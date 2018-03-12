@@ -10,7 +10,7 @@ Installation
 Dependencies
 ~~~~~~~~~~~~
 
-scikit-learn requires:
+dirty-cat requires:
 
 - Python (>= 2.7 or >= 3.4)
 - NumPy (>= 1.8.2)
