@@ -1,7 +1,7 @@
-categorical-encoding
-====================
+dirty-cat
+=========
 
-categorical-encoding is a Python module for encoding dirty categorical variables.
+dirty-cat is a Python module for pre-processing of dirty categorical variables.
 
 
 Installation
@@ -21,10 +21,10 @@ scikit-learn requires:
 User installation
 ~~~~~~~~~~~~~~~~~
 
-If you already have a working installation of numpy and scipy,
-the easiest way to install categorical-encoding is using ``pip`` ::
+If you already have a working installation of NumPy and SciPy,
+the easiest way to install dirty-cat is using ``pip`` ::
 
-    pip install -U 
+    pip install -U ...
 
 or ``conda``::
 
