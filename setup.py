@@ -23,7 +23,7 @@ if __name__ == '__main__':
           version=VERSION,
           author='Patricio Cerda',
           author_email='patricio.cerda@inria.fr',
-          url='https://github.com/dirty-cat/dirty_cat',
+          url='http://dirty-cat.github.io/',
           description=("Machine learning with dirty categories."),
           long_description=DESCRIPTION,
           license='BSD',
