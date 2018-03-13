@@ -4,6 +4,7 @@ dirty_cat: Learning on dirty categories.
 
 __version__ = '0.0.1a'
 
-from . import similarity_encoder, target_encoder
+from .similarity_encoder import SimilarityEncoder
+from .target_encoder import TargetEncoder
 
-__ALL__ = ['similarity_encoder', 'target_encoder']
+__all__ = ['SimilarityEncoder', 'TargetEncoder']
