@@ -11,7 +11,7 @@ then USERNAME="dirty_cat-ci";
 else USERNAME=$CIRCLE_PROJECT_USERNAME;
 fi
 
-DOC_REPO="dirty_cat.github.io"
+DOC_REPO="dirty-cat.github.io"
 GENERATED_DOC_DIR=$1
 
 if [[ -z "$GENERATED_DOC_DIR" ]]; then
