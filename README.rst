@@ -1,7 +1,7 @@
-dirty-cat
+dirty_cat
 =========
 
-dirty-cat is a Python module for encoding dirty categorical variables.
+dirty_cat is a Python module for machine-learning on dirty categorical variables.
 
 
 Installation
@@ -22,14 +22,9 @@ User installation
 ~~~~~~~~~~~~~~~~~
 
 If you already have a working installation of NumPy and SciPy,
-the easiest way to install dirty-cat is using ``pip`` ::
+the easiest way to install dirty_cat is using ``pip`` ::
 
     pip install -U ...
-
-or ``conda``::
-
-    conda install ...
-
 
 Documentation
 -------------
