@@ -1,7 +1,7 @@
 dirty-cat
 =========
 
-dirty-cat is a Python module for pre-processing of dirty categorical variables.
+dirty-cat is a Python module for encoding dirty categorical variables.
 
 
 Installation
@@ -28,11 +28,11 @@ the easiest way to install dirty-cat is using ``pip`` ::
 
 or ``conda``::
 
-    conda install 
+    conda install ...
 
 
 Citation
 ~~~~~~~~
 
 If you use this module in a scientific publication, please cite the following:
-(coming soon)
+(coming soon :))
