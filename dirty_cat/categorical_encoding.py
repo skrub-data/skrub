@@ -1,25 +1,19 @@
+import collections
+import numpy as np
+from scipy import sparse
+
 from sklearn.preprocessing import LabelEncoder
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import HashingVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
 
-import numpy as np
-from ngrams_vectorizer import ngram_similarity
-from scipy import sparse
-from pyjarowinkler import distance as jwdistance
 import jellyfish
 import Levenshtein as lev
 import distance as dist
-import json
-import itertools
-import pickle
-import random
-import collections
-from functools import lru_cache
 
+from .ngrams_vectorizer import ngram_similarity
 
-class categorical_encoding():
+class CategoricalEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, encoding='onehot', similarity='ngram',
                  ngram_type='sim2',
                  n=3, categories='auto',
