@@ -151,6 +151,7 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
         return sim4()
 
 
+
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, similarity='ngram',
                  ngram_similarity_type='sim2',
