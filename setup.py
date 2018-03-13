@@ -3,7 +3,10 @@
 from distutils.core import setup
 import sys
 
-import dirty_cat
+import _sample
+
+VERSION = _sample.__version__
+DESCRIPTION = _sample.__doc__
 
 # For some commands, use setuptools
 if len(set(('develop', 'sdist', 'release', 'bdist', 'bdist_egg', 'bdist_dumb',
@@ -17,12 +20,12 @@ extra_setuptools_args = {}
 
 if __name__ == '__main__':
     setup(name='dirty_cat',
-          version=dirty_cat.__version__,
+          version=VERSION,
           author='Patricio Cerda',
           author_email='patricio.cerda@inria.fr',
           url='https://github.com/dirty-cat/dirty_cat',
           description=("Machine learning with dirty categories."),
-          long_description=dirty_cat.__doc__,
+          long_description=DESCRIPTION,
           license='BSD',
           classifiers=[
               'Development Status :: 3 - Production/Stable',
@@ -39,5 +42,7 @@ if __name__ == '__main__':
               'Topic :: Software Development :: Libraries',
           ],
           platforms='any',
-          packages=['dirty_cat', ],
+          packages=['dirty_cat'],
+          install_requires=['jellyfish', 'python-Levenshtein',
+                            'distance', 'sklearn', 'numpy', 'scipy'],
           **extra_setuptools_args)
