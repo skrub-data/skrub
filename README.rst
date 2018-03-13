@@ -10,7 +10,7 @@ Installation
 Dependencies
 ~~~~~~~~~~~~
 
-dirty-cat requires:
+dirty_cat requires:
 
 - Python (>= 2.7 or >= 3.4)
 - NumPy (>= 1.8.2)
