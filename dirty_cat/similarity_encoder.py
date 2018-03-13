@@ -32,7 +32,7 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
 
     """
 
-    def sim1(X, cats):
+    def sim1():
         """
         sim1(s_i, s_j) = 2||min(ci, cj)||_1/ (||ci||_1 + ||cj||_1)
         """
@@ -53,8 +53,7 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
             SE.append(SE_dict[x])
         return np.nan_to_num(np.vstack(SE))
 
-
-    def sim2(X, cats):
+    def sim2():
         """
         sim2(s_i, s_j) = 2 dot(c1, c2) / (dot(c1, c1) + dot(c2, c2)
         """
@@ -74,8 +73,7 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
         similarity = similarity[index]
         return np.nan_to_num(similarity)
 
-
-    def sim3(X, cats):
+    def sim3():
         """
         sim3(s_i, s_j) = dot(c1, c2) / (dot(c1, c1)^.5 * dot(c2, c2)^.5)
         """
@@ -95,8 +93,7 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
         similarity = similarity[index]
         return np.nan_to_num(similarity)
 
-
-    def sim4(X, cats):
+    def sim4():
         """
         sim4(s_i, s_j) = 2 dot(p1, p2) / (dot(p1, p1) + dot(p2, p2))
         """
@@ -117,8 +114,7 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
         similarity = similarity[index]
         return np.nan_to_num(similarity)
 
-
-    def sim5(X, cats):
+    def sim5():
         """
         sim5(s_i, s_j) = dot(p1, p2) / (dot(p1, p1)^.5 * dot(p2, p2)^.5)
         """
@@ -140,19 +136,19 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
         return np.nan_to_num(similarity)
 
     if sim_type == 'sim1':
-        return sim1(X, cats)
+        return sim1()
 
     if sim_type == 'sim2':
-        return sim2(X, cats)
+        return sim2()
 
     if sim_type == 'sim3':
-        return sim3(X, cats)
+        return sim3()
 
     if sim_type == 'sim4':
-        return sim4(X, cats)
+        return sim4()
 
     if sim_type == 'sim5':
-        return sim4(X, cats)
+        return sim4()
 
 
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
