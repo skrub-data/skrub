@@ -19,7 +19,7 @@ import collections
 from functools import lru_cache
 
 
-class categorical_encoder():
+class categorical_encoding():
     def __init__(self, encoding='onehot', similarity='ngram',
                  ngram_type='sim2',
                  n=3, categories='auto',
