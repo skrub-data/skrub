@@ -44,7 +44,10 @@ preprocessing.categorical_encoding
     + jaro-winkler
     + ngram 
 * Target encoding
-* N-gram based encoders
+* N-gram based encoders:
+    + 'ngram-count',
+    + 'ngram-presence',
+    + 'ngram-tfidf'
 
 
 
