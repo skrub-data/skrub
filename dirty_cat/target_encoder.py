@@ -16,7 +16,7 @@ def lambda_(x, n):
 class TargetEncoder(BaseEstimator, TransformerMixin):
     def __init__(self,
                  categories='auto',
-                 clf_type='binary-clf'
+                 clf_type='binary-clf',
                  dtype=np.float64, handle_unknown='error',
                  ):
         self.categories = categories

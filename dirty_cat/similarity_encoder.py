@@ -11,8 +11,6 @@ import jellyfish
 import Levenshtein as lev
 import distance as dist
 
-from .ngrams_vectorizer import ngram_similarity
-
 
 def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
     """ Similarity encoding:

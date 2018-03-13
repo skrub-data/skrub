@@ -1,10 +1,6 @@
-"""
-dirty_cat: Learning on dirty categories.
-"""
+import _sample
+from . import similarity_encoder, target_encoder
 
-__version__ = '0.0.1a'
-
-from .categorical_encoding import SimilarityEncoder
-from .categorical_encoding import TargetEncoder
-
-
+__version__ = _sample.__version__
+__doc__ = _sample.__doc__
+__ALL__ = ['similarity_encoder', 'target_encoder']
