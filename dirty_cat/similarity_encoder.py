@@ -3,6 +3,7 @@ import numpy as np
 from scipy import sparse
 
 from sklearn.preprocessing import LabelEncoder
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 
