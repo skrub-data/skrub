@@ -78,8 +78,7 @@ fi
 
 if [[ "$CIRCLE_BRANCH" =~ ^master$|^[0-9]+\.[0-9]+\.X$ && -z "$CI_PULL_REQUEST" ]]
 then
-    # PDF linked into HTML
-    make_args="dist LATEXMKOPTS=-halt-on-error"
+    make_args="html"
 elif [[ "$build_type" =~ ^QUICK ]]
 then
     make_args=html-noplot
