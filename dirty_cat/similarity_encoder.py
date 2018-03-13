@@ -11,7 +11,28 @@ import Levenshtein as lev
 import distance as dist
 
 
-def sim1(X, cats):
+
+
+
+def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
+    """ Similarity encoding for dirty categorical variables:
+    Given to arrays of strings, returns the
+    similarity encoding matrix of size
+    len(X) x len(cats)
+
+    sim1(s_i, s_j) = 2||min(ci, cj)||_1/ (||ci||_1 + ||cj||_1)
+
+    sim2(s_i, s_j) = 2 dot(c1, c2) / (dot(c1, c1) + dot(c2, c2))
+
+    sim3(s_i, s_j) = dot(c1, c2) / (dot(c1, c1)^.5 * dot(c2, c2)^.5)
+
+    sim4(s_i, s_j) = 2 dot(p1, p2) / (dot(p1, p1) + dot(p2, p2))
+
+    sim5(s_i, s_j) = dot(p1, p2) / (dot(p1, p1)^.5 * dot(p2, p2)^.5)
+
+    """
+
+    def sim1(X, cats):
     """
     sim1(s_i, s_j) = 2||min(ci, cj)||_1/ (||ci||_1 + ||cj||_1)
     """
@@ -33,109 +54,90 @@ def sim1(X, cats):
     return np.nan_to_num(np.vstack(SE))
 
 
-def sim2(X, cats):
-    """
-    sim2(s_i, s_j) = 2 dot(c1, c2) / (dot(c1, c1) + dot(c2, c2)
-    """
-    unq_X = np.unique(X)
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
-    Cj = vectorizer.fit_transform(cats).transpose()
-    Ci = vectorizer.transform(unq_X)
-    SE_dict = {}
-    cij = Ci.dot(Cj).toarray()
-    cii = np.tile(Ci.multiply(Ci).sum(axis=1),
-                  (1, Cj.shape[1]))
-    cjj = np.tile(Cj.multiply(Cj).sum(axis=0),
-                  (Ci.shape[0], 1))
-    similarity = np.divide(2*cij, cii + cjj)
-    X_dict = {s: i for i, s in enumerate(unq_X)}
-    index = [X_dict[x] for x in X]
-    similarity = similarity[index]
-    return np.nan_to_num(similarity)
+    def sim2(X, cats):
+        """
+        sim2(s_i, s_j) = 2 dot(c1, c2) / (dot(c1, c1) + dot(c2, c2)
+        """
+        unq_X = np.unique(X)
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
+        Cj = vectorizer.fit_transform(cats).transpose()
+        Ci = vectorizer.transform(unq_X)
+        SE_dict = {}
+        cij = Ci.dot(Cj).toarray()
+        cii = np.tile(Ci.multiply(Ci).sum(axis=1),
+                      (1, Cj.shape[1]))
+        cjj = np.tile(Cj.multiply(Cj).sum(axis=0),
+                      (Ci.shape[0], 1))
+        similarity = np.divide(2*cij, cii + cjj)
+        X_dict = {s: i for i, s in enumerate(unq_X)}
+        index = [X_dict[x] for x in X]
+        similarity = similarity[index]
+        return np.nan_to_num(similarity)
 
 
-def sim3(X, cats):
-    """
-    sim3(s_i, s_j) = dot(c1, c2) / (dot(c1, c1)^.5 * dot(c2, c2)^.5)
-    """
-    unq_X = np.unique(X)
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
-    Cj = vectorizer.fit_transform(cats).transpose()
-    Ci = vectorizer.transform(unq_X)
-    SE_dict = {}
-    cij = Ci.dot(Cj).toarray()
-    cii = np.tile(np.power(Ci.multiply(Ci).sum(axis=1), .5),
-                  (1, Cj.shape[1]))
-    cjj = np.tile(np.power(Cj.multiply(Cj).sum(axis=0), .5),
-                  (Ci.shape[0], 1))
-    similarity = np.divide(cij, np.multiply(cii, cjj))
-    X_dict = {s: i for i, s in enumerate(unq_X)}
-    index = [X_dict[x] for x in X]
-    similarity = similarity[index]
-    return np.nan_to_num(similarity)
+    def sim3(X, cats):
+        """
+        sim3(s_i, s_j) = dot(c1, c2) / (dot(c1, c1)^.5 * dot(c2, c2)^.5)
+        """
+        unq_X = np.unique(X)
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
+        Cj = vectorizer.fit_transform(cats).transpose()
+        Ci = vectorizer.transform(unq_X)
+        SE_dict = {}
+        cij = Ci.dot(Cj).toarray()
+        cii = np.tile(np.power(Ci.multiply(Ci).sum(axis=1), .5),
+                      (1, Cj.shape[1]))
+        cjj = np.tile(np.power(Cj.multiply(Cj).sum(axis=0), .5),
+                      (Ci.shape[0], 1))
+        similarity = np.divide(cij, np.multiply(cii, cjj))
+        X_dict = {s: i for i, s in enumerate(unq_X)}
+        index = [X_dict[x] for x in X]
+        similarity = similarity[index]
+        return np.nan_to_num(similarity)
 
 
-def sim4(X, cats):
-    """
-    sim4(s_i, s_j) = 2 dot(p1, p2) / (dot(p1, p1) + dot(p2, p2))
-    """
-    unq_X = np.unique(X)
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
-    Cj = (vectorizer.fit_transform(cats) > 0
-          ).astype(dtype).transpose()
-    Ci = (vectorizer.transform(unq_X) > 0).astype(dtype)
-    SE_dict = {}
-    cij = Ci.dot(Cj).toarray()
-    cii = np.tile(Ci.multiply(Ci).sum(axis=1),
-                  (1, Cj.shape[1]))
-    cjj = np.tile(Cj.multiply(Cj).sum(axis=0),
-                  (Ci.shape[0], 1))
-    similarity = np.divide(2*cij, cii + cjj)
-    X_dict = {s: i for i, s in enumerate(unq_X)}
-    index = [X_dict[x] for x in X]
-    similarity = similarity[index]
-    return np.nan_to_num(similarity)
+    def sim4(X, cats):
+        """
+        sim4(s_i, s_j) = 2 dot(p1, p2) / (dot(p1, p1) + dot(p2, p2))
+        """
+        unq_X = np.unique(X)
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
+        Cj = (vectorizer.fit_transform(cats) > 0
+              ).astype(dtype).transpose()
+        Ci = (vectorizer.transform(unq_X) > 0).astype(dtype)
+        SE_dict = {}
+        cij = Ci.dot(Cj).toarray()
+        cii = np.tile(Ci.multiply(Ci).sum(axis=1),
+                      (1, Cj.shape[1]))
+        cjj = np.tile(Cj.multiply(Cj).sum(axis=0),
+                      (Ci.shape[0], 1))
+        similarity = np.divide(2*cij, cii + cjj)
+        X_dict = {s: i for i, s in enumerate(unq_X)}
+        index = [X_dict[x] for x in X]
+        similarity = similarity[index]
+        return np.nan_to_num(similarity)
 
 
-def sim5(X, cats):
-    """
-    sim5(s_i, s_j) = dot(p1, p2) / (dot(p1, p1)^.5 * dot(p2, p2)^.5)
-    """
-    unq_X = np.unique(X)
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
-    Cj = (vectorizer.fit_transform(cats) > 0
-          ).astype(dtype).transpose()
-    Ci = (vectorizer.transform(unq_X) > 0).astype(dtype)
-    SE_dict = {}
-    cij = Ci.dot(Cj).toarray()
-    cii = np.tile(np.power(Ci.multiply(Ci).sum(axis=1), .5),
-                  (1, Cj.shape[1]))
-    cjj = np.tile(np.power(Cj.multiply(Cj).sum(axis=0), .5),
-                  (Ci.shape[0], 1))
-    similarity = np.divide(cij, np.multiply(cii, cjj))
-    X_dict = {s: i for i, s in enumerate(unq_X)}
-    index = [X_dict[x] for x in X]
-    similarity = similarity[index]
-    return np.nan_to_num(similarity)
-
-
-def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
-    """ Similarity encoding for dirty categorical variables:
-    Given to arrays of strings, returns the
-    similarity encoding matrix of size
-    len(X) x len(cats)
-
-    sim1(s_i, s_j) = 2||min(ci, cj)||_1/ (||ci||_1 + ||cj||_1)
-
-    sim2(s_i, s_j) = 2 dot(c1, c2) / (dot(c1, c1) + dot(c2, c2))
-
-    sim3(s_i, s_j) = dot(c1, c2) / (dot(c1, c1)^.5 * dot(c2, c2)^.5)
-
-    sim4(s_i, s_j) = 2 dot(p1, p2) / (dot(p1, p1) + dot(p2, p2))
-
-    sim5(s_i, s_j) = dot(p1, p2) / (dot(p1, p1)^.5 * dot(p2, p2)^.5)
-
-    """
+    def sim5(X, cats):
+        """
+        sim5(s_i, s_j) = dot(p1, p2) / (dot(p1, p1)^.5 * dot(p2, p2)^.5)
+        """
+        unq_X = np.unique(X)
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
+        Cj = (vectorizer.fit_transform(cats) > 0
+              ).astype(dtype).transpose()
+        Ci = (vectorizer.transform(unq_X) > 0).astype(dtype)
+        SE_dict = {}
+        cij = Ci.dot(Cj).toarray()
+        cii = np.tile(np.power(Ci.multiply(Ci).sum(axis=1), .5),
+                      (1, Cj.shape[1]))
+        cjj = np.tile(np.power(Cj.multiply(Cj).sum(axis=0), .5),
+                      (Ci.shape[0], 1))
+        similarity = np.divide(cij, np.multiply(cii, cjj))
+        X_dict = {s: i for i, s in enumerate(unq_X)}
+        index = [X_dict[x] for x in X]
+        similarity = similarity[index]
+        return np.nan_to_num(similarity)
 
     if sim_type == 'sim1':
         return sim1(X, cats)
