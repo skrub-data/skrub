@@ -34,12 +34,15 @@ or ``conda``::
 Documentation
 -------------
 
-Preprocessing - Categorical encoding
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+preprocessing.categorical_encoding
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * One-hot encoding
 * Ordinal encoding
-* Similarity encoding
+* Similarity encoding:
+    + levenshtein-ratio
+    + jaro-winkler
+    + ngram 
 * Target encoding
 * N-gram based encoders
 
