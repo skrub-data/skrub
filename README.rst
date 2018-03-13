@@ -31,6 +31,22 @@ or ``conda``::
     conda install ...
 
 
+Documentation
+-------------
+
+Preprocessing - Categorical encoding
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* One-hot encoding
+* Ordinal encoding
+* Similarity encoding
+* Target encoding
+* N-gram based encoders
+
+
+
+
+
 Citation
 ~~~~~~~~
 
