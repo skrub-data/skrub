@@ -146,7 +146,7 @@ affected_doc_paths() {
     project_files=$(echo "$files" | grep '^dirty_cat/')
     if [ -n "$project_files" ]
     then
-        grep -hlR -f<(echo "$project_files" | sed 's/^/dirty_cat\/blob\/[a-z0-9]*\//') doc/_build/html/stable/modules/generated | cut -d/ -f5-
+        grep -hlR -f<(echo "$project_files" | sed 's/^/dirty_cat\/blob\/[a-z0-9]*\//') doc/_build/html/modules/generated | cut -d/ -f5-
     fi
 }
 
@@ -159,5 +159,5 @@ then
     echo '<html><body><ul>'
     echo "$affected" | sed 's|.*|<li><a href="&">&</a></li>|'
     echo '</ul><p>General: <a href="index.html">Home</a> | <a href="modules/classes.html">API Reference</a> | <a href="auto_examples/index.html">Examples</a></p></body></html>'
-    ) > 'doc/_build/html/stable/_changed.html'
+    ) > 'doc/_build/html/_changed.html'
 fi
