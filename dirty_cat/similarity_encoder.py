@@ -155,7 +155,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, similarity='ngram',
                  ngram_similarity_type='sim2',
                  n=3, categories='auto',
-                 dtype=np.float64, handle_unknown='error',
+                 dtype=np.float64, handle_unknown='ignore',
                  clf_type='binary_clf', ngram_type=None):
         self.categories = categories
         self.dtype = dtype
