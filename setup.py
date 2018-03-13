@@ -3,10 +3,10 @@
 from distutils.core import setup
 import sys
 
-import _sample
+import dirty_cat
 
-VERSION = _sample.__version__
-DESCRIPTION = _sample.__doc__
+VERSION = dirty_cat.__version__
+DESCRIPTION = dirty_cat.__doc__
 
 # For some commands, use setuptools
 if len(set(('develop', 'sdist', 'release', 'bdist', 'bdist_egg', 'bdist_dumb',
