@@ -1,4 +1,3 @@
-import collections
 import numpy as np
 from scipy import sparse
 
@@ -89,7 +88,7 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
                       (Ci.shape[0], 1))
         similarity = np.divide(2*cij, cii + cjj)
         X_dict = {s: i for i, s in enumerate(unq_X)}
-        index = [X_dict[s] for x in X]
+        index = [X_dict[x] for x in X]
         similarity = similarity[index]
         return np.nan_to_num(similarity)
 
@@ -236,7 +235,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                  ngram_similarity_type='sim2',
                  n=3, categories='auto',
                  dtype=np.float64, handle_unknown='error',
-                 clf_type='binary_clf'):
+                 clf_type='binary_clf', ngram_type=None):
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
