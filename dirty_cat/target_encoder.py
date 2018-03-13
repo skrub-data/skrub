@@ -1,11 +1,9 @@
 import collections
 import numpy as np
-from scipy import sparse
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
-from sklearn.feature_extraction.text import CountVectorizer
 
 
 def lambda_(x, n):

@@ -1,3 +1,5 @@
+*~
+*#
 __pycache__/
 */__pycache__/
 *.py[cod]
@@ -36,5 +38,5 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
-*,cover
+*cover
 .hypothesis/
