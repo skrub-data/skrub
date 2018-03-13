@@ -33,25 +33,25 @@ def ngram_similarity(X, cats, n, sim_type=None, dtype=np.float64):
     """
 
     def sim1(X, cats):
-    """
-    sim1(s_i, s_j) = 2||min(ci, cj)||_1/ (||ci||_1 + ||cj||_1)
-    """
-    unq_X = np.unique(X)
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
-    count2 = vectorizer.fit_transform(cats)
-    count1 = vectorizer.transform(unq_X)
-    sum_matrix2 = count2.sum(axis=1)
-    SE_dict = {}
-    for i, x in enumerate(count1):
-        aux = sparse.csr_matrix(np.ones((count2.shape[0], 1))).dot(x)
-        samegrams = count2.minimum(aux).sum(axis=1)
-        allgrams = x.sum() + sum_matrix2
-        similarity = 2 * np.divide(samegrams, allgrams)
-        SE_dict[unq_X[i]] = np.array(similarity).reshape(-1)
-    SE = []
-    for x in X:
-        SE.append(SE_dict[x])
-    return np.nan_to_num(np.vstack(SE))
+        """
+        sim1(s_i, s_j) = 2||min(ci, cj)||_1/ (||ci||_1 + ||cj||_1)
+        """
+        unq_X = np.unique(X)
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(n, n))
+        count2 = vectorizer.fit_transform(cats)
+        count1 = vectorizer.transform(unq_X)
+        sum_matrix2 = count2.sum(axis=1)
+        SE_dict = {}
+        for i, x in enumerate(count1):
+            aux = sparse.csr_matrix(np.ones((count2.shape[0], 1))).dot(x)
+            samegrams = count2.minimum(aux).sum(axis=1)
+            allgrams = x.sum() + sum_matrix2
+            similarity = 2 * np.divide(samegrams, allgrams)
+            SE_dict[unq_X[i]] = np.array(similarity).reshape(-1)
+        SE = []
+        for x in X:
+            SE.append(SE_dict[x])
+        return np.nan_to_num(np.vstack(SE))
 
 
     def sim2(X, cats):
