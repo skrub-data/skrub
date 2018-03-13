@@ -15,7 +15,7 @@ jobs:
           key: v1-datasets-{{ .Branch }}
       - run: ./build_tools/circle/build_doc.sh
       - store_artifacts:
-          path: doc/_build/html/stable
+          path: doc/_build/html
           destination: doc
       - store_artifacts:
           path: ~/log.txt
@@ -36,11 +36,11 @@ jobs:
       # deployed.
       - attach_workspace:
           at: doc/_build/html
-      - run: ls -ltrh doc/_build/html/stable
+      - run: ls -ltrh doc/_build/html
       - deploy:
           command: |
             if [[ "${CIRCLE_BRANCH}" =~ ^master$|^[0-9]+\.[0-9]+\.X$ ]]; then
-              bash build_tools/circle/push_doc.sh doc/_build/html/stable
+              bash build_tools/circle/push_doc.sh doc/_build/html
             fi
 
 workflows:
