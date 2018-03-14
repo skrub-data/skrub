@@ -3,6 +3,7 @@ Some string distances
 """
 import numpy as np
 
+from collections import Counter
 # Levenstein, adapted from
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 
@@ -91,20 +92,12 @@ def ngram_similarity(string1, string2, n):
     """ n-gram similarity between two strings
     """
     ngrams1 = get_ngrams(string1, n)
-    count_dict1 = {}
-    for ngram in ngrams1:
-        count_dict1.setdefault(ngram, 0)
-        count_dict1[ngram] += 1
+    count1 = Counter(ngrams1)
 
     ngrams2 = get_ngrams(string2, n)
-    samegrams = 0
-    for ngram in ngrams2:
-        try:
-            if count_dict1[ngram] > 0:
-                count_dict1[ngram] -= 1
-                samegrams += 1
-        except KeyError:
-            continue
+    count2 = Counter(ngrams2)
+
+    samegrams = sum((count1 & count2).values())
     allgrams = len(ngrams1) + len(ngrams2)
     similarity = samegrams/(allgrams - samegrams)
     return similarity
@@ -112,6 +105,6 @@ def ngram_similarity(string1, string2, n):
 
 if __name__ == '__main__':
     s1 = 'aa'
-    s2 = 'aaa'
+    s2 = 'aaab'
     print('Levenshtein similarity: %.3f' % levenshtein(s1, s2))
     print('3-gram similarity: %.3f' % ngram_similarity(s1, s2, 3))

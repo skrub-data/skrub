@@ -20,13 +20,12 @@ def ngram_similarity(X, cats, n_min, n_max, sim_type=None, dtype=np.float64):
     ngram_sim(s_i, s_j) =
         ||min(ci, cj)||_1 / (||ci||_1 + ||cj||_1 - ||min(ci, cj)||_1)
     """
-
     unq_X = np.unique(X)
-    cats = ['  %s  ' % cat for cat in cats]
+    cats = np.array(['  %s  ' % cat for cat in cats])
     unq_X_ = np.array(['  %s  ' % x for x in unq_X])
-
     vectorizer = CountVectorizer(analyzer='char', ngram_range=(n_min, n_max))
-    count2 = vectorizer.fit_transform(cats)
+    vectorizer.fit(np.concatenate((cats, unq_X_)))
+    count2 = vectorizer.transform(cats)
     count1 = vectorizer.transform(unq_X_)
     sum2 = count2.sum(axis=1)
     SE_dict = {}
