@@ -32,4 +32,4 @@ def test_similarity_encoder():
             for i, x_t in enumerate(X_test.reshape(-1)):
                 for j, x in enumerate(X.reshape(-1)):
                     ans[i, j] = jaro_distance(x_t, x)
-            assert np.array_equal(encoder, ans)
+            assert np.array_equal(encoder, ans - 1)
