@@ -6,10 +6,10 @@ import numpy as np
 # Levenstein, adapted from
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 
-def levenshtein(source, target):
+def levenshtein_array(source, target):
     target_size = len(target)
     if len(source) < target_size:
-        return levenshtein(target, source)
+        return levenshtein_array(target, source)
 
     # So now we have len(source) >= len(target).
     if len(target) == 0:
@@ -44,10 +44,30 @@ def levenshtein(source, target):
     return previous_row[-1]
 
 
+def levenshtein_seq(seq1, seq2):
+    thisrow = list(range(1, len(seq2) + 1)) + [0]
+    len_seq2 = len(seq2)
+    for x in range(len(seq1)):
+        oneago = thisrow
+        thisrow = [0] * len_seq2 + [x + 1]
+        for y in range(len_seq2):
+            delcost = oneago[y] + 1
+            addcost = thisrow[y - 1] + 1
+            subcost = oneago[y - 1] + (seq1[x] != seq2[y])
+            thisrow[y] = min(delcost, addcost, subcost)
+    return thisrow[len_seq2 - 1]
+
+
+def levenshtein(seq1, seq2):
+    # Choose the fastest option depending on the size of the arrays
+    # The number 15 was chosen empirically on Python 3.6
+    if len(seq1) < 15:
+        return levenshtein_seq(seq1, seq2)
+    else:
+        return levenshtein_array(seq1, seq2)
+
 if __name__ == '__main__':
- print(levenshtein('Varoquaux', 'Gouillart'))
- for i in range(10000):
-    levenshtein('Varoquaux', 'Gouillart')
+    print(levenshtein('aaaa', 'aa'))
 
 
 
