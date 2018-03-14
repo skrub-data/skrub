@@ -21,8 +21,8 @@ def ngram_similarity(X, cats, n_min, n_max, sim_type=None, dtype=np.float64):
         ||min(ci, cj)||_1 / (||ci||_1 + ||cj||_1 - ||min(ci, cj)||_1)
     """
     unq_X = np.unique(X)
-    cats = np.array(['  %s  ' % cat for cat in cats])
-    unq_X_ = np.array(['  %s  ' % x for x in unq_X])
+    cats = np.array([' ' + cat + ' ' for cat in cats])
+    unq_X_ = np.array([' ' + x + ' ' for x in unq_X])
     vectorizer = CountVectorizer(analyzer='char', ngram_range=(n_min, n_max))
     vectorizer.fit(np.concatenate((cats, unq_X_)))
     count2 = vectorizer.transform(cats)
