@@ -6,6 +6,7 @@ import numpy as np
 # Levenstein, adapted from
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 
+
 def levenshtein_array(source, target):
     target_size = len(target)
     if len(source) < target_size:
@@ -66,8 +67,51 @@ def levenshtein(seq1, seq2):
     else:
         return levenshtein_array(seq1, seq2)
 
+
+def get_unique_ngrams(string, n):
+    """ Return the set of different tri-grams in a string
+    """
+    spaces = ' ' * (n // 2 + n % 2)
+    string = spaces + string + '  '
+    string_list = [string[i:] for i in range(n)]
+    return set(zip(*string_list))
+
+
+def get_ngrams(string, n):
+    """ Return the set of different tri-grams in a string
+    """
+    # Pure Python implementation: no numpy
+    spaces = ' ' * (n // 2 + n % 2)
+    string = spaces + string + spaces
+    string_list = [string[i:] for i in range(n)]
+    return list(zip(*string_list))
+
+
+def ngram_similarity(string1, string2, n):
+    """ n-gram similarity between two strings
+    """
+    ngrams1 = get_ngrams(string1, n)
+    count_dict1 = {}
+    for ngram in ngrams1:
+        count_dict1.setdefault(ngram, 0)
+        count_dict1[ngram] += 1
+
+    ngrams2 = get_ngrams(string2, n)
+    samegrams = 0
+    for ngram in ngrams2:
+        try:
+            if count_dict1[ngram] > 0:
+                count_dict1[ngram] -= 1
+                samegrams += 1
+        except KeyError:
+            continue
+    allgrams = len(ngrams1) + len(ngrams2)
+    similarity = samegrams/(allgrams - samegrams)
+    return similarity
+
+
 if __name__ == '__main__':
-    print(levenshtein('aaaa', 'aa'))
-
-
-
+    s1 = 'aa'
+    s2 = 'aaa'
+    print('Levenshtein similarity: %.3f' % levenshtein(s1, s2))
+    print('3-gram similarity: %.3f' % ngram_similarity(s1, s2, 3))
