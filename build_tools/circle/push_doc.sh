@@ -35,11 +35,12 @@ MSG="Pushing the docs to $dir/ for branch: $CIRCLE_BRANCH, commit $CIRCLE_SHA1"
 
 cd $HOME
 if [ ! -d $DOC_REPO ];
-then git clone --depth 1 --no-checkout "git@github.com:dirty-cat/"$DOC_REPO".git";
+#then git clone --depth 1 --no-checkout "git@github.com:dirty-cat/"$DOC_REPO".git";
+then git clone "git@github.com:dirty-cat/"$DOC_REPO".git";
 fi
 cd $DOC_REPO
-git config core.sparseCheckout true
-echo $dir > .git/info/sparse-checkout
+#git config core.sparseCheckout true
+#echo $dir > .git/info/sparse-checkout
 git checkout $CIRCLE_BRANCH
 git reset --hard origin/$CIRCLE_BRANCH
 git rm -rf $dir/ && rm -rf $dir/
