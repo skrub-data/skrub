@@ -1,11 +1,11 @@
 import numpy as np
 import Levenshtein as lev
 
-from dirty_cat import similarity_encoder, target_encoder
+from dirty_cat.similarity_encoder import SimilarityEncoder
 
 
 def test_similarity_encoder():
-    model = similarity_encoder.SimilarityEncoder(
+    model = SimilarityEncoder(
         similarity='levenshtein-ratio', handle_unknown='ignore')
     X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
     X_test = np.array([['aa', 'aaa', 'aaa', 'aaab', 'aaac']]).reshape(-1, 1)
