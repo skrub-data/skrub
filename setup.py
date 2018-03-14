@@ -42,7 +42,7 @@ if __name__ == '__main__':
               'Topic :: Software Development :: Libraries',
           ],
           platforms='any',
-          packages=['dirty_cat'],
+          packages=['dirty_cat','dirty_cat.datasets'],
           install_requires=['jellyfish', 'python-Levenshtein',
-                            'distance', 'sklearn', 'numpy', 'scipy'],
+                            'distance', 'sklearn', 'numpy', 'scipy','pandas'],
           **extra_setuptools_args)
