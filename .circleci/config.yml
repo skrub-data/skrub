@@ -32,7 +32,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "2e:f0:60:d4:92:cf:50:a2:e1:ac:0d:65:e0:38:6d:f2"
+            - "41:3d:83:a6:8f:c3:f3:1f:19:93:d0:3f:d2:a4:51:25"
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh
       # Attach documentation generated in the 'python3' step so that it can be
