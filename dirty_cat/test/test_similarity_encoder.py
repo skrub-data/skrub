@@ -7,11 +7,12 @@ from dirty_cat import similarity_encoder, target_encoder, string_distances
 
 def test_similarity_encoder():
     X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
-    X_test = np.array([['aa', 'aaa', 'aaa', 'aaab', 'aaac']]).reshape(-1, 1)
+    X_test = np.array([['aa', 'aaa', 'aaa', 'aaab']]).reshape(-1, 1)
 
     similarity_types = [
         'levenshtein-ratio',
-        'jaro-winkler'
+        'jaro-winkler',
+        'ngram'
         ]
 
     for similarity_type in similarity_types:
