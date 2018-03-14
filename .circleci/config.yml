@@ -37,6 +37,9 @@ jobs:
       - attach_workspace:
           at: doc/_build/html
       - run: ls -ltrh doc/_build/html
+      - add_ssh_keys:
+          fingerprints:
+            - "2e:f0:60:d4:92:cf:50:a2:e1:ac:0d:65:e0:38:6d:f2"
       - deploy:
           command: |
             if [[ "${CIRCLE_BRANCH}" =~ ^master$|^[0-9]+\.[0-9]+\.X$ ]]; then
