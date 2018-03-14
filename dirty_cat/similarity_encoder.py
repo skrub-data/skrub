@@ -9,6 +9,8 @@ from sklearn.utils import check_array
 import jellyfish
 import Levenshtein as lev
 
+from dirty_cat import string_distances
+
 
 def ngram_similarity(X, cats, n_min, n_max, dtype=np.float64):
     """
@@ -42,7 +44,7 @@ def ngram_similarity(X, cats, n_min, n_max, dtype=np.float64):
 
 
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, similarity='ngram',
+    def __init__(self, similarity='similaritym',
                  n_min=3, n_max=3, categories='auto',
                  dtype=np.float64, handle_unknown='ignore'):
         self.categories = categories
@@ -155,6 +157,18 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                 encoder = np.vstack(encoder)
                 out.append(encoder)
             return np.hstack(out)
+
+        # if self.similarity == 'ngram2':
+        #     out = []
+        #     for j, cats in enumerate(self.categories_):
+        #         unqX = np.unique(X[:, j])
+        #         vect = np.vectorize(string_distances.ngram_similarity)
+        #         encoder_dict = {x: vect(x, cats.reshape(1, -1), self.n_min)
+        #                         for x in unqX}
+        #         encoder = [encoder_dict[x] for x in X[:, j]]
+        #         encoder = np.vstack(encoder)
+        #         out.append(encoder)
+        #     return np.hstack(out)
 
         if self.similarity == 'ngram':
             out = []

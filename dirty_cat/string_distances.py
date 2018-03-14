@@ -73,7 +73,7 @@ def get_unique_ngrams(string, n):
     """ Return the set of different tri-grams in a string
     """
     spaces = ' '  # * (n // 2 + n % 2)
-    string = spaces + string + '  '
+    string = spaces + " ".join(string.lower().split()) + spaces
     string_list = [string[i:] for i in range(n)]
     return set(zip(*string_list))
 
@@ -83,7 +83,7 @@ def get_ngrams(string, n):
     """
     # Pure Python implementation: no numpy
     spaces = ' '  # * (n // 2 + n % 2)
-    string = spaces + string + spaces
+    string = spaces + " ".join(string.lower().split()) + spaces
     string_list = [string[i:] for i in range(n)]
     return list(zip(*string_list))
 

@@ -7,7 +7,7 @@ from dirty_cat import similarity_encoder, target_encoder, string_distances
 
 def test_similarity_encoder():
     X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
-    X_test = np.array([['aa', 'aaa', 'aaa', 'aaac']]).reshape(-1, 1)
+    X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
 
     similarities = [
         'levenshtein-ratio',
