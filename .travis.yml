@@ -1,5 +1,7 @@
 language:
     python
+env:
+    - CONDA_DEPENDENCIES: jellyfish python-Levenshtein distance sklearn numpy scipy
 python:
     - 3.6
 install:
