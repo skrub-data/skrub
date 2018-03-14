@@ -6,10 +6,7 @@
 
 set -e
 
-if [ -z $CIRCLE_PROJECT_USERNAME ];
-then USERNAME="dirty-cat-ci";
-else USERNAME=$CIRCLE_PROJECT_USERNAME;
-fi
+USERNAME="dirty-cat-ci";
 
 DOC_REPO="dirty-cat.github.io"
 GENERATED_DOC_DIR=$1
