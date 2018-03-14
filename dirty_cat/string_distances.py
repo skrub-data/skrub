@@ -6,9 +6,9 @@ import numpy as np
 # Levenstein, adapted from
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 
-
 def levenshtein(source, target):
-    if len(source) < len(target):
+    target_size = len(target)
+    if len(source) < target_size:
         return levenshtein(target, source)
 
     # So now we have len(source) >= len(target).
@@ -16,13 +16,13 @@ def levenshtein(source, target):
         return len(source)
 
     # Create numpy arrays
-    source = np.frombuffer(source, dtype='|S1')
-    target = np.frombuffer(target, dtype='|S1')
+    source = np.array(tuple(source), dtype='|S1')
+    target = np.array(tuple(target), dtype='|S1')
 
     # We use a dynamic programming algorithm, but with the
     # added optimization that we only need the last two rows
     # of the matrix.
-    previous_row = np.arange(target.size + 1)
+    previous_row = np.arange(target_size + 1)
     for s in source:
         # Insertion (target grows longer than source):
         current_row = previous_row + 1
@@ -45,7 +45,9 @@ def levenshtein(source, target):
 
 
 if __name__ == '__main__':
-    print(levenshtein('aaaa', 'aa'))
+ print(levenshtein('Varoquaux', 'Gouillart'))
+ for i in range(10000):
+    levenshtein('Varoquaux', 'Gouillart')
 
 
 
