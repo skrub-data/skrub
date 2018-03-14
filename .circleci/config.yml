@@ -30,9 +30,6 @@ jobs:
     docker:
       - image: circleci/python:3.6.1
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "70:e2:4b:fb:98:1c:ff:68:8a:5d:bc:84:f5:94:27:cf"
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh
       # Attach documentation generated in the 'python3' step so that it can be
