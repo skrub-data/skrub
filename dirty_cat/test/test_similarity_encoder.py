@@ -9,32 +9,33 @@ def test_similarity_encoder():
     X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
     X_test = np.array([['aa', 'aaa', 'aaa', 'aaac']]).reshape(-1, 1)
 
-    similarity_types = [
+    similarities = [
         'levenshtein-ratio',
         'jaro-winkler',
         'ngram'
         ]
 
-    for similarity_type in similarity_types:
+    for similarity in similarities:
         model = similarity_encoder.SimilarityEncoder(
-            similarity_type=similarity_type, handle_unknown='ignore')
+            similarity=similarity, handle_unknown='ignore')
 
         encoder = model.fit(X).transform(X_test)
 
-        if similarity_type == 'levenshtein-ratio':
+        if similarity == 'levenshtein-ratio':
             ans = np.zeros((len(X_test), len(X)))
             for i, x_t in enumerate(X_test.reshape(-1)):
                 for j, x in enumerate(X.reshape(-1)):
                     ans[i, j] = lev.ratio(x_t, x)
             assert np.array_equal(encoder, ans)
 
-        if similarity_type == 'jaro-winkler':
+        if similarity == 'jaro-winkler':
             ans = np.zeros((len(X_test), len(X)))
             for i, x_t in enumerate(X_test.reshape(-1)):
                 for j, x in enumerate(X.reshape(-1)):
                     ans[i, j] = jaro_distance(x_t, x)
             assert np.array_equal(encoder, ans)
-        if similarity_type == 'ngram':
+
+        if similarity == 'ngram':
             ans = np.zeros((len(X_test), len(X)))
             for i, x_t in enumerate(X_test.reshape(-1)):
                 for j, x in enumerate(X.reshape(-1)):
