@@ -58,6 +58,7 @@ def test_levenshtein_distances():
     _check_levenshtein_distances()
     available = string_distances._LEVENSHTEIN_AVAILABLE
     # TODO: pytest patch to check which is called
+    # in circleci execute test with and without lev installed
     try:
         string_distances._LEVENSHTEIN_AVAILABLE = False
         _check_levenshtein_distances()
