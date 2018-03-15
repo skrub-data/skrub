@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
+import os
 from distutils.core import setup
 import sys
-
-import dirty_cat
-
-VERSION = dirty_cat.__version__
-DESCRIPTION = dirty_cat.__doc__
 
 # For some commands, use setuptools
 if len(set(('develop', 'sdist', 'release', 'bdist', 'bdist_egg', 'bdist_dumb',
@@ -14,6 +10,16 @@ if len(set(('develop', 'sdist', 'release', 'bdist', 'bdist_egg', 'bdist_dumb',
             'egg_info', 'easy_install', 'upload',
             )).intersection(sys.argv)) > 0:
     import setuptools
+
+version_file = os.path.join(
+    os.path.dirname(__file__), 'dirty_cat', 'VERSION.txt')
+with open(version_file) as fh:
+    VERSION = fh.read().strip()
+
+description_file = os.path.join(os.path.dirname(__file__), 'README.rst')
+with open(description_file) as fh:
+    DESCRIPTION = fh.read()
+
 
 extra_setuptools_args = {}
 
@@ -43,6 +49,7 @@ if __name__ == '__main__':
           ],
           platforms='any',
           packages=['dirty_cat'],
+          package_data={'dirty_cat': ['VERSION.txt']},
           install_requires=['jellyfish', 'python-Levenshtein',
                             'distance', 'sklearn', 'numpy', 'scipy'],
           **extra_setuptools_args)
