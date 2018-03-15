@@ -96,14 +96,17 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         """Transform X using specified encoding scheme.
+
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to encode.
+
         Returns
         -------
         X_out : sparse matrix or a 2-d array
             Transformed input.
+
         """
         X_temp = check_array(X, dtype=None)
         if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):

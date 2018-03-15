@@ -70,10 +70,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         """Transform X using specified encoding scheme.
+
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to encode.
+
         Returns
         -------
         X_out : sparse matrix or a 2-d array
