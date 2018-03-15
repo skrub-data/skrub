@@ -1,4 +1,5 @@
 import numpy as np
+import Levenshtein
 
 from dirty_cat import string_distances
 
@@ -39,7 +40,7 @@ def _check_symmetry(dist_func, *args, **kwargs):
             a, b, *args, **kwargs) == dist_func(b, a, *args, **kwargs)
 
 
-def test_levenshtein_distances():
+def _check_levenshtein_distances():
     for levenshtein_dist in [
             string_distances.levenshtein_seq]:
         _check_levenshtein_example_results(levenshtein_dist)
@@ -49,6 +50,19 @@ def test_levenshtein_distances():
             a, b) == string_distances.levenshtein_seq(a, b)
         assert string_distances.levenshtein_seq(
             a, b) == string_distances.levenshtein(a, b)
+        assert string_distances.levenshtein_seq(
+            a, b) == Levenshtein.distance(a, b)
+
+
+def test_levenshtein_distances():
+    _check_levenshtein_distances()
+    available = string_distances._LEVENSHTEIN_AVAILABLE
+    # TODO: pytest patch to check which is called
+    try:
+        string_distances._LEVENSHTEIN_AVAILABLE = False
+        _check_levenshtein_distances()
+    finally:
+        string_distances._LEVENSHTEIN_AVAILABLE = available
 
 
 def test_levenshtein_ratio():

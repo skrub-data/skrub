@@ -3,6 +3,12 @@ Some string distances
 """
 import numpy as np
 
+try:
+    import Levenshtein
+    _LEVENSHTEIN_AVAILABLE = True
+except ImportError:
+    _LEVENSHTEIN_AVAILABLE = False
+
 from collections import Counter
 # Levenstein, adapted from
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
@@ -63,6 +69,8 @@ def levenshtein_seq(seq1, seq2):
 def levenshtein(seq1, seq2):
     # Choose the fastest option depending on the size of the arrays
     # The number 15 was chosen empirically on Python 3.6
+    if _LEVENSHTEIN_AVAILABLE:
+        return Levenshtein.distance(seq1, seq2)
     if len(seq1) < 15:
         return levenshtein_seq(seq1, seq2)
     else:
@@ -70,6 +78,8 @@ def levenshtein(seq1, seq2):
 
 
 def levenshtein_ratio(seq1, seq2):
+    if _LEVENSHTEIN_AVAILABLE:
+        return levenshtein_ratio(seq1, seq2)
     total_len = len(seq1) + len(seq2)
     if total_len == 0:
         return 1.
