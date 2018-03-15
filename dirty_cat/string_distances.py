@@ -14,6 +14,9 @@ from collections import Counter
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 
 
+# TODO vectorize these functions (accept arrays)
+
+
 def levenshtein_array(source, target):
     target_size = len(target)
     if len(source) < target_size:
