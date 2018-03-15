@@ -3,6 +3,15 @@
 from distutils.core import setup
 import sys
 
+# Hackish way copied from scikit-learn to get the version and doc
+# without loading any modules during setup.
+if sys.version_info[0] < 3:
+    import __builtin__ as builtins
+else:
+    import builtins
+
+builtins.__DIRTY_CAT_SETUP__ = True
+
 import dirty_cat
 
 VERSION = dirty_cat.__version__
