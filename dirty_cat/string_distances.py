@@ -18,8 +18,8 @@ def levenshtein_array(source, target):
         return len(source)
 
     # Create numpy arrays
-    source = np.array(tuple(source), dtype='|S1')
-    target = np.array(tuple(target), dtype='|S1')
+    source = np.array(tuple(source), dtype='|U1')
+    target = np.array(tuple(target), dtype='|U1')
 
     # We use a dynamic programming algorithm, but with the
     # added optimization that we only need the last two rows
@@ -67,6 +67,13 @@ def levenshtein(seq1, seq2):
         return levenshtein_seq(seq1, seq2)
     else:
         return levenshtein_array(seq1, seq2)
+
+
+def levenshtein_ratio(seq1, seq2):
+    total_len = len(seq1) + len(seq2)
+    if total_len == 0:
+        return 1.
+    return (total_len - levenshtein(seq1, seq2)) / total_len
 
 
 def get_unique_ngrams(string, n):
