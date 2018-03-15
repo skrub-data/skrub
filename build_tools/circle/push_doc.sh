@@ -6,10 +6,7 @@
 
 set -e
 
-if [ -z $CIRCLE_PROJECT_USERNAME ];
-then USERNAME="dirty_cat-ci";
-else USERNAME=$CIRCLE_PROJECT_USERNAME;
-fi
+USERNAME="dirty-cat-ci";
 
 DOC_REPO="dirty-cat.github.io"
 GENERATED_DOC_DIR=$1
@@ -45,7 +42,7 @@ git checkout $CIRCLE_BRANCH
 git reset --hard origin/$CIRCLE_BRANCH
 git rm -rf $dir/ && rm -rf $dir/
 cp -R $GENERATED_DOC_DIR $dir
-git config user.email "gael.varoquaux+circleci@gmail.com"
+git config user.email "gael.varoquaux+dirty_cat@gmail.com"
 git config user.name $USERNAME
 git config push.default matching
 git add -f $dir/

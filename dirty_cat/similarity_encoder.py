@@ -9,8 +9,10 @@ from sklearn.utils import check_array
 import jellyfish
 import Levenshtein as lev
 
+from dirty_cat import string_distances
 
-def ngram_similarity(X, cats, n_min, n_max, sim_type=None, dtype=np.float64):
+
+def ngram_similarity(X, cats, n_min, n_max, dtype=np.float64):
     """
     Similarity encoding for dirty categorical variables:
         Given to arrays of strings, returns the
@@ -20,13 +22,12 @@ def ngram_similarity(X, cats, n_min, n_max, sim_type=None, dtype=np.float64):
     ngram_sim(s_i, s_j) =
         ||min(ci, cj)||_1 / (||ci||_1 + ||cj||_1 - ||min(ci, cj)||_1)
     """
-
     unq_X = np.unique(X)
-    cats = ['  %s  ' % cat for cat in cats]
-    unq_X_ = np.array(['  %s  ' % x for x in unq_X])
-
+    cats = np.array([' ' + cat + ' ' for cat in cats])
+    unq_X_ = np.array([' ' + x + ' ' for x in unq_X])
     vectorizer = CountVectorizer(analyzer='char', ngram_range=(n_min, n_max))
-    count2 = vectorizer.fit_transform(cats)
+    vectorizer.fit(np.concatenate((cats, unq_X_)))
+    count2 = vectorizer.transform(cats)
     count1 = vectorizer.transform(unq_X_)
     sum2 = count2.sum(axis=1)
     SE_dict = {}
@@ -43,13 +44,13 @@ def ngram_similarity(X, cats, n_min, n_max, sim_type=None, dtype=np.float64):
 
 
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, similarity_type='ngram',
+    def __init__(self, similarity='similaritym',
                  n_min=3, n_max=3, categories='auto',
                  dtype=np.float64, handle_unknown='ignore'):
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
-        self.similarity_type = similarity_type
+        self.similarity = similarity
         self.n_min = n_min
         self.n_max = n_max
 
@@ -95,14 +96,17 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         """Transform X using specified encoding scheme.
+
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to encode.
+
         Returns
         -------
         X_out : sparse matrix or a 2-d array
             Transformed input.
+
         """
         X_temp = check_array(X, dtype=None)
         if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
@@ -133,7 +137,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                     Xi[~valid_mask] = self.categories_[i][0]
             X_int[:, i] = self._label_encoders_[i].transform(Xi)
 
-        if self.similarity_type == 'levenshtein-ratio':
+        if self.similarity == 'levenshtein-ratio':
             out = []
             for j, cats in enumerate(self.categories_):
                 unqX = np.unique(X[:, j])
@@ -145,7 +149,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                 out.append(encoder)
             return np.hstack(out)
 
-        if self.similarity_type == 'jaro-winkler':
+        if self.similarity == 'jaro-winkler':
             out = []
             for j, cats in enumerate(self.categories_):
                 unqX = np.unique(X[:, j])
@@ -157,7 +161,19 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                 out.append(encoder)
             return np.hstack(out)
 
-        if self.similarity_type == 'ngram':
+        # if self.similarity == 'ngram2':
+        #     out = []
+        #     for j, cats in enumerate(self.categories_):
+        #         unqX = np.unique(X[:, j])
+        #         vect = np.vectorize(string_distances.ngram_similarity)
+        #         encoder_dict = {x: vect(x, cats.reshape(1, -1), self.n_min)
+        #                         for x in unqX}
+        #         encoder = [encoder_dict[x] for x in X[:, j]]
+        #         encoder = np.vstack(encoder)
+        #         out.append(encoder)
+        #     return np.hstack(out)
+
+        if self.similarity == 'ngram':
             out = []
             for j, cats in enumerate(self.categories_):
                 encoder = ngram_similarity(X[:, j], cats,
