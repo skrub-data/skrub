@@ -82,7 +82,7 @@ def levenshtein(seq1, seq2):
 
 def levenshtein_ratio(seq1, seq2):
     if _LEVENSHTEIN_AVAILABLE:
-        return levenshtein_ratio(seq1, seq2)
+        return Levenshtein.ratio(seq1, seq2)
     total_len = len(seq1) + len(seq2)
     if total_len == 0:
         return 1.
