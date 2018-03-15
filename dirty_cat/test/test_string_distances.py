@@ -16,6 +16,8 @@ def _random_string_pairs(n_pairs=50):
     return pairs
 
 
+# TODO: some factorization of what is common for distances;
+# check results for same examples on all distances
 def _check_levenshtein_example_results(levenshtein_dist):
     assert levenshtein_dist('', '') == 0
     assert levenshtein_dist('', 'abc') == 3
