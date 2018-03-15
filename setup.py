@@ -51,5 +51,5 @@ if __name__ == '__main__':
           packages=['dirty_cat'],
           package_data={'dirty_cat': ['VERSION.txt']},
           install_requires=['jellyfish', 'python-Levenshtein',
-                            'distance', 'sklearn', 'numpy', 'scipy'],
+                            'distance', 'sklearn', 'numpy', 'scipy','pandas'],
           **extra_setuptools_args)
