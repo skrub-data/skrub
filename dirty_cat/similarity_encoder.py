@@ -43,7 +43,7 @@ def ngram_similarity(X, cats, n_min, n_max, dtype=np.float64):
 
 
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, similarity='similaritym',
+    def __init__(self, similarity='ngram',
                  n_min=3, n_max=3, categories='auto',
                  dtype=np.float64, handle_unknown='ignore'):
         self.categories = categories

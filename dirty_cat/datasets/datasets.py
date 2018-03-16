@@ -3,12 +3,12 @@ import os
 
 # TODO: speficy pandas in dependencies
 
-FOLDER_PATH= os.path.dirname(os.path.realpath(__file__))
+FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 print(FOLDER_PATH)
 DATA_NAME = 'midwest_survey.csv'
 
 
-def fetch_data():
+def fetch_midwest_survey():
     """
     function that fetches example data
     - either from the internet
@@ -21,4 +21,3 @@ def fetch_data():
     """
 
     return pd.read_csv(os.path.join(FOLDER_PATH, 'data', DATA_NAME))
-
