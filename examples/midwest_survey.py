@@ -1,4 +1,7 @@
 """
+Semantic variation in the "midwest"
+====================================
+
 base example script. the midwest survey datasets will be included in the
 package because of its small size (500kb)
 """
