@@ -1,5 +1,8 @@
 """
 Semantic variation in the "Midwest"
+===================================
+
+Benchmark of encoders for the midwest_survey dataset
 """
 
 import numpy as np
