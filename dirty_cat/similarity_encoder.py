@@ -43,6 +43,48 @@ def ngram_similarity(X, cats, n_min, n_max, dtype=np.float64):
 
 
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
+    """Encode categorical features as a numeric array.
+    The input to this transformer should be an array-like of integers or
+    strings, denoting the values taken on by categorical (discrete) features.
+    The method is based on calculating the morphological similarities
+    between the categories.
+    The features can be encoded using one of the implemented string
+    similarities: ``similarity='ngram'`` (default), 'levenshtein-ratio' or
+    'jaro-winkler'.
+    This encoding is an alternative to OneHotEncoder in the case of
+    dirty categorical variables.
+
+    Parameters
+    ----------
+    similarity : str, 'ngram', 'levenshtein-ratio' or 'jaro-winkler'
+        The type of similarity to use (default is 'ngram'):
+        - 'ngram': n-gram similarity between two strings
+        - 'levenshtein-ratio':
+        - 'jaro-winkler':
+    categories : 'auto' or a list of lists/arrays of values.
+        Categories (unique values) per feature:
+        - 'auto' : Determine categories automatically from the training data.
+        - list : ``categories[i]`` holds the categories expected in the ith
+          column. The passed categories must be sorted and should not mix
+          strings and numeric values.
+        The used categories can be found in the ``categories_`` attribute.
+    dtype : number type, default np.float64
+        Desired dtype of output.
+    handle_unknown : 'error' (default) or 'ignore'
+        Whether to raise an error or ignore if a unknown categorical feature is
+        present during transform (default is to raise). When this parameter
+        is set to 'ignore' and an unknown category is encountered during
+        transform, the resulting one-hot encoded columns for this feature
+        will be all zeros. In the inverse transform, an unknown category
+        will be denoted as None.
+
+    Attributes
+    ----------
+    categories_ : list of arrays
+        The categories of each feature determined during fitting
+        (in order corresponding with output of ``transform``).
+    """
+
     def __init__(self, similarity='ngram',
                  n_min=3, n_max=3, categories='auto',
                  dtype=np.float64, handle_unknown='ignore'):
@@ -54,6 +96,16 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
         self.n_max = n_max
 
     def fit(self, X, y=None):
+        """Fit the CategoricalEncoder to X.
+        Parameters
+        ----------
+        X : array-like, shape [n_samples, n_features]
+            The data to determine the categories of each feature.
+        Returns
+        -------
+        self
+        """
+
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
@@ -103,8 +155,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        X_out : sparse matrix or a 2-d array
-            Transformed input.
+        X_out : 2-d array transformed input.
 
         """
         X_temp = check_array(X, dtype=None)
@@ -159,18 +210,6 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                 encoder = np.vstack(encoder)
                 out.append(encoder)
             return np.hstack(out)
-
-        # if self.similarity == 'ngram2':
-        #     out = []
-        #     for j, cats in enumerate(self.categories_):
-        #         unqX = np.unique(X[:, j])
-        #         vect = np.vectorize(string_distances.ngram_similarity)
-        #         encoder_dict = {x: vect(x, cats.reshape(1, -1), self.n_min)
-        #                         for x in unqX}
-        #         encoder = [encoder_dict[x] for x in X[:, j]]
-        #         encoder = np.vstack(encoder)
-        #         out.append(encoder)
-        #     return np.hstack(out)
 
         if self.similarity == 'ngram':
             out = []
