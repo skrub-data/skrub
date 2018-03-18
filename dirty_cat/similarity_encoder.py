@@ -11,7 +11,7 @@ import jellyfish
 from dirty_cat import string_distances
 
 
-def ngram_similarity(X, cats, n_min, n_max, dtype=np.float64):
+def ngram_similarity(X, cats, ngram_range, dtype=np.float64):
     """
     Similarity encoding for dirty categorical variables:
         Given to arrays of strings, returns the
@@ -21,10 +21,11 @@ def ngram_similarity(X, cats, n_min, n_max, dtype=np.float64):
     ngram_sim(s_i, s_j) =
         ||min(ci, cj)||_1 / (||ci||_1 + ||cj||_1 - ||min(ci, cj)||_1)
     """
+    min_n, max_n = ngram_range
     unq_X = np.unique(X)
     cats = np.array([' %s ' % cat for cat in cats])
     unq_X_ = np.array([' %s ' % x for x in unq_X])
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(n_min, n_max))
+    vectorizer = CountVectorizer(analyzer='char', ngram_range=(min_n, max_n))
     vectorizer.fit(np.concatenate((cats, unq_X_)))
     count2 = vectorizer.transform(cats)
     count1 = vectorizer.transform(unq_X_)
@@ -86,14 +87,13 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, similarity='ngram',
-                 n_min=3, n_max=3, categories='auto',
+                 ngram_range=(3, 3), categories='auto',
                  dtype=np.float64, handle_unknown='ignore'):
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
         self.similarity = similarity
-        self.n_min = n_min
-        self.n_max = n_max
+        self.ngram_range = ngram_range
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
@@ -212,10 +212,11 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
             return np.hstack(out)
 
         if self.similarity == 'ngram':
+            min_n, max_n = self.ngram_range
             out = []
             for j, cats in enumerate(self.categories_):
                 encoder = ngram_similarity(X[:, j], cats,
-                                           self.n_min, self.n_max,
+                                           ngram_range=(min_n, max_n),
                                            dtype=self.dtype)
                 out.append(encoder)
             return np.hstack(out)

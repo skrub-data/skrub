@@ -8,14 +8,12 @@ Benchmark of encoders for the midwest_survey dataset
 import numpy as np
 from scipy import sparse
 
-from sklearn.pipeline import FeatureUnion
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import RidgeClassifierCV
 from sklearn.model_selection import cross_val_score
 
 from dirty_cat.datasets import fetch_midwest_survey
