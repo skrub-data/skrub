@@ -16,9 +16,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
 
 
 # -- General configuration ------------------------------------------------
@@ -37,6 +35,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinx.ext.githubpages',
               'sphinx.ext.napoleon',
+              'sphinx_gallery.gen_gallery',
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -162,3 +161,13 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+# -- sphinx-gallery configuration -----------------------------------------
+sphinx_gallery_conf = {
+    'doc_module': 'dirty_cat',
+    'filename_pattern': '',
+    'backreferences_dir': os.path.join('generated'),
+    'reference_url': {
+        'dirty_cat': None}
+}
+

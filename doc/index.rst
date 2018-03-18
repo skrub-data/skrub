@@ -17,6 +17,8 @@ API documentation
 .. autoclass:: TargetEncoder
     :members:
 
+.. include:: auto_examples/index.rst
+
 Indices and tables
 ==================
 

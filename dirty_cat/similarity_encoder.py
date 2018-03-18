@@ -7,7 +7,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 
 import jellyfish
-import Levenshtein as lev
 
 from dirty_cat import string_distances
 
@@ -141,7 +140,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
             out = []
             for j, cats in enumerate(self.categories_):
                 unqX = np.unique(X[:, j])
-                vect = np.vectorize(lev.ratio)
+                vect = np.vectorize(string_distances.levenshtein_ratio)
                 encoder_dict = {x: vect(x, cats.reshape(1, -1))
                                 for x in unqX}
                 encoder = [encoder_dict[x] for x in X[:, j]]
