@@ -1,5 +1,5 @@
 """
-Prediction example with 'midwest_survey' dataset.
+Semantic variation in the "Midwest"
 """
 
 import numpy as np
