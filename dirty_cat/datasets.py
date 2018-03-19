@@ -2,7 +2,6 @@ import os
 
 
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
-DATA_NAME = 'midwest_survey.csv.gz'
 
 
 def fetch_midwest_survey():
@@ -17,4 +16,12 @@ def fetch_midwest_survey():
     :return:
     """
 
-    return os.path.join(FOLDER_PATH, 'data', DATA_NAME)
+    return os.path.join(FOLDER_PATH, 'data', 'midwest_survey.csv.gz')
+
+
+def fetch_employee_salaries():
+    '''
+    Fetch employee_salaries dataset
+    '''
+
+    return os.path.join(FOLDER_PATH, 'data', 'employee_salaries.csv.gz')
