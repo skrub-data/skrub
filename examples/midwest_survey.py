@@ -18,7 +18,7 @@ from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import StratifiedKFold
 
 from dirty_cat import datasets
 from dirty_cat import SimilarityEncoder
@@ -42,47 +42,74 @@ for method in ['one-hot', 'similarity']:
     y = df[target_column].values.ravel()
 
     # Transform the data into a numerical matrix
-    feature_columns = [
-        ('In your own words, what would you call the part of the country '
-         'you live in now?', method),
-        ('Personally identification as a Midwesterner?', 'one-hot'),
-        ('Illinois in MW?', 'one-hot'),
-        ('Indiana in MW?', 'one-hot'),
-        ('Kansas in MW?', 'one-hot'),
-        ('Iowa in MW?', 'one-hot'),
-        ('Michigan in MW?', 'one-hot'),
-        ('Minnesota in MW?', 'one-hot'),
-        ('Missouri in MW?', 'one-hot'),
-        ('Nebraska in MW?', 'one-hot'),
-        ('North Dakota in MW?', 'one-hot'),
-        ('Ohio in MW?', 'one-hot'),
-        ('South Dakota in MW?', 'one-hot'),
-        ('Wisconsin in MW?', 'one-hot'),
-        ('Arkansas in MW?', 'one-hot'),
-        ('Colorado in MW?', 'one-hot'),
-        ('Kentucky in MW?', 'one-hot'),
-        ('Oklahoma in MW?', 'one-hot'),
-        ('Pennsylvania in MW?', 'one-hot'),
-        ('West Virginia in MW?', 'one-hot'),
-        ('Montana in MW?', 'one-hot'),
-        ('Wyoming in MW?', 'one-hot'),
-        ('Gender', 'one-hot'),
-        ('Age', 'one-hot'),
-        ('Household Income', 'one-hot'),
-        ('Education', 'one-hot'),
-        ]
+    encoder_type = {
+        'one-hot': [
+            'Personally identification as a Midwesterner?',
+            'Illinois in MW?',
+            'Indiana in MW?',
+            'Kansas in MW?',
+            'Iowa in MW?',
+            'Michigan in MW?',
+            'Minnesota in MW?',
+            'Missouri in MW?',
+            'Nebraska in MW?',
+            'North Dakota in MW?',
+            'Ohio in MW?',
+            'South Dakota in MW?',
+            'Wisconsin in MW?',
+            'Arkansas in MW?',
+            'Colorado in MW?',
+            'Kentucky in MW?',
+            'Oklahoma in MW?',
+            'Pennsylvania in MW?',
+            'West Virginia in MW?',
+            'Montana in MW?',
+            'Wyoming in MW?',
+            'Gender',
+            'Age',
+            'Household Income',
+            'Education']
+        }
+    try:
+        encoder_type[method].append(
+            'In your own words, what would you call the part of the country '
+            'you live in now?')
+    except KeyError:
+        encoder_type[method] = ('In your own words, what would you call the '
+                               'part of the country you live in now?')
+
     # OneHotEncoder needs numerical data, hence we first use LabelEncoder
     label_encoder = LabelEncoder()
-    onehot_columns = [col for col, enc in feature_columns if enc == 'one-hot']
-    df[onehot_columns] = df[onehot_columns].apply(label_encoder.fit_transform)
+    df[encoder_type['one-hot']] = df[
+        encoder_type['one-hot']].apply(label_encoder.fit_transform)
 
-    X = [encoder_dict[encoder].fit_transform(df[column].values.reshape(-1, 1))
-         for column, encoder in feature_columns]
-    X = sparse.hstack(X)
+    cv = StratifiedKFold(n_splits=3, random_state=12, shuffle=True)
 
-    # Now predict whether or not each row is about the midwest
-    classifier = RandomForestClassifier(random_state=5)
+    scores = []
+    for train_index, test_index in cv.split(df, df[target_column]):
+        X_train = [
+            encoder_dict[encoder].fit_transform(
+            df.loc[train_index, encoder_type[encoder]
+                   ].values.reshape(len(train_index), -1))
+            for encoder in encoder_type]
+        X_train = sparse.hstack(X_train)
+        y_train = y[train_index]
+
+        X_test = [
+            encoder_dict[encoder].transform(
+            df.loc[test_index, encoder_type[encoder]
+                   ].values.reshape(len(test_index), -1))
+            for encoder in encoder_type]
+        X_test = sparse.hstack(X_test)
+        y_test = y[test_index]
+        X_test.shape
+        X_train.shape
+        # Now predict whether or not each row is about the midwest
+        classifier = RandomForestClassifier(random_state=5)
+        classifier.fit(X_train, y_train)
+        score = classifier.score(X_test, y_test)
+        scores.append(score)
+
     print('%s encoding' % method)
-    scores = cross_val_score(classifier, X, y, cv=5)
     print('Accuracy score:  mean: %.3f; std: %.3f\n'
           % (np.mean(scores), np.std(scores)))
