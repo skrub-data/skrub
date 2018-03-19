@@ -117,7 +117,7 @@ conda update --yes --quiet conda
 conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
   pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx=1.6.2 \
-  scikit-learn="${SCIKIT_LEARN_VERSION:-*}" \
+  pillow scikit-learn="${SCIKIT_LEARN_VERSION:-*}" \
   pandas="${PANDAS_VERSION:-*}"
 
 source activate testenv
