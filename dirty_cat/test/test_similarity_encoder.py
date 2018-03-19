@@ -1,6 +1,4 @@
 import numpy as np
-import Levenshtein as lev
-from jellyfish import jaro_distance
 
 from dirty_cat import similarity_encoder, string_distances
 
@@ -12,6 +10,7 @@ def test_similarity_encoder():
     similarities = [
         'levenshtein-ratio',
         'jaro-winkler',
+        'jaro',
         'ngram'
         ]
 
@@ -25,14 +24,21 @@ def test_similarity_encoder():
             ans = np.zeros((len(X_test), len(X)))
             for i, x_t in enumerate(X_test.reshape(-1)):
                 for j, x in enumerate(X.reshape(-1)):
-                    ans[i, j] = lev.ratio(x_t, x)
+                    ans[i, j] = string_distances.levenshtein_ratio(x_t, x)
             assert np.array_equal(encoder, ans)
 
         if similarity == 'jaro-winkler':
             ans = np.zeros((len(X_test), len(X)))
             for i, x_t in enumerate(X_test.reshape(-1)):
                 for j, x in enumerate(X.reshape(-1)):
-                    ans[i, j] = jaro_distance(x_t, x)
+                    ans[i, j] = string_distances.jaro_winkler(x_t, x)
+            assert np.array_equal(encoder, ans)
+
+        if similarity == 'jaro':
+            ans = np.zeros((len(X_test), len(X)))
+            for i, x_t in enumerate(X_test.reshape(-1)):
+                for j, x in enumerate(X.reshape(-1)):
+                    ans[i, j] = string_distances.jaro(x_t, x)
             assert np.array_equal(encoder, ans)
 
         if similarity == 'ngram':

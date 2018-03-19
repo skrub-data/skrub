@@ -121,7 +121,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
 
 source activate testenv
 pip install sphinx-gallery
-pip install jellyfish python-Levenshtein distance
+pip install python-Levenshtein distance
 # Use numpydoc master (for now)
 pip install git+https://github.com/numpy/numpydoc
 
