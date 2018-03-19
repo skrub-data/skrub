@@ -88,5 +88,5 @@ for method in ['one-hot', 'similarity']:
         scores.append(score)
 
     print('%s encoding' % method)
-    print('Accuracy score:  mean: %.3f; std: %.3f\n'
+    print('R^2 score:  mean: %.3f; std: %.3f\n'
           % (np.mean(scores), np.std(scores)))
