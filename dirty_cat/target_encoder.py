@@ -71,12 +71,11 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.categories_ = [le.classes_ for le in self._label_encoders_]
         self.classes_ = np.unique(y)
 
-        self.Eyx_ = {c: [{cat: np.mean(y[X[:, j] == cat])
+        self.Eyx_ = {c: [{cat: np.mean((y == c)[X[:, j] == cat])
                           for cat in self.categories_[j]}
                          for j in range(len(self.categories_))]
                      for c in self.classes_}
-        self.Ey_ = {c: [np.mean(y) for i in range(len(self.categories_))]
-                    for c in self.classes_}
+        self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
         self.counter_ = {j: collections.Counter(X[:, j])
                          for j in range(n_features)}
         return self
@@ -123,42 +122,40 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                     Xi[~valid_mask] = self.categories_[i][0]
             X_int[:, i] = self._label_encoders_[i].transform(Xi)
 
-        if self.clf_type in ['binary-clf', 'regression']:
-            out = []
-            for j, cats in enumerate(self.categories_):
-                unqX = np.unique(X[:, j])
-                n = len(X[:, j])
-                k = len(cats)
-                encoder = {x: 0 for x in unqX}
-                if self.clf_type in ['binary-clf', 'regression']:
+        out = []
+        for j, cats in enumerate(self.categories_):
+            unqX = np.unique(X[:, j])
+            n = len(X[:, j])
+            k = len(cats)
+            encoder = {x: 0 for x in unqX}
+            if self.clf_type in ['binary-clf', 'regression']:
+                for x in unqX:
+                    if x not in cats:
+                        Eyx = 0
+                    else:
+                        Eyx = self.Eyx_[self.classes_[1]][j][x]
+                    lambda_n = lambda_(self.counter_[j][x], n/k)
+                    encoder[x] = lambda_n*Eyx + \
+                        (1 - lambda_n)*self.Ey_[self.classes_[1]]
+                x_out = np.zeros((len(X[:, j]), 1))
+                for i, x in enumerate(X[:, j]):
+                    x_out[i, 0] = encoder[x]
+                out.append(x_out.reshape(-1, 1))
+            if self.clf_type == 'multiclass-clf':
+                x_out = np.zeros((len(X[:, j]), len(self.classes_)))
+                lambda_n = {x: 0 for x in unqX}
+                for x in unqX:
+                    lambda_n[x] = lambda_(self.counter_[j][x], n/k)
+                for k, c in enumerate(np.unique(self.classes_)):
                     for x in unqX:
                         if x not in cats:
                             Eyx = 0
                         else:
-                            Eyx = self.Eyx_[self.classes_[1]][j][x]
-                        lambda_n = lambda_(self.counter_[j][x], n/k)
-                        print(X[:, j])
-                        encoder[x] = lambda_n*Eyx + \
-                            (1 - lambda_n)*self.Ey_[self.classes_[1]][j]
-                    x_out = np.zeros((len(X[:, j]), 1))
+                            Eyx = self.Eyx_[c][j][x]
+                        encoder[x] = lambda_n[x]*Eyx + \
+                            (1 - lambda_n[x])*self.Ey_[c]
                     for i, x in enumerate(X[:, j]):
-                        x_out[i, 0] = encoder[x]
-                    out.append(x_out.reshape(-1, 1))
-                if self.clf_type == 'multiclass-clf':
-                    x_out_ = np.zeros((len(cats), len(self.classes_)))
-                    lambda_n = {x: 0 for x in unqX}
-                    for x in unqX:
-                        lambda_n[x] = lambda_(self.counter_[j][x], n/k)
-                    for k, c in enumerate(np.unique(self.classes_)):
-                        for x in unqX:
-                            if x not in cats:
-                                Eyx = 0
-                            else:
-                                Eyx = self.Eyx_[c][j][x]
-                            encoder[x] = lambda_n[x]*Eyx + \
-                                (1 - lambda_n[x])*self.Ey_[c][j]
-                        for i, x in enumerate(X[:, j]):
-                            x_out_[i, k] = encoder[x]
-                    out.append(x_out_)
-            out = np.hstack(out)
-            return out
+                        x_out[i, k] = encoder[x]
+                out.append(x_out)
+        out = np.hstack(out)
+        return out
