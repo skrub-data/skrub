@@ -69,15 +69,24 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 le.classes_ = np.array(self.categories[j])
 
         self.categories_ = [le.classes_ for le in self._label_encoders_]
-        self.classes_ = np.unique(y)
 
-        self.Eyx_ = {c: [{cat: np.mean((y == c)[X[:, j] == cat])
+        if self.clf_type in ['binary-clf', 'regression']:
+            self.Eyx_ = [{cat: np.mean(y[X[:, j] == cat])
                           for cat in self.categories_[j]}
                          for j in range(len(self.categories_))]
-                     for c in self.classes_}
-        self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
-        self.counter_ = {j: collections.Counter(X[:, j])
-                         for j in range(n_features)}
+            self.Ey_ = np.mean(y)
+            self.counter_ = {j: collections.Counter(X[:, j])
+                             for j in range(n_features)}
+        if self.clf_type in ['multiclass-clf']:
+            self.classes_ = np.unique(y)
+
+            self.Eyx_ = {c: [{cat: np.mean((y == c)[X[:, j] == cat])
+                              for cat in self.categories_[j]}
+                             for j in range(len(self.categories_))]
+                         for c in self.classes_}
+            self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
+            self.counter_ = {j: collections.Counter(X[:, j])
+                             for j in range(n_features)}
         return self
 
     def transform(self, X):
@@ -133,10 +142,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                     if x not in cats:
                         Eyx = 0
                     else:
-                        Eyx = self.Eyx_[self.classes_[1]][j][x]
+                        Eyx = self.Eyx_[j][x]
                     lambda_n = lambda_(self.counter_[j][x], n/k)
-                    encoder[x] = lambda_n*Eyx + \
-                        (1 - lambda_n)*self.Ey_[self.classes_[1]]
+                    encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
                 x_out = np.zeros((len(X[:, j]), 1))
                 for i, x in enumerate(X[:, j]):
                     x_out[i, 0] = encoder[x]
