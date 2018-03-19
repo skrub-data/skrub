@@ -45,6 +45,7 @@ def ngram_similarity(X, cats, ngram_range, dtype=np.float64):
 
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
     """Encode categorical features as a numeric array.
+
     The input to this transformer should be an array-like of integers or
     strings, denoting the values taken on by categorical (discrete) features.
     The method is based on calculating the morphological similarities
@@ -64,11 +65,13 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
         - 'jaro-winkler':
     categories : 'auto' or a list of lists/arrays of values.
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the ith
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
-        The used categories can be found in the ``categories_`` attribute.
+
+        The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.
     handle_unknown : 'error' (default) or 'ignore'
