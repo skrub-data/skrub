@@ -32,7 +32,7 @@ encoder_dict = {
 
 data_file = datasets.fetch_employee_salaries()
 
-for method in ['one-hot', 'target', 'similarity']:
+for method in ['one-hot', 'similarity']:
     # Load the data
     df = pd.read_csv(data_file).astype(str)
     df['Current Annual Salary'] = [float(s[1:]) for s
@@ -79,7 +79,7 @@ for method in ['one-hot', 'target', 'similarity']:
         X_test = sparse.hstack(X_test).toarray()
 
         # Now predict the salary of each worker
-        classifier = RidgeCV(normalize=True)
+        classifier = RidgeCV()
         classifier.fit(X_train, y_train)
         score = classifier.score(X_test, y_test)
         scores.append(score)
