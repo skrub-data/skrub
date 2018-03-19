@@ -12,6 +12,46 @@ def lambda_(x, n):
 
 
 class TargetEncoder(BaseEstimator, TransformerMixin):
+    """Encode categorical features as a numeric array given a target vector.
+
+    Each category is encoded given the effect that it has in the
+    target variable y. The method considers that categorical
+    variables can present rare categories. It represents each category by the
+    probability of y conditional on this category.
+    In addition it takes an empirical Bayes approach to shrink the estimate.
+
+    Parameters
+    ----------
+    categories : 'auto' or a list of lists/arrays of values.
+        Categories (unique values) per feature:
+
+        - 'auto' : Determine categories automatically from the training data.
+        - list : ``categories[i]`` holds the categories expected in the ith
+          column. The passed categories must be sorted and should not mix
+          strings and numeric values.
+
+        The categories used can be found in the ``categories_`` attribute.
+
+    clf_type : string {'regression', 'binary-clf', 'multiclass-clf'}
+        The type of classification/regression problem.
+
+    dtype : number type, default np.float64
+        Desired dtype of output.
+
+    handle_unknown : 'error' (default) or 'ignore'
+        Whether to raise an error or ignore if a unknown categorical feature is
+        present during transform (default is to raise). When this parameter
+        is set to 'ignore' and an unknown category is encountered during
+        transform, the resulting one-hot encoded columns for this feature
+        will be all zeros. In the inverse transform, an unknown category
+        will be denoted as None.
+
+    Attributes
+    ----------
+    categories_ : list of arrays
+        The categories of each feature determined during fitting
+        (in order corresponding with output of ``transform``).
+    """
     def __init__(self,
                  categories='auto',
                  clf_type='binary-clf',
@@ -28,6 +68,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to determine the categories of each feature.
+        y : array
+            The associated target vector.
+
         Returns
         -------
         self
@@ -69,15 +112,24 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 le.classes_ = np.array(self.categories[j])
 
         self.categories_ = [le.classes_ for le in self._label_encoders_]
-        self.classes_ = np.unique(y)
 
-        self.Eyx_ = {c: [{cat: np.mean((y == c)[X[:, j] == cat])
+        if self.clf_type in ['binary-clf', 'regression']:
+            self.Eyx_ = [{cat: np.mean(y[X[:, j] == cat])
                           for cat in self.categories_[j]}
                          for j in range(len(self.categories_))]
-                     for c in self.classes_}
-        self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
-        self.counter_ = {j: collections.Counter(X[:, j])
-                         for j in range(n_features)}
+            self.Ey_ = np.mean(y)
+            self.counter_ = {j: collections.Counter(X[:, j])
+                             for j in range(n_features)}
+        if self.clf_type in ['multiclass-clf']:
+            self.classes_ = np.unique(y)
+
+            self.Eyx_ = {c: [{cat: np.mean((y == c)[X[:, j] == cat])
+                              for cat in self.categories_[j]}
+                             for j in range(len(self.categories_))]
+                         for c in self.classes_}
+            self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
+            self.counter_ = {j: collections.Counter(X[:, j])
+                             for j in range(n_features)}
         return self
 
     def transform(self, X):
@@ -85,12 +137,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape [n_samples, n_features]
-            The data to encode.
+        X : array-like, shape [n_samples, n_features_new]
+            The data to encode. 
 
         Returns
         -------
-        X_out : 2-d array
+        X_new : 2-d array
             Transformed input.
         """
         X_temp = check_array(X, dtype=None)
@@ -133,10 +185,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                     if x not in cats:
                         Eyx = 0
                     else:
-                        Eyx = self.Eyx_[self.classes_[1]][j][x]
+                        Eyx = self.Eyx_[j][x]
                     lambda_n = lambda_(self.counter_[j][x], n/k)
-                    encoder[x] = lambda_n*Eyx + \
-                        (1 - lambda_n)*self.Ey_[self.classes_[1]]
+                    encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
                 x_out = np.zeros((len(X[:, j]), 1))
                 for i, x in enumerate(X[:, j]):
                     x_out[i, 0] = encoder[x]

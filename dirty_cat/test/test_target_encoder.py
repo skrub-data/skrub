@@ -45,10 +45,9 @@ def test_similarity_encoder():
     encoder.fit(X, y)
     for j in range(X.shape[1]):
         assert np.array_equal(encoder.categories_[j], np.unique(X[:, j]))
-    assert np.array_equal(np.unique(y), encoder.classes_)
-    assert Ey_ == encoder.Ey_[1]
-    assert encoder.Eyx_[1][0] == Eyx_['color']
-    assert encoder.Eyx_[1][1] == Eyx_['gender']
+    assert Ey_ == encoder.Ey_
+    assert encoder.Eyx_[0] == Eyx_['color']
+    assert encoder.Eyx_[1] == Eyx_['gender']
 
     Xtest1 = np.array(['Red',
                        'red',
