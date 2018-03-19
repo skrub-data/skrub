@@ -84,5 +84,5 @@ for method in ['one-hot', 'similarity']:
     classifier = RandomForestClassifier(random_state=5)
     print('%s encoding' % method)
     scores = cross_val_score(classifier, X, y, cv=5)
-    print('Accuracy:  mean: %.3f; std: %.3f\n'
+    print('Accuracy score:  mean: %.3f; std: %.3f\n'
           % (np.mean(scores), np.std(scores)))
