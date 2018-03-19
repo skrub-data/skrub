@@ -74,6 +74,7 @@ for method in ['one-hot', 'similarity']:
          for column, encoder in feature_columns]
     X = sparse.hstack(X)
 
+    # Now predict whether or not each row is about the midwest
     classifier = RandomForestClassifier(random_state=5)
     print('%s encoding' % method)
     scores = cross_val_score(classifier, X, y, cv=5)

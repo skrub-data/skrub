@@ -2,7 +2,7 @@ import os
 
 
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
-DATA_NAME = 'midwest_survey.csv'
+DATA_NAME = 'midwest_survey.csv.gz'
 
 
 def fetch_midwest_survey():

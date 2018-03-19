@@ -159,8 +159,20 @@ texinfo_documents = [
 ]
 
 
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+# Configuration for intersphinx
+intersphinx_mapping = {
+    'https://docs.python.org/': None,
+    'https://docs.scipy.org/doc/numpy': None,
+    'https://docs.scipy.org/doc/scipy/reference': None,
+    #'http://matplotlib.org/': None,
+    'http://scikit-learn.org/stable': None,
+    #'http://scikit-image.org/docs/stable/': None,
+    #'http://docs.enthought.com/mayavi/mayavi/': None,
+    #'http://www.statsmodels.org/stable/': None,
+    'http://pandas.pydata.org/pandas-docs/stable/': None,
+    #'http://seaborn.pydata.org/': None,
+}
+
 
 # -- sphinx-gallery configuration -----------------------------------------
 sphinx_gallery_conf = {
