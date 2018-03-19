@@ -68,6 +68,10 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
     'jaro-winkler'}
         The type of pairwise string similarity to use.
 
+    ngram_range : tuple (min_n, max_n), default=(3, 3)
+        Only significant for ``similarity='ngram'``. The range of
+        values for the n_gram similarity.
+
     categories : 'auto' or a list of lists/arrays of values.
         Categories (unique values) per feature:
 
