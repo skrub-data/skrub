@@ -2,7 +2,7 @@ import numpy as np
 import Levenshtein as lev
 from jellyfish import jaro_distance
 
-from dirty_cat import similarity_encoder, target_encoder, string_distances
+from dirty_cat import similarity_encoder, string_distances
 
 
 def test_similarity_encoder():
