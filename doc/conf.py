@@ -154,8 +154,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'dirty_cat', u'dirty_cat Documentation',
-     author, 'dirty_cat', 'One line description of project.',
-     'Miscellaneous'),
+     author, 'dirty_cat', 'Learning on non-curater categorical data.',
+     'Data Science'),
 ]
 
 
@@ -164,13 +164,13 @@ intersphinx_mapping = {
     'https://docs.python.org/': None,
     'https://docs.scipy.org/doc/numpy': None,
     'https://docs.scipy.org/doc/scipy/reference': None,
-    #'http://matplotlib.org/': None,
+    'http://matplotlib.org/': None,
     'http://scikit-learn.org/stable': None,
-    #'http://scikit-image.org/docs/stable/': None,
-    #'http://docs.enthought.com/mayavi/mayavi/': None,
-    #'http://www.statsmodels.org/stable/': None,
+    'http://scikit-image.org/docs/stable/': None,
+    'http://docs.enthought.com/mayavi/mayavi/': None,
+    'http://www.statsmodels.org/stable/': None,
     'http://pandas.pydata.org/pandas-docs/stable/': None,
-    #'http://seaborn.pydata.org/': None,
+    'http://seaborn.pydata.org/': None,
 }
 
 
@@ -180,6 +180,16 @@ sphinx_gallery_conf = {
     'filename_pattern': '',
     'backreferences_dir': os.path.join('generated'),
     'reference_url': {
-        'dirty_cat': None}
+        'dirty_cat': None,
+        'numpy': 'http://docs.scipy.org/doc/numpy',
+        'scipy': 'http://docs.scipy.org/doc/scipy/reference',
+        'pandas': 'http://pandas.pydata.org/pandas-docs/stable/',
+        #'seaborn': 'http://seaborn.pydata.org/',
+        #'matplotlib': 'http://matplotlib.org/',
+        'scikit-learn': 'http://scikit-learn.org/stable',
+        #'scikit-image': 'http://scikit-image.org/docs/stable/',
+        #'mayavi': 'http://docs.enthought.com/mayavi/mayavi/',
+        #'statsmodels': 'http://www.statsmodels.org/stable/',
+        },
 }
 
