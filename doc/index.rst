@@ -11,17 +11,27 @@ API documentation
 
 .. currentmodule:: dirty_cat
 
-.. autoclass:: SimilarityEncoder
-    :members:
+Base classes
+------------
 
-.. autoclass:: TargetEncoder
-    :members:
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+
+   SimilarityEncoder
+   TargetEncoder
+
+Datasets for examples
+-----------------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+
+   datasets.fetch_midwest_survey
+
+
 
 .. include:: auto_examples/index.rst
+    :start-line: 2
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

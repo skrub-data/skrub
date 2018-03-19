@@ -29,6 +29,7 @@ import os
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
               'sphinx.ext.doctest',
               'sphinx.ext.intersphinx',
               'sphinx.ext.mathjax',
@@ -81,6 +82,18 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
+
+# -- Options for autodoc / autosummary ------------------------------------
+# generate autosummary even if no references
+autosummary_generate = True
+
+# Add any paths that contain templates here, relative to this directory.
+#templates_path = ['_templates']
+
+
+autodoc_default_flags = ['members', 'inherited-members']
+
+
 
 
 # -- Options for HTML output ----------------------------------------------
