@@ -115,15 +115,14 @@ conda update --yes --quiet conda
 # Configure the conda environment and put it in the path using the
 # provided versions
 conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
-  numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" cython \
-  pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx=1.6.2 pillow \
-  scikit-learn="${SCIKIT_LEARN_VERSION:-*}"
+  numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
+  pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx=1.6.2 \
+  scikit-learn="${SCIKIT_LEARN_VERSION:-*}" \
+  pandas="${PANDAS_VERSION:-*}"
 
 source activate testenv
 pip install sphinx-gallery
-pip install jellyfish python-Levenshtein distance
-# Use numpydoc master (for now)
-pip install git+https://github.com/numpy/numpydoc
+pip install jellyfish python-Levenshtein
 
 # Build and install the project in dev mode
 python setup.py develop
