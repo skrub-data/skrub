@@ -4,8 +4,6 @@ Predicting the salary of employees
 
 Benchmark of encoders for the "employee_salaries" dataset.
 
-Similarity encoding on this column gives much improved performance.
-
 """
 
 import numpy as np
@@ -34,7 +32,7 @@ encoder_dict = {
 
 data_file = datasets.fetch_employee_salaries()
 
-for method in ['one-hot', 'similarity']:
+for method in ['one-hot', 'target', 'similarity']:
     # Load the data
     df = pd.read_csv(data_file).astype(str)
     df['Current Annual Salary'] = [float(s[1:]) for s
@@ -60,7 +58,7 @@ for method in ['one-hot', 'similarity']:
     df[encoder_type['one-hot']] = df[
         encoder_type['one-hot']].apply(label_encoder.fit_transform)
 
-    cv = KFold(n_splits=3, random_state=12, shuffle=True)
+    cv = KFold(n_splits=5, random_state=12, shuffle=True)
 
     scores = []
     for train_index, test_index in cv.split(df, df[target_column]):
@@ -68,7 +66,7 @@ for method in ['one-hot', 'similarity']:
         X_train = [
             encoder_dict[encoder].fit_transform(
                 df.loc[train_index, encoder_type[encoder]
-                       ].values.reshape(len(train_index), -1))
+                       ].values.reshape(len(train_index), -1), y_train)
             for encoder in encoder_type]
         X_train = sparse.hstack(X_train).toarray()
 
@@ -79,10 +77,9 @@ for method in ['one-hot', 'similarity']:
                         ].values.reshape(len(test_index), -1))
             for encoder in encoder_type]
         X_test = sparse.hstack(X_test).toarray()
-        X_test.shape
-        X_train.shape
-        # Now predict whether or not each row is about the midwest
-        classifier = RidgeCV()
+
+        # Now predict the salary of each worker
+        classifier = RidgeCV(normalize=True)
         classifier.fit(X_train, y_train)
         score = classifier.score(X_test, y_test)
         scores.append(score)
