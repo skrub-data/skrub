@@ -8,16 +8,16 @@ Benchmark of encoders for the midwest_survey dataset
 import numpy as np
 from scipy import sparse
 
-from sklearn.pipeline import Pipeline
+import pandas as pd
+
 from sklearn.preprocessing import FunctionTransformer
-from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import cross_val_score
 
-from dirty_cat.datasets import fetch_midwest_survey
-from dirty_cat.similarity_encoder import SimilarityEncoder
+from dirty_cat import datasets
+from dirty_cat import SimilarityEncoder
 
 
 # encoding methods
@@ -28,8 +28,10 @@ encoder_dict = {
     'num': FunctionTransformer(None)
     }
 
+data_file = datasets.fetch_midwest_survey()
+
 for method in ['one-hot', 'similarity']:
-    df = fetch_midwest_survey().astype(str)
+    df = pd.read_csv(data_file).astype(str)
 
     target_column = 'Location (Census Region)'
     y = df[target_column].values.ravel()
@@ -72,13 +74,8 @@ for method in ['one-hot', 'similarity']:
          for column, encoder in feature_columns]
     X = sparse.hstack(X)
 
-    pipeline = Pipeline([
-                         ('scaler', StandardScaler(with_mean=False)),
-                         ('classifier', RandomForestClassifier(
-                             random_state=5))
-                         ])
-
-    print(method)
-    scores = cross_val_score(pipeline, X, y, cv=5)
+    classifier = RandomForestClassifier(random_state=5)
+    print('%s encoding' % method)
+    scores = cross_val_score(classifier, X, y, cv=5)
     print('Accuracy:  mean: %.3f; std: %.3f\n'
           % (np.mean(scores), np.std(scores)))

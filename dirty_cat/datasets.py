@@ -1,7 +1,5 @@
-import pandas as pd
 import os
 
-# TODO: speficy pandas in dependencies
 
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 print(FOLDER_PATH)
@@ -20,4 +18,4 @@ def fetch_midwest_survey():
     :return:
     """
 
-    return pd.read_csv(os.path.join(FOLDER_PATH, 'data', DATA_NAME))
+    return os.path.join(FOLDER_PATH, 'data', DATA_NAME)
