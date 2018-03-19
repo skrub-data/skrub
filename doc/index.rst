@@ -5,11 +5,19 @@ dirty_cat: machine learning on dirty categories
 .. toctree::
    :maxdepth: 2
 
+.. currentmodule:: dirty_cat
+
+`dirty_cat` is a small Python module to perform machine-learning on
+non-curated categories. In particular, it provides encoders that are
+robust to morphological variants, such as typos, in the category strings.
+
+The :class:`SimilarityEncoder` can be used as a drop-in replacement for
+the `scikit-learn <https://scikit-learn.org>`_ class
+:class:`sklearn.preprocessing.OneHotEncoder`.
 
 API documentation
 =================
 
-.. currentmodule:: dirty_cat
 
 Base classes
 ------------
