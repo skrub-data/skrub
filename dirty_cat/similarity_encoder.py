@@ -158,7 +158,8 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        X_out : 2-d array transformed input.
+        X_out : 2-d array
+            Transformed input.
 
         """
         X_temp = check_array(X, dtype=None)

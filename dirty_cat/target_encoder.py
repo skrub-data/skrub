@@ -22,7 +22,16 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.clf_type = clf_type
         self.handle_unknown = handle_unknown
 
-    def fit(self, X, y=None):
+    def fit(self, X, y):
+        """Fit the TargetEncoder to X.
+        Parameters
+        ----------
+        X : array-like, shape [n_samples, n_features]
+            The data to determine the categories of each feature.
+        Returns
+        -------
+        self
+        """
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
@@ -44,28 +53,32 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         self._label_encoders_ = [LabelEncoder() for _ in range(n_features)]
 
-        for i in range(n_features):
-            le = self._label_encoders_[i]
-            Xi = X[:, i]
+        for j in range(n_features):
+            le = self._label_encoders_[j]
+            Xj = X[:, j]
             if self.categories == 'auto':
-                le.fit(Xi)
+                le.fit(Xj)
             else:
                 if self.handle_unknown == 'error':
-                    valid_mask = np.in1d(Xi, self.categories[i])
+                    valid_mask = np.in1d(Xj, self.categories[j])
                     if not np.all(valid_mask):
-                        diff = np.unique(Xi[~valid_mask])
+                        diff = np.unique(Xj[~valid_mask])
                         msg = ("Found unknown categories {0} in column {1}"
-                               " during fit".format(diff, i))
+                               " during fit".format(diff, j))
                         raise ValueError(msg)
-                le.classes_ = np.array(self.categories[i])
+                le.classes_ = np.array(self.categories[j])
 
         self.categories_ = [le.classes_ for le in self._label_encoders_]
+        self.classes_ = np.unique(y)
 
-        self.Eyx_ = [{cat: np.mean(y[X[:, i] == cat])
-                      for cat in self.categories_[i]}
-                     for i in range(len(self.categories_))]
-        self.Ey_ = [np.mean(y)
-                    for i in range(len(self.categories_))]
+        self.Eyx_ = {c: [{cat: np.mean(y[X[:, j] == cat])
+                          for cat in self.categories_[j]}
+                         for j in range(len(self.categories_))]
+                     for c in self.classes_}
+        self.Ey_ = {c: [np.mean(y) for i in range(len(self.categories_))]
+                    for c in self.classes_}
+        self.counter_ = {j: collections.Counter(X[:, j])
+                         for j in range(n_features)}
         return self
 
     def transform(self, X):
@@ -78,7 +91,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        X_out : sparse matrix or a 2-d array
+        X_out : 2-d array
             Transformed input.
         """
         X_temp = check_array(X, dtype=None)
@@ -113,7 +126,6 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         if self.clf_type in ['binary-clf', 'regression']:
             out = []
             for j, cats in enumerate(self.categories_):
-                counter = collections.Counter(X[:, j])
                 unqX = np.unique(X[:, j])
                 n = len(X[:, j])
                 k = len(cats)
@@ -123,31 +135,30 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                         if x not in cats:
                             Eyx = 0
                         else:
-                            Eyx = self.Eyx_[j][x]
-                        lambda_n = lambda_(counter[x], n/k)
+                            Eyx = self.Eyx_[self.classes_[1]][j][x]
+                        lambda_n = lambda_(self.counter_[j][x], n/k)
+                        print(X[:, j])
                         encoder[x] = lambda_n*Eyx + \
-                            (1 - lambda_n)*self.Ey_[j]
+                            (1 - lambda_n)*self.Ey_[self.classes_[1]][j]
                     x_out = np.zeros((len(X[:, j]), 1))
                     for i, x in enumerate(X[:, j]):
                         x_out[i, 0] = encoder[x]
                     out.append(x_out.reshape(-1, 1))
+                if self.clf_type == 'multiclass-clf':
+                    x_out_ = np.zeros((len(cats), len(self.classes_)))
+                    lambda_n = {x: 0 for x in unqX}
+                    for x in unqX:
+                        lambda_n[x] = lambda_(self.counter_[j][x], n/k)
+                    for k, c in enumerate(np.unique(self.classes_)):
+                        for x in unqX:
+                            if x not in cats:
+                                Eyx = 0
+                            else:
+                                Eyx = self.Eyx_[c][j][x]
+                            encoder[x] = lambda_n[x]*Eyx + \
+                                (1 - lambda_n[x])*self.Ey_[c][j]
+                        for i, x in enumerate(X[:, j]):
+                            x_out_[i, k] = encoder[x]
+                    out.append(x_out_)
             out = np.hstack(out)
-        # if self.clf_type == 'multiclass-clf':
-        #     x_out = np.zeros((len(cats), len(np.unique(y_train))))
-        #     lambda_n = {x: 0 for x in unqA}
-        #     y_train2 = {x: 0 for x in unqA}
-        #     for x in unqA:
-        #         lambda_n[x] = lambda_(counter[x], n/k)
-        #         y_train2[x] = y_train[B == x]
-        #     for j, y in enumerate(np.unique(y_train)):
-        #         Ey = sum(y_train == y)/n
-        #         for x in unqA:
-        #             if len(y_train2[x]) == 0:
-        #                 Eyx = 0
-        #             else:
-        #                 Eyx = sum(y_train2[x] == y)/len(y_train2[x])
-        #             encoder[x] = lambda_n[x]*Eyx + (1 - lambda_n[x])*Ey
-        #         for i, x in enumerate(A):
-        #             x_out[i, j] = encoder[x]
-        #
-        #     return out
+            return out
