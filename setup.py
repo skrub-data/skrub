@@ -49,6 +49,6 @@ if __name__ == '__main__':
           ],
           platforms='any',
           packages=['dirty_cat'],
-          package_data={'dirty_cat': ['VERSION.txt']},
+          package_data={'dirty_cat': ['VERSION.txt', 'data/*.csv.gz']},
           install_requires=['sklearn', 'numpy', 'scipy'],
           **extra_setuptools_args)
