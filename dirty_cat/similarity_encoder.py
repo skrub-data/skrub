@@ -50,13 +50,13 @@ _VECTORIZED_EDIT_DISTANCES = {
 
 
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
-    """Encode categorical features as a numeric array.
+    """Encode string categorical features as a numeric array.
 
-    The input to this transformer should be an array-like of integers or
-    strings, denoting the values taken on by categorical (discrete) features.
+    The input to this transformer should be an array-like of
+    strings.
     The method is based on calculating the morphological similarities
     between the categories.
-    The features can be encoded using one of the implemented string
+    The categories can be encoded using one of the implemented string
     similarities: ``similarity='ngram'`` (default), 'levenshtein-ratio',
     'jaro', or 'jaro-winkler'.
     This encoding is an alternative to OneHotEncoder in the case of
@@ -64,12 +64,10 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    similarity : str, 'ngram', 'levenshtein-ratio', 'jaro', or 'jaro-winkler'
-        The type of similarity to use (default is 'ngram'):
-        - 'ngram': n-gram similarity between two strings
-        - 'levenshtein-ratio':
-        - 'jaro':
-        - 'jaro-winkler':
+    similarity : str {'ngram', 'levenshtein-ratio', 'jaro', or
+    'jaro-winkler'}
+        The type of pairwise string similarity to use.
+
     categories : 'auto' or a list of lists/arrays of values.
         Categories (unique values) per feature:
 
@@ -165,7 +163,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        X_out : 2-d array
+        X_new : 2-d array, shape [n_samples, n_features_new]
             Transformed input.
 
         """
@@ -223,4 +221,3 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
             return np.hstack(out)
         else:
             raise ValueError("Unknown similarity: '%s'" % self.similarity)
-
