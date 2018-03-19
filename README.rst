@@ -13,7 +13,7 @@ Dependencies
 
 dirty_cat requires:
 
-- Python (>= 2.7 or >= 3.4)
+- Python (>= 3.5)
 - NumPy (>= 1.8.2)
 - SciPy (>= 0.13.3)
 - scikit-learn
