@@ -122,7 +122,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
 
 source activate testenv
 pip install sphinx-gallery
-pip install jellyfish python-Levenshtein
+pip install python-Levenshtein
 
 # Build and install the project in dev mode
 python setup.py develop

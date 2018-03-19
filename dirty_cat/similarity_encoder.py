@@ -6,7 +6,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 
-import jellyfish
 
 from dirty_cat import string_distances
 
@@ -41,6 +40,13 @@ def ngram_similarity(X, cats, ngram_range, dtype=np.float64):
     for x in X:
         out.append(SE_dict[x])
     return np.nan_to_num(np.vstack(out))
+
+
+_VECTORIZED_EDIT_DISTANCES = {
+    'levenshtein-ratio': np.vectorize(string_distances.levenshtein_ratio),
+    'jaro': np.vectorize(string_distances.jaro),
+    'jaro-winkler': np.vectorize(string_distances.jaro_winkler),
+}
 
 
 class SimilarityEncoder(BaseEstimator, TransformerMixin):
@@ -191,11 +197,13 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                     Xi[~valid_mask] = self.categories_[i][0]
             X_int[:, i] = self._label_encoders_[i].transform(Xi)
 
-        if self.similarity == 'levenshtein-ratio':
+        if self.similarity in ('levenshtein-ratio',
+                               'jaro',
+                               'jaro-winkler'):
             out = []
+            vect = _VECTORIZED_EDIT_DISTANCES[self.similarity]
             for j, cats in enumerate(self.categories_):
                 unqX = np.unique(X[:, j])
-                vect = np.vectorize(string_distances.levenshtein_ratio)
                 encoder_dict = {x: vect(x, cats.reshape(1, -1))
                                 for x in unqX}
                 encoder = [encoder_dict[x] for x in X[:, j]]
@@ -203,19 +211,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                 out.append(encoder)
             return np.hstack(out)
 
-        if self.similarity == 'jaro-winkler':
-            out = []
-            for j, cats in enumerate(self.categories_):
-                unqX = np.unique(X[:, j])
-                vect = np.vectorize(jellyfish.jaro_distance)
-                encoder_dict = {x: vect(x, cats.reshape(1, -1))
-                                for x in unqX}
-                encoder = [encoder_dict[x] for x in X[:, j]]
-                encoder = np.vstack(encoder)
-                out.append(encoder)
-            return np.hstack(out)
-
-        if self.similarity == 'ngram':
+        elif self.similarity == 'ngram':
             min_n, max_n = self.ngram_range
             out = []
             for j, cats in enumerate(self.categories_):
@@ -224,3 +220,6 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                                            dtype=self.dtype)
                 out.append(encoder)
             return np.hstack(out)
+        else:
+            raise ValueError("Unknown similarity: '%s'" % self.similarity)
+

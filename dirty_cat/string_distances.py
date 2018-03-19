@@ -1,6 +1,8 @@
 """
 Some string distances
 """
+import functools
+
 import numpy as np
 
 try:
@@ -80,13 +82,90 @@ def levenshtein(seq1, seq2):
         return levenshtein_array(seq1, seq2)
 
 
-def levenshtein_ratio(seq1, seq2):
-    if _LEVENSHTEIN_AVAILABLE:
-        return Levenshtein.ratio(seq1, seq2)
+def _levenshtein_ratio(seq1, seq2):
+    # Private function not using the Levenshtein package
     total_len = len(seq1) + len(seq2)
     if total_len == 0:
         return 1.
     return (total_len - levenshtein(seq1, seq2)) / total_len
+
+
+if _LEVENSHTEIN_AVAILABLE:
+    levenshtein_ratio = Levenshtein.ratio
+else:
+    levenshtein_ratio = _levenshtein_ratio
+
+
+def _jaro_winkler(seq1, seq2, winkler=False):
+    # Adapted from the jellyfish package
+    # If winkler is False, the Jaro similarity is returned, else the
+    # Jaro-Winkler variant is returned
+
+    seq1_len = len(seq1)
+    seq2_len = len(seq2)
+
+    if not seq1_len or not seq2_len:
+        return 0.0
+
+    min_len = max(seq1_len, seq2_len)
+    search_range = (min_len // 2) - 1
+    if search_range < 0:
+        search_range = 0
+
+    seq1_flags = seq1_len * [False]
+    seq2_flags = seq2_len * [False]
+
+    # looking only within search range, count & flag matched pairs
+    common_chars = 0
+    for i, seq1_ch in enumerate(seq1):
+        low = i - search_range if i > search_range else 0
+        hi = i + search_range if i + search_range < seq2_len else seq2_len - 1
+        for j in range(low, hi + 1):
+            if not seq2_flags[j] and seq2[j] == seq1_ch:
+                seq1_flags[i] = seq2_flags[j] = True
+                common_chars += 1
+                break
+
+    # short circuit if no characters match
+    if not common_chars:
+        return 0.0
+
+    # count transpositions
+    k = trans_count = 0
+    for i, seq1_f in enumerate(seq1_flags):
+        if seq1_f:
+            for j in range(k, seq2_len):
+                if seq2_flags[j]:
+                    k = j + 1
+                    break
+            if seq1[i] != seq2[j]:
+                trans_count += 1
+    trans_count /= 2
+
+    # adjust for similarities in nonmatched characters
+    common_chars = float(common_chars)
+    weight = ((common_chars/seq1_len + common_chars/seq2_len +
+              (common_chars-trans_count) / common_chars)) / 3
+
+    # winkler modification: continue to boost if strings are similar
+    if winkler and weight > 0.7 and seq1_len > 3 and seq2_len > 3:
+        # adjust for up to first 4 chars in common
+        j = min(min_len, 4)
+        i = 0
+        while i < j and seq1[i] == seq2[i] and seq1[i]:
+            i += 1
+        if i:
+            weight += i * 0.1 * (1.0 - weight)
+
+    return weight
+
+
+if _LEVENSHTEIN_AVAILABLE:
+    jaro_winkler = Levenshtein.jaro_winkler
+    jaro = Levenshtein.jaro
+else:
+    jaro_winkler = functools.partial(_jaro_winkler, winkler=True)
+    jaro = _jaro_winkler
 
 
 def get_unique_ngrams(string, n):

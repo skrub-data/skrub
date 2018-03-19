@@ -1,5 +1,11 @@
+import unittest
+
 import numpy as np
-import Levenshtein
+
+try:
+    import Levenshtein
+except ImportError:
+    Levenshtein = False
 
 from dirty_cat import string_distances
 
@@ -50,20 +56,9 @@ def _check_levenshtein_distances():
             a, b) == string_distances.levenshtein_seq(a, b)
         assert string_distances.levenshtein_seq(
             a, b) == string_distances.levenshtein(a, b)
-        assert string_distances.levenshtein_seq(
-            a, b) == Levenshtein.distance(a, b)
-
-
-def test_levenshtein_distances():
-    _check_levenshtein_distances()
-    available = string_distances._LEVENSHTEIN_AVAILABLE
-    # TODO: pytest patch to check which is called
-    # in circleci execute test with and without lev installed
-    try:
-        string_distances._LEVENSHTEIN_AVAILABLE = False
-        _check_levenshtein_distances()
-    finally:
-        string_distances._LEVENSHTEIN_AVAILABLE = available
+        if Levenshtein is not False:
+            assert string_distances.levenshtein_seq(
+                a, b) == Levenshtein.distance(a, b)
 
 
 def test_levenshtein_ratio():
@@ -81,6 +76,40 @@ def test_levenshtein_ratio():
     # assert string_distances.levenshtein_ratio('axcx', 'abcd') == 2
     # assert string_distances.levenshtein_ratio('axcx', 'abcde') == 3
     pass
+
+
+# Tests for jaro
+def test_jaro():
+    # If no character in common: similarity is 0
+    assert string_distances.jaro('Brian', 'Jesus') == 0
+    assert string_distances.jaro_winkler('Brian', 'Jesus') == 0
+
+
+def test_identical_strings():
+    # Test that if 2 strings are the same, the similarity
+    for string1, _ in _random_string_pairs(n_pairs=10):
+        assert string_distances.jaro(string1, string1) == 1
+        assert string_distances.jaro_winkler(string1, string1) == 1
+        assert string_distances.levenshtein_ratio(string1, string1) == 1
+
+
+def test_compare_implementations():
+    # Compare the implementations of python-Levenshtein to our
+    # pure-Python implementations
+    if Levenshtein is False:
+        raise unittest.SkipTest
+    for string1, string2 in _random_string_pairs(n_pairs=10):
+        assert (string_distances._jaro_winkler(string1, string2,
+                    winkler=False)
+                == Levenshtein.jaro(string1, string2)
+               )
+        assert (string_distances._jaro_winkler(string1, string2)
+                == Levenshtein.jaro_winkler(string1, string2)
+               )
+        assert (string_distances.levenshtein_ratio(string1, string2)
+                == Levenshtein.ratio(string1, string2)
+               )
+
 
 
 def test_ngram_similarity():
