@@ -57,17 +57,18 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
     The method is based on calculating the morphological similarities
     between the categories.
     The features can be encoded using one of the implemented string
-    similarities: ``similarity='ngram'`` (default), 'levenshtein-ratio' or
-    'jaro-winkler'.
+    similarities: ``similarity='ngram'`` (default), 'levenshtein-ratio',
+    'jaro', or 'jaro-winkler'.
     This encoding is an alternative to OneHotEncoder in the case of
     dirty categorical variables.
 
     Parameters
     ----------
-    similarity : str, 'ngram', 'levenshtein-ratio' or 'jaro-winkler'
+    similarity : str, 'ngram', 'levenshtein-ratio', 'jaro', or 'jaro-winkler'
         The type of similarity to use (default is 'ngram'):
         - 'ngram': n-gram similarity between two strings
         - 'levenshtein-ratio':
+        - 'jaro':
         - 'jaro-winkler':
     categories : 'auto' or a list of lists/arrays of values.
         Categories (unique values) per feature:
