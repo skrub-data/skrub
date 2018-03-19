@@ -2,7 +2,6 @@ import os
 
 
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
-print(FOLDER_PATH)
 DATA_NAME = 'midwest_survey.csv'
 
 
