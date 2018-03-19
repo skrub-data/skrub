@@ -18,6 +18,10 @@ dirty_cat requires:
 - SciPy (>= 0.13.3)
 - scikit-learn
 
+Optional dependency:
+
+- python-Levenshtein for faster edit distances (not used for the n-gram
+  distance)
 
 User installation
 ~~~~~~~~~~~~~~~~~
