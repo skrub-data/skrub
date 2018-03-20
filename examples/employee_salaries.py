@@ -33,7 +33,7 @@ encoder_dict = {
 
 data_file = datasets.fetch_employee_salaries()
 
-for method in ['one-hot', 'similarity']:
+for method in ['one-hot', 'target', 'similarity']:
     # Load the data
     df = pd.read_csv(data_file).astype(str)
     df['Current Annual Salary'] = [float(s[1:]) for s
