@@ -64,8 +64,8 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    similarity : str {'ngram', 'levenshtein-ratio', 'jaro', or
-    'jaro-winkler'}
+    similarity : str {'ngram', 'levenshtein-ratio', 'jaro', or\
+'jaro-winkler'}
         The type of pairwise string similarity to use.
 
     ngram_range : tuple (min_n, max_n), default=(3, 3)
