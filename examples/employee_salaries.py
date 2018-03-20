@@ -14,6 +14,7 @@ import pandas as pd
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import KFold
 
@@ -69,6 +70,8 @@ for method in ['one-hot', 'target', 'similarity']:
                        ].values.reshape(len(train_index), -1), y_train)
             for encoder in encoder_type]
         X_train = sparse.hstack(X_train).toarray()
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
 
         y_test = y[test_index]
         X_test = [
@@ -77,9 +80,10 @@ for method in ['one-hot', 'target', 'similarity']:
                         ].values.reshape(len(test_index), -1))
             for encoder in encoder_type]
         X_test = sparse.hstack(X_test).toarray()
+        X_test = scaler.transform(X_test)
 
         # Now predict the salary of each worker
-        classifier = RidgeCV(normalize=True)
+        classifier = RidgeCV()
         classifier.fit(X_train, y_train)
         score = classifier.score(X_test, y_test)
         scores.append(score)
