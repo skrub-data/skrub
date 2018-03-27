@@ -37,7 +37,7 @@ Datasets for examples
    :template: function.rst
 
    datasets.fetch_midwest_survey
-
+   datasets.fetch_employee_salaries
 
 
 .. include:: auto_examples/index.rst
