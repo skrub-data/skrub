@@ -120,8 +120,6 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             self.Ey_ = np.mean(y)
             self.counter_ = {j: collections.Counter(X[:, j])
                              for j in range(n_features)}
-            self.k = {j: len(self.counter_[j]))
-                      for j in self.counter_}
         if self.clf_type in ['multiclass-clf']:
             self.classes_ = np.unique(y)
 
@@ -132,6 +130,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
             self.counter_ = {j: collections.Counter(X[:, j])
                              for j in range(n_features)}
+        self.k = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
     def transform(self, X):
