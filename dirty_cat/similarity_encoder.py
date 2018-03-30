@@ -178,8 +178,6 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
             X = X_temp
 
         n_samples, n_features = X.shape
-        X_int = np.zeros_like(X, dtype=np.int)
-        X_mask = np.ones_like(X, dtype=np.bool)
 
         for i in range(n_features):
             Xi = X[:, i]
@@ -191,14 +189,6 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                     msg = ("Found unknown categories {0} in column {1}"
                            " during transform".format(diff, i))
                     raise ValueError(msg)
-                else:
-                    # Set the problematic rows to an acceptable value and
-                    # continue `The rows are marked `X_mask` and will be
-                    # removed later.
-                    X_mask[:, i] = valid_mask
-                    Xi = Xi.copy()
-                    Xi[~valid_mask] = self.categories_[i][0]
-            X_int[:, i] = self._label_encoders_[i].transform(Xi)
 
         if self.similarity in ('levenshtein-ratio',
                                'jaro',
