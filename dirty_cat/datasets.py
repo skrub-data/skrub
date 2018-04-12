@@ -22,7 +22,8 @@ from collections import namedtuple
 
 
 # in nilearn, urllib is used. Here the request package will be used
-# trying to use requests as much as possible (everything excpet the parsing function)
+# trying to use requests as much as possible (everything excpet the
+# parsing function)
 
 class FileFetcherConfig:
     def __init__(self, name, urls: (str, tuple), paths: (str, tuple),
@@ -37,7 +38,8 @@ class FileFetcherConfig:
 # for downlading. So for now we download the data from github
 # however, the data differ a little bit from the two sources
 # so we either have to implement login into _fetch_data
-# or to reverse-engineer the processing script that can transform the data from git
+# or to reverse-engineer the processing script that can transform the data
+# from git
 # to the data from bigml
 # this is true for bigml and midwest survey
 
@@ -114,7 +116,8 @@ medical_charge_config = FetcherConfig(
 employee_salaries_config = FetcherConfig(
     'employee_salaries',
     (UrlInfo(
-        "https://data.montgomerycountymd.gov/api/views/xj3h-s2i7/rows.csv?accessType=DOWNLOAD",
+        "https://data.montgomerycountymd.gov/api/views/"
+        "xj3h-s2i7/rows.csv?accessType=DOWNLOAD",
         ("rows.csv",),
         {'uncompress': False}),))
 
@@ -122,7 +125,8 @@ traffic_violations_config = FetcherConfig(
     'traffic_violations',
     (
         UrlInfo(
-            "https://data.montgomerycountymd.gov/api/views/4mse-ku6q/rows.csv?accessType=DOWNLOAD",
+            "https://data.montgomerycountymd.gov/api/views/"
+            "4mse-ku6q/rows.csv?accessType=DOWNLOAD",
             (
                 "rows.csv",
             ),
@@ -215,8 +219,9 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
     IF the downloaded file is compressed, then the fetcher
     looks also for the uncompressed files before downloading .
-    This only works for a one-to-one/one-to many configuration when one zipped file
-    gives one or several uncompressed files. but we don't handle many-to-many yet
+    This only works for a one-to-one/one-to many configuration when one zipped
+     file gives one or several uncompressed files. but we don't handle
+     many-to-many yet
 
     maybe a better behavior is possible
     :param url:
@@ -269,8 +274,8 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
     if download:
         try:
-            # using stream=True to download the response body only when accessing
-            # the content attribute
+            # using stream=True to download the response body only when
+            # accessing the content attribute
             with requests.get(url, stream=True) as r:
                 total_length = r.headers.get('Content-Length')
                 if total_length is not None:
