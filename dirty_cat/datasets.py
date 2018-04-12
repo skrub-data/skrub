@@ -312,6 +312,26 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     return full_name
 
 
+def fetch_employee_salaries():
+    return fetch_dataset(employee_salaries_config)
+
+
+def fetch_road_safety():
+    return fetch_dataset(road_safety_config)
+
+
+def fetch_medical_charge():
+    return fetch_dataset(medical_charge_config)
+
+
+def fetch_midwest_survey():
+    return fetch_dataset(midwest_survey_config)
+
+
+def fetch_open_payments():
+    return fetch_dataset(open_payments_config)
+
+
 def get_data_dir(dataset_name=None):
     """ Returns the directories in which nilearn looks for data.
     This is typically useful for the end-user to check where the data is
@@ -327,4 +347,4 @@ def get_data_dir(dataset_name=None):
 
 if __name__ == '__main__':
     pass
-    # fetch_dataset(medical_charge_config)
+    # fetch_midwest_survey()
