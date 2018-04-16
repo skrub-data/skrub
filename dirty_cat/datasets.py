@@ -20,22 +20,12 @@ import warnings
 import zipfile
 from collections import namedtuple
 
-
 # in nilearn, urllib is used. Here the request package will be used
-# trying to use requests as much as possible (everything excpet the
+# trying to use requests as much as possible (everything except the
 # parsing function)
 
-class FileFetcherConfig:
-    def __init__(self, name, urls: (str, tuple), paths: (str, tuple),
-                 opts=None):
-        self.name = name
-        self.urls = tuple(urls)
-        self.paths = tuple(paths)
-        self.opts = opts
-
-
-# current data has been pulled from bigml, which require authentification
-# for downlading. So for now we download the data from github
+# current data has been pulled from bigml, which require authentication
+# for downloading. So for now we download the data from github
 # however, the data differ a little bit from the two sources
 # so we either have to implement login into _fetch_data
 # or to reverse-engineer the processing script that can transform the data
@@ -44,94 +34,96 @@ class FileFetcherConfig:
 # this is true for bigml and midwest survey
 
 
-FetcherConfig = namedtuple('FetcherConfig',
-                           ['dataset_name', 'urlinfos'])
+DatasetInfo = namedtuple('DatasetInfo',
+                         ['name', 'urlinfos'])
 
-# a FetcherConfig Object is basically a tuple of UrlInfos object
-# an UrlInfo object is composed of an url and the filenames containted
+# a DatasetInfo Object is basically a tuple of UrlInfos object
+# an UrlInfo object is composed of an url and the filenames contained
 # in the request content
-UrlInfo = namedtuple('UrlInfo', ['url', 'filenames', 'opts'])
+UrlInfo = namedtuple('UrlInfo', ['url', 'filenames', 'uncompress'])
 
-road_safety_config = FetcherConfig(
-    'road_safety',
-    (
+ROAD_SAFETY_CONFIG = DatasetInfo(
+    name='road_safety',
+    urlinfos=(
         UrlInfo(
-            "http://data.dft.gov.uk/road-accidents-safety-data/"
-            "RoadSafetyData_2015.zip",
-            (
+            url="http://data.dft.gov.uk/road-accidents-safety-data/"
+                "RoadSafetyData_2015.zip",
+            filenames=(
                 "Casualties_2015.csv",
                 "Vehicles_2015.csv",
                 "Accidents_2015.csv"
             ),
-            {"uncompress": True}
-        ),
+            uncompress=True),
         UrlInfo(
-            "http://data.dft.gov.uk/road-accidents-safety-data/"
-            "MakeModel2015.zip",
-            ("2015_Make_Model.csv",),
-            {"uncompress": True}
+            url="http://data.dft.gov.uk/road-accidents-safety-data/"
+                "MakeModel2015.zip",
+            filenames=("2015_Make_Model.csv",),
+            uncompress=True
         )
     )
 )
 
-open_payments_config = FetcherConfig(
-    'open_payments',
+OPEN_PAYMENTS_CONFIG = DatasetInfo(
+    name='open_payments',
+    urlinfos=
     (
         UrlInfo(
-            'http://download.cms.gov/openpayments/PGYR13_P011718.ZIP',
-            None,
-            {"uncompress": True}
+            url='http://download.cms.gov/openpayments/PGYR13_P011718.ZIP',
+            filenames=None, uncompress=True
         ),
     )
 )
 
-midwest_survey_config = FetcherConfig(
-    'midwest_survey',
-    (
+MIDWEST_SURVEY_CONFIG = DatasetInfo(
+    name='midwest_survey',
+    urlinfos=(
         UrlInfo(
-            "https://github.com/fivethirtyeight/data/tree/"
-            "master/region-survey/FiveThirtyEight_Midwest_Survey.csv",
-            (
+            url="https://github.com/fivethirtyeight/data/tree/"
+                "master/region-survey/FiveThirtyEight_Midwest_Survey.csv",
+            filenames=(
                 "FiveThirtyEight_Midwest_Survey.csv",
-            ),
-            {"uncompress": False}
+            ), uncompress=False
         ),
     )
 )
-medical_charge_config = FetcherConfig(
-    'medical_charge',
-    (
+MEDICAL_CHARGE_CONFIG = DatasetInfo(
+    name='medical_charge',
+    urlinfos=(
         UrlInfo(
-            "https://www.cms.gov/Research-Statistics-Data-and-Systems/"
-            "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data/"
-            "Downloads/Inpatient_Data_2011_CSV.zip",
-            (
+            url="https://www.cms.gov/Research-Statistics-Data-and-Systems/"
+                "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data/"
+                "Downloads/Inpatient_Data_2011_CSV.zip",
+            filenames=(
                 "MedicalProviderChargeInpatient.csv",
             ),
-            {'uncompress': True}
+            uncompress=True
+
         ),
     )
 )
 
-employee_salaries_config = FetcherConfig(
-    'employee_salaries',
-    (UrlInfo(
-        "https://data.montgomerycountymd.gov/api/views/"
-        "xj3h-s2i7/rows.csv?accessType=DOWNLOAD",
-        ("rows.csv",),
-        {'uncompress': False}),))
-
-traffic_violations_config = FetcherConfig(
-    'traffic_violations',
-    (
+EMPLOYEE_SALARIES_CONFIG = DatasetInfo(
+    name='employee_salaries',
+    urlinfos=(
         UrlInfo(
-            "https://data.montgomerycountymd.gov/api/views/"
-            "4mse-ku6q/rows.csv?accessType=DOWNLOAD",
-            (
-                "rows.csv",
-            ),
-            {"uncompress": True}),
+            url="https://data.montgomerycountymd.gov/api/views/"
+                "xj3h-s2i7/rows.csv?accessType=DOWNLOAD",
+            filenames=("rows.csv",),
+            uncompress=False
+        ),
+    )
+)
 
+TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
+    name='traffic_violations',
+    urlinfos=(
+        UrlInfo(
+            url="https://data.montgomerycountymd.gov/api/views/"
+                "4mse-ku6q/rows.csv?accessType=DOWNLOAD",
+            filenames=(
+                "rows.csv",
+            ), uncompress=True
+        ),
     )
 )
 
@@ -159,13 +151,24 @@ FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 def _uncompress_file(file_, delete_archive=True):
-    """
-    Uncompress files contained in a data_set.
+    """Uncompress files contained in a data_set.
 
+
+    Parameters
+    ----------
+    file_: path to file
+    delete_archive: whether to delete the compressed file afterwards
+
+
+    Returns
+    -------
+    None if everything worked out fine
+    ValueError otherwise
+
+
+    Notes
+    -----
     only supports zip and gzip
-    :param file_:
-    :param delete_archive:
-    :return:
     """
     data_dir = os.path.dirname(file_)
     filename, ext = os.path.splitext(file_)
@@ -203,36 +206,41 @@ def _check_if_exists(path, remove=False):
         return os.path.exists(path)
 
 
-def fetch_dataset(configfile: FetcherConfig):
-    data_dir = os.path.join(get_data_dir(), configfile.dataset_name)
+def fetch_dataset(configfile: DatasetInfo):
+    data_dir = os.path.join(get_data_dir(), configfile.name)
     for urlinfo in configfile.urlinfos:
         _fetch_file(urlinfo.url, data_dir, filenames=urlinfo.filenames,
-                    uncompress=urlinfo.opts['uncompress'])
+                    uncompress=urlinfo.uncompress)
 
 
 def _fetch_file(url, data_dir, filenames=None, overwrite=False,
                 md5sum=None, uncompress=True):
-    """
-    fetching function that load the requested file,
-    downloading it if needed or requested
-
+    """fetches the content of a requested url
 
     IF the downloaded file is compressed, then the fetcher
     looks also for the uncompressed files before downloading .
-    This only works for a one-to-one/one-to many configuration when one zipped
-     file gives one or several uncompressed files. but we don't handle
-     many-to-many yet
 
-    maybe a better behavior is possible
-    :param url:
-    :param data_dir:
 
-    :return:
+    Parameters
+    ----------
+    url
+    data_dir: directory where the data will be stored
+    filenames: names of the files in the url content
+    overwrite: whether to overwrite present data
+    md5sum: if provided, verifies the integrity of the file using a hash
+    uncompress: whether to uncompress the content of the url
 
-    NOTES: NON-implemented nilearn parameters:
+    Returns
+    -------
+    the full name of the extracted file
+
+    NOTES
+    -----
+    NON-implemented nilearn parameters:
     * the resume option, that would resume partially downloaded files
     * username/password
-    *handlers
+    * handlers
+
     """
     # TODO: look for uncompressed files when download result is zippped.
     # potentially passing the config as an argument because this function
@@ -313,38 +321,41 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
 
 def fetch_employee_salaries():
-    return fetch_dataset(employee_salaries_config)
+    return fetch_dataset(EMPLOYEE_SALARIES_CONFIG)
 
 
 def fetch_road_safety():
-    return fetch_dataset(road_safety_config)
+    return fetch_dataset(ROAD_SAFETY_CONFIG)
 
 
 def fetch_medical_charge():
-    return fetch_dataset(medical_charge_config)
+    return fetch_dataset(MEDICAL_CHARGE_CONFIG)
 
 
 def fetch_midwest_survey():
-    return fetch_dataset(midwest_survey_config)
+    return fetch_dataset(MIDWEST_SURVEY_CONFIG)
 
 
 def fetch_open_payments():
-    return fetch_dataset(open_payments_config)
+    return fetch_dataset(OPEN_PAYMENTS_CONFIG)
 
 
-def get_data_dir(dataset_name=None):
+def get_data_dir(name=None):
     """ Returns the directories in which nilearn looks for data.
+
     This is typically useful for the end-user to check where the data is
     downloaded and stored.
 
-    *** taken from nilearn.datasets.utils ***
     """
     data_dir = os.path.join(os.path.dirname(__file__), 'data')
-    if dataset_name is not None:
-        data_dir = os.path.join(data_dir, dataset_name)
+    if name is not None:
+        data_dir = os.path.join(data_dir, name)
     return data_dir
 
 
 if __name__ == '__main__':
-    pass
-    # fetch_midwest_survey()
+    fetch_midwest_survey()
+    fetch_medical_charge()
+    fetch_road_safety()
+    fetch_employee_salaries()
+    fetch_open_payments()
