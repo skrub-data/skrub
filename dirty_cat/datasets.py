@@ -5,13 +5,10 @@ fetching convention.
 The parts of the nilearn fetching utils that have an obvious
 meaning are directly copied. The rest is annoted.
 """
-
+# -*- coding: utf-8 -*-
 import shutil
-import pandas as pd
 import os
 import requests
-import pandas
-import io
 import hashlib
 import urllib
 from clint.textui import \
@@ -19,6 +16,7 @@ from clint.textui import \
 import warnings
 import zipfile
 from collections import namedtuple
+from functools import wraps
 
 # in nilearn, urllib is used. Here the request package will be used
 # trying to use requests as much as possible (everything except the
@@ -128,9 +126,14 @@ TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
 )
 
 
+@wraps(requests.get)
+def request_get(*args, **kwargs):
+    return requests.get(*args, **kwargs)
+
+
 def md5_hash(string):
     m = hashlib.md5()
-    m.update(string)
+    m.update(string.encode('utf-8'))
     return m.hexdigest()
 
 
@@ -263,7 +266,10 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     temp_full_name = os.path.join(data_dir, temp_file_name)
     if overwrite:
         download = True
-        for name in [file_name, temp_file_name, *filenames]:
+        files_to_overwrite = [file_name, temp_file_name]
+        if filenames:
+            files_to_overwrite += filenames
+        for name in files_to_overwrite:
             # remove all compressed/uncompressed files
             _check_if_exists(os.path.join(data_dir, name), remove=True)
     else:
@@ -284,7 +290,7 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
         try:
             # using stream=True to download the response body only when
             # accessing the content attribute
-            with requests.get(url, stream=True) as r:
+            with request_get(url, stream=True) as r:
                 total_length = r.headers.get('Content-Length')
                 if total_length is not None:
                     with open(temp_full_name, 'wb') as local_file:
@@ -341,7 +347,7 @@ def fetch_open_payments():
 
 
 def get_data_dir(name=None):
-    """ Returns the directories in which nilearn looks for data.
+    """ Returns the directories in which dirty_cat looks for data.
 
     This is typically useful for the end-user to check where the data is
     downloaded and stored.
