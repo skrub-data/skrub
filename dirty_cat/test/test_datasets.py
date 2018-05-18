@@ -4,8 +4,6 @@ Test the datasets module
 # Author: Pierre Glaser
 # -*- coding: utf-8 -*-
 import os
-from nose import with_setup
-from nose.tools import assert_equal, assert_true
 from tempfile import mkstemp
 
 import dirty_cat.datasets as datasets
@@ -26,12 +24,12 @@ def setup_mock(true_module=datasets, mock_module=utils):
     true_module.request_get = mock_url_request
 
 
-def teardown_mock(true_module=datasets, mock_module=utils):
+def teardown_mock(true_module=datasets):
     global original_url_request
     true_module.request_get = original_url_request
 
 
-@with_setup(setup=setup_mock)
+@utils.with_setup(setup=setup_mock, teardown=teardown_mock)
 def test_fetch_file_overwrite():
     # overwrite non-exiting file.
     test_dir = datasets.get_data_dir(name='test')
@@ -39,9 +37,9 @@ def test_fetch_file_overwrite():
                                overwrite=True
                                , uncompress=False)
 
-    assert_true(os.path.exists(fil))
+    assert os.path.exists(fil)
     with open(fil, 'r') as fp:
-        assert_equal(fp.read(), ' ')
+        assert fp.read() == ' '
 
     # Modify content
     with open(fil, 'w') as fp:
@@ -50,17 +48,17 @@ def test_fetch_file_overwrite():
     # Don't overwrite existing file.
     fil = datasets._fetch_file(url='http://foo/', data_dir=test_dir,
                                overwrite=False, uncompress=False)
-    assert_true(os.path.exists(fil))
+    assert os.path.exists(fil)
     with open(fil, 'r') as fp:
-        assert_equal(fp.read(), 'some content')
+        assert fp.read() == 'some content'
 
     # Overwrite existing file.
     # Overwrite existing file.
     fil = datasets._fetch_file(url='http://foo/', data_dir=test_dir,
                                overwrite=True, uncompress=False)
-    assert_true(os.path.exists(fil))
+    assert os.path.exists(fil)
     with open(fil, 'r') as fp:
-        assert_equal(fp.read(), ' ')
+        assert fp.read() == ' '
 
 
 def test_md5_sum_file():
@@ -68,8 +66,7 @@ def test_md5_sum_file():
     out, f = mkstemp()
     os.write(out, b'abcfeg')
     os.close(out)
-    assert_equal(datasets.utils._md5_sum_file(f),
-                 '18f32295c556b2a1a3a8e68fe1ad40f7')
+    assert datasets.utils._md5_sum_file(f) == '18f32295c556b2a1a3a8e68fe1ad40f7'
     os.remove(f)
 
 # if __name__ == '__main__':
