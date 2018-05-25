@@ -2,6 +2,7 @@ import requests
 from io import BytesIO
 from functools import wraps
 
+
 class with_setup:
     def __init__(self, setup, teardown):
         self.setup = setup
@@ -35,6 +36,7 @@ class MockResponse(requests.Response):
 
     def iter_content(self, chunk_size=1, decode_unicode=False):
         # already exists, just for code readability
+        print('iterating from mocked response')
         return super(MockResponse, self).iter_content(chunk_size=chunk_size,
                                                       decode_unicode=decode_unicode)
 
