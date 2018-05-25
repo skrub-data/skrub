@@ -66,7 +66,7 @@ def test_md5_sum_file():
     out, f = mkstemp()
     os.write(out, b'abcfeg')
     os.close(out)
-    assert datasets.utils._md5_sum_file(f) == '18f32295c556b2a1a3a8e68fe1ad40f7'
+    assert datasets._md5_sum_file(f) == '18f32295c556b2a1a3a8e68fe1ad40f7'
     os.remove(f)
 
 # if __name__ == '__main__':

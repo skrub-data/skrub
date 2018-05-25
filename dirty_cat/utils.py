@@ -2,7 +2,6 @@ import requests
 from io import BytesIO
 from functools import wraps
 
-
 class with_setup:
     def __init__(self, setup, teardown):
         self.setup = setup
