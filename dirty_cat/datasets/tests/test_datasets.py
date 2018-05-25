@@ -35,7 +35,8 @@ def test_fetch_file_overwrite():
     test_dir = datasets_utils.get_data_dir(name='test')
     from dirty_cat.datasets import fetching
     fil = fetching._fetch_file(url='http://foo/', data_dir=test_dir,
-                               overwrite=True, uncompress=False)
+                               overwrite=True, uncompress=False,
+                               show_progress=False)
 
     assert os.path.exists(fil)
     with open(fil, 'r') as fp:
@@ -47,7 +48,8 @@ def test_fetch_file_overwrite():
 
     # Don't overwrite existing file.
     fil = fetching._fetch_file(url='http://foo/', data_dir=test_dir,
-                               overwrite=False, uncompress=False)
+                               overwrite=False, uncompress=False,
+                               show_progress=False)
     assert os.path.exists(fil)
     with open(fil, 'r') as fp:
         assert fp.read() == 'some content'
@@ -55,7 +57,8 @@ def test_fetch_file_overwrite():
     # Overwrite existing file.
     # Overwrite existing file.
     fil = fetching._fetch_file(url='http://foo/', data_dir=test_dir,
-                               overwrite=True, uncompress=False)
+                               overwrite=True, uncompress=False,
+                               show_progress=False)
     assert os.path.exists(fil)
     with open(fil, 'r') as fp:
         assert fp.read() == ' '

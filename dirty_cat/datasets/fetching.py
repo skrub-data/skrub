@@ -127,6 +127,39 @@ TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
+def _download_and_write(url, file, show_progress=True):
+    if show_progress:
+        from clint.textui import progress
+    try:
+        # using stream=True to download the response body only when
+        # accessing the content attribute
+        with request_get(url, stream=True) as r:
+            total_length = r.headers.get('Content-Length')
+            if total_length is not None:
+                with open(file, 'wb') as local_file:
+                    content_iterator = r.iter_content(chunk_size=1024)
+                    if show_progress:
+                        content_iterator = progress.bar(
+                            content_iterator, expected_size=(int(total_length) /
+                                                             1024) + 1)
+
+                    for chunk in content_iterator:
+                        if chunk:
+                            local_file.write(chunk)
+                            local_file.flush()
+
+            else:
+                warnings.warn('content size cannot be found, '
+                              'downloading file from {} as a whole'.format(
+                    url))
+                with open(file, 'wb') as local_file:
+                    local_file.write(r.content)
+
+    except requests.RequestException as e:
+        # pretty general request exception. subject to change
+        raise Exception('error while fetching: {}'.format(e))
+
+
 def fetch_dataset(configfile: DatasetInfo, show_progress=True):
     data_dir = os.path.join(get_data_dir(), configfile.name)
     for urlinfo in configfile.urlinfos:
@@ -174,8 +207,6 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     # Determine data path
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
-    if show_progress:
-        from clint.textui import progress
 
         # Determine filename using URL. sticking to urllib.parse, requests does not
     # provide parsing tools
@@ -211,30 +242,7 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
                 download = True
 
     if download:
-        try:
-            # using stream=True to download the response body only when
-            # accessing the content attribute
-            with request_get(url, stream=True) as r:
-                total_length = r.headers.get('Content-Length')
-                if total_length is not None:
-                    with open(temp_full_name, 'wb') as local_file:
-                        for chunk in progress.bar(
-                                r.iter_content(chunk_size=1024),
-                                expected_size=(int(total_length) /
-                                               1024) + 1):
-                            if chunk:
-                                local_file.write(chunk)
-                                local_file.flush()
-                else:
-                    warnings.warn('content size cannot be found, '
-                                  'downloading file from {} as a whole'.format(
-                        url))
-                    with open(temp_full_name, 'wb') as local_file:
-                        local_file.write(r.content)
-
-        except requests.RequestException as e:
-            # pretty general request exception. subject to change
-            raise Exception('error while fetching: {}'.format(e))
+        _download_and_write(url, temp_full_name, show_progress=show_progress)
 
     # chunk writing is not implemented, see if necessary
     if _check_if_exists(temp_full_name, remove=False):
