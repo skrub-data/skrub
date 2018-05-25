@@ -7,7 +7,7 @@ import os
 from tempfile import mkstemp
 
 import dirty_cat.datasets.utils as datasets_utils
-import dirty_cat.test.utils as utils
+import dirty_cat.datasets.tests.utils as utils
 
 currdir = os.path.dirname(os.path.abspath(__file__))
 datadir = os.path.join(currdir, 'data')

@@ -12,7 +12,9 @@ def get_data_dir(name=None):
     downloaded and stored.
 
     """
-    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    # assuming we are in datasets.utils, this calls the module
+    module_path = os.path.dirname(os.path.dirname(__file__))
+    data_dir = os.path.join(module_path, 'data')
     if name is not None:
         data_dir = os.path.join(data_dir, name)
     return data_dir
