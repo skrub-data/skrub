@@ -1,8 +1,12 @@
+import sys
 import os
 import requests
 from functools import wraps
 import hashlib
 import zipfile
+import shutil
+import contextlib
+import tarfile
 
 
 def get_data_dir(name=None):
@@ -55,7 +59,7 @@ def _check_if_exists(path, remove=False):
         return os.path.exists(path)
 
 
-def _uncompress_file(file_, delete_archive=True):
+def _uncompress_file(file_, delete_archive=True, verbose=0):
     """Uncompress files contained in a data_set.
 
 
@@ -75,26 +79,50 @@ def _uncompress_file(file_, delete_archive=True):
     -----
     only supports zip and gzip
     """
+    if verbose > 0:
+        sys.stderr.write('Extracting data from %s...' % file_)
     data_dir = os.path.dirname(file_)
-    filename, ext = os.path.splitext(file_)
+    # We first try to see if it is a zip file
+    try:
+        filename, ext = os.path.splitext(file_)
+        with open(file_, "rb") as fd:
+            header = fd.read(4)
+        processed = False
+        if zipfile.is_zipfile(file_):
+            z = zipfile.ZipFile(file_)
+            z.extractall(path=data_dir)
+            z.close()
+            if delete_archive:
+                os.remove(file_)
+            file_ = filename
+            processed = True
+        elif ext == '.gz' or header.startswith(b'\x1f\x8b'):
+            import gzip
+            gz = gzip.open(file_)
+            if ext == '.tgz':
+                filename = filename + '.tar'
+            out = open(filename, 'wb')
+            shutil.copyfileobj(gz, out, 8192)
+            gz.close()
+            out.close()
+            # If file is .tar.gz, this will be handle in the next case
+            if delete_archive:
+                os.remove(file_)
+            file_ = filename
+            processed = True
+        if os.path.isfile(file_) and tarfile.is_tarfile(file_):
+            with contextlib.closing(tarfile.open(file_, "r")) as tar:
+                tar.extractall(path=data_dir)
+            if delete_archive:
+                os.remove(file_)
+            processed = True
+        if not processed:
+            raise IOError(
+                "[Uncompress] unknown archive file format: %s" % file_)
 
-    if zipfile.is_zipfile(file_):
-        z = zipfile.ZipFile(file_)
-        z.extractall(path=data_dir)
-        z.close()
-        if delete_archive:
-            os.remove(file_)
-    elif ext == '.gz':
-        import gzip
-        gz = gzip.open(file_)
-        if ext == '.tgz':
-            filename = filename + '.tar'
-        out = open(filename, 'wb')
-        shutil.copyfileobj(gz, out, 8192)
-        gz.close()
-        out.close()
-        # If file is .tar.gz, this will be handle in the next case
-        if delete_archive:
-            os.remove(file_)
-    else:
-        raise IOError('[Compression] unknown archive format {}'.format(ext))
+        if verbose > 0:
+            sys.stderr.write('.. done.\n')
+    except Exception as e:
+        if verbose > 0:
+            print('Error uncompressing file: %s' % e)
+        raise
