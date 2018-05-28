@@ -39,6 +39,14 @@ def test_fetch_file_overwrite():
     test_dir = datasets_utils.get_data_dir(name='test')
     from dirty_cat.datasets import fetching
     try:
+        # test that filename is a md5 hash of the url if
+        # the url ends with /
+        fil = fetching._fetch_file(url='http://foo/', data_dir=test_dir,
+                                   overwrite=True, uncompress=False,
+                                   show_progress=False)
+        assert os.path.basename(fil) == datasets_utils.md5_hash('/')
+        os.remove(fil)
+
         # overwrite non-exiting file.
         fil = fetching._fetch_file(url='http://foo/testdata', data_dir=test_dir,
                                    overwrite=True, uncompress=False,
@@ -90,7 +98,7 @@ def test_fetch_file_overwrite():
         os.remove(os.path.join(test_dir, newf))
 
         # # create a zipfile with a file inside, remove the file, and
-        # 
+        #
         # zipd = os.path.join('testzip.zip')
         # with contextlib.closing(zipfile.ZipFile())
         #     fetching._fetch_file(url='http://foo/', filenames=('test_filename',),
@@ -158,6 +166,7 @@ def test_fetch_dataset():
         assert os.path.exists(os.path.join(datadir, 'unzipped_data.txt'))
     finally:
         shutil.rmtree(datadir)
+
 
 if __name__ == '__main__':
     # pass

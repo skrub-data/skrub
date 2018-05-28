@@ -59,7 +59,7 @@ def _check_if_exists(path, remove=False):
         return os.path.exists(path)
 
 
-def _uncompress_file(file_, delete_archive=True, verbose=0):
+def _uncompress_file(file_, delete_archive=True):
     """Uncompress files contained in a data_set.
 
 
@@ -79,8 +79,7 @@ def _uncompress_file(file_, delete_archive=True, verbose=0):
     -----
     only supports zip and gzip
     """
-    if verbose > 0:
-        sys.stderr.write('Extracting data from %s...' % file_)
+    sys.stderr.write('Extracting data from %s...' % file_)
     data_dir = os.path.dirname(file_)
     # We first try to see if it is a zip file
     try:
@@ -120,9 +119,7 @@ def _uncompress_file(file_, delete_archive=True, verbose=0):
             raise IOError(
                 "[Uncompress] unknown archive file format: %s" % file_)
 
-        if verbose > 0:
-            sys.stderr.write('.. done.\n')
+        sys.stderr.write('.. done.\n')
     except Exception as e:
-        if verbose > 0:
-            print('Error uncompressing file: %s' % e)
+        print('Error uncompressing file: %s' % e)
         raise
