@@ -5,6 +5,9 @@ Test the datasets module
 # -*- coding: utf-8 -*-
 import os
 from tempfile import mkstemp
+import shutil
+import zipfile
+import contextlib
 
 import dirty_cat.datasets.utils as datasets_utils
 import dirty_cat.datasets.tests.utils as utils
@@ -31,37 +34,91 @@ def teardown_mock(true_module=datasets_utils):
 
 @utils.with_setup(setup=setup_mock, teardown=teardown_mock)
 def test_fetch_file_overwrite():
-    # overwrite non-exiting file.
+    utils.MockResponse.set_with_content_length(True)
+    utils.MockResponse.set_to_zipfile(False)
     test_dir = datasets_utils.get_data_dir(name='test')
     from dirty_cat.datasets import fetching
-    fil = fetching._fetch_file(url='http://foo/', data_dir=test_dir,
-                               overwrite=True, uncompress=False,
-                               show_progress=False)
+    try:
+        # overwrite non-exiting file.
+        fil = fetching._fetch_file(url='http://foo/testdata', data_dir=test_dir,
+                                   overwrite=True, uncompress=False,
+                                   show_progress=False)
 
-    assert os.path.exists(fil)
-    with open(fil, 'r') as fp:
-        assert fp.read() == ' '
+        # check if data_dir is actually used
+        assert os.path.dirname(fil) == test_dir
+        assert os.path.exists(fil)
+        with open(fil, 'r') as fp:
+            assert fp.read() == ' '
 
-    # Modify content
-    with open(fil, 'w') as fp:
-        fp.write('some content')
+        # Modify content
+        with open(fil, 'w') as fp:
+            fp.write('some content')
 
-    # Don't overwrite existing file.
-    fil = fetching._fetch_file(url='http://foo/', data_dir=test_dir,
-                               overwrite=False, uncompress=False,
-                               show_progress=False)
-    assert os.path.exists(fil)
-    with open(fil, 'r') as fp:
-        assert fp.read() == 'some content'
+        # Don't overwrite existing file.
+        fil = fetching._fetch_file(url='http://foo/testdata', data_dir=test_dir,
+                                   overwrite=False, uncompress=False,
+                                   show_progress=False)
+        assert os.path.exists(fil)
+        with open(fil, 'r') as fp:
+            assert fp.read() == 'some content'
 
-    # Overwrite existing file.
-    # Overwrite existing file.
-    fil = fetching._fetch_file(url='http://foo/', data_dir=test_dir,
-                               overwrite=True, uncompress=False,
-                               show_progress=False)
-    assert os.path.exists(fil)
-    with open(fil, 'r') as fp:
-        assert fp.read() == ' '
+        # Overwrite existing file.
+        # Overwrite existing file.
+        fil = fetching._fetch_file(url='http://foo/testdata', data_dir=test_dir,
+                                   overwrite=True, uncompress=False,
+                                   show_progress=False)
+        assert os.path.exists(fil)
+        with open(fil, 'r') as fp:
+            assert fp.read() == ' '
+
+        # modify content,
+        # change filename,add it in argument, and set overwrite to false
+        with open(fil, 'w') as fp:
+            fp.write('some content')
+        newf = 'moved_file'
+        os.rename(fil, os.path.join(test_dir, newf))
+        fetching._fetch_file(url='http://foo/testdata',
+                             filenames=(newf,),
+                             data_dir=test_dir,
+                             overwrite=False, uncompress=False,
+                             show_progress=False)
+        assert (
+            not os.path.exists(fil))  # it has been removed and should not have
+        with open(os.path.join(test_dir, newf), 'r') as fp:
+            assert fp.read() == 'some content'
+        # been downloaded again
+        os.remove(os.path.join(test_dir, newf))
+
+        # # create a zipfile with a file inside, remove the file, and
+        # 
+        # zipd = os.path.join('testzip.zip')
+        # with contextlib.closing(zipfile.ZipFile())
+        #     fetching._fetch_file(url='http://foo/', filenames=('test_filename',),
+        #                          data_dir=test_dir,
+        #                          overwrite=False, uncompress=False,
+        #                          show_progress=False)
+
+        # add wrong md5 sum file and catch ValueError
+        try:
+            fil = fetching._fetch_file(url='http://foo/testdata',
+                                       data_dir=test_dir,
+                                       overwrite=True, uncompress=False,
+                                       show_progress=False, md5sum='1')
+            raise ValueError  # if no error raised in the previous line,
+            #  it is bad:
+            # a wrong md5 sum should raise an error. So forcing the except chunk
+            # to happen anyway
+        except Exception as e:
+            assert isinstance(e, fetching.FileChangedError)
+        utils.MockResponse.set_with_content_length(False)
+        # write content if no content size
+        fil = fetching._fetch_file(url='http://foo/testdata', data_dir=test_dir,
+                                   overwrite=True, uncompress=False,
+                                   show_progress=False)
+        assert os.path.exists(fil)
+        os.remove(fil)
+    finally:
+        shutil.rmtree(test_dir)
 
 
 def test_md5_sum_file():
@@ -72,5 +129,37 @@ def test_md5_sum_file():
     assert datasets_utils._md5_sum_file(f) == '18f32295c556b2a1a3a8e68fe1ad40f7'
     os.remove(f)
 
-# if __name__ == '__main__':
-#     test_fetch_file_overwrite()
+
+@utils.with_setup(setup=setup_mock, teardown=teardown_mock)
+def test_fetch_dataset():
+    from dirty_cat.datasets import fetching
+    utils.MockResponse.set_with_content_length(True)
+    datadir = os.path.join(datasets_utils.get_data_dir(),
+                           'testdata')
+    try:
+        urlinfo = fetching.DatasetInfo(name='testdata',
+                                       urlinfos=(fetching.UrlInfo(
+                                           url='http://foo/data',
+                                           filenames=('data',),
+                                           uncompress=False),))
+        fetching.fetch_dataset(urlinfo, show_progress=False)
+        assert os.path.exists(os.path.join(datadir, 'data'))
+        shutil.rmtree(os.path.join(datadir))
+
+        # test with zipped data
+        utils.MockResponse.set_to_zipfile(True)
+        utils.MockResponse.set_with_content_length(False)
+        urlinfo = fetching.DatasetInfo(name='testdata',
+                                       urlinfos=(fetching.UrlInfo(
+                                           url='http://foo/data.zip',
+                                           filenames=('unzipped_data.txt',),
+                                           uncompress=True),))
+        fetching.fetch_dataset(urlinfo, show_progress=False)
+        assert os.path.exists(os.path.join(datadir, 'unzipped_data.txt'))
+    finally:
+        shutil.rmtree(datadir)
+
+if __name__ == '__main__':
+    # pass
+    # test_fetch_file_overwrite()
+    test_fetch_dataset()

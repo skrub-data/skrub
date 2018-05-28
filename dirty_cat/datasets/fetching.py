@@ -6,6 +6,7 @@ The parts of the nilearn fetching utils that have an obvious
 meaning are directly copied. The rest is annoted.
 """
 # -*- coding: utf-8 -*-
+import io
 import os
 import requests
 import shutil
@@ -14,7 +15,8 @@ from collections import namedtuple
 
 import warnings
 
-from .utils import md5_hash, _check_if_exists, request_get, _uncompress_file, \
+from dirty_cat.datasets.utils import md5_hash, _check_if_exists, request_get, \
+    _uncompress_file, \
     _md5_sum_file, get_data_dir
 
 # in nilearn, urllib is used. Here the request package will be used
@@ -125,6 +127,10 @@ TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
 )
 
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
+
+
+class FileChangedError(Exception):
+    pass
 
 
 def _download_and_write(url, file, show_progress=True):
@@ -248,8 +254,9 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     if _check_if_exists(temp_full_name, remove=False):
         if md5sum is not None:
             if _md5_sum_file(temp_full_name) != md5sum:
-                raise ValueError("File %s checksum verification has failed."
-                                 "Dataset fetching aborted." % temp_full_name)
+                raise FileChangedError(
+                    "File %s checksum verification has failed."
+                    "Dataset fetching aborted." % temp_full_name)
 
         shutil.move(temp_full_name, full_name)
     if _check_if_exists(full_name, remove=False) and uncompress:
@@ -259,28 +266,28 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
 
 def fetch_employee_salaries():
-    return fetch_dataset(EMPLOYEE_SALARIES_CONFIG)
+    return fetch_dataset(EMPLOYEE_SALARIES_CONFIG,show_progress=False)
 
 
 def fetch_road_safety():
-    return fetch_dataset(ROAD_SAFETY_CONFIG)
+    return fetch_dataset(ROAD_SAFETY_CONFIG,show_progress=False)
 
 
 def fetch_medical_charge():
-    return fetch_dataset(MEDICAL_CHARGE_CONFIG)
+    return fetch_dataset(MEDICAL_CHARGE_CONFIG,show_progress=False)
 
 
 def fetch_midwest_survey():
-    return fetch_dataset(MIDWEST_SURVEY_CONFIG)
+    return fetch_dataset(MIDWEST_SURVEY_CONFIG,show_progress=False)
 
 
 def fetch_open_payments():
-    return fetch_dataset(OPEN_PAYMENTS_CONFIG)
+    return fetch_dataset(OPEN_PAYMENTS_CONFIG,show_progress=False)
 
 
 if __name__ == '__main__':
-    fetch_midwest_survey()
+    # fetch_midwest_survey()
     fetch_medical_charge()
-    fetch_road_safety()
-    fetch_employee_salaries()
-    fetch_open_payments()
+    # fetch_road_safety()
+    # fetch_employee_salaries()
+    # fetch_open_payments()
