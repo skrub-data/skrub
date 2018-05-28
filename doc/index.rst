@@ -36,8 +36,7 @@ Datasets for examples
    :toctree: generated/
    :template: function.rst
 
-   datasets.fetch_midwest_survey
-   datasets.fetch_employee_salaries
+   datasets.fetching.fetch_employee_salaries
 
 
 .. include:: auto_examples/index.rst

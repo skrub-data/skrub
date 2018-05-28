@@ -171,6 +171,7 @@ def fetch_dataset(configfile: DatasetInfo, show_progress=True):
     for urlinfo in configfile.urlinfos:
         _fetch_file(urlinfo.url, data_dir, filenames=urlinfo.filenames,
                     uncompress=urlinfo.uncompress, show_progress=show_progress)
+    return data_dir
 
 
 def _fetch_file(url, data_dir, filenames=None, overwrite=False,
