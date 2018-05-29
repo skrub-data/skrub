@@ -124,6 +124,15 @@ source activate testenv
 pip install sphinx-gallery
 pip install python-Levenshtein
 
+#cloning and installing from the ColumnTransformer branch
+pip uninstall scikit-learn
+git clone https://github.com/jorisvandenbossche/scikit-learn.git 
+cd scikit-learn
+git fetch 
+git checkout amueller/heterogeneous_feature_union
+pip install -e .
+cd ..
+
 # Build and install the project in dev mode
 python setup.py develop
 
