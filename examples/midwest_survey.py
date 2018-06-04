@@ -32,8 +32,10 @@ encoder_dict = {
     'num': FunctionTransformer(None)
 }
 
-data_file=fetching.fetch_midwest_survey()
-data_file=os.path.join(data_file,'FiveThirtyEight_Midwest_Survey.csv')
+data_path = fetching.get_data_dir()
+fetching.fetch_midwest_survey()
+data_file = os.path.join(data_path, 'midwest_survey',
+                         'FiveThirtyEight_Midwest_Survey.csv')
 
 for method in ['one-hot', 'similarity']:
     # Load the data

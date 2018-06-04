@@ -126,10 +126,8 @@ pip install python-Levenshtein
 
 #cloning and installing from the ColumnTransformer branch
 pip uninstall scikit-learn
-git clone https://github.com/jorisvandenbossche/scikit-learn.git 
+git clone https://github.com/scikit-learn/scikit-learn.git
 cd scikit-learn
-git fetch 
-git checkout amueller/heterogeneous_feature_union
 pip install -e .
 cd ..
 

@@ -6,7 +6,6 @@ The parts of the nilearn fetching utils that have an obvious
 meaning are directly copied. The rest is annoted.
 """
 # -*- coding: utf-8 -*-
-import io
 import os
 import requests
 import shutil
@@ -15,7 +14,7 @@ from collections import namedtuple
 
 import warnings
 
-from dirty_cat.datasets.utils import md5_hash, _check_if_exists, request_get, \
+from ..datasets.utils import md5_hash, _check_if_exists, request_get, \
     _uncompress_file, \
     _md5_sum_file, get_data_dir
 
@@ -35,7 +34,6 @@ from dirty_cat.datasets.utils import md5_hash, _check_if_exists, request_get, \
 
 DatasetInfo = namedtuple('DatasetInfo',
                          ['name', 'urlinfos'])
-
 # a DatasetInfo Object is basically a tuple of UrlInfos object
 # an UrlInfo object is composed of an url and the filenames contained
 # in the request content
@@ -125,7 +123,6 @@ TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
         ),
     )
 )
-
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -171,7 +168,6 @@ def fetch_dataset(configfile: DatasetInfo, show_progress=True):
     for urlinfo in configfile.urlinfos:
         _fetch_file(urlinfo.url, data_dir, filenames=urlinfo.filenames,
                     uncompress=urlinfo.uncompress, show_progress=show_progress)
-    return data_dir
 
 
 def _fetch_file(url, data_dir, filenames=None, overwrite=False,
@@ -184,12 +180,18 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
     Parameters
     ----------
-    url
-    data_dir: directory where the data will be stored
-    filenames: names of the files in the url content
-    overwrite: whether to overwrite present data
-    md5sum: if provided, verifies the integrity of the file using a hash
-    uncompress: whether to uncompress the content of the url
+    url: str
+        url from where to fetch the file from
+    data_dir: str
+        directory where the data will be stored
+    filenames: list
+        names of the files in the url content
+    overwrite: bool
+        whether to overwrite present data
+    md5sum: str
+        if provided, verifies the integrity of the file using a hash
+    uncompress: bool
+        whether to uncompress the content of the url
 
     show_progress: if True, displays a progressbar during the downloading
     of the dataset. Warning: clint needs to be implemented and is not in the
@@ -197,7 +199,7 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
     Returns
     -------
-    the full name of the extracted file
+    full_name: the full name of the extracted file
 
     NOTES
     -----
@@ -207,15 +209,10 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     * handlers
 
     """
-    # TODO: look for uncompressed files when download result is zippped.
-    # potentially passing the config as an argument because this function
-    # does a lot of thing, maybe makes sense to group the argument into
-    # the config file
-    # Determine data path
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
-        # Determine filename using URL. sticking to urllib.parse, requests does not
+    # Determine filename using URL. sticking to urllib.parse, requests does not
     # provide parsing tools
     parse = urllib.parse.urlparse(url)
     file_name = os.path.basename(parse.path)
@@ -267,23 +264,23 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
 
 def fetch_employee_salaries():
-    return fetch_dataset(EMPLOYEE_SALARIES_CONFIG,show_progress=False)
+    return fetch_dataset(EMPLOYEE_SALARIES_CONFIG, show_progress=False)
 
 
 def fetch_road_safety():
-    return fetch_dataset(ROAD_SAFETY_CONFIG,show_progress=False)
+    return fetch_dataset(ROAD_SAFETY_CONFIG, show_progress=False)
 
 
 def fetch_medical_charge():
-    return fetch_dataset(MEDICAL_CHARGE_CONFIG,show_progress=False)
+    return fetch_dataset(MEDICAL_CHARGE_CONFIG, show_progress=False)
 
 
 def fetch_midwest_survey():
-    return fetch_dataset(MIDWEST_SURVEY_CONFIG,show_progress=False)
+    return fetch_dataset(MIDWEST_SURVEY_CONFIG, show_progress=False)
 
 
 def fetch_open_payments():
-    return fetch_dataset(OPEN_PAYMENTS_CONFIG,show_progress=False)
+    return fetch_dataset(OPEN_PAYMENTS_CONFIG, show_progress=False)
 
 
 if __name__ == '__main__':

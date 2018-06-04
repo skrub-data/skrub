@@ -1,6 +1,5 @@
 [run]
 branch = True
-source = __YOUR_PROJECT_FOLDER__
 
 [report]
 exclude_lines =
