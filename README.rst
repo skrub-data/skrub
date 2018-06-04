@@ -7,8 +7,8 @@ Website: https://dirty-cat.github.io/
 
 It implements the following encoders for categorical variables:
 
-- Similarity encoding [CeVa18]_
-- Target encoding [MiBa01]_
+- Similarity encoding [1]_
+- Target encoding [2]_
 
 Installation
 ------------
