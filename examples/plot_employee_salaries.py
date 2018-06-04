@@ -11,9 +11,11 @@ The structure of this example will run as follows:
 * in the employee_salaries dataset we will first create a learning problem by 
  chosing a column to predict
 
-* then we will benchmark the different kind of encodings
-(one-hot, similarity encoding, target encoding)
-by fitting the target with their respective output with a Ridge Regression
+* then we will benchmark the different kind of encodings (one-hot, similarity \
+encoding, target encoding) by fitting the target using their respective output \
+and a Ridge Regression
+
+
 
 **Warning: this example is using the master branch of scikit-learn**
 

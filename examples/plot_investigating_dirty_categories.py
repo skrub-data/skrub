@@ -8,7 +8,7 @@ let's try to understand how embedding dirty categorical variables with
 
 #########################################################################
 # Getting an intution of what we mean by dirty data
-# ------------------------------------------------ 
+# -------------------------------------------------
 # Let's look at a dataset called employee salaries
 import pandas as pd
 import os
