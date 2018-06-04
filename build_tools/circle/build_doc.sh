@@ -121,7 +121,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   pandas="${PANDAS_VERSION:-*}"
 
 source activate testenv
-pip install sphinx-gallery
+pip install sphinx-gallery==0.1.12
 pip install python-Levenshtein
 
 # Build and install the project in dev mode
