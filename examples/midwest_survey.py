@@ -1,119 +1,132 @@
 """
 Semantic variation in the "Midwest"
 ===================================
-
-Benchmark of encoders for the midwest_survey dataset: the data comprises
+Here's some survey data with one dirty column, consisting of \
 an open-ended question, on which one-hot encoding does not work well.
+The other columns are more traditional categorical or numerical
+variables.
 
-Similarity encoding on this column gives much improved performance.
+Let's see how different encoding for the dirty column impact on the
+score of a classification problem.
 
 """
 
 import numpy as np
-import os
-from scipy import sparse
 
-import pandas as pd
-
-from sklearn.preprocessing import FunctionTransformer
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import StratifiedKFold
-
-import dirty_cat.datasets.fetching as fetching
 from dirty_cat import SimilarityEncoder
 
-# encoding methods
+################################################################################
+# Loading the data
+# ----------------
+from dirty_cat.datasets import fetch_midwest_survey
+import pandas as pd
+
+description = fetch_midwest_survey()
+df = pd.read_csv(description['path']).astype(str)
+
+################################################################################
+# Separating clean, and dirty columns as well a a column we will try to predict
+# ------------------------------------------------------------------------------
+target_column = 'Location (Census Region)'
+dirty_column = 'In your own words, what would you call the part of the country you live in now?'
+clean_columns = [
+    'Personally identification as a Midwesterner?',
+    'Illinois in MW?',
+    'Indiana in MW?',
+    'Kansas in MW?',
+    'Iowa in MW?',
+    'Michigan in MW?',
+    'Minnesota in MW?',
+    'Missouri in MW?',
+    'Nebraska in MW?',
+    'North Dakota in MW?',
+    'Ohio in MW?',
+    'South Dakota in MW?',
+    'Wisconsin in MW?',
+    'Arkansas in MW?',
+    'Colorado in MW?',
+    'Kentucky in MW?',
+    'Oklahoma in MW?',
+    'Pennsylvania in MW?',
+    'West Virginia in MW?',
+    'Montana in MW?',
+    'Wyoming in MW?',
+    'Gender',
+    'Age',
+    'Household Income',
+    'Education']
+y = df[target_column].values.ravel()
+
+##############################################################################
+# Creating a pipeline for data fitting and prediction
+# -----------------------------------------------------
+#  we first import the right encoders to transform our clean/dirty data:
+from sklearn.preprocessing import FunctionTransformer, CategoricalEncoder
+
 encoder_dict = {
-    'one-hot': OneHotEncoder(handle_unknown='ignore'),
+    'one-hot': CategoricalEncoder(handle_unknown='ignore',
+                                  encoding='onehot-dense'),
     'similarity': SimilarityEncoder(similarity='ngram',
                                     handle_unknown='ignore'),
     'num': FunctionTransformer(None)
 }
+##############################################################################
+# All the clean columns are encoded once and for all, but we since we
+# benchmark different categorical encodings for the dirty variable,
+# we create a function that takes an encoding as an input, and returns a \
+# scikit-learn pipeline for our problem.
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
 
-data_path = fetching.get_data_dir()
-fetching.fetch_midwest_survey()
-data_file = os.path.join(data_path, 'midwest_survey',
-                         'FiveThirtyEight_Midwest_Survey.csv')
 
+def make_pipeline(encoding_method):
+    # static transformers from the other columns
+    transformers = [('one-hot-clean', encoder_dict['one-hot'], clean_columns)]
+    # adding the encoded column
+    transformers += [(encoding_method + '-dirty', encoder_dict[encoding_method],
+                      [dirty_column])]
+    pipeline = Pipeline([
+        # Use ColumnTransformer to combine the features
+        ('union', ColumnTransformer(
+            transformers=transformers,
+            remainder='drop')),
+        ('scaler', StandardScaler(with_mean=False)),
+        ('clf', RandomForestClassifier(random_state=5))
+    ])
+
+    return pipeline
+
+
+###############################################################################
+# Looping over dirty-encoding methods
+# ----------------------------------
+# We then loop over encoding methods, scoring the different pipeline predictions
+# using a cross validation score:
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import StratifiedKFold
+
+cv = StratifiedKFold(n_splits=3, random_state=12, shuffle=True)
+all_scores = []
 for method in ['one-hot', 'similarity']:
-    # Load the data
-    df = pd.read_csv(data_file).astype(str)
-
-    target_column = 'Location (Census Region)'
-    y = df[target_column].values.ravel()
-
-    # Transform the data into a numerical matrix
-    encoder_type = {
-        'one-hot': [
-            'Personally identification as a Midwesterner?',
-            'Illinois in MW?',
-            'Indiana in MW?',
-            'Kansas in MW?',
-            'Iowa in MW?',
-            'Michigan in MW?',
-            'Minnesota in MW?',
-            'Missouri in MW?',
-            'Nebraska in MW?',
-            'North Dakota in MW?',
-            'Ohio in MW?',
-            'South Dakota in MW?',
-            'Wisconsin in MW?',
-            'Arkansas in MW?',
-            'Colorado in MW?',
-            'Kentucky in MW?',
-            'Oklahoma in MW?',
-            'Pennsylvania in MW?',
-            'West Virginia in MW?',
-            'Montana in MW?',
-            'Wyoming in MW?',
-            'Gender',
-            'Age',
-            'Household Income',
-            'Education']
-    }
-    try:
-        encoder_type[method].append(
-            'In your own words, what would you call the part of the country '
-            'you live in now?')
-    except KeyError:
-        encoder_type[method] = ('In your own words, what would you call the '
-                                'part of the country you live in now?')
-
-    # OneHotEncoder needs numerical data, hence we first use LabelEncoder
-    label_encoder = LabelEncoder()
-    df[encoder_type['one-hot']] = df[
-        encoder_type['one-hot']].apply(label_encoder.fit_transform)
-
-    cv = StratifiedKFold(n_splits=3, random_state=12, shuffle=True)
-
-    scores = []
-    for train_index, test_index in cv.split(df, df[target_column]):
-        X_train = [
-            encoder_dict[encoder].fit_transform(
-                df.loc[train_index, encoder_type[encoder]
-                ].values.reshape(len(train_index), -1))
-            for encoder in encoder_type]
-        X_train = sparse.hstack(X_train)
-        y_train = y[train_index]
-
-        X_test = [
-            encoder_dict[encoder].transform(
-                df.loc[test_index, encoder_type[encoder]
-                ].values.reshape(len(test_index), -1))
-            for encoder in encoder_type]
-        X_test = sparse.hstack(X_test)
-        y_test = y[test_index]
-        X_test.shape
-        X_train.shape
-
-        # Now predict the census region of each participant
-        classifier = RandomForestClassifier(random_state=5)
-        classifier.fit(X_train, y_train)
-        score = classifier.score(X_test, y_test)
-        scores.append(score)
+    pipeline = make_pipeline(method)
+    # Now predict the census region of each participant
+    scores = cross_val_score(pipeline, df, y, cv=cv)
+    all_scores.append(scores)
 
     print('%s encoding' % method)
     print('Accuracy score:  mean: %.3f; std: %.3f\n'
           % (np.mean(scores), np.std(scores)))
+
+###############################################################################
+# Plotting the data
+# ----------------------------------
+import matplotlib.pyplot as plt
+
+f, ax = plt.subplots()
+ax.boxplot(all_scores)
+ax.set_xticklabels(['one-hot', 'similarity'])
+###############################################################################
+# We can see that encoding the data using a SimilarityEncoder instead of
+# OneHotEncoder helps a lot in improving the cross validation score!

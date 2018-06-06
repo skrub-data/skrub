@@ -39,23 +39,33 @@ for i in range(5):
 # Now, there are some reason why traditional word-encoding methods won't work
 # very well. 
 #
-# * Using simple one-hot encoding will create orthogonal features, whereas it is clear that those 3 terms have a lot in common. 
+# * Using simple one-hot encoding will create orthogonal features, \
+# whereas it is clear that those 3 terms have a lot in common.
 #
-# * If we wanted to use word embedding methods such as word2vec, we would have to go through a cleaning phase: those algorithms are not trained to work on data such as 'Accountant/Auditor I'. However, that can be unsafe and take a long time.  
+# * If we wanted to use word embedding methods such as word2vec, \
+# we would have to go through a cleaning phase: those algorithms \
+# are not trained to work on data such as 'Accountant/Auditor I'. \
+# However, that can be unsafe and take a long time.
 
-from dirty_cat import SimilarityEncoder
 
 #########################################################################
-# That's where our encoders get into play. In order to robustly 
-# embed dirty semantic data, the SimilarityEncoder creates a similarity 
+# Encoding categorical data using SimilarityEncoder
+# -------------------------------------------------
+# That's where our encoders get into play. In order to robustly
+# embed dirty semantic data, the SimilarityEncoder creates a similarity
 # matrix based on the 3-gram structure of the data.
+from dirty_cat import SimilarityEncoder
+
 similarity_encoder = SimilarityEncoder(similarity='ngram')
 transformed_values = similarity_encoder.fit_transform(
     sorted_values.reshape(-1, 1))
 
 #########################################################################
-# lets now plot a couplt points at random using a low-dimensional representation
-# to get an intution of what the similarity encoder is doing
+# ------------------------------------------------------------
+# Plotting the new feature map using multi-dimensional scaling
+# ------------------------------------------------------------
+# lets now plot a couple points at random using a low-dimensional representation
+# to get an intuition of what the similarity encoder is doing
 from sklearn.manifold import MDS
 
 mds = MDS(dissimilarity='precomputed', n_init=10, random_state=42)
@@ -66,7 +76,7 @@ print(two_dim_data.shape)
 print(sorted_values.shape)
 
 #########################################################################
-# we first quickly fit a KNN so that the plots does not get too busy
+# we first quickly fit a KNN so that the plots does not get too busy:
 import numpy as np
 
 n_points = 5
@@ -80,7 +90,7 @@ _, indices_ = nn.kneighbors(transformed_values[random_points])
 indices = np.unique(indices_.squeeze())
 
 #########################################################################
-# and then plot it, adding the categories in the scatter plot
+# and then plot it, adding the categories in the scatter plot:
 
 import matplotlib.pyplot as plt
 
@@ -93,4 +103,23 @@ for x in indices:
 ax.set_title(
     'multi-dimensional-scaling representation using a 3gram similarity matrix')
 #########################################################################
-# and then plot it
+# ------------------------------------------------------------
+# Heatmap of the similarity matrix
+# ------------------------------------------------------------
+# We can also plot the distance matrix for those observations:
+f2, ax2 = plt.subplots()
+cax2 = ax2.matshow(transformed_values[indices, :][:, indices])
+ax2.set_yticks(np.arange(len(indices)))
+ax2.set_xticks(np.arange(len(indices)))
+# we crop the labels to that they do not take too much rooms in the figure
+labels = list(map(lambda x: x[:10], sorted_values[indices]))
+ax2.set_yticklabels(labels, rotation='30')
+ax2.set_xticklabels(labels, rotation='30', ha='left')
+f2.colorbar(cax2)
+f2.tight_layout()
+########################################################################
+# As shown in the previous plot, we see that "communication Equipment technician"'s
+# nearest neighbor is "telecommunication technician", although it is also
+# very close to senior "supply technician": therefore, we grasp the
+# "communication" part (not initially present in the category as a unique word)
+# as well as the technician part of this category.

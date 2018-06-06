@@ -149,7 +149,9 @@ def test_fetch_dataset():
                                        urlinfos=(fetching.UrlInfo(
                                            url='http://foo/data',
                                            filenames=('data',),
-                                           uncompress=False),))
+                                           uncompress=False),),
+                                       main_file='data',
+                                       source='http://foo/')
         fetching.fetch_dataset(urlinfo, show_progress=False)
         assert os.path.exists(os.path.join(datadir, 'data'))
         shutil.rmtree(os.path.join(datadir))
@@ -161,11 +163,14 @@ def test_fetch_dataset():
                                        urlinfos=(fetching.UrlInfo(
                                            url='http://foo/data.zip',
                                            filenames=('unzipped_data.txt',),
-                                           uncompress=True),))
+                                           uncompress=True),),
+                                       main_file='data',
+                                       source='http://foo/')
         fetching.fetch_dataset(urlinfo, show_progress=False)
         assert os.path.exists(os.path.join(datadir, 'unzipped_data.txt'))
     finally:
-        shutil.rmtree(datadir)
+        if os.path.exists(datadir):
+            shutil.rmtree(datadir)
 
 
 if __name__ == '__main__':

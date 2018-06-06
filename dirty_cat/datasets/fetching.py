@@ -14,7 +14,7 @@ from collections import namedtuple
 
 import warnings
 
-from ..datasets.utils import md5_hash, _check_if_exists, request_get, \
+from ..datasets.utils import md5_hash, _check_if_exists, \
     _uncompress_file, \
     _md5_sum_file, get_data_dir
 
@@ -33,7 +33,7 @@ from ..datasets.utils import md5_hash, _check_if_exists, request_get, \
 
 
 DatasetInfo = namedtuple('DatasetInfo',
-                         ['name', 'urlinfos'])
+                         ['name', 'urlinfos', 'main_file', 'source'])
 # a DatasetInfo Object is basically a tuple of UrlInfos object
 # an UrlInfo object is composed of an url and the filenames contained
 # in the request content
@@ -57,7 +57,9 @@ ROAD_SAFETY_CONFIG = DatasetInfo(
             filenames=("2015_Make_Model.csv",),
             uncompress=True
         )
-    )
+    ),
+    main_file="Accidents_2015.csv",  # for consistency, all files are relevant,
+    source="https://data.gov.uk/dataset/road-accidents-safety-data"
 )
 
 OPEN_PAYMENTS_CONFIG = DatasetInfo(
@@ -68,7 +70,9 @@ OPEN_PAYMENTS_CONFIG = DatasetInfo(
             url='http://download.cms.gov/openpayments/PGYR13_P011718.ZIP',
             filenames=None, uncompress=True
         ),
-    )
+    ),
+    main_file='OP_DTL_GNRL_PGYR2013_P01172018.csv',  # same
+    source='https://openpaymentsdata.cms.gov'
 )
 
 MIDWEST_SURVEY_CONFIG = DatasetInfo(
@@ -81,7 +85,9 @@ MIDWEST_SURVEY_CONFIG = DatasetInfo(
                 "FiveThirtyEight_Midwest_Survey.csv",
             ), uncompress=False
         ),
-    )
+    ),
+    main_file="FiveThirtyEight_Midwest_Survey.csv",
+    source="https://github.com/fivethirtyeight/data/tree/ master/region-survey"
 )
 MEDICAL_CHARGE_CONFIG = DatasetInfo(
     name='medical_charge',
@@ -96,7 +102,11 @@ MEDICAL_CHARGE_CONFIG = DatasetInfo(
             uncompress=True
 
         ),
-    )
+    ),
+    main_file="MedicalProviderChargeInpatient.csv",
+    source="https://www.cms.gov/Research-Statistics-Data-and-Systems/"
+           "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data"
+           "/Inpatient.html"
 )
 
 EMPLOYEE_SALARIES_CONFIG = DatasetInfo(
@@ -108,7 +118,9 @@ EMPLOYEE_SALARIES_CONFIG = DatasetInfo(
             filenames=("rows.csv",),
             uncompress=False
         ),
-    )
+    ),
+    main_file="rows.csv",
+    source="https://catalog.data.gov/dataset/ employee-salaries-2016"
 )
 
 TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
@@ -121,7 +133,9 @@ TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
                 "rows.csv",
             ), uncompress=True
         ),
-    )
+    ),
+    main_file="rows.csv",
+    source="https://catalog.data.gov/dataset/ traffic-violations-56dda"
 )
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -131,11 +145,13 @@ class FileChangedError(Exception):
 
 
 def _download_and_write(url, file, show_progress=True):
-    if show_progress:
+    if show_progress:  # maybe not an ideal design, should we mark
+        # clint as mandatory?
         from clint.textui import progress
     try:
         # using stream=True to download the response body only when
         # accessing the content attribute
+        from ..datasets.utils import request_get
         with request_get(url, stream=True) as r:
             total_length = r.headers.get('Content-Length')
             if total_length is not None:
@@ -168,6 +184,14 @@ def fetch_dataset(configfile: DatasetInfo, show_progress=True):
     for urlinfo in configfile.urlinfos:
         _fetch_file(urlinfo.url, data_dir, filenames=urlinfo.filenames,
                     uncompress=urlinfo.uncompress, show_progress=show_progress)
+    # returns the absolute path of the csv file where the data is
+    result_dict = {
+        'description': 'the downloaded data contains the {} dataset.\n'
+                       'It can originally be found at: {}'.format(
+            configfile.name, configfile.source),
+        'path': os.path.join(data_dir, configfile.main_file)
+    }
+    return result_dict
 
 
 def _fetch_file(url, data_dir, filenames=None, overwrite=False,
@@ -281,6 +305,10 @@ def fetch_midwest_survey():
 
 def fetch_open_payments():
     return fetch_dataset(OPEN_PAYMENTS_CONFIG, show_progress=False)
+
+
+def fetch_traffic_violations():
+    return fetch_dataset(TRAFFIC_VIOLATIONS_CONFIG, show_progress=False)
 
 
 if __name__ == '__main__':
