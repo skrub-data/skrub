@@ -19,7 +19,7 @@ dirty_cat requires:
 
 - Python (>= 3.5)
 - NumPy (>= 1.8.2)
-- SciPy (>= 1.1.0)
+- SciPy (>= 1.0.1)
 - scikit-learn (>= 0.19.0)
 
 Optional dependency:
