@@ -2,22 +2,20 @@
 Basic dirty_cat example: manipulating and looking at data
 =========================================================
 
-let's try to understand how embedding dirty categorical variables with 
+let's try to understand how embedding dirty categorical variables with
 3gram similarity can help in learning better models
 """
 
 #########################################################################
 # What do we mean by dirty data?
 # -------------------------------------------------
+#
 # Let's look at a dataset called employee salaries:
 import pandas as pd
-import os
-from dirty_cat.datasets.fetching import fetch_employee_salaries, get_data_dir
+from dirty_cat import datasets
 
-fetch_employee_salaries()
-data_path = get_data_dir()
-data_path = os.path.join(data_path, 'employee_salaries', 'rows.csv')
-df = pd.read_csv(data_path)
+employee_salaries = datasets.fetch_employee_salaries()
+df = pd.read_csv(employee_salaries['path'])
 print(df.head(n=5))
 
 #########################################################################
@@ -35,17 +33,17 @@ for i in range(5):
     print(sorted_values[i] + '\n')
 
 #########################################################################
-# Here we go! See how there are 3 kinds of Accountant/Auditor? I,II,and III. 
+# Here we go! See how there are 3 kinds of Accountant/Auditor? I,II,and III.
 # Now, there are some reason why traditional word-encoding methods won't work
-# very well. 
+# very well.
 #
-# * Using simple one-hot encoding will create orthogonal features, \
-# whereas it is clear that those 3 terms have a lot in common.
+# * Using simple one-hot encoding will create orthogonal features,
+#   whereas it is clear that those 3 terms have a lot in common.
 #
-# * If we wanted to use word embedding methods such as word2vec, \
-# we would have to go through a cleaning phase: those algorithms \
-# are not trained to work on data such as 'Accountant/Auditor I'. \
-# However, that can be unsafe and take a long time.
+# * If we wanted to use word embedding methods such as word2vec,
+#   we would have to go through a cleaning phase: those algorithms
+#   are not trained to work on data such as 'Accountant/Auditor I'.
+#   However, that can be unsafe and take a long time.
 
 
 #########################################################################
@@ -102,6 +100,7 @@ for x in indices:
             fontsize=8)
 ax.set_title(
     'multi-dimensional-scaling representation using a 3gram similarity matrix')
+
 #########################################################################
 # ------------------------------------------------------------
 # Heatmap of the similarity matrix
@@ -117,9 +116,12 @@ ax2.set_yticklabels(labels, rotation='30')
 ax2.set_xticklabels(labels, rotation='30', ha='left')
 f2.colorbar(cax2)
 f2.tight_layout()
+
 ########################################################################
 # As shown in the previous plot, we see that "communication Equipment technician"'s
 # nearest neighbor is "telecommunication technician", although it is also
 # very close to senior "supply technician": therefore, we grasp the
 # "communication" part (not initially present in the category as a unique word)
 # as well as the technician part of this category.
+
+
