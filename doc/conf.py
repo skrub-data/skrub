@@ -221,5 +221,7 @@ sphinx_gallery_conf = {
         #'mayavi': 'http://docs.enthought.com/mayavi/mayavi/',
         #'statsmodels': 'http://www.statsmodels.org/stable/',
         },
+    'examples_dirs':'../examples',
+    'gallery_dirs':'auto_examples'
 }
 
