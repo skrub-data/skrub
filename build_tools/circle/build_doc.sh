@@ -117,7 +117,7 @@ conda update --yes --quiet conda
 conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
   pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx=1.6.2 \
-  pillow \
+  pillow cython\
   pandas="${PANDAS_VERSION:-*}"
 #removed scikit learn from conda since it is installed from master after
 
@@ -128,7 +128,7 @@ pip install python-Levenshtein
 #cloning and installing from the ColumnTransformer branch
 git clone https://github.com/scikit-learn/scikit-learn.git
 cd scikit-learn
-pip install -e .
+python setup.py develop
 cd ..
 
 # Build and install the project in dev mode
