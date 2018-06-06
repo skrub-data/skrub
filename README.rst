@@ -5,6 +5,10 @@ dirty_cat is a Python module for machine-learning on dirty categorical variables
 
 Website: https://dirty-cat.github.io/
 
+For a detailed description of the problem of encoding dirty categorical data,
+see `Similarity encoding for learning with dirty categorical variables
+<https://hal.inria.fr/hal-01806175>`_ [1]_.
+
 Installation
 ------------
 
@@ -29,4 +33,10 @@ User installation
 If you already have a working installation of NumPy and SciPy,
 the easiest way to install dirty_cat is using ``pip`` ::
 
-    pip install -U ...
+    pip install -U --user dirty_cat
+
+
+References
+~~~~~~~~~~
+
+.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. https://hal.inria.fr/hal-01806175
