@@ -20,10 +20,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     probability of y conditional on this category.
     In addition it takes an empirical Bayes approach to shrink the estimate.
 
-    For more details, see Micci-Barreca, 2001: A preprocessing scheme for
-    high-cardinality categorical attributes in classification and prediction
-    problems.
-    
+ 
     Parameters
     ----------
     categories : 'auto' or a list of lists/arrays of values.
@@ -55,6 +52,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     categories_ : list of arrays
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
+
+    References
+    -----------
+    For more details, see Micci-Barreca, 2001: A preprocessing scheme for
+    high-cardinality categorical attributes in classification and prediction
+    problems.
     """
     def __init__(self,
                  categories='auto',
