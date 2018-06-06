@@ -7,7 +7,7 @@ let's try to understand how embedding dirty categorical variables with
 """
 
 #########################################################################
-# What do we mean by dirty data?
+# What do we mean by dirty categories?
 # -------------------------------------------------
 #
 # Let's look at a dataset called employee salaries:
@@ -15,27 +15,22 @@ import pandas as pd
 from dirty_cat import datasets
 
 employee_salaries = datasets.fetch_employee_salaries()
-df = pd.read_csv(employee_salaries['path'])
-print(df.head(n=5))
+data = pd.read_csv(employee_salaries['path'])
+print(data.head(n=5))
 
 #########################################################################
-# Here is how the columns are distributed:
-print(df.nunique())
+# Here is how many unique entries there is per column
+print(data.nunique())
 
 #########################################################################
-# Some numerical columns (Gross pay, etc..) and some obvious categorical
-# columns such as full_name
-# of course have many different values. but it is also the case
-# for other categorical columns  such as Employee position title:
-
-sorted_values = df['Employee Position Title'].sort_values().unique()
-for i in range(5):
-    print(sorted_values[i] + '\n')
+# As we can see, some entries have many different unique values:
+data['Employee Position Title'].value_counts().sort_index()
 
 #########################################################################
-# Here we go! See how there are 3 kinds of Accountant/Auditor? I,II,and III.
-# Now, there are some reason why traditional word-encoding methods won't work
-# very well.
+# These different entries are often variations on the same entities:
+# there are 4 kinds of Work Force Leader.
+#
+# Such variations will break traditional categorical encoding methods:
 #
 # * Using simple one-hot encoding will create orthogonal features,
 #   whereas it is clear that those 3 terms have a lot in common.
@@ -43,15 +38,25 @@ for i in range(5):
 # * If we wanted to use word embedding methods such as word2vec,
 #   we would have to go through a cleaning phase: those algorithms
 #   are not trained to work on data such as 'Accountant/Auditor I'.
-#   However, that can be unsafe and take a long time.
-
+#   However, this can be error prone and time consumming
+#
+# The problem is made easier if we can capture relationships between
+# entries
+#
+# To simplify understanding, we will focus on the column describing the
+# employee's position title
+# data
+values = data['Employee Position Title', 'Gender', 'Current Annual Salary']
 
 #########################################################################
-# Encoding categorical data using SimilarityEncoder
+# String similarity between entries
 # -------------------------------------------------
+#
 # That's where our encoders get into play. In order to robustly
 # embed dirty semantic data, the SimilarityEncoder creates a similarity
 # matrix based on the 3-gram structure of the data.
+sorted_values = values['Employee Position Title'].sort_values().unique()
+
 from dirty_cat import SimilarityEncoder
 
 similarity_encoder = SimilarityEncoder(similarity='ngram')
@@ -59,9 +64,9 @@ transformed_values = similarity_encoder.fit_transform(
     sorted_values.reshape(-1, 1))
 
 #########################################################################
-# ------------------------------------------------------------
-# Plotting the new feature map using multi-dimensional scaling
-# ------------------------------------------------------------
+# Plotting the new representation using multi-dimensional scaling
+# ................................................................
+#
 # lets now plot a couple points at random using a low-dimensional representation
 # to get an intuition of what the similarity encoder is doing:
 from sklearn.manifold import MDS
@@ -102,9 +107,9 @@ ax.set_title(
     'multi-dimensional-scaling representation using a 3gram similarity matrix')
 
 #########################################################################
-# ------------------------------------------------------------
 # Heatmap of the similarity matrix
-# ------------------------------------------------------------
+# ................................
+#
 # We can also plot the distance matrix for those observations:
 f2, ax2 = plt.subplots(figsize=(6, 6))
 cax2 = ax2.matshow(transformed_values[indices, :][:, indices])
@@ -123,4 +128,18 @@ f2.tight_layout()
 # "communication" part (not initially present in the category as a unique word)
 # as well as the technician part of this category.
 
+
+
+#########################################################################
+# Encoding categorical data using SimilarityEncoder
+# -------------------------------------------------
+#
+# A typical data-science workflow uses one-hot encoding to represent
+# categories.
+
+#########################################################################
+# The corresponding is very sparse
+#
+# SimilarityEncoder can be used to replace one-hot encoding capturing the
+# similarities:
 
