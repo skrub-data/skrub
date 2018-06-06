@@ -39,4 +39,4 @@ the easiest way to install dirty_cat is using ``pip`` ::
 References
 ~~~~~~~~~~
 
-.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Accepted for publication in: Machine Learning journal. Springer.
+.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Accepted for publication in: Machine Learning journal, Springer.
