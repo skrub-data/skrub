@@ -15,6 +15,12 @@ The :class:`SimilarityEncoder` can be used as a drop-in replacement for
 the `scikit-learn <https://scikit-learn.org>`_ class
 :class:`sklearn.preprocessing.OneHotEncoder`.
 
+For a detailed description of the problem of encoding dirty categorical data,
+see `Similarity encoding for learning with dirty categorical variables
+<https://hal.inria.fr/hal-01806175>`_ [1]_.
+
+.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Accepted for publication at: Machine Learning journal, Springer.
+
 API documentation
 =================
 

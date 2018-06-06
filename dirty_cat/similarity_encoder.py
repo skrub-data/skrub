@@ -62,6 +62,12 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
     This encoding is an alternative to OneHotEncoder in the case of
     dirty categorical variables.
 
+    For a detailed description of the method, see
+    `Similarity encoding for learning with dirty categorical variables
+    <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kégl. 2018
+    (accepted for publication at: Machine Learning journal, Springer).
+
+
     Parameters
     ----------
     similarity : str {'ngram', 'levenshtein-ratio', 'jaro', or\

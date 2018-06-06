@@ -20,6 +20,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     probability of y conditional on this category.
     In addition it takes an empirical Bayes approach to shrink the estimate.
 
+    For more details, see Micci-Barreca, 2001: A preprocessing scheme for
+    high-cardinality categorical attributes in classification and prediction
+    problems.
+    
     Parameters
     ----------
     categories : 'auto' or a list of lists/arrays of values.
