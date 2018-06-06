@@ -106,14 +106,13 @@ ax.set_title(
 # Heatmap of the similarity matrix
 # ------------------------------------------------------------
 # We can also plot the distance matrix for those observations:
-f2, ax2 = plt.subplots()
+f2, ax2 = plt.subplots(figsize=(6, 6))
 cax2 = ax2.matshow(transformed_values[indices, :][:, indices])
 ax2.set_yticks(np.arange(len(indices)))
 ax2.set_xticks(np.arange(len(indices)))
-# we crop the labels to that they do not take too much rooms in the figure
-labels = list(map(lambda x: x[:10], sorted_values[indices]))
-ax2.set_yticklabels(labels, rotation='30')
-ax2.set_xticklabels(labels, rotation='30', ha='left')
+ax2.set_yticklabels(sorted_values[indices], rotation='30')
+ax2.set_xticklabels(sorted_values[indices], rotation='60', ha='right')
+ax2.xaxis.tick_bottom()
 f2.colorbar(cax2)
 f2.tight_layout()
 
