@@ -1,7 +1,7 @@
 """
 Semantic variation in the "Midwest"
 ===================================
-Here's some survey data with one dirty column, consisting of \
+Here's some survey data with one dirty column, consisting of
 an open-ended question, on which one-hot encoding does not work well.
 The other columns are more traditional categorical or numerical
 variables.
@@ -71,7 +71,7 @@ encoder_dict = {
     'num': FunctionTransformer(None)
 }
 ##############################################################################
-# All the clean columns are encoded once and for all, but we since we
+# All the clean columns are encoded once and for all, but since we
 # benchmark different categorical encodings for the dirty variable,
 # we create a function that takes an encoding as an input, and returns a \
 # scikit-learn pipeline for our problem.
@@ -93,7 +93,7 @@ def make_pipeline(encoding_method):
             transformers=transformers,
             remainder='drop')),
         ('scaler', StandardScaler(with_mean=False)),
-        ('clf', RandomForestClassifier(random_state=5))
+        ('classifier', RandomForestClassifier(random_state=5))
     ])
 
     return pipeline

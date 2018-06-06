@@ -7,9 +7,9 @@ let's try to understand how embedding dirty categorical variables with
 """
 
 #########################################################################
-# Getting an intution of what we mean by dirty data
+# What do we mean by dirty data?
 # -------------------------------------------------
-# Let's look at a dataset called employee salaries
+# Let's look at a dataset called employee salaries:
 import pandas as pd
 import os
 from dirty_cat.datasets.fetching import fetch_employee_salaries, get_data_dir
@@ -21,14 +21,14 @@ df = pd.read_csv(data_path)
 print(df.head(n=5))
 
 #########################################################################
-# Here is how the columns are distributed
+# Here is how the columns are distributed:
 print(df.nunique())
 
 #########################################################################
 # Some numerical columns (Gross pay, etc..) and some obvious categorical
 # columns such as full_name
 # of course have many different values. but it is also the case
-# for other categorical columns  such as Employee position title
+# for other categorical columns  such as Employee position title:
 
 sorted_values = df['Employee Position Title'].sort_values().unique()
 for i in range(5):
@@ -65,7 +65,7 @@ transformed_values = similarity_encoder.fit_transform(
 # Plotting the new feature map using multi-dimensional scaling
 # ------------------------------------------------------------
 # lets now plot a couple points at random using a low-dimensional representation
-# to get an intuition of what the similarity encoder is doing
+# to get an intuition of what the similarity encoder is doing:
 from sklearn.manifold import MDS
 
 mds = MDS(dissimilarity='precomputed', n_init=10, random_state=42)
