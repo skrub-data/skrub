@@ -168,4 +168,4 @@ f4.tight_layout()
 
 #########################################################################
 # Other examples in the dirty_cat documentation show how
-# similarity encoding impacts prediction performance."
+# similarity encoding impacts prediction performance.
