@@ -123,7 +123,8 @@ f2.colorbar(cax2)
 f2.tight_layout()
 
 ########################################################################
-# As shown in the previous plot, we see that the nearset neighbor of "Communication Equipment Technician"
+# As shown in the previous plot, we see that the nearest neighbor of
+# "Communication Equipment Technician"
 # is "telecommunication technician", although it is also
 # very close to senior "supply technician": therefore, we grasp the
 # "communication" part (not initially present in the category as a unique word)
@@ -168,5 +169,5 @@ ax4.xaxis.tick_bottom()
 f4.tight_layout()
 
 #########################################################################
-# you can check out how similarity encoding impacts prediction performance
-# on machine learning problems in the other examples.
+# Other examples in the dirty_cat documentation show how
+# similarity encoding impacts prediction performance."
