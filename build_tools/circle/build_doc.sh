@@ -122,7 +122,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
 #removed scikit learn from conda since it is installed from master after
 
 source activate testenv
-pip install sphinx-gallery==0.1.12
+pip install sphinx-gallery
 pip install python-Levenshtein
 
 #cloning and installing from the ColumnTransformer branch
