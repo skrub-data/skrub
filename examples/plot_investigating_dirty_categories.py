@@ -139,17 +139,14 @@ f2.tight_layout()
 # categories.
 from sklearn.preprocessing import CategoricalEncoder
 
-n_obs, n_categories = 20, 20
-# employee_position_titles = values[
-#     'Employee Position Title'].sort_values().to_frame()
-# or
-# employee_position_titles=values[
-#     'Employee Position Title'].sample(n=n_observations)?
+# encoding simply a subset of the observations
+n_obs = 20
+employee_position_titles = values['Employee Position Title'].head(
+    n_obs).to_frame()
 categorical_encoder = CategoricalEncoder(encoding='onehot-dense')
-one_hot_encoded = categorical_encoder.fit_transform(
-    sorted_values[:n_obs].reshape(-1, 1))
+one_hot_encoded = categorical_encoder.fit_transform(employee_position_titles)
 f3, ax3 = plt.subplots(figsize=(6, 6))
-cax3 = ax3.matshow(one_hot_encoded[:n_obs, :n_categories])
+cax3 = ax3.matshow(one_hot_encoded)
 f3.colorbar(cax3)
 f3.suptitle('Employee Position Title values, one-hot encoded')
 ax3.xaxis.tick_bottom()
@@ -162,7 +159,8 @@ f3.tight_layout()
 # similarities:
 
 f4, ax4 = plt.subplots(figsize=(6, 6))
-cax4 = ax4.matshow(transformed_values[:n_obs, :n_obs])
+similarity_encoded = similarity_encoder.fit_transform(employee_position_titles)
+cax4 = ax4.matshow(similarity_encoded)
 f4.colorbar(cax4)
 f4.suptitle('Employee Position Title values, similarity encoded')
 ax4.xaxis.tick_bottom()
