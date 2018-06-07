@@ -11,7 +11,7 @@ import requests
 import shutil
 import urllib
 from collections import namedtuple
-
+import contextlib
 import warnings
 
 from ..datasets.utils import md5_hash, _check_if_exists, \
@@ -152,7 +152,7 @@ def _download_and_write(url, file, show_progress=True):
         # using stream=True to download the response body only when
         # accessing the content attribute
         from ..datasets.utils import request_get
-        with request_get(url, stream=True) as r:
+        with contextlib.closing(request_get(url, stream=True)) as r:
             total_length = r.headers.get('Content-Length')
             if total_length is not None:
                 with open(file, 'wb') as local_file:
