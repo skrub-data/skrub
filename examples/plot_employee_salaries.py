@@ -2,25 +2,14 @@
 Predicting the salary of employees
 ==================================
 
-Let's have a look on how using similarity encoding instead of
-more traditional categorical encoding like one-hot encoding can affect
-prediction performance.
-
-The structure of this example will run as follows:
-
-* in the employee_salaries dataset we will first create a learning problem by 
- chosing a column to predict
-
-* then we will benchmark the different kind of encodings (one-hot, similarity \
-encoding, target encoding) for one categoricl variable
-by fitting the target using their respective output \
-and a Ridge Regression
-
-
-The learning problem consists of prediciting the column 'Current Annual Salary'\
-depending on a mix of clean columns and on dirty column \
-We choose to benchmark different categorical encodings for \
-the dirty column 'Employee Position Title', that contains \
+The `employee salaries <https://catalog.data.gov/dataset/employee-salaries-2016>`_
+dataset contains information
+about annual salaries (year 2016) for more than 9,000 employees of the 
+Montgomery County (Maryland, US). In this example, we are interested
+in predicting the column *Current Annual Salary*
+depending on a mix of clean columns and a dirty column.
+We choose to benchmark different categorical encodings for
+the dirty column *Employee Position Title*, that contains
 dirty categorical data.
 
 **Warning: this example is using the master branch of scikit-learn**
@@ -29,16 +18,17 @@ dirty categorical data.
 
 ################################################################################
 # Data Importing and preprocessing
-# ---------------------
-# we first import the datataset 'employee_salaries'
+# --------------------------------
+# We first import the datataset:
 import pandas as pd
 from dirty_cat.datasets import fetch_employee_salaries
 
-description = fetch_employee_salaries()
-df = pd.read_csv(description['path']).astype(str)
-
+employee_salaries = fetch_employee_salaries()
+df = pd.read_csv(employee_salaries['path']).astype(str)
+print(employee_salaries['description'])
 ################################################################################
 # and carry out some basic preprocessing:
+
 df['Current Annual Salary'] = df['Current Annual Salary'].str.strip('$').astype(
     float)
 df['Date First Hired'] = pd.to_datetime(df['Date First Hired'])
@@ -48,28 +38,31 @@ target_column = 'Current Annual Salary'
 y = df[target_column].values.ravel()
 
 #########################################################################
-# Choosing clean columns
-# ----------------------
-# the other column are supposed clean, so it is 'safe' to use
-# one hot encoding to transform them
+# Choosing columns
+# -----------------
+# For categorical columns that are supossed to be clean, it is "safe" to
+# use one hot encoding to transform them:
 
 clean_columns = {
     'Gender': 'one-hot',
     'Department Name': 'one-hot',
     'Assignment Category': 'one-hot',
-    'Year First Hired': 'num'}
+    'Year First Hired': 'numerical'}
 
 #########################################################################
-# We then choose  which categorical encoding methods to benchmark:
+# We then choose the categorical encoding methods we want to benchmark
+# and the dirty categorical variable:
+
 encoding_methods = ['one-hot', 'target', 'similarity']
 dirty_column = 'Employee Position Title'
 #########################################################################
 
 
 #########################################################################
-# Creating a model fitting pipeline
-# ------------------------
-# the encoders for both clean and dirty data are first imported:
+# Creating a learning pipeline
+# ----------------------------
+# The encoders for both clean and dirty data are first imported:
+
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import CategoricalEncoder
 from dirty_cat import SimilarityEncoder, TargetEncoder
@@ -80,11 +73,12 @@ encoders_dict = {
     'similarity': SimilarityEncoder(similarity='ngram',
                                     handle_unknown='ignore'),
     'target': TargetEncoder(handle_unknown='ignore'),
-    'num': FunctionTransformer(None)}
+    'numerical': FunctionTransformer(None)}
 
-# we create a function that takes one key of our encoders_dict,
-# returns a encoding+fitting pipeline with the associated encoder,
+# We then create a function that takes one key of our ``encoders_dict``,
+# returns a pipeline object with the associated encoder,
 # as well as a Scaler and a RidgeCV regressor:
+
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
@@ -110,7 +104,7 @@ def make_pipeline(encoding_method):
 #########################################################################
 # Fitting each encoding methods with a RidgeCV
 # --------------------------------------------
-# eventually, we loop over the different encoding methods,
+# Eventually, we loop over the different encoding methods,
 # instanciate each time a new pipeline, fit it
 # and and store the returned cross-validation score
 from sklearn.preprocessing import StandardScaler
@@ -133,12 +127,12 @@ for method in encoding_methods:
 #########################################################################
 # Plotting the results
 # --------------------
-# plotting the scores on a boxplot, we get:
+# Finally, we plot the scores on a boxplot:
 import matplotlib.pyplot as plt
 
 f, ax = plt.subplots()
-ax.boxplot(all_scores)
-ax.set_xticklabels(encoding_methods)
+ax.boxplot(all_scores, vert=False)
+ax.set_yticklabels(encoding_methods)
 
 
 
