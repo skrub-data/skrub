@@ -15,6 +15,7 @@ import pandas as pd
 from dirty_cat import datasets
 
 employee_salaries = datasets.fetch_employee_salaries()
+print(employee_salaries['description'])
 data = pd.read_csv(employee_salaries['path'])
 print(data.head(n=5))
 
@@ -24,7 +25,7 @@ print(data.nunique())
 
 #########################################################################
 # As we can see, some entries have many different unique values:
-data['Employee Position Title'].value_counts().sort_index()
+print(data['Employee Position Title'].value_counts().sort_index())
 
 #########################################################################
 # These different entries are often variations on the same entities:
@@ -46,7 +47,7 @@ data['Employee Position Title'].value_counts().sort_index()
 # To simplify understanding, we will focus on the column describing the
 # employee's position title
 # data
-values = data['Employee Position Title', 'Gender', 'Current Annual Salary']
+values = data[['Employee Position Title', 'Gender', 'Current Annual Salary']]
 
 #########################################################################
 # String similarity between entries
@@ -122,12 +123,12 @@ f2.colorbar(cax2)
 f2.tight_layout()
 
 ########################################################################
-# As shown in the previous plot, we see that "communication Equipment technician"'s
-# nearest neighbor is "telecommunication technician", although it is also
+# As shown in the previous plot, we see that the nearest neighbor of
+# "Communication Equipment Technician"
+# is "telecommunication technician", although it is also
 # very close to senior "supply technician": therefore, we grasp the
 # "communication" part (not initially present in the category as a unique word)
 # as well as the technician part of this category.
-
 
 
 #########################################################################
@@ -136,6 +137,20 @@ f2.tight_layout()
 #
 # A typical data-science workflow uses one-hot encoding to represent
 # categories.
+from sklearn.preprocessing import CategoricalEncoder
+
+# encoding simply a subset of the observations
+n_obs = 20
+employee_position_titles = values['Employee Position Title'].head(
+    n_obs).to_frame()
+categorical_encoder = CategoricalEncoder(encoding='onehot-dense')
+one_hot_encoded = categorical_encoder.fit_transform(employee_position_titles)
+f3, ax3 = plt.subplots(figsize=(6, 6))
+cax3 = ax3.matshow(one_hot_encoded)
+f3.colorbar(cax3)
+f3.suptitle('Employee Position Title values, one-hot encoded')
+ax3.xaxis.tick_bottom()
+f3.tight_layout()
 
 #########################################################################
 # The corresponding is very sparse
@@ -143,3 +158,14 @@ f2.tight_layout()
 # SimilarityEncoder can be used to replace one-hot encoding capturing the
 # similarities:
 
+f4, ax4 = plt.subplots(figsize=(6, 6))
+similarity_encoded = similarity_encoder.fit_transform(employee_position_titles)
+cax4 = ax4.matshow(similarity_encoded)
+f4.colorbar(cax4)
+f4.suptitle('Employee Position Title values, similarity encoded')
+ax4.xaxis.tick_bottom()
+f4.tight_layout()
+
+#########################################################################
+# Other examples in the dirty_cat documentation show how
+# similarity encoding impacts prediction performance.
