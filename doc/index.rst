@@ -53,7 +53,7 @@ About
 =========
 
 dirty_cat is for now a repository for developing ideas with high-quality
-implementations, a form of a research project for now: there is still
+implementations, a form of a research project: there is still
 little known about the problems of dirty categories. We hope that
 tradeoffs will emerge in the long run, and that these tradeoffs will
 enable us to do better software. We really need people giving feedback on
