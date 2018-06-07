@@ -186,7 +186,7 @@ def fetch_dataset(configfile: DatasetInfo, show_progress=True):
                     uncompress=urlinfo.uncompress, show_progress=show_progress)
     # returns the absolute path of the csv file where the data is
     result_dict = {
-        'description': 'the downloaded data contains the {} dataset.\n'
+        'description': 'The downloaded data contains the {} dataset.\n'
                        'It can originally be found at: {}'.format(
             configfile.name, configfile.source),
         'path': os.path.join(data_dir, configfile.main_file)
