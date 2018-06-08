@@ -1,5 +1,3 @@
 
-dirty_cat usage
+Using dirty_cat
 ===============
-
-Tutorials on how to use dirty_cat.

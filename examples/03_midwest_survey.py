@@ -123,11 +123,12 @@ for method in ['one-hot', 'similarity']:
 # Plot the results
 # ------------------
 import seaborn
-ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
 import matplotlib.pyplot as plt
-plt.ylabel('Encoding', size=17)
-plt.xlabel('Prediction accuracy', size=17)
-plt.yticks(size=17)
+plt.figure(figsize=(4, 3))
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
+plt.ylabel('Encoding', size=20)
+plt.xlabel('Prediction accuracy     ', size=20)
+plt.yticks(size=20)
 plt.tight_layout()
 
 ###############################################################################

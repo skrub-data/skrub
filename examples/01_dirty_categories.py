@@ -29,7 +29,7 @@ print(data['Employee Position Title'].value_counts().sort_index())
 
 #########################################################################
 # These different entries are often variations on the same entities:
-# there are 4 kinds of Work Force Leader.
+# there are 3 kinds of Accountant/Auditor.
 #
 # Such variations will break traditional categorical encoding methods:
 #
@@ -119,6 +119,7 @@ ax2.set_xticks(np.arange(len(indices)))
 ax2.set_yticklabels(sorted_values[indices], rotation='30')
 ax2.set_xticklabels(sorted_values[indices], rotation='60', ha='right')
 ax2.xaxis.tick_bottom()
+ax2.set_title('Similarities across categories')
 f2.colorbar(cax2)
 f2.tight_layout()
 
@@ -146,10 +147,9 @@ employee_position_titles = values['Employee Position Title'].head(
 categorical_encoder = CategoricalEncoder(encoding='onehot-dense')
 one_hot_encoded = categorical_encoder.fit_transform(employee_position_titles)
 f3, ax3 = plt.subplots(figsize=(6, 6))
-cax3 = ax3.matshow(one_hot_encoded)
-f3.colorbar(cax3)
-f3.suptitle('Employee Position Title values, one-hot encoded')
-ax3.xaxis.tick_bottom()
+ax3.matshow(one_hot_encoded)
+ax3.set_title('Employee Position Title values, one-hot encoded')
+ax3.axis('off')
 f3.tight_layout()
 
 #########################################################################
@@ -160,10 +160,9 @@ f3.tight_layout()
 
 f4, ax4 = plt.subplots(figsize=(6, 6))
 similarity_encoded = similarity_encoder.fit_transform(employee_position_titles)
-cax4 = ax4.matshow(similarity_encoded)
-f4.colorbar(cax4)
-f4.suptitle('Employee Position Title values, similarity encoded')
-ax4.xaxis.tick_bottom()
+ax4.matshow(similarity_encoded)
+ax4.set_title('Employee Position Title values, similarity encoded')
+ax4.axis('off')
 f4.tight_layout()
 
 #########################################################################

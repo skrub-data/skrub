@@ -124,6 +124,10 @@ html_theme_options = {
     'github_button': 'true',
     'show_powered_by': 'false',
     'logo_name': 'true',
+    'gray_1': "#030",
+    'gray_2': "#F1FFF1",
+    'link': "#076B00",
+#    'gray_3': "#090",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -225,5 +229,6 @@ sphinx_gallery_conf = {
     'examples_dirs':'../examples',
     'gallery_dirs':'auto_examples',
     'within_subsection_order': FileNameSortKey,
+    'download_section_examples': False,
 }
 
