@@ -21,8 +21,8 @@ from dirty_cat import SimilarityEncoder
 from dirty_cat.datasets import fetch_midwest_survey
 import pandas as pd
 
-description = fetch_midwest_survey()
-df = pd.read_csv(description['path']).astype(str)
+dataset = fetch_midwest_survey()
+df = pd.read_csv(dataset['path']).astype(str)
 
 ################################################################################
 # Separating clean, and dirty columns as well a a column we will try to predict

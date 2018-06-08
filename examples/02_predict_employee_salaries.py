@@ -19,16 +19,19 @@ dirty categorical data.
 ################################################################################
 # Data Importing and preprocessing
 # --------------------------------
-# We first import the datataset:
-import pandas as pd
+#
+# We first download the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
-
 employee_salaries = fetch_employee_salaries()
-df = pd.read_csv(employee_salaries['path']).astype(str)
 print(employee_salaries['description'])
+
+################################################################################
+# load it:
+import pandas as pd
+df = pd.read_csv(employee_salaries['path']).astype(str)
+
 ################################################################################
 # and carry out some basic preprocessing:
-
 df['Current Annual Salary'] = df['Current Annual Salary'].str.strip('$').astype(
     float)
 df['Date First Hired'] = pd.to_datetime(df['Date First Hired'])
