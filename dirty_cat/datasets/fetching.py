@@ -11,7 +11,7 @@ import requests
 import shutil
 import urllib
 from collections import namedtuple
-
+import contextlib
 import warnings
 
 from ..datasets.utils import md5_hash, _check_if_exists, \
@@ -152,7 +152,7 @@ def _download_and_write(url, file, show_progress=True):
         # using stream=True to download the response body only when
         # accessing the content attribute
         from ..datasets.utils import request_get
-        with request_get(url, stream=True) as r:
+        with contextlib.closing(request_get(url, stream=True)) as r:
             total_length = r.headers.get('Content-Length')
             if total_length is not None:
                 with open(file, 'wb') as local_file:
@@ -186,7 +186,7 @@ def fetch_dataset(configfile: DatasetInfo, show_progress=True):
                     uncompress=urlinfo.uncompress, show_progress=show_progress)
     # returns the absolute path of the csv file where the data is
     result_dict = {
-        'description': 'the downloaded data contains the {} dataset.\n'
+        'description': 'The downloaded data contains the {} dataset.\n'
                        'It can originally be found at: {}'.format(
             configfile.name, configfile.source),
         'path': os.path.join(data_dir, configfile.main_file)
