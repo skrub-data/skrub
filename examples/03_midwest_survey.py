@@ -11,10 +11,6 @@ score of a classification problem.
 
 """
 
-import numpy as np
-
-from dirty_cat import SimilarityEncoder
-
 ################################################################################
 # Loading the data
 # ----------------
@@ -62,6 +58,7 @@ y = df[target_column].values.ravel()
 # -------------------------------------------
 #  we first import the right encoders to transform our clean/dirty data:
 from sklearn.preprocessing import FunctionTransformer, CategoricalEncoder
+from dirty_cat import SimilarityEncoder
 
 encoder_dict = {
     'one-hot': CategoricalEncoder(handle_unknown='ignore',
@@ -117,7 +114,7 @@ for method in ['one-hot', 'similarity']:
 
     print('%s encoding' % method)
     print('Accuracy score:  mean: %.3f; std: %.3f\n'
-          % (np.mean(scores), np.std(scores)))
+          % (scores.mean(), scores.std()))
 
 ###############################################################################
 # Plot the results
