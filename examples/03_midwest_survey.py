@@ -126,7 +126,7 @@ import matplotlib.pyplot as plt
 
 f, ax = plt.subplots()
 ax.boxplot(all_scores, vert=False)
-ax.set_xticklabels(['one-hot', 'similarity'])
+ax.set_yticklabels(['one-hot\nencoding', 'similarity\nencoding'])
 ###############################################################################
 # We can see that encoding the data using a SimilarityEncoder instead of
 # OneHotEncoder helps a lot in improving the cross validation score!
