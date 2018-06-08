@@ -38,6 +38,7 @@ Encoders
 .. autosummary::
    :toctree: generated/
    :template: class.rst
+   :nosignatures:
 
    SimilarityEncoder
    TargetEncoder
@@ -48,6 +49,7 @@ Data download
 .. autosummary::
    :toctree: generated/
    :template: function.rst
+   :nosignatures:
 
    datasets.fetch_employee_salaries
 
