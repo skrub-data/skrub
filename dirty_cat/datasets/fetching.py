@@ -223,7 +223,10 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
     Returns
     -------
-    full_name: the full name of the extracted file
+    a dictionary containing:
+    - a short description of the dataset (under the 'description' key )
+    - an absolute path leading to the csv file where the data is stored locally
+    (under the 'path' key)
 
     NOTES
     -----
@@ -288,6 +291,28 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 
 
 def fetch_employee_salaries():
+    """fetches the employee_salaries dataset
+
+    the employee_salaries dataset contains information about annual salaries
+    (year 2016) for more than 9,000 employees of the Montgomery County
+    (Maryland, US).
+
+
+    Returns
+    -------
+    dict
+        a dictionary containing:
+            - a short description of the dataset (under the 'description' key)
+            - an absolute path leading to the csv file where the data is
+            stored locally (under the 'path' key)
+
+
+    References
+    ----------
+    https://catalog.data.gov/dataset/ employee-salaries-2016
+
+    """
+
     return fetch_dataset(EMPLOYEE_SALARIES_CONFIG, show_progress=False)
 
 
