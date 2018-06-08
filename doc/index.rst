@@ -7,19 +7,21 @@ dirty_cat: machine learning on dirty categories
 
 .. currentmodule:: dirty_cat
 
-`dirty_cat` is a small Python module to perform machine-learning on
-non-curated categories. In particular, it provides **encoders that are
+`dirty_cat` helps with machine-learning on
+non-curated categories. It provides **encoders that are
 robust to morphological variants**, such as typos, in the category strings.
 
-The :class:`SimilarityEncoder` can be used as a drop-in replacement for
-the `scikit-learn <https://scikit-learn.org>`_ class
-:class:`sklearn.preprocessing.OneHotEncoder`.
+The :class:`SimilarityEncoder` is a drop-in replacement for
+`scikit-learn <https://scikit-learn.org>`_'s
+:class:`~sklearn.preprocessing.OneHotEncoder`.
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
 <https://hal.inria.fr/hal-01806175>`_ [1]_.
 
 :Installing: `$ pip install --user dirty_cat`
+
+*Requires Python 3*
 
 ______
 
