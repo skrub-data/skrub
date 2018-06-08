@@ -10,5 +10,25 @@ div.body h2 {
     color: #055100;
 }
 
+/* The download note on top of the examples */
+div.sphx-glr-download-link-note {
+    right: 2pt;
+    top: 10pt;
+    max-width: 15ex;
+    float: right;
+    padding: 0px 1px 10px 10px;
+    background-color: #F6F6F6;
+}
 
+div.sphx-glr-download-link-note p.admonition-title {
+    display: none;
+}
+
+/* For screens larger than 1200px: alabaster default settings are that
+ * the body is 940px wide and the sidebar 220px */
+@media only screen and (min-width: 1200px) {
+    div.sphx-glr-download-link-note {
+	position: absolute; /* Overrides the float behavior */
+    }
+}
 
