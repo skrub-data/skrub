@@ -125,7 +125,7 @@ for method in ['one-hot', 'similarity']:
 import matplotlib.pyplot as plt
 
 f, ax = plt.subplots()
-ax.boxplot(all_scores)
+ax.boxplot(all_scores, vert=False)
 ax.set_xticklabels(['one-hot', 'similarity'])
 ###############################################################################
 # We can see that encoding the data using a SimilarityEncoder instead of
