@@ -205,6 +205,7 @@ intersphinx_mapping = {
 
 
 # -- sphinx-gallery configuration -----------------------------------------
+from sphinx_gallery.sorting import FileNameSortKey
 sphinx_gallery_conf = {
     'doc_module': 'dirty_cat',
     'filename_pattern': '',
@@ -222,6 +223,7 @@ sphinx_gallery_conf = {
         #'statsmodels': 'http://www.statsmodels.org/stable/',
         },
     'examples_dirs':'../examples',
-    'gallery_dirs':'auto_examples'
+    'gallery_dirs':'auto_examples',
+    'within_subsection_order': FileNameSortKey,
 }
 
