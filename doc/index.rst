@@ -26,8 +26,7 @@ ______
 API documentation
 =================
 
-
-Base classes
+Encoders
 ------------
 
 .. autosummary::
@@ -37,7 +36,7 @@ Base classes
    SimilarityEncoder
    TargetEncoder
 
-Datasets for examples
+Data download
 -----------------------
 
 .. autosummary::
@@ -45,6 +44,8 @@ Datasets for examples
    :template: function.rst
 
    datasets.fetch_employee_salaries
+
+|
 
 .. include:: auto_examples/index.rst
     :start-line: 2
