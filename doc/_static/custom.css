@@ -1,0 +1,14 @@
+/* Main page title */
+div.body h1 {
+    text-align: center;
+    font-size: 270%;
+    color: #055100;
+}
+
+/* Secondary sections title */
+div.body h2 {
+    color: #055100;
+}
+
+
+
