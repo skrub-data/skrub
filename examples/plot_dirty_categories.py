@@ -1,13 +1,13 @@
 """
-Basic dirty_cat example: manipulating and looking at data
-=========================================================
+Investigating dirty categories
+=================================
 
-let's try to understand how embedding dirty categorical variables with
-3gram similarity can help in learning better models
+What are dirty categorical variables and how can a good encoding help
+with statistical learning.
 """
 
 #########################################################################
-# What do we mean by dirty data?
+# What do we mean by dirty categories?
 # -------------------------------------------------
 #
 # Let's look at a dataset called employee salaries:
