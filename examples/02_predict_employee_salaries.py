@@ -112,7 +112,7 @@ from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import KFold, cross_val_score
 import numpy as np
 
-all_scores = []
+all_scores = dict()
 
 cv = KFold(n_splits=5, random_state=12, shuffle=True)
 scoring = 'r2'
@@ -122,17 +122,19 @@ for method in encoding_methods:
     print('{} encoding'.format(method))
     print('{} score:  mean: {:.3f}; std: {:.3f}\n'.format(
         scoring, np.mean(scores), np.std(scores)))
-    all_scores.append(scores)
+    all_scores[method] = scores
 
 #########################################################################
 # Plotting the results
 # --------------------
 # Finally, we plot the scores on a boxplot:
+import seaborn
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
 import matplotlib.pyplot as plt
-
-f, ax = plt.subplots()
-ax.boxplot(all_scores, vert=False)
-ax.set_yticklabels(encoding_methods)
+plt.ylabel('Encoding', size=17)
+plt.xlabel('Prediction accuracy', size=17)
+plt.yticks(size=17)
+plt.tight_layout()
 
 
 

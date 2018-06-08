@@ -58,8 +58,8 @@ clean_columns = [
 y = df[target_column].values.ravel()
 
 ##############################################################################
-# Creating a pipeline for data fitting and prediction
-# -----------------------------------------------------
+# A pipeline for data fitting and prediction
+# -------------------------------------------
 #  we first import the right encoders to transform our clean/dirty data:
 from sklearn.preprocessing import FunctionTransformer, CategoricalEncoder
 
@@ -100,33 +100,36 @@ def make_pipeline(encoding_method):
 
 
 ###############################################################################
-# Looping over dirty-encoding methods
-# ----------------------------------
+# Evaluation of different encoding methods
+# -----------------------------------------
 # We then loop over encoding methods, scoring the different pipeline predictions
 # using a cross validation score:
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import StratifiedKFold
 
 cv = StratifiedKFold(n_splits=3, random_state=12, shuffle=True)
-all_scores = []
+all_scores = {}
 for method in ['one-hot', 'similarity']:
     pipeline = make_pipeline(method)
     # Now predict the census region of each participant
     scores = cross_val_score(pipeline, df, y, cv=cv)
-    all_scores.append(scores)
+    all_scores[method] = scores
 
     print('%s encoding' % method)
     print('Accuracy score:  mean: %.3f; std: %.3f\n'
           % (np.mean(scores), np.std(scores)))
 
 ###############################################################################
-# Plotting the data
-# ----------------------------------
+# Plot the results
+# ------------------
+import seaborn
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
 import matplotlib.pyplot as plt
+plt.ylabel('Encoding', size=17)
+plt.xlabel('Prediction accuracy', size=17)
+plt.yticks(size=17)
+plt.tight_layout()
 
-f, ax = plt.subplots()
-ax.boxplot(all_scores, vert=False)
-ax.set_yticklabels(['one-hot\nencoding', 'similarity\nencoding'])
 ###############################################################################
 # We can see that encoding the data using a SimilarityEncoder instead of
 # OneHotEncoder helps a lot in improving the cross validation score!
