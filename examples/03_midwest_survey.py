@@ -57,12 +57,11 @@ y = df[target_column].values.ravel()
 # A pipeline for data fitting and prediction
 # -------------------------------------------
 #  we first import the right encoders to transform our clean/dirty data:
-from sklearn.preprocessing import FunctionTransformer, CategoricalEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
 from dirty_cat import SimilarityEncoder
 
 encoder_dict = {
-    'one-hot': CategoricalEncoder(handle_unknown='ignore',
-                                  encoding='onehot-dense'),
+    'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram',
                                     handle_unknown='ignore'),
     'num': FunctionTransformer(None)

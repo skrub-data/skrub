@@ -138,13 +138,13 @@ f2.tight_layout()
 #
 # A typical data-science workflow uses one-hot encoding to represent
 # categories.
-from sklearn.preprocessing import CategoricalEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 # encoding simply a subset of the observations
 n_obs = 20
 employee_position_titles = values['Employee Position Title'].head(
     n_obs).to_frame()
-categorical_encoder = CategoricalEncoder(encoding='onehot-dense')
+categorical_encoder = OneHotEncoder(sparse=False)
 one_hot_encoded = categorical_encoder.fit_transform(employee_position_titles)
 f3, ax3 = plt.subplots(figsize=(6, 6))
 ax3.matshow(one_hot_encoded)
