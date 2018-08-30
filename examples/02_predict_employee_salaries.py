@@ -67,12 +67,11 @@ dirty_column = 'Employee Position Title'
 # The encoders for both clean and dirty data are first imported:
 
 from sklearn.preprocessing import FunctionTransformer
-from sklearn.preprocessing import CategoricalEncoder
+from sklearn.preprocessing import OneHotEncoder
 from dirty_cat import SimilarityEncoder, TargetEncoder
 
 encoders_dict = {
-    'one-hot': CategoricalEncoder(handle_unknown='ignore',
-                                  encoding='onehot-dense'),
+    'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram',
                                     handle_unknown='ignore'),
     'target': TargetEncoder(handle_unknown='ignore'),
