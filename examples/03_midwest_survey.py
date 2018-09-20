@@ -11,18 +11,14 @@ score of a classification problem.
 
 """
 
-import numpy as np
-
-from dirty_cat import SimilarityEncoder
-
 ################################################################################
 # Loading the data
 # ----------------
 from dirty_cat.datasets import fetch_midwest_survey
 import pandas as pd
 
-description = fetch_midwest_survey()
-df = pd.read_csv(description['path']).astype(str)
+dataset = fetch_midwest_survey()
+df = pd.read_csv(dataset['path']).astype(str)
 
 ################################################################################
 # Separating clean, and dirty columns as well a a column we will try to predict
@@ -58,14 +54,14 @@ clean_columns = [
 y = df[target_column].values.ravel()
 
 ##############################################################################
-# Creating a pipeline for data fitting and prediction
-# -----------------------------------------------------
+# A pipeline for data fitting and prediction
+# -------------------------------------------
 #  we first import the right encoders to transform our clean/dirty data:
-from sklearn.preprocessing import FunctionTransformer, CategoricalEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
+from dirty_cat import SimilarityEncoder
 
 encoder_dict = {
-    'one-hot': CategoricalEncoder(handle_unknown='ignore',
-                                  encoding='onehot-dense'),
+    'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram',
                                     handle_unknown='ignore'),
     'num': FunctionTransformer(None)
@@ -100,33 +96,37 @@ def make_pipeline(encoding_method):
 
 
 ###############################################################################
-# Looping over dirty-encoding methods
-# ----------------------------------
+# Evaluation of different encoding methods
+# -----------------------------------------
 # We then loop over encoding methods, scoring the different pipeline predictions
 # using a cross validation score:
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import StratifiedKFold
 
 cv = StratifiedKFold(n_splits=3, random_state=12, shuffle=True)
-all_scores = []
+all_scores = {}
 for method in ['one-hot', 'similarity']:
     pipeline = make_pipeline(method)
     # Now predict the census region of each participant
     scores = cross_val_score(pipeline, df, y, cv=cv)
-    all_scores.append(scores)
+    all_scores[method] = scores
 
     print('%s encoding' % method)
     print('Accuracy score:  mean: %.3f; std: %.3f\n'
-          % (np.mean(scores), np.std(scores)))
+          % (scores.mean(), scores.std()))
 
 ###############################################################################
-# Plotting the data
-# ----------------------------------
+# Plot the results
+# ------------------
+import seaborn
 import matplotlib.pyplot as plt
+plt.figure(figsize=(4, 3))
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
+plt.ylabel('Encoding', size=20)
+plt.xlabel('Prediction accuracy     ', size=20)
+plt.yticks(size=20)
+plt.tight_layout()
 
-f, ax = plt.subplots()
-ax.boxplot(all_scores)
-ax.set_xticklabels(['one-hot', 'similarity'])
 ###############################################################################
 # We can see that encoding the data using a SimilarityEncoder instead of
 # OneHotEncoder helps a lot in improving the cross validation score!

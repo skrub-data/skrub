@@ -19,16 +19,19 @@ dirty categorical data.
 ################################################################################
 # Data Importing and preprocessing
 # --------------------------------
-# We first import the datataset:
-import pandas as pd
+#
+# We first download the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
-
 employee_salaries = fetch_employee_salaries()
-df = pd.read_csv(employee_salaries['path']).astype(str)
 print(employee_salaries['description'])
+
+################################################################################
+# load it:
+import pandas as pd
+df = pd.read_csv(employee_salaries['path']).astype(str)
+
 ################################################################################
 # and carry out some basic preprocessing:
-
 df['Current Annual Salary'] = df['Current Annual Salary'].str.strip('$').astype(
     float)
 df['Date First Hired'] = pd.to_datetime(df['Date First Hired'])
@@ -64,12 +67,11 @@ dirty_column = 'Employee Position Title'
 # The encoders for both clean and dirty data are first imported:
 
 from sklearn.preprocessing import FunctionTransformer
-from sklearn.preprocessing import CategoricalEncoder
+from sklearn.preprocessing import OneHotEncoder
 from dirty_cat import SimilarityEncoder, TargetEncoder
 
 encoders_dict = {
-    'one-hot': CategoricalEncoder(handle_unknown='ignore',
-                                  encoding='onehot-dense'),
+    'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram',
                                     handle_unknown='ignore'),
     'target': TargetEncoder(handle_unknown='ignore'),
@@ -112,7 +114,7 @@ from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import KFold, cross_val_score
 import numpy as np
 
-all_scores = []
+all_scores = dict()
 
 cv = KFold(n_splits=5, random_state=12, shuffle=True)
 scoring = 'r2'
@@ -122,17 +124,20 @@ for method in encoding_methods:
     print('{} encoding'.format(method))
     print('{} score:  mean: {:.3f}; std: {:.3f}\n'.format(
         scoring, np.mean(scores), np.std(scores)))
-    all_scores.append(scores)
+    all_scores[method] = scores
 
 #########################################################################
 # Plotting the results
 # --------------------
 # Finally, we plot the scores on a boxplot:
+import seaborn
 import matplotlib.pyplot as plt
-
-f, ax = plt.subplots()
-ax.boxplot(all_scores, vert=False)
-ax.set_yticklabels(encoding_methods)
+plt.figure(figsize=(4, 3))
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
+plt.ylabel('Encoding', size=20)
+plt.xlabel('Prediction accuracy     ', size=20)
+plt.yticks(size=20)
+plt.tight_layout()
 
 
 

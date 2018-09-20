@@ -124,6 +124,10 @@ html_theme_options = {
     'github_button': 'true',
     'show_powered_by': 'false',
     'logo_name': 'true',
+    'gray_1': "#030",
+    'gray_2': "#F1FFF1",
+    'link': "#076B00",
+#    'gray_3': "#090",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -205,6 +209,7 @@ intersphinx_mapping = {
 
 
 # -- sphinx-gallery configuration -----------------------------------------
+from sphinx_gallery.sorting import FileNameSortKey
 sphinx_gallery_conf = {
     'doc_module': 'dirty_cat',
     'filename_pattern': '',
@@ -222,6 +227,8 @@ sphinx_gallery_conf = {
         #'statsmodels': 'http://www.statsmodels.org/stable/',
         },
     'examples_dirs':'../examples',
-    'gallery_dirs':'auto_examples'
+    'gallery_dirs':'auto_examples',
+    'within_subsection_order': FileNameSortKey,
+    'download_section_examples': False,
 }
 
