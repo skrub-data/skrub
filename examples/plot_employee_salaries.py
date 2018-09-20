@@ -7,7 +7,7 @@ dataset contains information
 about annual salaries (year 2016) for more than 9,000 employees of the 
 Montgomery County (Maryland, US). In this example, we are interested
 in predicting the column *Current Annual Salary*
-depending on a mix of clean columns and on dirty column.
+depending on a mix of clean columns and a dirty column.
 We choose to benchmark different categorical encodings for
 the dirty column *Employee Position Title*, that contains
 dirty categorical data.
