@@ -26,12 +26,12 @@ employee_salaries = fetch_employee_salaries()
 print(employee_salaries['description'])
 
 ################################################################################
-# load it:
+# Then we load it:
 import pandas as pd
 df = pd.read_csv(employee_salaries['path']).astype(str)
 
 ################################################################################
-# and carry out some basic preprocessing:
+# Now, let's carry out some basic preprocessing:
 df['Current Annual Salary'] = df['Current Annual Salary'].str.strip('$').astype(
     float)
 df['Date First Hired'] = pd.to_datetime(df['Date First Hired'])
@@ -43,7 +43,7 @@ y = df[target_column].values.ravel()
 #########################################################################
 # Choosing columns
 # -----------------
-# For categorical columns that are supossed to be clean, it is "safe" to
+# For categorical columns that are supposed to be clean, it is "safe" to
 # use one hot encoding to transform them:
 
 clean_columns = {
@@ -107,8 +107,8 @@ def make_pipeline(encoding_method):
 # Fitting each encoding methods with a RidgeCV
 # --------------------------------------------
 # Eventually, we loop over the different encoding methods,
-# instanciate each time a new pipeline, fit it
-# and and store the returned cross-validation score
+# instantiate each time a new pipeline, fit it
+# and store the returned cross-validation score:
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import KFold, cross_val_score
