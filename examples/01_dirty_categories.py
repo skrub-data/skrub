@@ -39,13 +39,13 @@ print(data['Employee Position Title'].value_counts().sort_index())
 # * If we wanted to use word embedding methods such as word2vec,
 #   we would have to go through a cleaning phase: those algorithms
 #   are not trained to work on data such as 'Accountant/Auditor I'.
-#   However, this can be error prone and time consumming
+#   However, this can be error prone and time consuming.
 #
-# The problem is made easier if we can capture relationships between
-# entries
+# The problem becomes easier if we can capture relationships between
+# entries.
 #
 # To simplify understanding, we will focus on the column describing the
-# employee's position title
+# employee's position title:
 # data
 values = data[['Employee Position Title', 'Gender', 'Current Annual Salary']]
 
@@ -68,7 +68,7 @@ transformed_values = similarity_encoder.fit_transform(
 # Plotting the new representation using multi-dimensional scaling
 # ................................................................
 #
-# lets now plot a couple points at random using a low-dimensional representation
+# Let's now plot a couple points at random using a low-dimensional representation
 # to get an intuition of what the similarity encoder is doing:
 from sklearn.manifold import MDS
 
@@ -80,7 +80,7 @@ print(two_dim_data.shape)
 print(sorted_values.shape)
 
 #########################################################################
-# we first quickly fit a KNN so that the plots does not get too busy:
+# We first quickly fit a KNN so that the plots does not get too busy:
 import numpy as np
 
 n_points = 5
@@ -94,7 +94,7 @@ _, indices_ = nn.kneighbors(transformed_values[random_points])
 indices = np.unique(indices_.squeeze())
 
 #########################################################################
-# and then plot it, adding the categories in the scatter plot:
+# Then we plot it, adding the categories in the scatter plot:
 
 import matplotlib.pyplot as plt
 
