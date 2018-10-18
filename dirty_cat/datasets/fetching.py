@@ -293,7 +293,7 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
 def fetch_employee_salaries():
     """fetches the employee_salaries dataset
 
-    the employee_salaries dataset contains information about annual salaries
+    The employee_salaries dataset contains information about annual salaries
     (year 2016) for more than 9,000 employees of the Montgomery County
     (Maryland, US).
 
