@@ -127,6 +127,8 @@ pip install python-Levenshtein
 #cloning and installing from the ColumnTransformer branch
 git clone https://github.com/scikit-learn/scikit-learn.git
 cd scikit-learn
+git fetch --all
+git checkout remotes/origin/0.20.X
 python setup.py develop
 cd ..
 
