@@ -125,10 +125,7 @@ pip install sphinx-gallery
 pip install python-Levenshtein
 
 #cloning and installing from the ColumnTransformer branch
-git clone https://github.com/scikit-learn/scikit-learn.git
-cd scikit-learn
-python setup.py develop
-cd ..
+pip install scikit-learn==0.20
 
 # Build and install the project in dev mode
 python setup.py develop
