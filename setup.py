@@ -2,9 +2,6 @@
 
 import os
 from setuptools import setup, find_packages
-import sys
-
-# For some commands, use setuptools
 
 version_file = os.path.join(
     os.path.dirname(__file__), 'dirty_cat', 'VERSION.txt')
@@ -15,7 +12,6 @@ description_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(description_file) as fh:
     DESCRIPTION = fh.read()
 
-extra_setuptools_args = {}
 
 if __name__ == '__main__':
     setup(name='dirty_cat',
@@ -41,4 +37,4 @@ if __name__ == '__main__':
           packages=find_packages(),
           package_data={'dirty_cat': ['VERSION.txt', 'data/midwest_survey/*.csv']},
           install_requires=['sklearn', 'numpy', 'scipy', 'requests'],
-          **extra_setuptools_args)
+          )
