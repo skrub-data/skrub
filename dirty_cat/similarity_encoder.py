@@ -2,7 +2,7 @@ import numpy as np
 from scipy import sparse
 
 from sklearn.preprocessing import LabelEncoder
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 
@@ -10,7 +10,7 @@ from sklearn.utils import check_array
 from dirty_cat import string_distances
 
 
-def ngram_similarity(X, cats, ngram_range, dtype=np.float64):
+def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     """
     Similarity encoding for dirty categorical variables:
         Given to arrays of strings, returns the
@@ -24,7 +24,11 @@ def ngram_similarity(X, cats, ngram_range, dtype=np.float64):
     unq_X = np.unique(X)
     cats = np.array([' %s ' % cat for cat in cats])
     unq_X_ = np.array([' %s ' % x for x in unq_X])
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(min_n, max_n))
+    if not hashing_dim:
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(min_n, max_n))
+    else:
+        vectorizer = HashingVectorizer(analyzer='char', ngram_range=(min_n, max_n),
+                                       n_features=hashing_dim, norm=None, alternate_sign=False)
     vectorizer.fit(np.concatenate((cats, unq_X_)))
     count2 = vectorizer.transform(cats)
     count1 = vectorizer.transform(unq_X_)
@@ -110,12 +114,13 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(self, similarity='ngram',
                  ngram_range=(3, 3), categories='auto',
-                 dtype=np.float64, handle_unknown='ignore'):
+                 dtype=np.float64, handle_unknown='ignore', hashing_dim=None):
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
         self.similarity = similarity
         self.ngram_range = ngram_range
+        self.hashing_dim = hashing_dim
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
@@ -138,6 +143,11 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet "
                                      "supported")
+
+        if (self.hashing_dim is not None) and (not isinstance(self.hashing_dim, int)):
+            print(type(self.hashing_dim))
+            raise ValueError("hashing_dim has invalid type, expected None or "
+                             "int.")
 
         X_temp = check_array(X, dtype=None)
         if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
@@ -220,6 +230,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
             for j, cats in enumerate(self.categories_):
                 encoder = ngram_similarity(X[:, j], cats,
                                            ngram_range=(min_n, max_n),
+                                           hashing_dim=self.hashing_dim,
                                            dtype=self.dtype)
                 out.append(encoder)
             return np.hstack(out)
