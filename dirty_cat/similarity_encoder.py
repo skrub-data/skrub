@@ -1,10 +1,9 @@
+import warnings
+
 import numpy as np
 from scipy import sparse
-
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing._encoders import _BaseEncoder
-from sklearn.utils import check_array
-
 
 from dirty_cat import string_distances
 
@@ -45,6 +44,17 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     return np.nan_to_num(np.vstack(out))
 
 
+def get_prototype_frequencies(prototypes):
+    """
+    Computes the frequencies of the values contained in prototypes
+    Reverse sorts the array by the frequency
+    Returns a numpy array of the values without their frequencies
+    """
+    uniques, counts = np.unique(prototypes, return_counts=True)
+    sorted_indexes = np.argsort(counts)[::-1]
+    return uniques[sorted_indexes], counts[sorted_indexes]
+
+
 _VECTORIZED_EDIT_DISTANCES = {
     'levenshtein-ratio': np.vectorize(string_distances.levenshtein_ratio),
     'jaro': np.vectorize(string_distances.jaro),
@@ -75,13 +85,17 @@ class SimilarityEncoder(_BaseEncoder):
         Only significant for ``similarity='ngram'``. The range of
         values for the n_gram similarity.
 
-    categories : 'auto' or a list of lists/arrays of values.
+    categories : 'auto', 'k-means', 'most_frequent' or a list of lists/arrays of values.
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
+        - 'most_frequent' : Computes the most frequent values for every
+           categorical variable
+        - 'k-means' : Computes the K nearest neighbors of K-mean centroids
+           in order to choose the prototype categories
 
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
@@ -93,6 +107,9 @@ class SimilarityEncoder(_BaseEncoder):
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
+    n_prototypes: number of prototype we want to use.
+        Useful when `most_frequent` or `k-means` is used.
+        Must be a positiv non null integer.
 
     Attributes
     ----------
@@ -111,15 +128,35 @@ class SimilarityEncoder(_BaseEncoder):
 
     """
 
-    def __init__(self, similarity='ngram',
-                 ngram_range=(3, 3), categories='auto',
-                 dtype=np.float64, handle_unknown='ignore', hashing_dim=None):
+    def __init__(self, similarity='ngram', ngram_range=(3, 3), categories='auto', dtype=np.float64,
+                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None):
+
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
         self.similarity = similarity
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
+        self.n_prototypes = n_prototypes
+
+        assert categories in [None, 'auto', 'k-means', 'most_frequent']
+
+        if categories in ['k_means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
+            raise ValueError('n_prototypes expected None or a positive non null integer')
+        if categories == 'auto' and n_prototypes is not None:
+            warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
+
+    def get_most_frequent(self, prototypes):
+        """ Get the most frequent category prototypes
+        Parameters
+        ----------
+        prototypes : the list of values for a category variable
+        Returns
+        -------
+        The n_prototypes most frequent values for a category variable
+        """
+        values, _ = get_prototype_frequencies(prototypes)[:self.n_prototypes]
+        return values
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
@@ -133,32 +170,32 @@ class SimilarityEncoder(_BaseEncoder):
         """
         X = self._check_X(X)
 
-        n_samples, n_features = X.shape
-
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
             raise ValueError(template % self.handle_unknown)
 
         if ((self.hashing_dim is not None) and
-            (not isinstance(self.hashing_dim, int))):
+                (not isinstance(self.hashing_dim, int))):
             raise ValueError("value '%r' was specified for hashing_dim, "
                              "which has invalid type, expected None or "
                              "int." % self.hashing_dim)
 
-        if self.categories != 'auto':
+        if self.categories not in ['auto', 'most_frequent', 'k-means']:
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet "
                                      "supported")
 
         n_samples, n_features = X.shape
-
         self.categories_ = list()
+
         for i in range(n_features):
             Xi = X[:, i]
             if self.categories == 'auto':
                 self.categories_.append(np.unique(Xi))
+            elif self.categories == 'most_frequent':
+                self.categories_.append(self.get_most_frequent(Xi))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
