@@ -2,9 +2,7 @@ import numpy as np
 from scipy import sparse
 
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.preprocessing._encoders import _BaseEncoder
-from sklearn.utils import check_array
-
+from sklearn.preprocessing._encoders import OneHotEncoder
 
 from dirty_cat import string_distances
 
@@ -52,7 +50,7 @@ _VECTORIZED_EDIT_DISTANCES = {
 }
 
 
-class SimilarityEncoder(_BaseEncoder):
+class SimilarityEncoder(OneHotEncoder):
     """Encode string categorical features as a numeric array.
 
     The input to this transformer should be an array-like of
@@ -114,12 +112,19 @@ class SimilarityEncoder(_BaseEncoder):
     def __init__(self, similarity='ngram',
                  ngram_range=(3, 3), categories='auto',
                  dtype=np.float64, handle_unknown='ignore', hashing_dim=None):
+        super().__init__()
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
         self.similarity = similarity
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
+
+        # To delete unused OneHotEncoder attributes
+        del self.n_values
+        del self._handle_deprecations
+        del self.active_features_
+        del self.feature_indices_
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
@@ -227,3 +232,4 @@ class SimilarityEncoder(_BaseEncoder):
             return np.hstack(out)
         else:
             raise ValueError("Unknown similarity: '%s'" % self.similarity)
+
