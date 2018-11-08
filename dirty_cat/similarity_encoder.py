@@ -107,9 +107,12 @@ class SimilarityEncoder(OneHotEncoder):
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
+    hashing_dim : int type or None.
+        If None, the base vectorizer is CountVectorizer, else it's set to
+        HashingVectorizer with a number of features equal to `hashing_dim`.
     n_prototypes: number of prototype we want to use.
         Useful when `most_frequent` or `k-means` is used.
-        Must be a positiv non null integer.
+        Must be a positive non null integer.
 
     Attributes
     ----------
@@ -127,8 +130,9 @@ class SimilarityEncoder(OneHotEncoder):
 
 
     """
-    def __init__(self, similarity='ngram', ngram_range=(3, 3), categories='auto', dtype=np.float64,
-                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None):
+    def __init__(self, similarity='ngram', ngram_range=(3, 3),
+                 categories='auto', dtype=np.float64, handle_unknown='ignore',
+                 hashing_dim=None, n_prototypes=None):
         super().__init__()
         self.categories = categories
         self.dtype = dtype
@@ -145,6 +149,12 @@ class SimilarityEncoder(OneHotEncoder):
         if categories == 'auto' and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
 
+        # To delete unused OneHotEncoder attributes
+        del self.n_values
+        del self._handle_deprecations
+        del self.active_features_
+        del self.feature_indices_
+
     def get_most_frequent(self, prototypes):
         """ Get the most frequent category prototypes
         Parameters
@@ -156,12 +166,6 @@ class SimilarityEncoder(OneHotEncoder):
         """
         values, _ = get_prototype_frequencies(prototypes)[:self.n_prototypes]
         return values
-
-        # To delete unused OneHotEncoder attributes
-        del self.n_values
-        del self._handle_deprecations
-        del self.active_features_
-        del self.feature_indices_
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
@@ -269,4 +273,3 @@ class SimilarityEncoder(OneHotEncoder):
             return np.hstack(out)
         else:
             raise ValueError("Unknown similarity: '%s'" % self.similarity)
-
