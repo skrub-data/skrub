@@ -152,6 +152,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
         for i in range(n_features):
             le = self._label_encoders_[i]
             Xi = X[:, i]
+
             if self.categories == 'auto':
                 le.fit(Xi)
             else:
