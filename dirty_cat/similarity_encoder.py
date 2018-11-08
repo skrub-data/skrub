@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -124,9 +126,16 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
         self.similarity = similarity
         self.ngram_range = ngram_range
         assert prototyping_strategy in [None, "k-means", "most_frequent"]
+
+        if categories in ['k_means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
+            raise ValueError('n_prototypes expected None or a positive non null integer')
+        if categories == 'auto' and n_prototypes is not None:
+            warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
+
         self.prototyping_strategy = prototyping_strategy
         if self.prototyping_strategy is not None:
             assert n_prototypes is not None
+
         self.n_prototypes = n_prototypes
 
     def get_most_frequent(self, prototypes):
@@ -162,27 +171,26 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
         n_samples, n_features = X.shape
 
-        if self.prototyping_strategy is None:
+        if self.categories is None:
             self._label_encoders_ = [LabelEncoder() for _ in range(n_features)]
 
         for i in range(n_features):
             le = self._label_encoders_[i]
 
             Xi = X[:, i]
-            if self.prototyping_strategy == 'most_frequent':
+            if self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
-            elif self.prototyping_strategy is None:
-                if self.categories == 'auto':
-                    le.fit(Xi)
-                else:
-                    if self.handle_unknown == 'error':
-                        valid_mask = np.in1d(Xi, self.categories[i])
-                        if not np.all(valid_mask):
-                            diff = np.unique(Xi[~valid_mask])
-                            msg = ("Found unknown categories {0} in column {1}"
-                                   " during fit".format(diff, i))
-                            raise ValueError(msg)
-                    le.classes_ = np.array(self.categories[i])
+            elif self.categories == 'auto':
+                le.fit(Xi)
+            else:
+                if self.handle_unknown == 'error':
+                    valid_mask = np.in1d(Xi, self.categories[i])
+                    if not np.all(valid_mask):
+                        diff = np.unique(Xi[~valid_mask])
+                        msg = ("Found unknown categories {0} in column {1}"
+                               " during fit".format(diff, i))
+                        raise ValueError(msg)
+                le.classes_ = np.array(self.categories[i])
 
         if self.prototyping_strategy is None:
             self.categories_ = [le.classes_ for le in self._label_encoders_]
