@@ -44,7 +44,7 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     return np.nan_to_num(np.vstack(out))
 
 
-def get_prototype_sorted_by_frequencies(prototypes):
+def get_prototype_frequencies(prototypes):
     """
     Computes the frequencies of the values contained in prototypes
     Reverse sorts the array by the frequency
@@ -155,7 +155,7 @@ class SimilarityEncoder(_BaseEncoder):
         -------
         The n_prototypes most frequent values for a category variable
         """
-        values, _ = get_prototype_sorted_by_frequencies(prototypes)[:self.n_prototypes]
+        values, _ = get_prototype_frequencies(prototypes)[:self.n_prototypes]
         return values
 
     def fit(self, X, y=None):
