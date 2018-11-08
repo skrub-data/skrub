@@ -2,7 +2,7 @@ import numpy as np
 from scipy import sparse
 
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.preprocessing._encoders import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import string_distances
 
