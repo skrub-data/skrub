@@ -27,7 +27,8 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     if not hashing_dim:
         vectorizer = CountVectorizer(analyzer='char', ngram_range=(min_n, max_n))
     else:
-        vectorizer = HashingVectorizer(analyzer='char', ngram_range=(min_n, max_n), n_features=hashing_dim)
+        vectorizer = HashingVectorizer(analyzer='char', ngram_range=(min_n, max_n),
+                                       n_features=hashing_dim, norm=None, alternate_sign=False)
     vectorizer.fit(np.concatenate((cats, unq_X_)))
     count2 = vectorizer.transform(cats)
     count1 = vectorizer.transform(unq_X_)
