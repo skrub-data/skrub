@@ -51,9 +51,8 @@ def get_prototype_sorted_by_frequencies(prototypes):
     Returns a numpy array of the values without their frequencies
     """
     uniques, counts = np.unique(prototypes, return_counts=True)
-    frequencies = list(zip(uniques, counts))
-    frequencies, _ = sorted(frequencies, key=lambda elt: elt[1], reverse=True)
-    return np.array([f for f in frequencies])
+    sorted_indexes = np.argsort(counts)[::-1]
+    return uniques[sorted_indexes], counts[sorted_indexes]
 
 
 _VECTORIZED_EDIT_DISTANCES = {
@@ -108,6 +107,9 @@ class SimilarityEncoder(_BaseEncoder):
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
+    n_prototypes: number of prototype we want to use.
+        Useful when `most_frequent` or `k-means` is used.
+        Must be a positiv non null integer.
 
     Attributes
     ----------
@@ -153,7 +155,8 @@ class SimilarityEncoder(_BaseEncoder):
         -------
         The n_prototypes most frequent values for a category variable
         """
-        return get_prototype_sorted_by_frequencies(prototypes)[:self.n_prototypes]
+        values, _ = get_prototype_sorted_by_frequencies(prototypes)[:self.n_prototypes]
+        return values
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
