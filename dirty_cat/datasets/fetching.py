@@ -317,22 +317,98 @@ def fetch_employee_salaries():
 
 
 def fetch_road_safety():
+    """fetches the road safety dataset
+
+    Returns
+    -------
+    dict
+        a dictionary containing:
+            - a short description of the dataset (under the 'description' key)
+            - an absolute path leading to the csv file where the data is
+            stored locally (under the 'path' key)
+
+
+    References
+    ----------
+    https://data.gov.uk/dataset/road-accidents-safety-dataset
+    """
+
     return fetch_dataset(ROAD_SAFETY_CONFIG, show_progress=False)
 
 
 def fetch_medical_charge():
+    """fetches the medical charge dataset
+
+    Returns
+    -------
+    dict
+        a dictionary containing:
+            - a short description of the dataset (under the 'description' key)
+            - an absolute path leading to the csv file where the data is
+            stored locally (under the 'path' key)
+
+
+    References
+    ----------
+    https://www.cms.gov/Research-Statistics-Data-and-Systems/Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data/Inpatient.html"
+    """
     return fetch_dataset(MEDICAL_CHARGE_CONFIG, show_progress=False)
 
 
 def fetch_midwest_survey():
+    """fetches the midwest survey dataset
+
+    Returns
+    -------
+    dict
+        a dictionary containing:
+            - a short description of the dataset (under the 'description' key)
+            - an absolute path leading to the csv file where the data is
+            stored locally (under the 'path' key)
+
+
+    References
+    ----------
+    https://github.com/fivethirtyeight/data/tree/master/region-survey
+    """
     return fetch_dataset(MIDWEST_SURVEY_CONFIG, show_progress=False)
 
 
 def fetch_open_payments():
+    """fetches the open payements dataset
+
+    Returns
+    -------
+    dict
+        a dictionary containing:
+            - a short description of the dataset (under the 'description' key)
+            - an absolute path leading to the csv file where the data is
+            stored locally (under the 'path' key)
+
+
+    References
+    ----------
+    https://openpaymentsdata.cms.gov
+    """
     return fetch_dataset(OPEN_PAYMENTS_CONFIG, show_progress=False)
 
 
 def fetch_traffic_violations():
+    """fetches the traffic violations dataset
+
+    Returns
+    -------
+    dict
+        a dictionary containing:
+            - a short description of the dataset (under the 'description' key)
+            - an absolute path leading to the csv file where the data is
+            stored locally (under the 'path' key)
+
+
+    References
+    ----------
+    https://catalog.data.gov/dataset/ traffic-violations-56dda
+    """
     return fetch_dataset(TRAFFIC_VIOLATIONS_CONFIG, show_progress=False)
 
 
