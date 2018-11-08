@@ -217,6 +217,7 @@ class SimilarityEncoder(_BaseEncoder):
 
         for i in range(n_features):
             Xi = X[:, i]
+
             if self.categories == 'auto':
                 self.categories_.append(np.unique(Xi))
             elif self.categories == 'most_frequent':
