@@ -52,6 +52,10 @@ Data download
    :nosignatures:
 
    datasets.fetch_employee_salaries
+   datasets.fetch_medical_charge
+   datasets.fetch_midwest_survey
+   datasets.fetch_open_payments
+   datasets.fetch_road_safety
 
 About
 =========

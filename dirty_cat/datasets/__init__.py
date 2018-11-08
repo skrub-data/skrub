@@ -7,6 +7,7 @@ from .fetching import fetch_midwest_survey, fetch_employee_salaries, \
 from .fetching import get_data_dir
 
 __all__ = [
+    'get_data_dir',
     'fetch_medical_charge',
     'fetch_midwest_survey',
     'fetch_employee_salaries',
