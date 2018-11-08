@@ -10,7 +10,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
 
         model = similarity_encoder.SimilarityEncoder(
         similarity=similarity, handle_unknown='ignore',
-        hashing_dim=hashing_dim, categories=categories)
+        hashing_dim=hashing_dim, categories=categories, n_prototypes=n_prototypes)
 
         encoder = model.fit(X).transform(X_test)
 
@@ -29,7 +29,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
         try:
             model = similarity_encoder.SimilarityEncoder(
             similarity=similarity, handle_unknown='ignore',
-            hashing_dim=hashing_dim, categories=categories)
+            hashing_dim=hashing_dim, categories=categories, n_prototypes=n_prototypes)
         except ValueError as e:
             assert (e.__str__() == 'n_prototypes expected None or a positive non null integer')
             return
