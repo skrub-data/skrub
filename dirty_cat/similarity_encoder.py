@@ -2,10 +2,8 @@ import warnings
 
 import numpy as np
 from scipy import sparse
-from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing._encoders import _BaseEncoder
-from sklearn.utils import check_array
 
 from dirty_cat import string_distances
 
@@ -46,11 +44,16 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     return np.nan_to_num(np.vstack(out))
 
 
-def get_prototype_frequencies(prototypes):
+def get_prototype_sorted_by_frequencies(prototypes):
+    """
+    Computes the frequencies of the values contained in prototypes
+    Reverse sorts the array by the frequency
+    Returns a numpy array of the values without their frequencies
+    """
     uniques, counts = np.unique(prototypes, return_counts=True)
     frequencies = list(zip(uniques, counts))
-    frequencies = sorted(frequencies, key=lambda elt: elt[1], reverse=True)
-    return np.array([f[0] for f in frequencies])
+    frequencies, _ = sorted(frequencies, key=lambda elt: elt[1], reverse=True)
+    return np.array([f for f in frequencies])
 
 
 _VECTORIZED_EDIT_DISTANCES = {
@@ -83,13 +86,17 @@ class SimilarityEncoder(_BaseEncoder):
         Only significant for ``similarity='ngram'``. The range of
         values for the n_gram similarity.
 
-    categories : 'auto' or a list of lists/arrays of values.
+    categories : 'auto', 'k-means', 'most_frequent' or a list of lists/arrays of values.
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
+        - 'most_frequent' : Computes the most frequent values for every
+           categorical variable
+        - 'k-means' : Computes the K nearest neighbors of K-mean centroids
+           in order to choose the prototype categories
 
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
@@ -138,7 +145,15 @@ class SimilarityEncoder(_BaseEncoder):
             warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
 
     def get_most_frequent(self, prototypes):
-        return get_prototype_frequencies(prototypes)[:self.n_prototypes]
+        """ Get the most frequent category prototypes
+        Parameters
+        ----------
+        prototypes : the list of values for a category variable
+        Returns
+        -------
+        The n_prototypes most frequent values for a category variable
+        """
+        return get_prototype_sorted_by_frequencies(prototypes)[:self.n_prototypes]
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
@@ -152,15 +167,13 @@ class SimilarityEncoder(_BaseEncoder):
         """
         X = self._check_X(X)
 
-        n_samples, n_features = X.shape
-
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
             raise ValueError(template % self.handle_unknown)
 
         if ((self.hashing_dim is not None) and
-            (not isinstance(self.hashing_dim, int))):
+                (not isinstance(self.hashing_dim, int))):
             raise ValueError("value '%r' was specified for hashing_dim, "
                              "which has invalid type, expected None or "
                              "int." % self.hashing_dim)
