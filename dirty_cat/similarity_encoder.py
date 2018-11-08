@@ -157,7 +157,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                         "'ignore', got %s")
             raise ValueError(template % self.handle_unknown)
 
-        if self.categories != 'auto':
+        if self.categories not in ['auto', 'most_frequent']:
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet "
@@ -171,12 +171,11 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
         n_samples, n_features = X.shape
 
-        if self.categories is None:
-            self._label_encoders_ = [LabelEncoder() for _ in range(n_features)]
-
+        self._label_encoders_ = [LabelEncoder() for _ in range(n_features)]
+        if self.categories == 'most_frequent':
+            self.categories_ = []
         for i in range(n_features):
             le = self._label_encoders_[i]
-
             Xi = X[:, i]
             if self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
@@ -192,7 +191,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                         raise ValueError(msg)
                 le.classes_ = np.array(self.categories[i])
 
-        if self.prototyping_strategy is None:
+        if self.categories == 'auto':
             self.categories_ = [le.classes_ for le in self._label_encoders_]
 
         return self
