@@ -1,9 +1,8 @@
 import numpy as np
 from scipy import sparse
 
-from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing._encoders import _BaseEncoder
 from sklearn.utils import check_array
 
 
@@ -53,7 +52,7 @@ _VECTORIZED_EDIT_DISTANCES = {
 }
 
 
-class SimilarityEncoder(BaseEstimator, TransformerMixin):
+class SimilarityEncoder(_BaseEncoder):
     """Encode string categorical features as a numeric array.
 
     The input to this transformer should be an array-like of
@@ -132,11 +131,20 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        X = self._check_X(X)
+
+        n_samples, n_features = X.shape
 
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
             raise ValueError(template % self.handle_unknown)
+
+        if ((self.hashing_dim is not None) and
+            (not isinstance(self.hashing_dim, int))):
+            raise ValueError("value '%r' was specified for hashing_dim, "
+                             "which has invalid type, expected None or "
+                             "int." % self.hashing_dim)
 
         if self.categories != 'auto':
             for cats in self.categories:
@@ -144,26 +152,13 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                     raise ValueError("Unsorted categories are not yet "
                                      "supported")
 
-        if (self.hashing_dim is not None) and (not isinstance(self.hashing_dim, int)):
-            print(type(self.hashing_dim))
-            raise ValueError("hashing_dim has invalid type, expected None or "
-                             "int.")
-
-        X_temp = check_array(X, dtype=None)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
-            X = check_array(X, dtype=np.object)
-        else:
-            X = X_temp
-
         n_samples, n_features = X.shape
 
-        self._label_encoders_ = [LabelEncoder() for _ in range(n_features)]
-
+        self.categories_ = list()
         for i in range(n_features):
-            le = self._label_encoders_[i]
             Xi = X[:, i]
             if self.categories == 'auto':
-                le.fit(Xi)
+                self.categories_.append(np.unique(Xi))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
@@ -172,9 +167,9 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                         msg = ("Found unknown categories {0} in column {1}"
                                " during fit".format(diff, i))
                         raise ValueError(msg)
-                le.classes_ = np.array(self.categories[i])
+                self.categories_.append(np.array(self.categories[i],
+                                                 dtype=object))
 
-        self.categories_ = [le.classes_ for le in self._label_encoders_]
         return self
 
     def transform(self, X):
@@ -191,11 +186,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
             Transformed input.
 
         """
-        X_temp = check_array(X, dtype=None)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
-            X = check_array(X, dtype=np.object)
-        else:
-            X = X_temp
+        X = self._check_X(X)
 
         n_samples, n_features = X.shape
 
