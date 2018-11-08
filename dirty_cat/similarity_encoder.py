@@ -2,7 +2,6 @@ import numpy as np
 from scipy import sparse
 
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing._encoders import _BaseEncoder
 from sklearn.utils import check_array
 
@@ -141,6 +140,12 @@ class SimilarityEncoder(_BaseEncoder):
                         "'ignore', got %s")
             raise ValueError(template % self.handle_unknown)
 
+        if ((self.hashing_dim is not None) and
+            (not isinstance(self.hashing_dim, int))):
+            raise ValueError("value '%r' was specified for hashing_dim, "
+                             "which has invalid type, expected None or "
+                             "int." % self.hashing_dim)
+
         if self.categories != 'auto':
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
@@ -181,11 +186,7 @@ class SimilarityEncoder(_BaseEncoder):
             Transformed input.
 
         """
-        X_temp = check_array(X, dtype=None)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
-            X = check_array(X, dtype=np.object)
-        else:
-            X = X_temp
+        X = self._check_X(X)
 
         n_samples, n_features = X.shape
 
