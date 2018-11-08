@@ -131,7 +131,7 @@ TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
                 "4mse-ku6q/rows.csv?accessType=DOWNLOAD",
             filenames=(
                 "rows.csv",
-            ), uncompress=True
+            ), uncompress=False,
         ),
     ),
     main_file="rows.csv",

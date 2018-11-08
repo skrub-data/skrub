@@ -56,6 +56,8 @@ Data download
    datasets.fetch_midwest_survey
    datasets.fetch_open_payments
    datasets.fetch_road_safety
+   datasets.fetch_traffic_violations
+   datasets.get_data_dir
 
 About
 =========
