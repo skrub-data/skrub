@@ -4,7 +4,7 @@ import numpy as np
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing._encoders import _BaseEncoder
 from sklearn.utils import check_array
 
 from dirty_cat import string_distances
@@ -172,22 +172,14 @@ class SimilarityEncoder(_BaseEncoder):
                                      "supported")
 
         n_samples, n_features = X.shape
-
-        if self.categories in [None, 'auto']:
-            self._label_encoders_ = [LabelEncoder() for _ in range(n_features)]
-
-        if self.categories == 'most_frequent':
-            self.categories_ = []
+        self.categories_ = list()
 
         for i in range(n_features):
             Xi = X[:, i]
-            if self.categories in [None, 'auto']:
-                le = self._label_encoders_[i]
-
-            if self.categories == 'most_frequent':
+            if self.categories == 'auto':
+                self.categories_.append(np.unique(Xi))
+            elif self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
-            elif self.categories == 'auto':
-                le.fit(Xi)
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
@@ -198,9 +190,6 @@ class SimilarityEncoder(_BaseEncoder):
                         raise ValueError(msg)
                 self.categories_.append(np.array(self.categories[i],
                                                  dtype=object))
-                
-        if self.categories == 'auto':
-            self.categories_ = [le.classes_ for le in self._label_encoders_]
 
         return self
 
