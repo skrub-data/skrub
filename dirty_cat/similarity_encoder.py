@@ -147,20 +147,6 @@ class SimilarityEncoder(_BaseEncoder):
                     raise ValueError("Unsorted categories are not yet "
                                      "supported")
 
-<<<<<<< HEAD
-        if (self.hashing_dim is not None) and (not isinstance(self.hashing_dim, int)):
-            print(type(self.hashing_dim))
-            raise ValueError("hashing_dim has invalid type, expected None or "
-                             "int.")
-
-        X_temp = check_array(X, dtype=None)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
-            X = check_array(X, dtype=np.object)
-        else:
-            X = X_temp
-
-=======
->>>>>>> REFACTOR: use _BaseEncoder and remove LabelEncoder
         n_samples, n_features = X.shape
 
         self.categories_ = list()
