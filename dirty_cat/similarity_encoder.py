@@ -155,8 +155,8 @@ class SimilarityEncoder(_BaseEncoder):
         -------
         The n_prototypes most frequent values for a category variable
         """
-        values, _ = get_prototype_frequencies(prototypes)[:self.n_prototypes]
-        return values
+        values, _ = get_prototype_frequencies(prototypes)
+        return values[:self.n_prototypes]
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
