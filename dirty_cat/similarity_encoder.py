@@ -1,16 +1,16 @@
+import warnings
+
 import numpy as np
 from scipy import sparse
-
-from sklearn.preprocessing import LabelEncoder
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils import check_array
-
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
+from sklearn.preprocessing._encoders import _BaseEncoder
+from sklearn.cluster import KMeans
+from sklearn.neighbors import NearestNeighbors
 
 from dirty_cat import string_distances
 
 
-def ngram_similarity(X, cats, ngram_range, dtype=np.float64):
+def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     """
     Similarity encoding for dirty categorical variables:
         Given to arrays of strings, returns the
@@ -24,7 +24,11 @@ def ngram_similarity(X, cats, ngram_range, dtype=np.float64):
     unq_X = np.unique(X)
     cats = np.array([' %s ' % cat for cat in cats])
     unq_X_ = np.array([' %s ' % x for x in unq_X])
-    vectorizer = CountVectorizer(analyzer='char', ngram_range=(min_n, max_n))
+    if not hashing_dim:
+        vectorizer = CountVectorizer(analyzer='char', ngram_range=(min_n, max_n))
+    else:
+        vectorizer = HashingVectorizer(analyzer='char', ngram_range=(min_n, max_n),
+                                       n_features=hashing_dim, norm=None, alternate_sign=False)
     vectorizer.fit(np.concatenate((cats, unq_X_)))
     count2 = vectorizer.transform(cats)
     count1 = vectorizer.transform(unq_X_)
@@ -42,6 +46,40 @@ def ngram_similarity(X, cats, ngram_range, dtype=np.float64):
     return np.nan_to_num(np.vstack(out))
 
 
+def get_prototype_frequencies(prototypes):
+    """
+    Computes the frequencies of the values contained in prototypes
+    Reverse sorts the array by the frequency
+    Returns a numpy array of the values without their frequencies
+    """
+    uniques, counts = np.unique(prototypes, return_counts=True)
+    sorted_indexes = np.argsort(counts)[::-1]
+    return uniques[sorted_indexes], counts[sorted_indexes]
+
+
+def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128, ngram_range=(3, 3), sparse=False):
+    """
+    Computes prototypes based on:
+      - dimensionality reduction (via hashing n-grams)
+      - k-means clustering
+      - nearest neighbor
+    """
+    vectorizer = HashingVectorizer(analyzer='char', norm=None, alternate_sign=False, ngram_range=ngram_range,
+                                   n_features=hashing_dim)
+    projected = vectorizer.transform(X)
+    if not sparse:
+        projected = projected.toarray()
+    kmeans = KMeans(n_clusters=n_prototypes)
+    kmeans.fit(projected)
+    centers = kmeans.cluster_centers_
+    neighbors = NearestNeighbors()
+    neighbors.fit(projected)
+    indexes_prototypes = np.unique(neighbors.kneighbors(centers, 1)[-1])
+    if indexes_prototypes.shape[0] < n_prototypes:
+        warnings.warn('Final number of unique prototypes is lower than n_prototypes (expected)')
+    return np.sort(X[indexes_prototypes])
+
+
 _VECTORIZED_EDIT_DISTANCES = {
     'levenshtein-ratio': np.vectorize(string_distances.levenshtein_ratio),
     'jaro': np.vectorize(string_distances.jaro),
@@ -49,7 +87,7 @@ _VECTORIZED_EDIT_DISTANCES = {
 }
 
 
-class SimilarityEncoder(BaseEstimator, TransformerMixin):
+class SimilarityEncoder(_BaseEncoder):
     """Encode string categorical features as a numeric array.
 
     The input to this transformer should be an array-like of
@@ -72,13 +110,17 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
         Only significant for ``similarity='ngram'``. The range of
         values for the n_gram similarity.
 
-    categories : 'auto' or a list of lists/arrays of values.
+    categories : 'auto', 'k-means', 'most_frequent' or a list of lists/arrays of values.
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
+        - 'most_frequent' : Computes the most frequent values for every
+           categorical variable
+        - 'k-means' : Computes the K nearest neighbors of K-mean centroids
+           in order to choose the prototype categories
 
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
@@ -90,6 +132,9 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
+    n_prototypes: number of prototype we want to use.
+        Useful when `most_frequent` or `k-means` is used.
+        Must be a positiv non null integer.
 
     Attributes
     ----------
@@ -108,14 +153,35 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, similarity='ngram',
-                 ngram_range=(3, 3), categories='auto',
-                 dtype=np.float64, handle_unknown='ignore'):
+    def __init__(self, similarity='ngram', ngram_range=(3, 3), categories='auto', dtype=np.float64,
+                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None):
+
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
         self.similarity = similarity
         self.ngram_range = ngram_range
+        self.hashing_dim = hashing_dim
+        self.n_prototypes = n_prototypes
+
+        assert categories in [None, 'auto', 'k-means', 'most_frequent']
+
+        if categories in ['k_means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
+            raise ValueError('n_prototypes expected None or a positive non null integer')
+        if categories == 'auto' and n_prototypes is not None:
+            warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
+
+    def get_most_frequent(self, prototypes):
+        """ Get the most frequent category prototypes
+        Parameters
+        ----------
+        prototypes : the list of values for a category variable
+        Returns
+        -------
+        The n_prototypes most frequent values for a category variable
+        """
+        values, _ = get_prototype_frequencies(prototypes)
+        return values[:self.n_prototypes]
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
@@ -127,34 +193,37 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        X = self._check_X(X)
 
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
             raise ValueError(template % self.handle_unknown)
 
-        if self.categories != 'auto':
+        if ((self.hashing_dim is not None) and
+                (not isinstance(self.hashing_dim, int))):
+            raise ValueError("value '%r' was specified for hashing_dim, "
+                             "which has invalid type, expected None or "
+                             "int." % self.hashing_dim)
+
+        if self.categories not in ['auto', 'most_frequent', 'k-means']:
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet "
                                      "supported")
 
-        X_temp = check_array(X, dtype=None)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
-            X = check_array(X, dtype=np.object)
-        else:
-            X = X_temp
-
         n_samples, n_features = X.shape
-
-        self._label_encoders_ = [LabelEncoder() for _ in range(n_features)]
+        self.categories_ = list()
 
         for i in range(n_features):
-            le = self._label_encoders_[i]
             Xi = X[:, i]
 
             if self.categories == 'auto':
-                le.fit(Xi)
+                self.categories_.append(np.unique(Xi))
+            elif self.categories == 'most_frequent':
+                self.categories_.append(self.get_most_frequent(Xi))
+            elif self.categories == 'k-means':
+                self.categories_.append(get_kmeans_protoypes(Xi, self.n_prototypes))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
@@ -163,9 +232,9 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
                         msg = ("Found unknown categories {0} in column {1}"
                                " during fit".format(diff, i))
                         raise ValueError(msg)
-                le.classes_ = np.array(self.categories[i])
+                self.categories_.append(np.array(self.categories[i],
+                                                 dtype=object))
 
-        self.categories_ = [le.classes_ for le in self._label_encoders_]
         return self
 
     def transform(self, X):
@@ -182,11 +251,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
             Transformed input.
 
         """
-        X_temp = check_array(X, dtype=None)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
-            X = check_array(X, dtype=np.object)
-        else:
-            X = X_temp
+        X = self._check_X(X)
 
         n_samples, n_features = X.shape
 
@@ -221,6 +286,7 @@ class SimilarityEncoder(BaseEstimator, TransformerMixin):
             for j, cats in enumerate(self.categories_):
                 encoder = ngram_similarity(X[:, j], cats,
                                            ngram_range=(min_n, max_n),
+                                           hashing_dim=self.hashing_dim,
                                            dtype=self.dtype)
                 out.append(encoder)
             return np.hstack(out)
