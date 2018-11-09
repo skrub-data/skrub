@@ -1,6 +1,7 @@
 import numpy as np
 
 from dirty_cat import similarity_encoder, string_distances
+from dirty_cat.similarity_encoder import get_kmeans_protoypes
 
 
 def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
@@ -56,8 +57,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
 
 
 def test_similarity_encoder():
-    categories = ['auto', 'most_frequent']
-
+    categories = ['auto', 'most_frequent', 'k-means']
     for category in categories:
         if category == 'auto':
             _test_similarity('levenshtein-ratio', string_distances.levenshtein_ratio, categories=category,
@@ -67,7 +67,7 @@ def test_similarity_encoder():
             _test_similarity('ngram', string_distances.ngram_similarity, categories=category, n_prototypes=None)
             _test_similarity('ngram', string_distances.ngram_similarity, hashing_dim=2**16, categories=category)
         else:
-            for i in range(0, 4):
+            for i in range(1, 4):
                 _test_similarity('levenshtein-ratio', string_distances.levenshtein_ratio, categories=category,
                                  n_prototypes=i)
                 _test_similarity('jaro-winkler', string_distances.jaro_winkler, categories=category, n_prototypes=i)
@@ -75,3 +75,8 @@ def test_similarity_encoder():
                 _test_similarity('ngram', string_distances.ngram_similarity, categories=category, n_prototypes=i)
                 _test_similarity('ngram', string_distances.ngram_similarity, hashing_dim=2**16, categories=category, n_prototypes=i)
 
+
+def test_kmeans_protoypes():
+    X_test = np.array(['cbbba', 'baaac', 'accc'])
+    proto = get_kmeans_protoypes(X_test, 3)
+    assert np.array_equal(np.sort(proto), np.sort(X_test))
