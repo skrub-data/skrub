@@ -149,12 +149,6 @@ class SimilarityEncoder(OneHotEncoder):
         if categories == 'auto' and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
 
-        # To delete unused OneHotEncoder attributes
-        del self.n_values
-        del self._handle_deprecations
-        del self.active_features_
-        del self.feature_indices_
-
     def get_most_frequent(self, prototypes):
         """ Get the most frequent category prototypes
         Parameters
