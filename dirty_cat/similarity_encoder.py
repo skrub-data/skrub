@@ -10,8 +10,7 @@ from sklearn.neighbors import NearestNeighbors
 from dirty_cat import string_distances
 
 
-def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64,
-                     strategy='B'):
+def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     """
     Similarity encoding for dirty categorical variables:
         Given to arrays of strings, returns the
