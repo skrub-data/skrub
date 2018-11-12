@@ -2,8 +2,10 @@ import warnings
 
 import numpy as np
 from scipy import sparse
-from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
+from sklearn.cluster import KMeans
+from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 
 from dirty_cat import string_distances
 
@@ -53,6 +55,29 @@ def get_prototype_frequencies(prototypes):
     uniques, counts = np.unique(prototypes, return_counts=True)
     sorted_indexes = np.argsort(counts)[::-1]
     return uniques[sorted_indexes], counts[sorted_indexes]
+
+
+def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128, ngram_range=(3, 3), sparse=False):
+    """
+    Computes prototypes based on:
+      - dimensionality reduction (via hashing n-grams)
+      - k-means clustering
+      - nearest neighbor
+    """
+    vectorizer = HashingVectorizer(analyzer='char', norm=None, alternate_sign=False, ngram_range=ngram_range,
+                                   n_features=hashing_dim)
+    projected = vectorizer.transform(X)
+    if not sparse:
+        projected = projected.toarray()
+    kmeans = KMeans(n_clusters=n_prototypes)
+    kmeans.fit(projected)
+    centers = kmeans.cluster_centers_
+    neighbors = NearestNeighbors()
+    neighbors.fit(projected)
+    indexes_prototypes = np.unique(neighbors.kneighbors(centers, 1)[-1])
+    if indexes_prototypes.shape[0] < n_prototypes:
+        warnings.warn('Final number of unique prototypes is lower than n_prototypes (expected)')
+    return np.sort(X[indexes_prototypes])
 
 
 _VECTORIZED_EDIT_DISTANCES = {
@@ -158,8 +183,8 @@ class SimilarityEncoder(OneHotEncoder):
         -------
         The n_prototypes most frequent values for a category variable
         """
-        values, _ = get_prototype_frequencies(prototypes)[:self.n_prototypes]
-        return values
+        values, _ = get_prototype_frequencies(prototypes)
+        return values[:self.n_prototypes]
 
     def fit(self, X, y=None):
         """Fit the CategoricalEncoder to X.
@@ -199,6 +224,8 @@ class SimilarityEncoder(OneHotEncoder):
                 self.categories_.append(np.unique(Xi))
             elif self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
+            elif self.categories == 'k-means':
+                self.categories_.append(get_kmeans_protoypes(Xi, self.n_prototypes))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
