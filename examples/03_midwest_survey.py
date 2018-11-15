@@ -21,10 +21,16 @@ dataset = fetch_midwest_survey()
 df = pd.read_csv(dataset['path']).astype(str)
 
 ################################################################################
+# The challenge with this data is that it contains a free-form input
+# column, where people put whatever they want:
+dirty_column = 'In your own words, what would you call the part of the country you live in now?'
+print(df[dirty_column].value_counts()[-10:])
+
+################################################################################
 # Separating clean, and dirty columns as well a a column we will try to predict
 # ------------------------------------------------------------------------------
+
 target_column = 'Location (Census Region)'
-dirty_column = 'In your own words, what would you call the part of the country you live in now?'
 clean_columns = [
     'Personally identification as a Midwesterner?',
     'Illinois in MW?',
