@@ -247,7 +247,7 @@ class SimilarityEncoder(_BaseEncoder):
                         get_kmeans_protoypes(uniques, self.n_prototypes, sample_weight=count))
                 else:
                     self.categories_.append(
-                        get_kmeans_protoypes(uniques, self.n_prototypes))
+                        get_kmeans_protoypes(Xi, self.n_prototypes))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
