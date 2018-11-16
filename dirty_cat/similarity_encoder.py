@@ -64,7 +64,7 @@ def get_prototype_frequencies(prototypes):
 
 
 def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128,
-                         ngram_range=(3, 3), sparse=False):
+                         ngram_range=(3, 3), sparse=False, sample_weight=None):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
@@ -79,7 +79,10 @@ def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128,
     if not sparse:
         projected = projected.toarray()
     kmeans = KMeans(n_clusters=n_prototypes)
-    kmeans.fit(projected)
+    if sample_weight is not None:
+        kmeans.fit(projected, sample_weight=sample_weight)
+    else:
+        kmeans.fit(projected)
     centers = kmeans.cluster_centers_
     neighbors = NearestNeighbors()
     neighbors.fit(projected)
@@ -166,7 +169,7 @@ class SimilarityEncoder(_BaseEncoder):
 
     def __init__(self, similarity='ngram', ngram_range=(3, 3),
                  categories='auto', dtype=np.float64,
-                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None):
+                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None, sample_weight=False):
 
         self.categories = categories
         self.dtype = dtype
@@ -175,10 +178,13 @@ class SimilarityEncoder(_BaseEncoder):
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
         self.n_prototypes = n_prototypes
+        self.sample_weight = sample_weight
 
         assert categories in [None, 'auto', 'k-means', 'most_frequent']
+        if sample_weight and categories != 'k-means':
+            raise ValueError('sample_weights can only be used with a k-means strategy')
 
-        if categories in ['k_means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
+        if categories in ['k-means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
             raise ValueError('n_prototypes expected None or a positive non null integer')
         if categories == 'auto' and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
@@ -235,7 +241,13 @@ class SimilarityEncoder(_BaseEncoder):
             elif self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
             elif self.categories == 'k-means':
-                self.categories_.append(get_kmeans_protoypes(Xi, self.n_prototypes))
+                uniques, count = np.unique(Xi, return_counts=True)
+                if self.sample_weight:
+                    self.categories_.append(
+                        get_kmeans_protoypes(uniques, self.n_prototypes, sample_weight=count))
+                else:
+                    self.categories_.append(
+                        get_kmeans_protoypes(uniques, self.n_prototypes))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
