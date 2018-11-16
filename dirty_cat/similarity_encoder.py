@@ -26,30 +26,39 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     unq_X_ = np.array([' %s ' % x for x in unq_X])
     if not hashing_dim:
         vectorizer = CountVectorizer(analyzer='char',
-                                     ngram_range=(min_n, max_n))
+                                     ngram_range=(min_n, max_n),
+                                     dtype=dtype)
+        vectorizer.fit(np.concatenate((cats, unq_X_)))
     else:
         vectorizer = HashingVectorizer(analyzer='char',
                                        ngram_range=(min_n, max_n),
                                        n_features=hashing_dim, norm=None,
-                                       alternate_sign=False)
-    vectorizer.fit(np.concatenate((cats, unq_X_)))
-    count2 = vectorizer.transform(cats)
-    count1 = vectorizer.transform(unq_X_)
-    sum2 = count2.sum(axis=1)
+                                       alternate_sign=False,
+                                       dtype=dtype)
+        # The hashing vectorizer is stateless. We don't need to fit it on the data
+        vectorizer.fit(X)
+    count_cats = vectorizer.transform(cats)
+    count_X = vectorizer.transform(unq_X_)
+    # We don't need the vectorizer anymore, delete it to save memory
+    del vectorizer
+    sum_cats = count_cats.sum(axis=1)
     SE_dict = {}
 
-    for i, x in enumerate(count1):
+    for i, x in enumerate(count_X):
         _, nonzero_idx, nonzero_vals = sparse.find(x)
-        samegrams = (count2[:, nonzero_idx].minimum(nonzero_vals)
+        samegrams = (count_cats[:, nonzero_idx].minimum(nonzero_vals)
                      ).sum(axis=1)
-        allgrams = x.sum() + sum2 - samegrams
+        allgrams = x.sum() + sum_cats - samegrams
         similarity = np.divide(samegrams, allgrams)
         SE_dict[unq_X[i]] = np.array(similarity).reshape(-1)
-    out = []
-    for x in X:
-        out.append(SE_dict[x])
+    # We don't need the counts anymore, delete them to save memory
+    del count_cats, count_X
 
-    return np.nan_to_num(np.vstack(out))
+    out = np.empty((len(X), similarity.size), dtype=dtype)
+    for x, out_row in zip(X, out):
+        out_row[:] = SE_dict[x]
+
+    return np.nan_to_num(out)
 
 
 def get_prototype_frequencies(prototypes):
