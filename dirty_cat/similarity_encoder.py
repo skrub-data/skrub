@@ -7,7 +7,7 @@ from sklearn.preprocessing._encoders import _BaseEncoder
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 
-from dirty_cat import string_distances
+from . import string_distances
 
 
 def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
