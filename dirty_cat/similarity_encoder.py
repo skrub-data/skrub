@@ -63,7 +63,7 @@ def get_prototype_frequencies(prototypes):
     return uniques[sorted_indexes], counts[sorted_indexes]
 
 
-def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128,
+def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
                          ngram_range=(3, 3), sparse=False, random_state=None):
     """
     Computes prototypes based on:
@@ -238,7 +238,7 @@ class SimilarityEncoder(_BaseEncoder):
             elif self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
             elif self.categories == 'k-means':
-                self.categories_.append(get_kmeans_protoypes(Xi, self.n_prototypes, random_state=self.random_state_))
+                self.categories_.append(get_kmeans_prototypes(Xi, self.n_prototypes, random_state=self.random_state_))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
