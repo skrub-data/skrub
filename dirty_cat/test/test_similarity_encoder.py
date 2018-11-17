@@ -96,5 +96,5 @@ def test_similarity_encoder():
 
 def test_kmeans_protoypes():
     X_test = np.array(['cbbba', 'baaac', 'accc'])
-    proto = get_kmeans_protoypes(X_test, 3)
+    proto = get_kmeans_prototypes(X_test, 3)
     assert np.array_equal(np.sort(proto), np.sort(X_test))
