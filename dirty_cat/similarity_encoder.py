@@ -41,16 +41,16 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     count_X = vectorizer.transform(unq_X_)
     # We don't need the vectorizer anymore, delete it to save memory
     del vectorizer
-    sum_cats = count_cats.sum(axis=1)
+    sum_cats = np.asarray(count_cats.sum(axis=1))
     SE_dict = {}
 
     for i, x in enumerate(count_X):
         _, nonzero_idx, nonzero_vals = sparse.find(x)
-        samegrams = (count_cats[:, nonzero_idx].minimum(nonzero_vals)
-                     ).sum(axis=1)
+        samegrams = np.asarray((count_cats[:, nonzero_idx].minimum(nonzero_vals)
+                     ).sum(axis=1))
         allgrams = x.sum() + sum_cats - samegrams
         similarity = np.divide(samegrams, allgrams)
-        SE_dict[unq_X[i]] = np.array(similarity).reshape(-1)
+        SE_dict[unq_X[i]] = similarity.reshape(-1)
     # We don't need the counts anymore, delete them to save memory
     del count_cats, count_X
 
