@@ -4,11 +4,19 @@ Scalability considerations for  similarity encoding
 
 """
 import warnings
+
+################################################################################
+# A tool to report memory usage and run time of a function
+# ---------------------------------------------------------
+#
+# For the sake of this example, we build a small tool that reports memory
+# usage and compute time of a function
 from time import time
 import functools
 import memory_profiler
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
 
 def resource_used(func):
     """ Decorator that return a function that prints its usage
@@ -19,7 +27,8 @@ def resource_used(func):
         mem, out = memory_profiler.memory_usage((func, args, kwargs),
                                                 max_usage=True,
                                                 retval=True)
-        print("Time: %.1is    Memory used: %iMb" % (time() - t0, mem[0]))
+        print("Run time: %.1is    Memory used: %iMb"
+              % (time() - t0, mem[0]))
         return out
     return wrapped_func
 
@@ -41,7 +50,7 @@ import pandas as pd
 df = pd.read_csv(data['path'])
 
 # Limit to 50 000 rows, for a faster example
-df = df[:100000].copy()
+df = df[:50000].copy()
 df = df.dropna(axis=0)
 df = df.reset_index()
 ################################################################################
@@ -94,10 +103,10 @@ column_trans = ColumnTransformer(
     remainder='drop')
 
 
-#t0 = time()
-#X = column_trans.fit_transform(df)
-#t1 = time()
-#print('Time to vectorize: %s' % (t1 - t0))
+t0 = time()
+X = column_trans.fit_transform(df)
+t1 = time()
+print('Time to vectorize: %s' % (t1 - t0))
 ################################################################################
 # We can run a cross-validation
 from sklearn import linear_model, pipeline, model_selection
