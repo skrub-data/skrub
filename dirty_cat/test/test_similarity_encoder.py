@@ -1,7 +1,7 @@
 import numpy as np
 
 from dirty_cat import similarity_encoder, string_distances
-from dirty_cat.similarity_encoder import get_kmeans_protoypes
+from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
 
 def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
