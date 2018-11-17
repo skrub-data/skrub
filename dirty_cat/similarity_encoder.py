@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing._encoders import _BaseEncoder
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
-
+from sklearn.utils import check_random_state
 from dirty_cat import string_distances
 
 
@@ -64,7 +64,7 @@ def get_prototype_frequencies(prototypes):
 
 
 def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128,
-                         ngram_range=(3, 3), sparse=False):
+                         ngram_range=(3, 3), sparse=False, random_state=None):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
@@ -78,7 +78,7 @@ def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128,
     projected = vectorizer.transform(X)
     if not sparse:
         projected = projected.toarray()
-    kmeans = KMeans(n_clusters=n_prototypes)
+    kmeans = KMeans(n_clusters=n_prototypes, random_state=random_state)
     kmeans.fit(projected)
     centers = kmeans.cluster_centers_
     neighbors = NearestNeighbors()
@@ -166,7 +166,7 @@ class SimilarityEncoder(_BaseEncoder):
 
     def __init__(self, similarity='ngram', ngram_range=(3, 3),
                  categories='auto', dtype=np.float64,
-                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None):
+                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None, random_state=None):
 
         self.categories = categories
         self.dtype = dtype
@@ -176,9 +176,14 @@ class SimilarityEncoder(_BaseEncoder):
         self.hashing_dim = hashing_dim
         self.n_prototypes = n_prototypes
 
+        if random_state and categories != 'k-means':
+            raise ValueError('Random state can only be used with a k-means strategy')
+
+        self.random_state = random_state
+
         assert categories in [None, 'auto', 'k-means', 'most_frequent']
 
-        if categories in ['k_means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
+        if categories in ['k-means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
             raise ValueError('n_prototypes expected None or a positive non null integer')
         if categories == 'auto' and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
@@ -206,7 +211,6 @@ class SimilarityEncoder(_BaseEncoder):
         self
         """
         X = self._check_X(X)
-
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
@@ -226,6 +230,7 @@ class SimilarityEncoder(_BaseEncoder):
 
         n_samples, n_features = X.shape
         self.categories_ = list()
+        self.random_state_ = check_random_state(self.random_state)
 
         for i in range(n_features):
             Xi = X[:, i]
@@ -235,7 +240,7 @@ class SimilarityEncoder(_BaseEncoder):
             elif self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
             elif self.categories == 'k-means':
-                self.categories_.append(get_kmeans_protoypes(Xi, self.n_prototypes))
+                self.categories_.append(get_kmeans_protoypes(Xi, self.n_prototypes, self.random_state_))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
