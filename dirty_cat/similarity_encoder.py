@@ -177,10 +177,6 @@ class SimilarityEncoder(_BaseEncoder):
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
         self.n_prototypes = n_prototypes
-
-        if random_state and categories != 'k-means':
-            raise ValueError('Random state can only be used with a k-means strategy')
-
         self.random_state = random_state
 
         assert categories in [None, 'auto', 'k-means', 'most_frequent']
