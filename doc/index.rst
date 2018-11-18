@@ -77,5 +77,8 @@ contributions in the scope of dirty categories.
    Many classic categorical encoding schemes are available here:
    http://contrib.scikit-learn.org/categorical-encoding/
 
+   Similarity encoding in also available in Spark ML:
+   https://github.com/rakutentech/spark-dirty-cat
+
 .. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Accepted for publication at: Machine Learning journal, Springer.
 
