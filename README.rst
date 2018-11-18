@@ -35,6 +35,11 @@ the easiest way to install dirty_cat is using ``pip`` ::
 
     pip install -U --user dirty_cat
 
+Other implementations
+~~~~~~~~~~~~~~~~~~~~~~
+
+-  Spark ML: https://github.com/rakutentech/spark-dirty-cat
+
 
 References
 ~~~~~~~~~~
