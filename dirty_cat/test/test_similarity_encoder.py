@@ -112,10 +112,3 @@ def test_reproducibility():
     prototypes = sim_enc.fit(X).categories_[0]
     for i in range(10):
         assert (np.array_equal(prototypes, sim_enc.fit(X).categories_[0]))
-
-    sim_enc = similarity_encoder.SimilarityEncoder(categories='k-means', n_prototypes=10,
-                                                   random_state=np.random.RandomState(345))
-    X = np.array([' %s ' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
-    prototypes = sim_enc.fit(X).categories_[0]
-    for i in range(10):
-        assert (np.array_equal(prototypes, sim_enc.fit(X).categories_[0]))
