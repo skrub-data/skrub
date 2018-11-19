@@ -240,7 +240,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         n_samples, n_features = X.shape
         self.categories_ = list()
-        self.random_state_ = check_random_state(self.random_state) if self.random_state is not None else None
+        self.random_state_ = check_random_state(self.random_state)
 
         for i in range(n_features):
             Xi = X[:, i]
