@@ -20,7 +20,7 @@ dirty_cat requires:
 - Python (>= 3.5)
 - NumPy (>= 1.8.2)
 - SciPy (>= 1.0.1)
-- scikit-learn (>= 0.19.0)
+- scikit-learn (>= 0.20.0)
 
 Optional dependency:
 
@@ -44,4 +44,4 @@ Other implementations
 References
 ~~~~~~~~~~
 
-.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Accepted for publication in: Machine Learning journal, Springer.
+.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018, Machine Learning journal, Springer.
