@@ -54,10 +54,10 @@ def benchmark(strat='k-means', limit=50000, n_proto=100, hash_dim=None, ngram_ra
 
     if strat == 'k-means':
         sim_enc = SimilarityEncoder(similarity='ngram', ngram_range=ngram_range, categories='k-means',
-                                    hashing_dim=hash_dim, n_prototypes=n_proto)
+                                    hashing_dim=hash_dim, n_prototypes=n_proto, random_state=3498)
     else:
         sim_enc = SimilarityEncoder(similarity='ngram', ngram_range=ngram_range, categories='most_frequent',
-                                    hashing_dim=hash_dim, n_prototypes=n_proto)
+                                    hashing_dim=hash_dim, n_prototypes=n_proto, random_state=3498)
 
     column_trans = ColumnTransformer(
         transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
