@@ -1,5 +1,5 @@
 import warnings
-
+import copy
 import numpy as np
 from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
@@ -178,7 +178,6 @@ class SimilarityEncoder(_BaseEncoder):
         self.hashing_dim = hashing_dim
         self.n_prototypes = n_prototypes
         self.random_state = random_state
-
         assert categories in [None, 'auto', 'k-means', 'most_frequent']
 
         if categories in ['k-means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
@@ -228,7 +227,10 @@ class SimilarityEncoder(_BaseEncoder):
 
         n_samples, n_features = X.shape
         self.categories_ = list()
-        self.random_state_ = check_random_state(self.random_state)
+        if isinstance(self.random_state, np.random.RandomState):
+            self.random_state_ = copy.deepcopy(self.random_state)
+        else:
+            self.random_state_ = check_random_state(self.random_state) if self.random_state is not None else None
 
         for i in range(n_features):
             Xi = X[:, i]
