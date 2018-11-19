@@ -3,9 +3,10 @@ import warnings
 import numpy as np
 from scipy import sparse
 from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
+from sklearn.utils import check_random_state
 
 from . import string_distances
 
@@ -47,7 +48,7 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     for i, x in enumerate(count_X):
         _, nonzero_idx, nonzero_vals = sparse.find(x)
         samegrams = np.asarray((count_cats[:, nonzero_idx].minimum(nonzero_vals)
-                     ).sum(axis=1))
+                                ).sum(axis=1))
         allgrams = x.sum() + sum_cats - samegrams
         similarity = np.divide(samegrams, allgrams)
         SE_dict[unq_X[i]] = similarity.reshape(-1)
@@ -72,8 +73,8 @@ def get_prototype_frequencies(prototypes):
     return uniques[sorted_indexes], counts[sorted_indexes]
 
 
-def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128,
-                         ngram_range=(3, 3), sparse=False):
+def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
+                          ngram_range=(3, 3), sparse=False, random_state=None):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
@@ -87,7 +88,7 @@ def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128,
     projected = vectorizer.transform(X)
     if not sparse:
         projected = projected.toarray()
-    kmeans = KMeans(n_clusters=n_prototypes)
+    kmeans = KMeans(n_clusters=n_prototypes, random_state=random_state)
     kmeans.fit(projected)
     centers = kmeans.cluster_centers_
     neighbors = NearestNeighbors()
@@ -158,6 +159,8 @@ class SimilarityEncoder(OneHotEncoder):
     n_prototypes: number of prototype we want to use.
         Useful when `most_frequent` or `k-means` is used.
         Must be a positive non null integer.
+    random_state: either an int used as a seed, a RandomState instance or None.
+        Useful when `k-means` strategy is used.
 
     Attributes
     ----------
@@ -175,9 +178,10 @@ class SimilarityEncoder(OneHotEncoder):
 
 
     """
+
     def __init__(self, similarity='ngram', ngram_range=(3, 3),
-                 categories='auto', dtype=np.float64, handle_unknown='ignore',
-                 hashing_dim=None, n_prototypes=None):
+                 categories='auto', dtype=np.float64,
+                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None, random_state=None):
         super().__init__()
         self.categories = categories
         self.dtype = dtype
@@ -186,10 +190,10 @@ class SimilarityEncoder(OneHotEncoder):
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
         self.n_prototypes = n_prototypes
+        self.random_state = random_state
 
         assert categories in [None, 'auto', 'k-means', 'most_frequent']
-
-        if categories in ['k_means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
+        if categories in ['k-means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
             raise ValueError('n_prototypes expected None or a positive non null integer')
         if categories == 'auto' and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
@@ -217,7 +221,6 @@ class SimilarityEncoder(OneHotEncoder):
         self
         """
         X = self._check_X(X)
-
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
@@ -237,16 +240,16 @@ class SimilarityEncoder(OneHotEncoder):
 
         n_samples, n_features = X.shape
         self.categories_ = list()
+        self.random_state_ = check_random_state(self.random_state)
 
         for i in range(n_features):
             Xi = X[:, i]
-
             if self.categories == 'auto':
                 self.categories_.append(np.unique(Xi))
             elif self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
             elif self.categories == 'k-means':
-                self.categories_.append(get_kmeans_protoypes(Xi, self.n_prototypes))
+                self.categories_.append(get_kmeans_prototypes(Xi, self.n_prototypes, random_state=self.random_state_))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
