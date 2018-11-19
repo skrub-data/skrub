@@ -158,7 +158,7 @@ class SimilarityEncoder(OneHotEncoder):
         HashingVectorizer with a number of features equal to `hashing_dim`.
     n_prototypes: number of prototype we want to use.
         Useful when `most_frequent` or `k-means` is used.
-        Must be a positiv non null integer.
+        Must be a positive non null integer.
     random_state: either an int used as a seed, a RandomState instance or None.
         Useful when `k-means` strategy is used.
 

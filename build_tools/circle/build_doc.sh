@@ -123,7 +123,6 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
 source activate testenv
 pip install sphinx-gallery
 pip install python-Levenshtein
-pip install memory_profiler
 
 #cloning and installing from the ColumnTransformer branch
 pip install scikit-learn==0.20
