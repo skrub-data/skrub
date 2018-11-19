@@ -2,12 +2,14 @@ import warnings
 import copy
 import numpy as np
 from scipy import sparse
-from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.preprocessing._encoders import _BaseEncoder
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state
 from dirty_cat import string_distances
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
+
+from . import string_distances
 
 
 def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
@@ -26,30 +28,39 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     unq_X_ = np.array([' %s ' % x for x in unq_X])
     if not hashing_dim:
         vectorizer = CountVectorizer(analyzer='char',
-                                     ngram_range=(min_n, max_n))
+                                     ngram_range=(min_n, max_n),
+                                     dtype=dtype)
+        vectorizer.fit(np.concatenate((cats, unq_X_)))
     else:
         vectorizer = HashingVectorizer(analyzer='char',
                                        ngram_range=(min_n, max_n),
                                        n_features=hashing_dim, norm=None,
-                                       alternate_sign=False)
-    vectorizer.fit(np.concatenate((cats, unq_X_)))
-    count2 = vectorizer.transform(cats)
-    count1 = vectorizer.transform(unq_X_)
-    sum2 = count2.sum(axis=1)
+                                       alternate_sign=False,
+                                       dtype=dtype)
+        # The hashing vectorizer is stateless. We don't need to fit it on the data
+        vectorizer.fit(X)
+    count_cats = vectorizer.transform(cats)
+    count_X = vectorizer.transform(unq_X_)
+    # We don't need the vectorizer anymore, delete it to save memory
+    del vectorizer
+    sum_cats = np.asarray(count_cats.sum(axis=1))
     SE_dict = {}
 
-    for i, x in enumerate(count1):
+    for i, x in enumerate(count_X):
         _, nonzero_idx, nonzero_vals = sparse.find(x)
-        samegrams = (count2[:, nonzero_idx].minimum(nonzero_vals)
-                     ).sum(axis=1)
-        allgrams = x.sum() + sum2 - samegrams
+        samegrams = np.asarray((count_cats[:, nonzero_idx].minimum(nonzero_vals)
+                     ).sum(axis=1))
+        allgrams = x.sum() + sum_cats - samegrams
         similarity = np.divide(samegrams, allgrams)
-        SE_dict[unq_X[i]] = np.array(similarity).reshape(-1)
-    out = []
-    for x in X:
-        out.append(SE_dict[x])
+        SE_dict[unq_X[i]] = similarity.reshape(-1)
+    # We don't need the counts anymore, delete them to save memory
+    del count_cats, count_X
 
-    return np.nan_to_num(np.vstack(out))
+    out = np.empty((len(X), similarity.size), dtype=dtype)
+    for x, out_row in zip(X, out):
+        out_row[:] = SE_dict[x]
+
+    return np.nan_to_num(out)
 
 
 def get_prototype_frequencies(prototypes):
@@ -97,7 +108,7 @@ _VECTORIZED_EDIT_DISTANCES = {
 }
 
 
-class SimilarityEncoder(_BaseEncoder):
+class SimilarityEncoder(OneHotEncoder):
     """Encode string categorical features as a numeric array.
 
     The input to this transformer should be an array-like of
@@ -143,6 +154,9 @@ class SimilarityEncoder(_BaseEncoder):
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
+    hashing_dim : int type or None.
+        If None, the base vectorizer is CountVectorizer, else it's set to
+        HashingVectorizer with a number of features equal to `hashing_dim`.
     n_prototypes: number of prototype we want to use.
         Useful when `most_frequent` or `k-means` is used.
         Must be a positiv non null integer.
@@ -165,11 +179,10 @@ class SimilarityEncoder(_BaseEncoder):
 
 
     """
-
     def __init__(self, similarity='ngram', ngram_range=(3, 3),
                  categories='auto', dtype=np.float64,
                  handle_unknown='ignore', hashing_dim=None, n_prototypes=None, random_state=None):
-
+        super().__init__()
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
@@ -178,6 +191,7 @@ class SimilarityEncoder(_BaseEncoder):
         self.hashing_dim = hashing_dim
         self.n_prototypes = n_prototypes
         self.random_state = random_state
+
         assert categories in [None, 'auto', 'k-means', 'most_frequent']
         if categories in ['k-means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
             raise ValueError('n_prototypes expected None or a positive non null integer')
@@ -230,7 +244,6 @@ class SimilarityEncoder(_BaseEncoder):
 
         for i in range(n_features):
             Xi = X[:, i]
-
             if self.categories == 'auto':
                 self.categories_.append(np.unique(Xi))
             elif self.categories == 'most_frequent':
