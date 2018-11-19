@@ -74,7 +74,7 @@ def get_prototype_frequencies(prototypes):
 
 
 def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
-                          ngram_range=(3, 3), sparse=False, random_state=None):
+                          ngram_range=(3, 3), sparse=False, sample_weight=None, random_state=None):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
@@ -89,7 +89,7 @@ def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
     if not sparse:
         projected = projected.toarray()
     kmeans = KMeans(n_clusters=n_prototypes, random_state=random_state)
-    kmeans.fit(projected)
+    kmeans.fit(projected, sample_weight=sample_weight)
     centers = kmeans.cluster_centers_
     neighbors = NearestNeighbors()
     neighbors.fit(projected)
@@ -249,7 +249,10 @@ class SimilarityEncoder(OneHotEncoder):
             elif self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
             elif self.categories == 'k-means':
-                self.categories_.append(get_kmeans_prototypes(Xi, self.n_prototypes, random_state=self.random_state_))
+                uniques, count = np.unique(Xi, return_counts=True)
+                self.categories_.append(
+                    get_kmeans_prototypes(uniques, self.n_prototypes, sample_weight=count,
+                                          random_state=self.random_state_))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
@@ -258,8 +261,7 @@ class SimilarityEncoder(OneHotEncoder):
                         msg = ("Found unknown categories {0} in column {1}"
                                " during fit".format(diff, i))
                         raise ValueError(msg)
-                self.categories_.append(np.array(self.categories[i],
-                                                 dtype=object))
+                self.categories_.append(np.array(self.categories[i], dtype=object))
 
         return self
 
