@@ -75,8 +75,6 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from dirty_cat import SimilarityEncoder
 
-print('\nBasic similarity encoding')
-
 sim_enc = SimilarityEncoder(similarity='ngram', handle_unknown='ignore')
 
 y = df['Violation Type']
@@ -124,17 +122,12 @@ print("Cross-validation score: %s" %
 # The most frequent strategy selects the n most frequent values in a dirty
 # categorical variable to reduce the dimensionality of the problem and thus
 # speed things up. We select manually the number of prototypes we want to use.
-
-print('\nSimilarity encoding with a most frequent strategy')
-
 sim_enc = SimilarityEncoder(similarity='ngram', categories='most_frequent', n_prototypes=100)
 
 column_trans = ColumnTransformer(
     # adding the dirty column
     transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
     remainder='drop')
-
-from time import time
 
 t0 = time()
 X = column_trans.fit_transform(df)
@@ -155,17 +148,12 @@ print("Cross-validation score: %s" %
 # K-means strategy is also a dimensionality reduction technique. But we apply
 # a K-means and nearest neighbors algorithm to find the prototypes. The number
 # of prototypes is set manually.
-
-print('\nSimilarity encoding with a k-means strategy')
-
 sim_enc = SimilarityEncoder(similarity='ngram', categories='k-means', n_prototypes=100)
 
 column_trans = ColumnTransformer(
     # adding the dirty column
     transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
     remainder='drop')
-
-from time import time
 
 t0 = time()
 X = column_trans.fit_transform(df)
