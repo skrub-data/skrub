@@ -4,6 +4,7 @@ Scalability considerations for  similarity encoding
 
 """
 import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 ################################################################################
 # A tool to report memory usage and run time of a function
@@ -15,7 +16,6 @@ from time import time
 import functools
 import memory_profiler
 
-warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def resource_used(func):

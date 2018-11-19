@@ -10,7 +10,10 @@ Parameters that are modified:
 - Ngram-range: (3, 3), (2, 4)
 """
 
+# We filter out the warning asking us to specify the solver in the logistic_regression
 import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 from time import time
 
 import matplotlib.pyplot as plt
@@ -23,7 +26,6 @@ from sklearn.preprocessing import OneHotEncoder
 from dirty_cat import SimilarityEncoder
 from dirty_cat.datasets import fetch_traffic_violations
 
-warnings.simplefilter(action='ignore', category=FutureWarning)
 
 data = fetch_traffic_violations()
 dfr = pd.read_csv(data['path'])
@@ -124,8 +126,11 @@ def plot(bench, title=''):
     ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     second.tight_layout()
 
-    first.show()
-    second.show()
+    title = title.replace(' ', '_').replace(':', '-').replace(',', '_').lower()
+    first.savefig(title + '_score.png')
+    second.savefig(title + '_time.png')
+    # first.show()
+    # second.show(t)
 
 
 def loop(proto):
@@ -138,7 +143,7 @@ def loop(proto):
             for h in hash_dims:
                 bench.append((benchmark(strat='k-means', limit=limit, n_proto=proto, hash_dim=h, ngram_range=r),
                               benchmark(strat='most-frequent', limit=limit, n_proto=proto, hash_dim=h, ngram_range=r)))
-            title = 'N-gram range: %s, Rows: %d, Prototypes: %d, 20 X-val' % (r.__str__(), limit, proto)
+            title = 'N-gram range: %s, Rows: %d, Prototypes: %d, 20 CV' % (r.__str__(), limit, proto)
             plot(bench, title)
             bench.clear()
 
