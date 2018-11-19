@@ -1,4 +1,4 @@
-Release 0.0.3
+Release 0.0.4
 =============
 
 * **SimilarityEncoder**: Change the default ngram range to (2, 4) which

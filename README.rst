@@ -44,4 +44,4 @@ Other implementations
 References
 ~~~~~~~~~~
 
-.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Accepted for publication in: Machine Learning journal, Springer.
+.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018, Machine Learning journal, Springer.

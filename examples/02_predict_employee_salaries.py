@@ -12,8 +12,6 @@ We choose to benchmark different categorical encodings for
 the dirty column *Employee Position Title*, that contains
 dirty categorical data.
 
-**Warning: this example is using the master branch of scikit-learn**
-
 """
 
 ################################################################################
