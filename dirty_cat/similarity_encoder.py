@@ -227,10 +227,7 @@ class SimilarityEncoder(_BaseEncoder):
 
         n_samples, n_features = X.shape
         self.categories_ = list()
-        if isinstance(self.random_state, np.random.RandomState):
-            self.random_state_ = copy.deepcopy(self.random_state)
-        else:
-            self.random_state_ = check_random_state(self.random_state) if self.random_state is not None else None
+        self.random_state_ = check_random_state(self.random_state) if self.random_state is not None else None
 
         for i in range(n_features):
             Xi = X[:, i]
