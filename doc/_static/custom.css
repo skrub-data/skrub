@@ -57,3 +57,7 @@ div.sphinxsidebarwrapper div h3:first-of-type {
     display: block;
 }
 
+/* My custom classes */
+p.right-align {
+    float: right;
+}
