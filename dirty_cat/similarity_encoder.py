@@ -126,7 +126,7 @@ class SimilarityEncoder(OneHotEncoder):
 'jaro-winkler'}
         The type of pairwise string similarity to use.
 
-    ngram_range : tuple (min_n, max_n), default=(3, 3)
+    ngram_range : tuple (min_n, max_n), default=(2, 4)
         Only significant for ``similarity='ngram'``. The range of
         values for the n_gram similarity.
 
@@ -179,7 +179,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     """
 
-    def __init__(self, similarity='ngram', ngram_range=(3, 3),
+    def __init__(self, similarity='ngram', ngram_range=(2, 4),
                  categories='auto', dtype=np.float64,
                  handle_unknown='ignore', hashing_dim=None, n_prototypes=None, random_state=None):
         super().__init__()

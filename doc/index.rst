@@ -21,6 +21,10 @@ see `Similarity encoding for learning with dirty categorical variables
 
 :Installing: `$ pip install --user dirty_cat`
 
+.. rst-class:: right-align
+
+   `Recent changes <CHANGES.html>`_
+
 *Requires Python 3*
 
 ______
