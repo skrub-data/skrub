@@ -25,24 +25,30 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     cats = np.array([' %s ' % cat for cat in cats])
     unq_X_ = np.array([' %s ' % x for x in unq_X])
     if not hashing_dim:
-        vectorizer = CountVectorizer(analyzer='char', ngram_range=(min_n, max_n))
+        vectorizer = CountVectorizer(analyzer='char',
+                                     ngram_range=(min_n, max_n))
     else:
-        vectorizer = HashingVectorizer(analyzer='char', ngram_range=(min_n, max_n),
-                                       n_features=hashing_dim, norm=None, alternate_sign=False)
+        vectorizer = HashingVectorizer(analyzer='char',
+                                       ngram_range=(min_n, max_n),
+                                       n_features=hashing_dim, norm=None,
+                                       alternate_sign=False)
     vectorizer.fit(np.concatenate((cats, unq_X_)))
     count2 = vectorizer.transform(cats)
     count1 = vectorizer.transform(unq_X_)
     sum2 = count2.sum(axis=1)
     SE_dict = {}
+
     for i, x in enumerate(count1):
-        aux = sparse.csr_matrix(np.ones((count2.shape[0], 1))).dot(x)
-        samegrams = count2.minimum(aux).sum(axis=1)
+        _, nonzero_idx, nonzero_vals = sparse.find(x)
+        samegrams = (count2[:, nonzero_idx].minimum(nonzero_vals)
+                     ).sum(axis=1)
         allgrams = x.sum() + sum2 - samegrams
         similarity = np.divide(samegrams, allgrams)
         SE_dict[unq_X[i]] = np.array(similarity).reshape(-1)
     out = []
     for x in X:
         out.append(SE_dict[x])
+
     return np.nan_to_num(np.vstack(out))
 
 
@@ -57,14 +63,17 @@ def get_prototype_frequencies(prototypes):
     return uniques[sorted_indexes], counts[sorted_indexes]
 
 
-def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128, ngram_range=(3, 3), sparse=False):
+def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128,
+                         ngram_range=(3, 3), sparse=False):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
       - k-means clustering
       - nearest neighbor
     """
-    vectorizer = HashingVectorizer(analyzer='char', norm=None, alternate_sign=False, ngram_range=ngram_range,
+    vectorizer = HashingVectorizer(analyzer='char', norm=None,
+                                   alternate_sign=False,
+                                   ngram_range=ngram_range,
                                    n_features=hashing_dim)
     projected = vectorizer.transform(X)
     if not sparse:
@@ -76,7 +85,8 @@ def get_kmeans_protoypes(X, n_prototypes, hashing_dim=128, ngram_range=(3, 3), s
     neighbors.fit(projected)
     indexes_prototypes = np.unique(neighbors.kneighbors(centers, 1)[-1])
     if indexes_prototypes.shape[0] < n_prototypes:
-        warnings.warn('Final number of unique prototypes is lower than n_prototypes (expected)')
+        warnings.warn('Final number of unique prototypes is lower than ' +
+                      'n_prototypes (expected)')
     return np.sort(X[indexes_prototypes])
 
 
@@ -110,7 +120,8 @@ class SimilarityEncoder(OneHotEncoder):
         Only significant for ``similarity='ngram'``. The range of
         values for the n_gram similarity.
 
-    categories : 'auto', 'k-means', 'most_frequent' or a list of lists/arrays of values.
+    categories : 'auto', 'k-means', 'most_frequent' or a list of lists/arrays
+    of values.
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
@@ -220,6 +231,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         for i in range(n_features):
             Xi = X[:, i]
+
             if self.categories == 'auto':
                 self.categories_.append(np.unique(Xi))
             elif self.categories == 'most_frequent':
