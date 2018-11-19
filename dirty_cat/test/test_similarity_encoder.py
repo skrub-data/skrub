@@ -11,7 +11,11 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
 
         model = similarity_encoder.SimilarityEncoder(
             similarity=similarity, handle_unknown='ignore',
-            hashing_dim=hashing_dim, categories=categories, n_prototypes=n_prototypes)
+            hashing_dim=hashing_dim, categories=categories,
+            n_prototypes=n_prototypes)
+
+        if similarity == 'ngram':
+            model.ngram_range = (3, 3)
 
         encoder = model.fit(X).transform(X_test)
 
@@ -38,6 +42,9 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
         except ValueError as e:
             assert (e.__str__() == 'n_prototypes expected None or a positive non null integer')
             return
+
+        if similarity == 'ngram':
+            model.ngram_range = (3, 3)
 
         encoder = model.fit(X).transform(X_test)
         if n_prototypes == 1:

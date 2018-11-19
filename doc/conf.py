@@ -133,6 +133,7 @@ html_theme_options = {
     'gray_2': "#F1FFF1",
     'link': "#076B00",
 #    'gray_3': "#090",
+    'fixed_sidebar': 'true',
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
