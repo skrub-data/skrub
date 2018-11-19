@@ -7,7 +7,7 @@ reduction strategies used in similarity encoding.
 Parameters that are modified:
 - Number of rows in datasets: 10k, 20k, 50k, 100k and nuniques.
 - Hashing dimensions: 2 ** 14, 2 ** 16, 2 ** 18, 2 ** 20
-# - Weights during k-mean: on and off
+- Ngram-range: (3, 3), (2, 4)
 """
 
 import warnings
@@ -54,8 +54,7 @@ def benchmark(strat='k-means', limit=50000, n_proto=100, hash_dim=None, ngram_ra
 
     if strat == 'k-means':
         sim_enc = SimilarityEncoder(similarity='ngram', ngram_range=ngram_range, categories='k-means',
-                                    hashing_dim=hash_dim,
-                                    n_prototypes=n_proto)
+                                    hashing_dim=hash_dim, n_prototypes=n_proto)
     else:
         sim_enc = SimilarityEncoder(similarity='ngram', ngram_range=ngram_range, categories='most_frequent',
                                     hashing_dim=hash_dim, n_prototypes=n_proto)
@@ -111,8 +110,7 @@ def plot(bench, title=''):
 
     for i, e in enumerate(bench):
         vectorizer.extend([hash_dims[i % 5]] * 4)
-        strategy.extend(
-            ['K-means vect', 'K-means X-val', 'MF vect', 'MF X-val'])
+        strategy.extend(['K-means vect', 'K-means X-val', 'MF vect', 'MF X-val'])
         times.extend([e[0][0], e[0][2] / 20, e[1][0], e[1][2] / 20])
 
     df = pd.DataFrame(columns=['vectorizer', 'strategy/operation', 'time'])
@@ -126,8 +124,8 @@ def plot(bench, title=''):
     ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     second.tight_layout()
 
-    first.savefig(title + 'score' + '.png')
-    second.savefig(title + 'time' + '.png')
+    first.show()
+    second.show()
 
 
 def loop(proto):
