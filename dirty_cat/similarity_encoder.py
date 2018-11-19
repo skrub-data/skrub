@@ -2,10 +2,10 @@ import warnings
 
 import numpy as np
 from scipy import sparse
-from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.preprocessing._encoders import _BaseEncoder
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 
 from dirty_cat import string_distances
 
@@ -97,7 +97,7 @@ _VECTORIZED_EDIT_DISTANCES = {
 }
 
 
-class SimilarityEncoder(_BaseEncoder):
+class SimilarityEncoder(OneHotEncoder):
     """Encode string categorical features as a numeric array.
 
     The input to this transformer should be an array-like of
@@ -143,9 +143,12 @@ class SimilarityEncoder(_BaseEncoder):
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
+    hashing_dim : int type or None.
+        If None, the base vectorizer is CountVectorizer, else it's set to
+        HashingVectorizer with a number of features equal to `hashing_dim`.
     n_prototypes: number of prototype we want to use.
         Useful when `most_frequent` or `k-means` is used.
-        Must be a positiv non null integer.
+        Must be a positive non null integer.
 
     Attributes
     ----------
@@ -163,11 +166,10 @@ class SimilarityEncoder(_BaseEncoder):
 
 
     """
-
     def __init__(self, similarity='ngram', ngram_range=(3, 3),
-                 categories='auto', dtype=np.float64,
-                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None):
-
+                 categories='auto', dtype=np.float64, handle_unknown='ignore',
+                 hashing_dim=None, n_prototypes=None):
+        super().__init__()
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
