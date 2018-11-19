@@ -249,7 +249,8 @@ class SimilarityEncoder(OneHotEncoder):
             elif self.categories == 'most_frequent':
                 self.categories_.append(self.get_most_frequent(Xi))
             elif self.categories == 'k-means':
-                self.categories_.append(get_kmeans_prototypes(Xi, self.n_prototypes, random_state=self.random_state_))
+                uniques, count = np.unique(Xi, return_counts=True)
+                self.categories_.append(get_kmeans_prototypes(Xi, self.n_prototypes, sample_weight=count, random_state=self.random_state_))
             else:
                 if self.handle_unknown == 'error':
                     valid_mask = np.in1d(Xi, self.categories[i])
