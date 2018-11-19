@@ -43,3 +43,6 @@ coverage.xml
 
 # PyCharm editor
 .idea/
+
+# Notebooks
+.ipynb_checkpoints/
