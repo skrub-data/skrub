@@ -32,3 +32,32 @@ div.sphx-glr-download-link-note p.admonition-title {
     }
 }
 
+/* Hide the title in the navigation bar in the index page */
+div.sphinxsidebarwrapper li a {
+    display: none;
+}
+
+/* Undo for children */
+div.sphinxsidebarwrapper li li a {
+    display: inline;
+}
+
+/* Undo for other pages */
+div.sphinxsidebarwrapper li.toctree-l1 a {
+    display: inline;
+}
+
+/* Less info in the navigation sidebar */
+div.sphinxsidebarwrapper h3:first-of-type {
+    display: none;
+}
+
+/* Undo for childs of enclosing divs */
+div.sphinxsidebarwrapper div h3:first-of-type {
+    display: block;
+}
+
+/* My custom classes */
+p.right-align {
+    float: right;
+}

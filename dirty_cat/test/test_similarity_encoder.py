@@ -1,7 +1,7 @@
 import numpy as np
 
 from dirty_cat import similarity_encoder, string_distances
-from dirty_cat.similarity_encoder import get_kmeans_protoypes
+from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
 
 def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
@@ -10,8 +10,12 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
 
         model = similarity_encoder.SimilarityEncoder(
-        similarity=similarity, handle_unknown='ignore',
-        hashing_dim=hashing_dim, categories=categories, n_prototypes=n_prototypes)
+            similarity=similarity, handle_unknown='ignore',
+            hashing_dim=hashing_dim, categories=categories,
+            n_prototypes=n_prototypes)
+
+        if similarity == 'ngram':
+            model.ngram_range = (3, 3)
 
         encoder = model.fit(X).transform(X_test)
 
@@ -26,7 +30,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
     else:
         X = np.array(
             ['aac', 'aaa', 'aaab', 'aaa', 'aaab', 'aaa', 'aaab', 'aaa']
-            ).reshape(-1, 1)
+        ).reshape(-1, 1)
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]
                           ).reshape(-1, 1)
 
@@ -34,10 +38,13 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
             model = similarity_encoder.SimilarityEncoder(
                 similarity=similarity, handle_unknown='ignore',
                 hashing_dim=hashing_dim, categories=categories,
-                n_prototypes=n_prototypes)
+                n_prototypes=n_prototypes, random_state=42)
         except ValueError as e:
             assert (e.__str__() == 'n_prototypes expected None or a positive non null integer')
             return
+
+        if similarity == 'ngram':
+            model.ngram_range = (3, 3)
 
         encoder = model.fit(X).transform(X_test)
         if n_prototypes == 1:
@@ -76,7 +83,7 @@ def test_similarity_encoder():
             _test_similarity('ngram', string_distances.ngram_similarity,
                              categories=category, n_prototypes=None)
             _test_similarity('ngram', string_distances.ngram_similarity,
-                             hashing_dim=2**16, categories=category)
+                             hashing_dim=2 ** 16, categories=category)
         else:
             for i in range(1, 4):
                 _test_similarity('levenshtein-ratio',
@@ -90,11 +97,19 @@ def test_similarity_encoder():
                 _test_similarity('ngram', string_distances.ngram_similarity,
                                  categories=category, n_prototypes=i)
                 _test_similarity('ngram', string_distances.ngram_similarity,
-                                 hashing_dim=2**16, categories=category,
+                                 hashing_dim=2 ** 16, categories=category,
                                  n_prototypes=i)
 
 
 def test_kmeans_protoypes():
     X_test = np.array(['cbbba', 'baaac', 'accc'])
-    proto = get_kmeans_protoypes(X_test, 3)
+    proto = get_kmeans_prototypes(X_test, 3)
     assert np.array_equal(np.sort(proto), np.sort(X_test))
+
+
+def test_reproducibility():
+    sim_enc = similarity_encoder.SimilarityEncoder(categories='k-means', n_prototypes=10, random_state=435)
+    X = np.array([' %s ' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
+    prototypes = sim_enc.fit(X).categories_[0]
+    for i in range(10):
+        assert (np.array_equal(prototypes, sim_enc.fit(X).categories_[0]))
