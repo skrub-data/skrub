@@ -214,7 +214,7 @@ sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, categories='mo
                             handle_unknown='ignore')
 
 y = df['Violation Type']
-# cast the year column in float32
+# cast the year column to float32
 df['Year'] = df['Year'].astype(np.float32)
 # clean columns
 transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32, handle_unknown='ignore'),
