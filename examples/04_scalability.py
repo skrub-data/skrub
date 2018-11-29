@@ -8,9 +8,11 @@ either chosen as the most frequent categories, or with kmeans clustering.
 
 """
 
+import warnings
+
 # Avoid the warning in scikit-learn's LogisticRegression for the change
 # in the solver
-import warnings
+import numpy as np
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -47,7 +49,7 @@ def resource_used(func):
 # --------------------------------
 #
 # We first download the dataset:
-from dirty_cat.datasets.fetching import fetch_traffic_violations
+from dirty_cat.datasets import fetch_traffic_violations
 
 data = fetch_traffic_violations()
 print(data['description'])
@@ -115,10 +117,6 @@ t1 = time()
 print('Time to vectorize: %s' % (t1 - t0))
 
 ################################################################################
-# Check the dtype of the vectorized data
-print('Type of X:', X.dtype)
-
-################################################################################
 # We can run a cross-validation
 from sklearn import linear_model, pipeline, model_selection
 
@@ -126,7 +124,7 @@ log_reg = linear_model.LogisticRegression()
 
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y, )
-print("Normal Cross-validation score: %s" % results['test_score'])
+print("Cross-validation score with default settings: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
@@ -154,7 +152,7 @@ column_trans = ColumnTransformer(
 # Check now that prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Most frequent Cross-validation score: %s" % results['test_score'])
+print("Cross-validation score with most-frequent strategy: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
@@ -180,7 +178,7 @@ column_trans = ColumnTransformer(
 # Check now that prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Kmeans Cross-validation score: %s" % results['test_score'])
+print("Cross-validation score with k-means strategy: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
@@ -202,3 +200,50 @@ seaborn.boxplot(data=pd.DataFrame(times), orient='h', ax=ax2)
 ax2.set_xlabel('Computation time', size=16)
 [t.set(size=16) for t in ax2.get_yticklabels()]
 plt.tight_layout()
+
+################################################################################
+# Similarity encoder with most frequent strategy and float32 dtype
+# ----------------------------------------------------------------
+#
+# The most frequent strategy selects the n most frequent values in a dirty
+# categorical variable to reduce the dimensionality of the problem and thus
+# speed things up. We select manually the number of prototypes we want to use.
+# We use a float32 dtype in this example to show some speed and memory gains.
+
+sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, categories='most_frequent', n_prototypes=100,
+                            handle_unknown='ignore')
+
+y = df['Violation Type']
+# cast the year column in float32
+df['Year'] = df['Year'].astype(np.float32)
+# clean columns
+transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32, handle_unknown='ignore'),
+                 ['Alcohol',
+                  'Arrest Type',
+                  'Belts',
+                  'Commercial License',
+                  'Commercial Vehicle',
+                  'Fatal',
+                  'Gender',
+                  'HAZMAT',
+                  'Property Damage',
+                  'Race',
+                  'Work Zone']),
+                ('pass', 'passthrough', ['Year']),
+                ]
+
+column_trans = ColumnTransformer(
+    # adding the dirty column
+    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    remainder='drop')
+
+t0 = time()
+X = column_trans.fit_transform(df)
+t1 = time()
+print('Time to vectorize: %s' % (t1 - t0))
+
+################################################################################
+# We can run a cross-validation to confirm the memory footprint reduction
+model = pipeline.make_pipeline(column_trans, log_reg)
+results = resource_used(model_selection.cross_validate)(model, df, y, )
+print("Cross-validation score with most-frequent strategy and float32 dtype: %s" % results['test_score'])

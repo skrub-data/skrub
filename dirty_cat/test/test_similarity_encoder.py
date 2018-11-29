@@ -1,5 +1,5 @@
 import numpy as np
-
+import numpy.testing
 from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
@@ -26,7 +26,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
                     ans[i, j] = similarity_f(x_t, x, 3)
                 else:
                     ans[i, j] = similarity_f(x_t, x)
-        assert np.array_equal(encoder, ans)
+        numpy.testing.assert_almost_equal(encoder, ans)
     else:
         X = np.array(
             ['aac', 'aaa', 'aaab', 'aaa', 'aaab', 'aaa', 'aaab', 'aaa']
@@ -65,7 +65,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
                 else:
                     ans[i, j] = similarity_f(x_t, x)
 
-        assert np.array_equal(encoder, ans)
+        numpy.testing.assert_almost_equal(encoder, ans)
 
 
 def test_similarity_encoder():

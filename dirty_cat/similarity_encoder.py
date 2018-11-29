@@ -267,6 +267,9 @@ class SimilarityEncoder(OneHotEncoder):
 
     def transform(self, X):
         """Transform X using specified encoding scheme.
+            For an n-gram similarity, the output dtype
+            will be the instance dtype, but the input dtype is
+            always float 32.
 
         Parameters
         ----------
@@ -319,7 +322,7 @@ class SimilarityEncoder(OneHotEncoder):
                                                                  ngram_range=(min_n, max_n),
                                                                  hashing_dim=self.hashing_dim,
                                                                  dtype=np.float32)
-                last = len(cats)
+                last += len(cats)
             return out
         else:
             raise ValueError("Unknown similarity: '%s'" % self.similarity)
