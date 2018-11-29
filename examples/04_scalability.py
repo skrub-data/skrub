@@ -11,6 +11,9 @@ either chosen as the most frequent categories, or with kmeans clustering.
 # Avoid the warning in scikit-learn's LogisticRegression for the change
 # in the solver
 import warnings
+
+import numpy as np
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 ################################################################################
@@ -27,6 +30,7 @@ import memory_profiler
 def resource_used(func):
     """ Decorator that return a function that prints its usage
     """
+
     @functools.wraps(func)
     def wrapped_func(*args, **kwargs):
         t0 = time()
@@ -36,6 +40,7 @@ def resource_used(func):
         print("Run time: %.1is    Memory used: %iMb"
               % (time() - t0, mem[0]))
         return out
+
     return wrapped_func
 
 
@@ -44,7 +49,7 @@ def resource_used(func):
 # --------------------------------
 #
 # We first download the dataset:
-from dirty_cat.datasets import fetch_traffic_violations
+from dirty_cat.datasets.fetching import fetch_traffic_violations
 
 data = fetch_traffic_violations()
 print(data['description'])
@@ -106,7 +111,6 @@ column_trans = ColumnTransformer(
     transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
     remainder='drop')
 
-
 t0 = time()
 X = column_trans.fit_transform(df)
 t1 = time()
@@ -114,11 +118,12 @@ print('Time to vectorize: %s' % (t1 - t0))
 ################################################################################
 # We can run a cross-validation
 from sklearn import linear_model, pipeline, model_selection
+
 log_ref = linear_model.LogisticRegression()
 
 model = pipeline.make_pipeline(column_trans, log_ref)
 results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Cross-validation score: %s" % results['test_score'])
+print("Normal Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
@@ -126,7 +131,6 @@ scores = dict()
 scores['Default options'] = results['test_score']
 times = dict()
 times['Default options'] = results['fit_time']
-
 
 ################################################################################
 # Most frequent strategy to define prototypes
@@ -147,13 +151,12 @@ column_trans = ColumnTransformer(
 # Check now that prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_ref)
 results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Cross-validation score: %s" % results['test_score'])
+print("Most frequent Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
 scores['Most frequent'] = results['test_score']
 times['Most frequent'] = results['fit_time']
-
 
 ################################################################################
 # KMeans strategy to define prototypes
@@ -174,19 +177,19 @@ column_trans = ColumnTransformer(
 # Check now that prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_ref)
 results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Cross-validation score: %s" % results['test_score'])
+print("Kmeans Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
 scores['KMeans'] = results['test_score']
 times['KMeans'] = results['fit_time']
 
-
 ################################################################################
 # Plot a summary figure
 # ----------------------
 import seaborn
 import matplotlib.pyplot as plt
+
 _, (ax1, ax2) = plt.subplots(nrows=2, figsize=(4, 3))
 seaborn.boxplot(data=pd.DataFrame(scores), orient='h', ax=ax1)
 ax1.set_xlabel('Prediction accuracy', size=16)
@@ -197,3 +200,87 @@ ax2.set_xlabel('Computation time', size=16)
 [t.set(size=16) for t in ax2.get_yticklabels()]
 plt.tight_layout()
 
+##################################################################################
+# SimilarityEncoder with default options and 32 bits float dtype
+# ---------------------------------------------------------------
+#
+# Let us build our vectorizer, using a ColumnTransformer to combine
+# one-hot encoding and similarity encoding.
+# We set the dtype parameters for one-hot and similarity encoders to np.float32
+# and cast the column 'year' to np.float32.
+# Otherwise the ColumnTransformer will force cast everything to float64.
+
+sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, handle_unknown='ignore')
+
+y = df['Violation Type']
+df['Year'] = df['Year'].astype(np.float32)
+
+transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32, handle_unknown='ignore'),
+                 ['Alcohol',
+                  'Arrest Type',
+                  'Belts',
+                  'Commercial License',
+                  'Commercial Vehicle',
+                  'Fatal',
+                  'Gender',
+                  'HAZMAT',
+                  'Property Damage',
+                  'Race',
+                  'Work Zone']),
+                ('pass', 'passthrough', ['Year']),
+                ]
+
+column_trans = ColumnTransformer(
+    # adding the dirty column
+    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    remainder='drop')
+
+t0 = time()
+X = column_trans.fit_transform(df)
+t1 = time()
+print('Time to vectorize: %s' % (t1 - t0))
+################################################################################
+# We can run a cross-validation
+model = pipeline.make_pipeline(column_trans, log_ref)
+results = resource_used(model_selection.cross_validate)(model, df, y)
+print("Cross-validation score: %s" % results['test_score'])
+
+################################################################################
+# Most frequent strategy to define prototypes used with 32 bits float dtype
+# -------------------------------------------------------------------------
+#
+# It is the same as when we call it above except with the dtype parameter
+# for the similarity encoder is set to np.float32.
+sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, categories='most_frequent',
+                            n_prototypes=100)
+
+column_trans = ColumnTransformer(
+    # adding the dirty column
+    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    remainder='drop')
+
+################################################################################
+# Check now that prediction is still as good
+model = pipeline.make_pipeline(column_trans, log_ref)
+results = resource_used(model_selection.cross_validate)(model, df, y)
+print("Cross-validation score: %s" % results['test_score'])
+
+################################################################################
+# KMeans strategy to define prototypes used with 32 bits float dtype
+# ------------------------------------------------------------------
+#
+# It is the same as when we call it above except with the dtype parameter
+# for the similarity encoder is set to np.float32.
+sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, categories='k-means',
+                            n_prototypes=100)
+
+column_trans = ColumnTransformer(
+    # adding the dirty column
+    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    remainder='drop')
+
+################################################################################
+# Check now that prediction is still as good
+model = pipeline.make_pipeline(column_trans, log_ref)
+results = resource_used(model_selection.cross_validate)(model, df, y)
+print("Cross-validation score: %s" % results['test_score'])
