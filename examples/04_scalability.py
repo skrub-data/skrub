@@ -204,11 +204,11 @@ plt.tight_layout()
 # SimilarityEncoder with default options and 32 bits float dtype
 # ---------------------------------------------------------------
 #
-# Let us build our vectorizer, using a ColumnTransformer to combine
-# one-hot encoding and similarity encoding.
-# We set the dtype parameters for one-hot and similarity encoders to np.float32
-# and cast the column 'year' to np.float32.
-# Otherwise the ColumnTransformer will force cast everything to float64.
+# As done above we build our vectorizer using the ColumnTransformer
+# to combine one-hot encoding and similarity encoding.
+# We set the dtype parameters for both encoders to np.float32
+# and cast the column 'year' to np.float32
+# (to prevent the ColumnTransformer from force casting everything to float64).
 
 sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, handle_unknown='ignore')
 
@@ -238,7 +238,9 @@ column_trans = ColumnTransformer(
 t0 = time()
 X = column_trans.fit_transform(df)
 t1 = time()
+print('Type of vectorized data:', X.dtype)
 print('Time to vectorize: %s' % (t1 - t0))
+
 ################################################################################
 # We can run a cross-validation
 model = pipeline.make_pipeline(column_trans, log_ref)
@@ -246,41 +248,7 @@ results = resource_used(model_selection.cross_validate)(model, df, y)
 print("Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
-# Most frequent strategy to define prototypes used with 32 bits float dtype
-# -------------------------------------------------------------------------
-#
-# It is the same as when we call it above except with the dtype parameter
-# for the similarity encoder is set to np.float32.
-sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, categories='most_frequent',
-                            n_prototypes=100)
-
-column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
-    remainder='drop')
-
-################################################################################
-# Check now that prediction is still as good
-model = pipeline.make_pipeline(column_trans, log_ref)
-results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Cross-validation score: %s" % results['test_score'])
-
-################################################################################
-# KMeans strategy to define prototypes used with 32 bits float dtype
-# ------------------------------------------------------------------
-#
-# It is the same as when we call it above except with the dtype parameter
-# for the similarity encoder is set to np.float32.
-sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, categories='k-means',
-                            n_prototypes=100)
-
-column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
-    remainder='drop')
-
-################################################################################
-# Check now that prediction is still as good
-model = pipeline.make_pipeline(column_trans, log_ref)
-results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Cross-validation score: %s" % results['test_score'])
+# Here we see that the memory consumption is reduced compared to the
+# case where 64 bits float are used.
+# Which is not the case with all the sci-kit learn models, where some
+# perform poorly with float32.
