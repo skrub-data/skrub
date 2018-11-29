@@ -115,14 +115,19 @@ t0 = time()
 X = column_trans.fit_transform(df)
 t1 = time()
 print('Time to vectorize: %s' % (t1 - t0))
+
+################################################################################
+# Check the dtype of the vectorized data
+print('Type of X:', X.dtype)
+
 ################################################################################
 # We can run a cross-validation
 from sklearn import linear_model, pipeline, model_selection
 
-log_ref = linear_model.LogisticRegression()
+log_reg = linear_model.LogisticRegression(solver='newton-cg')
 
-model = pipeline.make_pipeline(column_trans, log_ref)
-results = resource_used(model_selection.cross_validate)(model, df, y)
+model = pipeline.make_pipeline(column_trans, log_reg)
+results = resource_used(model_selection.cross_validate)(model, df, y, )
 print("Normal Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
@@ -149,7 +154,7 @@ column_trans = ColumnTransformer(
 
 ################################################################################
 # Check now that prediction is still as good
-model = pipeline.make_pipeline(column_trans, log_ref)
+model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
 print("Most frequent Cross-validation score: %s" % results['test_score'])
 
@@ -175,7 +180,7 @@ column_trans = ColumnTransformer(
 
 ################################################################################
 # Check now that prediction is still as good
-model = pipeline.make_pipeline(column_trans, log_ref)
+model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
 print("Kmeans Cross-validation score: %s" % results['test_score'])
 
@@ -238,17 +243,20 @@ column_trans = ColumnTransformer(
 t0 = time()
 X = column_trans.fit_transform(df)
 t1 = time()
-print('Type of vectorized data:', X.dtype)
 print('Time to vectorize: %s' % (t1 - t0))
 
 ################################################################################
+# Check the dtype of the vectorized data
+print('Type of X', X.dtype)
+
+################################################################################
 # We can run a cross-validation
-model = pipeline.make_pipeline(column_trans, log_ref)
+model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
 print("Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
 # Here we see that the memory consumption is reduced compared to the
 # case where 64 bits float are used.
-# Which is not the case with all the sci-kit learn models, where some
+# Which is not the case with all the scikit-learn models, where some
 # perform poorly with float32.
