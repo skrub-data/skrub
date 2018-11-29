@@ -12,8 +12,6 @@ either chosen as the most frequent categories, or with kmeans clustering.
 # in the solver
 import warnings
 
-import numpy as np
-
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 ################################################################################
@@ -124,7 +122,7 @@ print('Type of X:', X.dtype)
 # We can run a cross-validation
 from sklearn import linear_model, pipeline, model_selection
 
-log_reg = linear_model.LogisticRegression(solver='newton-cg')
+log_reg = linear_model.LogisticRegression()
 
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y, )
@@ -204,59 +202,3 @@ seaborn.boxplot(data=pd.DataFrame(times), orient='h', ax=ax2)
 ax2.set_xlabel('Computation time', size=16)
 [t.set(size=16) for t in ax2.get_yticklabels()]
 plt.tight_layout()
-
-##################################################################################
-# SimilarityEncoder with default options and 32 bits float dtype
-# ---------------------------------------------------------------
-#
-# As done above we build our vectorizer using the ColumnTransformer
-# to combine one-hot encoding and similarity encoding.
-# We set the dtype parameters for both encoders to np.float32
-# and cast the column 'year' to np.float32
-# (to prevent the ColumnTransformer from force casting everything to float64).
-
-sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, handle_unknown='ignore')
-
-y = df['Violation Type']
-df['Year'] = df['Year'].astype(np.float32)
-
-transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32, handle_unknown='ignore'),
-                 ['Alcohol',
-                  'Arrest Type',
-                  'Belts',
-                  'Commercial License',
-                  'Commercial Vehicle',
-                  'Fatal',
-                  'Gender',
-                  'HAZMAT',
-                  'Property Damage',
-                  'Race',
-                  'Work Zone']),
-                ('pass', 'passthrough', ['Year']),
-                ]
-
-column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
-    remainder='drop')
-
-t0 = time()
-X = column_trans.fit_transform(df)
-t1 = time()
-print('Time to vectorize: %s' % (t1 - t0))
-
-################################################################################
-# Check the dtype of the vectorized data
-print('Type of X', X.dtype)
-
-################################################################################
-# We can run a cross-validation
-model = pipeline.make_pipeline(column_trans, log_reg)
-results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Cross-validation score: %s" % results['test_score'])
-
-################################################################################
-# Here we see that the memory consumption is reduced compared to the
-# case where 64 bits float are used.
-# Which is not the case with all the scikit-learn models, where some
-# perform poorly with float32.

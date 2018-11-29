@@ -59,7 +59,7 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     for x, out_row in zip(X, out):
         out_row[:] = SE_dict[x]
 
-    return np.nan_to_num(out)
+    return np.nan_to_num(out, copy=False)
 
 
 def get_prototype_frequencies(prototypes):
@@ -310,13 +310,16 @@ class SimilarityEncoder(OneHotEncoder):
 
         elif self.similarity == 'ngram':
             min_n, max_n = self.ngram_range
-            out = []
+
+            total_length = sum(len(x) for x in self.categories_)
+            out = np.empty((len(X), total_length), dtype=self.dtype)
+            last = 0
             for j, cats in enumerate(self.categories_):
-                encoder = ngram_similarity(X[:, j], cats,
-                                           ngram_range=(min_n, max_n),
-                                           hashing_dim=self.hashing_dim,
-                                           dtype=self.dtype)
-                out.append(encoder)
-            return np.hstack(out)
+                out[:, last:last + len(cats)] = ngram_similarity(X[:, j], cats,
+                                                                 ngram_range=(min_n, max_n),
+                                                                 hashing_dim=self.hashing_dim,
+                                                                 dtype=np.float32)
+                last = len(cats)
+            return out
         else:
             raise ValueError("Unknown similarity: '%s'" % self.similarity)
