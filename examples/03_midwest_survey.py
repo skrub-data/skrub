@@ -68,8 +68,7 @@ from dirty_cat import SimilarityEncoder
 
 encoder_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
-    'similarity': SimilarityEncoder(similarity='ngram',
-                                    handle_unknown='ignore'),
+    'similarity': SimilarityEncoder(similarity='ngram'),
     'num': FunctionTransformer(None)
 }
 ##############################################################################
