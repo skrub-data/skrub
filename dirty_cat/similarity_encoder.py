@@ -267,9 +267,6 @@ class SimilarityEncoder(OneHotEncoder):
 
     def transform(self, X):
         """Transform X using specified encoding scheme.
-            For an n-gram similarity, the output dtype
-            will be the instance dtype, but the input dtype is
-            always float 32.
 
         Parameters
         ----------

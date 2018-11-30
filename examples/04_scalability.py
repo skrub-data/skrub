@@ -7,13 +7,9 @@ datasets: reducing the number of reference categories to "prototypes",
 either chosen as the most frequent categories, or with kmeans clustering.
 
 """
-
-import warnings
-
 # Avoid the warning in scikit-learn's LogisticRegression for the change
 # in the solver
-import numpy as np
-
+import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 ################################################################################
@@ -202,13 +198,13 @@ ax2.set_xlabel('Computation time', size=16)
 plt.tight_layout()
 
 ################################################################################
-# Similarity encoder with most frequent strategy and float32 dtype
+# Reduce memory usage during encoding using float32
 # ----------------------------------------------------------------
 #
-# The most frequent strategy selects the n most frequent values in a dirty
-# categorical variable to reduce the dimensionality of the problem and thus
-# speed things up. We select manually the number of prototypes we want to use.
 # We use a float32 dtype in this example to show some speed and memory gains.
+# The use of the scikit-learn model may upcast to float64 (depending on the used
+# algorithm). The memory savings will then happen during the encoding.
+import numpy as np
 
 sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, categories='most_frequent', n_prototypes=100,
                             handle_unknown='ignore')
