@@ -120,7 +120,7 @@ log_reg = linear_model.LogisticRegression()
 
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y, )
-print("Cross-validation score with default settings: %s" % results['test_score'])
+print("Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
@@ -148,7 +148,7 @@ column_trans = ColumnTransformer(
 # Check now that prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Cross-validation score with most-frequent strategy: %s" % results['test_score'])
+print("Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
@@ -174,7 +174,7 @@ column_trans = ColumnTransformer(
 # Check now that prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
-print("Cross-validation score with k-means strategy: %s" % results['test_score'])
+print("Cross-validation score: %s" % results['test_score'])
 
 ################################################################################
 # Store results for later
@@ -206,14 +206,16 @@ plt.tight_layout()
 # algorithm). The memory savings will then happen during the encoding.
 import numpy as np
 
-sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32, categories='most_frequent', n_prototypes=100,
+sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32,
+                            categories='most_frequent', n_prototypes=100,
                             handle_unknown='ignore')
 
 y = df['Violation Type']
 # cast the year column to float32
 df['Year'] = df['Year'].astype(np.float32)
 # clean columns
-transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32, handle_unknown='ignore'),
+transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32,
+                                          handle_unknown='ignore'),
                  ['Alcohol',
                   'Arrest Type',
                   'Belts',
@@ -242,4 +244,4 @@ print('Time to vectorize: %s' % (t1 - t0))
 # We can run a cross-validation to confirm the memory footprint reduction
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y, )
-print("Cross-validation score with most-frequent strategy and float32 dtype: %s" % results['test_score'])
+print("Cross-validation score: %s" % results['test_score'])

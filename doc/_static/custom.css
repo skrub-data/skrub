@@ -1,3 +1,5 @@
+/** Styling **************************************************************/
+
 /* Main page title */
 div.body h1 {
     text-align: center;
@@ -9,6 +11,19 @@ div.body h1 {
 div.body h2 {
     color: #055100;
 }
+
+/* More horizontal space in pre (to fit 80char lines) */
+div.body pre {
+    padding: 7px 30px 7px 10px;
+}
+
+@media only screen and (min-width: 1200px) {
+    div.body pre, .sphx-glr-script-out .highlight pre {
+	margin-right: -30px;
+    }
+}
+
+/** Sphinx gallery *******************************************************/
 
 /* The download note on top of the examples */
 div.sphx-glr-download-link-note {
@@ -31,6 +46,12 @@ div.sphx-glr-download-link-note p.admonition-title {
 	position: absolute; /* Overrides the float behavior */
     }
 }
+
+div.sphx-glr-script-out, p.sphx-glr-script-out {
+    margin-left: -3.5ex;
+}
+
+/** Sidebar **************************************************************/
 
 /* Hide the title in the navigation bar in the index page */
 div.sphinxsidebarwrapper li a {
@@ -56,6 +77,8 @@ div.sphinxsidebarwrapper h3:first-of-type {
 div.sphinxsidebarwrapper div h3:first-of-type {
     display: block;
 }
+
+/*************************************************************************/
 
 /* My custom classes */
 p.right-align {
