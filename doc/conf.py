@@ -111,13 +111,13 @@ html_sidebars = {
         'about.html',
         'globallinks.html',
         'relations.html',
-        'searchbox.html',
+        #'searchbox.html',
     ],
     'index': [
         'about.html',
         'localtoc.html',
         'relations.html',
-        'searchbox.html',
+        #'searchbox.html',
     ]
 }
 
