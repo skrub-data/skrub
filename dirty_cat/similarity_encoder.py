@@ -146,9 +146,9 @@ class SimilarityEncoder(OneHotEncoder):
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.
-    handle_unknown : 'error' (default) or 'ignore'
+    handle_unknown : 'error' or 'ignore' (default)
         Whether to raise an error or ignore if a unknown categorical feature is
-        present during transform (default is to raise). When this parameter
+        present during transform (default is to ignore). When this parameter
         is set to 'ignore' and an unknown category is encountered during
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category

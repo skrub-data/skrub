@@ -82,7 +82,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from dirty_cat import SimilarityEncoder
 
-sim_enc = SimilarityEncoder(similarity='ngram', handle_unknown='ignore')
+sim_enc = SimilarityEncoder(similarity='ngram')
 
 y = df['Violation Type']
 
@@ -207,8 +207,7 @@ plt.tight_layout()
 import numpy as np
 
 sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32,
-                            categories='most_frequent', n_prototypes=100,
-                            handle_unknown='ignore')
+                            categories='most_frequent', n_prototypes=100)
 
 y = df['Violation Type']
 # cast the year column to float32

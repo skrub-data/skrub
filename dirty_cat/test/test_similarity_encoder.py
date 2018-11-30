@@ -10,8 +10,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
 
         model = similarity_encoder.SimilarityEncoder(
-            similarity=similarity, handle_unknown='ignore',
-            hashing_dim=hashing_dim, categories=categories,
+            similarity=similarity, hashing_dim=hashing_dim, categories=categories,
             n_prototypes=n_prototypes)
 
         if similarity == 'ngram':
@@ -36,8 +35,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
 
         try:
             model = similarity_encoder.SimilarityEncoder(
-                similarity=similarity, handle_unknown='ignore',
-                hashing_dim=hashing_dim, categories=categories,
+                similarity=similarity, hashing_dim=hashing_dim, categories=categories,
                 n_prototypes=n_prototypes, random_state=42)
         except ValueError as e:
             assert (e.__str__() == 'n_prototypes expected None or a positive non null integer')
