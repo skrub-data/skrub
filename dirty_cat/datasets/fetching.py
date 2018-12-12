@@ -410,11 +410,3 @@ def fetch_traffic_violations():
     https://catalog.data.gov/dataset/ traffic-violations-56dda
     """
     return fetch_dataset(TRAFFIC_VIOLATIONS_CONFIG, show_progress=False)
-
-
-if __name__ == '__main__':
-    # fetch_midwest_survey()
-    fetch_medical_charge()
-    # fetch_road_safety()
-    # fetch_employee_salaries()
-    # fetch_open_payments()
