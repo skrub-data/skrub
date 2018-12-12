@@ -97,13 +97,13 @@ MEDICAL_CHARGE_CONFIG = DatasetInfo(
                 "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data/"
                 "Downloads/Inpatient_Data_2011_CSV.zip",
             filenames=(
-                "MedicalProviderChargeInpatient.csv",
+                "Medicare_Provider_Charge_Inpatient_DRG100_FY2011.csv",
             ),
             uncompress=True
 
         ),
     ),
-    main_file="MedicalProviderChargeInpatient.csv",
+    main_file="Medicare_Provider_Charge_Inpatient_DRG100_FY2011.csv",
     source="https://www.cms.gov/Research-Statistics-Data-and-Systems/"
            "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data"
            "/Inpatient.html"
