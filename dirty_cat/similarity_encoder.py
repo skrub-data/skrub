@@ -192,7 +192,8 @@ class SimilarityEncoder(OneHotEncoder):
         self.n_prototypes = n_prototypes
         self.random_state = random_state
 
-        assert categories in [None, 'auto', 'k-means', 'most_frequent']
+        if not isinstance(categories, list):
+            assert categories in [None, 'auto', 'k-means', 'most_frequent']
         if categories in ['k-means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
             raise ValueError('n_prototypes expected None or a positive non null integer')
         if categories == 'auto' and n_prototypes is not None:

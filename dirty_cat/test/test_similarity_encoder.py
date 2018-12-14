@@ -4,6 +4,32 @@ from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
 
+def test_specifying_categories():
+    # When creating a new SimilarityEncoder:
+    # - if categories = 'auto', the categories are the sorted, unique training
+    # set observations (for each column)
+    # - if categories is a list (of lists), the categories for each column are
+    # each item in the list
+
+    # In this test, we first find the sorted, unique categories in the training
+    # set, and create a SimilarityEncoder by giving it explicitly the computed
+    # categories. The test consists in making sure the transformed observations
+    # given by this encoder are equal to the transformed obervations in the
+    # case of a SimilarityEncoder created with categories = 'auto'
+
+    observations = [['bar'], ['foo']]
+    categories = [['bar', 'foo']]
+
+    sim_enc_with_cat = similarity_encoder.SimilarityEncoder(
+        categories=categories, ngram_range=(2, 3), similarity='ngram')
+    sim_enc_auto_cat = similarity_encoder.SimilarityEncoder(
+        ngram_range=(2, 3), similarity='ngram')
+
+    feature_matrix_with_cat = sim_enc_with_cat.fit_transform(observations)
+    feature_matrix_auto_cat = sim_enc_auto_cat.fit_transform(observations)
+
+    assert np.allclose(feature_matrix_auto_cat, feature_matrix_with_cat)
+
 def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
     if n_prototypes is None:
         X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
