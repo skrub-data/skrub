@@ -224,9 +224,10 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     Returns
     -------
     a dictionary containing:
-    - a short description of the dataset (under the 'description' key )
-    - an absolute path leading to the csv file where the data is stored locally
-    (under the 'path' key)
+
+        - a short description of the dataset (under the 'description' key )
+        - an absolute path leading to the csv file where the data is stored
+          locally (under the 'path' key)
 
     NOTES
     -----
@@ -302,10 +303,10 @@ def fetch_employee_salaries():
     -------
     dict
         a dictionary containing:
+
             - a short description of the dataset (under the 'description' key)
             - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
-
+              stored locally (under the 'path' key)
 
     References
     ----------
@@ -323,9 +324,10 @@ def fetch_road_safety():
     -------
     dict
         a dictionary containing:
+
             - a short description of the dataset (under the 'description' key)
             - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+              stored locally (under the 'path' key)
 
 
     References
@@ -343,9 +345,10 @@ def fetch_medical_charge():
     -------
     dict
         a dictionary containing:
+
             - a short description of the dataset (under the 'description' key)
             - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+              stored locally (under the 'path' key)
 
 
     References
@@ -362,9 +365,10 @@ def fetch_midwest_survey():
     -------
     dict
         a dictionary containing:
+
             - a short description of the dataset (under the 'description' key)
             - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+              stored locally (under the 'path' key)
 
 
     References
@@ -381,9 +385,10 @@ def fetch_open_payments():
     -------
     dict
         a dictionary containing:
+
             - a short description of the dataset (under the 'description' key)
             - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+              stored locally (under the 'path' key)
 
 
     References
@@ -400,9 +405,10 @@ def fetch_traffic_violations():
     -------
     dict
         a dictionary containing:
+
             - a short description of the dataset (under the 'description' key)
             - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+              stored locally (under the 'path' key)
 
 
     References
