@@ -1,6 +1,9 @@
 Release 0.0.6
 =============
 
+* **SimilarityEncoder**: Fix a bug that was preventing a ``SimilarityEncoder``
+  to be created when ``categories`` was a list.
+
 * **SimilarityEncoder**: Set the dtype passed to the ngram similarity
   to float32, which reduces memory consumption during encoding.
 
