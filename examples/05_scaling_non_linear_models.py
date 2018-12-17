@@ -1,6 +1,7 @@
 r"""
 Fitting scalable, non-linear models on data with dirty categories
 =================================================================
+
 Non-linear models form a very large model class. Among others, this class
 includes:
 
@@ -15,23 +16,24 @@ grasp more complex relationships between the input and the output of a machine
 learning problem. However, using a non-linear model model often comes at a
 cost:
 
-* for neural networks, this cost is an extended model tuning time, in order to
+* For neural networks, this cost is an extended model tuning time, in order to
   achieve good optimization and network architecture.
-* gradient boosting machines do not tend to scale extremely well with
+* Gradient Boosting Machines do not tend to scale extremely well with
   increasing sample size, as all the data needs to be loaded into the main
   memory.
-* for kernel methods, parameter fitting requires the inversion of a gram matrix
-  of size :math:`n \times m` (:math:`n` being the number of samples), yiedling
+* For kernel methods, parameter fitting requires the inversion of a gram matrix
+  of size :math:`n \times n` (:math:`n` being the number of samples), yiedling
   a quadratic dependency (with n) in the final compmutation time.
 
 
-All is not lost though. For kernel methods, there exists approximation
-algorithms, that drops the quadratic dependency with the sample size while
+All is not lost though. For kernel methods, there exist approximation
+algorithms that drop the quadratic dependency with the sample size while
 ensuring almost the same model capacity.
 
 In this example, you will learn how to:
     1. build a ML pipeline that uses a kernel method.
-    2. make this pipeline scalable.
+    2. make this pipeline scalable, by using online algorithms and dimension
+       reduction methods.
 
 
 .. note::
@@ -48,49 +50,67 @@ In this example, you will learn how to:
     replace:: :ref:`scikit-learn documentation <nystroem_kernel_approx>`
 
 .. |RBF|
-    replace:: :class:`RBFSampler <sklearn.kernel_approximation.RBFSampler>`
+    replace:: :class:`~sklearn.kernel_approximation.RBFSampler`
 
-.. |SE| replace:: :class:`SimilarityEncoder <dirty_cat.SimilarityEncoder>`
+.. |SVC|
+    replace:: :class:`SupportVectorClassifier <sklearn.svm.SVC>`
+
+.. |SE| replace:: :class:`~dirty_cat.SimilarityEncoder`
 
 .. |SGDClassifier| replace::
-    :class:`SGDClassifier <sklearn.linear_model.SGDClassifier>`
+    :class:`~sklearn.linear_model.SGDClassifier`
 
 .. |APS| replace::
-    :func:`average_precision_score <sklearn.metrics.average_precision_score>`
+    :func:`~sklearn.metrics.average_precision_score`
 
-.. |OHE| replace::
-    :class:`OneHotEncoder <sklearn.preprocessing.OneHotEncoder>`
+.. |OneHotEncoder| replace::
+    :class:`~sklearn.preprocessing.OneHotEncoder`
+
+.. |LabelEncoder| replace::
+    :class:`~sklearn.preprocessing.LabelEncoder`
 
 .. |SGDClassifier_partialfit| replace::
-    :func:`partial_fit <sklearn.linear_model.SGDClassifier.partial_fit>`
+    :meth:`~sklearn.linear_model.SGDClassifier.partial_fit`
 
 .. |Pipeline| replace::
-    :class:`Pipeline <sklearn.pipeline.Pipeline>`
+    :class:`~sklearn.pipeline.Pipeline`
+
+.. |pd_read_csv| replace::
+    :func:`pandas.read_csv`
+
+.. |sklearn| replace::
+    :std:doc:`scikit-learn <sklearn:index>`
+
+.. |transform| replace::
+    :std:term:`transform <sklearn:transform>`
+
+.. |fit| replace::
+    :std:term:`fit <sklearn:fit>`
 
 """
 ###############################################################################
-# Data Importing and preprocessing
+# Training a first simple pipeline
 # --------------------------------
-#
 # The data that the model will fit is the :code:`traffic violations` dataset.
-import pandas as pd
 from dirty_cat.datasets import fetch_traffic_violations
 
 info = fetch_traffic_violations()
 print(info['description'])
 
 ###############################################################################
-# Problem Setting
-# ---------------
-# .. note::
-#    We set the goal of our machine learning problem as follows: **predict the
-#    violation type as a function of the description.**
+# .. topic:: Problem Setting
 #
-# The :code:`Description` column, is composed of noisy textual observations. In
-# the first part of this example, we will solely use this column as the input
-# of our model. The output column is the :code:`Violation Type` column.  It
-# consists of categorial values: therefore, our problem is a classification
-# problem. You can have a glimpse of the values here:
+#    We set the goal of our machine learning problem as follows:
+#
+#    .. centered::
+#       **predict the violation type as a function of the description.**
+#
+#
+# The :code:`Description` column, is composed of noisy textual observations,
+# while the :code:`Violation Type` column consists of categorial values:
+# therefore, our problem is a classification problem. You can have a glimpse of
+# the values here:
+import pandas as pd
 
 df = pd.read_csv(info['path'], nrows=10).astype(str)
 print(df[['Description', 'Violation Type']].head())
@@ -98,8 +118,8 @@ print(df[['Description', 'Violation Type']].head())
 columns_names = df.columns
 
 ###############################################################################
-# Training a first simple pipeline
-# --------------------------------
+# Estimators construction
+# -----------------------
 # Our input is categorical, thus needs to be encoded. As observations often
 # consist in variations around a few concepts (for instance,
 # :code:`'FAILURE OF VEH. ON HWY. TO DISPLAY LIGHTED LAMPS'` and
@@ -110,55 +130,40 @@ from dirty_cat import SimilarityEncoder
 similarity_encoder = SimilarityEncoder(similarity='ngram')
 
 ###############################################################################
-# Once the input has be preprocessed, a choice has to be made regarding the
-# kind of model used to fit the data. As said below, this example is about kernel methods, a good
-# choice is to use a Support Vector Classifier, or :code:`SVC`:
-from sklearn.svm import SVC
-classifier = SVC(kernel='rbf', random_state=42, gamma=1)
-
-###############################################################################
-# Those two estimators can then be stacked into a :code:`Pipeline`:
+# We can now choose a kernel method, for instance a |SVC|, to fit our data, and
+# stack those two objects into a |Pipeline|.
 from sklearn.pipeline import Pipeline
+from sklearn.svm import SVC
+
+classifier = SVC(kernel='rbf', random_state=42, gamma=1)
 steps = [('encoder', similarity_encoder), ('classifier', classifier)]
 model = Pipeline(steps)
 
 ###############################################################################
-# Model Evaluation
-# ----------------
+# Data Loading and Preprocessing
+# ------------------------------
 # Like in most machine learning setups, the data has to be splitted into 2 or
 # more exclusive parts:
 #
-# * one for model training
-# * one for model testing,
-# * potentially, one for model selection/monitoring.
+# * One for model training.
+# * One for model testing.
+# * Potentially, one for model selection/monitoring.
 #
-# For this reason, we create a simple wrapper around ``pandas.read_csv``, that
+# For this reason, we create a simple wrapper around |pd_read_csv|, that
 # extracts the :code:`X`, and :code:`y` from the dataset.
 #
-# .. note::
+# .. topic:: Note about class imbalance:
+#
 #    The :code:`y` labels are composed of 4 unique classes: ``Citation``,
 #    ``Warning``, ``SERO``, and ``ESERO``. ``Citation`` and ``Warning``
 #    represent around 99% of the data, in a fairly balanced manner. The last
-#    two classes (``SERO`` and ``ESERO`` are very rare (1% and 0.1 % of the
+#    two classes (``SERO`` and ``ESERO``) are very rare (1% and 0.1 % of the
 #    data). Dealing with class imbalance is out of the scope of this example,
 #    so the models will be trained on the first two classes only.
-#
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 
-# pre-fit the label encoder on the only-two classes it will see.
-label_encoder = LabelEncoder()  # converts labels into integers
-label_encoder.fit(['Citation', 'Warning'])
 
-def get_X_y(**kwargs):
-    """simple wrapper around pd.read_csv that extracts features and labels
-
-    The y values are converted into integers to avoid doing this transformation
-    repeatedly in the code.
-    """
+def preprocess(df):
     global label_encoder
-    df = pd.read_csv(info['path'], **kwargs)
     df = df.loc[df['Violation Type'].isin(['Citation', 'Warning'])]
     df = df.dropna()
 
@@ -169,17 +174,36 @@ def get_X_y(**kwargs):
     return X, y_int
 
 
+def get_X_y(**kwargs):
+    """simple wrapper around pd.read_csv that extracts features and labels
+
+    Some systematic preprocessing is also carried out to avoid doing this
+    transformation repeatedly in the code.
+    """
+    df = pd.read_csv(info['path'], **kwargs)
+    return preprocess(df)
+
 ###############################################################################
-# To compute the |APS|, a binary version of the lables are needed, so a |OHE|
-# is created to transform the integer labels into binary vectors.  This encoder
-# fitted once with the only two values (0 and 1, since there are only two
-# classes) it can see.
+# Classifier objects in |sklearn| often require
+# :code:`y` to be integer labels.  Additionaly, |APS| requires a binary version
+# of the labels.  For these two purposes, we create:
+#
+# * a |LabelEncoder|, that we pre-fitted on the known :code:`y` classes
+# * a |OneHotEncoder|, pre-fitted on the resulting integer labels.
+#
+# Their |transform| methods can the be called at appopriate times.
+import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-one_hot_encoder = OneHotEncoder(categories="auto")  # integers to binary values
+
+label_encoder = LabelEncoder()
+label_encoder.fit(['Citation', 'Warning'])
+
+one_hot_encoder = OneHotEncoder(categories="auto", sparse=False)
 one_hot_encoder.fit([[0], [1]])
 
 ###############################################################################
 # .. warning::
+#
 #    During the following training procedures of this example, we will assume
 #    that the dataset was shuffled prior to its loading. As a reason, we can
 #    take the first :math:`n` observations for the training set, the next
@@ -187,9 +211,12 @@ one_hot_encoder.fit([[0], [1]])
 #    case for all datasets, so be careful before applying this code to your own
 #    !
 #
+#
 # Finally, the :code:`X` and :code:`y` are loaded.
 #
-# .. note::
+#
+# .. topic:: Note: offsetting the test set
+#
 #    We create an offset to separate the training and the test set. The reason
 #    for this, is that the online procedures of this example will consume far
 #    more rows, but we still would like to compare accuracies with the same the
@@ -218,9 +245,9 @@ X_cv, y_cv = get_X_y(skiprows=offset+test_set_size, names=columns_names,
 import time
 def profile(func):
     def profiled_func(*args, **kwargs):
-        t0 = time.time()
+        t0 = time.perf_counter()
         res = func(*args, **kwargs)
-        total_time = time.time() - t0
+        total_time = time.perf_counter() - t0
         return total_time, res
     return profiled_func
 
@@ -242,10 +269,8 @@ def evaluate_model(model, X_train, y_train, X_test, y_test, train_set_sizes):
 
         y_pred = model.predict(X_test)
 
-        y_pred_onehot = one_hot_encoder.transform(
-            y_pred.reshape(-1, 1)).toarray()
-        y_test_onehot = one_hot_encoder.transform(
-            y_test.reshape(-1, 1)).toarray()
+        y_pred_onehot = one_hot_encoder.transform(y_pred.reshape(-1, 1))
+        y_test_onehot = one_hot_encoder.transform(y_test.reshape(-1, 1))
 
         test_score = average_precision_score(y_test_onehot, y_pred_onehot)
 
@@ -286,354 +311,187 @@ f = plot_time_and_scores(train_set_sizes, train_times_svc, test_scores_svc,
 ###############################################################################
 # Increasing training size cleary improves model accuracy. However, the
 # training time and the input size increase quadratically with the training set
-# size.  Moreover, kernel methods, process the entire :math:`n \times n` gram
-# matrix at once, so the whole dataset needs to be loaded in the main memory at
-# the same time. This is can be a strong limitation on the training set size:
-# Using 30000 observations, the input is a :math:`30000 \times 30000` matrix.
-# If composed of 32-bit floats, its total size is around :math:`30000^2 \times
-# 32 = 2.8 \times 10^{10} \text{bits} = 4\text{GB}`, which is the caracteristic
-# size of many personal laptops.
+# size.  Indeed, kernel methods need to process an entire :math:`n \times n`
+# matrix at once. In order for this matrix to be loaded into memory, :math:`n`
+# has to remain low: Using 30000 observations, the input is a :math:`30000
+# \times 30000` matrix.  If composed of 32-bit floats, its total size is around
+# :math:`30000^2 \times 32 = 2.8 \times 10^{10} \text{bits} = 4\text{GB}`,
+# which is the caracteristic size of many personal laptops.
+
+###############################################################################
+# Reducing input dimension using kernel approximation methods.
+# ------------------------------------------------------------
+#
+# The main scalability issues with kernels methods is the processing of a large
+# square matrix. To understand where this matrix comes from, we need to delve a
+# little bit deeper these methods internals.
+#
+# .. topic:: Kernel methods
+#
+#    Kernel methods address non-linear problems by creating a new feature space
+#    in which (hopefully) the original problem becomes linear. However, this
+#    feature space is not defined explicitly.  Is it defined through the inner
+#    product of two elements of this space :math:`K(x_1, x_2)`.
+#
+#    Different formulas for the inner product can result in arbitrary complex
+#    feature space. It can even be of infinite dimension! But the magic of
+#    kernel methods is that those new features are never **actually computed**.
+#    Indeed, the kernel tricks consists in solving what is called the **dual
+#    problem** [#dual_ref]_, (the original optimization problem being the
+#    **primal problem**). To do so, only the gram matrix (matrix of the inner
+#    product between every pair of the training observation) :math:`K_{ij}` is
+#    needed.  In the original feature space, :math:`K_{ij} = x_i^Tx_j`, but in
+#    the new feature space, :math:`K_{ij}=K(x_i, x_j)`.
+#
+#    Fortunately, for a fair amount of interesting cost functions (including
+#    the ones we use here), the solution of the dual problem and of the primal
+#    problem is the same. So in summary, kernel methods can solve an
+#    optimization in a particular space, without even computing or knowing the
+#    features in this space!
 
 
 ###############################################################################
 # Kernel approximation methods
 # ----------------------------
-# Kernel approximation methods, such as |RBF| or |NYS| find a feature space in
-# which the gram matrix of the samples is very similar to what the kernel
-# matrix would be.  Thanks to this the problem can now be solved without a
-# :math:`n \times n` matrix, but a :math:`n \times k`, :math:`k` being the
-# dimension of the feature map matrix. More information can be found in the
-# |NYS_EXAMPLE|
-
-from sklearn.kernel_approximation import RBFSampler
-from sklearn.svm import LinearSVC
-n_out_rbf = 100  # number of features after the RBFSampler transformation
-
-###############################################################################
-# Concretly, the difference with the previous model, is that now, a |RBF| or
-# |NYS| object is inserted prior to the classifier, but after the |SE|:
-linear_svc = LinearSVC(dual=False, random_state=42)
-rbf_sampler = RBFSampler(n_components=n_out_rbf, random_state=42)
-similarity_encoder = SimilarityEncoder(similarity='ngram')
-
-steps = [('encoder', similarity_encoder),
-         ('sampler', rbf_sampler),
-         ('svc', linear_svc)]
-
-pipeline_rbfs = Pipeline(steps)
-
-###############################################################################
-# The training procedure is then exactly the same:
-train_times_rbfs, test_scores_rbfs = evaluate_model(
-    pipeline_rbfs, X_train, y_train, X_test, y_test, train_set_sizes)
-title = 'Test Accuracy and Fitting Time for SVC+RBFSampler'
-f = plot_time_and_scores(train_set_sizes, train_times_rbfs, test_scores_rbfs,
-                         title=title)
-
-
-###############################################################################
-# Two remarks:
+# From what was said below, two criterions are limiting a kernel algorithm to
+# scale:
 #
-# * We dropped the quadratic dependency of time with input size.
-# * We did this at a minimal cost: the accuracy scores are very similar!
+# * It processes an matrix, whose size increases quadratically with the number
+#   of samples.
+# * During dual optimization, this matrix is **inverted**, meaning it has to be
+#   loaded into main memory.
 #
-
-###############################################################################
-# Online training
-# ---------------
-# .. note::
+# Kernel approximation methods such as |RBF| or |NYS| [#nys_ref]_,  take a
+# specific kernel :math:`K` as an input, and, try to find the best
+# d-dimensional feature space :math:`\Phi_d` in which the inner product of two
+# elements matches K as much as possible:
+#
+# .. math::
+#    \Phi_d(x_i)^T\Phi_d(x_j) \simeq K(x_i, x_j)
+#
+# Such algorithms address the two limitations at once:
+#
+# * Thanks to this, the problem can now be solved without a :math:`n \times n`
+#   matrix, but a :math:`n \times d` one.
+# * The only power of solving the dual problem instead of the primal one
+#   was that the first one did not require the knowledge of :math:`\Phi`. Now
+#   that :math:`\Phi` is known, solving the dual problem in not useful anymore,
+#   and we can get back to the primal. This problem can now be treated as any
+#   other machine learning problem, using for instance online optimization
+#   algoriths, such as stochastic gradient descent.
+#
+# .. topic:: Online algorithms
+#
 #    An online algorithm [#online_ref]_ is an algorithm that treats its input
 #    piece by piece in a serial fashion. An famous example is the stochastic
 #    gradient descent [#sgd_ref]_, where an estimation the objective function's
-#    gradient is computed on a chunk of the data at each step.
+#    gradient is computed on a batch of the data at each step.
 #
-# Kernel methods create a feature map by defining the scalar products of two
-# elements in this feature map. But the feature map is not explicitally known,
-# or even if known, can be of too big dimension to be computed! The magic of
-# kernel methods is that when solving what is called the **dual problem** ,
-# (the original optimization problem being the **primal problem**),only the
-# gram matrix (matrix of the scalar product between every pair of the training
-# observation) is needed. Fortunately, for a fair amount of interesting cost
-# functions (including the ones we use here), the solution of the dual problem
-# and of the primal problem is the same. So kernel methods can solve an
-# optimization in a particular space, without even computing or knowing the
-# features in this space!
 #
-# The price to pay though, is that the data cannot be processed by pieces,
-# because the optimization of the dual problem is done by inverting the gram
-# matrix of the inputs: all the data has to be processed at once.
-#
-# Kernel approximations relase this constraint by finding a feature map whose
-# gram matrix (evaluated on the training set) approximate the gram matrix of
-# the original kernel.  Now that the feature map is known, we can go back to
-# solving the primal problem instead, and use the *online* optimization
-# algorithm we want!  Let's take, for example, a |SGDClassifier|:
-from sklearn.linear_model.stochastic_gradient import SGDClassifier
-n_out_rbf = 100  # number of features RBFSampler feature map
-
-# Filter annoying warning on max_iter and tol
-import warnings
-warnings.filterwarnings('ignore', module='sklearn.linear_model')
-
-
-similarity_encoder = SimilarityEncoder(similarity='ngram')
-rbf_sampler = RBFSampler(n_components=n_out_rbf, random_state=42)
-sgd_classifier = SGDClassifier(max_iter=1000, tol=None, random_state=42)
-
-steps = [('encoder', similarity_encoder),
-         ('sampler', rbf_sampler),
-         ('svc', sgd_classifier)]
-
-pipeline_sgd = Pipeline(steps)
 
 ###############################################################################
-# Again, the model evaluation procedure is exactly the same:
-train_times_sgd, test_scores_sgd = evaluate_model(
-    pipeline_sgd, X_train, y_train, X_test, y_test, train_set_sizes)
-title = 'Test Accuracy and Fitting Time for SGDClassifier+RBFSampler'
-f = plot_time_and_scores(train_set_sizes, train_times_sgd, test_scores_sgd,
-                         title=title)
-
-###############################################################################
-# Reducing encoding dimension
-# ---------------------------
-# As the dataset on which the models are trained contains dirty categorical
-# data, the cardindality of the categories may rise to a point where the
-# intermediate feature matrix given by the |SE| becomes too big to hold into
-# main memory.
+# Reducing the transformers dimensionality
+# ----------------------------------------
+# There is one last scalability issue in our pipeline: the |SE| and the |RBF|
+# both implement the |fit| method. How to adapt those method to an online
+# setting, where the data is never loaded as a whole?
 #
-# For this reason, it may be desirable to fit the similarity encoder
-# using a fixed set of categories.
-import numpy as np
+# A simple solution is to partially fit the |SE| and the |RBF| on a subset of
+# the data, prior to the online fitting step.
+
+from sklearn.kernel_approximation import RBFSampler
 n_out_encoder = 100
 n_out_rbf = 100
-categories = X_train[:n_out_encoder]
+n_samples_encoder = 10000
 
-###############################################################################
-# If specifying categories, they need to be sorted, per column, so there is a
-# little bit of pre-processing to do:
-def get_categories(X):
-    """extract sorted observation, per column"""
-    X = np.sort(X, axis=0)  # sort X per column
-    return X.T.tolist()
+X_encoder, _ = get_X_y(nrows=n_samples_encoder, names=columns_names)
 
-categories = get_categories(categories)
-similarity_encoder = SimilarityEncoder(similarity='ngram',
-                                       categories=categories)
-rbf_sampler = RBFSampler(n_components=n_out_rbf, random_state=42)
-sgd_classifier = SGDClassifier()
+similarity_encoder = SimilarityEncoder(
+    similarity='ngram', categories='most_frequent', n_prototypes=n_out_encoder)
+transformed_categories = similarity_encoder.fit_transform(X_encoder)
 
-steps = [('encoder', similarity_encoder),
-         ('sampler', rbf_sampler),
-         ('svc', sgd_classifier)]
-pipeline_fixed_categories = Pipeline(steps)
+# Fit the rbf_sampler with the similarity matrix.
+rbf_sampler = RBFSampler(n_out_rbf, random_state=42)
+rbf_sampler.fit(transformed_categories)
 
-train_times_fixed_cat, test_scores_fixed_cat = [], []
 
-train_times_fixed_cat, test_scores_fixed_cat = evaluate_model(
-    pipeline_fixed_categories, X_train, y_train, X_test, y_test,
-    train_set_sizes)
+# The inputs and labels of the cv and test sets have to be pre-processed the
+# same way the training set was processed:
+def encode(X, y_int):
+    global one_hot_encoder, similarity_encoder, rbf_sampler
+    X_sim_encoded = similarity_encoder.transform(X)
+    X_kernel_approx = rbf_sampler.transform(X_sim_encoded)
+    y_onehot = one_hot_encoder.transform(y_int.reshape(-1, 1))
+    return X_kernel_approx, y_onehot
 
-title = ('test accuracy and fitting time for truncated '
-         '\nSimilarityEncoder+SGDClassifier+RBFSampler')
-f = plot_time_and_scores(train_set_sizes, train_times_fixed_cat,
-                         test_scores_fixed_cat, title=title)
+
+X_cv_kernel_approx, y_true_cv_onehot = encode(X_cv, y_cv)
+X_test_kernel_approx, y_true_test_onehot = encode(X_test, y_test)
 
 ###############################################################################
 # Online training for out-of-memory data
 # --------------------------------------
-# In the previous examples, the dataset was still entirely loaded in the main
-# memory. For larger train sizes, it may not be possible. Fortunately,
-# |SGDClassifier| objects implements the |SGDClassifier_partialfit| method. As
-# a result, one can load one chunk of the full dataset, do a
-# |SGDClassifier_partialfit| on it, discard the chunk out of memory, and so on
-# until all the data passes through the dataset. For this though, there is a
-# little bit more code to write.
-#
-# * first, pipeline objects do not implement |SGDClassifier_partialfit|, so it
-#   is not possible to plug scikit-learn objects one after each other, for
-#   online training the preprocessing and the model fitting part have to be
-#   done separately.
-# * second, in the previous cases, |RBF| and the |SE| were fitted only once,
-#   right before the classifier fitting. Now, batch fitting is done, but the
-#   representation of the samples cannot change for each batch. We have to
-#   stick to one feature map, chosen at the beginning of the training phase.
-#   More precisely, the categories of the |SE| will be chosen as a fixed subset
-#   of the data. As for the fitting process of the RBFSampler, an good first
-#   try can be the transformed features of the categories of the |SE|
-#
-# Once again, one of the conditions of the |SGDClassifier| convergence is using
-# properly shuffled data. The data used in this example has been shuffled,
-# prior the execution of this notebook. In order to get good results, you must
-# make sure this holds in your local environment.
+# We now have all the theoretical elements to create an non-linear, online
+# kernel method.
+import warnings
+from sklearn.linear_model.stochastic_gradient import SGDClassifier
 
+online_train_set_size = 50000
+# Filter warning on max_iter and tol
+warnings.filterwarnings('ignore', module='sklearn.linear_model')
+sgd_classifier = SGDClassifier(max_iter=1, tol=None, random_state=42)
 
 ###############################################################################
-# define helper to get the number of lines of the dataset
-def file_length(fname):
-    with open(fname) as f:
-        for i, l in enumerate(f):
-            pass
-    return i + 1
-n_total_samples = file_length(info['path'])
-
-###############################################################################
-# Here are defined the encoder's dimensions, and the datasets size.  In this
-# case, we will monitor the evolution of the cross-validation accuracy over
-# epochs, so we need a cross-validation set.
-online_train_set_size = 10000
-n_out_encoder = 100
-rbf_sampler_out_dim = 100
-
-
-###############################################################################
-# The |SE| and the |RBF| are fitted once, at the beginning of the training
-# procedure, on a subset of the dataset. As the dataset is shuffled, a
-# reasonable choice for the |SE| categories is taking the first
-# n_out_encoder rows.  The |RBF| can then be fitted on the similarity matrix
-# given by the |SE|.
-
-categories, _ = get_X_y(nrows=n_out_encoder, names=columns_names)
-categories = get_categories(categories)
-
-# Create and fit the similarity_encoder on its categories
-similarity_encoder = SimilarityEncoder(
-    similarity='ngram', categories=categories)
-transformed_categories = similarity_encoder.fit_transform(
-    np.reshape(categories, (-1, 1)))
-
-# fit the rbf_sampler
-rbf_sampler = RBFSampler(rbf_sampler_out_dim, random_state=42)
-rbf_sampler.fit(transformed_categories)
-
-###############################################################################
-# create a |SGDClassifier|:
-sgd_classifier = SGDClassifier(
-    max_iter=1, tol=None, random_state=42,
-    # learning_rate='constant',
-    # eta0=0.01
-)
-
-
-###############################################################################
-# The inputs and labels of the cv and test sets have to be pre-processed the
-# same way the training set was processed:
-y_true_cv_onehot = one_hot_encoder.transform(y_cv.reshape(-1, 1)).toarray()
-y_true_test_onehot = one_hot_encoder.transform(y_test.reshape(-1, 1)).toarray()
-
-X_test_sim_encoded = similarity_encoder.transform(X_test)
-X_cv_sim_encoded = similarity_encoder.transform(X_cv)
-
-X_test_kernel_approx = rbf_sampler.transform(X_test_sim_encoded)
-X_cv_kernel_approx = rbf_sampler.transform(X_cv_sim_encoded)
-
-###############################################################################
-# We can now start the training. There are two intricated loop, one iterating
+# We can now start the training. There are two intricated loops, one iterating
 # over epochs (the number of passes of the |SGDClassifier| on the dataset, and
-# on over chunks (the distincts pieces of the datasets).
-chunksize = 1000
+# one over batches (the distincts pieces of the datasets).
+batchsize = 1000
 n_epochs = 5
 for epoch_no in range(n_epochs):
     iter_csv = pd.read_csv(
-        info['path'], nrows=online_train_set_size, chunksize=chunksize,
+        info['path'], nrows=online_train_set_size, chunksize=batchsize,
         skiprows=1, names=columns_names,
         usecols=['Description', 'Violation Type'])
-    for chunk_no, chunk in enumerate(iter_csv):
-        chunk = chunk.dropna(how='any')
-        chunk = chunk.loc[~chunk['Violation Type'].isin(['SERO', 'ESERO'])]
-
-        batch_X = chunk[['Description']].values
-        batch_Y = chunk['Violation Type'].values
-
-        # represent the labels as classes index
-        batch_Y_integers = label_encoder.transform(batch_Y)
-        batch_Y_onehot = one_hot_encoder.transform(
-            batch_Y_integers.reshape(-1, 1)).toarray()
-
-        # go through the preprocessing pipeline manually
-        batch_X_sim_encoded = similarity_encoder.transform(batch_X)
-        batch_X_kernel_approx = rbf_sampler.transform(batch_X_sim_encoded)
+    for batch_no, batch in enumerate(iter_csv):
+        X_batch, y_batch = preprocess(batch)
+        X_batch_kernel_approx, y_batch_onehot = encode(X_batch, y_batch)
 
         # make one pass of stochastic gradient descent over the batch.
         sgd_classifier.partial_fit(
-            batch_X_kernel_approx, batch_Y_integers,
-            classes=list(range(len(label_encoder.classes_))))
+            X_batch_kernel_approx, y_batch, classes=[0, 1])
 
-
-        # print train/test accuracy metrics every 5 chunks
-        if (chunk_no % 5) == 0:
-            message = "chunk {:>4} epoch {:>3} ".format(chunk_no, epoch_no)
+        # print train/test accuracy metrics every 5 batch
+        if (batch_no % 5) == 0:
+            message = "batch {:>4} epoch {:>3} ".format(batch_no, epoch_no)
             for origin, X, y_true_onehot in zip(
                     ('train', 'cv'),
-                    (batch_X_kernel_approx, X_cv_kernel_approx),
-                    (batch_Y_onehot, y_true_cv_onehot)):
+                    (X_batch_kernel_approx, X_cv_kernel_approx),
+                    (y_batch_onehot, y_true_cv_onehot)):
 
-                # compute cross validation accuracty at the end of each epoch
+                # compute cross validation accuracy at the end of each epoch
                 y_pred = sgd_classifier.predict(X)
 
                 # preprocess correctly the labels and prediction to match
                 # average_precision_score expectations
                 y_pred_onehot = one_hot_encoder.transform(
-                    y_pred.reshape(-1, 1)).toarray()
+                    y_pred.reshape(-1, 1))
 
-                score = average_precision_score(
-                    y_true_onehot, y_pred_onehot, average=None)
-                average_score = np.nanmean(score)
+                score = average_precision_score(y_true_onehot, y_pred_onehot)
+                message += "{} precision: {:.4f}  ".format(origin, score)
 
-                message += "{} precision: {:.4f}  ".format(
-                    origin, average_score)
             print(message)
 
 # finally, compute the test score
 y_test_pred = sgd_classifier.predict(X_test_kernel_approx)
-y_test_pred_onehot = one_hot_encoder.transform(
-    y_test_pred.reshape(-1, 1)).toarray()
+y_test_pred_onehot = one_hot_encoder.transform(y_test_pred.reshape(-1, 1))
 test_score_online = average_precision_score(
     y_true_test_onehot, y_test_pred_onehot)
 print('final test score for online method {:.4f}'.format(test_score_online))
-
-###############################################################################
-# Time and performance comparison
-# -------------------------------
-# We can finally compare the methods all together:
-# We can now start the training. There are two intricated loop, one iterating
-fig, ax = plt.subplots()
-n_groups = 3
-index = np.arange(n_groups)
-bar_width = 0.1
-
-opacity = 0.4
-
-labels = ['svc', 'rbfs', 'sgd', 'fixed_cat']
-test_scores = [test_scores_svc, test_scores_rbfs, test_scores_sgd,
-               test_scores_fixed_cat]
-colors = ['red', 'green', 'blue', 'orange']
-
-i = -1
-for label, scores, color in zip(labels, test_scores, colors):
-    ax.bar(index + i*bar_width, scores, bar_width, alpha=opacity, color=color,
-           label=label)
-    i += 1
-
-# plotting the online model accuracy
-ax.axhline(test_score_online, linestyle='--', label='online model',
-           color='black', alpha=opacity)
-
-ax.set_xlabel('Train set size')
-ax.set_ylabel('Test scores')
-ax.set_title('Scores by model and train set size')
-ax.set_xticks(index + bar_width / 2)
-ax.set_xticklabels(list(map(str, train_set_sizes)))
-ax.legend()
-
-fig.tight_layout()
-plt.show()
-
-# over epochs (the number of passes of the |SGDClassifier| on the dataset, and
-# on over chunks (the distincts pieces of the datasets).
 
 ###############################################################################
 # .. rubric:: Footnotes
 # .. [#xgboost] `Slides on gradient boosting by Tianqi Chen, the founder of XGBoost <https://homes.cs.washington.edu/~tqchen/pdf/BoostedTree.pdf>`_
 # .. [#online_ref] `Wikipedia article on online algorithms <https://en.wikipedia.org/wiki/Online_algorithm>`_
 # .. [#sgd_ref] `Leon Bouttou's article on stochastic gradient descent <http://khalilghorbal.info/assets/spa/papers/ML_GradDescent.pdf>`_
+# .. [#nys_ref] |NYS_EXAMPLE|
+# .. [#dual_ref] `Introduction to duality <https://pdfs.semanticscholar.org/0373/e7289a1978108d6455218160a529c85842c0.pdf>`_
