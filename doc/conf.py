@@ -204,16 +204,16 @@ texinfo_documents = [
 
 # Configuration for intersphinx
 intersphinx_mapping = {
-    'https://docs.python.org/': None,
-    'https://docs.scipy.org/doc/numpy': None,
-    'https://docs.scipy.org/doc/scipy/reference': None,
-    'http://matplotlib.org/': None,
-    'http://scikit-learn.org/0.20': None,
-    'http://scikit-image.org/docs/stable/': None,
-    'http://docs.enthought.com/mayavi/mayavi/': None,
-    'http://www.statsmodels.org/stable/': None,
-    'http://pandas.pydata.org/pandas-docs/stable/': None,
-    'http://seaborn.pydata.org/': None,
+    'python': ('https://docs.python.org/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'matplotlib': ('http://matplotlib.org/', None),
+    'sklearn': ('http://scikit-learn.org/0.20', None),
+    'skimage': ('http://scikit-image.org/docs/stable/', None),
+    'mayavi': ('http://docs.enthought.com/mayavi/mayavi/', None),
+    'statsmodels': ('http://www.statsmodels.org/stable/', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
+    'seaborn': ('http://seaborn.pydata.org/', None),
 }
 
 
