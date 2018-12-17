@@ -204,11 +204,11 @@ texinfo_documents = [
 
 # Configuration for intersphinx
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None),
+    'python': ('https://docs.python.org/3/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('http://matplotlib.org/', None),
-    'sklearn': ('http://scikit-learn.org/0.20', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'sklearn': ('https://scikit-learn.org/0.20', None),
     'skimage': ('http://scikit-image.org/docs/stable/', None),
     'mayavi': ('http://docs.enthought.com/mayavi/mayavi/', None),
     'statsmodels': ('http://www.statsmodels.org/stable/', None),
