@@ -230,7 +230,7 @@ sphinx_gallery_conf = {
         'pandas': 'http://pandas.pydata.org/pandas-docs/stable/',
         #'seaborn': 'http://seaborn.pydata.org/',
         #'matplotlib': 'http://matplotlib.org/',
-        'scikit-learn': 'http://scikit-learn.org/0.20',
+        'sklearn': 'http://scikit-learn.org/0.20',
         #'scikit-image': 'http://scikit-image.org/docs/stable/',
         #'mayavi': 'http://docs.enthought.com/mayavi/mayavi/',
         #'statsmodels': 'http://www.statsmodels.org/stable/',
