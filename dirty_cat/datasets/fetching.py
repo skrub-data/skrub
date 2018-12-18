@@ -37,7 +37,8 @@ DatasetInfo = namedtuple('DatasetInfo',
 # a DatasetInfo Object is basically a tuple of UrlInfos object
 # an UrlInfo object is composed of an url and the filenames contained
 # in the request content
-UrlInfo = namedtuple('UrlInfo', ['url', 'filenames', 'uncompress'])
+UrlInfo = namedtuple(
+    'UrlInfo', ['url', 'filenames', 'uncompress', 'encoding'])
 
 ROAD_SAFETY_CONFIG = DatasetInfo(
     name='road_safety',
@@ -50,12 +51,12 @@ ROAD_SAFETY_CONFIG = DatasetInfo(
                 "Vehicles_2015.csv",
                 "Accidents_2015.csv"
             ),
-            uncompress=True),
+            uncompress=True, encoding='utf-8'),
         UrlInfo(
             url="http://data.dft.gov.uk/road-accidents-safety-data/"
                 "MakeModel2015.zip",
             filenames=("2015_Make_Model.csv",),
-            uncompress=True
+            uncompress=True, encoding='utf-8'
         )
     ),
     main_file="Accidents_2015.csv",  # for consistency, all files are relevant,
@@ -68,7 +69,7 @@ OPEN_PAYMENTS_CONFIG = DatasetInfo(
     (
         UrlInfo(
             url='http://download.cms.gov/openpayments/PGYR13_P011718.ZIP',
-            filenames=None, uncompress=True
+            filenames=None, uncompress=True, encoding='utf-8'
         ),
     ),
     main_file='OP_DTL_GNRL_PGYR2013_P01172018.csv',  # same
@@ -83,7 +84,7 @@ MIDWEST_SURVEY_CONFIG = DatasetInfo(
                 "master/region-survey/FiveThirtyEight_Midwest_Survey.csv",
             filenames=(
                 "FiveThirtyEight_Midwest_Survey.csv",
-            ), uncompress=False
+            ), uncompress=False, encoding='utf-8'
         ),
     ),
     main_file="FiveThirtyEight_Midwest_Survey.csv",
@@ -99,7 +100,7 @@ MEDICAL_CHARGE_CONFIG = DatasetInfo(
             filenames=(
                 "Medicare_Provider_Charge_Inpatient_DRG100_FY2011.csv",
             ),
-            uncompress=True
+            uncompress=True, encoding='utf-8'
 
         ),
     ),
@@ -116,7 +117,7 @@ EMPLOYEE_SALARIES_CONFIG = DatasetInfo(
             url="https://data.montgomerycountymd.gov/api/views/"
                 "xj3h-s2i7/rows.csv?accessType=DOWNLOAD",
             filenames=("rows.csv",),
-            uncompress=False
+            uncompress=False, encoding='utf-8'
         ),
     ),
     main_file="rows.csv",
@@ -131,7 +132,7 @@ TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
                 "4mse-ku6q/rows.csv?accessType=DOWNLOAD",
             filenames=(
                 "rows.csv",
-            ), uncompress=False,
+            ), uncompress=False, encoding='utf-8'
         ),
     ),
     main_file="rows.csv",
@@ -142,6 +143,24 @@ FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 
 class FileChangedError(Exception):
     pass
+
+
+def _change_file_encoding(file_name, initial_encoding, target_encoding):
+
+    temp_file_name = file_name + '.temp'
+    try:
+        with open(file_name, "r", encoding=initial_encoding) as source:
+            with open(temp_file_name, "w", encoding=target_encoding) as target:
+                while True:
+                    contents = source.read(100000)
+                    if not contents:
+                        break
+                    target.write(contents)
+        shutil.move(temp_file_name, file_name)
+
+    finally:
+        if os.path.exists(temp_file_name):
+            os.unlink(temp_file_name)
 
 
 def _download_and_write(url, file, show_progress=True):
@@ -183,7 +202,8 @@ def fetch_dataset(configfile: DatasetInfo, show_progress=True):
     data_dir = os.path.join(get_data_dir(), configfile.name)
     for urlinfo in configfile.urlinfos:
         _fetch_file(urlinfo.url, data_dir, filenames=urlinfo.filenames,
-                    uncompress=urlinfo.uncompress, show_progress=show_progress)
+                    uncompress=urlinfo.uncompress, show_progress=show_progress,
+                    initial_encoding=urlinfo.encoding)
     # returns the absolute path of the csv file where the data is
     result_dict = {
         'description': 'The downloaded data contains the {} dataset.\n'
@@ -195,7 +215,8 @@ def fetch_dataset(configfile: DatasetInfo, show_progress=True):
 
 
 def _fetch_file(url, data_dir, filenames=None, overwrite=False,
-                md5sum=None, uncompress=True, show_progress=True):
+                md5sum=None, uncompress=True, show_progress=True,
+                initial_encoding='utf-8'):
     """fetches the content of a requested url
 
     IF the downloaded file is compressed, then the fetcher
@@ -289,6 +310,10 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     if _check_if_exists(full_name, remove=False) and uncompress:
         _uncompress_file(full_name, delete_archive=True)
 
+    if initial_encoding != 'utf-8':
+        for file in os.listdir(data_dir):
+            _change_file_encoding(
+                os.path.join(data_dir, file), initial_encoding, 'utf-8')
     return full_name
 
 

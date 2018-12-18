@@ -26,6 +26,7 @@ class with_setup:
 class MockResponse(requests.Response):
     with_content_length = True
     zipresult = False
+    _file_contents = ' '.encode('utf-8')
 
     @classmethod
     def set_with_content_length(cls, b):
@@ -50,7 +51,7 @@ class MockResponse(requests.Response):
     def set_to_zipfile(cls, b):
         cls.zipresult = b
 
-    def __init__(self, url, params, content: str, stream=True):
+    def __init__(self, url, params, stream=True):
         super(MockResponse, self).__init__()
         self.url = url
         self.params = params
@@ -60,24 +61,27 @@ class MockResponse(requests.Response):
             self.raw = BytesIO()
             with zipfile.ZipFile(self.raw, mode='w',
                                  compression=zipfile.ZIP_DEFLATED) as mf:
-                mf.writestr('unzipped_data.txt', 'test')
+                mf.writestr('unzipped_data.txt', self._file_contents)
+
+            # go to the start of the stream
+            self.raw.seek(0)
             # self.raw = self.raw.wr(file=self.raw)
             if stream:
                 self._content = self.raw.getvalue()
 
         else:
             if stream:
-                self.raw = BytesIO(str.encode(content))
+                self.raw = BytesIO(self._file_contents)
             else:
-                self._content = content
+                self._content = self._file_contents
 
         if self.with_content_length:
             if self.zipresult:
                 self.headers['Content-Length'] = len(self.raw.getvalue())
                 self.total_length = len(self.raw.getvalue())
             else:
-                self.headers['Content-Length'] = len(content)
-                self.total_length = len(content)
+                self.headers['Content-Length'] = len(self._file_contents)
+                self.total_length = len(self._file_contents)
 
     def iter_content(self, chunk_size=1, decode_unicode=False):
         """
@@ -103,4 +107,4 @@ class MockResponse(requests.Response):
 
 def mock_request_get(url, params=None, stream=True):
     # should we be able to input a specialized content for the mockrequest?
-    return MockResponse(url, params=None, content=' ')
+    return MockResponse(url, params=None)
