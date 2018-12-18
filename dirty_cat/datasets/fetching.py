@@ -138,6 +138,22 @@ TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
     main_file="rows.csv",
     source="https://catalog.data.gov/dataset/ traffic-violations-56dda"
 )
+
+DRUG_DIRECTORY_CONFIG = DatasetInfo(
+    name='drug_directory',
+    urlinfos=(
+        UrlInfo(
+            url="https://www.accessdata.fda.gov/cder/ndctext.zip",
+            filenames=(
+                "product.txt",
+                "package.txt",
+            ), uncompress=True, encoding='latin-1'
+        ),
+    ),
+    main_file="product.txt",
+    source="https://www.fda.gov/Drugs/InformationOnDrugs/ucm142438.htm"
+)
+
 FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -448,3 +464,24 @@ def fetch_traffic_violations():
     https://catalog.data.gov/dataset/traffic-violations-56dda
     """
     return fetch_dataset(TRAFFIC_VIOLATIONS_CONFIG, show_progress=False)
+
+
+def fetch_drug_directory():
+    """fetches the drug directory dataset
+
+    Returns
+    -------
+    dict
+        a dictionary containing:
+
+            - a short description of the dataset (under the ``description``
+              key)
+            - an absolute path leading to the csv file where the data is stored
+              locally (under the ``path`` key)
+
+
+    References
+    ----------
+    https://www.fda.gov/Drugs/InformationOnDrugs/ucm142438.htm
+    """
+    return fetch_dataset(DRUG_DIRECTORY_CONFIG, show_progress=False)
