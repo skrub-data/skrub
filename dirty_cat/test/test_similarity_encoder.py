@@ -1,8 +1,34 @@
 import numpy as np
-
+import numpy.testing
 from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
+
+def test_specifying_categories():
+    # When creating a new SimilarityEncoder:
+    # - if categories = 'auto', the categories are the sorted, unique training
+    # set observations (for each column)
+    # - if categories is a list (of lists), the categories for each column are
+    # each item in the list
+
+    # In this test, we first find the sorted, unique categories in the training
+    # set, and create a SimilarityEncoder by giving it explicitly the computed
+    # categories. The test consists in making sure the transformed observations
+    # given by this encoder are equal to the transformed obervations in the
+    # case of a SimilarityEncoder created with categories = 'auto'
+
+    observations = [['bar'], ['foo']]
+    categories = [['bar', 'foo']]
+
+    sim_enc_with_cat = similarity_encoder.SimilarityEncoder(
+        categories=categories, ngram_range=(2, 3), similarity='ngram')
+    sim_enc_auto_cat = similarity_encoder.SimilarityEncoder(
+        ngram_range=(2, 3), similarity='ngram')
+
+    feature_matrix_with_cat = sim_enc_with_cat.fit_transform(observations)
+    feature_matrix_auto_cat = sim_enc_auto_cat.fit_transform(observations)
+
+    assert np.allclose(feature_matrix_auto_cat, feature_matrix_with_cat)
 
 def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
     if n_prototypes is None:
@@ -10,8 +36,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
 
         model = similarity_encoder.SimilarityEncoder(
-            similarity=similarity, handle_unknown='ignore',
-            hashing_dim=hashing_dim, categories=categories,
+            similarity=similarity, hashing_dim=hashing_dim, categories=categories,
             n_prototypes=n_prototypes)
 
         if similarity == 'ngram':
@@ -26,7 +51,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
                     ans[i, j] = similarity_f(x_t, x, 3)
                 else:
                     ans[i, j] = similarity_f(x_t, x)
-        assert np.array_equal(encoder, ans)
+        numpy.testing.assert_almost_equal(encoder, ans)
     else:
         X = np.array(
             ['aac', 'aaa', 'aaab', 'aaa', 'aaab', 'aaa', 'aaab', 'aaa']
@@ -36,8 +61,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
 
         try:
             model = similarity_encoder.SimilarityEncoder(
-                similarity=similarity, handle_unknown='ignore',
-                hashing_dim=hashing_dim, categories=categories,
+                similarity=similarity, hashing_dim=hashing_dim, categories=categories,
                 n_prototypes=n_prototypes, random_state=42)
         except ValueError as e:
             assert (e.__str__() == 'n_prototypes expected None or a positive non null integer')
@@ -65,7 +89,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
                 else:
                     ans[i, j] = similarity_f(x_t, x)
 
-        assert np.array_equal(encoder, ans)
+        numpy.testing.assert_almost_equal(encoder, ans)
 
 
 def test_similarity_encoder():

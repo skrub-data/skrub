@@ -111,13 +111,13 @@ html_sidebars = {
         'about.html',
         'globallinks.html',
         'relations.html',
-        'searchbox.html',
+        #'searchbox.html',
     ],
     'index': [
         'about.html',
         'localtoc.html',
         'relations.html',
-        'searchbox.html',
+        #'searchbox.html',
     ]
 }
 
@@ -204,16 +204,16 @@ texinfo_documents = [
 
 # Configuration for intersphinx
 intersphinx_mapping = {
-    'https://docs.python.org/': None,
-    'https://docs.scipy.org/doc/numpy': None,
-    'https://docs.scipy.org/doc/scipy/reference': None,
-    'http://matplotlib.org/': None,
-    'http://scikit-learn.org/0.20': None,
-    'http://scikit-image.org/docs/stable/': None,
-    'http://docs.enthought.com/mayavi/mayavi/': None,
-    'http://www.statsmodels.org/stable/': None,
-    'http://pandas.pydata.org/pandas-docs/stable/': None,
-    'http://seaborn.pydata.org/': None,
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'sklearn': ('https://scikit-learn.org/0.20', None),
+    'skimage': ('http://scikit-image.org/docs/stable/', None),
+    'mayavi': ('http://docs.enthought.com/mayavi/mayavi/', None),
+    'statsmodels': ('http://www.statsmodels.org/stable/', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
+    'seaborn': ('http://seaborn.pydata.org/', None),
 }
 
 
@@ -230,7 +230,7 @@ sphinx_gallery_conf = {
         'pandas': 'http://pandas.pydata.org/pandas-docs/stable/',
         #'seaborn': 'http://seaborn.pydata.org/',
         #'matplotlib': 'http://matplotlib.org/',
-        'scikit-learn': 'http://scikit-learn.org/0.20',
+        'sklearn': 'http://scikit-learn.org/0.20',
         #'scikit-image': 'http://scikit-image.org/docs/stable/',
         #'mayavi': 'http://docs.enthought.com/mayavi/mayavi/',
         #'statsmodels': 'http://www.statsmodels.org/stable/',

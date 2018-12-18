@@ -84,5 +84,5 @@ contributions in the scope of dirty categories.
    Similarity encoding in also available in Spark ML:
    https://github.com/rakutentech/spark-dirty-cat
 
-.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Accepted for publication at: Machine Learning journal, Springer.
+.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
 

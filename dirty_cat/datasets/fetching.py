@@ -97,13 +97,13 @@ MEDICAL_CHARGE_CONFIG = DatasetInfo(
                 "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data/"
                 "Downloads/Inpatient_Data_2011_CSV.zip",
             filenames=(
-                "MedicalProviderChargeInpatient.csv",
+                "Medicare_Provider_Charge_Inpatient_DRG100_FY2011.csv",
             ),
             uncompress=True
 
         ),
     ),
-    main_file="MedicalProviderChargeInpatient.csv",
+    main_file="Medicare_Provider_Charge_Inpatient_DRG100_FY2011.csv",
     source="https://www.cms.gov/Research-Statistics-Data-and-Systems/"
            "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data"
            "/Inpatient.html"
@@ -217,21 +217,23 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     uncompress: bool
         whether to uncompress the content of the url
 
-    show_progress: if True, displays a progressbar during the downloading
-    of the dataset. Warning: clint needs to be implemented and is not in the
-    requirements for now
+    show_progress:
+        if ``True``, displays a progressbar during the downloading of the
+        dataset. Warning: ``clint`` needs to be implemented and is not in the
+        requirements for now
 
     Returns
     -------
     a dictionary containing:
-    - a short description of the dataset (under the 'description' key )
-    - an absolute path leading to the csv file where the data is stored locally
-    (under the 'path' key)
+
+        - a short description of the dataset (under the ``description`` key )
+        - an absolute path leading to the csv file where the data is stored
+          locally (under the ``path`` key)
 
     NOTES
     -----
     NON-implemented nilearn parameters:
-    * the resume option, that would resume partially downloaded files
+    * the ``resume`` option, that would resume partially downloaded files
     * username/password
     * handlers
 
@@ -302,14 +304,15 @@ def fetch_employee_salaries():
     -------
     dict
         a dictionary containing:
-            - a short description of the dataset (under the 'description' key)
-            - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
 
+            - a short description of the dataset (under the ``description``
+              key)
+            - an absolute path leading to the csv file where the data is stored
+              locally (under the ``path`` key)
 
     References
     ----------
-    https://catalog.data.gov/dataset/ employee-salaries-2016
+    https://catalog.data.gov/dataset/employee-salaries-2016
 
     """
 
@@ -323,9 +326,11 @@ def fetch_road_safety():
     -------
     dict
         a dictionary containing:
-            - a short description of the dataset (under the 'description' key)
-            - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+
+            - a short description of the dataset (under the ``description``
+              key)
+            - an absolute path leading to the csv file where the data is stored
+              locally (under the ``path`` key)
 
 
     References
@@ -343,9 +348,11 @@ def fetch_medical_charge():
     -------
     dict
         a dictionary containing:
-            - a short description of the dataset (under the 'description' key)
-            - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+
+            - a short description of the dataset (under the ``description``
+              key)
+            - an absolute path leading to the csv file where the data is stored
+              locally (under the ``path`` key)
 
 
     References
@@ -362,9 +369,11 @@ def fetch_midwest_survey():
     -------
     dict
         a dictionary containing:
-            - a short description of the dataset (under the 'description' key)
-            - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+
+            - a short description of the dataset (under the ``description``
+              key)
+            - an absolute path leading to the csv file where the data is stored
+              locally (under the ``path`` key)
 
 
     References
@@ -381,9 +390,11 @@ def fetch_open_payments():
     -------
     dict
         a dictionary containing:
-            - a short description of the dataset (under the 'description' key)
-            - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+
+            - a short description of the dataset (under the ``description``
+              key)
+            - an absolute path leading to the csv file where the data is stored
+              locally (under the ``path`` key)
 
 
     References
@@ -400,21 +411,15 @@ def fetch_traffic_violations():
     -------
     dict
         a dictionary containing:
-            - a short description of the dataset (under the 'description' key)
-            - an absolute path leading to the csv file where the data is
-            stored locally (under the 'path' key)
+
+            - a short description of the dataset (under the ``description``
+              key)
+            - an absolute path leading to the csv file where the data is stored
+              locally (under the ``path`` key)
 
 
     References
     ----------
-    https://catalog.data.gov/dataset/ traffic-violations-56dda
+    https://catalog.data.gov/dataset/traffic-violations-56dda
     """
     return fetch_dataset(TRAFFIC_VIOLATIONS_CONFIG, show_progress=False)
-
-
-if __name__ == '__main__':
-    # fetch_midwest_survey()
-    fetch_medical_charge()
-    # fetch_road_safety()
-    # fetch_employee_salaries()
-    # fetch_open_payments()

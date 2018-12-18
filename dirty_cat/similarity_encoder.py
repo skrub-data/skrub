@@ -59,7 +59,7 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     for x, out_row in zip(X, out):
         out_row[:] = SE_dict[x]
 
-    return np.nan_to_num(out)
+    return np.nan_to_num(out, copy=False)
 
 
 def get_prototype_frequencies(prototypes):
@@ -146,9 +146,9 @@ class SimilarityEncoder(OneHotEncoder):
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.
-    handle_unknown : 'error' (default) or 'ignore'
+    handle_unknown : 'error' or 'ignore' (default)
         Whether to raise an error or ignore if a unknown categorical feature is
-        present during transform (default is to raise). When this parameter
+        present during transform (default is to ignore). When this parameter
         is set to 'ignore' and an unknown category is encountered during
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
@@ -192,7 +192,8 @@ class SimilarityEncoder(OneHotEncoder):
         self.n_prototypes = n_prototypes
         self.random_state = random_state
 
-        assert categories in [None, 'auto', 'k-means', 'most_frequent']
+        if not isinstance(categories, list):
+            assert categories in [None, 'auto', 'k-means', 'most_frequent']
         if categories in ['k-means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
             raise ValueError('n_prototypes expected None or a positive non null integer')
         if categories == 'auto' and n_prototypes is not None:
@@ -310,13 +311,16 @@ class SimilarityEncoder(OneHotEncoder):
 
         elif self.similarity == 'ngram':
             min_n, max_n = self.ngram_range
-            out = []
+
+            total_length = sum(len(x) for x in self.categories_)
+            out = np.empty((len(X), total_length), dtype=self.dtype)
+            last = 0
             for j, cats in enumerate(self.categories_):
-                encoder = ngram_similarity(X[:, j], cats,
-                                           ngram_range=(min_n, max_n),
-                                           hashing_dim=self.hashing_dim,
-                                           dtype=self.dtype)
-                out.append(encoder)
-            return np.hstack(out)
+                out[:, last:last + len(cats)] = ngram_similarity(X[:, j], cats,
+                                                                 ngram_range=(min_n, max_n),
+                                                                 hashing_dim=self.hashing_dim,
+                                                                 dtype=np.float32)
+                last += len(cats)
+            return out
         else:
             raise ValueError("Unknown similarity: '%s'" % self.similarity)
