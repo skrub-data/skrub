@@ -310,7 +310,7 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     if _check_if_exists(full_name, remove=False) and uncompress:
         _uncompress_file(full_name, delete_archive=True)
 
-    if initial_encoding != 'utf-8':
+    if download and (initial_encoding != 'utf-8'):
         for file in os.listdir(data_dir):
             _change_file_encoding(
                 os.path.join(data_dir, file), initial_encoding, 'utf-8')
