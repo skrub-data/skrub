@@ -2,6 +2,7 @@
 Some string distances
 """
 import functools
+import re
 
 import numpy as np
 
@@ -17,6 +18,52 @@ from collections import Counter
 
 
 # TODO vectorize these functions (accept arrays)
+
+
+def get_ngram_count(X, ngram_range):
+    """Compute the number of ngrams in a string.
+
+    Here is where the formula comes from:
+
+    * the number of 3-grams in a string is the number of sliding windows of
+      size 3 in the string: len(string) - 3 + 1
+    * this can be generalized to n-grams by changing 3 by n.
+    * when given a ngram_range, we can sum this formula over all possible
+      ngrams
+
+    """
+    min_n, max_n = ngram_range
+    ngram_count = 0
+
+    for i in range(min_n, max_n + 1):
+        ngram_count += len(X) - i + 1
+
+    return ngram_count
+
+
+def preprocess(x):
+    """Combine preprocessing done by CountVectorizer and the SimilarityEncoder.
+
+    Different methods exist to compute the number of ngrams in a string:
+
+    - Simply sum the values of a count vector, which is the ouput of a
+      CountVectorizer with analyzer="char", and a specific ngram_range
+    - Compute the number of ngrams using a formula (see ``get_ngram_count``)
+
+    However, in the first case, some preprocessing is done by the
+    CountVectorizer that may change the length of the string (in particular,
+    stripping sequences of 2 or more whitespaces into 1). In order for the two
+    methods to output similar results, this pre-processing is done upstream,
+    prior to the CountVectorizer.
+    """
+
+    # preprocessing step done in ngram_similarity
+    x = ' %s ' % x
+
+    # preprocessing step done in the CountVectorizer
+    _white_spaces = re.compile(r"\s\s+")
+
+    return _white_spaces.sub(' ', x)
 
 
 def levenshtein_array(source, target):
@@ -187,9 +234,12 @@ def get_ngrams(string, n):
     return list(zip(*string_list))
 
 
-def ngram_similarity(string1, string2, n):
+def ngram_similarity(string1, string2, n, preprocess_strings=True):
     """ n-gram similarity between two strings
     """
+    if preprocess_strings:
+        string1, string2 = preprocess(string1), preprocess(string2)
+
     ngrams1 = get_ngrams(string1, n)
     count1 = Counter(ngrams1)
 

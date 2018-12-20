@@ -30,6 +30,21 @@ def test_specifying_categories():
 
     assert np.allclose(feature_matrix_auto_cat, feature_matrix_with_cat)
 
+
+def test_fast_ngram_similarity():
+    vocabulary = [['bar', 'foo']]
+    observations = [['foo'], ['baz']]
+
+    sim_enc = similarity_encoder.SimilarityEncoder(
+        similarity='ngram', ngram_range=(2, 2), categories=vocabulary)
+
+    sim_enc.fit(observations)
+    feature_matrix = sim_enc.transform(observations, fast=False)
+    feature_matrix_fast = sim_enc.transform(observations, fast=True)
+
+    assert np.allclose(feature_matrix, feature_matrix_fast)
+
+
 def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
     if n_prototypes is None:
         X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
