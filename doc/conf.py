@@ -138,7 +138,7 @@ html_theme_options = {
 #    'gray_3': "#090",
     'fixed_sidebar': 'true',
     'note_bg': "#E9E9E9",
-    'topic_bg': "#E9E9E9",
+    'topic_bg': "rgb(246, 248, 250);",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
