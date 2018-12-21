@@ -1,6 +1,6 @@
 language: python
 env:
-    - CONDA_DEPENDENCIES='python-Levenshtein distance sklearn numpy scipy requests pytest-cov codecov'
+    - CONDA_DEPENDENCIES='python-Levenshtein distance sklearn joblib numpy scipy requests pytest-cov codecov'
 python:
     - 3.6
 install:
