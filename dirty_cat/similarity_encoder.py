@@ -13,10 +13,10 @@ from . import string_distances
 from .string_distances import get_ngram_count, preprocess
 
 
-def _ngram_similarity_one_sample(
+def _ngram_similarity_one_sample_inplace(
         x_count_vector, vocabulary_count_matrix, str_x,
         vocabulary_ngram_counts, se_dict, unq_X, i, ngram_range):
-    """Compute the similarity between one new sample and a vocabulary.
+    """Update inplace a dict of similarities between a string and a vocabulary
 
 
     Parameters
@@ -49,7 +49,6 @@ def _ngram_similarity_one_sample(
         str_x, ngram_range) + vocabulary_ngram_counts - samegrams
     similarity = np.divide(samegrams, allgrams)
     se_dict[unq_X[i]] = similarity.reshape(-1)
-
 
 
 def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
@@ -440,7 +439,7 @@ class SimilarityEncoder(OneHotEncoder):
         se_dict = {}
 
         Parallel(n_jobs=self.n_jobs, backend='threading')(delayed(
-            _ngram_similarity_one_sample)(
+            _ngram_similarity_one_sample_inplace)(
             X_count_vector, vocabulary_count_matrix, x_str,
             vocabulary_ngram_count, se_dict, unq_X, i, self.ngram_range) for
             X_count_vector, x_str, i in zip(
