@@ -244,10 +244,6 @@ class SimilarityEncoder(OneHotEncoder):
         if categories == 'auto' and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
 
-        self._vectorizers = None
-        self._vocabulary_count_matrices = None
-        self._vocabulary_ngram_counts = None
-
     def get_most_frequent(self, prototypes):
         """ Get the most frequent category prototypes
         Parameters
@@ -314,9 +310,9 @@ class SimilarityEncoder(OneHotEncoder):
                 self.categories_.append(np.array(self.categories[i], dtype=object))
 
         if self.similarity == 'ngram':
-            self._vectorizers = []
-            self._vocabulary_count_matrices = []
-            self._vocabulary_ngram_counts = []
+            self.vectorizers_ = []
+            self.vocabulary_count_matrices_ = []
+            self.vocabulary_ngram_counts_ = []
 
             for i in range(n_features):
                 vectorizer = CountVectorizer(
@@ -338,9 +334,9 @@ class SimilarityEncoder(OneHotEncoder):
                 vocabulary_ngram_count = list(map(lambda x: get_ngram_count(
                     preprocess(x), self.ngram_range), self.categories_[i]))
 
-            self._vectorizers.append(vectorizer)
-            self._vocabulary_count_matrices.append(vocabulary_count_matrix)
-            self._vocabulary_ngram_counts.append(vocabulary_ngram_count)
+            self.vectorizers_.append(vectorizer)
+            self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
+            self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
 
         return self
 
@@ -426,15 +422,15 @@ class SimilarityEncoder(OneHotEncoder):
             the column index of X in the original feature matrix.
         """
         min_n, max_n = self.ngram_range
-        vectorizer = self._vectorizers[col_idx]
+        vectorizer = self.vectorizers_[col_idx]
 
         unq_X = np.unique(X)
         unq_X_ = np.array(list(map(preprocess, unq_X)))
 
         X_count_matrix = vectorizer.transform(unq_X_)
-        vocabulary_count_matrix = self._vocabulary_count_matrices[col_idx]
+        vocabulary_count_matrix = self.vocabulary_count_matrices_[col_idx]
         vocabulary_ngram_count = np.array(
-            self._vocabulary_ngram_counts[col_idx]).reshape(-1, 1)
+            self.vocabulary_ngram_counts_[col_idx]).reshape(-1, 1)
 
         se_dict = {}
 
