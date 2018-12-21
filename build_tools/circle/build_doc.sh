@@ -125,8 +125,7 @@ pip install sphinx-gallery
 pip install python-Levenshtein
 pip install memory_profiler
 
-#cloning and installing from the ColumnTransformer branch
-pip install scikit-learn==0.20
+pip install scikit-learn
 
 # Build and install the project in dev mode
 python setup.py develop
