@@ -13,12 +13,7 @@ training set may have, past some point, it's precision won't get any better.
 
 Non-linear models, however, tend to *scale* better with sample size: they are
 able to digest the information in the additional samples to get a better
-estimate of the link between the input and the output. This idea is illustrated
-in this plot:
-
-.. image:: ../_static/model_capacity.png
-   :align: center
-
+estimate of the link between the input and the output.
 
 Non-linear models form a very large model class. Among others, this class
 includes:
