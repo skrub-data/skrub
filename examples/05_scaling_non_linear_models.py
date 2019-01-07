@@ -266,73 +266,38 @@ X_test, y_test = get_X_y(skiprows=offset, names=columns_names,
 # Evaluating time and sample complexity
 # -------------------------------------
 # Let's get an idea of model precision and performance depending on the number
-# of the samples used in the train set.  First, a small helper is created to
-# profile model fitting.
-import time
-def profile(func):
-    def profiled_func(*args, **kwargs):
-        t0 = time.perf_counter()
-        res = func(*args, **kwargs)
-        total_time = time.perf_counter() - t0
-        return total_time, res
-    return profiled_func
-
-###############################################################################
-# The |Pipeline| is then trained over different training set sizes. For this,
+# of the samples used in the train set.
+# The |Pipeline| is trained over different training set sizes. For this,
 # :code:`X_train` and :code:`y_train` get sliced into subsets of increasing
 # size, while :code:`X_test` and :code:`y_test` do not get changed when the
 # sample size varies.
+import time
 from sklearn.metrics import average_precision_score
+
 # define the different train set sizes on which to evaluate the model
 train_set_sizes = [train_set_size // 10, train_set_size // 3, train_set_size]
 
-def evaluate_model(model, X_train, y_train, X_test, y_test, train_set_sizes,
-                   one_hot_encoder):
-    train_times, test_scores = [], []
+train_times_svc, test_scores_svc = [], []
 
-    for n in train_set_sizes:
-        train_time, _ = profile(model.fit)(X_train[:n], y_train[:n])
+for n in train_set_sizes:
 
-        y_pred = model.predict(X_test)
+    t0 = time.perf_counter()
+    model.fit(X_train[:n], y_train[:n])
+    train_time = time.perf_counter() - t0
 
-        y_pred_onehot = one_hot_encoder.transform(y_pred.reshape(-1, 1))
-        y_test_onehot = one_hot_encoder.transform(y_test.reshape(-1, 1))
+    y_pred = model.predict(X_test)
 
-        test_score = average_precision_score(y_test_onehot, y_pred_onehot)
+    y_pred_onehot = one_hot_encoder.transform(y_pred.reshape(-1, 1))
+    y_test_onehot = one_hot_encoder.transform(y_test.reshape(-1, 1))
 
-        train_times.append(train_time)
-        test_scores.append(test_score)
-    return train_times, test_scores
+    test_score = average_precision_score(y_test_onehot, y_pred_onehot)
 
-train_times_svc, test_scores_svc = evaluate_model(model, X_train, y_train,
-                                                  X_test, y_test,
-                                                  train_set_sizes,
-                                                  one_hot_encoder)
+    train_times_svc.append(train_time)
+    test_scores_svc.append(test_score)
 
-###############################################################################
-# Plotting the training accuracy and the time:
-import matplotlib.pyplot as plt
-def plot_time_and_scores(
-        train_set_sizes, train_times, test_scores, title=None):
-    f, ax_time = plt.subplots()
-    ax_time.set_ylabel('time')
-    ax_time.set_xlabel('training set size')
-    ax_time.plot(train_set_sizes, train_times, 'b-', label='time')
-    ax_time.legend(loc='upper left')
-
-    # display scores in the right-hand side y-axis
-    ax_score = ax_time.twinx()
-    ax_score.set_ylabel('score')
-    ax_score.plot(train_set_sizes, test_scores, 'r-', label='score')
-    ax_score.legend(loc='upper right')
-
-    if title is not None:
-        f.suptitle(title)
-    return f
-
-title = 'Test Accuracy and Fitting Time for a support vector classifier'
-f = plot_time_and_scores(train_set_sizes, train_times_svc, test_scores_svc,
-                         title=title)
+    msg = ("using {:>5} samples: model fitting took {:.1f}s, test accuracy of "
+           "{:.3f}")
+    print(msg.format(n, train_time, test_score))
 
 
 ###############################################################################
@@ -454,13 +419,12 @@ sgd_classifier = SGDClassifier(
     max_iter=1, tol=None, random_state=42, average=10)
 
 ###############################################################################
-# We can now start the training. There are two intricated loops, one iterating
+# We can now start the training. There are two nested loops, one iterating
 # over epochs (the number of passes of the |SGDClassifier| on the dataset, and
 # one over batches (the distincts pieces of the datasets).
 batchsize = 1000
 n_epochs = 2
 test_scores_rbf = []
-train_set_size_rbf = []
 train_times_rbf = []
 t0 = time.perf_counter()
 for epoch_no in range(n_epochs):
@@ -477,7 +441,7 @@ for epoch_no in range(n_epochs):
             X_batch_kernel_approx, y_batch, classes=[0, 1])
 
         # print train/test accuracy metrics every 5 batch
-        if (batch_no % 1) == 0:
+        if (batch_no % 5) == 0:
             message = "batch {:>4} epoch {:>3} ".format(batch_no, epoch_no)
             for origin, X, y_true_onehot in zip(
                     ('train', 'val'),
@@ -494,34 +458,65 @@ for epoch_no in range(n_epochs):
                 score = average_precision_score(y_true_onehot, y_pred_onehot)
                 message += "{} precision: {:.4f}  ".format(origin, score)
                 if epoch_no == 0 and origin == 'val':
-                    train_set_size_rbf.append(batchsize*(batch_no + 1))
                     test_scores_rbf.append(score)
                     train_times_rbf.append(time.perf_counter() - t0)
 
             print(message)
 
-# We can plot the test accuracy:
-title = ("Test set accuracy evolution with the number of unique samples seen "
-         "by the SGDClassifier")
-plot_time_and_scores(
-    train_set_size_rbf, train_times_rbf, test_scores_rbf, title=title)
+###############################################################################
+# So far, we fitted two kinds of models: a exact kernel algorithm, and an
+# approximate, online one. Lets compare both the accuracies and the number of
+# visited samples for each model as we increase our time budget:
+
+import matplotlib.pyplot as plt
+online_train_set_sizes = range(
+    batchsize, online_train_set_size + batchsize, batchsize)
+
+
+f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 7))
+ax_score, ax_capacity = axs
+
+ax_score.set_ylabel('score')
+ax_capacity.set_ylabel('training set size')
+ax_capacity.set_xlabel('time')
+
+ax_score.plot(train_times_svc, test_scores_svc, 'b-', label='exact')
+ax_score.plot(train_times_rbf, test_scores_rbf, 'r-', label='online')
+
+ax_capacity.plot(train_times_svc, train_set_sizes, 'b-', label='exact')
+ax_capacity.plot(train_times_rbf, online_train_set_sizes, 'r-', label='online')
+ax_capacity.set_yscale('log')
+
+ax_score.legend(
+    bbox_to_anchor=(0., 1.02, 1., .102),
+    loc=3, ncol=2, mode='expand',
+    borderaxespad=0.)
+
+# compare the two methods in their common time range
+ax_score.set_xlim(0, min(train_times_svc[-1], train_times_rbf[-1]))
+
+
+title = """Test set accuracy and number of samples visited
+samples seen by the SGDClassifier"""
+f.suptitle(title)
 
 
 ###############################################################################
-# * We get much higher results with the online non-linear model than
-#   with the non-online one.
-# * But we also get better results than if we had used a
-#   linear model ( like |SE| + |SGDClassifier| instead of |SE| + |RBF| +
-#   |SGDClassifier| )! We did not fit two online models here for simplicity
-#   purposes, but to see this by simply comment the line in encode
-#   :code:`X_highdim = rbf_sampler.transform(X_sim_encoded.toarray())` and
-#   change it for example with :code:`X_highdim = X_sim_encoded`.
+# This plot shows us that for the time budget, the online model will eventually
+# process more samples, be faster and reach a far higher test accuracy that the
+# non-online, exact kernel method.
 #
-# This hierarchy between the linear model and the non-linear models, shows that
-# there were some significant non-linear relashionships between the input and
-# the output. By scaling a kernel method, we managed, succesfully took this
-# non-linearity into account in our model, which was a far from trivial task at
-# the beginning of this example!
+# Our online model also outperforms online **linear** models (for instance,
+# |SE| + |SGDClassifier|). We did not fit two online models here for simplicity
+# purposes, but to train an online linear model, simply comment out the line in
+# encode :code:`X_highdim = rbf_sampler.transform(X_sim_encoded.toarray())` and
+# change it for example with :code:`X_highdim = X_sim_encoded`.
+#
+# In particular, this hierarchy between the linear model and the non-linear
+# one shows that there were some significant non-linear relashionships
+# between the input and the output. By scaling a kernel method, we succesfully
+# took this non-linearity into account in our model, which was a far from
+# trivial task at the beginning of this example!
 
 ###############################################################################
 # .. rubric:: Footnotes
