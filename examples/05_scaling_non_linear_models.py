@@ -421,6 +421,7 @@ warnings.filterwarnings('ignore', module='sklearn.linear_model')
 sgd_classifier = SGDClassifier(
     max_iter=1, tol=None, random_state=42, average=10)
 
+
 ###############################################################################
 # We can now start the training. There are two nested loops, one iterating
 # over epochs (the number of passes of the |SGDClassifier| on the dataset, and
@@ -429,6 +430,7 @@ batchsize = 1000
 n_epochs = 2
 test_scores_rbf = []
 train_times_rbf = []
+online_train_set_sizes = []
 t0 = time.perf_counter()
 for epoch_no in range(n_epochs):
     iter_csv = pd.read_csv(
@@ -463,6 +465,7 @@ for epoch_no in range(n_epochs):
                 if epoch_no == 0 and origin == 'val':
                     test_scores_rbf.append(score)
                     train_times_rbf.append(time.perf_counter() - t0)
+                    online_train_set_sizes.append((batch_no + 1)*batchsize)
 
             print(message)
 
@@ -470,11 +473,7 @@ for epoch_no in range(n_epochs):
 # So far, we fitted two kinds of models: a exact kernel algorithm, and an
 # approximate, online one. Lets compare both the accuracies and the number of
 # visited samples for each model as we increase our time budget:
-
 import matplotlib.pyplot as plt
-online_train_set_sizes = range(
-    batchsize, online_train_set_size + batchsize, batchsize)
-
 
 f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 7))
 ax_score, ax_capacity = axs
@@ -497,7 +496,6 @@ ax_score.legend(
 
 # compare the two methods in their common time range
 ax_score.set_xlim(0, min(train_times_svc[-1], train_times_rbf[-1]))
-
 
 title = """Test set accuracy and number of samples visited
 samples seen by the SGDClassifier"""
