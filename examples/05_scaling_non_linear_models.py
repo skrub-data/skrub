@@ -423,51 +423,52 @@ sgd_classifier = SGDClassifier(
 
 
 ###############################################################################
-# We can now start the training. There are two nested loops, one iterating
-# over epochs (the number of passes of the |SGDClassifier| on the dataset, and
-# one over batches (the distincts pieces of the datasets).
+# We can now start the training, by looping over batches one by one. Note that
+# only one pass over the whole dataset is done. It may be worth doing several
+# passes, but for very large sample sizes, the increase in test accuracy is
+# likely to be marginal.
 batchsize = 1000
-n_epochs = 2
 test_scores_rbf = []
 train_times_rbf = []
 online_train_set_sizes = []
 t0 = time.perf_counter()
-for epoch_no in range(n_epochs):
-    iter_csv = pd.read_csv(
-        info['path'], nrows=online_train_set_size, chunksize=batchsize,
-        skiprows=1, names=columns_names, sep='\t')
-    for batch_no, batch in enumerate(iter_csv):
-        X_batch, y_batch = preprocess(batch, label_encoder)
-        X_batch_kernel_approx, y_batch_onehot = encode(
-            X_batch, y_batch, one_hot_encoder, column_transformer, rbf_sampler)
 
-        # make one pass of stochastic gradient descent over the batch.
-        sgd_classifier.partial_fit(
-            X_batch_kernel_approx, y_batch, classes=[0, 1])
+iter_csv = pd.read_csv(
+    info['path'], nrows=online_train_set_size, chunksize=batchsize,
+    skiprows=1, names=columns_names, sep='\t')
 
-        # print train/test accuracy metrics every 5 batch
-        if (batch_no % 5) == 0:
-            message = "batch {:>4} epoch {:>3} ".format(batch_no, epoch_no)
-            for origin, X, y_true_onehot in zip(
-                    ('train', 'val'),
-                    (X_batch_kernel_approx, X_test_kernel_approx),
-                    (y_batch_onehot, y_true_test_onehot)):
+for batch_no, batch in enumerate(iter_csv):
+    X_batch, y_batch = preprocess(batch, label_encoder)
+    X_batch_kernel_approx, y_batch_onehot = encode(
+        X_batch, y_batch, one_hot_encoder, column_transformer, rbf_sampler)
 
-                y_pred = sgd_classifier.predict(X)
+    # make one pass of stochastic gradient descent over the batch.
+    sgd_classifier.partial_fit(
+        X_batch_kernel_approx, y_batch, classes=[0, 1])
 
-                # preprocess correctly the labels and prediction to match
-                # average_precision_score expectations
-                y_pred_onehot = one_hot_encoder.transform(
-                    y_pred.reshape(-1, 1))
+    # print train/test accuracy metrics every 5 batch
+    if (batch_no % 5) == 0:
+        message = "batch {:>4} ".format(batch_no)
+        for origin, X, y_true_onehot in zip(
+                ('train', 'val'),
+                (X_batch_kernel_approx, X_test_kernel_approx),
+                (y_batch_onehot, y_true_test_onehot)):
 
-                score = average_precision_score(y_true_onehot, y_pred_onehot)
-                message += "{} precision: {:.4f}  ".format(origin, score)
-                if epoch_no == 0 and origin == 'val':
-                    test_scores_rbf.append(score)
-                    train_times_rbf.append(time.perf_counter() - t0)
-                    online_train_set_sizes.append((batch_no + 1)*batchsize)
+            y_pred = sgd_classifier.predict(X)
 
-            print(message)
+            # preprocess correctly the labels and prediction to match
+            # average_precision_score expectations
+            y_pred_onehot = one_hot_encoder.transform(
+                y_pred.reshape(-1, 1))
+
+            score = average_precision_score(y_true_onehot, y_pred_onehot)
+            message += "{} precision: {:.4f}  ".format(origin, score)
+            if origin == 'val':
+                test_scores_rbf.append(score)
+                train_times_rbf.append(time.perf_counter() - t0)
+                online_train_set_sizes.append((batch_no + 1)*batchsize)
+
+        print(message)
 
 ###############################################################################
 # So far, we fitted two kinds of models: a exact kernel algorithm, and an
