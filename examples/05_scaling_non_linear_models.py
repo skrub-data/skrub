@@ -269,7 +269,7 @@ X_test, y_test = get_X_y(skiprows=offset, names=columns_names,
 # of the samples used in the train set.
 # The |Pipeline| is trained over different training set sizes. For this,
 # :code:`X_train` and :code:`y_train` get sliced into subsets of increasing
-# size, while :code:`X_test` and :code:`y_test` do not get changed when the
+# size, while :code:`X_test` and :code:`y_test` do not change when the
 # sample size varies.
 import time
 from sklearn.metrics import average_precision_score
@@ -307,8 +307,7 @@ for n in train_set_sizes:
 # matrix at once. In order for this matrix to be loaded into memory, :math:`n`
 # has to remain low: Using 30000 observations, the input is a :math:`30000
 # \times 30000` matrix.  If composed of 32-bit floats, its total size is around
-# :math:`30000^2 \times 32 = 2.8 \times 10^{10} \text{bits} = 4\text{GB}`,
-# which is the caracteristic size of many personal laptops.
+# :math:`30000^2 \times 32 = 2.8 \times 10^{10} \text{bits} = 4\text{GB}`
 
 ###############################################################################
 # Reducing input dimension using kernel approximation methods.
@@ -320,11 +319,11 @@ for n in train_set_sizes:
 #
 # .. topic:: Kernel methods
 #
-#    Kernel methods address non-linear problems by the similarities between
-#    each pair of inputs. Using a similarity matrix to solve a machine learning
-#    problem allows to catch complex, non-linear relationships within the data.
-#    But it requires inverting this matrix, which can be a computational burden
-#    when the sample sizes increases.
+#    Kernel methods address non-linear problems by leveraging similarities
+#    between each pair of inputs. Using a similarity matrix to solve a machine
+#    learning problem allows to catch complex, non-linear relationships within
+#    the data.  But it requires inverting this matrix, which can be a
+#    computational burden when the sample sizes increases.
 
 
 ###############################################################################
@@ -383,6 +382,10 @@ column_transformer = make_column_transformer(
 
 transformed_categories = column_transformer.fit_transform(X_encoder)
 
+# gamma is a parameter of the rbf function, that sets how fast the similarity
+# between two points should decrease as the distance between them rises. It
+# is data-specific, and needs to be chosen carefully, for example using
+# cross-validation.
 rbf_sampler = RBFSampler(
     gamma=0.5, n_components=n_out_rbf, random_state=42)
 rbf_sampler.fit(transformed_categories)
