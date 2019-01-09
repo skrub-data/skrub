@@ -129,6 +129,63 @@ def test_fetch_file_overwrite():
         shutil.rmtree(test_dir)
 
 
+@utils.with_setup(setup=setup_mock, teardown=teardown_mock)
+def test_convert_file_to_utf8(monkeypatch):
+    from dirty_cat.datasets import fetching
+    datadir = os.path.join(datasets_utils.get_data_dir(),
+                           'testdata')
+    try:
+        # Specify some content encoded in latin-1, and make sure the final file
+        # contains the same content, but in utf-8. Here, '\xe9' in latin-1 is
+        # '\xc3\xa9' in utf-8
+
+        with monkeypatch.context() as m:
+            m.setattr(utils.MockResponse, "zipresult", False)
+            m.setattr(utils.MockResponse, "_file_contents", b'\xe9')
+
+            dataset_info = fetching.DatasetInfo(
+                name='testdata',
+                urlinfos=(fetching.UrlInfo(
+                    url='http://foo/data',
+                    filenames=('data',),
+                    uncompress=False,
+                    encoding='latin-1'),),
+                main_file='data',
+                source='http://foo/')
+
+            info = fetching.fetch_dataset(dataset_info, show_progress=False)
+
+            with open(info['path'], 'rb') as f:
+                content = f.read()
+
+            assert content == b'\xc3\xa9'
+            os.unlink(info['path'])
+
+            m.setattr(utils.MockResponse, "zipresult", True)
+
+            dataset_info_with_zipfile = fetching.DatasetInfo(
+                name='testdata',
+                urlinfos=(fetching.UrlInfo(
+                    url='http://foo/data.zip',
+                    filenames=('unzipped_data.txt',),
+                    uncompress=True,
+                    encoding='latin-1'),),
+                main_file='unzipped_data.txt',
+                source='http://foo/')
+
+            info_unzipped = fetching.fetch_dataset(
+                dataset_info_with_zipfile, show_progress=False)
+
+            with open(info_unzipped['path'], 'rb') as f:
+                content_unzipped = f.read()
+
+            assert content_unzipped == b'\xc3\xa9'
+
+    finally:
+        if os.path.exists(datadir):
+            shutil.rmtree(datadir)
+
+
 def test_md5_sum_file():
     # Create dummy temporary file
     out, f = mkstemp()
@@ -149,7 +206,8 @@ def test_fetch_dataset():
                                        urlinfos=(fetching.UrlInfo(
                                            url='http://foo/data',
                                            filenames=('data',),
-                                           uncompress=False),),
+                                           uncompress=False,
+                                           encoding='utf-8'),),
                                        main_file='data',
                                        source='http://foo/')
         fetching.fetch_dataset(urlinfo, show_progress=False)
@@ -163,8 +221,9 @@ def test_fetch_dataset():
                                        urlinfos=(fetching.UrlInfo(
                                            url='http://foo/data.zip',
                                            filenames=('unzipped_data.txt',),
-                                           uncompress=True),),
-                                       main_file='data',
+                                           uncompress=True,
+                                           encoding='utf-8'),),
+                                       main_file='unzipped_data.txt',
                                        source='http://foo/')
         fetching.fetch_dataset(urlinfo, show_progress=False)
         assert os.path.exists(os.path.join(datadir, 'unzipped_data.txt'))
