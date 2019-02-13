@@ -1,5 +1,10 @@
 Release 0.0.6
 =============
+* **SimilarityEncoder**: Accelerate ``SimilarityEncoder.transform``, by:
+
+  - computing the vocabulary count vectors in ``fit`` instead of ``transform``
+  - computing the similarities in parallel using ``joblib``. This option can be
+    turned on/off via the ``n_jobs`` attribute of the ``SimilarityEncoder``.
 
 * **SimilarityEncoder**: Fix a bug that was preventing a ``SimilarityEncoder``
   to be created when ``categories`` was a list.

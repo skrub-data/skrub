@@ -117,7 +117,7 @@ conda update --yes --quiet conda
 conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
   pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx=1.6.2 \
-  seaborn pillow cython pandas="${PANDAS_VERSION:-*}"
+  seaborn pillow cython joblib pandas="${PANDAS_VERSION:-*}"
 #removed scikit learn from conda since it is installed from master after
 
 source activate testenv
@@ -125,8 +125,7 @@ pip install sphinx-gallery
 pip install python-Levenshtein
 pip install memory_profiler
 
-#cloning and installing from the ColumnTransformer branch
-pip install scikit-learn==0.20
+pip install scikit-learn
 
 # Build and install the project in dev mode
 python setup.py develop
