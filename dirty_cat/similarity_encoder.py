@@ -375,10 +375,10 @@ class SimilarityEncoder(OneHotEncoder):
             out = []
             vect = _VECTORIZED_EDIT_DISTANCES[self.similarity]
             for j, cats in enumerate(self.categories_):
-                unqX = np.unique(X[:, j])
+                unqX = np.unique(Xlist[j])
                 encoder_dict = {x: vect(x, cats.reshape(1, -1))
                                 for x in unqX}
-                encoder = [encoder_dict[x] for x in X[:, j]]
+                encoder = [encoder_dict[x] for x in Xlist[j]]
                 encoder = np.vstack(encoder)
                 out.append(encoder)
             return np.hstack(out)
@@ -391,10 +391,10 @@ class SimilarityEncoder(OneHotEncoder):
             last = 0
             for j, cats in enumerate(self.categories_):
                 if fast:
-                    encoded_Xj = self._ngram_similarity_fast(X[:, j], j)
+                    encoded_Xj = self._ngram_similarity_fast(Xlist[j], j)
                 else:
                     encoded_Xj = ngram_similarity(
-                        X[:, j], cats, ngram_range=(min_n, max_n),
+                        Xlist[j], cats, ngram_range=(min_n, max_n),
                         hashing_dim=self.hashing_dim, dtype=np.float32)
 
                 out[:, last:last + len(cats)] = encoded_Xj
