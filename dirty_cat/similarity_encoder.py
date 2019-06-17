@@ -335,9 +335,9 @@ class SimilarityEncoder(OneHotEncoder):
                 vocabulary_ngram_count = list(map(lambda x: get_ngram_count(
                     preprocess(x), self.ngram_range), self.categories_[i]))
 
-            self.vectorizers_.append(vectorizer)
-            self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
-            self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
+                self.vectorizers_.append(vectorizer)
+                self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
+                self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
 
         return self
 
