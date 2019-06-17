@@ -266,7 +266,9 @@ class SimilarityEncoder(OneHotEncoder):
         -------
         self
         """
-        X = self._check_X(X)
+
+        Xlist, n_samples, n_features = self._check_X(X)
+
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
@@ -284,12 +286,11 @@ class SimilarityEncoder(OneHotEncoder):
                     raise ValueError("Unsorted categories are not yet "
                                      "supported")
 
-        n_samples, n_features = X.shape
         self.categories_ = list()
         self.random_state_ = check_random_state(self.random_state)
 
         for i in range(n_features):
-            Xi = X[:, i]
+            Xi = Xlist[i]
             if self.categories == 'auto':
                 self.categories_.append(np.unique(Xi))
             elif self.categories == 'most_frequent':
@@ -354,12 +355,11 @@ class SimilarityEncoder(OneHotEncoder):
             Transformed input.
 
         """
-        X = self._check_X(X)
 
-        n_samples, n_features = X.shape
+        Xlist, n_samples, n_features = self._check_X(X)
 
         for i in range(n_features):
-            Xi = X[:, i]
+            Xi = Xlist[i]
             valid_mask = np.in1d(Xi, self.categories_[i])
 
             if not np.all(valid_mask):
