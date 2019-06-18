@@ -1,8 +1,10 @@
 import warnings
 
 import numpy as np
+from distutils.version import LooseVersion
 from joblib import Parallel, delayed
 from scipy import sparse
+import sklearn
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
@@ -76,7 +78,6 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
                                        n_features=hashing_dim, norm=None,
                                        alternate_sign=False,
                                        dtype=dtype)
-        # The hashing vectorizer is stateless. We don't need to fit it on the data
         vectorizer.fit(X)
     count_cats = vectorizer.transform(cats)
     count_X = vectorizer.transform(unq_X_)
@@ -87,8 +88,8 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
 
     for i, x in enumerate(count_X):
         _, nonzero_idx, nonzero_vals = sparse.find(x)
-        samegrams = np.asarray((count_cats[:, nonzero_idx].minimum(nonzero_vals)
-                                ).sum(axis=1))
+        samegrams = np.asarray(
+            (count_cats[:, nonzero_idx].minimum(nonzero_vals)).sum(axis=1))
         allgrams = x.sum() + sum_cats - samegrams
         similarity = np.divide(samegrams, allgrams)
         SE_dict[unq_X[i]] = similarity.reshape(-1)
@@ -114,7 +115,8 @@ def get_prototype_frequencies(prototypes):
 
 
 def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
-                          ngram_range=(3, 3), sparse=False, sample_weight=None, random_state=None):
+                          ngram_range=(3, 3), sparse=False, sample_weight=None,
+                          random_state=None):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
@@ -239,10 +241,14 @@ class SimilarityEncoder(OneHotEncoder):
 
         if not isinstance(categories, list):
             assert categories in [None, 'auto', 'k-means', 'most_frequent']
-        if categories in ['k-means', 'most_frequent'] and (n_prototypes is None or n_prototypes == 0):
-            raise ValueError('n_prototypes expected None or a positive non null integer')
+        if categories in ['k-means', 'most_frequent'] and (n_prototypes is None
+                                                           or n_prototypes == 0
+                                                           ):
+            raise ValueError(
+                'n_prototypes expected None or a positive non null integer')
         if categories == 'auto' and n_prototypes is not None:
-            warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
+            warnings.warn(
+                'n_prototypes parameter ignored with category type \'auto\'')
 
     def get_most_frequent(self, prototypes):
         """ Get the most frequent category prototypes
@@ -267,7 +273,11 @@ class SimilarityEncoder(OneHotEncoder):
         self
         """
 
-        Xlist, n_samples, n_features = self._check_X(X)
+        if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
+            Xlist, n_samples, n_features = self._check_X(X)
+        else:
+            Xlist = self._check_X(X)
+            n_samples, n_features = X.shape
 
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
@@ -298,7 +308,8 @@ class SimilarityEncoder(OneHotEncoder):
             elif self.categories == 'k-means':
                 uniques, count = np.unique(Xi, return_counts=True)
                 self.categories_.append(
-                    get_kmeans_prototypes(uniques, self.n_prototypes, sample_weight=count,
+                    get_kmeans_prototypes(uniques, self.n_prototypes,
+                                          sample_weight=count,
                                           random_state=self.random_state_))
             else:
                 if self.handle_unknown == 'error':
@@ -308,7 +319,8 @@ class SimilarityEncoder(OneHotEncoder):
                         msg = ("Found unknown categories {0} in column {1}"
                                " during fit".format(diff, i))
                         raise ValueError(msg)
-                self.categories_.append(np.array(self.categories[i], dtype=object))
+                self.categories_.append(np.array(self.categories[i],
+                                                 dtype=object))
 
         if self.similarity == 'ngram':
             self.vectorizers_ = []
