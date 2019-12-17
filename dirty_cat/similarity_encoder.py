@@ -244,6 +244,13 @@ class SimilarityEncoder(OneHotEncoder):
         if categories == 'auto' and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type \'auto\'')
 
+    def _check_X(self, X):
+        # undo breaking change in b2344a4e3f7924d92ff02b6e9dc476919da606da
+        result = super()._check_X(X)
+        if isinstance(result, tuple):
+            result = np.asarray(result[0]).T
+        return result
+
     def get_most_frequent(self, prototypes):
         """ Get the most frequent category prototypes
         Parameters
