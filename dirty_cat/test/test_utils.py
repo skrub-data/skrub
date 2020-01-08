@@ -1,4 +1,4 @@
-from string_categorical_encoders.utils import LRUDict
+from dirty_cat.utils import LRUDict
 
 
 def test_lrudict():

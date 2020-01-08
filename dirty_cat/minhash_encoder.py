@@ -1,5 +1,16 @@
 
-from utils import LRUDict
+import warnings
+
+import numpy as np
+from joblib import Parallel, delayed
+from scipy import sparse
+from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
+from sklearn.neighbors import NearestNeighbors
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils import check_random_state
+
+from dirty_cat.utils import LRUDict
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """
@@ -82,12 +93,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        X = np.asarray(X)
         assert X.ndim == 1
+        assert X.dtype.type is np.str_ # to check
         X_out = np.zeros((len(X), self.n_components))
 
         # TODO Parallel run here
         for i, x in enumerate(X):
-            assert type(x) == str
             if x not in self.hash_dict:
                 self.hash_dict[x] = self.get_hash(x)
 

@@ -1,9 +1,18 @@
 import numpy as np
 import time
-import pandas as pd
 
 from sklearn.datasets import fetch_20newsgroups
-from string_categorical_encoders.column_encoder import MinHashEncoder
+from dirty_cat.minhash_encoder import MinHashEncoder
+
+def test_string_array():
+
+    X = np.array(['alice', 'bob'])
+    enc = MinHashEncoder()
+    enc.fit_transform(X)
+
+    X = ['alicé', 'bob']
+    enc = MinHashEncoder()
+    enc.fit_transform(X)
 
 
 def test_MinHashEncoder(n_sample=70, minmax_hash=False):
