@@ -4,17 +4,6 @@ import time
 from sklearn.datasets import fetch_20newsgroups
 from dirty_cat.minhash_encoder import MinHashEncoder
 
-def test_string_array():
-
-    X = np.array(['alice', 'bob'])
-    enc = MinHashEncoder()
-    enc.fit_transform(X)
-
-    X = ['alicé', 'bob']
-    enc = MinHashEncoder()
-    enc.fit_transform(X)
-
-
 def test_MinHashEncoder(n_sample=70, minmax_hash=False):
     X_txt = fetch_20newsgroups(subset='train')['data']
     X = X_txt[:n_sample]
@@ -46,7 +35,28 @@ def test_MinHashEncoder(n_sample=70, minmax_hash=False):
                 y_substring = encoder.transform(X_substring)
                 np.testing.assert_array_less(y - y_substring, 0.0001)
 
+def test_input_type():
+    # Numpy array
+    X = np.array(['alice', 'bob'])
+    enc = MinHashEncoder(n_components=2)
+    enc.fit_transform(X)
+    # List
+    X = ['alice', 'bob']
+    enc = MinHashEncoder(n_components=2)
+    enc.fit_transform(X)
 
+def test_get_unique_ngrams():
+    string = 'test'
+    true_ngrams = {
+        (' ','t'), ('t','e'), ('e','s'), ('s', 't'),
+        ('t',' '), (' ','t','e'), ('t','e','s'),
+        ('e','s','t'), ('s','t',' '), (' ','t','e','s'),
+        ('t','e','s','t'), ('e','s','t',' ')}
+    ngram_range = (2,4)
+    enc = MinHashEncoder(n_components=2)
+    ngrams = enc.get_unique_ngrams(string, ngram_range)
+    assert ngrams == true_ngrams
+        
 def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
 
     from dirty_cat import datasets

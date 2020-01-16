@@ -8,9 +8,10 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils import check_random_state
+from sklearn.utils import check_random_state, murmurhash3_32 
 
-from dirty_cat.utils import LRUDict
+from .fast_hash import ngram_min_hash
+from .utils import LRUDict
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """
@@ -95,7 +96,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X = np.asarray(X)
         assert X.ndim == 1
-        assert X.dtype.type is np.str_ # to check
+        assert X.dtype.type is np.str_ # Python 3
         X_out = np.zeros((len(X), self.n_components))
 
         # TODO Parallel run here
