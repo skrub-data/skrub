@@ -9,5 +9,6 @@ with open(version_file) as fh:
 
 from .similarity_encoder import SimilarityEncoder
 from .target_encoder import TargetEncoder
+from .minhash_encoder import MinHashEncoder
 
-__all__ = ['SimilarityEncoder', 'TargetEncoder']
+__all__ = ['SimilarityEncoder', 'TargetEncoder', 'MinHashEncoder']

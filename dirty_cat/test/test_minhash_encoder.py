@@ -2,7 +2,7 @@ import numpy as np
 import time
 
 from sklearn.datasets import fetch_20newsgroups
-from dirty_cat.minhash_encoder import MinHashEncoder
+from dirty_cat import MinHashEncoder
 
 def test_MinHashEncoder(n_sample=70, minmax_hash=False):
     X_txt = fetch_20newsgroups(subset='train')['data']
