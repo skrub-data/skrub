@@ -54,6 +54,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return ngram_set
 
     def minhash(self, string, n_components, ngram_range):
+        """
+        Return minhash encoding of a string using murmur hashing function.
+        """
         min_hashes = np.ones(n_components) * np.infty
         grams = self.get_unique_ngrams(string, self.ngram_range)
         if len(grams) == 0:
@@ -66,6 +69,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return min_hashes/(2**32-1)
 
     def get_hash(self, string):
+        """
+        Return string encoding with murmur or fast hashing function.
+        fast hashing supports both min_hash and minmax_hash encoding,
+        whereas murmur only supports min_hash encoding.
+        """
         if self.hashing == 'fast':
             if self.minmax_hash:
                 assert self.n_components % 2 == 0,\
@@ -89,11 +97,41 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                              "".format(self.hashing))
 
     def fit(self, X, y=None):
+        """
+        Fit the MinHashEncoder to X.
+        Basically initialize a dictionary to store encodings to speed up
+        computation.
+
+        Parameters
+        ----------
+        X : 1-d array-like, shape [n_samples, ]
+            The string data to encode.
+        
+        Returns
+        -------
+        self
+        
+        """
 
         self.hash_dict = LRUDict(capacity=2**10)
         return self
 
     def transform(self, X):
+        """
+        Transform X using specified encoding scheme.
+
+        Parameters
+        ----------
+        X : 1-d array-like, shape [n_samples, ]
+            The string data to encode.
+
+        Returns
+        -------
+        X_out : 2-d array, shape [n_samples, n_components]
+            Transformed input.
+
+        """
+
         X = np.asarray(X)
         assert X.ndim == 1
         assert X.dtype.type is np.str_ # Python 3
