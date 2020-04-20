@@ -154,8 +154,8 @@ def _jaro_winkler(seq1, seq2, winkler=False):
     if not seq1_len or not seq2_len:
         return 0.0
 
-    min_len = max(seq1_len, seq2_len)
-    search_range = (min_len // 2) - 1
+    min_len = min(seq1_len, seq2_len)
+    search_range = (min_len + 1) // 2 # Same threshold as Levenshtein.jaro
     if search_range < 0:
         search_range = 0
 
@@ -195,7 +195,7 @@ def _jaro_winkler(seq1, seq2, winkler=False):
               (common_chars-trans_count) / common_chars)) / 3
 
     # winkler modification: continue to boost if strings are similar
-    if winkler and weight > 0.7 and seq1_len > 3 and seq2_len > 3:
+    if winkler:
         # adjust for up to first 4 chars in common
         j = min(min_len, 4)
         i = 0
