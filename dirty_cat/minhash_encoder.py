@@ -1,4 +1,23 @@
+"""
+Minhash encoding of string arrays.
 
+The principle is as follows:
+  1. A string is viewed as a succession of numbers (the ASCII or UTF8
+     representation of its elements).
+  2. The string is then decomposed into a set of n-grams, i.e.
+     n-dimensional vectors of integers.
+  3. A hashing function is used to assign an integer to each n-gram.
+     The minimum of the hashes over all n-grams is used in the encoding.
+  4. This process is repeated with N hashing functions are used to 
+     form N-dimensional encodings.
+
+Maxhash encodings can be computed similarly by taking the hashes maximum
+instead.
+
+With this procedure, strings that share many n-grams have greater
+probability of having same encoding values. These encodings thus capture
+morphological similarities between strings.
+"""
 import warnings
 
 import numpy as np
@@ -15,22 +34,28 @@ from .utils import LRUDict
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """
-    minhash method applied to ngram decomposition of strings
+    Minhash method for morphological encoding of strings at the n-gram level.
 
     Parameters
     ----------
-    n_components : integer
-        The number of dimension for each sample
-    ngram_range : tuple (min_n, max_n)
+    n_components : int
+        The number of dimension of encoded strings.
+    ngram_range : tuple (min_n, max_n), default=(2, 4)
         The lower and upper boundary of the range of n-values for different
-        n-grams to be extracted. All values of n such that min_n <= n <= max_n
+        n-grams to be extracted. All values of n such that min_n <= n <= max_n.
         will be used.
-    hashing : {'fast', 'murmur'}, default=fast
+    hashing : str {'fast', 'murmur'}, default=fast
         Hashing function. fast is faster but
-        might have some concern with its entropy
-    minmax_hash : boolean, default=False
-        if True, return min hash and max hash concatenated
-    X: list-like of string
+        might have some concern with its entropy.
+    minmax_hash : bool, default=False
+        if True, return min hash and max hash concatenated.
+
+    References
+    ----------
+    For a detailed description of the method, see
+    `Encoding high-cardinality string categorical variables
+    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
+    
     """
 
     def __init__(self, n_components, ngram_range=(2, 4),
@@ -42,8 +67,20 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.count = 0
 
     def get_unique_ngrams(self, string, ngram_range):
-        """
-        Return a list of different n-grams in a string
+        """ Return the set of unique n-grams of a string.
+
+        Parameters
+        ----------
+        string : str
+            The string to split in n-grams.
+        ngram_range : tuple (min_n, max_n)
+        The lower and upper boundary of the range of n-values for different
+        n-grams to be extracted. All values of n such that min_n <= n <= max_n.
+
+        Returns
+        -------
+        set
+            The set of unique n-grams of the string.
         """
         spaces = ' '  # * (n // 2 + n % 2)
         string = spaces + " ".join(string.lower().split()) + spaces
@@ -54,8 +91,22 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return ngram_set
 
     def minhash(self, string, n_components, ngram_range):
-        """
-        Return minhash encoding of a string using murmur hashing function.
+        """ Encode a string using murmur hashing function.
+
+        Parameters
+        ----------
+        string : str
+            The string to encode.
+        n_components : int
+            The number of dimension of encoded string.
+        ngram_range : tuple (min_n, max_n)
+        The lower and upper boundary of the range of n-values for different
+        n-grams to be extracted. All values of n such that min_n <= n <= max_n.
+
+        Returns
+        -------
+        array, shape (n_components, )
+            The encoded string.
         """
         min_hashes = np.ones(n_components) * np.infty
         grams = self.get_unique_ngrams(string, self.ngram_range)
@@ -70,9 +121,19 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def get_hash(self, string):
         """
-        Return string encoding with murmur or fast hashing function.
+        Encode a string with murmur or fast hashing function.
         fast hashing supports both min_hash and minmax_hash encoding,
         whereas murmur only supports min_hash encoding.
+
+        Parameters
+        ----------
+        string : str
+            The string to encode.
+
+        Returns
+        -------
+        array, shape (n_components, )
+            The encoded string, using specified encoding scheme.
         """
         if self.hashing == 'fast':
             if self.minmax_hash:
@@ -98,40 +159,35 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         """
-        Fit the MinHashEncoder to X.
-        Basically initialize a dictionary to store encodings to speed up
-        computation.
+        Fit the MinHashEncoder to X. In practice, just initializes a dictionary
+        to store encodings to speed up computation.
 
         Parameters
         ----------
-        X : 1-d array-like, shape [n_samples, ]
+        X : array-like, shape (n_samples, )
             The string data to encode.
         
         Returns
         -------
         self
-        
+            The fitted MinHashEncoder instance. 
         """
-
         self.hash_dict = LRUDict(capacity=2**10)
         return self
 
     def transform(self, X):
-        """
-        Transform X using specified encoding scheme.
+        """ Transform X using specified encoding scheme.
 
         Parameters
         ----------
-        X : 1-d array-like, shape [n_samples, ]
+        X : array-like, shape (n_samples, )
             The string data to encode.
 
         Returns
         -------
-        X_out : 2-d array, shape [n_samples, n_components]
+        array, shape (n_samples, n_components)
             Transformed input.
-
         """
-
         X = np.asarray(X)
         assert X.ndim == 1
         assert X.dtype.type is np.str_ # Python 3

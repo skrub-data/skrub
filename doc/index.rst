@@ -14,10 +14,13 @@ robust to morphological variants**, such as typos, in the category strings.
 The :class:`SimilarityEncoder` is a drop-in replacement for
 `scikit-learn <https://scikit-learn.org>`_'s
 :class:`~sklearn.preprocessing.OneHotEncoder`.
+If speed and scalability are an issue, the :class:`MinHashEncoder` provides
+a fast encoding method.
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
-<https://hal.inria.fr/hal-01806175>`_ [1]_.
+<https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
+string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
 :Installing: `$ pip install --user dirty_cat`
 
@@ -44,6 +47,7 @@ Encoders
    :template: class.rst
    :nosignatures:
 
+   MinHashEncoder
    SimilarityEncoder
    TargetEncoder
 
@@ -85,4 +89,5 @@ contributions in the scope of dirty categories.
    https://github.com/rakutentech/spark-dirty-cat
 
 .. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
+.. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables, 2019.
 

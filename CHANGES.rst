@@ -1,3 +1,10 @@
+Release 0.0.7
+=============
+* **MinHashEncoder**: Added ``minhash_encoder.py`` and ``fast_hast.py`` files
+  that implement minhash encoding through the ``MinHashEncoder`` class.
+  This method allows for fast and scalable string encoding.
+
+
 Release 0.0.6
 =============
 * **SimilarityEncoder**: Accelerate ``SimilarityEncoder.transform``, by:
