@@ -10,15 +10,15 @@ except ImportError:
 from dirty_cat import string_distances
 
 
-def _random_string_pairs(n_pairs=50):
-    rng = np.random.RandomState(0)
+def _random_string_pairs(n_pairs=50, seed=1):
+    rng = np.random.RandomState(seed)
     characters = list(map(chr, range(10000)))
     pairs = []
     for n in range(n_pairs):
         s1_len = rng.randint(50)
         s2_len = rng.randint(50)
-        s1 = ''.join(np.random.choice(characters, s1_len))
-        s2 = ''.join(np.random.choice(characters, s2_len))
+        s1 = ''.join(rng.choice(characters, s1_len))
+        s2 = ''.join(rng.choice(characters, s2_len))
         pairs.append((s1, s2))
     return pairs
 
