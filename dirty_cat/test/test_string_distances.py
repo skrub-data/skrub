@@ -23,16 +23,17 @@ def _random_string_pairs(n_pairs=50):
         pairs.append((s1, s2))
     return pairs
 
-def _random_common_char_pairs(n_pairs=50):
+def _random_common_char_pairs(n_pairs=50, seed=1):
     """
     Return string pairs with a common char at random positions. This should
     discriminate different thresholds for matching chararacters in Jaro distance.
     """
     # Make strings with random length and common char at index 0
-    list1 = ['a'+'b'*np.random.randint(2,20) for k in range(n_pairs)]
-    list2 = ['a'+'c'*np.random.randint(2,20) for k in range(n_pairs)]
+    rng = np.random.RandomState(seed=seed)
+    list1 = ['a'+'b'*rng.randint(2,20) for k in range(n_pairs)]
+    list2 = ['a'+'c'*rng.randint(2,20) for k in range(n_pairs)]
     # Shuffle strings
-    list1 = [''.join(random.sample(s,len(s))) for s in list1]
+    list1 = [''.join(rng.sample(s,len(s))) for s in list1]
     list2 = [''.join(random.sample(s,len(s))) for s in list2]
     pairs = zip(list1, list2)
     return pairs
