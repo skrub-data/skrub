@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import random
 
 try:
     import Levenshtein
@@ -22,6 +23,20 @@ def _random_string_pairs(n_pairs=50):
         pairs.append((s1, s2))
     return pairs
 
+def _random_common_char_pairs(n_pairs=50, seed=1):
+    """
+    Return string pairs with a common char at random positions. This should
+    discriminate different thresholds for matching chararacters in Jaro distance.
+    """
+    # Make strings with random length and common char at index 0
+    rng = np.random.RandomState(seed=seed)
+    list1 = ['a'+'b'*rng.randint(2,20) for k in range(n_pairs)]
+    list2 = ['a'+'c'*rng.randint(2,20) for k in range(n_pairs)]
+    # Shuffle strings
+    list1 = [''.join(rng.sample(s,len(s))) for s in list1]
+    list2 = [''.join(random.sample(s,len(s))) for s in list2]
+    pairs = zip(list1, list2)
+    return pairs
 
 # TODO: some factorization of what is common for distances;
 # check results for same examples on all distances
@@ -98,12 +113,27 @@ def test_compare_implementations():
     # pure-Python implementations
     if Levenshtein is False:
         raise unittest.SkipTest
-    for string1, string2 in _random_string_pairs(n_pairs=10):
+    # Test on strings with randomly placed common char
+    for string1, string2 in _random_common_char_pairs(n_pairs=50):
         assert (string_distances._jaro_winkler(string1, string2,
                     winkler=False)
                 == Levenshtein.jaro(string1, string2)
                )
-        assert (string_distances._jaro_winkler(string1, string2)
+        assert (string_distances._jaro_winkler(string1, string2,
+                    winkler=True)
+                == Levenshtein.jaro_winkler(string1, string2)
+               )
+        assert (string_distances.levenshtein_ratio(string1, string2)
+                == Levenshtein.ratio(string1, string2)
+               )
+    # Test on random strings
+    for string1, string2 in _random_string_pairs(n_pairs=50):
+        assert (string_distances._jaro_winkler(string1, string2,
+                    winkler=False)
+                == Levenshtein.jaro(string1, string2)
+               )
+        assert (string_distances._jaro_winkler(string1, string2,
+                    winkler=True)
                 == Levenshtein.jaro_winkler(string1, string2)
                )
         assert (string_distances.levenshtein_ratio(string1, string2)
