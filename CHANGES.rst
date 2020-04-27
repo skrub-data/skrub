@@ -2,7 +2,7 @@ Release 0.0.6
 =============
 * **SimilarityEncoder**: Fixed a bug when using the Jaro-Winkler distance as a
   similarity metric. Our implementation now accurately reproduces the behaviour
-  of the ``python-Levenstein`` implementation.
+  of the ``python-Levenshtein`` implementation.
 
 * **SimilarityEncoder**: Accelerate ``SimilarityEncoder.transform``, by:
 
