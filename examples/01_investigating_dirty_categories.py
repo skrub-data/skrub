@@ -17,7 +17,6 @@ from dirty_cat import datasets
 employee_salaries = datasets.fetch_employee_salaries()
 print(employee_salaries['DESCR'])
 data = employee_salaries['data']
-data['Current Annual Salary'] = employee_salaries['target']
 print(data.head(n=5))
 
 #########################################################################

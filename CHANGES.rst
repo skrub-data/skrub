@@ -1,3 +1,7 @@
+Release 0.0.7
+=============
+* **datasets.fetch_employee_salaries**: change the origin of download for employee_salaries.
+
 Release 0.0.6
 =============
 * **SimilarityEncoder**: Fixed a bug when using the Jaro-Winkler distance as a
