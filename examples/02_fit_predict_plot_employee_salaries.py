@@ -28,6 +28,9 @@ print(employee_salaries['description'])
 import pandas as pd
 df = pd.read_csv(employee_salaries['path']).astype(str)
 
+# Test if load was unsuccesful
+if '"code" : "authentication_required"' in str(df.iloc[0]):
+    raise IOError
 ################################################################################
 # Now, let's carry out some basic preprocessing:
 df['Current Annual Salary'] = df['Current Annual Salary'].str.strip('$').astype(
