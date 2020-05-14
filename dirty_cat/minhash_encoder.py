@@ -1,3 +1,6 @@
+"""
+class MinHashEncoder
+"""
 
 import warnings
 
@@ -14,8 +17,8 @@ from .fast_hash import ngram_min_hash
 from .utils import LRUDict
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
-    """
-    minhash method applied to ngram decomposition of strings
+    """Encode string categorical features as a numeric array, 
+    based on ngram decomposition of the string
 
     Parameters
     ----------
