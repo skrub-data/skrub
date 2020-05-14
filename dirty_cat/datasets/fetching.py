@@ -13,6 +13,7 @@ import urllib
 from collections import namedtuple
 import contextlib
 import warnings
+from sklearn.datasets import fetch_openml
 
 from ..datasets.utils import md5_hash, _check_if_exists, \
     _uncompress_file, \
@@ -357,7 +358,6 @@ def fetch_employee_salaries():
 
     """
 
-    from sklearn.datasets import fetch_openml
     data = fetch_openml(data_id=42125, as_frame=True)
     return data
 
