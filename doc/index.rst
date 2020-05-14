@@ -46,6 +46,7 @@ Encoders
 
    SimilarityEncoder
    TargetEncoder
+   MinHashEncoder
 
 Data download
 -----------------------
