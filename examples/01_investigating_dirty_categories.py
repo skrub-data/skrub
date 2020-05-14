@@ -15,8 +15,9 @@ import pandas as pd
 from dirty_cat import datasets
 
 employee_salaries = datasets.fetch_employee_salaries()
-print(employee_salaries['description'])
-data = pd.read_csv(employee_salaries['path'])
+print(employee_salaries['DESCR'])
+data = employee_salaries['data']
+data['Current Annual Salary'] = employee_salaries['target']
 print(data.head(n=5))
 
 #########################################################################
@@ -25,7 +26,7 @@ print(data.nunique())
 
 #########################################################################
 # As we can see, some entries have many different unique values:
-print(data['Employee Position Title'].value_counts().sort_index())
+print(data['employee_position_title'].value_counts().sort_index())
 
 #########################################################################
 # These different entries are often variations on the same entities:
@@ -47,7 +48,7 @@ print(data['Employee Position Title'].value_counts().sort_index())
 # To simplify understanding, we will focus on the column describing the
 # employee's position title:
 # data
-values = data[['Employee Position Title', 'Gender', 'Current Annual Salary']]
+values = data[['employee_position_title', 'gender', 'Current Annual Salary']]
 
 #########################################################################
 # String similarity between entries
@@ -56,7 +57,7 @@ values = data[['Employee Position Title', 'Gender', 'Current Annual Salary']]
 # That's where our encoders get into play. In order to robustly
 # embed dirty semantic data, the SimilarityEncoder creates a similarity
 # matrix based on the 3-gram structure of the data.
-sorted_values = values['Employee Position Title'].sort_values().unique()
+sorted_values = values['employee_position_title'].sort_values().unique()
 
 from dirty_cat import SimilarityEncoder
 
@@ -142,7 +143,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 # encoding simply a subset of the observations
 n_obs = 20
-employee_position_titles = values['Employee Position Title'].head(
+employee_position_titles = values['employee_position_title'].head(
     n_obs).to_frame()
 categorical_encoder = OneHotEncoder(sparse=False)
 one_hot_encoded = categorical_encoder.fit_transform(employee_position_titles)

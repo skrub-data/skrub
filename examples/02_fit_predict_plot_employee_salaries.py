@@ -21,22 +21,18 @@ dirty categorical data.
 # We first download the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
 employee_salaries = fetch_employee_salaries()
-print(employee_salaries['DESC'])
+print(employee_salaries['DESCR'])
 
 
 ################################################################################
 # Then we load it:
 import pandas as pd
-df = data = employee_salaries['data']
+df = employee_salaries['data']
 
-# Test if load was unsuccesful
-if '"code" : "authentication_required"' in str(df.iloc[0]):
-    raise IOError
 ################################################################################
 # Now, let's carry out some basic preprocessing:
-df['Current Annual Salary'] = df['Current Annual Salary'].str.strip('$').astype(
-    float)
-df['Date First Hired'] = pd.to_datetime(df['Date First Hired'])
+df['Current Annual Salary'] = employee_salaries['target']
+df['Date First Hired'] = pd.to_datetime(df['date_first_hired'])
 df['Year First Hired'] = df['Date First Hired'].apply(lambda x: x.year)
 
 target_column = 'Current Annual Salary'
@@ -49,9 +45,9 @@ y = df[target_column].values.ravel()
 # use one hot encoding to transform them:
 
 clean_columns = {
-    'Gender': 'one-hot',
-    'Department Name': 'one-hot',
-    'Assignment Category': 'one-hot',
+    'gender': 'one-hot',
+    'department_name': 'one-hot',
+    'assignment_category': 'one-hot',
     'Year First Hired': 'numerical'}
 
 #########################################################################
@@ -59,7 +55,7 @@ clean_columns = {
 # and the dirty categorical variable:
 
 encoding_methods = ['one-hot', 'target', 'similarity']
-dirty_column = 'Employee Position Title'
+dirty_column = 'employee_position_title'
 #########################################################################
 
 
