@@ -21,12 +21,13 @@ dirty categorical data.
 # We first download the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
 employee_salaries = fetch_employee_salaries()
-print(employee_salaries['description'])
+print(employee_salaries['DESC'])
+
 
 ################################################################################
 # Then we load it:
 import pandas as pd
-df = pd.read_csv(employee_salaries['path']).astype(str)
+df = data = employee_salaries['data']
 
 # Test if load was unsuccesful
 if '"code" : "authentication_required"' in str(df.iloc[0]):
