@@ -359,8 +359,7 @@ def fetch_employee_salaries():
     """
 
     data = fetch_openml(data_id=42125, as_frame=True)
-    data['Current Annual Salary'] = employee_salaries['target']
-    employee_salaries['data']
+    data.data['Current Annual Salary'] = data['target']
     return data
 
     # link dead.
