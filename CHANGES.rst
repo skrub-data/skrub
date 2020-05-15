@@ -1,3 +1,11 @@
+Release 0.0.7
+=============
+* **datasets.fetch_employee_salaries**: change the origin of download for employee_salaries.
+  - The function now return a bunch with a dataframe under the field "data",
+    and not the path to the csv file. 
+  - The field "description" has been renamed to "DESCR".
+
+
 Release 0.0.6
 =============
 * **SimilarityEncoder**: Fixed a bug when using the Jaro-Winkler distance as a
