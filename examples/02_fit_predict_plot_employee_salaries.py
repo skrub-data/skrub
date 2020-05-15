@@ -33,6 +33,8 @@ df = employee_salaries['data']
 # Now, let's carry out some basic preprocessing:
 df['Date First Hired'] = pd.to_datetime(df['date_first_hired'])
 df['Year First Hired'] = df['Date First Hired'].apply(lambda x: x.year)
+# drop rows with NaN in gender
+df.dropna(subset=['gender'], inplace=True)
 
 target_column = 'Current Annual Salary'
 y = df[target_column].values.ravel()
