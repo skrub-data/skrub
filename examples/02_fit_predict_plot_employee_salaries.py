@@ -31,7 +31,6 @@ df = employee_salaries['data']
 
 ################################################################################
 # Now, let's carry out some basic preprocessing:
-df['Current Annual Salary'] = employee_salaries['target']
 df['Date First Hired'] = pd.to_datetime(df['date_first_hired'])
 df['Year First Hired'] = df['Date First Hired'].apply(lambda x: x.year)
 
