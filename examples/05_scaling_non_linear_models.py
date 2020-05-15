@@ -439,6 +439,9 @@ iter_csv = pd.read_csv(
 
 for batch_no, batch in enumerate(iter_csv):
     X_batch, y_batch = preprocess(batch, label_encoder)
+    # skip iteration if batch is empty after preprocessing
+    if len(y_batch) == 0:
+        continue
     X_batch_kernel_approx, y_batch_onehot = encode(
         X_batch, y_batch, one_hot_encoder, column_transformer, rbf_sampler)
 
