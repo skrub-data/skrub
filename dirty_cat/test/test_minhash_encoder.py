@@ -58,8 +58,10 @@ def test_get_unique_ngrams():
     assert ngrams == true_ngrams
         
 def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
-
+    # not an unit test
+    
     from dirty_cat import datasets
+    import pandas as pd
     employee_salaries = datasets.fetch_employee_salaries()
     data = pd.read_csv(employee_salaries['path'])
     X = data['Employee Position Title'].tolist()

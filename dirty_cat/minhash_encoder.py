@@ -1,6 +1,5 @@
 """
 Minhash encoding of string arrays.
-
 The principle is as follows:
   1. A string is viewed as a succession of numbers (the ASCII or UTF8
      representation of its elements).
@@ -10,10 +9,8 @@ The principle is as follows:
      The minimum of the hashes over all n-grams is used in the encoding.
   4. This process is repeated with N hashing functions are used to 
      form N-dimensional encodings.
-
 Maxhash encodings can be computed similarly by taking the hashes maximum
 instead.
-
 With this procedure, strings that share many n-grams have greater
 probability of having same encoding values. These encodings thus capture
 morphological similarities between strings.
@@ -34,7 +31,9 @@ from .utils import LRUDict
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """
-    Minhash method for morphological encoding of strings at the n-gram level.
+    Encode string categorical features as a numeric array, minhash method
+    applied to ngram decomposition of strings based on ngram decomposition
+    of the string.
 
     Parameters
     ----------
@@ -49,7 +48,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         might have some concern with its entropy.
     minmax_hash : bool, default=False
         if True, return min hash and max hash concatenated.
-
     References
     ----------
     For a detailed description of the method, see
@@ -68,7 +66,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def get_unique_ngrams(self, string, ngram_range):
         """ Return the set of unique n-grams of a string.
-
         Parameters
         ----------
         string : str
@@ -76,7 +73,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         ngram_range : tuple (min_n, max_n)
         The lower and upper boundary of the range of n-values for different
         n-grams to be extracted. All values of n such that min_n <= n <= max_n.
-
         Returns
         -------
         set
@@ -92,7 +88,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def minhash(self, string, n_components, ngram_range):
         """ Encode a string using murmur hashing function.
-
         Parameters
         ----------
         string : str
@@ -102,7 +97,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         ngram_range : tuple (min_n, max_n)
         The lower and upper boundary of the range of n-values for different
         n-grams to be extracted. All values of n such that min_n <= n <= max_n.
-
         Returns
         -------
         array, shape (n_components, )
@@ -124,12 +118,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         Encode a string with murmur or fast hashing function.
         fast hashing supports both min_hash and minmax_hash encoding,
         whereas murmur only supports min_hash encoding.
-
         Parameters
         ----------
         string : str
             The string to encode.
-
         Returns
         -------
         array, shape (n_components, )
@@ -161,7 +153,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         Fit the MinHashEncoder to X. In practice, just initializes a dictionary
         to store encodings to speed up computation.
-
         Parameters
         ----------
         X : array-like, shape (n_samples, )
@@ -177,12 +168,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         """ Transform X using specified encoding scheme.
-
         Parameters
         ----------
         X : array-like, shape (n_samples, )
             The string data to encode.
-
         Returns
         -------
         array, shape (n_samples, n_components)
