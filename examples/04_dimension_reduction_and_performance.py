@@ -34,7 +34,7 @@ def resource_used(func):
                                                 max_usage=True,
                                                 retval=True)
         print("Run time: %.1is    Memory used: %iMb"
-              % (time() - t0, mem[0]))
+              % (time() - t0, mem))
         return out
 
     return wrapped_func

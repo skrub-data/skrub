@@ -13,6 +13,7 @@ import urllib
 from collections import namedtuple
 import contextlib
 import warnings
+from sklearn.datasets import fetch_openml
 
 from ..datasets.utils import md5_hash, _check_if_exists, \
     _uncompress_file, \
@@ -346,10 +347,10 @@ def fetch_employee_salaries():
     dict
         a dictionary containing:
 
-            - a short description of the dataset (under the ``description``
+            - a short description of the dataset (under the ``DESCR``
               key)
-            - an absolute path leading to the csv file where the data is stored
-              locally (under the ``path`` key)
+            - the tabular data (under the ``data`` key)
+            - the target (under the ``target`` key)
 
     References
     ----------
@@ -357,7 +358,12 @@ def fetch_employee_salaries():
 
     """
 
-    return fetch_dataset(EMPLOYEE_SALARIES_CONFIG, show_progress=False)
+    data = fetch_openml(data_id=42125, as_frame=True)
+    data.data['Current Annual Salary'] = data['target']
+    return data
+
+    # link dead.
+    # return fetch_dataset(EMPLOYEE_SALARIES_CONFIG, show_progress=False)
 
 
 def fetch_road_safety():

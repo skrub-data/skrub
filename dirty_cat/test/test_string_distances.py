@@ -10,16 +10,35 @@ except ImportError:
 from dirty_cat import string_distances
 
 
-def _random_string_pairs(n_pairs=50):
-    rng = np.random.RandomState(0)
+def _random_string_pairs(n_pairs=50, seed=1):
+    rng = np.random.RandomState(seed)
     characters = list(map(chr, range(10000)))
     pairs = []
     for n in range(n_pairs):
         s1_len = rng.randint(50)
         s2_len = rng.randint(50)
-        s1 = ''.join(np.random.choice(characters, s1_len))
-        s2 = ''.join(np.random.choice(characters, s2_len))
+        s1 = ''.join(rng.choice(characters, s1_len))
+        s2 = ''.join(rng.choice(characters, s2_len))
         pairs.append((s1, s2))
+    return pairs
+
+
+def _random_common_char_pairs(n_pairs=50, seed=1):
+    """
+    Return string pairs with a common char at random positions, in order to
+    distinguish different thresholds for matching chararacters in Jaro
+    distance.
+    """
+    # Make strings with random length and common char at index 0
+    rng = np.random.RandomState(seed=seed)
+    list1 = ['a' + 'b' * rng.randint(2, 20) for k in range(n_pairs)]
+    list2 = ['a' + 'c' * rng.randint(2, 20) for k in range(n_pairs)]
+    # Shuffle strings
+    list1 = [''.join(rng.choice(
+        list(s), size=len(s), replace=False)) for s in list1]
+    list2 = [''.join(rng.choice(
+        list(s), size=len(s), replace=False)) for s in list2]
+    pairs = zip(list1, list2)
     return pairs
 
 
@@ -98,18 +117,27 @@ def test_compare_implementations():
     # pure-Python implementations
     if Levenshtein is False:
         raise unittest.SkipTest
-    for string1, string2 in _random_string_pairs(n_pairs=10):
+    # Test on strings with randomly placed common char
+    for string1, string2 in _random_common_char_pairs(n_pairs=50):
         assert (string_distances._jaro_winkler(string1, string2,
-                    winkler=False)
+                                               winkler=False)
                 == Levenshtein.jaro(string1, string2)
-               )
-        assert (string_distances._jaro_winkler(string1, string2)
-                == Levenshtein.jaro_winkler(string1, string2)
-               )
+                )
+        assert (string_distances._jaro_winkler(string1, string2,
+                                               winkler=True)
+                == Levenshtein.jaro_winkler(string1, string2))
         assert (string_distances.levenshtein_ratio(string1, string2)
-                == Levenshtein.ratio(string1, string2)
-               )
-
+                == Levenshtein.ratio(string1, string2))
+    # Test on random strings
+    for string1, string2 in _random_string_pairs(n_pairs=50):
+        assert (string_distances._jaro_winkler(string1, string2,
+                                               winkler=False)
+                == Levenshtein.jaro(string1, string2))
+        assert (string_distances._jaro_winkler(string1, string2,
+                                               winkler=True)
+                == Levenshtein.jaro_winkler(string1, string2))
+        assert (string_distances.levenshtein_ratio(string1, string2)
+                == Levenshtein.ratio(string1, string2))
 
 
 def test_ngram_similarity():
