@@ -155,7 +155,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         to store encodings to speed up computation.
         Parameters
         ----------
-        X : array-like, shape (n_samples, )
+        X : array-like, shape (n_samples, ) or (n_samples, 1)
             The string data to encode.
         
         Returns
@@ -170,7 +170,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """ Transform X using specified encoding scheme.
         Parameters
         ----------
-        X : array-like, shape (n_samples, )
+        X : array-like, shape (n_samples, ) or (n_samples, 1)
             The string data to encode.
         Returns
         -------
@@ -178,8 +178,14 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             Transformed input.
         """
         X = np.asarray(X)
-        assert X.ndim == 1
-        assert X.dtype.type is np.str_ # Python 3
+        assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
+        shape {X.shape} of input array is not supported."
+        if X.ndim == 2:
+            X = X[:, 0]
+        if X.dtype.type is not np.str_: # Python 3
+            print(f'Warning: input array dtype is {X.dtype.type}.\
+            Change dtype to np.str_.')
+            X = X.astype(dtype=np.str_)
         X_out = np.zeros((len(X), self.n_components))
 
         # TODO Parallel run here
@@ -189,5 +195,5 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         for i, x in enumerate(X):
             X_out[i, :] = self.hash_dict[x]
-
+            
         return X_out

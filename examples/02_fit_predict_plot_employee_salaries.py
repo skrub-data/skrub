@@ -55,7 +55,7 @@ clean_columns = {
 # We then choose the categorical encoding methods we want to benchmark
 # and the dirty categorical variable:
 
-encoding_methods = ['one-hot', 'target', 'similarity']
+encoding_methods = ['one-hot', 'target', 'similarity', 'minhash']
 dirty_column = 'employee_position_title'
 #########################################################################
 
@@ -67,12 +67,14 @@ dirty_column = 'employee_position_title'
 
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import OneHotEncoder
-from dirty_cat import SimilarityEncoder, TargetEncoder
+from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder
 
 encoders_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
     'target': TargetEncoder(handle_unknown='ignore'),
+    'minhash': MinHashEncoder(n_components=10, ngram_range=(2, 4),
+                              hashing='fast', minmax_hash=False),
     'numerical': FunctionTransformer(None)}
 
 # We then create a function that takes one key of our ``encoders_dict``,
