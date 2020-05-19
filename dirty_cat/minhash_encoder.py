@@ -182,10 +182,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         shape {X.shape} of input array is not supported."
         if X.ndim == 2:
             X = X[:, 0]
-        if X.dtype.type is not np.str_: # Python 3
-            print(f'Warning: input array dtype is {X.dtype.type}.\
-            Change dtype to np.str_.')
-            X = X.astype(dtype=np.str_)
+        # Check if first item has str or np.str_ type
+        assert isinstance(X[0], str), "ERROR: Input data is not string."
         X_out = np.zeros((len(X), self.n_components))
 
         # TODO Parallel run here
