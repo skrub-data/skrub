@@ -7,7 +7,8 @@ Website: https://dirty-cat.github.io/
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
-<https://hal.inria.fr/hal-01806175>`_ [1]_.
+<https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality string categorical variables
+<https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
 Installation
 ------------
@@ -45,3 +46,4 @@ References
 ~~~~~~~~~~
 
 .. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018, Machine Learning journal, Springer.
+.. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables, 2019.

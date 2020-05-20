@@ -1,16 +1,23 @@
 Release 0.0.7
 =============
+
+* **MinHashEncoder**: Added ``minhash_encoder.py`` and ``fast_hast.py`` files
+  that implement minhash encoding through the ``MinHashEncoder`` class.
+  This method allows for fast and scalable encoding of string categorical
+  variables.
+
 * **datasets.fetch_employee_salaries**: change the origin of download for employee_salaries.
+
   - The function now return a bunch with a dataframe under the field "data",
     and not the path to the csv file. 
   - The field "description" has been renamed to "DESCR".
 
-
-Release 0.0.6
-=============
 * **SimilarityEncoder**: Fixed a bug when using the Jaro-Winkler distance as a
   similarity metric. Our implementation now accurately reproduces the behaviour
   of the ``python-Levenshtein`` implementation.
+
+Release 0.0.6
+=============
 
 * **SimilarityEncoder**: Accelerate ``SimilarityEncoder.transform``, by:
 

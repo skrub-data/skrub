@@ -55,7 +55,7 @@ clean_columns = {
 # We then choose the categorical encoding methods we want to benchmark
 # and the dirty categorical variable:
 
-encoding_methods = ['one-hot', 'target', 'similarity']
+encoding_methods = ['one-hot', 'target', 'similarity', 'minhash']
 dirty_column = 'employee_position_title'
 #########################################################################
 
@@ -67,12 +67,14 @@ dirty_column = 'employee_position_title'
 
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import OneHotEncoder
-from dirty_cat import SimilarityEncoder, TargetEncoder
+from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder
 
 encoders_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
     'target': TargetEncoder(handle_unknown='ignore'),
+    'minhash': MinHashEncoder(n_components=10, ngram_range=(2, 4),
+                              hashing='fast', minmax_hash=False),
     'numerical': FunctionTransformer(None)}
 
 # We then create a function that takes one key of our ``encoders_dict``,
@@ -128,6 +130,12 @@ for method in encoding_methods:
 # Plotting the results
 # --------------------
 # Finally, we plot the scores on a boxplot:
+# We notice that the MinHashEncoder performs poorly compared to other encoding
+# methods. There are two reasons for that: the MinHashEncoder performs better
+# with tree-based models than linear models (see example 03), and the
+# low-dimensionality of encodings (increasing n_components improves
+# performances.
+
 import seaborn
 import matplotlib.pyplot as plt
 plt.figure(figsize=(4, 3))

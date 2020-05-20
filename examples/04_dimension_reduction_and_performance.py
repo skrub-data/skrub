@@ -62,14 +62,14 @@ df = df.dropna(axis=0)
 df = df.reset_index()
 ################################################################################
 # We will use SimilarityEncoder on the 'description' column. One
-# difficulty is that it many different entries
+# difficulty is that it has many different entries.
 print(df['Description'].nunique())
 
 ################################################################################
 print(df['Description'].value_counts()[:20])
 
 ################################################################################
-# As we will see,SimilarityEncoder takes a while on such data
+# As we will see, SimilarityEncoder takes a while on such data.
 
 
 ################################################################################
