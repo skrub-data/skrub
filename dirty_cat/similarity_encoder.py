@@ -415,16 +415,13 @@ class SimilarityEncoder(OneHotEncoder):
             X = np.asarray(X, dtype=object)
 
         if hasattr(X, 'dtype'):
-            if np.issubdtype(X.dtype, np.str_):
-                X = np.asarray(X, dtype=object)
             mask = _object_dtype_isnan(X)
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
                     msg = ("Found missing values in input data.")
                     raise ValueError(msg)
                 if self.handle_missing != 'error':
-                    X = np.ma.array(X, mask=mask)
-                    X = np.ma.filled(X, self.handle_missing)
+                    X[mask] = self.handle_missing
 
         if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
             Xlist, n_samples, n_features = self._check_X(X)
