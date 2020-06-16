@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import numpy.testing
 from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
@@ -43,6 +44,38 @@ def test_fast_ngram_similarity():
     feature_matrix_fast = sim_enc.transform(observations, fast=True)
 
     assert np.allclose(feature_matrix, feature_matrix_fast)
+
+
+def _test_missing_values(input_type, missing):
+    observations = [['a', 'b'], ['b', 'a'], ['b', np.nan],
+                    ['a', 'c'], [np.nan, 'a']]
+    encoded = np.array([[0., 1., 0., 0., 0., 1., 0.],
+                        [0., 0., 1., 0., 1., 0., 0.],
+                        [0., 0., 1., 0., 0., 0., 0.],
+                        [0., 1., 0., 0., 0., 0., 1.],
+                        [0., 0., 0., 0., 1., 0., 0.]])
+
+    if input_type == 'numpy':
+        observations = np.array(observations, dtype=object)
+    elif input_type == 'pandas':
+        observations = pd.DataFrame(observations)
+
+    sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
+    if missing == 'error':
+        try:
+            sim_enc.fit_transform(observations)
+        except ValueError as e:
+            assert e.__str__() == 'Found missing values in input data.'
+            return
+    elif missing == '':
+        ans = sim_enc.fit_transform(observations)
+        assert np.allclose(encoded, ans)
+    else:
+        try:
+            sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
+        except ValueError as e:
+            assert e.__str__() == "handle_missing should be either \'error\' or \'\', got %s" % missing
+            return
 
 
 def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
@@ -138,6 +171,12 @@ def test_similarity_encoder():
                 _test_similarity('ngram', string_distances.ngram_similarity,
                                  hashing_dim=2 ** 16, categories=category,
                                  n_prototypes=i)
+
+    input_types = ['list', 'numpy', 'pandas']
+    handle_missing = ['error', '', 'aaa']
+    for input_type in input_types:
+        for missing in handle_missing:
+            _test_missing_values(input_type, missing)
 
 
 def test_kmeans_protoypes():
