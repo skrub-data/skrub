@@ -1,12 +1,16 @@
 language: python
-env:
-    - CONDA_DEPENDENCIES='python-Levenshtein distance sklearn joblib numpy scipy requests pytest-cov codecov coverage'
-python:
-    - 3.6
 install:
     - git clone --depth 1 git://github.com/astropy/ci-helpers.git
     - source ci-helpers/travis/setup_conda.sh
 script:
     - pytest --cov=./
     - codecov
+matrix:
+  include:
+    - name: "Python 3.6 with minimum dependencies (no pandas and python-Levenshtein)"
+      python: "3.6"
+      env: CONDA_DEPENDENCIES='distance sklearn joblib numpy scipy requests pytest-cov codecov coverage'
+    - name: "Python 3.7 with pandas"
+      python: "3.7"
+      env: CONDA_DEPENDENCIES='python-Levenshtein distance sklearn joblib numpy scipy requests pytest-cov codecov coverage pandas'
 
