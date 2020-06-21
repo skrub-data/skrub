@@ -1,12 +1,9 @@
 import numpy as np
 import numpy.testing
+from sklearn.utils._testing import assert_raise_message
 from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
-try:
-    import pandas as pd
-    _pandas_import_error = None
-except Exception as e:
-    _pandas_import_error = e
+import pytest
 
 
 def test_specifying_categories():
@@ -61,7 +58,8 @@ def _test_missing_values(input_type, missing):
 
     if input_type == 'numpy':
         observations = np.array(observations, dtype=object)
-    elif _pandas_import_error is None and input_type == 'pandas':
+    elif input_type == 'pandas':
+        pd = pytest.importorskip("pandas")
         observations = pd.DataFrame(observations)
 
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
@@ -76,11 +74,41 @@ def _test_missing_values(input_type, missing):
         ans = sim_enc.fit_transform(observations)
         assert np.allclose(encoded, ans)
     else:
+        msg = "handle_missing should be either 'error' or '', got %s" % missing
+        assert_raise_message(ValueError, msg, sim_enc.fit_transform, observations)
+        return
+
+
+def _test_missing_values_transform(input_type, missing):
+    observations = [['a', 'b'], ['b', 'a'], ['b', 'b'],
+                    ['a', 'c'], ['c', 'a']]
+    test_observations = [['a', 'b'], ['b', 'a'], ['b', np.nan],
+                         ['a', 'c'], [np.nan, 'a']]
+    encoded = np.array([[1., 0., 0., 0., 1., 0.],
+                        [0., 1., 0., 1., 0., 0.],
+                        [0., 1., 0., 0., 0., 0.],
+                        [1., 0., 0., 0., 0., 1.],
+                        [0., 0., 0., 1., 0., 0.]])
+
+    if input_type == 'numpy':
+        test_observations = np.array(test_observations, dtype=object)
+    elif input_type == 'pandas':
+        pd = pytest.importorskip("pandas")
+        test_observations = pd.DataFrame(test_observations)
+
+    sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
+    if missing == 'error':
+        sim_enc.fit_transform(observations)
         try:
-            sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
+            sim_enc.transform(test_observations)
         except ValueError as e:
-            assert e.__str__() == "handle_missing should be either 'error' or '', got %s" % missing
+            assert e.__str__() == ("Found missing values in input data; set "
+                                   "handle_missing='' to encode with missing values")
             return
+    elif missing == '':
+        sim_enc.fit_transform(observations)
+        ans = sim_enc.transform(test_observations)
+        assert np.allclose(encoded, ans)
 
 
 def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
@@ -178,10 +206,11 @@ def test_similarity_encoder():
                                  n_prototypes=i)
 
     input_types = ['list', 'numpy', 'pandas']
-    handle_missing = ['error', '', 'aaa']
+    handle_missing = ['aaa', 'error', '']
     for input_type in input_types:
         for missing in handle_missing:
             _test_missing_values(input_type, missing)
+            _test_missing_values_transform(input_type, missing)
 
 
 def test_kmeans_protoypes():

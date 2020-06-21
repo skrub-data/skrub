@@ -403,10 +403,6 @@ class SimilarityEncoder(OneHotEncoder):
 
         """
 
-        if self.handle_missing not in ['error', '']:
-            template = ("handle_missing should be either 'error' or "
-                        "'', got %s")
-            raise ValueError(template % self.handle_missing)
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
                 msg = ("Found missing values in input data; set "
