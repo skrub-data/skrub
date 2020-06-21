@@ -74,7 +74,7 @@ def _test_missing_values(input_type, missing):
         try:
             sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
         except ValueError as e:
-            assert e.__str__() == "handle_missing should be either \'error\' or \'\', got %s" % missing
+            assert e.__str__() == "handle_missing should be either 'error' or '', got %s" % missing
             return
 
 
