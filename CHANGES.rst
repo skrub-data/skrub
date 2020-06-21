@@ -16,6 +16,9 @@ Release 0.0.7
   similarity metric. Our implementation now accurately reproduces the behaviour
   of the ``python-Levenshtein`` implementation.
 
+* **SimilarityEncoder**: Added a "handle_missing" attribute to allow encoding
+  with missing values.
+
 Release 0.0.6
 =============
 

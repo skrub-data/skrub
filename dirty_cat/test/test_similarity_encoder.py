@@ -69,7 +69,8 @@ def _test_missing_values(input_type, missing):
         try:
             sim_enc.fit_transform(observations)
         except ValueError as e:
-            assert e.__str__() == 'Found missing values in input data.'
+            assert e.__str__() == ("Found missing values in input data; set "
+                                   "handle_missing='' to encode with missing values")
             return
     elif missing == '':
         ans = sim_enc.fit_transform(observations)

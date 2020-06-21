@@ -289,7 +289,8 @@ class SimilarityEncoder(OneHotEncoder):
             raise ValueError(template % self.handle_missing)
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
-                msg = ("Found missing values in input data.")
+                msg = ("Found missing values in input data; set "
+                       "handle_missing='' to encode with missing values")
                 raise ValueError(msg)
             if self.handle_missing != 'error':
                 X = X.fillna(self.handle_missing)
@@ -300,7 +301,8 @@ class SimilarityEncoder(OneHotEncoder):
             mask = _object_dtype_isnan(X)
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data.")
+                    msg = ("Found missing values in input data; set "
+                           "handle_missing='' to encode with missing values")
                     raise ValueError(msg)
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
@@ -419,7 +421,8 @@ class SimilarityEncoder(OneHotEncoder):
             mask = _object_dtype_isnan(X)
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data.")
+                    msg = ("Found missing values in input data; set "
+                           "handle_missing='' to encode with missing values")
                     raise ValueError(msg)
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
