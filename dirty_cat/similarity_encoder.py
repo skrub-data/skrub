@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
+from sklearn.utils.fixes import _object_dtype_isnan
 
 from . import string_distances
 from .string_distances import get_ngram_count, preprocess
@@ -49,7 +50,8 @@ def _ngram_similarity_one_sample_inplace(
 
     allgrams = get_ngram_count(
         str_x, ngram_range) + vocabulary_ngram_counts - samegrams
-    similarity = np.divide(samegrams, allgrams)
+    similarity = np.divide(samegrams, allgrams, out=np.zeros_like(samegrams),
+                           where=allgrams != 0)
     se_dict[unq_X[i]] = similarity.reshape(-1)
 
 
@@ -195,6 +197,13 @@ class SimilarityEncoder(OneHotEncoder):
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
+    handle_missing : 'error' or '' (default)
+        Whether to raise an error or impute with blank string '' if missing
+        values (NaN) are present during fit (default is to impute).
+        When this parameter is set to '', and a missing value is encountered
+        during fit_transform, the resulting encoded columns for this feature
+        will be all zeros. In the inverse transform, the missing category
+        will be denoted as None.
     hashing_dim : int type or None.
         If None, the base vectorizer is CountVectorizer, else it's set to
         HashingVectorizer with a number of features equal to `hashing_dim`.
@@ -226,12 +235,13 @@ class SimilarityEncoder(OneHotEncoder):
 
     def __init__(self, similarity='ngram', ngram_range=(2, 4),
                  categories='auto', dtype=np.float64,
-                 handle_unknown='ignore', hashing_dim=None, n_prototypes=None,
-                 random_state=None, n_jobs=None):
+                 handle_unknown='ignore', handle_missing='', hashing_dim=None,
+                 n_prototypes=None, random_state=None, n_jobs=None):
         super().__init__()
         self.categories = categories
         self.dtype = dtype
         self.handle_unknown = handle_unknown
+        self.handle_missing = handle_missing
         self.similarity = similarity
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
@@ -272,6 +282,30 @@ class SimilarityEncoder(OneHotEncoder):
         -------
         self
         """
+
+        if self.handle_missing not in ['error', '']:
+            template = ("handle_missing should be either 'error' or "
+                        "'', got %s")
+            raise ValueError(template % self.handle_missing)
+        if hasattr(X, 'iloc') and X.isna().values.any():
+            if self.handle_missing == 'error':
+                msg = ("Found missing values in input data; set "
+                       "handle_missing='' to encode with missing values")
+                raise ValueError(msg)
+            if self.handle_missing != 'error':
+                X = X.fillna(self.handle_missing)
+        elif not hasattr(X, 'dtype') and isinstance(X, list):
+            X = np.asarray(X, dtype=object)
+
+        if hasattr(X, 'dtype'):
+            mask = _object_dtype_isnan(X)
+            if X.dtype.kind == 'O' and mask.any():
+                if self.handle_missing == 'error':
+                    msg = ("Found missing values in input data; set "
+                           "handle_missing='' to encode with missing values")
+                    raise ValueError(msg)
+                if self.handle_missing != 'error':
+                    X[mask] = self.handle_missing
 
         if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
             Xlist, n_samples, n_features = self._check_X(X)
@@ -368,6 +402,26 @@ class SimilarityEncoder(OneHotEncoder):
             Transformed input.
 
         """
+
+        if hasattr(X, 'iloc') and X.isna().values.any():
+            if self.handle_missing == 'error':
+                msg = ("Found missing values in input data; set "
+                       "handle_missing='' to encode with missing values")
+                raise ValueError(msg)
+            if self.handle_missing != 'error':
+                X = X.fillna(self.handle_missing)
+        elif not hasattr(X, 'dtype') and isinstance(X, list):
+            X = np.asarray(X, dtype=object)
+
+        if hasattr(X, 'dtype'):
+            mask = _object_dtype_isnan(X)
+            if X.dtype.kind == 'O' and mask.any():
+                if self.handle_missing == 'error':
+                    msg = ("Found missing values in input data; set "
+                           "handle_missing='' to encode with missing values")
+                    raise ValueError(msg)
+                if self.handle_missing != 'error':
+                    X[mask] = self.handle_missing
 
         if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
             Xlist, n_samples, n_features = self._check_X(X)
