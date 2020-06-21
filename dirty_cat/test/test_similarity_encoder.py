@@ -1,8 +1,12 @@
 import numpy as np
-import pandas as pd
 import numpy.testing
 from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
+try:
+    import pandas as pd
+    _pandas_import_error = None
+except Exception as e:
+    _pandas_import_error = e
 
 
 def test_specifying_categories():
@@ -57,7 +61,7 @@ def _test_missing_values(input_type, missing):
 
     if input_type == 'numpy':
         observations = np.array(observations, dtype=object)
-    elif input_type == 'pandas':
+    elif _pandas_import_error is None and input_type == 'pandas':
         observations = pd.DataFrame(observations)
 
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
