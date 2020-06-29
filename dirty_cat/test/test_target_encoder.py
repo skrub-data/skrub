@@ -238,7 +238,7 @@ def _test_missing_values(input_type, missing):
         assert_raise_message(ValueError, msg, encoder.fit_transform, X, y)
         return
     elif missing == '':
-        X = encoder.fit_transform(X, y)
+        encoder.fit_transform(X, y)
 
         assert set(encoder.categories_[0]) == set(color_cat)
         assert set(encoder.categories_[1]) == set(gender_cat)
