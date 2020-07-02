@@ -19,6 +19,9 @@ Release 0.0.7
 * **SimilarityEncoder**: Added a "handle_missing" attribute to allow encoding
   with missing values.
 
+* **TargetEncoder**: Added a "handle_missing" attribute to allow encoding
+  with missing values.
+
 Release 0.0.6
 =============
 

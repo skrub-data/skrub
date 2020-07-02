@@ -1,9 +1,11 @@
 import numpy as np
+import pytest
+from sklearn.utils._testing import assert_raise_message
 
 from dirty_cat import target_encoder
 
 
-def test_similarity_encoder():
+def test_target_encoder():
     lambda_ = target_encoder.lambda_
     X1 = np.array(['Red',
                    'red',
@@ -187,3 +189,137 @@ def test_similarity_encoder():
     encoder.fit(X, y)
     Xout = encoder.transform(Xtest)
     assert np.array_equal(Xout, ans)
+
+
+def _test_missing_values(input_type, missing):
+    lambda_ = target_encoder.lambda_
+    X = [['Red', 'male'],
+         [np.nan, 'male'],
+         ['green', 'female'],
+         ['blue', 'male'],
+         ['green', 'female'],
+         ['green', 'female'],
+         ['blue', 'female'],
+         [np.nan, np.nan]]
+
+    color_cat = ['Red', '', 'green', 'blue']
+    gender_cat = ['male', '', 'female']
+
+    if input_type == 'numpy':
+        X = np.array(X, dtype=object)
+    elif input_type == 'pandas':
+        pd = pytest.importorskip("pandas")
+        X = pd.DataFrame(X)
+
+    # Case 1: binary-classification and regression
+    y = np.array([1, 0, 0, 1, 0, 1, 0, 0])
+    n = len(y)
+
+    Ey_ = 3/8
+    Eyx_ = {'color': {'Red': 1,
+                      '': 0,
+                      'green': 1/3,
+                      'blue': .5},
+            'gender': {'male': 2/3,
+                       'female': .25,
+                       '': 0}}
+    count_ = {'color': {'Red': 1,
+                        '': 2,
+                        'green': 3,
+                        'blue': 2},
+              'gender': {'male': 3,
+                         'female': 4,
+                         '': 1}}
+
+    encoder = target_encoder.TargetEncoder(handle_missing=missing)
+    if missing == 'error':
+        msg = ("Found missing values in input data; set "
+               "handle_missing='' to encode with missing values")
+        assert_raise_message(ValueError, msg, encoder.fit_transform, X, y)
+        return
+    elif missing == '':
+        encoder.fit_transform(X, y)
+
+        assert set(encoder.categories_[0]) == set(color_cat)
+        assert set(encoder.categories_[1]) == set(gender_cat)
+        assert Ey_ == encoder.Ey_
+        assert encoder.Eyx_[0] == Eyx_['color']
+        assert encoder.Eyx_[1] == Eyx_['gender']
+        assert dict(encoder.counter_[0]) == count_['color']
+        assert dict(encoder.counter_[1]) == count_['gender']
+    else:
+        msg = "handle_missing should be either 'error' or '', got %s" % missing
+        assert_raise_message(ValueError, msg, encoder.fit_transform, X, y)
+        return
+
+
+def _test_missing_values_transform(input_type, missing):
+    lambda_ = target_encoder.lambda_
+    X = [['Red', 'male'],
+         ['red', 'male'],
+         ['green', 'female'],
+         ['blue', 'male'],
+         ['green', 'female'],
+         ['green', 'female'],
+         ['blue', 'female'],
+         ['red', 'male']]
+
+    color_cat = ['Red', 'red', 'green', 'blue']
+    gender_cat = ['male', 'female']
+
+    X_test = [['Red', 'male'],
+              [np.nan, 'male'],
+              ['green', 'female'],
+              ['blue', 'male'],
+              ['green', 'female'],
+              ['green', 'female'],
+              ['blue', 'female'],
+              [np.nan, np.nan]]
+
+    if input_type == 'numpy':
+        X_test = np.array(X_test, dtype=object)
+    elif input_type == 'pandas':
+        pd = pytest.importorskip("pandas")
+        X_test = pd.DataFrame(X_test)
+
+    # Case 1: binary-classification and regression
+    y = np.array([1, 0, 0, 1, 0, 1, 0, 0])
+    n = len(y)
+
+    Ey_ = 3/8
+    Eyx_ = {'color': {'Red': 1,
+                      'red': 0,
+                      'green': 1/3,
+                      'blue': .5},
+            'gender': {'male': .5,
+                       'female': .25}}
+    count_ = {'color': {'Red': 1,
+                        'red': 2,
+                        'green': 3,
+                        'blue': 2},
+              'gender': {'male': 4,
+                         'female': 4}}
+
+    encoder = target_encoder.TargetEncoder(handle_unknown='ignore',
+                                           handle_missing=missing)
+    if missing == 'error':
+        encoder.fit_transform(X, y)
+        msg = ("Found missing values in input data; set "
+               "handle_missing='' to encode with missing values")
+        assert_raise_message(ValueError, msg, encoder.transform, X_test)
+        return
+    elif missing == '':
+        encoder.fit_transform(X, y)
+        ans = encoder.transform(X_test)
+
+        assert np.allclose(ans[1, 0], Ey_)
+        assert np.allclose(ans[-1, 0], Ey_)
+
+
+def test_missing_values():
+    input_types = ['list', 'numpy', 'pandas']
+    handle_missing = ['aaa', 'error', '']
+    for input_type in input_types:
+        for missing in handle_missing:
+            _test_missing_values(input_type, missing)
+            _test_missing_values_transform(input_type, missing)
