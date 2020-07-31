@@ -49,7 +49,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         might have some concern with its entropy.
     minmax_hash : bool, default=False
         if True, return min hash and max hash concatenated.
-        handle_missing : 'error' or '' (default)
+    handle_missing : 'error' or '' (default)
         Whether to raise an error or impute with blank string '' if missing
         values (NaN) are present during fit (default is to impute).
         When this parameter is set to '', and a missing value is encountered
