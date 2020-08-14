@@ -143,23 +143,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             return np.array([ngram_min_hash(string, self.ngram_range, seed)
                             for seed in range(self.n_components)])
 
-    def get_murmur_hash(self, string):
-        """
-        Encode a string with murmur hashing function.
-        murmur only supports min_hash encoding.
-        Parameters
-        ----------
-        string : str
-            The string to encode.
-        Returns
-        -------
-        array, shape (n_components, )
-            The encoded string, using specified encoding scheme.
-        """
-        return self.minhash(
-                    string, n_components=self.n_components,
-                    ngram_range=self.ngram_range)
-
     def fit(self, X, y=None):
         """
         Fit the MinHashEncoder to X. In practice, just initializes a dictionary
@@ -206,7 +189,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                         "'', got %s")
             raise ValueError(template % self.handle_missing)
         X_out = np.zeros((len(X), self.n_components))
-        X = X.ravel()
+        X = X.reshape(-1)
 
         # TODO Parallel run here
         nan_idx = []
@@ -217,13 +200,22 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     nan_idx.append(i)
                 elif x not in self.hash_dict:
                     self.hash_dict[x] = self.get_fast_hash(x)
+                    X_out[i, :] = self.hash_dict[x]
+                else:
+                    X_out[i, :] = self.hash_dict[x]
 
         elif self.hashing == 'murmur':
             for i, x in enumerate(X):
                 if isinstance(x, float):
                     nan_idx.append(i)
                 elif x not in self.hash_dict:
-                    self.hash_dict[x] = self.get_murmur_hash(x)
+                    self.hash_dict[x] = self.minhash(
+                        x,
+                        n_components=self.n_components,
+                        ngram_range=self.ngram_range)
+                    X_out[i, :] = self.hash_dict[x]
+                else:
+                    X_out[i, :] = self.hash_dict[x]
 
         else:
             raise ValueError("hashing function must be 'fast' or"
@@ -234,9 +226,5 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             msg = ("Found missing values in input data; set "
                    "handle_missing='' to encode with missing values")
             raise ValueError(msg)
-
-        for i, x in enumerate(X):
-            if i not in nan_idx:
-                X_out[i, :] = self.hash_dict[x]
 
         return X_out

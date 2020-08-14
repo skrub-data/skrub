@@ -79,7 +79,10 @@ def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
     return eta
 
 
-def _test_missing_values(input_type, missing):
+@pytest.mark.parametrize("input_type", ['list', 'numpy', 'pandas'])
+@pytest.mark.parametrize("missing", ['aaa', 'error', ''])
+@pytest.mark.parametrize("hashing", ["fast", "murmur"])
+def test_missing_values(input_type, missing, hashing):
     X = ['Red',
          np.nan,
          'green',
@@ -97,35 +100,26 @@ def _test_missing_values(input_type, missing):
         pd = pytest.importorskip("pandas")
         X = pd.DataFrame(X)
 
-    for hashing in ['fast', 'murmur']:
-        encoder = MinHashEncoder(n_components=n, hashing=hashing,
-                                 minmax_hash=False, handle_missing=missing)
-        if missing == 'error':
-            encoder.fit(X)
-            if input_type in ['numpy', 'pandas']:
-                msg = ("Found missing values in input data; set "
-                       "handle_missing='' to encode with missing values")
-                assert_raise_message(ValueError, msg, encoder.transform, X)
-        elif missing == '':
-            encoder.fit(X)
-            y = encoder.transform(X)
-            if input_type == 'list':
-                assert np.allclose(y[1], y[-1])
-            else:
-                assert np.array_equal(y[1], z)
-                assert np.array_equal(y[-1], z)
+    encoder = MinHashEncoder(n_components=n, hashing=hashing,
+                             minmax_hash=False, handle_missing=missing)
+    if missing == 'error':
+        encoder.fit(X)
+        if input_type in ['numpy', 'pandas']:
+            msg = ("Found missing values in input data; set "
+                   "handle_missing='' to encode with missing values")
+            assert_raise_message(ValueError, msg, encoder.transform, X)
+    elif missing == '':
+        encoder.fit(X)
+        y = encoder.transform(X)
+        if input_type == 'list':
+            assert np.allclose(y[1], y[-1])
         else:
-            msg = "handle_missing should be either 'error' or '', got %s" % missing
-            assert_raise_message(ValueError, msg, encoder.fit_transform, X)
-            return
-
-
-def test_missing_values():
-    input_types = ['list', 'numpy', 'pandas']
-    handle_missing = ['aaa', 'error', '']
-    for input_type in input_types:
-        for missing in handle_missing:
-            _test_missing_values(input_type, missing)
+            assert np.array_equal(y[1], z)
+            assert np.array_equal(y[-1], z)
+    else:
+        msg = "handle_missing should be either 'error' or '', got %s" % missing
+        assert_raise_message(ValueError, msg, encoder.fit_transform, X)
+        return
 
 
 if __name__ == '__main__':
