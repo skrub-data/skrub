@@ -1,7 +1,6 @@
-import numpy as np
 import time
+import numpy as np
 import pytest
-from sklearn.utils._testing import assert_raise_message
 
 from sklearn.datasets import fetch_20newsgroups
 from dirty_cat import MinHashEncoder
@@ -79,9 +78,11 @@ def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
     return eta
 
 
-@pytest.mark.parametrize("input_type", ['list', 'numpy', 'pandas'])
-@pytest.mark.parametrize("missing", ['aaa', 'error', ''])
-@pytest.mark.parametrize("hashing", ["fast", "murmur"])
+@pytest.mark.parametrize("input_type, missing, hashing", [
+    ['list', '', 'fast'],
+    ['numpy', 'error', 'fast'],
+    ['pandas', '', 'murmur'],
+    ['numpy', '', 'fast']])
 def test_missing_values(input_type, missing, hashing):
     X = ['Red',
          np.nan,
@@ -105,9 +106,9 @@ def test_missing_values(input_type, missing, hashing):
     if missing == 'error':
         encoder.fit(X)
         if input_type in ['numpy', 'pandas']:
-            msg = ("Found missing values in input data; set "
-                   "handle_missing='' to encode with missing values")
-            assert_raise_message(ValueError, msg, encoder.transform, X)
+            with pytest.raises(ValueError, match=r"missing"
+                               " values in input"):
+                encoder.transform(X)
     elif missing == '':
         encoder.fit(X)
         y = encoder.transform(X)
@@ -117,9 +118,10 @@ def test_missing_values(input_type, missing, hashing):
             assert np.array_equal(y[1], z)
             assert np.array_equal(y[-1], z)
     else:
-        msg = "handle_missing should be either 'error' or '', got %s" % missing
-        assert_raise_message(ValueError, msg, encoder.fit_transform, X)
-        return
+        with pytest.raises(ValueError, match=r"handle_missing"
+                           " should be either 'error' or ''"):
+            encoder.fit_transform(X)
+    return
 
 
 if __name__ == '__main__':

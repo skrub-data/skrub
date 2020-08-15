@@ -199,8 +199,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 if isinstance(x, float):
                     nan_idx.append(i)
                 elif x not in self.hash_dict:
-                    self.hash_dict[x] = self.get_fast_hash(x)
-                    X_out[i, :] = self.hash_dict[x]
+                    X_out[i, :] = self.hash_dict[x] = self.get_fast_hash(x)
                 else:
                     X_out[i, :] = self.hash_dict[x]
 
@@ -209,11 +208,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 if isinstance(x, float):
                     nan_idx.append(i)
                 elif x not in self.hash_dict:
-                    self.hash_dict[x] = self.minhash(
+                    X_out[i, :] = self.hash_dict[x] = self.minhash(
                         x,
                         n_components=self.n_components,
                         ngram_range=self.ngram_range)
-                    X_out[i, :] = self.hash_dict[x]
                 else:
                     X_out[i, :] = self.hash_dict[x]
 
