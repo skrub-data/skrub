@@ -133,7 +133,7 @@ for method in encoding_methods:
 # other encoding methods.
 # There are two reasons for that: the MinHashEncoder performs better
 # with tree-based models than linear models (
-# :ref:`see example 03<sphx_glr_auto_examples_03_fit_predict_plot_midwest_survey.html#sphx-glr-auto-examples-03-fit-predict-plot-midwest-survey-py>`)
+# :ref:`see example 03<sphx_glr_auto_examples_03_fit_predict_plot_midwest_survey.py>`)
 # , and also
 # increasing `n_components` improves performances. `n_components` around 300 
 # tend to lead to good prediction performance, but with more computational
