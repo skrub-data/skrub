@@ -38,7 +38,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     Parameters
     ----------
     n_components : int
-        The number of dimension of encoded strings.
+        The number of dimension of encoded strings. Numbers around 300 tend to
+        lead to good prediction performance, but with more computational cost.
     ngram_range : tuple (min_n, max_n), default=(2, 4)
         The lower and upper boundary of the range of n-values for different
         n-grams to be extracted. All values of n such that min_n <= n <= max_n.

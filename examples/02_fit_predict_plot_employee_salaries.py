@@ -134,7 +134,9 @@ for method in encoding_methods:
 # other encoding methods.
 # There are two reasons for that: the MinHashEncoder performs better
 # with tree-based models than linear models (see example 03), and also
-# increasing n_components improves performances.
+# increasing n_components improves performances. n_components around 300 
+# tend to lead to good prediction performance, but with more computational
+# cost.
 
 import seaborn
 import matplotlib.pyplot as plt
