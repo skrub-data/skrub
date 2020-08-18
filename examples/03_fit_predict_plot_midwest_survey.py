@@ -69,8 +69,7 @@ from dirty_cat import SimilarityEncoder, MinHashEncoder
 encoder_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
-    'minhash': MinHashEncoder(n_components=30, ngram_range=(2, 4),
-                              hashing='fast', minmax_hash=False),
+    'minhash': MinHashEncoder(),
     'num': FunctionTransformer(None)
 }
 ##############################################################################

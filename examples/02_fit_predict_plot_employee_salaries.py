@@ -73,8 +73,7 @@ encoders_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
     'target': TargetEncoder(handle_unknown='ignore'),
-    'minhash': MinHashEncoder(n_components=100, ngram_range=(2, 4),
-                              hashing='fast', minmax_hash=False),
+    'minhash': MinHashEncoder(n_components=100),
     'numerical': FunctionTransformer(None)}
 
 # We then create a function that takes one key of our ``encoders_dict``,

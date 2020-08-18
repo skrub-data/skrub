@@ -57,7 +57,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     
     """
 
-    def __init__(self, n_components, ngram_range=(2, 4),
+    def __init__(self, n_components=30, ngram_range=(2, 4),
                  hashing='fast', minmax_hash=False):
         self.ngram_range = ngram_range
         self.n_components = n_components
