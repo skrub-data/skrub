@@ -73,7 +73,7 @@ encoders_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
     'target': TargetEncoder(handle_unknown='ignore'),
-    'minhash': MinHashEncoder(n_components=10, ngram_range=(2, 4),
+    'minhash': MinHashEncoder(n_components=100, ngram_range=(2, 4),
                               hashing='fast', minmax_hash=False),
     'numerical': FunctionTransformer(None)}
 
@@ -130,11 +130,11 @@ for method in encoding_methods:
 # Plotting the results
 # --------------------
 # Finally, we plot the scores on a boxplot:
-# We notice that the MinHashEncoder performs poorly compared to other encoding
-# methods. There are two reasons for that: the MinHashEncoder performs better
-# with tree-based models than linear models (see example 03), and the
-# low-dimensionality of encodings (increasing n_components improves
-# performances.
+# We notice that the MinHashEncoder does not performs as well compared to 
+# other encoding methods.
+# There are two reasons for that: the MinHashEncoder performs better
+# with tree-based models than linear models (see example 03), and also
+# increasing n_components improves performances.
 
 import seaborn
 import matplotlib.pyplot as plt
