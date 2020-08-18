@@ -73,8 +73,7 @@ encoders_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
     'target': TargetEncoder(handle_unknown='ignore'),
-    'minhash': MinHashEncoder(n_components=10, ngram_range=(2, 4),
-                              hashing='fast', minmax_hash=False),
+    'minhash': MinHashEncoder(n_components=100),
     'numerical': FunctionTransformer(None)}
 
 # We then create a function that takes one key of our ``encoders_dict``,
@@ -130,11 +129,15 @@ for method in encoding_methods:
 # Plotting the results
 # --------------------
 # Finally, we plot the scores on a boxplot:
-# We notice that the MinHashEncoder performs poorly compared to other encoding
-# methods. There are two reasons for that: the MinHashEncoder performs better
-# with tree-based models than linear models (see example 03), and the
-# low-dimensionality of encodings (increasing n_components improves
-# performances.
+# We notice that the MinHashEncoder does not performs as well compared to 
+# other encoding methods.
+# There are two reasons for that: the MinHashEncoder performs better
+# with tree-based models than linear models (
+# :ref:`see example 03<sphx_glr_auto_examples_03_fit_predict_plot_midwest_survey.py>`)
+# , and also
+# increasing `n_components` improves performances. `n_components` around 300 
+# tend to lead to good prediction performance, but with more computational
+# cost.
 
 import seaborn
 import matplotlib.pyplot as plt
