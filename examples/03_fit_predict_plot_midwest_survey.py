@@ -69,8 +69,7 @@ from dirty_cat import SimilarityEncoder, MinHashEncoder
 encoder_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
-    'minhash': MinHashEncoder(n_components=10, ngram_range=(2, 4),
-                              hashing='fast', minmax_hash=False),
+    'minhash': MinHashEncoder(),
     'num': FunctionTransformer(None)
 }
 ##############################################################################
@@ -135,5 +134,5 @@ plt.yticks(size=20)
 plt.tight_layout()
 
 ###############################################################################
-# We can see that encoding the data using a SimilarityEncoder instead of
-# OneHotEncoder helps a lot in improving the cross validation score!
+# We can see that encoding the data using a SimilarityEncoder or MinhashEncoder
+# instead of OneHotEncoder helps a lot in improving the cross validation score!
