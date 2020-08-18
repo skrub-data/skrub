@@ -52,8 +52,8 @@ In this example, you will learn how to:
    This example assumes the reader to be familiar with similarity encoding and
    its use-cases.
 
-   * For an introduction to dirty categories, see :ref:`this example<sphx_glr_auto_examples_01_dirty_categories.py>`.
-   * To learn with dirty categories using the SimilarityEncoder, see :ref:`this example<sphx_glr_auto_examples_02_predict_employee_salaries.py>`.
+   * For an introduction to dirty categories, see :ref:`this example<sphx_glr_auto_examples_01_investigating_dirty_categories.py>`.
+   * To learn with dirty categories using the SimilarityEncoder, see :ref:`this example<sphx_glr_auto_examples_02_fit_predict_predict_employee_salaries.py>`.
 
 
 .. |NYS| replace:: :class:`Nystroem <sklearn.kernel_approximation.Nystroem>`
