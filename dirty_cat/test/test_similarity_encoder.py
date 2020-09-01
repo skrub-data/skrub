@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.testing
-from sklearn.utils._testing import assert_raise_message
 from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 import pytest
@@ -64,18 +63,17 @@ def _test_missing_values(input_type, missing):
 
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
     if missing == 'error':
-        try:
+        with pytest.raises(ValueError, match=r"Found missing values in input "
+                           "data; set handle_missing='' to encode "
+                           "with missing values"):
             sim_enc.fit_transform(observations)
-        except ValueError as e:
-            assert e.__str__() == ("Found missing values in input data; set "
-                                   "handle_missing='' to encode with missing values")
-            return
     elif missing == '':
         ans = sim_enc.fit_transform(observations)
         assert np.allclose(encoded, ans)
     else:
-        msg = "handle_missing should be either 'error' or '', got %s" % missing
-        assert_raise_message(ValueError, msg, sim_enc.fit_transform, observations)
+        with pytest.raises(ValueError, match=r"handle_missing"
+                           " should be either 'error' or ''"):
+            sim_enc.fit_transform(observations)
         return
 
 
@@ -99,12 +97,10 @@ def _test_missing_values_transform(input_type, missing):
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
     if missing == 'error':
         sim_enc.fit_transform(observations)
-        try:
+        with pytest.raises(ValueError, match=r"Found missing values in input "
+                           "data; set handle_missing='' to encode "
+                           "with missing values"):
             sim_enc.transform(test_observations)
-        except ValueError as e:
-            assert e.__str__() == ("Found missing values in input data; set "
-                                   "handle_missing='' to encode with missing values")
-            return
     elif missing == '':
         sim_enc.fit_transform(observations)
         ans = sim_enc.transform(test_observations)
