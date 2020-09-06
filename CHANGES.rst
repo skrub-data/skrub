@@ -1,9 +1,3 @@
-Release 0.0.8
-=============
-
-* **MinHashEncoder**: Added a "handle_missing" attribute to allow encoding
-  with missing values.
-
 Release 0.0.7
 =============
 
@@ -26,6 +20,9 @@ Release 0.0.7
   with missing values.
 
 * **TargetEncoder**: Added a "handle_missing" attribute to allow encoding
+  with missing values.
+
+* **MinHashEncoder**: Added a "handle_missing" attribute to allow encoding
   with missing values.
 
 Release 0.0.6
