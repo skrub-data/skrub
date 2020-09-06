@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from sklearn.utils._testing import assert_raise_message
 
 from dirty_cat import target_encoder
 
@@ -233,9 +232,10 @@ def _test_missing_values(input_type, missing):
 
     encoder = target_encoder.TargetEncoder(handle_missing=missing)
     if missing == 'error':
-        msg = ("Found missing values in input data; set "
-               "handle_missing='' to encode with missing values")
-        assert_raise_message(ValueError, msg, encoder.fit_transform, X, y)
+        with pytest.raises(ValueError, match=r"Found missing values in input "
+                           "data; set handle_missing='' to encode "
+                           "with missing values"):
+            encoder.fit_transform(X, y)
         return
     elif missing == '':
         encoder.fit_transform(X, y)
@@ -248,8 +248,9 @@ def _test_missing_values(input_type, missing):
         assert dict(encoder.counter_[0]) == count_['color']
         assert dict(encoder.counter_[1]) == count_['gender']
     else:
-        msg = "handle_missing should be either 'error' or '', got %s" % missing
-        assert_raise_message(ValueError, msg, encoder.fit_transform, X, y)
+        with pytest.raises(ValueError, match=r"handle_missing"
+                           " should be either 'error' or ''"):
+            encoder.fit_transform(X, y)
         return
 
 
@@ -304,9 +305,10 @@ def _test_missing_values_transform(input_type, missing):
                                            handle_missing=missing)
     if missing == 'error':
         encoder.fit_transform(X, y)
-        msg = ("Found missing values in input data; set "
-               "handle_missing='' to encode with missing values")
-        assert_raise_message(ValueError, msg, encoder.transform, X_test)
+        with pytest.raises(ValueError, match=r"Found missing values in input "
+                           "data; set handle_missing='' to encode "
+                           "with missing values"):
+            encoder.transform(X_test)
         return
     elif missing == '':
         encoder.fit_transform(X, y)

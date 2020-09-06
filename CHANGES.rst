@@ -22,6 +22,9 @@ Release 0.0.7
 * **TargetEncoder**: Added a "handle_missing" attribute to allow encoding
   with missing values.
 
+* **MinHashEncoder**: Added a "handle_missing" attribute to allow encoding
+  with missing values.
+
 Release 0.0.6
 =============
 
