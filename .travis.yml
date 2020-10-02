@@ -10,7 +10,7 @@ matrix:
     - name: "Python 3.6 with minimum dependencies (no pandas and python-Levenshtein)"
       python: "3.6"
       env: CONDA_DEPENDENCIES='distance sklearn joblib numpy scipy requests pytest-cov codecov coverage'
-    - name: "Python 3.7 with pandas"
-      python: "3.7"
+    - name: "Python 3.8 with pandas"
+      python: "3.8"
       env: CONDA_DEPENDENCIES='python-Levenshtein distance sklearn joblib numpy scipy requests pytest-cov codecov coverage pandas'
 
