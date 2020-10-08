@@ -116,7 +116,8 @@ print('Time to vectorize: %s' % (t1 - t0))
 # We can run a cross-validation
 from sklearn import linear_model, pipeline, model_selection
 
-log_reg = linear_model.LogisticRegression()
+# We specify max_iter to avoid convergence warnings
+log_reg = linear_model.LogisticRegression(max_iter=10000)
 
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y, )
