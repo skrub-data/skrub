@@ -12,7 +12,7 @@ import pytest
 import shutil
 import warnings
 
-from pytest_mock import mock
+from unittest import mock
 from unittest.mock import mock_open
 
 
