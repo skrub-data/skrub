@@ -1,6 +1,6 @@
 import time
 import random
-import string
+from string import ascii_lowercase
 import numpy as np
 import pytest
 
@@ -129,7 +129,7 @@ def test_missing_values(input_type, missing, hashing):
 def test_cache_overflow():
     # Regression test for cache overflow resulting in -1s in encoding
     def get_random_string(length):
-        letters = string.ascii_letters
+        letters = ascii_lowercase
         result_str = ''.join(random.choice(letters) for i in range(length))
         return result_str
 
