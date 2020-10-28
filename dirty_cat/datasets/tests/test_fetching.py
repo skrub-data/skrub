@@ -10,7 +10,6 @@ import os
 import sys
 import pytest
 import shutil
-import warnings
 
 from unittest import mock
 from unittest.mock import mock_open
@@ -23,8 +22,8 @@ def get_test_data_dir() -> str:
 
 def test_fetch_openml_dataset():
     """
-    Tests the ``fetch_openml_dataset()`` function.
-    This function tests the system in a real environment
+    Tests the ``fetch_openml_dataset()``
+    function in a real environment.
     Though, to avoid the test being too long,
     we will download a small dataset (<1000 entries).
 
@@ -34,19 +33,29 @@ def test_fetch_openml_dataset():
     from dirty_cat.datasets.fetching import fetch_openml_dataset
     from urllib.error import URLError
 
+    # Information of the test dataset.
+    # Centralizes its information here.
+    test_dataset = {
+        "id": 50,
+        "desc_start": "**Author**",
+        "url": "https://www.openml.org/d/50",
+        "csv_name": "tic-tac-toe.csv",
+        "dataset_rows_count": 958,
+        "dataset_columns_count": 10,
+    }
+
     test_data_dir = get_test_data_dir()
 
-    warnings.warn(test_data_dir)
+    try:  # Try-finally block used to remove the test data directory at the end.
+        try:
 
-    try:
-        try:  # To catch errors of the ``fetch_openml()`` function.
-
-            # First, we want to purposefully test common exceptions.
+            # First, we want to purposefully test ValueError exceptions.
             with pytest.raises(ValueError):
                 assert fetch_openml_dataset(dataset_id=0, data_directory=test_data_dir)
                 assert fetch_openml_dataset(dataset_id=2**32, data_directory=test_data_dir)
 
-            returned_info = fetch_openml_dataset(dataset_id=50, data_directory=test_data_dir)
+            # Valid call
+            returned_info = fetch_openml_dataset(dataset_id=test_dataset["id"], data_directory=test_data_dir)
 
         except URLError:
             # No internet connection, or the website is down.
@@ -57,11 +66,27 @@ def test_fetch_openml_dataset():
             # ``.gz`` files within in order to finish the test.
             return
 
-        assert returned_info["description"].startswith("**Author**")
-        assert returned_info["source"] == "https://www.openml.org/d/50"
-        assert returned_info["path"].endswith("tic-tac-toe.csv")
+        assert returned_info["description"].startswith(test_dataset["desc_start"])
+        assert returned_info["source"] == test_dataset["url"]
+        assert returned_info["path"] == os.path.join(test_data_dir, test_dataset["csv_name"])
 
         assert os.path.isfile(returned_info["path"])
+
+        try:
+            from pandas import read_csv, DataFrame
+        except ImportError:
+            pass
+        else:
+            # This block will be executed after the end
+            # of ``try`` if no error was raised
+            # (if pandas.read_csv could be imported).
+
+            dataset: DataFrame = read_csv(filepath_or_buffer=returned_info["path"],
+                                          sep=",", quotechar="'", escapechar="\\")
+
+            assert dataset.shape == (test_dataset["dataset_rows_count"],
+                                     test_dataset["dataset_columns_count"])
+
     finally:
         shutil.rmtree(path=test_data_dir, ignore_errors=True)
 
@@ -71,7 +96,7 @@ def test_fetch_openml_dataset():
 @mock.patch("dirty_cat.datasets.fetching._get_details")
 @mock.patch("dirty_cat.datasets.fetching._export_gz_data_to_csv")
 @mock.patch("dirty_cat.datasets.fetching._download_and_write_openml_dataset")
-def test_fetch_openml_dataset_mocked(mock_download, mock_export, mock_details, mock_features, mock_isfile):
+def test_fetch_openml_dataset_mocked(mock_download, mock_export, mock_get_details, mock_get_features, mock_isfile):
     """
     Test function ``fetch_openml_dataset()``,
     but this time, we mock the functions to
@@ -80,8 +105,8 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export, mock_details, m
 
     from dirty_cat.datasets.fetching import fetch_openml_dataset, Details, Features
 
-    mock_details.return_value = Details("Dataset_name", "123456", "This is a dummy dataset description.")
-    mock_features.return_value = Features(["id", "name", "transaction_id", "owner", "recipient"])
+    mock_get_details.return_value = Details("Dataset_name", "123456", "This is a dummy dataset description.")
+    mock_get_features.return_value = Features(["id", "name", "transaction_id", "owner", "recipient"])
 
     test_data_dir = get_test_data_dir()
 
@@ -91,40 +116,37 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export, mock_details, m
 
     fetch_openml_dataset(50, test_data_dir)
 
-    mock_download.assert_not_called()
-    mock_export.assert_not_called()
-    mock_details.assert_called_once()
-    mock_features.assert_not_called()
+    mock_download       .assert_not_called()
+    mock_export         .assert_not_called()
+    mock_get_features   .assert_not_called()
+    mock_get_details    .assert_called_once()
 
     # Reset mocks
-    mock_details.reset_mock()
+    mock_get_details    .reset_mock()
 
     # This time, the files does not exists
     mock_isfile.return_value = False
 
     fetch_openml_dataset(50, test_data_dir)
 
-    mock_download.assert_called_with(dataset_id=50, data_directory=get_test_data_dir())  # Should be called twice
-    mock_export.assert_called_once()
-    mock_details.assert_called_once()
-    mock_features.assert_called_once()
+    # Download should be called twice
+    mock_download       .assert_called_with(dataset_id=50, data_directory=get_test_data_dir())
+    mock_export         .assert_called_once()
+    mock_get_features   .assert_called_once()
+    mock_get_details    .assert_called_once()
 
 
-@mock.patch("dirty_cat.datasets.utils.get_data_dir")
-@mock.patch("sklearn.datasets.fetch_openml")
-def test__download_and_write_openml_dataset(mock_fetch_openml, mock_get_data_dir):
+@mock.patch('sklearn.datasets.fetch_openml')
+def test__download_and_write_openml_dataset(mock_fetch_openml):
     """Tests function ``_download_and_write_openml_dataset()``."""
 
     from dirty_cat.datasets.fetching import _download_and_write_openml_dataset
 
-    dummy_dir_path = "/dir/path/"
-    mock_get_data_dir.return_value = dummy_dir_path
-    mock_fetch_openml.return_value = None
-
-    _download_and_write_openml_dataset(1, dummy_dir_path)
+    test_data_dir = get_test_data_dir()
+    _download_and_write_openml_dataset(1, test_data_dir)
 
     # The following returns "Called 0 times" although I'm pretty sure it does get called...
-    # mock_fetch_openml.assert_called_once_with(1, dummy_dir_path)
+    mock_fetch_openml.assert_called_once_with(data_id=1, data_home=test_data_dir)
 
 
 @mock.patch("os.path.isfile")
@@ -161,7 +183,9 @@ def test__get_details(mock_read_json_from_gz):
 
     from dirty_cat.datasets.fetching import Details, _get_details
 
-    dummy_raw_details = {
+    expected_return_value = Details("Dataset_name", "123456", "This is a dummy dataset description.")
+
+    mock_read_json_from_gz.return_value = {
         "data_set_description": {
             "data": "This is JSON data!",
             "name": "Dataset_name",
@@ -170,9 +194,7 @@ def test__get_details(mock_read_json_from_gz):
             "extra": "extra_field",
         }
     }
-    expected_return_value = Details("Dataset_name", "123456", "This is a dummy dataset description.")
 
-    mock_read_json_from_gz.return_value = dummy_raw_details
     returned_value = _get_details("/file/name.gz")
 
     assert returned_value == expected_return_value
@@ -184,7 +206,9 @@ def test__get_features(mock_read_json_from_gz):
 
     from dirty_cat.datasets.fetching import Features, _get_features
 
-    dummy_raw_features = {
+    expected_return_value = Features(["id", "name", "transaction_id", "owner", "recipient"])
+
+    mock_read_json_from_gz.return_value = {
         "data_features": {
             "feature": [
                 {"index": "0", "name": "id", "range": "123"},
@@ -195,9 +219,7 @@ def test__get_features(mock_read_json_from_gz):
             ]
         }
     }
-    expected_return_value = Features(["id", "name", "transaction_id", "owner", "recipient"])
 
-    mock_read_json_from_gz.return_value = dummy_raw_features
     returned_value = _get_features("/file/name.gz")
 
     assert returned_value == expected_return_value
@@ -231,9 +253,9 @@ def test__get_gz_path():
 
     expected_return_value_1 = "/path/to/file.gz"
     expected_return_value_2 = "/tmp/path/to.strange/file.gz"
-    expected_return_value_3 = "C/Temp/path/to/very/very/very/very/long/file.gz"
+    expected_return_value_3 = "C:/Temp/path/to/very/very/very/very/long/file.gz"
 
-    returned_value_1 = _get_gz_path("", "/path/to", "file")
+    returned_value_1 = _get_gz_path("/", "path/to", "file")
     returned_value_2 = _get_gz_path("/tmp/", "/path/to.strange", "/file")
     returned_value_3 = _get_gz_path("C:/Temp/", "/path/to/very/very/very/very/long/", "file")
 
@@ -243,7 +265,8 @@ def test__get_gz_path():
 
 
 def test__export_gz_data_to_csv():
-    """Tests function ``_export_gz_data_to_csv()``."""
+    """Tests function ``_export_gz_data_to_csv()``.
+    TODO"""
     pass
 
 
