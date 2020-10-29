@@ -58,7 +58,7 @@ def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) 
     dataset_id: int
         The ID of the dataset to fetch.
     data_directory: str
-        A directory to save the data to.
+        Optional. A directory to save the data to.
         By default, the dirty_cat data directory.
 
     Returns
@@ -274,18 +274,14 @@ def _export_gz_data_to_csv(compressed_dir_path: str, destination_file: str, feat
 
     """
     atdata_found = False
-    watchdog = 50
-    index = 0
     with open(destination_file, mode="w") as csv:
         with gzip.open(compressed_dir_path, mode="rt") as gz:
             csv.write(_features_to_csv_format(features))
             csv.write("\n")
             # We will look at each line of the file until we find
-            # "@DATA": only after this tag is the actual CSV data.
-            for line in gz.readlines():
+            # "@data": only after this tag is the actual CSV data.
+            for line in gz:
                 if not atdata_found:
-                    if index < watchdog:
-                        index += 1
                     if line.lower().startswith("@data"):
                         atdata_found = True
                 else:

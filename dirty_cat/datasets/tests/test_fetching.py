@@ -145,7 +145,6 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
     test_data_dir = get_test_data_dir()
     _download_and_write_openml_dataset(1, test_data_dir)
 
-    # The following returns "Called 0 times" although I'm pretty sure it does get called...
     mock_fetch_openml.assert_called_once_with(data_id=1, data_home=test_data_dir)
 
 
@@ -265,9 +264,47 @@ def test__get_gz_path():
 
 
 def test__export_gz_data_to_csv():
-    """Tests function ``_export_gz_data_to_csv()``.
-    TODO"""
-    pass
+    """Tests function ``_export_gz_data_to_csv()``."""
+    from dirty_cat.datasets.fetching import _export_gz_data_to_csv, Features
+
+    features = Features(["top-left-square",
+                         "top-middle-square",
+                         "top-right-square",
+                         "middle-left-square",
+                         "middle-middle-square",
+                         "middle-right-square",
+                         "bottom-left-square",
+                         "bottom-middle-square",
+                         "bottom-right-square",
+                         "Class"])
+    arff_data = (
+        "% This is a comment\n"
+        "@relation tic-tac-toe\n"
+        "@attribute 'top-left-square' {b,o,x}\n"
+        "@data\n"
+        "x,x,x,x,o,o,x,o,o,positive\n"
+        "x,x,x,x,o,o,o,x,o,positive\n"
+    )
+
+    dummy_gz = "/dummy/file.gz"
+    dummy_csv = "/dummy/file.csv"
+
+    expected_calls = "[call('/dummy/file.csv', mode='w'),\n " \
+                     "call().__enter__(),\n " \
+                     "call().write('top-left-square,top-middle-square,top-right-square,middle-left-square," \
+                     "middle-middle-square,middle-right-square,bottom-left-square,bottom-middle-square," \
+                     "bottom-right-square,Class'),\n " \
+                     "call().write('\\n'),\n " \
+                     "call().write('x,x,x,x,o,o,x,o,o,positive\\n'),\n " \
+                     "call().write('x,x,x,x,o,o,o,x,o,positive\\n'),\n " \
+                     "call().__exit__(None, None, None)]"
+
+    with mock.patch("builtins.open", mock_open(read_data="")) as mock_builtin_open:
+        with mock.patch("gzip.open", mock_open(read_data=arff_data)) as mock_gzip_open:
+            _export_gz_data_to_csv(dummy_gz, dummy_csv, features)
+            mock_builtin_open   .assert_called_with(dummy_csv, mode='w')
+            mock_gzip_open      .assert_called_with(dummy_gz, mode='rt')
+            assert str(mock_builtin_open.mock_calls) == expected_calls
 
 
 def test__features_to_csv_format():
