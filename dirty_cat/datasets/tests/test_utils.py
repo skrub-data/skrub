@@ -1,0 +1,17 @@
+import os
+
+from unittest import mock
+
+
+@mock.patch('os.path.dirname')
+def test_get_data_dir(mock_os_path_dirname):
+    """Tests function ``get_data_dir()``."""
+    from dirty_cat.datasets.utils import get_data_dir
+
+    expected_return_value_default = "/user/directory/data"
+
+    mock_os_path_dirname.return_value = "/user/directory/"
+    assert get_data_dir() == expected_return_value_default
+
+    expected_return_value_custom = expected_return_value_default + os.sep + "tests"
+    assert get_data_dir("tests") == expected_return_value_custom
