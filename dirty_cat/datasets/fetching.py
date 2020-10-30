@@ -280,7 +280,7 @@ def _export_gz_data_to_csv(compressed_dir_path: str, destination_file: str, feat
             csv.write("\n")
             # We will look at each line of the file until we find
             # "@data": only after this tag is the actual CSV data.
-            for line in gz:
+            for line in gz.readlines():
                 if not atdata_found:
                     if line.lower().startswith("@data"):
                         atdata_found = True
