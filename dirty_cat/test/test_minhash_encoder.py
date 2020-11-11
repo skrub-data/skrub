@@ -134,7 +134,7 @@ def test_cache_overflow():
         return result_str
 
     encoder = MinHashEncoder(n_components=3)
-    capacity = encoder.capacity
+    capacity = encoder._capacity
     raw_data = [get_random_string(10) for x in range(capacity)]
     y = encoder.fit_transform(raw_data)
 

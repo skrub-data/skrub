@@ -73,7 +73,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.minmax_hash = minmax_hash
         self.count = 0
         self.handle_missing = handle_missing
-        self.capacity = 2**10
+        self._capacity = 2**10
 
     def get_unique_ngrams(self, string, ngram_range):
         """ Return the set of unique n-grams of a string.
@@ -159,7 +159,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self
             The fitted MinHashEncoder instance.
         """
-        self.hash_dict = LRUDict(capacity=self.capacity)
+        self.hash_dict = LRUDict(capacity=self._capacity)
         return self
 
     def transform(self, X):
