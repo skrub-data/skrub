@@ -1,4 +1,6 @@
 import time
+import random
+from string import ascii_lowercase
 import numpy as np
 import pytest
 
@@ -122,6 +124,21 @@ def test_missing_values(input_type, missing, hashing):
                            " should be either 'error' or ''"):
             encoder.fit_transform(X)
     return
+
+
+def test_cache_overflow():
+    # Regression test for cache overflow resulting in -1s in encoding
+    def get_random_string(length):
+        letters = ascii_lowercase
+        result_str = ''.join(random.choice(letters) for i in range(length))
+        return result_str
+
+    encoder = MinHashEncoder(n_components=3)
+    capacity = encoder._capacity
+    raw_data = [get_random_string(10) for x in range(capacity + 1)]
+    y = encoder.fit_transform(raw_data)
+
+    assert len(y[y == -1.0]) == 0
 
 
 if __name__ == '__main__':
