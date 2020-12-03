@@ -24,11 +24,18 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
-if LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
+
+if LooseVersion(sklearn.__version__) < LooseVersion('0.22'):
     from sklearn.cluster.k_means_ import _k_init
+elif LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
+    from sklearn.cluster._kmeans import _k_init
 else:
-    from sklearn.cluster.k_means_ import _kmeans_plusplus
-from sklearn.decomposition.nmf import _beta_divergence
+    from sklearn.cluster._kmeans import kmeans_plusplus
+
+if LooseVersion(sklearn.__version__) < LooseVersion('0.22'):
+    from sklearn.decomposition.nmf import _beta_divergence
+else:
+    from sklearn.decomposition._nmf import _beta_divergence
 
 
 class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
