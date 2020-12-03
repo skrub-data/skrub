@@ -15,14 +15,19 @@ The principle is as follows:
        We thus optimize H and W with the multiplicative update method.
 """
 import numpy as np
+from distutils.version import LooseVersion
 from scipy import sparse
+import sklearn
 from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
-from sklearn.cluster.k_means_ import _k_init
+if LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
+    from sklearn.cluster.k_means_ import _k_init
+else:
+    from sklearn.cluster.k_means_ import _kmeans_plusplus
 from sklearn.decomposition.nmf import _beta_divergence
 
 
@@ -81,8 +86,8 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         The range of ngram length that will be used to build the
         bag-of-n-grams representation of the input data.
 
-    analizer : str, default='char'.
-        Analizer parameter for the CountVectorizer/HashingVectorizer.
+    analyzer : str, default='char'.
+        Analyzer parameter for the CountVectorizer/HashingVectorizer.
         Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
         Option ‘char_wb’ creates character n-grams only from text inside word
@@ -117,7 +122,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                  gamma_scale_prior=1.0, rho=.95, rescale_rho=False,
                  hashing=False, hashing_n_features=2**12, init='k-means++',
                  tol=1e-4, min_iter=2, max_iter=5, ngram_range=(2, 4),
-                 analizer='char', add_words=False, random_state=None,
+                 analyzer='char', add_words=False, random_state=None,
                  rescale_W=True, max_iter_e_step=20):
 
         self.ngram_range = ngram_range
@@ -133,7 +138,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         self.max_iter = max_iter
         self.min_iter = min_iter
         self.init = init
-        self.analizer = analizer
+        self.analyzer = analyzer
         self.add_words = add_words
         self.random_state = check_random_state(random_state)
         self.rescale_W = rescale_W
@@ -141,7 +146,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
         if self.hashing:
             self.ngrams_count = HashingVectorizer(
-                 analyzer=self.analizer, ngram_range=self.ngram_range,
+                 analyzer=self.analyzer, ngram_range=self.ngram_range,
                  n_features=self.hashing_n_features,
                  norm=None, alternate_sign=False)
             if self.add_words:
@@ -151,7 +156,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                      norm=None, alternate_sign=False)
         else:
             self.ngrams_count = CountVectorizer(
-                 analyzer=self.analizer, ngram_range=self.ngram_range)
+                 analyzer=self.analyzer, ngram_range=self.ngram_range)
             if self.add_words:
                 self.word_count = CountVectorizer()
 

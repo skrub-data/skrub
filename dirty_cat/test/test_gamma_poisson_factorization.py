@@ -12,12 +12,12 @@ def test_OnlineGammaPoissonFactorization(n_samples=70):
     n_topics = 10
     for hashing in [True, False]:
         for init in ['k-means++', 'random', 'k-means']:
-            for analizer in ['word', 'char', 'char_wb']:
+            for analyzer in ['word', 'char', 'char_wb']:
                 for add_words in [True, False]:
                     # Test output shape
                     encoder = OnlineGammaPoissonFactorization(
                         n_topics=n_topics, hashing=hashing, init=init,
-                        analizer=analizer, add_words=add_words,
+                        analyzer=analyzer, add_words=add_words,
                         random_state=42, rescale_W=True)
                     encoder.fit(X)
                     y = encoder.transform(X)
@@ -32,7 +32,7 @@ def test_OnlineGammaPoissonFactorization(n_samples=70):
                     # Test same seed return the same output
                     encoder = OnlineGammaPoissonFactorization(
                         n_topics=n_topics, hashing=hashing, init=init,
-                        analizer=analizer, add_words=add_words,
+                        analyzer=analyzer, add_words=add_words,
                         random_state=42)
                     encoder.fit(X)
                     y2 = encoder.transform(X)
