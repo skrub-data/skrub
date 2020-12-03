@@ -148,12 +148,14 @@ if __name__ == '__main__':
 
     for _ in range(3):
         print('time profile_encoder(MinHashEncoder, hashing=fast)')
-        print("{:.4} seconds".format(profile_encoder(MinHashEncoder, hashing='fast')))
+        print("{:.4} seconds".format(
+            profile_encoder(MinHashEncoder, hashing='fast')))
     for _ in range(3):
         print('time profile_encoder(MinHashEncoder, hashing=fast) with minmax')
         print("{:.4} seconds".format(profile_encoder(MinHashEncoder,
                                      hashing='fast', minmax_hash=True)))
     print('time profile_encoder(MinHashEncoder, hashing=murmur)')
-    print("{:.4} seconds".format(profile_encoder(MinHashEncoder, hashing='murmur')))
+    print("{:.4} seconds".format(
+        profile_encoder(MinHashEncoder, hashing='murmur')))
 
     print('Done')

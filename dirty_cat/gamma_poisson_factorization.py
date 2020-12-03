@@ -46,11 +46,11 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
     gamma_scale_prior : float, default=1.0
         Scale parameter for the Gamma prior distribution.
 
-    r : float, default=0.7
+    rho : float, default=0.95
         Weight parameter for the update of the W matrix.
     
-    rescale_r : boolean, default=True
-        If true, use r ** (batch_size / len(X)) instead of r to obtain an
+    rescale_rho : boolean, default=False
+        If true, use rho ** (batch_size / len(X)) instead of rho to obtain an
         update rate per iteration that is independent of the batch size.
 
     hashing : boolean, default=False
@@ -66,7 +66,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         If init='k-means++', we use the init method of sklearn.cluster.KMeans.
         If init='random', topics are initialized with a Gamma distribution.
         If init='k-means', topics are initialized with a KMeans on the n-grams
-        counts.
+        counts. This usually makes convergence faster but is a bit slower.
 
     tol : float, default=1e-4
         Tolerance for the convergence of the matrix W.
@@ -83,7 +83,10 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
     analizer : str, default='char'.
         Analizer parameter for the CountVectorizer/HashingVectorizer.
-        Options: {‘word’, ‘char’, ‘char_wb’}
+        Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
+        to factorize should be made of word counts or character n-gram counts.
+        Option ‘char_wb’ creates character n-grams only from text inside word
+        boundaries; n-grams at the edges of words are padded with space.
 
     add_words : boolean, default=False
         If true, add the words counts to the bag-of-n-grams representation
@@ -111,8 +114,8 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, n_topics=10, batch_size=512, gamma_shape_prior=1.1,
-                 gamma_scale_prior=1.0, r=.7, rescale_r=True, hashing=False,
-                 hashing_n_features=2**12, init='k-means++',
+                 gamma_scale_prior=1.0, rho=.95, rescale_rho=False,
+                 hashing=False, hashing_n_features=2**12, init='k-means++',
                  tol=1e-4, min_iter=2, max_iter=5, ngram_range=(2, 4),
                  analizer='char', add_words=False, random_state=None,
                  rescale_W=True, max_iter_e_step=20):
@@ -121,8 +124,8 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         self.n_topics = n_topics
         self.gamma_shape_prior = gamma_shape_prior  # 'a' parameter
         self.gamma_scale_prior = gamma_scale_prior  # 'b' parameter
-        self.r = r
-        self.rescale_r = rescale_r
+        self.rho = rho
+        self.rescale_rho = rescale_rho
         self.batch_size = batch_size
         self.tol = tol
         self.hashing = hashing
@@ -189,10 +192,10 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         unq_H = _rescale_h(unq_V, np.ones((len(unq_X), self.n_topics)))
         self.H_dict = dict()
         self._update_H_dict(unq_X, unq_H)
-        if self.rescale_r:
-            self.rho_ = self.r ** (self.batch_size / len(X))
+        if self.rescale_rho:
+            self.rho_ = self.rho ** (self.batch_size / len(X))
         else:
-            self.rho_ = self.r
+            self.rho_ = self.rho
         return unq_X, unq_V, lookup
 
     def _get_H(self, X):
