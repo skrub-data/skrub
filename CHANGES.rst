@@ -1,6 +1,12 @@
 Release 0.0.7
 =============
 
+* **OnlineGammaPoissonFactorization**: Added ``gamma_poisson_factorzation.py``
+  file that implement online Gamma-Poisson factorization through the
+  ``OnlineGammaPoissonFactorization`` class. This method allows for
+  intrerpretable encoding of string categorical variables, as it factorizes
+  character-level substring counts into linear combinations of latent topics.
+
 * **MinHashEncoder**: Added ``minhash_encoder.py`` and ``fast_hast.py`` files
   that implement minhash encoding through the ``MinHashEncoder`` class.
   This method allows for fast and scalable encoding of string categorical
