@@ -30,7 +30,7 @@ if LooseVersion(sklearn.__version__) < LooseVersion('0.22'):
 elif LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
     from sklearn.cluster._kmeans import _k_init
 else:
-    from sklearn.cluster._kmeans import kmeans_plusplus
+    from sklearn.cluster._kmeans import kmeans_plusplus as _k_init
 
 if LooseVersion(sklearn.__version__) < LooseVersion('0.22'):
     from sklearn.decomposition.nmf import _beta_divergence
