@@ -30,7 +30,7 @@ if LooseVersion(sklearn.__version__) < LooseVersion('0.22'):
 elif LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
     from sklearn.cluster._kmeans import _k_init
 else:
-    from sklearn.cluster._kmeans import kmeans_plusplus as _k_init
+    from sklearn.cluster._kmeans import kmeans_plusplus
 
 if LooseVersion(sklearn.__version__) < LooseVersion('0.22'):
     from sklearn.decomposition.nmf import _beta_divergence
@@ -230,11 +230,19 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         n-grams counts.
         """
         if self.init == 'k-means++':
-            W = _k_init(
-                V, self.n_topics,
-                x_squared_norms=row_norms(V, squared=True),
-                random_state=self.random_state,
-                n_local_trials=None) + .1
+            if LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
+                W = _k_init(
+                    V, self.n_topics,
+                    x_squared_norms=row_norms(V, squared=True),
+                    random_state=self.random_state,
+                    n_local_trials=None) + .1
+            else:
+                W, _ = kmeans_plusplus(
+                    V, self.n_topics,
+                    x_squared_norms=row_norms(V, squared=True),
+                    random_state=self.random_state,
+                    n_local_trials=None)
+                W += .1
         elif self.init == 'random':
             W = self.random_state.gamma(
                 shape=self.gamma_shape_prior, scale=self.gamma_scale_prior,
@@ -248,11 +256,19 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_topics:
-                W2 = _k_init(
-                    V, self.n_topics - W.shape[0],
-                    x_squared_norms=row_norms(V, squared=True),
-                    random_state=self.random_state,
-                    n_local_trials=None) + .1
+                if LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
+                    W2 = _k_init(
+                        V, self.n_topics - W.shape[0],
+                        x_squared_norms=row_norms(V, squared=True),
+                        random_state=self.random_state,
+                        n_local_trials=None) + .1
+                else:
+                    W2, _ = kmeans_plusplus(
+                        V, self.n_topics - W.shape[0],
+                        x_squared_norms=row_norms(V, squared=True),
+                        random_state=self.random_state,
+                        n_local_trials=None)
+                    W2 += .1
                 W = np.concatenate((W, W2), axis=0)
         else:
             raise AttributeError(
