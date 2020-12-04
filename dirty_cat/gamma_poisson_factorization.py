@@ -184,7 +184,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
     def _init_vars(self, X):
         """
-        Build the bag-of-n-grams representation H of X and initialize
+        Build the bag-of-n-grams representation V of X and initialize
         the topics W.
         """
         unq_X, lookup = np.unique(X, return_inverse=True)
@@ -242,7 +242,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                     x_squared_norms=row_norms(V, squared=True),
                     random_state=self.random_state,
                     n_local_trials=None)
-                W += .1
+                W = W + .1 # To avoid restricting topics to few n-grams only
         elif self.init == 'random':
             W = self.random_state.gamma(
                 shape=self.gamma_shape_prior, scale=self.gamma_scale_prior,
@@ -268,7 +268,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                         x_squared_norms=row_norms(V, squared=True),
                         random_state=self.random_state,
                         n_local_trials=None)
-                    W2 += .1
+                    W2 = W2 + .1
                 W = np.concatenate((W, W2), axis=0)
         else:
             raise AttributeError(
@@ -298,22 +298,26 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
             X = X[:, 0]
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
+        # Build bag-of-n-grams matrix V
         unq_X, unq_V, lookup = self._init_vars(X)
         n_batch = (len(X) - 1) // self.batch_size + 1
         del X
         unq_H = self._get_H(unq_X)
 
         for iter in range(self.max_iter):
+            # Loop over batches
             for i, (unq_idx, idx) in enumerate(batch_lookup(
               lookup, n=self.batch_size)):
                 if i == n_batch-1:
                     W_last = self.W_.copy()
+                # Update H with the multiplicative update rule
                 unq_H[unq_idx] = _multiplicative_update_h(
                     unq_V[unq_idx], self.W_, unq_H[unq_idx],
                     epsilon=1e-3, max_iter=self.max_iter_e_step,
                     rescale_W=self.rescale_W,
                     gamma_shape_prior=self.gamma_shape_prior,
                     gamma_scale_prior=self.gamma_scale_prior)
+                # Update H with the multiplicative update rule
                 _multiplicative_update_w(
                     unq_V[idx], self.W_, self.A_, self.B_, unq_H[idx],
                     self.rescale_W, self.rho_)
@@ -323,7 +327,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                         self.W_ - W_last) / np.linalg.norm(W_last)
 
             if (W_change < self.tol) and (iter >= self.min_iter - 1):
-                break
+                break # Stop if the change in W is smaller than the tolerance
 
         self._update_H_dict(unq_X, unq_H)
         return self
@@ -436,7 +440,9 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         """
-        Transform X using the trained matrix W.
+        Transform X using the trained matrix W, by finding H' so that
+        V' = H'W, with V' the bag-of-n-grams representation of X.
+        The activations H' are then returned as the transformed input.
 
         Parameters
         ----------
@@ -456,6 +462,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         unq_X = np.unique(X)
+        # Build the bag-of-n-grams matrix V for the words to encode
         unq_V = self.ngrams_count.transform(unq_X)
         if self.add_words:
             unq_V2 = self.word_count.transform(unq_X)
@@ -463,8 +470,10 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
         self._add_unseen_keys_to_H_dict(unq_X)
         unq_H = self._get_H(unq_X)
+        # Loop over batches
         for slice in gen_batches(n=unq_H.shape[0],
                                  batch_size=self.batch_size):
+            # Do many updates of H' to have V' = H'W
             unq_H[slice] = _multiplicative_update_h(
                 unq_V[slice], self.W_, unq_H[slice],
                 epsilon=1e-3, max_iter=100,
@@ -541,6 +550,7 @@ def _multiplicative_update_h(Vt, W, Ht, epsilon=1e-3, max_iter=10,
 
 
 def batch_lookup(lookup, n=1):
+    """ Make batches of the lookup array. """
     len_iter = len(lookup)
     for idx in range(0, len_iter, n):
         indices = lookup[slice(idx, min(idx + n, len_iter))]
