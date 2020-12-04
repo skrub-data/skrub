@@ -231,7 +231,8 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         """
         if self.init == 'k-means++':
             W = _k_init(
-                V, self.n_topics, row_norms(V, squared=True),
+                V, self.n_topics,
+                x_squared_norms=row_norms(V, squared=True),
                 random_state=self.random_state,
                 n_local_trials=None) + .1
         elif self.init == 'random':
@@ -248,7 +249,8 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_topics:
                 W2 = _k_init(
-                    V, self.n_topics - W.shape[0], row_norms(V, squared=True),
+                    V, self.n_topics - W.shape[0],
+                    x_squared_norms=row_norms(V, squared=True),
                     random_state=self.random_state,
                     n_local_trials=None) + .1
                 W = np.concatenate((W, W2), axis=0)
