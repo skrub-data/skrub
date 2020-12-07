@@ -1,10 +1,10 @@
 """
 Online Gamma-Poisson factorization of string arrays.
 The principle is as follows:
-    1. Given an input string data X, we build its bag-of-n-grams
+    1. Given an input string array X, we build its bag-of-n-grams
        representation V (n_samples, vocab_size).
     2. Instead of using the n-grams counts as encodings, we look for low-
-       dimensional representations by modeling n-grams counts as as linear
+       dimensional representations by modeling n-grams counts as linear
        combinations of topics V = HW, with W (n_topics, vocab_size) the topics
        and H (n_samples, n_topics) the associated activations.
     3. Assuming that n-grams counts follow a Poisson law, we fit H and W to
@@ -67,6 +67,9 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
     hashing : boolean, default=False
         If true, HashingVectorizer is used instead of CountVectorizer.
+        It has the advantage of being very low memory scalable to large
+        datasets as there is no need to store a vocabulary dictionary in
+        memory.
 
     hashing_n_features : int, default=2**12
         Number of features for the HashingVectorizer. Only relevant if
@@ -151,12 +154,13 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
+        # Init n-grams counts vectorizer
         if self.hashing:
             self.ngrams_count = HashingVectorizer(
                  analyzer=self.analyzer, ngram_range=self.ngram_range,
                  n_features=self.hashing_n_features,
                  norm=None, alternate_sign=False)
-            if self.add_words:
+            if self.add_words: # Init a word counts vectorizer if needed
                 self.word_count = HashingVectorizer(
                      analyzer='word',
                      n_features=self.hashing_n_features,
@@ -187,24 +191,29 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         Build the bag-of-n-grams representation V of X and initialize
         the topics W.
         """
+        # Build the n-grams counts matrix unq_V on unique elements of X
         unq_X, lookup = np.unique(X, return_inverse=True)
         unq_V = self.ngrams_count.fit_transform(unq_X)
-        if self.add_words:
+        if self.add_words: # Add word counts to unq_V
             unq_V2 = self.word_count.fit_transform(unq_X)
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
-        if not self.hashing:
+        if not self.hashing: # Build n-grams/word vocabulary
             self.vocabulary = self.ngrams_count.get_feature_names()
             if self.add_words:
                 self.vocabulary = np.concatenate(
                     (self.vocabulary, self.word_count.get_feature_names()))
 
         _, self.n_vocab = unq_V.shape
+        # Init the topics W given the n-grams counts V
         self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], X)
+        # Init the activations unq_H of each unique input string
         unq_H = _rescale_h(unq_V, np.ones((len(unq_X), self.n_topics)))
+        # Map unique input strings to their activations
         self.H_dict = dict()
         self._update_H_dict(unq_X, unq_H)
         if self.rescale_rho:
+            # Make update rate per iteration independant of the batch_size
             self.rho_ = self.rho ** (self.batch_size / len(X))
         else:
             self.rho_ = self.rho
@@ -291,6 +300,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        # Check input data shape
         X = np.asarray(X)
         assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
         shape {X.shape} of input array is not supported."
@@ -298,10 +308,11 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
             X = X[:, 0]
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
-        # Build bag-of-n-grams matrix V
+        # Make n-grams counts matrix unq_V
         unq_X, unq_V, lookup = self._init_vars(X)
         n_batch = (len(X) - 1) // self.batch_size + 1
         del X
+        # Get activations unq_H
         unq_H = self._get_H(unq_X)
 
         for iter in range(self.max_iter):
@@ -310,25 +321,27 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
               lookup, n=self.batch_size)):
                 if i == n_batch-1:
                     W_last = self.W_.copy()
-                # Update H with the multiplicative update rule
+                # Update the activations unq_H
                 unq_H[unq_idx] = _multiplicative_update_h(
                     unq_V[unq_idx], self.W_, unq_H[unq_idx],
                     epsilon=1e-3, max_iter=self.max_iter_e_step,
                     rescale_W=self.rescale_W,
                     gamma_shape_prior=self.gamma_shape_prior,
                     gamma_scale_prior=self.gamma_scale_prior)
-                # Update H with the multiplicative update rule
+                # Update the topics self.W_
                 _multiplicative_update_w(
                     unq_V[idx], self.W_, self.A_, self.B_, unq_H[idx],
                     self.rescale_W, self.rho_)
 
                 if i == n_batch-1:
+                    # Compute the norm of the update of W in the last batch
                     W_change = np.linalg.norm(
                         self.W_ - W_last) / np.linalg.norm(W_last)
 
             if (W_change < self.tol) and (iter >= self.min_iter - 1):
                 break # Stop if the change in W is smaller than the tolerance
 
+        # Update self.H_dict with the learnt encoded vectors (activations)
         self._update_H_dict(unq_X, unq_H)
         return self
 
@@ -350,7 +363,8 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
     def score(self, X):
         """
-        Returns the Kullback-Leibler divergence.
+        Returns the Kullback-Leibler divergence between the n-grams counts
+        matrix V of X, and its non-negative factorization HW.
 
         Parameters
         ----------
@@ -362,7 +376,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         kl_divergence : float.
             The Kullback-Leibler divergence.
         """
-
+        # Build n-grams/word counts matrix
         unq_X, lookup = np.unique(X, return_inverse=True)
         unq_V = self.ngrams_count.transform(unq_X)
         if self.add_words:
@@ -371,6 +385,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
         self._add_unseen_keys_to_H_dict(unq_X)
         unq_H = self._get_H(unq_X)
+        # Given the learnt topics W, optimize the activations H to fit V = HW
         for slice in gen_batches(n=unq_H.shape[0],
                                  batch_size=self.batch_size):
             unq_H[slice] = _multiplicative_update_h(
@@ -379,6 +394,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                 rescale_W=self.rescale_W,
                 gamma_shape_prior=self.gamma_shape_prior,
                 gamma_scale_prior=self.gamma_scale_prior)
+        # Compute the KL divergence between V and HW
         kl_divergence = _beta_divergence(
             unq_V[lookup], unq_H[lookup], self.W_,
             'kullback-leibler', square_root=False)
@@ -440,9 +456,8 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         """
-        Transform X using the trained matrix W, by finding H' so that
-        V' = H'W, with V' the bag-of-n-grams representation of X.
-        The activations H' are then returned as the transformed input.
+        Return the encoded vectors (activations) H of input strings in X.
+        Given the learnt topics W, the activations H are tuned to fit V = HW.
 
         Parameters
         ----------
@@ -451,9 +466,10 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        X_new : 2-d array, shape (n_samples, n_topics)
+        H : 2-d array, shape (n_samples, n_topics)
             Transformed input.
         """
+        # Check input data shape
         X = np.asarray(X)
         assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
         shape {X.shape} of input array is not supported."
@@ -462,24 +478,25 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         unq_X = np.unique(X)
-        # Build the bag-of-n-grams matrix V for the words to encode
+        # Build the n-grams counts matrix V for the string data to encode
         unq_V = self.ngrams_count.transform(unq_X)
-        if self.add_words:
+        if self.add_words: # Add words counts
             unq_V2 = self.word_count.transform(unq_X)
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
-
+        # Add unseen strings in X to H_dict
         self._add_unseen_keys_to_H_dict(unq_X)
         unq_H = self._get_H(unq_X)
         # Loop over batches
         for slice in gen_batches(n=unq_H.shape[0],
                                  batch_size=self.batch_size):
-            # Do many updates of H' to have V' = H'W
+            # Given the learnt topics W, optimize H to fit V = HW
             unq_H[slice] = _multiplicative_update_h(
                 unq_V[slice], self.W_, unq_H[slice],
                 epsilon=1e-3, max_iter=100,
                 rescale_W=self.rescale_W,
                 gamma_shape_prior=self.gamma_shape_prior,
                 gamma_scale_prior=self.gamma_scale_prior)
+        # Store and return the encoded vectors of X
         self._update_H_dict(unq_X, unq_H)
         return self._get_H(X)
 
