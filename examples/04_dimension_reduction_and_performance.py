@@ -31,15 +31,11 @@ def resource_used(func):
     def wrapped_func(*args, **kwargs):
         t0 = time()
         tracemalloc.start()
-
         out = func(*args, **kwargs)
-
         size, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         peak /= (1024 ** 2)  # Converts to megabytes
-
         print(f"Run time: {time() - t0}s    Memory used: {peak}MB")
-
         return out
 
     return wrapped_func
