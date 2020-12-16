@@ -51,7 +51,7 @@ Encoders
    :template: class.rst
    :nosignatures:
 
-   OnlineGammaPoissonFactorization
+   GapEncoder
    MinHashEncoder
    SimilarityEncoder
    TargetEncoder
