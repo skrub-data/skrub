@@ -10,7 +10,7 @@ with open(version_file) as fh:
 from .similarity_encoder import SimilarityEncoder
 from .target_encoder import TargetEncoder
 from .minhash_encoder import MinHashEncoder
-from .gamma_poisson_factorization import OnlineGammaPoissonFactorization
+from .gap_encoder import GapEncoder
 
 __all__ = ['SimilarityEncoder', 'TargetEncoder', 'MinHashEncoder',
-           'OnlineGammaPoissonFactorization']
+           'GapEncoder']

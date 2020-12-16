@@ -17,7 +17,7 @@ The principle is as follows:
 import numpy as np
 from distutils.version import LooseVersion
 from scipy import sparse
-import sklearn
+from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -25,29 +25,30 @@ from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 
-if LooseVersion(sklearn.__version__) < LooseVersion('0.22'):
+if LooseVersion(sklearn_version) < LooseVersion('0.22'):
     from sklearn.cluster.k_means_ import _k_init
-elif LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
+elif LooseVersion(sklearn_version) < LooseVersion('0.24'):
     from sklearn.cluster._kmeans import _k_init
 else:
     from sklearn.cluster._kmeans import kmeans_plusplus
 
-if LooseVersion(sklearn.__version__) < LooseVersion('0.22'):
+if LooseVersion(sklearn_version) < LooseVersion('0.22'):
     from sklearn.decomposition.nmf import _beta_divergence
 else:
     from sklearn.decomposition._nmf import _beta_divergence
 
 
-class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
+class GapEncoder(BaseEstimator, TransformerMixin):
     """
-    Online Gamma-Poisson Factorization by minimizing the
-    Kullback-Leibler divergence.
+    This encoder can be understood as a continuous encoding on a set of latent
+    categories estimated from the data. The latent categories are built by
+    capturing combinations of substrings that frequently co-occur.
 
     Parameters
     ----------
 
-    n_topics : int, default=10
-        Number of topics of the matrix factorization.
+    n_components : int, default=10
+        Number of latent categories used to model string data.
 
     batch_size : int, default=512
         Number of samples per batch.
@@ -61,11 +62,11 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
     rho : float, default=0.95
         Weight parameter for the update of the W matrix.
     
-    rescale_rho : boolean, default=False
+    rescale_rho : bool, default=False
         If true, use rho ** (batch_size / len(X)) instead of rho to obtain an
         update rate per iteration that is independent of the batch size.
 
-    hashing : boolean, default=False
+    hashing : bool, default=False
         If true, HashingVectorizer is used instead of CountVectorizer.
         It has the advantage of being very low memory scalable to large
         datasets as there is no need to store a vocabulary dictionary in
@@ -103,14 +104,14 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         Option ‘char_wb’ creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
 
-    add_words : boolean, default=False
+    add_words : bool, default=False
         If true, add the words counts to the bag-of-n-grams representation
         of the input data.
 
     random_state : int or None, default=None
         Pass an int for reproducible output across multiple function calls.
 
-    rescale_W : boolean, default=True
+    rescale_W : bool, default=True
         If true, the weight matrix W is rescaled at each iteration
         to have an l1 norm equal to 1 for each row.
     
@@ -128,7 +129,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
     """
 
-    def __init__(self, n_topics=10, batch_size=512, gamma_shape_prior=1.1,
+    def __init__(self, n_components=10, batch_size=512, gamma_shape_prior=1.1,
                  gamma_scale_prior=1.0, rho=.95, rescale_rho=False,
                  hashing=False, hashing_n_features=2**12, init='k-means++',
                  tol=1e-4, min_iter=2, max_iter=5, ngram_range=(2, 4),
@@ -136,7 +137,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                  rescale_W=True, max_iter_e_step=20):
 
         self.ngram_range = ngram_range
-        self.n_topics = n_topics
+        self.n_components = n_components
         self.gamma_shape_prior = gamma_shape_prior  # 'a' parameter
         self.gamma_scale_prior = gamma_scale_prior  # 'b' parameter
         self.rho = rho
@@ -153,23 +154,25 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         self.random_state = check_random_state(random_state)
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
+        self.H_dict = dict()
+        self.rho_ = self.rho
 
         # Init n-grams counts vectorizer
         if self.hashing:
-            self.ngrams_count = HashingVectorizer(
+            self.ngrams_count_ = HashingVectorizer(
                  analyzer=self.analyzer, ngram_range=self.ngram_range,
                  n_features=self.hashing_n_features,
                  norm=None, alternate_sign=False)
             if self.add_words: # Init a word counts vectorizer if needed
-                self.word_count = HashingVectorizer(
+                self.word_count_ = HashingVectorizer(
                      analyzer='word',
                      n_features=self.hashing_n_features,
                      norm=None, alternate_sign=False)
         else:
-            self.ngrams_count = CountVectorizer(
+            self.ngrams_count_ = CountVectorizer(
                  analyzer=self.analyzer, ngram_range=self.ngram_range)
             if self.add_words:
-                self.word_count = CountVectorizer()
+                self.word_count_ = CountVectorizer()
 
     def _update_H_dict(self, X, H):
         """
@@ -193,37 +196,34 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         """
         # Build the n-grams counts matrix unq_V on unique elements of X
         unq_X, lookup = np.unique(X, return_inverse=True)
-        unq_V = self.ngrams_count.fit_transform(unq_X)
+        unq_V = self.ngrams_count_.fit_transform(unq_X)
         if self.add_words: # Add word counts to unq_V
-            unq_V2 = self.word_count.fit_transform(unq_X)
+            unq_V2 = self.word_count_.fit_transform(unq_X)
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
         if not self.hashing: # Build n-grams/word vocabulary
-            self.vocabulary = self.ngrams_count.get_feature_names()
+            self.vocabulary = self.ngrams_count_.get_feature_names()
             if self.add_words:
                 self.vocabulary = np.concatenate(
-                    (self.vocabulary, self.word_count.get_feature_names()))
+                    (self.vocabulary, self.word_count_.get_feature_names()))
 
         _, self.n_vocab = unq_V.shape
         # Init the topics W given the n-grams counts V
         self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], X)
         # Init the activations unq_H of each unique input string
-        unq_H = _rescale_h(unq_V, np.ones((len(unq_X), self.n_topics)))
-        # Map unique input strings to their activations
-        self.H_dict = dict()
+        unq_H = _rescale_h(unq_V, np.ones((len(unq_X), self.n_components)))
+        # Update self.H_dict with unique input strings and their activations
         self._update_H_dict(unq_X, unq_H)
         if self.rescale_rho:
             # Make update rate per iteration independant of the batch_size
             self.rho_ = self.rho ** (self.batch_size / len(X))
-        else:
-            self.rho_ = self.rho
         return unq_X, unq_V, lookup
 
     def _get_H(self, X):
         """
         Return the bag-of-n-grams representation of X.
         """
-        H_out = np.empty((len(X), self.n_topics))
+        H_out = np.empty((len(X), self.n_components))
         for x, h_out in zip(X, H_out):
             h_out[:] = self.H_dict[x]
         return H_out
@@ -239,15 +239,15 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         n-grams counts.
         """
         if self.init == 'k-means++':
-            if LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
+            if LooseVersion(sklearn_version) < LooseVersion('0.24'):
                 W = _k_init(
-                    V, self.n_topics,
+                    V, self.n_components,
                     x_squared_norms=row_norms(V, squared=True),
                     random_state=self.random_state,
                     n_local_trials=None) + .1
             else:
                 W, _ = kmeans_plusplus(
-                    V, self.n_topics,
+                    V, self.n_components,
                     x_squared_norms=row_norms(V, squared=True),
                     random_state=self.random_state,
                     n_local_trials=None)
@@ -255,25 +255,25 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         elif self.init == 'random':
             W = self.random_state.gamma(
                 shape=self.gamma_shape_prior, scale=self.gamma_scale_prior,
-                size=(self.n_topics, self.n_vocab))
+                size=(self.n_components, self.n_vocab))
         elif self.init == 'k-means':
             prototypes = get_kmeans_prototypes(
-                X, self.n_topics, random_state=self.random_state)
-            W = self.ngrams_count.transform(prototypes).A + .1
+                X, self.n_components, random_state=self.random_state)
+            W = self.ngrams_count_.transform(prototypes).A + .1
             if self.add_words:
-                W2 = self.word_count.transform(prototypes).A + .1
+                W2 = self.word_count_.transform(prototypes).A + .1
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
-            if W.shape[0] < self.n_topics:
-                if LooseVersion(sklearn.__version__) < LooseVersion('0.24'):
+            if W.shape[0] < self.n_components:
+                if LooseVersion(sklearn_version) < LooseVersion('0.24'):
                     W2 = _k_init(
-                        V, self.n_topics - W.shape[0],
+                        V, self.n_components - W.shape[0],
                         x_squared_norms=row_norms(V, squared=True),
                         random_state=self.random_state,
                         n_local_trials=None) + .1
                 else:
                     W2, _ = kmeans_plusplus(
-                        V, self.n_topics - W.shape[0],
+                        V, self.n_components - W.shape[0],
                         x_squared_norms=row_norms(V, squared=True),
                         random_state=self.random_state,
                         n_local_trials=None)
@@ -283,13 +283,13 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
             raise AttributeError(
                 'Initialization method %s does not exist.' % self.init)
         W /= W.sum(axis=1, keepdims=True)
-        A = np.ones((self.n_topics, self.n_vocab)) * 1e-10
+        A = np.ones((self.n_components, self.n_vocab)) * 1e-10
         B = A.copy()
         return W, A, B
 
     def fit(self, X, y=None):
         """
-        Fit the OnlineGammaPoissonFactorization to X.
+        Fit the GapEncoder to X.
 
         Parameters
         ----------
@@ -315,7 +315,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         # Get activations unq_H
         unq_H = self._get_H(unq_X)
 
-        for iter in range(self.max_iter):
+        for n_iter_ in range(self.max_iter):
             # Loop over batches
             for i, (unq_idx, idx) in enumerate(batch_lookup(
               lookup, n=self.batch_size)):
@@ -338,7 +338,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
                     W_change = np.linalg.norm(
                         self.W_ - W_last) / np.linalg.norm(W_last)
 
-            if (W_change < self.tol) and (iter >= self.min_iter - 1):
+            if (W_change < self.tol) and (n_iter_ >= self.min_iter - 1):
                 break # Stop if the change in W is smaller than the tolerance
 
         # Update self.H_dict with the learnt encoded vectors (activations)
@@ -378,9 +378,9 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         """
         # Build n-grams/word counts matrix
         unq_X, lookup = np.unique(X, return_inverse=True)
-        unq_V = self.ngrams_count.transform(unq_X)
+        unq_V = self.ngrams_count_.transform(unq_X)
         if self.add_words:
-            unq_V2 = self.word_count.transform(unq_X)
+            unq_V2 = self.word_count_.transform(unq_X)
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
         self._add_unseen_keys_to_H_dict(unq_X)
@@ -404,20 +404,20 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
     #     assert X.ndim == 1
     #     if hasattr(self, 'vocabulary'):
     #         unq_X, lookup = np.unique(X, return_inverse=True)
-    #         unq_V = self.ngrams_count.transform(unq_X)
+    #         unq_V = self.ngrams_count_.transform(unq_X)
     #         if self.add_words:
-    #             unq_V2 = self.word_count.transform(unq_X)
+    #             unq_V2 = self.word_count_.transform(unq_X)
     #             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
     #         unseen_X = np.setdiff1d(unq_X, np.array([*self.H_dict]))
-    #         unseen_V = self.ngrams_count.transform(unseen_X)
+    #         unseen_V = self.ngrams_count_.transform(unseen_X)
     #         if self.add_words:
-    #             unseen_V2 = self.word_count.transform(unseen_X)
+    #             unseen_V2 = self.word_count_.transform(unseen_X)
     #             unseen_V = sparse.hstack((unseen_V, unseen_V2), format='csr')
 
     #         if unseen_V.shape[0] != 0:
     #             unseen_H = _rescale_h(
-    #                 unseen_V, np.ones((len(unseen_X), self.n_topics)))
+    #                 unseen_V, np.ones((len(unseen_X), self.n_components)))
     #             for x, h in zip(unseen_X, unseen_H):
     #                 self.H_dict[x] = h
     #             del unseen_H
@@ -445,13 +445,13 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         """
         unseen_X = np.setdiff1d(X, np.array([*self.H_dict]))
         if unseen_X.size > 0:
-            unseen_V = self.ngrams_count.transform(unseen_X)
+            unseen_V = self.ngrams_count_.transform(unseen_X)
             if self.add_words:
-                unseen_V2 = self.word_count.transform(unseen_X)
+                unseen_V2 = self.word_count_.transform(unseen_X)
                 unseen_V = sparse.hstack((unseen_V, unseen_V2), format='csr')
 
             unseen_H = _rescale_h(
-                unseen_V, np.ones((unseen_V.shape[0], self.n_topics)))
+                unseen_V, np.ones((unseen_V.shape[0], self.n_components)))
             self._update_H_dict(unseen_X, unseen_H)
 
     def transform(self, X):
@@ -479,9 +479,9 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         unq_X = np.unique(X)
         # Build the n-grams counts matrix V for the string data to encode
-        unq_V = self.ngrams_count.transform(unq_X)
+        unq_V = self.ngrams_count_.transform(unq_X)
         if self.add_words: # Add words counts
-            unq_V2 = self.word_count.transform(unq_X)
+            unq_V2 = self.word_count_.transform(unq_X)
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
         # Add unseen strings in X to H_dict
         self._add_unseen_keys_to_H_dict(unq_X)
@@ -501,14 +501,14 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         return self._get_H(X)
 
 
-def _rescale_W(W, A, B):
+def _rescale_W(W, A):
     """
     Rescale the topics W to have a L1-norm equal to 1.
     """
     s = W.sum(axis=1, keepdims=True)
     W /= s
     A /= s
-    return W, A, B
+    return
 
 
 def _multiplicative_update_w(Vt, W, A, B, Ht, rescale_W, rho):
@@ -521,7 +521,7 @@ def _multiplicative_update_w(Vt, W, A, B, Ht, rescale_W, rho):
     B += Ht.sum(axis=0).reshape(-1, 1)
     np.divide(A, B, out=W)
     if rescale_W:
-        _rescale_W(W, A, B)
+        _rescale_W(W, A)
     return W, A, B
 
 

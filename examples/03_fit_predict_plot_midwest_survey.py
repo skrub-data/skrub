@@ -65,13 +65,13 @@ y = df[target_column].values.ravel()
 # We first import the right encoders to transform our clean/dirty data:
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
 from dirty_cat import SimilarityEncoder, MinHashEncoder,\
-    OnlineGammaPoissonFactorization
+    GapEncoder
 
 encoder_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
     'minhash': MinHashEncoder(),
-    'gamma-poisson': OnlineGammaPoissonFactorization(),
+    'gamma-poisson': GapEncoder(),
     'num': FunctionTransformer(None)
 }
 ##############################################################################

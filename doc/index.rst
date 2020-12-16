@@ -16,10 +16,10 @@ The :class:`SimilarityEncoder` is a drop-in replacement for
 :class:`~sklearn.preprocessing.OneHotEncoder`.
 If speed and scalability are an issue, the :class:`MinHashEncoder` provides
 a fast encoding method.
-If interpretability is important,the :class:`OnlineGammaPoissonFactorization`
-is a good alternative, as it can be interpreted as one-hot encoding,
-where each encoding dimension corresponds to a topic that summarizes the
-substrings captured.
+
+If interpretability is important,the :class:`GapEncoder` is a good
+alternative, as it can be interpreted as one-hot encoding, where each encoding
+dimension corresponds to a topic that summarizes the substrings captured.
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables

@@ -69,14 +69,14 @@ dirty_column = 'employee_position_title'
 from sklearn.preprocessing import FunctionTransformer
 from sklearn.preprocessing import OneHotEncoder
 from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder,\
-    OnlineGammaPoissonFactorization
+    GapEncoder
 
 encoders_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
     'target': TargetEncoder(handle_unknown='ignore'),
     'minhash': MinHashEncoder(n_components=100),
-    'gamma-poisson': OnlineGammaPoissonFactorization(n_topics=100),
+    'gamma-poisson': GapEncoder(n_components=100),
     'numerical': FunctionTransformer(None)}
 
 # We then create a function that takes one key of our ``encoders_dict``,
