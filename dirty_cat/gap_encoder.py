@@ -50,7 +50,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     n_components : int, default=10
         Number of latent categories used to model string data.
 
-    batch_size : int, default=512
+    batch_size : int, default=128
         Number of samples per batch.
 
     gamma_shape_prior : float, default=1.1
@@ -129,7 +129,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
     """
 
-    def __init__(self, n_components=10, batch_size=512, gamma_shape_prior=1.1,
+    def __init__(self, n_components=10, batch_size=128, gamma_shape_prior=1.1,
                  gamma_scale_prior=1.0, rho=.95, rescale_rho=False,
                  hashing=False, hashing_n_features=2**12, init='k-means++',
                  tol=1e-4, min_iter=2, max_iter=5, ngram_range=(2, 4),
