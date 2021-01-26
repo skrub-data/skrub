@@ -56,7 +56,7 @@ clean_columns = {
 # and the dirty categorical variable:
 
 encoding_methods = ['one-hot', 'target', 'similarity', 'minhash',
-                    'gamma-poisson']
+                    'gap']
 dirty_column = 'employee_position_title'
 #########################################################################
 
@@ -76,7 +76,7 @@ encoders_dict = {
     'similarity': SimilarityEncoder(similarity='ngram'),
     'target': TargetEncoder(handle_unknown='ignore'),
     'minhash': MinHashEncoder(n_components=100),
-    'gamma-poisson': GapEncoder(n_components=100),
+    'gap': GapEncoder(n_components=100),
     'numerical': FunctionTransformer(None)}
 
 # We then create a function that takes one key of our ``encoders_dict``,
