@@ -20,23 +20,25 @@ dirty categorical data.
 #
 # We first download the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
+
 employee_salaries = fetch_employee_salaries()
-print(employee_salaries['DESCR'])
+print(employee_salaries['description'])
 
 
 ################################################################################
 # Then we load it:
 import pandas as pd
-df = employee_salaries['data']
+csv_path = employee_salaries['path']
+df = pd.read_csv(csv_path, sep=",", quotechar="'", escapechar='\\')
 
 ################################################################################
 # Now, let's carry out some basic preprocessing:
-df['Date First Hired'] = pd.to_datetime(df['date_first_hired'])
-df['Year First Hired'] = df['Date First Hired'].apply(lambda x: x.year)
+df['date_first_hired'] = pd.to_datetime(df['date_first_hired'])
+df['year_first_hired'] = df['date_first_hired'].apply(lambda x: x.year)
 # drop rows with NaN in gender
 df.dropna(subset=['gender'], inplace=True)
 
-target_column = 'Current Annual Salary'
+target_column = 'current_annual_salary'
 y = df[target_column].values.ravel()
 
 #########################################################################
@@ -49,7 +51,7 @@ clean_columns = {
     'gender': 'one-hot',
     'department_name': 'one-hot',
     'assignment_category': 'one-hot',
-    'Year First Hired': 'numerical'}
+    'year_first_hired': 'numerical'}
 
 #########################################################################
 # We then choose the categorical encoding methods we want to benchmark
