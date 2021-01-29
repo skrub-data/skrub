@@ -15,8 +15,9 @@ import pandas as pd
 from dirty_cat import datasets
 
 employee_salaries = datasets.fetch_employee_salaries()
-print(employee_salaries['DESCR'])
-data = employee_salaries['data']
+print(employee_salaries['description'])
+csv_path = employee_salaries['path']
+data = pd.read_csv(csv_path, sep=",", quotechar="'", escapechar='\\')
 print(data.head(n=5))
 
 #########################################################################
@@ -47,7 +48,7 @@ print(data['employee_position_title'].value_counts().sort_index())
 # To simplify understanding, we will focus on the column describing the
 # employee's position title:
 # data
-values = data[['employee_position_title', 'gender', 'Current Annual Salary']]
+values = data[['employee_position_title', 'gender', 'current_annual_salary']]
 
 #########################################################################
 # String similarity between entries
