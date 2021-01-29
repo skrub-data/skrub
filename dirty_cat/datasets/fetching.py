@@ -1,493 +1,337 @@
-"""
-fetching function to retrieve example dataset, using nilearn
-fetching convention.
-
-The parts of the nilearn fetching utils that have an obvious
-meaning are directly copied. The rest is annoted.
-"""
 # -*- coding: utf-8 -*-
+
+"""
+Fetching functions to retrieve example datasets, using
+Scikit-Learn's ``fetch_openml()`` function.
+"""
+
+
+# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/Phaide
+
+# Future notes:
+# - Watch out for ``fetch_openml()`` API modifications: as of january 2021, the function is marked as experimental.
+# - Would be nice to use f-strings (implemented in Python 3.6, current requirement is Python >= 3.5)
+#   instead of the old-school ``format()`` method.
+
+
 import os
-import requests
-import shutil
-import urllib
-from collections import namedtuple
-import contextlib
+import gzip
+import json
 import warnings
-from sklearn.datasets import fetch_openml
 
-from ..datasets.utils import md5_hash, _check_if_exists, \
-    _uncompress_file, \
-    _md5_sum_file, get_data_dir
+from collections import namedtuple
 
-# in nilearn, urllib is used. Here the request package will be used
-# trying to use requests as much as possible (everything except the
-# parsing function)
-
-# current data has been pulled from bigml, which require authentication
-# for downloading. So for now we download the data from github
-# however, the data differ a little bit from the two sources
-# so we either have to implement login into _fetch_data
-# or to reverse-engineer the processing script that can transform the data
-# from git
-# to the data from bigml
-# this is true for bigml and midwest survey
+from dirty_cat.datasets.utils import get_data_dir
 
 
-DatasetInfo = namedtuple('DatasetInfo',
-                         ['name', 'urlinfos', 'main_file', 'source'])
-# a DatasetInfo Object is basically a tuple of UrlInfos object
-# an UrlInfo object is composed of an url and the filenames contained
-# in the request content
-UrlInfo = namedtuple(
-    'UrlInfo', ['url', 'filenames', 'uncompress', 'encoding'])
+Details = namedtuple("Details", ["name", "file_id", "description"])
+Features = namedtuple("Features", ["names"])
 
-ROAD_SAFETY_CONFIG = DatasetInfo(
-    name='road_safety',
-    urlinfos=(
-        UrlInfo(
-            url="http://data.dft.gov.uk/road-accidents-safety-data/"
-                "RoadSafetyData_2015.zip",
-            filenames=(
-                "Casualties_2015.csv",
-                "Vehicles_2015.csv",
-                "Accidents_2015.csv"
-            ),
-            uncompress=True, encoding='utf-8'),
-        UrlInfo(
-            url="http://data.dft.gov.uk/road-accidents-safety-data/"
-                "MakeModel2015.zip",
-            filenames=("2015_Make_Model.csv",),
-            uncompress=True, encoding='utf-8'
-        )
-    ),
-    main_file="Accidents_2015.csv",  # for consistency, all files are relevant,
-    source="https://data.gov.uk/dataset/road-accidents-safety-data"
-)
+# Directory where the ``.gz`` files containing the
+# details on downloaded datasets are stored.
+# Note: the tree structure is created by ``fetch_openml()``.
+# As of october 2020, this function is annotated as
+# ``Experimental`` so the structure might change in future releases.
+# This path will be concatenated to the dirty_cat data directory,
+# available via the function ``get_data_dir()``.
+DETAILS_DIRECTORY = "openml/openml.org/api/v1/json/data/"
 
-OPEN_PAYMENTS_CONFIG = DatasetInfo(
-    name='open_payments',
-    urlinfos=
-    (
-        UrlInfo(
-            url='http://download.cms.gov/openpayments/PGYR13_P011718.ZIP',
-            filenames=None, uncompress=True, encoding='utf-8'
-        ),
-    ),
-    main_file='OP_DTL_GNRL_PGYR2013_P01172018.csv',  # same
-    source='https://openpaymentsdata.cms.gov'
-)
+# Same as above ; for the datasets features location.
+FEATURES_DIRECTORY = "openml/openml.org/api/v1/json/data/features/"
 
-MIDWEST_SURVEY_CONFIG = DatasetInfo(
-    name='midwest_survey',
-    urlinfos=(
-        UrlInfo(
-            url="https://github.com/fivethirtyeight/data/tree/"
-                "master/region-survey/FiveThirtyEight_Midwest_Survey.csv",
-            filenames=(
-                "FiveThirtyEight_Midwest_Survey.csv",
-            ), uncompress=False, encoding='utf-8'
-        ),
-    ),
-    main_file="FiveThirtyEight_Midwest_Survey.csv",
-    source="https://github.com/fivethirtyeight/data/tree/ master/region-survey"
-)
-MEDICAL_CHARGE_CONFIG = DatasetInfo(
-    name='medical_charge',
-    urlinfos=(
-        UrlInfo(
-            url="https://www.cms.gov/Research-Statistics-Data-and-Systems/"
-                "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data/"
-                "Downloads/Inpatient_Data_2011_CSV.zip",
-            filenames=(
-                "Medicare_Provider_Charge_Inpatient_DRG100_FY2011.csv",
-            ),
-            uncompress=True, encoding='utf-8'
+# Same as above ; for the datasets data location.
+DATA_DIRECTORY = "openml/openml.org/data/v1/download/"
 
-        ),
-    ),
-    main_file="Medicare_Provider_Charge_Inpatient_DRG100_FY2011.csv",
-    source="https://www.cms.gov/Research-Statistics-Data-and-Systems/"
-           "Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data"
-           "/Inpatient.html"
-)
-
-EMPLOYEE_SALARIES_CONFIG = DatasetInfo(
-    name='employee_salaries',
-    urlinfos=(
-        UrlInfo(
-            url="https://data.montgomerycountymd.gov/api/views/"
-                "xj3h-s2i7/rows.csv?accessType=DOWNLOAD",
-            filenames=("rows.csv",),
-            uncompress=False, encoding='utf-8'
-        ),
-    ),
-    main_file="rows.csv",
-    source="https://catalog.data.gov/dataset/ employee-salaries-2016"
-)
-
-TRAFFIC_VIOLATIONS_CONFIG = DatasetInfo(
-    name='traffic_violations',
-    urlinfos=(
-        UrlInfo(
-            url="https://data.montgomerycountymd.gov/api/views/"
-                "4mse-ku6q/rows.csv?accessType=DOWNLOAD",
-            filenames=(
-                "rows.csv",
-            ), uncompress=False, encoding='utf-8'
-        ),
-    ),
-    main_file="rows.csv",
-    source="https://catalog.data.gov/dataset/ traffic-violations-56dda"
-)
-
-DRUG_DIRECTORY_CONFIG = DatasetInfo(
-    name='drug_directory',
-    urlinfos=(
-        UrlInfo(
-            url="https://www.accessdata.fda.gov/cder/ndctext.zip",
-            filenames=(
-                "product.txt",
-                "package.txt",
-            ), uncompress=True, encoding='latin-1'
-        ),
-    ),
-    main_file="product.txt",
-    source="https://www.fda.gov/Drugs/InformationOnDrugs/ucm142438.htm"
-)
-
-FOLDER_PATH = os.path.dirname(os.path.realpath(__file__))
+# The IDs of the datasets, from OpenML.
+# For each dataset, its URL is constructed as follows:
+openml_url = "https://www.openml.org/d/{ID}"
+ROAD_SAFETY_ID = 42791
+OPEN_PAYMENTS_ID = 42738
+MIDWEST_SURVEY_ID = 42768
+MEDICAL_CHARGE_ID = 42720
+EMPLOYEE_SALARIES_ID = 42125
+TRAFFIC_VIOLATIONS_ID = 42132
+DRUG_DIRECTORY_ID = 42787
 
 
-class FileChangedError(Exception):
-    pass
-
-
-def _change_file_encoding(file_name, initial_encoding, target_encoding):
-
-    temp_file_name = file_name + '.temp'
-    try:
-        with open(file_name, "r", encoding=initial_encoding) as source:
-            with open(temp_file_name, "w", encoding=target_encoding) as target:
-                while True:
-                    contents = source.read(100000)
-                    if not contents:
-                        break
-                    target.write(contents)
-        shutil.move(temp_file_name, file_name)
-
-    finally:
-        if os.path.exists(temp_file_name):
-            os.unlink(temp_file_name)
-
-
-def _download_and_write(url, file, show_progress=True):
-    if show_progress:  # maybe not an ideal design, should we mark
-        # clint as mandatory?
-        from clint.textui import progress
-    try:
-        # using stream=True to download the response body only when
-        # accessing the content attribute
-        from ..datasets.utils import request_get
-        with contextlib.closing(request_get(url, stream=True)) as r:
-            total_length = r.headers.get('Content-Length')
-            if total_length is not None:
-                with open(file, 'wb') as local_file:
-                    content_iterator = r.iter_content(chunk_size=1024)
-                    if show_progress:
-                        content_iterator = progress.bar(
-                            content_iterator, expected_size=(int(total_length) /
-                                                             1024) + 1)
-
-                    for chunk in content_iterator:
-                        if chunk:
-                            local_file.write(chunk)
-                            local_file.flush()
-
-            else:
-                warnings.warn('content size cannot be found, '
-                              'downloading file from {} as a whole'.format(
-                    url))
-                with open(file, 'wb') as local_file:
-                    local_file.write(r.content)
-
-    except requests.RequestException as e:
-        # pretty general request exception. subject to change
-        raise Exception('error while fetching: {}'.format(e))
-
-
-def fetch_dataset(configfile: DatasetInfo, show_progress=True):
-    data_dir = os.path.join(get_data_dir(), configfile.name)
-    for urlinfo in configfile.urlinfos:
-        _fetch_file(urlinfo.url, data_dir, filenames=urlinfo.filenames,
-                    uncompress=urlinfo.uncompress, show_progress=show_progress,
-                    initial_encoding=urlinfo.encoding)
-    # returns the absolute path of the csv file where the data is
-    result_dict = {
-        'description': 'The downloaded data contains the {} dataset.\n'
-                       'It can originally be found at: {}'.format(
-            configfile.name, configfile.source),
-        'path': os.path.join(data_dir, configfile.main_file)
-    }
-    return result_dict
-
-
-def _fetch_file(url, data_dir, filenames=None, overwrite=False,
-                md5sum=None, uncompress=True, show_progress=True,
-                initial_encoding='utf-8'):
-    """fetches the content of a requested url
-
-    IF the downloaded file is compressed, then the fetcher
-    looks also for the uncompressed files before downloading .
-
+def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) -> dict:
+    """
+    Gets a dataset from OpenML (https://www.openml.org),
+    or from the disk if already downloaded.
 
     Parameters
     ----------
-    url: str
-        url from where to fetch the file from
-    data_dir: str
-        directory where the data will be stored
-    filenames: list
-        names of the files in the url content
-    overwrite: bool
-        whether to overwrite present data
-    md5sum: str
-        if provided, verifies the integrity of the file using a hash
-    uncompress: bool
-        whether to uncompress the content of the url
-
-    show_progress:
-        if ``True``, displays a progressbar during the downloading of the
-        dataset. Warning: ``clint`` needs to be implemented and is not in the
-        requirements for now
-
-    Returns
-    -------
-    a dictionary containing:
-
-        - a short description of the dataset (under the ``description`` key )
-        - an absolute path leading to the csv file where the data is stored
-          locally (under the ``path`` key)
-
-    NOTES
-    -----
-    NON-implemented nilearn parameters:
-    * the ``resume`` option, that would resume partially downloaded files
-    * username/password
-    * handlers
-
-    """
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-
-    # Determine filename using URL. sticking to urllib.parse, requests does not
-    # provide parsing tools
-    parse = urllib.parse.urlparse(url)
-    file_name = os.path.basename(parse.path)
-    download = False
-    if file_name == '':
-        file_name = md5_hash(parse.path)
-
-    temp_file_name = file_name + ".part"
-    full_name = os.path.join(data_dir, file_name)
-    temp_full_name = os.path.join(data_dir, temp_file_name)
-    if overwrite:
-        download = True
-        files_to_overwrite = [file_name, temp_file_name]
-        if filenames:
-            files_to_overwrite += filenames
-        for name in files_to_overwrite:
-            # remove all compressed/uncompressed files
-            _check_if_exists(os.path.join(data_dir, name), remove=True)
-    else:
-        # if no filenames info provided, overwrite
-        is_file_missing = True
-        if filenames is not None:
-            # first look for uncompressed files
-            is_file_missing = any(
-                [not _check_if_exists(os.path.join(data_dir, name),
-                                      remove=False)
-                 for name in filenames])
-        if is_file_missing:
-            # then look for compressed files
-            if not _check_if_exists(full_name, remove=False):
-                download = True
-
-    if download:
-        _download_and_write(url, temp_full_name, show_progress=show_progress)
-
-    # chunk writing is not implemented, see if necessary
-    if _check_if_exists(temp_full_name, remove=False):
-        if md5sum is not None:
-            if _md5_sum_file(temp_full_name) != md5sum:
-                raise FileChangedError(
-                    "File %s checksum verification has failed."
-                    "Dataset fetching aborted." % temp_full_name)
-
-        shutil.move(temp_full_name, full_name)
-    if _check_if_exists(full_name, remove=False) and uncompress:
-        _uncompress_file(full_name, delete_archive=True)
-
-    if download and (initial_encoding != 'utf-8'):
-        for file in os.listdir(data_dir):
-            _change_file_encoding(
-                os.path.join(data_dir, file), initial_encoding, 'utf-8')
-    return full_name
-
-
-def fetch_employee_salaries():
-    """fetches the employee_salaries dataset
-
-    The employee_salaries dataset contains information about annual salaries
-    (year 2016) for more than 9,000 employees of the Montgomery County
-    (Maryland, US).
-
+    dataset_id: int
+        The ID of the dataset to fetch.
+    data_directory: str
+        Optional. A directory to save the data to.
+        By default, the dirty_cat data directory.
 
     Returns
     -------
     dict
-        a dictionary containing:
-
-            - a short description of the dataset (under the ``DESCR``
-              key)
-            - the tabular data (under the ``data`` key)
-            - the target (under the ``target`` key)
-
-    References
-    ----------
-    https://catalog.data.gov/dataset/employee-salaries-2016
+        A dictionary containing:
+          - ``description``
+              The description of the dataset, as gathered from OpenML.
+          - ``source``
+              The dataset's URL from OpenML.
+          - ``path``
+              The absolute local path leading to the dataset, saved as a CSV file.
 
     """
 
-    data = fetch_openml(data_id=42125, as_frame=True)
-    data.data['Current Annual Salary'] = data['target']
-    return data
+    # Construct the path to the ``.gz`` file containing the details on a dataset.
+    details_gz_path = _get_gz_path(data_directory, DETAILS_DIRECTORY, str(dataset_id))
+    features_gz_path = _get_gz_path(data_directory, FEATURES_DIRECTORY, str(dataset_id))
 
-    # link dead.
-    # return fetch_dataset(EMPLOYEE_SALARIES_CONFIG, show_progress=False)
+    if not os.path.isfile(details_gz_path) or not os.path.isfile(features_gz_path):
+        # If the details file or the features file do not exist, download the dataset.
+        warnings.warn(
+            "Could not find the dataset locally. Downloading it from OpenML... This might take a while."
+            "If the process is interrupted, some files will be invalid/incomplete."
+            "To fix this problem, delete the CSV file if it exists. The system will recreate it on the next run."
+        )
+        _download_and_write_openml_dataset(dataset_id=dataset_id, data_directory=data_directory)
+    details = _get_details(details_gz_path)
+
+    # The file ID is required because the data file is named after this ID, and not after the dataset's.
+    file_id = details.file_id
+    csv_path = os.path.join(data_directory, details.name + ".csv")
+
+    data_gz_path = _get_gz_path(data_directory, DATA_DIRECTORY, str(file_id))
+
+    if not os.path.isfile(data_gz_path):
+        # This is a double-check.
+        # If the data file does not exist, download the dataset.
+        _download_and_write_openml_dataset(dataset_id=dataset_id, data_directory=data_directory)
+
+    if not os.path.isfile(csv_path):
+        # If the CSV file does not exist, use the dataset
+        # downloaded by ``fetch_openml()`` to construct it.
+        features = _get_features(features_gz_path)
+        _export_gz_data_to_csv(data_gz_path, csv_path, features)
+
+    url = openml_url.format(ID=dataset_id)
+
+    return {
+        "description": details.description,
+        "source": url,
+        "path": csv_path
+    }
 
 
-def fetch_road_safety():
-    """fetches the road safety dataset
+def _download_and_write_openml_dataset(dataset_id: int, data_directory: str) -> None:
+    """
+    Downloads a dataset from OpenML, taking care of creating the tree structure.
+
+    Parameters
+    ----------
+    dataset_id: int
+        The ID of the dataset to download.
+    data_directory: str
+        The directory in which the data will be saved.
+
+    Raises
+    ------
+    ValueError
+        If the ID is incorrect (does not exist on OpenML)
+    urllib.error.URLError
+        If there is no Internet connection.
+
+    """
+    from sklearn.datasets import fetch_openml
+
+    # The ``fetch_openml()`` function returns a Scikit-Learn ``Bunch`` object,
+    # which behaves just like a ``namedtuple``.
+    # However, we do not want to save this data into memory:
+    # we will read it from the disk later.
+    #
+    # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
+    # and ``urllib.error.URLError`` if there is no Internet connection.
+    fetch_openml(data_id=dataset_id, data_home=data_directory, as_frame=False)
+
+
+def _read_json_from_gz(compressed_dir_path: str) -> dict:
+    """
+    Opens a ``.gz`` file, reads its content, expecting JSON, and returns a dictionary.
+
+    Parameters
+    ----------
+    compressed_dir_path
+        Path to the ``.gz`` file to read.
 
     Returns
     -------
     dict
-        a dictionary containing:
+        The information contained in the file, converted from plain-text JSON.
 
-            - a short description of the dataset (under the ``description``
-              key)
-            - an absolute path leading to the csv file where the data is stored
-              locally (under the ``path`` key)
-
-
-    References
-    ----------
-    https://data.gov.uk/dataset/road-accidents-safety-dataset
     """
+    if not os.path.isfile(compressed_dir_path):
+        raise FileNotFoundError('Could not find file {}.'.format(compressed_dir_path))
 
-    return fetch_dataset(ROAD_SAFETY_CONFIG, show_progress=False)
+    # Read content
+    with gzip.open(compressed_dir_path, mode='rt') as gz:
+        content = gz.read()
+
+    details_json = json.JSONDecoder().decode(content)
+    return details_json
 
 
-def fetch_medical_charge():
-    """fetches the medical charge dataset
+def _get_details(compressed_dir_path: str) -> Details:
+    """
+    Gets useful details from the details file.
+
+    Parameters
+    ----------
+    compressed_dir_path: str
+        The path to the ``.gz`` file containing the details.
 
     Returns
     -------
-    dict
-        a dictionary containing:
+    Details
+        A ``Details`` object.
 
-            - a short description of the dataset (under the ``description``
-              key)
-            - an absolute path leading to the csv file where the data is stored
-              locally (under the ``path`` key)
-
-
-    References
-    ----------
-    https://www.cms.gov/Research-Statistics-Data-and-Systems/Statistics-Trends-and-Reports/Medicare-Provider-Charge-Data/Inpatient.html"
     """
-    return fetch_dataset(MEDICAL_CHARGE_CONFIG, show_progress=False)
+    details = _read_json_from_gz(compressed_dir_path)["data_set_description"]
+    # We filter out the irrelevant information.
+    # If you want to modify this list (to add or remove items)
+    # you must also modify the ``Details`` object definition.
+    f_details = {
+        "name": details["name"],
+        "file_id": details["file_id"],
+        "description": details["description"],
+    }
+    return Details(*f_details.values())
 
 
-def fetch_midwest_survey():
-    """fetches the midwest survey dataset
+def _get_features(compressed_dir_path: str) -> Features:
+    """
+    Gets features that can be inserted in the CSV file or that can be useful in other ways.
+    The most important feature being the columns names.
+
+    Parameters
+    ----------
+    compressed_dir_path
+        Path to the ``.gz`` file
+        containing the features.
 
     Returns
     -------
-    dict
-        a dictionary containing:
+    Features
+        A ``Features`` object.
 
-            - a short description of the dataset (under the ``description``
-              key)
-            - an absolute path leading to the csv file where the data is stored
-              locally (under the ``path`` key)
-
-
-    References
-    ----------
-    https://github.com/fivethirtyeight/data/tree/master/region-survey
     """
-    return fetch_dataset(MIDWEST_SURVEY_CONFIG, show_progress=False)
+    raw_features = _read_json_from_gz(compressed_dir_path)["data_features"]
+    # We filter out the irrelevant information.
+    # If you want to modify this list (to add or remove items)
+    # you must also modify the ``Features`` object definition.
+    features = {
+        "names": [column["name"] for column in raw_features["feature"]]
+    }
+    return Features(*features.values())
 
 
-def fetch_open_payments():
-    """fetches the open payements dataset
+def _get_gz_path(root: str, directory: str, file_name: str) -> str:
+    """
+    Constructs the path to a ``.gz`` file.
+
+    Parameters
+    ----------
+    root
+        A directory tree starting from the system root, therefore, it must be absolute.
+    directory
+        Directory tree under root.
+    file_name
+        The file name, without the extension.
 
     Returns
     -------
-    dict
-        a dictionary containing:
+    str
+        The path to the compressed directory.
 
-            - a short description of the dataset (under the ``description``
-              key)
-            - an absolute path leading to the csv file where the data is stored
-              locally (under the ``path`` key)
+    Raises
+    ------
+    ValueError
+        If any of the arguments passed is not a string.
 
-
-    References
-    ----------
-    https://openpaymentsdata.cms.gov
     """
-    return fetch_dataset(OPEN_PAYMENTS_CONFIG, show_progress=False)
+    if not isinstance(root, str) or not isinstance(directory, str) or not isinstance(file_name, str):
+        raise ValueError
+
+    return os.path.join(
+        root,
+        directory.strip(os.sep),
+        "{}.gz".format(file_name).strip(os.sep)
+    )
 
 
-def fetch_traffic_violations():
-    """fetches the traffic violations dataset
-
-    Returns
-    -------
-    dict
-        a dictionary containing:
-
-            - a short description of the dataset (under the ``description``
-              key)
-            - an absolute path leading to the csv file where the data is stored
-              locally (under the ``path`` key)
-
-
-    References
-    ----------
-    https://catalog.data.gov/dataset/traffic-violations-56dda
+def _export_gz_data_to_csv(compressed_dir_path: str, destination_file: str, features: Features) -> None:
     """
-    return fetch_dataset(TRAFFIC_VIOLATIONS_CONFIG, show_progress=False)
+    Reads a ``.gz`` file containing an ARFF file, and writes to a target CSV the data.
 
-
-def fetch_drug_directory():
-    """fetches the drug directory dataset
-
-    Returns
-    -------
-    dict
-        a dictionary containing:
-
-            - a short description of the dataset (under the ``description``
-              key)
-            - an absolute path leading to the csv file where the data is stored
-              locally (under the ``path`` key)
-
-
-    References
+    Parameters
     ----------
-    https://www.fda.gov/Drugs/InformationOnDrugs/ucm142438.htm
+    compressed_dir_path: str
+        Path to the ``.gz`` file containing the ARFF data.
+    destination_file: str
+        A CSV file to write to.
+    features: Features
+        A ``Features`` object containing the first CSV line (the columns names).
+
     """
-    return fetch_dataset(DRUG_DIRECTORY_CONFIG, show_progress=False)
+    atdata_found = False
+    with open(destination_file, mode="w") as csv:
+        with gzip.open(compressed_dir_path, mode="rt") as gz:
+            csv.write(_features_to_csv_format(features))
+            csv.write("\n")
+            # We will look at each line of the file until we find
+            # "@data": only after this tag is the actual CSV data.
+            for line in gz.readlines():
+                if not atdata_found:
+                    if line.lower().startswith("@data"):
+                        atdata_found = True
+                else:
+                    csv.write(line)
+
+
+def _features_to_csv_format(features: Features) -> str:
+    return ",".join(features.names)
+
+
+# Datasets fetchers section
+# Public API
+
+
+def fetch_employee_salaries() -> dict:
+    """Fetches the employee_salaries dataset."""
+    return fetch_openml_dataset(dataset_id=EMPLOYEE_SALARIES_ID)
+
+
+def fetch_road_safety() -> dict:
+    """Fetches the road safety dataset."""
+    return fetch_openml_dataset(dataset_id=ROAD_SAFETY_ID)
+
+
+def fetch_medical_charge() -> dict:
+    """Fetches the medical charge dataset."""
+    return fetch_openml_dataset(dataset_id=MEDICAL_CHARGE_ID)
+
+
+def fetch_midwest_survey() -> dict:
+    """Fetches the midwest survey dataset."""
+    return fetch_openml_dataset(dataset_id=MIDWEST_SURVEY_ID)
+
+
+def fetch_open_payments() -> dict:
+    """Fetches the open payments dataset."""
+    return fetch_openml_dataset(dataset_id=OPEN_PAYMENTS_ID)
+
+
+def fetch_traffic_violations() -> dict:
+    """Fetches the traffic violations dataset."""
+    return fetch_openml_dataset(dataset_id=TRAFFIC_VIOLATIONS_ID)
+
+
+def fetch_drug_directory() -> dict:
+    """Fetches the drug directory dataset."""
+    return fetch_openml_dataset(dataset_id=DRUG_DIRECTORY_ID)
