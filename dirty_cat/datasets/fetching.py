@@ -87,8 +87,8 @@ def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) 
     if not os.path.isfile(details_gz_path) or not os.path.isfile(features_gz_path):
         # If the details file or the features file do not exist, download the dataset.
         warnings.warn(
-            "Could not find the dataset locally. Downloading it from OpenML... This might take a while."
-            "If the process is interrupted, some files will be invalid/incomplete."
+            "Could not find the dataset locally. Downloading it from OpenML; this might take a while... "
+            "If the process is interrupted, some files will be invalid/incomplete. "
             "To fix this problem, delete the CSV file if it exists. The system will recreate it on the next run."
         )
         _download_and_write_openml_dataset(dataset_id=dataset_id, data_directory=data_directory)
@@ -148,7 +148,7 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: str) -> 
     #
     # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
     # and ``urllib.error.URLError`` if there is no Internet connection.
-    fetch_openml(data_id=dataset_id, data_home=data_directory, as_frame=False)
+    fetch_openml(data_id=dataset_id, data_home=data_directory, as_frame=True)
 
 
 def _read_json_from_gz(compressed_dir_path: str) -> dict:
