@@ -1,5 +1,4 @@
 import time
-import random
 import numpy as np
 import pytest
 
@@ -7,7 +6,7 @@ from sklearn.datasets import fetch_20newsgroups
 from dirty_cat import GapEncoder
 
 @pytest.mark.parametrize("hashing, init, analyzer, add_words", [
-    (True, 'k-means++', 'word', True),
+    (False, 'k-means++', 'word', True),
     (True, 'random', 'char', False),
     (True, 'k-means', 'char_wb', True)
 ])
@@ -53,9 +52,7 @@ def test_input_type():
 
 def profile_encoder(Encoder, init):
     # not an unit test
-
     from dirty_cat import datasets
-    import pandas as pd
     employee_salaries = datasets.fetch_employee_salaries()
     data = employee_salaries['data']
     X = data['employee_position_title'].tolist()

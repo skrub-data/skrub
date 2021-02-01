@@ -30,7 +30,7 @@ if LooseVersion(sklearn_version) < LooseVersion('0.22'):
 elif LooseVersion(sklearn_version) < LooseVersion('0.24'):
     from sklearn.cluster._kmeans import _k_init
 else:
-    from sklearn.cluster._kmeans import kmeans_plusplus
+    from sklearn.cluster import kmeans_plusplus
 
 if LooseVersion(sklearn_version) < LooseVersion('0.22'):
     from sklearn.decomposition.nmf import _beta_divergence
@@ -170,9 +170,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
                      norm=None, alternate_sign=False)
         else:
             self.ngrams_count_ = CountVectorizer(
-                 analyzer=self.analyzer, ngram_range=self.ngram_range)
+                 analyzer=self.analyzer, ngram_range=self.ngram_range,
+                 dtype=np.float64)
             if self.add_words:
-                self.word_count_ = CountVectorizer()
+                self.word_count_ = CountVectorizer(dtype=np.float64)
 
     def _update_H_dict(self, X, H):
         """
