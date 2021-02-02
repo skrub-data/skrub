@@ -52,6 +52,7 @@ def test_input_type():
 
 def profile_encoder(Encoder, init):
     # not an unit test
+    
     from dirty_cat import datasets
     employee_salaries = datasets.fetch_employee_salaries()
     data = employee_salaries['data']

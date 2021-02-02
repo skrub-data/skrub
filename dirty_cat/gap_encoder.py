@@ -43,6 +43,9 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     This encoder can be understood as a continuous encoding on a set of latent
     categories estimated from the data. The latent categories are built by
     capturing combinations of substrings that frequently co-occur.
+    
+    The GapEncoder supports online learning on batches of data for
+    scalability through the partial_fit method.
 
     Parameters
     ----------
@@ -141,6 +144,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.gamma_shape_prior = gamma_shape_prior  # 'a' parameter
         self.gamma_scale_prior = gamma_scale_prior  # 'b' parameter
         self.rho = rho
+        self.rho_ = self.rho
         self.rescale_rho = rescale_rho
         self.batch_size = batch_size
         self.tol = tol
@@ -154,8 +158,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.random_state = check_random_state(random_state)
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
-        self.H_dict = dict()
-        self.rho_ = self.rho
 
         # Init n-grams counts vectorizer
         if self.hashing:
@@ -174,21 +176,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
                  dtype=np.float64)
             if self.add_words:
                 self.word_count_ = CountVectorizer(dtype=np.float64)
-
-    def _update_H_dict(self, X, H):
-        """
-        For each category x in X, update the dictionary self.H_dict with
-        the corresponding bag-of-n-grams representation h.
-
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, )
-            The string data to fit the model on.
-        H : array-like, shape (n_samples, n_vocab)
-            The corresponding bag-of-n-grams representations.
-        """
-        for x, h in zip(X, H):
-            self.H_dict[x] = h
 
     def _init_vars(self, X):
         """
@@ -213,8 +200,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], X)
         # Init the activations unq_H of each unique input string
         unq_H = _rescale_h(unq_V, np.ones((len(unq_X), self.n_components)))
-        # Update self.H_dict with unique input strings and their activations
-        self._update_H_dict(unq_X, unq_H)
+        # Update self.H_dict_ with unique input strings and their activations
+        self.H_dict_.update(zip(unq_X, unq_H))
         if self.rescale_rho:
             # Make update rate per iteration independant of the batch_size
             self.rho_ = self.rho ** (self.batch_size / len(X))
@@ -226,7 +213,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         """
         H_out = np.empty((len(X), self.n_components))
         for x, h_out in zip(X, H_out):
-            h_out[:] = self.H_dict[x]
+            h_out[:] = self.H_dict_[x]
         return H_out
 
     def _init_w(self, V, X):
@@ -290,7 +277,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         """
-        Fit the GapEncoder to X.
+        Fit the GapEncoder on batches of X.
 
         Parameters
         ----------
@@ -301,6 +288,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        
+        # Check if fit has already been called or not
+        if not hasattr(self, 'H_dict_'):
+            self.H_dict_ = dict()
         # Check input data shape
         X = np.asarray(X)
         assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
@@ -342,25 +333,44 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             if (W_change < self.tol) and (n_iter_ >= self.min_iter - 1):
                 break # Stop if the change in W is smaller than the tolerance
 
-        # Update self.H_dict with the learnt encoded vectors (activations)
-        self._update_H_dict(unq_X, unq_H)
+        # Update self.H_dict_ with the learned encoded vectors (activations)
+        self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    # def get_feature_names(self, n_top=3):
-    #     vectorizer = CountVectorizer()
-    #     vectorizer.fit(list(self.H_dict.keys()))
-    #     vocabulary = np.array(vectorizer.get_feature_names())
-    #     encoding = self.transform(np.array(vocabulary).reshape(-1))
-    #     encoding = abs(encoding)
-    #     encoding = encoding / np.sum(encoding, axis=1, keepdims=True)
-    #     n_components = encoding.shape[1]
-    #     topic_labels = []
-    #     for i in range(n_components):
-    #         x = encoding[:, i]
-    #         labels = vocabulary[np.argsort(-x)[: n_top]]
-    #         topic_labels.append(labels)
-    #     topic_labels = [', '.join(label) for label in topic_labels]
-    #     return topic_labels
+    def get_feature_names(self, n_labels=3):
+        
+        """
+        Returns the labels that best summarize the learned components/topics.
+        For each topic, labels with highest activations are selected.
+        
+        Parameters
+        ----------
+        
+        n_labels : int, default=3
+            The number of labels used to describe each topic.
+        
+        Returns
+        -------
+        
+        topic_labels : list of strings
+            The labels that best describe each topic.
+        
+        """
+        
+        vectorizer = CountVectorizer()
+        vectorizer.fit(list(self.H_dict_.keys()))
+        vocabulary = np.array(vectorizer.get_feature_names())
+        encoding = self.transform(np.array(vocabulary).reshape(-1))
+        encoding = abs(encoding)
+        encoding = encoding / np.sum(encoding, axis=1, keepdims=True)
+        n_components = encoding.shape[1]
+        topic_labels = []
+        for i in range(n_components):
+            x = encoding[:, i]
+            labels = vocabulary[np.argsort(-x)[:n_labels]]
+            topic_labels.append(labels)
+        topic_labels = [', '.join(label) for label in topic_labels]
+        return topic_labels
 
     def score(self, X):
         """
@@ -401,50 +411,80 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             'kullback-leibler', square_root=False)
         return kl_divergence
 
-    # def partial_fit(self, X, y=None):
-    #     assert X.ndim == 1
-    #     if hasattr(self, 'vocabulary'):
-    #         unq_X, lookup = np.unique(X, return_inverse=True)
-    #         unq_V = self.ngrams_count_.transform(unq_X)
-    #         if self.add_words:
-    #             unq_V2 = self.word_count_.transform(unq_X)
-    #             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
+    def partial_fit(self, X, y=None):
+        
+        """
+        Partial fit of the GapEncoder on X.
+        To be used in a online learning procedure where batches of data are
+        coming one by one.
 
-    #         unseen_X = np.setdiff1d(unq_X, np.array([*self.H_dict]))
-    #         unseen_V = self.ngrams_count_.transform(unseen_X)
-    #         if self.add_words:
-    #             unseen_V2 = self.word_count_.transform(unseen_X)
-    #             unseen_V = sparse.hstack((unseen_V, unseen_V2), format='csr')
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, ) or (n_samples, 1)
+            The string data to fit the model on.
+        
+        Returns
+        -------
+        self
+        
+        """
+        
+        # Check if fit has already been called or not
+        if not hasattr(self, 'H_dict_'):
+            self.H_dict_ = dict()
+        # Check input data shape
+        X = np.asarray(X)
+        assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
+        shape {X.shape} of input array is not supported."
+        if X.ndim == 2:
+            X = X[:, 0]
+        # Check if first item has str or np.str_ type
+        assert isinstance(X[0], str), "ERROR: Input data is not string."
+        # Check if it is not the first batch
+        if hasattr(self, 'vocabulary'): # Update unq_X, unq_V with new batch
+            unq_X, lookup = np.unique(X, return_inverse=True)
+            unq_V = self.ngrams_count_.transform(unq_X)
+            if self.add_words:
+                unq_V2 = self.word_count_.transform(unq_X)
+                unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
-    #         if unseen_V.shape[0] != 0:
-    #             unseen_H = _rescale_h(
-    #                 unseen_V, np.ones((len(unseen_X), self.n_components)))
-    #             for x, h in zip(unseen_X, unseen_H):
-    #                 self.H_dict[x] = h
-    #             del unseen_H
-    #         del unseen_X, unseen_V
-    #     else:
-    #         unq_X, unq_V, lookup = self._init_vars(X)
-    #         self.rho_ = self.rho
+            unseen_X = np.setdiff1d(unq_X, np.array([*self.H_dict_]))
+            unseen_V = self.ngrams_count_.transform(unseen_X)
+            if self.add_words:
+                unseen_V2 = self.word_count_.transform(unseen_X)
+                unseen_V = sparse.hstack((unseen_V, unseen_V2), format='csr')
 
-    #     unq_H = self._get_H(unq_X)
-    #     unq_H = _multiplicative_update_h(
-    #         unq_V, self.W_, unq_H,
-    #         epsilon=1e-3, max_iter=self.max_iter_e_step,
-    #         rescale_W=self.rescale_W,
-    #         gamma_shape_prior=self.gamma_shape_prior,
-    #         gamma_scale_prior=self.gamma_scale_prior)
-    #     self._update_H_dict(unq_X, unq_H)
-    #     _multiplicative_update_w(
-    #         unq_V[lookup], self.W_, self.A_, self.B_,
-    #         unq_H[lookup], self.rescale_W, self.rho_)
-    #     return self
+            if unseen_V.shape[0] != 0:
+                unseen_H = _rescale_h(
+                    unseen_V, np.ones((len(unseen_X), self.n_components)))
+                for x, h in zip(unseen_X, unseen_H):
+                    self.H_dict_[x] = h
+                del unseen_H
+            del unseen_X, unseen_V
+        else: # If it is the first batch, call _init_vars to init unq_X, unq_V
+            unq_X, unq_V, lookup = self._init_vars(X)
+
+        unq_H = self._get_H(unq_X)
+        # Update the activations unq_H
+        unq_H = _multiplicative_update_h(
+            unq_V, self.W_, unq_H,
+            epsilon=1e-3, max_iter=self.max_iter_e_step,
+            rescale_W=self.rescale_W,
+            gamma_shape_prior=self.gamma_shape_prior,
+            gamma_scale_prior=self.gamma_scale_prior)
+        # Update the topics self.W_
+        _multiplicative_update_w(
+            unq_V[lookup], self.W_, self.A_, self.B_,
+            unq_H[lookup], self.rescale_W, self.rho_)
+        # Update self.H_dict_ with the learned encoded vectors (activations)
+        self.H_dict_.update(zip(unq_X, unq_H))
+        return self
 
     def _add_unseen_keys_to_H_dict(self, X):
         """
         Add activations of unseen string categories from X to H_dict.
         """
-        unseen_X = np.setdiff1d(X, np.array([*self.H_dict]))
+        unseen_X = np.setdiff1d(X, np.array([*self.H_dict_]))
         if unseen_X.size > 0:
             unseen_V = self.ngrams_count_.transform(unseen_X)
             if self.add_words:
@@ -453,7 +493,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
             unseen_H = _rescale_h(
                 unseen_V, np.ones((unseen_V.shape[0], self.n_components)))
-            self._update_H_dict(unseen_X, unseen_H)
+            self.H_dict_.update(zip(unseen_X, unseen_H))
 
     def transform(self, X):
         """
@@ -498,7 +538,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
                 gamma_shape_prior=self.gamma_shape_prior,
                 gamma_scale_prior=self.gamma_scale_prior)
         # Store and return the encoded vectors of X
-        self._update_H_dict(unq_X, unq_H)
+        self.H_dict_.update(zip(unq_X, unq_H))
         return self._get_H(X)
 
 
