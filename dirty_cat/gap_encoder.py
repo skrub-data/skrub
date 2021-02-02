@@ -289,9 +289,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self
         """
         
-        # Check if fit has already been called or not
-        if not hasattr(self, 'H_dict_'):
-            self.H_dict_ = dict()
+        # Init H_dict_ with empty dict to train from scratch
+        self.H_dict_ = dict()
         # Check input data shape
         X = np.asarray(X)
         assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
@@ -429,7 +428,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         
         """
         
-        # Check if fit has already been called or not
+        # Init H_dict_ with empty dict if it's the first call of partial_fit
         if not hasattr(self, 'H_dict_'):
             self.H_dict_ = dict()
         # Check input data shape
