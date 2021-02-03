@@ -38,7 +38,7 @@ print(f'Number of dirty entries = {len(X_dirty)}')
 #
 # We first create an instance of the GapEncoder with n_components=10:
 from dirty_cat import GapEncoder
-enc = GapEncoder(n_components=10)
+enc = GapEncoder(n_components=10, random_state=42)
 
 ################################################################################
 # Then we fit the model on the dirty categorical data and transform it to
@@ -64,15 +64,20 @@ for k in range(len(topic_labels)):
     print(f'Topic n°{k}: {labels}') 
     
 ################################################################################
-# We can check that these labels "summarize" well each topic by looking at
-# their encoded vectors:
+# As expected, topics capture labels that frequently co-occur. For instance,
+# the labels *firefighter*, *rescuer*, *rescue* appear together in
+# *Firefigther/Rescuer III*, or *Fire/Rescue Lieutenant*. We can qualitatively
+# check that these labels "summarize" well each topic by looking at their
+# encoded vectors:
 import matplotlib.pyplot as plt
 encoded_labels = enc.transform(topic_labels)
 encoded_labels /= encoded_labels.sum(axis=1)
 plt.figure(figsize=(4,4))
 plt.imshow(encoded_labels)
 plt.xlabel('Latent topics', size=12)
+plt.xticks(range(0, 10))
 plt.ylabel('Topic labels', size=12)
+plt.yticks(range(0, 10), labels=topic_labels)
 plt.colorbar(ticks=[0, 0.5, 1]).set_label(label='Topic activations', size=12)
 plt.clim(-0.05, 1.05)
 plt.show()
