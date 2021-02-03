@@ -20,7 +20,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 # usage and compute time of a function
 from time import time
 import functools
-import memory_profiler
+import tracemalloc
 
 
 def resource_used(func):
@@ -30,11 +30,13 @@ def resource_used(func):
     @functools.wraps(func)
     def wrapped_func(*args, **kwargs):
         t0 = time()
-        mem, out = memory_profiler.memory_usage((func, args, kwargs),
-                                                max_usage=True,
-                                                retval=True)
+        tracemalloc.start()
+        out = func(*args, **kwargs)
+        size, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peak /= (1024 ** 2)  # Convert to megabytes
         print("Run time: %.1is    Memory used: %iMb"
-              % (time() - t0, mem))
+              % (time() - t0, peak))
         return out
 
     return wrapped_func
