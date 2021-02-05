@@ -159,6 +159,11 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
+    def _init_vars(self, X):
+        """
+        Build the bag-of-n-grams representation V of X and initialize
+        the topics W.
+        """
         # Init n-grams counts vectorizer
         if self.hashing:
             self.ngrams_count_ = HashingVectorizer(
@@ -177,11 +182,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             if self.add_words:
                 self.word_count_ = CountVectorizer(dtype=np.float64)
 
-    def _init_vars(self, X):
-        """
-        Build the bag-of-n-grams representation V of X and initialize
-        the topics W.
-        """
+        # Init H_dict_ with empty dict to train from scratch
+        self.H_dict_ = dict()
         # Build the n-grams counts matrix unq_V on unique elements of X
         unq_X, lookup = np.unique(X, return_inverse=True)
         unq_V = self.ngrams_count_.fit_transform(unq_X)
@@ -288,9 +290,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         -------
         self
         """
-        
-        # Init H_dict_ with empty dict to train from scratch
-        self.H_dict_ = dict()
         # Check input data shape
         X = np.asarray(X)
         assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\

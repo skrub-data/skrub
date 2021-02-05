@@ -229,7 +229,7 @@ sphinx_gallery_conf = {
         'dirty_cat': None,
         'numpy': 'http://docs.scipy.org/doc/numpy',
         'scipy': 'http://docs.scipy.org/doc/scipy/reference',
-        'pandas': 'http://pandas.pydata.org/pandas-docs/stable/',
+        'pandas': 'http://pandas.pydata.org/pandas-docs/stable',
         #'seaborn': 'http://seaborn.pydata.org/',
         #'matplotlib': 'http://matplotlib.org/',
         'sklearn': 'http://scikit-learn.org/0.20',
