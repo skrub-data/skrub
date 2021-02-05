@@ -61,29 +61,29 @@ print(f'Shape of encoded vectors = {X_enc.shape}')
 topic_labels = enc.get_feature_names(n_labels=3)
 for k in range(len(topic_labels)):
     labels = topic_labels[k]
-    print(f'Topic n°{k}: {labels}') 
-    
+    print(f'Topic n°{k}: {labels}')
+
 ################################################################################
 # As expected, topics capture labels that frequently co-occur. For instance,
 # the labels *firefighter*, *rescuer*, *rescue* appear together in
-# *Firefigther/Rescuer III*, or *Fire/Rescue Lieutenant*. We can qualitatively
-# check that these labels "summarize" well each topic by looking at their
-# encoded vectors:
+# *Firefigther/Rescuer III*, or *Fire/Rescue Lieutenant*.
+# 
+# This enables us to understand the encoding of different samples
+
 import matplotlib.pyplot as plt
-encoded_labels = enc.transform(topic_labels)
-encoded_labels /= encoded_labels.sum(axis=1)
-plt.figure(figsize=(8,4))
+encoded_labels = enc.transform(X_dirty[:20])
+plt.figure(figsize=(8,10))
 plt.imshow(encoded_labels)
 plt.xlabel('Latent topics', size=12)
-plt.xticks(range(0, 10))
-plt.ylabel('Topic labels', size=12)
-plt.yticks(range(0, 10), labels=topic_labels)
-plt.colorbar(ticks=[0, 0.5, 1]).set_label(label='Topic activations', size=12)
-plt.clim(-0.05, 1.05)
+plt.xticks(range(0, 10), labels=topic_labels, rotation=50, ha='right')
+plt.ylabel('Data entries', size=12)
+plt.yticks(range(0, 20), labels=X_dirty[:20])
+plt.colorbar().set_label(label='Topic activations', size=12)
 plt.tight_layout()
 plt.show()
 
 ################################################################################
-# As we can see, the encoded topic labels have very sparse activations: one set
-# of labels correspond to one latent topic only. They can thus be reliably
-# used to summarize each topic.
+# As we can see, each dirty category encodes on a small number of topics,
+# These can thus be reliably used to summarize each topic, which are in
+# effect latent categories captured from the data.
+
