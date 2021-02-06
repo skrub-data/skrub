@@ -7,7 +7,7 @@ jobs:
     environment:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv
-      - PYTHON_VERSION: 3
+      - PYTHON_VERSION: 3.8
     steps:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh

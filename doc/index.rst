@@ -17,6 +17,10 @@ The :class:`SimilarityEncoder` is a drop-in replacement for
 If speed and scalability are an issue, the :class:`MinHashEncoder` provides
 a fast encoding method.
 
+If interpretability is important,the :class:`GapEncoder` is a good
+alternative, as it can be interpreted as one-hot encoding, where each encoding
+dimension corresponds to a topic that summarizes the substrings captured.
+
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
 <https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
@@ -47,6 +51,7 @@ Encoders
    :template: class.rst
    :nosignatures:
 
+   GapEncoder
    MinHashEncoder
    SimilarityEncoder
    TargetEncoder

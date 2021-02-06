@@ -64,12 +64,14 @@ y = df[target_column].values.ravel()
 # -------------------------------------------
 # We first import the right encoders to transform our clean/dirty data:
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
-from dirty_cat import SimilarityEncoder, MinHashEncoder
+from dirty_cat import SimilarityEncoder, MinHashEncoder,\
+    GapEncoder
 
 encoder_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
     'minhash': MinHashEncoder(),
+    'gap': GapEncoder(),
     'num': FunctionTransformer(None)
 }
 ##############################################################################
@@ -111,7 +113,7 @@ from sklearn.model_selection import StratifiedKFold
 
 cv = StratifiedKFold(n_splits=3, random_state=12, shuffle=True)
 all_scores = {}
-for method in ['one-hot', 'similarity', 'minhash']:
+for method in ['one-hot', 'similarity', 'minhash', 'gap']:
     pipeline = make_pipeline(method)
     # Now predict the census region of each participant
     scores = cross_val_score(pipeline, df, y, cv=cv)
