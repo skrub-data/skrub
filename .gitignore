@@ -46,3 +46,6 @@ coverage.xml
 
 # Notebooks
 .ipynb_checkpoints/
+
+# VS Code
+.vscode
