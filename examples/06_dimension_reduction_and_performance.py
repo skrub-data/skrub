@@ -6,6 +6,10 @@ Here we discuss how to apply efficiently SimilarityEncoder to larger
 datasets: reducing the number of reference categories to "prototypes",
 either chosen as the most frequent categories, or with kmeans clustering.
 
+Note that the :class:`GapEncoder` naturally does data reduction and comes
+with online estimation. As a result is it more scalable than the
+SimilarityEncoder, and should be prefered in large-scale settings.
+
 """
 # Avoid the warning in scikit-learn's LogisticRegression for the change
 # in the solver
@@ -20,7 +24,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 # usage and compute time of a function
 from time import time
 import functools
-import memory_profiler
+import tracemalloc
 
 
 def resource_used(func):
@@ -30,11 +34,13 @@ def resource_used(func):
     @functools.wraps(func)
     def wrapped_func(*args, **kwargs):
         t0 = time()
-        mem, out = memory_profiler.memory_usage((func, args, kwargs),
-                                                max_usage=True,
-                                                retval=True)
+        tracemalloc.start()
+        out = func(*args, **kwargs)
+        size, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peak /= (1024 ** 2)  # Convert to megabytes
         print("Run time: %.1is    Memory used: %iMb"
-              % (time() - t0, mem))
+              % (time() - t0, peak))
         return out
 
     return wrapped_func

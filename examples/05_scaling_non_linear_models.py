@@ -413,7 +413,7 @@ X_test_kernel_approx, y_true_test_onehot = encode(
 # We now have all the theoretical elements to create an non-linear, online
 # kernel method.
 import warnings
-from sklearn.linear_model.stochastic_gradient import SGDClassifier
+from sklearn.linear_model import SGDClassifier
 
 online_train_set_size = 100000
 # Filter warning on max_iter and tol
