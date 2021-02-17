@@ -21,8 +21,8 @@ matrix:
       env:
         - CONDA_DEPENDENCIES='python-Levenshtein distance joblib numpy scipy requests pytest-cov codecov coverage pandas'
         - SCIKIT_LEARN_VERSION='stable'
-    - name: "Python 3.8 with scikit-learn nightly-build"
-      python: "3.8"
+    - name: "Python 3.9 with scikit-learn nightly-build"
+      python: "3.9"
       env:
         - CONDA_DEPENDENCIES='python-Levenshtein distance joblib numpy scipy requests pytest-cov codecov coverage pandas'
         - SCIKIT_LEARN_VERSION='nightly'
