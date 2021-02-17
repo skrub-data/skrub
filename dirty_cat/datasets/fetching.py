@@ -45,13 +45,13 @@ DATA_DIRECTORY = "openml/openml.org/data/v1/download/"
 # The IDs of the datasets, from OpenML.
 # For each dataset, its URL is constructed as follows:
 openml_url = "https://www.openml.org/d/{ID}"
-ROAD_SAFETY_ID = 42791
+ROAD_SAFETY_ID = 42803
 OPEN_PAYMENTS_ID = 42738
-MIDWEST_SURVEY_ID = 42768
+MIDWEST_SURVEY_ID = 42805
 MEDICAL_CHARGE_ID = 42720
 EMPLOYEE_SALARIES_ID = 42125
 TRAFFIC_VIOLATIONS_ID = 42132
-DRUG_DIRECTORY_ID = 42787
+DRUG_DIRECTORY_ID = 42802
 
 
 def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) -> dict:
