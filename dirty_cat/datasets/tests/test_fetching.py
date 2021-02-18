@@ -139,7 +139,7 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
     test_data_dir = get_test_data_dir()
     _download_and_write_openml_dataset(1, test_data_dir)
 
-    mock_fetch_openml.assert_called_once_with(data_id=1, data_home=test_data_dir)
+    mock_fetch_openml.assert_called_once_with(data_id=1, data_home=test_data_dir, as_frame=True)
 
 
 @mock.patch("os.path.isfile")
