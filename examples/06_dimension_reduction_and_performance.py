@@ -59,20 +59,22 @@ print(data['description'])
 ################################################################################
 # Then we load it:
 import pandas as pd
+import numpy as np
 
-df = pd.read_csv(data['path'])
+df = pd.read_csv(data['path'], quotechar="'", escapechar="\\")
 
 # Limit to 50 000 rows, for a faster example
 df = df[:50000].copy()
+df = df.replace("?", np.nan)  # Remove question marks
 df = df.dropna(axis=0)
 df = df.reset_index()
 ################################################################################
 # We will use SimilarityEncoder on the 'description' column. One
 # difficulty is that it has many different entries.
-print(df['Description'].nunique())
+print(df['description'].nunique())
 
 ################################################################################
-print(df['Description'].value_counts()[:20])
+print(df['description'].value_counts()[:20])
 
 ################################################################################
 # As we will see, SimilarityEncoder takes a while on such data.
@@ -90,25 +92,25 @@ from dirty_cat import SimilarityEncoder
 
 sim_enc = SimilarityEncoder(similarity='ngram')
 
-y = df['Violation Type']
+y = df['violation_type']
 
 # clean columns
 transformers = [('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'),
-                 ['Alcohol',
-                  'Arrest Type',
-                  'Belts',
-                  'Commercial License',
-                  'Commercial Vehicle',
-                  'Fatal',
-                  'HAZMAT',
-                  'Property Damage',
-                  'Work Zone']),
-                ('pass', 'passthrough', ['Year']),
+                 ['alcohol',
+                  'arrest_type',
+                  'belts',
+                  'commercial_license',
+                  'commercial_vehicle',
+                  'fatal',
+                  'hazmat',
+                  'property_damage',
+                  'work_zone']),
+                ('pass', 'passthrough', ['year']),
                 ]
 
 column_trans = ColumnTransformer(
     # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, ['description'])],
     remainder='drop')
 
 t0 = time()
@@ -146,7 +148,7 @@ sim_enc = SimilarityEncoder(similarity='ngram', categories='most_frequent',
 
 column_trans = ColumnTransformer(
     # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, ['description'])],
     remainder='drop')
 
 ################################################################################
@@ -172,7 +174,7 @@ sim_enc = SimilarityEncoder(similarity='ngram', categories='k-means',
 
 column_trans = ColumnTransformer(
     # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, ['description'])],
     remainder='drop')
 
 ################################################################################
@@ -209,32 +211,31 @@ plt.tight_layout()
 # We use a float32 dtype in this example to show some speed and memory gains.
 # The use of the scikit-learn model may upcast to float64 (depending on the used
 # algorithm). The memory savings will then happen during the encoding.
-import numpy as np
 
 sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32,
                             categories='most_frequent', n_prototypes=100)
 
-y = df['Violation Type']
+y = df['violation_type']
 # cast the year column to float32
-df['Year'] = df['Year'].astype(np.float32)
+df['year'] = df['year'].astype(np.float32)
 # clean columns
 transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32,
                                           handle_unknown='ignore'),
-                 ['Alcohol',
-                  'Arrest Type',
-                  'Belts',
-                  'Commercial License',
-                  'Commercial Vehicle',
-                  'Fatal',
-                  'HAZMAT',
-                  'Property Damage',
-                  'Work Zone']),
-                ('pass', 'passthrough', ['Year']),
+                 ['alcohol',
+                  'arrest_type',
+                  'belts',
+                  'commercial_license',
+                  'commercial_vehicle',
+                  'fatal',
+                  'hazmat',
+                  'property_damage',
+                  'work_zone']),
+                ('pass', 'passthrough', ['year']),
                 ]
 
 column_trans = ColumnTransformer(
     # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, ['description'])],
     remainder='drop')
 
 t0 = time()
