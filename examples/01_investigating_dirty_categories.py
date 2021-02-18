@@ -17,7 +17,7 @@ from dirty_cat import datasets
 employee_salaries = datasets.fetch_employee_salaries()
 print(employee_salaries['description'])
 csv_path = employee_salaries['path']
-data = pd.read_csv(csv_path, sep=",", quotechar="'", escapechar='\\')
+data = pd.read_csv(csv_path, quotechar="'", escapechar='\\')
 print(data.head(n=5))
 
 #########################################################################
