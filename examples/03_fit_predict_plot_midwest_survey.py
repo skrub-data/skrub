@@ -18,44 +18,45 @@ from dirty_cat.datasets import fetch_midwest_survey
 import pandas as pd
 
 dataset = fetch_midwest_survey()
-df = pd.read_csv(dataset['path']).astype(str)
+print(dataset['path'])
+df = pd.read_csv(dataset['path'], quotechar="'", escapechar='\\')
 
 ################################################################################
 # The challenge with this data is that it contains a free-form input
 # column, where people put whatever they want:
-dirty_column = 'In your own words, what would you call the part of the country you live in now?'
+dirty_column = 'What_would_you_call_the_part_of_the_country_you_live_in_now'
 print(df[dirty_column].value_counts()[-10:])
 
 ################################################################################
 # Separating clean, and dirty columns as well a a column we will try to predict
 # ------------------------------------------------------------------------------
 
-target_column = 'Location (Census Region)'
+target_column = 'Census_Region'
 clean_columns = [
-    'Personally identification as a Midwesterner?',
-    'Illinois in MW?',
-    'Indiana in MW?',
-    'Kansas in MW?',
-    'Iowa in MW?',
-    'Michigan in MW?',
-    'Minnesota in MW?',
-    'Missouri in MW?',
-    'Nebraska in MW?',
-    'North Dakota in MW?',
-    'Ohio in MW?',
-    'South Dakota in MW?',
-    'Wisconsin in MW?',
-    'Arkansas in MW?',
-    'Colorado in MW?',
-    'Kentucky in MW?',
-    'Oklahoma in MW?',
-    'Pennsylvania in MW?',
-    'West Virginia in MW?',
-    'Montana in MW?',
-    'Wyoming in MW?',
+    'What_would_you_call_the_part_of_the_country_you_live_in_now',
+    'Do_you_consider_Illinois_state_as_part_of_the_Midwest',
+    'Do_you_consider_Indiana_state_as_part_of_the_Midwest',
+    'Do_you_consider_Iowa_state_as_part_of_the_Midwest',
+    'Do_you_consider_Kansas_state_as_part_of_the_Midwest',
+    'Do_you_consider_Michigan_state_as_part_of_the_Midwest',
+    'Do_you_consider_Minnesota_state_as_part_of_the_Midwest',
+    'Do_you_consider_Missouri_state_as_part_of_the_Midwest',
+    'Do_you_consider_Nebraska_state_as_part_of_the_Midwest',
+    'Do_you_consider_North_Dakota_state_as_part_of_the_Midwest',
+    'Do_you_consider_Ohio_state_as_part_of_the_Midwest',
+    'Do_you_consider_South_Dakota_state_as_part_of_the_Midwest',
+    'Do_you_consider_Wisconsin_state_as_part_of_the_Midwest',
+    'Do_you_consider_Arkansas_state_as_part_of_the_Midwest',
+    'Do_you_consider_Colorado_state_as_part_of_the_Midwest',
+    'Do_you_consider_Kentucky_state_as_part_of_the_Midwest',
+    'Do_you_consider_Oklahoma_state_as_part_of_the_Midwest',
+    'Do_you_consider_Pennsylvania_state_as_part_of_the_Midwest',
+    'Do_you_consider_West_Virginia_state_as_part_of_the_Midwest',
+    'Do_you_consider_Montana_state_as_part_of_the_Midwest',
+    'Do_you_consider_Wyoming_state_as_part_of_the_Midwest',
     'Gender',
     'Age',
-    'Household Income',
+    'Household_Income',
     'Education']
 y = df[target_column].values.ravel()
 
