@@ -555,7 +555,7 @@ def _multiplicative_update_w(Vt, W, A, B, Ht, rescale_W, rho):
     Multiplicative update step for the topics W.
     """
     A *= rho
-    A += W * safe_sparse_dot(Ht.T, Vt.multiply(np.dot(Ht, W) ** -1))
+    A += W * safe_sparse_dot(Ht.T, Vt.multiply(1 / (np.dot(Ht, W) + 1e-10)))
     B *= rho
     B += Ht.sum(axis=0).reshape(-1, 1)
     np.divide(A, B, out=W)
@@ -597,7 +597,7 @@ def _multiplicative_update_h(Vt, W, Ht, epsilon=1e-3, max_iter=10,
         for n_iter_ in range(max_iter):
             if squared_norm <= squared_epsilon:
                 break
-            aux = np.dot(W_WT1_, vt_ / np.dot(ht, W_))
+            aux = np.dot(W_WT1_, vt_ / (np.dot(ht, W_) + 1e-10))
             ht_out = ht * aux + const
             squared_norm = np.dot(
                 ht_out - ht, ht_out - ht) / np.dot(ht, ht)
