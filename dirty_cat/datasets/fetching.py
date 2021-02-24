@@ -6,12 +6,10 @@ Scikit-Learn's ``fetch_openml()`` function.
 """
 
 
-# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/Phaide
+# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/LilianBoulard
 
 # Future notes:
 # - Watch out for ``fetch_openml()`` API modifications: as of january 2021, the function is marked as experimental.
-# - Would be nice to use f-strings (implemented in Python 3.6, current requirement is Python >= 3.5)
-#   instead of the old-school ``format()`` method.
 
 
 import os
@@ -87,16 +85,18 @@ def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) 
     if not os.path.isfile(details_gz_path) or not os.path.isfile(features_gz_path):
         # If the details file or the features file do not exist, download the dataset.
         warnings.warn(
-            "Could not find the dataset locally. Downloading it from OpenML; this might take a while... "
+            "Could not find the dataset {dataset_id} locally. "
+            "Downloading it from OpenML; this might take a while... "
             "If the process is interrupted, some files will be invalid/incomplete. "
-            "To fix this problem, delete the CSV file if it exists. The system will recreate it on the next run."
+            "To fix this problem, delete the CSV file if it exists. "
+            "The system will recreate it on the next run."
         )
         _download_and_write_openml_dataset(dataset_id=dataset_id, data_directory=data_directory)
     details = _get_details(details_gz_path)
 
     # The file ID is required because the data file is named after this ID, and not after the dataset's.
     file_id = details.file_id
-    csv_path = os.path.join(data_directory, details.name + ".csv")
+    csv_path = os.path.join(data_directory, f'{details.name}.csv')
 
     data_gz_path = _get_gz_path(data_directory, DATA_DIRECTORY, str(file_id))
 
@@ -167,7 +167,7 @@ def _read_json_from_gz(compressed_dir_path: str) -> dict:
 
     """
     if not os.path.isfile(compressed_dir_path):
-        raise FileNotFoundError('Could not find file {}.'.format(compressed_dir_path))
+        raise FileNotFoundError(f'Could not find file {compressed_dir_path}.')
 
     # Read content
     with gzip.open(compressed_dir_path, mode='rt') as gz:
@@ -261,7 +261,7 @@ def _get_gz_path(root: str, directory: str, file_name: str) -> str:
     return os.path.join(
         root,
         directory.strip(os.sep),
-        "{}.gz".format(file_name).strip(os.sep)
+        f"{file_name}.gz".strip(os.sep)
     )
 
 
