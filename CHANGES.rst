@@ -1,10 +1,22 @@
-Release 0.0.7
+Release 0.1.0
 =============
+
+Major changes
+-------------
 
 * **GapEncoder**: Added online Gamma-Poisson factorization through the
   :class:`GapEncoder` class. This method discovers latent categories formed
   via combinations of substrings, and encodes string data as combinations of
   these categories. To be used if interpretability is important.
+
+Bug-fixes
+---------
+
+* Multiprocessing exception in notebook (#154)
+
+
+Release 0.0.7
+=============
 
 * **MinHashEncoder**: Added ``minhash_encoder.py`` and ``fast_hast.py`` files
   that implement minhash encoding through the ``MinHashEncoder`` class.
