@@ -105,29 +105,29 @@ def profile_encoder(Encoder, init):
 
 
 if __name__ == '__main__':
-    # print('start test_gap_encoder')
-    # test_gap_encoder(True, 'k-means++', 'char', False)
-    # print('test_gap_encoder passed')
-    # print('start test_input_type')
-    # test_input_type()
-    # print('test_input_type passed')
-    # print('start test_partial_fit')
-    # test_partial_fit()
-    # print('test_partial_fit passed')
-    # print('start test_get_feature_names')
-    # test_get_feature_names()
-    # print('test_get_feature_names passed')
+    print('start test_gap_encoder')
+    test_gap_encoder(True, 'k-means++', 'char', False)
+    print('test_gap_encoder passed')
+    print('start test_input_type')
+    test_input_type()
+    print('test_input_type passed')
+    print('start test_partial_fit')
+    test_partial_fit()
+    print('test_partial_fit passed')
+    print('start test_get_feature_names')
+    test_get_feature_names()
+    print('test_get_feature_names passed')
     print('start test_overflow_error')
     test_overflow_error()
     print('test_overflow_error passed')
     
-    # for _ in range(3):
-    #     print('time profile_encoder(GapEncoder, init="k-means++")')
-    #     print("{:.4} seconds".format(profile_encoder(
-    #         GapEncoder, init='k-means++')))
-    # for _ in range(3):
-    #     print('time profile_encoder(GapEncoder, init="k-means")')
-    #     print("{:.4} seconds".format(profile_encoder(
-    #         GapEncoder, init='k-means')))
+    for _ in range(3):
+        print('time profile_encoder(GapEncoder, init="k-means++")')
+        print("{:.4} seconds".format(profile_encoder(
+            GapEncoder, init='k-means++')))
+    for _ in range(3):
+        print('time profile_encoder(GapEncoder, init="k-means")')
+        print("{:.4} seconds".format(profile_encoder(
+            GapEncoder, init='k-means')))
     
-    # print('Done')
+    print('Done')
