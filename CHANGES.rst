@@ -1,3 +1,15 @@
+Release 0.1.1
+=============
+
+Major changes
+-------------
+
+Bug-fixes
+---------
+
+* RuntimeWarnings due to overflow in GapEncoder (#161)
+
+
 Release 0.1.0
 =============
 
