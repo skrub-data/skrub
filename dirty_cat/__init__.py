@@ -11,6 +11,7 @@ from .similarity_encoder import SimilarityEncoder
 from .target_encoder import TargetEncoder
 from .minhash_encoder import MinHashEncoder
 from .gap_encoder import GapEncoder
+from .pretrained_fastText import PretrainedFastText
 
 __all__ = ['SimilarityEncoder', 'TargetEncoder', 'MinHashEncoder',
-           'GapEncoder']
+           'GapEncoder', 'PretrainedFastText']
