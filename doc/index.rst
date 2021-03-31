@@ -20,6 +20,12 @@ a fast encoding method.
 If interpretability is important,the :class:`GapEncoder` is a good
 alternative, as it can be interpreted as one-hot encoding, where each encoding
 dimension corresponds to a topic that summarizes the substrings captured.
+It also comes with online estimation, and should be prefered in large-scale
+settings.
+
+The :class:`PretrainedFastText` encoder captures semantic and morphological
+information with a pretrained fastText model. Once loaded, it is also very
+fast to encode categorical data.
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
@@ -53,6 +59,7 @@ Encoders
 
    GapEncoder
    MinHashEncoder
+   PretrainedFastText
    SimilarityEncoder
    TargetEncoder
 

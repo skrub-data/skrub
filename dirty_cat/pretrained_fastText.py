@@ -12,7 +12,7 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
     Category embedding using a fastText pretrained model.
     In a nutshell, fastText learns embeddings for character n-grams based on
     their context. Sequences of words are then embedded by averaging the
-    n-gram representations it is made of. fastText embeddings thus capture
+    n-gram representations it is made of. FastText embeddings thus capture
     both semantic and morphological information.
     
     The code is largely based on the fasttext package, for which this class
@@ -28,7 +28,8 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
         If n_components > 300, it is automatically set to 300.
         
     language : str, default='en'
-        The language of the fastText model to load.
+        The language of the fastText model to load in
+        file_name = "cc.{language}.{n_components}.bin"
         For instance, language='en' corresponds to fastText trained on an
         English corpora. Pretrained models are available here
         <https://fasttext.cc/docs/en/crawl-vectors.html>.
@@ -180,6 +181,9 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
             Transformed input.
         """
         
+        # Check if a fastText model has been loaded
+        assert hasattr(self, 'ft_model'), f"The fastText model hasn't been\
+            automatically loaded. Load it manually with self.load_model()."
         # Check input data shape
         X = np.asarray(X)
         assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
@@ -188,6 +192,8 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
             X = X[:, 0]
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
+        # Remove '\n' from X
+        X = np.array([x.replace('\n', ' ') for x in X])
         # Get unique categories and store the associated embeddings in a dict
         unq_X, lookup = np.unique(X, return_inverse=True)
         unq_X_out = np.empty((len(unq_X), self.n_components))

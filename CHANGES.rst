@@ -4,6 +4,10 @@ Release 0.1.1
 Major changes
 -------------
 
+* **PretrainedFastText**: Added encoding of categorical variables through
+  a pretrained fastText model. FastText word embeddings capture both semantic
+  and morphological similarities.
+  
 Bug-fixes
 ---------
 

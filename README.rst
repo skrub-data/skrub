@@ -22,6 +22,7 @@ dirty_cat requires:
 - NumPy (>= 1.8.2)
 - SciPy (>= 1.0.1)
 - scikit-learn (>= 0.20.0)
+- fasttext (>= 0.9.2)
 
 Optional dependency:
 
