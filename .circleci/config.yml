@@ -10,9 +10,6 @@ jobs:
       - PYTHON_VERSION: 3.8
     steps:
       - checkout
-      - run: # Install gcc as requirement for fasttext
-          name: Install fastText dependencies
-          command: sudo apt-get install gcc
       - run: ./build_tools/circle/checkout_merge_commit.sh
       - restore_cache:
           key: v1-datasets-{{ .Branch }}
