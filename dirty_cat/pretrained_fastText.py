@@ -1,15 +1,11 @@
 import os
 import numpy as np
-import fasttext
-import fasttext.util
-from pathlib import Path
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class PretrainedFastText(BaseEstimator, TransformerMixin):
+    """ Category embedding using a fastText pretrained model.
     
-    """
-    Category embedding using a fastText pretrained model.
     In a nutshell, fastText learns embeddings for character n-grams based on
     their context. Sequences of words are then embedded by averaging the
     n-gram representations it is made of. FastText embeddings thus capture
@@ -71,13 +67,13 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
         return
     
     def download_model(self):
-        
         """
         Download pre-trained common-crawl vectors from fastText's website
         <https://fasttext.cc/docs/en/crawl-vectors.html>.
         Downloaded models are stored in self.bin_dir.
         """
-    
+
+        import fasttext.util
         cwd = os.getcwd()
         os.chdir(self.bin_dir)
         # Download fastText model in bin_dir
@@ -86,7 +82,6 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
         return
     
     def load_model(self):
-        
         """
         Load the binary file "cc.{language}.{n_components}.bin" in bin_dir.
         If there exists no file with the appropriate embedding dimension
@@ -94,6 +89,7 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
         300) and reduce it to n_components afterwards.
         """
         
+        import fasttext
         file_path_300 = os.path.join(
             self.bin_dir, f"cc.{self.language}.300.bin")
         # Load model with dim = n_components
@@ -112,7 +108,6 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
         return
     
     def save_model(self, file_name=None):
-        
         """
         Save the current fastText model in self.bin_dir.
         This is particularly useful to save reduced models, which
@@ -137,7 +132,6 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
         return
     
     def reduce_model(self, n_components):
-        
         """
         Reduce the embedding dimension of the loaded fastText model.
         
@@ -148,14 +142,14 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
             The new embedding size. Must be smaller than the previous one.
         """
         
+        import fasttext.util
         assert n_components < self.n_components, f"Cannot expand embedding\
             size from {self.n_components} to {n_components}."
         self.n_components = n_components
         fasttext.util.reduce_model(self.ft_model, self.n_components)
         return
                     
-    def fit(self, X=None, y=None):
-        
+    def fit(self, X=None, y=None): 
         """
         Since the model is already trained, simply checks that is has been
         loaded properly.
@@ -166,7 +160,6 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        
         """
         Return fastText embeddings of input strings in X.
         
