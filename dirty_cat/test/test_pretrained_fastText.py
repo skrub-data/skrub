@@ -36,20 +36,6 @@ def test_input_type():
     np.testing.assert_array_equal(X_enc_array, X_enc_list)
     return
 
-# def test_reduce_model(reduced_n_components=5, n_samples=70):
-    
-#     X_txt = fetch_20newsgroups(subset='train')['data']
-#     X = X_txt[:n_samples]
-#     bin_dir, file_name = '../data/fasttext/', 'dbpedia.ftz'
-#     # Use 'reduce_model' method
-#     enc = PretrainedFastText(
-#         n_components=10, bin_dir=bin_dir, file_name=file_name)
-#     enc.reduce_model(reduced_n_components)
-#     X_enc = enc.transform(X)
-#     assert enc.n_components == reduced_n_components, str(enc.n_components)
-#     assert X_enc.shape == (n_samples, reduced_n_components), str(X_enc.shape)
-#     return
-
 def test_save_model(n_samples=70):
     
     X_txt = fetch_20newsgroups(subset='train')['data']
@@ -72,6 +58,21 @@ def test_save_model(n_samples=70):
     # Delete saved model
     os.remove(saved_file_path)
     return
+
+# Quantized models like "dbpedia.ftz" cannot be reduced.
+# def test_reduce_model(reduced_n_components=5, n_samples=70):
+    
+#     X_txt = fetch_20newsgroups(subset='train')['data']
+#     X = X_txt[:n_samples]
+#     bin_dir, file_name = '../data/fasttext/', 'dbpedia.ftz'
+#     # Use 'reduce_model' method
+#     enc = PretrainedFastText(
+#         n_components=10, bin_dir=bin_dir, file_name=file_name)
+#     enc.reduce_model(reduced_n_components)
+#     X_enc = enc.transform(X)
+#     assert enc.n_components == reduced_n_components, str(enc.n_components)
+#     assert X_enc.shape == (n_samples, reduced_n_components), str(X_enc.shape)
+#     return
 
 if __name__ == '__main__':
     

@@ -14,15 +14,15 @@ matrix:
     - name: "Python 3.6 with minimum dependencies (no pandas and python-Levenshtein)"
       python: "3.6"
       env:
-        - CONDA_DEPENDENCIES='distance joblib numpy scipy requests pytest-cov codecov coverage'
+        - CONDA_DEPENDENCIES='distance joblib numpy scipy requests pytest-cov codecov coverage fasttext'
         - SCIKIT_LEARN_VERSION='stable'
     - name: "Python 3.8 with pandas"
       python: "3.8"
       env:
-        - CONDA_DEPENDENCIES='python-Levenshtein distance joblib numpy scipy requests pytest-cov codecov coverage pandas'
+        - CONDA_DEPENDENCIES='python-Levenshtein distance joblib numpy scipy requests pytest-cov codecov coverage pandas fasttext'
         - SCIKIT_LEARN_VERSION='stable'
     - name: "Python 3.9 with scikit-learn nightly-build"
       python: "3.9"
       env:
-        - CONDA_DEPENDENCIES='python-Levenshtein distance joblib numpy scipy requests pytest-cov codecov coverage pandas'
+        - CONDA_DEPENDENCIES='python-Levenshtein distance joblib numpy scipy requests pytest-cov codecov coverage pandas fasttext'
         - SCIKIT_LEARN_VERSION='nightly'

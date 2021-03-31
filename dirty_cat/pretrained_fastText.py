@@ -16,33 +16,34 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
     both semantic and morphological information.
     
     The code is largely based on the fasttext package, for which this class
-    provides a simple interface.
+    provides a simple interface. It is designed to download and use fastText
+    models pretrained on Common Crawls and Wikipedia in 157 different
+    languages and stored in the form of binary files "cc.{language}.300.bin"
+    (see <https://fasttext.cc/docs/en/crawl-vectors.html>).
     
     Parameters
     ----------
     
     n_components : int, default=300
-        The size of the fastText embeddings (300 for the original model).
-        If n_components < 300, the fastText model is automatically
-        reduced to output vectors of the desired size.
+        The size of the fastText embeddings (300 for the downloaded models).
+        If n_components < 300, the fastText model is automatically reduced to
+        output vectors of the desired size.
         If n_components > 300, it is automatically set to 300.
         
     language : str, default='en'
-        The language of the fastText model to load in
-        file_name = "cc.{language}.{n_components}.bin"
-        For instance, language='en' corresponds to fastText trained on an
-        English corpora. Pretrained models are available here
+        The training language of the fastText model to load.
+        See the list of models trained in 157 different languages here:
         <https://fasttext.cc/docs/en/crawl-vectors.html>.
     
     bin_dir : str, default='./fastText_bins'
         The path to the folder containing the fastText models to load.
         Models downloaded or saved with the 'download_model' or 'save_model'
-        methods also end up in bin_dir.
+        methods are stored in bin_dir.
     
     file_name : str or None, default=None
-        If given, indicates the file to load instead of
-        "cc.{language}.{n_components}.bin". This allows to load other fastText
-        models than the ones available with 'download_model'.
+        Only used for testing purposes. If given, indicates the file to load
+        instead of "cc.{language}.{n_components}.bin". This allows to load
+        different fastText models that have been manually downloaded.
         If given, n_components must be set appropriately to the embedding size
         of the model.
         
@@ -87,10 +88,10 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
     def load_model(self):
         
         """
-        Load a pretrained fastText model from the corresponding binary file
-        in self.bin_dir. If n_components is smaller than the dimensionality of
-        the loaded model, the latter is automatically reduced to output vectors
-        of the desired size.
+        Load the binary file "cc.{language}.{n_components}.bin" in bin_dir.
+        If there exists no file with the appropriate embedding dimension
+        (n_components), we instead load the raw model (whose embedding dim is
+        300) and reduce it to n_components afterwards.
         """
         
         file_path_300 = os.path.join(
@@ -104,10 +105,10 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
             fasttext.util.reduce_model(self.ft_model, self.n_components)
         else: # Else, raise an error
             raise FileNotFoundError(
-                f"The file {file_path_300} doesn't exist.\
-                Download it with self.download_model(), or from\
-                https://fasttext.cc/docs/en/crawl-vectors.html.\
-                Then load it manually with self.load_model().")
+                f"The file {self.file_path} doesn't exist and cannot be\
+                reduced from the raw model {file_path_300}.\
+                Download the raw model with self.download_model()\
+                and load it manually with self.load_model().")
         return
     
     def save_model(self, file_name=None):
@@ -122,7 +123,7 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
         
         file_name : str or None, default=None
             If given, indicates the filename under which the model
-            must be saved. Otherwise, the default file_name is
+            must be saved. By default, the default file_name is
             "cc.{self.language}.{self.n_components}.bin".
         """
         
@@ -138,14 +139,13 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
     def reduce_model(self, n_components):
         
         """
-        Reduce the current model to obtain embeddings of the desired size.
+        Reduce the embedding dimension of the loaded fastText model.
         
         Parameters
         ----------
         
         n_components : int
-            The new size of the fastText embeddings.
-            Must be smaller than the previous embedding size.
+            The new embedding size. Must be smaller than the previous one.
         """
         
         assert n_components < self.n_components, f"Cannot expand embedding\
