@@ -40,4 +40,9 @@ if __name__ == '__main__':
           package_data={'dirty_cat': ['VERSION.txt', 'data/midwest_survey/*.csv']},
           install_requires=['scikit-learn>=0.20', 'numpy', 'scipy', 'requests',
                             'joblib'],
+          extras_require={
+              'fasttext': ['fasttext>=0.9.2'],
+              'levenshtein': ['python-Levenshtein'],
+              'full': ['fasttext>=0.9.2', 'python-Levenshtein']
+            }
           )
