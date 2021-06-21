@@ -2,14 +2,14 @@ r"""
 Fitting scalable, non-linear models on data with dirty categories
 =================================================================
 
-A very classic dilemna when training a machine learning model consists in
+A very classic dilemma when training a machine learning model consists in
 choosing between using a linear model or a non-linear one.
 
 Linear models are very well studied and understood. They are generally fast
 and easy to optimize, and generate interpretable results. However, for some
 problems with a complex relationship between the input and the output, linear
 models reach their expressivity limit: whatever the number of samples the
-training set may have, past some point, it's precision won't get any better.
+training set may have, past some point, its precision won't get any better.
 
 Non-linear models, however, tend to *scale* better with sample size: they are
 able to digest the information in the additional samples to get a better
@@ -23,24 +23,24 @@ includes:
   Boosting Machines [#xgboost]_
 * Kernel Methods.
 
-However, reaching the phase where the non-linear model outpeforms the linear
-one can be complicated. Indeed, a more complex models means often a longer
+However, reaching the phase where the non-linear model outperforms the linear
+one can be complicated. Indeed, a more complex models often means a longer
 fitting/tuning process:
 
-* Neural networks often necessitate extended model tuning time, in order to
+* Neural networks often need extended model tuning time, in order to
   achieve good optimization and network architecture.
 * Gradient Boosting Machines do not tend to scale extremely well with
   increasing sample size, as all the data needs to be loaded into the main
   memory.
 * For kernel methods, parameter fitting requires the inversion of a gram matrix
-  of size :math:`n \times n` (:math:`n` being the number of samples), yiedling
-  a quadratic dependency (with n) in the final compmutation time.
+  of size :math:`n \times n` (:math:`n` being the number of samples), yielding
+  a quadratic dependency (with :math:`n`) in the final computation time.
 
 
-In order to make the best out of a non-linear model, one has to **make it
-scalable**. For kernel methods, there exist approximation algorithms that
-drop the quadratic dependency with the sample size while ensuring almost the
-same model capacity.
+In order to get the best out of a non-linear model, one has to **make it
+scalable**. For kernel methods, approximation algorithms that drop the
+quadratic dependency with the sample size while ensuring almost the
+same model capacity exist.
 
 In this example, you will learn how to:
     1. Build a ML pipeline that uses a kernel method.
@@ -49,7 +49,7 @@ In this example, you will learn how to:
 
 
 .. note::
-   This example assumes the reader to be familiar with similarity encoding and
+   This example assumes the reader is familiar with similarity encoding and
    its use-cases.
 
    * For an introduction to dirty categories, see :ref:`this example<sphx_glr_auto_examples_01_investigating_dirty_categories.py>`.
@@ -104,8 +104,8 @@ In this example, you will learn how to:
 
 """
 ###############################################################################
-# Training a first simple pipeline
-# --------------------------------
+# Training a simple pipeline
+# --------------------------
 # The data that the model will fit is the :code:`drug_directory` dataset.
 from dirty_cat.datasets import fetch_drug_directory
 
@@ -123,11 +123,11 @@ print(info['description'])
 #
 # The :code:`NONPROPRIETARYNAME` column, is composed of text observations with
 # describing each drug's composition. The :code:`PRODUCTTYPENAME` column
-# consists of categorial values: therefore, our problem is a classification
+# consists of categorical values: therefore, our problem is a classification
 # problem. You can have a glimpse of the values here:
 import pandas as pd
 
-df = pd.read_csv(info['path'], nrows=10, sep='\t').astype(str)
+df = pd.read_csv(info['path'], nrows=10, quotechar="'", escapechar="\\").astype(str)
 print(df[['NONPROPRIETARYNAME', 'PRODUCTTYPENAME']].head())
 # This will be useful further down in the example.
 columns_names = df.columns
@@ -169,7 +169,7 @@ model = Pipeline(steps)
 ###############################################################################
 # Data Loading and Preprocessing
 # ------------------------------
-# Like in most machine learning setups, the data has to be splitted into 2
+# Like in most machine learning setups, the data has to be split into 2
 # exclusive parts:
 #
 # * One for model training.
@@ -209,7 +209,7 @@ def get_X_y(**kwargs):
     transformation repeatedly in the code.
     """
     global label_encoder
-    df = pd.read_csv(info['path'], sep='\t', **kwargs)
+    df = pd.read_csv(info['path'], quotechar="'", escapechar="\\", **kwargs)
     return preprocess(df, label_encoder)
 
 ###############################################################################
@@ -220,7 +220,7 @@ def get_X_y(**kwargs):
 # * a |LabelEncoder|, that we pre-fitted on the known :code:`y` classes
 # * a |OneHotEncoder|, pre-fitted on the resulting integer labels.
 #
-# Their |transform| methods can the be called at appopriate times.
+# Their |transform| methods can the be called at appropriate times.
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
@@ -301,7 +301,7 @@ for n in train_set_sizes:
 
 
 ###############################################################################
-# Increasing training size cleary improves model accuracy. However, the
+# Increasing training size clearly improves model accuracy. However, the
 # training time and the input size increase quadratically with the training set
 # size.  Indeed, kernel methods need to process an entire :math:`n \times n`
 # matrix at once. In order for this matrix to be loaded into memory, :math:`n`
@@ -329,7 +329,7 @@ for n in train_set_sizes:
 ###############################################################################
 # Kernel approximation methods
 # ----------------------------
-# From what was said below, two criterions are limiting a kernel algorithm to
+# From what was said below, two criteria are limiting a kernel algorithm to
 # scale:
 #
 # * It processes a matrix, whose size increases quadratically with the number
@@ -435,7 +435,7 @@ t0 = time.perf_counter()
 
 iter_csv = pd.read_csv(
     info['path'], nrows=online_train_set_size, chunksize=batchsize,
-    skiprows=1, names=columns_names, sep='\t')
+    skiprows=1, names=columns_names,  quotechar="'", escapechar="\\")
 
 for batch_no, batch in enumerate(iter_csv):
     X_batch, y_batch = preprocess(batch, label_encoder)
@@ -518,8 +518,8 @@ f.suptitle(title)
 # change it for example with :code:`X_highdim = X_sim_encoded`.
 #
 # In particular, this hierarchy between the linear model and the non-linear
-# one shows that there were some significant non-linear relashionships
-# between the input and the output. By scaling a kernel method, we succesfully
+# one shows that there were some significant non-linear relationships
+# between the input and the output. By scaling a kernel method, we successfully
 # took this non-linearity into account in our model, which was a far from
 # trivial task at the beginning of this example!
 
