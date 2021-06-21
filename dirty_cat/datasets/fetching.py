@@ -49,7 +49,7 @@ MIDWEST_SURVEY_ID = 42805
 MEDICAL_CHARGE_ID = 42720
 EMPLOYEE_SALARIES_ID = 42125
 TRAFFIC_VIOLATIONS_ID = 42132
-DRUG_DIRECTORY_ID = 42802
+DRUG_DIRECTORY_ID = 43044
 
 
 def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) -> dict:
