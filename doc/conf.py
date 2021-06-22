@@ -53,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'dirty_cat'
-copyright = u'2018, dirty_cat developers'
+copyright = u'2018-2021, dirty_cat developers'
 author = u'dirty_cat developers'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -240,6 +240,6 @@ sphinx_gallery_conf = {
     'examples_dirs':'../examples',
     'gallery_dirs':'auto_examples',
     'within_subsection_order': FileNameSortKey,
-    'download_section_examples': False,
+    'download_all_examples': False,
 }
 
