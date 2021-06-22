@@ -221,3 +221,25 @@ def test_reproducibility():
     prototypes = sim_enc.fit(X).categories_[0]
     for i in range(10):
         assert (np.array_equal(prototypes, sim_enc.fit(X).categories_[0]))
+
+
+def test_get_features():
+    # See https://github.com/dirty-cat/dirty_cat/issues/168
+    sim_enc = similarity_encoder.SimilarityEncoder(random_state=435)
+    X = np.array(['%s' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
+    sim_enc.fit(X)
+    feature_names = sim_enc.get_feature_names()
+    assert feature_names.tolist() == [
+        'x0_ ', 'x0_!', 'x0_"', 'x0_#', 'x0_$', 'x0_%', 'x0_&', "x0_'", 'x0_(',
+        'x0_)', 'x0_*', 'x0_+', 'x0_,', 'x0_-', 'x0_.', 'x0_/', 'x0_0', 'x0_1',
+        'x0_2', 'x0_3', 'x0_4', 'x0_5', 'x0_6', 'x0_7', 'x0_8', 'x0_9', 'x0_:',
+        'x0_;', 'x0_<', 'x0_=', 'x0_>', 'x0_?', 'x0_@', 'x0_A', 'x0_B', 'x0_C',
+        'x0_D', 'x0_E', 'x0_F', 'x0_G', 'x0_H', 'x0_I', 'x0_J', 'x0_K', 'x0_L',
+        'x0_M', 'x0_N', 'x0_O', 'x0_P', 'x0_Q', 'x0_R', 'x0_S', 'x0_T', 'x0_U',
+        'x0_V', 'x0_W', 'x0_X', 'x0_Y', 'x0_Z', 'x0_[', 'x0_\\', 'x0_]', 'x0_^',
+        'x0__', 'x0_`', 'x0_a', 'x0_b', 'x0_c', 'x0_d', 'x0_e', 'x0_f', 'x0_g',
+        'x0_h', 'x0_i', 'x0_j', 'x0_k', 'x0_l', 'x0_m', 'x0_n', 'x0_o', 'x0_p',
+        'x0_q', 'x0_r', 'x0_s', 'x0_t', 'x0_u', 'x0_v', 'x0_w', 'x0_x', 'x0_y',
+        'x0_z', 'x0_{', 'x0_|', 'x0_}', 'x0_~'
+    ]
+
