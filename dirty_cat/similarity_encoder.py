@@ -402,7 +402,8 @@ class SimilarityEncoder(OneHotEncoder):
                 self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
                 self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
 
-        self.drop_idx_ = self._compute_drop_idx()
+        if LooseVersion(sklearn.__version__) >= LooseVersion('0.21'):
+            self.drop_idx_ = self._compute_drop_idx()
 
         return self
 
