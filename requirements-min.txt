@@ -1,0 +1,12 @@
+numpy==1.16
+scipy==1.2
+scikit-learn==0.20.0
+pytest
+pytest-cov
+coverage
+matplotlib
+pandas
+cython
+joblib
+seaborn
+
