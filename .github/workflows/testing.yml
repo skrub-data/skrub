@@ -78,9 +78,6 @@ jobs:
         run: ./build_tools/github/install.sh
         name: 'Install dirty-cat'
       - shell: bash {0}
-        run: ./build_tools/github/test_docs.sh
-        name: 'Run doctests'
-      - shell: bash {0}
         run: ./build_tools/github/test.sh
         name: 'Run tests'
       - uses: codecov/codecov-action@v1
