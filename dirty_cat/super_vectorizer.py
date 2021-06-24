@@ -320,26 +320,26 @@ class SuperVectorizer(ColumnTransformer):
         low_card_cat_columns = [col for col in categorical_columns if X[col].nunique() < self.cardinality_threshold]
         high_card_cat_columns = [col for col in categorical_columns if X[col].nunique() >= self.cardinality_threshold]
 
-        # Construct the transformers
-        transformers_df = pd.DataFrame([
-            ['numeric', self.numerical_transformer, numeric_columns],
-            ['datetime', self.datetime_transformer, datetime_columns],
-            ['low_card_str', self.low_card_str_transformer, low_card_str_columns],
-            ['high_card_str', self.high_card_str_transformer, high_card_str_columns],
-            ['low_card_cat', self.low_card_cat_transformer, low_card_cat_columns],
-            ['high_card_cat', self.high_card_cat_transformer, high_card_cat_columns],
-        ], columns=['name', 'transformer', 'columns'])
-        # Get mask of lines with valid encoders.
-        # True: valid encoders
-        valid_encoders_mask = np.invert(transformers_df['transformer'].isnull())
-        # Get mask of lines with non-empty columns
-        # True: non-empty columns field
-        valid_columns_mask = transformers_df['columns'].apply(lambda x: True if x != [] else False)
+        # Next part: construct the transformers
+        # Create the list of all the transformers.
+        all_transformers = [
+            ('numeric', self.numerical_transformer, numeric_columns),
+            ('datetime', self.datetime_transformer, datetime_columns),
+            ('low_card_str', self.low_card_str_transformer, low_card_str_columns),
+            ('high_card_str', self.high_card_str_transformer, high_card_str_columns),
+            ('low_card_cat', self.low_card_cat_transformer, low_card_cat_columns),
+            ('high_card_cat', self.high_card_cat_transformer, high_card_cat_columns),
+        ]
+        # We will now filter this list, by keeping only the ones with:
+        # - at least one column
+        # - a valid encoder or string (filter out if None)
+        self.transformers = []
+        for trans in all_transformers:
+            name, enc, cols = trans  # Unpack
+            if len(cols) > 0 and enc is not None:
+                self.transformers.append(trans)
 
-        mask = valid_encoders_mask & valid_columns_mask
-        self.transformers = transformers_df[mask].values.tolist()
-
-        if not self.transformers:
+        if len(self.transformers) == 0:
             raise RuntimeError('No transformers could be generated !')
 
         if self.verbose is not False:
