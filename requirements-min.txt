@@ -9,4 +9,4 @@ pandas
 cython
 joblib
 seaborn
-
+fasttext
