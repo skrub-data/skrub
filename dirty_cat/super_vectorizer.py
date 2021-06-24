@@ -342,7 +342,7 @@ class SuperVectorizer(ColumnTransformer):
         if len(self.transformers) == 0:
             raise RuntimeError('No transformers could be generated !')
 
-        if self.verbose is not False:
+        if self.verbose:
             print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
 
         # [Black magic] - Calls the overridden method `fit_transform`.
