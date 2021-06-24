@@ -11,6 +11,9 @@ manually categorize them beforehand, or construct complex Pipelines.
 import numpy as np
 import pandas as pd
 
+from distutils.version import LooseVersion
+
+import sklearn
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -167,13 +170,16 @@ class SuperVectorizer(ColumnTransformer):
                 "sklearn's ColumnTransformer directly."
             )
 
+        # Add `verbose` only if sklearn's version is above or equal to 0.21
+        if LooseVersion(sklearn.__version__) >= LooseVersion('0.21'):
+            kwargs.update({'verbose': verbose})
+
         super().__init__(
             transformers=[],
             remainder=remainder,
             sparse_threshold=sparse_threshold,
             n_jobs=n_jobs,
             transformer_weights=transformer_weights,
-            verbose=verbose,
             **kwargs
         )
         self.cardinality_threshold = cardinality_threshold
