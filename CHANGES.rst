@@ -4,6 +4,10 @@ Release 0.2.0
 Major changes
 -------------
 
+* **PretrainedFastText**: Added encoding of categorical variables through
+  a pretrained fastText model. FastText word embeddings capture both semantic
+  and morphological similarities.
+  
 * Bump minimum dependencies:
 
   - Python (>= 3.6)
@@ -23,10 +27,6 @@ Release 0.1.1
 
 Major changes
 -------------
-
-* **PretrainedFastText**: Added encoding of categorical variables through
-  a pretrained fastText model. FastText word embeddings capture both semantic
-  and morphological similarities.
   
 Bug-fixes
 ---------
