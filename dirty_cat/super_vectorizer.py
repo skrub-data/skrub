@@ -186,6 +186,61 @@ class SuperVectorizer(ColumnTransformer):
         self.auto_cast = auto_cast
         self.handle_missing = handle_missing
 
+    @staticmethod
+    def _cast_astype(col):
+        # First, try to convert the column to floats
+        try:
+            return col.astype(float)
+        except ValueError:
+            # Couldn't cast
+            pass
+
+        # Next, to integers
+        try:
+            return col.astype(int)
+        except ValueError:
+            pass
+
+        # Finally, to strings
+        # We are not using try-except because this should work no matter the data.
+        # (to be confirmed).
+        return col.astype(str)
+
+    @staticmethod
+    def _cast_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+        return df.convert_dtypes()
+
+    def _cast_column(self, col: np.array):
+        """
+        Method to call on each column,
+        which will try to cast said column to the best possible type.
+        """
+
+        # Check if the array contains NaN or INF
+        if _has_missing_values(col):
+            raise ValueError(_ERR_MSG_FOUND_NAN)
+        if any(col.isinf()):
+            raise ValueError(_ERR_MSG_FOUND_INF)
+
+        return self._cast_astype(col)
+
+    def _cast_series(self, sr: pd.Series) -> pd.Series:
+        if _has_missing_values(sr):
+            raise ValueError(_ERR_MSG_FOUND_NAN)
+
+        return self._cast_astype(sr)
+
+    def _cast_array(self, arr: np.array) -> np.array:
+
+        try:
+            # nD array
+            arr = np.apply_along_axis(func1d=self._cast_column, axis=1, arr=arr)
+        except np.AxisError:
+            # 1D array
+            arr = self._cast_column(arr)
+
+        return arr
+
     def _auto_cast_array(self, X):
         """
         Takes an array and tries to convert its columns to the best possible
@@ -211,65 +266,12 @@ class SuperVectorizer(ColumnTransformer):
 
         """
 
-        def cast_astype(col):
-            # First, try to convert the column to floats
-            try:
-                return col.astype(float)
-            except ValueError:
-                # Couldn't cast
-                pass
-
-            # Next, to integers
-            try:
-                return col.astype(int)
-            except ValueError:
-                pass
-
-            # Finally, to strings
-            # We are not using try-except because this should work no matter the data.
-            # (to be confirmed).
-            return col.astype(str)
-
-        def cast_series(sr: pd.Series) -> pd.Series:
-            if _has_missing_values(sr):
-                raise ValueError(_ERR_MSG_FOUND_NAN)
-
-            return cast_astype(sr)
-
-        def cast_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-            return df.convert_dtypes()
-
-        def cast_array(arr: np.array) -> np.array:
-
-            def cast_column(col: np.array):
-                """
-                Method to call on each column,
-                which will try to cast said column to the best possible type.
-                """
-
-                # Check if the array contains NaN or INF
-                if _has_missing_values(col):
-                    raise ValueError(_ERR_MSG_FOUND_NAN)
-                if any(col.isinf()):
-                    raise ValueError(_ERR_MSG_FOUND_INF)
-
-                return cast_astype(col)
-
-            try:
-                # nD array
-                arr = np.apply_along_axis(func1d=cast_column, axis=1, arr=arr)
-            except np.AxisError:
-                # 1D array
-                arr = cast_column(arr)
-
-            return arr
-
         if isinstance(X, pd.Series):
-            return cast_series(X)
+            return self._cast_series(X)
         elif isinstance(X, pd.DataFrame):
-            return cast_dataframe(X)
+            return self._cast_dataframe(X)
         elif isinstance(X, np.ndarray):
-            return cast_array(X)
+            return self._cast_array(X)
 
     def _transform(self, X) -> pd.DataFrame:
         # Convert to pandas DataFrame if not already.
