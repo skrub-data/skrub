@@ -65,7 +65,7 @@ def test_partial_fit(n_samples=70):
     enc.partial_fit(X)
     X_enc_partial = enc.transform(X)
     # Check if the encoded vectors are the same
-    np.testing.assert_array_equal(X_enc, X_enc_partial)
+    np.testing.assert_almost_equal(X_enc, X_enc_partial)
     return
 
 

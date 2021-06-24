@@ -19,8 +19,8 @@ Dependencies
 dirty_cat requires:
 
 - Python (>= 3.6)
-- NumPy (>= 1.8.2)
-- SciPy (>= 1.0.1)
+- NumPy (>= 1.16)
+- SciPy (>= 1.2)
 - scikit-learn (>= 0.20.0)
 
 Optional dependencies:
