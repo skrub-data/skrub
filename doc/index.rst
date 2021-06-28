@@ -38,7 +38,7 @@ ______
 
 .. include:: auto_examples/index.rst
     :start-line: 2
-    :end-before: .. container:: sphx-glr-footer
+    :end-before: .. rst-class:: sphx-glr-signature
 
 API documentation
 =================

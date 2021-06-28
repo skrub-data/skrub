@@ -65,7 +65,7 @@ def test_partial_fit(n_samples=70):
     enc.partial_fit(X)
     X_enc_partial = enc.transform(X)
     # Check if the encoded vectors are the same
-    np.testing.assert_array_equal(X_enc, X_enc_partial)
+    np.testing.assert_almost_equal(X_enc, X_enc_partial)
     return
 
 
@@ -78,7 +78,15 @@ def test_get_feature_names(n_samples=70):
     # Check number of labels
     assert len(topic_labels) == enc.n_components
     return
-    
+
+def test_overflow_error():
+    np.seterr(over='raise', divide='raise')
+    r = np.random.RandomState(0)
+    X = r.randint(1e5, 1e6, size=(8000, 1)).astype(str)
+    enc = GapEncoder(n_components=2, batch_size=1, min_iter=1, max_iter=1,
+                     random_state=0)
+    enc.fit(X)
+    return
 
 def profile_encoder(Encoder, init):
     # not an unit test
@@ -109,6 +117,9 @@ if __name__ == '__main__':
     print('start test_get_feature_names')
     test_get_feature_names()
     print('test_get_feature_names passed')
+    print('start test_overflow_error')
+    test_overflow_error()
+    print('test_overflow_error passed')
     
     for _ in range(3):
         print('time profile_encoder(GapEncoder, init="k-means++")')

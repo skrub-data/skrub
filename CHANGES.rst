@@ -1,3 +1,35 @@
+Release 0.2.0
+=============
+
+Major changes
+-------------
+
+* Bump minimum dependencies:
+
+  - Python (>= 3.6)
+  - NumPy (>= 1.16)
+  - SciPy (>= 1.2)
+  - scikit-learn (>= 0.20.0)
+
+
+Bug-fixes
+---------
+
+* Fix get_feature_names under scikit-learn > 0.21
+
+
+Release 0.1.1
+=============
+
+Major changes
+-------------
+
+Bug-fixes
+---------
+
+* RuntimeWarnings due to overflow in GapEncoder (#161)
+
+
 Release 0.1.0
 =============
 
