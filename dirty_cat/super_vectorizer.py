@@ -286,8 +286,7 @@ class SuperVectorizer(ColumnTransformer):
 
     def transform(self, X):
         X = self._transform(X)
-        # [Black magic] - Calls the overridden method `transform`.
-        return ColumnTransformer.transform(self, X)
+        return super().transform(X)
 
     def fit_transform(self, X, y=None):
         X = self._transform(X)
@@ -329,5 +328,4 @@ class SuperVectorizer(ColumnTransformer):
         if self.verbose:
             print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
 
-        # [Black magic] - Calls the overridden method `fit_transform`.
-        return ColumnTransformer.fit_transform(self, X, y)
+        return super().fit_transform(X, y)
