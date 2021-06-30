@@ -45,9 +45,9 @@ def _replace_missing(array):
                 and ('' not in array.cat.categories):
             array = array.cat.add_categories('')
         if dtype_name.startswith('int') or dtype_name.startswith('float'):
-            array.fillna(0, inplace=True)
+            array = array.fillna(0)
         else:
-            array.fillna('', inplace=True)
+            array = array.fillna('')
         array = array.reset_index(drop=True)
         return array
     elif isinstance(array, pd.DataFrame):
@@ -56,16 +56,19 @@ def _replace_missing(array):
             dtype_name = array[col].dtype.name
             if dtype_name == 'category' \
                     and ('' not in array[col].cat.categories):
-                array[col].cat.add_categories('', inplace=True)
-            array[col].replace(to_replace='?', value='', inplace=True)
+                array[col] = array[col].cat.add_categories('')
+            array[col] = array[col].replace(to_replace='?', value='')
             if dtype_name.startswith('int') or dtype_name.startswith('float'):
-                array[col].fillna(0, inplace=True)
+                array[col] = array[col].fillna(0)
             else:
-                array[col].fillna('', inplace=True)
+                array[col] = array[col].fillna('')
         array = array.reset_index(drop=True)
         return array
     elif isinstance(array, np.ndarray):
         # Replace missing values for numpy
+        # Warning: changes the array in-place.
+        # TODO: Add user warning regarding this issue,
+        # or find a fix.
         array[np.where(np.isnan(array))] = 0
         return array
     else:
@@ -264,6 +267,8 @@ class SuperVectorizer(ColumnTransformer):
             return self._cast_array(X)
 
     def _transform(self, X) -> pd.DataFrame:
+        # Create a copy to avoid altering the original data.
+        X = X.copy()
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
