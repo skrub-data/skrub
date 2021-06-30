@@ -11,7 +11,8 @@ manually categorize them beforehand, or construct complex Pipelines.
 import numpy as np
 import pandas as pd
 
-from typing import Union, Optional
+from warnings import warn
+from typing import Union, Optional, List
 
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
@@ -181,6 +182,8 @@ class SuperVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
+        self.columns_ = []
+
     @staticmethod
     def _cast_astype(col):
         # First, try to convert the column to floats
@@ -297,6 +300,7 @@ class SuperVectorizer(ColumnTransformer):
 
     def fit_transform(self, X, y=None):
         X = self._transform(X)
+        self.columns_ = X.columns
 
         # Select columns by dtype
         numeric_columns = X.select_dtypes(include=['int', 'float']).columns.to_list()
@@ -336,3 +340,34 @@ class SuperVectorizer(ColumnTransformer):
             print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
 
         return super().fit_transform(X, y)
+
+    def get_feature_names(self) -> List[str]:
+        """
+        Returns clean feature names with format
+        "<column_name>_<value>" if encoded by OneHotEncoder or alike,
+        e.g. "job_title_Police officer",
+        or "<column_name>" if not encoded.
+        """
+        ct_feature_names = super().get_feature_names()
+        all_trans_feature_names = []
+
+        for name, trans, cols, _ in self._iter(fitted=True):
+            if isinstance(trans, str):
+                if trans == 'drop':
+                    continue
+                elif trans == 'passthrough':
+                    if all(isinstance(col, int) for col in cols):
+                        cols = [self.columns_[i] for i in cols]
+                    all_trans_feature_names.extend(cols)
+                continue
+            if not hasattr(trans, 'get_feature_names'):
+                all_trans_feature_names.extend(cols)
+            else:
+                trans_feature_names = trans.get_feature_names(cols)
+                all_trans_feature_names.extend(trans_feature_names)
+
+        if len(ct_feature_names) != len(all_trans_feature_names):
+            warn('Could not extract clean feature names ; returning defaults.')
+            return ct_feature_names
+
+        return all_trans_feature_names
