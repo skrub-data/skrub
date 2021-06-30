@@ -37,6 +37,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.githubpages',
               'sphinx.ext.napoleon',
               'sphinx_gallery.gen_gallery',
+              'sphinxext.opengraph',
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -243,3 +244,7 @@ sphinx_gallery_conf = {
     'download_all_examples': False,
 }
 
+# -- sphinxext.opengraph configuration -------------------------------------
+ogp_site_url = "https://dirty-cat.github.io/stable/"
+ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
+ogp_use_first_image = True
