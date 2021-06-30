@@ -149,7 +149,8 @@ html_static_path = ['_static']
 
 
 # Modify the title, so as to get good social-media links
-html_title = "<project> "
+html_title = "Dirty cat:"
+html_short_title = 'Dirty cat:'
 
 # -- Options for HTMLHelp output ------------------------------------------
 
