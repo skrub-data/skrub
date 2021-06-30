@@ -148,6 +148,9 @@ html_theme_options = {
 html_static_path = ['_static']
 
 
+# Modify the title, so as to get good social-media links
+html_title = "<project> "
+
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
