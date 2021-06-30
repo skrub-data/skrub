@@ -11,6 +11,8 @@ manually categorize them beforehand, or construct complex Pipelines.
 import numpy as np
 import pandas as pd
 
+from typing import Union, Optional
+
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -146,12 +148,12 @@ class SuperVectorizer(ColumnTransformer):
 
     def __init__(self, *,
                  cardinality_threshold: int = 20,
-                 low_card_str_transformer: BaseEstimator = OneHotEncoder(),
-                 high_card_str_transformer: BaseEstimator = SimilarityEncoder(),
-                 low_card_cat_transformer: BaseEstimator = OneHotEncoder(),
-                 high_card_cat_transformer: BaseEstimator = SimilarityEncoder(),
-                 numerical_transformer: BaseEstimator = None,
-                 datetime_transformer: BaseEstimator = None,
+                 low_card_str_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
+                 high_card_str_transformer: Optional[Union[BaseEstimator, str]] = SimilarityEncoder(),
+                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
+                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = SimilarityEncoder(),
+                 numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
+                 datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
                  auto_cast: bool = False,
                  # Following parameters are inherited from ColumnTransformer
                  handle_missing: str = '',
