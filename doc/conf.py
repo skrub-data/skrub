@@ -149,8 +149,7 @@ html_static_path = ['_static']
 
 
 # Modify the title, so as to get good social-media links
-html_title = "Dirty cat:"
-html_short_title = 'Dirty cat:'
+html_title = "&mdash; Dirty cat"
 
 # -- Options for HTMLHelp output ------------------------------------------
 
@@ -252,3 +251,4 @@ sphinx_gallery_conf = {
 ogp_site_url = "https://dirty-cat.github.io/stable/"
 ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
 ogp_use_first_image = True
+ogp_site_name = "Dirty cat"
