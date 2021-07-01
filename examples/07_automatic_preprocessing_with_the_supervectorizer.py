@@ -2,10 +2,9 @@
 Automatic pre-processing with the SuperVectorizer
 =================================================
 
-In this notebook, we will illustrate the use of the `SuperVectorizer`, which
-can automatically classify columns of a dataset based on their type, and apply
-transformers based on this classification.
-To demonstrate that, we will use the `employee salaries` dataset.
+In this notebook, we introduce the `SuperVectorizer`, which automatically
+applies transformers to the different columns of a dataset.
+We demonstrate that on the `employee salaries` dataset.
 """
 
 ###############################################################################
@@ -35,7 +34,9 @@ X.drop(
     inplace=True
 )
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.15, random_state=42
+)
 
 
 ###############################################################################
@@ -56,15 +57,16 @@ regressor.fit(X_train_enc, y_train)
 
 
 ###############################################################################
-# Under the hood
-# --------------
+# Inspecting the features created by the SuperVectorizer
+# ------------------------------------------------------
 # Let's now break down what the SuperVectorizer did.
 #
 # Once it has been trained on data,
-# we can print the assignation it did:
+# we can print the transformers and the columns assignment it creates:
 
 print(sup_vec.transformers_)
 
+###############################################################################
 # This is what is being passed to the ColumnTransformer under the hood.
 # If you're familiar with how the later works, it should be very intuitive.
 # We can notice it considered the columns "gender" and "assignment_category"
@@ -82,6 +84,7 @@ feature_names = sup_vec.get_feature_names()
 print(', '.join(feature_names[:10]), '...')
 print(len(feature_names))
 
+###############################################################################
 # As we can see, it created a new column for each unique value.
 # This is because we used SimilarityEncoder on the column "division",
 # which was classified as a high cardinality string variable.
@@ -89,11 +92,12 @@ print(len(feature_names))
 # In total, we have 1212 encoded columns.
 #
 # Finally, let's plot the features importance:
-# Note: we will plot the features importances computed by the RandomForestRegressor,
-# but you should use
+# Note: we will plot the features importances computed by the
+# RandomForestRegressor, but you should use
 # [permutation importances](https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html)
 # instead (which are much more accurate).
 # We chose the former over the later for the sake of performance.
+
 import numpy as np
 import matplotlib.pyplot as plt
 
