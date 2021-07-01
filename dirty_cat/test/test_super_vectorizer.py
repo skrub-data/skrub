@@ -1,7 +1,5 @@
 import pandas as pd
 
-from sklearn.preprocessing import StandardScaler
-
 from dirty_cat import SuperVectorizer
 
 
@@ -24,7 +22,7 @@ def test_super_vectorizer():
     # Test with low cardinality and a StandardScaler for the numeric columns
     vectorizer_base = SuperVectorizer(
         cardinality_threshold=3,
-        numerical_transformer=StandardScaler(),
+        numerical_transformer='passthrough',
     )
     # Warning: order-dependant
     expected_transformers_df = {
@@ -68,7 +66,7 @@ def test_super_vectorizer():
     vectorizer_cast = SuperVectorizer(
         cardinality_threshold=3,
         auto_cast=True,
-        numerical_transformer=StandardScaler()
+        numerical_transformer='passthrough',
     )
     X_str = X.astype('object')
     expected_transformers_plain = {
