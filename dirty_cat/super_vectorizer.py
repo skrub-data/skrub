@@ -142,6 +142,20 @@ class SuperVectorizer(ColumnTransformer):
         If set to 'error', will raise ValueError.
         If set to '', will impute the missing values (pd.NA) with blank strings.
 
+    Attributes
+    ----------
+
+    transformers_: List[Tuple[str, Union[str, BaseEstimator], Union[str, int]]]
+        The final distribution of columns.
+        List of three-tuple containing
+        (1) the name of the category
+        (2) the encoder/transformer instance which will be applied
+        or "passthrough" or "drop"
+        (3) the list of column names or index
+
+    columns_: List[Union[str, int]]
+        The column names of fitted array.
+
     """
 
     # Override required parameters
