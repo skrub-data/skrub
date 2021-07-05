@@ -11,6 +11,8 @@ Major changes
   - SciPy (>= 1.2)
   - scikit-learn (>= 0.20.0)
 
+* Add SuperVectorizer v1
+
 
 Bug-fixes
 ---------

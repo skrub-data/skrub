@@ -109,15 +109,15 @@ print(len(feature_names))
 # (default values, see `SuperVectorizer`'s docstring).
 # In total, we have 1212 encoded columns.
 #
-# Finally, let's plot the features importance.
+# Finally, let's plot the feature importances.
 #
 # .. topic:: Note:
 #
-#    we will plot the features importances computed by the
+#    we will plot the feature importances computed by the
 #    |RandomForestRegressor|, but you should use |permutation importances|
 #    instead (which are much more accurate)
 #
-# We chose the former over the later for the sake of performance.
+#    We chose the former over the later for the sake of performance.
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -149,3 +149,30 @@ plt.show()
 # We can deduce a few things from this data:
 # the three factors that define the most the salary are: being a manager,
 # being hired for a long time, and have a permanent, full-time job.
+#
+# Finally, let's make a pipeline, perform a cross-validation
+# and compare the results to the other examples
+
+from sklearn.model_selection import cross_val_score, KFold
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import RidgeCV
+from sklearn.pipeline import Pipeline
+
+pipeline = Pipeline([
+    ('vectorizer', SuperVectorizer(auto_cast=True,
+                                   numerical_transformer=StandardScaler())),
+    ('clf', RidgeCV())
+])
+
+cv = KFold(n_splits=5, random_state=42, shuffle=True)
+scores = cross_val_score(pipeline, X, y, cv=cv, scoring='r2')
+
+print(f'{scores=}')
+print(f'mean={np.mean(scores)}')
+print(f'std={np.std(scores)}')
+
+###############################################################################
+# Compared to
+# :ref:`example 02<sphx_glr_auto_examples_02_fit_predict_plot_employee_salaries.py>`,
+# the mean score is a little higher than the all-`SimilarityEncoder`,
+# and the standard deviation is a little smaller.

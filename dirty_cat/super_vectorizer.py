@@ -87,7 +87,7 @@ class SuperVectorizer(ColumnTransformer):
     on the characteristics of each column.
     Under the hood, it is an interface for scikit-learn's `ColumnTransformer`.
 
-    .. versionadded:: 0.1.1
+    .. versionadded:: 0.2.0
 
     Parameters
     ----------
