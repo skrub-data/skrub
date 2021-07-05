@@ -10,6 +10,9 @@ import os
 import sys
 import pytest
 import shutil
+import sklearn
+
+from distutils.version import LooseVersion
 
 from unittest import mock
 from unittest.mock import mock_open
@@ -139,7 +142,10 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
     test_data_dir = get_test_data_dir()
     _download_and_write_openml_dataset(1, test_data_dir)
 
-    mock_fetch_openml.assert_called_once_with(data_id=1, data_home=test_data_dir, as_frame=True)
+    if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+        mock_fetch_openml.assert_called_once_with(data_id=1, data_home=test_data_dir, as_frame=True)
+    else:
+        mock_fetch_openml.assert_called_once_with(data_id=1, data_home=test_data_dir)
 
 
 @mock.patch("os.path.isfile")
