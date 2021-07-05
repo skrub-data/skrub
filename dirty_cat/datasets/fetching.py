@@ -15,9 +15,11 @@ Scikit-Learn's ``fetch_openml()`` function.
 import os
 import gzip
 import json
+import sklearn
 import warnings
 
 from collections import namedtuple
+from distutils.version import LooseVersion
 
 from dirty_cat.datasets.utils import get_data_dir
 
@@ -141,6 +143,10 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: str) -> 
     """
     from sklearn.datasets import fetch_openml
 
+    fetch_kwargs = {}
+    if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+        fetch_kwargs.update({'as_frame': True})
+
     # The ``fetch_openml()`` function returns a Scikit-Learn ``Bunch`` object,
     # which behaves just like a ``namedtuple``.
     # However, we do not want to save this data into memory:
@@ -148,7 +154,7 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: str) -> 
     #
     # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
     # and ``urllib.error.URLError`` if there is no Internet connection.
-    fetch_openml(data_id=dataset_id, data_home=data_directory, as_frame=True)
+    fetch_openml(data_id=dataset_id, data_home=data_directory, **fetch_kwargs)
 
 
 def _read_json_from_gz(compressed_dir_path: str) -> dict:
