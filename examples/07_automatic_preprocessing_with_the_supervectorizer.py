@@ -5,10 +5,26 @@ Automatic pre-processing with the SuperVectorizer
 In this notebook, we introduce the `SuperVectorizer`, which automatically
 applies transformers to the different columns of a dataset.
 We demonstrate that on the `employee salaries` dataset.
+
+
+.. |OneHotEncoder| replace::
+    :class:`~sklearn.preprocessing.OneHotEncoder`
+
+.. |ColumnTransformer| replace::
+    :class:`~sklearn.compose.ColumnTransformer`
+
+.. |RandomForestRegressor| replace::
+    :class:`~sklearn.ensemble.RandomForestRegressor`
+
+.. |SE| replace:: :class:`~dirty_cat.SimilarityEncoder`
+
+.. |permutation importances| replace::
+    :func:`~sklearn.inspection.permutation_importance`
+
 """
 
 ###############################################################################
-# Import the data
+# Importing the data
 # ---------------
 #
 # Let's fetch the dataset, and load X and y:
@@ -40,9 +56,9 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 ###############################################################################
-# Using the SuperVectorizer
-# -------------------------
-# Here is a simple workflow with the SuperVectorizer.
+# Using the vectorizer
+# --------------------
+# Here is a simple workflow with the `SuperVectorizer`.
 
 from sklearn.ensemble import RandomForestRegressor
 from dirty_cat import SuperVectorizer
@@ -57,9 +73,9 @@ regressor.fit(X_train_enc, y_train)
 
 
 ###############################################################################
-# Inspecting the features created by the SuperVectorizer
-# ------------------------------------------------------
-# Let's now break down what the SuperVectorizer did.
+# Inspecting the features created
+# -------------------------------
+# Let's now break down what the `SuperVectorizer` did.
 #
 # Once it has been trained on data,
 # we can print the transformers and the columns assignment it creates:
@@ -67,13 +83,15 @@ regressor.fit(X_train_enc, y_train)
 print(sup_vec.transformers_)
 
 ###############################################################################
-# This is what is being passed to the ColumnTransformer under the hood.
+# This is what is being passed to the |ColumnTransformer| under the hood.
 # If you're familiar with how the later works, it should be very intuitive.
 # We can notice it considered the columns "gender" and "assignment_category"
 # as low cardinality string variables.
+#
 # The vectorizer actually makes the difference between string variables
-# (data type "object") and categorical variables (data type "category").
-# A OneHotEncoder() will be applied to these columns.
+# (data type `object` and `string`) and categorical variables
+# (data type `category`).
+# A |OneHotEncoder| will be applied to these columns.
 #
 # Next, we can have a look at the encoded feature names.
 
@@ -86,16 +104,19 @@ print(len(feature_names))
 
 ###############################################################################
 # As we can see, it created a new column for each unique value.
-# This is because we used SimilarityEncoder on the column "division",
+# This is because we used |SimilarityEncoder| on the column "division",
 # which was classified as a high cardinality string variable.
-# (default values, see SuperVectorizer's docstring).
+# (default values, see `SuperVectorizer`'s docstring).
 # In total, we have 1212 encoded columns.
 #
-# Finally, let's plot the features importance:
-# Note: we will plot the features importances computed by the
-# RandomForestRegressor, but you should use
-# [permutation importances](https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html)
-# instead (which are much more accurate).
+# Finally, let's plot the features importance.
+#
+# .. topic:: Note:
+#
+#    we will plot the features importances computed by the
+#    |RandomForestRegressor|, but you should use |permutation importances|
+#    instead (which are much more accurate)
+#
 # We chose the former over the later for the sake of performance.
 
 import numpy as np
