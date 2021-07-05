@@ -8,11 +8,14 @@ manually categorize them beforehand, or construct complex Pipelines.
 
 # Author: Lilian Boulard <lilian@boulard.fr> | https://github.com/LilianBoulard
 
+import sklearn
+
 import numpy as np
 import pandas as pd
 
 from warnings import warn
 from typing import Union, Optional, List
+from distutils.version import LooseVersion
 
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
@@ -83,6 +86,8 @@ class SuperVectorizer(ColumnTransformer):
     Applies transformers to columns of an array depending
     on the characteristics of each column.
     Under the hood, it is an interface for scikit-learn's `ColumnTransformer`.
+
+    .. versionadded:: 0.1.1
 
     Parameters
     ----------
@@ -304,7 +309,19 @@ class SuperVectorizer(ColumnTransformer):
                                  f"got {self.handle_missing}")
 
         if self.auto_cast:
+            from pandas.core.dtypes.base import ExtensionDtype
             X = self._auto_cast_array(X)
+
+            if LooseVersion(sklearn.__version__) <= LooseVersion('0.22'):
+                # Cast pandas dtypes to numpy dtypes
+                # for earlier versions of sklearn
+                for column in X:
+                    dtype = X[column].dtype
+                    if issubclass(dtype.__class__, ExtensionDtype):
+                        try:
+                            X[column] = X[column].astype(dtype.type)
+                        except TypeError:
+                            pass
 
         return X
 
