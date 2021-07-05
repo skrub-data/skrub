@@ -4,7 +4,7 @@ Tests fetching.py (datasets fetching off OpenML.org).
 
 """
 
-# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/Phaide
+# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/LilianBoulard
 
 import os
 import sys
