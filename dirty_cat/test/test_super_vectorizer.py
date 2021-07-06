@@ -46,6 +46,14 @@ def test_super_vectorizer():
     vectorizer_default.fit_transform(X)
     check_same_transformers(expected_transformers_2, vectorizer_default.transformers)
 
+    # Test feature names
+    expected_feature_names = [  # Order matters. If it doesn't, convert to set.
+        'str1_private', 'str1_public',
+        'str2_chef', 'str2_lawyer', 'str2_manager', 'str2_officer', 'str2_teacher',
+        'cat1_no', 'cat1_yes', 'cat2_20K+', 'cat2_30K+', 'cat2_40K+', 'cat2_50K+', 'cat2_60K+',
+        'int', 'float']
+    assert vectorizer_default.get_feature_names() == expected_feature_names
+
     # Test with a numpy array
     arr = X.to_numpy()
     # Instead of the columns names, we'll have the column indices.
