@@ -68,7 +68,10 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 import numpy as np
 
-from sklearn.ensemble._hist_gradient_boosting.gradient_boosting import HistGradientBoostingRegressor
+# For scikit-learn 0.24, we need to require the experimental feature
+from sklearn.experimental import enable_hist_gradient_boosting
+from sklearn.ensemble import HistGradientBoostingRegressor
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
@@ -82,7 +85,7 @@ pipeline = Pipeline([
 ])
 
 ###############################################################################
-# For reference, let's perform a cross-validation:
+# For reference, let's perform a cross-validation
 
 from sklearn.model_selection import cross_val_score
 
