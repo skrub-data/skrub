@@ -177,7 +177,7 @@ indices = np.argsort(importances)[::-1]
 
 # Plotting the results:
 
-plt.figure(figsize=(18, 9))
+plt.figure(figsize=(12, 9))
 plt.title("Feature importances")
 n = 20
 n_indices = indices[:n]
