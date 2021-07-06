@@ -26,11 +26,16 @@ We demonstrate that on the `employee salaries` dataset.
 ###############################################################################
 # Importing the data
 # ---------------
-#
 # Let's fetch the dataset, and load X and y:
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from dirty_cat.datasets import fetch_employee_salaries
+
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
 
 employee_salaries = fetch_employee_salaries()
 print(employee_salaries['DESCR'])
@@ -54,14 +59,53 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.15, random_state=42
 )
 
-
 ###############################################################################
 # Using the vectorizer
 # --------------------
-# Here is a simple workflow with the `SuperVectorizer`.
+# Here is a simple workflow with the `SuperVectorizer` using a `Pipeline`:
+#
+# It's the typical and recommended way of using it.
+
+import numpy as np
+
+from sklearn.ensemble._hist_gradient_boosting.gradient_boosting import HistGradientBoostingRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+
+from dirty_cat import SuperVectorizer
+
+
+pipeline = Pipeline([
+    ('vectorizer', SuperVectorizer(auto_cast=True,
+                                   numerical_transformer=StandardScaler())),
+    ('clf', HistGradientBoostingRegressor(random_state=42))
+])
+
+###############################################################################
+# For reference, let's perform a cross-validation:
+
+from sklearn.model_selection import cross_val_score
+
+
+scores = cross_val_score(pipeline, X, y, scoring='r2')
+
+print(f'{scores=}')
+print(f'mean={np.mean(scores)}')
+print(f'std={np.std(scores)}')
+
+###############################################################################
+# Compared to
+# :ref:`example 02<sphx_glr_auto_examples_02_fit_predict_plot_employee_salaries.py>`,
+# the mean score is a pretty much the same as the all-|SE|.
+
+###############################################################################
+# Analyzing what it does
+# ----------------------
+# Let's perform the same workflow, but without the `Pipeline`, so we can
+# analyze its mechanisms along the way.
 
 from sklearn.ensemble import RandomForestRegressor
-from dirty_cat import SuperVectorizer
+
 
 sup_vec = SuperVectorizer(auto_cast=True)
 regressor = RandomForestRegressor(n_estimators=25, random_state=42)
@@ -71,12 +115,9 @@ X_test_enc = sup_vec.transform(X_test)
 # And the regressor
 regressor.fit(X_train_enc, y_train)
 
-
 ###############################################################################
 # Inspecting the features created
 # -------------------------------
-# Let's now break down what the `SuperVectorizer` did.
-#
 # Once it has been trained on data,
 # we can print the transformers and the columns assignment it creates:
 
@@ -85,13 +126,13 @@ print(sup_vec.transformers_)
 ###############################################################################
 # This is what is being passed to the |ColumnTransformer| under the hood.
 # If you're familiar with how the later works, it should be very intuitive.
-# We can notice it considered the columns "gender" and "assignment_category"
+# We can notice it classified the columns "gender" and "assignment_category"
 # as low cardinality string variables.
+# A |OneHotEncoder| will be applied to these columns.
 #
 # The vectorizer actually makes the difference between string variables
-# (data type `object` and `string`) and categorical variables
-# (data type `category`).
-# A |OneHotEncoder| will be applied to these columns.
+# (data type ``object`` and ``string``) and categorical variables
+# (data type ``category``).
 #
 # Next, we can have a look at the encoded feature names.
 
@@ -99,7 +140,7 @@ print(sup_vec.transformers_)
 print(X.columns.to_list())
 # After :
 feature_names = sup_vec.get_feature_names()
-print(', '.join(feature_names[:10]), '...')
+print(feature_names[:8])
 print(len(feature_names))
 
 ###############################################################################
@@ -119,8 +160,8 @@ print(len(feature_names))
 #
 #    We chose the former over the later for the sake of performance.
 
-import numpy as np
 import matplotlib.pyplot as plt
+
 
 # Getting feature importances
 importances = regressor.feature_importances_
@@ -149,30 +190,3 @@ plt.show()
 # We can deduce a few things from this data:
 # the three factors that define the most the salary are: being a manager,
 # being hired for a long time, and have a permanent, full-time job.
-#
-# Finally, let's make a pipeline, perform a cross-validation
-# and compare the results to the other examples
-
-from sklearn.model_selection import cross_val_score, KFold
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import RidgeCV
-from sklearn.pipeline import Pipeline
-
-pipeline = Pipeline([
-    ('vectorizer', SuperVectorizer(auto_cast=True,
-                                   numerical_transformer=StandardScaler())),
-    ('clf', RidgeCV())
-])
-
-cv = KFold(n_splits=5, random_state=42, shuffle=True)
-scores = cross_val_score(pipeline, X, y, cv=cv, scoring='r2')
-
-print(f'{scores=}')
-print(f'mean={np.mean(scores)}')
-print(f'std={np.std(scores)}')
-
-###############################################################################
-# Compared to
-# :ref:`example 02<sphx_glr_auto_examples_02_fit_predict_plot_employee_salaries.py>`,
-# the mean score is a little higher than the all-`SimilarityEncoder`,
-# and the standard deviation is a little smaller.
