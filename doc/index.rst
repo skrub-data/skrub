@@ -21,6 +21,10 @@ If interpretability is important,the :class:`GapEncoder` is a good
 alternative, as it can be interpreted as one-hot encoding, where each encoding
 dimension corresponds to a topic that summarizes the substrings captured.
 
+The :class:`SuperVectorizer` provides an interface for automatic pre-processing
+of datasets.
+
+
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
 <https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
@@ -43,8 +47,8 @@ ______
 API documentation
 =================
 
-Encoders
-------------
+Encoders / Vectorizers
+----------------------
 
 .. autosummary::
    :toctree: generated/
@@ -55,6 +59,7 @@ Encoders
    MinHashEncoder
    SimilarityEncoder
    TargetEncoder
+   SuperVectorizer
 
 Data download
 -----------------------
