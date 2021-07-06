@@ -69,7 +69,7 @@ class SuperVectorizer(ColumnTransformer):
         the parameters `low_card_str_transformer`/`low_card_cat_transformer` and
         `high_card_str_transformer`/`high_card_cat_transformer` respectively.
 
-    low_card_str_transformer, default=OneHotEncoder()
+    low_card_str_transformer: Transformer or str or None, default=OneHotEncoder()
         Transformer used on features with low cardinality (threshold is
         defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
@@ -77,7 +77,7 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    high_card_str_transformer, default=GapEncoder()
+    high_card_str_transformer: Transformer or str or None, default=GapEncoder()
         Transformer used on features with high cardinality (threshold is
         defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. `GapEncoder()`),
@@ -85,20 +85,20 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    low_card_cat_transformer, default=OneHotEncoder()
+    low_card_cat_transformer: Transformer or str or None, default=OneHotEncoder()
         Same as `low_card_str_transformer`.
 
-    high_card_cat_transformer, default=GapEncoder()
+    high_card_cat_transformer: Transformer or str or None, default=GapEncoder()
         Same as `high_card_str_transformer`.
 
-    numerical_transformer, default=None
+    numerical_transformer: Transformer or str or None, default=None
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    datetime_transformer, default=None
+    datetime_transformer: Transformer or str or None, default=None
         Transformer used on datetime features.
         Can either be a transformer object instance,
         a `Pipeline` containing the preprocessing steps,
