@@ -37,6 +37,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.githubpages',
               'sphinx.ext.napoleon',
               'sphinx_gallery.gen_gallery',
+              'sphinxext.opengraph',
               ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -147,6 +148,9 @@ html_theme_options = {
 html_static_path = ['_static']
 
 
+# Modify the title, so as to get good social-media links
+html_title = "&mdash; Dirty cat"
+
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
@@ -243,3 +247,8 @@ sphinx_gallery_conf = {
     'download_all_examples': False,
 }
 
+# -- sphinxext.opengraph configuration -------------------------------------
+ogp_site_url = "https://dirty-cat.github.io/stable/"
+ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
+ogp_use_first_image = True
+ogp_site_name = "Dirty cat"
