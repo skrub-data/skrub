@@ -37,8 +37,13 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.githubpages',
               'sphinx.ext.napoleon',
               'sphinx_gallery.gen_gallery',
-              'sphinxext.opengraph',
               ]
+
+try:
+    import sphinxext.opengraph
+    extensions.append('sphinxext.opengraph')
+except ImportError:
+    print("ERROR: sphinxext.opengraph import failed")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

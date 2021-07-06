@@ -11,9 +11,9 @@ dirty_cat: machine learning on dirty categories
 non-curated categories. It provides **encoders that are
 robust to morphological variants**, such as typos, in the category strings.
 
-The :class:`SuperVectorizer` is a high-level transformer that can easily
-turn a heterogeneous data table, as a pandas dataframe, to a numerical
-array, suitable for machin learning.
+The :class:`SuperVectorizer` is a high-level transformer that can
+automatically turn a heterogeneous data table, as a pandas dataframe, to
+a numerical array, suitable for machin learning.
 
 
 **Dirty category encoder**: `scikit-learn <https://scikit-learn.org>`_'s

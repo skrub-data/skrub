@@ -1,6 +1,10 @@
 Release 0.2.0
 =============
 
+Version 0.2.0 is not yet releave. To install it use::
+
+    pip install git+https://github.com/dirty-cat/dirty_cat.git
+
 Major changes
 -------------
 

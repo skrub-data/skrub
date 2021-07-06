@@ -3,8 +3,10 @@ Automatic pre-processing with the SuperVectorizer
 =================================================
 
 In this notebook, we introduce the `SuperVectorizer`, which automatically
-applies transformers to the different columns of a dataset.
-We demonstrate that on the `employee salaries` dataset.
+turns a heterogeneous dataset into a numerical column, finding the right
+transformers to apply to the different columns.
+
+We demonstrate it on the `employee salaries` dataset.
 
 
 .. |OneHotEncoder| replace::
@@ -40,7 +42,9 @@ pd.set_option('display.max_colwidth', None)
 employee_salaries = fetch_employee_salaries()
 print(employee_salaries['DESCR'])
 
-X: pd.DataFrame = employee_salaries['data']
+###############################################################################
+
+X = employee_salaries['data']
 y = employee_salaries['target']
 # We'll drop a few columns we don't want
 X.drop(
@@ -55,18 +59,24 @@ X.drop(
     inplace=True
 )
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.15, random_state=42
-)
+###############################################################################
+# The data are in a fairly complex and heterogeneous dataframe:
+X.head(n=15)
 
 ###############################################################################
-# Using the vectorizer
-# --------------------
-# Here is a simple workflow with the `SuperVectorizer` using a `Pipeline`:
+# The challenge is to turn this dataframe into a form well suited for
+# machine learning.
+
+###############################################################################
+# Using the SuperVectorizer in a supervised-learning pipeline
+# ------------------------------------------------------------
+#
+# Assembling the SuperVectorizer in a pipeline with a powerful learner,
+# such as gradient boosted trees, gives **a machine-learning method that
+# can be readily applied to the dataframe**.
 #
 # It's the typical and recommended way of using it.
 
-import numpy as np
 
 # For scikit-learn 0.24, we need to require the experimental feature
 from sklearn.experimental import enable_hist_gradient_boosting
@@ -76,45 +86,49 @@ from sklearn.pipeline import Pipeline
 
 from dirty_cat import SuperVectorizer
 
-
 pipeline = Pipeline([
     ('vectorizer', SuperVectorizer(auto_cast=True)),
     ('clf', HistGradientBoostingRegressor(random_state=42))
 ])
 
 ###############################################################################
-# For reference, let's perform a cross-validation
+# Let's perform a cross-validation to see how well this model predicts
 
 from sklearn.model_selection import cross_val_score
 
-
 scores = cross_val_score(pipeline, X, y, scoring='r2')
 
+import numpy as np
 print(f'{scores=}')
 print(f'mean={np.mean(scores)}')
 print(f'std={np.std(scores)}')
 
 ###############################################################################
-# Compared to
-# :ref:`example 02<sphx_glr_auto_examples_02_fit_predict_plot_employee_salaries.py>`,
-# the mean score is a pretty much the same as the all-|SE|, and yet the
-# code to build the pipeline is much simpler as it does not involve
-# specifying the columns manually.
+# The prediction perform here is pretty much as good as in :ref:`example
+# 02<sphx_glr_auto_examples_02_fit_predict_plot_employee_salaries.py>`,
+# but the code here is much simpler as it does not involve specifying
+# columns manually.
 
 ###############################################################################
-# Analyzing what it does
-# ----------------------
-# Let's perform the same workflow, but without the `Pipeline`, so we can
+# Analyzing the features created
+# -------------------------------
+#
+# Let us perform the same workflow, but without the `Pipeline`, so we can
 # analyze its mechanisms along the way.
-
 sup_vec = SuperVectorizer(auto_cast=True)
+
+##############################################################################
+# We split the data between train and test, and transform them:
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.15, random_state=42
+)
 
 X_train_enc = sup_vec.fit_transform(X_train, y_train)
 X_test_enc = sup_vec.transform(X_test)
 
 ###############################################################################
 # Inspecting the features created
-# -------------------------------
+# .................................
 # Once it has been trained on data,
 # we can print the transformers and the columns assignment it creates:
 
@@ -132,48 +146,44 @@ print(sup_vec.transformers_)
 # (data type ``category``).
 #
 # Next, we can have a look at the encoded feature names.
-
-# Before:
+#
+# Before encoding:
 print(X.columns.to_list())
-# After :
+
+###############################################################################
+# After encoding (we only plot the first 8 feature names):
 feature_names = sup_vec.get_feature_names()
 print(feature_names[:8])
-print(len(feature_names))
 
 ###############################################################################
 # As we can see, it created a new column for each unique value.
 # This is because we used |SE| on the column "division",
 # which was classified as a high cardinality string variable.
 # (default values, see `SuperVectorizer`'s docstring).
+#
 # In total, we have 1212 encoded columns.
+print(len(feature_names))
+
 
 ###############################################################################
 # Feature importance in the statistical model
-# -------------------------------------------
+# ............................................
 # In this section, we will train a regressor, and plot the feature importances
 # .. topic:: Note:
 #
-#    we will plot the feature importances computed by the
-#    |RandomForestRegressor|, but you should use |permutation importances|
-#    instead (which are much more accurate)
-#
-#    We chose the former over the later for the sake of performance.
+#    To minimize compute time, use the feature importances computed by the
+#    |RandomForestRegressor|, but you should prefer |permutation importances|
+#    instead (which are not less subject to biases)
 #
 # First, let's train the |RandomForestRegressor|,
 
 from sklearn.ensemble import RandomForestRegressor
-
-
-regressor = RandomForestRegressor(n_estimators=25, random_state=42)
+regressor = RandomForestRegressor()
 regressor.fit(X_train_enc, y_train)
 
+
 ###############################################################################
-# And then plot the feature importances.
-
-import matplotlib.pyplot as plt
-
-
-# Getting feature importances
+# Getting the feature importances
 importances = regressor.feature_importances_
 std = np.std(
     [
@@ -184,8 +194,10 @@ std = np.std(
 )
 indices = np.argsort(importances)[::-1]
 
+###############################################################################
 # Plotting the results:
 
+import matplotlib.pyplot as plt
 plt.figure(figsize=(12, 9))
 plt.title("Feature importances")
 n = 20
@@ -197,6 +209,6 @@ plt.tight_layout(pad=1)
 plt.show()
 
 ###############################################################################
-# We can deduce a few things from this data:
-# the three factors that define the most the salary are: being a manager,
-# being hired for a long time, and have a permanent, full-time job :).
+# We can deduce from this data that the three factors that define the
+# most the salary are: being a manager, being hired for a long time, and
+# have a permanent, full-time job :).
