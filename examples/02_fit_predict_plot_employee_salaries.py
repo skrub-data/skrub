@@ -140,7 +140,7 @@ plt.yticks(size=20)
 plt.tight_layout()
 
 ##########################################################################
-# The clear trend is that encoders that encoders that use the string form
+# The clear trend is that encoders that use the string form
 # of the category (similarity, minhash, and gap) perform better than
 # those that discard it.
 # 
@@ -148,4 +148,3 @@ plt.tight_layout()
 # data than MinHashEncoder and GapEncoder. The most scalable encoder is
 # the MinHashEncoder. GapEncoder, on the other hand, has the benefit that
 # it provides interpretable features (see :ref:`sphx_glr_auto_examples_04_feature_interpretation_gap_encoder.py`)
-
