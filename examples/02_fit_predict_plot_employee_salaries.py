@@ -1,6 +1,6 @@
 """
-Predicting the salary of employees
-==================================
+Comparing encoders of a dirty categorical columns
+==================================================
 
 The `employee salaries <https://catalog.data.gov/dataset/employee-salaries-2016>`_
 dataset contains information
@@ -99,13 +99,13 @@ def make_pipeline(encoding_method):
         ('union', ColumnTransformer(
             transformers=transformers,
             remainder='drop')),
-        ('clf', HistGradientBoostingRegressor())
+        ('clf', HistGradientBoostingRegressor(n_jobs=-1))
     ])
     return pipeline
 
 
 #########################################################################
-# Fitting each encoding methods with a RidgeCV
+# Using each encoding for supervised learning
 # --------------------------------------------
 # Eventually, we loop over the different encoding methods,
 # instantiate each time a new pipeline, fit it
@@ -115,19 +115,17 @@ def make_pipeline(encoding_method):
 from sklearn.experimental import enable_hist_gradient_boosting  # noqa
 # now you can import normally from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import cross_val_score
 import numpy as np
 
 all_scores = dict()
 
-cv = KFold(n_splits=5, random_state=12, shuffle=True)
-scoring = 'r2'
 for method in encoding_methods:
     pipeline = make_pipeline(method)
-    scores = cross_val_score(pipeline, df, y, cv=cv, scoring=scoring)
+    scores = cross_val_score(pipeline, df, y)
     print('{} encoding'.format(method))
-    print('{} score:  mean: {:.3f}; std: {:.3f}\n'.format(
-        scoring, np.mean(scores), np.std(scores)))
+    print('r2 score:  mean: {:.3f}; std: {:.3f}\n'.format(
+        np.mean(scores), np.std(scores)))
     all_scores[method] = scores
 
 #########################################################################
