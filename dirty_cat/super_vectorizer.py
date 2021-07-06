@@ -308,7 +308,18 @@ class SuperVectorizer(ColumnTransformer):
         e.g. "job_title_Police officer",
         or "<column_name>" if not encoded.
         """
-        ct_feature_names = super().get_feature_names()
+        if LooseVersion(sklearn.__version__) < LooseVersion('0.23'):
+            try:
+                ct_feature_names = super().get_feature_names()
+            except NotImplementedError:
+                raise NotImplementedError(
+                    'Prior to sklearn 0.23, get_feature_names with '
+                    '"passthrough" is unsupported. To use the method, '
+                    'either make sure there is no "passthrough" in the '
+                    'transformers, or update your copy of scikit-learn.'
+                )
+        else:
+            ct_feature_names = super().get_feature_names()
         all_trans_feature_names = []
 
         for name, trans, cols, _ in self._iter(fitted=True):
