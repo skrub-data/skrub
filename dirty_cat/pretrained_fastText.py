@@ -20,21 +20,21 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
     Parameters
     ----------
     
+    bin_dir : str
+        The folder containing the fastText models in the form of binary files.
+        Models downloaded or saved with the 'download_model' or 'save_model'
+        methods are stored in bin_dir.
+    
     n_components : int, default=300
         The size of the fastText embeddings (300 for the downloaded models).
         If n_components < 300, the fastText model is automatically reduced to
         output vectors of the desired size.
-        If n_components > 300, it is automatically set to 300.
+        If n_components > 300, it is set back to 300.
         
     language : str, default='en'
         The training language of the fastText model to load.
         See the list of models trained in 157 different languages here:
         <https://fasttext.cc/docs/en/crawl-vectors.html>.
-    
-    bin_dir : str, default='./fastText_bins'
-        The path to the folder containing the fastText models to load.
-        Models downloaded or saved with the 'download_model' or 'save_model'
-        methods are stored in bin_dir.
     
     file_name : str or None, default=None
         Only used for testing purposes. If given, indicates the file to load
@@ -53,12 +53,12 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
     can be found here <https://fasttext.cc>.
     """
 
-    def __init__(self, n_components=300, language='en',
-                 bin_dir='./fastText_bins', file_name=None):
+    def __init__(self, bin_dir, n_components=300, language='en',
+                 file_name=None):
         
+        self.bin_dir = bin_dir
         self.n_components = n_components if n_components < 300 else 300
         self.language = language
-        self.bin_dir = bin_dir
         # Load the model from binary file
         if file_name == None:
             file_name = f"cc.{language}.{n_components}.bin"
