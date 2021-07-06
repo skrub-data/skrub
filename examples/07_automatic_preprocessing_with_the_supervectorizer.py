@@ -72,15 +72,13 @@ import numpy as np
 from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
 
-from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
 from dirty_cat import SuperVectorizer
 
 
 pipeline = Pipeline([
-    ('vectorizer', SuperVectorizer(auto_cast=True,
-                                   numerical_transformer=StandardScaler())),
+    ('vectorizer', SuperVectorizer(auto_cast=True)),
     ('clf', HistGradientBoostingRegressor(random_state=42))
 ])
 
