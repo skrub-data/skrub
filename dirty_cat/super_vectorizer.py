@@ -10,10 +10,10 @@ manually categorize them beforehand, or construct complex Pipelines.
 
 import sklearn
 
-import numpy as np
 import pandas as pd
 
 from warnings import warn
+from functools import wraps
 from typing import Union, Optional, List
 from distutils.version import LooseVersion
 
@@ -24,61 +24,30 @@ from sklearn.preprocessing import OneHotEncoder
 from dirty_cat import SimilarityEncoder
 
 
-_ERR_MSG_UNSUPPORTED_ARR_T = 'Unsupported array type: {}'
-_ERR_MSG_FOUND_NAN = 'Found NaN in array'
-_ERR_MSG_FOUND_INF = 'Found INF in array'
-
-
-def _has_missing_values(array) -> bool:
+def _has_missing_values(array: pd.DataFrame) -> bool:
     """
     Returns True if `array` contains missing values, False otherwise.
     """
-    if isinstance(array, pd.DataFrame) or isinstance(array, pd.Series):
-        return any(array.isnull())
-    elif isinstance(array, np.ndarray):
-        return np.isnan(array).any()
-    else:
-        raise ValueError(_ERR_MSG_UNSUPPORTED_ARR_T.format(type(array)))
+    return any(array.isnull())
 
 
-def _replace_missing(array):
+def _replace_missing(array: pd.DataFrame) -> pd.DataFrame:
     """
-    Takes an array, replaces the missing values with a specific value, and returns it.
+    Takes a DataFrame, replaces the missing values, and returns it.
     """
-    if isinstance(array, pd.Series):
-        dtype_name = array.dtype.name
+    # Replace missing values for pandas
+    for col in array.columns:
+        dtype_name = array[col].dtype.name
         if dtype_name == 'category' \
-                and ('' not in array.cat.categories):
-            array = array.cat.add_categories('')
+                and ('' not in array[col].cat.categories):
+            array[col] = array[col].cat.add_categories('')
+        array[col] = array[col].replace(to_replace='?', value='')
         if dtype_name.startswith('int') or dtype_name.startswith('float'):
-            array = array.fillna(0)
+            array[col] = array[col].fillna(0)
         else:
-            array = array.fillna('')
-        array = array.reset_index(drop=True)
-        return array
-    elif isinstance(array, pd.DataFrame):
-        # Replace missing values for pandas
-        for col in array.columns:
-            dtype_name = array[col].dtype.name
-            if dtype_name == 'category' \
-                    and ('' not in array[col].cat.categories):
-                array[col] = array[col].cat.add_categories('')
-            array[col] = array[col].replace(to_replace='?', value='')
-            if dtype_name.startswith('int') or dtype_name.startswith('float'):
-                array[col] = array[col].fillna(0)
-            else:
-                array[col] = array[col].fillna('')
-        array = array.reset_index(drop=True)
-        return array
-    elif isinstance(array, np.ndarray):
-        # Replace missing values for numpy
-        # Warning: changes the array in-place.
-        # TODO: Add user warning regarding this issue,
-        # or find a fix.
-        array[np.where(np.isnan(array))] = 0
-        return array
-    else:
-        raise ValueError(_ERR_MSG_UNSUPPORTED_ARR_T.format(type(array)))
+            array[col] = array[col].fillna('')
+    array = array.reset_index(drop=True)
+    return array
 
 
 class SuperVectorizer(ColumnTransformer):
@@ -203,61 +172,6 @@ class SuperVectorizer(ColumnTransformer):
 
         self.columns_ = []
 
-    @staticmethod
-    def _cast_astype(col):
-        # First, try to convert the column to floats
-        try:
-            return col.astype(float)
-        except ValueError:
-            # Couldn't cast
-            pass
-
-        # Next, to integers
-        try:
-            return col.astype(int)
-        except ValueError:
-            pass
-
-        # Finally, to strings
-        # We are not using try-except because this should work no matter the data.
-        # (to be confirmed).
-        return col.astype(str)
-
-    @staticmethod
-    def _cast_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-        return df.convert_dtypes()
-
-    def _cast_column(self, col: np.array):
-        """
-        Method to call on each column,
-        which will try to cast said column to the best possible type.
-        """
-
-        # Check if the array contains NaN or INF
-        if _has_missing_values(col):
-            raise ValueError(_ERR_MSG_FOUND_NAN)
-        if any(col.isinf()):
-            raise ValueError(_ERR_MSG_FOUND_INF)
-
-        return self._cast_astype(col)
-
-    def _cast_series(self, sr: pd.Series) -> pd.Series:
-        if _has_missing_values(sr):
-            raise ValueError(_ERR_MSG_FOUND_NAN)
-
-        return self._cast_astype(sr)
-
-    def _cast_array(self, arr: np.array) -> np.array:
-
-        try:
-            # nD array
-            arr = np.apply_along_axis(func1d=self._cast_column, axis=1, arr=arr)
-        except np.AxisError:
-            # 1D array
-            arr = self._cast_column(arr)
-
-        return arr
-
     def _auto_cast_array(self, X):
         """
         Takes an array and tries to convert its columns to the best possible
@@ -273,22 +187,8 @@ class SuperVectorizer(ColumnTransformer):
         array
             The same array, with its columns casted to the best possible
             data type.
-
-        Raises
-        ------
-        RuntimeError
-            If no transformers could be constructed,
-            usually because transformers passed do not match any column.
-            To fix the issue, try passing the least amount of None as encoders.
-
         """
-
-        if isinstance(X, pd.Series):
-            return self._cast_series(X)
-        elif isinstance(X, pd.DataFrame):
-            return self._cast_dataframe(X)
-        elif isinstance(X, np.ndarray):
-            return self._cast_array(X)
+        return X.convert_dtypes()
 
     def _transform(self, X) -> pd.DataFrame:
         # Create a copy to avoid altering the original data.
@@ -325,11 +225,40 @@ class SuperVectorizer(ColumnTransformer):
 
         return X
 
+    @wraps(ColumnTransformer.transform)
     def transform(self, X):
         X = self._transform(X)
         return super().transform(X)
 
     def fit_transform(self, X, y=None):
+        """
+        Fit all transformers, transform the data, and concatenate results.
+
+        Parameters
+        ----------
+        X : {array-like, dataframe} of shape (n_samples, n_features)
+            Input data, of which specified subsets are used to fit the
+            transformers.
+
+        y : array-like of shape (n_samples,), default=None
+            Targets for supervised learning.
+
+        Returns
+        -------
+        X_t : {array-like, sparse matrix} of \
+                shape (n_samples, sum_n_components)
+            hstack of results of transformers. sum_n_components is the
+            sum of n_components (output dimension) over transformers. If
+            any result is a sparse matrix, everything will be converted to
+            sparse matrices.
+
+        Raises
+        ------
+        RuntimeError
+            If no transformers could be constructed,
+            usually because transformers passed do not match any column.
+            To fix the issue, try passing the least amount of None as encoders.
+        """
         X = self._transform(X)
         self.columns_ = X.columns
 
