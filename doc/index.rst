@@ -48,7 +48,7 @@ API documentation
 =================
 
 Encoders / Vectorizers
-------------
+----------------------
 
 .. autosummary::
    :toctree: generated/
