@@ -2,16 +2,13 @@
 Comparing encoders of a dirty categorical columns
 ==================================================
 
-The `employee salaries <https://catalog.data.gov/dataset/employee-salaries-2016>`_
-dataset contains information
-about annual salaries (year 2016) for more than 9,000 employees of the 
-Montgomery County (Maryland, US). In this example, we are interested
-in predicting the column *Current Annual Salary*
-depending on a mix of clean columns and a dirty column.
-We choose to benchmark different categorical encodings for
-the dirty column *Employee Position Title*, that contains
-dirty categorical data.
+Considering a database on `employee salaries
+<https://catalog.data.gov/dataset/employee-salaries-2016>`_, one problem
+is that the *Employee Position Title* column contains dirty categorical
+data.
 
+Here, we compare different categorical encodings for the dirty column to
+predict the *Current Annual Salary*, using gradient boosted trees.
 """
 
 ################################################################################
@@ -71,6 +68,11 @@ from sklearn.preprocessing import OneHotEncoder
 from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder,\
     GapEncoder
 
+# for scikit-learn 0.24 we need to require the experimental feature
+from sklearn.experimental import enable_hist_gradient_boosting  # noqa
+# now you can import normally from ensemble
+from sklearn.ensemble import HistGradientBoostingRegressor
+
 encoders_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
@@ -87,7 +89,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 
-def make_pipeline(encoding_method):
+def assemble_pipeline(encoding_method):
     # static transformers from the other columns
     transformers = [(enc + '_' + col, encoders_dict[enc], [col])
                     for col, enc in clean_columns.items()]
@@ -111,17 +113,13 @@ def make_pipeline(encoding_method):
 # instantiate each time a new pipeline, fit it
 # and store the returned cross-validation score:
 
-# explicitly require this experimental feature
-from sklearn.experimental import enable_hist_gradient_boosting  # noqa
-# now you can import normally from ensemble
-from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import cross_val_score
 import numpy as np
 
 all_scores = dict()
 
 for method in encoding_methods:
-    pipeline = make_pipeline(method)
+    pipeline = assemble_pipeline(method)
     scores = cross_val_score(pipeline, df, y)
     print('{} encoding'.format(method))
     print('r2 score:  mean: {:.3f}; std: {:.3f}\n'.format(
