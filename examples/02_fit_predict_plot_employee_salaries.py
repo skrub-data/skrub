@@ -99,7 +99,7 @@ def make_pipeline(encoding_method):
         ('union', ColumnTransformer(
             transformers=transformers,
             remainder='drop')),
-        ('clf', HistGradientBoostingRegressor(n_jobs=-1))
+        ('clf', HistGradientBoostingRegressor())
     ])
     return pipeline
 
