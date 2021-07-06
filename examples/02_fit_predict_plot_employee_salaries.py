@@ -2,9 +2,8 @@
 Comparing encoders of a dirty categorical columns
 ==================================================
 
-Considering a database on `employee salaries
-<https://catalog.data.gov/dataset/employee-salaries-2016>`_, one problem
-is that the *Employee Position Title* column contains dirty categorical
+The column *Employee Position Title* of the dataset `employee salaries
+<https://catalog.data.gov/dataset/employee-salaries-2016>`_ contains dirty categorical
 data.
 
 Here, we compare different categorical encodings for the dirty column to
@@ -149,5 +148,4 @@ plt.tight_layout()
 # data than MinHashEncoder and GapEncoder. The most scalable encoder is
 # the MinHashEncoder. GapEncoder, on the other hand, has the benefit that
 # it provides interpretable features (see :ref:`sphx_glr_auto_examples_04_feature_interpretation_gap_encoder.py`)
-
 
