@@ -11,7 +11,10 @@ Major changes
   - SciPy (>= 1.2)
   - scikit-learn (>= 0.20.0)
 
-* Add SuperVectorizer v1
+* **SuperVectorizer**: Added automatic transform through the
+  :class:`SuperVectorizer` class. It classifies and transforms
+  columns automatically based on their type. A replacement
+  for the `ColumnTransformer`.
 
 
 Bug-fixes
