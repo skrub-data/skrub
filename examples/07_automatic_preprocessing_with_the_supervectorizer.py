@@ -25,7 +25,7 @@ We demonstrate that on the `employee salaries` dataset.
 
 ###############################################################################
 # Importing the data
-# ---------------
+# ------------------
 # Let's fetch the dataset, and load X and y:
 
 import pandas as pd
@@ -105,16 +105,10 @@ print(f'std={np.std(scores)}')
 # Let's perform the same workflow, but without the `Pipeline`, so we can
 # analyze its mechanisms along the way.
 
-from sklearn.ensemble import RandomForestRegressor
-
-
 sup_vec = SuperVectorizer(auto_cast=True)
-regressor = RandomForestRegressor(n_estimators=25, random_state=42)
-# Fit the SuperVectorizer
+
 X_train_enc = sup_vec.fit_transform(X_train, y_train)
 X_test_enc = sup_vec.transform(X_test)
-# And the regressor
-regressor.fit(X_train_enc, y_train)
 
 ###############################################################################
 # Inspecting the features created
@@ -146,13 +140,15 @@ print(len(feature_names))
 
 ###############################################################################
 # As we can see, it created a new column for each unique value.
-# This is because we used |SimilarityEncoder| on the column "division",
+# This is because we used |SE| on the column "division",
 # which was classified as a high cardinality string variable.
 # (default values, see `SuperVectorizer`'s docstring).
 # In total, we have 1212 encoded columns.
-#
-# Finally, let's plot the feature importances.
-#
+
+###############################################################################
+# Feature importance in the statistical model
+# -------------------------------------------
+# In this section, we will train a regressor, and plot the feature importances
 # .. topic:: Note:
 #
 #    we will plot the feature importances computed by the
@@ -160,6 +156,17 @@ print(len(feature_names))
 #    instead (which are much more accurate)
 #
 #    We chose the former over the later for the sake of performance.
+#
+# First, let's train the |RandomForestRegressor|,
+
+from sklearn.ensemble import RandomForestRegressor
+
+
+regressor = RandomForestRegressor(n_estimators=25, random_state=42)
+regressor.fit(X_train_enc, y_train)
+
+###############################################################################
+# And then plot the feature importances.
 
 import matplotlib.pyplot as plt
 
