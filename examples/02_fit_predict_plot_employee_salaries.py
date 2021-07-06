@@ -81,7 +81,7 @@ encoders_dict = {
 
 # We then create a function that takes one key of our ``encoders_dict``,
 # returns a pipeline object with the associated encoder,
-# as well as a Scaler and a RidgeCV regressor:
+# as well as a gradient-boosting regressor
 
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -99,8 +99,7 @@ def make_pipeline(encoding_method):
         ('union', ColumnTransformer(
             transformers=transformers,
             remainder='drop')),
-        ('scaler', StandardScaler(with_mean=False)),
-        ('clf', RidgeCV())
+        ('clf', HistGradientBoostingRegressor())
     ])
     return pipeline
 
@@ -111,8 +110,11 @@ def make_pipeline(encoding_method):
 # Eventually, we loop over the different encoding methods,
 # instantiate each time a new pipeline, fit it
 # and store the returned cross-validation score:
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import RidgeCV
+
+# explicitly require this experimental feature
+from sklearn.experimental import enable_hist_gradient_boosting  # noqa
+# now you can import normally from ensemble
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import KFold, cross_val_score
 import numpy as np
 
