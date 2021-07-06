@@ -3,8 +3,8 @@ Automatic pre-processing with the SuperVectorizer
 =================================================
 
 In this notebook, we introduce the `SuperVectorizer`, which automatically
-turns a heterogeneous dataset into a numerical column, finding the right
-transformers to apply to the different columns.
+turns a heterogeneous dataset into a numerical representation, finding
+the right transformers to apply to the different columns.
 
 We demonstrate it on the `employee salaries` dataset.
 
