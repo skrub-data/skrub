@@ -130,15 +130,6 @@ for method in encoding_methods:
 # Plotting the results
 # --------------------
 # Finally, we plot the scores on a boxplot:
-# We notice that the MinHashEncoder does not performs as well compared to 
-# other encoding methods.
-# There are two reasons for that: the MinHashEncoder performs better
-# with tree-based models than linear models (
-# :ref:`see example 03<sphx_glr_auto_examples_03_fit_predict_plot_midwest_survey.py>`)
-# , and also
-# increasing `n_components` improves performances. `n_components` around 300 
-# tend to lead to good prediction performance, but with more computational
-# cost.
 
 import seaborn
 import matplotlib.pyplot as plt
@@ -149,5 +140,14 @@ plt.xlabel('Prediction accuracy     ', size=20)
 plt.yticks(size=20)
 plt.tight_layout()
 
+##########################################################################
+# The clear trend is that encoders that encoders that use the string form
+# of the category (similarity, minhash, and gap) perform better than
+# those that discard it.
+# 
+# SimilarityEncoder is the best performer, but it is less scalable on big
+# data than MinHashEncoder and GapEncoder. The most scalable encoder is
+# the MinHashEncoder. GapEncoder, on the other hand, has the benefit that
+# it provides interpretable features (see :ref:`sphx_glr_auto_examples_04_feature_interpretation_gap_encoder.py`)
 
 
