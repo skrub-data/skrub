@@ -12,9 +12,10 @@ Major changes
   - scikit-learn (>= 0.20.0)
 
 * **SuperVectorizer**: Added automatic transform through the
-  :class:`SuperVectorizer` class. It classifies and transforms
-  columns automatically based on their type. A replacement
-  for the `ColumnTransformer`.
+  :class:`SuperVectorizer` class. It transforms
+  columns automatically based on their type. It provides a replacement
+  for scikit-learn's `ColumnTransformer` simpler to use on heterogeneous
+  panda dataframes.
 
 
 Bug-fixes

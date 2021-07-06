@@ -52,9 +52,10 @@ def _replace_missing(array: pd.DataFrame) -> pd.DataFrame:
 
 class SuperVectorizer(ColumnTransformer):
     """
-    Applies transformers to columns of an array depending
-    on the characteristics of each column.
-    Under the hood, it is an interface for scikit-learn's `ColumnTransformer`.
+    Easily transforms a heterogeneous data table (such as a dataframe) to
+    a numerical array for machine learning. For this it transforms each
+    column depending on its data type.
+    It provides a simplified interface for scikit-learn's `ColumnTransformer`.
 
     .. versionadded:: 0.2.0
 

@@ -97,7 +97,9 @@ print(f'std={np.std(scores)}')
 ###############################################################################
 # Compared to
 # :ref:`example 02<sphx_glr_auto_examples_02_fit_predict_plot_employee_salaries.py>`,
-# the mean score is a pretty much the same as the all-|SE|.
+# the mean score is a pretty much the same as the all-|SE|, and yet the
+# code to build the pipeline is much simpler as it does not involve
+# specifying the columns manually.
 
 ###############################################################################
 # Analyzing what it does
@@ -197,4 +199,4 @@ plt.show()
 ###############################################################################
 # We can deduce a few things from this data:
 # the three factors that define the most the salary are: being a manager,
-# being hired for a long time, and have a permanent, full-time job.
+# being hired for a long time, and have a permanent, full-time job :).
