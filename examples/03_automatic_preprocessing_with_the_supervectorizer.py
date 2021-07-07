@@ -8,7 +8,6 @@ the right transformers to apply to the different columns.
 
 We demonstrate it on the `employee salaries` dataset.
 
-
 .. |OneHotEncoder| replace::
     :class:`~sklearn.preprocessing.OneHotEncoder`
 
@@ -28,17 +27,9 @@ We demonstrate it on the `employee salaries` dataset.
 ###############################################################################
 # Importing the data
 # ------------------
-# Let's fetch the dataset, and load X and y:
-
-import pandas as pd
-from sklearn.model_selection import train_test_split
+# Let's fetch the dataset, and load X (the employees' features) and y
+# (the salary to predict):
 from dirty_cat.datasets import fetch_employee_salaries
-
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', None)
-
 employee_salaries = fetch_employee_salaries()
 print(employee_salaries['DESCR'])
 
@@ -61,7 +52,7 @@ X.drop(
 
 ###############################################################################
 # The data are in a fairly complex and heterogeneous dataframe:
-X.head(n=15)
+X
 
 ###############################################################################
 # The challenge is to turn this dataframe into a form well suited for
@@ -119,6 +110,7 @@ sup_vec = SuperVectorizer(auto_cast=True)
 
 ##############################################################################
 # We split the data between train and test, and transform them:
+from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.15, random_state=42
 )
@@ -132,7 +124,7 @@ X_test_enc = sup_vec.transform(X_test)
 # Once it has been trained on data,
 # we can print the transformers and the columns assignment it creates:
 
-print(sup_vec.transformers_)
+sup_vec.transformers_
 
 ###############################################################################
 # This is what is being passed to the |ColumnTransformer| under the hood.
@@ -148,12 +140,12 @@ print(sup_vec.transformers_)
 # Next, we can have a look at the encoded feature names.
 #
 # Before encoding:
-print(X.columns.to_list())
+X.columns.to_list()
 
 ###############################################################################
 # After encoding (we only plot the first 8 feature names):
 feature_names = sup_vec.get_feature_names()
-print(feature_names[:8])
+feature_names[:8]
 
 ###############################################################################
 # As we can see, it created a new column for each unique value.
@@ -162,7 +154,7 @@ print(feature_names[:8])
 # (default values, see `SuperVectorizer`'s docstring).
 #
 # In total, we have 1212 encoded columns.
-print(len(feature_names))
+len(feature_names)
 
 
 ###############################################################################
