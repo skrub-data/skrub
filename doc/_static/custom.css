@@ -81,8 +81,13 @@ div.sphinxsidebarwrapper div h3:first-of-type {
 /* Docstrings ************************************************************/
 
 /* More space around the attributes and methods */
-dl.py.attribute, dl.py.method {
-    padding-top: 2em;
+dl.py.attribute, dl.py.method, dl.py.property {
+    padding-top: 1.5em;
+    padding-bottom: .5em;
+}
+
+dl.py.class dl.field-list {
+    padding-bottom: .5em;
 }
 
 /*************************************************************************/
