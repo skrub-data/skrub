@@ -2,11 +2,14 @@
 Automatic pre-processing with the SuperVectorizer
 =================================================
 
-In this notebook, we introduce the `SuperVectorizer`, which automatically
+In this notebook, we introduce the |SV|, which automatically
 turns a heterogeneous dataset into a numerical representation, finding
 the right transformers to apply to the different columns.
 
 We demonstrate it on the `employee salaries` dataset.
+
+.. |SV| replace::
+    :class:`~dirty_cat.SuperVectorizer`
 
 .. |OneHotEncoder| replace::
     :class:`~sklearn.preprocessing.OneHotEncoder`
@@ -55,14 +58,14 @@ X.drop(
 X
 
 ###############################################################################
-# The challenge is to turn this dataframe into a form well suited for
+# The challenge is to turn this dataframe into a form suited for
 # machine learning.
 
 ###############################################################################
 # Using the SuperVectorizer in a supervised-learning pipeline
 # ------------------------------------------------------------
 #
-# Assembling the SuperVectorizer in a pipeline with a powerful learner,
+# Assembling the |SV| in a pipeline with a powerful learner,
 # such as gradient boosted trees, gives **a machine-learning method that
 # can be readily applied to the dataframe**.
 #
@@ -151,7 +154,7 @@ feature_names[:8]
 # As we can see, it created a new column for each unique value.
 # This is because we used |SE| on the column "division",
 # which was classified as a high cardinality string variable.
-# (default values, see `SuperVectorizer`'s docstring).
+# (default values, see |SV|'s docstring).
 #
 # In total, we have 1212 encoded columns.
 len(feature_names)
@@ -165,7 +168,7 @@ len(feature_names)
 #
 #    To minimize compute time, use the feature importances computed by the
 #    |RandomForestRegressor|, but you should prefer |permutation importances|
-#    instead (which are not less subject to biases)
+#    instead (which are less subject to biases)
 #
 # First, let's train the |RandomForestRegressor|,
 
