@@ -78,6 +78,13 @@ div.sphinxsidebarwrapper div h3:first-of-type {
     display: block;
 }
 
+/* Docstrings ************************************************************/
+
+/* More space around the attributes and methods */
+dl.py.attribute, dl.py.method {
+    padding-top: 2em;
+}
+
 /*************************************************************************/
 
 /* My custom classes */

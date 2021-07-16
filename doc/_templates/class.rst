@@ -4,10 +4,13 @@
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+   :inherited-members:
+   :undoc-members:
 
    {% block methods %}
-   .. automethod:: __init__
+
    {% endblock %}
+
 
 .. include:: {{module}}.{{objname}}.examples
 
