@@ -12,7 +12,7 @@ from dirty_cat import GapEncoder
 ])
 def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
     X_txt = fetch_20newsgroups(subset='train')['data']
-    X = X_txt[:n_samples]
+    X = np.array(X_txt[:n_samples])[:,None]
     n_components = 10
     # Test output shape
     encoder = GapEncoder(
@@ -25,9 +25,10 @@ def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
     assert len(set(y[0])) == n_components
 
     # Test L1-norm of topics W.
-    l1_norm_W = np.abs(encoder.W_).sum(axis=1)
-    np.testing.assert_array_almost_equal(
-        l1_norm_W, np.ones(n_components))
+    for ge_col in encoder.fitted_models_:
+        l1_norm_W = np.abs(ge_col.W_).sum(axis=1)
+        np.testing.assert_array_almost_equal(
+            l1_norm_W, np.ones(n_components))
 
     # Test same seed return the same output
     encoder = GapEncoder(
@@ -42,11 +43,11 @@ def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
 
 def test_input_type():
     # Numpy array
-    X = np.array(['alice', 'bob'])
+    X = np.array([['alice'], ['bob']])
     enc = GapEncoder(n_components=2, random_state=42)
     X_enc_array = enc.fit_transform(X)
     # List
-    X = ['alice', 'bob']
+    X = [['alice'], ['bob']]
     enc = GapEncoder(n_components=2, random_state=42)
     X_enc_list = enc.fit_transform(X)
     # Check if the encoded vectors are the same
@@ -56,7 +57,7 @@ def test_input_type():
 
 def test_partial_fit(n_samples=70):
     X_txt = fetch_20newsgroups(subset='train')['data']
-    X = X_txt[:n_samples]
+    X = np.array(X_txt[:n_samples])[:,None]
     # Gap encoder with fit on one batch
     enc = GapEncoder(random_state=42, batch_size=n_samples, max_iter=1)
     X_enc = enc.fit_transform(X)
@@ -71,12 +72,13 @@ def test_partial_fit(n_samples=70):
 
 def test_get_feature_names(n_samples=70):
     X_txt = fetch_20newsgroups(subset='train')['data']
-    X = X_txt[:n_samples]
+    X = np.array(X_txt[:n_samples])[:,None]
     enc = GapEncoder()
     enc.fit(X)
     topic_labels = enc.get_feature_names()
     # Check number of labels
-    assert len(topic_labels) == enc.n_components
+    assert len(topic_labels) == X.shape[1]
+    assert len(topic_labels[0]) == enc.n_components
     return
 
 def test_overflow_error():

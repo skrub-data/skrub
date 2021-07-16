@@ -24,6 +24,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
+from .utils import check_x
 
 if LooseVersion(sklearn_version) < LooseVersion('0.22'):
     from sklearn.cluster.k_means_ import _k_init
@@ -38,99 +39,9 @@ else:
     from sklearn.decomposition._nmf import _beta_divergence
 
 
-class GapEncoder(BaseEstimator, TransformerMixin):
-    """
-    This encoder can be understood as a continuous encoding on a set of latent
-    categories estimated from the data. The latent categories are built by
-    capturing combinations of substrings that frequently co-occur.
-    
-    The GapEncoder supports online learning on batches of data for
-    scalability through the partial_fit method.
+class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
-    Parameters
-    ----------
-
-    n_components : int, default=10
-        Number of latent categories used to model string data.
-
-    batch_size : int, default=128
-        Number of samples per batch.
-
-    gamma_shape_prior : float, default=1.1
-        Shape parameter for the Gamma prior distribution.
-
-    gamma_scale_prior : float, default=1.0
-        Scale parameter for the Gamma prior distribution.
-
-    rho : float, default=0.95
-        Weight parameter for the update of the W matrix.
-    
-    rescale_rho : bool, default=False
-        If true, use rho ** (batch_size / len(X)) instead of rho to obtain an
-        update rate per iteration that is independent of the batch size.
-
-    hashing : bool, default=False
-        If true, HashingVectorizer is used instead of CountVectorizer.
-        It has the advantage of being very low memory scalable to large
-        datasets as there is no need to store a vocabulary dictionary in
-        memory.
-
-    hashing_n_features : int, default=2**12
-        Number of features for the HashingVectorizer. Only relevant if
-        hashing=True.
-
-    init : str, default='k-means++'
-        Initialization method of the W matrix.
-        Options: {'k-means++', 'random', 'k-means'}.
-        If init='k-means++', we use the init method of sklearn.cluster.KMeans.
-        If init='random', topics are initialized with a Gamma distribution.
-        If init='k-means', topics are initialized with a KMeans on the n-grams
-        counts. This usually makes convergence faster but is a bit slower.
-
-    tol : float, default=1e-4
-        Tolerance for the convergence of the matrix W.
-
-    min_iter : int, default=2
-        Minimum number of iterations on the input data.
-
-    max_iter : int, default=5
-        Maximum number of iterations on the input data.
-
-    ngram_range : tuple, default=(2, 4)
-        The range of ngram length that will be used to build the
-        bag-of-n-grams representation of the input data.
-
-    analyzer : str, default='char'.
-        Analyzer parameter for the CountVectorizer/HashingVectorizer.
-        Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
-        to factorize should be made of word counts or character n-gram counts.
-        Option ‘char_wb’ creates character n-grams only from text inside word
-        boundaries; n-grams at the edges of words are padded with space.
-
-    add_words : bool, default=False
-        If true, add the words counts to the bag-of-n-grams representation
-        of the input data.
-
-    random_state : int or None, default=None
-        Pass an int for reproducible output across multiple function calls.
-
-    rescale_W : bool, default=True
-        If true, the weight matrix W is rescaled at each iteration
-        to have an l1 norm equal to 1 for each row.
-    
-    max_iter_e_step : int, default=20
-        Maximum number of iterations to adjust the activations h at each step.
-
-
-    Attributes
-    ----------
-
-    References
-    ----------
-    For a detailed description of the method, see
-    `Encoding high-cardinality string categorical variables
-    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
-    """
+    """See GapEncoder's docstring."""
 
     def __init__(self, n_components=10, batch_size=128, gamma_shape_prior=1.1,
                  gamma_scale_prior=1.0, rho=.95, rescale_rho=False,
@@ -290,12 +201,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         -------
         self
         """
-        # Check input data shape
-        X = np.asarray(X)
-        assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
-        shape {X.shape} of input array is not supported."
-        if X.ndim == 2:
-            X = X[:, 0]
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Make n-grams counts matrix unq_V
@@ -430,12 +335,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         # Init H_dict_ with empty dict if it's the first call of partial_fit
         if not hasattr(self, 'H_dict_'):
             self.H_dict_ = dict()
-        # Check input data shape
-        X = np.asarray(X)
-        assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
-        shape {X.shape} of input array is not supported."
-        if X.ndim == 2:
-            X = X[:, 0]
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Check if it is not the first batch
@@ -508,12 +407,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         H : 2-d array, shape (n_samples, n_topics)
             Transformed input.
         """
-        # Check input data shape
-        X = np.asarray(X)
-        assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
-        shape {X.shape} of input array is not supported."
-        if X.ndim == 2:
-            X = X[:, 0]
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         unq_X = np.unique(X)
@@ -538,6 +431,190 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         # Store and return the encoded vectors of X
         self.H_dict_.update(zip(unq_X, unq_H))
         return self._get_H(X)
+
+
+class GapEncoder(BaseEstimator, TransformerMixin):
+    """
+    This encoder can be understood as a continuous encoding on a set of latent
+    categories estimated from the data. The latent categories are built by
+    capturing combinations of substrings that frequently co-occur.
+
+    The GapEncoder supports online learning on batches of data for
+    scalability through the partial_fit method.
+
+    Parameters
+    ----------
+
+    n_components : int, default=10
+        Number of latent categories used to model string data.
+
+    batch_size : int, default=128
+        Number of samples per batch.
+
+    gamma_shape_prior : float, default=1.1
+        Shape parameter for the Gamma prior distribution.
+
+    gamma_scale_prior : float, default=1.0
+        Scale parameter for the Gamma prior distribution.
+
+    rho : float, default=0.95
+        Weight parameter for the update of the W matrix.
+
+    rescale_rho : bool, default=False
+        If true, use rho ** (batch_size / len(X)) instead of rho to obtain an
+        update rate per iteration that is independent of the batch size.
+
+    hashing : bool, default=False
+        If true, HashingVectorizer is used instead of CountVectorizer.
+        It has the advantage of being very low memory scalable to large
+        datasets as there is no need to store a vocabulary dictionary in
+        memory.
+
+    hashing_n_features : int, default=2**12
+        Number of features for the HashingVectorizer. Only relevant if
+        hashing=True.
+
+    init : str, default='k-means++'
+        Initialization method of the W matrix.
+        Options: {'k-means++', 'random', 'k-means'}.
+        If init='k-means++', we use the init method of sklearn.cluster.KMeans.
+        If init='random', topics are initialized with a Gamma distribution.
+        If init='k-means', topics are initialized with a KMeans on the n-grams
+        counts. This usually makes convergence faster but is a bit slower.
+
+    tol : float, default=1e-4
+        Tolerance for the convergence of the matrix W.
+
+    min_iter : int, default=2
+        Minimum number of iterations on the input data.
+
+    max_iter : int, default=5
+        Maximum number of iterations on the input data.
+
+    ngram_range : tuple, default=(2, 4)
+        The range of ngram length that will be used to build the
+        bag-of-n-grams representation of the input data.
+
+    analyzer : str, default='char'.
+        Analyzer parameter for the CountVectorizer/HashingVectorizer.
+        Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
+        to factorize should be made of word counts or character n-gram counts.
+        Option ‘char_wb’ creates character n-grams only from text inside word
+        boundaries; n-grams at the edges of words are padded with space.
+
+    add_words : bool, default=False
+        If true, add the words counts to the bag-of-n-grams representation
+        of the input data.
+
+    random_state : int or None, default=None
+        Pass an int for reproducible output across multiple function calls.
+
+    rescale_W : bool, default=True
+        If true, the weight matrix W is rescaled at each iteration
+        to have an l1 norm equal to 1 for each row.
+
+    max_iter_e_step : int, default=20
+        Maximum number of iterations to adjust the activations h at each step.
+
+
+    Attributes
+    ----------
+
+    References
+    ----------
+    For a detailed description of the method, see
+    `Encoding high-cardinality string categorical variables
+    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
+    """
+
+    def __init__(self, n_components=10, batch_size=128, gamma_shape_prior=1.1,
+                 gamma_scale_prior=1.0, rho=.95, rescale_rho=False,
+                 hashing=False, hashing_n_features=2**12, init='k-means++',
+                 tol=1e-4, min_iter=2, max_iter=5, ngram_range=(2, 4),
+                 analyzer='char', add_words=False, random_state=None,
+                 rescale_W=True, max_iter_e_step=20):
+
+        self.ngram_range = ngram_range
+        self.n_components = n_components
+        self.gamma_shape_prior = gamma_shape_prior  # 'a' parameter
+        self.gamma_scale_prior = gamma_scale_prior  # 'b' parameter
+        self.rho = rho
+        self.rho_ = self.rho
+        self.rescale_rho = rescale_rho
+        self.batch_size = batch_size
+        self.tol = tol
+        self.hashing = hashing
+        self.hashing_n_features = hashing_n_features
+        self.max_iter = max_iter
+        self.min_iter = min_iter
+        self.init = init
+        self.analyzer = analyzer
+        self.add_words = add_words
+        self.random_state = random_state
+        self.rescale_W = rescale_W
+        self.max_iter_e_step = max_iter_e_step
+
+    # TODO: score method
+
+    def _create_column_gap_encoder(self) -> GapEncoderColumn:
+        return GapEncoderColumn(
+            ngram_range=self.ngram_range,
+            n_components=self.n_components,
+            gamma_shape_prior=self.gamma_shape_prior,
+            gamma_scale_prior=self.gamma_scale_prior,
+            rho=self.rho,
+            rescale_rho=self.rescale_rho,
+            batch_size=self.batch_size,
+            tol=self.tol,
+            hashing=self.hashing,
+            hashing_n_features=self.hashing_n_features,
+            max_iter=self.max_iter,
+            init=self.init,
+            add_words=self.add_words,
+            random_state=self.random_state,
+            rescale_W=self.rescale_W,
+            max_iter_e_step=self.max_iter_e_step,
+        )
+
+    def fit(self, X, y=None):
+        X = check_x(X)
+        self.fitted_models_ = []
+        for k in range(X.shape[1]):
+            ge_column = self._create_column_gap_encoder()
+            self.fitted_models_.append(ge_column.fit(X[:, k]))
+        return self
+
+    def transform(self, X):
+        # Check input data shape
+        X = check_x(X)
+        X_enc = []
+        for k in range(X.shape[1]):
+            X_enc.append(self.fitted_models_[k].transform(X[:, k]))
+        X_enc = np.hstack(X_enc)
+        return X_enc
+
+    def partial_fit(self, X, y=None):
+        X = check_x(X)
+        # Init the `GapEncoderColumn` instances if the model was
+        # not fitted already.
+        if not hasattr(self, 'fitted_models_'):
+            self.fitted_models_ = [
+                self._create_column_gap_encoder()
+                for _ in range(X.shape[1])
+            ]
+
+        for k in range(X.shape[1]):
+            self.fitted_models_[k].partial_fit(X[:, k])
+
+        return self
+
+    def get_feature_names(self, n_labels=3):
+        assert hasattr(self, 'fitted_models_'), (
+            'ERROR: GapEncoder must be fitted first.')
+        labels = [
+            enc.get_feature_names(n_labels)
+            for enc in self.fitted_models_]
+        return labels
 
 
 def _rescale_W(W, A):
