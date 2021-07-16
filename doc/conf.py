@@ -260,7 +260,7 @@ ogp_use_first_image = True
 ogp_site_name = "Dirty cat"
 
 # -- sphinxext.napoleon configuration --------------------------------------
-napoleon_use_param = True
+napoleon_use_param = False
 
 # -- sphinxext.typehints configuration -------------------------------------
 autodoc_typehints = "description"
