@@ -87,6 +87,12 @@ dl.py.attribute, dl.py.method {
 
 /*************************************************************************/
 
+p.side-comment {
+    font-size: smaller;
+    text-align: right;
+    padding-bottom: 1em;
+}
+
 /* My custom classes */
 p.right-align {
     float: right;
