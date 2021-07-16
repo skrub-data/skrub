@@ -137,7 +137,7 @@ html_theme_options = {
     'github_user': 'dirty-cat',
     'github_repo': 'dirty_cat',
     'github_button': 'true',
-    'github_style': 'follow',
+    'github_style': 'star',
     'github_count': 'true',
     'show_powered_by': 'false',
     'logo_name': 'true',
