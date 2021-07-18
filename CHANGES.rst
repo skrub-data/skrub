@@ -21,6 +21,11 @@ Major changes
   for scikit-learn's `ColumnTransformer` simpler to use on heterogeneous
   panda dataframes.
 
+* **Backward incompatible change to GapEncoder**: The GapEncoder now only
+  supports two-dimensional inputs of shape (n_samples, n_features).
+  Internally, features are encoded by independent GapEncoder models,
+  and are then concatenated into a single matrix.
+
 
 Bug-fixes
 ---------
