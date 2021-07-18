@@ -112,7 +112,7 @@ print(f'std={np.std(scores)}')
 # analyze its mechanisms along the way.
 sup_vec = SuperVectorizer(
     auto_cast=True,
-    high_card_str_transformer=GapEncoder(n_components=50)
+    high_card_str_transformer=GapEncoder(n_components=50),
     high_card_cat_transformer=GapEncoder(n_components=50)
 )
 
