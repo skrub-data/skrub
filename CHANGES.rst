@@ -1,6 +1,10 @@
 Release 0.2.0
 =============
 
+Version 0.2.0 is not yet releave. To install it use::
+
+    pip install git+https://github.com/dirty-cat/dirty_cat.git
+
 Major changes
 -------------
 
@@ -14,6 +18,12 @@ Major changes
   - NumPy (>= 1.16)
   - SciPy (>= 1.2)
   - scikit-learn (>= 0.20.0)
+
+* **SuperVectorizer**: Added automatic transform through the
+  :class:`SuperVectorizer` class. It transforms
+  columns automatically based on their type. It provides a replacement
+  for scikit-learn's `ColumnTransformer` simpler to use on heterogeneous
+  panda dataframes.
 
 
 Bug-fixes

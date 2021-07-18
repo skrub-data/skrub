@@ -1,12 +1,18 @@
 :mod:`{{module}}`.{{objname}}
 {{ underline }}==============
 
+.. rst-class:: side_comment
+
+    Usage examples at the bottom of this page.
+
 .. currentmodule:: {{ module }}
 
 .. autoclass:: {{ objname }}
+   :inherited-members:
+   :undoc-members:
 
    {% block methods %}
-   .. automethod:: __init__
+
    {% endblock %}
 
 .. include:: {{module}}.{{objname}}.examples
