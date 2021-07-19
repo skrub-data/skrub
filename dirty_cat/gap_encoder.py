@@ -398,7 +398,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, )
+        X : array-like, shape (n_samples, n_features)
             The string data to encode.
 
         Returns
