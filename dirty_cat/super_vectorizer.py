@@ -21,7 +21,7 @@ from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
-from dirty_cat import SimilarityEncoder
+from dirty_cat import GapEncoder
 
 
 def _has_missing_values(array: pd.DataFrame) -> bool:
@@ -139,9 +139,9 @@ class SuperVectorizer(ColumnTransformer):
     def __init__(self, *,
                  cardinality_threshold: int = 20,
                  low_card_str_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
-                 high_card_str_transformer: Optional[Union[BaseEstimator, str]] = SimilarityEncoder(),
+                 high_card_str_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(),
                  low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
-                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = SimilarityEncoder(),
+                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(),
                  numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
                  datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
                  auto_cast: bool = False,

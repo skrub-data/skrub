@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from distutils.version import LooseVersion
 
 from dirty_cat import SuperVectorizer
+from dirty_cat import GapEncoder
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):
@@ -32,6 +33,9 @@ def test_super_vectorizer():
     # Test with low cardinality and a StandardScaler for the numeric columns
     vectorizer_base = SuperVectorizer(
         cardinality_threshold=3,
+        # we must have n_samples = 5 >= n_components
+        high_card_str_transformer=GapEncoder(n_components=2),
+        high_card_cat_transformer=GapEncoder(n_components=2),
         numerical_transformer=StandardScaler(),
     )
     # Warning: order-dependant
@@ -76,6 +80,9 @@ def test_super_vectorizer():
     vectorizer_cast = SuperVectorizer(
         cardinality_threshold=3,
         auto_cast=True,
+        # we must have n_samples = 5 >= n_components
+        high_card_str_transformer=GapEncoder(n_components=2),
+        high_card_cat_transformer=GapEncoder(n_components=2),
         numerical_transformer=StandardScaler(),
     )
     X_str = X.astype('object')

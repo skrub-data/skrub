@@ -31,7 +31,7 @@ class LRUDict:
         return key in self.cache
 
 
-def check_x(X):
+def check_input(X):
     # Check input data shape
     X = np.asarray(X)
     if X.ndim != 2:

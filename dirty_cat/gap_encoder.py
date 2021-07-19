@@ -24,7 +24,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
-from .utils import check_x
+import pandas as pd
+from .utils import check_input
 
 if LooseVersion(sklearn_version) < LooseVersion('0.22'):
     from sklearn.cluster.k_means_ import _k_init
@@ -194,7 +195,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, ) or (n_samples, 1)
+        X : array-like, shape (n_samples, )
             The string data to fit the model on.
         
         Returns
@@ -240,8 +241,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def get_feature_names(self, n_labels=3):
-        
+    def get_feature_names(self, n_labels=3, prefix=''):
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with highest activations are selected.
@@ -259,7 +259,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             The labels that best describe each topic.
         
         """
-        
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
         vocabulary = np.array(vectorizer.get_feature_names())
@@ -272,7 +271,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             x = encoding[:, i]
             labels = vocabulary[np.argsort(-x)[:n_labels]]
             topic_labels.append(labels)
-        topic_labels = [', '.join(label) for label in topic_labels]
+        topic_labels = [prefix + ', '.join(label) for label in topic_labels]
         return topic_labels
 
     def score(self, X):
@@ -323,7 +322,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, ) or (n_samples, 1)
+        X : array-like, shape (n_samples, )
             The string data to fit the model on.
         
         Returns
@@ -399,7 +398,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, ) or (n_samples, 1)
+        X : array-like, shape (n_samples, )
             The string data to encode.
 
         Returns
@@ -525,6 +524,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     For a detailed description of the method, see
     `Encoding high-cardinality string categorical variables
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
+    
     """
 
     def __init__(self, n_components=10, batch_size=128, gamma_shape_prior=1.1,
@@ -554,8 +554,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
-    # TODO: score method
-
     def _create_column_gap_encoder(self) -> GapEncoderColumn:
         return GapEncoderColumn(
             ngram_range=self.ngram_range,
@@ -575,18 +573,57 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             rescale_W=self.rescale_W,
             max_iter_e_step=self.max_iter_e_step,
         )
-
+            
     def fit(self, X, y=None):
-        X = check_x(X)
+        """
+        Fit the GapEncoder on batches of X.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, )
+            The string data to fit the model on.
+        
+        Returns
+        -------
+        self
+        
+        """
+        # If X is a dataframe, store its column names
+        if isinstance(X, pd.DataFrame):
+            self.column_names_ = list(X.columns)
+        # Check input data shape
+        X = check_input(X)
         self.fitted_models_ = []
         for k in range(X.shape[1]):
-            ge_column = self._create_column_gap_encoder()
-            self.fitted_models_.append(ge_column.fit(X[:, k]))
+            col_enc = self._create_column_gap_encoder()
+            self.fitted_models_.append(col_enc.fit(X[:, k]))
         return self
 
     def transform(self, X):
+        """
+        Return the encoded vectors (activations) H of input strings in X.
+        Given the learnt topics W, the activations H are tuned to fit V = HW.
+        When X has several columns, they are encoded separately and
+        then concatenated.
+        
+        Remark: calling transform mutliple times in a row on the same
+        input X can give slightly different encodings. This is expected
+        since transform doesn't fit H from scratch at every call but
+        uses the fitted H from the previous call to continue the
+        optimization.        
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The string data to encode.
+
+        Returns
+        -------
+        H : 2-d array, shape (n_samples, n_topics * n_features)
+            Transformed input.
+        """
         # Check input data shape
-        X = check_x(X)
+        X = check_input(X)
         X_enc = []
         for k in range(X.shape[1]):
             X_enc.append(self.fitted_models_[k].transform(X[:, k]))
@@ -594,29 +631,102 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         return X_enc
 
     def partial_fit(self, X, y=None):
-        X = check_x(X)
+        """
+        Partial fit of the GapEncoder on X.
+        To be used in a online learning procedure where batches of data are
+        coming one by one.
+
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            The string data to fit the model on.
+        
+        Returns
+        -------
+        self
+        
+        """
+        # If X is a dataframe, store its column names
+        if isinstance(X, pd.DataFrame):
+            self.column_names_ = list(X.columns)
+        # Check input data shape
+        X = check_input(X)
         # Init the `GapEncoderColumn` instances if the model was
         # not fitted already.
         if not hasattr(self, 'fitted_models_'):
             self.fitted_models_ = [
-                self._create_column_gap_encoder()
-                for _ in range(X.shape[1])
+                self._create_column_gap_encoder() for _ in range(X.shape[1])
             ]
-
         for k in range(X.shape[1]):
             self.fitted_models_[k].partial_fit(X[:, k])
-
         return self
 
-    def get_feature_names(self, n_labels=3):
+    def get_feature_names(self, col_names=None, n_labels=3):
+        """
+        Returns the labels that best summarize the learned components/topics.
+        For each topic, labels with highest activations are selected.
+        
+        Parameters
+        ----------
+        
+        col_names : {None, list or str}, default=None
+            The column names to be added as prefixes before the labels.
+            If col_names == None, no prefixes are used.
+            If col_names == 'auto', column names are automatically defined:
+                - if the input data was a dataframe, its column names are used
+                - otherwise, 'col1', ..., 'colN' are used as prefixes
+            Prefixes can be manually set by passing a list  for col_names.
+            
+        n_labels : int, default=3
+            The number of labels used to describe each topic.
+        
+        Returns
+        -------
+        
+        topic_labels : list of strings
+            The labels that best describe each topic.
+        
+        """
         assert hasattr(self, 'fitted_models_'), (
             'ERROR: GapEncoder must be fitted first.')
-        labels = [
-            enc.get_feature_names(n_labels)
-            for enc in self.fitted_models_]
+        # Generate prefixes
+        if isinstance(col_names, list):
+            prefixes = [s + ': ' for s in col_names]
+        elif col_names == 'auto':
+            if hasattr(self, 'column_names_'): # Use column names
+                prefixes = [s + ': ' for s in self.column_names_]
+            else: # Use 'col1: ', ... 'colN: ' as prefixes
+                prefixes = [f'col{k}: ' for k in range(len(self.fitted_models_))]
+        else: # Empty prefixes
+            prefixes = [''] * len(self.fitted_models_)
+        labels = list()
+        for k, enc in enumerate(self.fitted_models_):
+            col_labels = enc.get_feature_names(n_labels, prefixes[k])
+            labels.extend(col_labels)
         return labels
 
+    def score(self, X):
+        """
+        Returns the sum over the columns of X of the Kullback-Leibler
+        divergence between the n-grams counts matrix V of X, and its
+        non-negative factorization HW.
 
+        Parameters
+        ----------
+        X : array-like (str), shape (n_samples, n_features)
+            The data to encode.
+
+        Returns
+        -------
+        kl_divergence : float.
+            The Kullback-Leibler divergence.
+        """
+        X = check_input(X)
+        kl_divergence = 0
+        for k in range(X.shape[1]):
+            kl_divergence += self.fitted_models_[k].score(X[:,k])
+        return kl_divergence
+        
 def _rescale_W(W, A):
     """
     Rescale the topics W to have a L1-norm equal to 1.
