@@ -1,5 +1,6 @@
 import time
 import numpy as np
+from numpy.random import random
 import pytest
 import pandas as pd
 
@@ -84,7 +85,7 @@ def test_partial_fit(n_samples=70):
 def test_get_feature_names(n_samples=70):
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X = np.array([X_txt, X_txt]).T
-    enc = GapEncoder()
+    enc = GapEncoder(random_state=42)
     enc.fit(X)
     topic_labels = enc.get_feature_names()
     # Check number of labels
@@ -124,7 +125,7 @@ def profile_encoder(Encoder, init):
     from dirty_cat import datasets
     employee_salaries = datasets.fetch_employee_salaries()
     data = employee_salaries['data']
-    X = data['employee_position_title'].tolist()
+    X = np.array(data['employee_position_title'])[:, None]
     t0 = time.time()
     encoder = Encoder(n_components=50, init=init)
     encoder.fit(X)
@@ -150,6 +151,9 @@ if __name__ == '__main__':
     print('start test_overflow_error')
     test_overflow_error()
     print('test_overflow_error passed')
+    print('start test_score')
+    test_score()
+    print('test_score passed')
     
     for _ in range(3):
         print('time profile_encoder(GapEncoder, init="k-means++")')
