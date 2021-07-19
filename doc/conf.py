@@ -254,6 +254,15 @@ sphinx_gallery_conf = {
     'gallery_dirs':'auto_examples',
     'within_subsection_order': FileNameSortKey,
     'download_all_examples': False,
+    'binder': {
+        'org': 'dirty-cat',
+        'repo': 'dirty-cat.github.io',
+        'binderhub_url': 'https://mybinder.org',
+        'branch': 'master',
+        'dependencies': ['../requirements.txt',
+                         'binder/requirements.txt'],
+        'notebooks_dir': 'examples'
+    }
 }
 
 # -- sphinxext.opengraph configuration -------------------------------------
