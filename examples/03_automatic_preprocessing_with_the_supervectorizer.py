@@ -32,6 +32,7 @@ We demonstrate it on the `employee salaries` dataset.
 # ------------------
 # Let's fetch the dataset, and load X (the employees' features) and y
 # (the salary to predict):
+from dirty_cat.gap_encoder import GapEncoder
 from dirty_cat.datasets import fetch_employee_salaries
 employee_salaries = fetch_employee_salaries()
 print(employee_salaries['DESCR'])
@@ -109,7 +110,11 @@ print(f'std={np.std(scores)}')
 #
 # Let us perform the same workflow, but without the `Pipeline`, so we can
 # analyze its mechanisms along the way.
-sup_vec = SuperVectorizer(auto_cast=True)
+sup_vec = SuperVectorizer(
+    auto_cast=True,
+    high_card_str_transformer=GapEncoder(n_components=50),
+    high_card_cat_transformer=GapEncoder(n_components=50)
+)
 
 ##############################################################################
 # We split the data between train and test, and transform them:
@@ -156,7 +161,7 @@ feature_names[:8]
 # which was classified as a high cardinality string variable.
 # (default values, see |SV|'s docstring).
 #
-# In total, we have 1212 encoded columns.
+# In total, we have 256 encoded columns.
 len(feature_names)
 
 
@@ -205,5 +210,5 @@ plt.show()
 
 ###############################################################################
 # We can deduce from this data that the three factors that define the
-# most the salary are: being a manager, being hired for a long time, and
-# have a permanent, full-time job :).
+# most the salary are: being hired for a long time, being a manager, and
+# having a permanent, full-time job :).

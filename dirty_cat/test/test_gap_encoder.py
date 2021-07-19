@@ -1,6 +1,8 @@
 import time
 import numpy as np
+from numpy.random import random
 import pytest
+import pandas as pd
 
 from sklearn.datasets import fetch_20newsgroups
 from dirty_cat import GapEncoder
@@ -11,8 +13,8 @@ from dirty_cat import GapEncoder
     (True, 'k-means', 'char_wb', True)
 ])
 def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
-    X_txt = fetch_20newsgroups(subset='train')['data']
-    X = X_txt[:n_samples]
+    X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
+    X = np.array([X_txt, X_txt]).T
     n_components = 10
     # Test output shape
     encoder = GapEncoder(
@@ -21,13 +23,13 @@ def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
         random_state=42, rescale_W=True)
     encoder.fit(X)
     y = encoder.transform(X)
-    assert y.shape == (n_samples, n_components), str(y.shape)
-    assert len(set(y[0])) == n_components
+    assert y.shape == (n_samples, n_components * X.shape[1]), str(y.shape)
 
     # Test L1-norm of topics W.
-    l1_norm_W = np.abs(encoder.W_).sum(axis=1)
-    np.testing.assert_array_almost_equal(
-        l1_norm_W, np.ones(n_components))
+    for col_enc in encoder.fitted_models_:
+        l1_norm_W = np.abs(col_enc.W_).sum(axis=1)
+        np.testing.assert_array_almost_equal(
+            l1_norm_W, np.ones(n_components))
 
     # Test same seed return the same output
     encoder = GapEncoder(
@@ -41,22 +43,33 @@ def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
 
 
 def test_input_type():
-    # Numpy array
-    X = np.array(['alice', 'bob'])
+    # Numpy array with one column
+    X = np.array([['alice'], ['bob']])
     enc = GapEncoder(n_components=2, random_state=42)
     X_enc_array = enc.fit_transform(X)
     # List
-    X = ['alice', 'bob']
+    X2 = [['alice'], ['bob']]
     enc = GapEncoder(n_components=2, random_state=42)
-    X_enc_list = enc.fit_transform(X)
+    X_enc_list = enc.fit_transform(X2)
     # Check if the encoded vectors are the same
     np.testing.assert_array_equal(X_enc_array, X_enc_list)
+    
+    # Numpy array with two columns
+    X = np.array([['alice', 'charlie'], ['bob', 'delta']])
+    enc = GapEncoder(n_components=2, random_state=42)
+    X_enc_array = enc.fit_transform(X)
+    # Pandas dataframe with two columns
+    df = pd.DataFrame(X)
+    enc = GapEncoder(n_components=2, random_state=42)
+    X_enc_df = enc.fit_transform(df)
+    # Check if the encoded vectors are the same
+    np.testing.assert_array_equal(X_enc_array, X_enc_df)
     return
 
 
 def test_partial_fit(n_samples=70):
-    X_txt = fetch_20newsgroups(subset='train')['data']
-    X = X_txt[:n_samples]
+    X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
+    X = np.array([X_txt, X_txt]).T
     # Gap encoder with fit on one batch
     enc = GapEncoder(random_state=42, batch_size=n_samples, max_iter=1)
     X_enc = enc.fit_transform(X)
@@ -70,13 +83,18 @@ def test_partial_fit(n_samples=70):
 
 
 def test_get_feature_names(n_samples=70):
-    X_txt = fetch_20newsgroups(subset='train')['data']
-    X = X_txt[:n_samples]
-    enc = GapEncoder()
+    X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
+    X = np.array([X_txt, X_txt]).T
+    enc = GapEncoder(random_state=42)
     enc.fit(X)
     topic_labels = enc.get_feature_names()
     # Check number of labels
-    assert len(topic_labels) == enc.n_components
+    assert len(topic_labels) == enc.n_components * X.shape[1]
+    # Test different parameters for col_names
+    topic_labels_2 = enc.get_feature_names(col_names='auto')
+    assert topic_labels_2[0] == 'col0: ' + topic_labels[0]
+    topic_labels_3 = enc.get_feature_names(col_names=['abc', 'def'])
+    assert topic_labels_3[0] == 'abc: ' + topic_labels[0]
     return
 
 def test_overflow_error():
@@ -88,13 +106,26 @@ def test_overflow_error():
     enc.fit(X)
     return
 
+def test_score(n_samples=70):
+    X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
+    X1 = np.array(X_txt)[:, None]
+    X2 = np.hstack([X1, X1])
+    enc = GapEncoder(random_state=42)
+    enc.fit(X1)
+    score_X1 = enc.score(X1)
+    enc.fit(X2)
+    score_X2 = enc.score(X2)
+    # Check that two identical columns give the same score
+    assert score_X1 * 2 == score_X2
+    return
+
 def profile_encoder(Encoder, init):
     # not an unit test
     
     from dirty_cat import datasets
     employee_salaries = datasets.fetch_employee_salaries()
     data = employee_salaries['data']
-    X = data['employee_position_title'].tolist()
+    X = np.array(data['employee_position_title'])[:, None]
     t0 = time.time()
     encoder = Encoder(n_components=50, init=init)
     encoder.fit(X)
@@ -120,6 +151,9 @@ if __name__ == '__main__':
     print('start test_overflow_error')
     test_overflow_error()
     print('test_overflow_error passed')
+    print('start test_score')
+    test_score()
+    print('test_score passed')
     
     for _ in range(3):
         print('time profile_encoder(GapEncoder, init="k-means++")')
