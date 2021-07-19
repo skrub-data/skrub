@@ -35,6 +35,30 @@ div.sphx-glr-download-link-note {
     background-color: #F6F6F6;
 }
 
+/* The download block at the bottom */
+div.sphx-glr-footer-example {
+    background-color: #F6F6F6;
+    border: solid 1px #CCC;
+    padding: 0px 5px;
+}
+
+/* Large screens */
+@media only screen and (min-width: 1550px) {
+    /* The download note on top of the examples */
+    div.sphx-glr-download-link-note {
+	display: none;
+    }
+
+    /* The download block at the bottom */
+    div.sphx-glr-footer-example {
+	position: absolute;
+	right: 10px;
+	width: 300px;
+	top: 300px;
+    }
+
+}
+
 div.sphx-glr-download-link-note p.admonition-title {
     display: none;
 }
