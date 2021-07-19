@@ -314,7 +314,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return kl_divergence
 
     def partial_fit(self, X, y=None):
-        
         """
         Partial fit of the GapEncoder on X.
         To be used in a online learning procedure where batches of data are
@@ -398,7 +397,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
+        X : array-like, shape (n_samples)
             The string data to encode.
 
         Returns
