@@ -261,7 +261,7 @@ sphinx_gallery_conf = {
         'branch': 'master',
         'dependencies': ['../requirements.txt',
                          'binder/requirements.txt'],
-        'notebooks_dir': 'stable/examples'
+        'notebooks_dir': 'stable'
     }
 }
 
