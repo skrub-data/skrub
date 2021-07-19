@@ -608,9 +608,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         
         Remark: calling transform mutliple times in a row on the same
         input X can give slightly different encodings. This is expected
-        since transform doesn't fit H from scratch at every call but
-        uses the fitted H from the previous call to continue the
-        optimization.        
+        due to a caching mechanism to speed things up.        
 
         Parameters
         ----------
