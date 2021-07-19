@@ -605,6 +605,12 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Given the learnt topics W, the activations H are tuned to fit V = HW.
         When X has several columns, they are encoded separately and
         then concatenated.
+        
+        Remark: calling transform mutliple times in a row on the same
+        input X can give slightly different encodings. This is expected
+        since transform doesn't fit H from scratch at every call but
+        uses the fitted H from the previous call to continue the
+        optimization.        
 
         Parameters
         ----------
