@@ -1,7 +1,12 @@
-Release 0.2.0
-=============
+Release 0.2.0a1
+===============
 
-Version 0.2.0 is not yet releave. To install it use::
+Version 0.2.0a1 is a pre-release.
+To try it, you have to install it manually using::
+
+    pip install -pre dirty_cat==0.2.0a1
+
+or from the GitHub repository::
 
     pip install git+https://github.com/dirty-cat/dirty_cat.git
 
@@ -19,7 +24,7 @@ Major changes
   :class:`SuperVectorizer` class. It transforms
   columns automatically based on their type. It provides a replacement
   for scikit-learn's `ColumnTransformer` simpler to use on heterogeneous
-  panda dataframes.
+  pandas DataFrame.
 
 * **Backward incompatible change to GapEncoder**: The GapEncoder now only
   supports two-dimensional inputs of shape (n_samples, n_features).
@@ -30,7 +35,7 @@ Major changes
 Bug-fixes
 ---------
 
-* Fix get_feature_names under scikit-learn > 0.21
+* Fix get_feature_names for scikit-learn > 0.21
 
 
 Release 0.1.1
