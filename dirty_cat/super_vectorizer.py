@@ -106,10 +106,9 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    auto_cast: bool, default=False
+    auto_cast: bool, default=True
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
-        Experimental. It is advised to cast them beforehand, and leave this false.
 
     handle_missing: str, default=''
         One of the following values: 'error' or '' (empty).
@@ -144,7 +143,7 @@ class SuperVectorizer(ColumnTransformer):
                  high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(),
                  numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
                  datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
-                 auto_cast: bool = False,
+                 auto_cast: bool = True,
                  # Following parameters are inherited from ColumnTransformer
                  handle_missing: str = '',
                  remainder='passthrough',

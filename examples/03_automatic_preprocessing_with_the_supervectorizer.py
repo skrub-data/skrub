@@ -82,7 +82,7 @@ from sklearn.pipeline import Pipeline
 from dirty_cat import SuperVectorizer
 
 pipeline = Pipeline([
-    ('vectorizer', SuperVectorizer(auto_cast=True)),
+    ('vectorizer', SuperVectorizer()),
     ('clf', HistGradientBoostingRegressor(random_state=42))
 ])
 
@@ -111,7 +111,6 @@ print(f'std={np.std(scores)}')
 # Let us perform the same workflow, but without the `Pipeline`, so we can
 # analyze its mechanisms along the way.
 sup_vec = SuperVectorizer(
-    auto_cast=True,
     high_card_str_transformer=GapEncoder(n_components=50),
     high_card_cat_transformer=GapEncoder(n_components=50)
 )
