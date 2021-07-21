@@ -1,5 +1,7 @@
 import collections
 
+import numpy as np
+
 
 class LRUDict:
     """ dict with limited capacity
@@ -27,3 +29,15 @@ class LRUDict:
 
     def __contains__(self, key):
         return key in self.cache
+
+
+def check_input(X):
+    # Check input data shape
+    X = np.asarray(X)
+    if X.ndim != 2:
+        raise ValueError(
+            'Expected 2D array. Reshape your data either using'
+            'array.reshape(-1, 1) if your data has a single feature or'
+            'array.reshape(1, -1) if it contains a single sample.'
+        )
+    return X
