@@ -171,8 +171,6 @@ class SuperVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
-        self.columns_ = []
-
     def _auto_cast_array(self, X):
         """
         Takes an array and tries to convert its columns to the best possible
