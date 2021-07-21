@@ -3,6 +3,8 @@ import sklearn
 import pandas as pd
 
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils.validation import check_is_fitted
+from sklearn.exceptions import NotFittedError
 
 from distutils.version import LooseVersion
 
@@ -129,6 +131,18 @@ def test_get_feature_names():
     assert vectorizer_w_drop.get_feature_names() == expected_feature_names_drop
 
 
+def test_fit():
+    # Simply checks sklearn's `check_is_fitted` function raises an error if
+    # the SuperVectorizer is instantiated but not fitted.
+    # See GH#193
+    sup_vec = SuperVectorizer()
+    with pytest.raises(NotFittedError):
+        if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+            assert check_is_fitted(sup_vec)
+        else:
+            assert check_is_fitted(sup_vec, attributes=dir(sup_vec))
+
+
 if __name__ == '__main__':
     print('start test_super_vectorizer')
     test_super_vectorizer()
@@ -136,5 +150,8 @@ if __name__ == '__main__':
     print('start test_get_feature_names')
     test_get_feature_names()
     print('test_get_feature_names passed')
+    print('start test_fit')
+    test_fit()
+    print('test_fit passed')
 
     print('Done')
