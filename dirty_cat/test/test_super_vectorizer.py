@@ -79,7 +79,6 @@ def test_super_vectorizer():
     # Test casting values
     vectorizer_cast = SuperVectorizer(
         cardinality_threshold=3,
-        auto_cast=True,
         # we must have n_samples = 5 >= n_components
         high_card_str_transformer=GapEncoder(n_components=2),
         high_card_cat_transformer=GapEncoder(n_components=2),
