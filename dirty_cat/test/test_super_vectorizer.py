@@ -138,7 +138,10 @@ def test_fit():
     # See GH#193
     sup_vec = SuperVectorizer()
     with pytest.raises(NotFittedError):
-        assert check_is_fitted(sup_vec)
+        if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+            assert check_is_fitted(sup_vec)
+        else:
+            assert check_is_fitted(sup_vec, attributes=dir(sup_vec))
 
 
 if __name__ == '__main__':
