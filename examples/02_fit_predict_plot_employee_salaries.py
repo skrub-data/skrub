@@ -1,17 +1,13 @@
 """
-Predicting the salary of employees
-==================================
+Comparing encoders of a dirty categorical columns
+==================================================
 
-The `employee salaries <https://catalog.data.gov/dataset/employee-salaries-2016>`_
-dataset contains information
-about annual salaries (year 2016) for more than 9,000 employees of the 
-Montgomery County (Maryland, US). In this example, we are interested
-in predicting the column *Current Annual Salary*
-depending on a mix of clean columns and a dirty column.
-We choose to benchmark different categorical encodings for
-the dirty column *Employee Position Title*, that contains
-dirty categorical data.
+The column *Employee Position Title* of the dataset `employee salaries
+<https://catalog.data.gov/dataset/employee-salaries-2016>`_ contains dirty categorical
+data.
 
+Here, we compare different categorical encodings for the dirty column to
+predict the *Current Annual Salary*, using gradient boosted trees.
 """
 
 ################################################################################
@@ -73,6 +69,11 @@ from sklearn.preprocessing import OneHotEncoder
 from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder,\
     GapEncoder
 
+# for scikit-learn 0.24 we need to require the experimental feature
+from sklearn.experimental import enable_hist_gradient_boosting  # noqa
+# now you can import normally from ensemble
+from sklearn.ensemble import HistGradientBoostingRegressor
+
 encoders_dict = {
     'one-hot': OneHotEncoder(handle_unknown='ignore', sparse=False),
     'similarity': SimilarityEncoder(similarity='ngram'),
@@ -83,13 +84,13 @@ encoders_dict = {
 
 # We then create a function that takes one key of our ``encoders_dict``,
 # returns a pipeline object with the associated encoder,
-# as well as a Scaler and a RidgeCV regressor:
+# as well as a gradient-boosting regressor
 
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 
-def make_pipeline(encoding_method):
+def assemble_pipeline(encoding_method):
     # static transformers from the other columns
     transformers = [(enc + '_' + col, encoders_dict[enc], [col])
                     for col, enc in clean_columns.items()]
@@ -101,48 +102,35 @@ def make_pipeline(encoding_method):
         ('union', ColumnTransformer(
             transformers=transformers,
             remainder='drop')),
-        ('scaler', StandardScaler(with_mean=False)),
-        ('clf', RidgeCV())
+        ('clf', HistGradientBoostingRegressor())
     ])
     return pipeline
 
 
 #########################################################################
-# Fitting each encoding methods with a RidgeCV
+# Using each encoding for supervised learning
 # --------------------------------------------
 # Eventually, we loop over the different encoding methods,
 # instantiate each time a new pipeline, fit it
 # and store the returned cross-validation score:
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import RidgeCV
-from sklearn.model_selection import KFold, cross_val_score
+
+from sklearn.model_selection import cross_val_score
 import numpy as np
 
 all_scores = dict()
 
-cv = KFold(n_splits=5, random_state=12, shuffle=True)
-scoring = 'r2'
 for method in encoding_methods:
-    pipeline = make_pipeline(method)
-    scores = cross_val_score(pipeline, df, y, cv=cv, scoring=scoring)
+    pipeline = assemble_pipeline(method)
+    scores = cross_val_score(pipeline, df, y)
     print('{} encoding'.format(method))
-    print('{} score:  mean: {:.3f}; std: {:.3f}\n'.format(
-        scoring, np.mean(scores), np.std(scores)))
+    print('r2 score:  mean: {:.3f}; std: {:.3f}\n'.format(
+        np.mean(scores), np.std(scores)))
     all_scores[method] = scores
 
 #########################################################################
 # Plotting the results
 # --------------------
 # Finally, we plot the scores on a boxplot:
-# We notice that the MinHashEncoder does not performs as well compared to 
-# other encoding methods.
-# There are two reasons for that: the MinHashEncoder performs better
-# with tree-based models than linear models (
-# :ref:`see example 03<sphx_glr_auto_examples_03_fit_predict_plot_midwest_survey.py>`)
-# , and also
-# increasing `n_components` improves performances. `n_components` around 300 
-# tend to lead to good prediction performance, but with more computational
-# cost.
 
 import seaborn
 import matplotlib.pyplot as plt
@@ -153,5 +141,12 @@ plt.xlabel('Prediction accuracy     ', size=20)
 plt.yticks(size=20)
 plt.tight_layout()
 
-
-
+##########################################################################
+# The clear trend is that encoders that use the string form
+# of the category (similarity, minhash, and gap) perform better than
+# those that discard it.
+# 
+# SimilarityEncoder is the best performer, but it is less scalable on big
+# data than MinHashEncoder and GapEncoder. The most scalable encoder is
+# the MinHashEncoder. GapEncoder, on the other hand, has the benefit that
+# it provides interpretable features (see :ref:`sphx_glr_auto_examples_04_feature_interpretation_gap_encoder.py`)

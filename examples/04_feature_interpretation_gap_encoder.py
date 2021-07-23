@@ -28,7 +28,7 @@ df = pd.read_csv(employee_salaries['path'], quotechar="'", escapechar='\\')
 ################################################################################
 # Now, we retrieve the dirty column to encode:
 dirty_column = 'employee_position_title'
-X_dirty = df[dirty_column]
+X_dirty = df[[dirty_column]]
 print(X_dirty.head(), end='\n\n')
 print(f'Number of dirty entries = {len(X_dirty)}')
 
@@ -77,7 +77,7 @@ plt.imshow(encoded_labels)
 plt.xlabel('Latent topics', size=12)
 plt.xticks(range(0, 10), labels=topic_labels, rotation=50, ha='right')
 plt.ylabel('Data entries', size=12)
-plt.yticks(range(0, 20), labels=X_dirty[:20])
+plt.yticks(range(0, 20), labels=X_dirty[:20].to_numpy().flatten())
 plt.colorbar().set_label(label='Topic activations', size=12)
 plt.tight_layout()
 plt.show()

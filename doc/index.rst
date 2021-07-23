@@ -11,15 +11,22 @@ dirty_cat: machine learning on dirty categories
 non-curated categories. It provides **encoders that are
 robust to morphological variants**, such as typos, in the category strings.
 
-The :class:`SimilarityEncoder` is a drop-in replacement for
-`scikit-learn <https://scikit-learn.org>`_'s
-:class:`~sklearn.preprocessing.OneHotEncoder`.
-If speed and scalability are an issue, the :class:`MinHashEncoder` provides
-a fast encoding method.
+The :class:`SuperVectorizer` is a high-level transformer that can
+automatically turn a heterogeneous data table, as a pandas dataframe, to
+a numerical array, suitable for machin learning.
 
-If interpretability is important,the :class:`GapEncoder` is a good
-alternative, as it can be interpreted as one-hot encoding, where each encoding
-dimension corresponds to a topic that summarizes the substrings captured.
+
+**Dirty category encoder**: `scikit-learn <https://scikit-learn.org>`_'s
+:class:`~sklearn.preprocessing.OneHotEncoder` can be replaced by:
+
+* :class:`GapEncoder`, scalable and interpretable, where each encoding
+  dimension corresponds to a topic that summarizes substrings captured.
+
+* :class:`SimilarityEncoder`, a simple modification of one-hot encoding
+  to capture the strings.
+
+* :class:`MinHashEncoder`, very scalable
+
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
@@ -43,8 +50,8 @@ ______
 API documentation
 =================
 
-Encoders
-------------
+Encoders / Vectorizers
+----------------------
 
 .. autosummary::
    :toctree: generated/
@@ -55,6 +62,7 @@ Encoders
    MinHashEncoder
    SimilarityEncoder
    TargetEncoder
+   SuperVectorizer
 
 Data download
 -----------------------

@@ -36,8 +36,15 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinx.ext.githubpages',
               'sphinx.ext.napoleon',
+              'sphinx.ext.autodoc.typehints',
               'sphinx_gallery.gen_gallery',
               ]
+
+try:
+    import sphinxext.opengraph
+    extensions.append('sphinxext.opengraph')
+except ImportError:
+    print("ERROR: sphinxext.opengraph import failed")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -105,6 +112,7 @@ autodoc_default_flags = ['members', 'inherited-members']
 # a list of builtin themes.
 #
 html_theme = 'alabaster'
+# Doc: https://alabaster.readthedocs.io/en/latest/customization.html
 
 html_sidebars = {
     '**': [
@@ -130,6 +138,8 @@ html_theme_options = {
     'github_user': 'dirty-cat',
     'github_repo': 'dirty_cat',
     'github_button': 'true',
+    'github_type': 'star',
+    'github_count': 'true',
     'show_powered_by': 'false',
     'logo_name': 'true',
     'gray_1': "#030",
@@ -146,6 +156,9 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+
+# Modify the title, so as to get good social-media links
+html_title = "&mdash; Dirty cat"
 
 # -- Options for HTMLHelp output ------------------------------------------
 
@@ -241,5 +254,27 @@ sphinx_gallery_conf = {
     'gallery_dirs':'auto_examples',
     'within_subsection_order': FileNameSortKey,
     'download_all_examples': False,
+    'binder': {
+        'org': 'dirty-cat',
+        'repo': 'dirty-cat.github.io',
+        'binderhub_url': 'https://mybinder.org',
+        'branch': 'master',
+        'dependencies': ['../requirements.txt',
+                         'binder/requirements.txt'],
+        'notebooks_dir': 'dev'
+    }
 }
 
+# -- sphinxext.opengraph configuration -------------------------------------
+ogp_site_url = "https://dirty-cat.github.io/stable/"
+ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
+ogp_use_first_image = True
+ogp_site_name = "Dirty cat"
+
+# -- sphinxext.napoleon configuration --------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
+napoleon_use_param = True
+
+# -- sphinxext.autodoc configuration ---------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+autodoc_typehints = "none"
