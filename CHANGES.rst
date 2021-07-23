@@ -1,3 +1,15 @@
+Release 0.2.0
+=============
+
+Also see pre-release 0.2.0a1 below for additional changes.
+
+Major changes
+-------------
+
+* Bump minimum dependencies:
+
+  - scikit-learn (>=0.21.0)
+
 Release 0.2.0a1
 ===============
 
