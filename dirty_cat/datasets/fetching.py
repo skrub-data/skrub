@@ -345,7 +345,7 @@ def fetch_employee_salaries(drop_linked_to_target=True):
     Parameters
     ----------
     drop_linked_to_target: bool, default=True
-        Whether we should drop the columns "Current Annual Salary',
+        Whether we should drop the columns 'Current Annual Salary',
         '2016_gross_pay_received' and '2016_overtime_pay',
         which are highly linked to the target.
 
