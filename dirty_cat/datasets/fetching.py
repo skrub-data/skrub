@@ -334,13 +334,20 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     return full_name
 
 
-def fetch_employee_salaries():
+def fetch_employee_salaries(drop_linked_to_target=True):
     """fetches the employee_salaries dataset
 
     The employee_salaries dataset contains information about annual salaries
     (year 2016) for more than 9,000 employees of the Montgomery County
     (Maryland, US).
 
+
+    Parameters
+    ----------
+    drop_linked_to_target: bool, default=True
+        Whether we should drop the columns "Current Annual Salary',
+        '2016_gross_pay_received' and '2016_overtime_pay',
+        which are highly linked to the target.
 
     Returns
     -------
@@ -360,6 +367,12 @@ def fetch_employee_salaries():
 
     data = fetch_openml(data_id=42125, as_frame=True)
     data.data['Current Annual Salary'] = data['target']
+    if drop_linked_to_target:
+        data.data.drop([
+            'Current Annual Salary',
+            '2016_gross_pay_received',
+            '2016_overtime_pay',
+        ], inplace=True, axis=1)
     return data
 
     # link dead.
