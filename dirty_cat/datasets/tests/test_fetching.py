@@ -232,6 +232,31 @@ def test_fetch_dataset():
             shutil.rmtree(datadir)
 
 
+def test_employee_salaries_fetching():
+    from dirty_cat.datasets.fetching import fetch_employee_salaries
+
+    full_name_col = 'full_name'
+    linked_cols = [
+        'Current Annual Salary',
+        '2016_gross_pay_received',
+        '2016_overtime_pay',
+    ]
+
+    with_all = fetch_employee_salaries(drop_linked_to_target=False, drop_full_name=False)
+    assert full_name_col in with_all.data.columns
+    assert all((col in with_all.data.columns) for col in linked_cols)
+
+    without_full_name = fetch_employee_salaries(drop_linked_to_target=False, drop_full_name=True)
+    assert full_name_col not in without_full_name.data.columns
+
+    without_linked = fetch_employee_salaries(drop_linked_to_target=True, drop_full_name=False)
+    assert all((col not in without_linked.data.columns) for col in linked_cols)
+
+    without_all = fetch_employee_salaries(drop_linked_to_target=True, drop_full_name=True)
+    assert full_name_col not in without_all.data.columns
+    assert all((col not in without_all.data.columns) for col in linked_cols)
+
+
 if __name__ == '__main__':
     # pass
     # test_fetch_file_overwrite()
