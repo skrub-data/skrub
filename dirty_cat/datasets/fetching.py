@@ -7,12 +7,16 @@ meaning are directly copied. The rest is annoted.
 """
 # -*- coding: utf-8 -*-
 import os
+
 import requests
 import shutil
 import urllib
 from collections import namedtuple
+from distutils.version import LooseVersion
 import contextlib
 import warnings
+
+import sklearn
 from sklearn.datasets import fetch_openml
 
 from ..datasets.utils import md5_hash, _check_if_exists, \
@@ -369,7 +373,12 @@ def fetch_employee_salaries(drop_linked_to_target=True, drop_full_name=True):
 
     """
 
-    data = fetch_openml(data_id=42125, as_frame=True)
+    # Pass "as_frame" for only sklearn>=0.22
+    fetch_kwargs = {}
+    if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+        fetch_kwargs.update({'as_frame': True})
+
+    data = fetch_openml(data_id=42125, **fetch_kwargs)
     data.data['Current Annual Salary'] = data['target']
     if drop_linked_to_target:
         data.data.drop([
