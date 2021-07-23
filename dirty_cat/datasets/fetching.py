@@ -334,7 +334,7 @@ def _fetch_file(url, data_dir, filenames=None, overwrite=False,
     return full_name
 
 
-def fetch_employee_salaries(drop_linked_to_target=True):
+def fetch_employee_salaries(drop_linked_to_target=True, drop_full_name=True):
     """fetches the employee_salaries dataset
 
     The employee_salaries dataset contains information about annual salaries
@@ -348,6 +348,10 @@ def fetch_employee_salaries(drop_linked_to_target=True):
         Whether we should drop the columns 'Current Annual Salary',
         '2016_gross_pay_received' and '2016_overtime_pay',
         which are highly linked to the target.
+
+    drop_full_name: bool, default=True
+        Whether we should drop the column 'full_name',
+        which is usually useless.
 
     Returns
     -------
@@ -373,6 +377,8 @@ def fetch_employee_salaries(drop_linked_to_target=True):
             '2016_gross_pay_received',
             '2016_overtime_pay',
         ], inplace=True, axis=1)
+    if drop_full_name:
+        data.data.drop('full_name', inplace=True, axis=1)
     return data
 
     # link dead.
