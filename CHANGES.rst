@@ -16,7 +16,7 @@ Release 0.2.0a1
 Version 0.2.0a1 is a pre-release.
 To try it, you have to install it manually using::
 
-    pip install -pre dirty_cat==0.2.0a1
+    pip install --pre dirty_cat==0.2.0a1
 
 or from the GitHub repository::
 
