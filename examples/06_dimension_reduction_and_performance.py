@@ -61,11 +61,8 @@ print(data['description'])
 import pandas as pd
 import numpy as np
 
-df = pd.read_csv(data['path'], quotechar="'", escapechar="\\")
-
 # Limit to 50 000 rows, for a faster example
-df = df[:50000].copy()
-df = df.replace("?", np.nan)  # Remove question marks
+df = pd.read_csv(data['path'], nrows=50000)
 df = df.dropna(axis=0)
 df = df.reset_index()
 ################################################################################
