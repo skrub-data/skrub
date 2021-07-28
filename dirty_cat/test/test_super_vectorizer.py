@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 import sklearn
 import pandas as pd
@@ -18,10 +19,13 @@ def check_same_transformers(expected_transformers: dict, actual_transformers: li
     assert actual_transformers_dict == expected_transformers
 
 
-def _get_dataframe():
+def _get_clean_dataframe():
+    """
+    Creates a simple DataFrame without missing values.
+    """
     return pd.DataFrame({
-        'int': pd.Series([15, 56, 63, 12, 44], dtype=int),
-        'float': pd.Series([5.2, 2.4, 6.2, 10.45, 9.], dtype=float),
+        'int': pd.Series([15, 56, 63, 12, 44], dtype='int'),
+        'float': pd.Series([5.2, 2.4, 6.2, 10.45, 9.], dtype='float'),
         'str1': pd.Series(['public', 'private', 'private', 'private', 'public'], dtype='string'),
         'str2': pd.Series(['officer', 'manager', 'lawyer', 'chef', 'teacher'], dtype='string'),
         'cat1': pd.Series(['yes', 'yes', 'no', 'yes', 'no'], dtype='category'),
@@ -29,9 +33,29 @@ def _get_dataframe():
     })
 
 
-def test_super_vectorizer():
-    # Create a simple DataFrame
-    X = _get_dataframe()
+def _get_dirty_dataframe():
+    """
+    Creates a simple DataFrame with missing values.
+    """
+    return pd.DataFrame({
+        'int': pd.Series([15, 56, 63, 12, 44], dtype='int'),
+        'float': pd.Series([5.2, 2.4, 6.2, 10.45, 9.], dtype='float'),
+        'str1': pd.Series(['public', None, 'private', 'private', 'public'], dtype='object'),
+        'str2': pd.Series(['officer', 'manager', None, 'chef', 'teacher'], dtype='object'),
+        'cat1': pd.Series([None, 'yes', 'no', 'yes', 'no'], dtype='object'),
+        'cat2': pd.Series(['20K+', '40K+', '60K+', '30K+', None], dtype='object'),
+    })
+
+
+def _test_possibilities(
+        X,
+        expected_transformers_df,
+        expected_transformers_2,
+        expected_transformers_np_no_cast,
+        expected_transformers_series,
+        expected_transformers_plain,
+        expected_transformers_np_cast,
+):
     # Test with low cardinality and a StandardScaler for the numeric columns
     vectorizer_base = SuperVectorizer(
         cardinality_threshold=3,
@@ -41,40 +65,21 @@ def test_super_vectorizer():
         numerical_transformer=StandardScaler(),
     )
     # Warning: order-dependant
-    expected_transformers_df = {
-        'numeric': ['int', 'float'],
-        'low_card_str': ['str1'],
-        'high_card_str': ['str2'],
-        'low_card_cat': ['cat1'],
-        'high_card_cat': ['cat2'],
-    }
     vectorizer_base.fit_transform(X)
     check_same_transformers(expected_transformers_df, vectorizer_base.transformers)
 
     # Test with higher cardinality threshold and no numeric transformer
     vectorizer_default = SuperVectorizer()  # Using default values
-    expected_transformers_2 = {
-        'low_card_str': ['str1', 'str2'],
-        'low_card_cat': ['cat1', 'cat2'],
-    }
     vectorizer_default.fit_transform(X)
     check_same_transformers(expected_transformers_2, vectorizer_default.transformers)
 
     # Test with a numpy array
     arr = X.to_numpy()
     # Instead of the columns names, we'll have the column indices.
-    expected_transformers_np = {
-        'numeric': [0, 1],
-        'low_card_str': [2, 4],
-        'high_card_str': [3, 5],
-    }
     vectorizer_base.fit_transform(arr)
-    check_same_transformers(expected_transformers_np, vectorizer_base.transformers)
+    check_same_transformers(expected_transformers_np_no_cast, vectorizer_base.transformers)
 
     # Test with pandas series
-    expected_transformers_series = {
-        'low_card_cat': ['cat1'],
-    }
     vectorizer_base.fit_transform(X['cat1'])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
 
@@ -87,21 +92,103 @@ def test_super_vectorizer():
         numerical_transformer=StandardScaler(),
     )
     X_str = X.astype('object')
-    expected_transformers_plain = {
-        'high_card_str': ['str2', 'cat2'],
-        'low_card_str': ['str1', 'cat1'],
-        'numeric': ['int', 'float']
-    }
     # With pandas
     vectorizer_cast.fit_transform(X_str)
     check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers)
     # With numpy
     vectorizer_cast.fit_transform(X_str.to_numpy())
-    check_same_transformers(expected_transformers_np, vectorizer_cast.transformers)
+    check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
+
+
+def _with_clean_data():
+    X = _get_clean_dataframe()
+    # Define the transformers we'll use throughout the test.
+    expected_transformers_df = {
+        'numeric': ['int', 'float'],
+        'low_card_str': ['str1'],
+        'high_card_str': ['str2'],
+        'low_card_cat': ['cat1'],
+        'high_card_cat': ['cat2'],
+    }
+    expected_transformers_2 = {
+        'low_card_str': ['str1', 'str2'],
+        'low_card_cat': ['cat1', 'cat2'],
+    }
+    expected_transformers_np_no_cast = {
+        'low_card_str': [2, 4],
+        'high_card_str': [3, 5],
+        'numeric': [0, 1]
+    }
+    expected_transformers_series = {
+        'low_card_cat': ['cat1'],
+    }
+    expected_transformers_plain = {
+        'high_card_str': ['str2', 'cat2'],
+        'low_card_str': ['str1', 'cat1'],
+        'numeric': ['int', 'float']
+    }
+    expected_transformers_np_cast = {
+        'numeric': [0, 1],
+        'low_card_str': [2, 4],
+        'high_card_str': [3, 5],
+    }
+    _test_possibilities(
+        X,
+        expected_transformers_df,
+        expected_transformers_2,
+        expected_transformers_np_no_cast,
+        expected_transformers_series,
+        expected_transformers_plain,
+        expected_transformers_np_cast,
+    )
+
+
+def _with_dirty_data():
+    X = _get_dirty_dataframe()
+    # Define the transformers we'll use throughout the test.
+    expected_transformers_df = {
+        'numeric': ['int', 'float'],
+        'low_card_str': ['str1', 'cat1'],
+        'high_card_str': ['str2', 'cat2'],
+    }
+    expected_transformers_2 = {
+        'low_card_str': ['str1', 'str2', 'cat1', 'cat2'],
+    }
+    expected_transformers_np_no_cast = {
+        'low_card_str': [2, 4],
+        'high_card_str': [0, 1, 3, 5],
+    }
+    expected_transformers_series = {
+        'low_card_str': ['cat1'],
+    }
+    expected_transformers_plain = {
+        'high_card_str': ['str2', 'cat2'],
+        'low_card_str': ['str1', 'cat1'],
+        'numeric': ['int', 'float']
+    }
+    expected_transformers_np_cast = {
+        'numeric': [0, 1],
+        'low_card_str': [2, 4],
+        'high_card_str': [3, 5],
+    }
+    _test_possibilities(
+        X,
+        expected_transformers_df,
+        expected_transformers_2,
+        expected_transformers_np_no_cast,
+        expected_transformers_series,
+        expected_transformers_plain,
+        expected_transformers_np_cast,
+    )
+
+
+def test_super_vectorizer():
+    _with_clean_data()
+    _with_dirty_data()
 
 
 def test_get_feature_names():
-    X = _get_dataframe()
+    X = _get_clean_dataframe()
 
     vectorizer_w_pass = SuperVectorizer(remainder='passthrough')
     vectorizer_w_pass.fit(X)
@@ -144,9 +231,12 @@ def test_fit():
 
 
 if __name__ == '__main__':
-    print('start test_super_vectorizer')
+    print('start test_super_vectorizer with clean df')
     test_super_vectorizer()
-    print('test_super_vectorizer passed')
+    print('test_super_vectorizer with clean df passed')
+    print('start test_super_vectorizer with dirty df')
+    test_super_vectorizer()
+    print('test_super_vectorizer with dirty df passed')
     print('start test_get_feature_names')
     test_get_feature_names()
     print('test_get_feature_names passed')
