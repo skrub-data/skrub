@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.datasets import fetch_20newsgroups
 from dirty_cat import GapEncoder
 
+
 @pytest.mark.parametrize("hashing, init, analyzer, add_words", [
     (False, 'k-means++', 'word', True),
     (True, 'random', 'char', False),
@@ -39,7 +40,6 @@ def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
     encoder.fit(X)
     y2 = encoder.transform(X)
     np.testing.assert_array_equal(y, y2)
-    return
 
 
 def test_input_type():
@@ -97,6 +97,7 @@ def test_get_feature_names(n_samples=70):
     assert topic_labels_3[0] == 'abc: ' + topic_labels[0]
     return
 
+
 def test_overflow_error():
     np.seterr(over='raise', divide='raise')
     r = np.random.RandomState(0)
@@ -105,6 +106,7 @@ def test_overflow_error():
                      random_state=0)
     enc.fit(X)
     return
+
 
 def test_score(n_samples=70):
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
@@ -118,6 +120,25 @@ def test_score(n_samples=70):
     # Check that two identical columns give the same score
     assert score_X1 * 2 == score_X2
     return
+
+
+@pytest.mark.parametrize("missing", ['', 'error', 'aaa'])
+def test_missing_values(missing):
+    observations = [['alice', 'bob'], ['bob', 'alice'], ['bob', np.nan],
+                    ['alice', 'charlie'], [np.nan, 'alice']]
+    observations = np.array(observations, dtype=object)
+    enc = GapEncoder(handle_missing=missing, n_components=3)
+    if missing == 'error':
+        with pytest.raises(ValueError, match=r'Input data contains missing values.'):
+            enc.fit_transform(observations)
+    elif missing == '':
+        enc.fit_transform(observations)
+        enc.partial_fit(observations)
+    else:
+        with pytest.raises(ValueError, match=r"handle_missing should be either "
+                                             r"'error' or '', got 'aaa'"):
+            enc.fit_transform(observations)
+
 
 def profile_encoder(Encoder, init):
     # not an unit test

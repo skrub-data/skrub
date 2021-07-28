@@ -24,6 +24,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
+from sklearn.utils.fixes import _object_dtype_isnan
 import pandas as pd
 from .utils import check_input
 
@@ -514,6 +515,14 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     max_iter_e_step : int, default=20
         Maximum number of iterations to adjust the activations h at each step.
 
+    handle_missing : 'error' or '' (default)
+        Whether to raise an error or impute with blank string '' if missing
+        values (NaN) are present during fit (default is to impute).
+        When this parameter is set to '', and a missing value is encountered
+        during fit_transform, the resulting encoded columns for this feature
+        will be all zeros. In the inverse transform, the missing category
+        will be denoted as None.
+
 
     Attributes
     ----------
@@ -531,7 +540,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
                  hashing=False, hashing_n_features=2**12, init='k-means++',
                  tol=1e-4, min_iter=2, max_iter=5, ngram_range=(2, 4),
                  analyzer='char', add_words=False, random_state=None,
-                 rescale_W=True, max_iter_e_step=20):
+                 rescale_W=True, max_iter_e_step=20, handle_missing=''):
 
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -552,6 +561,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.random_state = random_state
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
+        self.handle_missing = handle_missing
 
     def _create_column_gap_encoder(self) -> GapEncoderColumn:
         return GapEncoderColumn(
@@ -572,6 +582,27 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             rescale_W=self.rescale_W,
             max_iter_e_step=self.max_iter_e_step,
         )
+
+    def _handle_missing(self, X):
+        """
+        Imputes missing values with `` or raises an error
+        Note: modifies the array in-place.
+        """
+        if self.handle_missing not in ['error', '']:
+            raise ValueError(
+                "handle_missing should be either 'error' or "
+                f"'', got {self.handle_missing!r}"
+            )
+
+        missing_mask = _object_dtype_isnan(X)
+
+        if missing_mask.any():
+            if self.handle_missing == 'error':
+                raise ValueError('Input data contains missing values.')
+            else:
+                X[missing_mask] = self.handle_missing
+
+        return X
             
     def fit(self, X, y=None):
         """
@@ -592,6 +623,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             self.column_names_ = list(X.columns)
         # Check input data shape
         X = check_input(X)
+        X = self._handle_missing(X)
         self.fitted_models_ = []
         for k in range(X.shape[1]):
             col_enc = self._create_column_gap_encoder()
@@ -621,6 +653,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         """
         # Check input data shape
         X = check_input(X)
+        X = self._handle_missing(X)
         X_enc = []
         for k in range(X.shape[1]):
             X_enc.append(self.fitted_models_[k].transform(X[:, k]))
@@ -648,6 +681,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             self.column_names_ = list(X.columns)
         # Check input data shape
         X = check_input(X)
+        X = self._handle_missing(X)
         # Init the `GapEncoderColumn` instances if the model was
         # not fitted already.
         if not hasattr(self, 'fitted_models_'):
