@@ -84,7 +84,7 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
               `pandas.read_csv` for reading.
               Usually, it contains `quotechar`, `escapechar` and `na_values`.
               See `pandas.read_csv`'s documentation for more information.
-              Use by passing `**data['read_csv_kwargs']` to `read_csv`.
+              Use by passing `**info['read_csv_kwargs']` to `read_csv`.
           - ``y``: str
               The name of the target column.
 
@@ -289,8 +289,8 @@ def _features_to_csv_format(features: Features) -> str:
 
 def fetch_employee_salaries() -> dict:
     """Fetches the employee_salaries dataset."""
-    data = fetch_openml_dataset(dataset_id=EMPLOYEE_SALARIES_ID)
-    data.update({
+    info = fetch_openml_dataset(dataset_id=EMPLOYEE_SALARIES_ID)
+    info.update({
         'read_csv_kwargs': {
             'quotechar': "'",
             'escapechar': '\\',
@@ -298,51 +298,51 @@ def fetch_employee_salaries() -> dict:
         },
         'y': 'current_annual_salary',
     })
-    return data
+    return info
 
 
 def fetch_road_safety() -> dict:
     """Fetches the road safety dataset."""
-    data = fetch_openml_dataset(dataset_id=ROAD_SAFETY_ID)
-    data.update({
+    info = fetch_openml_dataset(dataset_id=ROAD_SAFETY_ID)
+    info.update({
         'read_csv_kwargs': {
             'na_values': ['?'],
         },
         'y': 'Sex_of_Driver',
     })
-    return data
+    return info
 
 
 def fetch_medical_charge() -> dict:
     """Fetches the medical charge dataset."""
-    data = fetch_openml_dataset(dataset_id=MEDICAL_CHARGE_ID)
-    data.update({
+    info = fetch_openml_dataset(dataset_id=MEDICAL_CHARGE_ID)
+    info.update({
         'read_csv_kwargs': {
             'quotechar': "'",
             'escapechar': '\\',
         },
         'y': 'Average_Total_Payments',
     })
-    return data
+    return info
 
 
 def fetch_midwest_survey() -> dict:
     """Fetches the midwest survey dataset."""
-    data = fetch_openml_dataset(dataset_id=MIDWEST_SURVEY_ID)
-    data.update({
+    info = fetch_openml_dataset(dataset_id=MIDWEST_SURVEY_ID)
+    info.update({
         'read_csv_kwargs': {
             'quotechar': "'",
             'escapechar': '\\',
         },
         'y': 'Census_Region',
     })
-    return data
+    return info
 
 
 def fetch_open_payments() -> dict:
     """Fetches the open payments dataset."""
-    data = fetch_openml_dataset(dataset_id=OPEN_PAYMENTS_ID)
-    data.update({
+    info = fetch_openml_dataset(dataset_id=OPEN_PAYMENTS_ID)
+    info.update({
         'read_csv_kwargs': {
             'quotechar': "'",
             'escapechar': '\\',
@@ -350,13 +350,13 @@ def fetch_open_payments() -> dict:
         },
         'y': 'status',
     })
-    return data
+    return info
 
 
 def fetch_traffic_violations() -> dict:
     """Fetches the traffic violations dataset."""
-    data = fetch_openml_dataset(dataset_id=TRAFFIC_VIOLATIONS_ID)
-    data.update({
+    info = fetch_openml_dataset(dataset_id=TRAFFIC_VIOLATIONS_ID)
+    info.update({
         'read_csv_kwargs': {
             'quotechar': "'",
             'escapechar': '\\',
@@ -365,16 +365,16 @@ def fetch_traffic_violations() -> dict:
         'y': 'violation_type',
 
     })
-    return data
+    return info
 
 
 def fetch_drug_directory() -> dict:
     """Fetches the drug directory dataset."""
-    data = fetch_openml_dataset(dataset_id=DRUG_DIRECTORY_ID)
-    data.update({
+    info = fetch_openml_dataset(dataset_id=DRUG_DIRECTORY_ID)
+    info.update({
         'read_csv_kwargs': {
             'quotechar': "'",
         },
         'y': 'PRODUCTTYPENAME',
     })
-    return data
+    return info
