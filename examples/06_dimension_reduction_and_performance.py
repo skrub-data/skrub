@@ -60,7 +60,7 @@ print(data['description'])
 # Then we load it:
 import pandas as pd
 
-df = pd.read_csv(data['path'], quotechar="'", escapechar='\\', na_values=['?'])
+df = pd.read_csv(data['path'], **data['read_csv_kwargs'])
 df = df.dropna(axis=0)
 df = df.reset_index()
 

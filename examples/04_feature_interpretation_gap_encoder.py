@@ -16,14 +16,14 @@ categorical data.
 #
 # We first download the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
-employee_salaries = fetch_employee_salaries()
-print(employee_salaries['description'])
+info = fetch_employee_salaries()
+print(info['description'])
 
 
 ################################################################################
 # Then we load it:
 import pandas as pd
-df = pd.read_csv(employee_salaries['path'], quotechar="'", escapechar='\\')
+df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
 
 ################################################################################
 # Now, we retrieve the dirty column to encode:

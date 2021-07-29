@@ -127,7 +127,7 @@ print(info['description'])
 # problem. You can have a glimpse of the values here:
 import pandas as pd
 
-df = pd.read_csv(info['path'], nrows=10, quotechar="'", escapechar="\\").astype(str)
+df = pd.read_csv(info['path'], nrows=10, **info['read_csv_kwargs']).astype(str)
 print(df[['NONPROPRIETARYNAME', 'PRODUCTTYPENAME']].head())
 # This will be useful further down in the example.
 columns_names = df.columns
@@ -209,7 +209,7 @@ def get_X_y(**kwargs):
     transformation repeatedly in the code.
     """
     global label_encoder
-    df = pd.read_csv(info['path'], quotechar="'", escapechar="\\", **kwargs)
+    df = pd.read_csv(info['path'], **info['read_csv_kwargs'], **kwargs)
     return preprocess(df, label_encoder)
 
 ###############################################################################
@@ -435,7 +435,7 @@ t0 = time.perf_counter()
 
 iter_csv = pd.read_csv(
     info['path'], nrows=online_train_set_size, chunksize=batchsize,
-    skiprows=1, names=columns_names,  quotechar="'", escapechar="\\")
+    skiprows=1, names=columns_names, **info['read_csv_kwargs'])
 
 for batch_no, batch in enumerate(iter_csv):
     X_batch, y_batch = preprocess(batch, label_encoder)

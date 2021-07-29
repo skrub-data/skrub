@@ -77,6 +77,13 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
               The dataset's URL from OpenML.
           - ``path``: pathlib.Path
               The local path leading to the dataset, saved as a CSV file.
+          - ``read_csv_kwargs``: Dict[str, Any]
+              Not returned by default but added by the dataset fetchers below,
+              it is a list of keyword arguments that can be passed to
+              `pandas.read_csv` for easy reading.
+              Usually, it contains `quotechar`, `escapechar` and `na_values`.
+              See `pandas.read_csv`'s documentation for more information.
+              Use by passing `**data['read_csv_kwargs']` to `read_csv`.
 
     """
 
@@ -276,37 +283,67 @@ def _features_to_csv_format(features: Features) -> str:
 # Datasets fetchers section
 # Public API
 
+kwarg_field = 'read_csv_kwargs'
+
 
 def fetch_employee_salaries() -> dict:
     """Fetches the employee_salaries dataset."""
-    return fetch_openml_dataset(dataset_id=EMPLOYEE_SALARIES_ID)
+    data = fetch_openml_dataset(dataset_id=EMPLOYEE_SALARIES_ID)
+    data.update({
+        kwarg_field: {'quotechar': "'", 'escapechar': '\\', 'na_values': ['?']}
+    })
+    return data
 
 
 def fetch_road_safety() -> dict:
     """Fetches the road safety dataset."""
-    return fetch_openml_dataset(dataset_id=ROAD_SAFETY_ID)
+    data = fetch_openml_dataset(dataset_id=ROAD_SAFETY_ID)
+    data.update({
+        kwarg_field: {'na_values': ['?']}
+    })
+    return data
 
 
 def fetch_medical_charge() -> dict:
     """Fetches the medical charge dataset."""
-    return fetch_openml_dataset(dataset_id=MEDICAL_CHARGE_ID)
+    data = fetch_openml_dataset(dataset_id=MEDICAL_CHARGE_ID)
+    data.update({
+        kwarg_field: {'quotechar': "'", 'escapechar': '\\'}
+    })
+    return data
 
 
 def fetch_midwest_survey() -> dict:
     """Fetches the midwest survey dataset."""
-    return fetch_openml_dataset(dataset_id=MIDWEST_SURVEY_ID)
+    data = fetch_openml_dataset(dataset_id=MIDWEST_SURVEY_ID)
+    data.update({
+        kwarg_field: {'quotechar': "'", 'escapechar': '\\'}
+    })
+    return data
 
 
 def fetch_open_payments() -> dict:
     """Fetches the open payments dataset."""
-    return fetch_openml_dataset(dataset_id=OPEN_PAYMENTS_ID)
+    data = fetch_openml_dataset(dataset_id=OPEN_PAYMENTS_ID)
+    data.update({
+        kwarg_field: {'quotechar': "'", 'escapechar': '\\', 'na_values': ['?']}
+    })
+    return data
 
 
 def fetch_traffic_violations() -> dict:
     """Fetches the traffic violations dataset."""
-    return fetch_openml_dataset(dataset_id=TRAFFIC_VIOLATIONS_ID)
+    data = fetch_openml_dataset(dataset_id=TRAFFIC_VIOLATIONS_ID)
+    data.update({
+        kwarg_field: {'quotechar': "'", 'escapechar': '\\', 'na_values': ['?']}
+    })
+    return data
 
 
 def fetch_drug_directory() -> dict:
     """Fetches the drug directory dataset."""
-    return fetch_openml_dataset(dataset_id=DRUG_DIRECTORY_ID)
+    data = fetch_openml_dataset(dataset_id=DRUG_DIRECTORY_ID)
+    data.update({
+        kwarg_field: {'quotechar': "'"}
+    })
+    return data

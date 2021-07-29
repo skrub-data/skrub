@@ -34,14 +34,14 @@ We demonstrate it on the `employee salaries` dataset.
 # (the salary to predict):
 from dirty_cat.gap_encoder import GapEncoder
 from dirty_cat.datasets import fetch_employee_salaries
-employee_salaries = fetch_employee_salaries()
-print(employee_salaries['description'])
+info = fetch_employee_salaries()
+print(info['description'])
 
 ###############################################################################
 
 import pandas as pd
 
-df = pd.read_csv(employee_salaries['path'], quotechar="'", escapechar='\\')
+df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
 
 X = df
 y = df['current_annual_salary']
