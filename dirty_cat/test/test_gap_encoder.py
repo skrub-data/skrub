@@ -131,7 +131,7 @@ def test_missing_values(missing):
     if missing == 'error':
         with pytest.raises(ValueError, match=r'Input data contains missing values.'):
             enc.fit_transform(observations)
-    elif missing == '':
+    elif missing == 'zero_impute':
         enc.fit_transform(observations)
         enc.partial_fit(observations)
     else:
