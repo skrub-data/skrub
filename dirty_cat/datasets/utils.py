@@ -13,6 +13,4 @@ def get_data_dir(name=None) -> Path:
     data_dir = module_path / 'data'
     if name is not None:
         data_dir = data_dir / name
-    # Create it if it doesn't exist already
-    data_dir.mkdir(exist_ok=True)
     return data_dir
