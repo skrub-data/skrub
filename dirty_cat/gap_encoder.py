@@ -540,7 +540,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
                  hashing=False, hashing_n_features=2**12, init='k-means++',
                  tol=1e-4, min_iter=2, max_iter=5, ngram_range=(2, 4),
                  analyzer='char', add_words=False, random_state=None,
-                 rescale_W=True, max_iter_e_step=20, handle_missing=''):
+                 rescale_W=True, max_iter_e_step=20, handle_missing='zero_impute'):
 
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -588,10 +588,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Imputes missing values with `` or raises an error
         Note: modifies the array in-place.
         """
-        if self.handle_missing not in ['error', '']:
+        if self.handle_missing not in ['error', 'zero_impute']:
             raise ValueError(
                 "handle_missing should be either 'error' or "
-                f"'', got {self.handle_missing!r}"
+                f"'zero_impute', got {self.handle_missing!r}"
             )
 
         missing_mask = _object_dtype_isnan(X)
@@ -599,8 +599,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         if missing_mask.any():
             if self.handle_missing == 'error':
                 raise ValueError('Input data contains missing values.')
-            else:
-                X[missing_mask] = self.handle_missing
+            elif self.handle_missing == 'zero_impute':
+                X[missing_mask] = ''
 
         return X
             

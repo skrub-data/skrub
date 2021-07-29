@@ -122,7 +122,7 @@ def test_score(n_samples=70):
     return
 
 
-@pytest.mark.parametrize("missing", ['', 'error', 'aaa'])
+@pytest.mark.parametrize("missing", ['zero_impute', 'error', 'aaa'])
 def test_missing_values(missing):
     observations = [['alice', 'bob'], ['bob', 'alice'], ['bob', np.nan],
                     ['alice', 'charlie'], [np.nan, 'alice']]
@@ -136,7 +136,7 @@ def test_missing_values(missing):
         enc.partial_fit(observations)
     else:
         with pytest.raises(ValueError, match=r"handle_missing should be either "
-                                             r"'error' or '', got 'aaa'"):
+                                             r"'error' or 'zero_impute', got 'aaa'"):
             enc.fit_transform(observations)
 
 
