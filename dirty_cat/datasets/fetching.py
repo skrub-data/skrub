@@ -12,12 +12,12 @@ Scikit-Learn's ``fetch_openml()`` function.
 # - Watch out for ``fetch_openml()`` API modifications: as of january 2021, the function is marked as experimental.
 
 
-import os
 import gzip
 import json
 import sklearn
 import warnings
 
+from pathlib import Path
 from collections import namedtuple
 from distutils.version import LooseVersion
 
@@ -54,7 +54,7 @@ TRAFFIC_VIOLATIONS_ID = 42132
 DRUG_DIRECTORY_ID = 43044
 
 
-def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) -> dict:
+def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir()) -> dict:
     """
     Gets a dataset from OpenML (https://www.openml.org),
     or from the disk if already downloaded.
@@ -63,7 +63,7 @@ def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) 
     ----------
     dataset_id: int
         The ID of the dataset to fetch.
-    data_directory: str
+    data_directory: Path
         Optional. A directory to save the data to.
         By default, the dirty_cat data directory.
 
@@ -71,43 +71,47 @@ def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) 
     -------
     dict
         A dictionary containing:
-          - ``description``
+          - ``description``: str
               The description of the dataset, as gathered from OpenML.
-          - ``source``
+          - ``source``: str
               The dataset's URL from OpenML.
-          - ``path``
-              The absolute local path leading to the dataset, saved as a CSV file.
+          - ``path``: pathlib.Path
+              The local path leading to the dataset, saved as a CSV file.
 
     """
 
-    # Construct the path to the ``.gz`` file containing the details on a dataset.
-    details_gz_path = _get_gz_path(data_directory, DETAILS_DIRECTORY, str(dataset_id))
-    features_gz_path = _get_gz_path(data_directory, FEATURES_DIRECTORY, str(dataset_id))
+    # Construct the path to the gzip file containing the details on a dataset.
+    details_gz_path = data_directory / DETAILS_DIRECTORY / f'{dataset_id}.gz'
+    features_gz_path = data_directory / FEATURES_DIRECTORY / f'{dataset_id}.gz'
 
-    if not os.path.isfile(details_gz_path) or not os.path.isfile(features_gz_path):
-        # If the details file or the features file do not exist, download the dataset.
+    if not details_gz_path.is_file() or not features_gz_path.is_file():
+        # If the details file or the features file don't exist,
+        # download the dataset.
         warnings.warn(
-            "Could not find the dataset {} locally. "
+            f"Could not find the dataset {dataset_id} locally. "
             "Downloading it from OpenML; this might take a while... "
-            "If the process is interrupted, some files will be invalid/incomplete. "
+            "If the process is interrupted, files will be invalid/incomplete. "
             "To fix this problem, delete the CSV file if it exists. "
-            "The system will recreate it on the next run.".format(dataset_id)
+            "The system will recreate it on the next run."
         )
-        _download_and_write_openml_dataset(dataset_id=dataset_id, data_directory=data_directory)
+        _download_and_write_openml_dataset(dataset_id=dataset_id,
+                                           data_directory=data_directory)
     details = _get_details(details_gz_path)
 
-    # The file ID is required because the data file is named after this ID, and not after the dataset's.
+    # The file ID is required because the data file is named after this ID,
+    # and not after the dataset's.
     file_id = details.file_id
-    csv_path = os.path.join(data_directory, f'{details.name}.csv')
+    csv_path = data_directory / f'{details.name}.csv'
 
-    data_gz_path = _get_gz_path(data_directory, DATA_DIRECTORY, str(file_id))
+    data_gz_path = data_directory / DATA_DIRECTORY / f'{file_id}.gz'
 
-    if not os.path.isfile(data_gz_path):
+    if not data_gz_path.is_file():
         # This is a double-check.
         # If the data file does not exist, download the dataset.
-        _download_and_write_openml_dataset(dataset_id=dataset_id, data_directory=data_directory)
+        _download_and_write_openml_dataset(dataset_id=dataset_id,
+                                           data_directory=data_directory)
 
-    if not os.path.isfile(csv_path):
+    if not csv_path.is_file():
         # If the CSV file does not exist, use the dataset
         # downloaded by ``fetch_openml()`` to construct it.
         features = _get_features(features_gz_path)
@@ -118,19 +122,19 @@ def fetch_openml_dataset(dataset_id: int, data_directory: str = get_data_dir()) 
     return {
         "description": details.description,
         "source": url,
-        "path": csv_path
+        "path": csv_path.resolve()
     }
 
 
-def _download_and_write_openml_dataset(dataset_id: int, data_directory: str) -> None:
+def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
     """
-    Downloads a dataset from OpenML, taking care of creating the tree structure.
+    Downloads a dataset from OpenML, taking care of creating the directories.
 
     Parameters
     ----------
     dataset_id: int
         The ID of the dataset to download.
-    data_directory: str
+    data_directory: Path
         The directory in which the data will be saved.
 
     Raises
@@ -154,16 +158,16 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: str) -> 
     #
     # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
     # and ``urllib.error.URLError`` if there is no Internet connection.
-    fetch_openml(data_id=dataset_id, data_home=data_directory, **fetch_kwargs)
+    fetch_openml(data_id=dataset_id, data_home=str(data_directory), **fetch_kwargs)
 
 
-def _read_json_from_gz(compressed_dir_path: str) -> dict:
+def _read_json_from_gz(compressed_dir_path: Path) -> dict:
     """
-    Opens a ``.gz`` file, reads its content, expecting JSON, and returns a dictionary.
+    Opens a gzip file, reads its content (JSON expected), and returns a dictionary.
 
     Parameters
     ----------
-    compressed_dir_path
+    compressed_dir_path: Path
         Path to the ``.gz`` file to read.
 
     Returns
@@ -172,8 +176,8 @@ def _read_json_from_gz(compressed_dir_path: str) -> dict:
         The information contained in the file, converted from plain-text JSON.
 
     """
-    if not os.path.isfile(compressed_dir_path):
-        raise FileNotFoundError(f'Could not find file {compressed_dir_path}.')
+    if not compressed_dir_path.is_file():
+        raise FileNotFoundError(f"Couldn't find file {compressed_dir_path!s}")
 
     # Read content
     with gzip.open(compressed_dir_path, mode='rt') as gz:
@@ -183,13 +187,13 @@ def _read_json_from_gz(compressed_dir_path: str) -> dict:
     return details_json
 
 
-def _get_details(compressed_dir_path: str) -> Details:
+def _get_details(compressed_dir_path: Path) -> Details:
     """
     Gets useful details from the details file.
 
     Parameters
     ----------
-    compressed_dir_path: str
+    compressed_dir_path: Path
         The path to the ``.gz`` file containing the details.
 
     Returns
@@ -210,16 +214,15 @@ def _get_details(compressed_dir_path: str) -> Details:
     return Details(*f_details.values())
 
 
-def _get_features(compressed_dir_path: str) -> Features:
+def _get_features(compressed_dir_path: Path) -> Features:
     """
-    Gets features that can be inserted in the CSV file or that can be useful in other ways.
-    The most important feature being the columns names.
+    Gets features that can be inserted in the CSV file.
+    The most important feature being the column names.
 
     Parameters
     ----------
-    compressed_dir_path
-        Path to the ``.gz`` file
-        containing the features.
+    compressed_dir_path: Path
+        Path to the gzip file containing the features.
 
     Returns
     -------
@@ -237,56 +240,22 @@ def _get_features(compressed_dir_path: str) -> Features:
     return Features(*features.values())
 
 
-def _get_gz_path(root: str, directory: str, file_name: str) -> str:
+def _export_gz_data_to_csv(compressed_dir_path: Path, destination_file: Path, features: Features) -> None:
     """
-    Constructs the path to a ``.gz`` file.
+    Reads a gzip file containing ARFF data, and writes it to a target CSV.
 
     Parameters
     ----------
-    root
-        A directory tree starting from the system root, therefore, it must be absolute.
-    directory
-        Directory tree under root.
-    file_name
-        The file name, without the extension.
-
-    Returns
-    -------
-    str
-        The path to the compressed directory.
-
-    Raises
-    ------
-    ValueError
-        If any of the arguments passed is not a string.
-
-    """
-    if not isinstance(root, str) or not isinstance(directory, str) or not isinstance(file_name, str):
-        raise ValueError
-
-    return os.path.join(
-        root,
-        directory.strip(os.sep),
-        f"{file_name}.gz".strip(os.sep)
-    )
-
-
-def _export_gz_data_to_csv(compressed_dir_path: str, destination_file: str, features: Features) -> None:
-    """
-    Reads a ``.gz`` file containing an ARFF file, and writes to a target CSV the data.
-
-    Parameters
-    ----------
-    compressed_dir_path: str
+    compressed_dir_path: Path
         Path to the ``.gz`` file containing the ARFF data.
-    destination_file: str
+    destination_file: Path
         A CSV file to write to.
     features: Features
-        A ``Features`` object containing the first CSV line (the columns names).
+        A ``Features`` object containing the first CSV line (the column names).
 
     """
     atdata_found = False
-    with open(destination_file, mode="w") as csv:
+    with destination_file.open(mode="w") as csv:
         with gzip.open(compressed_dir_path, mode="rt") as gz:
             csv.write(_features_to_csv_format(features))
             csv.write("\n")
