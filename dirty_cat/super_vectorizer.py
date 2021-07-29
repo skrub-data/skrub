@@ -24,6 +24,9 @@ from sklearn.preprocessing import OneHotEncoder
 from dirty_cat import GapEncoder
 
 
+_sklearn_loose_version = LooseVersion(sklearn.__version__)
+
+
 def _has_missing_values(array: pd.DataFrame) -> bool:
     """
     Returns True if `array` contains missing values, False otherwise.
@@ -31,22 +34,16 @@ def _has_missing_values(array: pd.DataFrame) -> bool:
     return any(array.isnull())
 
 
-def _replace_missing(array: pd.DataFrame) -> pd.DataFrame:
+def _replace_missing(array: pd.DataFrame, value: str = "missing") -> pd.DataFrame:
     """
     Takes a DataFrame, replaces the missing values, and returns it.
     """
-    # Replace missing values for pandas
     for col in array.columns:
         dtype_name = array[col].dtype.name
         if dtype_name == 'category' \
-                and ('' not in array[col].cat.categories):
-            array[col] = array[col].cat.add_categories('')
-        array[col] = array[col].replace(to_replace='?', value='')
-        if dtype_name.startswith('int') or dtype_name.startswith('float'):
-            array[col] = array[col].fillna(0)
-        else:
-            array[col] = array[col].fillna('')
-    array = array.reset_index(drop=True)
+                and (value not in array[col].cat.categories):
+            array[col] = array[col].cat.add_categories(value)
+        array[col] = array[col].fillna(value=value)
     return array
 
 
@@ -137,9 +134,9 @@ class SuperVectorizer(ColumnTransformer):
 
     def __init__(self, *,
                  cardinality_threshold: int = 20,
-                 low_card_str_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
+                 low_card_str_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(handle_unknown='ignore'),
                  high_card_str_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(),
-                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
+                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(handle_unknown='ignore'),
                  high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(),
                  numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
                  datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
@@ -170,7 +167,7 @@ class SuperVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
-    def _auto_cast_array(self, X):
+    def _auto_cast_array(self, X: pd.DataFrame):
         """
         Takes an array and tries to convert its columns to the best possible
         data type.
@@ -185,8 +182,12 @@ class SuperVectorizer(ColumnTransformer):
         array
             The same array, with its columns casted to the best possible
             data type.
+            If there are missing values in a column, it won't change it.
         """
-        return X.convert_dtypes()
+        for col in X.columns:
+            if not _has_missing_values(X[col]):
+                X[col] = X[col].convert_dtypes()
+        return X
 
     def _transform(self, X) -> pd.DataFrame:
         # Create a copy to avoid altering the original data.
@@ -197,20 +198,30 @@ class SuperVectorizer(ColumnTransformer):
 
         # Detect if the array contains missing values.
         if _has_missing_values(X):
-            if self.handle_missing == '':
-                X = _replace_missing(X)
-            elif self.handle_missing == 'error':
+            if self.handle_missing == 'error':
                 raise ValueError('Array contains missing values')
             else:
-                raise ValueError("Invalid 'handle_missing' value. "
-                                 "Expected any of {'', 'error'}, "
-                                 f"got {self.handle_missing}")
+                # Check if we're using a OneHotEncoder
+                using_ohe: bool = any(
+                    trans.__class__.__name__ == OneHotEncoder.__name__
+                    for trans in [
+                        self.low_card_str_transformer,
+                        self.high_card_str_transformer,
+                        self.low_card_cat_transformer,
+                        self.high_card_cat_transformer,
+                    ]
+                )
+                if using_ohe and _sklearn_loose_version < LooseVersion('0.24'):
+                    # If we use a OneHotEncoder and we're using a version
+                    # of sklearn prior to 0.24, replace missing values,
+                    # otherwise, leave them in.
+                    X = _replace_missing(X, self.handle_missing)
 
         if self.auto_cast:
             from pandas.core.dtypes.base import ExtensionDtype
             X = self._auto_cast_array(X)
 
-            if LooseVersion(sklearn.__version__) <= LooseVersion('0.22'):
+            if _sklearn_loose_version <= LooseVersion('0.22'):
                 # Cast pandas dtypes to numpy dtypes
                 # for earlier versions of sklearn
                 for column in X:
@@ -306,7 +317,7 @@ class SuperVectorizer(ColumnTransformer):
         e.g. "job_title_Police officer",
         or "<column_name>" if not encoded.
         """
-        if LooseVersion(sklearn.__version__) < LooseVersion('0.23'):
+        if _sklearn_loose_version < LooseVersion('0.23'):
             try:
                 ct_feature_names = super().get_feature_names()
             except NotImplementedError:
