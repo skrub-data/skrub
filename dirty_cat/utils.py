@@ -32,7 +32,10 @@ class LRUDict:
 
 
 def check_input(X):
-    # Check input data shape
+    """
+    Check input data shape.
+    Also converts X to a numpy array if not already.
+    """
     X = np.asarray(X)
     if X.ndim != 2:
         raise ValueError(

@@ -38,6 +38,6 @@ if __name__ == '__main__':
           platforms='any',
           packages=find_packages(),
           package_data={'dirty_cat': ['VERSION.txt', 'data/midwest_survey/*.csv']},
-          install_requires=['scikit-learn>=0.20', 'numpy>=1.16', 'scipy>=1.2', 'requests',
+          install_requires=['scikit-learn>=0.21', 'numpy>=1.16', 'scipy>=1.2', 'requests',
                             'joblib'],
           )

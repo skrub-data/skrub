@@ -60,10 +60,8 @@ print(data['description'])
 # Then we load it:
 import pandas as pd
 
-df = pd.read_csv(data['path'])
-
 # Limit to 50 000 rows, for a faster example
-df = df[:50000].copy()
+df = pd.read_csv(data['path'], nrows=50000)
 df = df.dropna(axis=0)
 df = df.reset_index()
 ################################################################################
