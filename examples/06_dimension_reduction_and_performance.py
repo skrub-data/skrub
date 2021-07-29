@@ -62,7 +62,7 @@ import pandas as pd
 import numpy as np
 
 # Limit to 50 000 rows, for a faster example
-df = pd.read_csv(data['path'], nrows=50000)
+df = pd.read_csv(data['path'], nrows=50000, quotechar="'", escapechar='\\', na_values=['?'])
 df = df.dropna(axis=0)
 df = df.reset_index()
 ################################################################################
