@@ -40,10 +40,10 @@ def _get_dirty_dataframe():
     return pd.DataFrame({
         'int': pd.Series([15, 56, 63, 12, 44], dtype='int'),
         'float': pd.Series([5.2, 2.4, 6.2, 10.45, 9.], dtype='float'),
-        'str1': pd.Series(['public', None, 'private', 'private', 'public'], dtype='object'),
-        'str2': pd.Series(['officer', 'manager', None, 'chef', 'teacher'], dtype='object'),
-        'cat1': pd.Series([None, 'yes', 'no', 'yes', 'no'], dtype='object'),
-        'cat2': pd.Series(['20K+', '40K+', '60K+', '30K+', None], dtype='object'),
+        'str1': pd.Series(['public', np.nan, 'private', 'private', 'public'], dtype='object'),
+        'str2': pd.Series(['officer', 'manager', np.nan, 'chef', 'teacher'], dtype='object'),
+        'cat1': pd.Series([np.nan, 'yes', 'no', 'yes', 'no'], dtype='object'),
+        'cat2': pd.Series(['20K+', '40K+', '60K+', '30K+', np.nan], dtype='object'),
     })
 
 
@@ -58,7 +58,7 @@ def _test_possibilities(
 ):
     # Test with low cardinality and a StandardScaler for the numeric columns
     vectorizer_base = SuperVectorizer(
-        cardinality_threshold=3,
+        cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
         high_card_str_transformer=GapEncoder(n_components=2),
         high_card_cat_transformer=GapEncoder(n_components=2),
@@ -85,7 +85,7 @@ def _test_possibilities(
 
     # Test casting values
     vectorizer_cast = SuperVectorizer(
-        cardinality_threshold=3,
+        cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
         high_card_str_transformer=GapEncoder(n_components=2),
         high_card_cat_transformer=GapEncoder(n_components=2),
@@ -156,7 +156,8 @@ def _with_dirty_data():
     }
     expected_transformers_np_no_cast = {
         'low_card_str': [2, 4],
-        'high_card_str': [0, 1, 3, 5],
+        'high_card_str': [3, 5],
+        'numeric': [0, 1],
     }
     expected_transformers_series = {
         'low_card_str': ['cat1'],
