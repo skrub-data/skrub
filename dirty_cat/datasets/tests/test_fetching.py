@@ -76,8 +76,8 @@ def test_fetch_openml_dataset():
 
         assert returned_info["path"].is_file()
 
-        dataset: pd.DataFrame = pd.read_csv(returned_info["path"], sep=",",
-                                            quotechar="'", escapechar="\\")
+        dataset: pd.DataFrame = pd.read_csv(returned_info["path"],
+                                            **returned_info["read_csv_kwargs"])
 
         assert dataset.shape == (test_dataset["dataset_rows_count"],
                                  test_dataset["dataset_columns_count"])

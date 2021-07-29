@@ -121,10 +121,10 @@ def test_score(n_samples=70):
 
 def profile_encoder(Encoder, init):
     # not an unit test
-    
-    from dirty_cat import datasets
-    employee_salaries = datasets.fetch_employee_salaries()
-    data = employee_salaries['data']
+
+    from dirty_cat.datasets import fetch_employee_salaries
+    info = fetch_employee_salaries()
+    data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
     X = np.array(data['employee_position_title'])[:, None]
     t0 = time.time()
     encoder = Encoder(n_components=50, init=init)

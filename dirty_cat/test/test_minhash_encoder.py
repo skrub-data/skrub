@@ -2,6 +2,7 @@ import time
 import random
 from string import ascii_lowercase
 import numpy as np
+import pandas as pd
 import pytest
 
 from sklearn.datasets import fetch_20newsgroups
@@ -64,10 +65,10 @@ def test_get_unique_ngrams():
 def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
     # not an unit test
 
-    from dirty_cat import datasets
-    import pandas as pd
-    employee_salaries = datasets.fetch_employee_salaries()
-    data = employee_salaries['data']
+    from dirty_cat.datasets import fetch_employee_salaries
+    info = fetch_employee_salaries()
+    data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+    X = np.array(data['employee_position_title'])[:, None]
     X = data['employee_position_title'].tolist()
     X = X * 10
     t0 = time.time()
