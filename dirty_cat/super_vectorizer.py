@@ -131,23 +131,25 @@ class SuperVectorizer(ColumnTransformer):
 
     # Override required parameters
     _required_parameters = []
+    OptionalEstimator = Optional[Union[BaseEstimator, str]]
 
     def __init__(self, *,
                  cardinality_threshold: int = 20,
-                 low_card_str_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(handle_unknown='ignore'),
-                 high_card_str_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(),
-                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(handle_unknown='ignore'),
-                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(),
-                 numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
-                 datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
+                 low_card_str_transformer: OptionalEstimator = OneHotEncoder(handle_unknown='ignore'),
+                 high_card_str_transformer: OptionalEstimator = GapEncoder(),
+                 low_card_cat_transformer: OptionalEstimator = OneHotEncoder(handle_unknown='ignore'),
+                 high_card_cat_transformer: OptionalEstimator = GapEncoder(),
+                 numerical_transformer: OptionalEstimator = None,
+                 datetime_transformer: OptionalEstimator = None,
                  auto_cast: bool = True,
+                 impute_missing: str = 'auto',
                  # Following parameters are inherited from ColumnTransformer
                  handle_missing: str = '',
-                 remainder='passthrough',
-                 sparse_threshold=0.3,
-                 n_jobs=None,
+                 remainder: str = 'passthrough',
+                 sparse_threshold: float = 0.3,
+                 n_jobs: int = None,
                  transformer_weights=None,
-                 verbose=False,
+                 verbose: bool = False,
                  ):
         super().__init__(transformers=[])
 
@@ -159,84 +161,63 @@ class SuperVectorizer(ColumnTransformer):
         self.numerical_transformer = numerical_transformer
         self.datetime_transformer = datetime_transformer
         self.auto_cast = auto_cast
-        self.handle_missing = handle_missing
+        self.impute_missing = impute_missing
 
+        self.handle_missing = handle_missing
         self.remainder = remainder
         self.sparse_threshold = sparse_threshold
         self.n_jobs = n_jobs
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
-    def _auto_cast_array(self, X: pd.DataFrame):
+    def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
         """
-        Takes an array and tries to convert its columns to the best possible
-        data type.
+        Takes a pandas DataFrame and tries to convert its columns to the best
+        possible data type.
 
         Parameters
         ----------
-        X: array-like
-            Input data.
+        X: pd.DataFrame
+            Input data as a pandas DataFrame.
 
         Returns
         -------
         array
             The same array, with its columns casted to the best possible
             data type.
-            If there are missing values in a column, it won't change it.
+            If there are missing values in a column, it won't change.
         """
         for col in X.columns:
             if not _has_missing_values(X[col]):
                 X[col] = X[col].convert_dtypes()
+
+        if _sklearn_loose_version <= LooseVersion('0.22'):
+            # Cast pandas dtypes to numpy dtypes
+            # for earlier versions of sklearn
+            from pandas.core.dtypes.base import ExtensionDtype
+            for column in X:
+                dtype = X[column].dtype
+                if issubclass(dtype.__class__, ExtensionDtype):
+                    try:
+                        X[column] = X[column].astype(dtype.type)
+                    except TypeError:
+                        pass
         return X
 
-    def _transform(self, X) -> pd.DataFrame:
+    @wraps(ColumnTransformer.transform)
+    def transform(self, X):
         # Create a copy to avoid altering the original data.
         X = X.copy()
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
 
-        # Detect if the array contains missing values.
-        if _has_missing_values(X):
-            if self.handle_missing == 'error':
-                raise ValueError('Array contains missing values')
-            else:
-                # Check if we're using a OneHotEncoder
-                using_ohe: bool = any(
-                    trans.__class__.__name__ == OneHotEncoder.__name__
-                    for trans in [
-                        self.low_card_str_transformer,
-                        self.high_card_str_transformer,
-                        self.low_card_cat_transformer,
-                        self.high_card_cat_transformer,
-                    ]
-                )
-                if using_ohe and _sklearn_loose_version < LooseVersion('0.24'):
-                    # If we use a OneHotEncoder and we're using a version
-                    # of sklearn prior to 0.24, replace missing values,
-                    # otherwise, leave them in.
-                    X = _replace_missing(X, self.handle_missing)
-
         if self.auto_cast:
-            from pandas.core.dtypes.base import ExtensionDtype
-            X = self._auto_cast_array(X)
+            X = X.astype(self.types_)
 
-            if _sklearn_loose_version <= LooseVersion('0.22'):
-                # Cast pandas dtypes to numpy dtypes
-                # for earlier versions of sklearn
-                for column in X:
-                    dtype = X[column].dtype
-                    if issubclass(dtype.__class__, ExtensionDtype):
-                        try:
-                            X[column] = X[column].astype(dtype.type)
-                        except TypeError:
-                            pass
+        for col in self.imputed_columns_:
+            X[col] = _replace_missing(X[col])
 
-        return X
-
-    @wraps(ColumnTransformer.transform)
-    def transform(self, X):
-        X = self._transform(X)
         return super().transform(X)
 
     def fit_transform(self, X, y=None):
@@ -245,17 +226,16 @@ class SuperVectorizer(ColumnTransformer):
 
         Parameters
         ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
+        X: {array-like, dataframe} of shape (n_samples, n_features)
             Input data, of which specified subsets are used to fit the
             transformers.
 
-        y : array-like of shape (n_samples,), default=None
+        y: array-like of shape (n_samples,), default=None
             Targets for supervised learning.
 
         Returns
         -------
-        X_t : {array-like, sparse matrix} of \
-                shape (n_samples, sum_n_components)
+        X_t: {array-like, sparse matrix} of shape (n_samples, sum_n_components)
             hstack of results of transformers. sum_n_components is the
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
@@ -268,8 +248,20 @@ class SuperVectorizer(ColumnTransformer):
             usually because transformers passed do not match any column.
             To fix the issue, try passing the least amount of None as encoders.
         """
-        X = self._transform(X)
+        # Create a copy to avoid altering the original data.
+        X = X.copy()
+        # Convert to pandas DataFrame if not already.
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        # X = self._transform(X)
         self.columns_ = X.columns
+        # If auto_cast is True, we'll find and apply the best possible type
+        # to each column.
+        # We'll keep the results so we can apply the types in transform.
+        if self.auto_cast:
+            X = self._auto_cast(X)
+            self.types_ = {i: t for i, t in enumerate(X.dtypes)}
 
         # Select columns by dtype
         numeric_columns = X.select_dtypes(include=['int', 'float']).columns.to_list()
@@ -278,10 +270,22 @@ class SuperVectorizer(ColumnTransformer):
         datetime_columns = X.select_dtypes(include='datetime').columns.to_list()
 
         # Divide string and categorical columns by cardinality
-        low_card_str_columns = [col for col in string_columns if X[col].nunique() < self.cardinality_threshold]
-        high_card_str_columns = [col for col in string_columns if X[col].nunique() >= self.cardinality_threshold]
-        low_card_cat_columns = [col for col in categorical_columns if X[col].nunique() < self.cardinality_threshold]
-        high_card_cat_columns = [col for col in categorical_columns if X[col].nunique() >= self.cardinality_threshold]
+        low_card_str_columns = [
+            col for col in string_columns
+            if X[col].nunique() < self.cardinality_threshold
+        ]
+        high_card_str_columns = [
+            col for col in string_columns
+            if X[col].nunique() >= self.cardinality_threshold
+        ]
+        low_card_cat_columns = [
+            col for col in categorical_columns
+            if X[col].nunique() < self.cardinality_threshold
+        ]
+        high_card_cat_columns = [
+            col for col in categorical_columns
+            if X[col].nunique() >= self.cardinality_threshold
+        ]
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
@@ -304,6 +308,32 @@ class SuperVectorizer(ColumnTransformer):
 
         if len(self.transformers) == 0:
             raise RuntimeError('No transformers could be generated !')
+
+        # Replace missing values in specific cases
+        if _has_missing_values(X):
+            self.imputed_columns_ = []
+            if self.impute_missing == 'auto':
+                for name, trans, cols in all_transformers:
+                    # At each iteration, we'll manipulate a boolean,
+                    # and depending on its value at the end of the loop,
+                    # we will or will not replace the missing values in
+                    # the columns.
+                    impute: bool = False
+
+                    if isinstance(trans, OneHotEncoder) \
+                            and _sklearn_loose_version < LooseVersion('0.24'):
+                        impute = True
+
+                    if impute:
+                        self.imputed_columns_.extend(cols)
+                        for col in cols:
+                            X[col] = _replace_missing(X[col])
+
+        # If there was missing values imputation, we cast the DataFrame again,
+        # as pandas give different types depending whether a column has
+        # missing values or not.
+        if self.imputed_columns_:
+            X = self._auto_cast(X)
 
         if self.verbose:
             print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
