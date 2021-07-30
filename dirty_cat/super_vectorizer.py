@@ -27,24 +27,24 @@ from dirty_cat import GapEncoder
 _sklearn_loose_version = LooseVersion(sklearn.__version__)
 
 
-def _has_missing_values(array: pd.DataFrame) -> bool:
+def _has_missing_values(df: pd.DataFrame) -> bool:
     """
     Returns True if `array` contains missing values, False otherwise.
     """
-    return any(array.isnull())
+    return any(df.isnull())
 
 
-def _replace_missing(array: pd.DataFrame, value: str = "missing") -> pd.DataFrame:
+def _replace_missing(df: pd.DataFrame, value: str = "missing") -> pd.DataFrame:
     """
     Takes a DataFrame, replaces the missing values, and returns it.
     """
-    for col in array.columns:
-        dtype_name = array[col].dtype.name
+    for col in df.columns:
+        dtype_name = df[col].dtype.name
         if dtype_name == 'category' \
-                and (value not in array[col].cat.categories):
-            array[col] = array[col].cat.add_categories(value)
-        array[col] = array[col].fillna(value=value)
-    return array
+                and (value not in df[col].cat.categories):
+            df[col] = df[col].cat.add_categories(value)
+        df[col] = df[col].fillna(value=value)
+    return df
 
 
 class SuperVectorizer(ColumnTransformer):
