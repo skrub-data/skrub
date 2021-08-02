@@ -27,23 +27,21 @@ from dirty_cat import GapEncoder
 _sklearn_loose_version = LooseVersion(sklearn.__version__)
 
 
-def _has_missing_values(df: pd.DataFrame) -> bool:
+def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
     """
     Returns True if `array` contains missing values, False otherwise.
     """
     return any(df.isnull())
 
 
-def _replace_missing(df: pd.DataFrame, value: str = "missing") -> pd.DataFrame:
+def _replace_missing_col(df: pd.Series, value: str = "missing") -> pd.Series:
     """
-    Takes a DataFrame, replaces the missing values, and returns it.
+    Takes a Series, replaces the missing values, and returns it.
     """
-    for col in df.columns:
-        dtype_name = df[col].dtype.name
-        if dtype_name == 'category' \
-                and (value not in df[col].cat.categories):
-            df[col] = df[col].cat.add_categories(value)
-        df[col] = df[col].fillna(value=value)
+    dtype_name = df.dtype.name
+    if dtype_name == 'category' and (value not in df.cat.categories):
+        df = df.cat.add_categories(value)
+    df = df.fillna(value=value)
     return df
 
 
@@ -223,7 +221,7 @@ class SuperVectorizer(ColumnTransformer):
             X = X.astype(self.types_)
 
         for col in self.imputed_columns_:
-            X[col] = _replace_missing(X[col])
+            X[col] = _replace_missing_col(X[col])
 
         return super().transform(X)
 
@@ -334,7 +332,7 @@ class SuperVectorizer(ColumnTransformer):
                     if impute:
                         self.imputed_columns_.extend(cols)
                         for col in cols:
-                            X[col] = _replace_missing(X[col])
+                            X[col] = _replace_missing_col(X[col])
 
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas give different types depending whether a column has
