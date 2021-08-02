@@ -100,7 +100,7 @@ def _test_possibilities(
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
 
 
-def _with_clean_data():
+def test_with_clean_data():
     X = _get_clean_dataframe()
     # Define the transformers we'll use throughout the test.
     expected_transformers_df = {
@@ -143,7 +143,7 @@ def _with_clean_data():
     )
 
 
-def _with_dirty_data():
+def test_with_dirty_data():
     X = _get_dirty_dataframe()
     # Define the transformers we'll use throughout the test.
     expected_transformers_df = {
@@ -181,12 +181,6 @@ def _with_dirty_data():
         expected_transformers_plain,
         expected_transformers_np_cast,
     )
-
-
-def test_super_vectorizer():
-    _with_clean_data()
-    _with_dirty_data()
-
 
 def test_get_feature_names():
     X = _get_clean_dataframe()
@@ -231,12 +225,22 @@ def test_fit():
             assert check_is_fitted(sup_vec, attributes=dir(sup_vec))
 
 
+def test_transform():
+    X = _get_clean_dataframe()
+    sup_vec = SuperVectorizer()
+    sup_vec.fit(X)
+    s = [34, 5.5, 'private', 'engineer', 'yes', '60K+']
+    x = np.array(s).reshape(1, -1)
+    x_trans = sup_vec.transform(x)
+    assert (x_trans == [[1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
+
+
 if __name__ == '__main__':
     print('start test_super_vectorizer with clean df')
-    test_super_vectorizer()
+    test_with_clean_data()
     print('test_super_vectorizer with clean df passed')
     print('start test_super_vectorizer with dirty df')
-    test_super_vectorizer()
+    test_with_dirty_data()
     print('test_super_vectorizer with dirty df passed')
     print('start test_get_feature_names')
     test_get_feature_names()
