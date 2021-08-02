@@ -13,7 +13,6 @@ import sklearn
 import pandas as pd
 
 from warnings import warn
-from functools import wraps
 from typing import Union, Optional, List
 from distutils.version import LooseVersion
 
@@ -208,8 +207,24 @@ class SuperVectorizer(ColumnTransformer):
                     pass
         return X
 
-    @wraps(ColumnTransformer.transform)
     def transform(self, X):
+        """Transform X separately by each transformer, concatenate results.
+
+        Parameters
+        ----------
+        X : {array-like, dataframe} of shape (n_samples, n_features)
+            The data to be transformed by subset.
+
+        Returns
+        -------
+        X_t : {array-like, sparse matrix} of \
+                shape (n_samples, sum_n_components)
+            hstack of results of transformers. sum_n_components is the
+            sum of n_components (output dimension) over transformers. If
+            any result is a sparse matrix, everything will be converted to
+            sparse matrices.
+
+        """
         # Create a copy to avoid altering the original data.
         X = X.copy()
         # Convert to pandas DataFrame if not already.
