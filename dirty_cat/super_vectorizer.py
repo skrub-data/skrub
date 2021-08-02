@@ -127,6 +127,13 @@ class SuperVectorizer(ColumnTransformer):
     columns_: List[Union[str, int]]
         The column names of fitted array.
 
+    self.types_: Dict[int, type]
+        A learnt mapping of type by column.
+        Key is the column index, value is the final dtype.
+
+    self.imputed_columns_: List[str]
+        A list of columns that had missing values and were imputed.
+
     """
 
     # Override required parameters
