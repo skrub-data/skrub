@@ -196,17 +196,16 @@ class SuperVectorizer(ColumnTransformer):
             if not _has_missing_values(X[col]):
                 X[col] = X[col].convert_dtypes()
 
-        if _sklearn_loose_version <= LooseVersion('0.22'):
-            # Cast pandas dtypes to numpy dtypes
-            # for earlier versions of sklearn
-            from pandas.core.dtypes.base import ExtensionDtype
-            for column in X:
-                dtype = X[column].dtype
-                if issubclass(dtype.__class__, ExtensionDtype):
-                    try:
-                        X[column] = X[column].astype(dtype.type)
-                    except TypeError:
-                        pass
+        # Cast pandas dtypes to numpy dtypes
+        # for earlier versions of sklearn
+        from pandas.core.dtypes.base import ExtensionDtype
+        for column in X:
+            dtype = X[column].dtype
+            if issubclass(dtype.__class__, ExtensionDtype):
+                try:
+                    X[column] = X[column].astype(dtype.type)
+                except TypeError:
+                    pass
         return X
 
     @wraps(ColumnTransformer.transform)
@@ -216,8 +215,17 @@ class SuperVectorizer(ColumnTransformer):
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
+            # Check the number of columns matches the fitted array's.
+            if X.shape[1] != len(self.columns_):
+                raise ValueError("Passed array does not match column count of "
+                                 f"fitter array. Got X.shape={X.shape}")
+            # If the DataFrame does not have named columns already,
+            # apply the learnt columns
+            if isinstance(X.columns, pd.RangeIndex):
+                X.columns = self.columns_
 
         if self.auto_cast:
+            X.columns = self.columns_
             X = X.astype(self.types_)
 
         for col in self.imputed_columns_:
