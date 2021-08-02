@@ -127,7 +127,7 @@ class SuperVectorizer(ColumnTransformer):
 
     self.types_: Dict[int, type]
         A learnt mapping of type by column.
-        Key is the column index, value is the final dtype.
+        Key is the column name, value is the final dtype.
 
     self.imputed_columns_: List[str]
         A list of columns that had missing values and were imputed.
@@ -266,7 +266,7 @@ class SuperVectorizer(ColumnTransformer):
         # We'll keep the results so we can apply the types in transform.
         if self.auto_cast:
             X = self._auto_cast(X)
-            self.types_ = {i: t for i, t in enumerate(X.dtypes)}
+            self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
 
         # Select columns by dtype
         numeric_columns = X.select_dtypes(include=['int', 'float']).columns.to_list()
