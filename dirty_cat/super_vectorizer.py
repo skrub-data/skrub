@@ -104,11 +104,12 @@ class SuperVectorizer(ColumnTransformer):
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
-    handle_missing: str, default=''
-        One of the following values: 'error' or '' (empty).
-        Defines how the encoder will handle missing values.
-        If set to 'error', will raise ValueError.
-        If set to '', will impute the missing values (pd.NA) with blank strings.
+    impute_missing: str, default='auto'
+        By-column missing values imputation parameter.
+        'auto' will impute missing values if it's considered appropriate.
+        'force' will impute all missing values.
+        'skip' will not impute at all.
+        See also attribute `imputed_columns_`.
 
     Attributes
     ----------
@@ -124,12 +125,12 @@ class SuperVectorizer(ColumnTransformer):
     columns_: List[Union[str, int]]
         The column names of fitted array.
 
-    self.types_: Dict[int, type]
+    types_: Dict[int, type]
         A learnt mapping of type by column.
         Key is the column name, value is the final dtype.
 
-    self.imputed_columns_: List[str]
-        A list of columns that had missing values and were imputed.
+    imputed_columns_: List[str]
+        A list of columns for which we imputed the missing values.
 
     """
 
@@ -148,7 +149,6 @@ class SuperVectorizer(ColumnTransformer):
                  auto_cast: bool = True,
                  impute_missing: str = 'auto',
                  # Following parameters are inherited from ColumnTransformer
-                 handle_missing: str = '',
                  remainder: str = 'passthrough',
                  sparse_threshold: float = 0.3,
                  n_jobs: int = None,
@@ -167,7 +167,6 @@ class SuperVectorizer(ColumnTransformer):
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
 
-        self.handle_missing = handle_missing
         self.remainder = remainder
         self.sparse_threshold = sparse_threshold
         self.n_jobs = n_jobs
@@ -337,10 +336,23 @@ class SuperVectorizer(ColumnTransformer):
         if len(self.transformers) == 0:
             raise RuntimeError('No transformers could be generated !')
 
-        # Replace missing values in specific cases
         if _has_missing_values(X):
             self.imputed_columns_ = []
-            if self.impute_missing == 'auto':
+
+            if self.impute_missing == 'force':
+                X = X.apply(_replace_missing_col, axis='columns')
+                self.imputed_columns_.extend(X.columns.to_list())
+
+            elif self.impute_missing == 'skip':
+                pass
+
+            else:
+                if not self.impute_missing == 'auto':
+                    warn("Invalid value for `impute_missing`, "
+                         "expected any of {'auto', 'force', 'skip'} "
+                         f"but got {self.impute_missing!r}. "
+                         f"Defaulting to 'auto'.")
+
                 for name, trans, cols in all_transformers:
                     # At each iteration, we'll manipulate a boolean,
                     # and depending on its value at the end of the loop,
