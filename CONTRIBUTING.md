@@ -21,9 +21,8 @@ The following is a set of guidelines for contributing to
 
 ## I don't want to read the whole thing I just have a question !
 
-> Add social / mailing list / other direct means of asking simple questions
-> 
-> Also FAQs
+We use GitHub Discussions for general chat and Q&As.
+[Check it out !](https://github.com/dirty-cat/dirty_cat/discussions)
 
 ## What should I know before I get started ?
 
@@ -59,9 +58,8 @@ If you stumble upon one, please
 
 #### How do I submit a (good) bug report ?
 
-To solve your issue as soon as possible,
-explain the problem and include additional details 
-to help maintainers easily reproduce the problem:
+To solve your issue as soon as possible, explain the problem and include 
+additional details to help maintainers easily reproduce the problem:
 
 - **Use a clear and descriptive title** which identifies the problem
 - **Describe the result you expected**
@@ -99,22 +97,18 @@ proposing the change.
 Of course, some of these bullet points might not apply depending on the kind
 of enhancement you're submitting.
 
-##### If the maintainers validate the enhancement
+##### If the enhancement is validated
 
-You can either :
-- **Write the code and submit a PR** ; in this case, let maintainers know, 
-  so they don't start working on the feature for nothing
-- **Let maintainers know you won't be able to write the code**, 
-  so that they can start working on it
+Let maintainers know whether :
+- **You will write the code and submit a PR**. Writing the feature yourself 
+  is the fastest way to getting it implemented in the library, 
+  and we'll help in that process if guidance is needed !
+- **You won't be able to write the code**, in which case a developer interested 
+  in the feature can start working on it. Note however that maintainers are 
+  **volunteers**, and therefore cannot guarantee how much time it will take 
+  to implement the change.
 
-Know however that maintainers are **volunteers**, 
-and therefore cannot guarantee how much time it will take 
-to implement the enhancement.
-
-Writing the feature yourself is the fastest way of getting it implemented 
-in the library, and we'll help you as much as we can in that process !
-
-##### If the maintainers refuse the enhancement
+##### If the enhancement is refused
 
 There are specific incentives behind dirty_cat. While most enhancement ideas 
 are good, they don't always fit in the context of the library.
