@@ -34,17 +34,21 @@ We demonstrate it on the `employee salaries` dataset.
 # (the salary to predict):
 from dirty_cat.gap_encoder import GapEncoder
 from dirty_cat.datasets import fetch_employee_salaries
-employee_salaries = fetch_employee_salaries()
-print(employee_salaries['DESCR'])
+info = fetch_employee_salaries()
+print(info['description'])
 
 ###############################################################################
 
-X = employee_salaries['data']
-y = employee_salaries['target']
+import pandas as pd
+
+df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+
+X = df
+y = df['current_annual_salary']
 # We'll drop a few columns we don't want
 X.drop(
     [
-        'Current Annual Salary',  # Too linked with target
+        'current_annual_salary',  # Target
         'full_name',  # Not relevant to the analysis
         '2016_gross_pay_received',  # Too linked with target
         '2016_overtime_pay',  # Too linked with target

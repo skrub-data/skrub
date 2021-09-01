@@ -51,26 +51,36 @@ def resource_used(func):
 # --------------------------------
 #
 # We first download the dataset:
-from dirty_cat.datasets import fetch_traffic_violations
+from dirty_cat.datasets import fetch_open_payments
 
-data = fetch_traffic_violations()
+data = fetch_open_payments()
 print(data['description'])
 
 ################################################################################
 # Then we load it:
 import pandas as pd
 
-# Limit to 50 000 rows, for a faster example
-df = pd.read_csv(data['path'], nrows=50000)
+df = pd.read_csv(data['path'], **data['read_csv_kwargs'])
 df = df.dropna(axis=0)
 df = df.reset_index()
-################################################################################
-# We will use SimilarityEncoder on the 'description' column. One
-# difficulty is that it has many different entries.
-print(df['Description'].nunique())
+
+clean_columns = [
+    'Applicable_Manufacturer_or_Applicable_GPO_Making_Payment_Name',
+    'Dispute_Status_for_Publication',
+    'Physician_Specialty',
+]
+dirty_columns = [
+    'Name_of_Associated_Covered_Device_or_Medical_Supply1',
+    'Name_of_Associated_Covered_Drug_or_Biological1',
+]
 
 ################################################################################
-print(df['Description'].value_counts()[:20])
+# We will use SimilarityEncoder on the the two dirty columns defined above.
+# One difficulty is that they have many different entries.
+print(df[dirty_columns].nunique())
+
+################################################################################
+print(df[dirty_columns].value_counts()[:20])
 
 ################################################################################
 # As we will see, SimilarityEncoder takes a while on such data.
@@ -88,25 +98,14 @@ from dirty_cat import SimilarityEncoder
 
 sim_enc = SimilarityEncoder(similarity='ngram')
 
-y = df['Violation Type']
+y = df['status']
 
-# clean columns
-transformers = [('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'),
-                 ['Alcohol',
-                  'Arrest Type',
-                  'Belts',
-                  'Commercial License',
-                  'Commercial Vehicle',
-                  'Fatal',
-                  'HAZMAT',
-                  'Property Damage',
-                  'Work Zone']),
-                ('pass', 'passthrough', ['Year']),
-                ]
+transformers = [
+    ('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'), clean_columns),
+]
 
 column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, dirty_columns)],
     remainder='drop')
 
 t0 = time()
@@ -143,8 +142,7 @@ sim_enc = SimilarityEncoder(similarity='ngram', categories='most_frequent',
                             n_prototypes=100)
 
 column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, dirty_columns)],
     remainder='drop')
 
 ################################################################################
@@ -169,8 +167,7 @@ sim_enc = SimilarityEncoder(similarity='ngram', categories='k-means',
                             n_prototypes=100)
 
 column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, dirty_columns)],
     remainder='drop')
 
 ################################################################################
@@ -199,49 +196,3 @@ seaborn.boxplot(data=pd.DataFrame(times), orient='h', ax=ax2)
 ax2.set_xlabel('Computation time', size=16)
 [t.set(size=16) for t in ax2.get_yticklabels()]
 plt.tight_layout()
-
-################################################################################
-# Reduce memory usage during encoding using float32
-# ----------------------------------------------------------------
-#
-# We use a float32 dtype in this example to show some speed and memory gains.
-# The use of the scikit-learn model may upcast to float64 (depending on the used
-# algorithm). The memory savings will then happen during the encoding.
-import numpy as np
-
-sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32,
-                            categories='most_frequent', n_prototypes=100)
-
-y = df['Violation Type']
-# cast the year column to float32
-df['Year'] = df['Year'].astype(np.float32)
-# clean columns
-transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32,
-                                          handle_unknown='ignore'),
-                 ['Alcohol',
-                  'Arrest Type',
-                  'Belts',
-                  'Commercial License',
-                  'Commercial Vehicle',
-                  'Fatal',
-                  'HAZMAT',
-                  'Property Damage',
-                  'Work Zone']),
-                ('pass', 'passthrough', ['Year']),
-                ]
-
-column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
-    remainder='drop')
-
-t0 = time()
-X = column_trans.fit_transform(df)
-t1 = time()
-print('Time to vectorize: %s' % (t1 - t0))
-
-################################################################################
-# We can run a cross-validation to confirm the memory footprint reduction
-model = pipeline.make_pipeline(column_trans, log_reg)
-results = resource_used(model_selection.cross_validate)(model, df, y, )
-print("Cross-validation score: %s" % results['test_score'])
