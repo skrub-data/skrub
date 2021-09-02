@@ -10,6 +10,7 @@ manually categorize them beforehand, or construct complex Pipelines.
 
 import sklearn
 
+import numpy as np
 import pandas as pd
 
 from warnings import warn
@@ -33,7 +34,7 @@ def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
     return any(df.isnull())
 
 
-def _replace_missing_col(df: pd.Series, value: str = "missing") -> pd.Series:
+def _replace_missing_in_col(df: pd.Series, value: str = "missing") -> pd.Series:
     """
     Takes a Series, replaces the missing values, and returns it.
     """
@@ -106,7 +107,9 @@ class SuperVectorizer(ColumnTransformer):
 
     impute_missing: str, default='auto'
         By-column missing values imputation parameter.
-        'auto' will impute missing values if it's considered appropriate.
+        'auto' will impute missing values if it's considered appropriate
+        (we are using an encoder that does not support missing values and/or
+        specific versions of pandas, numpy and scikit-learn).
         'force' will impute all missing values.
         'skip' will not impute at all.
         See also attribute `imputed_columns_`.
@@ -130,7 +133,7 @@ class SuperVectorizer(ColumnTransformer):
         Key is the column name, value is the final dtype.
 
     imputed_columns_: List[str]
-        A list of columns for which we imputed the missing values.
+        The list of columns in which we imputed the missing values.
 
     """
 
@@ -173,7 +176,8 @@ class SuperVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
-    def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
+    @staticmethod
+    def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
         """
         Takes a pandas DataFrame and tries to convert its columns to the best
         possible data type.
@@ -188,25 +192,30 @@ class SuperVectorizer(ColumnTransformer):
         array
             The same array, with its columns casted to the best possible
             data type.
-            If there are missing values in a column, it won't change.
+            Columns with missing values won't be modified.
         """
-        for col in X.columns:
-            if not _has_missing_values(X[col]):
-                X[col] = X[col].convert_dtypes()
-
-        # Cast pandas dtypes to numpy dtypes
-        # for earlier versions of sklearn
         from pandas.core.dtypes.base import ExtensionDtype
-        for column in X:
-            dtype = X[column].dtype
+        for col in X.columns:
+            dtype = X[col].dtype
+            contains_missing: bool = _has_missing_values(X[col])
+            if not contains_missing:
+                X[col] = X[col].convert_dtypes()
+            # Cast pandas dtypes to numpy dtypes
+            # for earlier versions of sklearn
             if issubclass(dtype.__class__, ExtensionDtype):
                 try:
-                    X[column] = X[column].astype(dtype.type)
-                except TypeError:
+                    X[col] = X[col].astype(dtype.type)
+                except (TypeError, ValueError):
                     pass
+            # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
+            # because the former tends to raise all kind of issues when dealing
+            # with scikit-learn (as of version 0.24).
+            if contains_missing:
+                X[col] = X[col].replace(to_replace=pd.NA, value=np.nan)
+
         return X
 
-    def transform(self, X):
+    def transform(self, X) -> np.ndarray:
         """Transform X separately by each transformer, concatenate results.
 
         Parameters
@@ -224,26 +233,32 @@ class SuperVectorizer(ColumnTransformer):
             sparse matrices.
 
         """
-        # Create a copy to avoid altering the original data.
-        X = X.copy()
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
+            # Auto cast the imported DataFrame to avoid having issues with
+            # `object` dtype when we will cast columns to the fitted types.
+            X = self._auto_cast(X)
             # Check the number of columns matches the fitted array's.
             if X.shape[1] != len(self.columns_):
                 raise ValueError("Passed array does not match column count of "
-                                 f"fitter array. Got X.shape={X.shape}")
-            # If the DataFrame does not have named columns already,
-            # apply the learnt columns
-            if isinstance(X.columns, pd.RangeIndex):
-                X.columns = self.columns_
+                                 f"array seen at fit time. Got {X.shape[0]} "
+                                 f"columns, expected {len(self.columns_)}")
+        else:
+            # Create a copy to avoid altering the original data.
+            X = X.copy()
+        # If the DataFrame does not have named columns already,
+        # apply the learnt columns
+        if isinstance(X.columns, pd.RangeIndex):
+            X.columns = self.columns_
 
         if self.auto_cast:
-            X.columns = self.columns_
-            X = X.astype(self.types_)
+            # Enforce types of the fitted input array.
+            for col, to_type in self.types_.items():
+                X[col] = X[col].astype(to_type)
 
         for col in self.imputed_columns_:
-            X[col] = _replace_missing_col(X[col])
+            X[col] = _replace_missing_in_col(X[col])
 
         return super().transform(X)
 
@@ -275,13 +290,13 @@ class SuperVectorizer(ColumnTransformer):
             usually because transformers passed do not match any column.
             To fix the issue, try passing the least amount of None as encoders.
         """
-        # Create a copy to avoid altering the original data.
-        X = X.copy()
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
+        else:
+            # Create a copy to avoid altering the original data.
+            X = X.copy()
 
-        # X = self._transform(X)
         self.columns_ = X.columns
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
@@ -336,23 +351,17 @@ class SuperVectorizer(ColumnTransformer):
         if len(self.transformers) == 0:
             raise RuntimeError('No transformers could be generated !')
 
+        self.imputed_columns_ = []
         if _has_missing_values(X):
-            self.imputed_columns_ = []
 
             if self.impute_missing == 'force':
-                X = X.apply(_replace_missing_col, axis='columns')
+                X = X.apply(_replace_missing_in_col, axis='columns')
                 self.imputed_columns_.extend(X.columns.to_list())
 
             elif self.impute_missing == 'skip':
                 pass
 
-            else:
-                if not self.impute_missing == 'auto':
-                    warn("Invalid value for `impute_missing`, "
-                         "expected any of {'auto', 'force', 'skip'} "
-                         f"but got {self.impute_missing!r}. "
-                         f"Defaulting to 'auto'.")
-
+            elif self.impute_missing == 'auto':
                 for name, trans, cols in all_transformers:
                     # At each iteration, we'll manipulate a boolean,
                     # and depending on its value at the end of the loop,
@@ -367,7 +376,13 @@ class SuperVectorizer(ColumnTransformer):
                     if impute:
                         self.imputed_columns_.extend(cols)
                         for col in cols:
-                            X[col] = _replace_missing_col(X[col])
+                            X[col] = _replace_missing_in_col(X[col])
+
+            else:
+                raise ValueError(
+                    "Invalid value for `impute_missing`, expected any of "
+                    "{'auto', 'force', 'skip'}, got {self.impute_missing!r}."
+                )
 
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas give different types depending whether a column has

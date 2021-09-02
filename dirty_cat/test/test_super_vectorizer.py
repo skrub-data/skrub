@@ -38,8 +38,8 @@ def _get_dirty_dataframe():
     Creates a simple DataFrame with missing values.
     """
     return pd.DataFrame({
-        'int': pd.Series([15, 56, 63, 12, 44], dtype='int'),
-        'float': pd.Series([5.2, 2.4, 6.2, 10.45, 9.], dtype='float'),
+        'int': pd.Series([15, 56, np.nan, 12, 44], dtype='Int64'),
+        'float': pd.Series([5.2, 2.4, 6.2, 10.45, np.nan], dtype='Float64'),
         'str1': pd.Series(['public', np.nan, 'private', 'private', 'public'], dtype='object'),
         'str2': pd.Series(['officer', 'manager', np.nan, 'chef', 'teacher'], dtype='object'),
         'cat1': pd.Series([np.nan, 'yes', 'no', 'yes', 'no'], dtype='object'),
@@ -181,6 +181,7 @@ def test_with_dirty_data():
         expected_transformers_plain,
         expected_transformers_np_cast,
     )
+
 
 def test_get_feature_names():
     X = _get_clean_dataframe()
