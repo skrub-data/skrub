@@ -21,7 +21,8 @@ def check_same_transformers(expected_transformers: dict, actual_transformers: li
 
 def _get_clean_dataframe():
     """
-    Creates a simple DataFrame without missing values.
+    Creates a simple DataFrame with various types of data,
+    and without missing values.
     """
     return pd.DataFrame({
         'int': pd.Series([15, 56, 63, 12, 44], dtype='int'),
@@ -35,13 +36,15 @@ def _get_clean_dataframe():
 
 def _get_dirty_dataframe():
     """
-    Creates a simple DataFrame with missing values.
+    Creates a simple DataFrame with some missing values.
+    We'll use different types of missing values (np.nan, pd.NA, None)
+    to see how robust the vectorizer is.
     """
     return pd.DataFrame({
-        'int': pd.Series([15, 56, np.nan, 12, 44], dtype='Int64'),
+        'int': pd.Series([15, 56, pd.NA, 12, 44], dtype='Int64'),
         'float': pd.Series([5.2, 2.4, 6.2, 10.45, np.nan], dtype='Float64'),
         'str1': pd.Series(['public', np.nan, 'private', 'private', 'public'], dtype='object'),
-        'str2': pd.Series(['officer', 'manager', np.nan, 'chef', 'teacher'], dtype='object'),
+        'str2': pd.Series(['officer', 'manager', None, 'chef', 'teacher'], dtype='object'),
         'cat1': pd.Series([np.nan, 'yes', 'no', 'yes', 'no'], dtype='object'),
         'cat2': pd.Series(['20K+', '40K+', '60K+', '30K+', np.nan], dtype='object'),
     })
@@ -56,6 +59,11 @@ def _test_possibilities(
         expected_transformers_plain,
         expected_transformers_np_cast,
 ):
+    """
+    Do a bunch of tests with the SuperVectorizer.
+    We take some expected transformers results as argument. They're usually
+    lists or dictionaries.
+    """
     # Test with low cardinality and a StandardScaler for the numeric columns
     vectorizer_base = SuperVectorizer(
         cardinality_threshold=4,
@@ -101,6 +109,10 @@ def _test_possibilities(
 
 
 def test_with_clean_data():
+    """
+    Defines the expected returns of the vectorizer in different settings,
+    and runs the tests with a clean dataset.
+    """
     X = _get_clean_dataframe()
     # Define the transformers we'll use throughout the test.
     expected_transformers_df = {
@@ -144,6 +156,10 @@ def test_with_clean_data():
 
 
 def test_with_dirty_data():
+    """
+    Defines the expected returns of the vectorizer in different settings,
+    and runs the tests with a dataset containing missing values.
+    """
     X = _get_dirty_dataframe()
     # Define the transformers we'll use throughout the test.
     expected_transformers_df = {
