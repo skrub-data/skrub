@@ -204,7 +204,7 @@ class SuperVectorizer(ColumnTransformer):
             # for earlier versions of sklearn
             if issubclass(dtype.__class__, ExtensionDtype):
                 try:
-                    X[col] = X[col].astype(dtype.type)
+                    X[col] = X[col].astype(dtype.type, errors='ignore')
                 except (TypeError, ValueError):
                     pass
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
