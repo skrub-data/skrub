@@ -41,10 +41,17 @@ print(info['description'])
 
 import pandas as pd
 
-df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+df = pd.read_csv(
+    info['path'],
+    quotechar=info['read_csv_kwargs']['quotechar'],
+    escapechar=info['read_csv_kwargs']['escapechar'],
+    na_values=info['read_csv_kwargs']['na_values'],
+)
+# A simpler syntax we could use:
+# df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
 
 X = df
-y = df['current_annual_salary']
+y = df[info['target']]
 # We'll drop a few columns we don't want
 X.drop(
     [

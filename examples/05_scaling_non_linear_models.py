@@ -127,7 +127,13 @@ print(info['description'])
 # problem. You can have a glimpse of the values here:
 import pandas as pd
 
-df = pd.read_csv(info['path'], nrows=10, **info['read_csv_kwargs']).astype(str)
+df = pd.read_csv(
+    info['path'],
+    quotechar=info['read_csv_kwargs']['quotechar'],
+    nrows=10,
+).astype(str)
+# A simpler syntax we could use:
+# df = pd.read_csv(info['path'], **info['read_csv_kwargs'], nrows=10).astype(str)
 print(df[['NONPROPRIETARYNAME', 'PRODUCTTYPENAME']].head())
 # This will be useful further down in the example.
 columns_names = df.columns

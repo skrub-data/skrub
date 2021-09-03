@@ -1,16 +1,16 @@
 """
 Comparing encoders of a dirty categorical columns
-==================================================
+=================================================
 
 The column *Employee Position Title* of the dataset `employee salaries
-<https://catalog.data.gov/dataset/employee-salaries-2016>`_ contains dirty categorical
-data.
+<https://catalog.data.gov/dataset/employee-salaries-2016>`_ contains dirty
+categorical data.
 
 Here, we compare different categorical encodings for the dirty column to
 predict the *Current Annual Salary*, using gradient boosted trees.
 """
 
-################################################################################
+###############################################################################
 # Data Importing and preprocessing
 # --------------------------------
 #
@@ -21,12 +21,20 @@ info = fetch_employee_salaries()
 print(info['description'])
 
 
-################################################################################
+###############################################################################
 # Then we load it:
 import pandas as pd
-df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
 
-################################################################################
+df = pd.read_csv(
+    info['path'],
+    quotechar=info['read_csv_kwargs']['quotechar'],
+    escapechar=info['read_csv_kwargs']['escapechar'],
+    na_values=info['read_csv_kwargs']['na_values'],
+)
+# A simpler syntax we could use:
+# df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+
+###############################################################################
 # Now, let's carry out some basic preprocessing:
 df['date_first_hired'] = pd.to_datetime(df['date_first_hired'])
 df['year_first_hired'] = df['date_first_hired'].apply(lambda x: x.year)
@@ -36,9 +44,9 @@ df.dropna(subset=['gender'], inplace=True)
 target_column = 'current_annual_salary'
 y = df[target_column].values.ravel()
 
-#########################################################################
+###############################################################################
 # Choosing columns
-# -----------------
+# ----------------
 # For categorical columns that are supposed to be clean, it is "safe" to
 # use one hot encoding to transform them:
 
@@ -48,17 +56,17 @@ clean_columns = {
     'assignment_category': 'one-hot',
     'year_first_hired': 'numerical'}
 
-#########################################################################
+###############################################################################
 # We then choose the categorical encoding methods we want to benchmark
 # and the dirty categorical variable:
 
 encoding_methods = ['one-hot', 'target', 'similarity', 'minhash',
                     'gap']
 dirty_column = 'employee_position_title'
-#########################################################################
+###############################################################################
 
 
-#########################################################################
+###############################################################################
 # Creating a learning pipeline
 # ----------------------------
 # The encoders for both clean and dirty data are first imported:
@@ -106,9 +114,9 @@ def assemble_pipeline(encoding_method):
     return pipeline
 
 
-#########################################################################
+###############################################################################
 # Using each encoding for supervised learning
-# --------------------------------------------
+# -------------------------------------------
 # Eventually, we loop over the different encoding methods,
 # instantiate each time a new pipeline, fit it
 # and store the returned cross-validation score:
@@ -126,7 +134,7 @@ for method in encoding_methods:
         np.mean(scores), np.std(scores)))
     all_scores[method] = scores
 
-#########################################################################
+###############################################################################
 # Plotting the results
 # --------------------
 # Finally, we plot the scores on a boxplot:
@@ -140,7 +148,7 @@ plt.xlabel('Prediction accuracy     ', size=20)
 plt.yticks(size=20)
 plt.tight_layout()
 
-##########################################################################
+###############################################################################
 # The clear trend is that encoders that use the string form
 # of the category (similarity, minhash, and gap) perform better than
 # those that discard it.

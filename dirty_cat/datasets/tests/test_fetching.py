@@ -11,6 +11,7 @@ Tests fetching.py (datasets fetching off OpenML.org).
 import pytest
 import shutil
 import sklearn
+import warnings
 import pandas as pd
 
 from pathlib import Path
@@ -65,12 +66,14 @@ def test_fetch_openml_dataset():
                                                  data_directory=test_data_dir)
 
         except URLError:
-            # No internet connection, or the website is down.
-            # We abort the test.
-            #
-            # One could try to manually recreate the tree structure
-            # created by ``fetch_openml()``,  and the
-            # ``.gz`` files within in order to finish the test.
+            warnings.warn(
+                "No internet connection or the website is down, test aborted."
+            )
+            pytest.skip(
+                "One could try to manually recreate the tree structure "
+                "created by ``fetch_openml()``,  and the "
+                "``.gz`` files within in order to finish the test."
+            )
             return
 
         assert returned_info["description"].startswith(test_dataset["desc_start"])
