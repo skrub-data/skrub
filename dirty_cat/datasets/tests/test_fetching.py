@@ -265,7 +265,7 @@ def test__export_gz_data_to_csv():
     dummy_gz = Path("/dummy/file.gz")
     dummy_csv = Path("/dummy/file.csv")
 
-    expected_calls = "[call(mode='w'),\n " \
+    expected_calls = "[call(mode='w', encoding='utf8'),\n " \
                      "call().__enter__(),\n " \
                      "call().write('top-left-square,top-middle-square,top-right-square,middle-left-square," \
                      "middle-middle-square,middle-right-square,bottom-left-square,bottom-middle-square," \
@@ -280,8 +280,8 @@ def test__export_gz_data_to_csv():
         with mock.patch("gzip.open",
                         mock_open(read_data=arff_data)) as mock_gzip_open:
             _export_gz_data_to_csv(dummy_gz, dummy_csv, features)
-            mock_pathlib_path_open.assert_called_with(mode='w')
-            mock_gzip_open.assert_called_with(dummy_gz, mode='rt')
+            mock_pathlib_path_open.assert_called_with(mode='w', encoding='utf8')
+            mock_gzip_open.assert_called_with(dummy_gz, mode='rt', encoding='utf8')
             assert str(mock_pathlib_path_open.mock_calls) == expected_calls
 
 
