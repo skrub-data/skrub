@@ -86,13 +86,13 @@ def fetch_openml_dataset(dataset_id: int,
 
           The following values are added by the fetches below (fetch_*)
           - ``read_csv_kwargs``: Dict[str, Any]
-              A list of keyword arguments that can be passed to
+              A dict of keyword arguments that can be passed to
               `pandas.read_csv` for reading.
               Usually, it contains `quotechar`, `escapechar` and `na_values`.
-              See `pandas.read_csv`'s documentation for more information.
               Use by passing `**info['read_csv_kwargs']` to `read_csv`.
-          - ``y``: str
-              The name of the target column.
+              e.g., `df = pd.read_csv(info['path'], **info['read_csv_kwargs'])`
+          - ``target``: str
+              The name of `y`, the target column.
 
     """
     # Make path absolute
@@ -283,8 +283,8 @@ def _export_gz_data_to_csv(compressed_dir_path: Path,
 
     """
     atdata_found = False
-    with destination_file.open(mode="w") as csv:
-        with gzip.open(compressed_dir_path, mode="rt") as gz:
+    with destination_file.open(mode="w", encoding='utf8') as csv:
+        with gzip.open(compressed_dir_path, mode="rt", encoding='utf8') as gz:
             csv.write(_features_to_csv_format(features))
             csv.write("\n")
             # We will look at each line of the file until we find
@@ -314,7 +314,7 @@ def fetch_employee_salaries() -> dict:
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'y': 'current_annual_salary',
+        'target': 'current_annual_salary',
     })
     return info
 
@@ -326,7 +326,7 @@ def fetch_road_safety() -> dict:
         'read_csv_kwargs': {
             'na_values': ['?'],
         },
-        'y': 'Sex_of_Driver',
+        'target': 'Sex_of_Driver',
     })
     return info
 
@@ -339,7 +339,7 @@ def fetch_medical_charge() -> dict:
             'quotechar': "'",
             'escapechar': '\\',
         },
-        'y': 'Average_Total_Payments',
+        'target': 'Average_Total_Payments',
     })
     return info
 
@@ -352,7 +352,7 @@ def fetch_midwest_survey() -> dict:
             'quotechar': "'",
             'escapechar': '\\',
         },
-        'y': 'Census_Region',
+        'target': 'Census_Region',
     })
     return info
 
@@ -366,7 +366,7 @@ def fetch_open_payments() -> dict:
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'y': 'status',
+        'target': 'status',
     })
     return info
 
@@ -380,7 +380,7 @@ def fetch_traffic_violations() -> dict:
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'y': 'violation_type',
+        'target': 'violation_type',
 
     })
     return info
@@ -392,7 +392,8 @@ def fetch_drug_directory() -> dict:
     info.update({
         'read_csv_kwargs': {
             'quotechar': "'",
+            'escapechar': '\\',
         },
-        'y': 'PRODUCTTYPENAME',
+        'target': 'PRODUCTTYPENAME',
     })
     return info
