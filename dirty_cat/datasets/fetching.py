@@ -6,10 +6,13 @@ Scikit-Learn's ``fetch_openml()`` function.
 """
 
 
-# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/LilianBoulard
+# Author:
+# Lilian Boulard <lilian@boulard.fr>
+# https://github.com/LilianBoulard
 
 # Future notes:
-# - Watch out for ``fetch_openml()`` API modifications: as of january 2021, the function is marked as experimental.
+# - Watch out for ``fetch_openml()`` API modifications:
+# as of january 2021, the function is marked as experimental.
 
 
 import gzip
@@ -54,7 +57,8 @@ TRAFFIC_VIOLATIONS_ID = 42132
 DRUG_DIRECTORY_ID = 43044
 
 
-def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir()) -> dict:
+def fetch_openml_dataset(dataset_id: int,
+                         data_directory: Path = get_data_dir()) -> dict:
     """
     Gets a dataset from OpenML (https://www.openml.org),
     or from the disk if already downloaded.
@@ -72,11 +76,13 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
     dict
         A dictionary containing:
           - ``description``: str
-              The description of the dataset, as gathered from OpenML.
+              The description of the dataset,
+              as gathered from OpenML.
           - ``source``: str
               The dataset's URL from OpenML.
           - ``path``: pathlib.Path
-              The local path leading to the dataset, saved as a CSV file.
+              The local path leading to the dataset,
+              saved as a CSV file.
 
           The following values are added by the fetches below (fetch_*)
           - ``read_csv_kwargs``: Dict[str, Any]
@@ -89,6 +95,8 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
               The name of the target column.
 
     """
+    # Make path absolute
+    data_directory = data_directory.resolve()
 
     # Construct the path to the gzip file containing the details on a dataset.
     details_gz_path = data_directory / DETAILS_DIRECTORY / f'{dataset_id}.gz'
@@ -100,9 +108,9 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
         warnings.warn(
             f"Could not find the dataset {dataset_id} locally. "
             "Downloading it from OpenML; this might take a while... "
-            "If the process is interrupted, files will be invalid/incomplete. "
-            "To fix this problem, delete the CSV file if it exists. "
-            "The system will recreate it on the next run."
+            "If it is interrupted, some files might be invalid/incomplete: "
+            "if on the following run, the fetching raises errors, you can try "
+            f"fixing this issue by deleting the directory {data_directory!r}."
         )
         _download_and_write_openml_dataset(dataset_id=dataset_id,
                                            data_directory=data_directory)
@@ -136,9 +144,11 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
     }
 
 
-def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
+def _download_and_write_openml_dataset(dataset_id: int,
+                                       data_directory: Path) -> None:
     """
-    Downloads a dataset from OpenML, taking care of creating the directories.
+    Downloads a dataset from OpenML,
+    taking care of creating the directories.
 
     Parameters
     ----------
@@ -168,12 +178,17 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) ->
     #
     # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
     # and ``urllib.error.URLError`` if there is no Internet connection.
-    fetch_openml(data_id=dataset_id, data_home=str(data_directory), **fetch_kwargs)
+    fetch_openml(
+        data_id=dataset_id,
+        data_home=str(data_directory),
+        **fetch_kwargs
+    )
 
 
 def _read_json_from_gz(compressed_dir_path: Path) -> dict:
     """
-    Opens a gzip file, reads its content (JSON expected), and returns a dictionary.
+    Opens a gzip file, reads its content (JSON expected),
+    and returns a dictionary.
 
     Parameters
     ----------
@@ -183,7 +198,8 @@ def _read_json_from_gz(compressed_dir_path: Path) -> dict:
     Returns
     -------
     dict
-        The information contained in the file, converted from plain-text JSON.
+        The information contained in the file,
+        converted from plain-text JSON.
 
     """
     if not compressed_dir_path.is_file():
@@ -250,9 +266,11 @@ def _get_features(compressed_dir_path: Path) -> Features:
     return Features(*features.values())
 
 
-def _export_gz_data_to_csv(compressed_dir_path: Path, destination_file: Path, features: Features) -> None:
+def _export_gz_data_to_csv(compressed_dir_path: Path,
+                           destination_file: Path, features: Features) -> None:
     """
-    Reads a gzip file containing ARFF data, and writes it to a target CSV.
+    Reads a gzip file containing ARFF data,
+    and writes it to a target CSV.
 
     Parameters
     ----------

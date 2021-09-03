@@ -4,7 +4,9 @@ Tests fetching.py (datasets fetching off OpenML.org).
 
 """
 
-# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/LilianBoulard
+# Author:
+# Lilian Boulard <lilian@boulard.fr>
+# https://github.com/LilianBoulard
 
 import pytest
 import shutil
@@ -26,7 +28,8 @@ def get_test_data_dir() -> Path:
 def test_fetch_openml_dataset():
     """
     Tests the ``fetch_openml_dataset()`` function in a real environment.
-    Though, to avoid the test being too long, we will download a small dataset (<1000 entries).
+    Though, to avoid the test being too long,
+    we will download a small dataset (<1000 entries).
 
     Reference: https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/datasets/tests/test_openml.py
     """
@@ -99,7 +102,8 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     we mock the functions to test its inner mechanisms.
     """
 
-    from dirty_cat.datasets.fetching import fetch_openml_dataset, Details, Features
+    from dirty_cat.datasets.fetching import fetch_openml_dataset, Details, \
+        Features
 
     mock_get_details.return_value = Details("Dataset_name", "123456",
                                             "Dummy dataset description.")
@@ -113,13 +117,13 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
 
     fetch_openml_dataset(50, test_data_dir)
 
-    mock_download       .assert_not_called()
-    mock_export         .assert_not_called()
-    mock_get_features   .assert_not_called()
-    mock_get_details    .assert_called_once()
+    mock_download.assert_not_called()
+    mock_export.assert_not_called()
+    mock_get_features.assert_not_called()
+    mock_get_details.assert_called_once()
 
     # Reset mocks
-    mock_get_details    .reset_mock()
+    mock_get_details.reset_mock()
 
     # This time, the files does not exists
     mock_pathlib_path_isfile.return_value = False
@@ -127,11 +131,11 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     fetch_openml_dataset(50, test_data_dir)
 
     # Download should be called twice
-    mock_download       .assert_called_with(dataset_id=50,
-                                            data_directory=get_test_data_dir())
-    mock_export         .assert_called_once()
-    mock_get_features   .assert_called_once()
-    mock_get_details    .assert_called_once()
+    mock_download.assert_called_with(dataset_id=50,
+                                     data_directory=get_test_data_dir())
+    mock_export.assert_called_once()
+    mock_get_features.assert_called_once()
+    mock_get_details.assert_called_once()
 
 
 @mock.patch('sklearn.datasets.fetch_openml')
@@ -169,14 +173,16 @@ def test__read_json_from_gz(mock_pathlib_path_isfile):
     # Passing a valid file path,
     # but reading it does not return JSON-encoded data.
     mock_pathlib_path_isfile.return_value = True
-    with mock.patch("gzip.open", mock_open(read_data='This is not JSON-encoded data!')) as _:
+    with mock.patch("gzip.open", mock_open(
+            read_data='This is not JSON-encoded data!')) as _:
         with pytest.raises(JSONDecodeError):
             assert _read_json_from_gz(dummy_file_path)
 
     # Passing a valid file path, and reading it
     # returns valid JSON-encoded data.
     expected_return_value = {"data": "This is JSON-encoded data!"}
-    with mock.patch("gzip.open", mock_open(read_data='{"data": "This is JSON-encoded data!"}')) as _:
+    with mock.patch("gzip.open", mock_open(
+            read_data='{"data": "This is JSON-encoded data!"}')) as _:
         assert _read_json_from_gz(dummy_file_path) == expected_return_value
 
 
@@ -266,8 +272,10 @@ def test__export_gz_data_to_csv():
                      "call().write('x,x,x,x,o,o,o,x,o,positive\\n'),\n " \
                      "call().__exit__(None, None, None)]"
 
-    with mock.patch("pathlib.Path.open", mock_open(read_data="")) as mock_pathlib_path_open:
-        with mock.patch("gzip.open", mock_open(read_data=arff_data)) as mock_gzip_open:
+    with mock.patch("pathlib.Path.open",
+                    mock_open(read_data="")) as mock_pathlib_path_open:
+        with mock.patch("gzip.open",
+                        mock_open(read_data=arff_data)) as mock_gzip_open:
             _export_gz_data_to_csv(dummy_gz, dummy_csv, features)
             mock_pathlib_path_open.assert_called_with(mode='w')
             mock_gzip_open.assert_called_with(dummy_gz, mode='rt')
