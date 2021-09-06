@@ -129,7 +129,8 @@ import pandas as pd
 
 df = pd.read_csv(
     info['path'],
-    quotechar=info['read_csv_kwargs']['quotechar'],
+    quotechar="'",
+    escapechar='\\',
     nrows=10,
 ).astype(str)
 # A simpler syntax we could use:

@@ -18,9 +18,9 @@ info = datasets.fetch_employee_salaries()
 print(info['description'])
 data = pd.read_csv(
     info['path'],
-    quotechar=info['read_csv_kwargs']['quotechar'],
-    escapechar=info['read_csv_kwargs']['escapechar'],
-    na_values=info['read_csv_kwargs']['na_values'],
+    quotechar="'",
+    escapechar='\\',
+    na_values=['?'],
 )
 # A simpler syntax we could use:
 # data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
