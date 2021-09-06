@@ -69,10 +69,12 @@ def test_fetch_openml_dataset():
             warnings.warn(
                 "No internet connection or the website is down, test aborted."
             )
+            # One could try to manually recreate the tree structure
+            # created by ``fetch_openml()``,  and the
+            # ``.gz`` files within in order to finish the test.
             pytest.skip(
-                "One could try to manually recreate the tree structure "
-                "created by ``fetch_openml()``,  and the "
-                "``.gz`` files within in order to finish the test."
+                'Exception: Skipping this test because we encountered an '
+                'issue probably due to an Internet connection problem.'
             )
             return
 
