@@ -202,7 +202,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         Returns
         -------
         self
-        """
+        """Fix doc missing values 
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Make n-grams counts matrix unq_V
@@ -515,13 +515,13 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     max_iter_e_step : int, default=20
         Maximum number of iterations to adjust the activations h at each step.
 
-    handle_missing : 'error' or '' (default)
+    handle_missing : 'error' or 'zero_impute' (default)
         Whether to raise an error or impute with blank string '' if missing
         values (NaN) are present during fit (default is to impute).
-        When this parameter is set to '', and a missing value is encountered
-        during fit_transform, the resulting encoded columns for this feature
-        will be all zeros. In the inverse transform, the missing category
-        will be denoted as None.
+        When this parameter is set to 'zero_impute', and a missing value is
+        encountered during fit_transform, the resulting encoded columns for
+        this feature will be all zeros. In the inverse transform, the missing
+        category will be denoted as None.
 
 
     Attributes
