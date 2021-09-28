@@ -19,6 +19,7 @@ import gzip
 import json
 import sklearn
 import warnings
+import pandas as pd
 
 from pathlib import Path
 from collections import namedtuple
@@ -29,6 +30,10 @@ from dirty_cat.datasets.utils import get_data_dir
 
 Details = namedtuple("Details", ["name", "file_id", "description"])
 Features = namedtuple("Features", ["names"])
+
+DatasetAll = namedtuple('Dataset', ('description', 'X', 'y', 'source', 'path'))
+DatasetInfoOnly = namedtuple('Dataset', ('description', 'source', 'path',
+                                         'read_csv_kwargs'))
 
 # Directory where the ``.gz`` files containing the
 # details on downloaded datasets are stored.
@@ -301,99 +306,179 @@ def _features_to_csv_format(features: Features) -> str:
     return ",".join(features.names)
 
 
+def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
+                                read_csv_kwargs: dict,
+                                load_dataframe: bool) -> namedtuple:
+    """
+    Takes a dataset identifier, a target column name,
+    and some additional keyword arguments for `pd.read_csv`.
+
+    Returns a `collections.namedtuple` containing :
+    - ``description``: str
+        The description of the dataset, as gathered from OpenML.
+    - ``source``: str
+        The dataset's URL from OpenML.
+    - ``path``: pathlib.Path
+        The local path leading to the dataset,
+        saved as a CSV file.
+
+    If `load_dataframe` is True, the dataset is read and stored in memory,
+    and these fields are added:
+    - ``X``: pd.DataFrame
+        The dataset, as a pandas DataFrame.
+    - ``y``: pd.Series
+        The target column, as a pandas Series.
+    - ``read_csv_kwargs``: dict
+        A dictionary of keyword arguments that can be passed to
+        `pandas.read_csv`.
+
+    If you don't need the dataset to be loaded in memory,
+    pass `load_dataframe=False`.
+
+    """
+    info = fetch_openml_dataset(dataset_id)
+    if load_dataframe:
+        df = pd.read_csv(info['path'], **read_csv_kwargs)
+        y = df[target]
+        X = df.drop(target, axis='columns')
+        dataset = DatasetAll(
+            description=info['description'],
+            X=X,
+            y=y,
+            source=info['source'],
+            path=info['path'],
+        )
+    else:
+        dataset = DatasetInfoOnly(
+            description=info['description'],
+            source=info['source'],
+            path=info['path'],
+            read_csv_kwargs=read_csv_kwargs,
+        )
+
+    return dataset
+
+
 # Datasets fetchers section
 # Public API
 
 
-def fetch_employee_salaries() -> dict:
-    """Fetches the employee_salaries dataset."""
-    info = fetch_openml_dataset(dataset_id=EMPLOYEE_SALARIES_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_employee_salaries(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the employee_salaries dataset.
+
+    See the docstring of `fetch_dataset_as_namedtuple`
+    for additional information.
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=EMPLOYEE_SALARIES_ID,
+        target='current_annual_salary',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'target': 'current_annual_salary',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_road_safety() -> dict:
-    """Fetches the road safety dataset."""
-    info = fetch_openml_dataset(dataset_id=ROAD_SAFETY_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_road_safety(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the road safety dataset.
+
+    See the docstring of `fetch_dataset_as_namedtuple`
+    for additional information.
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=ROAD_SAFETY_ID,
+        target='Sex_of_Driver',
+        read_csv_kwargs={
             'na_values': ['?'],
         },
-        'target': 'Sex_of_Driver',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_medical_charge() -> dict:
-    """Fetches the medical charge dataset."""
-    info = fetch_openml_dataset(dataset_id=MEDICAL_CHARGE_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_medical_charge(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the medical charge dataset.
+
+    See the docstring of `fetch_dataset_as_namedtuple`
+    for additional information.
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=MEDICAL_CHARGE_ID,
+        target='Average_Total_Payments',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
         },
-        'target': 'Average_Total_Payments',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_midwest_survey() -> dict:
-    """Fetches the midwest survey dataset."""
-    info = fetch_openml_dataset(dataset_id=MIDWEST_SURVEY_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_midwest_survey(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the midwest survey dataset.
+
+    See the docstring of `fetch_dataset_as_namedtuple`
+    for additional information.
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=MIDWEST_SURVEY_ID,
+        target='Census_Region',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
         },
-        'target': 'Census_Region',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_open_payments() -> dict:
-    """Fetches the open payments dataset."""
-    info = fetch_openml_dataset(dataset_id=OPEN_PAYMENTS_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_open_payments(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the open payments dataset.
+
+    See the docstring of `fetch_dataset_as_namedtuple`
+    for additional information.
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=OPEN_PAYMENTS_ID,
+        target='status',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'target': 'status',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_traffic_violations() -> dict:
-    """Fetches the traffic violations dataset."""
-    info = fetch_openml_dataset(dataset_id=TRAFFIC_VIOLATIONS_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_traffic_violations(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the traffic violations dataset.
+
+    See the docstring of `fetch_dataset_as_namedtuple`
+    for additional information.
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=TRAFFIC_VIOLATIONS_ID,
+        target='violation_type',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'target': 'violation_type',
-
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_drug_directory() -> dict:
-    """Fetches the drug directory dataset."""
-    info = fetch_openml_dataset(dataset_id=DRUG_DIRECTORY_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_drug_directory(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the drug directory dataset.
+
+    See the docstring of `fetch_dataset_as_namedtuple`
+    for additional information.
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=DRUG_DIRECTORY_ID,
+        target='PRODUCTTYPENAME',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
         },
-        'target': 'PRODUCTTYPENAME',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
