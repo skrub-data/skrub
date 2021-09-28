@@ -14,35 +14,26 @@ predict the *Current Annual Salary*, using gradient boosted trees.
 # Data Importing and preprocessing
 # --------------------------------
 #
-# We first download the dataset:
+# We first get the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
 
-info = fetch_employee_salaries()
-print(info['description'])
+employee_salaries = fetch_employee_salaries()
+print(employee_salaries.description)
 
-
-###############################################################################
-# Then we load it:
-import pandas as pd
-
-df = pd.read_csv(
-    info['path'],
-    quotechar="'",
-    escapechar='\\',
-    na_values=['?'],
-)
-# A simpler syntax we could use:
-# df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+df = employee_salaries.X
 
 ###############################################################################
 # Now, let's carry out some basic preprocessing:
+import pandas as pd
 df['date_first_hired'] = pd.to_datetime(df['date_first_hired'])
 df['year_first_hired'] = df['date_first_hired'].apply(lambda x: x.year)
 # drop rows with NaN in gender
+na_mask = df.isna()  # Get boolean mask of missing values
 df.dropna(subset=['gender'], inplace=True)
 
-target_column = 'current_annual_salary'
-y = df[target_column].values.ravel()
+y = employee_salaries.y
+# Drop lines from y where there was missing values in X
+y = y[~na_mask['gender']]
 
 ###############################################################################
 # Choosing columns

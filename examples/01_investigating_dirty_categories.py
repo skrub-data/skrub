@@ -11,19 +11,11 @@ with statistical learning.
 # -------------------------------------------------
 #
 # Let's look at a dataset called employee salaries:
-import pandas as pd
 from dirty_cat import datasets
 
-info = datasets.fetch_employee_salaries()
-print(info['description'])
-data = pd.read_csv(
-    info['path'],
-    quotechar="'",
-    escapechar='\\',
-    na_values=['?'],
-)
-# A simpler syntax we could use:
-# data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+employee_salaries = datasets.fetch_employee_salaries()
+print(employee_salaries.description)
+data = employee_salaries.X
 print(data.head(n=5))
 
 #########################################################################

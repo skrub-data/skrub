@@ -8,7 +8,7 @@ either chosen as the most frequent categories, or with kmeans clustering.
 
 Note that the :class:`GapEncoder` naturally does data reduction and comes
 with online estimation. As a result is it more scalable than the
-SimilarityEncoder, and should be prefered in large-scale settings.
+SimilarityEncoder, and should be preferred in large-scale settings.
 
 """
 # Avoid the warning in scikit-learn's LogisticRegression for the change
@@ -50,26 +50,28 @@ def resource_used(func):
 # Data Importing and preprocessing
 # --------------------------------
 #
-# We first download the dataset:
+# We first get the dataset:
+import pandas as pd
 from dirty_cat.datasets import fetch_open_payments
 
-info = fetch_open_payments()
-print(info['description'])
+open_payments = fetch_open_payments()
+print(open_payments.description)
 
-###############################################################################
-# Then we load it:
-import pandas as pd
+df = open_payments.X
 
-df = pd.read_csv(
-    info['path'],
-    quotechar="'",
-    escapechar='\\',
-    na_values=['?'],
-)
-# A simpler syntax we could use:
-# df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+na_mask: pd.DataFrame = df.isna()
 df = df.dropna(axis=0)
 df = df.reset_index()
+
+from functools import reduce
+
+y = open_payments.y
+# Combine boolean masks
+na_mask = reduce(lambda acc, col: acc | na_mask[col],
+                 na_mask.columns, na_mask[na_mask.columns[0]])
+# Drop the lines that contained missing values in X
+y = y[~na_mask]
+y.reset_index()
 
 clean_columns = [
     'Applicable_Manufacturer_or_Applicable_GPO_Making_Payment_Name',
@@ -105,8 +107,6 @@ from dirty_cat import SimilarityEncoder
 
 sim_enc = SimilarityEncoder(similarity='ngram')
 
-y = df[info['target']]
-
 transformers = [
     ('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'), clean_columns),
 ]
@@ -128,7 +128,7 @@ from sklearn import linear_model, pipeline, model_selection
 log_reg = linear_model.LogisticRegression(max_iter=10000)
 
 model = pipeline.make_pipeline(column_trans, log_reg)
-results = resource_used(model_selection.cross_validate)(model, df, y, )
+results = resource_used(model_selection.cross_validate)(model, df, y)
 print("Cross-validation score: %s" % results['test_score'])
 
 ###############################################################################

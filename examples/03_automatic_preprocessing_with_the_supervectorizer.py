@@ -34,28 +34,16 @@ We demonstrate it on the `employee salaries` dataset.
 # (the salary to predict):
 from dirty_cat.gap_encoder import GapEncoder
 from dirty_cat.datasets import fetch_employee_salaries
-info = fetch_employee_salaries()
-print(info['description'])
+employee_salaries = fetch_employee_salaries()
+print(employee_salaries.description)
 
 ###############################################################################
 
-import pandas as pd
-
-df = pd.read_csv(
-    info['path'],
-    quotechar="'",
-    escapechar='\\',
-    na_values=['?'],
-)
-# A simpler syntax we could use:
-# df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
-
-X = df
-y = df[info['target']]
+X = employee_salaries.X
+y = employee_salaries.y
 # We'll drop a few columns we don't want
 X.drop(
     [
-        'current_annual_salary',  # Target
         'full_name',  # Not relevant to the analysis
         '2016_gross_pay_received',  # Too linked with target
         '2016_overtime_pay',  # Too linked with target
@@ -105,7 +93,7 @@ from sklearn.model_selection import cross_val_score
 scores = cross_val_score(pipeline, X, y, scoring='r2')
 
 import numpy as np
-print(f'{scores=}')
+print(f'scores={scores}')
 print(f'mean={np.mean(scores)}')
 print(f'std={np.std(scores)}')
 

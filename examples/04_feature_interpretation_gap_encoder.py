@@ -14,29 +14,15 @@ categorical data.
 # Data Importing
 # --------------
 #
-# We first download the dataset:
+# We first get the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
-info = fetch_employee_salaries()
-print(info['description'])
-
-
-###############################################################################
-# Then we load it:
-import pandas as pd
-
-df = pd.read_csv(
-    info['path'],
-    quotechar="'",
-    escapechar='\\',
-    na_values=['?'],
-)
-# A simpler syntax we could use:
-# df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+employee_salaries = fetch_employee_salaries()
+print(employee_salaries.description)
 
 ###############################################################################
 # Now, we retrieve the dirty column to encode:
 dirty_column = 'employee_position_title'
-X_dirty = df[[dirty_column]]
+X_dirty = employee_salaries.X[[dirty_column]]
 print(X_dirty.head(), end='\n\n')
 print(f'Number of dirty entries = {len(X_dirty)}')
 
