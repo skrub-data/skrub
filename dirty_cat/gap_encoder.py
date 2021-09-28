@@ -202,7 +202,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         Returns
         -------
         self
-        """Fix doc missing values 
+        """
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Make n-grams counts matrix unq_V
