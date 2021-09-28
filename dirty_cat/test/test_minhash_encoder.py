@@ -9,7 +9,7 @@ from dirty_cat import MinHashEncoder
 
 def test_MinHashEncoder(n_sample=70, minmax_hash=False):
     X_txt = fetch_20newsgroups(subset='train')['data']
-    X = X_txt[:n_sample]
+    X = np.array(X_txt[:n_sample])[:,None]
 
     for minmax_hash in [True, False]:
         for hashing in ['fast', 'murmur']:
@@ -32,7 +32,8 @@ def test_MinHashEncoder(n_sample=70, minmax_hash=False):
 
             # Test min property
             if not minmax_hash:
-                X_substring = [x[:x.find(' ')] for x in X]
+                X_substring = [x[:x.find(' ')] for x in X[:,0]]
+                X_substring = np.array(X_substring)[:,None]
                 encoder = MinHashEncoder(50, hashing=hashing)
                 encoder.fit(X_substring)
                 y_substring = encoder.transform(X_substring)
@@ -40,11 +41,11 @@ def test_MinHashEncoder(n_sample=70, minmax_hash=False):
 
 def test_input_type():
     # Numpy array
-    X = np.array(['alice', 'bob'])
+    X = np.array(['alice', 'bob'])[:,None]
     enc = MinHashEncoder(n_components=2)
     enc.fit_transform(X)
     # List
-    X = ['alice', 'bob']
+    X = [['alice'], ['bob']]
     enc = MinHashEncoder(n_components=2)
     enc.fit_transform(X)
 
@@ -68,8 +69,8 @@ def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
     import pandas as pd
     employee_salaries = datasets.fetch_employee_salaries()
     data = employee_salaries['data']
-    X = data['employee_position_title'].tolist()
-    X = X * 10
+    X = data['employee_position_title'].tolist() * 10
+    X = np.array(X)[:,None]
     t0 = time.time()
     encoder = Encoder(n_components=50, hashing=hashing,
                       minmax_hash=minmax_hash)
@@ -98,7 +99,7 @@ def test_missing_values(input_type, missing, hashing):
     z = np.zeros(n)
 
     if input_type == 'numpy':
-        X = np.array(X, dtype=object)
+        X = np.array(X, dtype=object)[:,None]
     elif input_type == 'pandas':
         pd = pytest.importorskip("pandas")
         X = pd.DataFrame(X)

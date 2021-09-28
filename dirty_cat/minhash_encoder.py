@@ -27,7 +27,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_random_state, murmurhash3_32
 
 from .fast_hash import ngram_min_hash
-from .utils import LRUDict
+from .utils import LRUDict, check_input
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
@@ -50,12 +50,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         might have some concern with its entropy.
     minmax_hash : bool, default=False
         if True, return min hash and max hash concatenated.
-    handle_missing : 'error' or '' (default)
-        Whether to raise an error or impute with blank string '' if missing
-        values (NaN) are present during fit (default is to impute).
-        When this parameter is set to '', and a missing value is encountered
-        during fit_transform, the resulting encoded columns for this feature
-        will be all zeros.
+    handle_missing : 'error' or 'zero_impute' (default)
+        Whether to raise an error or encode missing values (NaN) with
+        vectors filled with zeros.
     References
     ----------
     For a detailed description of the method, see
@@ -66,7 +63,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(self, n_components=30, ngram_range=(2, 4),
                  hashing='fast', minmax_hash=False,
-                 handle_missing=''):
+                 handle_missing='zero_impute'):
         self.ngram_range = ngram_range
         self.n_components = n_components
         self.hashing = hashing
@@ -173,22 +170,16 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         array, shape (n_samples, n_components)
             Transformed input.
         """
-        X = np.asarray(X)
-        assert X.ndim == 1 or (X.ndim == 2 and X.shape[1] == 1), f"ERROR:\
-        shape {X.shape} of input array is not supported."
-        if X.ndim == 2:
-            X = X[:, 0]
-        # Check if first item has str or np.str_ type
-        assert isinstance(X[0], str), "ERROR: Input data is not string."
+        X = check_input(X)
         if self.minmax_hash:
             assert self.n_components % 2 == 0,\
                     "n_components should be even when minmax_hash=True"
         if self.hashing == 'murmur':
             assert not(self.minmax_hash),\
                    "minmax_hash not implemented with murmur"
-        if self.handle_missing not in ['error', '']:
+        if self.handle_missing not in ['error', 'zero_impute']:
             template = ("handle_missing should be either 'error' or "
-                        "'', got %s")
+                        "'zero_impute', got %s")
             raise ValueError(template % self.handle_missing)
         X_out = np.zeros((len(X), self.n_components))
         X = X.reshape(-1)
@@ -198,7 +189,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         if self.hashing == 'fast':
             for i, x in enumerate(X):
-                if isinstance(x, float):
+                if isinstance(x, float): # true if x is a missing value
                     nan_idx.append(i)
                 elif x not in self.hash_dict:
                     X_out[i, :] = self.hash_dict[x] = self.get_fast_hash(x)
