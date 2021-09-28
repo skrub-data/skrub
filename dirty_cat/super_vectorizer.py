@@ -211,7 +211,11 @@ class SuperVectorizer(ColumnTransformer):
             # because the former tends to raise all kind of issues when dealing
             # with scikit-learn (as of version 0.24).
             if contains_missing:
-                X[col] = X[col].replace({pd.NA: np.nan})
+                # Some numerical dtypes like Int64 or Float64 only support
+                # pd.NA so they must be converted to np.float64 before.
+                if pd.api.types.is_numeric_dtype(X[col]):
+                    X[col] = X[col].astype(np.float64)
+                X[col].fillna(value=np.nan, inplace=True)
 
         return X
 
