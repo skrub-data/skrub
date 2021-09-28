@@ -82,10 +82,9 @@ def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
 
 
 @pytest.mark.parametrize("input_type, missing, hashing", [
-    ['list', '', 'fast'],
     ['numpy', 'error', 'fast'],
-    ['pandas', '', 'murmur'],
-    ['numpy', '', 'fast']])
+    ['pandas', 'zero_impute', 'murmur'],
+    ['numpy', 'zero_impute', 'fast']])
 def test_missing_values(input_type, missing, hashing):
     X = ['Red',
          np.nan,
@@ -112,7 +111,7 @@ def test_missing_values(input_type, missing, hashing):
             with pytest.raises(ValueError, match=r"missing"
                                " values in input"):
                 encoder.transform(X)
-    elif missing == '':
+    elif missing == 'zero_impute':
         encoder.fit(X)
         y = encoder.transform(X)
         if input_type == 'list':
@@ -122,7 +121,7 @@ def test_missing_values(input_type, missing, hashing):
             assert np.array_equal(y[-1], z)
     else:
         with pytest.raises(ValueError, match=r"handle_missing"
-                           " should be either 'error' or ''"):
+                           " should be either 'error' or 'zero_impute'"):
             encoder.fit_transform(X)
     return
 
@@ -137,6 +136,7 @@ def test_cache_overflow():
     encoder = MinHashEncoder(n_components=3)
     capacity = encoder._capacity
     raw_data = [get_random_string(10) for x in range(capacity + 1)]
+    raw_data = np.array(raw_data)[:,None]
     y = encoder.fit_transform(raw_data)
 
     assert len(y[y == -1.0]) == 0

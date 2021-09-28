@@ -204,7 +204,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     X_out[i, :] = self.hash_dict[x] = self.minhash(
                         x,
                         n_components=self.n_components,
-                        ngram_range=self.ngram_range)
+                        ngram_range=self.ngram_range
+                    )
                 else:
                     X_out[i, :] = self.hash_dict[x]
 
