@@ -46,7 +46,10 @@ print(data['employee_position_title'].value_counts().sort_index())
 # To simplify understanding, we will focus on the column describing the
 # employee's position title:
 # data
-values = data[['employee_position_title', 'gender', 'current_annual_salary']]
+# values = data[['employee_position_title', 'gender']] + employee_salaries.y
+import pandas as pd
+values = data[['employee_position_title', 'gender']]
+values.insert(0, 'current_annual_salary', employee_salaries.y)
 
 #########################################################################
 # String similarity between entries
