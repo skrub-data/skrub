@@ -41,17 +41,9 @@ print(employee_salaries.description)
 
 X = employee_salaries.X
 y = employee_salaries.y
-# We'll drop a few columns we don't want
-X.drop(
-    [
-        'full_name',  # Not relevant to the analysis
-        '2016_gross_pay_received',  # Too linked with target
-        '2016_overtime_pay',  # Too linked with target
-        'date_first_hired'  # Redundant with "year_first_hired"
-    ],
-    axis=1,
-    inplace=True
-)
+# We'll drop the column "date first hired" as
+# it is redundant with "year first hired"
+X.drop(['date_first_hired'], axis=1, inplace=True)
 
 ###############################################################################
 # The data are in a fairly complex and heterogeneous dataframe:

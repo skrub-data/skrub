@@ -47,7 +47,7 @@ print(data['employee_position_title'].value_counts().sort_index())
 # employee's position title:
 # data
 # values = data[['employee_position_title', 'gender']] + employee_salaries.y
-import pandas as pd
+
 values = data[['employee_position_title', 'gender']]
 values.insert(0, 'current_annual_salary', employee_salaries.y)
 
