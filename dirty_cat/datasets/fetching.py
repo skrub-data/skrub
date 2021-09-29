@@ -363,13 +363,26 @@ def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
 # Public API
 
 
-def fetch_employee_salaries(load_dataframe: bool = True) -> namedtuple:
+def fetch_employee_salaries(load_dataframe: bool = True,
+                            drop_linked: bool = True,
+                            drop_irrelevant: bool = True) -> namedtuple:
     """Fetches the employee_salaries dataset.
 
-    See the docstring of `fetch_dataset_as_namedtuple`
-    for additional information.
+    Parameters
+    ----------
+    drop_linked: bool (default True)
+        Drops columns "2016_gross_pay_received" and "2016_overtime_pay",
+        which are closely linked to "current_annual_salary", the target.
+
+    drop_irrelevant: bool (default True)
+        Drops column "full_name", which is usually irrelevant to the
+        statistical analysis.
+
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
-    return fetch_dataset_as_namedtuple(
+    dataset = fetch_dataset_as_namedtuple(
         dataset_id=EMPLOYEE_SALARIES_ID,
         target='current_annual_salary',
         read_csv_kwargs={
@@ -379,13 +392,21 @@ def fetch_employee_salaries(load_dataframe: bool = True) -> namedtuple:
         },
         load_dataframe=load_dataframe,
     )
+    if drop_linked:
+        dataset.X.drop(["2016_gross_pay_received", "2016_overtime_pay"],
+                       axis=1, inplace=True)
+    if drop_irrelevant:
+        dataset.X.drop(["full_name"], axis=1, inplace=True)
+
+    return dataset
 
 
 def fetch_road_safety(load_dataframe: bool = True) -> namedtuple:
     """Fetches the road safety dataset.
 
-    See the docstring of `fetch_dataset_as_namedtuple`
-    for additional information.
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
     return fetch_dataset_as_namedtuple(
         dataset_id=ROAD_SAFETY_ID,
@@ -400,8 +421,9 @@ def fetch_road_safety(load_dataframe: bool = True) -> namedtuple:
 def fetch_medical_charge(load_dataframe: bool = True) -> namedtuple:
     """Fetches the medical charge dataset.
 
-    See the docstring of `fetch_dataset_as_namedtuple`
-    for additional information.
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
     return fetch_dataset_as_namedtuple(
         dataset_id=MEDICAL_CHARGE_ID,
@@ -417,8 +439,9 @@ def fetch_medical_charge(load_dataframe: bool = True) -> namedtuple:
 def fetch_midwest_survey(load_dataframe: bool = True) -> namedtuple:
     """Fetches the midwest survey dataset.
 
-    See the docstring of `fetch_dataset_as_namedtuple`
-    for additional information.
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
     return fetch_dataset_as_namedtuple(
         dataset_id=MIDWEST_SURVEY_ID,
@@ -434,8 +457,9 @@ def fetch_midwest_survey(load_dataframe: bool = True) -> namedtuple:
 def fetch_open_payments(load_dataframe: bool = True) -> namedtuple:
     """Fetches the open payments dataset.
 
-    See the docstring of `fetch_dataset_as_namedtuple`
-    for additional information.
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
     return fetch_dataset_as_namedtuple(
         dataset_id=OPEN_PAYMENTS_ID,
@@ -452,8 +476,9 @@ def fetch_open_payments(load_dataframe: bool = True) -> namedtuple:
 def fetch_traffic_violations(load_dataframe: bool = True) -> namedtuple:
     """Fetches the traffic violations dataset.
 
-    See the docstring of `fetch_dataset_as_namedtuple`
-    for additional information.
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
     return fetch_dataset_as_namedtuple(
         dataset_id=TRAFFIC_VIOLATIONS_ID,
@@ -470,8 +495,9 @@ def fetch_traffic_violations(load_dataframe: bool = True) -> namedtuple:
 def fetch_drug_directory(load_dataframe: bool = True) -> namedtuple:
     """Fetches the drug directory dataset.
 
-    See the docstring of `fetch_dataset_as_namedtuple`
-    for additional information.
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
     return fetch_dataset_as_namedtuple(
         dataset_id=DRUG_DIRECTORY_ID,
