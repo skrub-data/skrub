@@ -322,7 +322,8 @@ def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
     ):
         mock_fetch_dataset_as_namedtuple.return_value = expected_return_value
 
-        returned_value = fetching.fetch_employee_salaries()
+        returned_value = fetching.fetch_employee_salaries(drop_linked=False,
+                                                          drop_irrelevant=False)
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()

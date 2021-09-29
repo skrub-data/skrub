@@ -392,11 +392,12 @@ def fetch_employee_salaries(load_dataframe: bool = True,
         },
         load_dataframe=load_dataframe,
     )
-    if drop_linked:
-        dataset.X.drop(["2016_gross_pay_received", "2016_overtime_pay"],
-                       axis=1, inplace=True)
-    if drop_irrelevant:
-        dataset.X.drop(["full_name"], axis=1, inplace=True)
+    if load_dataframe:
+        if drop_linked:
+            dataset.X.drop(["2016_gross_pay_received", "2016_overtime_pay"],
+                           axis=1, inplace=True)
+        if drop_irrelevant:
+            dataset.X.drop(["full_name"], axis=1, inplace=True)
 
     return dataset
 
