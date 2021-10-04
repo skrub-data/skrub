@@ -39,6 +39,15 @@ def _replace_missing_in_col(df: pd.Series, value: str = "missing") -> pd.Series:
     Takes a Series, replaces the missing values, and returns it.
     """
     dtype_name = df.dtype.name
+
+    # We won't impute numerical data
+    is_numeric = any(tp in dtype_name.lower() for tp in [
+        'int',
+        'float',
+    ])
+    if is_numeric:
+        return df
+
     if dtype_name == 'category' and (value not in df.cat.categories):
         df = df.cat.add_categories(value)
     df = df.fillna(value=value)
