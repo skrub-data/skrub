@@ -40,14 +40,6 @@ def _replace_missing_in_col(df: pd.Series, value: str = "missing") -> pd.Series:
     """
     dtype_name = df.dtype.name
 
-    # We won't impute numerical data
-    is_numeric = any(tp in dtype_name.lower() for tp in [
-        'int',
-        'float',
-    ])
-    if is_numeric:
-        return df
-
     if dtype_name == 'category' and (value not in df.cat.categories):
         df = df.cat.add_categories(value)
     df = df.fillna(value=value)
@@ -368,8 +360,11 @@ class SuperVectorizer(ColumnTransformer):
         if _has_missing_values(X):
 
             if self.impute_missing == 'force':
-                X = X.apply(_replace_missing_in_col, axis='columns')
-                self.imputed_columns_.extend(X.columns.to_list())
+                for col in X.columns:
+                    # Do not impute numeric columns
+                    if not pd.api.types.is_numeric_dtype(X[col]):
+                        X[col] = _replace_missing_in_col(X[col])
+                        self.imputed_columns_.append(col)
 
             elif self.impute_missing == 'skip':
                 pass
@@ -387,9 +382,11 @@ class SuperVectorizer(ColumnTransformer):
                         impute = True
 
                     if impute:
-                        self.imputed_columns_.extend(cols)
                         for col in cols:
-                            X[col] = _replace_missing_in_col(X[col])
+                            # Do not impute numeric columns
+                            if not pd.api.types.is_numeric_dtype(X[col]):
+                                X[col] = _replace_missing_in_col(X[col])
+                                self.imputed_columns_.append(col)
 
             else:
                 raise ValueError(

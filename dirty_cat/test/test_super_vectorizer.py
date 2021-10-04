@@ -246,10 +246,10 @@ def test_transform():
     X = _get_clean_dataframe()
     sup_vec = SuperVectorizer()
     sup_vec.fit(X)
-    s = [34, 5.5, 'private', 'engineer', 'yes', '60K+']
+    s = [34, 5.5, 'private', 'manager', 'yes', '60K+']
     x = np.array(s).reshape(1, -1)
     x_trans = sup_vec.transform(x)
-    assert (x_trans == [[1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
+    assert (x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
 
 
 if __name__ == '__main__':
