@@ -96,7 +96,7 @@ contributions in the scope of dirty categories.
 .. seealso::
 
    Many classic categorical encoding schemes are available here:
-   http://contrib.scikit-learn.org/categorical-encoding/
+   https://contrib.scikit-learn.org/category_encoders/
 
    Similarity encoding in also available in Spark ML:
    https://github.com/rakutentech/spark-dirty-cat

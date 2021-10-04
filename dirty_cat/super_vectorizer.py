@@ -151,13 +151,13 @@ class SuperVectorizer(ColumnTransformer):
     OptionalEstimator = Optional[Union[BaseEstimator, str]]
 
     def __init__(self, *,
-                 cardinality_threshold: int = 20,
-                 low_card_str_transformer: OptionalEstimator = OneHotEncoder(handle_unknown='ignore'),
-                 high_card_str_transformer: OptionalEstimator = GapEncoder(),
-                 low_card_cat_transformer: OptionalEstimator = OneHotEncoder(handle_unknown='ignore'),
-                 high_card_cat_transformer: OptionalEstimator = GapEncoder(),
-                 numerical_transformer: OptionalEstimator = None,
-                 datetime_transformer: OptionalEstimator = None,
+                 cardinality_threshold: int = 40,
+                 low_card_str_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
+                 high_card_str_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(n_components=30),
+                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
+                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(n_components=30),
+                 numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
+                 datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
                  auto_cast: bool = True,
                  impute_missing: str = 'auto',
                  # Following parameters are inherited from ColumnTransformer
