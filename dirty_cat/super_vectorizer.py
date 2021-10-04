@@ -391,7 +391,7 @@ class SuperVectorizer(ColumnTransformer):
             else:
                 raise ValueError(
                     "Invalid value for `impute_missing`, expected any of "
-                    "{'auto', 'force', 'skip'}, got {self.impute_missing!r}."
+                    f"{'auto', 'force', 'skip'}, got {self.impute_missing!r}."
                 )
 
         # If there was missing values imputation, we cast the DataFrame again,
