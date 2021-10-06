@@ -71,10 +71,9 @@ X['date_first_hired'] = pd.to_datetime(X['date_first_hired'])
 X['year_first_hired'] = X['date_first_hired'].apply(lambda x: x.year)
 # Get mask of rows with missing values in gender
 mask = X.isna()['gender']
-X.dropna(subset=['gender'], inplace=True)
 # And remove the lines accordingly
-X.drop(mask, axis=0, inplace=True)
-y.drop(mask, inplace=True)
+X.dropna(subset=['gender'], inplace=True)
+y = y[~mask]
 
 # %%
 #
@@ -105,7 +104,7 @@ one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
 from sklearn.compose import make_column_transformer
 encoder = make_column_transformer(
     (one_hot, ['gender', 'department_name', 'assignment_category']),
-    ('passthrough', ['Year First Hired']),
+    ('passthrough', ['year_first_hired']),
     # Last but not least, our dirty column
     (one_hot, ['employee_position_title']),
     remainder='drop',
@@ -137,7 +136,7 @@ pipeline.fit(X, y)
 # The one-hot encoder is actually not well suited to the 'Employee
 # Position Title' column, as this columns contains 400 different entries:
 import numpy as np
-np.nunique(y)
+np.unique(y)
 
 # %%
 # We will now experiment with encoders specially made for handling
