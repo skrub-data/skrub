@@ -36,7 +36,7 @@ def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
 
 def _replace_missing_in_col(df: pd.Series, value: str = "missing") -> pd.Series:
     """
-    Takes a Series, replaces the missing values, and returns it.
+    Takes a Series with string data, replaces the missing values, and returns it.
     """
     dtype_name = df.dtype.name
 
@@ -58,7 +58,7 @@ class SuperVectorizer(ColumnTransformer):
     Parameters
     ----------
 
-    cardinality_threshold: int, default=20
+    cardinality_threshold: int, default=40
         Two lists of features will be created depending on this value: strictly
         under this value, the low cardinality categorical values, and above or
         equal, the high cardinality categorical values.
@@ -74,7 +74,7 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    high_card_str_transformer: Transformer or str or None, default=GapEncoder()
+    high_card_str_transformer: Transformer or str or None, default=GapEncoder(n_components=30)
         Transformer used on features with high cardinality (threshold is
         defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. `GapEncoder()`),
@@ -85,7 +85,7 @@ class SuperVectorizer(ColumnTransformer):
     low_card_cat_transformer: Transformer or str or None, default=OneHotEncoder()
         Same as `low_card_str_transformer`.
 
-    high_card_cat_transformer: Transformer or str or None, default=GapEncoder()
+    high_card_cat_transformer: Transformer or str or None, default=GapEncoder(n_components=30)
         Same as `high_card_str_transformer`.
 
     numerical_transformer: Transformer or str or None, default=None
@@ -107,12 +107,13 @@ class SuperVectorizer(ColumnTransformer):
         data type (dtype).
 
     impute_missing: str, default='auto'
-        By-column missing values imputation parameter.
+        When to impute missing values in string columns.
         'auto' will impute missing values if it's considered appropriate
         (we are using an encoder that does not support missing values and/or
         specific versions of pandas, numpy and scikit-learn).
         'force' will impute all missing values.
         'skip' will not impute at all.
+        When imputed, missing values are replaced by the string 'missing'.
         See also attribute `imputed_columns_`.
 
     Attributes
@@ -129,9 +130,9 @@ class SuperVectorizer(ColumnTransformer):
     columns_: List[Union[str, int]]
         The column names of fitted array.
 
-    types_: Dict[int, type]
-        A learnt mapping of type by column.
-        Key is the column name, value is the final dtype.
+    types_: Dict[str, type]
+        A mapping of inferred types per column.
+        Key is the column name, value is the inferred dtype.
 
     imputed_columns_: List[str]
         The list of columns in which we imputed the missing values.
@@ -221,12 +222,12 @@ class SuperVectorizer(ColumnTransformer):
         return X
 
     def transform(self, X) -> np.ndarray:
-        """Transform X separately by each transformer, concatenate results.
+        """Transform X by applying transformers on each column, then concatenate results.
 
         Parameters
         ----------
         X : {array-like, dataframe} of shape (n_samples, n_features)
-            The data to be transformed by subset.
+            The data to be transformed.
 
         Returns
         -------
