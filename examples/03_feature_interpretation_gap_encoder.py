@@ -10,29 +10,23 @@ categorical data.
 
 """
 
-################################################################################
+###############################################################################
 # Data Importing
 # --------------
 #
-# We first download the dataset:
+# We first get the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
-info = fetch_employee_salaries()
-print(info['description'])
+employee_salaries = fetch_employee_salaries()
+print(employee_salaries.description)
 
-
-################################################################################
-# Then we load it:
-import pandas as pd
-df = pd.read_csv(info['path'], **info['read_csv_kwargs'])
-
-################################################################################
+###############################################################################
 # Now, we retrieve the dirty column to encode:
 dirty_column = 'employee_position_title'
-X_dirty = df[[dirty_column]]
+X_dirty = employee_salaries.X[[dirty_column]]
 print(X_dirty.head(), end='\n\n')
 print(f'Number of dirty entries = {len(X_dirty)}')
 
-################################################################################
+###############################################################################
 # Encoding dirty job titles
 # -------------------------
 #
@@ -40,13 +34,13 @@ print(f'Number of dirty entries = {len(X_dirty)}')
 from dirty_cat import GapEncoder
 enc = GapEncoder(n_components=10, random_state=42)
 
-################################################################################
+###############################################################################
 # Then we fit the model on the dirty categorical data and transform it to
 # obtain encoded vectors of size 10:
 X_enc = enc.fit_transform(X_dirty)
 print(f'Shape of encoded vectors = {X_enc.shape}')
 
-################################################################################
+###############################################################################
 # Interpreting encoded vectors
 # ----------------------------
 #
@@ -63,7 +57,7 @@ for k in range(len(topic_labels)):
     labels = topic_labels[k]
     print(f'Topic n°{k}: {labels}')
 
-################################################################################
+###############################################################################
 # As expected, topics capture labels that frequently co-occur. For instance,
 # the labels *firefighter*, *rescuer*, *rescue* appear together in
 # *Firefigther/Rescuer III*, or *Fire/Rescue Lieutenant*.
@@ -82,7 +76,7 @@ plt.colorbar().set_label(label='Topic activations', size=12)
 plt.tight_layout()
 plt.show()
 
-################################################################################
+###############################################################################
 # As we can see, each dirty category encodes on a small number of topics,
 # These can thus be reliably used to summarize each topic, which are in
 # effect latent categories captured from the data.

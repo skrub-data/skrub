@@ -4,11 +4,14 @@ Tests fetching.py (datasets fetching off OpenML.org).
 
 """
 
-# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/LilianBoulard
+# Author:
+# Lilian Boulard <lilian@boulard.fr>
+# https://github.com/LilianBoulard
 
 import pytest
 import shutil
 import sklearn
+import warnings
 import pandas as pd
 
 from pathlib import Path
@@ -26,7 +29,8 @@ def get_test_data_dir() -> Path:
 def test_fetch_openml_dataset():
     """
     Tests the ``fetch_openml_dataset()`` function in a real environment.
-    Though, to avoid the test being too long, we will download a small dataset (<1000 entries).
+    Though, to avoid the test being too long,
+    we will download a small dataset (<1000 entries).
 
     Reference: https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/datasets/tests/test_openml.py
     """
@@ -62,12 +66,16 @@ def test_fetch_openml_dataset():
                                                  data_directory=test_data_dir)
 
         except URLError:
-            # No internet connection, or the website is down.
-            # We abort the test.
-            #
+            warnings.warn(
+                "No internet connection or the website is down, test aborted."
+            )
             # One could try to manually recreate the tree structure
             # created by ``fetch_openml()``,  and the
             # ``.gz`` files within in order to finish the test.
+            pytest.skip(
+                'Exception: Skipping this test because we encountered an '
+                'issue probably due to an Internet connection problem.'
+            )
             return
 
         assert returned_info["description"].startswith(test_dataset["desc_start"])
@@ -99,7 +107,8 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     we mock the functions to test its inner mechanisms.
     """
 
-    from dirty_cat.datasets.fetching import fetch_openml_dataset, Details, Features
+    from dirty_cat.datasets.fetching import fetch_openml_dataset, Details, \
+        Features
 
     mock_get_details.return_value = Details("Dataset_name", "123456",
                                             "Dummy dataset description.")
@@ -113,13 +122,13 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
 
     fetch_openml_dataset(50, test_data_dir)
 
-    mock_download       .assert_not_called()
-    mock_export         .assert_not_called()
-    mock_get_features   .assert_not_called()
-    mock_get_details    .assert_called_once()
+    mock_download.assert_not_called()
+    mock_export.assert_not_called()
+    mock_get_features.assert_not_called()
+    mock_get_details.assert_called_once()
 
     # Reset mocks
-    mock_get_details    .reset_mock()
+    mock_get_details.reset_mock()
 
     # This time, the files does not exists
     mock_pathlib_path_isfile.return_value = False
@@ -127,11 +136,11 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     fetch_openml_dataset(50, test_data_dir)
 
     # Download should be called twice
-    mock_download       .assert_called_with(dataset_id=50,
-                                            data_directory=get_test_data_dir())
-    mock_export         .assert_called_once()
-    mock_get_features   .assert_called_once()
-    mock_get_details    .assert_called_once()
+    mock_download.assert_called_with(dataset_id=50,
+                                     data_directory=get_test_data_dir())
+    mock_export.assert_called_once()
+    mock_get_features.assert_called_once()
+    mock_get_details.assert_called_once()
 
 
 @mock.patch('sklearn.datasets.fetch_openml')
@@ -169,14 +178,16 @@ def test__read_json_from_gz(mock_pathlib_path_isfile):
     # Passing a valid file path,
     # but reading it does not return JSON-encoded data.
     mock_pathlib_path_isfile.return_value = True
-    with mock.patch("gzip.open", mock_open(read_data='This is not JSON-encoded data!')) as _:
+    with mock.patch("gzip.open", mock_open(
+            read_data='This is not JSON-encoded data!')) as _:
         with pytest.raises(JSONDecodeError):
             assert _read_json_from_gz(dummy_file_path)
 
     # Passing a valid file path, and reading it
     # returns valid JSON-encoded data.
     expected_return_value = {"data": "This is JSON-encoded data!"}
-    with mock.patch("gzip.open", mock_open(read_data='{"data": "This is JSON-encoded data!"}')) as _:
+    with mock.patch("gzip.open", mock_open(
+            read_data='{"data": "This is JSON-encoded data!"}')) as _:
         assert _read_json_from_gz(dummy_file_path) == expected_return_value
 
 
@@ -256,22 +267,13 @@ def test__export_gz_data_to_csv():
     dummy_gz = Path("/dummy/file.gz")
     dummy_csv = Path("/dummy/file.csv")
 
-    expected_calls = "[call(mode='w'),\n " \
-                     "call().__enter__(),\n " \
-                     "call().write('top-left-square,top-middle-square,top-right-square,middle-left-square," \
-                     "middle-middle-square,middle-right-square,bottom-left-square,bottom-middle-square," \
-                     "bottom-right-square,Class'),\n " \
-                     "call().write('\\n'),\n " \
-                     "call().write('x,x,x,x,o,o,x,o,o,positive\\n'),\n " \
-                     "call().write('x,x,x,x,o,o,o,x,o,positive\\n'),\n " \
-                     "call().__exit__(None, None, None)]"
-
-    with mock.patch("pathlib.Path.open", mock_open(read_data="")) as mock_pathlib_path_open:
-        with mock.patch("gzip.open", mock_open(read_data=arff_data)) as mock_gzip_open:
+    with mock.patch("pathlib.Path.open",
+                    mock_open(read_data="")) as mock_pathlib_path_open:
+        with mock.patch("gzip.open",
+                        mock_open(read_data=arff_data)) as mock_gzip_open:
             _export_gz_data_to_csv(dummy_gz, dummy_csv, features)
-            mock_pathlib_path_open.assert_called_with(mode='w')
-            mock_gzip_open.assert_called_with(dummy_gz, mode='rt')
-            assert str(mock_pathlib_path_open.mock_calls) == expected_calls
+            mock_pathlib_path_open.assert_called_with(mode='w', encoding='utf8')
+            mock_gzip_open.assert_called_with(dummy_gz, mode='rt', encoding='utf8')
 
 
 def test__features_to_csv_format():
@@ -284,65 +286,75 @@ def test__features_to_csv_format():
     assert _features_to_csv_format(features) == expected_return_value
 
 
-@mock.patch("dirty_cat.datasets.fetching.fetch_openml_dataset")
-def test_import_all_datasets(mock_fetch_openml_dataset):
+@mock.patch('dirty_cat.datasets.fetching.fetch_openml_dataset')
+@mock.patch("dirty_cat.datasets.fetching.fetch_dataset_as_namedtuple")
+def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
+                             mock_fetch_openml_dataset):
     """Tests functions ``fetch_*()``."""
 
     from dirty_cat.datasets import fetching
 
-    expected_return_value = {
-        "description": "This is a dataset.",
-        "source": "https://www.openml.org/",
-        "path": Path("/path/to/file.csv"),
+    mock_fetch_openml_dataset.return_value = {
+        'description': 'This is a dataset.',
+        'source': 'https://www.openml.org/',
+        'path': Path("/path/to/file.csv"),
+        'read_csv_kwargs': {'a': 'b'},
     }
-    mock_fetch_openml_dataset.return_value = expected_return_value
 
-    returned_value = fetching.fetch_employee_salaries()
-    mock_fetch_openml_dataset.assert_called_once_with(
-        dataset_id=fetching.EMPLOYEE_SALARIES_ID)
-    assert expected_return_value == returned_value
+    expected_return_value_all = fetching.DatasetAll(
+        description="This is a dataset.",
+        source="https://www.openml.org/",
+        path=Path("/path/to/file.csv"),
+        X=pd.DataFrame([1, 2, 3, 4]),
+        y=pd.Series([5, ]),
+    )
 
-    mock_fetch_openml_dataset.reset_mock()
+    expected_return_value_info_only = fetching.DatasetInfoOnly(
+        description="This is a dataset.",
+        source="https://www.openml.org/",
+        path=Path("/path/to/file.csv"),
+        read_csv_kwargs={'a': 'b'},
+    )
 
-    returned_value = fetching.fetch_road_safety()
-    mock_fetch_openml_dataset.assert_called_once_with(
-        dataset_id=fetching.ROAD_SAFETY_ID)
-    assert expected_return_value == returned_value
+    for expected_return_value, load_dataframe in zip(
+        [expected_return_value_all, expected_return_value_info_only],
+        [True, False],
+    ):
+        mock_fetch_dataset_as_namedtuple.return_value = expected_return_value
 
-    mock_fetch_openml_dataset.reset_mock()
+        returned_value = fetching.fetch_employee_salaries(drop_linked=False,
+                                                          drop_irrelevant=False)
+        assert expected_return_value == returned_value
 
-    returned_value = fetching.fetch_medical_charge()
-    mock_fetch_openml_dataset.assert_called_once_with(
-        dataset_id=fetching.MEDICAL_CHARGE_ID)
-    assert expected_return_value == returned_value
+        mock_fetch_openml_dataset.reset_mock()
 
-    mock_fetch_openml_dataset.reset_mock()
+        returned_value = fetching.fetch_road_safety()
+        assert expected_return_value == returned_value
 
-    returned_value = fetching.fetch_midwest_survey()
-    mock_fetch_openml_dataset.assert_called_once_with(
-        dataset_id=fetching.MIDWEST_SURVEY_ID)
-    assert expected_return_value == returned_value
+        mock_fetch_openml_dataset.reset_mock()
 
-    mock_fetch_openml_dataset.reset_mock()
+        returned_value = fetching.fetch_medical_charge()
+        assert expected_return_value == returned_value
 
-    returned_value = fetching.fetch_open_payments()
-    mock_fetch_openml_dataset.assert_called_once_with(
-        dataset_id=fetching.OPEN_PAYMENTS_ID)
-    assert expected_return_value == returned_value
+        mock_fetch_openml_dataset.reset_mock()
 
-    mock_fetch_openml_dataset.reset_mock()
+        returned_value = fetching.fetch_midwest_survey()
+        assert expected_return_value == returned_value
 
-    returned_value = fetching.fetch_traffic_violations()
-    mock_fetch_openml_dataset.assert_called_once_with(
-        dataset_id=fetching.TRAFFIC_VIOLATIONS_ID)
-    assert expected_return_value == returned_value
+        mock_fetch_openml_dataset.reset_mock()
 
-    mock_fetch_openml_dataset.reset_mock()
+        returned_value = fetching.fetch_open_payments()
+        assert expected_return_value == returned_value
 
-    returned_value = fetching.fetch_drug_directory()
-    mock_fetch_openml_dataset.assert_called_once_with(
-        dataset_id=fetching.DRUG_DIRECTORY_ID)
-    assert expected_return_value == returned_value
+        mock_fetch_openml_dataset.reset_mock()
+
+        returned_value = fetching.fetch_traffic_violations()
+        assert expected_return_value == returned_value
+
+        mock_fetch_openml_dataset.reset_mock()
+
+        returned_value = fetching.fetch_drug_directory()
+        assert expected_return_value == returned_value
 
 
 if __name__ == "__main__":

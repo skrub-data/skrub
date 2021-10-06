@@ -11,12 +11,11 @@ with statistical learning.
 # -------------------------------------------------
 #
 # Let's look at a dataset called employee salaries:
-import pandas as pd
 from dirty_cat import datasets
 
-info = datasets.fetch_employee_salaries()
-print(info['description'])
-data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
+employee_salaries = datasets.fetch_employee_salaries()
+print(employee_salaries.description)
+data = employee_salaries.X
 print(data.head(n=5))
 
 #########################################################################
@@ -47,7 +46,10 @@ print(data['employee_position_title'].value_counts().sort_index())
 # To simplify understanding, we will focus on the column describing the
 # employee's position title:
 # data
-values = data[['employee_position_title', 'gender', 'current_annual_salary']]
+# values = data[['employee_position_title', 'gender']] + employee_salaries.y
+
+values = data[['employee_position_title', 'gender']]
+values.insert(0, 'current_annual_salary', employee_salaries.y)
 
 #########################################################################
 # String similarity between entries

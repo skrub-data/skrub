@@ -109,8 +109,9 @@ In this example, you will learn how to:
 # The data that the model will fit is the :code:`drug_directory` dataset.
 from dirty_cat.datasets import fetch_drug_directory
 
-info = fetch_drug_directory()
-print(info['description'])
+# We'll only gather the information, and not load the dataset in memory for now
+drug_directory = fetch_drug_directory(load_dataframe=False)
+print(drug_directory.description)
 
 ###############################################################################
 # .. topic:: Problem Setting
@@ -127,7 +128,14 @@ print(info['description'])
 # problem. You can have a glimpse of the values here:
 import pandas as pd
 
-df = pd.read_csv(info['path'], nrows=10, **info['read_csv_kwargs']).astype(str)
+df = pd.read_csv(
+    drug_directory.path,
+    quotechar="'",
+    escapechar='\\',
+    nrows=10,
+).astype(str)
+# A simpler syntax we could use:
+# df = pd.read_csv(drug_directory.path, **drug_directory.read_csv_kwargs, nrows=10).astype(str)
 print(df[['NONPROPRIETARYNAME', 'PRODUCTTYPENAME']].head())
 # This will be useful further down in the example.
 columns_names = df.columns
@@ -209,7 +217,7 @@ def get_X_y(**kwargs):
     transformation repeatedly in the code.
     """
     global label_encoder
-    df = pd.read_csv(info['path'], **info['read_csv_kwargs'], **kwargs)
+    df = pd.read_csv(drug_directory.path, **drug_directory.read_csv_kwargs, **kwargs)
     return preprocess(df, label_encoder)
 
 ###############################################################################
@@ -434,8 +442,8 @@ online_train_set_sizes = []
 t0 = time.perf_counter()
 
 iter_csv = pd.read_csv(
-    info['path'], nrows=online_train_set_size, chunksize=batchsize,
-    skiprows=1, names=columns_names, **info['read_csv_kwargs'])
+    drug_directory.path, nrows=online_train_set_size, chunksize=batchsize,
+    skiprows=1, names=columns_names, **drug_directory.read_csv_kwargs)
 
 for batch_no, batch in enumerate(iter_csv):
     X_batch, y_batch = preprocess(batch, label_encoder)

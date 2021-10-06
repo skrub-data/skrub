@@ -6,16 +6,20 @@ Scikit-Learn's ``fetch_openml()`` function.
 """
 
 
-# Author: Lilian Boulard <lilian@boulard.fr> || https://github.com/LilianBoulard
+# Author:
+# Lilian Boulard <lilian@boulard.fr>
+# https://github.com/LilianBoulard
 
 # Future notes:
-# - Watch out for ``fetch_openml()`` API modifications: as of january 2021, the function is marked as experimental.
+# - Watch out for ``fetch_openml()`` API modifications:
+# as of january 2021, the function is marked as experimental.
 
 
 import gzip
 import json
 import sklearn
 import warnings
+import pandas as pd
 
 from pathlib import Path
 from collections import namedtuple
@@ -26,6 +30,10 @@ from dirty_cat.datasets.utils import get_data_dir
 
 Details = namedtuple("Details", ["name", "file_id", "description"])
 Features = namedtuple("Features", ["names"])
+
+DatasetAll = namedtuple('Dataset', ('description', 'X', 'y', 'source', 'path'))
+DatasetInfoOnly = namedtuple('Dataset', ('description', 'source', 'path',
+                                         'read_csv_kwargs'))
 
 # Directory where the ``.gz`` files containing the
 # details on downloaded datasets are stored.
@@ -54,7 +62,8 @@ TRAFFIC_VIOLATIONS_ID = 42132
 DRUG_DIRECTORY_ID = 43044
 
 
-def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir()) -> dict:
+def fetch_openml_dataset(dataset_id: int,
+                         data_directory: Path = get_data_dir()) -> dict:
     """
     Gets a dataset from OpenML (https://www.openml.org),
     or from the disk if already downloaded.
@@ -72,23 +81,27 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
     dict
         A dictionary containing:
           - ``description``: str
-              The description of the dataset, as gathered from OpenML.
+              The description of the dataset,
+              as gathered from OpenML.
           - ``source``: str
               The dataset's URL from OpenML.
           - ``path``: pathlib.Path
-              The local path leading to the dataset, saved as a CSV file.
+              The local path leading to the dataset,
+              saved as a CSV file.
 
           The following values are added by the fetches below (fetch_*)
           - ``read_csv_kwargs``: Dict[str, Any]
-              A list of keyword arguments that can be passed to
+              A dict of keyword arguments that can be passed to
               `pandas.read_csv` for reading.
               Usually, it contains `quotechar`, `escapechar` and `na_values`.
-              See `pandas.read_csv`'s documentation for more information.
               Use by passing `**info['read_csv_kwargs']` to `read_csv`.
-          - ``y``: str
-              The name of the target column.
+              e.g., `df = pd.read_csv(info['path'], **info['read_csv_kwargs'])`
+          - ``target``: str
+              The name of `y`, the target column.
 
     """
+    # Make path absolute
+    data_directory = data_directory.resolve()
 
     # Construct the path to the gzip file containing the details on a dataset.
     details_gz_path = data_directory / DETAILS_DIRECTORY / f'{dataset_id}.gz'
@@ -100,9 +113,9 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
         warnings.warn(
             f"Could not find the dataset {dataset_id} locally. "
             "Downloading it from OpenML; this might take a while... "
-            "If the process is interrupted, files will be invalid/incomplete. "
-            "To fix this problem, delete the CSV file if it exists. "
-            "The system will recreate it on the next run."
+            "If it is interrupted, some files might be invalid/incomplete: "
+            "if on the following run, the fetching raises errors, you can try "
+            f"fixing this issue by deleting the directory {data_directory!r}."
         )
         _download_and_write_openml_dataset(dataset_id=dataset_id,
                                            data_directory=data_directory)
@@ -136,9 +149,11 @@ def fetch_openml_dataset(dataset_id: int, data_directory: Path = get_data_dir())
     }
 
 
-def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
+def _download_and_write_openml_dataset(dataset_id: int,
+                                       data_directory: Path) -> None:
     """
-    Downloads a dataset from OpenML, taking care of creating the directories.
+    Downloads a dataset from OpenML,
+    taking care of creating the directories.
 
     Parameters
     ----------
@@ -168,12 +183,17 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) ->
     #
     # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
     # and ``urllib.error.URLError`` if there is no Internet connection.
-    fetch_openml(data_id=dataset_id, data_home=str(data_directory), **fetch_kwargs)
+    fetch_openml(
+        data_id=dataset_id,
+        data_home=str(data_directory),
+        **fetch_kwargs
+    )
 
 
 def _read_json_from_gz(compressed_dir_path: Path) -> dict:
     """
-    Opens a gzip file, reads its content (JSON expected), and returns a dictionary.
+    Opens a gzip file, reads its content (JSON expected),
+    and returns a dictionary.
 
     Parameters
     ----------
@@ -183,7 +203,8 @@ def _read_json_from_gz(compressed_dir_path: Path) -> dict:
     Returns
     -------
     dict
-        The information contained in the file, converted from plain-text JSON.
+        The information contained in the file,
+        converted from plain-text JSON.
 
     """
     if not compressed_dir_path.is_file():
@@ -250,9 +271,11 @@ def _get_features(compressed_dir_path: Path) -> Features:
     return Features(*features.values())
 
 
-def _export_gz_data_to_csv(compressed_dir_path: Path, destination_file: Path, features: Features) -> None:
+def _export_gz_data_to_csv(compressed_dir_path: Path,
+                           destination_file: Path, features: Features) -> None:
     """
-    Reads a gzip file containing ARFF data, and writes it to a target CSV.
+    Reads a gzip file containing ARFF data,
+    and writes it to a target CSV.
 
     Parameters
     ----------
@@ -265,8 +288,8 @@ def _export_gz_data_to_csv(compressed_dir_path: Path, destination_file: Path, fe
 
     """
     atdata_found = False
-    with destination_file.open(mode="w") as csv:
-        with gzip.open(compressed_dir_path, mode="rt") as gz:
+    with destination_file.open(mode="w", encoding='utf8') as csv:
+        with gzip.open(compressed_dir_path, mode="rt", encoding='utf8') as gz:
             csv.write(_features_to_csv_format(features))
             csv.write("\n")
             # We will look at each line of the file until we find
@@ -283,98 +306,206 @@ def _features_to_csv_format(features: Features) -> str:
     return ",".join(features.names)
 
 
+def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
+                                read_csv_kwargs: dict,
+                                load_dataframe: bool) -> namedtuple:
+    """
+    Takes a dataset identifier, a target column name,
+    and some additional keyword arguments for `pd.read_csv`.
+
+    Returns a `collections.namedtuple` containing :
+    - ``description``: str
+        The description of the dataset, as gathered from OpenML.
+    - ``source``: str
+        The dataset's URL from OpenML.
+    - ``path``: pathlib.Path
+        The local path leading to the dataset,
+        saved as a CSV file.
+
+    If `load_dataframe` is True, the dataset is read and stored in memory,
+    and these fields are added:
+    - ``X``: pd.DataFrame
+        The dataset, as a pandas DataFrame.
+    - ``y``: pd.Series
+        The target column, as a pandas Series.
+    - ``read_csv_kwargs``: dict
+        A dictionary of keyword arguments that can be passed to
+        `pandas.read_csv`.
+
+    If you don't need the dataset to be loaded in memory,
+    pass `load_dataframe=False`.
+
+    """
+    info = fetch_openml_dataset(dataset_id)
+    if load_dataframe:
+        df = pd.read_csv(info['path'], **read_csv_kwargs)
+        y = df[target]
+        X = df.drop(target, axis='columns')
+        dataset = DatasetAll(
+            description=info['description'],
+            X=X,
+            y=y,
+            source=info['source'],
+            path=info['path'],
+        )
+    else:
+        dataset = DatasetInfoOnly(
+            description=info['description'],
+            source=info['source'],
+            path=info['path'],
+            read_csv_kwargs=read_csv_kwargs,
+        )
+
+    return dataset
+
+
 # Datasets fetchers section
 # Public API
 
 
-def fetch_employee_salaries() -> dict:
-    """Fetches the employee_salaries dataset."""
-    info = fetch_openml_dataset(dataset_id=EMPLOYEE_SALARIES_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_employee_salaries(load_dataframe: bool = True,
+                            drop_linked: bool = True,
+                            drop_irrelevant: bool = True) -> namedtuple:
+    """Fetches the employee_salaries dataset.
+
+    Parameters
+    ----------
+    drop_linked: bool (default True)
+        Drops columns "2016_gross_pay_received" and "2016_overtime_pay",
+        which are closely linked to "current_annual_salary", the target.
+
+    drop_irrelevant: bool (default True)
+        Drops column "full_name", which is usually irrelevant to the
+        statistical analysis.
+
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    """
+    dataset = fetch_dataset_as_namedtuple(
+        dataset_id=EMPLOYEE_SALARIES_ID,
+        target='current_annual_salary',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'y': 'current_annual_salary',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
+    if load_dataframe:
+        if drop_linked:
+            dataset.X.drop(["2016_gross_pay_received", "2016_overtime_pay"],
+                           axis=1, inplace=True)
+        if drop_irrelevant:
+            dataset.X.drop(["full_name"], axis=1, inplace=True)
+
+    return dataset
 
 
-def fetch_road_safety() -> dict:
-    """Fetches the road safety dataset."""
-    info = fetch_openml_dataset(dataset_id=ROAD_SAFETY_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_road_safety(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the road safety dataset.
+
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=ROAD_SAFETY_ID,
+        target='Sex_of_Driver',
+        read_csv_kwargs={
             'na_values': ['?'],
         },
-        'y': 'Sex_of_Driver',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_medical_charge() -> dict:
-    """Fetches the medical charge dataset."""
-    info = fetch_openml_dataset(dataset_id=MEDICAL_CHARGE_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_medical_charge(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the medical charge dataset.
+
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=MEDICAL_CHARGE_ID,
+        target='Average_Total_Payments',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
         },
-        'y': 'Average_Total_Payments',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_midwest_survey() -> dict:
-    """Fetches the midwest survey dataset."""
-    info = fetch_openml_dataset(dataset_id=MIDWEST_SURVEY_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_midwest_survey(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the midwest survey dataset.
+
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=MIDWEST_SURVEY_ID,
+        target='Census_Region',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
         },
-        'y': 'Census_Region',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_open_payments() -> dict:
-    """Fetches the open payments dataset."""
-    info = fetch_openml_dataset(dataset_id=OPEN_PAYMENTS_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_open_payments(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the open payments dataset.
+
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=OPEN_PAYMENTS_ID,
+        target='status',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'y': 'status',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_traffic_violations() -> dict:
-    """Fetches the traffic violations dataset."""
-    info = fetch_openml_dataset(dataset_id=TRAFFIC_VIOLATIONS_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_traffic_violations(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the traffic violations dataset.
+
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=TRAFFIC_VIOLATIONS_ID,
+        target='violation_type',
+        read_csv_kwargs={
             'quotechar': "'",
             'escapechar': '\\',
             'na_values': ['?'],
         },
-        'y': 'violation_type',
-
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
 
 
-def fetch_drug_directory() -> dict:
-    """Fetches the drug directory dataset."""
-    info = fetch_openml_dataset(dataset_id=DRUG_DIRECTORY_ID)
-    info.update({
-        'read_csv_kwargs': {
+def fetch_drug_directory(load_dataframe: bool = True) -> namedtuple:
+    """Fetches the drug directory dataset.
+
+    See Also
+    --------
+    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    """
+    return fetch_dataset_as_namedtuple(
+        dataset_id=DRUG_DIRECTORY_ID,
+        target='PRODUCTTYPENAME',
+        read_csv_kwargs={
             'quotechar': "'",
+            'escapechar': '\\',
         },
-        'y': 'PRODUCTTYPENAME',
-    })
-    return info
+        load_dataframe=load_dataframe,
+    )
