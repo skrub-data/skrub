@@ -8,7 +8,7 @@ either chosen as the most frequent categories, or with kmeans clustering.
 
 Note that the :class:`GapEncoder` naturally does data reduction and comes
 with online estimation. As a result is it more scalable than the
-SimilarityEncoder, and should be prefered in large-scale settings.
+SimilarityEncoder, and should be preferred in large-scale settings.
 
 """
 # Avoid the warning in scikit-learn's LogisticRegression for the change
@@ -16,9 +16,9 @@ SimilarityEncoder, and should be prefered in large-scale settings.
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-################################################################################
+###############################################################################
 # A tool to report memory usage and run time
-# -------------------------------------------
+# ------------------------------------------
 #
 # For this example, we build a small tool that reports memory
 # usage and compute time of a function
@@ -46,37 +46,56 @@ def resource_used(func):
     return wrapped_func
 
 
-################################################################################
+###############################################################################
 # Data Importing and preprocessing
 # --------------------------------
 #
-# We first download the dataset:
-from dirty_cat.datasets import fetch_traffic_violations
-
-data = fetch_traffic_violations()
-print(data['description'])
-
-################################################################################
-# Then we load it:
+# We first get the dataset:
 import pandas as pd
+from dirty_cat.datasets import fetch_open_payments
 
-# Limit to 50 000 rows, for a faster example
-df = pd.read_csv(data['path'], nrows=50000)
+open_payments = fetch_open_payments()
+print(open_payments.description)
+
+df = open_payments.X
+
+na_mask: pd.DataFrame = df.isna()
 df = df.dropna(axis=0)
 df = df.reset_index()
-################################################################################
-# We will use SimilarityEncoder on the 'description' column. One
-# difficulty is that it has many different entries.
-print(df['Description'].nunique())
 
-################################################################################
-print(df['Description'].value_counts()[:20])
+from functools import reduce
 
-################################################################################
+y = open_payments.y
+# Combine boolean masks
+na_mask = reduce(lambda acc, col: acc | na_mask[col],
+                 na_mask.columns, na_mask[na_mask.columns[0]])
+# Drop the lines that contained missing values in X
+y = y[~na_mask]
+y.reset_index()
+
+clean_columns = [
+    'Applicable_Manufacturer_or_Applicable_GPO_Making_Payment_Name',
+    'Dispute_Status_for_Publication',
+    'Physician_Specialty',
+]
+dirty_columns = [
+    'Name_of_Associated_Covered_Device_or_Medical_Supply1',
+    'Name_of_Associated_Covered_Drug_or_Biological1',
+]
+
+###############################################################################
+# We will use SimilarityEncoder on the the two dirty columns defined above.
+# One difficulty is that they have many different entries.
+print(df[dirty_columns].nunique())
+
+###############################################################################
+print(df[dirty_columns].value_counts()[:20])
+
+###############################################################################
 # As we will see, SimilarityEncoder takes a while on such data.
 
 
-################################################################################
+###############################################################################
 # SimilarityEncoder with default options
 # --------------------------------------
 #
@@ -88,25 +107,12 @@ from dirty_cat import SimilarityEncoder
 
 sim_enc = SimilarityEncoder(similarity='ngram')
 
-y = df['Violation Type']
-
-# clean columns
-transformers = [('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'),
-                 ['Alcohol',
-                  'Arrest Type',
-                  'Belts',
-                  'Commercial License',
-                  'Commercial Vehicle',
-                  'Fatal',
-                  'HAZMAT',
-                  'Property Damage',
-                  'Work Zone']),
-                ('pass', 'passthrough', ['Year']),
-                ]
+transformers = [
+    ('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'), clean_columns),
+]
 
 column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, dirty_columns)],
     remainder='drop')
 
 t0 = time()
@@ -114,7 +120,7 @@ X = column_trans.fit_transform(df)
 t1 = time()
 print('Time to vectorize: %s' % (t1 - t0))
 
-################################################################################
+###############################################################################
 # We can run a cross-validation
 from sklearn import linear_model, pipeline, model_selection
 
@@ -122,19 +128,19 @@ from sklearn import linear_model, pipeline, model_selection
 log_reg = linear_model.LogisticRegression(max_iter=10000)
 
 model = pipeline.make_pipeline(column_trans, log_reg)
-results = resource_used(model_selection.cross_validate)(model, df, y, )
+results = resource_used(model_selection.cross_validate)(model, df, y)
 print("Cross-validation score: %s" % results['test_score'])
 
-################################################################################
+###############################################################################
 # Store results for later
 scores = dict()
 scores['Default options'] = results['test_score']
 times = dict()
 times['Default options'] = results['fit_time']
 
-################################################################################
+###############################################################################
 # Most frequent strategy to define prototypes
-# ---------------------------------------------
+# -------------------------------------------
 #
 # The most frequent strategy selects the n most frequent values in a dirty
 # categorical variable to reduce the dimensionality of the problem and thus
@@ -143,24 +149,23 @@ sim_enc = SimilarityEncoder(similarity='ngram', categories='most_frequent',
                             n_prototypes=100)
 
 column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, dirty_columns)],
     remainder='drop')
 
-################################################################################
+###############################################################################
 # Check now that prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
 print("Cross-validation score: %s" % results['test_score'])
 
-################################################################################
+###############################################################################
 # Store results for later
 scores['Most frequent'] = results['test_score']
 times['Most frequent'] = results['fit_time']
 
-################################################################################
+###############################################################################
 # KMeans strategy to define prototypes
-# ---------------------------------------
+# ------------------------------------
 #
 # K-means strategy is also a dimensionality reduction technique.
 # SimilarityEncoder can apply a K-means and nearest neighbors algorithm
@@ -169,24 +174,23 @@ sim_enc = SimilarityEncoder(similarity='ngram', categories='k-means',
                             n_prototypes=100)
 
 column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+    transformers=transformers + [('sim_enc', sim_enc, dirty_columns)],
     remainder='drop')
 
-################################################################################
+###############################################################################
 # Check now that prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, df, y)
 print("Cross-validation score: %s" % results['test_score'])
 
-################################################################################
+###############################################################################
 # Store results for later
 scores['KMeans'] = results['test_score']
 times['KMeans'] = results['fit_time']
 
-################################################################################
+###############################################################################
 # Plot a summary figure
-# ----------------------
+# ---------------------
 import seaborn
 import matplotlib.pyplot as plt
 
@@ -199,49 +203,3 @@ seaborn.boxplot(data=pd.DataFrame(times), orient='h', ax=ax2)
 ax2.set_xlabel('Computation time', size=16)
 [t.set(size=16) for t in ax2.get_yticklabels()]
 plt.tight_layout()
-
-################################################################################
-# Reduce memory usage during encoding using float32
-# ----------------------------------------------------------------
-#
-# We use a float32 dtype in this example to show some speed and memory gains.
-# The use of the scikit-learn model may upcast to float64 (depending on the used
-# algorithm). The memory savings will then happen during the encoding.
-import numpy as np
-
-sim_enc = SimilarityEncoder(similarity='ngram', dtype=np.float32,
-                            categories='most_frequent', n_prototypes=100)
-
-y = df['Violation Type']
-# cast the year column to float32
-df['Year'] = df['Year'].astype(np.float32)
-# clean columns
-transformers = [('one_hot', OneHotEncoder(sparse=False, dtype=np.float32,
-                                          handle_unknown='ignore'),
-                 ['Alcohol',
-                  'Arrest Type',
-                  'Belts',
-                  'Commercial License',
-                  'Commercial Vehicle',
-                  'Fatal',
-                  'HAZMAT',
-                  'Property Damage',
-                  'Work Zone']),
-                ('pass', 'passthrough', ['Year']),
-                ]
-
-column_trans = ColumnTransformer(
-    # adding the dirty column
-    transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
-    remainder='drop')
-
-t0 = time()
-X = column_trans.fit_transform(df)
-t1 = time()
-print('Time to vectorize: %s' % (t1 - t0))
-
-################################################################################
-# We can run a cross-validation to confirm the memory footprint reduction
-model = pipeline.make_pipeline(column_trans, log_reg)
-results = resource_used(model_selection.cross_validate)(model, df, y, )
-print("Cross-validation score: %s" % results['test_score'])

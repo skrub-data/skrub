@@ -35,24 +35,15 @@ We demonstrate it on the `employee salaries` dataset.
 from dirty_cat.gap_encoder import GapEncoder
 from dirty_cat.datasets import fetch_employee_salaries
 employee_salaries = fetch_employee_salaries()
-print(employee_salaries['DESCR'])
+print(employee_salaries.description)
 
 ###############################################################################
 
-X = employee_salaries['data']
-y = employee_salaries['target']
-# We'll drop a few columns we don't want
-X.drop(
-    [
-        'Current Annual Salary',  # Too linked with target
-        'full_name',  # Not relevant to the analysis
-        '2016_gross_pay_received',  # Too linked with target
-        '2016_overtime_pay',  # Too linked with target
-        'date_first_hired'  # Redundant with "year_first_hired"
-    ],
-    axis=1,
-    inplace=True
-)
+X = employee_salaries.X
+y = employee_salaries.y
+# We'll drop the column "date first hired" as
+# it is redundant with "year first hired"
+X.drop(['date_first_hired'], axis=1, inplace=True)
 
 ###############################################################################
 # The data are in a fairly complex and heterogeneous dataframe:
@@ -94,7 +85,7 @@ from sklearn.model_selection import cross_val_score
 scores = cross_val_score(pipeline, X, y, scoring='r2')
 
 import numpy as np
-print(f'{scores=}')
+print(f'scores={scores}')
 print(f'mean={np.mean(scores)}')
 print(f'std={np.std(scores)}')
 
