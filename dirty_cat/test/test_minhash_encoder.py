@@ -71,8 +71,7 @@ def profile_encoder(encoder, hashing='fast', minmax_hash=False):
     df = employee_salaries.X
     X = df[["employee_position_title"]]
     t0 = time.time()
-    enc = encoder(n_components=50, hashing=hashing,
-                        minmax_hash=minmax_hash)
+    enc = encoder(n_components=50, hashing=hashing, minmax_hash=minmax_hash)
     enc.fit(X)
     y = enc.transform(X)
     assert y.shape == (len(X), 50)
