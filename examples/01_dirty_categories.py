@@ -2,16 +2,20 @@
 ==============================================================
 Dirty categories: machine learning with non normalized strings
 ==============================================================
+
 Including strings that represent categories often calls for much data
 preparation. In particular categories may appear with many morphological
 variants, when they have been manually input, or assembled from diverse
 sources.
+
 Including such a column in a learning pipeline as a standard categorical
 column leads to categories with very high cardinalities and can loose
 information on which categories are similar.
 Here we look at a dataset on wages [#]_ where the column *Employee
 Position Title* contains dirty categories.
+
 .. [#] https://catalog.data.gov/dataset/employee-salaries-2016
+
 We investigate encodings to include this dirty column in the machine learning
 workflow, and predict the *current annual salary*, using gradient boosted
 trees. For this purpose, we use the dirty-cat
