@@ -18,8 +18,7 @@ Position Title* contains dirty categories.
 
 We investigate encodings to include this dirty column in the machine learning
 workflow, and predict the *current annual salary*, using gradient boosted
-trees. For this purpose, we use the dirty-cat
-library (https://dirty-cat.github.io).
+trees.
 
 
  .. |SV| replace::
@@ -241,10 +240,7 @@ X
 # such as gradient boosted trees, gives **a machine-learning method that
 # can be readily applied to the dataframe**.
 
-# The SuperVectorizer requires dirty_cat 0.2.0a1. If you have an older
-# version, you can install this alpha release with
-#
-#   pip install -pre dirty_cat==0.2.0a1
+# The SuperVectorizer requires at least dirty_cat 0.2.0. 
 #
 
 from dirty_cat import SuperVectorizer
