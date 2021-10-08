@@ -28,6 +28,12 @@ Notes
 * Removed hard-coded CSV file `dirty_cat/data/FiveThirtyEight_Midwest_Survey.csv`.
 
 
+* Improvements to the SuperVectorizer
+
+  - Missing values are not systematically imputed anymore
+  - Type casting and per-column imputation are now learnt during fitting
+  - Several bugfixes
+
 Release 0.2.0a1
 ===============
 
