@@ -10,7 +10,7 @@ from dirty_cat import MinHashEncoder
 
 def test_MinHashEncoder(n_sample=70, minmax_hash=False):
     X_txt = fetch_20newsgroups(subset='train')['data']
-    X = X_txt[:n_sample]
+    X = np.array(X_txt[:n_sample])[:,None]
 
     for minmax_hash in [True, False]:
         for hashing in ['fast', 'murmur']:
@@ -33,7 +33,8 @@ def test_MinHashEncoder(n_sample=70, minmax_hash=False):
 
             # Test min property
             if not minmax_hash:
-                X_substring = [x[:x.find(' ')] for x in X]
+                X_substring = [x[:x.find(' ')] for x in X[:,0]]
+                X_substring = np.array(X_substring)[:,None]
                 encoder = MinHashEncoder(50, hashing=hashing)
                 encoder.fit(X_substring)
                 y_substring = encoder.transform(X_substring)
@@ -41,11 +42,11 @@ def test_MinHashEncoder(n_sample=70, minmax_hash=False):
 
 def test_input_type():
     # Numpy array
-    X = np.array(['alice', 'bob'])
+    X = np.array(['alice', 'bob'])[:,None]
     enc = MinHashEncoder(n_components=2)
     enc.fit_transform(X)
     # List
-    X = ['alice', 'bob']
+    X = [['alice'], ['bob']]
     enc = MinHashEncoder(n_components=2)
     enc.fit_transform(X)
 
@@ -62,30 +63,26 @@ def test_get_unique_ngrams():
     assert ngrams == true_ngrams
 
 
-def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
+def profile_encoder(encoder, hashing='fast', minmax_hash=False):
     # not an unit test
 
     from dirty_cat.datasets import fetch_employee_salaries
-    info = fetch_employee_salaries()
-    data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
-    X = np.array(data['employee_position_title'])[:, None]
-    X = data['employee_position_title'].tolist()
-    X = X * 10
+    employee_salaries = fetch_employee_salaries()
+    df = employee_salaries.X
+    X = df[["employee_position_title"]]
     t0 = time.time()
-    encoder = Encoder(n_components=50, hashing=hashing,
-                      minmax_hash=minmax_hash)
-    encoder.fit(X)
-    y = encoder.transform(X)
+    enc = encoder(n_components=50, hashing=hashing, minmax_hash=minmax_hash)
+    enc.fit(X)
+    y = enc.transform(X)
     assert y.shape == (len(X), 50)
     eta = time.time() - t0
     return eta
 
 
 @pytest.mark.parametrize("input_type, missing, hashing", [
-    ['list', '', 'fast'],
     ['numpy', 'error', 'fast'],
-    ['pandas', '', 'murmur'],
-    ['numpy', '', 'fast']])
+    ['pandas', 'zero_impute', 'murmur'],
+    ['numpy', 'zero_impute', 'fast']])
 def test_missing_values(input_type, missing, hashing):
     X = ['Red',
          np.nan,
@@ -99,7 +96,7 @@ def test_missing_values(input_type, missing, hashing):
     z = np.zeros(n)
 
     if input_type == 'numpy':
-        X = np.array(X, dtype=object)
+        X = np.array(X, dtype=object)[:,None]
     elif input_type == 'pandas':
         pd = pytest.importorskip("pandas")
         X = pd.DataFrame(X)
@@ -112,7 +109,7 @@ def test_missing_values(input_type, missing, hashing):
             with pytest.raises(ValueError, match=r"missing"
                                " values in input"):
                 encoder.transform(X)
-    elif missing == '':
+    elif missing == 'zero_impute':
         encoder.fit(X)
         y = encoder.transform(X)
         if input_type == 'list':
@@ -122,7 +119,7 @@ def test_missing_values(input_type, missing, hashing):
             assert np.array_equal(y[-1], z)
     else:
         with pytest.raises(ValueError, match=r"handle_missing"
-                           " should be either 'error' or ''"):
+                           " should be either 'error' or 'zero_impute'"):
             encoder.fit_transform(X)
     return
 
@@ -137,6 +134,7 @@ def test_cache_overflow():
     encoder = MinHashEncoder(n_components=3)
     capacity = encoder._capacity
     raw_data = [get_random_string(10) for x in range(capacity + 1)]
+    raw_data = np.array(raw_data)[:,None]
     y = encoder.fit_transform(raw_data)
 
     assert len(y[y == -1.0]) == 0

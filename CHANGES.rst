@@ -22,6 +22,13 @@ Major changes
     for more information.
   - The example notebooks were updated to reflect these changes.
 
+* **Backward incompatible change to MinHashEncoder**: The MinHashEncoder now
+  only supports two dimensional inputs of shape (N_samples, 1).
+
+* Update `handle_missing` parameters:
+  - **GapEncoder**: the default value "zero_impute" becomes "empty_impute" (see doc).
+  - **MinHashEncoder**: the default value "" becomes "zero_impute" (see doc).
+
 Notes
 -----
 

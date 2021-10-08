@@ -515,13 +515,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     max_iter_e_step : int, default=20
         Maximum number of iterations to adjust the activations h at each step.
 
-    handle_missing : 'error' or '' (default)
-        Whether to raise an error or impute with blank string '' if missing
+    handle_missing : 'error' or 'empty_impute' (default)
+        Whether to raise an error or impute with empty string '' if missing
         values (NaN) are present during fit (default is to impute).
-        When this parameter is set to '', and a missing value is encountered
-        during fit_transform, the resulting encoded columns for this feature
-        will be all zeros. In the inverse transform, the missing category
-        will be denoted as None.
+        In the inverse transform, the missing category will be denoted as None.
 
 
     Attributes
