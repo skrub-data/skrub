@@ -2,6 +2,7 @@ import time
 import random
 from string import ascii_lowercase
 import numpy as np
+import pandas as pd
 import pytest
 
 from sklearn.datasets import fetch_20newsgroups
