@@ -66,27 +66,21 @@ class SuperVectorizer(ColumnTransformer):
         the parameters `low_card_str_transformer`/`low_card_cat_transformer` and
         `high_card_str_transformer`/`high_card_cat_transformer` respectively.
 
-    low_card_str_transformer: Transformer or str or None, default=OneHotEncoder()
-        Transformer used on features with low cardinality (threshold is
-        defined by `cardinality_threshold`).
+    low_card_cat_transformer: Transformer or str or None, default=OneHotEncoder()
+        Transformer used on categorical/string features with low cardinality
+        (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    high_card_str_transformer: Transformer or str or None, default=GapEncoder(n_components=30)
-        Transformer used on features with high cardinality (threshold is
-        defined by `cardinality_threshold`).
+    high_card_cat_transformer: Transformer or str or None, default=GapEncoder(n_components=30)
+        Transformer used on categorical/string features with high cardinality
+        (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
-
-    low_card_cat_transformer: Transformer or str or None, default=OneHotEncoder()
-        Same as `low_card_str_transformer`.
-
-    high_card_cat_transformer: Transformer or str or None, default=GapEncoder(n_components=30)
-        Same as `high_card_str_transformer`.
 
     numerical_transformer: Transformer or str or None, default=None
         Transformer used on numerical features.
@@ -145,8 +139,6 @@ class SuperVectorizer(ColumnTransformer):
 
     def __init__(self, *,
                  cardinality_threshold: int = 40,
-                 low_card_str_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
-                 high_card_str_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(n_components=30),
                  low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
                  high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(n_components=30),
                  numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
@@ -163,8 +155,6 @@ class SuperVectorizer(ColumnTransformer):
         super().__init__(transformers=[])
 
         self.cardinality_threshold = cardinality_threshold
-        self.low_card_str_transformer = low_card_str_transformer
-        self.high_card_str_transformer = high_card_str_transformer
         self.low_card_cat_transformer = low_card_cat_transformer
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
@@ -313,19 +303,10 @@ class SuperVectorizer(ColumnTransformer):
 
         # Select columns by dtype
         numeric_columns = X.select_dtypes(include=['int', 'float']).columns.to_list()
-        string_columns = X.select_dtypes(include=['string', 'object']).columns.to_list()
-        categorical_columns = X.select_dtypes(include='category').columns.to_list()
+        categorical_columns = X.select_dtypes(include=['string', 'object', 'category']).columns.to_list()
         datetime_columns = X.select_dtypes(include='datetime').columns.to_list()
 
-        # Divide string and categorical columns by cardinality
-        low_card_str_columns = [
-            col for col in string_columns
-            if X[col].nunique() < self.cardinality_threshold
-        ]
-        high_card_str_columns = [
-            col for col in string_columns
-            if X[col].nunique() >= self.cardinality_threshold
-        ]
+        # Divide categorical columns by cardinality
         low_card_cat_columns = [
             col for col in categorical_columns
             if X[col].nunique() < self.cardinality_threshold
@@ -340,8 +321,6 @@ class SuperVectorizer(ColumnTransformer):
         all_transformers = [
             ('numeric', self.numerical_transformer, numeric_columns),
             ('datetime', self.datetime_transformer, datetime_columns),
-            ('low_card_str', self.low_card_str_transformer, low_card_str_columns),
-            ('high_card_str', self.high_card_str_transformer, high_card_str_columns),
             ('low_card_cat', self.low_card_cat_transformer, low_card_cat_columns),
             ('high_card_cat', self.high_card_cat_transformer, high_card_cat_columns),
         ]

@@ -68,7 +68,6 @@ def _test_possibilities(
     vectorizer_base = SuperVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
-        high_card_str_transformer=GapEncoder(n_components=2),
         high_card_cat_transformer=GapEncoder(n_components=2),
         numerical_transformer=StandardScaler(),
     )
@@ -95,7 +94,6 @@ def _test_possibilities(
     vectorizer_cast = SuperVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
-        high_card_str_transformer=GapEncoder(n_components=2),
         high_card_cat_transformer=GapEncoder(n_components=2),
         numerical_transformer=StandardScaler(),
     )
@@ -117,32 +115,29 @@ def test_with_clean_data():
     # Define the transformers we'll use throughout the test.
     expected_transformers_df = {
         'numeric': ['int', 'float'],
-        'low_card_str': ['str1'],
-        'high_card_str': ['str2'],
-        'low_card_cat': ['cat1'],
-        'high_card_cat': ['cat2'],
+        'low_card_cat': ['str1', 'cat1'],
+        'high_card_cat': ['str2', 'cat2'],
     }
     expected_transformers_2 = {
-        'low_card_str': ['str1', 'str2'],
-        'low_card_cat': ['cat1', 'cat2'],
+        'low_card_cat': ['str1', 'str2', 'cat1', 'cat2'],
     }
     expected_transformers_np_no_cast = {
-        'low_card_str': [2, 4],
-        'high_card_str': [3, 5],
+        'low_card_cat': [2, 4],
+        'high_card_cat': [3, 5],
         'numeric': [0, 1]
     }
     expected_transformers_series = {
         'low_card_cat': ['cat1'],
     }
     expected_transformers_plain = {
-        'high_card_str': ['str2', 'cat2'],
-        'low_card_str': ['str1', 'cat1'],
+        'high_card_cat': ['str2', 'cat2'],
+        'low_card_cat': ['str1', 'cat1'],
         'numeric': ['int', 'float']
     }
     expected_transformers_np_cast = {
         'numeric': [0, 1],
-        'low_card_str': [2, 4],
-        'high_card_str': [3, 5],
+        'low_card_cat': [2, 4],
+        'high_card_cat': [3, 5],
     }
     _test_possibilities(
         X,
@@ -164,29 +159,29 @@ def test_with_dirty_data():
     # Define the transformers we'll use throughout the test.
     expected_transformers_df = {
         'numeric': ['int', 'float'],
-        'low_card_str': ['str1', 'cat1'],
-        'high_card_str': ['str2', 'cat2'],
+        'low_card_cat': ['str1', 'cat1'],
+        'high_card_cat': ['str2', 'cat2'],
     }
     expected_transformers_2 = {
-        'low_card_str': ['str1', 'str2', 'cat1', 'cat2'],
+        'low_card_cat': ['str1', 'str2', 'cat1', 'cat2'],
     }
     expected_transformers_np_no_cast = {
-        'low_card_str': [2, 4],
-        'high_card_str': [3, 5],
+        'low_card_cat': [2, 4],
+        'high_card_cat': [3, 5],
         'numeric': [0, 1],
     }
     expected_transformers_series = {
-        'low_card_str': ['cat1'],
+        'low_card_cat': ['cat1'],
     }
     expected_transformers_plain = {
-        'high_card_str': ['str2', 'cat2'],
-        'low_card_str': ['str1', 'cat1'],
+        'high_card_cat': ['str2', 'cat2'],
+        'low_card_cat': ['str1', 'cat1'],
         'numeric': ['int', 'float']
     }
     expected_transformers_np_cast = {
         'numeric': [0, 1],
-        'low_card_str': [2, 4],
-        'high_card_str': [3, 5],
+        'low_card_cat': [2, 4],
+        'high_card_cat': [3, 5],
     }
     _test_possibilities(
         X,
