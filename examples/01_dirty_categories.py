@@ -200,7 +200,7 @@ plt.tight_layout()
 # data than MinHashEncoder and GapEncoder. The most scalable encoder is
 # the MinHashEncoder. GapEncoder, on the other hand, has the benefit that
 # it provides interpretable features
-# (see :ref:`sphx_glr_auto_examples_04_feature_interpretation_gap_encoder.py`)
+# (see :ref:`sphx_glr_auto_examples_03_feature_interpretation_gap_encoder.py`)
 #
 # |
 #
