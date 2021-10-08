@@ -252,6 +252,32 @@ def test_transform():
     assert (x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
 
 
+def fit_transform_equiv():
+    """
+    We will test the equivalence between using `.fit_transform(X)`
+    and `.fit(X).transform(X).`
+    """
+    X1 = _get_clean_dataframe()
+    X2 = _get_dirty_dataframe()
+
+    sup_vec1 = SuperVectorizer()
+    sup_vec2 = SuperVectorizer()
+    sup_vec3 = SuperVectorizer()
+    sup_vec4 = SuperVectorizer()
+
+    enc1_x1 = sup_vec1.fit_transform(X1)
+    enc2_x1 = sup_vec2.fit(X1).transform(X1)
+
+    enc1_x2 = sup_vec3.fit_transform(X2)
+    enc2_x2 = sup_vec4.fit(X2).transform(X2)
+
+    assert enc1_x1 == enc2_x1
+    assert sup_vec1 == sup_vec2
+
+    assert enc1_x2 == enc2_x2
+    assert sup_vec3 == sup_vec4
+
+
 if __name__ == '__main__':
     print('start test_super_vectorizer with clean df')
     test_with_clean_data()
@@ -265,5 +291,8 @@ if __name__ == '__main__':
     print('start test_fit')
     test_fit()
     print('test_fit passed')
+    print('start fit_transform_equiv')
+    fit_transform_equiv()
+    print('fit_transform_equiv passed')
 
     print('Done')
