@@ -63,20 +63,18 @@ def test_get_unique_ngrams():
     assert ngrams == true_ngrams
 
 
-def profile_encoder(Encoder, hashing='fast', minmax_hash=False):
+def profile_encoder(encoder, hashing='fast', minmax_hash=False):
     # not an unit test
 
-    from dirty_cat import datasets
-    import pandas as pd
-    employee_salaries = datasets.fetch_employee_salaries()
-    data = employee_salaries['data']
-    X = data['employee_position_title'].tolist() * 10
-    X = np.array(X)[:,None]
+    from dirty_cat.datasets import fetch_employee_salaries
+    employee_salaries = fetch_employee_salaries()
+    df = employee_salaries.X
+    X = df[["employee_position_title"]]
     t0 = time.time()
-    encoder = Encoder(n_components=50, hashing=hashing,
-                      minmax_hash=minmax_hash)
-    encoder.fit(X)
-    y = encoder.transform(X)
+    enc = encoder(n_components=50, hashing=hashing,
+                        minmax_hash=minmax_hash)
+    enc.fit(X)
+    y = enc.transform(X)
     assert y.shape == (len(X), 50)
     eta = time.time() - t0
     return eta

@@ -49,3 +49,6 @@ coverage.xml
 
 # VS Code
 .vscode
+
+# Ignore fetched datasets
+dirty_cat/datasets/data/*
