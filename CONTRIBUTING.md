@@ -77,7 +77,7 @@ of error you're submitting.
 ### Suggesting enhancements
 
 This section will guide you through submitting a new enhancement for dirty_cat,
-whether it is a small fix to a big new feature.
+whether it is a small fix or a new feature.
 
 First, you should 
 [check if the feature has not already been proposed or implemented](https://github.com/dirty-cat/dirty_cat/pulls?q=is%3Apr).
@@ -91,7 +91,7 @@ proposing the change.
 - **Use a clear and descriptive title**
 - **Provide a quick explanation of the goal of this enhancement**
 - **Provide a step-by-step description of the suggested enhancement** 
-  in as many details as possible
+  with as many details as possible
 - **If it exists elsewhere, link resources**
 
 Of course, some of these bullet points might not apply depending on the kind
