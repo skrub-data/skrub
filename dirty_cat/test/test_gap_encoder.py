@@ -87,14 +87,14 @@ def test_get_feature_names(n_samples=70):
     X = np.array([X_txt, X_txt]).T
     enc = GapEncoder(random_state=42)
     enc.fit(X)
-    topic_labels = enc.get_feature_names()
-    # Check number of labels
-    assert len(topic_labels) == enc.n_components * X.shape[1]
-    # Test different parameters for col_names
-    topic_labels_2 = enc.get_feature_names(col_names='auto')
-    assert topic_labels_2[0] == 'col0: ' + topic_labels[0]
-    topic_labels_3 = enc.get_feature_names(col_names=['abc', 'def'])
-    assert topic_labels_3[0] == 'abc: ' + topic_labels[0]
+    for topic_labels in [enc.get_feature_names(), enc.get_feature_names_out()]:
+        # Check number of labels
+        assert len(topic_labels) == enc.n_components * X.shape[1]
+        # Test different parameters for col_names
+        topic_labels_2 = enc.get_feature_names(col_names='auto')
+        assert topic_labels_2[0] == 'col0: ' + topic_labels[0]
+        topic_labels_3 = enc.get_feature_names(col_names=['abc', 'def'])
+        assert topic_labels_3[0] == 'abc: ' + topic_labels[0]
     return
 
 

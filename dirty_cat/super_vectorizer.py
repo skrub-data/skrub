@@ -426,3 +426,10 @@ class SuperVectorizer(ColumnTransformer):
             return ct_feature_names
 
         return all_trans_feature_names
+    
+    def get_feature_names_out(self, input_features=None) -> List[str]:
+        """
+        Ensures compatibility with sklearn >= 1.0, and returns the output of
+        get_feature_names.
+        """
+        return self.get_feature_names()

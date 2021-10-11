@@ -6,7 +6,6 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
-from sklearn import __version__ as sklearn_version
 
 from distutils.version import LooseVersion
 
@@ -205,10 +204,8 @@ def test_get_feature_names():
         with pytest.raises(NotImplementedError):
             # Prior to sklearn 0.23, ColumnTransformer.get_feature_names
             # with "passthrough" transformer(s) raises a NotImplementedError
-            if LooseVersion(sklearn_version) < LooseVersion('1.0'):
-                assert vectorizer_w_pass.get_feature_names()
-            else:
-                assert vectorizer_w_pass.get_feature_names_out()
+            assert vectorizer_w_pass.get_feature_names()
+            assert vectorizer_w_pass.get_feature_names_out()
     else:
         expected_feature_names_pass = [  # Order matters. If it doesn't, convert to set.
             'str1_private', 'str1_public',
@@ -216,21 +213,8 @@ def test_get_feature_names():
             'cat1_no', 'cat1_yes', 'cat2_20K+', 'cat2_30K+', 'cat2_40K+', 'cat2_50K+', 'cat2_60K+',
             'int', 'float'
         ]
-        expected_feature_names_out_pass = [  # Expected output of get_feature_names_out
-            'low_card_cat__str1_private', 'low_card_cat__str1_public',
-            'low_card_cat__str2_chef', 'low_card_cat__str2_lawyer',
-            'low_card_cat__str2_manager', 'low_card_cat__str2_officer',
-            'low_card_cat__str2_teacher', 'low_card_cat__cat1_no',
-            'low_card_cat__cat1_yes', 'low_card_cat__cat2_20K+',
-            'low_card_cat__cat2_30K+', 'low_card_cat__cat2_40K+',
-            'low_card_cat__cat2_50K+', 'low_card_cat__cat2_60K+',
-            'remainder__int', 'remainder__float'
-        ]
-        if LooseVersion(sklearn_version) < LooseVersion('1.0'):
-            assert vectorizer_w_pass.get_feature_names() == expected_feature_names_pass
-        else:
-            assert list(vectorizer_w_pass.get_feature_names_out(
-                )) == expected_feature_names_out_pass
+        assert vectorizer_w_pass.get_feature_names() == expected_feature_names_pass
+        assert vectorizer_w_pass.get_feature_names_out() == expected_feature_names_pass
 
     vectorizer_w_drop = SuperVectorizer(remainder='drop')
     vectorizer_w_drop.fit(X)
@@ -240,20 +224,8 @@ def test_get_feature_names():
         'str2_chef', 'str2_lawyer', 'str2_manager', 'str2_officer', 'str2_teacher',
         'cat1_no', 'cat1_yes', 'cat2_20K+', 'cat2_30K+', 'cat2_40K+', 'cat2_50K+', 'cat2_60K+'
     ]
-    expected_feature_names_out_drop = [  # Expected output of get_feature_names_out
-            'low_card_cat__str1_private', 'low_card_cat__str1_public',
-            'low_card_cat__str2_chef', 'low_card_cat__str2_lawyer',
-            'low_card_cat__str2_manager', 'low_card_cat__str2_officer',
-            'low_card_cat__str2_teacher', 'low_card_cat__cat1_no',
-            'low_card_cat__cat1_yes', 'low_card_cat__cat2_20K+',
-            'low_card_cat__cat2_30K+', 'low_card_cat__cat2_40K+',
-            'low_card_cat__cat2_50K+', 'low_card_cat__cat2_60K+',
-        ]
-    if LooseVersion(sklearn_version) < LooseVersion('1.0'):
-        assert vectorizer_w_drop.get_feature_names() == expected_feature_names_drop
-    else:
-        assert list(vectorizer_w_drop.get_feature_names_out(
-            )) == expected_feature_names_out_drop
+    assert vectorizer_w_drop.get_feature_names() == expected_feature_names_drop
+    assert vectorizer_w_drop.get_feature_names_out() == expected_feature_names_drop
 
 
 def test_fit():

@@ -745,6 +745,16 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             col_labels = enc.get_feature_names(n_labels, prefixes[k])
             labels.extend(col_labels)
         return labels
+    
+    def get_feature_names_out(
+        self, input_features=None, col_names=None, n_labels=3
+    ):
+        """
+        Ensures compatibility with sklearn >= 1.0, and returns the output of
+        get_feature_names.
+        """
+        return self.get_feature_names(col_names, n_labels)
+        
 
     def score(self, X):
         """
