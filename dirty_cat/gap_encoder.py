@@ -105,10 +105,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
         if not self.hashing: # Build n-grams/word vocabulary
-            self.vocabulary = self.ngrams_count_.get_feature_names()
+            self.vocabulary = self.ngrams_count_.get_feature_names_out()
             if self.add_words:
                 self.vocabulary = np.concatenate(
-                    (self.vocabulary, self.word_count_.get_feature_names()))
+                    (self.vocabulary, self.word_count_.get_feature_names_out()))
 
         _, self.n_vocab = unq_V.shape
         # Init the topics W given the n-grams counts V
@@ -262,7 +262,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         """
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
-        vocabulary = np.array(vectorizer.get_feature_names())
+        vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self.transform(np.array(vocabulary).reshape(-1))
         encoding = abs(encoding)
         encoding = encoding / np.sum(encoding, axis=1, keepdims=True)
