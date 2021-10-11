@@ -29,6 +29,8 @@ Major changes
   - **GapEncoder**: the default value "zero_impute" becomes "empty_impute" (see doc).
   - **MinHashEncoder**: the default value "" becomes "zero_impute" (see doc).
 
+* Fix FutureWarnings raised by scikit-learn when calling "get_feature_names". (#216)
+
 Notes
 -----
 
