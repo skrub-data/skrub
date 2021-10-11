@@ -120,6 +120,7 @@ html_sidebars = {
         'globallinks.html',
         'relations.html',
         #'searchbox.html',
+        'localtoc.html',
     ],
     'index': [
         'about.html',
@@ -278,3 +279,6 @@ napoleon_use_param = True
 # -- sphinxext.autodoc configuration ---------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 autodoc_typehints = "none"
+
+# -- The javascript to highlight the toc as we scroll ----------------------
+html_js_files = ['scrolltoc.js']
