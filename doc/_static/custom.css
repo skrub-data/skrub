@@ -23,6 +23,30 @@ div.body pre {
     }
 }
 
+/* Side hanging footnotes */
+@media (min-width: 1500px) {
+    div.body dl.footnote {
+	position: absolute;
+	right: 1ex;
+	margin-top: -10ex;
+	width: 17em;
+    }
+}
+
+@media (min-width: 1650px) {
+    div.body dl.footnote {
+	width: 20em;
+    }
+
+}
+
+@media (min-width: 1750px) {
+    div.body dl.footnote {
+	width: 25em;
+    }
+
+}
+
 /** Sphinx gallery *******************************************************/
 
 /* The download note on top of the examples */
@@ -139,6 +163,72 @@ div.sphinxsidebarwrapper div h3:first-of-type {
     display: block;
 }
 
+/* The section links */
+div.sphinxsidebarwrapper li a {
+    display: block;
+    margin-left: -2.5ex;
+    padding-left: 2.5ex;
+}
+
+div.sphinxsidebarwrapper ul ul {
+    list-style: circle;
+}
+
+div.sphinxsidebarwrapper li li a:hover {
+    border-right: #076B00 solid 5px;
+    background-color: #F6F6F6;
+}
+
+/* The "active" sections */
+div.sphinxsidebarwrapper li li.preactive li ul {
+    display: none;
+}
+
+div.sphinxsidebarwrapper li li.preactive li ul.active {
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li.preactive > a:first-child {
+    border-right: #C1CEC1 solid 5px;
+}
+
+div.sphinxsidebarwrapper li ul.active ul {
+    display: block;
+    font-size: smaller;
+}
+
+div.sphinxsidebarwrapper li li a.active {
+    border-right: #055100 solid 5px;
+    background-color: #F3F3F3;
+    text-decoration: none;
+}
+
+div.sphinxsidebarwrapper > ul > li.preactive li ul {
+    display: none;
+}
+
+div.sphinxsidebarwrapper > ul > li.preactive li ul.active {
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li.preactive ul {
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li a.active + ul {
+    display: block;
+    font-size: smaller;
+}
+
+div.sphinxsidebarwrapper li li ul.active {
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li ul {
+    font-size: smaller;
+}
+
+
 /* Docstrings ************************************************************/
 
 /* More space around the attributes and methods */
@@ -151,20 +241,10 @@ dl.py.class dl.field-list {
     padding-bottom: .5em;
 }
 
-/*************************************************************************/
-
 p.side-comment {
     font-size: smaller;
     text-align: right;
     padding-bottom: 1em;
-}
-
-div.sphinxsidebarwrapper li li ul.active {
-    display: block;
-}
-
-div.sphinxsidebarwrapper li li ul {
-    font-size: smaller;
 }
 
 
