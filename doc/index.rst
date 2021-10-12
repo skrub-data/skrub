@@ -27,14 +27,17 @@ dirty_cat: machine learning on dirty categories
 `dirty_cat` facilitates machine-learning on non-curated categories:
 **robust to morphological variants**, such as typos.
 
+.. rst-class:: flex-container
 
-.. topic:: Automatically ingest a heterogeneous dataframe
+ .. topic:: Automatically ingest a heterogeneous dataframe
+    :class: flex-content
 
     :class:`SuperVectorizer`: a high-level transformer to easily turn a
     non-normalized pandas dataframe into a numpy array for machine learning.
 
 
-.. topic:: Like OneHotEncoder but for non-normalized categories
+ .. topic:: OneHotEncoder but for non-normalized categories
+    :class: flex-content
 
     * :class:`GapEncoder`, scalable and interpretable, where each encoding
       dimension corresponds to a topic that summarizes substrings captured.
