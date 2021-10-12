@@ -312,7 +312,7 @@ p.side-comment {
 
 
 /* Flush the sidebar more to the left */
-@media (min-width: 1300px) {
+@media screen and (min-width: 1300px) {
     div.sphinxsidebar {
 	left: 5%;
 	width: 300px;
@@ -323,7 +323,7 @@ p.side-comment {
     }
 }
 
-@media (min-width: 1500px) {
+@media screen and (min-width: 1500px) {
     div.sphinxsidebar {
 	left: 10%;
     }
