@@ -117,14 +117,13 @@ html_theme = 'alabaster'
 html_sidebars = {
     '**': [
         'about.html',
-        'globallinks.html',
+        'localtoc.html',
         'relations.html',
         #'searchbox.html',
-        'localtoc.html',
     ],
     'index': [
         'about.html',
-        'localtoc.html',
+        'globallinks.html',
         'relations.html',
         #'searchbox.html',
     ]
