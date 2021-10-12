@@ -66,6 +66,8 @@ Usage
     :start-line: 2
     :end-before: .. rst-class:: sphx-glr-signature
 
+|
+
 API documentation
 =================
 
