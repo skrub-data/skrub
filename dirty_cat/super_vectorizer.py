@@ -394,7 +394,10 @@ class SuperVectorizer(ColumnTransformer):
         """
         if _sklearn_loose_version < LooseVersion('0.23'):
             try:
-                ct_feature_names = super().get_feature_names()
+                if _sklearn_loose_version < LooseVersion('1.0'):
+                    ct_feature_names = super().get_feature_names()
+                else:
+                    ct_feature_names = super().get_feature_names_out()
             except NotImplementedError:
                 raise NotImplementedError(
                     'Prior to sklearn 0.23, get_feature_names with '
@@ -403,7 +406,10 @@ class SuperVectorizer(ColumnTransformer):
                     'transformers, or update your copy of scikit-learn.'
                 )
         else:
-            ct_feature_names = super().get_feature_names()
+            if _sklearn_loose_version < LooseVersion('1.0'):
+                ct_feature_names = super().get_feature_names()
+            else:
+                ct_feature_names = super().get_feature_names_out()
         all_trans_feature_names = []
 
         for name, trans, cols, _ in self._iter(fitted=True):
