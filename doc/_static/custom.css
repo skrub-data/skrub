@@ -75,8 +75,8 @@ span.container-title {
 /* Wide screens: use better the full width */
 @media only screen and (min-width: 1360px) {
     div.body section:first-of-type h1 {
-	width: 1280px;
-	left: -300px;
+	width: 1080px;
+	left: -200px;
 	position: relative;
 	margin-top: 1ex;
 	margin-bottom: 2ex;
@@ -104,12 +104,18 @@ span.container-title {
 
 }
 
+@media only screen and (min-width: 1500px) {
+    div.body section:first-of-type h1 {
+	width: 1280px;
+	left: -300px;
+}
+
 /** Sphinx gallery *******************************************************/
 
 /* The download note on top of the examples */
 div.sphx-glr-download-link-note {
     right: 2pt;
-    top: 10pt;
+    top: 80pt;
     max-width: 15ex;
     float: right;
     padding: 0px 1px 10px 10px;
