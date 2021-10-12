@@ -159,7 +159,20 @@ div.sphx-glr-footer-example {
 
 @media only screen and (min-width: 1750px) {
     div.sphx-glr-footer-example {
+	right: 6%;
+    }
+}
+
+@media only screen and (min-width: 2050px) {
+    div.sphx-glr-footer-example {
+	right: 8%;
 	max-width: 400px;
+    }
+}
+
+@media only screen and (min-width: 2150px) {
+    div.sphx-glr-footer-example {
+	right: 10%;
     }
 }
 
@@ -191,6 +204,14 @@ div.sphinxsidebarwrapper h3.toc-title {
     font-style: italic;
     text-decoration: underline;
     margin-bottom: 0px;
+}
+
+div.sphinxsidebarwrapper h3.this-page {
+    font-size: small;
+    display: block;
+    border-bottom: 1px solid;
+    margin: 3ex 0px 0px -3ex;
+    padding: 0px;
 }
 
 div.sphinxsidebarwrapper ul:first-of-type {
@@ -310,6 +331,11 @@ p.side-comment {
     padding-bottom: 1em;
 }
 
+@media screen and (min-width: 876px) {
+    div.sphinxsidebar {
+	left: 1%;
+    }
+}
 
 /* Flush the sidebar more to the left */
 @media screen and (min-width: 1300px) {
