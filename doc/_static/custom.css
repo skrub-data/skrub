@@ -76,6 +76,7 @@ div.flex-container {
 div.flex-content {
     background-color: #fafafa;
     border: 1px solid #d4d4d4;
+    margin: 1ex auto;
 }
 
 span.container-title {
@@ -84,7 +85,7 @@ span.container-title {
 
 @media only screen and (min-width: 1200px) {
     div.flex-content {
-	width: 50%;
+	width: 49%;
 	display: inline-block;
     }
 }
