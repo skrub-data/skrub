@@ -146,7 +146,7 @@ div.sphx-glr-footer-example {
 	position: absolute;
 	right: 10px;
 	width: 300px;
-	top: 300px;
+	top: 19ex;
     }
 
 }
@@ -332,30 +332,30 @@ p.side-comment {
     padding-bottom: 1em;
 }
 
-div.sphinxsidebar {
+div.document div.sphinxsidebar {
     left: 1ex;
 }
 
 @media screen and (min-width: 876px) {
-    div.sphinxsidebar {
+    div.document div.sphinxsidebar {
 	left: 1%;
     }
 }
 
 /* Flush the sidebar more to the left */
 @media screen and (min-width: 1300px) {
-    div.sphinxsidebar {
+    div.document div.sphinxsidebar {
 	left: 5%;
 	width: 300px;
     }
 
-    div.sphinxsidebar p.logo {
+    div.document div.sphinxsidebar p.logo {
 	width: 220px;
     }
 }
 
 @media screen and (min-width: 1500px) {
-    div.sphinxsidebar {
+    div.document div.sphinxsidebar {
 	left: 10%;
     }
 }
