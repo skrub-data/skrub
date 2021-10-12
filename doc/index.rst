@@ -46,7 +46,8 @@ dirty_cat: machine learning on dirty categories
 .. raw:: html
 
     <div class="flex-container">
-    <span "container-title">Automatically ingest a heterogeneous dataframe</span>
+    <div class="flex-content">
+    <span class="container-title">Automatically ingest a heterogeneous dataframe</span>
 
 :class:`SuperVectorizer`: a high-level transformer to easily turn a
 non-normalized pandas dataframe into a numpy array for machine learning.
@@ -54,8 +55,9 @@ non-normalized pandas dataframe into a numpy array for machine learning.
 .. raw:: html
 
     </div>
-    <div class="flex-container">
-    <span "container-title">OneHotEncoder but for non-normalized categories</span>
+    </div>
+    <div class="flex-content">
+    <span class="container-title">OneHotEncoder but for non-normalized categories</span>
 
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
@@ -68,6 +70,7 @@ non-normalized pandas dataframe into a numpy array for machine learning.
 
 .. raw:: html
 
+    </div>
     </div>
 
 For a detailed description of the problem of encoding dirty categorical data,
