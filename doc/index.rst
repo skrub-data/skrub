@@ -10,8 +10,10 @@ dirty_cat: machine learning on dirty categories
 
 .. container:: larger-container
 
- `dirty_cat` facilitates machine-learning on non-curated categories:
- **robust to morphological variants**, such as typos.
+    `dirty_cat` facilitates machine-learning on non-curated categories:
+    **robust to morphological variants**, such as typos.
+
+|
 
 .. raw:: html
 
@@ -19,7 +21,7 @@ dirty_cat: machine learning on dirty categories
     <div class="flex-content">
     <span class="container-title">Automatically ingest a heterogeneous dataframe</span>
 
-:class:`SuperVectorizer`: a high-level transformer to easily turn a
+:class:`SuperVectorizer`: a simple transformer to easily turn a
 non-normalized pandas dataframe into a numpy array for machine learning.
 
 .. raw:: html
@@ -30,10 +32,10 @@ non-normalized pandas dataframe into a numpy array for machine learning.
 
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
-    dimension corresponds to a topic that summarizes substrings captured.
+  dimension corresponds to a topic that summarizes substrings captured.
 
 * :class:`SimilarityEncoder`, a simple modification of one-hot encoding
-    to capture the strings.
+  to capture the strings.
 
 * :class:`MinHashEncoder`, very scalable
 

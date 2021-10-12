@@ -7,20 +7,6 @@ div.body h1 {
     color: #055100;
 }
 
-div.body section:first-of-type h1 {
-    width: 1280px;
-    left: -300px;
-    position: relative;
-    margin-top: 1ex;
-    margin-bottom: 2ex;
-}
-
-
-div.larger-container {
-    width: 1080px;
-    left: -140px;
-    position: relative;
-}
 
 /* Secondary sections title */
 div.body h2 {
@@ -64,30 +50,58 @@ div.body pre {
 
 /* For title page */
 
-div.flex-container {
-    align-content: flex-start;
-    display: flex;
-    flex-flow: row wrap;
-    width: 1280px;
-    left: -300px;
-    position: relative;
-}
-
 div.flex-content {
-    background-color: #fafafa;
+    background-color: #fdfdfd;
     border: 1px solid #d4d4d4;
     margin: 1ex auto;
+    border-radius: 1ex 1ex 0ex 0ex;
+}
+
+div.flex-content p {
+    margin-left: 1ex;
+    margin-right: 1ex;
 }
 
 span.container-title {
     font-weight: bold;
+    color: black;
+    background-color: #f1fff1;
+    display: block;
+    padding: 1ex;
+    border-radius: 1ex 1ex 0ex 0ex;
+    border-bottom: 1px solid #d4d4d4;
 }
 
+/* Wide screens: use better the full width */
 @media only screen and (min-width: 1200px) {
+    div.body section:first-of-type h1 {
+	width: 1280px;
+	left: -300px;
+	position: relative;
+	margin-top: 1ex;
+	margin-bottom: 2ex;
+    }
+
+    div.flex-container {
+	align-content: flex-start;
+	display: flex;
+	flex-flow: row wrap;
+	width: 1000px;
+	left: -170px;
+	position: relative;
+    }
+
     div.flex-content {
 	width: 49%;
 	display: inline-block;
     }
+
+    div.larger-container {
+	width: 1080px;
+	left: -140px;
+	position: relative;
+    }
+
 }
 
 /** Sphinx gallery *******************************************************/
