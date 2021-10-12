@@ -2,17 +2,31 @@
 .. raw-html::
 
     <style>
-        div.document {
-            min-width: 940px;
-            max-width: 1280px;
+        div.flex-container {
+            align-content: flex-start;
+            display: flex;
+            flex-flow: row wrap;
+            width: 1280px;
+            left: -300px;
+            position: relative;
         }
-        div.body {
-            max-width: 1280px;
-        }
-        div.topic {
+
+        div.flex-content {
             background-color: #fafafa;
             border: 1px solid #d4d4d4;
         }
+
+        span.container-title {
+            font-weight: bold;
+        }
+
+        @media only screen and (min-width: 1200px) {
+            div.flex-content {
+                width: 50%;
+                display: inline-block;
+            }
+        }
+
     </style>
 
 =================================================
@@ -24,29 +38,37 @@ dirty_cat: machine learning on dirty categories
 
 .. currentmodule:: dirty_cat
 
-
-.. container:: flex-container larger-container
+.. container:: larger-container
 
  `dirty_cat` facilitates machine-learning on non-curated categories:
  **robust to morphological variants**, such as typos.
 
- .. topic:: Automatically ingest a heterogeneous dataframe
-    :class: flex-content
+.. raw:: html
 
-    :class:`SuperVectorizer`: a high-level transformer to easily turn a
-    non-normalized pandas dataframe into a numpy array for machine learning.
+    <div class="flex-container">
+    <span "container-title">Automatically ingest a heterogeneous dataframe</span>
 
- .. topic:: OneHotEncoder but for non-normalized categories
-    :class: flex-content
+:class:`SuperVectorizer`: a high-level transformer to easily turn a
+non-normalized pandas dataframe into a numpy array for machine learning.
 
-    * :class:`GapEncoder`, scalable and interpretable, where each encoding
-      dimension corresponds to a topic that summarizes substrings captured.
+.. raw:: html
 
-    * :class:`SimilarityEncoder`, a simple modification of one-hot encoding
-      to capture the strings.
+    </div>
+    <div class="flex-container">
+    <span "container-title">OneHotEncoder but for non-normalized categories</span>
 
-    * :class:`MinHashEncoder`, very scalable
 
+* :class:`GapEncoder`, scalable and interpretable, where each encoding
+    dimension corresponds to a topic that summarizes substrings captured.
+
+* :class:`SimilarityEncoder`, a simple modification of one-hot encoding
+    to capture the strings.
+
+* :class:`MinHashEncoder`, very scalable
+
+.. raw:: html
+
+    </div>
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
@@ -108,14 +130,12 @@ Data download
 About
 =========
 
-dirty_cat is for now a repository for developing ideas with high-quality
-implementations, a form of a research project: there is still
-little known about the problems of dirty categories. We hope that
-tradeoffs will emerge in the long run, and that these tradeoffs will
-enable us to do better software. We really need people giving feedback on
-success and failures with the different techniques and pointing us to
-open datasets on which we can do more empirical work. We also welcome
-contributions in the scope of dirty categories.
+dirty_cat is for now a repository for ideas coming out of a research
+project: there is still little known about the problems of dirty
+categories. Tradeoffs will emerge in the long run. We really need
+people giving feedback on success and failures with the different
+techniques and pointing us to open datasets on which we can do more
+empirical work.
 
 
 .. seealso::
