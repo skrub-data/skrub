@@ -25,7 +25,6 @@ non-normalized pandas dataframe into a numpy array for machine learning.
 .. raw:: html
 
     </div>
-    </div>
     <div class="flex-content">
     <span class="container-title">OneHotEncoder but for non-normalized categories</span>
 
