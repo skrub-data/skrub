@@ -27,7 +27,7 @@ dirty_cat: machine learning on dirty categories
 `dirty_cat` facilitates machine-learning on non-curated categories:
 **robust to morphological variants**, such as typos.
 
-.. rst-class:: flex-container
+.. container:: flex-container larger-container
 
  .. topic:: Automatically ingest a heterogeneous dataframe
     :class: flex-content
@@ -63,7 +63,9 @@ string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
 ______
 
-.. include:: auto_examples/index.rst
+.. container:: larger-container
+
+  .. include:: auto_examples/index.rst
     :start-line: 2
     :end-before: .. rst-class:: sphx-glr-signature
 

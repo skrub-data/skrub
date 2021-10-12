@@ -7,7 +7,7 @@ div.body h1 {
     color: #055100;
 }
 
-div.body section:first-child h1 {
+div.body section:first-of-type h1 {
     width: 1280px;
     left: -300px;
     position: relative;
@@ -19,6 +19,12 @@ div.flex-container {
     align-content: flex-start;
     display: flex;
     flex-flow: row wrap;
+}
+
+div.larger-container {
+    width: 1280px;
+    left: -300px;
+    position: relative;
 }
 
 @media only screen and (min-width: 1200px) {
