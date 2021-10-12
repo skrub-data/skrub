@@ -23,6 +23,30 @@ div.body pre {
     }
 }
 
+/* Side hanging footnotes */
+@media (min-width: 1500px) {
+    div.body dl.footnote {
+	position: absolute;
+	right: 1ex;
+	margin-top: -10ex;
+	width: 17em;
+    }
+}
+
+@media (min-width: 1650px) {
+    div.body dl.footnote {
+	width: 20em;
+    }
+
+}
+
+@media (min-width: 1750px) {
+    div.body dl.footnote {
+	width: 25em;
+    }
+
+}
+
 /** Sphinx gallery *******************************************************/
 
 /* The download note on top of the examples */
@@ -33,6 +57,11 @@ div.sphx-glr-download-link-note {
     float: right;
     padding: 0px 1px 10px 10px;
     background-color: #F6F6F6;
+}
+
+/* Hide the download python button (the notebook is enough) */
+div.sphx-glr-download-python {
+    display: none;
 }
 
 /* The download block at the bottom */
@@ -59,6 +88,18 @@ div.sphx-glr-footer-example {
 
 }
 
+@media only screen and (min-width: 1550px) {
+    div.sphx-glr-footer-example {
+	max-width: 300px;
+    }
+}
+
+@media only screen and (min-width: 1750px) {
+    div.sphx-glr-footer-example {
+	max-width: 400px;
+    }
+}
+
 div.sphx-glr-download-link-note p.admonition-title {
     display: none;
 }
@@ -82,25 +123,111 @@ div.sphinxsidebarwrapper li a {
     display: none;
 }
 
+div.sphinxsidebarwrapper h3.toc-title {
+    font-size: unset;
+    font-style: italic;
+    text-decoration: underline;
+    margin-bottom: 0px;
+}
+
+div.sphinxsidebarwrapper ul:first-of-type {
+    margin-top: 0px;
+}
+
 /* Undo for children */
 div.sphinxsidebarwrapper li li a {
-    display: inline;
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li {
+    margin: 1ex 0ex;
+}
+
+/* Online one level of titles */
+div.sphinxsidebarwrapper li li ul {
+    display: none;
 }
 
 /* Undo for other pages */
 div.sphinxsidebarwrapper li.toctree-l1 a {
-    display: inline;
+    display: block;
 }
 
 /* Less info in the navigation sidebar */
-div.sphinxsidebarwrapper h3:first-of-type {
+/*div.sphinxsidebarwrapper h3:first-of-type {
     display: none;
-}
+}*/
 
 /* Undo for childs of enclosing divs */
 div.sphinxsidebarwrapper div h3:first-of-type {
     display: block;
 }
+
+/* The section links */
+div.sphinxsidebarwrapper li a {
+    display: block;
+    margin-left: -2.5ex;
+    padding-left: 2.5ex;
+}
+
+div.sphinxsidebarwrapper ul ul {
+    list-style: circle;
+}
+
+div.sphinxsidebarwrapper li li a:hover {
+    border-right: #076B00 solid 5px;
+    background-color: #F6F6F6;
+}
+
+/* The "active" sections */
+div.sphinxsidebarwrapper li li.preactive li ul {
+    display: none;
+}
+
+div.sphinxsidebarwrapper li li.preactive li ul.active {
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li.preactive > a:first-child {
+    border-right: #C1CEC1 solid 5px;
+}
+
+div.sphinxsidebarwrapper li ul.active ul {
+    display: block;
+    font-size: smaller;
+}
+
+div.sphinxsidebarwrapper li li a.active {
+    border-right: #055100 solid 5px;
+    background-color: #F3F3F3;
+    text-decoration: none;
+}
+
+div.sphinxsidebarwrapper > ul > li.preactive li ul {
+    display: none;
+}
+
+div.sphinxsidebarwrapper > ul > li.preactive li ul.active {
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li.preactive ul {
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li a.active + ul {
+    display: block;
+    font-size: smaller;
+}
+
+div.sphinxsidebarwrapper li li ul.active {
+    display: block;
+}
+
+div.sphinxsidebarwrapper li li ul {
+    font-size: smaller;
+}
+
 
 /* Docstrings ************************************************************/
 
@@ -114,12 +241,29 @@ dl.py.class dl.field-list {
     padding-bottom: .5em;
 }
 
-/*************************************************************************/
-
 p.side-comment {
     font-size: smaller;
     text-align: right;
     padding-bottom: 1em;
+}
+
+
+/* Flush the sidebar more to the left */
+@media (min-width: 1300px) {
+    div.sphinxsidebar {
+	left: 5%;
+	width: 300px;
+    }
+
+    div.sphinxsidebar p.logo {
+	width: 220px;
+    }
+}
+
+@media (min-width: 1500px) {
+    div.sphinxsidebar {
+	left: 10%;
+    }
 }
 
 /* My custom classes */
