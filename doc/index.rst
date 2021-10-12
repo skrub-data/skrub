@@ -1,34 +1,4 @@
 
-.. raw-html::
-
-    <style>
-        div.flex-container {
-            align-content: flex-start;
-            display: flex;
-            flex-flow: row wrap;
-            width: 1280px;
-            left: -300px;
-            position: relative;
-        }
-
-        div.flex-content {
-            background-color: #fafafa;
-            border: 1px solid #d4d4d4;
-        }
-
-        span.container-title {
-            font-weight: bold;
-        }
-
-        @media only screen and (min-width: 1200px) {
-            div.flex-content {
-                width: 50%;
-                display: inline-block;
-            }
-        }
-
-    </style>
-
 =================================================
 dirty_cat: machine learning on dirty categories
 =================================================
