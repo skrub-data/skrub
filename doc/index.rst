@@ -7,19 +7,19 @@ dirty_cat: machine learning on dirty categories
 
 .. currentmodule:: dirty_cat
 
-`dirty_cat` facilites machine-learning on non-curated categories:
+`dirty_cat` facilitates machine-learning on non-curated categories:
 **robust to morphological variants**, such as typos.
 
 |
 
-.. rubric:: Automatically injest a heterogeneous dataframe
+.. rubric:: Automatically ingest a heterogeneous dataframe
 
 :class:`SuperVectorizer`: a high-level transformer to easily turn a
-non-normalized pandas dataframe to a numpy array for machine learning.
+non-normalized pandas dataframe into a numpy array for machine learning.
 
 |
 
-.. rubric:: Like OneHotEncoder but for non-normalized cateories
+.. rubric:: Like OneHotEncoder but for non-normalized categories
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
   dimension corresponds to a topic that summarizes substrings captured.
