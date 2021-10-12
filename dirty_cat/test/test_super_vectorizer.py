@@ -205,6 +205,7 @@ def test_get_feature_names():
             # Prior to sklearn 0.23, ColumnTransformer.get_feature_names
             # with "passthrough" transformer(s) raises a NotImplementedError
             assert vectorizer_w_pass.get_feature_names()
+            assert vectorizer_w_pass.get_feature_names_out()
     else:
         expected_feature_names_pass = [  # Order matters. If it doesn't, convert to set.
             'str1_private', 'str1_public',
@@ -213,6 +214,7 @@ def test_get_feature_names():
             'int', 'float'
         ]
         assert vectorizer_w_pass.get_feature_names() == expected_feature_names_pass
+        assert vectorizer_w_pass.get_feature_names_out() == expected_feature_names_pass
 
     vectorizer_w_drop = SuperVectorizer(remainder='drop')
     vectorizer_w_drop.fit(X)
@@ -223,6 +225,7 @@ def test_get_feature_names():
         'cat1_no', 'cat1_yes', 'cat2_20K+', 'cat2_30K+', 'cat2_40K+', 'cat2_50K+', 'cat2_60K+'
     ]
     assert vectorizer_w_drop.get_feature_names() == expected_feature_names_drop
+    assert vectorizer_w_drop.get_feature_names_out() == expected_feature_names_drop
 
 
 def test_fit():

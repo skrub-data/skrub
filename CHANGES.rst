@@ -29,6 +29,9 @@ Major changes
   - **GapEncoder**: the default value "zero_impute" becomes "empty_impute" (see doc).
   - **MinHashEncoder**: the default value "" becomes "zero_impute" (see doc).
 
+* Add a method "get_feature_names_out" for the **GapEncoder** and the **SuperVectorizer**,
+  since "get_feature_names" will be depreciated in scikit-learn 1.2 (#216).
+
 Notes
 -----
 

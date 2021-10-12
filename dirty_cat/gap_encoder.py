@@ -105,11 +105,21 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
         if not self.hashing: # Build n-grams/word vocabulary
-            self.vocabulary = self.ngrams_count_.get_feature_names()
+            if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+                self.vocabulary = self.ngrams_count_.get_feature_names()
+            else:
+                self.vocabulary = self.ngrams_count_.get_feature_names_out()
             if self.add_words:
-                self.vocabulary = np.concatenate(
-                    (self.vocabulary, self.word_count_.get_feature_names()))
-
+                if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+                    self.vocabulary = np.concatenate((
+                        self.vocabulary,
+                        self.word_count_.get_feature_names()
+                    ))
+                else:
+                    self.vocabulary = np.concatenate((
+                        self.vocabulary,
+                        self.word_count_.get_feature_names_out()
+                    ))
         _, self.n_vocab = unq_V.shape
         # Init the topics W given the n-grams counts V
         self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], X)
@@ -262,7 +272,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         """
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
-        vocabulary = np.array(vectorizer.get_feature_names())
+        if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+            vocabulary = np.array(vectorizer.get_feature_names())
+        else:
+            vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self.transform(np.array(vocabulary).reshape(-1))
         encoding = abs(encoding)
         encoding = encoding / np.sum(encoding, axis=1, keepdims=True)
@@ -732,6 +745,16 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             col_labels = enc.get_feature_names(n_labels, prefixes[k])
             labels.extend(col_labels)
         return labels
+    
+    def get_feature_names_out(
+        self, input_features=None, col_names=None, n_labels=3
+    ):
+        """
+        Ensures compatibility with sklearn >= 1.0, and returns the output of
+        get_feature_names.
+        """
+        return self.get_feature_names(col_names, n_labels)
+        
 
     def score(self, X):
         """

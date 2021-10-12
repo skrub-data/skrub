@@ -1,8 +1,9 @@
 import numpy as np
 import numpy.testing
+import pytest
+
 from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
-import pytest
 
 
 def test_specifying_categories():
