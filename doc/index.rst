@@ -49,13 +49,11 @@ see `Similarity encoding for learning with dirty categorical variables
 <https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
 string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
-:Installing: `$ pip install --user dirty_cat`
-
 .. rst-class:: right-align
 
    `Recent changes <CHANGES.html>`_
 
-*Requires Python 3*
+:Installing: `$ pip install --user dirty_cat`
 
 ______
 
