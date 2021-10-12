@@ -223,7 +223,7 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
     'matplotlib': ('https://matplotlib.org/', None),
-    'sklearn': ('https://scikit-learn.org/0.20', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
     'skimage': ('http://scikit-image.org/docs/stable/', None),
     'mayavi': ('http://docs.enthought.com/mayavi/mayavi/', None),
     'statsmodels': ('http://www.statsmodels.org/stable/', None),
