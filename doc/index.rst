@@ -7,17 +7,19 @@ dirty_cat: machine learning on dirty categories
 
 .. currentmodule:: dirty_cat
 
-`dirty_cat` helps with machine-learning on
-non-curated categories. It provides **encoders that are
-robust to morphological variants**, such as typos, in the category strings.
+`dirty_cat` facilites machine-learning on non-curated categories:
+**robust to morphological variants**, such as typos.
 
-The :class:`SuperVectorizer` is a high-level transformer that can
-automatically turn a heterogeneous data table, as a pandas dataframe, to
-a numerical array, suitable for machin learning.
+|
 
+.. rubric:: Automatically injest a heterogeneous dataframe
 
-**Dirty category encoder**: `scikit-learn <https://scikit-learn.org>`_'s
-:class:`~sklearn.preprocessing.OneHotEncoder` can be replaced by:
+:class:`SuperVectorizer`: a high-level transformer to easily turn a
+non-normalized pandas dataframe to a numpy array for machine learning.
+
+|
+
+.. rubric:: Like OneHotEncoder but for non-normalized cateories
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
   dimension corresponds to a topic that summarizes substrings captured.
