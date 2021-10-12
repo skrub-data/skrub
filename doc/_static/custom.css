@@ -108,6 +108,7 @@ span.container-title {
     div.body section:first-of-type h1 {
 	width: 1280px;
 	left: -300px;
+    }
 }
 
 /** Sphinx gallery *******************************************************/
