@@ -21,10 +21,15 @@ div.flex-container {
     flex-flow: row wrap;
 }
 
-div.larger-container {
+div.xlarger-container {
     width: 1280px;
     left: -300px;
     position: relative;
+}
+
+div.xlarger-container {
+    width: 1080px;
+    left: -140px;
 }
 
 @media only screen and (min-width: 1200px) {

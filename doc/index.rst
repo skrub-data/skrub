@@ -24,17 +24,17 @@ dirty_cat: machine learning on dirty categories
 
 .. currentmodule:: dirty_cat
 
-`dirty_cat` facilitates machine-learning on non-curated categories:
-**robust to morphological variants**, such as typos.
 
 .. container:: flex-container larger-container
+
+ `dirty_cat` facilitates machine-learning on non-curated categories:
+ **robust to morphological variants**, such as typos.
 
  .. topic:: Automatically ingest a heterogeneous dataframe
     :class: flex-content
 
     :class:`SuperVectorizer`: a high-level transformer to easily turn a
     non-normalized pandas dataframe into a numpy array for machine learning.
-
 
  .. topic:: OneHotEncoder but for non-normalized categories
     :class: flex-content
@@ -62,6 +62,9 @@ string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 *Requires Python 3*
 
 ______
+
+Usage
+========
 
 .. container:: larger-container
 
