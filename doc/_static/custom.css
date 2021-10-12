@@ -326,4 +326,5 @@ p.side-comment {
 /* My custom classes */
 p.right-align {
     float: right;
+    margin: 0ex;
 }
