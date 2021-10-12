@@ -111,6 +111,9 @@ people giving feedback on success and failures with the different
 techniques and pointing us to open datasets on which we can do more
 empirical work.
 
+.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
+.. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
+
 
 .. seealso::
 
@@ -119,7 +122,4 @@ empirical work.
 
    Similarity encoding in also available in Spark ML:
    https://github.com/rakutentech/spark-dirty-cat
-
-.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
-.. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
 
