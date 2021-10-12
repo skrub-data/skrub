@@ -73,7 +73,7 @@ span.container-title {
 }
 
 /* Wide screens: use better the full width */
-@media only screen and (min-width: 1200px) {
+@media only screen and (min-width: 1000px) {
     div.body section:first-of-type h1 {
 	width: 1280px;
 	left: -300px;
