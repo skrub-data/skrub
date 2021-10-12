@@ -1,3 +1,4 @@
+
 =================================================
 dirty_cat: machine learning on dirty categories
 =================================================
@@ -7,19 +8,28 @@ dirty_cat: machine learning on dirty categories
 
 .. currentmodule:: dirty_cat
 
-`dirty_cat` facilitates machine-learning on non-curated categories:
-**robust to morphological variants**, such as typos.
+.. container:: larger-container
+
+    `dirty_cat` facilitates machine-learning on non-curated categories:
+    **robust to morphological variants**, such as typos.
 
 |
 
-.. rubric:: Automatically ingest a heterogeneous dataframe
+.. raw:: html
 
-:class:`SuperVectorizer`: a high-level transformer to easily turn a
+    <div class="flex-container">
+    <div class="flex-content">
+    <span class="container-title">Automatically ingest a heterogeneous dataframe</span>
+
+:class:`SuperVectorizer`: a simple transformer to easily turn a
 non-normalized pandas dataframe into a numpy array for machine learning.
 
-|
+.. raw:: html
 
-.. rubric:: Like OneHotEncoder but for non-normalized categories
+    </div>
+    <div class="flex-content">
+    <span class="container-title">OneHotEncoder but for non-normalized categories</span>
+
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
   dimension corresponds to a topic that summarizes substrings captured.
@@ -29,25 +39,34 @@ non-normalized pandas dataframe into a numpy array for machine learning.
 
 * :class:`MinHashEncoder`, very scalable
 
+.. raw:: html
+
+    </div>
+    </div>
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
 <https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
 string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
-:Installing: `$ pip install --user dirty_cat`
-
 .. rst-class:: right-align
 
    `Recent changes <CHANGES.html>`_
 
-*Requires Python 3*
+:Installing: `$ pip install --user dirty_cat`
 
 ______
 
-.. include:: auto_examples/index.rst
+Usage
+========
+
+.. container:: larger-container
+
+  .. include:: auto_examples/index.rst
     :start-line: 2
     :end-before: .. rst-class:: sphx-glr-signature
+
+|
 
 API documentation
 =================
@@ -85,14 +104,15 @@ Data download
 About
 =========
 
-dirty_cat is for now a repository for developing ideas with high-quality
-implementations, a form of a research project: there is still
-little known about the problems of dirty categories. We hope that
-tradeoffs will emerge in the long run, and that these tradeoffs will
-enable us to do better software. We really need people giving feedback on
-success and failures with the different techniques and pointing us to
-open datasets on which we can do more empirical work. We also welcome
-contributions in the scope of dirty categories.
+dirty_cat is for now a repository for ideas coming out of a research
+project: there is still little known about the problems of dirty
+categories. Tradeoffs will emerge in the long run. We really need
+people giving feedback on success and failures with the different
+techniques and pointing us to open datasets on which we can do more
+empirical work.
+
+.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
+.. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
 
 
 .. seealso::
@@ -102,7 +122,4 @@ contributions in the scope of dirty categories.
 
    Similarity encoding in also available in Spark ML:
    https://github.com/rakutentech/spark-dirty-cat
-
-.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
-.. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
 

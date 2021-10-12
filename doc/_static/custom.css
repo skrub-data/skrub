@@ -7,6 +7,7 @@ div.body h1 {
     color: #055100;
 }
 
+
 /* Secondary sections title */
 div.body h2 {
     color: #055100;
@@ -47,12 +48,74 @@ div.body pre {
 
 }
 
+/* For title page */
+
+div.flex-content {
+    background-color: #fdfdfd;
+    border: 1px solid #d4d4d4;
+    margin: 1ex auto;
+    border-radius: 1ex 1ex 0ex 0ex;
+}
+
+div.flex-content p {
+    margin-left: 1ex;
+    margin-right: 1ex;
+}
+
+span.container-title {
+    font-weight: bold;
+    color: black;
+    background-color: #f1fff1;
+    display: block;
+    padding: 1ex;
+    border-radius: 1ex 1ex 0ex 0ex;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+/* Wide screens: use better the full width */
+@media only screen and (min-width: 1400px) {
+    div.body section:first-of-type h1 {
+	width: 1080px;
+	left: -200px;
+	position: relative;
+	margin-top: 1ex;
+	margin-bottom: 2ex;
+    }
+
+    div.flex-container {
+	align-content: flex-start;
+	display: flex;
+	flex-flow: row wrap;
+	width: 1000px;
+	left: -170px;
+	position: relative;
+    }
+
+    div.flex-content {
+	width: 47%;
+	display: inline-block;
+    }
+
+    div.larger-container {
+	width: 1080px;
+	left: -140px;
+	position: relative;
+    }
+
+}
+
+@media only screen and (min-width: 1500px) {
+    div.body section:first-of-type h1 {
+	width: 1280px;
+	left: -300px;
+}
+
 /** Sphinx gallery *******************************************************/
 
 /* The download note on top of the examples */
 div.sphx-glr-download-link-note {
     right: 2pt;
-    top: 10pt;
+    top: 80pt;
     max-width: 15ex;
     float: right;
     padding: 0px 1px 10px 10px;
@@ -249,7 +312,7 @@ p.side-comment {
 
 
 /* Flush the sidebar more to the left */
-@media (min-width: 1300px) {
+@media screen and (min-width: 1300px) {
     div.sphinxsidebar {
 	left: 5%;
 	width: 300px;
@@ -260,7 +323,7 @@ p.side-comment {
     }
 }
 
-@media (min-width: 1500px) {
+@media screen and (min-width: 1500px) {
     div.sphinxsidebar {
 	left: 10%;
     }
@@ -269,4 +332,5 @@ p.side-comment {
 /* My custom classes */
 p.right-align {
     float: right;
+    margin: 0ex;
 }
