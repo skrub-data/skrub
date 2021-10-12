@@ -172,7 +172,8 @@ div.sphx-glr-footer-example {
 
 @media only screen and (min-width: 2150px) {
     div.sphx-glr-footer-example {
-	right: 10%;
+	right: 1%;
+	top: 3ex;
     }
 }
 
@@ -329,6 +330,10 @@ p.side-comment {
     font-size: smaller;
     text-align: right;
     padding-bottom: 1em;
+}
+
+div.sphinxsidebar {
+    left: 1ex;
 }
 
 @media screen and (min-width: 876px) {
