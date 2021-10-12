@@ -1,3 +1,20 @@
+
+.. raw-html::
+
+    <style>
+        div.document {
+            min-width: 940px;
+            max-width: 1280px;
+        }
+        div.body {
+            max-width: 1280px;
+        }
+        div.topic {
+            background-color: #fafafa;
+            border: 1px solid #d4d4d4;
+        }
+    </style>
+
 =================================================
 dirty_cat: machine learning on dirty categories
 =================================================
@@ -10,24 +27,22 @@ dirty_cat: machine learning on dirty categories
 `dirty_cat` facilitates machine-learning on non-curated categories:
 **robust to morphological variants**, such as typos.
 
-|
 
-.. rubric:: Automatically ingest a heterogeneous dataframe
+.. topic:: Automatically ingest a heterogeneous dataframe
 
-:class:`SuperVectorizer`: a high-level transformer to easily turn a
-non-normalized pandas dataframe into a numpy array for machine learning.
+    :class:`SuperVectorizer`: a high-level transformer to easily turn a
+    non-normalized pandas dataframe into a numpy array for machine learning.
 
-|
 
-.. rubric:: Like OneHotEncoder but for non-normalized categories
+.. topic:: Like OneHotEncoder but for non-normalized categories
 
-* :class:`GapEncoder`, scalable and interpretable, where each encoding
-  dimension corresponds to a topic that summarizes substrings captured.
+    * :class:`GapEncoder`, scalable and interpretable, where each encoding
+      dimension corresponds to a topic that summarizes substrings captured.
 
-* :class:`SimilarityEncoder`, a simple modification of one-hot encoding
-  to capture the strings.
+    * :class:`SimilarityEncoder`, a simple modification of one-hot encoding
+      to capture the strings.
 
-* :class:`MinHashEncoder`, very scalable
+    * :class:`MinHashEncoder`, very scalable
 
 
 For a detailed description of the problem of encoding dirty categorical data,
