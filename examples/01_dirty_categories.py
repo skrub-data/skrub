@@ -50,20 +50,17 @@ trees.
 # The data
 # ========
 #
-# Data Importing and preprocessing
-# --------------------------------
-#
-# We first get the dataset:
+# We first retrieve the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
 employee_salaries = fetch_employee_salaries()
 
 # %%
-# Let's get X, the dataset:
+# X, the input data (descriptions of employees):
 X = employee_salaries.X
 X
 
 # %%
-# and y, our target column
+# and y, our target column (the annual salary)
 y = employee_salaries.y
 y.name
 
