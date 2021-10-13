@@ -63,8 +63,8 @@ class SuperVectorizer(ColumnTransformer):
         under this value, the low cardinality categorical values, and above or
         equal, the high cardinality categorical values.
         Different encoders will be applied to these two groups, defined by
-        the parameters `low_card_str_transformer`/`low_card_cat_transformer` and
-        `high_card_str_transformer`/`high_card_cat_transformer` respectively.
+        the parameters `low_card_cat_transformer` and
+        `high_card_cat_transformer` respectively.
 
     low_card_cat_transformer: Transformer or str or None, default=OneHotEncoder()
         Transformer used on categorical/string features with low cardinality
