@@ -24,6 +24,10 @@ dirty_cat: machine learning on dirty categories
 :class:`SuperVectorizer`: a simple transformer to easily turn a
 non-normalized pandas dataframe into a numpy array for machine learning.
 
+.. centered::
+
+    :ref:`An example <example_super_vectorizer>`
+
 .. raw:: html
 
     </div>

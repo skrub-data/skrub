@@ -364,5 +364,5 @@ div.document div.sphinxsidebar {
 /* My custom classes */
 p.right-align {
     float: right;
-    margin: 0ex;
+    margin-top: 0ex;
 }

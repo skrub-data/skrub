@@ -5,20 +5,22 @@ Dirty categories: machine learning with non normalized strings
 
 Including strings that represent categories often calls for much data
 preparation. In particular categories may appear with many morphological
-variants, when they have been manually input, or assembled from diverse
+variants, when they have been manually input or assembled from diverse
 sources.
 
-Including such a column in a learning pipeline as a standard categorical
-column leads to categories with very high cardinalities and can loose
-information on which categories are similar.
 Here we look at a dataset on wages [#]_ where the column *Employee
-Position Title* contains dirty categories.
+Position Title* contains dirty categories. On such a column, standard
+categorical encodings leads to very high dimensions and can loose
+information on which categories are similar.
+
+We investigate various encodings of this dirty column for the machine
+learning workflow, predicting the *current annual salary* with gradient
+boosted trees. First we manually assemble a complex encoder for the full
+dataframe, after which we show a much simpler way, albeit with less fine
+control.
+
 
 .. [#] https://catalog.data.gov/dataset/employee-salaries-2016
-
-We investigate encodings to include this dirty column in the machine learning
-workflow, and predict the *current annual salary*, using gradient boosted
-trees.
 
 
  .. |SV| replace::
@@ -206,10 +208,12 @@ plt.tight_layout()
 #
 
 # %%
+# .. _example_super_vectorizer:
+#
 # A simpler way: automatic vectorization
 # ======================================
 #
-# The code to assemble the column transformer is a bit tedious. We will
+# The code to assemble a column transformer is a bit tedious. We will
 # now explore a simpler, automated, way of encoding the data.
 #
 # Let's start again from the raw data:
