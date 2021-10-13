@@ -17,7 +17,7 @@ Major changes
   - The backend has changed: we now exclusively fetch the datasets from OpenML.
     End users should not see any difference regarding this.
   - The frontend, however, changed a little: the fetching functions stay the same
-    but their return values were modified in favor of more Pythonic interface.
+    but their return values were modified in favor of a more Pythonic interface.
     Refer to the docstrings of functions `dirty_cat.datasets.fetching.fetch_*`
     for more information.
   - The example notebooks were updated to reflect these changes.
