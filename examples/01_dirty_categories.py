@@ -240,7 +240,7 @@ X
 # Assembling the |SV| in a |Pipeline| with a powerful learner,
 # such as gradient boosted trees, gives **a machine-learning method that
 # can be readily applied to the dataframe**.
-
+#
 # The SuperVectorizer requires at least dirty_cat 0.2.0. 
 #
 
