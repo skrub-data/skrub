@@ -287,7 +287,7 @@ def test__features_to_csv_format():
 
 
 @mock.patch('dirty_cat.datasets.fetching.fetch_openml_dataset')
-@mock.patch("dirty_cat.datasets.fetching.fetch_dataset_as_dataclass")
+@mock.patch("dirty_cat.datasets.fetching.fetch_dataset_as_namedtuple")
 def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
                              mock_fetch_openml_dataset):
     """Tests functions ``fetch_*()``."""
