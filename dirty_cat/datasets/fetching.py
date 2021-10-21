@@ -21,6 +21,7 @@ import sklearn
 import warnings
 import pandas as pd
 
+from typing import Union
 from pathlib import Path
 from collections import namedtuple
 from distutils.version import LooseVersion
@@ -308,7 +309,8 @@ def _features_to_csv_format(features: Features) -> str:
 
 def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
                                 read_csv_kwargs: dict,
-                                load_dataframe: bool) -> namedtuple:
+                                load_dataframe: bool,
+                                ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
     Takes a dataset identifier, a target column name,
     and some additional keyword arguments for `pd.read_csv`.
@@ -365,7 +367,8 @@ def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
 
 def fetch_employee_salaries(load_dataframe: bool = True,
                             drop_linked: bool = True,
-                            drop_irrelevant: bool = True) -> namedtuple:
+                            drop_irrelevant: bool = True,
+                            ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the employee_salaries dataset.
 
     Parameters
@@ -377,6 +380,14 @@ def fetch_employee_salaries(load_dataframe: bool = True,
     drop_irrelevant: bool (default True)
         Drops column "full_name", which is usually irrelevant to the
         statistical analysis.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -402,8 +413,17 @@ def fetch_employee_salaries(load_dataframe: bool = True,
     return dataset
 
 
-def fetch_road_safety(load_dataframe: bool = True) -> namedtuple:
+def fetch_road_safety(load_dataframe: bool = True,
+                      ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the road safety dataset.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -419,8 +439,17 @@ def fetch_road_safety(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_medical_charge(load_dataframe: bool = True) -> namedtuple:
+def fetch_medical_charge(load_dataframe: bool = True
+                         ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the medical charge dataset.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -437,8 +466,17 @@ def fetch_medical_charge(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_midwest_survey(load_dataframe: bool = True) -> namedtuple:
+def fetch_midwest_survey(load_dataframe: bool = True
+                         ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the midwest survey dataset.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -455,8 +493,17 @@ def fetch_midwest_survey(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_open_payments(load_dataframe: bool = True) -> namedtuple:
+def fetch_open_payments(load_dataframe: bool = True
+                        ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the open payments dataset.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -474,8 +521,17 @@ def fetch_open_payments(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_traffic_violations(load_dataframe: bool = True) -> namedtuple:
+def fetch_traffic_violations(load_dataframe: bool = True
+                             ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the traffic violations dataset.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -493,8 +549,17 @@ def fetch_traffic_violations(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_drug_directory(load_dataframe: bool = True) -> namedtuple:
+def fetch_drug_directory(load_dataframe: bool = True
+                         ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the drug directory dataset.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
