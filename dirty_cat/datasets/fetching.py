@@ -134,7 +134,8 @@ class DatasetInfoOnly:
 
 
 def fetch_openml_dataset(dataset_id: int,
-                         data_directory: Path = get_data_dir()) -> dict:
+                         data_directory: Path = get_data_dir(),
+                         ) -> Dict[str, Any]:
     """
     Gets a dataset from OpenML (https://www.openml.org),
     or from the disk if already downloaded.
@@ -149,7 +150,7 @@ def fetch_openml_dataset(dataset_id: int,
 
     Returns
     -------
-    dict
+    Dict[str, Any]
         A dictionary containing:
           - ``description``: str
               The description of the dataset,
@@ -159,16 +160,6 @@ def fetch_openml_dataset(dataset_id: int,
           - ``path``: pathlib.Path
               The local path leading to the dataset,
               saved as a CSV file.
-
-          The following values are added by the fetches below (fetch_*)
-          - ``read_csv_kwargs``: Dict[str, Any]
-              A dict of keyword arguments that can be passed to
-              `pandas.read_csv` for reading.
-              Usually, it contains `quotechar`, `escapechar` and `na_values`.
-              Use by passing `**info['read_csv_kwargs']` to `read_csv`.
-              e.g., `df = pd.read_csv(info['path'], **info['read_csv_kwargs'])`
-          - ``target``: str
-              The name of `y`, the target column.
 
     """
     # Make path absolute
@@ -378,7 +369,7 @@ def _features_to_csv_format(features: Features) -> str:
 
 
 def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
-                               read_csv_kwargs: dict,
+                               read_csv_kwargs: Dict[str, Any],
                                load_dataframe: bool,
                                ) -> Union[DatasetAll, DatasetInfoOnly]:
     warnings.warn('Method `fetch_dataset_as_namedtuple` is deprecated, '
@@ -388,7 +379,7 @@ def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
 
 
 def fetch_dataset_as_dataclass(dataset_id: int, target: str,
-                               read_csv_kwargs: dict,
+                               read_csv_kwargs: Dict[str, Any],
                                load_dataframe: bool,
                                ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
@@ -465,7 +456,7 @@ def fetch_employee_salaries(load_dataframe: bool = True,
 
     See Also
     --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    dirty_cat.datasets.fetch_dataset_as_dataclass : additional information
     """
     dataset = fetch_dataset_as_dataclass(
         dataset_id=EMPLOYEE_SALARIES_ID,
@@ -507,7 +498,7 @@ def fetch_road_safety(load_dataframe: bool = True,
 
     See Also
     --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    dirty_cat.datasets.fetch_dataset_as_dataclass : additional information
     """
     return fetch_dataset_as_dataclass(
         dataset_id=ROAD_SAFETY_ID,
@@ -543,7 +534,7 @@ def fetch_medical_charge(load_dataframe: bool = True
 
     See Also
     --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    dirty_cat.datasets.fetch_dataset_as_dataclass : additional information
     """
     return fetch_dataset_as_dataclass(
         dataset_id=MEDICAL_CHARGE_ID,
@@ -573,7 +564,7 @@ def fetch_midwest_survey(load_dataframe: bool = True
 
     See Also
     --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    dirty_cat.datasets.fetch_dataset_as_dataclass : additional information
     """
     return fetch_dataset_as_dataclass(
         dataset_id=MIDWEST_SURVEY_ID,
@@ -604,7 +595,7 @@ def fetch_open_payments(load_dataframe: bool = True
 
     See Also
     --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    dirty_cat.datasets.fetch_dataset_as_dataclass : additional information
     """
     return fetch_dataset_as_dataclass(
         dataset_id=OPEN_PAYMENTS_ID,
@@ -638,7 +629,7 @@ def fetch_traffic_violations(load_dataframe: bool = True
 
     See Also
     --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    dirty_cat.datasets.fetch_dataset_as_dataclass : additional information
     """
     return fetch_dataset_as_dataclass(
         dataset_id=TRAFFIC_VIOLATIONS_ID,
@@ -670,7 +661,7 @@ def fetch_drug_directory(load_dataframe: bool = True
 
     See Also
     --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
+    dirty_cat.datasets.fetch_dataset_as_dataclass : additional information
     """
     return fetch_dataset_as_dataclass(
         dataset_id=DRUG_DIRECTORY_ID,
