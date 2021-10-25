@@ -23,6 +23,7 @@ import pandas as pd
 
 from pathlib import Path
 from collections import namedtuple
+from typing import Union, Dict, Any
 from distutils.version import LooseVersion
 
 from dirty_cat.datasets.utils import get_data_dir
@@ -63,7 +64,8 @@ DRUG_DIRECTORY_ID = 43044
 
 
 def fetch_openml_dataset(dataset_id: int,
-                         data_directory: Path = get_data_dir()) -> dict:
+                         data_directory: Path = get_data_dir(),
+                         ) -> Dict[str, Any]:
     """
     Gets a dataset from OpenML (https://www.openml.org),
     or from the disk if already downloaded.
@@ -78,7 +80,7 @@ def fetch_openml_dataset(dataset_id: int,
 
     Returns
     -------
-    dict
+    Dict[str, Any]
         A dictionary containing:
           - ``description``: str
               The description of the dataset,
@@ -88,16 +90,6 @@ def fetch_openml_dataset(dataset_id: int,
           - ``path``: pathlib.Path
               The local path leading to the dataset,
               saved as a CSV file.
-
-          The following values are added by the fetches below (fetch_*)
-          - ``read_csv_kwargs``: Dict[str, Any]
-              A dict of keyword arguments that can be passed to
-              `pandas.read_csv` for reading.
-              Usually, it contains `quotechar`, `escapechar` and `na_values`.
-              Use by passing `**info['read_csv_kwargs']` to `read_csv`.
-              e.g., `df = pd.read_csv(info['path'], **info['read_csv_kwargs'])`
-          - ``target``: str
-              The name of `y`, the target column.
 
     """
     # Make path absolute
@@ -308,32 +300,22 @@ def _features_to_csv_format(features: Features) -> str:
 
 def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
                                 read_csv_kwargs: dict,
-                                load_dataframe: bool) -> namedtuple:
+                                load_dataframe: bool,
+                                ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
     Takes a dataset identifier, a target column name,
     and some additional keyword arguments for `pd.read_csv`.
 
-    Returns a `collections.namedtuple` containing :
-    - ``description``: str
-        The description of the dataset, as gathered from OpenML.
-    - ``source``: str
-        The dataset's URL from OpenML.
-    - ``path``: pathlib.Path
-        The local path leading to the dataset,
-        saved as a CSV file.
-
-    If `load_dataframe` is True, the dataset is read and stored in memory,
-    and these fields are added:
-    - ``X``: pd.DataFrame
-        The dataset, as a pandas DataFrame.
-    - ``y``: pd.Series
-        The target column, as a pandas Series.
-    - ``read_csv_kwargs``: dict
-        A dictionary of keyword arguments that can be passed to
-        `pandas.read_csv`.
-
     If you don't need the dataset to be loaded in memory,
     pass `load_dataframe=False`.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     """
     info = fetch_openml_dataset(dataset_id)
@@ -365,8 +347,14 @@ def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
 
 def fetch_employee_salaries(load_dataframe: bool = True,
                             drop_linked: bool = True,
-                            drop_irrelevant: bool = True) -> namedtuple:
+                            drop_irrelevant: bool = True,
+                            ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the employee_salaries dataset.
+
+    Description of the dataset:
+    > Annual salary information including gross pay and overtime pay for all
+    active, permanent employees of Montgomery County, MD paid in calendar
+    year 2016. This information will be published annually each year.
 
     Parameters
     ----------
@@ -377,6 +365,14 @@ def fetch_employee_salaries(load_dataframe: bool = True,
     drop_irrelevant: bool (default True)
         Drops column "full_name", which is usually irrelevant to the
         statistical analysis.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -402,8 +398,23 @@ def fetch_employee_salaries(load_dataframe: bool = True,
     return dataset
 
 
-def fetch_road_safety(load_dataframe: bool = True) -> namedtuple:
+def fetch_road_safety(load_dataframe: bool = True,
+                      ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the road safety dataset.
+
+    Description of the dataset:
+    > Data reported to the police about the circumstances of personal injury
+    road accidents in Great Britain from 1979, and the maker and model
+    information of vehicles involved in the respective accident. This version
+    includes data up to 2015.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -419,8 +430,27 @@ def fetch_road_safety(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_medical_charge(load_dataframe: bool = True) -> namedtuple:
+def fetch_medical_charge(load_dataframe: bool = True
+                         ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the medical charge dataset.
+
+    Description of the dataset:
+    > The Inpatient Utilization and Payment Public Use File (Inpatient PUF)
+    provides information on inpatient discharges for Medicare fee-for-service
+    beneficiaries. The Inpatient PUF includes information on utilization,
+    payment (total payment and Medicare payment), and hospital-specific charges
+    for the more than 3,000 U.S. hospitals that receive Medicare Inpatient
+    Prospective Payment System (IPPS) payments. The PUF is organized by
+    hospital and Medicare Severity Diagnosis Related Group (MS-DRG) and
+    covers Fiscal Year (FY) 2011 through FY 2016.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -437,8 +467,20 @@ def fetch_medical_charge(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_midwest_survey(load_dataframe: bool = True) -> namedtuple:
+def fetch_midwest_survey(load_dataframe: bool = True
+                         ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the midwest survey dataset.
+
+    Description of the dataset:
+    > Survey to know if people self-identify as Midwesterners.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -455,8 +497,21 @@ def fetch_midwest_survey(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_open_payments(load_dataframe: bool = True) -> namedtuple:
+def fetch_open_payments(load_dataframe: bool = True
+                        ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the open payments dataset.
+
+    Description of the dataset:
+    > Payments given by healthcare manufacturing companies to medical doctors
+    or hospitals.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -474,8 +529,23 @@ def fetch_open_payments(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_traffic_violations(load_dataframe: bool = True) -> namedtuple:
+def fetch_traffic_violations(load_dataframe: bool = True
+                             ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the traffic violations dataset.
+
+    Description of the dataset:
+    > This dataset contains traffic violation information from all electronic
+    traffic violations issued in the Montgomery County, MD. Any information that can be used
+    to uniquely identify the vehicle, the vehicle owner or the officer issuing
+    the violation will not be published.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
@@ -493,8 +563,21 @@ def fetch_traffic_violations(load_dataframe: bool = True) -> namedtuple:
     )
 
 
-def fetch_drug_directory(load_dataframe: bool = True) -> namedtuple:
+def fetch_drug_directory(load_dataframe: bool = True
+                         ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the drug directory dataset.
+
+    Description of the dataset:
+    > Product listing data submitted to the U.S. FDA for all unfinished,
+    unapproved drugs.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
 
     See Also
     --------
