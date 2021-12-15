@@ -126,7 +126,17 @@ def _test_possibilities(
                 vectorizer_unknown.fit(pd.DataFrame(X['cat2'][:3]), y=np.array([1, 1, 2]))
                 vectorizer_unknown.transform(pd.DataFrame(X['cat2'][:-1]))
 
-
+    # Check that custom encoders parameters are not overwritten
+    encoder = OneHotEncoder(handle_unknown="ignore")
+    vectorizer_unknown = SuperVectorizer(
+        cardinality_threshold=4,
+        low_card_cat_transformer=encoder,
+        high_card_cat_transformer=GapEncoder(n_components=2),
+        numerical_transformer=StandardScaler(),
+        handle_unknown="error"
+    )
+    vectorizer_unknown.fit(pd.DataFrame(X['cat2'][:3]), y=np.array([1, 1, 2]))
+    vectorizer_unknown.transform(pd.DataFrame(X['cat2'][:-1]))
 
 def test_with_clean_data():
     """

@@ -50,18 +50,22 @@ def _set_handle_unknown(transformer: BaseEstimator, handle_unknown: str) -> Base
     Sets the `handle_unknown` parameter of a transformer. Input is in {"error", "ignore"},
     converts it if for OrdinalEncoder.
     """
-    if isinstance(transformer, OneHotEncoder) or isinstance(transformer, TargetEncoder):
-        return transformer.set_params(handle_unknown=handle_unknown)
-    elif isinstance(transformer, OrdinalEncoder):
-        if handle_unknown == "error":
-            return transformer.set_params(handle_unknown="error")
-        elif handle_unknown == "ignore":
-            return transformer.set_params(handle_unknown="use_encoded_value", unknown_value=np.nan)
-
-    else:
-        warn("handle_unknown parameter cannot be set with the transformer you chose for low_card_cat_transformer."
-             "Using default.")
+    # If low_card_cat_transformer is a string, it's drop or passthrough
+    if isinstance(transformer, str):
         return transformer
+    if handle_unknown == "error":
+        # Either the transformer has default value and we don't need to change it
+        # Or the user has changed the default value and we don't want to overwrite it
+        return transformer
+    elif handle_unknown == "ignore":
+        if isinstance(transformer, OneHotEncoder) or isinstance(transformer, TargetEncoder):
+            return transformer.set_params(handle_unknown="ignore")
+        elif isinstance(transformer, OrdinalEncoder):
+            return transformer.set_params(handle_unknown="use_encoded_value", unknown_value=np.nan)
+        else:
+            warn("handle_unknown parameter cannot be changed with the "
+                 "transformer you chose for low_card_cat_transformer.")
+            return transformer
 
 
 
@@ -138,6 +142,8 @@ class SuperVectorizer(ColumnTransformer):
         For OrdinalEncoder, when this parameter is set to ‘ignore’ and an unknown category is
         encountered during transform, the missing category will be replaced with np.nan.
         In the inverse transform, an unknown category will be denoted as None.
+        If an encoder with handle_unknown != "error" is passed for low_card_cat_transformer,
+        this parameter is ignored.
 
 
     Attributes
@@ -200,10 +206,7 @@ class SuperVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
-        # If the user has passed a custom transformer, its parameter wins over handle_unknown
-        # If low_card_cat_transformer is a string, it's drop or passthrough
-        if not isinstance(low_card_cat_transformer, str) and handle_unknown != 'error':
-            self.low_card_cat_transformer = _set_handle_unknown(self.low_card_cat_transformer, handle_unknown)
+        self.low_card_cat_transformer = _set_handle_unknown(self.low_card_cat_transformer, handle_unknown)
 
     @staticmethod
     def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
