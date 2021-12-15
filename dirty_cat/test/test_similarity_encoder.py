@@ -244,3 +244,18 @@ def test_get_features():
         'x0_z', 'x0_{', 'x0_|', 'x0_}', 'x0_~'
     ]
 
+def test_handle_unknown():
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"]).reshape((-1, 1))
+    #X = pd.DataFrame(X)
+    X_train = X[:10]
+
+    sim_enc = similarity_encoder.SimilarityEncoder(random_state=235, handle_unknown='ignore')
+    sim_enc.fit(X_train)
+    sim_enc.transform(X)
+    with pytest.raises(ValueError,
+                       match="Found unknown categories \['k' 'l' 'm'\] in column 0 during transform"):
+        sim_enc = similarity_encoder.SimilarityEncoder(random_state=235, handle_unknown='error')
+        sim_enc.fit(X_train)
+        sim_enc.transform(X)
+
+

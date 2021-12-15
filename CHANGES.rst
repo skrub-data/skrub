@@ -32,6 +32,9 @@ Major changes
 * Add a method "get_feature_names_out" for the **GapEncoder** and the **SuperVectorizer**,
   since "get_feature_names" will be depreciated in scikit-learn 1.2 (#216).
 
+* Add a `handle_unknown` parameter to the `SuperVectorizer` to deal with categories
+  that are not in the training set.
+
 Notes
 -----
 

@@ -19,10 +19,9 @@ from distutils.version import LooseVersion
 
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 
-from dirty_cat import GapEncoder
-
+from dirty_cat import GapEncoder, TargetEncoder
 
 _sklearn_loose_version = LooseVersion(sklearn.__version__)
 
@@ -44,6 +43,26 @@ def _replace_missing_in_col(df: pd.Series, value: str = "missing") -> pd.Series:
         df = df.cat.add_categories(value)
     df = df.fillna(value=value)
     return df
+
+
+def _set_handle_unknown(transformer: BaseEstimator, handle_unknown: str) -> BaseEstimator:
+    """
+    Sets the `handle_unknown` parameter of a transformer. Input is in {"error", "ignore"},
+    converts it if for OrdinalEncoder.
+    """
+    if isinstance(transformer, OneHotEncoder) or isinstance(transformer, TargetEncoder):
+        return transformer.set_params(handle_unknown=handle_unknown)
+    elif isinstance(transformer, OrdinalEncoder):
+        if handle_unknown == "error":
+            return transformer.set_params(handle_unknown="error")
+        elif handle_unknown == "ignore":
+            return transformer.set_params(handle_unknown="use_encoded_value", unknown_value=np.nan)
+
+    else:
+        warn("handle_unknown parameter cannot be set with the transformer you chose for low_card_cat_transformer."
+             "Using default.")
+        return transformer
+
 
 
 class SuperVectorizer(ColumnTransformer):
@@ -110,6 +129,17 @@ class SuperVectorizer(ColumnTransformer):
         When imputed, missing values are replaced by the string 'missing'.
         See also attribute `imputed_columns_`.
 
+    handle_unknown: {'error', 'ignore'}, default='error'
+        Passed to low_card_cat_transformer. Whether to raise an error or ignore if
+        an unknown categorical feature is present during transform (default is to raise).
+        For OneHotEncoder or TargetEncoder, when this parameter is set to ‘ignore’ and
+        an unknown category is encountered during transform, the resulting one-hot encoded
+        columns for this feature will be all zeros.
+        For OrdinalEncoder, when this parameter is set to ‘ignore’ and an unknown category is
+        encountered during transform, the missing category will be replaced with np.nan.
+        In the inverse transform, an unknown category will be denoted as None.
+
+
     Attributes
     ----------
 
@@ -145,12 +175,13 @@ class SuperVectorizer(ColumnTransformer):
                  datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
                  auto_cast: bool = True,
                  impute_missing: str = 'auto',
+                 handle_unknown: str = 'error',
                  # Following parameters are inherited from ColumnTransformer
                  remainder: str = 'passthrough',
                  sparse_threshold: float = 0.3,
                  n_jobs: int = None,
                  transformer_weights=None,
-                 verbose: bool = False,
+                 verbose: bool = False
                  ):
         super().__init__(transformers=[])
 
@@ -161,12 +192,18 @@ class SuperVectorizer(ColumnTransformer):
         self.datetime_transformer = datetime_transformer
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
+        self.handle_unknown = handle_unknown
 
         self.remainder = remainder
         self.sparse_threshold = sparse_threshold
         self.n_jobs = n_jobs
         self.transformer_weights = transformer_weights
         self.verbose = verbose
+
+        # If the user has passed a custom transformer, its parameter wins over handle_unknown
+        # If low_card_cat_transformer is a string, it's drop or passthrough
+        if not isinstance(low_card_cat_transformer, str) and handle_unknown != 'error':
+            self.low_card_cat_transformer = _set_handle_unknown(self.low_card_cat_transformer, handle_unknown)
 
     @staticmethod
     def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
@@ -432,7 +469,7 @@ class SuperVectorizer(ColumnTransformer):
             return ct_feature_names
 
         return all_trans_feature_names
-    
+
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """
         Ensures compatibility with sklearn >= 1.0, and returns the output of

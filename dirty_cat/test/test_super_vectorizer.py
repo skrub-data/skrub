@@ -3,14 +3,14 @@ import pytest
 import sklearn
 import pandas as pd
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, OrdinalEncoder, OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
 
 from distutils.version import LooseVersion
 
 from dirty_cat import SuperVectorizer
-from dirty_cat import GapEncoder
+from dirty_cat import GapEncoder, TargetEncoder
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):
@@ -104,6 +104,28 @@ def _test_possibilities(
     # With numpy
     vectorizer_cast.fit_transform(X_str.to_numpy())
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
+
+    # Test handle_unknown
+    for encoder in [OneHotEncoder(), OrdinalEncoder()]:
+        for handle_unknown in ["error", "ignore"]:
+            vectorizer_unknown = SuperVectorizer(
+                cardinality_threshold=4,
+                # we must have n_samples = 5 >= n_components
+                low_card_cat_transformer=encoder,
+                high_card_cat_transformer=GapEncoder(n_components=2),
+                numerical_transformer=StandardScaler(),
+                handle_unknown=handle_unknown
+            )
+            if handle_unknown == "error":
+                with pytest.raises(ValueError,
+                                   match="Found unknown categories \['30K\+'\] in column 0 during transform"):
+                    # y needed for TargetEncoder and ignored otherwise
+                    vectorizer_unknown.fit(pd.DataFrame(X['cat2'][:3]), y=[1, 1, 2])
+                    vectorizer_unknown.transform(pd.DataFrame(X['cat2'][:-1]))
+            elif handle_unknown == "ignore":
+                vectorizer_unknown.fit(pd.DataFrame(X['cat2'][:3]), y=[1, 1, 2])
+                vectorizer_unknown.transform(pd.DataFrame(X['cat2'][:-1]))
+
 
 
 def test_with_clean_data():
