@@ -106,7 +106,7 @@ def _test_possibilities(
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
 
     # Test handle_unknown
-    for encoder in [OneHotEncoder(), OrdinalEncoder()]:
+    for encoder in [OneHotEncoder(), OrdinalEncoder(), TargetEncoder()]:
         for handle_unknown in ["error", "ignore"]:
             vectorizer_unknown = SuperVectorizer(
                 cardinality_threshold=4,
@@ -120,10 +120,10 @@ def _test_possibilities(
                 with pytest.raises(ValueError,
                                    match="Found unknown categories \['30K\+'\] in column 0 during transform"):
                     # y needed for TargetEncoder and ignored otherwise
-                    vectorizer_unknown.fit(pd.DataFrame(X['cat2'][:3]), y=[1, 1, 2])
+                    vectorizer_unknown.fit(pd.DataFrame(X['cat2'][:3]), y=np.array([1, 1, 2]))
                     vectorizer_unknown.transform(pd.DataFrame(X['cat2'][:-1]))
             elif handle_unknown == "ignore":
-                vectorizer_unknown.fit(pd.DataFrame(X['cat2'][:3]), y=[1, 1, 2])
+                vectorizer_unknown.fit(pd.DataFrame(X['cat2'][:3]), y=np.array([1, 1, 2]))
                 vectorizer_unknown.transform(pd.DataFrame(X['cat2'][:-1]))
 
 
