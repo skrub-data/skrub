@@ -298,7 +298,7 @@ X_train_enc
 #
 # The |SV| assigns a transformer for each column. We can inspect this
 # choice:
-sup_vec.transformers_
+sup_vec.get_transformers()
 
 # %%
 # This is what is being passed to the |ColumnTransformer| under the hood.

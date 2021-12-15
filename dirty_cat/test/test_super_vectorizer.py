@@ -249,6 +249,13 @@ def test_transform():
     x_trans = sup_vec.transform(x)
     assert (x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
 
+def test_get_transformers():
+    X = _get_dirty_dataframe()
+    sup_vec = SuperVectorizer()
+    sup_vec.fit_transform(X)
+    trans = sup_vec.get_transformers()
+    assert trans[0][2] ==['str1', 'str2', 'cat1', 'cat2']
+    assert trans[1][2] == ['int', 'float']
 
 def fit_transform_equiv():
     """

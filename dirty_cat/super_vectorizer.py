@@ -439,3 +439,14 @@ class SuperVectorizer(ColumnTransformer):
         get_feature_names.
         """
         return self.get_feature_names()
+
+    def get_transformers(self):
+        res  = []
+        for name, trans, cols in self.transformers_:
+            if name == "remainder":
+                res.append((name, trans,
+                            list(map(lambda i:self.columns_[i], cols))))
+            else:
+                res.append((name, trans, cols))
+        return res
+
