@@ -32,6 +32,9 @@ Major changes
 * Add a method "get_feature_names_out" for the **GapEncoder** and the **SuperVectorizer**,
   since "get_feature_names" will be depreciated in scikit-learn 1.2 (#216).
 
+* Add a method "get_transformers" to the **SuperVectorizer**, to display the
+  transformers used in the SuperVectorizer, with the associated column names.
+
 Notes
 -----
 
