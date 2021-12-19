@@ -19,10 +19,11 @@ dirty_cat: machine learning on dirty categories
 
     <div class="flex-container">
     <div class="flex-content">
-    <span class="container-title">Automatically ingest a heterogeneous dataframe</span>
+    <span class="container-title">Automatic features from heterogeneous dataframes</span>
 
-:class:`SuperVectorizer`: a simple transformer to easily turn a
-non-normalized pandas dataframe into a numpy array for machine learning.
+:class:`SuperVectorizer`: a transformer **automatically turning a pandas
+dataframe into a numpy array** for machine learning -- a default encoding
+pipeline you can tweak.
 
 .. rst-class:: centered
 
@@ -75,8 +76,18 @@ Usage
 API documentation
 =================
 
-Encoders / Vectorizers
-----------------------
+Vectorizing a dataframe
+------------------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
+   SuperVectorizer
+
+Dirty Category encoders
+-----------------------
 
 .. autosummary::
    :toctree: generated/
@@ -87,7 +98,6 @@ Encoders / Vectorizers
    MinHashEncoder
    SimilarityEncoder
    TargetEncoder
-   SuperVectorizer
 
 Data download
 -----------------------
@@ -115,8 +125,8 @@ people giving feedback on success and failures with the different
 techniques and pointing us to open datasets on which we can do more
 empirical work.
 
-.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
-.. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
+.. [1] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
+.. [2] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
 
 
 .. seealso::

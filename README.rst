@@ -18,6 +18,9 @@ dirty_cat is a Python module for machine-learning on dirty categorical variables
 
 Website: https://dirty-cat.github.io/
 
+dirty_cat's SuperVectorizer automatically turns pandas data frames into
+numerical arrays suitable for learning.
+
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
 <https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality string categorical variables
