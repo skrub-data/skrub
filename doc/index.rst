@@ -19,7 +19,7 @@ dirty_cat: machine learning on dirty categories
 
     <div class="flex-container">
     <div class="flex-content">
-    <span class="container-title">Automatic features from a heterogeneous dataframe</span>
+    <span class="container-title">Automatic features from heterogeneous dataframes</span>
 
 :class:`SuperVectorizer`: a transformer **automatically turning a pandas
 dataframe into a numpy array** for machine learning -- a default encoding
