@@ -23,7 +23,6 @@ from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import GapEncoder
 
-
 _sklearn_loose_version = LooseVersion(sklearn.__version__)
 
 
@@ -169,29 +168,43 @@ class SuperVectorizer(ColumnTransformer):
         self.verbose = verbose
 
     @staticmethod
-    def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
+    def _auto_cast(X) -> pd.DataFrame:
         """
-        Takes a pandas DataFrame and tries to convert its columns to the best
+        Takes an array-like or a dataframe and tries to convert its columns to the best
         possible data type.
 
         Parameters
         ----------
-        X: pd.DataFrame
-            Input data as a pandas DataFrame.
+        X : {array-like, dataframe} of shape (n_samples, n_features)
+            The data to be transformed.
 
         Returns
         -------
         array
             The same array, with its columns casted to the best possible
             data type.
-            Columns with missing values won't be modified.
         """
         from pandas.core.dtypes.base import ExtensionDtype
+        # To use TextParser, we need to have a list of rows
+        colnames = None  # save the column names which we lose during the conversion
+        if isinstance(X, pd.DataFrame):
+            colnames = X.columns
+            X = X.to_numpy().tolist()
+        elif isinstance(X, np.ndarray):
+            X = X.tolist()
+
+        parser = pd.io.parsers.TextParser(X,
+                                          header=None,
+                                          na_values=[None, " ", "?", "..."],  # additional values to be considered as NA
+                                          infer_datetime_format=True,  # speed-up the date conversion
+                                          parse_dates=list(range(len(X[0]))))  # parse for all columns
+        X = parser.read()
+
+        if colnames is not None:
+            X.columns = colnames  # restore the column names
+
         for col in X.columns:
             dtype = X[col].dtype
-            contains_missing: bool = _has_missing_values(X[col])
-            if not contains_missing:
-                X[col] = X[col].convert_dtypes()
             # Cast pandas dtypes to numpy dtypes
             # for earlier versions of sklearn
             if issubclass(dtype.__class__, ExtensionDtype):
@@ -199,15 +212,11 @@ class SuperVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(dtype.type, errors='ignore')
                 except (TypeError, ValueError):
                     pass
-            # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
-            # because the former tends to raise all kind of issues when dealing
-            # with scikit-learn (as of version 0.24).
-            if contains_missing:
-                # Some numerical dtypes like Int64 or Float64 only support
-                # pd.NA so they must be converted to np.float64 before.
-                if pd.api.types.is_numeric_dtype(X[col]):
-                    X[col] = X[col].astype(np.float64)
-                X[col].fillna(value=np.nan, inplace=True)
+
+        # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan) 
+        # because the former tends to raise all kind of issues when dealing
+        # with scikit-learn (as of version 0.24).
+        X.fillna(value=np.nan, inplace=True)
 
         return X
 
@@ -229,29 +238,22 @@ class SuperVectorizer(ColumnTransformer):
             sparse matrices.
 
         """
-        # Convert to pandas DataFrame if not already.
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-            # Auto cast the imported DataFrame to avoid having issues with
-            # `object` dtype when we will cast columns to the fitted types.
+        # Create a copy to avoid altering the original data.
+        X = X.copy()
+        # Auto cast the imported data to avoid having issues with
+        # `object` dtype when we will cast columns to the fitted types.
+        if self.auto_cast:
             X = self._auto_cast(X)
-            # Check the number of columns matches the fitted array's.
-            if X.shape[1] != len(self.columns_):
-                raise ValueError("Passed array does not match column count of "
-                                 f"array seen at fit time. Got {X.shape[0]} "
-                                 f"columns, expected {len(self.columns_)}")
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
+        # Check the number of columns matches the fitted array's.
+        if X.shape[1] != len(self.columns_):
+            raise ValueError("Passed array does not match column count of "
+                             f"array seen at fit time. Got {X.shape[0]} "
+                             f"columns, expected {len(self.columns_)}")
+
         # If the DataFrame does not have named columns already,
         # apply the learnt columns
-        if isinstance(X.columns, pd.RangeIndex):
+        if isinstance(X.columns, pd.RangeIndex) or isinstance(X.columns, pd.Int64Index):
             X.columns = self.columns_
-
-        if self.auto_cast:
-            # Enforce types of the fitted input array.
-            for col, to_type in self.types_.items():
-                X[col] = X[col].astype(to_type)
 
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_col(X[col])
@@ -432,7 +434,7 @@ class SuperVectorizer(ColumnTransformer):
             return ct_feature_names
 
         return all_trans_feature_names
-    
+
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """
         Ensures compatibility with sklearn >= 1.0, and returns the output of

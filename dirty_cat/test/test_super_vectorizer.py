@@ -49,6 +49,65 @@ def _get_dirty_dataframe():
         'cat2': pd.Series(['20K+', '40K+', '60K+', '30K+', np.nan], dtype='object'),
     })
 
+def _get_numpy_array():
+    return np.array([["15", "56", pd.NA, "12", ""],
+            ["?", "2.4", "6.2", "10.45", np.nan],
+            ['public', np.nan, 'private', 'private', pd.NA],
+            ['officer', 'manager', None, 'chef', 'teacher'],
+            [np.nan, 'yes', 'no', 'yes', 'no'],
+            ['20K+', '40K+', '60K+', '30K+', np.nan]]).T
+
+def _get_list_of_lists():
+    return _get_numpy_array().tolist()
+
+def _get_datetimes_dataframe():
+    """
+    Creates a DataFrame with various date format, already converted or to be converted.
+    """
+    return pd.DataFrame({
+        "pd_datetime": [
+            pd.Timestamp("2019-01-01"),
+            pd.Timestamp("2019-01-02"),
+            pd.Timestamp("2019-01-03"),
+            pd.Timestamp("2019-01-04"),
+            pd.Timestamp("2019-01-05")],
+        "np_datetime": [np.datetime64('2018-01-01'),
+                        np.datetime64('2018-01-02'),
+                        np.datetime64('2018-01-03'),
+                        np.datetime64('2018-01-04'),
+                        np.datetime64('2018-01-05')],
+        "dmy-": ['11-12-2029',
+                 '02-12-2012',
+                 '11-09-2012',
+                 '13-02-2000',
+                 '10-11-2001'],
+        # "mdy-": ['11-13-2013',
+        #          '02-12-2012',
+        #          '11-31-2012',
+        #          '05-02-2000',
+        #          '10-11-2001'],
+        "ymd/": ['2014/12/31',
+                 '2001/11/23',
+                 '2005/02/12',
+                 '1997/11/01',
+                 '2011/05/05'],
+        "ymd/_hms:": ["2014/12/31 00:31:01",
+                      "2014/12/30 00:31:12",
+                      "2014/12/31 23:31:23",
+                      "2015/12/31 01:31:34",
+                      "2014/01/31 00:32:45"],
+        "y_int": [2005,
+                  1976,
+                  2012,
+                  2001,
+                  2024],
+        "y_int_old": [678,
+                      976,
+                      2012,
+                      2001,
+                      1998]
+    })
+
 
 def _test_possibilities(
         X,
@@ -183,6 +242,7 @@ def test_with_dirty_data():
         'low_card_cat': [2, 4],
         'high_card_cat': [3, 5],
     }
+
     _test_possibilities(
         X,
         expected_transformers_df,
@@ -193,6 +253,94 @@ def test_with_dirty_data():
         expected_transformers_np_cast,
     )
 
+
+def test_auto_cast():
+    """
+    Tests that the SuperVectorizer automatic type detection works as expected.
+    """
+    vectorizer = SuperVectorizer()
+
+    # Test datetime detection
+    X = _get_datetimes_dataframe()
+
+    expected_types_datetimes = {
+        "pd_datetime": "datetime64[ns]",
+        "np_datetime": "datetime64[ns]",
+        "dmy-": "datetime64[ns]",
+        "ymd/": "datetime64[ns]",
+        "ymd/_hms:": "datetime64[ns]",
+        "y_int": "datetime64[ns]",
+        "y_int_old": "int64",
+    }
+    X_trans = vectorizer._auto_cast(X)
+    for col in X_trans.columns:
+        assert expected_types_datetimes[col] == X_trans[col].dtype
+
+    # Test other types detection
+
+    expected_types_clean_dataframe = {
+        "int": "int64",
+        "float": "float64",
+        "str1": "object",
+        "str2": "object",
+        "cat1": "object",
+        "cat2": "object"
+    }
+
+    X = _get_clean_dataframe()
+    X_trans = vectorizer._auto_cast(X)
+    for col in X_trans.columns:
+        assert expected_types_clean_dataframe[col] == X_trans[col].dtype
+
+    # Test that missing values don't prevent type detection
+    expected_types_dirty_dataframe = {
+        "int": "float64",  # int type doesn't support nans
+        "float": "float64",
+        "str1": "object",
+        "str2": "object",
+        "cat1": "object",
+        "cat2": "object"
+    }
+
+    X = _get_dirty_dataframe()
+    X_trans = vectorizer._auto_cast(X)
+    for col in X_trans.columns:
+        assert expected_types_dirty_dataframe[col] == X_trans[col].dtype
+
+    X = _get_numpy_array()
+    X_trans = vectorizer._auto_cast(X)
+    for i in range(X_trans.shape[1]):
+        assert list(expected_types_dirty_dataframe.values())[i] == X_trans[i].dtype
+
+    X = _get_list_of_lists()
+    X_trans = vectorizer._auto_cast(X)
+    for i in range(X_trans.shape[1]):
+        assert list(expected_types_dirty_dataframe.values())[i] == X_trans[i].dtype
+
+
+def test_with_arrays():
+    """
+    Check that the SuperVectorizer works if we input a list of lists or a numpy array.
+    """
+    expected_transformers = {
+        'numeric': [0, 1],
+        'low_card_cat': [2, 4],
+        'high_card_cat': [3, 5],
+    }
+    vectorizer =  SuperVectorizer(
+        cardinality_threshold=4,
+        # we must have n_samples = 5 >= n_components
+        high_card_cat_transformer=GapEncoder(n_components=2),
+        numerical_transformer=StandardScaler(),
+    )
+
+    X = _get_numpy_array()
+    vectorizer.fit_transform(X)
+    check_same_transformers(expected_transformers, vectorizer.transformers)
+
+    X = _get_list_of_lists()
+    vectorizer.fit_transform(X)
+    check_same_transformers(expected_transformers, vectorizer.transformers)
 
 def test_get_feature_names():
     X = _get_clean_dataframe()
@@ -269,11 +417,9 @@ def test_fit_transform_equiv():
     enc1_x2 = sup_vec3.fit_transform(X2)
     enc2_x2 = sup_vec4.fit(X2).transform(X2)
 
-    assert enc1_x1 == enc2_x1
-    assert sup_vec1 == sup_vec2
+    assert np.array_equal(enc1_x1, enc2_x1, equal_nan=True)
 
-    assert enc1_x2 == enc2_x2
-    assert sup_vec3 == sup_vec4
+    assert np.array_equal(enc1_x2, enc2_x2, equal_nan=True)
 
 
 if __name__ == '__main__':
@@ -283,6 +429,12 @@ if __name__ == '__main__':
     print('start test_super_vectorizer with dirty df')
     test_with_dirty_data()
     print('test_super_vectorizer with dirty df passed')
+    print('start test_auto_cast')
+    test_auto_cast()
+    print('test_auto_cast passed')
+    print("start test_with_arrays")
+    test_with_arrays()
+    print("test_with_arrays passed")
     print('start test_get_feature_names')
     test_get_feature_names()
     print('test_get_feature_names passed')
