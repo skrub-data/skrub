@@ -250,7 +250,7 @@ def test_transform():
     assert (x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
 
 
-def fit_transform_equiv():
+def test_fit_transform_equiv():
     """
     We will test the equivalence between using `.fit_transform(X)`
     and `.fit(X).transform(X).`
@@ -290,7 +290,7 @@ if __name__ == '__main__':
     test_fit()
     print('test_fit passed')
     print('start fit_transform_equiv')
-    fit_transform_equiv()
+    test_fit_transform_equiv()
     print('fit_transform_equiv passed')
 
     print('Done')
