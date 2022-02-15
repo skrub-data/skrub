@@ -96,16 +96,6 @@ def _get_datetimes_dataframe():
                       "2014/12/31 23:31:23",
                       "2015/12/31 01:31:34",
                       "2014/01/31 00:32:45"],
-        "y_int": [2005,
-                  1976,
-                  2012,
-                  2001,
-                  2024],
-        "y_int_old": [678,
-                      976,
-                      2012,
-                      2001,
-                      1998]
     })
 
 
@@ -269,8 +259,6 @@ def test_auto_cast():
         "dmy-": "datetime64[ns]",
         "ymd/": "datetime64[ns]",
         "ymd/_hms:": "datetime64[ns]",
-        "y_int": "datetime64[ns]",
-        "y_int_old": "int64",
     }
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:

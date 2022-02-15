@@ -195,10 +195,16 @@ class SuperVectorizer(ColumnTransformer):
 
         parser = pd.io.parsers.TextParser(X,
                                           header=None,
-                                          na_values=[None, " ", "?", "..."],  # additional values to be considered as NA
-                                          infer_datetime_format=True,  # speed-up the date conversion
-                                          parse_dates=list(range(len(X[0]))))  # parse for all columns
+                                          na_values=[None, " ", "?", "..."])  # additional values to be considered as NA
         X = parser.read()
+
+        for col in X.columns:
+            # only convert string, object or categorical columns to datetimes
+            if X[col].dtype != "int64" and X[col].dtype != "float64":
+                try:
+                    X[col] = pd.to_datetime(X[col], errors='raise')
+                except:
+                    pass
 
         if colnames is not None:
             X.columns = colnames  # restore the column names
@@ -252,7 +258,7 @@ class SuperVectorizer(ColumnTransformer):
 
         # If the DataFrame does not have named columns already,
         # apply the learnt columns
-        if isinstance(X.columns, pd.RangeIndex) or isinstance(X.columns, pd.Int64Index):
+        if X.columns.dtype == "int64":
             X.columns = self.columns_
 
         for col in self.imputed_columns_:
