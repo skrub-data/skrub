@@ -201,7 +201,7 @@ class SuperVectorizer(ColumnTransformer):
 
         for col in X.columns:
             # only convert string, object or categorical columns to datetimes
-            if X[col].dtype != "int64" and X[col].dtype != "float64":
+            if not pd.api.types.is_numeric_dtype(X[col]):
                 try:
                     X[col] = pd.to_datetime(X[col], errors='raise')
                 except:
@@ -259,7 +259,7 @@ class SuperVectorizer(ColumnTransformer):
 
         # If the DataFrame does not have named columns already,
         # apply the learnt columns
-        if X.columns.dtype == "int64":
+        if pd.api.types.is_numeric_dtype(X.columns):
             X.columns = self.columns_
 
         for col in self.imputed_columns_:
