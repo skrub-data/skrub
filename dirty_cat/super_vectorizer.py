@@ -195,7 +195,8 @@ class SuperVectorizer(ColumnTransformer):
 
         parser = pd.io.parsers.TextParser(X,
                                           header=None,
-                                          na_values=[None, " ", "?", "..."])  # additional values to be considered as NA
+                                          na_values=[pd.NA, None, " ", "?", "..."])  # additional values to be considered as NA
+                                                                                     # adding pd.NA is needed  for python3.6 compatibility
         X = parser.read()
 
         for col in X.columns:
