@@ -180,8 +180,8 @@ class SuperVectorizer(ColumnTransformer):
 
         Returns
         -------
-        array
-            The same array, with its columns casted to the best possible
+        pd.DataFrame
+            The same array as a pandas DataFrame, with its columns casted to the best possible
             data type.
         """
         from pandas.core.dtypes.base import ExtensionDtype
