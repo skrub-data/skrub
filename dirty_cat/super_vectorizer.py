@@ -180,7 +180,7 @@ class SuperVectorizer(ColumnTransformer):
 
         Returns
         -------
-        array
+        pd.DataFrame
             The same array, with its columns casted to the best possible
             data type.
         """
