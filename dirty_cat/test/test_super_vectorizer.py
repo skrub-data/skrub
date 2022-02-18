@@ -405,9 +405,9 @@ def test_fit_transform_equiv():
     enc1_x2 = sup_vec3.fit_transform(X2)
     enc2_x2 = sup_vec4.fit(X2).transform(X2)
 
-    assert np.array_equal(enc1_x1, enc2_x1, equal_nan=True)
+    assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
-    assert np.array_equal(enc1_x2, enc2_x2, equal_nan=True)
+    assert np.allclose(enc1_x2, enc2_x2, rtol=0, atol=0, equal_nan=True)
 
 
 if __name__ == '__main__':
