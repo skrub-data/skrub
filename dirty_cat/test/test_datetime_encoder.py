@@ -21,6 +21,15 @@ def get_dirty_datetime_array():
                   pd.to_datetime(["2022-01-01 23:23:43", "2020-12-25 11:12:00", pd.NaT]),
                   pd.to_datetime(["2023-02-03 11:12:12", "2020-02-04 08:32:00", "2023-02-05 23:00:00"])])
 
+def get_datetime_with_TZ_array():
+    res = pd.DataFrame([pd.to_datetime(["2020-01-01 10:12:01"]),
+                  pd.to_datetime(["2021-02-03 12:45:23"]),
+                  pd.to_datetime(["2022-01-01 23:23:43"]),
+                  pd.to_datetime(["2023-02-03 11:12:12"])])
+    for col in res.columns:
+        res[col] = pd.DatetimeIndex(res[col]).tz_localize("Asia/Kolkata")
+    return res
+
 def test_fit():
     # Dates
     X = get_date_array()
@@ -76,6 +85,15 @@ def test_fit():
     assert enc.to_extract_full == expected_to_extract_full
     assert enc.to_extract == expected_to_extract
 
+    # Datetimes with TZ
+    X = get_datetime_with_TZ_array()
+    enc = DatetimeEncoder()
+    expected_to_extract_full = ["year", "month", "day", "hour", "other"]
+    expected_to_extract = {0: ["year", "month", "day", "hour", "other", "dayofweek"]}
+    enc.fit(X)
+    assert enc.to_extract_full == expected_to_extract_full
+    assert enc.to_extract == expected_to_extract
+
 
 def test_transform():
     # Dates
@@ -126,3 +144,17 @@ def test_transform():
     enc.fit(X)
     X_trans = enc.transform(X)
     assert np.allclose(X_trans, expected_result, equal_nan=True)
+
+    # Datetimes with TZ
+    # If the date are timezone-aware, all the feature extraction should be done
+    # in the provided timezone.
+    X = get_datetime_with_TZ_array()
+    enc = DatetimeEncoder()
+    expected_result = np.array([[2020, 1, 1, 10, 12 / 60 + 1 / 3600, 2],
+                                [2021, 2, 3, 12, 45 / 60 + 23 / 3600, 2],
+                                [2022, 1, 1, 23, 23 / 60 + 43 / 3600, 5],
+                                [2023, 2, 3, 11, 12 / 60 + 12 / 3600, 4]])
+    enc.fit(X)
+    X_trans = enc.transform(X)
+    assert np.allclose(X_trans, expected_result, equal_nan=True)
+

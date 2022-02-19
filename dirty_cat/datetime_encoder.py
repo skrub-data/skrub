@@ -1,6 +1,7 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 import pandas as pd
+from dirty_cat.utils import check_input
 from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 
 
@@ -9,6 +10,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     """
     This encoder transforms each datetime column into several numeric columns corresponding to temporal features,
     e.g year, month, day...
+    If the dates are timezone aware, all the features extracted will correspond to the provided timezone.
     Parameters
     ----------
     extract_until : {"year", "month", "day", "hour", "minute", "second",
@@ -76,19 +78,22 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             return np.isin(date_series, holidays).astype(int)
         elif feature == "other":
             # Gather all the variables below the extract_until into one numerical variable
-            res = (date_series - pd.to_datetime(pd.DatetimeIndex(date_series).floor(
+            res = (pd.to_datetime(date_series) - pd.to_datetime(pd.DatetimeIndex(date_series).floor(
                 self.word_to_alias[self.extract_until]))).to_numpy()
             # Convert to the extract_until unit (e.g if I extract until "minute", then convert to minutes)
             return res / pd.to_timedelta(1, self.word_to_alias[self.extract_until])
 
     def fit(self, X, y=None):
+        X = check_input(X)
         self.to_extract = {}  # Features to extract for each column, after removing constant features
         for i in range(X.shape[1]):
             self.to_extract[i] = []
         # Check which columns are constant
         for i in range(X.shape[1]):
-            print(i)
             for feature in self.to_extract_full:
+                print(feature)
+                print(self._extract_from_date(X[:, i], feature))
+                print(self._extract_from_date(X[:, i], feature).dtype)
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
                     self.to_extract[i].append(feature)
             if "day" in self.to_extract[i]:
@@ -102,6 +107,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, X, y=None):
+        X = check_input(X)
         # Create a new dataframe with the extracted features, choosing only features that weren't constant during fit
         X_ = np.empty((X.shape[0], self.n_features_out), dtype=np.float64)
         idx = 0
