@@ -35,15 +35,15 @@ def test_fit():
     X = get_date_array()
     enc = DatetimeEncoder()
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "dayofweek"],
-                           1: ["month", "day", "dayofweek"],
-                           2: ["year", "month", "day", "dayofweek"]}
+    expected_to_extract = {0: ["year", "month", "day"],
+                           1: ["month", "day"],
+                           2: ["year", "month", "day"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
     assert enc.to_extract == expected_to_extract
 
     X = get_date_array()
-    enc = DatetimeEncoder(add_holidays=True)
+    enc = DatetimeEncoder(add_day_of_the_week=True, add_holidays=True)
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
     expected_to_extract = {0: ["year", "month", "day", "dayofweek", "holiday"],
                            1: ["month", "day", "dayofweek", "holiday"],
@@ -55,7 +55,7 @@ def test_fit():
 
     # Datetimes
     X = get_datetime_array()
-    enc = DatetimeEncoder()
+    enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
     expected_to_extract = {0: ["year", "month", "day", "hour", "other", "dayofweek"],
                            1: ["month", "day", "hour", "other", "dayofweek"],
@@ -67,9 +67,9 @@ def test_fit():
     X = get_datetime_array()
     enc = DatetimeEncoder(extract_until="minute")
     expected_to_extract_full = ["year", "month", "day", "hour", "minute", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "hour", "minute", "other", "dayofweek"],
-                           1: ["month", "day", "hour", "minute", "dayofweek"],
-                           2: ["year", "month", "day", "hour", "dayofweek"]}
+    expected_to_extract = {0: ["year", "month", "day", "hour", "minute", "other"],
+                           1: ["month", "day", "hour", "minute"],
+                           2: ["year", "month", "day", "hour"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
     assert enc.to_extract == expected_to_extract
@@ -78,9 +78,9 @@ def test_fit():
     X = get_dirty_datetime_array()
     enc = DatetimeEncoder()
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "hour", "other", "dayofweek"],
-                           1: ["month", "day", "hour", "other", "dayofweek"],
-                           2: ["year", "month", "day", "hour", "dayofweek"]}
+    expected_to_extract = {0: ["year", "month", "day", "hour", "other"],
+                           1: ["month", "day", "hour", "other"],
+                           2: ["year", "month", "day", "hour"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
     assert enc.to_extract == expected_to_extract
@@ -89,7 +89,7 @@ def test_fit():
     X = get_datetime_with_TZ_array()
     enc = DatetimeEncoder()
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "hour", "other", "dayofweek"]}
+    expected_to_extract = {0: ["year", "month", "day", "hour", "other"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
     assert enc.to_extract == expected_to_extract
@@ -97,7 +97,7 @@ def test_fit():
     # Feature names
     # Without column names
     X = get_datetime_array()
-    enc = DatetimeEncoder()
+    enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_feature_names = ["0_year", "0_month", "0_day", "0_hour", "0_other", "0_dayofweek",
                               "1_month", "1_day", "1_hour", "1_other", "1_dayofweek",
                               "2_year", "2_month", "2_day", "2_hour", "2_dayofweek"]
@@ -108,7 +108,7 @@ def test_fit():
     X = get_datetime_array()
     X = pd.DataFrame(X)
     X.columns = ["col1", "col2", "col3"]
-    enc = DatetimeEncoder()
+    enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_feature_names = ["col1_year", "col1_month", "col1_day", "col1_hour", "col1_other", "col1_dayofweek",
                               "col2_month", "col2_day", "col2_hour", "col2_other", "col2_dayofweek",
                               "col3_year", "col3_month", "col3_day", "col3_hour", "col3_dayofweek"]
@@ -120,7 +120,7 @@ def test_fit():
 def test_transform():
     # Dates
     X = get_date_array()
-    enc = DatetimeEncoder()
+    enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_result = np.array([[2020, 1, 1, 2, 1, 2, 3, 2020, 1, 3, 4],
                                 [2021, 2, 3, 2, 2, 4, 1, 2021, 2, 5, 4],
                                 [2022, 1, 1, 5, 12, 25, 4, 2022, 1, 3, 0],
@@ -136,7 +136,7 @@ def test_transform():
     enc.fit(X)
     assert np.allclose(enc.transform(X), expected_result, equal_nan=True)
 
-    enc = DatetimeEncoder(add_holidays=True)
+    enc = DatetimeEncoder(add_day_of_the_week=True, add_holidays=True)
     expected_result = np.array([[2020, 1, 1, 2, 1, 1, 2, 3, 0, 2020, 1, 3, 4, 0],
                                 [2021, 2, 3, 2, 0, 2, 4, 1, 0, 2021, 2, 5, 4, 0],
                                 [2022, 1, 1, 5, 0, 12, 25, 4, 1, 2022, 1, 3, 0, 0],
@@ -146,7 +146,7 @@ def test_transform():
 
     # Datetimes
     X = get_datetime_array()[:, 0].reshape(-1, 1)
-    enc = DatetimeEncoder()
+    enc = DatetimeEncoder(add_day_of_the_week=True)
     # Check that the "other" feature is the right value and unit
     expected_result = np.array([[2020, 1, 1, 10, 12 / 60 + 1 / 3600, 2],
                                 [2021, 2, 3, 12, 45 / 60 + 23 / 3600, 2],
@@ -158,7 +158,7 @@ def test_transform():
 
     # Dirty Datetimes
     X = get_dirty_datetime_array()[:, 0].reshape(-1, 1)
-    enc = DatetimeEncoder()
+    enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_result = np.array([[2020, 1, 1, 10, 12 / 60 + 1 / 3600, 2],
                                 [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
                                 [2022, 1, 1, 23, 23 / 60 + 43 / 3600, 5],
@@ -171,7 +171,7 @@ def test_transform():
     # If the date are timezone-aware, all the feature extraction should be done
     # in the provided timezone.
     X = get_datetime_with_TZ_array()
-    enc = DatetimeEncoder()
+    enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_result = np.array([[2020, 1, 1, 10, 12 / 60 + 1 / 3600, 2],
                                 [2021, 2, 3, 12, 45 / 60 + 23 / 3600, 2],
                                 [2022, 1, 1, 23, 23 / 60 + 43 / 3600, 5],

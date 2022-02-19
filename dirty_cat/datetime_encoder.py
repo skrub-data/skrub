@@ -11,6 +11,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     """
     This encoder transforms each datetime column into several numeric columns corresponding to temporal features,
     e.g year, month, day...
+    If one of the feature is constant, this feature will be dropped.
     If the dates are timezone aware, all the features extracted will correspond to the provided timezone.
 
     Parameters
@@ -20,15 +21,15 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         Extract up to this granularity, and gather the rest into the "other" feature.
         For instance, if you specify "day", only "year", "month", "day" and "other" features will be created.
         The "other" feature will be a numerical value expressed in the "extract_until" unit.
-    add_day_of_the_week: bool, default=True
+    add_day_of_the_week: bool, default=False
         Add day of the week feature (if day is extracted). This is a numerical feature from 0 to 6.
     add_holidays : bool, default=False
         Whether to add a numerical variable encoding if the day of the date is a holiday.
-        Uses pandas calendar, which for now only supports US holidays.
+        Uses pandas calendar, which for now only contains US holidays.
     """
     def __init__(self,
                  extract_until="hour",
-                 add_day_of_the_week=True,
+                 add_day_of_the_week=False,
                  add_holidays=False):
         to_extract = ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]
         self.extract_until = extract_until
@@ -100,11 +101,10 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             for feature in self.to_extract_full:
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
                     self.to_extract[i].append(feature)
-            if "day" in self.to_extract[i]:
-                if self.add_day_of_the_week:
-                    self.to_extract[i].append("dayofweek")
-                if self.add_holidays:
-                    self.to_extract[i].append("holiday")
+            if self.add_day_of_the_week:
+                self.to_extract[i].append("dayofweek")
+            if self.add_holidays:
+                self.to_extract[i].append("holiday")
 
         self.n_features_out = len(np.concatenate(list(self.to_extract.values())))
 
