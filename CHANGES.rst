@@ -1,3 +1,13 @@
+Release 0.2.1
+=============
+
+Major changes
+-------------
+
+* New encoder: DatetimeEncoder transform a datetime column into several numerical columns
+  (year, month, day, hour, minute, second, ...)
+
+
 Release 0.2.0
 =============
 
