@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from dirty_cat.utils import check_input
 from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
+from typing import Union, Optional, List
 
 
 
@@ -11,16 +12,18 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     This encoder transforms each datetime column into several numeric columns corresponding to temporal features,
     e.g year, month, day...
     If the dates are timezone aware, all the features extracted will correspond to the provided timezone.
+
     Parameters
     ----------
     extract_until : {"year", "month", "day", "hour", "minute", "second",
     "millisecond", "microsecond", "nanosecond"}, default="hour"
-        Extract up to this granularity. For instance, if you specify "day", only "year", "month", and "day"
-        features will be created. The rest will me gathered into the "other" feature.
+        Extract up to this granularity, and gather the rest into the "other" feature.
+        For instance, if you specify "day", only "year", "month", "day" and "other" features will be created.
+        The "other" feature will be a numerical value expressed in the "extract_until" unit.
     add_day_of_the_week: bool, default=True
-        Add day of the week feature (if day is extracted).
+        Add day of the week feature (if day is extracted). This is a numerical feature from 0 to 6.
     add_holidays : bool, default=False
-        Whether to add a categorical variable encoding if the day of the date is a holiday (and if day is extracted).
+        Whether to add a numerical variable encoding if the day of the date is a holiday.
         Uses pandas calendar, which for now only supports US holidays.
     """
     def __init__(self,
@@ -84,6 +87,10 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             return res / pd.to_timedelta(1, self.word_to_alias[self.extract_until])
 
     def fit(self, X, y=None):
+        if isinstance(X, pd.DataFrame):
+            self.colnames = X.columns
+        else:
+            self.colnames = None
         X = check_input(X)
         self.to_extract = {}  # Features to extract for each column, after removing constant features
         for i in range(X.shape[1]):
@@ -91,9 +98,6 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         # Check which columns are constant
         for i in range(X.shape[1]):
             for feature in self.to_extract_full:
-                print(feature)
-                print(self._extract_from_date(X[:, i], feature))
-                print(self._extract_from_date(X[:, i], feature).dtype)
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
                     self.to_extract[i].append(feature)
             if "day" in self.to_extract[i]:
@@ -116,3 +120,25 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
                 X_[:, idx + j] = self._extract_from_date(X[:, i], feature)
             idx += len(self.to_extract[i])
         return X_
+
+    def get_feature_names(self) -> List[str]:
+        """
+        Returns clean feature names with format "<column_name>_<new_feature>"
+        if the original data has column names, otherwise with format
+        "<column_indice>_<new_feature>". new_feature is one of ["year", "month",
+        "day", "hour", "minute", "second", "millisecond", "microsecond",
+        "nanosecond", "dayofweek", "holiday"]
+        """
+        feature_names = []
+        for i in self.to_extract.keys():
+            prefix = str(i) if self.colnames is None else self.colnames[i]
+            for feature in self.to_extract[i]:
+                feature_names.append(prefix + "_" + feature)
+        return feature_names
+
+    def get_feature_names_out(self, input_features=None) -> List[str]:
+        """
+        Ensures compatibility with sklearn >= 1.0, and returns the output of
+        get_feature_names.
+        """
+        return self.get_feature_names()

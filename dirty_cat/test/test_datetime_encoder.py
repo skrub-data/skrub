@@ -94,6 +94,28 @@ def test_fit():
     assert enc.to_extract_full == expected_to_extract_full
     assert enc.to_extract == expected_to_extract
 
+    # Feature names
+    # Without column names
+    X = get_datetime_array()
+    enc = DatetimeEncoder()
+    expected_feature_names = ["0_year", "0_month", "0_day", "0_hour", "0_other", "0_dayofweek",
+                              "1_month", "1_day", "1_hour", "1_other", "1_dayofweek",
+                              "2_year", "2_month", "2_day", "2_hour", "2_dayofweek"]
+    enc.fit(X)
+    assert enc.get_feature_names() == expected_feature_names
+
+    # With column names
+    X = get_datetime_array()
+    X = pd.DataFrame(X)
+    X.columns = ["col1", "col2", "col3"]
+    enc = DatetimeEncoder()
+    expected_feature_names = ["col1_year", "col1_month", "col1_day", "col1_hour", "col1_other", "col1_dayofweek",
+                              "col2_month", "col2_day", "col2_hour", "col2_other", "col2_dayofweek",
+                              "col3_year", "col3_month", "col3_day", "col3_hour", "col3_dayofweek"]
+    enc.fit(X)
+    assert enc.get_feature_names() == expected_feature_names
+
+
 
 def test_transform():
     # Dates
@@ -157,4 +179,5 @@ def test_transform():
     enc.fit(X)
     X_trans = enc.transform(X)
     assert np.allclose(X_trans, expected_result, equal_nan=True)
+
 
