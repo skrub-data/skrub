@@ -7,6 +7,8 @@ from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 
 class DatetimeEncoder(TransformerMixin, BaseEstimator):
     """
+    This encoder transforms each datetime column into several numeric columns corresponding to temporal features,
+    e.g year, month, day...
     Parameters
     ----------
     extract_until : {"year", "month", "day", "hour", "minute", "second",
@@ -23,8 +25,6 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
                  extract_until="hour",
                  add_day_of_the_week=True,
                  add_holidays=False):
-        # TODO validate_keywords
-        # TODO doc
         to_extract = ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]
         self.extract_until = extract_until
         self._validate_keywords()
@@ -34,7 +34,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         self.add_holidays = add_holidays
         # number of new columns created per feature, before removing constant columns
         self.n_features_per_col_full = len(self.to_extract_full) + self.add_day_of_the_week + self.add_holidays
-
+        # Some functions need aliases
         self.word_to_alias = {"year": "Y", "month": "M", "day": "D", "hour": "H", "minute": "min", "second": "S",
                               "millisecond": "ms", "microsecond": "us", "nanosecond": "N"}
 
@@ -87,8 +87,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             self.to_extract[i] = []
         # Check which columns are constant
         for i in range(X.shape[1]):
+            print(i)
             for feature in self.to_extract_full:
-                if self._extract_from_date(X[:, i], feature).std() > 0:
+                if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
                     self.to_extract[i].append(feature)
             if "day" in self.to_extract[i]:
                 if self.add_day_of_the_week:
