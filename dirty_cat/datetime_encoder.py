@@ -130,7 +130,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, X, y=None):
-        """ Transform X using specified encoding scheme.
+        """ Transform X by replacing each column with corresponding numerical features.
         Parameters
         ----------
         X : array-like, shape (n_samples, ) or (n_samples, 1)
