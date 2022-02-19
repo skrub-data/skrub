@@ -11,7 +11,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     """
     This encoder transforms each datetime column into several numeric columns corresponding to temporal features,
     e.g year, month, day...
-    If one of the feature is constant, this feature will be dropped.
+    If one of the feature is constant, this feature is dropped.
     If the dates are timezone aware, all the features extracted will correspond to the provided timezone.
 
     Parameters
@@ -24,8 +24,17 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     add_day_of_the_week: bool, default=False
         Add day of the week feature (if day is extracted). This is a numerical feature from 0 to 6.
     add_holidays : bool, default=False
-        Whether to add a numerical variable encoding if the day of the date is a holiday.
+        Whether to add a numerical variable encoding if the day of the date is a holiday (1 for holiday,
+        0 for non-holiday).
         Uses pandas calendar, which for now only contains US holidays.
+
+    Attributes
+    ----------
+    n_features_out: int
+        Number of features of the transformed data.
+    features_per_column: Dict[int, List[str]]
+        A dictionary mapping the index of the original columns
+        to the list of features extracted for each column.
     """
     def __init__(self,
                  extract_until="hour",
@@ -38,8 +47,6 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         self.to_extract_full.append("other")
         self.add_day_of_the_week = add_day_of_the_week
         self.add_holidays = add_holidays
-        # number of new columns created per feature, before removing constant columns
-        self.n_features_per_col_full = len(self.to_extract_full) + self.add_day_of_the_week + self.add_holidays
         # Some functions need aliases
         self.word_to_alias = {"year": "Y", "month": "M", "day": "D", "hour": "H", "minute": "min", "second": "S",
                               "millisecond": "ms", "microsecond": "us", "nanosecond": "N"}
@@ -88,37 +95,59 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             return res / pd.to_timedelta(1, self.word_to_alias[self.extract_until])
 
     def fit(self, X, y=None):
+        """
+        Fit the DatetimeEncoder to X. In practice, just stores which extracted features
+        are not constant.
+
+        Parameters
+        ----------
+        X : array-like, shape [n_samples, n_features]
+            Data where each column is a datetime feature.
+        Returns
+        -------
+        self
+        """
         if isinstance(X, pd.DataFrame):
             self.colnames = X.columns
         else:
             self.colnames = None
         X = check_input(X)
-        self.to_extract = {}  # Features to extract for each column, after removing constant features
+        self.features_per_column = {}  # Features to extract for each column, after removing constant features
         for i in range(X.shape[1]):
-            self.to_extract[i] = []
+            self.features_per_column[i] = []
         # Check which columns are constant
         for i in range(X.shape[1]):
             for feature in self.to_extract_full:
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
-                    self.to_extract[i].append(feature)
+                    self.features_per_column[i].append(feature)
             if self.add_day_of_the_week:
-                self.to_extract[i].append("dayofweek")
+                self.features_per_column[i].append("dayofweek")
             if self.add_holidays:
-                self.to_extract[i].append("holiday")
+                self.features_per_column[i].append("holiday")
 
-        self.n_features_out = len(np.concatenate(list(self.to_extract.values())))
+        self.n_features_out = len(np.concatenate(list(self.features_per_column.values())))
 
         return self
 
     def transform(self, X, y=None):
+        """ Transform X using specified encoding scheme.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, ) or (n_samples, 1)
+            The data to transform, where each column is a datetime feature.
+        Returns
+        -------
+        array, shape (n_samples, n_features_out)
+            Transformed input.
+        """
         X = check_input(X)
         # Create a new dataframe with the extracted features, choosing only features that weren't constant during fit
         X_ = np.empty((X.shape[0], self.n_features_out), dtype=np.float64)
         idx = 0
         for i in range(X.shape[1]):
-            for j, feature in enumerate(self.to_extract[i]):
+            for j, feature in enumerate(self.features_per_column[i]):
                 X_[:, idx + j] = self._extract_from_date(X[:, i], feature)
-            idx += len(self.to_extract[i])
+            idx += len(self.features_per_column[i])
         return X_
 
     def get_feature_names(self) -> List[str]:
@@ -130,9 +159,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         "nanosecond", "dayofweek", "holiday"]
         """
         feature_names = []
-        for i in self.to_extract.keys():
+        for i in self.features_per_column.keys():
             prefix = str(i) if self.colnames is None else self.colnames[i]
-            for feature in self.to_extract[i]:
+            for feature in self.features_per_column[i]:
                 feature_names.append(prefix + "_" + feature)
         return feature_names
 

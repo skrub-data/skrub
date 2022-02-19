@@ -35,64 +35,64 @@ def test_fit():
     X = get_date_array()
     enc = DatetimeEncoder()
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
-    expected_to_extract = {0: ["year", "month", "day"],
+    expected_features_per_column = {0: ["year", "month", "day"],
                            1: ["month", "day"],
                            2: ["year", "month", "day"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
-    assert enc.to_extract == expected_to_extract
+    assert enc.features_per_column == expected_features_per_column
 
     X = get_date_array()
     enc = DatetimeEncoder(add_day_of_the_week=True, add_holidays=True)
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "dayofweek", "holiday"],
+    expected_features_per_column = {0: ["year", "month", "day", "dayofweek", "holiday"],
                            1: ["month", "day", "dayofweek", "holiday"],
                            2: ["year", "month", "day", "dayofweek", "holiday"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
-    assert enc.to_extract == expected_to_extract
+    assert enc.features_per_column == expected_features_per_column
 
 
     # Datetimes
     X = get_datetime_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "hour", "other", "dayofweek"],
+    expected_features_per_column = {0: ["year", "month", "day", "hour", "other", "dayofweek"],
                            1: ["month", "day", "hour", "other", "dayofweek"],
                            2: ["year", "month", "day", "hour", "dayofweek"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
-    assert enc.to_extract == expected_to_extract
+    assert enc.features_per_column == expected_features_per_column
 
     X = get_datetime_array()
     enc = DatetimeEncoder(extract_until="minute")
     expected_to_extract_full = ["year", "month", "day", "hour", "minute", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "hour", "minute", "other"],
+    expected_features_per_column = {0: ["year", "month", "day", "hour", "minute", "other"],
                            1: ["month", "day", "hour", "minute"],
                            2: ["year", "month", "day", "hour"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
-    assert enc.to_extract == expected_to_extract
+    assert enc.features_per_column == expected_features_per_column
 
     # Dirty Datetimes
     X = get_dirty_datetime_array()
     enc = DatetimeEncoder()
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "hour", "other"],
+    expected_features_per_column = {0: ["year", "month", "day", "hour", "other"],
                            1: ["month", "day", "hour", "other"],
                            2: ["year", "month", "day", "hour"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
-    assert enc.to_extract == expected_to_extract
+    assert enc.features_per_column == expected_features_per_column
 
     # Datetimes with TZ
     X = get_datetime_with_TZ_array()
     enc = DatetimeEncoder()
     expected_to_extract_full = ["year", "month", "day", "hour", "other"]
-    expected_to_extract = {0: ["year", "month", "day", "hour", "other"]}
+    expected_features_per_column = {0: ["year", "month", "day", "hour", "other"]}
     enc.fit(X)
     assert enc.to_extract_full == expected_to_extract_full
-    assert enc.to_extract == expected_to_extract
+    assert enc.features_per_column == expected_features_per_column
 
     # Feature names
     # Without column names
