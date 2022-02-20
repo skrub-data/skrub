@@ -18,6 +18,17 @@ def check_same_transformers(expected_transformers: dict, actual_transformers: li
     actual_transformers_dict = dict([(name, cols) for name, trans, cols in actual_transformers])
     assert actual_transformers_dict == expected_transformers
 
+def type_equality(expected_type, actual_type):
+    """
+    Checks that the expected type is equal to the actual type, assuming object and str types
+    are equivalent (considered as categorical by the supervectorizer).
+    """
+    if (isinstance(expected_type , object) or  isinstance(expected_type, str))\
+            and (isinstance(actual_type, object) or isinstance(actual_type, str)):
+        return True
+    else:
+        return expected_type == actual_type
+
 
 def _get_clean_dataframe():
     """
@@ -278,7 +289,7 @@ def test_auto_cast():
     X = _get_clean_dataframe()
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:
-        assert expected_types_clean_dataframe[col] == X_trans[col].dtype
+        assert type_equality(expected_types_clean_dataframe[col], X_trans[col].dtype)
 
     # Test that missing values don't prevent type detection
     expected_types_dirty_dataframe = {
@@ -293,18 +304,7 @@ def test_auto_cast():
     X = _get_dirty_dataframe()
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:
-        assert expected_types_dirty_dataframe[col] == X_trans[col].dtype
-
-    X = _get_numpy_array()
-    X_trans = vectorizer._auto_cast(X)
-    for i in range(X_trans.shape[1]):
-        assert list(expected_types_dirty_dataframe.values())[i] == X_trans[i].dtype
-
-    X = _get_list_of_lists()
-    X_trans = vectorizer._auto_cast(X)
-    for i in range(X_trans.shape[1]):
-        assert list(expected_types_dirty_dataframe.values())[i] == X_trans[i].dtype
-
+        assert type_equality(expected_types_dirty_dataframe[col], X_trans[col].dtype)
 
 def test_with_arrays():
     """

@@ -12,6 +12,7 @@ import sklearn
 
 import numpy as np
 import pandas as pd
+from pandas.io.parsers import STR_NA_VALUES
 
 from warnings import warn
 from typing import Union, Optional, List
@@ -168,63 +169,58 @@ class SuperVectorizer(ColumnTransformer):
         self.verbose = verbose
 
     @staticmethod
-    def _auto_cast(X) -> pd.DataFrame:
+    def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
         """
-        Takes an array-like or a dataframe and tries to convert its columns to the best
+        Takes a dataframe and tries to convert its columns to the best
         possible data type.
 
         Parameters
         ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
+        X : {dataframe} of shape (n_samples, n_features)
             The data to be transformed.
 
         Returns
         -------
         pd.DataFrame
-            The same array as a pandas DataFrame, with its columns casted to the best possible
+            The same pandas DataFrame, with its columns casted to the best possible
             data type.
         """
         from pandas.core.dtypes.base import ExtensionDtype
-        # To use TextParser, we need to have a list of rows
-        colnames = None  # save the column names which we lose during the conversion
-        if isinstance(X, pd.DataFrame):
-            colnames = X.columns
-            X = X.to_numpy().tolist()
-        elif isinstance(X, np.ndarray):
-            X = X.tolist()
 
-        parser = pd.io.parsers.TextParser(X,
-                                          header=None,
-                                          na_values=[pd.NA, None, " ", "?", "..."])  # additional values to be considered as NA
-                                                                                     # adding pd.NA is needed  for python3.6 compatibility
-        X = parser.read()
-
+        # Handle missing values
         for col in X.columns:
-            # only convert string, object or categorical columns to datetimes
-            if not pd.api.types.is_numeric_dtype(X[col]):
+            contains_missing: bool = _has_missing_values(X[col])
+            # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
+            # because the former tends to raise all kind of issues when dealing
+            # with scikit-learn (as of version 0.24).
+            if contains_missing:
+                # Some numerical dtypes like Int64 or Float64 only support
+                # pd.NA so they must be converted to np.float64 before.
+                if pd.api.types.is_numeric_dtype(X[col]):
+                    X[col] = X[col].astype(np.float64)
+                X[col].fillna(value=np.nan, inplace=True)
+        X = X.replace(list(STR_NA_VALUES) + [None, "?", "..."],
+                      np.nan)
+        X = X.replace(r'^\s+$', np.nan, regex=True) # replace whitespace only
+
+        # Convert to best possible data type
+        for col in X.columns:
+            if not pd.api.types.is_datetime64_any_dtype(X[col]): # we don't want to cast datetime64
                 try:
-                    X[col] = pd.to_datetime(X[col], errors='raise')
+                    X[col] = pd.to_numeric(X[col], errors='raise')
                 except:
-                    pass
-
-        if colnames is not None:
-            X.columns = colnames  # restore the column names
-
-        for col in X.columns:
-            dtype = X[col].dtype
+                    # Only try to convert to datetime if the variable isn't numeric.
+                    try:
+                        X[col] = pd.to_datetime(X[col], errors='raise')
+                    except:
+                        pass
             # Cast pandas dtypes to numpy dtypes
             # for earlier versions of sklearn
-            if issubclass(dtype.__class__, ExtensionDtype):
+            if issubclass(X[col].dtype.__class__, ExtensionDtype):
                 try:
-                    X[col] = X[col].astype(dtype.type, errors='ignore')
+                    X[col] = X[col].astype(X[col].dtype.type, errors='ignore')
                 except (TypeError, ValueError):
                     pass
-
-        # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan) 
-        # because the former tends to raise all kind of issues when dealing
-        # with scikit-learn (as of version 0.24).
-        X.fillna(value=np.nan, inplace=True)
-
         return X
 
     def transform(self, X) -> np.ndarray:
@@ -245,12 +241,16 @@ class SuperVectorizer(ColumnTransformer):
             sparse matrices.
 
         """
-        # Create a copy to avoid altering the original data.
-        X = X.copy()
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        else:
+            # Create a copy to avoid altering the original data.
+            X = X.copy()
         # Auto cast the imported data to avoid having issues with
         # `object` dtype when we will cast columns to the fitted types.
         if self.auto_cast:
             X = self._auto_cast(X)
+            self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
         # Check the number of columns matches the fitted array's.
         if X.shape[1] != len(self.columns_):
             raise ValueError("Passed array does not match column count of "
