@@ -16,10 +16,10 @@ def get_datetime_array():
                   pd.to_datetime(["2023-02-03 11:12:12", "2020-02-04 08:32:00", "2023-02-05 23:00:00"])])
 
 def get_dirty_datetime_array():
-    return np.array([pd.to_datetime(["2020-01-01 10:12:01", "2020-01-02 10:23:00", "2020-01-03 10:00:00"]),
-                  pd.to_datetime([np.nan, "2020-02-04 22:12:00", "2021-02-05 12:00:00"]),
-                  pd.to_datetime(["2022-01-01 23:23:43", "2020-12-25 11:12:00", pd.NaT]),
-                  pd.to_datetime(["2023-02-03 11:12:12", "2020-02-04 08:32:00", "2023-02-05 23:00:00"])])
+    return np.array([np.array(pd.to_datetime(["2020-01-01 10:12:01", "2020-01-02 10:23:00", "2020-01-03 10:00:00"])),
+                  np.array(pd.to_datetime([np.nan, "2020-02-04 22:12:00", "2021-02-05 12:00:00"])),
+                  np.array(pd.to_datetime(["2022-01-01 23:23:43", "2020-12-25 11:12:00", pd.NaT])),
+                  np.array(pd.to_datetime(["2023-02-03 11:12:12", "2020-02-04 08:32:00", "2023-02-05 23:00:00"]))])
 
 def get_datetime_with_TZ_array():
     res = pd.DataFrame([pd.to_datetime(["2020-01-01 10:12:01"]),
