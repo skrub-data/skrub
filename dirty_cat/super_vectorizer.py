@@ -12,7 +12,6 @@ import sklearn
 
 import numpy as np
 import pandas as pd
-from pandas.io.parsers import STR_NA_VALUES
 
 from warnings import warn
 from typing import Union, Optional, List
@@ -199,7 +198,7 @@ class SuperVectorizer(ColumnTransformer):
                 if pd.api.types.is_numeric_dtype(X[col]):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
-        X = X.replace(list(STR_NA_VALUES) + [None, "?", "..."],
+        X = X.replace(list(pd.io.parsers.STR_NA_VALUES) + [None, "?", "..."],
                       np.nan)
         X = X.replace(r'^\s+$', np.nan, regex=True) # replace whitespace only
 
