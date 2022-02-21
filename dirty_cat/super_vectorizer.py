@@ -198,7 +198,9 @@ class SuperVectorizer(ColumnTransformer):
                 if pd.api.types.is_numeric_dtype(X[col]):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
-        X = X.replace(list(pd.io.parsers.STR_NA_VALUES) + [None, "?", "..."],
+        STR_NA_VALUES = ['null', '', '1.#QNAN', '#NA', 'nan', '#N/A N/A', '-1.#QNAN', '<NA>', '-1.#IND', '-nan', 'n/a',
+                         '-NaN', '1.#IND', 'NULL', 'NA', 'N/A', '#N/A', 'NaN'] #taken from pandas
+        X = X.replace(STR_NA_VALUES + [None, "?", "..."],
                       np.nan)
         X = X.replace(r'^\s+$', np.nan, regex=True) # replace whitespace only
 
