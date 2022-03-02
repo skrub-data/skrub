@@ -30,7 +30,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
     Attributes
     ----------
-    n_features_out: int
+    n_features_out_: int
         Number of features of the transformed data.
     features_per_column: Dict[int, List[str]]
         A dictionary mapping the index of the original columns
@@ -40,11 +40,8 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
                  extract_until="hour",
                  add_day_of_the_week=False,
                  add_holidays=False):
-        to_extract = ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]
+        self.to_extract = ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]
         self.extract_until = extract_until
-        self._validate_keywords()
-        self.to_extract_full = to_extract[:to_extract.index(extract_until) + 1]
-        self.to_extract_full.append("other")
         self.add_day_of_the_week = add_day_of_the_week
         self.add_holidays = add_holidays
         # Some functions need aliases
@@ -72,7 +69,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         elif feature == "second":
             return pd.DatetimeIndex(date_series).second.to_numpy()
         elif feature == "millisecond":
-            return pd.DatetimeIndex(date_series).microsecond.to_numpy()
+            return pd.DatetimeIndex(date_series).millisecond.to_numpy()
         elif feature == "microsecond":
             return pd.DatetimeIndex(date_series).microsecond.to_numpy()
         elif feature == "nanosecond":
@@ -105,6 +102,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         self
             Fitted DatetimeEncoder instance.
         """
+        self._validate_keywords()
+        self.to_extract_full = self.to_extract[:self.to_extract.index(self.extract_until) + 1]
+        self.to_extract_full.append("other")
         if isinstance(X, pd.DataFrame):
             self.colnames = X.columns
         else:
@@ -123,7 +123,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             if self.add_holidays:
                 self.features_per_column[i].append("holiday")
 
-        self.n_features_out = len(np.concatenate(list(self.features_per_column.values())))
+        self.n_features_out_ = len(np.concatenate(list(self.features_per_column.values())))
 
         return self
 
@@ -135,12 +135,12 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             The data to transform, where each column is a datetime feature.
         Returns
         -------
-        array, shape (n_samples, n_features_out)
+        array, shape (n_samples, n_features_out_)
             Transformed input.
         """
         X = check_input(X)
         # Create a new dataframe with the extracted features, choosing only features that weren't constant during fit
-        X_ = np.empty((X.shape[0], self.n_features_out), dtype=np.float64)
+        X_ = np.empty((X.shape[0], self.n_features_out_), dtype=np.float64)
         idx = 0
         for i in range(X.shape[1]):
             for j, feature in enumerate(self.features_per_column[i]):
