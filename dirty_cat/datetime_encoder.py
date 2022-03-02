@@ -11,7 +11,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     """
     This encoder transforms each datetime column into several numeric columns corresponding to temporal features,
     e.g year, month, day...
-    If one of the feature is constant, this feature is dropped.
+    Constant extracted features are dropped ; for instance, if the year is always the same in a feature, the extracted "year" column won't be added.
     If the dates are timezone aware, all the features extracted will correspond to the provided timezone.
 
     Parameters
@@ -53,13 +53,10 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
     def _validate_keywords(self):
         if self.extract_until not in ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]:
-            msg = (
-                """extract_until should be one of ["year", "month", "day", "hour", "minute", "second", "millisecond", 
-                "microsecond", "nanosecond"], got {0}.""".format(
-                    self.extract_until
-                )
+            raise ValueError(
+                f'"extract_until" should be one of ["year", "month", "day", "hour", "minute", '
+                f'"second", "millisecond", "microsecond", "nanosecond"], got {self.extract_until}.'
             )
-            raise ValueError(msg)
 
     def _extract_from_date(self, date_series, feature):
         if feature == "year":
@@ -106,6 +103,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         Returns
         -------
         self
+            Fitted DatetimeEncoder instance.
         """
         if isinstance(X, pd.DataFrame):
             self.colnames = X.columns
@@ -154,7 +152,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         """
         Returns clean feature names with format "<column_name>_<new_feature>"
         if the original data has column names, otherwise with format
-        "<column_indice>_<new_feature>". new_feature is one of ["year", "month",
+        "<column_index>_<new_feature>". new_feature is one of ["year", "month",
         "day", "hour", "minute", "second", "millisecond", "microsecond",
         "nanosecond", "dayofweek", "holiday"]
         """
@@ -162,7 +160,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         for i in self.features_per_column.keys():
             prefix = str(i) if self.colnames is None else self.colnames[i]
             for feature in self.features_per_column[i]:
-                feature_names.append(prefix + "_" + feature)
+                feature_names.append(f"{prefix}_{feature}")
         return feature_names
 
     def get_feature_names_out(self, input_features=None) -> List[str]:

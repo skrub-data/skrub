@@ -168,7 +168,7 @@ def test_transform():
     assert np.allclose(X_trans, expected_result, equal_nan=True)
 
     # Datetimes with TZ
-    # If the date are timezone-aware, all the feature extraction should be done
+    # If the dates are timezone-aware, all the feature extractions should be done
     # in the provided timezone.
     X = get_datetime_with_TZ_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
