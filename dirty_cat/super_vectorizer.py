@@ -254,7 +254,7 @@ class SuperVectorizer(ColumnTransformer):
             self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
         if X.shape[1] != len(self.columns_):
             raise ValueError("Passed array does not match column count of "
-                             f"array seen at fit time. Got {X.shape[0]} "
+                             f"array seen at fit time. Got {X.shape[1]} "
                              f"columns, expected {len(self.columns_)}")
 
         # If the DataFrame does not have named columns already,
