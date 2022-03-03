@@ -199,7 +199,7 @@ class SuperVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
         STR_NA_VALUES = ['null', '', '1.#QNAN', '#NA', 'nan', '#N/A N/A', '-1.#QNAN', '<NA>', '-1.#IND', '-nan', 'n/a',
-                         '-NaN', '1.#IND', 'NULL', 'NA', 'N/A', '#N/A', 'NaN'] #taken from pandas
+                         '-NaN', '1.#IND', 'NULL', 'NA', 'N/A', '#N/A', 'NaN']  # taken from pandas.io.parsers (version 1.1.4)
         X = X.replace(STR_NA_VALUES + [None, "?", "..."],
                       np.nan)
         X = X.replace(r'^\s+$', np.nan, regex=True) # replace whitespace only
@@ -252,7 +252,6 @@ class SuperVectorizer(ColumnTransformer):
         if self.auto_cast:
             X = self._auto_cast(X)
             self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
-        # Check the number of columns matches the fitted array's.
         if X.shape[1] != len(self.columns_):
             raise ValueError("Passed array does not match column count of "
                              f"array seen at fit time. Got {X.shape[0]} "
