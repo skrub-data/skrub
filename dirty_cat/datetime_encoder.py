@@ -96,7 +96,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : array-like, shape [n_samples, n_features]
+        X : array-like, shape (n_samples, n_features)
             Data where each column is a datetime feature.
         Returns
         -------
@@ -132,7 +132,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         """ Transform X by replacing each column with corresponding numerical features.
         Parameters
         ----------
-        X : array-like, shape (n_samples, ) or (n_samples, 1)
+        X : array-like, shape (n_samples, n_features)
             The data to transform, where each column is a datetime feature.
         Returns
         -------
