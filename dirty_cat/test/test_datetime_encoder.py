@@ -102,7 +102,7 @@ def test_fit():
                               "1_month", "1_day", "1_hour", "1_other", "1_dayofweek",
                               "2_year", "2_month", "2_day", "2_hour", "2_dayofweek"]
     enc.fit(X)
-    assert enc.get_feature_names() == expected_feature_names
+    assert enc.get_feature_names_out() == expected_feature_names
 
     # With column names
     X = get_datetime_array()
@@ -113,7 +113,7 @@ def test_fit():
                               "col2_month", "col2_day", "col2_hour", "col2_other", "col2_dayofweek",
                               "col3_year", "col3_month", "col3_day", "col3_hour", "col3_dayofweek"]
     enc.fit(X)
-    assert enc.get_feature_names() == expected_feature_names
+    assert enc.get_feature_names_out() == expected_feature_names
 
 
 

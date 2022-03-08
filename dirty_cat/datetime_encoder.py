@@ -151,7 +151,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             idx += len(self.features_per_column_[i])
         return X_
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names_out(self, input_features=None) -> List[str]:
         """
         Returns clean feature names with format "<column_name>_<new_feature>"
         if the original data has column names, otherwise with format
@@ -166,9 +166,10 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
                 feature_names.append(f"{prefix}_{feature}")
         return feature_names
 
-    def get_feature_names_out(self, input_features=None) -> List[str]:
+    def get_feature_names(self) -> List[str]:
         """
-        Ensures compatibility with sklearn >= 1.0, and returns the output of
-        get_feature_names.
+        Ensures compatibility with sklearn < 1.0, and returns the output of
+        get_feature_names_out.
         """
-        return self.get_feature_names()
+        return self.get_feature_names_out()
+
