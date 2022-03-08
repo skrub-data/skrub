@@ -5,7 +5,10 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from typing import List
 from dirty_cat.utils import check_input
 
-
+# Some functions need aliases
+WORD_TO_ALIAS = {"year": "Y", "month": "M", "day": "D", "hour": "H", "minute": "min", "second": "S",
+                 "millisecond": "ms", "microsecond": "us", "nanosecond": "N"}
+TIME_LEVELS = ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]
 
 
 class DatetimeEncoder(TransformerMixin, BaseEstimator):
@@ -37,23 +40,19 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         A dictionary mapping the index of the original columns
         to the list of features extracted for each column.
     """
+
     def __init__(self,
                  extract_until="hour",
                  add_day_of_the_week=False,
                  add_holidays=False):
-        self.to_extract = ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]
         self.extract_until = extract_until
         self.add_day_of_the_week = add_day_of_the_week
         self.add_holidays = add_holidays
-        # Some functions need aliases
-        self.word_to_alias = {"year": "Y", "month": "M", "day": "D", "hour": "H", "minute": "min", "second": "S",
-                              "millisecond": "ms", "microsecond": "us", "nanosecond": "N"}
 
     def _validate_keywords(self):
-        if self.extract_until not in ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]:
+        if self.extract_until not in TIME_LEVELS:
             raise ValueError(
-                f'"extract_until" should be one of ["year", "month", "day", "hour", "minute", '
-                f'"second", "millisecond", "microsecond", "nanosecond"], got {self.extract_until}.'
+                f'"extract_until" should be one of {TIME_LEVELS}, got {self.extract_until}.'
             )
 
     def _extract_from_date(self, date_series, feature):
@@ -85,9 +84,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         elif feature == "other":
             # Gather all the variables below the extract_until into one numerical variable
             res = (pd.to_datetime(date_series) - pd.to_datetime(pd.DatetimeIndex(date_series).floor(
-                self.word_to_alias[self.extract_until]))).to_numpy()
+                WORD_TO_ALIAS[self.extract_until]))).to_numpy()
             # Convert to the extract_until unit (e.g if I extract until "minute", then convert to minutes)
-            return res / pd.to_timedelta(1, self.word_to_alias[self.extract_until])
+            return res / pd.to_timedelta(1, WORD_TO_ALIAS[self.extract_until])
 
     def fit(self, X, y=None):
         """
@@ -104,7 +103,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             Fitted DatetimeEncoder instance.
         """
         self._validate_keywords()
-        self.to_extract_full = self.to_extract[:self.to_extract.index(self.extract_until) + 1]
+        self.to_extract_full = TIME_LEVELS[:TIME_LEVELS.index(self.extract_until) + 1]
         self.to_extract_full.append("other")
         if isinstance(X, pd.DataFrame):
             self.colnames = X.columns
