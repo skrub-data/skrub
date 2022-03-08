@@ -139,7 +139,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             Transformed input.
         """
         X = check_input(X)
-        # Create a new dataframe with the extracted features, choosing only features that weren't constant during fit
+        # Create a new array with the extracted features, choosing only features that weren't constant during fit
         X_ = np.empty((X.shape[0], self.n_features_out_), dtype=np.float64)
         idx = 0
         for i in range(X.shape[1]):
