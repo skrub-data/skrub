@@ -4,7 +4,7 @@ Release 0.2.1
 Major changes
 -------------
 
-* New encoder: DatetimeEncoder can transform a datetime column into several numerical columns
+* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical columns
   (year, month, day, hour, minute, second, ...)
 
 
