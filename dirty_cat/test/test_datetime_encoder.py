@@ -47,11 +47,11 @@ def test_fit():
     assert enc.features_per_column_ == expected_features_per_column_
 
     X = get_date_array()
-    enc = DatetimeEncoder(add_day_of_the_week=True, add_holidays=True)
+    enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_to_extract = ["year", "month", "day", "hour", "other"]
-    expected_features_per_column_ = {0: ["year", "month", "day", "dayofweek", "holiday"],
-                                     1: ["month", "day", "dayofweek", "holiday"],
-                                     2: ["year", "month", "day", "dayofweek", "holiday"]}
+    expected_features_per_column_ = {0: ["year", "month", "day", "dayofweek"],
+                                     1: ["month", "day", "dayofweek"],
+                                     2: ["year", "month", "day", "dayofweek"]}
     enc.fit(X)
     assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
@@ -138,11 +138,11 @@ def test_transform():
     enc.fit(X)
     assert np.allclose(enc.transform(X), expected_result, equal_nan=True)
 
-    enc = DatetimeEncoder(add_day_of_the_week=True, add_holidays=True)
-    expected_result = np.array([[2020, 1, 1, 2, 1, 1, 2, 3, 0, 2020, 1, 3, 4, 0],
-                                [2021, 2, 3, 2, 0, 2, 4, 1, 0, 2021, 2, 5, 4, 0],
-                                [2022, 1, 1, 5, 0, 12, 25, 4, 1, 2022, 1, 3, 0, 0],
-                                [2023, 2, 3, 4, 0, 2, 4, 1, 0, 2023, 2, 5, 6, 0]])
+    enc = DatetimeEncoder(add_day_of_the_week=True)
+    expected_result = np.array([[2020, 1, 1, 2, 1, 2, 3, 2020, 1, 3, 4],
+                                [2021, 2, 3, 2, 2, 4, 1, 2021, 2, 5, 4],
+                                [2022, 1, 1, 5, 12, 25, 4, 2022, 1, 3, 0],
+                                [2023, 2, 3, 4, 2, 4, 1, 2023, 2, 5, 6]])
     enc.fit(X)
     assert np.allclose(enc.transform(X), expected_result, equal_nan=True)
 

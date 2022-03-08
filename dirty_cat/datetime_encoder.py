@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
 from sklearn.base import BaseEstimator, TransformerMixin
 from typing import List
 from dirty_cat.utils import check_input
@@ -26,10 +25,6 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         The "other" feature will be a numerical value expressed in the "extract_until" unit.
     add_day_of_the_week: bool, default=False
         Add day of the week feature (if day is extracted). This is a numerical feature from 0 (Monday) to 6 (Sunday).
-    add_holidays : bool, default=False
-        Whether to add a numerical variable encoding if the day of the date is a holiday (1 for holiday,
-        0 for non-holiday).
-        Uses pandas calendar, which for now only contains US holidays.
 
     Attributes
     ----------
@@ -44,11 +39,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
     def __init__(self,
                  extract_until="hour",
-                 add_day_of_the_week=False,
-                 add_holidays=False):
+                 add_day_of_the_week=False):
         self.extract_until = extract_until
         self.add_day_of_the_week = add_day_of_the_week
-        self.add_holidays = add_holidays
 
     def _validate_keywords(self):
         if self.extract_until not in TIME_LEVELS:
@@ -77,11 +70,6 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             return pd.DatetimeIndex(date_series).nanosecond.to_numpy()
         elif feature == "dayofweek":
             return pd.DatetimeIndex(date_series).dayofweek.to_numpy()
-        elif feature == "holiday":
-            # Create an indicator for holidays
-            cal = calendar()
-            holidays = cal.holidays(start=date_series.min(), end=date_series.max())
-            return np.isin(date_series, holidays).astype(int)
         elif feature == "other":
             # Gather all the variables below the extract_until into one numerical variable
             res = (pd.to_datetime(date_series) - pd.to_datetime(pd.DatetimeIndex(date_series).floor(
@@ -123,8 +111,6 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
                     self.features_per_column_[i].append(feature)
             if self.add_day_of_the_week:
                 self.features_per_column_[i].append("dayofweek")
-            if self.add_holidays:
-                self.features_per_column_[i].append("holiday")
 
         self.n_features_out_ = len(np.concatenate(list(self.features_per_column_.values())))
 
@@ -159,7 +145,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         if the original data has column names, otherwise with format
         "<column_index>_<new_feature>". new_feature is one of ["year", "month",
         "day", "hour", "minute", "second", "millisecond", "microsecond",
-        "nanosecond", "dayofweek", "holiday"]
+        "nanosecond", "dayofweek"]
         """
         feature_names = []
         for i in self.features_per_column_.keys():
