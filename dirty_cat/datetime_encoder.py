@@ -20,8 +20,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    extract_until : {"year", "month", "day", "hour", "minute", "second",
-    "millisecond", "microsecond", "nanosecond"}, default="hour"
+    extract_until : {"year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"}, default="hour"
         Extract up to this granularity, and gather the rest into the "other" feature.
         For instance, if you specify "day", only "year", "month", "day" and "other" features will be created.
         The "other" feature will be a numerical value expressed in the "extract_until" unit.
@@ -37,10 +36,10 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     n_features_out_: int
         Number of features of the transformed data.
     features_per_column_: Dict[int, List[str]]
-        A dictionary mapping the index of the original columns
+        Dictionary mapping the index of the original columns
         to the list of features extracted for each column.
     col_names_: List[str]
-        The list of the names of the features of the input data, if input data was a pandas DataFrame, otherwise None.
+        List of the names of the features of the input data, if input data was a pandas DataFrame, otherwise None.
     """
 
     def __init__(self,
@@ -132,7 +131,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, X, y=None):
-        """ Transform X by replacing each column with corresponding numerical features.
+        """ Transform X by replacing each datetime column with corresponding numerical features.
 
         Parameters
         ----------

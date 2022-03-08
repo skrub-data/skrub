@@ -12,6 +12,7 @@ from .target_encoder import TargetEncoder
 from .minhash_encoder import MinHashEncoder
 from .gap_encoder import GapEncoder
 from .super_vectorizer import SuperVectorizer
+from .datetime_encoder import DatetimeEncoder
 
 __all__ = ['SimilarityEncoder', 'TargetEncoder', 'MinHashEncoder',
            'GapEncoder', 'SuperVectorizer']

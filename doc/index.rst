@@ -99,6 +99,16 @@ Dirty Category encoders
    SimilarityEncoder
    TargetEncoder
 
+Other encoders
+-----------------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
+   DatetimeEncoder
+
 Data download
 -----------------------
 
