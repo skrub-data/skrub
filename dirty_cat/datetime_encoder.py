@@ -1,9 +1,10 @@
-from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 import pandas as pd
-from dirty_cat.utils import check_input
 from pandas.tseries.holiday import USFederalHolidayCalendar as calendar
-from typing import Union, Optional, List
+from sklearn.base import BaseEstimator, TransformerMixin
+from typing import List
+from dirty_cat.utils import check_input
+
 
 
 
