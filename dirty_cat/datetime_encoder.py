@@ -36,9 +36,11 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     ----------
     n_features_out_: int
         Number of features of the transformed data.
-    features_per_column: Dict[int, List[str]]
+    features_per_column_: Dict[int, List[str]]
         A dictionary mapping the index of the original columns
         to the list of features extracted for each column.
+    col_names_: List[str]
+        The list of the names of the features of the input data, if input data was a pandas DataFrame, otherwise None.
     """
 
     def __init__(self,
@@ -103,27 +105,28 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             Fitted DatetimeEncoder instance.
         """
         self._validate_keywords()
-        self.to_extract_full = TIME_LEVELS[:TIME_LEVELS.index(self.extract_until) + 1]
-        self.to_extract_full.append("other")
+        # Columns to extract for each column, before taking into account constant columns
+        self._to_extract = TIME_LEVELS[:TIME_LEVELS.index(self.extract_until) + 1]
+        self._to_extract.append("other")
         if isinstance(X, pd.DataFrame):
-            self.colnames = X.columns
+            self.col_names_ = X.columns
         else:
-            self.colnames = None
+            self.col_names_ = None
         X = check_input(X)
-        self.features_per_column = {}  # Features to extract for each column, after removing constant features
+        self.features_per_column_ = {}  # Features to extract for each column, after removing constant features
         for i in range(X.shape[1]):
-            self.features_per_column[i] = []
+            self.features_per_column_[i] = []
         # Check which columns are constant
         for i in range(X.shape[1]):
-            for feature in self.to_extract_full:
+            for feature in self._to_extract:
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
-                    self.features_per_column[i].append(feature)
+                    self.features_per_column_[i].append(feature)
             if self.add_day_of_the_week:
-                self.features_per_column[i].append("dayofweek")
+                self.features_per_column_[i].append("dayofweek")
             if self.add_holidays:
-                self.features_per_column[i].append("holiday")
+                self.features_per_column_[i].append("holiday")
 
-        self.n_features_out_ = len(np.concatenate(list(self.features_per_column.values())))
+        self.n_features_out_ = len(np.concatenate(list(self.features_per_column_.values())))
 
         return self
 
@@ -143,9 +146,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         X_ = np.empty((X.shape[0], self.n_features_out_), dtype=np.float64)
         idx = 0
         for i in range(X.shape[1]):
-            for j, feature in enumerate(self.features_per_column[i]):
+            for j, feature in enumerate(self.features_per_column_[i]):
                 X_[:, idx + j] = self._extract_from_date(X[:, i], feature)
-            idx += len(self.features_per_column[i])
+            idx += len(self.features_per_column_[i])
         return X_
 
     def get_feature_names(self) -> List[str]:
@@ -157,9 +160,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         "nanosecond", "dayofweek", "holiday"]
         """
         feature_names = []
-        for i in self.features_per_column.keys():
-            prefix = str(i) if self.colnames is None else self.colnames[i]
-            for feature in self.features_per_column[i]:
+        for i in self.features_per_column_.keys():
+            prefix = str(i) if self.col_names_ is None else self.col_names_[i]
+            for feature in self.features_per_column_[i]:
                 feature_names.append(f"{prefix}_{feature}")
         return feature_names
 
