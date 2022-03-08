@@ -25,7 +25,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         For instance, if you specify "day", only "year", "month", "day" and "other" features will be created.
         The "other" feature will be a numerical value expressed in the "extract_until" unit.
     add_day_of_the_week: bool, default=False
-        Add day of the week feature (if day is extracted). This is a numerical feature from 0 to 6.
+        Add day of the week feature (if day is extracted). This is a numerical feature from 0 (Monday) to 6 (Sunday).
     add_holidays : bool, default=False
         Whether to add a numerical variable encoding if the day of the date is a holiday (1 for holiday,
         0 for non-holiday).
