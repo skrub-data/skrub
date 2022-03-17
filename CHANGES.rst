@@ -1,3 +1,17 @@
+Release 0.2.1
+=============
+
+Major changes
+-------------
+
+Notes
+-----
+
+* Improvements to the :class:`SuperVectorizer`
+
+    - Type detection works better: handles dates, numerics columns encoded as strings, or numeric columns containing strings for missing values
+
+
 Release 0.2.0
 =============
 
