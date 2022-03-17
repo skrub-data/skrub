@@ -24,7 +24,7 @@ includes:
 * Kernel Methods.
 
 However, reaching the phase where the non-linear model outperforms the linear
-one can be complicated. Indeed, a more complex models often means a longer
+one can be complicated. Indeed, a more complex model often means a longer
 fitting/tuning process:
 
 * Neural networks often need extended model tuning time, in order to
@@ -52,8 +52,8 @@ In this example, you will learn how to:
    This example assumes the reader is familiar with similarity encoding and
    its use-cases.
 
-   * For an introduction to dirty categories, see :ref:`this example<sphx_glr_auto_examples_01_investigating_dirty_categories.py>`.
-   * To learn with dirty categories using the SimilarityEncoder, see :ref:`this example<sphx_glr_auto_examples_02_fit_predict_predict_employee_salaries.py>`.
+   * For an introduction to dirty categories, see :ref:`this example<https://dirty-cat.github.io/stable/auto_examples/02_investigating_dirty_categories.html#sphx-glr-auto-examples-02-investigating-dirty-categories-py>`.
+   * To learn with dirty categories using the SimilarityEncoder, see :ref:`this example<https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html#sphx-glr-auto-examples-01-dirty-categories-py>`.
 
 
 .. |NYS| replace:: :class:`Nystroem <sklearn.kernel_approximation.Nystroem>`
@@ -256,7 +256,7 @@ one_hot_encoder.fit([[0], [1]])
 #
 #    We create an offset to separate the training and the test set. The reason
 #    for this, is that the online procedures of this example will consume far
-#    more rows, but we still would like to compare accuracies with the same the
+#    more rows, but we still would like to compare accuracies with the
 #    same test set, and not change it each time. Therefore, we "reserve" the
 #    first 100000 rows for the training phase. The rest is made available to
 #    the test set.
@@ -533,7 +533,7 @@ f.suptitle(title)
 
 ###############################################################################
 # .. rubric:: Footnotes
-# .. [#xgboost] `Slides on gradient boosting by Tianqi Chen, the founder of XGBoost <https://homes.cs.washington.edu/~tqchen/pdf/BoostedTree.pdf>`_
+# .. [#xgboost] `Slides on gradient boosting by Tianqi Chen, the founder of XGBoost <https://web.njit.edu/~usman/courses/cs675_summer20/BoostedTree.pdf>`_
 # .. [#online_ref] `Wikipedia article on online algorithms <https://en.wikipedia.org/wiki/Online_algorithm>`_
 # .. [#sgd_ref] `Leon Bouttou's article on stochastic gradient descent <http://khalilghorbal.info/assets/spa/papers/ML_GradDescent.pdf>`_
 # .. [#nys_ref] |NYS_EXAMPLE|
