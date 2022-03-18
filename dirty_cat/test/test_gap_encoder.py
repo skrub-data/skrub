@@ -1,12 +1,43 @@
 import time
 import numpy as np
-from numpy.random import random
 import pytest
 import pandas as pd
 
 from sklearn.datasets import fetch_20newsgroups
 from dirty_cat import GapEncoder
 
+@pytest.mark.parametrize("init1, analyzer1, analyzer2",[
+    ('k-means++', 'char', 'word'),
+    ('random', 'char', 'word'),
+    ('k-means', 'char', 'word')
+])
+def test_analyzer(init1, analyzer1, analyzer2):
+    """" Test if the output is different when the analyzer is 'word' or 'char'.
+        If it is, no error ir raised. 
+    """
+    add_words = False
+    n_samples = 70
+    X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
+    X = np.array([X_txt, X_txt]).T
+    n_components = 10
+    # Test first analyzer output:
+    encoder = GapEncoder(
+        n_components=n_components, init='k-means++',
+        analyzer=analyzer1, add_words=add_words,
+        random_state=42, rescale_W=True)
+    encoder.fit(X)
+    y = encoder.transform(X)
+    
+    # Test the other analyzer output:
+    encoder = GapEncoder(
+        n_components=n_components, init='k-means++',
+        analyzer=analyzer2, add_words=add_words,
+        random_state=42)
+    encoder.fit(X)
+    y2 = encoder.transform(X)
+    
+    # Test inequality btw analyzer word and char ouput:
+    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, y, y2)
 
 @pytest.mark.parametrize("hashing, init, analyzer, add_words", [
     (False, 'k-means++', 'word', True),
@@ -157,6 +188,10 @@ def profile_encoder(Encoder, init):
 
 
 if __name__ == '__main__':
+    
+    print('test_analyzer')
+    test_analyzer('k-means++', 'char_wb', 'word')
+    print('test_analyzer passed')
     print('start test_gap_encoder')
     test_gap_encoder(True, 'k-means++', 'char', False)
     print('test_gap_encoder passed')
