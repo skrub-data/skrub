@@ -394,7 +394,7 @@ class SuperVectorizer(ColumnTransformer):
 
         return super().fit_transform(X, y)
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names_out(self, input_features=None) -> List[str]:
         """
         Returns clean feature names with format
         "<column_name>_<value>" if encoded by OneHotEncoder or alike,
@@ -441,10 +441,13 @@ class SuperVectorizer(ColumnTransformer):
             return ct_feature_names
 
         return all_trans_feature_names
-
-    def get_feature_names_out(self, input_features=None) -> List[str]:
+    
+    def get_feature_names(self) -> List[str]:
+        """ Deprecated, use "get_feature_names_out"
         """
-        Ensures compatibility with sklearn >= 1.0, and returns the output of
-        get_feature_names.
-        """
-        return self.get_feature_names()
+        warn(
+            "get_feature_names is deprecated in scikit-learn > 1.0. "
+            "use get_feature_names_out instead",
+            DeprecationWarning,
+            )
+        return self.get_feature_names_out()
