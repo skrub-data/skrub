@@ -11,6 +11,7 @@ Notes
 
     - Type detection works better: handles dates, numerics columns encoded as strings, or numeric columns containing strings for missing values
 
+* Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
 
 Release 0.2.0
 =============

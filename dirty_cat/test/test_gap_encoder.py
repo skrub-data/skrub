@@ -11,12 +11,12 @@ from dirty_cat import GapEncoder
     ('random', 'char', 'word'),
     ('k-means', 'char', 'word')
 ])
-def test_analyzer(init1,analyzer1,analyzer2):
+def test_analyzer(init1, analyzer1, analyzer2):
     """" Test if the output is different when the analyzer is 'word' or 'char'.
         If it is, no error ir raised. 
     """
-    add_words=False
-    n_samples=70
+    add_words = False
+    n_samples = 70
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X = np.array([X_txt, X_txt]).T
     n_components = 10

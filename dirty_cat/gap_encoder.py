@@ -853,7 +853,7 @@ def batch_lookup(lookup, n=1):
         yield (unq_indices, indices)
 
 
-def get_kmeans_prototypes(X, n_prototypes, analyzer, hashing_dim=128,
+def get_kmeans_prototypes(X, n_prototypes, analyzer='char', hashing_dim=128,
                           ngram_range=(2, 4), sparse=False,
                           sample_weight=None, random_state=None):
     """
