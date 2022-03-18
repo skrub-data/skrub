@@ -26,7 +26,7 @@ from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils.fixes import _object_dtype_isnan
 import pandas as pd
-from utils import check_input
+from .utils import check_input
 
 if LooseVersion(sklearn_version) < LooseVersion('0.22'):
     from sklearn.cluster.k_means_ import _k_init
