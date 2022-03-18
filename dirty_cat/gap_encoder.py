@@ -26,7 +26,7 @@ from sklearn.cluster import KMeans
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils.fixes import _object_dtype_isnan
 import pandas as pd
-from .utils import check_input
+from utils import check_input
 
 if LooseVersion(sklearn_version) < LooseVersion('0.22'):
     from sklearn.cluster.k_means_ import _k_init
@@ -171,7 +171,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 size=(self.n_components, self.n_vocab))
         elif self.init == 'k-means':
             prototypes = get_kmeans_prototypes(
-                X, self.n_components, random_state=self.random_state)
+                X, self.n_components, analyzer=self.analyzer, random_state=self.random_state)
             W = self.ngrams_count_.transform(prototypes).A + .1
             if self.add_words:
                 W2 = self.word_count_.transform(prototypes).A + .1
@@ -577,6 +577,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         return GapEncoderColumn(
             ngram_range=self.ngram_range,
             n_components=self.n_components,
+            analyzer = self.analyzer,
             gamma_shape_prior=self.gamma_shape_prior,
             gamma_scale_prior=self.gamma_scale_prior,
             rho=self.rho,
@@ -852,7 +853,7 @@ def batch_lookup(lookup, n=1):
         yield (unq_indices, indices)
 
 
-def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
+def get_kmeans_prototypes(X, n_prototypes, analyzer, hashing_dim=128,
                           ngram_range=(2, 4), sparse=False,
                           sample_weight=None, random_state=None):
     """
@@ -861,7 +862,7 @@ def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
       - k-means clustering
       - nearest neighbor
     """
-    vectorizer = HashingVectorizer(analyzer='char', norm=None,
+    vectorizer = HashingVectorizer(analyzer=analyzer, norm=None,
                                    alternate_sign=False,
                                    ngram_range=ngram_range,
                                    n_features=hashing_dim)
