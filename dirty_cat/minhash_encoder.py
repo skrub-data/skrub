@@ -26,8 +26,8 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_random_state, murmurhash3_32
 
-from .fast_hash import ngram_min_hash
-from .utils import LRUDict, check_input
+from fast_hash import ngram_min_hash
+from utils import LRUDict, check_input
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
@@ -157,6 +157,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             The fitted MinHashEncoder instance.
         """
         self.hash_dict = LRUDict(capacity=self._capacity)
+        
         return self
 
     def transform(self, X):
@@ -181,42 +182,45 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             template = ("handle_missing should be either 'error' or "
                         "'zero_impute', got %s")
             raise ValueError(template % self.handle_missing)
-        X_out = np.zeros((len(X), self.n_components))
-        X = X.reshape(-1)
+        X_enc = []
+        for k in range(X.shape[1]):
+            X_out = np.zeros((len(X[:, k]), self.n_components))
+            X_in = X[:, k].reshape(-1)
 
-        # TODO Parallel run here
-        nan_idx = []
-
-        if self.hashing == 'fast':
-            for i, x in enumerate(X):
-                if isinstance(x, float): # true if x is a missing value
-                    nan_idx.append(i)
-                elif x not in self.hash_dict:
-                    X_out[i, :] = self.hash_dict[x] = self.get_fast_hash(x)
-                else:
-                    X_out[i, :] = self.hash_dict[x]
-
-        elif self.hashing == 'murmur':
-            for i, x in enumerate(X):
-                if isinstance(x, float):
-                    nan_idx.append(i)
-                elif x not in self.hash_dict:
-                    X_out[i, :] = self.hash_dict[x] = self.minhash(
-                        x,
-                        n_components=self.n_components,
-                        ngram_range=self.ngram_range
-                    )
-                else:
-                    X_out[i, :] = self.hash_dict[x]
-
-        else:
-            raise ValueError("hashing function must be 'fast' or"
-                             "'murmur', got '{}'"
-                             "".format(self.hashing))
-
-        if self.handle_missing == 'error' and nan_idx:
-            msg = ("Found missing values in input data; set "
-                   "handle_missing='' to encode with missing values")
-            raise ValueError(msg)
-
-        return X_out
+            # TODO Parallel run here
+            nan_idx = []
+    
+            if self.hashing == 'fast':
+                for i, x in enumerate(X_in):
+                    if isinstance(x, float): # true if x is a missing value
+                        nan_idx.append(i)
+                    elif x not in self.hash_dict:
+                        X_out[i, :] = self.hash_dict[x] = self.get_fast_hash(x)
+                    else:
+                        X_out[i, :] = self.hash_dict[x]
+    
+            elif self.hashing == 'murmur':
+                for i, x in enumerate(X_in):
+                    if isinstance(x, float):
+                        nan_idx.append(i)
+                    elif x not in self.hash_dict:
+                        X_out[i, :] = self.hash_dict[x] = self.minhash(
+                            x,
+                            n_components=self.n_components,
+                            ngram_range=self.ngram_range
+                        )
+                    else:
+                        X_out[i, :] = self.hash_dict[x]
+    
+            else:
+                raise ValueError("hashing function must be 'fast' or"
+                                 "'murmur', got '{}'"
+                                 "".format(self.hashing))
+    
+            if self.handle_missing == 'error' and nan_idx:
+                msg = ("Found missing values in input data; set "
+                       "handle_missing='' to encode with missing values")
+                raise ValueError(msg)
+            X_enc.append(X_out)
+        X_enc = np.hstack(X_enc)
+        return X_enc

@@ -40,6 +40,20 @@ def test_MinHashEncoder(n_sample=70, minmax_hash=False):
                 y_substring = encoder.transform(X_substring)
                 np.testing.assert_array_less(y - y_substring, 0.0001)
 
+def test_multiple_columns():
+    """ This test is intented to verify that fitting multiple columns
+        with the MinHashEncoder will not produce an error, but will 
+        encode the column independently """
+    from dirty_cat.datasets import fetch_employee_salaries
+    employee_salaries = fetch_employee_salaries()
+    X = employee_salaries.X
+    try:        
+        MinHashEncoder().fit_transform(X[['employee_position_title','department_name']])
+    except:
+        raise Exception(
+            'It is not possible to fit multiple columns.'
+        )
+
 def test_input_type():
     # Numpy array
     X = np.array(['alice', 'bob'])[:,None]
@@ -144,6 +158,10 @@ if __name__ == '__main__':
     print('start test')
     test_MinHashEncoder()
     print('test passed')
+    
+    print('start test')
+    test_multiple_columns()
+    print('multiple columns encoding test passed')
 
     for _ in range(3):
         print('time profile_encoder(MinHashEncoder, hashing=fast)')
