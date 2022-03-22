@@ -44,15 +44,12 @@ def test_multiple_columns():
     """ This test is intented to verify that fitting multiple columns
         with the MinHashEncoder will not produce an error, but will 
         encode the column independently """
-    from dirty_cat.datasets import fetch_employee_salaries
-    employee_salaries = fetch_employee_salaries()
-    X = employee_salaries.X
-    try:        
-        MinHashEncoder().fit_transform(X[['employee_position_title','department_name']])
-    except:
-        raise Exception(
-            'It is not possible to fit multiple columns.'
-        )
+    X = pd.DataFrame([('bird', 'parrot'),
+                   ('bird', 'nightingale'),
+                   ('mammal', 'monkey'),
+                   ('mammal', np.nan)],
+                  columns=('class', 'type'))
+    MinHashEncoder().fit_transform(X)
 
 def test_input_type():
     # Numpy array

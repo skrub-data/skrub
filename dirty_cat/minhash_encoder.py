@@ -26,8 +26,8 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_random_state, murmurhash3_32
 
-from .fast_hash import ngram_min_hash
-from .utils import LRUDict, check_input
+from fast_hash import ngram_min_hash
+from utils import LRUDict, check_input
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
@@ -156,7 +156,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self
             The fitted MinHashEncoder instance.
         """
-        self.hash_dict = LRUDict(capacity=self._capacity)        
+        self.hash_dict = LRUDict(capacity=self._capacity)
         return self
 
     def transform(self, X):
