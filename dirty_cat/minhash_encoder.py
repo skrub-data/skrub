@@ -26,8 +26,8 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_random_state, murmurhash3_32
 
-from fast_hash import ngram_min_hash
-from utils import LRUDict, check_input
+from .fast_hash import ngram_min_hash
+from .utils import LRUDict, check_input
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
