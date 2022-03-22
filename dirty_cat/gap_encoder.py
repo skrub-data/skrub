@@ -14,6 +14,7 @@ The principle is as follows:
        with the Kullback-Leibler divergence as loss, and a Gamma prior on H.
        We thus optimize H and W with the multiplicative update method.
 """
+import warnings
 import numpy as np
 from distutils.version import LooseVersion
 from scipy import sparse
@@ -253,6 +254,17 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return self
 
     def get_feature_names(self, n_labels=3, prefix=''):
+        """ Deprecated, use "get_feature_names_out"
+        """
+        warnings.warn(
+            "get_feature_names is deprecated in scikit-learn > 1.0. "
+            "use get_feature_names_out instead",
+            DeprecationWarning,
+            )
+        return self.get_feature_names_out(n_labels=n_labels,
+                                          prefix=prefix)
+
+    def get_feature_names_out(self, n_labels=3, prefix=''):
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with highest activations are selected.
@@ -703,7 +715,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             self.fitted_models_[k].partial_fit(X[:, k])
         return self
 
-    def get_feature_names(self, col_names=None, n_labels=3):
+    def get_feature_names_out(self, col_names=None, n_labels=3):
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with highest activations are selected.
@@ -743,18 +755,21 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             prefixes = [''] * len(self.fitted_models_)
         labels = list()
         for k, enc in enumerate(self.fitted_models_):
-            col_labels = enc.get_feature_names(n_labels, prefixes[k])
+            col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
             labels.extend(col_labels)
         return labels
     
-    def get_feature_names_out(
+    def get_feature_names(
         self, input_features=None, col_names=None, n_labels=3
     ):
+        """ Deprecated, use "get_feature_names_out"
         """
-        Ensures compatibility with sklearn >= 1.0, and returns the output of
-        get_feature_names.
-        """
-        return self.get_feature_names(col_names, n_labels)
+        warnings.warn(
+            "get_feature_names is deprecated in scikit-learn > 1.0. "
+            "use get_feature_names_out instead",
+            DeprecationWarning,
+            )
+        return self.get_feature_names_out(col_names, n_labels)
         
 
     def score(self, X):

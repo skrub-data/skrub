@@ -52,7 +52,7 @@ print(f'Shape of encoded vectors = {X_enc.shape}')
 # from the input data with the highest activations.
 # In the example below we select 3 labels to summarize each topic.
 
-topic_labels = enc.get_feature_names(n_labels=3)
+topic_labels = enc.get_feature_names_out(n_labels=3)
 for k in range(len(topic_labels)):
     labels = topic_labels[k]
     print(f'Topic n°{k}: {labels}')

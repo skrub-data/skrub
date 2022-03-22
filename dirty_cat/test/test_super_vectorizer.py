@@ -330,7 +330,7 @@ def test_with_arrays():
     vectorizer.fit_transform(X)
     check_same_transformers(expected_transformers, vectorizer.transformers)
 
-def test_get_feature_names():
+def test_get_feature_names_out():
     X = _get_clean_dataframe()
 
     vectorizer_w_pass = SuperVectorizer(remainder='passthrough')

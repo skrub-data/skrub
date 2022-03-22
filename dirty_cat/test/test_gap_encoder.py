@@ -113,7 +113,7 @@ def test_partial_fit(n_samples=70):
     return
 
 
-def test_get_feature_names(n_samples=70):
+def test_get_feature_names_out(n_samples=70):
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X = np.array([X_txt, X_txt]).T
     enc = GapEncoder(random_state=42)
@@ -122,9 +122,9 @@ def test_get_feature_names(n_samples=70):
         # Check number of labels
         assert len(topic_labels) == enc.n_components * X.shape[1]
         # Test different parameters for col_names
-        topic_labels_2 = enc.get_feature_names(col_names='auto')
+        topic_labels_2 = enc.get_feature_names_out(col_names='auto')
         assert topic_labels_2[0] == 'col0: ' + topic_labels[0]
-        topic_labels_3 = enc.get_feature_names(col_names=['abc', 'def'])
+        topic_labels_3 = enc.get_feature_names_out(col_names=['abc', 'def'])
         assert topic_labels_3[0] == 'abc: ' + topic_labels[0]
     return
 
@@ -201,9 +201,9 @@ if __name__ == '__main__':
     print('start test_partial_fit')
     test_partial_fit()
     print('test_partial_fit passed')
-    print('start test_get_feature_names')
-    test_get_feature_names()
-    print('test_get_feature_names passed')
+    print('start test_get_feature_names_out')
+    test_get_feature_names_out()
+    print('test_get_feature_names_out passed')
     print('start test_overflow_error')
     test_overflow_error()
     print('test_overflow_error passed')
