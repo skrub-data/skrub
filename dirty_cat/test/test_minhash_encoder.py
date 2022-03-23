@@ -45,10 +45,10 @@ def test_multiple_columns():
         with the MinHashEncoder will not produce an error, but will 
         encode the column independently """
     X = pd.DataFrame([('bird', 'parrot'),
-                   ('bird', 'nightingale'),
-                   ('mammal', 'monkey'),
-                   ('mammal', np.nan)],
-                  columns=('class', 'type'))
+                      ('bird', 'nightingale'),
+                      ('mammal', 'monkey'),
+                      ('mammal', np.nan)],
+                      columns=('class', 'type'))
     MinHashEncoder().fit_transform(X)
 
 def test_input_type():
