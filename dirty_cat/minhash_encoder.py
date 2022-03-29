@@ -184,7 +184,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         # TODO Parallel run here
         nan_idx = []
-        
+
         if self.hashing == 'fast':
             X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
             counter = self.n_components
@@ -214,7 +214,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                         )
                     else:
                         X_out[i, k*self.n_components:counter] = self.hash_dict[x]
-                counter += self.n_components  
+                counter += self.n_components
         else:
             raise ValueError("hashing function must be 'fast' or"
                              "'murmur', got '{}'"
