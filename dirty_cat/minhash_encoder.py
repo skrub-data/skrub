@@ -184,12 +184,12 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         # TODO Parallel run here
         nan_idx = []
-
+        
         if self.hashing == 'fast':
             X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
             counter = self.n_components
             for k in range(X.shape[1]):
-                X_in = X[:,k].reshape(-1)
+                X_in = X[:, k].reshape(-1)
                 for i, x in enumerate(X_in):
                     if isinstance(x, float): # true if x is a missing value
                         nan_idx.append(i)
@@ -202,7 +202,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
             counter = self.n_components
             for k in range(X.shape[1]):
-                X_in = X[:,k].reshape(-1)
+                X_in = X[:, k].reshape(-1)
                 for i, x in enumerate(X_in):
                     if isinstance(x, float):
                         nan_idx.append(i)
@@ -214,7 +214,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                         )
                     else:
                         X_out[i, k*self.n_components:counter] = self.hash_dict[x]
-                counter += self.n_components    
+                counter += self.n_components  
         else:
             raise ValueError("hashing function must be 'fast' or"
                              "'murmur', got '{}'"
@@ -222,7 +222,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         if self.handle_missing == 'error' and nan_idx:
             msg = ("Found missing values in input data; set "
-                   "handle_missing='' to encode with missing values")
+                   "handle_missing='zero_impute' to encode with missing values")
             raise ValueError(msg)
-
         return X_out
