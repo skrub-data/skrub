@@ -7,7 +7,7 @@ The principle is as follows:
      n-dimensional vectors of integers.
   3. A hashing function is used to assign an integer to each n-gram.
      The minimum of the hashes over all n-grams is used in the encoding.
-  4. This process is repeated with N hashing functions are used to 
+  4. This process is repeated with N hashing functions are used to
      form N-dimensional encodings.
 Maxhash encodings can be computed similarly by taking the hashes maximum
 instead.
@@ -15,16 +15,10 @@ With this procedure, strings that share many n-grams have greater
 probability of having same encoding values. These encodings thus capture
 morphological similarities between strings.
 """
-import warnings
 
 import numpy as np
-from joblib import Parallel, delayed
-from scipy import sparse
-from sklearn.cluster import KMeans
-from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils import check_random_state, murmurhash3_32
+from sklearn.utils import murmurhash3_32
 
 from .fast_hash import ngram_min_hash
 from .utils import LRUDict, check_input
