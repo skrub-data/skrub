@@ -181,42 +181,47 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             template = ("handle_missing should be either 'error' or "
                         "'zero_impute', got %s")
             raise ValueError(template % self.handle_missing)
-        X_out = np.zeros((len(X), self.n_components))
-        X = X.reshape(-1)
 
         # TODO Parallel run here
-        nan_idx = []
+        is_nan_idx = False
 
         if self.hashing == 'fast':
-            for i, x in enumerate(X):
-                if isinstance(x, float): # true if x is a missing value
-                    nan_idx.append(i)
-                elif x not in self.hash_dict:
-                    X_out[i, :] = self.hash_dict[x] = self.get_fast_hash(x)
-                else:
-                    X_out[i, :] = self.hash_dict[x]
-
+            X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
+            counter = self.n_components
+            for k in range(X.shape[1]):
+                X_in = X[:, k].reshape(-1)
+                for i, x in enumerate(X_in):
+                    if isinstance(x, float): # true if x is a missing value
+                        is_nan_idx = True
+                    elif x not in self.hash_dict:
+                        X_out[i, k*self.n_components:counter] = self.hash_dict[x] = self.get_fast_hash(x)
+                    else:
+                        X_out[i, k*self.n_components:counter] = self.hash_dict[x]
+                counter += self.n_components
         elif self.hashing == 'murmur':
-            for i, x in enumerate(X):
-                if isinstance(x, float):
-                    nan_idx.append(i)
-                elif x not in self.hash_dict:
-                    X_out[i, :] = self.hash_dict[x] = self.minhash(
-                        x,
-                        n_components=self.n_components,
-                        ngram_range=self.ngram_range
-                    )
-                else:
-                    X_out[i, :] = self.hash_dict[x]
-
+            X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
+            counter = self.n_components
+            for k in range(X.shape[1]):
+                X_in = X[:, k].reshape(-1)
+                for i, x in enumerate(X_in):
+                    if isinstance(x, float):
+                        is_nan_idx = True
+                    elif x not in self.hash_dict:
+                        X_out[i, k*self.n_components:counter] = self.hash_dict[x] = self.minhash(
+                            x,
+                            n_components=self.n_components,
+                            ngram_range=self.ngram_range
+                        )
+                    else:
+                        X_out[i, k*self.n_components:counter] = self.hash_dict[x]
+                counter += self.n_components
         else:
             raise ValueError("hashing function must be 'fast' or"
                              "'murmur', got '{}'"
                              "".format(self.hashing))
 
-        if self.handle_missing == 'error' and nan_idx:
+        if self.handle_missing == 'error' and is_nan_idx:
             msg = ("Found missing values in input data; set "
-                   "handle_missing='' to encode with missing values")
+                   "handle_missing='zero_impute' to encode with missing values")
             raise ValueError(msg)
-
         return X_out

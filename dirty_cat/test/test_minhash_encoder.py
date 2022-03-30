@@ -40,6 +40,22 @@ def test_MinHashEncoder(n_sample=70, minmax_hash=False):
                 y_substring = encoder.transform(X_substring)
                 np.testing.assert_array_less(y - y_substring, 0.0001)
 
+def test_multiple_columns():
+    """ This test is intented to verify that fitting multiple columns
+        with the MinHashEncoder will not produce an error, and will 
+        encode the column independently """
+    X = pd.DataFrame([('bird', 'parrot'),
+                      ('bird', 'nightingale'),
+                      ('mammal', 'monkey'),
+                      ('mammal', np.nan)],
+                      columns=('class', 'type'))
+    X1 = X[['class']]
+    X2 = X[['type']]
+    fit1 = MinHashEncoder(n_components=30).fit_transform(X1)
+    fit2 = MinHashEncoder(n_components=30).fit_transform(X2)
+    fit = MinHashEncoder(n_components=30).fit_transform(X)
+    assert np.array_equal(np.array([fit[:, :30], fit[:, 30:60]]), np.array([fit1, fit2]))
+
 def test_input_type():
     # Numpy array
     X = np.array(['alice', 'bob'])[:,None]
@@ -144,6 +160,10 @@ if __name__ == '__main__':
     print('start test')
     test_MinHashEncoder()
     print('test passed')
+    
+    print('start test')
+    test_multiple_columns()
+    print('multiple columns encoding test passed')
 
     for _ in range(3):
         print('time profile_encoder(MinHashEncoder, hashing=fast)')
