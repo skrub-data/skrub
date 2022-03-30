@@ -26,8 +26,8 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_random_state, murmurhash3_32
 
-from .fast_hash import ngram_min_hash
-from .utils import LRUDict, check_input
+from fast_hash import ngram_min_hash
+from utils import LRUDict, check_input
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
@@ -183,7 +183,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             raise ValueError(template % self.handle_missing)
 
         # TODO Parallel run here
-        nan_idx = []
+        is_nan_idx = False
 
         if self.hashing == 'fast':
             X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
@@ -192,7 +192,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 X_in = X[:, k].reshape(-1)
                 for i, x in enumerate(X_in):
                     if isinstance(x, float): # true if x is a missing value
-                        nan_idx.append(i)
+                        is_nan_idx = True
                     elif x not in self.hash_dict:
                         X_out[i, k*self.n_components:counter] = self.hash_dict[x] = self.get_fast_hash(x)
                     else:
@@ -205,7 +205,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 X_in = X[:, k].reshape(-1)
                 for i, x in enumerate(X_in):
                     if isinstance(x, float):
-                        nan_idx.append(i)
+                        is_nan_idx = True
                     elif x not in self.hash_dict:
                         X_out[i, k*self.n_components:counter] = self.hash_dict[x] = self.minhash(
                             x,
@@ -220,7 +220,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                              "'murmur', got '{}'"
                              "".format(self.hashing))
 
-        if self.handle_missing == 'error' and nan_idx:
+        if self.handle_missing == 'error' and is_nan_idx:
             msg = ("Found missing values in input data; set "
                    "handle_missing='zero_impute' to encode with missing values")
             raise ValueError(msg)
