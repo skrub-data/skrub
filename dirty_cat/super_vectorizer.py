@@ -116,7 +116,6 @@ class SuperVectorizer(ColumnTransformer):
         When the transformed output consists of all dense data, the stacked result
         will be dense, and this keyword will be ignored.
 
-
     Attributes
     ----------
 
