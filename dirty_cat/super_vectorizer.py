@@ -108,6 +108,14 @@ class SuperVectorizer(ColumnTransformer):
         'skip' will not impute at all.
         When imputed, missing values are replaced by the string 'missing'.
         See also attribute `imputed_columns_`.
+        
+    sparse_threshold: float, default=0.3
+        If the output of the different transformers contains sparse matrices,
+        these will be stacked as a sparse matrix if the overall density is
+        lower than this value. Use sparse_threshold=0 to always return dense. 
+        When the transformed output consists of all dense data, the stacked result
+        will be dense, and this keyword will be ignored.
+
 
     Attributes
     ----------
