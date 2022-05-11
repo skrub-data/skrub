@@ -26,8 +26,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
-from dirty_cat import string_distances
-from dirty_cat.string_distances import get_ngram_count, preprocess
+from . import string_distances
+from .string_distances import get_ngram_count, preprocess
 
 
 def _ngram_similarity_one_sample_inplace(
@@ -540,7 +540,7 @@ class SimilarityEncoder(OneHotEncoder):
             out_row[:] = se_dict[x]
 
         return np.nan_to_num(out, copy=False)
-    
+
     def fit_transform(self, X, y=None, **fit_params):
             """
             Fit SimilarityEncoder to data, then transform it.
@@ -565,4 +565,4 @@ class SimilarityEncoder(OneHotEncoder):
                 return self.fit(X, **fit_params).transform(X)
             else:
                 # fit method of arity 2 (supervised transformation)
-                return self.fit(X, y, **fit_params).transform(X)    
+                return self.fit(X, y, **fit_params).transform(X)
