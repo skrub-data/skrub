@@ -26,8 +26,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
-from . import string_distances
-from .string_distances import get_ngram_count, preprocess
+from dirty_cat import string_distances
+from dirty_cat.string_distances import get_ngram_count, preprocess
 
 
 def _ngram_similarity_one_sample_inplace(
@@ -208,7 +208,7 @@ class SimilarityEncoder(OneHotEncoder):
         Whether to raise an error or ignore if a unknown categorical feature is
         present during transform (default is to ignore). When this parameter
         is set to 'ignore' and an unknown category is encountered during
-        transform, the resulting one-hot encoded columns for this feature
+        transform, the resulting encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
     handle_missing : 'error' or '' (default)
@@ -540,3 +540,29 @@ class SimilarityEncoder(OneHotEncoder):
             out_row[:] = se_dict[x]
 
         return np.nan_to_num(out, copy=False)
+    
+    def fit_transform(self, X, y=None, **fit_params):
+            """
+            Fit SimilarityEncoder to data, then transform it.
+            Fits transformer to `X` and `y` with optional parameters `fit_params`
+            and returns a transformed version of `X`.
+            Parameters
+            ----------
+            X : array-like of shape (n_samples, n_features)
+                Input samples.
+            y :  array-like of shape (n_samples,) or (n_samples, n_outputs), \
+                    default=None
+                Target values (None for unsupervised transformations).
+            **fit_params : dict
+                Additional fit parameters.
+            Returns
+            -------
+            X_new : ndarray array of shape (n_samples, n_features_new)
+                Transformed array.
+            """
+            if y is None:
+                # fit method of arity 1 (unsupervised transformation)
+                return self.fit(X, **fit_params).transform(X)
+            else:
+                # fit method of arity 2 (supervised transformation)
+                return self.fit(X, y, **fit_params).transform(X)    
