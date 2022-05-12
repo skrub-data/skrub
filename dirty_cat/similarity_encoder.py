@@ -556,6 +556,7 @@ class SimilarityEncoder(OneHotEncoder):
                 Target values (None for unsupervised transformations).
             **fit_params : dict
                 Additional fit parameters.
+
             Returns
             -------
             X_new : ndarray array of shape (n_samples, n_features_new)
