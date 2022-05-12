@@ -4,9 +4,10 @@ import numpy as np
 
 
 class LRUDict:
-    """ dict with limited capacity
+    """dict with limited capacity
 
     Using LRU eviction, this avoid to memorizz a full dataset"""
+
     def __init__(self, capacity):
         self.capacity = capacity
         self.cache = collections.OrderedDict()
@@ -39,8 +40,8 @@ def check_input(X):
     X = np.asarray(X)
     if X.ndim != 2:
         raise ValueError(
-            'Expected 2D array. Reshape your data either using'
-            'array.reshape(-1, 1) if your data has a single feature or'
-            'array.reshape(1, -1) if it contains a single sample.'
+            "Expected 2D array. Reshape your data either using"
+            "array.reshape(-1, 1) if your data has a single feature or"
+            "array.reshape(1, -1) if it contains a single sample."
         )
     return X

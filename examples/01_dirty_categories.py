@@ -54,6 +54,7 @@ control.
 #
 # We first retrieve the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
+
 employee_salaries = fetch_employee_salaries()
 
 # %%
@@ -69,12 +70,13 @@ y.name
 # %%
 # Now, let's carry out some basic preprocessing:
 import pandas as pd
-X['date_first_hired'] = pd.to_datetime(X['date_first_hired'])
-X['year_first_hired'] = X['date_first_hired'].apply(lambda x: x.year)
+
+X["date_first_hired"] = pd.to_datetime(X["date_first_hired"])
+X["year_first_hired"] = X["date_first_hired"].apply(lambda x: x.year)
 # Get mask of rows with missing values in gender
-mask = X.isna()['gender']
+mask = X.isna()["gender"]
 # And remove the lines accordingly
-X.dropna(subset=['gender'], inplace=True)
+X.dropna(subset=["gender"], inplace=True)
 y = y[~mask]
 
 # %%
@@ -96,7 +98,7 @@ y = y[~mask]
 # representation
 from sklearn.preprocessing import OneHotEncoder
 
-one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
+one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 # %%
 # We assemble these to apply them to the relevant columns.
@@ -104,13 +106,14 @@ one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
 # alongside with the column names on which each must be applied
 
 from sklearn.compose import make_column_transformer
+
 encoder = make_column_transformer(
-    (one_hot, ['gender', 'department_name', 'assignment_category']),
-    ('passthrough', ['year_first_hired']),
+    (one_hot, ["gender", "department_name", "assignment_category"]),
+    ("passthrough", ["year_first_hired"]),
     # Last but not least, our dirty column
-    (one_hot, ['employee_position_title']),
-    remainder='drop',
-   )
+    (one_hot, ["employee_position_title"]),
+    remainder="drop",
+)
 
 # %%
 # Pipelining an encoder with a learner
@@ -120,11 +123,13 @@ encoder = make_column_transformer(
 # for data with heterogeneous columns
 # (we need to require the experimental feature for scikit-learn 0.24)
 from sklearn.experimental import enable_hist_gradient_boosting
+
 # now you can import the HGBR from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
 from sklearn.pipeline import make_pipeline
+
 pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
 
 # %%
@@ -138,20 +143,25 @@ pipeline.fit(X, y)
 # The one-hot encoder is actually not well suited to the 'Employee
 # Position Title' column, as this columns contains 400 different entries:
 import numpy as np
+
 np.unique(y)
 
 # %%
 # We will now experiment with encoders specially made for handling
 # dirty columns
-from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder,\
-    GapEncoder
+from dirty_cat import (
+    SimilarityEncoder,
+    TargetEncoder,
+    MinHashEncoder,
+    GapEncoder,
+)
 
 encoders = {
-    'one-hot': one_hot,
-    'similarity': SimilarityEncoder(similarity='ngram'),
-    'target': TargetEncoder(handle_unknown='ignore'),
-    'minhash': MinHashEncoder(n_components=100),
-    'gap': GapEncoder(n_components=100),
+    "one-hot": one_hot,
+    "similarity": SimilarityEncoder(similarity="ngram"),
+    "target": TargetEncoder(handle_unknown="ignore"),
+    "minhash": MinHashEncoder(n_components=100),
+    "gap": GapEncoder(n_components=100),
 }
 
 # %%
@@ -165,18 +175,20 @@ all_scores = dict()
 
 for name, method in encoders.items():
     encoder = make_column_transformer(
-        (one_hot, ['gender', 'department_name', 'assignment_category']),
-        ('passthrough', ['year_first_hired']),
+        (one_hot, ["gender", "department_name", "assignment_category"]),
+        ("passthrough", ["year_first_hired"]),
         # Last but not least, our dirty column
-        (method, ['employee_position_title']),
-        remainder='drop',
+        (method, ["employee_position_title"]),
+        remainder="drop",
     )
 
     pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
     scores = cross_val_score(pipeline, X, y)
-    print(f'{name} encoding')
-    print(f'r2 score:  mean: {np.mean(scores):.3f}; '
-          f'std: {np.std(scores):.3f}\n')
+    print(f"{name} encoding")
+    print(
+        f"r2 score:  mean: {np.mean(scores):.3f}; "
+        f"std: {np.std(scores):.3f}\n"
+    )
     all_scores[name] = scores
 
 # %%
@@ -187,10 +199,11 @@ for name, method in encoders.items():
 
 import seaborn
 import matplotlib.pyplot as plt
+
 plt.figure(figsize=(4, 3))
-ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
-plt.ylabel('Encoding', size=20)
-plt.xlabel('Prediction accuracy     ', size=20)
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient="h")
+plt.ylabel("Encoding", size=20)
+plt.xlabel("Prediction accuracy     ", size=20)
 plt.yticks(size=20)
 plt.tight_layout()
 
@@ -223,7 +236,7 @@ y = employee_salaries.y
 
 # %%
 # We'll drop a column we don't want
-X = X.drop(['date_first_hired'], axis=1)  # Redundant with "year_first_hired"
+X = X.drop(["date_first_hired"], axis=1)  # Redundant with "year_first_hired"
 
 # %%
 # We still have a complex and heterogeneous dataframe:
@@ -241,25 +254,25 @@ X
 # such as gradient boosted trees, gives **a machine-learning method that
 # can be readily applied to the dataframe**.
 #
-# The SuperVectorizer requires at least dirty_cat 0.2.0. 
+# The SuperVectorizer requires at least dirty_cat 0.2.0.
 #
 
 from dirty_cat import SuperVectorizer
 
 pipeline = make_pipeline(
-    SuperVectorizer(auto_cast=True),
-    HistGradientBoostingRegressor()
+    SuperVectorizer(auto_cast=True), HistGradientBoostingRegressor()
 )
 
 # %%
 # Let's perform a cross-validation to see how well this model predicts
 
 from sklearn.model_selection import cross_val_score
-scores = cross_val_score(pipeline, X, y, scoring='r2')
 
-print(f'scores={scores}')
-print(f'mean={np.mean(scores)}')
-print(f'std={np.std(scores)}')
+scores = cross_val_score(pipeline, X, y, scoring="r2")
+
+print(f"scores={scores}")
+print(f"mean={np.mean(scores)}")
+print(f"std={np.std(scores)}")
 
 # %%
 # The prediction performed here is pretty much as good as above
@@ -277,6 +290,7 @@ sup_vec = SuperVectorizer(auto_cast=True)
 # %%
 # We split the data between train and test, and transform them:
 from sklearn.model_selection import train_test_split
+
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.15, random_state=42
 )
@@ -345,6 +359,7 @@ len(feature_names)
 #
 # First, let's train the |RandomForestRegressor|,
 from sklearn.ensemble import RandomForestRegressor
+
 regressor = RandomForestRegressor()
 regressor.fit(X_train_enc, y_train)
 
@@ -352,11 +367,7 @@ regressor.fit(X_train_enc, y_train)
 # Retrieving the feature importances
 importances = regressor.feature_importances_
 std = np.std(
-    [
-        tree.feature_importances_
-        for tree in regressor.estimators_
-    ],
-    axis=0
+    [tree.feature_importances_ for tree in regressor.estimators_], axis=0
 )
 indices = np.argsort(importances)
 # Sort from least to most
@@ -366,6 +377,7 @@ indices = list(reversed(indices))
 # Plotting the results:
 
 import matplotlib.pyplot as plt
+
 plt.figure(figsize=(12, 9))
 plt.title("Feature importances")
 n = 20

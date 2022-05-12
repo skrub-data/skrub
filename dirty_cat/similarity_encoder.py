@@ -31,8 +31,15 @@ from .string_distances import get_ngram_count, preprocess
 
 
 def _ngram_similarity_one_sample_inplace(
-        x_count_vector, vocabulary_count_matrix, str_x,
-        vocabulary_ngram_counts, se_dict, unq_X, i, ngram_range):
+    x_count_vector,
+    vocabulary_count_matrix,
+    str_x,
+    vocabulary_ngram_counts,
+    se_dict,
+    unq_X,
+    i,
+    ngram_range,
+):
     """Update inplace a dict of similarities between a string and a vocabulary
 
 
@@ -60,12 +67,18 @@ def _ngram_similarity_one_sample_inplace(
 
     samegrams = np.asarray(
         (vocabulary_count_matrix[:, nonzero_idx].minimum(nonzero_vals)).sum(
-            axis=1))
+            axis=1
+        )
+    )
 
-    allgrams = get_ngram_count(
-        str_x, ngram_range) + vocabulary_ngram_counts - samegrams
-    similarity = np.divide(samegrams, allgrams, out=np.zeros_like(samegrams),
-                           where=allgrams != 0)
+    allgrams = (
+        get_ngram_count(str_x, ngram_range)
+        + vocabulary_ngram_counts
+        - samegrams
+    )
+    similarity = np.divide(
+        samegrams, allgrams, out=np.zeros_like(samegrams), where=allgrams != 0
+    )
     se_dict[unq_X[i]] = similarity.reshape(-1)
 
 
@@ -81,19 +94,22 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     """
     min_n, max_n = ngram_range
     unq_X = np.unique(X)
-    cats = np.array([' %s ' % cat for cat in cats])
-    unq_X_ = np.array([' %s ' % x for x in unq_X])
+    cats = np.array([" %s " % cat for cat in cats])
+    unq_X_ = np.array([" %s " % x for x in unq_X])
     if not hashing_dim:
-        vectorizer = CountVectorizer(analyzer='char',
-                                     ngram_range=(min_n, max_n),
-                                     dtype=dtype)
+        vectorizer = CountVectorizer(
+            analyzer="char", ngram_range=(min_n, max_n), dtype=dtype
+        )
         vectorizer.fit(np.concatenate((cats, unq_X_)))
     else:
-        vectorizer = HashingVectorizer(analyzer='char',
-                                       ngram_range=(min_n, max_n),
-                                       n_features=hashing_dim, norm=None,
-                                       alternate_sign=False,
-                                       dtype=dtype)
+        vectorizer = HashingVectorizer(
+            analyzer="char",
+            ngram_range=(min_n, max_n),
+            n_features=hashing_dim,
+            norm=None,
+            alternate_sign=False,
+            dtype=dtype,
+        )
         vectorizer.fit(X)
     count_cats = vectorizer.transform(cats)
     count_X = vectorizer.transform(unq_X_)
@@ -105,7 +121,8 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     for i, x in enumerate(count_X):
         _, nonzero_idx, nonzero_vals = sparse.find(x)
         samegrams = np.asarray(
-            (count_cats[:, nonzero_idx].minimum(nonzero_vals)).sum(axis=1))
+            (count_cats[:, nonzero_idx].minimum(nonzero_vals)).sum(axis=1)
+        )
         allgrams = x.sum() + sum_cats - samegrams
         similarity = np.divide(samegrams, allgrams)
         SE_dict[unq_X[i]] = similarity.reshape(-1)
@@ -130,19 +147,28 @@ def get_prototype_frequencies(prototypes):
     return uniques[sorted_indexes], counts[sorted_indexes]
 
 
-def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
-                          ngram_range=(3, 3), sparse=False, sample_weight=None,
-                          random_state=None):
+def get_kmeans_prototypes(
+    X,
+    n_prototypes,
+    hashing_dim=128,
+    ngram_range=(3, 3),
+    sparse=False,
+    sample_weight=None,
+    random_state=None,
+):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
       - k-means clustering
       - nearest neighbor
     """
-    vectorizer = HashingVectorizer(analyzer='char', norm=None,
-                                   alternate_sign=False,
-                                   ngram_range=ngram_range,
-                                   n_features=hashing_dim)
+    vectorizer = HashingVectorizer(
+        analyzer="char",
+        norm=None,
+        alternate_sign=False,
+        ngram_range=ngram_range,
+        n_features=hashing_dim,
+    )
     projected = vectorizer.transform(X)
     if not sparse:
         projected = projected.toarray()
@@ -153,15 +179,17 @@ def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
     neighbors.fit(projected)
     indexes_prototypes = np.unique(neighbors.kneighbors(centers, 1)[-1])
     if indexes_prototypes.shape[0] < n_prototypes:
-        warnings.warn('Final number of unique prototypes is lower than ' +
-                      'n_prototypes (expected)')
+        warnings.warn(
+            "Final number of unique prototypes is lower than "
+            + "n_prototypes (expected)"
+        )
     return np.sort(X[indexes_prototypes])
 
 
 _VECTORIZED_EDIT_DISTANCES = {
-    'levenshtein-ratio': np.vectorize(string_distances.levenshtein_ratio),
-    'jaro': np.vectorize(string_distances.jaro),
-    'jaro-winkler': np.vectorize(string_distances.jaro_winkler),
+    "levenshtein-ratio": np.vectorize(string_distances.levenshtein_ratio),
+    "jaro": np.vectorize(string_distances.jaro),
+    "jaro-winkler": np.vectorize(string_distances.jaro_winkler),
 }
 
 
@@ -247,10 +275,19 @@ class SimilarityEncoder(OneHotEncoder):
 
     """
 
-    def __init__(self, similarity='ngram', ngram_range=(2, 4),
-                 categories='auto', dtype=np.float64,
-                 handle_unknown='ignore', handle_missing='', hashing_dim=None,
-                 n_prototypes=None, random_state=None, n_jobs=None):
+    def __init__(
+        self,
+        similarity="ngram",
+        ngram_range=(2, 4),
+        categories="auto",
+        dtype=np.float64,
+        handle_unknown="ignore",
+        handle_missing="",
+        hashing_dim=None,
+        n_prototypes=None,
+        random_state=None,
+        n_jobs=None,
+    ):
         super().__init__()
         self.categories = categories
         self.dtype = dtype
@@ -264,18 +301,20 @@ class SimilarityEncoder(OneHotEncoder):
         self.n_jobs = n_jobs
 
         if not isinstance(categories, list):
-            assert categories in [None, 'auto', 'k-means', 'most_frequent']
-        if categories in ['k-means', 'most_frequent'] and (n_prototypes is None
-                                                           or n_prototypes == 0
-                                                           ):
+            assert categories in [None, "auto", "k-means", "most_frequent"]
+        if categories in ["k-means", "most_frequent"] and (
+            n_prototypes is None or n_prototypes == 0
+        ):
             raise ValueError(
-                'n_prototypes expected None or a positive non null integer')
-        if categories == 'auto' and n_prototypes is not None:
+                "n_prototypes expected None or a positive non null integer"
+            )
+        if categories == "auto" and n_prototypes is not None:
             warnings.warn(
-                'n_prototypes parameter ignored with category type \'auto\'')
+                "n_prototypes parameter ignored with category type 'auto'"
+            )
 
     def get_most_frequent(self, prototypes):
-        """ Get the most frequent category prototypes
+        """Get the most frequent category prototypes
         Parameters
         ----------
         prototypes : the list of values for a category variable
@@ -284,7 +323,7 @@ class SimilarityEncoder(OneHotEncoder):
         The n_prototypes most frequent values for a category variable
         """
         values, _ = get_prototype_frequencies(prototypes)
-        return values[:self.n_prototypes]
+        return values[: self.n_prototypes]
 
     def fit(self, X, y=None):
         """
@@ -299,89 +338,110 @@ class SimilarityEncoder(OneHotEncoder):
         self
         """
 
-        if self.handle_missing not in ['error', '']:
-            template = ("handle_missing should be either 'error' or "
-                        "'', got %s")
+        if self.handle_missing not in ["error", ""]:
+            template = (
+                "handle_missing should be either 'error' or " "'', got %s"
+            )
             raise ValueError(template % self.handle_missing)
-        if hasattr(X, 'iloc') and X.isna().values.any():
-            if self.handle_missing == 'error':
-                msg = ("Found missing values in input data; set "
-                       "handle_missing='' to encode with missing values")
+        if hasattr(X, "iloc") and X.isna().values.any():
+            if self.handle_missing == "error":
+                msg = (
+                    "Found missing values in input data; set "
+                    "handle_missing='' to encode with missing values"
+                )
                 raise ValueError(msg)
-            if self.handle_missing != 'error':
+            if self.handle_missing != "error":
                 X = X.fillna(self.handle_missing)
-        elif not hasattr(X, 'dtype') and isinstance(X, list):
+        elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)
 
-        if hasattr(X, 'dtype'):
+        if hasattr(X, "dtype"):
             mask = _object_dtype_isnan(X)
-            if X.dtype.kind == 'O' and mask.any():
-                if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data; set "
-                           "handle_missing='' to encode with missing values")
+            if X.dtype.kind == "O" and mask.any():
+                if self.handle_missing == "error":
+                    msg = (
+                        "Found missing values in input data; set "
+                        "handle_missing='' to encode with missing values"
+                    )
                     raise ValueError(msg)
-                if self.handle_missing != 'error':
+                if self.handle_missing != "error":
                     X[mask] = self.handle_missing
 
-        if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
+        if LooseVersion(sklearn.__version__) > LooseVersion("0.21"):
             Xlist, n_samples, n_features = self._check_X(X)
         else:
             X = self._check_X(X)
             Xlist = X.T
             n_samples, n_features = X.shape
 
-        if self.handle_unknown not in ['error', 'ignore']:
-            template = ("handle_unknown should be either 'error' or "
-                        "'ignore', got %s")
+        if self.handle_unknown not in ["error", "ignore"]:
+            template = (
+                "handle_unknown should be either 'error' or "
+                "'ignore', got %s"
+            )
             raise ValueError(template % self.handle_unknown)
 
-        if ((self.hashing_dim is not None) and
-                (not isinstance(self.hashing_dim, int))):
-            raise ValueError("value '%r' was specified for hashing_dim, "
-                             "which has invalid type, expected None or "
-                             "int." % self.hashing_dim)
+        if (self.hashing_dim is not None) and (
+            not isinstance(self.hashing_dim, int)
+        ):
+            raise ValueError(
+                "value '%r' was specified for hashing_dim, "
+                "which has invalid type, expected None or "
+                "int." % self.hashing_dim
+            )
 
-        if self.categories not in ['auto', 'most_frequent', 'k-means']:
+        if self.categories not in ["auto", "most_frequent", "k-means"]:
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
-                    raise ValueError("Unsorted categories are not yet "
-                                     "supported")
+                    raise ValueError(
+                        "Unsorted categories are not yet " "supported"
+                    )
 
         self.categories_ = list()
         self.random_state_ = check_random_state(self.random_state)
 
         for i in range(n_features):
             Xi = Xlist[i]
-            if self.categories == 'auto':
+            if self.categories == "auto":
                 self.categories_.append(np.unique(Xi))
-            elif self.categories == 'most_frequent':
+            elif self.categories == "most_frequent":
                 self.categories_.append(self.get_most_frequent(Xi))
-            elif self.categories == 'k-means':
+            elif self.categories == "k-means":
                 uniques, count = np.unique(Xi, return_counts=True)
                 self.categories_.append(
-                    get_kmeans_prototypes(uniques, self.n_prototypes,
-                                          sample_weight=count,
-                                          random_state=self.random_state_))
+                    get_kmeans_prototypes(
+                        uniques,
+                        self.n_prototypes,
+                        sample_weight=count,
+                        random_state=self.random_state_,
+                    )
+                )
             else:
-                if self.handle_unknown == 'error':
+                if self.handle_unknown == "error":
                     valid_mask = np.in1d(Xi, self.categories[i])
                     if not np.all(valid_mask):
                         diff = np.unique(Xi[~valid_mask])
-                        msg = ("Found unknown categories {0} in column {1}"
-                               " during fit".format(diff, i))
+                        msg = (
+                            "Found unknown categories {0} in column {1}"
+                            " during fit".format(diff, i)
+                        )
                         raise ValueError(msg)
-                self.categories_.append(np.array(self.categories[i],
-                                                 dtype=object))
+                self.categories_.append(
+                    np.array(self.categories[i], dtype=object)
+                )
 
-        if self.similarity == 'ngram':
+        if self.similarity == "ngram":
             self.vectorizers_ = []
             self.vocabulary_count_matrices_ = []
             self.vocabulary_ngram_counts_ = []
 
             for i in range(n_features):
                 vectorizer = CountVectorizer(
-                    analyzer='char', ngram_range=self.ngram_range,
-                    dtype=self.dtype, strip_accents=None)
+                    analyzer="char",
+                    ngram_range=self.ngram_range,
+                    dtype=self.dtype,
+                    strip_accents=None,
+                )
 
                 # Store the raw-categories (and not the preprocessed
                 # categories) but use the preprocessed categories to compute
@@ -389,20 +449,28 @@ class SimilarityEncoder(OneHotEncoder):
                 # equivalency between the user input and the categories_
                 # attribute of the SimilarityEncoder, while being compliant
                 # with the CountVectorizer preprocessing steps.
-                preprocessed_categories = np.array(list(map(
-                    preprocess, self.categories_[i])), dtype=object)
+                preprocessed_categories = np.array(
+                    list(map(preprocess, self.categories_[i])), dtype=object
+                )
 
                 vocabulary_count_matrix = vectorizer.fit_transform(
-                    preprocessed_categories)
+                    preprocessed_categories
+                )
 
-                vocabulary_ngram_count = list(map(lambda x: get_ngram_count(
-                    preprocess(x), self.ngram_range), self.categories_[i]))
+                vocabulary_ngram_count = list(
+                    map(
+                        lambda x: get_ngram_count(
+                            preprocess(x), self.ngram_range
+                        ),
+                        self.categories_[i],
+                    )
+                )
 
                 self.vectorizers_.append(vectorizer)
                 self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
                 self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
 
-        if LooseVersion(sklearn.__version__) >= LooseVersion('0.21'):
+        if LooseVersion(sklearn.__version__) >= LooseVersion("0.21"):
             self.drop_idx_ = self._compute_drop_idx()
 
         return self
@@ -423,27 +491,31 @@ class SimilarityEncoder(OneHotEncoder):
 
         """
 
-        if hasattr(X, 'iloc') and X.isna().values.any():
-            if self.handle_missing == 'error':
-                msg = ("Found missing values in input data; set "
-                       "handle_missing='' to encode with missing values")
+        if hasattr(X, "iloc") and X.isna().values.any():
+            if self.handle_missing == "error":
+                msg = (
+                    "Found missing values in input data; set "
+                    "handle_missing='' to encode with missing values"
+                )
                 raise ValueError(msg)
-            if self.handle_missing != 'error':
+            if self.handle_missing != "error":
                 X = X.fillna(self.handle_missing)
-        elif not hasattr(X, 'dtype') and isinstance(X, list):
+        elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)
 
-        if hasattr(X, 'dtype'):
+        if hasattr(X, "dtype"):
             mask = _object_dtype_isnan(X)
-            if X.dtype.kind == 'O' and mask.any():
-                if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data; set "
-                           "handle_missing='' to encode with missing values")
+            if X.dtype.kind == "O" and mask.any():
+                if self.handle_missing == "error":
+                    msg = (
+                        "Found missing values in input data; set "
+                        "handle_missing='' to encode with missing values"
+                    )
                     raise ValueError(msg)
-                if self.handle_missing != 'error':
+                if self.handle_missing != "error":
                     X[mask] = self.handle_missing
 
-        if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
+        if LooseVersion(sklearn.__version__) > LooseVersion("0.21"):
             Xlist, n_samples, n_features = self._check_X(X)
         else:
             X = self._check_X(X)
@@ -455,27 +527,26 @@ class SimilarityEncoder(OneHotEncoder):
             valid_mask = np.in1d(Xi, self.categories_[i])
 
             if not np.all(valid_mask):
-                if self.handle_unknown == 'error':
+                if self.handle_unknown == "error":
                     diff = np.unique(X[~valid_mask, i])
-                    msg = ("Found unknown categories {0} in column {1}"
-                           " during transform".format(diff, i))
+                    msg = (
+                        "Found unknown categories {0} in column {1}"
+                        " during transform".format(diff, i)
+                    )
                     raise ValueError(msg)
 
-        if self.similarity in ('levenshtein-ratio',
-                               'jaro',
-                               'jaro-winkler'):
+        if self.similarity in ("levenshtein-ratio", "jaro", "jaro-winkler"):
             out = []
             vect = _VECTORIZED_EDIT_DISTANCES[self.similarity]
             for j, cats in enumerate(self.categories_):
                 unqX = np.unique(Xlist[j])
-                encoder_dict = {x: vect(x, cats.reshape(1, -1))
-                                for x in unqX}
+                encoder_dict = {x: vect(x, cats.reshape(1, -1)) for x in unqX}
                 encoder = [encoder_dict[x] for x in Xlist[j]]
                 encoder = np.vstack(encoder)
                 out.append(encoder)
             return np.hstack(out)
 
-        elif self.similarity == 'ngram':
+        elif self.similarity == "ngram":
             min_n, max_n = self.ngram_range
 
             total_length = sum(len(x) for x in self.categories_)
@@ -486,10 +557,14 @@ class SimilarityEncoder(OneHotEncoder):
                     encoded_Xj = self._ngram_similarity_fast(Xlist[j], j)
                 else:
                     encoded_Xj = ngram_similarity(
-                        Xlist[j], cats, ngram_range=(min_n, max_n),
-                        hashing_dim=self.hashing_dim, dtype=np.float32)
+                        Xlist[j],
+                        cats,
+                        ngram_range=(min_n, max_n),
+                        hashing_dim=self.hashing_dim,
+                        dtype=np.float32,
+                    )
 
-                out[:, last:last + len(cats)] = encoded_Xj
+                out[:, last: last + len(cats)] = encoded_Xj
                 last += len(cats)
             return out
         else:
@@ -522,19 +597,30 @@ class SimilarityEncoder(OneHotEncoder):
         X_count_matrix = vectorizer.transform(unq_X_)
         vocabulary_count_matrix = self.vocabulary_count_matrices_[col_idx]
         vocabulary_ngram_count = np.array(
-            self.vocabulary_ngram_counts_[col_idx]).reshape(-1, 1)
+            self.vocabulary_ngram_counts_[col_idx]
+        ).reshape(-1, 1)
 
         se_dict = {}
 
-        Parallel(n_jobs=self.n_jobs, backend='threading')(delayed(
-            _ngram_similarity_one_sample_inplace)(
-            X_count_vector, vocabulary_count_matrix, x_str,
-            vocabulary_ngram_count, se_dict, unq_X, i, self.ngram_range) for
-            X_count_vector, x_str, i in zip(
-                X_count_matrix, unq_X_, range(len(unq_X))))
+        Parallel(n_jobs=self.n_jobs, backend="threading")(
+            delayed(_ngram_similarity_one_sample_inplace)(
+                X_count_vector,
+                vocabulary_count_matrix,
+                x_str,
+                vocabulary_ngram_count,
+                se_dict,
+                unq_X,
+                i,
+                self.ngram_range,
+            )
+            for X_count_vector, x_str, i in zip(
+                X_count_matrix, unq_X_, range(len(unq_X))
+            )
+        )
 
         out = np.empty(
-            (len(X), vocabulary_count_matrix.shape[0]), dtype=self.dtype)
+            (len(X), vocabulary_count_matrix.shape[0]), dtype=self.dtype
+        )
 
         for x, out_row in zip(X, out):
             out_row[:] = se_dict[x]

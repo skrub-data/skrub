@@ -8,11 +8,13 @@ import numpy as np
 
 try:
     import Levenshtein
+
     _LEVENSHTEIN_AVAILABLE = True
 except ImportError:
     _LEVENSHTEIN_AVAILABLE = False
 
 from collections import Counter
+
 # Levenstein, adapted from
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
 
@@ -58,12 +60,12 @@ def preprocess(x):
     """
 
     # preprocessing step done in ngram_similarity
-    x = ' %s ' % x
+    x = " %s " % x
 
     # preprocessing step done in the CountVectorizer
     _white_spaces = re.compile(r"\s\s+")
 
-    return _white_spaces.sub(' ', x)
+    return _white_spaces.sub(" ", x)
 
 
 def levenshtein_array(source, target):
@@ -76,8 +78,8 @@ def levenshtein_array(source, target):
         return len(source)
 
     # Create numpy arrays
-    source = np.array(tuple(source), dtype='|U1')
-    target = np.array(tuple(target), dtype='|U1')
+    source = np.array(tuple(source), dtype="|U1")
+    target = np.array(tuple(target), dtype="|U1")
 
     # We use a dynamic programming algorithm, but with the
     # added optimization that we only need the last two rows
@@ -91,13 +93,11 @@ def levenshtein_array(source, target):
         # Target and source items are aligned, and either
         # are different (cost of 1), or are the same (cost of 0).
         current_row[1:] = np.minimum(
-                current_row[1:],
-                np.add(previous_row[:-1], target != s))
+            current_row[1:], np.add(previous_row[:-1], target != s)
+        )
 
         # Deletion (target grows shorter than source):
-        current_row[1:] = np.minimum(
-                current_row[1:],
-                current_row[0:-1] + 1)
+        current_row[1:] = np.minimum(current_row[1:], current_row[0:-1] + 1)
 
         previous_row = current_row
 
@@ -133,7 +133,7 @@ def _levenshtein_ratio(seq1, seq2):
     # Private function not using the Levenshtein package
     total_len = len(seq1) + len(seq2)
     if total_len == 0:
-        return 1.
+        return 1.0
     return (total_len - levenshtein(seq1, seq2)) / total_len
 
 
@@ -155,7 +155,7 @@ def _jaro_winkler(seq1, seq2, winkler=False):
         return 0.0
 
     min_len = min(seq1_len, seq2_len)
-    search_range = (min_len + 1) // 2 # Same threshold as Levenshtein.jaro
+    search_range = (min_len + 1) // 2  # Same threshold as Levenshtein.jaro
     if search_range < 0:
         search_range = 0
 
@@ -191,8 +191,13 @@ def _jaro_winkler(seq1, seq2, winkler=False):
 
     # adjust for similarities in nonmatched characters
     common_chars = float(common_chars)
-    weight = ((common_chars/seq1_len + common_chars/seq2_len +
-              (common_chars-trans_count) / common_chars)) / 3
+    weight = (
+        (
+            common_chars / seq1_len
+            + common_chars / seq2_len
+            + (common_chars - trans_count) / common_chars
+        )
+    ) / 3
 
     # winkler modification: continue to boost if strings are similar
     if winkler:
@@ -216,27 +221,24 @@ else:
 
 
 def get_unique_ngrams(string, n):
-    """ Return the set of different tri-grams in a string
-    """
-    spaces = ' '  # * (n // 2 + n % 2)
+    """Return the set of different tri-grams in a string"""
+    spaces = " "  # * (n // 2 + n % 2)
     string = spaces + " ".join(string.lower().split()) + spaces
     string_list = [string[i:] for i in range(n)]
     return set(zip(*string_list))
 
 
 def get_ngrams(string, n):
-    """ Return the set of different tri-grams in a string
-    """
+    """Return the set of different tri-grams in a string"""
     # Pure Python implementation: no numpy
-    spaces = ' '  # * (n // 2 + n % 2)
+    spaces = " "  # * (n // 2 + n % 2)
     string = spaces + " ".join(string.lower().split()) + spaces
     string_list = [string[i:] for i in range(n)]
     return list(zip(*string_list))
 
 
 def ngram_similarity(string1, string2, n, preprocess_strings=True):
-    """ n-gram similarity between two strings
-    """
+    """n-gram similarity between two strings"""
     if preprocess_strings:
         string1, string2 = preprocess(string1), preprocess(string2)
 
@@ -248,12 +250,12 @@ def ngram_similarity(string1, string2, n, preprocess_strings=True):
 
     samegrams = sum((count1 & count2).values())
     allgrams = len(ngrams1) + len(ngrams2)
-    similarity = samegrams/(allgrams - samegrams)
+    similarity = samegrams / (allgrams - samegrams)
     return similarity
 
 
-if __name__ == '__main__':
-    s1 = 'aa'
-    s2 = 'aaab'
-    print('Levenshtein similarity: %.3f' % levenshtein(s1, s2))
-    print('3-gram similarity: %.3f' % ngram_similarity(s1, s2, 3))
+if __name__ == "__main__":
+    s1 = "aa"
+    s2 = "aaab"
+    print("Levenshtein similarity: %.3f" % levenshtein(s1, s2))
+    print("3-gram similarity: %.3f" % ngram_similarity(s1, s2, 3))

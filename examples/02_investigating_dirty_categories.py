@@ -24,7 +24,7 @@ print(data.nunique())
 
 #########################################################################
 # As we can see, some entries have many different unique values:
-print(data['employee_position_title'].value_counts().sort_index())
+print(data["employee_position_title"].value_counts().sort_index())
 
 #########################################################################
 # These different entries are often variations on the same entities:
@@ -48,8 +48,8 @@ print(data['employee_position_title'].value_counts().sort_index())
 # data
 # values = data[['employee_position_title', 'gender']] + employee_salaries.y
 
-values = data[['employee_position_title', 'gender']]
-values.insert(0, 'current_annual_salary', employee_salaries.y)
+values = data[["employee_position_title", "gender"]]
+values.insert(0, "current_annual_salary", employee_salaries.y)
 
 #########################################################################
 # String similarity between entries
@@ -58,13 +58,14 @@ values.insert(0, 'current_annual_salary', employee_salaries.y)
 # That's where our encoders get into play. In order to robustly
 # embed dirty semantic data, the SimilarityEncoder creates a similarity
 # matrix based on the 3-gram structure of the data.
-sorted_values = values['employee_position_title'].sort_values().unique()
+sorted_values = values["employee_position_title"].sort_values().unique()
 
 from dirty_cat import SimilarityEncoder
 
-similarity_encoder = SimilarityEncoder(similarity='ngram')
+similarity_encoder = SimilarityEncoder(similarity="ngram")
 transformed_values = similarity_encoder.fit_transform(
-    sorted_values.reshape(-1, 1))
+    sorted_values.reshape(-1, 1)
+)
 
 #########################################################################
 # Plotting the new representation using multi-dimensional scaling
@@ -74,9 +75,10 @@ transformed_values = similarity_encoder.fit_transform(
 # to get an intuition of what the similarity encoder is doing:
 from sklearn.manifold import MDS
 
-mds = MDS(dissimilarity='precomputed', n_init=10, random_state=42)
+mds = MDS(dissimilarity="precomputed", n_init=10, random_state=42)
 two_dim_data = mds.fit_transform(
-    1 - transformed_values)  # transformed values lie
+    1 - transformed_values
+)  # transformed values lie
 # in the 0-1 range, so 1-transformed_value yields a positive dissimilarity matrix
 print(two_dim_data.shape)
 print(sorted_values.shape)
@@ -89,8 +91,9 @@ n_points = 5
 np.random.seed(42)
 from sklearn.neighbors import NearestNeighbors
 
-random_points = np.random.choice(len(similarity_encoder.categories_[0]),
-                                 n_points, replace=False)
+random_points = np.random.choice(
+    len(similarity_encoder.categories_[0]), n_points, replace=False
+)
 nn = NearestNeighbors(n_neighbors=2).fit(transformed_values)
 _, indices_ = nn.kneighbors(transformed_values[random_points])
 indices = np.unique(indices_.squeeze())
@@ -104,10 +107,15 @@ f, ax = plt.subplots()
 ax.scatter(x=two_dim_data[indices, 0], y=two_dim_data[indices, 1])
 # adding the legend
 for x in indices:
-    ax.text(x=two_dim_data[x, 0], y=two_dim_data[x, 1], s=sorted_values[x],
-            fontsize=8)
+    ax.text(
+        x=two_dim_data[x, 0],
+        y=two_dim_data[x, 1],
+        s=sorted_values[x],
+        fontsize=8,
+    )
 ax.set_title(
-    'multi-dimensional-scaling representation using a 3gram similarity matrix')
+    "multi-dimensional-scaling representation using a 3gram similarity matrix"
+)
 
 #########################################################################
 # Heatmap of the similarity matrix
@@ -118,10 +126,10 @@ f2, ax2 = plt.subplots(figsize=(6, 6))
 cax2 = ax2.matshow(transformed_values[indices, :][:, indices])
 ax2.set_yticks(np.arange(len(indices)))
 ax2.set_xticks(np.arange(len(indices)))
-ax2.set_yticklabels(sorted_values[indices], rotation='30')
-ax2.set_xticklabels(sorted_values[indices], rotation='60', ha='right')
+ax2.set_yticklabels(sorted_values[indices], rotation="30")
+ax2.set_xticklabels(sorted_values[indices], rotation="60", ha="right")
 ax2.xaxis.tick_bottom()
-ax2.set_title('Similarities across categories')
+ax2.set_title("Similarities across categories")
 f2.colorbar(cax2)
 f2.tight_layout()
 
@@ -144,14 +152,15 @@ from sklearn.preprocessing import OneHotEncoder
 
 # encoding simply a subset of the observations
 n_obs = 20
-employee_position_titles = values['employee_position_title'].head(
-    n_obs).to_frame()
+employee_position_titles = (
+    values["employee_position_title"].head(n_obs).to_frame()
+)
 categorical_encoder = OneHotEncoder(sparse=False)
 one_hot_encoded = categorical_encoder.fit_transform(employee_position_titles)
 f3, ax3 = plt.subplots(figsize=(6, 6))
 ax3.matshow(one_hot_encoded)
-ax3.set_title('Employee Position Title values, one-hot encoded')
-ax3.axis('off')
+ax3.set_title("Employee Position Title values, one-hot encoded")
+ax3.axis("off")
 f3.tight_layout()
 
 #########################################################################
@@ -163,8 +172,8 @@ f3.tight_layout()
 f4, ax4 = plt.subplots(figsize=(6, 6))
 similarity_encoded = similarity_encoder.fit_transform(employee_position_titles)
 ax4.matshow(similarity_encoded)
-ax4.set_title('Employee Position Title values, similarity encoded')
-ax4.axis('off')
+ax4.set_title("Employee Position Title values, similarity encoded")
+ax4.axis("off")
 f4.tight_layout()
 
 #########################################################################

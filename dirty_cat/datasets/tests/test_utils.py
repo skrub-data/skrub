@@ -1,11 +1,8 @@
-import os
-
 from pathlib import Path
-
 from unittest import mock
 
 
-@mock.patch('os.path.dirname')
+@mock.patch("os.path.dirname")
 def test_get_data_dir(mock_os_path_dirname):
     """Tests function ``get_data_dir()``."""
     from dirty_cat.datasets.utils import get_data_dir

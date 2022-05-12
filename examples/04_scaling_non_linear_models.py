@@ -131,12 +131,12 @@ import pandas as pd
 df = pd.read_csv(
     drug_directory.path,
     quotechar="'",
-    escapechar='\\',
+    escapechar="\\",
     nrows=10,
 ).astype(str)
 # A simpler syntax we could use:
 # df = pd.read_csv(drug_directory.path, **drug_directory.read_csv_kwargs, nrows=10).astype(str)
-print(df[['NONPROPRIETARYNAME', 'PRODUCTTYPENAME']].head())
+print(df[["NONPROPRIETARYNAME", "PRODUCTTYPENAME"]].head())
 # This will be useful further down in the example.
 columns_names = df.columns
 
@@ -153,7 +153,8 @@ columns_names = df.columns
 from dirty_cat import SimilarityEncoder
 from sklearn.compose import make_column_transformer
 from sklearn.preprocessing import OneHotEncoder
-similarity_encoder = SimilarityEncoder(similarity='ngram')
+
+similarity_encoder = SimilarityEncoder(similarity="ngram")
 
 ###############################################################################
 # Two other columns are used to predict the output: ``DOSAGEFORMNAME`` and
@@ -165,13 +166,14 @@ from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
 column_transformer = make_column_transformer(
-    (similarity_encoder, ['NONPROPRIETARYNAME']),
-    (OneHotEncoder(handle_unknown='ignore'), ['DOSAGEFORMNAME', 'ROUTENAME']),
-    sparse_threshold=1)
+    (similarity_encoder, ["NONPROPRIETARYNAME"]),
+    (OneHotEncoder(handle_unknown="ignore"), ["DOSAGEFORMNAME", "ROUTENAME"]),
+    sparse_threshold=1,
+)
 
 # The classifier and the ColumnTransformer are stacked into a Pipeline object
-classifier = SVC(kernel='rbf', random_state=42, gamma=1)
-steps = [('transformer', column_transformer), ('classifier', classifier)]
+classifier = SVC(kernel="rbf", random_state=42, gamma=1)
+steps = [("transformer", column_transformer), ("classifier", classifier)]
 model = Pipeline(steps)
 
 ###############################################################################
@@ -196,14 +198,24 @@ model = Pipeline(steps)
 
 
 def preprocess(df, label_encoder):
-    df = df.loc[df['PRODUCTTYPENAME'].isin(
-        ['HUMAN OTC DRUG', 'HUMAN PRESCRIPTION DRUG'])]
+    df = df.loc[
+        df["PRODUCTTYPENAME"].isin(
+            ["HUMAN OTC DRUG", "HUMAN PRESCRIPTION DRUG"]
+        )
+    ]
 
-    df = df[['NONPROPRIETARYNAME', 'DOSAGEFORMNAME', 'ROUTENAME', 'PRODUCTTYPENAME']]
+    df = df[
+        [
+            "NONPROPRIETARYNAME",
+            "DOSAGEFORMNAME",
+            "ROUTENAME",
+            "PRODUCTTYPENAME",
+        ]
+    ]
     df = df.dropna()
 
-    X = df[['NONPROPRIETARYNAME', 'DOSAGEFORMNAME', 'ROUTENAME']]
-    y = df[['PRODUCTTYPENAME']].values
+    X = df[["NONPROPRIETARYNAME", "DOSAGEFORMNAME", "ROUTENAME"]]
+    y = df[["PRODUCTTYPENAME"]].values
 
     y_int = label_encoder.transform(np.squeeze(y))
 
@@ -217,8 +229,11 @@ def get_X_y(**kwargs):
     transformation repeatedly in the code.
     """
     global label_encoder
-    df = pd.read_csv(drug_directory.path, **drug_directory.read_csv_kwargs, **kwargs)
+    df = pd.read_csv(
+        drug_directory.path, **drug_directory.read_csv_kwargs, **kwargs
+    )
     return preprocess(df, label_encoder)
+
 
 ###############################################################################
 # Classifier objects in |sklearn| often require :code:`y` to be integer labels.
@@ -233,7 +248,7 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 label_encoder = LabelEncoder()
-label_encoder.fit(['HUMAN OTC DRUG', 'HUMAN PRESCRIPTION DRUG'])
+label_encoder.fit(["HUMAN OTC DRUG", "HUMAN PRESCRIPTION DRUG"])
 
 one_hot_encoder = OneHotEncoder(categories="auto", sparse=False)
 one_hot_encoder.fit([[0], [1]])
@@ -264,11 +279,13 @@ train_set_size = 5000
 test_set_size = 10000
 offset = 100000
 
-X_train, y_train = get_X_y(skiprows=1, names=columns_names,
-                           nrows=train_set_size)
+X_train, y_train = get_X_y(
+    skiprows=1, names=columns_names, nrows=train_set_size
+)
 
-X_test, y_test = get_X_y(skiprows=offset, names=columns_names,
-                         nrows=test_set_size)
+X_test, y_test = get_X_y(
+    skiprows=offset, names=columns_names, nrows=test_set_size
+)
 
 ###############################################################################
 # Evaluating time and sample complexity
@@ -303,8 +320,10 @@ for n in train_set_sizes:
     train_times_svc.append(train_time)
     test_scores_svc.append(test_score)
 
-    msg = ("using {:>5} samples: model fitting took {:.1f}s, test accuracy of "
-           "{:.3f}")
+    msg = (
+        "using {:>5} samples: model fitting took {:.1f}s, test accuracy of "
+        "{:.3f}"
+    )
     print(msg.format(n, train_time, test_score))
 
 
@@ -372,6 +391,7 @@ for n in train_set_sizes:
 # the data, prior to the online fitting step.
 
 from sklearn.kernel_approximation import RBFSampler
+
 n_out_encoder = 1000
 n_out_rbf = 5000
 n_samples_encoder = 10000
@@ -379,14 +399,19 @@ n_samples_encoder = 10000
 X_encoder, _ = get_X_y(nrows=n_samples_encoder, names=columns_names)
 
 similarity_encoder = SimilarityEncoder(
-    similarity='ngram', categories='most_frequent', n_prototypes=n_out_encoder,
-    random_state=42, ngram_range=(2, 4))
+    similarity="ngram",
+    categories="most_frequent",
+    n_prototypes=n_out_encoder,
+    random_state=42,
+    ngram_range=(2, 4),
+)
 
 # Fit the rbf_sampler with the similarity matrix.
 column_transformer = make_column_transformer(
-    (similarity_encoder, ['NONPROPRIETARYNAME']),
-    (OneHotEncoder(handle_unknown='ignore'), ['DOSAGEFORMNAME', 'ROUTENAME']),
-    sparse_threshold=1)
+    (similarity_encoder, ["NONPROPRIETARYNAME"]),
+    (OneHotEncoder(handle_unknown="ignore"), ["DOSAGEFORMNAME", "ROUTENAME"]),
+    sparse_threshold=1,
+)
 
 transformed_categories = column_transformer.fit_transform(X_encoder)
 
@@ -394,8 +419,7 @@ transformed_categories = column_transformer.fit_transform(X_encoder)
 # between two points should decrease as the distance between them rises. It
 # is data-specific, and needs to be chosen carefully, for example using
 # cross-validation.
-rbf_sampler = RBFSampler(
-    gamma=0.5, n_components=n_out_rbf, random_state=42)
+rbf_sampler = RBFSampler(gamma=0.5, n_components=n_out_rbf, random_state=42)
 rbf_sampler.fit(transformed_categories)
 
 
@@ -412,7 +436,8 @@ def encode(X, y_int, one_hot_encoder, column_transformer, rbf_sampler):
 # The inputs and labels of the val and test sets have to be pre-processed the
 # same way the training set was processed:
 X_test_kernel_approx, y_true_test_onehot = encode(
-    X_test, y_test, one_hot_encoder, column_transformer, rbf_sampler)
+    X_test, y_test, one_hot_encoder, column_transformer, rbf_sampler
+)
 
 
 ###############################################################################
@@ -425,9 +450,10 @@ from sklearn.linear_model import SGDClassifier
 
 online_train_set_size = 100000
 # Filter warning on max_iter and tol
-warnings.filterwarnings('ignore', module='sklearn.linear_model')
+warnings.filterwarnings("ignore", module="sklearn.linear_model")
 sgd_classifier = SGDClassifier(
-    max_iter=1, tol=None, random_state=42, average=10)
+    max_iter=1, tol=None, random_state=42, average=10
+)
 
 
 ###############################################################################
@@ -442,8 +468,13 @@ online_train_set_sizes = []
 t0 = time.perf_counter()
 
 iter_csv = pd.read_csv(
-    drug_directory.path, nrows=online_train_set_size, chunksize=batchsize,
-    skiprows=1, names=columns_names, **drug_directory.read_csv_kwargs)
+    drug_directory.path,
+    nrows=online_train_set_size,
+    chunksize=batchsize,
+    skiprows=1,
+    names=columns_names,
+    **drug_directory.read_csv_kwargs
+)
 
 for batch_no, batch in enumerate(iter_csv):
     X_batch, y_batch = preprocess(batch, label_encoder)
@@ -451,33 +482,33 @@ for batch_no, batch in enumerate(iter_csv):
     if len(y_batch) == 0:
         continue
     X_batch_kernel_approx, y_batch_onehot = encode(
-        X_batch, y_batch, one_hot_encoder, column_transformer, rbf_sampler)
+        X_batch, y_batch, one_hot_encoder, column_transformer, rbf_sampler
+    )
 
     # make one pass of stochastic gradient descent over the batch.
-    sgd_classifier.partial_fit(
-        X_batch_kernel_approx, y_batch, classes=[0, 1])
+    sgd_classifier.partial_fit(X_batch_kernel_approx, y_batch, classes=[0, 1])
 
     # print train/test accuracy metrics every 5 batch
     if (batch_no % 5) == 0:
         message = "batch {:>4} ".format(batch_no)
         for origin, X, y_true_onehot in zip(
-                ('train', 'val'),
-                (X_batch_kernel_approx, X_test_kernel_approx),
-                (y_batch_onehot, y_true_test_onehot)):
+            ("train", "val"),
+            (X_batch_kernel_approx, X_test_kernel_approx),
+            (y_batch_onehot, y_true_test_onehot),
+        ):
 
             y_pred = sgd_classifier.predict(X)
 
             # preprocess correctly the labels and prediction to match
             # average_precision_score expectations
-            y_pred_onehot = one_hot_encoder.transform(
-                y_pred.reshape(-1, 1))
+            y_pred_onehot = one_hot_encoder.transform(y_pred.reshape(-1, 1))
 
             score = average_precision_score(y_true_onehot, y_pred_onehot)
             message += "{} precision: {:.4f}  ".format(origin, score)
-            if origin == 'val':
+            if origin == "val":
                 test_scores_rbf.append(score)
                 train_times_rbf.append(time.perf_counter() - t0)
-                online_train_set_sizes.append((batch_no + 1)*batchsize)
+                online_train_set_sizes.append((batch_no + 1) * batchsize)
 
         print(message)
 
@@ -490,21 +521,24 @@ import matplotlib.pyplot as plt
 f, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 7))
 ax_score, ax_capacity = axs
 
-ax_score.set_ylabel('score')
-ax_capacity.set_ylabel('training set size')
-ax_capacity.set_xlabel('time')
+ax_score.set_ylabel("score")
+ax_capacity.set_ylabel("training set size")
+ax_capacity.set_xlabel("time")
 
-ax_score.plot(train_times_svc, test_scores_svc, 'b-', label='exact')
-ax_score.plot(train_times_rbf, test_scores_rbf, 'r-', label='online')
+ax_score.plot(train_times_svc, test_scores_svc, "b-", label="exact")
+ax_score.plot(train_times_rbf, test_scores_rbf, "r-", label="online")
 
-ax_capacity.plot(train_times_svc, train_set_sizes, 'b-', label='exact')
-ax_capacity.plot(train_times_rbf, online_train_set_sizes, 'r-', label='online')
-ax_capacity.set_yscale('log')
+ax_capacity.plot(train_times_svc, train_set_sizes, "b-", label="exact")
+ax_capacity.plot(train_times_rbf, online_train_set_sizes, "r-", label="online")
+ax_capacity.set_yscale("log")
 
 ax_score.legend(
-    bbox_to_anchor=(0., 1.02, 1., .102),
-    loc=3, ncol=2, mode='expand',
-    borderaxespad=0.)
+    bbox_to_anchor=(0.0, 1.02, 1.0, 0.102),
+    loc=3,
+    ncol=2,
+    mode="expand",
+    borderaxespad=0.0,
+)
 
 # compare the two methods in their common time range
 ax_score.set_xlim(0, min(train_times_svc[-1], train_times_rbf[-1]))
