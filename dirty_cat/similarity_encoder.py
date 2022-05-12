@@ -546,6 +546,7 @@ class SimilarityEncoder(OneHotEncoder):
             Fit SimilarityEncoder to data, then transform it.
             Fits transformer to `X` and `y` with optional parameters `fit_params`
             and returns a transformed version of `X`.
+
             Parameters
             ----------
             X : array-like of shape (n_samples, n_features)
