@@ -744,15 +744,15 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         assert hasattr(self, 'fitted_models_'), (
             'ERROR: GapEncoder must be fitted first.')
         # Generate prefixes
-        if isinstance(col_names, list):
-            prefixes = [s + ': ' for s in col_names]
-        elif col_names == 'auto':
+        if isinstance(col_names, str) and col_names == 'auto':
             if hasattr(self, 'column_names_'): # Use column names
                 prefixes = [s + ': ' for s in self.column_names_]
             else: # Use 'col1: ', ... 'colN: ' as prefixes
                 prefixes = [f'col{k}: ' for k in range(len(self.fitted_models_))]
-        else: # Empty prefixes
+        elif col_names is None:  # Empty prefixes
             prefixes = [''] * len(self.fitted_models_)
+        else:
+            prefixes = [s + ': ' for s in col_names]
         labels = list()
         for k, enc in enumerate(self.fitted_models_):
             col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
