@@ -3,15 +3,33 @@ Release 0.2.1
 
 Major changes
 -------------
+* Improvements to the :class:`SuperVectorizer`
+
+    - Type detection works better: handles dates, numerics columns encoded as strings,
+     or numeric columns containing strings for missing values.
+
+* "get_feature_names" becomes "get_feature_names_out", following changes in the scikit-learn API.
+    "get_feature_names" is deprecated in scikit-learn > 1.0.
+    
+* Improvements to the :class:`MinHashEncoder`
+    - It is now possible to fit multiple columns simultaneously with the MinHashEncoder.
+    Very useful when using for instance the sklearn.compose.make_column_transformer method,
+    on multiple columns.
+
+
+Bug-fixes
+---------
+
+* Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
 
 Notes
 -----
 
-* Improvements to the :class:`SuperVectorizer`
+* Remove trailing imports in the MinHashEncoder.
 
-    - Type detection works better: handles dates, numerics columns encoded as strings, or numeric columns containing strings for missing values
+* Fix typos and update links for website.
 
-* Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
+* Documentation of the SuperVectorizer and the SimilarityEncoder improved.
 
 Release 0.2.0
 =============
