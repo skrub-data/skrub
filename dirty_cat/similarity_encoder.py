@@ -235,6 +235,8 @@ class SimilarityEncoder(OneHotEncoder):
     categories_ : list of arrays
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
+    _infrequent_enabled: bool, default=False
+        Avoid taking into account the existance of infrequent categories.
 
     References
     ----------
@@ -404,6 +406,8 @@ class SimilarityEncoder(OneHotEncoder):
 
         if LooseVersion(sklearn.__version__) >= LooseVersion('0.21'):
             self.drop_idx_ = self._compute_drop_idx()
+        if LooseVersion(sklearn.__version__) >= LooseVersion('1.1.0'):
+            self._infrequent_enabled = False
 
         return self
 
@@ -544,8 +548,8 @@ class SimilarityEncoder(OneHotEncoder):
     def fit_transform(self, X, y=None, **fit_params):
             """
             Fit SimilarityEncoder to data, then transform it.
-            Fits transformer to `X` and `y` with optional parameters `fit_params`
-            and returns a transformed version of `X`.
+            Fits transformer to `X` and `y` with optional parameters
+            `fit_params` and returns a transformed version of `X`.
 
             Parameters
             ----------
