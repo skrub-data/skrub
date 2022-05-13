@@ -21,6 +21,7 @@ Bug-fixes
 ---------
 
 * Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
+
 * GapEncoder's `get_feature_names_out` now accepts all iterators, not just lists.  
 
 Notes
