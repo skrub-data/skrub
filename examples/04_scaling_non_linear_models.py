@@ -134,8 +134,6 @@ df = pd.read_csv(
     escapechar='\\',
     nrows=10,
 ).astype(str)
-# A simpler syntax we could use:
-# df = pd.read_csv(drug_directory.path, **drug_directory.read_csv_kwargs, nrows=10).astype(str)
 print(df[['NONPROPRIETARYNAME', 'PRODUCTTYPENAME']].head())
 # This will be useful further down in the example.
 columns_names = df.columns
