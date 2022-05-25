@@ -20,7 +20,7 @@ dataframe, after which we show a much simpler way, albeit with less fine
 control.
 
 
-.. [#] https://catalog.data.gov/dataset/employee-salaries-2016
+.. [#] https://www.openml.org/d/42125
 
 
  .. |SV| replace::
