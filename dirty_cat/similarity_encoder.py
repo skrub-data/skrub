@@ -15,7 +15,7 @@ The principle is as follows:
 import warnings
 
 import numpy as np
-from distutils.version import LooseVersion
+from packaging.version import Version
 from joblib import Parallel, delayed
 from scipy import sparse
 import sklearn
@@ -325,7 +325,7 @@ class SimilarityEncoder(OneHotEncoder):
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
 
-        if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
+        if Version(sklearn.__version__) > Version('0.21'):
             Xlist, n_samples, n_features = self._check_X(X)
         else:
             X = self._check_X(X)
@@ -404,9 +404,9 @@ class SimilarityEncoder(OneHotEncoder):
                 self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
                 self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
 
-        if LooseVersion(sklearn.__version__) >= LooseVersion('0.21'):
+        if Version(sklearn.__version__) >= Version('0.21'):
             self.drop_idx_ = self._compute_drop_idx()
-        if LooseVersion(sklearn.__version__) >= LooseVersion('1.1.0'):
+        if Version(sklearn.__version__) >= Version('1.1.0'):
             self._infrequent_enabled = False
 
         return self
@@ -447,7 +447,7 @@ class SimilarityEncoder(OneHotEncoder):
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
 
-        if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
+        if Version(sklearn.__version__) > Version('0.21'):
             Xlist, n_samples, n_features = self._check_X(X)
         else:
             X = self._check_X(X)

@@ -24,7 +24,7 @@ import pandas as pd
 from pathlib import Path
 from collections import namedtuple
 from typing import Union, Dict, Any
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 from dirty_cat.datasets.utils import get_data_dir
 
@@ -165,7 +165,7 @@ def _download_and_write_openml_dataset(dataset_id: int,
     from sklearn.datasets import fetch_openml
 
     fetch_kwargs = {}
-    if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+    if Version(sklearn.__version__) >= Version('0.22'):
         fetch_kwargs.update({'as_frame': True})
 
     # The ``fetch_openml()`` function returns a Scikit-Learn ``Bunch`` object,

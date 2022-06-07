@@ -15,7 +15,7 @@ import pandas as pd
 
 from warnings import warn
 from typing import Union, Optional, List
-from distutils.version import LooseVersion
+from packaging.version import Version
 
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
@@ -23,7 +23,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import GapEncoder
 
-_sklearn_loose_version = LooseVersion(sklearn.__version__)
+_sklearn_loose_version = Version(sklearn.__version__)
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -402,7 +402,7 @@ class SuperVectorizer(ColumnTransformer):
                     impute: bool = False
 
                     if isinstance(trans, OneHotEncoder) \
-                            and _sklearn_loose_version < LooseVersion('0.24'):
+                            and _sklearn_loose_version < Version('0.24'):
                         impute = True
 
                     if impute:
@@ -436,9 +436,9 @@ class SuperVectorizer(ColumnTransformer):
         e.g. "job_title_Police officer",
         or "<column_name>" if not encoded.
         """
-        if _sklearn_loose_version < LooseVersion('0.23'):
+        if _sklearn_loose_version < Version('0.23'):
             try:
-                if _sklearn_loose_version < LooseVersion('1.0'):
+                if _sklearn_loose_version < Version('1.0'):
                     ct_feature_names = super().get_feature_names()
                 else:
                     ct_feature_names = super().get_feature_names_out()
@@ -450,7 +450,7 @@ class SuperVectorizer(ColumnTransformer):
                     'transformers, or update your copy of scikit-learn.'
                 )
         else:
-            if _sklearn_loose_version < LooseVersion('1.0'):
+            if _sklearn_loose_version < Version('1.0'):
                 ct_feature_names = super().get_feature_names()
             else:
                 ct_feature_names = super().get_feature_names_out()
