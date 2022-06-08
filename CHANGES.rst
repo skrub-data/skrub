@@ -5,7 +5,7 @@ Bug-fixes
 ---------
 
 * Fixed a bug in the :class:`SuperVectorizer` causing a `FutureWarning`
-  when using the `get_feature_names` method.
+  when using the `get_feature_names_out` method.
 
 Release 0.2.1
 =============
