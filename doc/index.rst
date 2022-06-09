@@ -49,6 +49,10 @@ pipeline you can tweak.
     </div>
     </div>
 
+.. raw:: html
+
+    <iframe src="https://youtu.be/_GNaaeEI2tg" frameborder="0" allowfullscreen></iframe>
+
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
 <https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
