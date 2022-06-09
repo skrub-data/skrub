@@ -51,8 +51,8 @@ pipeline you can tweak.
 
 .. raw:: html
 
-    <iframe width="560" height="315"
-     src="https://www.youtube-nocookie.com/embed/_GNaaeEI2tg" frameborder="0"
+    <iframe style="display: block; margin: auto;" width="560" height="315"
+     src="https://www.youtube.com/embed/_GNaaeEI2tg" frameborder="0"
      allow="accelerometer; autoplay; clipboard-write;
      encrypted-media; gyroscope; picture-in-picture" allowfullscreen
     ></iframe>
