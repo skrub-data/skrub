@@ -51,7 +51,11 @@ pipeline you can tweak.
 
 .. raw:: html
 
-    <iframe src="https://youtu.be/_GNaaeEI2tg" frameborder="0" allowfullscreen></iframe>
+    <iframe width="560" height="315"
+     src="https://www.youtube-nocookie.com/embed/_GNaaeEI2tg" frameborder="0"
+     allow="accelerometer; autoplay; clipboard-write;
+     encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+    ></iframe>
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
