@@ -60,7 +60,7 @@ string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
     </div>
     <div class="flex-content">
-    <iframe style="display: block; margin: auto; width: 100%;"
+    <iframe style="display: block; margin: auto; width: 100%;" width="560" height="315"
      src="https://www.youtube.com/embed/_GNaaeEI2tg" frameborder="0"
      allow="accelerometer; autoplay; clipboard-write;
      encrypted-media; gyroscope; picture-in-picture" allowfullscreen
