@@ -1,0 +1,23 @@
+
+
+Examples using ``dirty_cat.datasets.fetch_drug_directory``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A very classic dilemma when training a machine learning model consists in choosing between usin...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_04_scaling_non_linear_models_thumb.png
+     :alt: Fitting scalable, non-linear models on data with dirty categories
+
+     :ref:`sphx_glr_auto_examples_04_scaling_non_linear_models.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+ * :ref:`sphx_glr_auto_examples_04_scaling_non_linear_models.py`

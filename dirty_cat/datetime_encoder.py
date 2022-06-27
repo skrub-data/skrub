@@ -109,8 +109,14 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             for feature in self._to_extract:
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
                     self.features_per_column_[i].append(feature)
+            # Remove the "other" feature if only one other feature is extracted (because it would be perfectly
+            # collinear)
+            if len([feature for feature in self.features_per_column_[i] if feature != "other"]) < 2:
+                assert self.features_per_column_[i][-1] == "other"
+                self.features_per_column_[i].pop(-1)
             if self.add_day_of_the_week:
                 self.features_per_column_[i].append("dayofweek")
+
 
         self.n_features_out_ = len(np.concatenate(list(self.features_per_column_.values())))
 

@@ -1,0 +1,22 @@
+﻿:mod:`dirty_cat`.MinHashEncoder
+======================================
+
+.. rst-class:: side_comment
+
+    Usage examples at the bottom of this page.
+
+.. currentmodule:: dirty_cat
+
+.. autoclass:: MinHashEncoder
+   :inherited-members:
+   :undoc-members:
+
+   
+
+   
+
+.. include:: dirty_cat.MinHashEncoder.examples
+
+.. raw:: html
+
+    <div class="clearer"></div>
