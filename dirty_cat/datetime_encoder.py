@@ -20,9 +20,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     extract_until : {"year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"}, default="hour"
-        Extract up to this granularity, and gather the rest into the "other" feature.
-        For instance, if you specify "day", only "year", "month", "day" and "other" features will be created.
-        The "other" feature will be a numerical value expressed in the "extract_until" unit.
+        Extract up to this granularity. If all features have not been extracted, add the "full" feature, which contains
+        the full time to epoch (in seconds).
+        For instance, if you specify "day", only "year", "month", "day" and "full" features will be created.
     add_day_of_the_week: bool, default=False
         Add day of the week feature (if day is extracted). This is a numerical feature from 0 (Monday) to 6 (Sunday).
 
@@ -70,12 +70,13 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             return pd.DatetimeIndex(date_series).nanosecond.to_numpy()
         elif feature == "dayofweek":
             return pd.DatetimeIndex(date_series).dayofweek.to_numpy()
-        elif feature == "other":
-            # Gather all the variables below the extract_until into one numerical variable
-            res = (pd.to_datetime(date_series) - pd.to_datetime(pd.DatetimeIndex(date_series).floor(
-                WORD_TO_ALIAS[self.extract_until]))).to_numpy()
-            # Convert to the extract_until unit (e.g if I extract until "minute", then convert to minutes)
-            return res / pd.to_timedelta(1, WORD_TO_ALIAS[self.extract_until])
+        elif feature == "full":
+            tz = pd.DatetimeIndex(date_series).tz
+            # Compute the time in seconds from the epoch time UTC
+            if tz is None:
+                return (pd.to_datetime(date_series) - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+            else:
+                return (pd.DatetimeIndex(date_series).tz_convert("utc") - pd.Timestamp("1970-01-01", tz="utc")) // pd.Timedelta('1s')
 
     def fit(self, X, y=None):
         """
@@ -95,7 +96,8 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         self._validate_keywords()
         # Columns to extract for each column, before taking into account constant columns
         self._to_extract = TIME_LEVELS[:TIME_LEVELS.index(self.extract_until) + 1]
-        self._to_extract.append("other")
+        if self.add_day_of_the_week:
+            self._to_extract.append("dayofweek")
         if isinstance(X, pd.DataFrame):
             self.col_names_ = X.columns
         else:
@@ -109,13 +111,12 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             for feature in self._to_extract:
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
                     self.features_per_column_[i].append(feature)
-            # Remove the "other" feature if only one other feature is extracted (because it would be perfectly
-            # collinear)
-            if len([feature for feature in self.features_per_column_[i] if feature != "other"]) < 2:
-                assert self.features_per_column_[i][-1] == "other"
-                self.features_per_column_[i].pop(-1)
-            if self.add_day_of_the_week:
-                self.features_per_column_[i].append("dayofweek")
+            # If some date features have not been extracted, then add the "full" feature, which contains the full
+            # time to epoch
+            remainder = (pd.to_datetime(X[:, i]) - pd.to_datetime(pd.DatetimeIndex(X[:, i]).floor(
+                WORD_TO_ALIAS[self.extract_until]))).seconds.to_numpy()
+            if np.nanstd(remainder) > 0:
+                self.features_per_column_[i].append("full")
 
 
         self.n_features_out_ = len(np.concatenate(list(self.features_per_column_.values())))
