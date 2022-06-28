@@ -24,7 +24,7 @@ X = road_safety.X.drop("accident", axis=1)
 # Reduce dataset size for speed
 import numpy as np
 rng = np.random.default_rng(1)
-indices = rng.choice(range(len(y)), 30000)
+indices = rng.choice(range(len(y)), 3000)
 X, y = X.iloc[indices], y.iloc[indices]
 
 ###############################################################################
@@ -63,7 +63,7 @@ feature_names
 from sklearn.ensemble import HistGradientBoostingClassifier
 clf = HistGradientBoostingClassifier().fit(X_, y)
 from sklearn.inspection import permutation_importance
-result = permutation_importance(clf, X_, y, n_repeats=10, random_state=0)
+result = permutation_importance(clf, X_, y, n_repeats=2, random_state=0)
 std = result.importances_std
 importances = result.importances_mean
 indices = np.argsort(importances)
