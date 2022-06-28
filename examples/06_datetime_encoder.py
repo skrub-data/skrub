@@ -24,13 +24,15 @@ print(road_safety.description)
 # We want to predict whether a traffic violation is linked to an accident, depending on the location, the gender
 # of the driver, whether the driver had drunk alcohol, and, most importantly, the date and time of the violation.
 data = road_safety.X[["accident", "date_of_stop", "time_of_stop", "longitude", "latitude", "gender", "alcohol", "subagency"]]
+import gc #reduce memory usage
+del road_safety
+gc.collect()
 y = data["accident"]  # Whether the traffic violation is linked to an accident
 X = data.drop("accident", axis=1)
 # Reduce dataset size for speed
 import numpy as np
-from numpy.random import RandomState
-rs = RandomState(12345)
-indices = rs.choice(range(len(y)), 50000)
+rng = np.random.default_rng(1)
+indices = rng.choice(range(len(y)), 50000)
 X, y = X.iloc[indices], y.iloc[indices]
 
 ###############################################################################
