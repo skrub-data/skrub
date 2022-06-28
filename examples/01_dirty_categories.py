@@ -20,7 +20,7 @@ dataframe, after which we show a much simpler way, albeit with less fine
 control.
 
 
-.. [#] https://catalog.data.gov/dataset/employee-salaries-2016
+.. [#] https://www.openml.org/d/42125
 
 
  .. |SV| replace::
@@ -118,9 +118,6 @@ encoder = make_column_transformer(
 #
 # We will use a HistGradientBoostingRegressor, which is a good predictor
 # for data with heterogeneous columns
-# (we need to require the experimental feature for scikit-learn 0.24)
-from sklearn.experimental import enable_hist_gradient_boosting
-# now you can import the HGBR from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
@@ -318,7 +315,7 @@ X.columns.to_list()
 
 # %%
 # After encoding (we only plot the first 8 feature names):
-feature_names = sup_vec.get_feature_names()
+feature_names = sup_vec.get_feature_names_out()
 feature_names[:8]
 
 # %%

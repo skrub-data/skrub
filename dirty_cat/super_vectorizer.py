@@ -109,6 +109,41 @@ class SuperVectorizer(ColumnTransformer):
         When imputed, missing values are replaced by the string 'missing'.
         See also attribute `imputed_columns_`.
 
+    remainder : {'drop', 'passthrough'} or estimator, default='drop'
+        By default, only the specified columns in `transformers` are
+        transformed and combined in the output, and the non-specified
+        columns are dropped. (default of ``'drop'``).
+        By specifying ``remainder='passthrough'``, all remaining columns that
+        were not specified in `transformers` will be automatically passed
+        through. This subset of columns is concatenated with the output of
+        the transformers.
+        By setting ``remainder`` to be an estimator, the remaining
+        non-specified columns will use the ``remainder`` estimator. The
+        estimator must support :term:`fit` and :term:`transform`.
+        Note that using this feature requires that the DataFrame columns
+        input at :term:`fit` and :term:`transform` have identical order.
+
+    sparse_threshold: float, default=0.3
+        If the output of the different transformers contains sparse matrices,
+        these will be stacked as a sparse matrix if the overall density is
+        lower than this value. Use sparse_threshold=0 to always return dense.
+        When the transformed output consists of all dense data, the stacked result
+        will be dense, and this keyword will be ignored.
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel.
+        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``-1`` means using all processors.
+
+    transformer_weights : dict, default=None
+        Multiplicative weights for features per transformer. The output of the
+        transformer is multiplied by these weights. Keys are transformer names,
+        values the weights.
+
+    verbose : bool, default=False
+        If True, the time elapsed while fitting each transformer will be
+        printed as it is completed
+
     Attributes
     ----------
 
@@ -170,34 +205,25 @@ class SuperVectorizer(ColumnTransformer):
     @staticmethod
     def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
         """
-        Takes a pandas DataFrame and tries to convert its columns to the best
+        Takes a dataframe and tries to convert its columns to the best
         possible data type.
 
         Parameters
         ----------
-        X: pd.DataFrame
-            Input data as a pandas DataFrame.
+        X : {dataframe} of shape (n_samples, n_features)
+            The data to be transformed.
 
         Returns
         -------
-        array
-            The same array, with its columns casted to the best possible
+        pd.DataFrame
+            The same pandas DataFrame, with its columns casted to the best possible
             data type.
-            Columns with missing values won't be modified.
         """
         from pandas.core.dtypes.base import ExtensionDtype
+
+        # Handle missing values
         for col in X.columns:
-            dtype = X[col].dtype
             contains_missing: bool = _has_missing_values(X[col])
-            if not contains_missing:
-                X[col] = X[col].convert_dtypes()
-            # Cast pandas dtypes to numpy dtypes
-            # for earlier versions of sklearn
-            if issubclass(dtype.__class__, ExtensionDtype):
-                try:
-                    X[col] = X[col].astype(dtype.type, errors='ignore')
-                except (TypeError, ValueError):
-                    pass
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
             # because the former tends to raise all kind of issues when dealing
             # with scikit-learn (as of version 0.24).
@@ -207,7 +233,30 @@ class SuperVectorizer(ColumnTransformer):
                 if pd.api.types.is_numeric_dtype(X[col]):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
+        STR_NA_VALUES = ['null', '', '1.#QNAN', '#NA', 'nan', '#N/A N/A', '-1.#QNAN', '<NA>', '-1.#IND', '-nan', 'n/a',
+                         '-NaN', '1.#IND', 'NULL', 'NA', 'N/A', '#N/A', 'NaN']  # taken from pandas.io.parsers (version 1.1.4)
+        X = X.replace(STR_NA_VALUES + [None, "?", "..."],
+                      np.nan)
+        X = X.replace(r'^\s+$', np.nan, regex=True) # replace whitespace only
 
+        # Convert to best possible data type
+        for col in X.columns:
+            if not pd.api.types.is_datetime64_any_dtype(X[col]): # we don't want to cast datetime64
+                try:
+                    X[col] = pd.to_numeric(X[col], errors='raise')
+                except:
+                    # Only try to convert to datetime if the variable isn't numeric.
+                    try:
+                        X[col] = pd.to_datetime(X[col], errors='raise')
+                    except:
+                        pass
+            # Cast pandas dtypes to numpy dtypes
+            # for earlier versions of sklearn
+            if issubclass(X[col].dtype.__class__, ExtensionDtype):
+                try:
+                    X[col] = X[col].astype(X[col].dtype.type, errors='ignore')
+                except (TypeError, ValueError):
+                    pass
         return X
 
     def transform(self, X) -> np.ndarray:
@@ -228,29 +277,25 @@ class SuperVectorizer(ColumnTransformer):
             sparse matrices.
 
         """
-        # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
-            # Auto cast the imported DataFrame to avoid having issues with
-            # `object` dtype when we will cast columns to the fitted types.
-            X = self._auto_cast(X)
-            # Check the number of columns matches the fitted array's.
-            if X.shape[1] != len(self.columns_):
-                raise ValueError("Passed array does not match column count of "
-                                 f"array seen at fit time. Got {X.shape[0]} "
-                                 f"columns, expected {len(self.columns_)}")
         else:
             # Create a copy to avoid altering the original data.
             X = X.copy()
+        # Auto cast the imported data to avoid having issues with
+        # `object` dtype when we will cast columns to the fitted types.
+        if self.auto_cast:
+            X = self._auto_cast(X)
+            self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
+        if X.shape[1] != len(self.columns_):
+            raise ValueError("Passed array does not match column count of "
+                             f"array seen at fit time. Got {X.shape[1]} "
+                             f"columns, expected {len(self.columns_)}")
+
         # If the DataFrame does not have named columns already,
         # apply the learnt columns
-        if isinstance(X.columns, pd.RangeIndex):
+        if pd.api.types.is_numeric_dtype(X.columns):
             X.columns = self.columns_
-
-        if self.auto_cast:
-            # Enforce types of the fitted input array.
-            for col, to_type in self.types_.items():
-                X[col] = X[col].astype(to_type)
 
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_col(X[col])
@@ -384,7 +429,7 @@ class SuperVectorizer(ColumnTransformer):
 
         return super().fit_transform(X, y)
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names_out(self, input_features=None) -> List[str]:
         """
         Returns clean feature names with format
         "<column_name>_<value>" if encoded by OneHotEncoder or alike,
@@ -432,9 +477,12 @@ class SuperVectorizer(ColumnTransformer):
 
         return all_trans_feature_names
     
-    def get_feature_names_out(self, input_features=None) -> List[str]:
+    def get_feature_names(self) -> List[str]:
+        """ Deprecated, use "get_feature_names_out"
         """
-        Ensures compatibility with sklearn >= 1.0, and returns the output of
-        get_feature_names.
-        """
-        return self.get_feature_names()
+        warn(
+            "get_feature_names is deprecated in scikit-learn > 1.0. "
+            "use get_feature_names_out instead",
+            DeprecationWarning,
+            )
+        return self.get_feature_names_out()

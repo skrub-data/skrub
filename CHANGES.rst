@@ -3,10 +3,35 @@ Release 0.2.1
 
 Major changes
 -------------
+* Improvements to the :class:`SuperVectorizer`
 
-* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical columns
-  (year, month, day, hour, minute, second, ...)
+    - Type detection works better: handles dates, numerics columns encoded as strings,
+     or numeric columns containing strings for missing values.
 
+* "get_feature_names" becomes "get_feature_names_out", following changes in the scikit-learn API.
+    "get_feature_names" is deprecated in scikit-learn > 1.0.
+    
+* Improvements to the :class:`MinHashEncoder`
+    - It is now possible to fit multiple columns simultaneously with the MinHashEncoder.
+    Very useful when using for instance the sklearn.compose.make_column_transformer method,
+    on multiple columns.
+
+
+Bug-fixes
+---------
+
+* Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
+
+* GapEncoder's `get_feature_names_out` now accepts all iterators, not just lists.  
+
+Notes
+-----
+
+* Remove trailing imports in the MinHashEncoder.
+
+* Fix typos and update links for website.
+
+* Documentation of the SuperVectorizer and the SimilarityEncoder improved.
 
 Release 0.2.0
 =============

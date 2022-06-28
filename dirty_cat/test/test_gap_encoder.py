@@ -1,12 +1,43 @@
 import time
 import numpy as np
-from numpy.random import random
 import pytest
 import pandas as pd
 
 from sklearn.datasets import fetch_20newsgroups
 from dirty_cat import GapEncoder
 
+@pytest.mark.parametrize("init1, analyzer1, analyzer2",[
+    ('k-means++', 'char', 'word'),
+    ('random', 'char', 'word'),
+    ('k-means', 'char', 'word')
+])
+def test_analyzer(init1, analyzer1, analyzer2):
+    """" Test if the output is different when the analyzer is 'word' or 'char'.
+        If it is, no error ir raised. 
+    """
+    add_words = False
+    n_samples = 70
+    X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
+    X = np.array([X_txt, X_txt]).T
+    n_components = 10
+    # Test first analyzer output:
+    encoder = GapEncoder(
+        n_components=n_components, init='k-means++',
+        analyzer=analyzer1, add_words=add_words,
+        random_state=42, rescale_W=True)
+    encoder.fit(X)
+    y = encoder.transform(X)
+    
+    # Test the other analyzer output:
+    encoder = GapEncoder(
+        n_components=n_components, init='k-means++',
+        analyzer=analyzer2, add_words=add_words,
+        random_state=42)
+    encoder.fit(X)
+    y2 = encoder.transform(X)
+    
+    # Test inequality btw analyzer word and char ouput:
+    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, y, y2)
 
 @pytest.mark.parametrize("hashing, init, analyzer, add_words", [
     (False, 'k-means++', 'word', True),
@@ -82,7 +113,7 @@ def test_partial_fit(n_samples=70):
     return
 
 
-def test_get_feature_names(n_samples=70):
+def test_get_feature_names_out(n_samples=70):
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X = np.array([X_txt, X_txt]).T
     enc = GapEncoder(random_state=42)
@@ -91,9 +122,9 @@ def test_get_feature_names(n_samples=70):
         # Check number of labels
         assert len(topic_labels) == enc.n_components * X.shape[1]
         # Test different parameters for col_names
-        topic_labels_2 = enc.get_feature_names(col_names='auto')
+        topic_labels_2 = enc.get_feature_names_out(col_names='auto')
         assert topic_labels_2[0] == 'col0: ' + topic_labels[0]
-        topic_labels_3 = enc.get_feature_names(col_names=['abc', 'def'])
+        topic_labels_3 = enc.get_feature_names_out(col_names=['abc', 'def'])
         assert topic_labels_3[0] == 'abc: ' + topic_labels[0]
     return
 
@@ -157,6 +188,10 @@ def profile_encoder(Encoder, init):
 
 
 if __name__ == '__main__':
+    
+    print('test_analyzer')
+    test_analyzer('k-means++', 'char_wb', 'word')
+    print('test_analyzer passed')
     print('start test_gap_encoder')
     test_gap_encoder(True, 'k-means++', 'char', False)
     print('test_gap_encoder passed')
@@ -166,9 +201,9 @@ if __name__ == '__main__':
     print('start test_partial_fit')
     test_partial_fit()
     print('test_partial_fit passed')
-    print('start test_get_feature_names')
-    test_get_feature_names()
-    print('test_get_feature_names passed')
+    print('start test_get_feature_names_out')
+    test_get_feature_names_out()
+    print('test_get_feature_names_out passed')
     print('start test_overflow_error')
     test_overflow_error()
     print('test_overflow_error passed')

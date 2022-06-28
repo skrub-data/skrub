@@ -14,6 +14,7 @@ The principle is as follows:
        with the Kullback-Leibler divergence as loss, and a Gamma prior on H.
        We thus optimize H and W with the multiplicative update method.
 """
+import warnings
 import numpy as np
 from distutils.version import LooseVersion
 from scipy import sparse
@@ -171,7 +172,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 size=(self.n_components, self.n_vocab))
         elif self.init == 'k-means':
             prototypes = get_kmeans_prototypes(
-                X, self.n_components, random_state=self.random_state)
+                X, self.n_components, analyzer=self.analyzer, random_state=self.random_state)
             W = self.ngrams_count_.transform(prototypes).A + .1
             if self.add_words:
                 W2 = self.word_count_.transform(prototypes).A + .1
@@ -253,6 +254,17 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return self
 
     def get_feature_names(self, n_labels=3, prefix=''):
+        """ Deprecated, use "get_feature_names_out"
+        """
+        warnings.warn(
+            "get_feature_names is deprecated in scikit-learn > 1.0. "
+            "use get_feature_names_out instead",
+            DeprecationWarning,
+            )
+        return self.get_feature_names_out(n_labels=n_labels,
+                                          prefix=prefix)
+
+    def get_feature_names_out(self, n_labels=3, prefix=''):
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with highest activations are selected.
@@ -577,6 +589,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         return GapEncoderColumn(
             ngram_range=self.ngram_range,
             n_components=self.n_components,
+            analyzer = self.analyzer,
             gamma_shape_prior=self.gamma_shape_prior,
             gamma_scale_prior=self.gamma_scale_prior,
             rho=self.rho,
@@ -702,7 +715,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             self.fitted_models_[k].partial_fit(X[:, k])
         return self
 
-    def get_feature_names(self, col_names=None, n_labels=3):
+    def get_feature_names_out(self, col_names=None, n_labels=3):
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with highest activations are selected.
@@ -731,29 +744,32 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         assert hasattr(self, 'fitted_models_'), (
             'ERROR: GapEncoder must be fitted first.')
         # Generate prefixes
-        if isinstance(col_names, list):
-            prefixes = [s + ': ' for s in col_names]
-        elif col_names == 'auto':
+        if isinstance(col_names, str) and col_names == 'auto':
             if hasattr(self, 'column_names_'): # Use column names
                 prefixes = [s + ': ' for s in self.column_names_]
             else: # Use 'col1: ', ... 'colN: ' as prefixes
                 prefixes = [f'col{k}: ' for k in range(len(self.fitted_models_))]
-        else: # Empty prefixes
+        elif col_names is None:  # Empty prefixes
             prefixes = [''] * len(self.fitted_models_)
+        else:
+            prefixes = [s + ': ' for s in col_names]
         labels = list()
         for k, enc in enumerate(self.fitted_models_):
-            col_labels = enc.get_feature_names(n_labels, prefixes[k])
+            col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
             labels.extend(col_labels)
         return labels
     
-    def get_feature_names_out(
+    def get_feature_names(
         self, input_features=None, col_names=None, n_labels=3
     ):
+        """ Deprecated, use "get_feature_names_out"
         """
-        Ensures compatibility with sklearn >= 1.0, and returns the output of
-        get_feature_names.
-        """
-        return self.get_feature_names(col_names, n_labels)
+        warnings.warn(
+            "get_feature_names is deprecated in scikit-learn > 1.0. "
+            "use get_feature_names_out instead",
+            DeprecationWarning,
+            )
+        return self.get_feature_names_out(col_names, n_labels)
         
 
     def score(self, X):
@@ -852,7 +868,7 @@ def batch_lookup(lookup, n=1):
         yield (unq_indices, indices)
 
 
-def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
+def get_kmeans_prototypes(X, n_prototypes, analyzer='char', hashing_dim=128,
                           ngram_range=(2, 4), sparse=False,
                           sample_weight=None, random_state=None):
     """
@@ -861,7 +877,7 @@ def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
       - k-means clustering
       - nearest neighbor
     """
-    vectorizer = HashingVectorizer(analyzer='char', norm=None,
+    vectorizer = HashingVectorizer(analyzer=analyzer, norm=None,
                                    alternate_sign=False,
                                    ngram_range=ngram_range,
                                    n_features=hashing_dim)
