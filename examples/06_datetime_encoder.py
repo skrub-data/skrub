@@ -14,23 +14,12 @@ to handle datetime features easily.
 # --------------
 #
 # We first get the dataset.
-from dirty_cat.datasets import fetch_traffic_violations
-
-road_safety = fetch_traffic_violations()
-print(road_safety.description)
-
-###############################################################################
-# Now, we select relevant features, choose the target and reduce the number of samples.
-# We want to predict whether a traffic violation is linked to an accident, depending on the location, the gender
-# of the driver, whether the driver had drunk alcohol, and, most importantly, the date and time of the violation.
-data = road_safety.X[["accident", "date_of_stop", "time_of_stop", "longitude", "latitude", "gender", "alcohol", "subagency"]]
-y = data["accident"]  # Whether the traffic violation is linked to an accident
-X = data.drop("accident", axis=1)
-# Reduce dataset size for speed
-import numpy as np
-rng = np.random.default_rng(1)
-indices = rng.choice(range(len(y)), 10000)
-X, y = X.iloc[indices], y.iloc[indices]
+# We want to predict the NO2 air concentration in different cities, based on the date and the time of measurement.
+import pandas as pd
+data = pd.read_csv("https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/air_quality_no2_long.csv")
+y = data["value"]
+X = data[["city", "date.utc"]]
+X
 
 ###############################################################################
 # Creating encoders for categorical and datetime features
@@ -40,17 +29,15 @@ from dirty_cat.datetime_encoder import DatetimeEncoder
 
 cat_encoder = OneHotEncoder(handle_unknown="ignore")
 datetime_encoder = DatetimeEncoder(add_day_of_the_week=True,  # The day of the week is probably relevant
-                                   extract_until="hour")  # We're probably not interested in minutes, seconds etc.
+                                   extract_until="minute")  # We're probably not interested in seconds and below
 
 from sklearn.compose import make_column_transformer
 
-datetime_columns = ["date_of_stop", "time_of_stop"]
-numerical_columns = ["longitude", "latitude"]
-categorical_columns = ["gender", "alcohol", "subagency"]
+datetime_columns = ["date.utc"]
+categorical_columns = ["city"]
 
 encoder = make_column_transformer((cat_encoder, categorical_columns),
                                   (datetime_encoder, datetime_columns),
-                                  ("passthrough", numerical_columns),  # don't encode the numerical columns
                                   remainder="drop")
 
 
@@ -66,12 +53,13 @@ feature_names
 # Features importance
 # ----------------------------
 # This allows us to compute the importance of these date features, using the `permutation_importance` function.
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import HistGradientBoostingRegressor
+import numpy as np
 
-clf = HistGradientBoostingClassifier().fit(X_, y)
+clf = HistGradientBoostingRegressor().fit(X_, y)
 from sklearn.inspection import permutation_importance
 
-result = permutation_importance(clf, X_, y, n_repeats=7, random_state=0)
+result = permutation_importance(clf, X_, y, n_repeats=10, random_state=0)
 std = result.importances_std
 importances = result.importances_mean
 indices = np.argsort(importances)
@@ -89,11 +77,8 @@ plt.tight_layout(pad=1)
 plt.show()
 
 ###############################################################################
-# We can see that datetime features are considered important by the model.
-# The "full" feature, which represent the full time to epoch, seems the most
-# important (note that it is highly collinear with the `year` feature, which can
-# make the importance interpretation tricky). The other features seem approximately
-# equally important, with the day of the month being slightly more important.
+# We can see that the hour of the day is the most important feature, which seems reasonable.
+# Note that the `year` and `minute` features were removed because they were constant.
 
 ###############################################################################
 # One-liner with the SuperVectorizer
@@ -104,7 +89,7 @@ from dirty_cat import SuperVectorizer
 sup_vec = SuperVectorizer()
 X_ = sup_vec.fit_transform(X)
 feature_names = sup_vec.get_feature_names_out()
-feature_names
+print(feature_names)
 
 ###############################################################################
 # We can see that the SuperVectorizer is indeed using a DatetimeEncoder for the datetime features.
@@ -115,4 +100,4 @@ sup_vec.transformers_
 sup_vec = SuperVectorizer(datetime_transformer=DatetimeEncoder(add_day_of_the_week=True))
 X_ = sup_vec.fit_transform(X)
 feature_names = sup_vec.get_feature_names_out()
-feature_names
+print(feature_names)

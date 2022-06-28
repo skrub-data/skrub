@@ -348,7 +348,7 @@ class SuperVectorizer(ColumnTransformer):
         # Select columns by dtype
         numeric_columns = X.select_dtypes(include=['int', 'float']).columns.to_list()
         categorical_columns = X.select_dtypes(include=['string', 'object', 'category']).columns.to_list()
-        datetime_columns = X.select_dtypes(include='datetime').columns.to_list()
+        datetime_columns = X.select_dtypes(include=['datetime', "datetimetz"]).columns.to_list()
 
         # Divide categorical columns by cardinality
         low_card_cat_columns = [
