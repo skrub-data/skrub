@@ -3,7 +3,7 @@ Handling datetime features with the DatetimeEncoder
 ==========================================
 
 We illustrate here how to handle datetime features with the DatetimeEncoder. The DatetimeEncoder
-break down each datetime features into several numerical features, by extracting relevant information from the
+breaks down each datetime features into several numerical features, by extracting relevant information from the
 datetime features, such as the month, the day of the week, the hour of the day, etc. Used in
 the SuperVectorizer, which automatically detects the datetime features, the DatetimeEncoder allows
 to handle datetime features easily.
