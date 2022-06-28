@@ -16,9 +16,8 @@ to handle datetime features easily.
 # We first get the dataset.
 from dirty_cat.datasets import fetch_traffic_violations
 
-#road_safety = fetch_traffic_violations()
-#print(road_safety.description)
-print("test")
+road_safety = fetch_traffic_violations()
+print(road_safety.description)
 
 ###############################################################################
 # Now, we select relevant features, choose the target and reduce the number of samples.
@@ -33,7 +32,7 @@ X = data.drop("accident", axis=1)
 # Reduce dataset size for speed
 import numpy as np
 rng = np.random.default_rng(1)
-indices = rng.choice(range(len(y)), 50000)
+indices = rng.choice(range(len(y)), 10000)
 X, y = X.iloc[indices], y.iloc[indices]
 
 ###############################################################################
@@ -75,7 +74,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 clf = HistGradientBoostingClassifier().fit(X_, y)
 from sklearn.inspection import permutation_importance
 
-result = permutation_importance(clf, X_, y, n_repeats=10, random_state=0)
+result = permutation_importance(clf, X_, y, n_repeats=7, random_state=0)
 std = result.importances_std
 importances = result.importances_mean
 indices = np.argsort(importances)
