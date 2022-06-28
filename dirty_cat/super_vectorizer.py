@@ -21,8 +21,7 @@ from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
-from dirty_cat import GapEncoder
-
+from dirty_cat import GapEncoder, DatetimeEncoder
 
 _sklearn_loose_version = LooseVersion(sklearn.__version__)
 
@@ -89,9 +88,9 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    datetime_transformer: Transformer or str or None, default=None
+    datetime_transformer: Transformer or str or None, default=DatetimeEncoder()
         Transformer used on datetime features.
-        Can either be a transformer object instance,
+        Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
@@ -142,7 +141,7 @@ class SuperVectorizer(ColumnTransformer):
                  low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
                  high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(n_components=30),
                  numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
-                 datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
+                 datetime_transformer: Optional[Union[BaseEstimator, str]] = DatetimeEncoder(),
                  auto_cast: bool = True,
                  impute_missing: str = 'auto',
                  # Following parameters are inherited from ColumnTransformer
