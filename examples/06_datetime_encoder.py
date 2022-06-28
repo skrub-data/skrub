@@ -28,8 +28,9 @@ y = data["accident"]  # Whether the traffic violation is linked to an accident
 X = data.drop("accident", axis=1)
 # Reduce dataset size for speed
 import numpy as np
-rng = np.random.default_rng(1)
-indices = rng.choice(range(len(y)), 50000)
+from numpy.random import RandomState
+rs = RandomState(12345)
+indices = rs.choice(range(len(y)), 50000)
 X, y = X.iloc[indices], y.iloc[indices]
 
 ###############################################################################
