@@ -161,7 +161,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
                 feature_names.append(f"{prefix}_{feature}")
         return feature_names
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names(self, input_features=None) -> List[str]:
         """
         Ensures compatibility with sklearn < 1.0, and returns the output of
         get_feature_names_out.

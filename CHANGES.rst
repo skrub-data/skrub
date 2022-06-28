@@ -1,3 +1,9 @@
+Release 0.3
+============
+* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
+    columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
+    in the SuperVectorizer for datetime columns.
+
 Release 0.2.1
 =============
 
