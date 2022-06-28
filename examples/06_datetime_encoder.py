@@ -24,7 +24,7 @@ X = road_safety.X.drop("accident", axis=1)
 # Reduce dataset size for speed
 import numpy as np
 rng = np.random.default_rng(1)
-indices = rng.choice(range(len(y)), 3000)
+indices = rng.choice(range(len(y)), 100)
 X, y = X.iloc[indices], y.iloc[indices]
 
 ###############################################################################
