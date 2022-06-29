@@ -1,3 +1,12 @@
+Release 0.3.0
+=============
+
+Notes
+-----
+
+* The transformers_ attribute of the SuperVectorizer now contains column names
+instead of column indices for the "remainder" columns.
+
 Release 0.2.1
 =============
 
