@@ -15,10 +15,11 @@ With this procedure, strings that share many n-grams have greater
 probability of having same encoding values. These encodings thus capture
 morphological similarities between strings.
 """
-
+import joblib
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import murmurhash3_32
+from joblib import Parallel, delayed
 
 from .fast_hash import ngram_min_hash
 from .utils import LRUDict, check_input
@@ -47,6 +48,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     handle_missing : 'error' or 'zero_impute' (default)
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
+    n_jobs : int, default=-1
+        The number of jobs to run in parallel. If -1, then the number of
+        jobs is set to the number of cores.
     References
     ----------
     For a detailed description of the method, see
@@ -57,13 +61,15 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(self, n_components=30, ngram_range=(2, 4),
                  hashing='fast', minmax_hash=False,
-                 handle_missing='zero_impute'):
+                 handle_missing='zero_impute',
+                 n_jobs=-1):
         self.ngram_range = ngram_range
         self.n_components = n_components
         self.hashing = hashing
         self.minmax_hash = minmax_hash
         self.count = 0
         self.handle_missing = handle_missing
+        self.n_jobs = n_jobs
         self._capacity = 2**10
 
     def get_unique_ngrams(self, string, ngram_range):
@@ -176,46 +182,47 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                         "'zero_impute', got %s")
             raise ValueError(template % self.handle_missing)
 
-        # TODO Parallel run here
-        is_nan_idx = False
+        def compute_hash(x):
+            # Function called by joblib to compute the hash
+            if isinstance(x, float):  # true if x is a missing value
+                if self.handle_missing == 'error':
+                    msg = ("Found missing values in input data; set "
+                           "handle_missing='zero_impute' to encode with missing values")
+                    raise ValueError(msg)
+            elif x not in self.hash_dict:
+                if self.hashing == "fast":
+                    return self.get_fast_hash(x)
+                elif self.hashing == "murmur":
+                    return self.minhash(
+                        x,
+                        n_components=self.n_components,
+                        ngram_range=self.ngram_range
+                    )
+                else:
+                    raise ValueError("hashing function must be 'fast' or"
+                                 "'murmur', got '{}'"
+                                 "".format(self.hashing))
+            return False
 
-        if self.hashing == 'fast':
-            X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
-            counter = self.n_components
-            for k in range(X.shape[1]):
-                X_in = X[:, k].reshape(-1)
-                for i, x in enumerate(X_in):
-                    if isinstance(x, float): # true if x is a missing value
-                        is_nan_idx = True
-                    elif x not in self.hash_dict:
-                        X_out[i, k*self.n_components:counter] = self.hash_dict[x] = self.get_fast_hash(x)
-                    else:
-                        X_out[i, k*self.n_components:counter] = self.hash_dict[x]
-                counter += self.n_components
-        elif self.hashing == 'murmur':
-            X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
-            counter = self.n_components
-            for k in range(X.shape[1]):
-                X_in = X[:, k].reshape(-1)
-                for i, x in enumerate(X_in):
-                    if isinstance(x, float):
-                        is_nan_idx = True
-                    elif x not in self.hash_dict:
-                        X_out[i, k*self.n_components:counter] = self.hash_dict[x] = self.minhash(
-                            x,
-                            n_components=self.n_components,
-                            ngram_range=self.ngram_range
-                        )
-                    else:
-                        X_out[i, k*self.n_components:counter] = self.hash_dict[x]
-                counter += self.n_components
-        else:
-            raise ValueError("hashing function must be 'fast' or"
-                             "'murmur', got '{}'"
-                             "".format(self.hashing))
+        #X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
+        print((X == X).all())
+        print(self.handle_missing)
+        if not (X == X).all() and self.handle_missing == 'error':
+            raise ValueError("Found missing values in input data; set "
+                             "handle_missing='zero_impute' to encode with missing values")
+        print(X.shape)
+        print(self.n_components)
+        unique_x, indices_x = np.unique(X, return_inverse=True)
+        print(indices_x)
+        # First parallel loop to store the hashes in self.hash_dict
+        unique_x_trans = joblib.Parallel(n_jobs=self.n_jobs)(delayed(compute_hash)(x) for x in unique_x)
+        print(np.stack(unique_x_trans).shape)
+        print(np.stack(unique_x_trans)[indices_x].shape)
+        X_out = np.stack(unique_x_trans)[indices_x]
+        print(X_out)
+        # Second sequential loop to fill the output array with the values from self.hash_dict
+        #for k in range(X.shape[1]):
+        #    for i, x in enumerate(X[:, k].reshape(-1)):
+        #        X_out[i, k * self.n_components:(k + 1) * self.n_components] = self.hash_dict[x]
 
-        if self.handle_missing == 'error' and is_nan_idx:
-            msg = ("Found missing values in input data; set "
-                   "handle_missing='zero_impute' to encode with missing values")
-            raise ValueError(msg)
         return X_out
