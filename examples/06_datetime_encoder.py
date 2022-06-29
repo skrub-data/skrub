@@ -16,6 +16,7 @@ to handle datetime features easily.
 # We first get the dataset.
 # We want to predict the NO2 air concentration in different cities, based on the date and the time of measurement.
 import pandas as pd
+
 data = pd.read_csv("https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/air_quality_no2_long.csv")
 y = data["value"]
 X = data[["city", "date.utc"]]
@@ -39,7 +40,6 @@ categorical_columns = ["city"]
 encoder = make_column_transformer((cat_encoder, categorical_columns),
                                   (datetime_encoder, datetime_columns),
                                   remainder="drop")
-
 
 ###############################################################################
 # Transforming the input data
@@ -101,3 +101,53 @@ sup_vec = SuperVectorizer(datetime_transformer=DatetimeEncoder(add_day_of_the_we
 X_ = sup_vec.fit_transform(X)
 feature_names = sup_vec.get_feature_names_out()
 print(feature_names)
+
+###############################################################################
+# Predicting with date features
+# --------------------------------
+from sklearn.pipeline import make_pipeline
+pipeline = make_pipeline(sup_vec, clf)
+# When using date features, we often care about predicting the future.
+# In this case, we have to be careful when evaluating our model, because
+# standard tool like cross-validation do not respect the time ordering.
+X.loc[:, "date.utc"] = pd.to_datetime(X["date.utc"])
+X.sort_values("date.utc", inplace=True)
+from sklearn.model_selection import TimeSeriesSplit, cross_val_score
+cross_val_score(pipeline, X, y, scoring="neg_mean_squared_error", cv=TimeSeriesSplit(n_splits=5))
+
+###############################################################################
+# Plotting the prediction
+X_train, X_test = X[X["date.utc"] < "2019-06-01"], X[X["date.utc"] >= "2019-06-01"]
+y_train, y_test = y[X["date.utc"] < "2019-06-01"], y[X["date.utc"] >= "2019-06-01"]
+pipeline.fit(X_train, y_train)
+# Plot subplots for each city using subplots
+fig, axs = plt.subplots(nrows=len(X_test.city.unique()), ncols=1, figsize=(12, 9))
+for i, city in enumerate(X_test.city.unique()):
+    print(X_test.city == city)
+    print(y_test)
+    axs[i].plot(X.loc[X.city == city, "date.utc"], y.loc[X.city == city], label="Actual")
+    axs[i].plot(X_test.loc[X_test.city == city, "date.utc"], pipeline.predict(X_test.loc[X_test.city == city]),
+                label="Predicted")
+    axs[i].set_title(city)
+    axs[i].set_ylabel("NO2")
+plt.legend()
+plt.show()
+
+###############################################################################
+# Let's zoom on a few days
+
+X_zoomed = X[X["date.utc"] <= "2019-06-04"][X["date.utc"] >= "2019-06-01"]
+y_zoomed = y[X["date.utc"] <= "2019-06-04"][X["date.utc"] >= "2019-06-01"]
+X_train_zoomed, X_test_zoomed = X_zoomed[X_zoomed["date.utc"] < "2019-06-03"], X_zoomed[X_zoomed["date.utc"] >= "2019-06-03"]
+y_train_zoomed, y_test_zoomed = y[X["date.utc"] < "2019-06-03"], y[X["date.utc"] >= "2019-06-03"]
+pipeline.fit(X_train, y_train)
+# Plot subplots for each city using subplots
+fig, axs = plt.subplots(nrows=len(X_test_zoomed.city.unique()), ncols=1, figsize=(12, 9))
+for i, city in enumerate(X_test_zoomed.city.unique()):
+    axs[i].plot(X_zoomed.loc[X_zoomed.city == city, "date.utc"], y_zoomed.loc[X_zoomed.city == city], label="Actual")
+    axs[i].plot(X_test_zoomed.loc[X_test_zoomed.city == city, "date.utc"], pipeline.predict(X_test_zoomed.loc[X_test_zoomed.city == city]),
+                label="Predicted")
+    axs[i].set_title(city)
+    axs[i].set_ylabel("NO2")
+plt.legend()
+plt.show()
