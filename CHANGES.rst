@@ -7,6 +7,17 @@ Notes
 * The transformers_ attribute of the SuperVectorizer now contains column names
 instead of column indices for the "remainder" columns.
 
+
+Release 0.2.2
+=============
+
+Bug-fixes
+---------
+
+* Fixed a bug in the :class:`SuperVectorizer` causing a `FutureWarning`
+  when using the `get_feature_names_out` method.
+
+
 Release 0.2.1
 =============
 
