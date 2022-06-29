@@ -144,9 +144,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         """
-        Fit the MinHashEncoder to X. Does nothing, just for compatibility with
-        sklearn API.
-
+        Fit the MinHashEncoder to X. Does nothing, just for compatibility with sklearn API.
         Parameters
         ----------
         X : array-like, shape (n_samples, ) or (n_samples, 1)
