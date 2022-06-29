@@ -430,10 +430,11 @@ class SuperVectorizer(ColumnTransformer):
         res = super().fit_transform(X, y)
 
         # for the "remainder" columns, the ColumnTransformer transformers_ attribute
-        # contains the index instead of the column name so we convert it to the column name.
+        # contains the index instead of the column name, so we convert it to the column name
+        # if there is less than 20 columns in the remainder.
         for i, tup in enumerate(self.transformers_):
             name, enc, cols = tup  # Unpack
-            if name == "remainder":
+            if name == "remainder" and len(cols) < 20:
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
 
         return res
