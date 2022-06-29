@@ -9,6 +9,9 @@ the SuperVectorizer, which automatically detects the datetime features, the Date
 to handle datetime features easily.
 """
 
+import warnings
+warnings.filterwarnings("ignore")
+
 ###############################################################################
 # Data Importing
 # --------------
@@ -16,7 +19,6 @@ to handle datetime features easily.
 # We first get the dataset.
 # We want to predict the NO2 air concentration in different cities, based on the date and the time of measurement.
 import pandas as pd
-
 data = pd.read_csv("https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/air_quality_no2_long.csv")
 y = data["value"]
 X = data[["city", "date.utc"]]
@@ -41,10 +43,13 @@ encoder = make_column_transformer((cat_encoder, categorical_columns),
                                   (datetime_encoder, datetime_columns),
                                   remainder="drop")
 
+
 ###############################################################################
 # Transforming the input data
 # ----------------------------
-# We can see that the encoder is working as expected, and new date features are created.
+# We can see that the encoder is working as expected: the date feature has
+# been replaced by features for the month, day, hour, and day of the week.
+# Note that the year and minute features have been removed by the encoder because they are constant.
 X_ = encoder.fit_transform(X)
 feature_names = encoder.get_feature_names_out()
 feature_names
@@ -56,10 +61,10 @@ feature_names
 from sklearn.ensemble import HistGradientBoostingRegressor
 import numpy as np
 
-clf = HistGradientBoostingRegressor().fit(X_, y)
+reg = HistGradientBoostingRegressor().fit(X_, y)
 from sklearn.inspection import permutation_importance
 
-result = permutation_importance(clf, X_, y, n_repeats=10, random_state=0)
+result = permutation_importance(reg, X_, y, n_repeats=10, random_state=0)
 std = result.importances_std
 importances = result.importances_mean
 indices = np.argsort(importances)
@@ -78,7 +83,6 @@ plt.show()
 
 ###############################################################################
 # We can see that the hour of the day is the most important feature, which seems reasonable.
-# Note that the `year` and `minute` features were removed because they were constant.
 
 ###############################################################################
 # One-liner with the SuperVectorizer
@@ -88,8 +92,7 @@ from dirty_cat import SuperVectorizer
 
 sup_vec = SuperVectorizer()
 X_ = sup_vec.fit_transform(X)
-feature_names = sup_vec.get_feature_names_out()
-print(feature_names)
+sup_vec.get_feature_names_out()
 
 ###############################################################################
 # We can see that the SuperVectorizer is indeed using a DatetimeEncoder for the datetime features.
@@ -99,17 +102,21 @@ sup_vec.transformers_
 # If we want the day of the week, we can just replace SuperVectorizer's default
 sup_vec = SuperVectorizer(datetime_transformer=DatetimeEncoder(add_day_of_the_week=True))
 X_ = sup_vec.fit_transform(X)
-feature_names = sup_vec.get_feature_names_out()
-print(feature_names)
+sup_vec.get_feature_names_out()
 
 ###############################################################################
-# Predicting with date features
-# --------------------------------
+# Predictions with date features
+# ----------------------------
+# For prediction tasks, we recommend using the SuperVectorizer inside a pipeline, combined with
+# a model that uses the features extracted by the DatetimeEncoder.
 from sklearn.pipeline import make_pipeline
-pipeline = make_pipeline(sup_vec, clf)
-# When using date features, we often care about predicting the future.
+pipeline = make_pipeline(sup_vec, reg)
+###############################################################################
+# When using date and time features, we often care about predicting the future.
 # In this case, we have to be careful when evaluating our model, because
-# standard tool like cross-validation do not respect the time ordering.
+# standard tools like cross-validation do not respect the time ordering.
+# Instead we can use the `TimeSeriesSplit` class, which makes sure that the test set
+# is always in the future.
 X.loc[:, "date.utc"] = pd.to_datetime(X["date.utc"])
 X.sort_values("date.utc", inplace=True)
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
@@ -117,20 +124,20 @@ cross_val_score(pipeline, X, y, scoring="neg_mean_squared_error", cv=TimeSeriesS
 
 ###############################################################################
 # Plotting the prediction
+# -----------------------
+# The mean squared error is not obvious to interpret, so we can compare
+# visually the prediction of our model with the actual values.
 X_train, X_test = X[X["date.utc"] < "2019-06-01"], X[X["date.utc"] >= "2019-06-01"]
 y_train, y_test = y[X["date.utc"] < "2019-06-01"], y[X["date.utc"] >= "2019-06-01"]
 pipeline.fit(X_train, y_train)
-# Plot subplots for each city using subplots
 fig, axs = plt.subplots(nrows=len(X_test.city.unique()), ncols=1, figsize=(12, 9))
 for i, city in enumerate(X_test.city.unique()):
-    print(X_test.city == city)
-    print(y_test)
     axs[i].plot(X.loc[X.city == city, "date.utc"], y.loc[X.city == city], label="Actual")
     axs[i].plot(X_test.loc[X_test.city == city, "date.utc"], pipeline.predict(X_test.loc[X_test.city == city]),
                 label="Predicted")
     axs[i].set_title(city)
     axs[i].set_ylabel("NO2")
-plt.legend()
+    axs[i].legend()
 plt.show()
 
 ###############################################################################
@@ -141,7 +148,6 @@ y_zoomed = y[X["date.utc"] <= "2019-06-04"][X["date.utc"] >= "2019-06-01"]
 X_train_zoomed, X_test_zoomed = X_zoomed[X_zoomed["date.utc"] < "2019-06-03"], X_zoomed[X_zoomed["date.utc"] >= "2019-06-03"]
 y_train_zoomed, y_test_zoomed = y[X["date.utc"] < "2019-06-03"], y[X["date.utc"] >= "2019-06-03"]
 pipeline.fit(X_train, y_train)
-# Plot subplots for each city using subplots
 fig, axs = plt.subplots(nrows=len(X_test_zoomed.city.unique()), ncols=1, figsize=(12, 9))
 for i, city in enumerate(X_test_zoomed.city.unique()):
     axs[i].plot(X_zoomed.loc[X_zoomed.city == city, "date.utc"], y_zoomed.loc[X_zoomed.city == city], label="Actual")
@@ -149,5 +155,5 @@ for i, city in enumerate(X_test_zoomed.city.unique()):
                 label="Predicted")
     axs[i].set_title(city)
     axs[i].set_ylabel("NO2")
-plt.legend()
+    axs[i].legend()
 plt.show()
