@@ -184,11 +184,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         def compute_hash(x):
             # Function called by joblib to compute the hash
-            if isinstance(x, float):  # true if x is a missing value
-                if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data; set "
-                           "handle_missing='zero_impute' to encode with missing values")
-                    raise ValueError(msg)
+            if x == "NAN":  # true if x is a missing value
+                return np.zeros(self.n_components)
             elif x not in self.hash_dict:
                 if self.hashing == "fast":
                     return self.get_fast_hash(x)
@@ -205,24 +202,18 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             return False
 
         #X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
-        print((X == X).all())
-        print(self.handle_missing)
-        if not (X == X).all() and self.handle_missing == 'error':
-            raise ValueError("Found missing values in input data; set "
-                             "handle_missing='zero_impute' to encode with missing values")
-        print(X.shape)
-        print(self.n_components)
+        if not (X == X).all(): # contains at least one missing value
+            if self.handle_missing == 'error':
+                raise ValueError("Found missing values in input data; set "
+                                 "handle_missing='zero_impute' to encode with missing values")
+            elif self.handle_missing == 'zero_impute':
+                X[~(X == X)] = "NAN" # this will be replaced by a vector of zeroes by compute_hash
+        # Compute the hashes for unique values
         unique_x, indices_x = np.unique(X, return_inverse=True)
         print(indices_x)
-        # First parallel loop to store the hashes in self.hash_dict
         unique_x_trans = joblib.Parallel(n_jobs=self.n_jobs)(delayed(compute_hash)(x) for x in unique_x)
-        print(np.stack(unique_x_trans).shape)
-        print(np.stack(unique_x_trans)[indices_x].shape)
-        X_out = np.stack(unique_x_trans)[indices_x]
-        print(X_out)
-        # Second sequential loop to fill the output array with the values from self.hash_dict
-        #for k in range(X.shape[1]):
-        #    for i, x in enumerate(X[:, k].reshape(-1)):
-        #        X_out[i, k * self.n_components:(k + 1) * self.n_components] = self.hash_dict[x]
+        # Match the hashes of the unique value to the original values
+        print(unique_x_trans)
+        X_out = np.stack(unique_x_trans)[indices_x].reshape(len(X), X.shape[1] * self.n_components)
 
         return X_out
