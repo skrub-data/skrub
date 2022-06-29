@@ -1,8 +1,21 @@
 Release 0.3
 ============
+
+Major changes
+-------------
+
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the SuperVectorizer for datetime columns.
+
+Release 0.2.2
+=============
+
+Bug-fixes
+---------
+
+* Fixed a bug in the :class:`SuperVectorizer` causing a `FutureWarning`
+  when using the `get_feature_names_out` method.
 
 Release 0.2.1
 =============

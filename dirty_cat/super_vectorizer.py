@@ -468,7 +468,10 @@ class SuperVectorizer(ColumnTransformer):
             if not hasattr(trans, 'get_feature_names'):
                 all_trans_feature_names.extend(cols)
             else:
-                trans_feature_names = trans.get_feature_names(cols)
+                if _sklearn_loose_version < LooseVersion('1.0'):
+                    trans_feature_names = trans.get_feature_names(cols)
+                else:
+                    trans_feature_names = trans.get_feature_names_out(cols)
                 all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
