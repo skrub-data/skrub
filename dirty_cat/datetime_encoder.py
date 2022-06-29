@@ -20,9 +20,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     extract_until : {"year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"}, default="hour"
-        Extract up to this granularity. If all features have not been extracted, add the "full" feature, which contains
-        the full time to epoch (in seconds).
-        For instance, if you specify "day", only "year", "month", "day" and "full" features will be created.
+        Extract up to this granularity. If all features have not been extracted, add the "total_time" feature, which contains
+        the time to epoch (in seconds).
+        For instance, if you specify "day", only "year", "month", "day" and "total_time" features will be created.
     add_day_of_the_week: bool, default=False
         Add day of the week feature (if day is extracted). This is a numerical feature from 0 (Monday) to 6 (Sunday).
 
@@ -70,7 +70,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             return pd.DatetimeIndex(date_series).nanosecond.to_numpy()
         elif feature == "dayofweek":
             return pd.DatetimeIndex(date_series).dayofweek.to_numpy()
-        elif feature == "full":
+        elif feature == "total_time":
             tz = pd.DatetimeIndex(date_series).tz
             # Compute the time in seconds from the epoch time UTC
             if tz is None:
@@ -111,12 +111,12 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             for feature in self._to_extract:
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
                     self.features_per_column_[i].append(feature)
-            # If some date features have not been extracted, then add the "full" feature, which contains the full
+            # If some date features have not been extracted, then add the "total_time" feature, which contains the full
             # time to epoch
             remainder = (pd.to_datetime(X[:, i]) - pd.to_datetime(pd.DatetimeIndex(X[:, i]).floor(
                 WORD_TO_ALIAS[self.extract_until]))).seconds.to_numpy()
             if np.nanstd(remainder) > 0:
-                self.features_per_column_[i].append("full")
+                self.features_per_column_[i].append("total_time")
 
 
         self.n_features_out_ = len(np.concatenate(list(self.features_per_column_.values())))

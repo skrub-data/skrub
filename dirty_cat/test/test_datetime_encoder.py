@@ -66,8 +66,8 @@ def test_fit():
     X = get_datetime_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_to_extract = ["year", "month", "day", "hour", "dayofweek"]
-    expected_features_per_column_ = {0: ["year", "month", "day", "hour", "dayofweek", "full"],
-                                     1: ["month", "day", "hour", "dayofweek", "full"],
+    expected_features_per_column_ = {0: ["year", "month", "day", "hour", "dayofweek", "total_time"],
+                                     1: ["month", "day", "hour", "dayofweek", "total_time"],
                                      2: ["year", "month", "day", "hour", "dayofweek"]}
     enc.fit(X)
     assert enc._to_extract == expected_to_extract
@@ -76,7 +76,7 @@ def test_fit():
     X = get_datetime_array()
     enc = DatetimeEncoder(extract_until="minute")
     expected_to_extract = ["year", "month", "day", "hour", "minute"]
-    expected_features_per_column_ = {0: ["year", "month", "day", "hour", "minute", "full"],
+    expected_features_per_column_ = {0: ["year", "month", "day", "hour", "minute", "total_time"],
                                      1: ["month", "day", "hour", "minute"],
                                      2: ["year", "month", "day", "hour"]}
     enc.fit(X)
@@ -87,8 +87,8 @@ def test_fit():
     X = get_dirty_datetime_array()
     enc = DatetimeEncoder()
     expected_to_extract = ["year", "month", "day", "hour"]
-    expected_features_per_column_ = {0: ["year", "month", "day", "hour", "full"],
-                                     1: ["month", "day", "hour", "full"],
+    expected_features_per_column_ = {0: ["year", "month", "day", "hour", "total_time"],
+                                     1: ["month", "day", "hour", "total_time"],
                                      2: ["year", "month", "day", "hour"]}
     enc.fit(X)
     assert enc._to_extract == expected_to_extract
@@ -98,7 +98,7 @@ def test_fit():
     X = get_datetime_with_TZ_array()
     enc = DatetimeEncoder()
     expected_to_extract = ["year", "month", "day", "hour"]
-    expected_features_per_column_ = {0: ["year", "month", "day", "hour", "full"]}
+    expected_features_per_column_ = {0: ["year", "month", "day", "hour", "total_time"]}
     enc.fit(X)
     assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
@@ -107,8 +107,8 @@ def test_fit():
     # Without column names
     X = get_datetime_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
-    expected_feature_names = ["0_year", "0_month", "0_day", "0_hour", "0_dayofweek", "0_full",
-                              "1_month", "1_day", "1_hour", "1_dayofweek", "1_full",
+    expected_feature_names = ["0_year", "0_month", "0_day", "0_hour", "0_dayofweek", "0_total_time",
+                              "1_month", "1_day", "1_hour", "1_dayofweek", "1_total_time",
                               "2_year", "2_month", "2_day", "2_hour", "2_dayofweek"]
     enc.fit(X)
     assert enc.get_feature_names_out() == expected_feature_names
@@ -118,8 +118,8 @@ def test_fit():
     X = pd.DataFrame(X)
     X.columns = ["col1", "col2", "col3"]
     enc = DatetimeEncoder(add_day_of_the_week=True)
-    expected_feature_names = ["col1_year", "col1_month", "col1_day", "col1_hour", "col1_dayofweek", "col1_full",
-                              "col2_month", "col2_day", "col2_hour", "col2_dayofweek", "col2_full",
+    expected_feature_names = ["col1_year", "col1_month", "col1_day", "col1_hour", "col1_dayofweek", "col1_total_time",
+                              "col2_month", "col2_day", "col2_hour", "col2_dayofweek", "col2_total_time",
                               "col3_year", "col3_month", "col3_day", "col3_hour", "col3_dayofweek"]
     enc.fit(X)
     assert enc.get_feature_names_out() == expected_feature_names
@@ -155,7 +155,7 @@ def test_transform():
     # Datetimes
     X = get_datetime_array()[:, 0].reshape(-1, 1)
     enc = DatetimeEncoder(add_day_of_the_week=True)
-    # Check that the "full" feature is working
+    # Check that the "total_time" feature is working
     expected_result = np.array([[2020, 1, 1, 10, 2, 0],
                                 [2021, 2, 3, 12, 2, 0],
                                 [2022, 1, 1, 23, 5, 0],
