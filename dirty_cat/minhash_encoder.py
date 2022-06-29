@@ -70,7 +70,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.count = 0
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
-        self._capacity = 2**10
+        self._capacity = 2 ** 10
 
     def get_unique_ngrams(self, string, ngram_range):
         """ Return the set of unique n-grams of a string.
@@ -119,7 +119,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 murmurhash3_32(''.join(gram), seed=d, positive=True)
                 for d in range(n_components)])
             min_hashes = np.minimum(min_hashes, hash_array)
-        return min_hashes/(2**32-1)
+        return min_hashes / (2 ** 32 - 1)
 
     def get_fast_hash(self, string):
         """
@@ -136,16 +136,17 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         if self.minmax_hash:
             return np.concatenate([ngram_min_hash(string, self.ngram_range,
-                                   seed, return_minmax=True)
-                                   for seed in range(self.n_components//2)])
+                                                  seed, return_minmax=True)
+                                   for seed in range(self.n_components // 2)])
         else:
             return np.array([ngram_min_hash(string, self.ngram_range, seed)
-                            for seed in range(self.n_components)])
+                             for seed in range(self.n_components)])
 
     def fit(self, X, y=None):
         """
-        Fit the MinHashEncoder to X. In practice, just initializes a dictionary
-        to store encodings to speed up computation.
+        Fit the MinHashEncoder to X. Does nothing, just for compatibility with
+        sklearn API.
+
         Parameters
         ----------
         X : array-like, shape (n_samples, ) or (n_samples, 1)
@@ -156,7 +157,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self
             The fitted MinHashEncoder instance.
         """
-        self.hash_dict = LRUDict(capacity=self._capacity)
         return self
 
     def transform(self, X):
@@ -172,21 +172,28 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         X = check_input(X)
         if self.minmax_hash:
-            assert self.n_components % 2 == 0,\
-                    "n_components should be even when minmax_hash=True"
+            assert self.n_components % 2 == 0, \
+                "n_components should be even when minmax_hash=True"
         if self.hashing == 'murmur':
-            assert not(self.minmax_hash),\
-                   "minmax_hash not implemented with murmur"
+            assert not (self.minmax_hash), \
+                "minmax_hash not implemented with murmur"
         if self.handle_missing not in ['error', 'zero_impute']:
             template = ("handle_missing should be either 'error' or "
                         "'zero_impute', got %s")
             raise ValueError(template % self.handle_missing)
 
+        if not (X == X).all():  # contains at least one missing value
+            if self.handle_missing == 'error':
+                raise ValueError("Found missing values in input data; set "
+                                 "handle_missing='zero_impute' to encode with missing values")
+            elif self.handle_missing == 'zero_impute':
+                X[~(X == X)] = "NAN"  # this will be replaced by a vector of zeroes by compute_hash
+
         def compute_hash(x):
             # Function called by joblib to compute the hash
             if x == "NAN":  # true if x is a missing value
                 return np.zeros(self.n_components)
-            elif x not in self.hash_dict:
+            else:
                 if self.hashing == "fast":
                     return self.get_fast_hash(x)
                 elif self.hashing == "murmur":
@@ -197,23 +204,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     )
                 else:
                     raise ValueError("hashing function must be 'fast' or"
-                                 "'murmur', got '{}'"
-                                 "".format(self.hashing))
-            return False
+                                     "'murmur', got '{}'"
+                                     "".format(self.hashing))
 
-        #X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
-        if not (X == X).all(): # contains at least one missing value
-            if self.handle_missing == 'error':
-                raise ValueError("Found missing values in input data; set "
-                                 "handle_missing='zero_impute' to encode with missing values")
-            elif self.handle_missing == 'zero_impute':
-                X[~(X == X)] = "NAN" # this will be replaced by a vector of zeroes by compute_hash
         # Compute the hashes for unique values
         unique_x, indices_x = np.unique(X, return_inverse=True)
-        print(indices_x)
         unique_x_trans = joblib.Parallel(n_jobs=self.n_jobs)(delayed(compute_hash)(x) for x in unique_x)
         # Match the hashes of the unique value to the original values
-        print(unique_x_trans)
         X_out = np.stack(unique_x_trans)[indices_x].reshape(len(X), X.shape[1] * self.n_components)
 
-        return X_out
+        return X_out.astype(np.float64)  # The output is an int32 before conversion
