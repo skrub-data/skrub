@@ -88,8 +88,7 @@ from dirty_cat import SuperVectorizer
 
 sup_vec = SuperVectorizer()
 X_ = sup_vec.fit_transform(X)
-feature_names = sup_vec.get_feature_names_out()
-print(feature_names)
+sup_vec.get_feature_names_out()
 
 ###############################################################################
 # We can see that the SuperVectorizer is indeed using a DatetimeEncoder for the datetime features.
@@ -99,5 +98,4 @@ sup_vec.transformers_
 # If we want the day of the week, we can just replace SuperVectorizer's default
 sup_vec = SuperVectorizer(datetime_transformer=DatetimeEncoder(add_day_of_the_week=True))
 X_ = sup_vec.fit_transform(X)
-feature_names = sup_vec.get_feature_names_out()
-print(feature_names)
+sup_vec.get_feature_names_out()
