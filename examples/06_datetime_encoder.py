@@ -25,8 +25,11 @@ X = data[["city", "date.utc"]]
 X
 
 ###############################################################################
-# Creating encoders for categorical and datetime features
-# -------------------------
+# Encoding the data to numerical representations
+# -----------------------------------------------
+# 
+# Encoders for categorical and datetime features
+# ..............................................
 from sklearn.preprocessing import OneHotEncoder
 from dirty_cat.datetime_encoder import DatetimeEncoder
 
@@ -46,7 +49,7 @@ encoder = make_column_transformer((cat_encoder, categorical_columns),
 
 ###############################################################################
 # Transforming the input data
-# ----------------------------
+# ..........................
 # We can see that the encoder is working as expected: the date feature has
 # been replaced by features for the month, day, hour, and day of the week.
 # Note that the year and minute features have been removed by the encoder because they are constant.
@@ -124,7 +127,7 @@ cross_val_score(pipeline, X, y, scoring="neg_mean_squared_error", cv=TimeSeriesS
 
 ###############################################################################
 # Plotting the prediction
-# -----------------------
+# .......................
 # The mean squared error is not obvious to interpret, so we can compare
 # visually the prediction of our model with the actual values.
 X_train, X_test = X[X["date.utc"] < "2019-06-01"], X[X["date.utc"] >= "2019-06-01"]
