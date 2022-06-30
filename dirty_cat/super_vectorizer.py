@@ -427,7 +427,17 @@ class SuperVectorizer(ColumnTransformer):
         if self.verbose:
             print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
 
-        return super().fit_transform(X, y)
+        res = super().fit_transform(X, y)
+
+        # for the "remainder" columns, the ColumnTransformer transformers_ attribute
+        # contains the index instead of the column name, so we convert it to the column name
+        # if there is less than 20 columns in the remainder.
+        for i, tup in enumerate(self.transformers_):
+            name, enc, cols = tup  # Unpack
+            if name == "remainder" and len(cols) < 20:
+                self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
+
+        return res
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """
