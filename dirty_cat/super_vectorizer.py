@@ -21,7 +21,7 @@ from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
-from dirty_cat import GapEncoder
+from dirty_cat import GapEncoder, DatetimeEncoder
 
 _sklearn_loose_version = LooseVersion(sklearn.__version__)
 
@@ -88,9 +88,9 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    datetime_transformer: Transformer or str or None, default=None
+    datetime_transformer: Transformer or str or None, default=DatetimeEncoder()
         Transformer used on datetime features.
-        Can either be a transformer object instance,
+        Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
@@ -108,7 +108,7 @@ class SuperVectorizer(ColumnTransformer):
         'skip' will not impute at all.
         When imputed, missing values are replaced by the string 'missing'.
         See also attribute `imputed_columns_`.
-        
+
     remainder : {'drop', 'passthrough'} or estimator, default='drop'
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
@@ -122,24 +122,24 @@ class SuperVectorizer(ColumnTransformer):
         estimator must support :term:`fit` and :term:`transform`.
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
-        
+
     sparse_threshold: float, default=0.3
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
-        lower than this value. Use sparse_threshold=0 to always return dense. 
+        lower than this value. Use sparse_threshold=0 to always return dense.
         When the transformed output consists of all dense data, the stacked result
         will be dense, and this keyword will be ignored.
-        
+
     n_jobs : int, default=None
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
-        
+
     transformer_weights : dict, default=None
         Multiplicative weights for features per transformer. The output of the
         transformer is multiplied by these weights. Keys are transformer names,
         values the weights.
-        
+
     verbose : bool, default=False
         If True, the time elapsed while fitting each transformer will be
         printed as it is completed
@@ -176,7 +176,7 @@ class SuperVectorizer(ColumnTransformer):
                  low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
                  high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(n_components=30),
                  numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
-                 datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
+                 datetime_transformer: Optional[Union[BaseEstimator, str]] = DatetimeEncoder(),
                  auto_cast: bool = True,
                  impute_missing: str = 'auto',
                  # Following parameters are inherited from ColumnTransformer
@@ -348,7 +348,7 @@ class SuperVectorizer(ColumnTransformer):
         # Select columns by dtype
         numeric_columns = X.select_dtypes(include=['int', 'float']).columns.to_list()
         categorical_columns = X.select_dtypes(include=['string', 'object', 'category']).columns.to_list()
-        datetime_columns = X.select_dtypes(include='datetime').columns.to_list()
+        datetime_columns = X.select_dtypes(include=['datetime', "datetimetz"]).columns.to_list()
 
         # Divide categorical columns by cardinality
         low_card_cat_columns = [

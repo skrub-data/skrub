@@ -52,3 +52,10 @@ coverage.xml
 
 # Ignore fetched datasets
 dirty_cat/datasets/data/*
+
+# Generated files for doc
+doc/_build
+doc/auto_examples
+doc/generated
+.DS_Store
+
