@@ -48,11 +48,28 @@ pipeline you can tweak.
 
     </div>
     </div>
+    <div class="flex-container">
+    <div class="flex-content" style="border: 0px;">
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
 <https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
 string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
+
+.. raw:: html
+
+    </div>
+    <div class="flex-content" style="border: 0px;">
+    <iframe style="display: block; margin: auto; width: 100%;" width="560" height="315"
+     src="https://www.youtube.com/embed/_GNaaeEI2tg" frameborder="0"
+     allow="accelerometer; autoplay; clipboard-write;
+     encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+    ></iframe>
+
+.. raw:: html
+
+    </div>
+    </div>
 
 .. rst-class:: right-align
 
