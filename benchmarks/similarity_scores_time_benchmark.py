@@ -19,7 +19,7 @@ from time import time
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from sklearn import pipeline, linear_model, model_selection
+from sklearn import linear_model, model_selection
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
@@ -77,7 +77,7 @@ def benchmark(X_b, y_b, strat='k-means', limit=50000, n_proto=100, hash_dim=None
     t1 = time()
     t_score_1 = t1 - t0
 
-    model = pipeline.Pipeline([('logistic', linear_model.LogisticRegression())])
+    model = linear_model.LogisticRegression()
 
     t0 = time()
     m_score = model_selection.cross_val_score(model, X_enc, y_b, cv=20)
