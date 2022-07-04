@@ -62,10 +62,15 @@ class Version:
 
     Examples:
     >>> # Standard usage
-    >>> Version(sklearn.__version__) > Version("0.22")
+    >>> Version(sklearn.__version__) > Version('0.22')
+    >>> Version(sklearn.__version__) > '0.22'
     >>> # In general, pass the version as numbers separated by dots.
     >>> Version('1.5') <= Version('1.6.5')
-    >>> Version()
+    >>> Version('1.5') <= '1.6.5'
+    >>> # You can also pass the separator for specific cases
+    >>> Version('1-5', separator='-') == Version('1-6-5', separator='-')
+    >>> Version('1-5', separator='-') == '1-6-5'
+    >>> Version('1-5', separator='-') == '1.6.5'  # Won't work !
     """
 
     def __init__(self, value: str, separator: str = '.'):
