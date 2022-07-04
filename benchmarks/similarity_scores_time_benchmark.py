@@ -19,7 +19,7 @@ from time import time
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-from sklearn import pipeline, linear_model, model_selection
+from sklearn import linear_model, model_selection
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
@@ -28,31 +28,37 @@ from dirty_cat.datasets import fetch_traffic_violations
 
 
 data = fetch_traffic_violations()
-dfr = pd.read_csv(data['path'])
+
+col_to_ohe = [
+    "alcohol", "arrest_type", "belts",
+    "commercial_license", "commercial_vehicle",
+    "fatal", "gender", "hazmat",
+    "property_damage", "race", "work_zone",
+]
+
+col_to_pass = ["year"]
+
+col_to_enc = ["description"]
+
+# Get the data and remove missing values:
+X = data[1][col_to_enc + col_to_ohe + col_to_pass]
+mask = X.isna()[col_to_pass].copy()
+X.dropna(subset=col_to_pass, inplace=True)
+
+y = data[2][~mask[mask.columns[0]]]
+
+X.reset_index(inplace=True, drop=True)
+y.reset_index(inplace=True, drop=True)
 
 transformers = [
-    ('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'),
-     ['Alcohol',
-      'Arrest Type',
-      'Belts',
-      'Commercial License',
-      'Commercial Vehicle',
-      'Fatal',
-      'Gender',
-      'HAZMAT',
-      'Property Damage',
-      'Race',
-      'Work Zone']),
-    ('pass', 'passthrough', ['Year']),
+    ('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'), col_to_ohe),
+    ("pass", "passthrough", col_to_pass),
 ]
 
 
-def benchmark(strat='k-means', limit=50000, n_proto=100, hash_dim=None, ngram_range=(3, 3)):
-    df = dfr[:limit].copy()
-    df = df.dropna(axis=0)
-    df = df.reset_index()
-
-    y = df['Violation Type']
+def benchmark(X_b, y_b, strat='k-means', limit=50000, n_proto=100, hash_dim=None, ngram_range=(3, 3)):
+    X_b = X_b[:limit].copy()
+    y_b = y_b[:limit].copy()
 
     if strat == 'k-means':
         sim_enc = SimilarityEncoder(similarity='ngram', ngram_range=ngram_range, categories='k-means',
@@ -62,19 +68,19 @@ def benchmark(strat='k-means', limit=50000, n_proto=100, hash_dim=None, ngram_ra
                                     hashing_dim=hash_dim, n_prototypes=n_proto, random_state=3498)
 
     column_trans = ColumnTransformer(
-        transformers=transformers + [('sim_enc', sim_enc, ['Description'])],
+        transformers=transformers + [('sim_enc', sim_enc, ['description'])],
         remainder='drop'
     )
 
     t0 = time()
-    X = column_trans.fit_transform(df)
+    X_enc = column_trans.fit_transform(X_b)
     t1 = time()
     t_score_1 = t1 - t0
 
-    model = pipeline.Pipeline([('logistic', linear_model.LogisticRegression())])
+    model = linear_model.LogisticRegression()
 
     t0 = time()
-    m_score = model_selection.cross_val_score(model, X, y, cv=20)
+    m_score = model_selection.cross_val_score(model, X_enc, y_b, cv=20)
     t1 = time()
     t_score_2 = t1 - t0
     return t_score_1, m_score, t_score_2
@@ -134,15 +140,15 @@ def plot(bench, title=''):
 
 
 def loop(proto):
-    limits = sorted([dfr['Description'].nunique(), 10000, 20000, 50000, 100000])
+    limits = sorted([X['description'].nunique(), 10000, 20000, 50000, 100000])
     hash_dims = [None, 2 ** 14, 2 ** 16, 2 ** 18, 2 ** 20]
     bench = list()
     ngram = [(3, 3), (2, 4)]
     for limit in limits:
         for r in ngram:
             for h in hash_dims:
-                bench.append((benchmark(strat='k-means', limit=limit, n_proto=proto, hash_dim=h, ngram_range=r),
-                              benchmark(strat='most-frequent', limit=limit, n_proto=proto, hash_dim=h, ngram_range=r)))
+                bench.append((benchmark(X, y, strat='k-means', limit=limit, n_proto=proto, hash_dim=h, ngram_range=r),
+                              benchmark(X, y, strat='most-frequent', limit=limit, n_proto=proto, hash_dim=h, ngram_range=r)))
             title = 'N-gram range: %s, Rows: %d, Prototypes: %d, 20 CV' % (r.__str__(), limit, proto)
             plot(bench, title)
             bench.clear()
