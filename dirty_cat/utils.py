@@ -58,6 +58,9 @@ class Version:
     hard to understand.
     It currently only supports major and minor versions.
 
+    Inspired from https://stackoverflow.com/a/11887825/9084059
+    Should eventually dissapear.
+
     Examples:
     >>> # Standard usage
     >>> Version(sklearn.__version__) > Version('0.22')
@@ -74,6 +77,9 @@ class Version:
     def __init__(self, value: str, separator: str = '.'):
         self.separator = separator
         self.major, self.minor = self._parse_version(value)
+
+    def __repr__(self):
+        return f'Version({self.major}.{self.minor})'
 
     def _parse_version(self, value: str) -> Tuple[int, int]:
         raw_parts = value.split(self.separator)
@@ -97,24 +103,24 @@ class Version:
 
     def __eq__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
-        return (self.major == other.major) and (self.minor == other.minor)
+        return (self.major, self.minor) == (other.major, other.minor)
 
     def __ne__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
-        return (self.major != other.major) and (self.minor != other.minor)
+        return (self.major, self.minor) != (other.major, other.minor)
 
     def __lt__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
-        return (self.major < other.major) and (self.minor < other.minor)
+        return (self.major, self.minor) < (other.major, other.minor)
 
     def __le__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
-        return (self.major <= other.major) and (self.minor <= other.minor)
+        return (self.major, self.minor) <= (other.major, other.minor)
 
     def __gt__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
-        return (self.major > other.major) and (self.minor > other.minor)
+        return (self.major, self.minor) > (other.major, other.minor)
 
     def __ge__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
-        return (self.major >= other.major) and (self.minor >= other.minor)
+        return (self.major, self.minor) >= (other.major, other.minor)
