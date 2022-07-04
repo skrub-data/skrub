@@ -148,7 +148,7 @@ def test_cache_overflow():
         return result_str
 
     encoder = MinHashEncoder(n_components=3)
-    capacity = 2**10 # default capacity #TODO: find a way to use the default capacity automatically
+    capacity = encoder._capacity
     raw_data = [get_random_string(10) for x in range(capacity + 1)]
     raw_data = np.array(raw_data)[:,None]
     y = encoder.fit_transform(raw_data)
