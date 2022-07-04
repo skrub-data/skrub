@@ -22,21 +22,21 @@ def test_version():
     assert Version('1.5') <= Version('1.6.5')
     assert Version('1.5') <= '1.6.5'
 
-    assert not (Version('1-5', separator='-') == Version('1-6-5', separator='-'))
-    assert not (Version('1-5', separator='-') == '1-6-5')
+    assert (Version('1-5', separator='-') == Version('1-6-5', separator='-')) is False
+    assert (Version('1-5', separator='-') == '1-6-5') is False
     with pytest.raises(ValueError):
         assert not (Version('1-5', separator='-') == '1.6.5')
 
     # Test all comparison methods
     assert Version('1.0') == Version('1.0')
-    assert not (Version('1.0') != Version('1.0'))
+    assert (Version('1.0') != Version('1.0')) is False
 
     assert Version('1.0') < Version('1.1')
     assert Version('1.1') <= Version('1.5')
     assert Version('1.1') <= Version('1.1')
-    assert not (Version('1.1') < Version('1.1'))
+    assert (Version('1.1') < Version('1.1')) is False
 
     assert Version('1.1') > Version('0.5')
     assert Version('1.1') >= Version('0.9')
     assert Version('1.1') >= Version('1.1')
-    assert not (Version('1.1') >= Version('1.9'))
+    assert (Version('1.1') >= Version('1.9')) is False
