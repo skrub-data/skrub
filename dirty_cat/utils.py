@@ -53,7 +53,7 @@ def check_input(X):
 class Version:
     """
     Replacement for `distutil.version.LooseVersion` and `packaging.version.Version`.
-    Implemented to avoid future warnings raised by the former,
+    Implemented to avoid `DeprecationWarning`s raised by the former,
     and avoid adding a dependency for the latter.
 
     It is therefore very bare-bones, so its code shouldn't be too
