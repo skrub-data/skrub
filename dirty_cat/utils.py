@@ -99,6 +99,10 @@ class Version:
         other = self._cast_to_version(other)
         return (self.major == other.major) and (self.minor == other.minor)
 
+    def __ne__(self, other: Union["Version", str]):
+        other = self._cast_to_version(other)
+        return (self.major != other.major) and (self.minor != other.minor)
+
     def __lt__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
         return (self.major < other.major) and (self.minor < other.minor)
