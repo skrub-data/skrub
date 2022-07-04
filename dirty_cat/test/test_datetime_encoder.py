@@ -185,6 +185,8 @@ def test_transform():
     # Datetimes with TZ
     # If the dates are timezone-aware, all the feature extractions should be done
     # in the provided timezone.
+    # But the full time to epoch should correspond to the true number of seconds between epoch time and the time
+    # of the date.
     X = get_datetime_with_TZ_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_result = np.array([[2020, 1, 1, 10, 2, 0],
@@ -193,7 +195,12 @@ def test_transform():
                                 [2023, 2, 3, 11, 4, 0]]).astype(np.float64)
     expected_result[:, 5] = (X.astype('int64')//1e9).astype(np.float64).to_numpy().reshape(-1) #time from epochs in seconds
     enc.fit(X)
+    print("######")
+    print(X)
     X_trans = enc.transform(X)
+    print("last")
+    print(X_trans)
+    print(X_trans.dtype)
     assert np.allclose(X_trans, expected_result, equal_nan=True)
 
     # Check if we find back the date from the time to epoch

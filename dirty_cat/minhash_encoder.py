@@ -62,9 +62,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.n_components = n_components
         self.hashing = hashing
         self.minmax_hash = minmax_hash
-        self.count = 0
         self.handle_missing = handle_missing
-        self._capacity = 2**10
+
+    def _more_tags(self):
+        """
+        Used to ease the sklearn checks of the estimator.
+        """
+        return {"X_types": ["categorical"]}
 
     def get_unique_ngrams(self, string, ngram_range):
         """ Return the set of unique n-grams of a string.
@@ -150,6 +154,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self
             The fitted MinHashEncoder instance.
         """
+        self.count = 0
+        self._capacity = 2**10
         self.hash_dict = LRUDict(capacity=self._capacity)
         return self
 

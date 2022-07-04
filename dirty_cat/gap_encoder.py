@@ -58,7 +58,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.gamma_shape_prior = gamma_shape_prior  # 'a' parameter
         self.gamma_scale_prior = gamma_scale_prior  # 'b' parameter
         self.rho = rho
-        self.rho_ = self.rho
         self.rescale_rho = rescale_rho
         self.batch_size = batch_size
         self.tol = tol
@@ -214,7 +213,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        # Copy parameter rho
+        self.rho_ = self.rho
         # Check if first item has str or np.str_ type
+        print(X)
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Make n-grams counts matrix unq_V
         unq_X, unq_V, lookup = self._init_vars(X)
@@ -359,6 +361,9 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         # Init H_dict_ with empty dict if it's the first call of partial_fit
         if not hasattr(self, 'H_dict_'):
             self.H_dict_ = dict()
+        # Same thing for the rho_ parameter
+        if not hasattr(self, 'rho_'):
+            self.rho_ = self.rho
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Check if it is not the first batch
@@ -569,7 +574,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.gamma_shape_prior = gamma_shape_prior  # 'a' parameter
         self.gamma_scale_prior = gamma_scale_prior  # 'b' parameter
         self.rho = rho
-        self.rho_ = self.rho
         self.rescale_rho = rescale_rho
         self.batch_size = batch_size
         self.tol = tol
@@ -584,6 +588,12 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
         self.handle_missing = handle_missing
+
+    def _more_tags(self):
+        """
+        Used to ease the sklearn checks of the estimator.
+        """
+        return {"X_types": ["categorical"]}
 
     def _create_column_gap_encoder(self) -> GapEncoderColumn:
         return GapEncoderColumn(
@@ -641,6 +651,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self
         
         """
+        # Copy parameter rho
+        self.rho_ = self.rho
         # If X is a dataframe, store its column names
         if isinstance(X, pd.DataFrame):
             self.column_names_ = list(X.columns)
