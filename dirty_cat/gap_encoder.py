@@ -29,14 +29,14 @@ from sklearn.utils.fixes import _object_dtype_isnan
 import pandas as pd
 from .utils import check_input
 
-if LooseVersion(sklearn_version) < LooseVersion('0.22'):
+if LooseVersion(sklearn_version) <= LooseVersion('0.22'):
     from sklearn.cluster.k_means_ import _k_init
 elif LooseVersion(sklearn_version) < LooseVersion('0.24'):
     from sklearn.cluster._kmeans import _k_init
 else:
     from sklearn.cluster import kmeans_plusplus
 
-if LooseVersion(sklearn_version) < LooseVersion('0.22'):
+if LooseVersion(sklearn_version) <= LooseVersion('0.22'):
     from sklearn.decomposition.nmf import _beta_divergence
 else:
     from sklearn.decomposition._nmf import _beta_divergence
