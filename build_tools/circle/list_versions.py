@@ -5,8 +5,9 @@ import json
 import re
 import sys
 
-from packaging.version import Version
+from dirty_cat.utils import Version
 from urllib.request import urlopen
+
 
 def json_urlread(url):
     try:

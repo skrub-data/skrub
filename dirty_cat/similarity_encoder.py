@@ -15,7 +15,6 @@ The principle is as follows:
 import warnings
 
 import numpy as np
-from packaging.version import Version
 from joblib import Parallel, delayed
 from scipy import sparse
 import sklearn
@@ -26,6 +25,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
+from dirty_cat.utils import Version
 from . import string_distances
 from .string_distances import get_ngram_count, preprocess
 

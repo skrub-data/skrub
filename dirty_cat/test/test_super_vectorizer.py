@@ -7,10 +7,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
 
-from packaging.version import Version
 
 from dirty_cat import SuperVectorizer
 from dirty_cat import GapEncoder
+from dirty_cat.utils import Version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):

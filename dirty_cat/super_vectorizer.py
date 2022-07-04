@@ -15,13 +15,13 @@ import pandas as pd
 
 from warnings import warn
 from typing import Union, Optional, List
-from packaging.version import Version
 
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import GapEncoder
+from dirty_cat.utils import Version
 
 _sklearn_loose_version = Version(sklearn.__version__)
 

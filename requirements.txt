@@ -8,4 +8,3 @@ seaborn
 joblib
 pandas
 scikit-learn
-packaging

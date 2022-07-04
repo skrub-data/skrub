@@ -15,7 +15,7 @@ import warnings
 import pandas as pd
 
 from pathlib import Path
-from packaging.version import Version
+from dirty_cat.utils import Version
 
 from unittest import mock
 from unittest.mock import mock_open

@@ -16,7 +16,6 @@ The principle is as follows:
 """
 import warnings
 import numpy as np
-from packaging.version import Version
 from scipy import sparse
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_random_state, gen_batches
@@ -28,6 +27,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils.fixes import _object_dtype_isnan
 import pandas as pd
 from .utils import check_input
+from dirty_cat.utils import Version
 
 if Version(sklearn_version) < Version('0.22'):
     from sklearn.cluster.k_means_ import _k_init
