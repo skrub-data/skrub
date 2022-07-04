@@ -195,12 +195,7 @@ def test_transform():
                                 [2023, 2, 3, 11, 4, 0]]).astype(np.float64)
     expected_result[:, 5] = (X.astype('int64')//1e9).astype(np.float64).to_numpy().reshape(-1) #time from epochs in seconds
     enc.fit(X)
-    print("######")
-    print(X)
     X_trans = enc.transform(X)
-    print("last")
-    print(X_trans)
-    print(X_trans.dtype)
     assert np.allclose(X_trans, expected_result, equal_nan=True)
 
     # Check if we find back the date from the time to epoch

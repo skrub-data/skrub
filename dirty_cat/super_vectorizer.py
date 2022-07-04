@@ -225,7 +225,6 @@ class SuperVectorizer(ColumnTransformer):
 
         #TODO check that the provided transformers are valid
 
-
     @staticmethod
     def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
         """
