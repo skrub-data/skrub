@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import collections
 
 import numpy as np
@@ -97,22 +95,22 @@ class Version:
             other = Version(other, self.separator)
         return other
 
-    def __eq__(self, other: Union[Version, str]):
+    def __eq__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
         return (self.major == other.major) and (self.minor == other.minor)
 
-    def __lt__(self, other: Union[Version, str]):
+    def __lt__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
         return (self.major < other.major) and (self.minor < other.minor)
 
-    def __le__(self, other: Union[Version, str]):
+    def __le__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
         return (self.major <= other.major) and (self.minor <= other.minor)
 
-    def __gt__(self, other: Union[Version, str]):
+    def __gt__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
         return (self.major > other.major) and (self.minor > other.minor)
 
-    def __ge__(self, other: Union[Version, str]):
+    def __ge__(self, other: Union["Version", str]):
         other = self._cast_to_version(other)
         return (self.major >= other.major) and (self.minor >= other.minor)
