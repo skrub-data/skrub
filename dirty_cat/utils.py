@@ -89,7 +89,7 @@ class Version:
             # Ditch the rest
         return major, minor
 
-    def _cast_to_version(self, other: Union[Version, str]) -> Version:
+    def _cast_to_version(self, other: Union["Version", str]) -> "Version":
         if isinstance(other, str):
             # We pass our separator, as we expect they are the same
             other = Version(other, self.separator)
