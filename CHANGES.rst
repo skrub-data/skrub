@@ -30,6 +30,7 @@ Release 0.2.1
 
 Major changes
 -------------
+
 * Improvements to the :class:`SuperVectorizer`
 
     - Type detection works better: handles dates, numerics columns encoded as strings,
@@ -50,6 +51,8 @@ Bug-fixes
 * Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
 
 * GapEncoder's `get_feature_names_out` now accepts all iterators, not just lists.  
+
+* Fixed `DeprecationWarning` raised by the usage of `distutils.version.LooseVersion`
 
 Notes
 -----

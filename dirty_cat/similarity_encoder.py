@@ -15,7 +15,6 @@ The principle is as follows:
 import warnings
 
 import numpy as np
-from distutils.version import LooseVersion
 from joblib import Parallel, delayed
 from scipy import sparse
 import sklearn
@@ -26,6 +25,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
+from dirty_cat.utils import Version
 from . import string_distances
 from .string_distances import get_ngram_count, preprocess
 
@@ -400,7 +400,7 @@ class SimilarityEncoder(OneHotEncoder):
                 self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
 
         self.drop_idx_ = self._compute_drop_idx()
-        if LooseVersion(sklearn.__version__) >= LooseVersion('1.1.0'):
+        if Version(sklearn.__version__) >= Version('1.1.0'):
             self._infrequent_enabled = False
 
         return self
