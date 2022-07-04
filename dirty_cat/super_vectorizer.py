@@ -15,7 +15,6 @@ import pandas as pd
 
 from warnings import warn
 from typing import Union, Optional, List
-from distutils.version import LooseVersion
 
 from sklearn.base import BaseEstimator
 from sklearn.compose import ColumnTransformer
@@ -479,7 +478,7 @@ class SuperVectorizer(ColumnTransformer):
             if not hasattr(trans, 'get_feature_names'):
                 all_trans_feature_names.extend(cols)
             else:
-                if _sklearn_loose_version < LooseVersion('1.0'):
+                if _sklearn_loose_version < Version('1.0'):
                     trans_feature_names = trans.get_feature_names(cols)
                 else:
                     trans_feature_names = trans.get_feature_names_out(cols)
