@@ -349,7 +349,8 @@ def fetch_employee_salaries(load_dataframe: bool = True,
                             drop_linked: bool = True,
                             drop_irrelevant: bool = True,
                             ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the employee_salaries dataset.
+    """Fetches the employee_salaries dataset, available at
+    https://openml.org/d/42125
 
     Description of the dataset:
     > Annual salary information including gross pay and overtime pay for all
@@ -400,7 +401,8 @@ def fetch_employee_salaries(load_dataframe: bool = True,
 
 def fetch_road_safety(load_dataframe: bool = True,
                       ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the road safety dataset.
+    """Fetches the road safety dataset, available at
+    https://openml.org/d/42803
 
     Description of the dataset:
     > Data reported to the police about the circumstances of personal injury
@@ -432,7 +434,8 @@ def fetch_road_safety(load_dataframe: bool = True,
 
 def fetch_medical_charge(load_dataframe: bool = True
                          ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the medical charge dataset.
+    """Fetches the medical charge dataset, available at
+    https://openml.org/d/42720
 
     Description of the dataset:
     > The Inpatient Utilization and Payment Public Use File (Inpatient PUF)
@@ -469,7 +472,8 @@ def fetch_medical_charge(load_dataframe: bool = True
 
 def fetch_midwest_survey(load_dataframe: bool = True
                          ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the midwest survey dataset.
+    """Fetches the midwest survey dataset, available at
+    https://openml.org/d/42805
 
     Description of the dataset:
     > Survey to know if people self-identify as Midwesterners.
@@ -499,7 +503,8 @@ def fetch_midwest_survey(load_dataframe: bool = True
 
 def fetch_open_payments(load_dataframe: bool = True
                         ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the open payments dataset.
+    """Fetches the open payments dataset, available at
+    https://openml.org/d/42738
 
     Description of the dataset:
     > Payments given by healthcare manufacturing companies to medical doctors
@@ -531,7 +536,8 @@ def fetch_open_payments(load_dataframe: bool = True
 
 def fetch_traffic_violations(load_dataframe: bool = True
                              ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the traffic violations dataset.
+    """Fetches the traffic violations dataset, available at
+    https://openml.org/d/42132
 
     Description of the dataset:
     > This dataset contains traffic violation information from all electronic
@@ -565,7 +571,8 @@ def fetch_traffic_violations(load_dataframe: bool = True
 
 def fetch_drug_directory(load_dataframe: bool = True
                          ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the drug directory dataset.
+    """Fetches the drug directory dataset, available at
+    https://openml.org/d/43044
 
     Description of the dataset:
     > Product listing data submitted to the U.S. FDA for all unfinished,
