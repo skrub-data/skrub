@@ -16,6 +16,7 @@ The principle is as follows:
 """
 import warnings
 import numpy as np
+from distutils.version import LooseVersion
 from scipy import sparse
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_random_state, gen_batches
