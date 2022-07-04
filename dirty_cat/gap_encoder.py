@@ -216,7 +216,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         # Copy parameter rho
         self.rho_ = self.rho
         # Check if first item has str or np.str_ type
-        print(X)
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Make n-grams counts matrix unq_V
         unq_X, unq_V, lookup = self._init_vars(X)

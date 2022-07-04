@@ -98,11 +98,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         -------
         self
         """
-        print("########")
-        print(X)
-        print("##")
         X = check_input(X)
-        print(X)
         self.n_features_in_ = X.shape[1]
         if self.handle_missing not in ['error', '']:
             template = ("handle_missing should be either 'error' or "
