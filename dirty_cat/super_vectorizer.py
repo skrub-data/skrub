@@ -374,9 +374,10 @@ class SuperVectorizer(ColumnTransformer):
             self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
 
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(include=['int', 'float', np.float64, np.float32, np.float16,
-                                                   np.int64, np.int32, np.int16, np.uint64, np.uint32,
-                                                   np.uint16]).columns.to_list()
+        numeric_columns = X.select_dtypes(include=['int', 'float', 
+                                                   np.float64, np.float32, np.float16,
+                                                   np.int64, np.int32, np.int16, 
+                                                   np.uint64, np.uint32, np.uint16]).columns.to_list()
         categorical_columns = X.select_dtypes(include=['string', 'object', 'category']).columns.to_list()
         datetime_columns = X.select_dtypes(include=['datetime', "datetimetz"]).columns.to_list()
 
