@@ -217,15 +217,15 @@ class SuperVectorizer(ColumnTransformer):
         if self.low_card_cat_transformer is not None:
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         else:
-            self.low_card_cat_transformer_ = clone(OneHotEncoder())
+            self.low_card_cat_transformer_ = OneHotEncoder()
         if self.high_card_cat_transformer is not None:
             self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
         else:
-            self.high_card_cat_transformer_ = clone(GapEncoder(n_components=30))
+            self.high_card_cat_transformer_ = GapEncoder(n_components=30)
         if self.datetime_transformer is not None:
             self.datetime_transformer_ = clone(self.datetime_transformer)
         else:
-            self.datetime_transformer_ = clone(DatetimeEncoder())
+            self.datetime_transformer_ = DatetimeEncoder()
 
         #TODO check that the provided transformers are valid
 
