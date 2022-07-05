@@ -2,6 +2,9 @@ import numpy as np
 import numpy.testing
 import pytest
 
+from sklearn import __version__ as sklearn_version
+
+from dirty_cat.utils import Version
 from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
@@ -229,7 +232,10 @@ def test_get_features():
     sim_enc = similarity_encoder.SimilarityEncoder(random_state=435)
     X = np.array(['%s' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)
-    feature_names = sim_enc.get_feature_names()
+    if Version(sklearn_version) >= Version('1.0'):
+        feature_names = sim_enc.get_feature_names_out()
+    else:
+        feature_names = sim_enc.get_feature_names()
     assert feature_names.tolist() == [
         'x0_ ', 'x0_!', 'x0_"', 'x0_#', 'x0_$', 'x0_%', 'x0_&', "x0_'", 'x0_(',
         'x0_)', 'x0_*', 'x0_+', 'x0_,', 'x0_-', 'x0_.', 'x0_/', 'x0_0', 'x0_1',
