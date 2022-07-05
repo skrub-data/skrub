@@ -9,7 +9,7 @@ the instructions in the [README](README.rst) !
 
 ### Process
 
-> Going further, we assume you have write access to both the repository and 
+> Going further, we assume you have write-access to both the repository and 
 > the PyPI project page.
 
 To release a new version of dirty_cat,
