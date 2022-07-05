@@ -67,31 +67,34 @@ class SuperVectorizer(ColumnTransformer):
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
 
-    low_card_cat_transformer: Transformer or str or None, default=OneHotEncoder()
+    low_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
+        `OneHotEncoder()` is used by default.
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    high_card_cat_transformer: Transformer or str or None, default=GapEncoder(n_components=30)
+    high_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
+        `GapEncoder(n_components=30)` is used by default.
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    numerical_transformer: Transformer or str or None, default='passthrough'
+    numerical_transformer: Transformer or str or None, default=None
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    datetime_transformer: Transformer or str or None, default=DatetimeEncoder()
+    datetime_transformer: Transformer or str or None, default=None
         Transformer used on datetime features.
+        `DatetimeEncoder()` is used by default.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
