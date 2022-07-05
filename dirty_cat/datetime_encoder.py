@@ -149,7 +149,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         X = check_input(X)
         if X.shape[1] != self.n_features_in_:
             raise ValueError(
-                f"Number of features in the input data ({X.shape[1]}) does not match the number of features "
+                f"The number of features in the input data ({X.shape[1]}) does not match the number of features "
                 f"seen during fit ({self.n_features_in_})."
             )
         # Create a new array with the extracted features, choosing only features that weren't constant during fit
