@@ -15,7 +15,7 @@ import warnings
 import pandas as pd
 
 from pathlib import Path
-from distutils.version import LooseVersion
+from dirty_cat.utils import Version
 
 from unittest import mock
 from unittest.mock import mock_open
@@ -152,7 +152,7 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
     test_data_dir = get_test_data_dir()
     _download_and_write_openml_dataset(1, test_data_dir)
 
-    if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+    if Version(sklearn.__version__) >= Version('0.22'):
         mock_fetch_openml.assert_called_once_with(data_id=1,
                                                   data_home=str(test_data_dir),
                                                   as_frame=True)

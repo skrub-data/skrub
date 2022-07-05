@@ -16,7 +16,6 @@ The principle is as follows:
 """
 import warnings
 import numpy as np
-from distutils.version import LooseVersion
 from scipy import sparse
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_random_state, gen_batches
@@ -28,15 +27,16 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils.fixes import _object_dtype_isnan
 import pandas as pd
 from .utils import check_input
+from dirty_cat.utils import Version
 
-if LooseVersion(sklearn_version) < LooseVersion('0.22'):
+if Version(sklearn_version) <= Version('0.22'):
     from sklearn.cluster.k_means_ import _k_init
-elif LooseVersion(sklearn_version) < LooseVersion('0.24'):
+elif Version(sklearn_version) < Version('0.24'):
     from sklearn.cluster._kmeans import _k_init
 else:
     from sklearn.cluster import kmeans_plusplus
 
-if LooseVersion(sklearn_version) < LooseVersion('0.22'):
+if Version(sklearn_version) <= Version('0.22'):
     from sklearn.decomposition.nmf import _beta_divergence
 else:
     from sklearn.decomposition._nmf import _beta_divergence
@@ -105,12 +105,12 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
         if not self.hashing: # Build n-grams/word vocabulary
-            if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+            if Version(sklearn_version) < Version('1.0'):
                 self.vocabulary = self.ngrams_count_.get_feature_names()
             else:
                 self.vocabulary = self.ngrams_count_.get_feature_names_out()
             if self.add_words:
-                if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+                if Version(sklearn_version) < Version('1.0'):
                     self.vocabulary = np.concatenate((
                         self.vocabulary,
                         self.word_count_.get_feature_names()
@@ -152,7 +152,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         n-grams counts.
         """
         if self.init == 'k-means++':
-            if LooseVersion(sklearn_version) < LooseVersion('0.24'):
+            if Version(sklearn_version) < Version('0.24'):
                 W = _k_init(
                     V, self.n_components,
                     x_squared_norms=row_norms(V, squared=True),
@@ -178,7 +178,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_components:
-                if LooseVersion(sklearn_version) < LooseVersion('0.24'):
+                if Version(sklearn_version) < Version('0.24'):
                     W2 = _k_init(
                         V, self.n_components - W.shape[0],
                         x_squared_norms=row_norms(V, squared=True),
@@ -285,7 +285,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         """
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
-        if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+        if Version(sklearn_version) < Version('1.0'):
             vocabulary = np.array(vectorizer.get_feature_names())
         else:
             vocabulary = np.array(vectorizer.get_feature_names_out())

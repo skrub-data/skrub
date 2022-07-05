@@ -5,8 +5,9 @@ import json
 import re
 import sys
 
-from distutils.version import LooseVersion
+from dirty_cat.utils import Version
 from urllib.request import urlopen
+
 
 def json_urlread(url):
     try:
@@ -80,7 +81,7 @@ for src, dst in symlinks.items():
 seen = set()
 for name in (NAMED_DIRS +
              sorted((k for k in dirs if k[:1].isdigit()),
-                    key=LooseVersion, reverse=True)):
+                    key=Version, reverse=True)):
     version_num, pdf_size = dirs[name]
     if version_num in seen:
         # symlink came first
