@@ -590,7 +590,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def _more_tags(self):
         """
-        Used to ease the sklearn checks of the estimator.
+        Used internally by sklearn to ease the estimator checks.
         """
         return {"X_types": ["categorical"]}
 
