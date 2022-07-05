@@ -191,7 +191,7 @@ def test_transform():
                                 [2021, 2, 3, 12, 2, 0],
                                 [2022, 1, 1, 23, 5, 0],
                                 [2023, 2, 3, 11, 4, 0]]).astype(np.float64)
-    expected_result[:, 5] = (X.astype('int64')//1e9).astype(np.float64).to_numpy().reshape(-1) #time from epochs in seconds
+    expected_result[:, 5] = (X.iloc[:, 0].view(dtype='int64')//1e9).astype(np.float64).to_numpy().reshape(-1) #time from epochs in seconds
     enc.fit(X)
     X_trans = enc.transform(X)
     assert np.allclose(X_trans, expected_result, equal_nan=True)
