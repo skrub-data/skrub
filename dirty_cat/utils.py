@@ -48,6 +48,9 @@ def check_input(X):
     #If the array contains both NaNs and strings, convert to object type
     if X_.dtype.kind in {'U', 'S'}: # contains strings
         if np.any(X_ == "nan"): # missing value converted to string
-            return np.array(X, dtype=object)
+            return check_array(np.array(X, dtype=object),
+                dtype= None,
+                ensure_2d=True,
+                force_all_finite=False)
 
     return X_
