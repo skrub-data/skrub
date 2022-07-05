@@ -1,5 +1,14 @@
 ## Release process
 
+### Target audience
+
+This document is aimed toward established contributors the project.
+
+If you're a user looking to install dirty_cat, please refer to
+the instructions in the [README](README.rst) !
+
+### Process
+
 To release a new version of dirty_cat,
 here are the main steps and appropriate resources:
 
