@@ -26,6 +26,7 @@ def get_test_data_dir() -> Path:
     return get_data_dir("tests")
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')
 def test_fetch_openml_dataset():
     """
     Tests the ``fetch_openml_dataset()`` function in a real environment.
@@ -94,6 +95,7 @@ def test_fetch_openml_dataset():
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')
 @mock.patch("pathlib.Path.is_file")
 @mock.patch("dirty_cat.datasets.fetching._get_features")
 @mock.patch("dirty_cat.datasets.fetching._get_details")
@@ -286,6 +288,7 @@ def test__features_to_csv_format():
     assert _features_to_csv_format(features) == expected_return_value
 
 
+@pytest.mark.filterwarnings('ignore::UserWarning')
 @mock.patch('dirty_cat.datasets.fetching.fetch_openml_dataset')
 @mock.patch("dirty_cat.datasets.fetching.fetch_dataset_as_namedtuple")
 def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
