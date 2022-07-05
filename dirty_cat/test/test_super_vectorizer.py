@@ -341,7 +341,6 @@ def test_get_feature_names_out():
         with pytest.raises(NotImplementedError):
             # Prior to sklearn 0.23, ColumnTransformer.get_feature_names
             # with "passthrough" transformer(s) raises a NotImplementedError
-            assert vectorizer_w_pass.get_feature_names()
             assert vectorizer_w_pass.get_feature_names_out()
     else:
         expected_feature_names_pass = [  # Order matters. If it doesn't, convert to set.
