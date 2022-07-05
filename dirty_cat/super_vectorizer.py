@@ -7,7 +7,6 @@ manually categorize them beforehand, or construct complex Pipelines.
 """
 
 # Author: Lilian Boulard <lilian@boulard.fr> | https://github.com/LilianBoulard
-import warnings
 
 import sklearn
 
