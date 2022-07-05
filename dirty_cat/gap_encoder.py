@@ -29,17 +29,12 @@ import pandas as pd
 from .utils import check_input
 from dirty_cat.utils import Version
 
-if Version(sklearn_version) <= Version('0.22'):
-    from sklearn.cluster.k_means_ import _k_init
-elif Version(sklearn_version) < Version('0.24'):
+if Version(sklearn_version) < Version('0.24'):
     from sklearn.cluster._kmeans import _k_init
 else:
     from sklearn.cluster import kmeans_plusplus
 
-if Version(sklearn_version) <= Version('0.22'):
-    from sklearn.decomposition.nmf import _beta_divergence
-else:
-    from sklearn.decomposition._nmf import _beta_divergence
+from sklearn.decomposition._nmf import _beta_divergence
 
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
