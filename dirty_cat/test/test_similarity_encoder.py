@@ -232,7 +232,7 @@ def test_get_features():
     sim_enc = similarity_encoder.SimilarityEncoder(random_state=435)
     X = np.array(['%s' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)
-    if Version(sklearn_version) >= Version('1.0'):
+    if Version(sklearn_version) > Version('1.0'):
         feature_names = sim_enc.get_feature_names_out()
     else:
         feature_names = sim_enc.get_feature_names()
