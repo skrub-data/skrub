@@ -161,7 +161,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 le.classes_ = np.array(self.categories[j])
 
         self.categories_ = [le.classes_ for le in self._label_encoders_]
-        self._n = len(y)
+        self.n_ = len(y)
         if self.clf_type in ['binary-clf', 'regression']:
             self.Eyx_ = [{cat: np.mean(y[X[:, j] == cat])
                           for cat in self.categories_[j]}
@@ -179,7 +179,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
             self.counter_ = {j: collections.Counter(X[:, j])
                              for j in range(n_features)}
-        self._k = {j: len(self.counter_[j]) for j in self.counter_}
+        self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
     def transform(self, X):
@@ -262,7 +262,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                         Eyx = 0
                     else:
                         Eyx = self.Eyx_[j][x]
-                    lambda_n = lambda_(self.counter_[j][x], self._n/self._k[j])
+                    lambda_n = lambda_(self.counter_[j][x], self.n_/self.k_[j])
                     encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
                 x_out = np.zeros((len(X[:, j]), 1))
                 for i, x in enumerate(X[:, j]):
@@ -272,7 +272,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 x_out = np.zeros((len(X[:, j]), len(self.classes_)))
                 lambda_n = {x: 0 for x in unqX}
                 for x in unqX:
-                    lambda_n[x] = lambda_(self.counter_[j][x], self._n/self._k[j])
+                    lambda_n[x] = lambda_(self.counter_[j][x], self.n_/self.k_[j])
                 for k, c in enumerate(np.unique(self.classes_)):
                     for x in unqX:
                         if x not in cats:

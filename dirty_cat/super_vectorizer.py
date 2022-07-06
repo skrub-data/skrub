@@ -70,7 +70,7 @@ class SuperVectorizer(ColumnTransformer):
     low_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        `OneHotEncoder()` is used by default.
+        Default value None is converted to `OneHotEncoder()`.
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
@@ -79,7 +79,7 @@ class SuperVectorizer(ColumnTransformer):
     high_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
-        `GapEncoder(n_components=30)` is used by default.
+        Default value None is converted to `GapEncoder(n_components=30)`.
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
@@ -94,7 +94,7 @@ class SuperVectorizer(ColumnTransformer):
 
     datetime_transformer: Transformer or str or None, default=None
         Transformer used on datetime features.
-        `DatetimeEncoder()` is used by default.
+        Default value None is converted to `DatetimeEncoder()`.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
