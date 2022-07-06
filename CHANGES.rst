@@ -8,11 +8,18 @@ Major changes
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the SuperVectorizer for datetime columns.
 
+* :class:`TargetEncoder` can now perform cross-validation loops to encode categories, thus avoiding
+    overfitting. This is done using the `cross_val` parameter, and the number of splits of the
+    dataset are set with the `n_folds` and `n_inner_folds` parameters.
+
 Notes
 -----
 
 * The transformers_ attribute of the SuperVectorizer now contains column names
 instead of column indices for the "remainder" columns.
+
+* Two new examples have been added to illustrate the majors changes: the new
+:class"`DatetimeEncoder` and the new features of the :class:`TargetEncoder`.
 
 
 Release 0.2.2

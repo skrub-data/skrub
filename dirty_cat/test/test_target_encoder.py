@@ -337,3 +337,10 @@ if __name__ == '__main__':
     print('start test_missing_values')
     test_missing_values()
     print('test_missing_values passed')
+
+    print('start test_target_encoder with K-fold encoding')
+    test_target_encoder(cv=True)
+    print('test_target_encoder with K-fold encoding passed')
+    print('start test_missing_values with K-fold encoding')
+    test_missing_values(cv=True)
+    print('test_missing_values with K-fold encoding passed')
