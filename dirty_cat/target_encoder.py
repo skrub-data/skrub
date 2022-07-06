@@ -5,6 +5,8 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
+from sklearn.utils.validation import check_is_fitted
+from dirty_cat.utils import check_input
 
 
 def lambda_(x, n):
@@ -77,6 +79,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.handle_unknown = handle_unknown
         self.handle_missing = handle_missing
 
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {"X_types": ["categorical"]}
+
     def fit(self, X, y):
         """Fit the TargetEncoder to X.
         Parameters
@@ -90,6 +98,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        X = check_input(X)
+        self.n_features_in_ = X.shape[1]
         if self.handle_missing not in ['error', '']:
             template = ("handle_missing should be either 'error' or "
                         "'', got %s")
@@ -151,7 +161,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 le.classes_ = np.array(self.categories[j])
 
         self.categories_ = [le.classes_ for le in self._label_encoders_]
-        self.n = len(y)
+        self.n_ = len(y)
         if self.clf_type in ['binary-clf', 'regression']:
             self.Eyx_ = [{cat: np.mean(y[X[:, j] == cat])
                           for cat in self.categories_[j]}
@@ -169,7 +179,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
             self.counter_ = {j: collections.Counter(X[:, j])
                              for j in range(n_features)}
-        self.k = {j: len(self.counter_[j]) for j in self.counter_}
+        self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
     def transform(self, X):
@@ -185,6 +195,13 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         X_new : 2-d array
             Transformed input.
         """
+        check_is_fitted(self, attributes=["n_features_in_"])
+        X = check_input(X)
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"Number of features in the input data ({X.shape[1]}) does not match the number of features "
+                f"seen during fit ({self.n_features_in_})."
+            )
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
                 msg = ("Found missing values in input data; set "
@@ -245,7 +262,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                         Eyx = 0
                     else:
                         Eyx = self.Eyx_[j][x]
-                    lambda_n = lambda_(self.counter_[j][x], self.n/self.k[j])
+                    lambda_n = lambda_(self.counter_[j][x], self.n_/self.k_[j])
                     encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
                 x_out = np.zeros((len(X[:, j]), 1))
                 for i, x in enumerate(X[:, j]):
@@ -255,7 +272,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 x_out = np.zeros((len(X[:, j]), len(self.classes_)))
                 lambda_n = {x: 0 for x in unqX}
                 for x in unqX:
-                    lambda_n[x] = lambda_(self.counter_[j][x], self.n/self.k[j])
+                    lambda_n[x] = lambda_(self.counter_[j][x], self.n_/self.k_[j])
                 for k, c in enumerate(np.unique(self.classes_)):
                     for x in unqX:
                         if x not in cats:

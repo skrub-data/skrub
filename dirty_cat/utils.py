@@ -1,6 +1,8 @@
 import collections
 
 import numpy as np
+import pandas as pd
+from sklearn.utils import check_X_y, check_array
 
 from typing import Tuple, Union
 
@@ -35,17 +37,25 @@ class LRUDict:
 
 def check_input(X):
     """
-    Check input data shape.
+    Check input with sklearn standards.
     Also converts X to a numpy array if not already.
     """
-    X = np.asarray(X)
-    if X.ndim != 2:
-        raise ValueError(
-            'Expected 2D array. Reshape your data either using'
-            'array.reshape(-1, 1) if your data has a single feature or'
-            'array.reshape(1, -1) if it contains a single sample.'
-        )
-    return X
+    #TODO check for weird type of input to pass scikit learn tests
+    # whithout messing with the original type too much
+
+    X_ = check_array(X,
+                dtype= None,
+                ensure_2d=True,
+                force_all_finite=False)
+    #If the array contains both NaNs and strings, convert to object type
+    if X_.dtype.kind in {'U', 'S'}: # contains strings
+        if np.any(X_ == "nan"): # missing value converted to string
+            return check_array(np.array(X, dtype=object),
+                dtype= None,
+                ensure_2d=True,
+                force_all_finite=False)
+
+    return X_
 
 
 class Version:
