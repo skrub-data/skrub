@@ -40,10 +40,9 @@ def fetch_openml_dataset(*args, **kwargs):
     Filters out specific warnings.
     """
     with warnings.catch_warnings():
-        warnings.filterwarnings(
+        warnings.simplefilter(
             action='ignore',
             category=UserWarning,
-            message='Downloading',
         )
         return _fetch_openml_dataset(*args, **kwargs)
 
