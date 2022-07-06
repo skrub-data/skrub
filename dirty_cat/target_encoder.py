@@ -304,7 +304,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                             Eyx = 0
                         else:
                             Eyx = self.Eyx_[j][x]
-                        lambda_n = lambda_(self.counter_[j][x], self.n/self.k[j])
+                        lambda_n = lambda_(self.counter_[j][x], self.n_/self.k_[j])
                         encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
                     x_out = np.zeros((len(X[:, j]), 1))
                     for i, x in enumerate(X[:, j]):
@@ -315,7 +315,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                     lambda_n = {x: 0 for x in unqX}
                     for x in unqX:
                         lambda_n[x] = lambda_(self.counter_[j][x],
-                                              self.n/self.k[j])
+                                              self.n_/self.k_[j])
                     for k, c in enumerate(np.unique(self.classes_)):
                         for x in unqX:
                             if x not in cats:
