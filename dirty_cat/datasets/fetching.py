@@ -107,7 +107,9 @@ def fetch_openml_dataset(dataset_id: int,
             "Downloading it from OpenML; this might take a while... "
             "If it is interrupted, some files might be invalid/incomplete: "
             "if on the following run, the fetching raises errors, you can try "
-            f"fixing this issue by deleting the directory {data_directory!r}."
+            f"fixing this issue by deleting the directory {data_directory!r}.",
+            UserWarning,
+            stacklevel=2,
         )
         _download_and_write_openml_dataset(dataset_id=dataset_id,
                                            data_directory=data_directory)
