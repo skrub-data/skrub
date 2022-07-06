@@ -16,13 +16,13 @@ import pandas as pd
 from warnings import warn
 from typing import Union, Optional, List
 
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn import __version__ as sklearn_version
 
 from dirty_cat import GapEncoder, DatetimeEncoder
-from dirty_cat.utils import Version
+from dirty_cat.utils import Version, check_input
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -64,17 +64,19 @@ class SuperVectorizer(ColumnTransformer):
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
 
-    low_card_cat_transformer: Transformer or str or None, default=OneHotEncoder()
+    low_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
+        Default value None is converted to `OneHotEncoder()`.
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    high_card_cat_transformer: Transformer or str or None, default=GapEncoder(n_components=30)
+    high_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
+        Default value None is converted to `GapEncoder(n_components=30)`.
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
@@ -87,8 +89,9 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    datetime_transformer: Transformer or str or None, default=DatetimeEncoder()
+    datetime_transformer: Transformer or str or None, default=None
         Transformer used on datetime features.
+        Default value None is converted to `DatetimeEncoder()`.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
@@ -172,10 +175,10 @@ class SuperVectorizer(ColumnTransformer):
 
     def __init__(self, *,
                  cardinality_threshold: int = 40,
-                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
-                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(n_components=30),
+                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = None,
+                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = None,
                  numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
-                 datetime_transformer: Optional[Union[BaseEstimator, str]] = DatetimeEncoder(),
+                 datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
                  auto_cast: bool = True,
                  impute_missing: str = 'auto',
                  # Following parameters are inherited from ColumnTransformer
@@ -200,6 +203,28 @@ class SuperVectorizer(ColumnTransformer):
         self.n_jobs = n_jobs
         self.transformer_weights = transformer_weights
         self.verbose = verbose
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {"allow_nan": [True]}
+
+    def _clone_transformers(self):
+        if self.low_card_cat_transformer is not None:
+            self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
+        else:
+            self.low_card_cat_transformer_ = OneHotEncoder()
+        if self.high_card_cat_transformer is not None:
+            self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
+        else:
+            self.high_card_cat_transformer_ = GapEncoder(n_components=30)
+        if self.datetime_transformer is not None:
+            self.datetime_transformer_ = clone(self.datetime_transformer)
+        else:
+            self.datetime_transformer_ = DatetimeEncoder()
+
+        #TODO check that the provided transformers are valid
 
     @staticmethod
     def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
@@ -246,7 +271,8 @@ class SuperVectorizer(ColumnTransformer):
                 except:
                     # Only try to convert to datetime if the variable isn't numeric.
                     try:
-                        X[col] = pd.to_datetime(X[col], errors='raise')
+                        X[col] = pd.to_datetime(X[col], errors='raise',
+                                                infer_datetime_format=True)
                     except:
                         pass
             # Cast pandas dtypes to numpy dtypes
@@ -329,6 +355,7 @@ class SuperVectorizer(ColumnTransformer):
             usually because transformers passed do not match any column.
             To fix the issue, try passing the least amount of None as encoders.
         """
+        self._clone_transformers()
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
@@ -345,7 +372,10 @@ class SuperVectorizer(ColumnTransformer):
             self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
 
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(include=['int', 'float']).columns.to_list()
+        numeric_columns = X.select_dtypes(include=['int', 'float',
+                                                   np.float64, np.float32, np.float16,
+                                                   np.int64, np.int32, np.int16,
+                                                   np.uint64, np.uint32, np.uint16]).columns.to_list()
         categorical_columns = X.select_dtypes(include=['string', 'object', 'category']).columns.to_list()
         datetime_columns = X.select_dtypes(include=['datetime', "datetimetz"]).columns.to_list()
 
@@ -363,9 +393,9 @@ class SuperVectorizer(ColumnTransformer):
         # Create the list of all the transformers.
         all_transformers = [
             ('numeric', self.numerical_transformer, numeric_columns),
-            ('datetime', self.datetime_transformer, datetime_columns),
-            ('low_card_cat', self.low_card_cat_transformer, low_card_cat_columns),
-            ('high_card_cat', self.high_card_cat_transformer, high_card_cat_columns),
+            ('datetime', self.datetime_transformer_, datetime_columns),
+            ('low_card_cat', self.low_card_cat_transformer_, low_card_cat_columns),
+            ('high_card_cat', self.high_card_cat_transformer_, high_card_cat_columns),
         ]
         # We will now filter this list, by keeping only the ones with:
         # - at least one column
@@ -425,6 +455,8 @@ class SuperVectorizer(ColumnTransformer):
 
         if self.verbose:
             print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
+
+        check_input(X)
 
         res = super().fit_transform(X, y)
 

@@ -118,7 +118,10 @@ def test_get_feature_names_out(n_samples=70):
     X = np.array([X_txt, X_txt]).T
     enc = GapEncoder(random_state=42)
     enc.fit(X)
-    for topic_labels in [enc.get_feature_names(), enc.get_feature_names_out()]:
+    with pytest.warns(DeprecationWarning):
+        feature_names_1 = enc.get_feature_names()
+    feature_names_2 = enc.get_feature_names_out()
+    for topic_labels in [feature_names_1, feature_names_2]:
         # Check number of labels
         assert len(topic_labels) == enc.n_components * X.shape[1]
         # Test different parameters for col_names
