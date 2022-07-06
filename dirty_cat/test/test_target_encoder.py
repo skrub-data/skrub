@@ -4,7 +4,7 @@ import pytest
 from dirty_cat import target_encoder
 
 
-def test_target_encoder():
+def test_target_encoder(cv=False):
     lambda_ = target_encoder.lambda_
     X1 = np.array(['Red',
                    'red',
@@ -42,7 +42,7 @@ def test_target_encoder():
               'gender': {'male': 4,
                          'female': 4}}
 
-    encoder = target_encoder.TargetEncoder()
+    encoder = target_encoder.TargetEncoder(cross_val=cv)
     encoder.fit(X, y)
     for j in range(X.shape[1]):
         assert np.array_equal(encoder.categories_[j], np.unique(X[:, j]))
@@ -88,7 +88,7 @@ def test_target_encoder():
     y = np.array([1, 0, 2, 1, 0, 1, 0, 0])
     n = len(y)
 
-    encoder = target_encoder.TargetEncoder(clf_type='multiclass-clf')
+    encoder = target_encoder.TargetEncoder(clf_type='multiclass-clf', cross_val=cv)
     encoder.fit(X, y)
 
     Ey_ = {0: 4/8, 1: 3/8, 2: 1/8}
@@ -184,13 +184,13 @@ def test_target_encoder():
         for j, col in enumerate(['color', 'gender']):
             for i in range(n):
                 ans[i, j*3+k] = ans_dict[k][col][Xtest[i, j]]
-    encoder = target_encoder.TargetEncoder(clf_type='multiclass-clf')
+    encoder = target_encoder.TargetEncoder(clf_type='multiclass-clf', cross_val=cv)
     encoder.fit(X, y)
     Xout = encoder.transform(Xtest)
     assert np.array_equal(Xout, ans)
 
 
-def _test_missing_values(input_type, missing):
+def _test_missing_values(input_type, missing, cv=False):
     lambda_ = target_encoder.lambda_
     X = [['Red', 'male'],
          [np.nan, 'male'],
@@ -230,7 +230,7 @@ def _test_missing_values(input_type, missing):
                          'female': 4,
                          '': 1}}
 
-    encoder = target_encoder.TargetEncoder(handle_missing=missing)
+    encoder = target_encoder.TargetEncoder(handle_missing=missing, cross_val=cv)
     if missing == 'error':
         with pytest.raises(ValueError, match=r"Found missing values in input "
                            "data; set handle_missing='' to encode "
@@ -254,7 +254,7 @@ def _test_missing_values(input_type, missing):
         return
 
 
-def _test_missing_values_transform(input_type, missing):
+def _test_missing_values_transform(input_type, missing, cv=False):
     lambda_ = target_encoder.lambda_
     X = [['Red', 'male'],
          ['red', 'male'],
@@ -302,7 +302,8 @@ def _test_missing_values_transform(input_type, missing):
                          'female': 4}}
 
     encoder = target_encoder.TargetEncoder(handle_unknown='ignore',
-                                           handle_missing=missing)
+                                           handle_missing=missing,
+                                           cross_val=cv)
     if missing == 'error':
         encoder.fit_transform(X, y)
         with pytest.raises(ValueError, match=r"Found missing values in input "
@@ -325,3 +326,14 @@ def test_missing_values():
         for missing in handle_missing:
             _test_missing_values(input_type, missing)
             _test_missing_values_transform(input_type, missing)
+            _test_missing_values(input_type, missing, cv=True)
+            _test_missing_values_transform(input_type, missing, cv=True)
+
+
+if __name__ == '__main__':
+    print('start test_target_encoder')
+    test_target_encoder()
+    print('test_target_encoder passed')
+    print('start test_missing_values')
+    test_missing_values()
+    print('test_missing_values passed')

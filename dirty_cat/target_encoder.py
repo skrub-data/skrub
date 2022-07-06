@@ -1,10 +1,12 @@
 import collections
 import numpy as np
+import pandas as pd
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
+from sklearn.model_selection import KFold
 
 
 def lambda_(x, n):
@@ -12,10 +14,18 @@ def lambda_(x, n):
     return out
 
 
+def arr_mean(X_g, y_g):
+    """ Find the group mean of numpy arrays with categories """
+    X_uniques = np.unique(X_g)
+    grouped = [y_g[X_g == xi] for xi in X_uniques]
+    mean = [gr.mean() for gr in grouped]
+    return mean, X_uniques
+
+
 class TargetEncoder(BaseEstimator, TransformerMixin):
     """Encode categorical features as a numeric array given a target vector.
 
-    Each category is encoded given the effect that it has in the
+    Each category is encoded given the effect that it has on the
     target variable y. The method considers that categorical
     variables can present rare categories. It represents each category by the
     probability of y conditional on this category.
@@ -54,6 +64,22 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         during fit_transform, the resulting encoded columns for this feature
         will be all zeros.
 
+    cross_val : bool, default=False
+        Computing impact coded features on a subset of the data, using nested
+        KFold cross-validation loop. Very useful when the number of
+        observations of the encoded columns is high, to avoid overfitting.
+        The number of inner and outer folds are defined by the ``n_folds`` and
+        ``n_inner_folds`` parameters.
+    
+    n_folds : int, default=5
+        The number of outer folds for the nested KFold. Useful only when
+        ``cross_val`` is True.
+
+    n_inner_folds: int, default=3
+        The number of inner folds for the nested KFold. Useful only when
+        ``cross_val`` is True.
+
+
     Attributes
     ----------
     categories_ : list of arrays
@@ -69,13 +95,20 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     def __init__(self,
                  categories='auto',
                  clf_type='binary-clf',
-                 dtype=np.float64, handle_unknown='error',
-                 handle_missing=''):
+                 dtype=np.float64,
+                 handle_unknown='error',
+                 handle_missing='',
+                 cross_val=False,
+                 n_folds=10,
+                 n_inner_folds=3):
         self.categories = categories
         self.dtype = dtype
         self.clf_type = clf_type
         self.handle_unknown = handle_unknown
         self.handle_missing = handle_missing
+        self.cross_val = cross_val
+        self.n_folds = n_folds
+        self.n_inner_folds = n_inner_folds
 
     def fit(self, X, y):
         """Fit the TargetEncoder to X.
@@ -126,10 +159,15 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                                      "supported")
 
         X_temp = check_array(X, dtype=None)
+        y_temp = check_array(y, dtype=None, ensure_2d=False)
         if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
             X = check_array(X, dtype=np.object)
+            y = check_array(y, dtype=np.object, ensure_2d=False)
         else:
             X = X_temp
+            y = y_temp
+
+        self.y = y
 
         n_samples, n_features = X.shape
 
@@ -178,7 +216,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features_new]
-            The data to encode. 
+            The data to encode.
 
         Returns
         -------
@@ -206,10 +244,13 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                     X[mask] = self.handle_missing
 
         X_temp = check_array(X, dtype=None)
+        y_temp = check_array(self.y, dtype=None, ensure_2d=False)
         if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
             X = check_array(X, dtype=np.object)
+            y = check_array(self.y, dtype=np.object, ensure_2d=False)
         else:
             X = X_temp
+            y = y_temp
 
         n_samples, n_features = X.shape
         X_int = np.zeros_like(X, dtype=np.int)
@@ -236,36 +277,78 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         out = []
 
-        for j, cats in enumerate(self.categories_):
-            unqX = np.unique(X[:, j])
-            encoder = {x: 0 for x in unqX}
-            if self.clf_type in ['binary-clf', 'regression']:
-                for x in unqX:
-                    if x not in cats:
-                        Eyx = 0
-                    else:
-                        Eyx = self.Eyx_[j][x]
-                    lambda_n = lambda_(self.counter_[j][x], self.n/self.k[j])
-                    encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
-                x_out = np.zeros((len(X[:, j]), 1))
-                for i, x in enumerate(X[:, j]):
-                    x_out[i, 0] = encoder[x]
-                out.append(x_out.reshape(-1, 1))
-            if self.clf_type == 'multiclass-clf':
-                x_out = np.zeros((len(X[:, j]), len(self.classes_)))
-                lambda_n = {x: 0 for x in unqX}
-                for x in unqX:
-                    lambda_n[x] = lambda_(self.counter_[j][x], self.n/self.k[j])
-                for k, c in enumerate(np.unique(self.classes_)):
+        if self.cross_val is False:
+            for j, cats in enumerate(self.categories_):
+                unqX = np.unique(X[:, j])
+                encoder = {x: 0 for x in unqX}
+                if self.clf_type in ['binary-clf', 'regression']:
                     for x in unqX:
                         if x not in cats:
                             Eyx = 0
                         else:
-                            Eyx = self.Eyx_[c][j][x]
-                        encoder[x] = lambda_n[x]*Eyx + \
-                            (1 - lambda_n[x])*self.Ey_[c]
+                            Eyx = self.Eyx_[j][x]
+                        lambda_n = lambda_(self.counter_[j][x], self.n/self.k[j])
+                        encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
+                    x_out = np.zeros((len(X[:, j]), 1))
                     for i, x in enumerate(X[:, j]):
-                        x_out[i, k] = encoder[x]
-                out.append(x_out)
-        out = np.hstack(out)
+                        x_out[i, 0] = encoder[x]
+                    out.append(x_out.reshape(-1, 1))
+                if self.clf_type == 'multiclass-clf':
+                    x_out = np.zeros((len(X[:, j]), len(self.classes_)))
+                    lambda_n = {x: 0 for x in unqX}
+                    for x in unqX:
+                        lambda_n[x] = lambda_(self.counter_[j][x],
+                                              self.n/self.k[j])
+                    for k, c in enumerate(np.unique(self.classes_)):
+                        for x in unqX:
+                            if x not in cats:
+                                Eyx = 0
+                            else:
+                                Eyx = self.Eyx_[c][j][x]
+                            encoder[x] = lambda_n[x]*Eyx + \
+                                (1 - lambda_n[x])*self.Ey_[c]
+                        for i, x in enumerate(X[:, j]):
+                            x_out[i, k] = encoder[x]
+                    out.append(x_out)
+            out = np.hstack(out)
+
+        if self.cross_val is True:
+            np.random.seed(1)
+            kf = KFold(n_splits=self.n_folds, shuffle=True)
+            # Global mean of the target, applied to unknown values
+            global_mean = y.mean()
+            split = 0
+            out = np.zeros(shape=(n_samples, n_features))
+            for j in range(n_features):
+                impact_coded = pd.Series(dtype="float64")
+                df_j = pd.DataFrame(X[:, j], columns=["features"])
+                for infold, oof in kf.split(X[:, j]):
+                    inner_means_df = pd.DataFrame()
+                    infold_mean = y[infold].mean()
+                    kf_inner = KFold(n_splits=self.n_inner_folds, shuffle=True)
+                    inner_split = 0
+                    for infold_inner, oof_inner in kf_inner.split(X[:, j][infold]):
+                        X_a = X[:, j][infold][infold_inner]
+                        y_a = y[infold][infold_inner]
+                        infold_inner_mean, idx = arr_mean(X_a, y_a)
+                        inner_means_df = inner_means_df.join(
+                            pd.DataFrame(
+                                infold_inner_mean, index=idx, columns=[inner_split]
+                            ),
+                            lsuffix=inner_split,
+                            how="outer",
+                        )
+                        inner_means_df.fillna(infold_mean, inplace=True)
+                        inner_split += 1
+                    # Apply the mean of all infold_inner means
+                    #  to the actual data, on oof
+                    oof_X = df_j.iloc[oof]
+                    inner_folds_mean = inner_means_df.mean(axis=1)
+                    impact_coded_oof = (
+                        oof_X["features"].map(inner_folds_mean).fillna(global_mean)
+                    )
+                    impact_coded = impact_coded.append(impact_coded_oof)
+                    impact_coded.sort_index(inplace=True)
+                    split += 1
+                out[:, j] = impact_coded.to_numpy()
         return out
