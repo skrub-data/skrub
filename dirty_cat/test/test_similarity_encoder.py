@@ -177,28 +177,12 @@ def test_similarity_encoder():
     categories = ['auto', 'most_frequent', 'k-means']
     for category in categories:
         if category == 'auto':
-            _test_similarity('levenshtein-ratio',
-                             string_distances.levenshtein_ratio,
-                             categories=category,
-                             n_prototypes=None)
-            _test_similarity('jaro-winkler', string_distances.jaro_winkler,
-                             categories=category, n_prototypes=None)
-            _test_similarity('jaro', string_distances.jaro,
-                             categories=category, n_prototypes=None)
             _test_similarity('ngram', string_distances.ngram_similarity,
                              categories=category, n_prototypes=None)
             _test_similarity('ngram', string_distances.ngram_similarity,
                              hashing_dim=2 ** 16, categories=category)
         else:
             for i in range(1, 4):
-                _test_similarity('levenshtein-ratio',
-                                 string_distances.levenshtein_ratio,
-                                 categories=category,
-                                 n_prototypes=i)
-                _test_similarity('jaro-winkler', string_distances.jaro_winkler,
-                                 categories=category, n_prototypes=i)
-                _test_similarity('jaro', string_distances.jaro,
-                                 categories=category, n_prototypes=i)
                 _test_similarity('ngram', string_distances.ngram_similarity,
                                  categories=category, n_prototypes=i)
                 _test_similarity('ngram', string_distances.ngram_similarity,

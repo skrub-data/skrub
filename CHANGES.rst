@@ -8,6 +8,9 @@ Major changes
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the SuperVectorizer for datetime columns.
 
+* Dropped support for Jaro, Jaro-Winkler and Levenshtein distances, in favor of ngram.
+    Therefore, the :class:`SimilarityEncoder` now exclusively takes `ngram` as the `similarity` argument.
+
 Notes
 -----
 

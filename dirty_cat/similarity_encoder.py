@@ -26,7 +26,6 @@ from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
 from dirty_cat.utils import Version
-from . import string_distances
 from .string_distances import get_ngram_count, preprocess
 
 
@@ -158,13 +157,6 @@ def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
     return np.sort(X[indexes_prototypes])
 
 
-_VECTORIZED_EDIT_DISTANCES = {
-    'levenshtein-ratio': np.vectorize(string_distances.levenshtein_ratio),
-    'jaro': np.vectorize(string_distances.jaro),
-    'jaro-winkler': np.vectorize(string_distances.jaro_winkler),
-}
-
-
 class SimilarityEncoder(OneHotEncoder):
     """Encode string categorical features as a numeric array.
 
@@ -173,20 +165,18 @@ class SimilarityEncoder(OneHotEncoder):
     The method is based on calculating the morphological similarities
     between the categories.
     The categories can be encoded using one of the implemented string
-    similarities: ``similarity='ngram'`` (default), 'levenshtein-ratio',
-    'jaro', or 'jaro-winkler'.
+    similarities. Currently, only ``similarity='ngram'`` is available.
     This encoding is an alternative to OneHotEncoder in the case of
     dirty categorical variables.
 
     Parameters
     ----------
-    similarity : str {'ngram', 'levenshtein-ratio', 'jaro', or\
-'jaro-winkler'}
+    similarity : str {'ngram'}
         The type of pairwise string similarity to use.
+        Defaults to "ngram"
 
     ngram_range : tuple (min_n, max_n), default=(2, 4)
-        Only significant for ``similarity='ngram'``. The range of
-        values for the n_gram similarity.
+        The range of values for the n_gram similarity.
 
     categories : 'auto', 'k-means', 'most_frequent' or a list of lists/arrays
     of values.
@@ -455,21 +445,7 @@ class SimilarityEncoder(OneHotEncoder):
                            " during transform".format(diff, i))
                     raise ValueError(msg)
 
-        if self.similarity in ('levenshtein-ratio',
-                               'jaro',
-                               'jaro-winkler'):
-            out = []
-            vect = _VECTORIZED_EDIT_DISTANCES[self.similarity]
-            for j, cats in enumerate(self.categories_):
-                unqX = np.unique(Xlist[j])
-                encoder_dict = {x: vect(x, cats.reshape(1, -1))
-                                for x in unqX}
-                encoder = [encoder_dict[x] for x in Xlist[j]]
-                encoder = np.vstack(encoder)
-                out.append(encoder)
-            return np.hstack(out)
-
-        elif self.similarity == 'ngram':
+        if self.similarity == 'ngram':
             min_n, max_n = self.ngram_range
 
             total_length = sum(len(x) for x in self.categories_)
