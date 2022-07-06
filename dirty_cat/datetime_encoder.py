@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from typing import List
+
+from sklearn.utils.validation import check_is_fitted
+
 from dirty_cat.utils import check_input
 
 # Some functions need aliases
@@ -10,7 +13,7 @@ WORD_TO_ALIAS = {"year": "Y", "month": "M", "day": "D", "hour": "H", "minute": "
 TIME_LEVELS = ["year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"]
 
 
-class DatetimeEncoder(TransformerMixin, BaseEstimator):
+class DatetimeEncoder(BaseEstimator, TransformerMixin):
     """
     This encoder transforms each datetime column into several numeric columns corresponding to temporal features,
     e.g year, month, day...
@@ -42,6 +45,12 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
                  add_day_of_the_week=False):
         self.extract_until = extract_until
         self.add_day_of_the_week = add_day_of_the_week
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {"X_types": ["categorical"]}
 
     def _validate_keywords(self):
         if self.extract_until not in TIME_LEVELS:
@@ -118,7 +127,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             if np.nanstd(remainder) > 0:
                 self.features_per_column_[i].append("total_time")
 
-
+        self.n_features_in_ = X.shape[1]
         self.n_features_out_ = len(np.concatenate(list(self.features_per_column_.values())))
 
         return self
@@ -136,7 +145,13 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         array, shape (n_samples, n_features_out_)
             Transformed input.
         """
+        check_is_fitted(self, attributes=["n_features_in_", "n_features_out_", "features_per_column_"])
         X = check_input(X)
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError(
+                f"The number of features in the input data ({X.shape[1]}) does not match the number of features "
+                f"seen during fit ({self.n_features_in_})."
+            )
         # Create a new array with the extracted features, choosing only features that weren't constant during fit
         X_ = np.empty((X.shape[0], self.n_features_out_), dtype=np.float64)
         idx = 0
