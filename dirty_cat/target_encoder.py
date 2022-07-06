@@ -101,7 +101,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                  handle_unknown='error',
                  handle_missing='',
                  cross_val=False,
-                 n_folds=10,
+                 n_folds=5,
                  n_inner_folds=3):
         self.categories = categories
         self.dtype = dtype
