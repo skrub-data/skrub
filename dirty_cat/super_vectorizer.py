@@ -499,6 +499,7 @@ class SuperVectorizer(ColumnTransformer):
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "
                 "Use get_feature_names_out instead.",
-                DeprecationWarning
+                DeprecationWarning,
+                stacklevel=2,
             )
         return self.get_feature_names_out()
