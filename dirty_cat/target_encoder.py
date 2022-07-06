@@ -229,8 +229,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             X = X_temp
 
         n_samples, n_features = X.shape
-        X_int = np.zeros_like(X, dtype=np.int)
-        X_mask = np.ones_like(X, dtype=np.bool)
+        X_int = np.zeros_like(X, dtype=int)
+        X_mask = np.ones_like(X, dtype=bool)
 
         for i in range(n_features):
             Xi = X[:, i]

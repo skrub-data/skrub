@@ -274,7 +274,8 @@ class SuperVectorizer(ColumnTransformer):
                 except:
                     # Only try to convert to datetime if the variable isn't numeric.
                     try:
-                        X[col] = pd.to_datetime(X[col], errors='raise')
+                        X[col] = pd.to_datetime(X[col], errors='raise',
+                                                infer_datetime_format=True)
                     except:
                         pass
             # Cast pandas dtypes to numpy dtypes
