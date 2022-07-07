@@ -145,7 +145,7 @@ from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder,\
 
 encoders = {
     'one-hot': one_hot,
-    'similarity': SimilarityEncoder(similarity='ngram'),
+    'similarity': SimilarityEncoder(),
     'target': TargetEncoder(handle_unknown='ignore'),
     'minhash': MinHashEncoder(n_components=100),
     'gap': GapEncoder(n_components=100),

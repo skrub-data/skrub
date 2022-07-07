@@ -151,7 +151,7 @@ columns_names = df.columns
 from dirty_cat import SimilarityEncoder
 from sklearn.compose import make_column_transformer
 from sklearn.preprocessing import OneHotEncoder
-similarity_encoder = SimilarityEncoder(similarity='ngram')
+similarity_encoder = SimilarityEncoder()
 
 ###############################################################################
 # Two other columns are used to predict the output: ``DOSAGEFORMNAME`` and
@@ -377,7 +377,7 @@ n_samples_encoder = 10000
 X_encoder, _ = get_X_y(nrows=n_samples_encoder, names=columns_names)
 
 similarity_encoder = SimilarityEncoder(
-    similarity='ngram', categories='most_frequent', n_prototypes=n_out_encoder,
+    categories='most_frequent', n_prototypes=n_out_encoder,
     random_state=42, ngram_range=(2, 4))
 
 # Fit the rbf_sampler with the similarity matrix.
