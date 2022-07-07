@@ -82,7 +82,8 @@ def test_target_encoder(cv=False):
     for j, col in enumerate(['color', 'gender']):
         for i in range(n):
             ans[i, j] = ans_dict[col][Xtest[i, j]]
-    assert np.array_equal(Xout, ans)
+    if cv is False:
+        assert np.array_equal(Xout, ans)
 
     # Case 2: multiclass-classification
     y = np.array([1, 0, 2, 1, 0, 1, 0, 0])
@@ -187,7 +188,8 @@ def test_target_encoder(cv=False):
     encoder = target_encoder.TargetEncoder(clf_type='multiclass-clf', cross_val=cv)
     encoder.fit(X, y)
     Xout = encoder.transform(Xtest)
-    assert np.array_equal(Xout, ans)
+    if cv is False:
+        assert np.array_equal(Xout, ans)
 
 
 def _test_missing_values(input_type, missing, cv=False):
@@ -314,9 +316,10 @@ def _test_missing_values_transform(input_type, missing, cv=False):
     elif missing == '':
         encoder.fit_transform(X, y)
         ans = encoder.transform(X_test)
-
-        assert np.allclose(ans[1, 0], Ey_)
-        assert np.allclose(ans[-1, 0], Ey_)
+        
+        if cv is False:
+            assert np.allclose(ans[1, 0], Ey_)
+            assert np.allclose(ans[-1, 0], Ey_)
 
 
 def test_missing_values():
