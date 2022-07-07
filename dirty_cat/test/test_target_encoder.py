@@ -233,7 +233,7 @@ def test_cv_target_encoder():
     assert count_['gender'] == encoder.counter_[1]
 
     # Test same seed returns the same results:
-    encoder2 = TargetEncoder(clf_type='multiclass-clf',
+    encoder2 = target_encoder.TargetEncoder(clf_type='multiclass-clf',
                              cross_val=True, random_state=1)
     encoder2.fit(X, y)
     Xout2 = encoder2.transform(Xtest)
