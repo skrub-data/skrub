@@ -72,7 +72,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         observations of the encoded columns is high, to avoid overfitting.
         The number of inner and outer folds are defined by the ``n_folds`` and
         ``n_inner_folds`` parameters.
-    
+
     n_folds : int, default=5
         The number of outer folds for the nested KFold. Useful only when
         ``cross_val`` is True.
@@ -81,6 +81,11 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         The number of inner folds for the nested KFold. Useful only when
         ``cross_val`` is True.
 
+    random_state: int, RandomState instance or None, default=None
+        When ``cross_val`` is True, random_state affects the ordering of the
+        indices, which controls the randomness of each fold. Otherwise,
+        this parameter has no effect. Pass an int for reproducible output
+        across multiple function calls.
 
     Attributes
     ----------
@@ -102,7 +107,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                  handle_missing='',
                  cross_val=False,
                  n_folds=5,
-                 n_inner_folds=3):
+                 n_inner_folds=3,
+                 random_state=1):
         self.categories = categories
         self.dtype = dtype
         self.clf_type = clf_type
@@ -111,6 +117,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.cross_val = cross_val
         self.n_folds = n_folds
         self.n_inner_folds = n_inner_folds
+        self.random_state = random_state
 
     def _more_tags(self):
         """
@@ -331,7 +338,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         if self.cross_val is True:
             np.random.seed(1)
-            kf = KFold(n_splits=self.n_folds, shuffle=True)
+            kf = KFold(n_splits=self.n_folds, shuffle=True,
+                       random_state=self.random_state)
             # Global mean of the target, applied to unknown values
             global_mean = y.mean()
             split = 0
@@ -342,7 +350,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 for infold, oof in kf.split(X[:, j]):
                     inner_means_df = pd.DataFrame()
                     infold_mean = y[infold].mean()
-                    kf_inner = KFold(n_splits=self.n_inner_folds, shuffle=True)
+                    kf_inner = KFold(n_splits=self.n_inner_folds,
+                                     shuffle=True, random_state=self.random_state)
                     inner_split = 0
                     for infold_inner, oof_inner in kf_inner.split(X[:, j][infold]):
                         X_a = X[:, j][infold][infold_inner]
