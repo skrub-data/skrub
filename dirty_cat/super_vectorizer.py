@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 
 from warnings import warn
-from numpy.typing import ArrayLike
 from typing import Union, Optional, List
 
 from sklearn.base import BaseEstimator, clone
@@ -288,7 +287,7 @@ class SuperVectorizer(ColumnTransformer):
                     pass
         return X
 
-    def transform(self, X: ArrayLike) -> ArrayLike:
+    def transform(self, X):
         """Transform X by applying fitted transformers on each column,
         and concatenate the results.
 
@@ -332,7 +331,7 @@ class SuperVectorizer(ColumnTransformer):
 
         return super().transform(X)
 
-    def fit_transform(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> ArrayLike:
+    def fit_transform(self, X, y=None):
         """
         Fit all transformers, transform the data, and concatenate the results.
 
@@ -471,7 +470,7 @@ class SuperVectorizer(ColumnTransformer):
 
         return res
 
-    def get_feature_names_out(self, input_features: Optional[ArrayLike] = None) -> List[str]:
+    def get_feature_names_out(self, input_features=None) -> List[str]:
         """
         Returns clean feature names with format
         "<column_name>_<value>" if encoded by OneHotEncoder or alike,
@@ -521,7 +520,7 @@ class SuperVectorizer(ColumnTransformer):
 
         return all_trans_feature_names
     
-    def get_feature_names(self, input_features: Optional[ArrayLike] = None) -> List[str]:
+    def get_feature_names(self, input_features=None) -> List[str]:
         """ Deprecated, use "get_feature_names_out"
         """
         warn(

@@ -1,8 +1,6 @@
 import collections
 import numpy as np
 
-from numpy.typing import ArrayLike
-
 from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
@@ -86,7 +84,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def fit(self, X: ArrayLike, y: ArrayLike):
+    def fit(self, X, y):
         """Fit the TargetEncoder to X.
         Parameters
         ----------
@@ -189,7 +187,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
-    def transform(self, X: ArrayLike):
+    def transform(self, X):
         """Transform X using the specified encoding scheme.
 
         Parameters

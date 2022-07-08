@@ -4,7 +4,6 @@ import sklearn
 import pandas as pd
 
 from typing import List, Dict
-from numpy.typing import ArrayLike
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
@@ -121,7 +120,7 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
 
 
 def _test_possibilities(
-        X: ArrayLike,
+        X,
         expected_transformers_df: Dict[str, List[str]],
         expected_transformers_2: Dict[str, List[str]],
         expected_transformers_np_no_cast: Dict[str, List[int]],

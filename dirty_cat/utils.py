@@ -1,7 +1,6 @@
 import collections
 import numpy as np
 
-from numpy.typing import ArrayLike
 from sklearn.utils import check_array
 from typing import Tuple, Union, Any, Hashable
 
@@ -34,7 +33,7 @@ class LRUDict:
         return key in self.cache
 
 
-def check_input(X: ArrayLike) -> np.array:
+def check_input(X) -> np.array:
     """
     Check input with sklearn standards.
     Also converts X to a numpy array if not already.

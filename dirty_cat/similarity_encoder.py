@@ -17,7 +17,6 @@ import warnings
 import numpy as np
 
 from scipy import sparse
-from numpy.typing import ArrayLike
 from numpy.random import RandomState
 from joblib import Parallel, delayed
 from typing import List, Tuple, Literal, Optional, Union
@@ -80,7 +79,7 @@ def _ngram_similarity_one_sample_inplace(
     se_dict[unq_X[i]] = similarity.reshape(-1)
 
 
-def ngram_similarity(X: ArrayLike,
+def ngram_similarity(X,
                      cats: List[str],
                      ngram_range: Tuple[int, int],
                      hashing_dim: int,
@@ -145,12 +144,12 @@ def get_prototype_frequencies(prototypes: np.array):
     return uniques[sorted_indexes], counts[sorted_indexes]
 
 
-def get_kmeans_prototypes(X: ArrayLike,
+def get_kmeans_prototypes(X,
                           n_prototypes: int,
                           hashing_dim: int = 128,
                           ngram_range: Tuple[int, int] = (3, 3),
                           sparse: bool = False,
-                          sample_weight: Optional[ArrayLike] = None,
+                          sample_weight=None,
                           random_state: Optional[Union[int, RandomState]] = None):
     """
     Computes prototypes based on:
@@ -316,7 +315,7 @@ class SimilarityEncoder(OneHotEncoder):
         values, _ = get_prototype_frequencies(prototypes)
         return values[:self.n_prototypes]
 
-    def fit(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> "SimilarityEncoder":
+    def fit(self, X, y=None) -> "SimilarityEncoder":
         """
         Fit the SimilarityEncoder to X.
 
@@ -447,7 +446,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         return self
 
-    def transform(self, X: ArrayLike, fast: bool = True) -> ArrayLike:
+    def transform(self, X, fast: bool = True):
         """
         Transform X using specified encoding scheme.
 
@@ -583,7 +582,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         return np.nan_to_num(out, copy=False)
 
-    def fit_transform(self, X: ArrayLike, y: Optional[ArrayLike] = None, **fit_params):
+    def fit_transform(self, X, y=None, **fit_params):
         """
         Fit SimilarityEncoder to data, then transform it.
         Fits transformer to `X` and `y` with optional parameters

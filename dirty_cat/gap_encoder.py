@@ -20,7 +20,6 @@ import numpy as np
 import pandas as pd
 
 from scipy import sparse
-from numpy.typing import ArrayLike
 from numpy.random import RandomState
 from typing import Tuple, Optional, Union, Literal, Dict, List, Generator
 
@@ -97,7 +96,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
-    def _init_vars(self, X: ArrayLike) -> Tuple[np.array, np.array, np.array]:
+    def _init_vars(self, X) -> Tuple[np.array, np.array, np.array]:
         """
         Build the bag-of-n-grams representation V of X and initialize
         the topics W.
@@ -157,7 +156,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             self.rho_ = self.rho ** (self.batch_size / len(X))
         return unq_X, unq_V, lookup
 
-    def _get_H(self, X: ArrayLike) -> np.array:
+    def _get_H(self, X) -> np.array:
         """
         Return the bag-of-n-grams representation of X.
         """
@@ -166,7 +165,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             h_out[:] = self.H_dict_[x]
         return H_out
 
-    def _init_w(self, V: np.array, X: ArrayLike) -> Tuple[np.array, np.array, np.array]:
+    def _init_w(self, V: np.array, X) -> Tuple[np.array, np.array, np.array]:
         """
         Initialize the topics W.
         If self.init='k-means++', we use the init method of
@@ -227,7 +226,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         B = A.copy()
         return W, A, B
 
-    def fit(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> "GapEncoderColumn":
+    def fit(self, X, y=None) -> "GapEncoderColumn":
         """
         Fit the GapEncoder on batches of X.
 
@@ -332,7 +331,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         topic_labels = [prefix + ', '.join(label) for label in topic_labels]
         return topic_labels
 
-    def score(self, X: ArrayLike) -> float:
+    def score(self, X) -> float:
         """
         Returns the Kullback-Leibler divergence between the n-grams counts
         matrix V of X, and its non-negative factorization HW.
@@ -660,7 +659,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             max_iter_e_step=self.max_iter_e_step,
         )
 
-    def _handle_missing(self, X: ArrayLike):
+    def _handle_missing(self, X):
         """
         Imputes missing values with `` or raises an error
         Note: modifies the array in-place.
@@ -681,7 +680,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         return X
             
-    def fit(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> "GapEncoder":
+    def fit(self, X, y=None) -> "GapEncoder":
         """
         Fit the GapEncoder on batches of X.
 
@@ -709,7 +708,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             self.fitted_models_.append(col_enc.fit(X[:, k]))
         return self
 
-    def transform(self, X: ArrayLike) -> ArrayLike:
+    def transform(self, X):
         """
         Return the encoded vectors (activations) H of input strings in X.
         Given the learnt topics W, the activations H are tuned to fit V = HW.
@@ -739,7 +738,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         X_enc = np.hstack(X_enc)
         return X_enc
 
-    def partial_fit(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> "GapEncoder":
+    def partial_fit(self, X, y=None) -> "GapEncoder":
         """
         Partial fit of the GapEncoder on X.
         To be used in a online learning procedure where batches of data are
@@ -831,7 +830,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             )
         return self.get_feature_names_out(col_names, n_labels)
 
-    def score(self, X: ArrayLike) -> float:
+    def score(self, X) -> float:
         """
         Returns the sum over the columns of X of the Kullback-Leibler
         divergence between the n-grams counts matrix V of X, and its
@@ -932,13 +931,13 @@ def batch_lookup(lookup: np.array, n: int = 1,
         yield unq_indices, indices
 
 
-def get_kmeans_prototypes(X: ArrayLike,
+def get_kmeans_prototypes(X,
                           n_prototypes: int,
                           analyzer: Literal["word", "char", "char_wb"] = 'char',
                           hashing_dim: int = 128,
                           ngram_range: Tuple[int, int] = (2, 4),
                           sparse: bool = False,
-                          sample_weight: Optional[ArrayLike] = None,
+                          sample_weight=None,
                           random_state: Optional[Union[int, RandomState]] = None):
     """
     Computes prototypes based on:
