@@ -162,7 +162,7 @@ times['Default options'] = results['fit_time']
 #
 # The :code:`most_frequent` strategy selects the :code:`n` most frequent
 # values in a dirty categorical variable to reduce the dimensionality of the
-# problem and thus speed things up. \
+# problem and thus speed things up.
 # Here, we arbitrarily choose 100 as the number of prototypes we want to use.
 
 column_trans = ColumnTransformer(

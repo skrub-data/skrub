@@ -134,7 +134,7 @@ columns_names = df.columns
 # capture similarities between observations. We choose to use a |SE|.
 #
 # Two other columns are used to predict the output: ``DOSAGEFORMNAME`` and
-# ``ROUTENAME``. \
+# ``ROUTENAME``.
 # They are both categorical and can be encoded with a |OHE|.
 # We use a |ColumnTransformer| to stack both.
 # We can now choose a kernel method. Here, we'll use a |SVC| to fit
@@ -177,7 +177,7 @@ model = Pipeline(steps)
 #
 #    The :code:`y` labels are composed of 7 unique classes. However, the two
 #    classes ``HUMAN OTC DRUG`` and ``HUMAN PRESCRIPTION DRUG`` represent
-#    around 97% of the data. The other 5 classes are much rarer. \
+#    around 97% of the data. The other 5 classes are much rarer.
 #    Dealing with class imbalance is out of the scope of this example, so the
 #    models will be trained only on the two most common classes.
 #
@@ -259,7 +259,7 @@ X_test, y_test = get_X_y(skiprows=offset, nrows=test_set_size)
 # -------------------------------------
 #
 # Let's get an idea of model precision and performance depending on the number
-# of the samples used in the train set. \
+# of the samples used in the train set.
 # The |Pipeline| is trained over different training set sizes. For this,
 # :code:`X_train` and :code:`y_train` get sliced into subsets of increasing
 # size, while :code:`X_test` and :code:`y_test` do not change.
@@ -344,7 +344,7 @@ for n in train_set_sizes:
 # .. topic:: Online algorithms
 #
 #    An online algorithm [#online_ref]_ is an algorithm that treats its input
-#    piece by piece in a serial fashion. \
+#    piece by piece in a serial fashion.
 #    A famous example is the stochastic gradient descent [#sgd_ref]_,
 #    where an estimation of the objective function's gradient is computed
 #    on a batch of the data at each step.
@@ -423,8 +423,8 @@ sgd_classifier = SGDClassifier(
 
 
 ###############################################################################
-# We can now start the training by looping over batches one by one. \
-# Note that only one pass over the whole dataset is done. \
+# We can now start the training by looping over batches one by one.
+# Note that only one pass over the whole dataset is done.
 # It may be worth doing several passes, but for very large sample sizes,
 # the increase in test accuracy is likely to be marginal.
 batchsize = 1000
