@@ -1,12 +1,6 @@
 """
-
 Tests fetching.py (datasets fetching off OpenML.org).
-
 """
-
-# Author:
-# Lilian Boulard <lilian@boulard.fr>
-# https://github.com/LilianBoulard
 
 import pytest
 import shutil
@@ -98,7 +92,7 @@ def test_fetch_openml_dataset():
             # ``.gz`` files within in order to finish the test.
             pytest.skip(
                 'Exception: Skipping this test because we encountered an '
-                'issue probably due to an Internet connection problem.'
+                'issue probably related to an Internet connection problem. '
             )
             return
 

@@ -1,22 +1,25 @@
 import time
+import pytest
 import random
-from string import ascii_lowercase
 import numpy as np
 import pandas as pd
-import pytest
 
+from string import ascii_lowercase
 from sklearn.datasets import fetch_20newsgroups
-from dirty_cat import MinHashEncoder
 
-def test_MinHashEncoder(n_sample=70, minmax_hash=False):
+from dirty_cat import MinHashEncoder
+from dirty_cat.datasets import fetch_employee_salaries
+
+
+def test_MinHashEncoder(n_sample=70) -> None:
     X_txt = fetch_20newsgroups(subset='train')['data']
-    X = np.array(X_txt[:n_sample])[:,None]
+    X = np.array(X_txt[:n_sample])[:, None]
 
     for minmax_hash in [True, False]:
         for hashing in ['fast', 'murmur']:
 
             if minmax_hash and hashing == 'murmur':
-                pass # not implemented
+                pass  # not implemented
 
             # Test output shape
             encoder = MinHashEncoder(n_components=50, hashing=hashing)
@@ -40,23 +43,28 @@ def test_MinHashEncoder(n_sample=70, minmax_hash=False):
                 y_substring = encoder.transform(X_substring)
                 np.testing.assert_array_less(y - y_substring, 0.0001)
 
-def test_multiple_columns():
-    """ This test is intented to verify that fitting multiple columns
-        with the MinHashEncoder will not produce an error, and will 
-        encode the column independently """
+
+def test_multiple_columns() -> None:
+    """
+    This test aims at verifying that fitting multiple columns
+    with the MinHashEncoder will not produce an error, and will
+    encode the column independently.
+    """
     X = pd.DataFrame([('bird', 'parrot'),
                       ('bird', 'nightingale'),
                       ('mammal', 'monkey'),
                       ('mammal', np.nan)],
-                      columns=('class', 'type'))
+                     columns=('class', 'type'))
     X1 = X[['class']]
     X2 = X[['type']]
     fit1 = MinHashEncoder(n_components=30).fit_transform(X1)
     fit2 = MinHashEncoder(n_components=30).fit_transform(X2)
     fit = MinHashEncoder(n_components=30).fit_transform(X)
-    assert np.array_equal(np.array([fit[:, :30], fit[:, 30:60]]), np.array([fit1, fit2]))
+    assert np.array_equal(np.array([fit[:, :30], fit[:, 30:60]]),
+                          np.array([fit1, fit2]))
 
-def test_input_type():
+
+def test_input_type() -> None:
     # Numpy array
     X = np.array(['alice', 'bob'])[:,None]
     enc = MinHashEncoder(n_components=2)
@@ -66,28 +74,15 @@ def test_input_type():
     enc = MinHashEncoder(n_components=2)
     enc.fit_transform(X)
 
-def test_get_unique_ngrams():
-    string = 'test'
-    true_ngrams = {
-        (' ','t'), ('t','e'), ('e','s'), ('s', 't'),
-        ('t',' '), (' ','t','e'), ('t','e','s'),
-        ('e','s','t'), ('s','t',' '), (' ','t','e','s'),
-        ('t','e','s','t'), ('e','s','t',' ')}
-    ngram_range = (2,4)
-    enc = MinHashEncoder(n_components=2)
-    ngrams = enc.get_unique_ngrams(string, ngram_range)
-    assert ngrams == true_ngrams
 
-
-def profile_encoder(encoder, hashing='fast', minmax_hash=False):
-    # not an unit test
-
-    from dirty_cat.datasets import fetch_employee_salaries
+def profile_encoder(hashing='fast', minmax_hash=False) -> float:
+    # not a unit test
     employee_salaries = fetch_employee_salaries()
     df = employee_salaries.X
     X = df[["employee_position_title"]]
     t0 = time.time()
-    enc = encoder(n_components=50, hashing=hashing, minmax_hash=minmax_hash)
+    enc = MinHashEncoder(n_components=50, hashing=hashing,
+                         minmax_hash=minmax_hash)
     enc.fit(X)
     y = enc.transform(X)
     assert y.shape == (len(X), 50)
@@ -99,7 +94,7 @@ def profile_encoder(encoder, hashing='fast', minmax_hash=False):
     ['numpy', 'error', 'fast'],
     ['pandas', 'zero_impute', 'murmur'],
     ['numpy', 'zero_impute', 'fast']])
-def test_missing_values(input_type, missing, hashing):
+def test_missing_values(input_type, missing, hashing) -> None:
     X = ['Red',
          np.nan,
          'green',
@@ -114,7 +109,6 @@ def test_missing_values(input_type, missing, hashing):
     if input_type == 'numpy':
         X = np.array(X, dtype=object)[:,None]
     elif input_type == 'pandas':
-        pd = pytest.importorskip("pandas")
         X = pd.DataFrame(X)
 
     encoder = MinHashEncoder(n_components=n, hashing=hashing,
@@ -140,41 +134,40 @@ def test_missing_values(input_type, missing, hashing):
     return
 
 
-def test_cache_overflow():
+def test_cache_overflow() -> None:
     # Regression test for cache overflow resulting in -1s in encoding
     def get_random_string(length):
         letters = ascii_lowercase
-        result_str = ''.join(random.choice(letters) for i in range(length))
+        result_str = ''.join(random.choice(letters) for _ in range(length))
         return result_str
 
     encoder = MinHashEncoder(n_components=3)
     capacity = encoder._capacity
-    raw_data = [get_random_string(10) for x in range(capacity + 1)]
-    raw_data = np.array(raw_data)[:,None]
+    raw_data = [get_random_string(10) for _ in range(capacity + 1)]
+    raw_data = np.array(raw_data)[:, None]
     y = encoder.fit_transform(raw_data)
 
     assert len(y[y == -1.0]) == 0
 
 
 if __name__ == '__main__':
-    print('start test')
+    print('start test_MinHashEncoder')
     test_MinHashEncoder()
-    print('test passed')
+    print('passed')
     
-    print('start test')
+    print('start test_multiple_columns')
     test_multiple_columns()
-    print('multiple columns encoding test passed')
+    print('passed')
 
     for _ in range(3):
         print('time profile_encoder(MinHashEncoder, hashing=fast)')
-        print("{:.4} seconds".format(
-            profile_encoder(MinHashEncoder, hashing='fast')))
+        print(f"{profile_encoder(hashing='fast'):.4} seconds")
+
     for _ in range(3):
         print('time profile_encoder(MinHashEncoder, hashing=fast) with minmax')
-        print("{:.4} seconds".format(profile_encoder(MinHashEncoder,
-                                     hashing='fast', minmax_hash=True)))
+        print(f"{profile_encoder(hashing='fast', minmax_hash=True):.4} seconds")
+
     print('time profile_encoder(MinHashEncoder, hashing=murmur)')
-    print("{:.4} seconds".format(
-        profile_encoder(MinHashEncoder, hashing='murmur')))
+    print(f"{profile_encoder(hashing='murmur'):.4} seconds")
 
     print('Done')

@@ -3,34 +3,40 @@ import pytest
 import sklearn
 import pandas as pd
 
+from typing import List, Dict
+from numpy.typing import ArrayLike
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
-
 
 from dirty_cat import SuperVectorizer
 from dirty_cat import GapEncoder
 from dirty_cat.utils import Version
 
 
-def check_same_transformers(expected_transformers: dict, actual_transformers: list):
+def check_same_transformers(expected_transformers: dict,
+                            actual_transformers: list):
     # Construct the dict from the actual transformers
-    actual_transformers_dict = dict([(name, cols) for name, trans, cols in actual_transformers])
+    actual_transformers_dict = {name: cols
+                                for name, trans, cols in actual_transformers}
     assert actual_transformers_dict == expected_transformers
+
 
 def type_equality(expected_type, actual_type):
     """
-    Checks that the expected type is equal to the actual type, assuming object and str types
-    are equivalent (considered as categorical by the supervectorizer).
+    Checks that the expected type is equal to the actual type,
+    assuming object and str types are equivalent
+    (considered as categorical by the SuperVectorizer).
     """
-    if (isinstance(expected_type , object) or  isinstance(expected_type, str))\
+    if (isinstance(expected_type, object) or isinstance(expected_type, str))\
             and (isinstance(actual_type, object) or isinstance(actual_type, str)):
         return True
     else:
         return expected_type == actual_type
 
 
-def _get_clean_dataframe():
+def _get_clean_dataframe() -> pd.DataFrame:
     """
     Creates a simple DataFrame with various types of data,
     and without missing values.
@@ -45,11 +51,11 @@ def _get_clean_dataframe():
     })
 
 
-def _get_dirty_dataframe():
+def _get_dirty_dataframe() -> pd.DataFrame:
     """
     Creates a simple DataFrame with some missing values.
     We'll use different types of missing values (np.nan, pd.NA, None)
-    to see how robust the vectorizer is.
+    to test the robustness of the vectorizer.
     """
     return pd.DataFrame({
         'int': pd.Series([15, 56, pd.NA, 12, 44], dtype='Int64'),
@@ -60,7 +66,8 @@ def _get_dirty_dataframe():
         'cat2': pd.Series(['20K+', '40K+', '60K+', '30K+', np.nan], dtype='object'),
     })
 
-def _get_numpy_array():
+
+def _get_numpy_array() -> np.array:
     return np.array([["15", "56", pd.NA, "12", ""],
             ["?", "2.4", "6.2", "10.45", np.nan],
             ['public', np.nan, 'private', 'private', pd.NA],
@@ -68,12 +75,15 @@ def _get_numpy_array():
             [np.nan, 'yes', 'no', 'yes', 'no'],
             ['20K+', '40K+', '60K+', '30K+', np.nan]]).T
 
-def _get_list_of_lists():
+
+def _get_list_of_lists() -> list:
     return _get_numpy_array().tolist()
 
-def _get_datetimes_dataframe():
+
+def _get_datetimes_dataframe() -> pd.DataFrame:
     """
-    Creates a DataFrame with various date format, already converted or to be converted.
+    Creates a DataFrame with various date formats,
+    already converted or to be converted.
     """
     return pd.DataFrame({
         "pd_datetime": [
@@ -111,13 +121,13 @@ def _get_datetimes_dataframe():
 
 
 def _test_possibilities(
-        X,
-        expected_transformers_df,
-        expected_transformers_2,
-        expected_transformers_np_no_cast,
-        expected_transformers_series,
-        expected_transformers_plain,
-        expected_transformers_np_cast,
+        X: ArrayLike,
+        expected_transformers_df: Dict[str, List[str]],
+        expected_transformers_2: Dict[str, List[str]],
+        expected_transformers_np_no_cast: Dict[str, List[int]],
+        expected_transformers_series: Dict[str, List[str]],
+        expected_transformers_plain: Dict[str, List[str]],
+        expected_transformers_np_cast: Dict[str, List[int]],
 ):
     """
     Do a bunch of tests with the SuperVectorizer.
@@ -133,22 +143,26 @@ def _test_possibilities(
     )
     # Warning: order-dependant
     vectorizer_base.fit_transform(X)
-    check_same_transformers(expected_transformers_df, vectorizer_base.transformers)
+    check_same_transformers(expected_transformers_df,
+                            vectorizer_base.transformers)
 
     # Test with higher cardinality threshold and no numeric transformer
     vectorizer_default = SuperVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
-    check_same_transformers(expected_transformers_2, vectorizer_default.transformers)
+    check_same_transformers(expected_transformers_2,
+                            vectorizer_default.transformers)
 
     # Test with a numpy array
     arr = X.to_numpy()
     # Instead of the columns names, we'll have the column indices.
     vectorizer_base.fit_transform(arr)
-    check_same_transformers(expected_transformers_np_no_cast, vectorizer_base.transformers)
+    check_same_transformers(expected_transformers_np_no_cast,
+                            vectorizer_base.transformers)
 
     # Test with pandas series
     vectorizer_base.fit_transform(X['cat1'])
-    check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
+    check_same_transformers(expected_transformers_series,
+                            vectorizer_base.transformers)
 
     # Test casting values
     vectorizer_cast = SuperVectorizer(
@@ -160,10 +174,12 @@ def _test_possibilities(
     X_str = X.astype('object')
     # With pandas
     vectorizer_cast.fit_transform(X_str)
-    check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers)
+    check_same_transformers(expected_transformers_plain,
+                            vectorizer_cast.transformers)
     # With numpy
     vectorizer_cast.fit_transform(X_str.to_numpy())
-    check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
+    check_same_transformers(expected_transformers_np_cast,
+                            vectorizer_cast.transformers)
 
 
 def test_with_clean_data():
@@ -210,7 +226,7 @@ def test_with_clean_data():
     )
 
 
-def test_with_dirty_data():
+def test_with_dirty_data() -> None:
     """
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a dataset containing missing values.
@@ -255,7 +271,7 @@ def test_with_dirty_data():
     )
 
 
-def test_auto_cast():
+def test_auto_cast() -> None:
     """
     Tests that the SuperVectorizer automatic type detection works as expected.
     """
@@ -289,7 +305,8 @@ def test_auto_cast():
     X = _get_clean_dataframe()
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:
-        assert type_equality(expected_types_clean_dataframe[col], X_trans[col].dtype)
+        assert type_equality(expected_types_clean_dataframe[col],
+                             X_trans[col].dtype)
 
     # Test that missing values don't prevent type detection
     expected_types_dirty_dataframe = {
@@ -304,11 +321,14 @@ def test_auto_cast():
     X = _get_dirty_dataframe()
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:
-        assert type_equality(expected_types_dirty_dataframe[col], X_trans[col].dtype)
+        assert type_equality(expected_types_dirty_dataframe[col],
+                             X_trans[col].dtype)
+
 
 def test_with_arrays():
     """
-    Check that the SuperVectorizer works if we input a list of lists or a numpy array.
+    Check that the SuperVectorizer works if we input
+    a list of lists or a numpy array.
     """
     expected_transformers = {
         'numeric': [0, 1],
@@ -331,44 +351,46 @@ def test_with_arrays():
     check_same_transformers(expected_transformers, vectorizer.transformers)
 
 
-def test_get_feature_names_out():
+def test_get_feature_names_out() -> None:
     X = _get_clean_dataframe()
 
-    vectorizer_w_pass = SuperVectorizer(remainder='passthrough')
-    vectorizer_w_pass.fit(X)
+    vec_w_pass = SuperVectorizer(remainder='passthrough')
+    vec_w_pass.fit(X)
 
     if Version(sklearn.__version__) < Version('0.23'):
         with pytest.raises(NotImplementedError):
             # Prior to sklearn 0.23, ColumnTransformer.get_feature_names
             # with "passthrough" transformer(s) raises a NotImplementedError
-            assert vectorizer_w_pass.get_feature_names_out()
+            assert vec_w_pass.get_feature_names_out()
     else:
-        expected_feature_names_pass = [  # Order matters. If it doesn't, convert to set.
+        # In this test, order matters. If it doesn't, convert to set.
+        expected_feature_names_pass = [
             'str1_private', 'str1_public',
             'str2_chef', 'str2_lawyer', 'str2_manager', 'str2_officer', 'str2_teacher',
             'cat1_no', 'cat1_yes', 'cat2_20K+', 'cat2_30K+', 'cat2_40K+', 'cat2_50K+', 'cat2_60K+',
             'int', 'float'
         ]
         if Version(sklearn.__version__) < Version('1.0'):
-            assert vectorizer_w_pass.get_feature_names() == expected_feature_names_pass
+            assert vec_w_pass.get_feature_names() == expected_feature_names_pass
         else:
-            assert vectorizer_w_pass.get_feature_names_out() == expected_feature_names_pass
+            assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
 
-    vectorizer_w_drop = SuperVectorizer(remainder='drop')
-    vectorizer_w_drop.fit(X)
+    vec_w_drop = SuperVectorizer(remainder='drop')
+    vec_w_drop.fit(X)
 
-    expected_feature_names_drop = [  # Order matters. If it doesn't, convert to set.
+    # In this test, order matters. If it doesn't, convert to set.
+    expected_feature_names_drop = [
         'str1_private', 'str1_public',
         'str2_chef', 'str2_lawyer', 'str2_manager', 'str2_officer', 'str2_teacher',
         'cat1_no', 'cat1_yes', 'cat2_20K+', 'cat2_30K+', 'cat2_40K+', 'cat2_50K+', 'cat2_60K+'
     ]
     if Version(sklearn.__version__) < Version('1.0'):
-        assert vectorizer_w_drop.get_feature_names() == expected_feature_names_drop
+        assert vec_w_drop.get_feature_names() == expected_feature_names_drop
     else:
-        assert vectorizer_w_drop.get_feature_names_out() == expected_feature_names_drop
+        assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
 
 
-def test_fit():
+def test_fit() -> None:
     # Simply checks sklearn's `check_is_fitted` function raises an error if
     # the SuperVectorizer is instantiated but not fitted.
     # See GH#193
@@ -380,7 +402,7 @@ def test_fit():
             assert check_is_fitted(sup_vec, attributes=dir(sup_vec))
 
 
-def test_transform():
+def test_transform() -> None:
     X = _get_clean_dataframe()
     sup_vec = SuperVectorizer()
     sup_vec.fit(X)
@@ -390,7 +412,7 @@ def test_transform():
     assert (x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
 
 
-def test_fit_transform_equiv():
+def test_fit_transform_equiv() -> None:
     """
     We will test the equivalence between using `.fit_transform(X)`
     and `.fit(X).transform(X).`

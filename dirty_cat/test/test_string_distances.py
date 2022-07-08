@@ -10,6 +10,19 @@ except ImportError:
 from dirty_cat import string_distances
 
 
+def test_get_unique_ngrams():
+    string = 'test'
+    true_ngrams = {
+        (' ', 't'), ('t', 'e'), ('e', 's'), ('s', 't'),
+        ('t', ' '), (' ', 't', 'e'), ('t', 'e', 's'),
+        ('e', 's', 't'), ('s', 't', ' '), (' ', 't', 'e', 's'),
+        ('t', 'e', 's', 't'), ('e', 's', 't', ' ')
+    }
+    ngram_range = (2, 4)
+    ngrams = string_distances.get_unique_ngrams(string, ngram_range)
+    assert ngrams == true_ngrams
+
+
 def _random_string_pairs(n_pairs=50, seed=1):
     rng = np.random.RandomState(seed)
     characters = list(map(chr, range(10000)))

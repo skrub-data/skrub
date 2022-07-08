@@ -9,7 +9,7 @@ from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
 
-def test_specifying_categories():
+def test_specifying_categories() -> None:
     # When creating a new SimilarityEncoder:
     # - if categories = 'auto', the categories are the sorted, unique training
     # set observations (for each column)
@@ -36,7 +36,7 @@ def test_specifying_categories():
     assert np.allclose(feature_matrix_auto_cat, feature_matrix_with_cat)
 
 
-def test_fast_ngram_similarity():
+def test_fast_ngram_similarity() -> None:
     vocabulary = [['bar', 'foo']]
     observations = [['foo'], ['baz']]
 
@@ -81,7 +81,7 @@ def _test_missing_values(input_type, missing):
         return
 
 
-def _test_missing_values_transform(input_type, missing):
+def _test_missing_values_transform(input_type, missing) -> None:
     observations = [['a', 'b'], ['b', 'a'], ['b', 'b'],
                     ['a', 'c'], ['c', 'a']]
     test_observations = [['a', 'b'], ['b', 'a'], ['b', np.nan],
@@ -111,7 +111,7 @@ def _test_missing_values_transform(input_type, missing):
         assert np.allclose(encoded, ans)
 
 
-def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
+def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None) -> None:
     if n_prototypes is None:
         X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
@@ -173,7 +173,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
         numpy.testing.assert_almost_equal(encoder, ans)
 
 
-def test_similarity_encoder():
+def test_similarity_encoder() -> None:
     categories = ['auto', 'most_frequent', 'k-means']
     for category in categories:
         if category == 'auto':
@@ -213,13 +213,13 @@ def test_similarity_encoder():
             _test_missing_values_transform(input_type, missing)
 
 
-def test_kmeans_protoypes():
+def test_kmeans_protoypes() -> None:
     X_test = np.array(['cbbba', 'baaac', 'accc'])
     proto = get_kmeans_prototypes(X_test, 3)
     assert np.array_equal(np.sort(proto), np.sort(X_test))
 
 
-def test_reproducibility():
+def test_reproducibility() -> None:
     sim_enc = similarity_encoder.SimilarityEncoder(categories='k-means', n_prototypes=10, random_state=435)
     X = np.array([' %s ' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     prototypes = sim_enc.fit(X).categories_[0]
@@ -227,7 +227,7 @@ def test_reproducibility():
         assert (np.array_equal(prototypes, sim_enc.fit(X).categories_[0]))
 
 
-def test_get_features():
+def test_get_features() -> None:
     # See https://github.com/dirty-cat/dirty_cat/issues/168
     sim_enc = similarity_encoder.SimilarityEncoder(random_state=435)
     X = np.array(['%s' % chr(i) for i in range(32, 127)]).reshape((-1, 1))

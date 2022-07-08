@@ -92,25 +92,32 @@ def test_target_encoder():
     encoder.fit(X, y)
 
     Ey_ = {0: 4/8, 1: 3/8, 2: 1/8}
-    Eyx_ = {0: {}, 1: {}, 2: {}}
-    Eyx_[0] = {'color': {'Red': 0,
-                         'red': 1,
-                         'green': 1/3,
-                         'blue': .5},
-               'gender': {'male': .5,
-                          'female': .5}}
-    Eyx_[1] = {'color': {'Red': 1,
-                         'red': 0,
-                         'green': 1/3,
-                         'blue': .5},
-               'gender': {'male': .5,
-                          'female': .25}}
-    Eyx_[2] = {'color': {'Red': 0,
-                         'red': 0,
-                         'green': 1/3,
-                         'blue': 0},
-               'gender': {'male': 0,
-                          'female': .25}}
+    Eyx_ = {
+        0: {
+            'color': {'Red': 0,
+                      'red': 1,
+                      'green': 1 / 3,
+                      'blue': .5},
+            'gender': {'male': .5,
+                       'female': .5},
+        },
+        1: {
+            'color': {'Red': 1,
+                      'red': 0,
+                      'green': 1 / 3,
+                      'blue': .5},
+            'gender': {'male': .5,
+                       'female': .25},
+        },
+        2: {
+            'color': {'Red': 0,
+                      'red': 0,
+                      'green': 1 / 3,
+                      'blue': 0},
+            'gender': {'male': 0,
+                       'female': .25},
+        },
+    }
     assert np.array_equal(np.unique(y), encoder.classes_)
     for k in [0, 1, 2]:
         assert Ey_[k] == encoder.Ey_[k]
@@ -128,15 +135,12 @@ def test_target_encoder():
 
     ans_dict = {0: {}, 1: {}, 2: {}}
     for k in [0, 1, 2]:
-        ans_dict[k] = {var:
-                       {cat:
-                        Eyx_[k][var][cat] *
-                        lambda_(count_[var][cat], n/len(count_[var])) +
-                        Ey_[k] *
-                        (1 - lambda_(count_[var][cat], n/len(count_[var])))
-                        for cat in Eyx_[k][var]}
-                       for var in Eyx_[k]
-                       }
+        ans_dict[k] = {
+            var: {
+                cat: Eyx_[k][var][cat] * lambda_(count_[var][cat], n/len(count_[var])) + Ey_[k] * (1 - lambda_(count_[var][cat], n/len(count_[var])))
+                for cat in Eyx_[k][var]}
+            for var in Eyx_[k]
+        }
 
     ans = np.zeros((n, 2*3))
     Xtest1 = np.array(['Red',

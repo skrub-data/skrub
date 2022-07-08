@@ -4,16 +4,20 @@ import pytest
 import pandas as pd
 
 from sklearn.datasets import fetch_20newsgroups
+
+from dirty_cat.datasets import fetch_employee_salaries
 from dirty_cat import GapEncoder
 
-@pytest.mark.parametrize("init1, analyzer1, analyzer2",[
+
+@pytest.mark.parametrize("init1, analyzer1, analyzer2", [
     ('k-means++', 'char', 'word'),
     ('random', 'char', 'word'),
     ('k-means', 'char', 'word')
 ])
-def test_analyzer(init1, analyzer1, analyzer2):
-    """" Test if the output is different when the analyzer is 'word' or 'char'.
-        If it is, no error ir raised. 
+def test_analyzer(init1, analyzer1, analyzer2) -> None:
+    """
+    Test if the output is different when the analyzer is 'word' or 'char'.
+    If it is, no error ir raised.
     """
     add_words = False
     n_samples = 70
@@ -36,15 +40,17 @@ def test_analyzer(init1, analyzer1, analyzer2):
     encoder.fit(X)
     y2 = encoder.transform(X)
     
-    # Test inequality btw analyzer word and char ouput:
-    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, y, y2)
+    # Test inequality btw analyzer word and char output:
+    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal,
+                             y, y2)
+
 
 @pytest.mark.parametrize("hashing, init, analyzer, add_words", [
     (False, 'k-means++', 'word', True),
     (True, 'random', 'char', False),
     (True, 'k-means', 'char_wb', True)
 ])
-def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
+def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70) -> None:
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X = np.array([X_txt, X_txt]).T
     n_components = 10
@@ -73,7 +79,7 @@ def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70):
     np.testing.assert_array_equal(y, y2)
 
 
-def test_input_type():
+def test_input_type() -> None:
     # Numpy array with one column
     X = np.array([['alice'], ['bob']])
     enc = GapEncoder(n_components=2, random_state=42)
@@ -95,10 +101,9 @@ def test_input_type():
     X_enc_df = enc.fit_transform(df)
     # Check if the encoded vectors are the same
     np.testing.assert_array_equal(X_enc_array, X_enc_df)
-    return
 
 
-def test_partial_fit(n_samples=70):
+def test_partial_fit(n_samples=70) -> None:
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X = np.array([X_txt, X_txt]).T
     # Gap encoder with fit on one batch
@@ -110,10 +115,9 @@ def test_partial_fit(n_samples=70):
     X_enc_partial = enc.transform(X)
     # Check if the encoded vectors are the same
     np.testing.assert_almost_equal(X_enc, X_enc_partial)
-    return
 
 
-def test_get_feature_names_out(n_samples=70):
+def test_get_feature_names_out(n_samples=70) -> None:
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X = np.array([X_txt, X_txt]).T
     enc = GapEncoder(random_state=42)
@@ -139,7 +143,6 @@ def test_overflow_error():
     enc = GapEncoder(n_components=2, batch_size=1, min_iter=1, max_iter=1,
                      random_state=0)
     enc.fit(X)
-    return
 
 
 def test_score(n_samples=70):
@@ -153,7 +156,6 @@ def test_score(n_samples=70):
     score_X2 = enc.score(X2)
     # Check that two identical columns give the same score
     assert score_X1 * 2 == score_X2
-    return
 
 
 @pytest.mark.parametrize("missing", ['zero_impute', 'error', 'aaa'])
@@ -163,26 +165,26 @@ def test_missing_values(missing):
     observations = np.array(observations, dtype=object)
     enc = GapEncoder(handle_missing=missing, n_components=3)
     if missing == 'error':
-        with pytest.raises(ValueError, match=r'Input data contains missing values.'):
+        with pytest.raises(ValueError,
+                           match='Input data contains missing values'):
             enc.fit_transform(observations)
     elif missing == 'zero_impute':
         enc.fit_transform(observations)
         enc.partial_fit(observations)
     else:
-        with pytest.raises(ValueError, match=r"handle_missing should be either "
-                                             r"'error' or 'zero_impute', got 'aaa'"):
+        with pytest.raises(ValueError,
+                           match=r"handle_missing should be either "
+                                 r"'error' or 'zero_impute', got 'aaa'"):
             enc.fit_transform(observations)
 
 
-def profile_encoder(Encoder, init):
-    # not an unit test
-
-    from dirty_cat.datasets import fetch_employee_salaries
+def profile_encoder(init):
+    # not a unit test
     info = fetch_employee_salaries()
     data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
     X = np.array(data['employee_position_title'])[:, None]
     t0 = time.time()
-    encoder = Encoder(n_components=50, init=init)
+    encoder = GapEncoder(n_components=50, init=init)
     encoder.fit(X)
     y = encoder.transform(X)
     assert y.shape == (len(X), 50)
@@ -194,33 +196,38 @@ if __name__ == '__main__':
     
     print('test_analyzer')
     test_analyzer('k-means++', 'char_wb', 'word')
-    print('test_analyzer passed')
+    print('passed')
+
     print('start test_gap_encoder')
-    test_gap_encoder(True, 'k-means++', 'char', False)
-    print('test_gap_encoder passed')
+    test_gap_encoder(hashing=True, init='k-means++', analyzer='char', add_words=False)
+    print('passed')
+
     print('start test_input_type')
     test_input_type()
-    print('test_input_type passed')
+    print('passed')
+
     print('start test_partial_fit')
     test_partial_fit()
-    print('test_partial_fit passed')
+    print('passed')
+
     print('start test_get_feature_names_out')
     test_get_feature_names_out()
-    print('test_get_feature_names_out passed')
+    print('passed')
+
     print('start test_overflow_error')
     test_overflow_error()
-    print('test_overflow_error passed')
+    print('passed')
+
     print('start test_score')
     test_score()
     print('test_score passed')
     
     for _ in range(3):
         print('time profile_encoder(GapEncoder, init="k-means++")')
-        print("{:.4} seconds".format(profile_encoder(
-            GapEncoder, init='k-means++')))
+        print(f"{profile_encoder('k-means++'):.4} seconds")
+
     for _ in range(3):
         print('time profile_encoder(GapEncoder, init="k-means")')
-        print("{:.4} seconds".format(profile_encoder(
-            GapEncoder, init='k-means')))
+        print(f"{profile_encoder('k-means'):.4} seconds")
     
     print('Done')
