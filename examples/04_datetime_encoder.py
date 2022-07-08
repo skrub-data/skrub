@@ -71,10 +71,11 @@ X_
 # The DatetimeEncoder is used by default in the SuperVectorizer, which
 # automatically detects datetime features.
 from dirty_cat import SuperVectorizer
+from pprint import pprint
 
 sup_vec = SuperVectorizer()
 sup_vec.fit_transform(X)
-sup_vec.get_feature_names_out()
+pprint(sup_vec.get_feature_names_out())
 
 ###############################################################################
 # If we want the day of the week, we can just replace SuperVectorizer's default
@@ -85,8 +86,9 @@ sup_vec.fit_transform(X)
 sup_vec.get_feature_names_out()
 
 ###############################################################################
-# We can see that the SuperVectorizer is indeed using a DatetimeEncoder for the datetime features.
-sup_vec.transformers_
+# We can see that the SuperVectorizer is indeed using
+# a DatetimeEncoder for the datetime features.
+pprint(sup_vec.transformers_)
 
 ###############################################################################
 # Predictions with date features

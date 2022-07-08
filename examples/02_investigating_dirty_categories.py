@@ -23,30 +23,28 @@ print(data.head(n=5))
 print(data.nunique())
 
 #########################################################################
-# As we can see, some entries have many different unique values:
+# As we can see, some entries have many unique values:
 print(data['employee_position_title'].value_counts().sort_index())
 
 #########################################################################
 # These different entries are often variations on the same entities:
-# there are 3 kinds of Accountant/Auditor.
+# for example, there are 3 kinds of Accountant/Auditor.
 #
 # Such variations will break traditional categorical encoding methods:
 #
 # * Using simple one-hot encoding will create orthogonal features,
 #   whereas it is clear that those 3 terms have a lot in common.
 #
-# * If we wanted to use word embedding methods such as word2vec,
+# * If we wanted to use word embedding methods such as Word2vec,
 #   we would have to go through a cleaning phase: those algorithms
 #   are not trained to work on data such as 'Accountant/Auditor I'.
-#   However, this can be error prone and time consuming.
+#   However, this can be error-prone and time-consuming.
 #
 # The problem becomes easier if we can capture relationships between
 # entries.
 #
 # To simplify understanding, we will focus on the column describing the
 # employee's position title:
-# data
-# values = data[['employee_position_title', 'gender']] + employee_salaries.y
 
 values = data[['employee_position_title', 'gender']]
 values.insert(0, 'current_annual_salary', employee_salaries.y)
@@ -55,9 +53,10 @@ values.insert(0, 'current_annual_salary', employee_salaries.y)
 # String similarity between entries
 # -------------------------------------------------
 #
-# That's where our encoders get into play. In order to robustly
-# embed dirty semantic data, the SimilarityEncoder creates a similarity
-# matrix based on the 3-gram structure of the data.
+# That's where our encoders get into play.
+# In order to robustly embed dirty semantic data, the SimilarityEncoder
+# creates a similarity matrix based on the 3-gram structure of the data.
+
 sorted_values = values['employee_position_title'].sort_values().unique()
 
 from dirty_cat import SimilarityEncoder
@@ -70,24 +69,26 @@ transformed_values = similarity_encoder.fit_transform(
 # Plotting the new representation using multi-dimensional scaling
 # ................................................................
 #
-# Let's now plot a couple points at random using a low-dimensional representation
-# to get an intuition of what the similarity encoder is doing:
+# Let's now plot a couple of points at random using a low-dimensional
+# representation to get an intuition of what the similarity encoder is doing:
+
 from sklearn.manifold import MDS
 
 mds = MDS(dissimilarity='precomputed', n_init=10, random_state=42)
-two_dim_data = mds.fit_transform(
-    1 - transformed_values)  # transformed values lie
-# in the 0-1 range, so 1-transformed_value yields a positive dissimilarity matrix
+two_dim_data = mds.fit_transform(1 - transformed_values)
+# transformed values lie in the 0-1 range,
+# so 1-transformed_value yields a positive dissimilarity matrix
 print(two_dim_data.shape)
 print(sorted_values.shape)
 
 #########################################################################
 # We first quickly fit a KNN so that the plots does not get too busy:
+
 import numpy as np
+from sklearn.neighbors import NearestNeighbors
 
 n_points = 5
 np.random.seed(42)
-from sklearn.neighbors import NearestNeighbors
 
 random_points = np.random.choice(len(similarity_encoder.categories_[0]),
                                  n_points, replace=False)
@@ -114,6 +115,7 @@ ax.set_title(
 # ................................
 #
 # We can also plot the distance matrix for those observations:
+
 f2, ax2 = plt.subplots(figsize=(6, 6))
 cax2 = ax2.matshow(transformed_values[indices, :][:, indices])
 ax2.set_yticks(np.arange(len(indices)))
@@ -140,6 +142,7 @@ f2.tight_layout()
 #
 # A typical data-science workflow uses one-hot encoding to represent
 # categories.
+
 from sklearn.preprocessing import OneHotEncoder
 
 # encoding simply a subset of the observations
