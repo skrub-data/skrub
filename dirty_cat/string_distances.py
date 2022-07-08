@@ -12,6 +12,7 @@ try:
 except ImportError:
     _LEVENSHTEIN_AVAILABLE = False
 
+from typing import Tuple
 from collections import Counter
 # Levenstein, adapted from
 # https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#Python
@@ -215,13 +216,30 @@ else:
     jaro = _jaro_winkler
 
 
-def get_unique_ngrams(string, n):
-    """ Return the set of different tri-grams in a string
+def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
+    """
+    Return the set of unique n-grams of a string.
+
+    Parameters
+    ----------
+    string : str
+        The string to split in n-grams.
+    ngram_range : tuple (min_n, max_n)
+    The lower and upper boundary of the range of n-values for different
+    n-grams to be extracted. All values of n such that min_n <= n <= max_n.
+
+    Returns
+    -------
+    set
+        The set of unique n-grams of the string.
     """
     spaces = ' '  # * (n // 2 + n % 2)
     string = spaces + " ".join(string.lower().split()) + spaces
-    string_list = [string[i:] for i in range(n)]
-    return set(zip(*string_list))
+    ngram_set = set()
+    for n in range(ngram_range[0], ngram_range[1] + 1):
+        string_list = [string[i:] for i in range(n)]
+        ngram_set |= set(zip(*string_list))
+    return ngram_set
 
 
 def get_ngrams(string, n):

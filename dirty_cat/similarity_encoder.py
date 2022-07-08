@@ -12,11 +12,16 @@ The principle is as follows:
        be automatically sampled from the input data (most frequent categories,
        KMeans) or provided by the user.
 """
-import warnings
 
+import warnings
 import numpy as np
-from joblib import Parallel, delayed
+
 from scipy import sparse
+from numpy.typing import ArrayLike
+from numpy.random import RandomState
+from joblib import Parallel, delayed
+from typing import List, Tuple, Literal, Optional, Union
+
 import sklearn
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
@@ -31,8 +36,14 @@ from .string_distances import get_ngram_count, preprocess
 
 
 def _ngram_similarity_one_sample_inplace(
-        x_count_vector, vocabulary_count_matrix, str_x,
-        vocabulary_ngram_counts, se_dict, unq_X, i, ngram_range):
+        x_count_vector: np.array,
+        vocabulary_count_matrix: np.array,
+        str_x: str,
+        vocabulary_ngram_counts: np.array,
+        se_dict: dict,
+        unq_X: np.array,
+        i: int,
+        ngram_range: Tuple[int, int]):
     """Update inplace a dict of similarities between a string and a vocabulary
 
 
@@ -69,10 +80,14 @@ def _ngram_similarity_one_sample_inplace(
     se_dict[unq_X[i]] = similarity.reshape(-1)
 
 
-def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
+def ngram_similarity(X: ArrayLike,
+                     cats: List[str],
+                     ngram_range: Tuple[int, int],
+                     hashing_dim: int,
+                     dtype: type = np.float64):
     """
     Similarity encoding for dirty categorical variables:
-        Given to arrays of strings, returns the
+        Given two arrays of strings, returns the
         similarity encoding matrix of size
         len(X) x len(cats)
 
@@ -119,7 +134,7 @@ def ngram_similarity(X, cats, ngram_range, hashing_dim, dtype=np.float64):
     return np.nan_to_num(out, copy=False)
 
 
-def get_prototype_frequencies(prototypes):
+def get_prototype_frequencies(prototypes: np.array):
     """
     Computes the frequencies of the values contained in prototypes
     Reverse sorts the array by the frequency
@@ -130,9 +145,13 @@ def get_prototype_frequencies(prototypes):
     return uniques[sorted_indexes], counts[sorted_indexes]
 
 
-def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
-                          ngram_range=(3, 3), sparse=False, sample_weight=None,
-                          random_state=None):
+def get_kmeans_prototypes(X: ArrayLike,
+                          n_prototypes: int,
+                          hashing_dim: int = 128,
+                          ngram_range: Tuple[int, int] = (3, 3),
+                          sparse: bool = False,
+                          sample_weight: Optional[ArrayLike] = None,
+                          random_state: Optional[int, RandomState] = None):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
@@ -205,8 +224,8 @@ class SimilarityEncoder(OneHotEncoder):
     dtype : number type, default np.float64
         Desired dtype of output.
     handle_unknown : 'error' or 'ignore' (default)
-        Whether to raise an error or ignore if a unknown categorical feature is
-        present during transform (default is to ignore). When this parameter
+        Whether to raise an error or ignore if an unknown categorical feature
+        is present during transform (default is to ignore). When this parameter
         is set to 'ignore' and an unknown category is encountered during
         transform, the resulting encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
@@ -223,7 +242,7 @@ class SimilarityEncoder(OneHotEncoder):
         HashingVectorizer with a number of features equal to `hashing_dim`.
     n_prototypes: number of prototype we want to use.
         Useful when `most_frequent` or `k-means` is used.
-        Must be a positive non null integer.
+        Must be a positive non-null integer.
     random_state: either an int used as a seed, a RandomState instance or None.
         Useful when `k-means` strategy is used.
     n_jobs: int, optional
@@ -236,7 +255,7 @@ class SimilarityEncoder(OneHotEncoder):
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
     _infrequent_enabled: bool, default=False
-        Avoid taking into account the existance of infrequent categories.
+        Avoid taking into account the existence of infrequent categories.
 
     References
     ----------
@@ -246,13 +265,19 @@ class SimilarityEncoder(OneHotEncoder):
     <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kegl. 2018
     (accepted for publication at: Machine Learning journal, Springer).
 
-
     """
 
-    def __init__(self, similarity='ngram', ngram_range=(2, 4),
-                 categories='auto', dtype=np.float64,
-                 handle_unknown='ignore', handle_missing='', hashing_dim=None,
-                 n_prototypes=None, random_state=None, n_jobs=None):
+    def __init__(self,
+                 similarity: str = 'ngram',
+                 ngram_range: Tuple[int, int] = (2, 4),
+                 categories: Union[Literal["auto", "k-means", "most_frequent"], List[List[str]]] = 'auto',
+                 dtype: type = np.float64,
+                 handle_unknown: Literal["error", "ignore"] = 'ignore',
+                 handle_missing: Literal["error", ""] = '',
+                 hashing_dim: Optional[int] = None,
+                 n_prototypes: Optional[int] = None,
+                 random_state: Optional[Union[int, RandomState]] = None,
+                 n_jobs: Optional[int] = None):
         super().__init__()
         self.categories = categories
         self.dtype = dtype
@@ -277,10 +302,13 @@ class SimilarityEncoder(OneHotEncoder):
                 'n_prototypes parameter ignored with category type \'auto\'')
 
     def get_most_frequent(self, prototypes):
-        """ Get the most frequent category prototypes
+        """
+        Get the most frequent category prototypes.
+
         Parameters
         ----------
         prototypes : the list of values for a category variable
+
         Returns
         -------
         The n_prototypes most frequent values for a category variable
@@ -288,7 +316,7 @@ class SimilarityEncoder(OneHotEncoder):
         values, _ = get_prototype_frequencies(prototypes)
         return values[:self.n_prototypes]
 
-    def fit(self, X, y=None):
+    def fit(self, X: ArrayLike, y: Optional[ArrayLike] = None) -> "SimilarityEncoder":
         """
         Fit the SimilarityEncoder to X.
 
@@ -296,21 +324,29 @@ class SimilarityEncoder(OneHotEncoder):
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to determine the categories of each feature.
+
+        y: None
+            Unused, only here for compatibility.
+
         Returns
         -------
         self
+            The fitted SimilarityEncoder instance
+
         """
 
         if self.handle_missing not in ['error', '']:
-            template = ("handle_missing should be either 'error' or "
-                        "'', got %s")
-            raise ValueError(template % self.handle_missing)
+            raise ValueError(
+                f"Got handle_missing={self.handle_missing}, but expected "
+                f"any of {{'error', ''}}. "
+            )
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
-                msg = ("Found missing values in input data; set "
-                       "handle_missing='' to encode with missing values")
-                raise ValueError(msg)
-            if self.handle_missing != 'error':
+                raise ValueError(
+                    "Found missing values in input data ; set "
+                    "handle_missing='' to encode with missing values. "
+                )
+            else:
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, 'dtype') and isinstance(X, list):
             X = np.asarray(X, dtype=object)
@@ -319,31 +355,35 @@ class SimilarityEncoder(OneHotEncoder):
             mask = _object_dtype_isnan(X)
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data; set "
-                           "handle_missing='' to encode with missing values")
-                    raise ValueError(msg)
-                if self.handle_missing != 'error':
+                    raise ValueError(
+                        "Found missing values in input data ; set "
+                        "handle_missing='' to encode with missing values. "
+                    )
+                else:
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
         self.n_features_in_ = n_features
 
         if self.handle_unknown not in ['error', 'ignore']:
-            template = ("handle_unknown should be either 'error' or "
-                        "'ignore', got %s")
-            raise ValueError(template % self.handle_unknown)
+            raise ValueError(
+                f"Got handle_unknown={self.handle_unknown!r}, but expected "
+                f"any of {{'error', 'ignore'}}. "
+            )
 
         if ((self.hashing_dim is not None) and
                 (not isinstance(self.hashing_dim, int))):
-            raise ValueError("value '%r' was specified for hashing_dim, "
-                             "which has invalid type, expected None or "
-                             "int." % self.hashing_dim)
+            raise ValueError(
+                f"Got hashing_dim={self.hashing_dim!r}, which has an invalid "
+                f"type ({type(self.hashing_dim)}), expected None or int. "
+            )
 
         if self.categories not in ['auto', 'most_frequent', 'k-means']:
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
-                    raise ValueError("Unsorted categories are not yet "
-                                     "supported")
+                    raise ValueError(
+                        "Unsorted categories are not yet supported. "
+                    )
 
         self.categories_ = list()
         self.random_state_ = check_random_state(self.random_state)
@@ -365,9 +405,10 @@ class SimilarityEncoder(OneHotEncoder):
                     valid_mask = np.in1d(Xi, self.categories[i])
                     if not np.all(valid_mask):
                         diff = np.unique(Xi[~valid_mask])
-                        msg = ("Found unknown categories {0} in column {1}"
-                               " during fit".format(diff, i))
-                        raise ValueError(msg)
+                        raise ValueError(
+                            f"Found unknown categories {diff} in column {i} "
+                            f"during fit."
+                        )
                 self.categories_.append(np.array(self.categories[i],
                                                  dtype=object))
 
@@ -406,7 +447,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         return self
 
-    def transform(self, X, fast=True):
+    def transform(self, X: ArrayLike, fast: bool = True) -> ArrayLike:
         """
         Transform X using specified encoding scheme.
 
@@ -414,6 +455,9 @@ class SimilarityEncoder(OneHotEncoder):
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to encode.
+
+        fast : bool
+            Whether to use the fast computation of ngrams.
 
         Returns
         -------
@@ -424,9 +468,10 @@ class SimilarityEncoder(OneHotEncoder):
 
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
-                msg = ("Found missing values in input data; set "
-                       "handle_missing='' to encode with missing values")
-                raise ValueError(msg)
+                raise ValueError(
+                    "Found missing values in input data ; set "
+                    "handle_missing='' to encode with missing values. "
+                )
             if self.handle_missing != 'error':
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, 'dtype') and isinstance(X, list):
@@ -436,9 +481,10 @@ class SimilarityEncoder(OneHotEncoder):
             mask = _object_dtype_isnan(X)
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data; set "
-                           "handle_missing='' to encode with missing values")
-                    raise ValueError(msg)
+                    raise ValueError(
+                        "Found missing values in input data ; set "
+                        "handle_missing='' to encode with missing values. "
+                    )
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
 
@@ -451,9 +497,10 @@ class SimilarityEncoder(OneHotEncoder):
             if not np.all(valid_mask):
                 if self.handle_unknown == 'error':
                     diff = np.unique(X[~valid_mask, i])
-                    msg = ("Found unknown categories {0} in column {1}"
-                           " during transform".format(diff, i))
-                    raise ValueError(msg)
+                    raise ValueError(
+                        f"Found unknown categories {diff} in column {i} "
+                        f"during fit."
+                    )
 
         if self.similarity in ('levenshtein-ratio',
                                'jaro',
@@ -487,12 +534,10 @@ class SimilarityEncoder(OneHotEncoder):
                 last += len(cats)
             return out
         else:
-            raise ValueError("Unknown similarity: '%s'" % self.similarity)
+            raise ValueError(f"Unknown similarity: {self.similarity!r}")
 
-    def _ngram_similarity_fast(self, X, col_idx):
-        """
-        Fast computation of ngram similarity, for SimilarityEncoder.
-
+    def _ngram_similarity_fast(self, X: Union[list, np.array], col_idx: int) -> np.array:
+        """ Fast computation of ngram similarity.
 
         SimilarityEncoder.transform uses the count vectors of the vocabulary in
         its computations. In ngram_similarity, these count vectors have to be
@@ -500,6 +545,7 @@ class SimilarityEncoder(OneHotEncoder):
         method, the count vectors are recovered from the
         ``vocabulary_count_matrices`` attribute of the SimilarityEncoder,
         speeding up the execution.
+
         Parameters
         ----------
         X: np.array, list
@@ -528,37 +574,39 @@ class SimilarityEncoder(OneHotEncoder):
                 X_count_matrix, unq_X_, range(len(unq_X))))
 
         out = np.empty(
-            (len(X), vocabulary_count_matrix.shape[0]), dtype=self.dtype)
+            (len(X), vocabulary_count_matrix.shape[0]),
+            dtype=self.dtype,
+        )
 
         for x, out_row in zip(X, out):
             out_row[:] = se_dict[x]
 
         return np.nan_to_num(out, copy=False)
 
-    def fit_transform(self, X, y=None, **fit_params):
-            """
-            Fit SimilarityEncoder to data, then transform it.
-            Fits transformer to `X` and `y` with optional parameters
-            `fit_params` and returns a transformed version of `X`.
+    def fit_transform(self, X: ArrayLike, y: Optional[ArrayLike] = None, **fit_params):
+        """
+        Fit SimilarityEncoder to data, then transform it.
+        Fits transformer to `X` and `y` with optional parameters
+        `fit_params` and returns a transformed version of `X`.
 
-            Parameters
-            ----------
-            X : array-like of shape (n_samples, n_features)
-                Input samples.
-            y :  array-like of shape (n_samples,) or (n_samples, n_outputs), \
-                    default=None
-                Target values (None for unsupervised transformations).
-            **fit_params : dict
-                Additional fit parameters.
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, n_features)
+            Input samples.
+        y :  array-like of shape (n_samples,) or (n_samples, n_outputs), \
+                default=None
+            Target values (None for unsupervised transformations).
+        **fit_params
+            Additional fit parameters.
 
-            Returns
-            -------
-            X_new : ndarray array of shape (n_samples, n_features_new)
-                Transformed array.
-            """
-            if y is None:
-                # fit method of arity 1 (unsupervised transformation)
-                return self.fit(X, **fit_params).transform(X)
-            else:
-                # fit method of arity 2 (supervised transformation)
-                return self.fit(X, y, **fit_params).transform(X)
+        Returns
+        -------
+        X_new : ndarray array of shape (n_samples, n_features_new)
+            Transformed array.
+        """
+        if y is None:
+            # fit method of arity 1 (unsupervised transformation)
+            return self.fit(X, **fit_params).transform(X)
+        else:
+            # fit method of arity 2 (supervised transformation)
+            return self.fit(X, y, **fit_params).transform(X)

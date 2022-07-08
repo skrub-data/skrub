@@ -1,6 +1,8 @@
 import collections
 import numpy as np
 
+from numpy.typing import ArrayLike
+
 from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
@@ -10,8 +12,7 @@ from dirty_cat.utils import check_input
 
 
 def lambda_(x, n):
-    out = x / (x + n)
-    return out
+    return x / (x + n)
 
 
 class TargetEncoder(BaseEstimator, TransformerMixin):
@@ -21,7 +22,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     target variable y. The method considers that categorical
     variables can present rare categories. It represents each category by the
     probability of y conditional on this category.
-    In addition it takes an empirical Bayes approach to shrink the estimate.
+    In addition, it takes an empirical Bayes approach to shrink the estimate.
 
 
     Parameters
@@ -85,7 +86,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def fit(self, X, y):
+    def fit(self, X: ArrayLike, y: ArrayLike):
         """Fit the TargetEncoder to X.
         Parameters
         ----------
@@ -106,10 +107,11 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             raise ValueError(template % self.handle_missing)
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
-                msg = ("Found missing values in input data; set "
-                       "handle_missing='' to encode with missing values")
-                raise ValueError(msg)
-            if self.handle_missing != 'error':
+                    raise ValueError(
+                        "Found missing values in input data ; set "
+                        "handle_missing='' to encode with missing values. "
+                    )
+            else:
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, 'dtype') and isinstance(X, list):
             X = np.asarray(X, dtype=object)
@@ -118,22 +120,25 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             mask = _object_dtype_isnan(X)
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data; set "
-                           "handle_missing='' to encode with missing values")
-                    raise ValueError(msg)
-                if self.handle_missing != 'error':
+                    raise ValueError(
+                        "Found missing values in input data ; set "
+                        "handle_missing='' to encode with missing values. "
+                    )
+                else:
                     X[mask] = self.handle_missing
 
         if self.handle_unknown not in ['error', 'ignore']:
-            template = ("handle_unknown should be either 'error' or "
-                        "'ignore', got %s")
-            raise ValueError(template % self.handle_unknown)
+            raise ValueError(
+                f'Got handle_unknown={self.handle_unknown!r}, but expected'
+                f'any of {{"error", "ignore"}}. '
+            )
 
         if self.categories != 'auto':
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
-                    raise ValueError("Unsorted categories are not yet "
-                                     "supported")
+                    raise ValueError(
+                        "Unsorted categories are not yet supported"
+                    )
 
         X_temp = check_array(X, dtype=None)
         if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
@@ -155,9 +160,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                     valid_mask = np.in1d(Xj, self.categories[j])
                     if not np.all(valid_mask):
                         diff = np.unique(Xj[~valid_mask])
-                        msg = ("Found unknown categories {0} in column {1}"
-                               " during fit".format(diff, j))
-                        raise ValueError(msg)
+                        raise ValueError(
+                            f"Found unknown categories {diff} in column {j}"
+                            f" during fit"
+                        )
                 le.classes_ = np.array(self.categories[j])
 
         self.categories_ = [le.classes_ for le in self._label_encoders_]
@@ -182,8 +188,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
-    def transform(self, X):
-        """Transform X using specified encoding scheme.
+    def transform(self, X: ArrayLike):
+        """Transform X using the specified encoding scheme.
 
         Parameters
         ----------
@@ -199,7 +205,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         X = check_input(X)
         if X.shape[1] != self.n_features_in_:
             raise ValueError(
-                f"Number of features in the input data ({X.shape[1]}) does not match the number of features "
+                f"The number of features in the input data ({X.shape[1]}) "
+                f"does not match the number of features "
                 f"seen during fit ({self.n_features_in_})."
             )
         if hasattr(X, 'iloc') and X.isna().values.any():
