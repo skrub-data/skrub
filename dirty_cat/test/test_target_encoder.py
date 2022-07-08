@@ -236,9 +236,7 @@ def _test_missing_values(input_type, missing):
 
     encoder = target_encoder.TargetEncoder(handle_missing=missing)
     if missing == 'error':
-        with pytest.raises(ValueError, match=r"Found missing values in input "
-                           "data; set handle_missing='' to encode "
-                           "with missing values"):
+        with pytest.raises(ValueError, match=r"Found missing values in input"):
             encoder.fit_transform(X, y)
         return
     elif missing == '':
@@ -252,8 +250,7 @@ def _test_missing_values(input_type, missing):
         assert dict(encoder.counter_[0]) == count_['color']
         assert dict(encoder.counter_[1]) == count_['gender']
     else:
-        with pytest.raises(ValueError, match=r"handle_missing"
-                           " should be either 'error' or ''"):
+        with pytest.raises(ValueError, match=r"expected any of"):
             encoder.fit_transform(X, y)
         return
 
@@ -309,9 +306,7 @@ def _test_missing_values_transform(input_type, missing):
                                            handle_missing=missing)
     if missing == 'error':
         encoder.fit_transform(X, y)
-        with pytest.raises(ValueError, match=r"Found missing values in input "
-                           "data; set handle_missing='' to encode "
-                           "with missing values"):
+        with pytest.raises(ValueError, match=r"Found missing values in input"):
             encoder.transform(X_test)
         return
     elif missing == '':

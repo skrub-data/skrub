@@ -102,9 +102,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         X = check_input(X)
         self.n_features_in_ = X.shape[1]
         if self.handle_missing not in ['error', '']:
-            template = ("handle_missing should be either 'error' or "
-                        "'', got %s")
-            raise ValueError(template % self.handle_missing)
+            raise ValueError(
+                f"Got handle_missing={self.handle_missing!r}, but expected "
+                f"any of {{'error', ''}}. "
+            )
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
                     raise ValueError(
@@ -211,9 +212,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             )
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
-                msg = ("Found missing values in input data; set "
-                       "handle_missing='' to encode with missing values")
-                raise ValueError(msg)
+                    raise ValueError(
+                        "Found missing values in input data ; set "
+                        "handle_missing='' to encode with missing values. "
+                    )
             if self.handle_missing != 'error':
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, 'dtype') and isinstance(X, list):
@@ -223,9 +225,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             mask = _object_dtype_isnan(X)
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
-                    msg = ("Found missing values in input data; set "
-                           "handle_missing='' to encode with missing values")
-                    raise ValueError(msg)
+                    raise ValueError(
+                        "Found missing values in input data ; set "
+                        "handle_missing='' to encode with missing values. "
+                    )
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
 
@@ -246,9 +249,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             if not np.all(valid_mask):
                 if self.handle_unknown == 'error':
                     diff = np.unique(X[~valid_mask, i])
-                    msg = ("Found unknown categories {0} in column {1}"
-                           " during transform".format(diff, i))
-                    raise ValueError(msg)
+                    raise ValueError(
+                        "Found unknown categories {diff} in column {i} "
+                        "during transform. "
+                    )
                 else:
                     # Set the problematic rows to an acceptable value and
                     # continue `The rows are marked `X_mask` and will be

@@ -151,7 +151,7 @@ def get_kmeans_prototypes(X: ArrayLike,
                           ngram_range: Tuple[int, int] = (3, 3),
                           sparse: bool = False,
                           sample_weight: Optional[ArrayLike] = None,
-                          random_state: Optional[int, RandomState] = None):
+                          random_state: Optional[Union[int, RandomState]] = None):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)

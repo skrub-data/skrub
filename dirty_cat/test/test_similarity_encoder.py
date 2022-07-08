@@ -67,16 +67,13 @@ def _test_missing_values(input_type, missing):
 
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
     if missing == 'error':
-        with pytest.raises(ValueError, match=r"Found missing values in input "
-                           "data; set handle_missing='' to encode "
-                           "with missing values"):
+        with pytest.raises(ValueError, match=r"Found missing values in input"):
             sim_enc.fit_transform(observations)
     elif missing == '':
         ans = sim_enc.fit_transform(observations)
         assert np.allclose(encoded, ans)
     else:
-        with pytest.raises(ValueError, match=r"handle_missing"
-                           " should be either 'error' or ''"):
+        with pytest.raises(ValueError, match=r"expected any of"):
             sim_enc.fit_transform(observations)
         return
 
@@ -101,9 +98,7 @@ def _test_missing_values_transform(input_type, missing) -> None:
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
     if missing == 'error':
         sim_enc.fit_transform(observations)
-        with pytest.raises(ValueError, match=r"Found missing values in input "
-                           "data; set handle_missing='' to encode "
-                           "with missing values"):
+        with pytest.raises(ValueError, match=r"Found missing values in input"):
             sim_enc.transform(test_observations)
     elif missing == '':
         sim_enc.fit_transform(observations)

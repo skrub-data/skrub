@@ -116,8 +116,7 @@ def test_missing_values(input_type, missing, hashing) -> None:
     if missing == 'error':
         encoder.fit(X)
         if input_type in ['numpy', 'pandas']:
-            with pytest.raises(ValueError, match=r"missing"
-                               " values in input"):
+            with pytest.raises(ValueError, match=r"missing values in input"):
                 encoder.transform(X)
     elif missing == 'zero_impute':
         encoder.fit(X)
@@ -128,8 +127,7 @@ def test_missing_values(input_type, missing, hashing) -> None:
             assert np.array_equal(y[1], z)
             assert np.array_equal(y[-1], z)
     else:
-        with pytest.raises(ValueError, match=r"handle_missing"
-                           " should be either 'error' or 'zero_impute'"):
+        with pytest.raises(ValueError, match=r"expected any of"):
             encoder.fit_transform(X)
     return
 

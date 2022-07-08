@@ -75,7 +75,7 @@ string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
    `Recent changes <CHANGES.html>`_
 
-:Installing: `$ pip install --user dirty_cat`
+:Installing: `$ pip install --user --upgrade dirty_cat`
 
 ______
 

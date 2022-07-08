@@ -51,7 +51,7 @@ User installation
 If you already have a working installation of NumPy and SciPy,
 the easiest way to install dirty_cat is using ``pip`` ::
 
-    pip install -U --user dirty_cat
+    pip install --user --upgrade dirty_cat
 
 Other implementations
 ~~~~~~~~~~~~~~~~~~~~~~

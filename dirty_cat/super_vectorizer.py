@@ -471,7 +471,7 @@ class SuperVectorizer(ColumnTransformer):
 
         return res
 
-    def get_feature_names_out(self, input_features: Optional[ArrayLike[str]] = None) -> List[str]:
+    def get_feature_names_out(self, input_features: Optional[ArrayLike] = None) -> List[str]:
         """
         Returns clean feature names with format
         "<column_name>_<value>" if encoded by OneHotEncoder or alike,
@@ -521,7 +521,7 @@ class SuperVectorizer(ColumnTransformer):
 
         return all_trans_feature_names
     
-    def get_feature_names(self, input_features: Optional[ArrayLike[str]] = None) -> List[str]:
+    def get_feature_names(self, input_features: Optional[ArrayLike] = None) -> List[str]:
         """ Deprecated, use "get_feature_names_out"
         """
         warn(
