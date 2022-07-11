@@ -261,6 +261,7 @@ class SimilarityEncoder(OneHotEncoder):
                 category=UserWarning,
                 stacklevel=2
             )
+        self.similarity = None
 
         if not isinstance(categories, list):
             assert categories in [None, 'auto', 'k-means', 'most_frequent']
