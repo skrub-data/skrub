@@ -3,7 +3,7 @@ version: 2
 jobs:
   python3:
     docker:
-      - image: circleci/python:3.6.1
+      - image: cimg/python:3.6.1
     environment:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv
@@ -31,7 +31,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/python:3.6.1
+      - image: cimg/python:3.6.1
     steps:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh
