@@ -4,13 +4,11 @@ apply encoders to different types of data, without the need to manually
 categorize them beforehand, or construct complex Pipelines.
 """
 
-import sklearn
-
 import numpy as np
 import pandas as pd
 
 from warnings import warn
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Dict, Tuple
 
 from sklearn.base import BaseEstimator, clone
 from sklearn.compose import ColumnTransformer
@@ -125,8 +123,8 @@ class SuperVectorizer(ColumnTransformer):
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
         lower than this value. Use sparse_threshold=0 to always return dense.
-        When the transformed output consists of all dense data, the stacked result
-        will be dense, and this keyword will be ignored.
+        When the transformed output consists of all dense data, the stacked
+        result will be dense, and this keyword will be ignored.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -145,13 +143,13 @@ class SuperVectorizer(ColumnTransformer):
     Attributes
     ----------
 
-    transformers_: List[Tuple[str, Union[str, BaseEstimator], Union[str, int]]]
+    transformers_: List[Tuple[str, Union[str, BaseEstimator], List[str]]]
         The final distribution of columns.
         List of three-tuple containing
         (1) the name of the category
         (2) the encoder/transformer instance which will be applied
         or "passthrough" or "drop"
-        (3) the list of column names or index
+        (3) the list of column names
 
     columns_: List[Union[str, int]]
         The column names of fitted array.
@@ -164,6 +162,11 @@ class SuperVectorizer(ColumnTransformer):
         The list of columns in which we imputed the missing values.
 
     """
+
+    transformers_: List[Tuple[str, Union[str, BaseEstimator], List[str]]]
+    columns_: List[str]
+    types_: Dict[str, type]
+    imputed_columns_: List[str]
 
     # Override required parameters
     _required_parameters = []
@@ -251,7 +254,7 @@ class SuperVectorizer(ColumnTransformer):
                 # Some numerical dtypes like Int64 or Float64 only support
                 # pd.NA, so they must be converted to np.float64 before.
                 if pd.api.types.is_numeric_dtype(X[col]):
-                    X[col] = X[col].astype(np.float64)
+                    X.loc[:, col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
         # taken from pandas.io.parsers (version 1.1.4)
@@ -266,12 +269,12 @@ class SuperVectorizer(ColumnTransformer):
             if not pd.api.types.is_datetime64_any_dtype(X[col]):
                 # we don't want to cast datetime64
                 try:
-                    X[col] = pd.to_numeric(X[col], errors='raise')
+                    X.loc[:, col] = pd.to_numeric(X[col], errors='raise')
                 except:
                     # Only try to convert to datetime
                     # if the variable isn't numeric.
                     try:
-                        X[col] = pd.to_datetime(X[col], errors='raise',
+                        X.loc[:, col] = pd.to_datetime(X[col], errors='raise',
                                                 infer_datetime_format=True)
                     except:
                         pass
@@ -279,7 +282,8 @@ class SuperVectorizer(ColumnTransformer):
             # for earlier versions of sklearn
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
                 try:
-                    X[col] = X[col].astype(X[col].dtype.type, errors='ignore')
+                    X.loc[:, col] = X[col].astype(X[col].dtype.type,
+                                                  errors='ignore')
                 except (TypeError, ValueError):
                     pass
         return X
@@ -324,7 +328,7 @@ class SuperVectorizer(ColumnTransformer):
             X.columns = self.columns_
 
         for col in self.imputed_columns_:
-            X[col] = _replace_missing_in_col(X[col])
+            X.loc[:, col] = _replace_missing_in_col(X[col])
 
         return super().transform(X)
 
@@ -364,7 +368,7 @@ class SuperVectorizer(ColumnTransformer):
             # Create a copy to avoid altering the original data.
             X = X.copy()
 
-        self.columns_ = X.columns
+        self.columns_ = X.columns.to_list()
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
         # We'll keep the results in order to apply the types in `transform`.
@@ -373,12 +377,17 @@ class SuperVectorizer(ColumnTransformer):
             self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
 
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(include=['int', 'float',
-                                                   np.float64, np.float32, np.float16,
-                                                   np.int64, np.int32, np.int16,
-                                                   np.uint64, np.uint32, np.uint16]).columns.to_list()
-        categorical_columns = X.select_dtypes(include=['string', 'object', 'category']).columns.to_list()
-        datetime_columns = X.select_dtypes(include=['datetime', "datetimetz"]).columns.to_list()
+        numeric_columns = X.select_dtypes(
+            include=[
+                'int', 'float',
+                np.float64, np.float32, np.float16,
+                np.int64, np.int32, np.int16,
+                np.uint64, np.uint32, np.uint16
+            ]).columns.to_list()
+        categorical_columns = X.select_dtypes(
+            include=['string', 'object', 'category']).columns.to_list()
+        datetime_columns = X.select_dtypes(
+            include=['datetime', "datetimetz"]).columns.to_list()
 
         # Divide categorical columns by cardinality
         low_card_cat_columns = [
@@ -417,7 +426,7 @@ class SuperVectorizer(ColumnTransformer):
                 for col in X.columns:
                     # Do not impute numeric columns
                     if not pd.api.types.is_numeric_dtype(X[col]):
-                        X[col] = _replace_missing_in_col(X[col])
+                        X.loc[:, col] = _replace_missing_in_col(X[col])
                         self.imputed_columns_.append(col)
 
             elif self.impute_missing == 'skip':
@@ -435,13 +444,14 @@ class SuperVectorizer(ColumnTransformer):
                         for col in cols:
                             # Do not impute numeric columns
                             if not pd.api.types.is_numeric_dtype(X[col]):
-                                X[col] = _replace_missing_in_col(X[col])
+                                X.loc[:, col] = _replace_missing_in_col(X[col])
                                 self.imputed_columns_.append(col)
 
             else:
                 raise ValueError(
                     "Invalid value for `impute_missing`, expected any of "
-                    f"{{'auto', 'force', 'skip'}}, got {self.impute_missing!r}."
+                    f"{{'auto', 'force', 'skip'}}, "
+                    f"got {self.impute_missing!r}. "
                 )
 
         # If there was missing values imputation, we cast the DataFrame again,
@@ -451,7 +461,8 @@ class SuperVectorizer(ColumnTransformer):
             X = self._auto_cast(X)
 
         if self.verbose:
-            print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
+            print(f'[SuperVectorizer] Assigned transformers: '
+                  f'{self.transformers}')
 
         check_input(X)
 
@@ -463,7 +474,11 @@ class SuperVectorizer(ColumnTransformer):
         # if there is less than 20 columns in the remainder.
         for i, (name, enc, cols) in enumerate(self.transformers_):
             if name == "remainder" and len(cols) < 20:
-                self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
+                # In this case, "cols" is a list of ints (the indices)
+                cols: List[int]
+                self.transformers_[i] = (
+                    name, enc, [self.columns_[j] for j in cols]
+                )
 
         return res
 

@@ -18,7 +18,7 @@ morphological similarities between strings.
 
 import numpy as np
 
-from typing import Tuple, Literal
+from typing import Tuple, Literal, Dict, List
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import murmurhash3_32
@@ -59,7 +59,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
 
     """
-    _capacity = 2 ** 10
+    _capacity: int = 2 ** 10
 
     def __init__(self,
                  n_components: int = 30,
@@ -73,14 +73,14 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.minmax_hash = minmax_hash
         self.handle_missing = handle_missing
 
-    def _more_tags(self):
+    def _more_tags(self) -> Dict[str, List[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """
         return {"X_types": ["categorical"]}
 
     def minhash(self, string: str, n_components: int,
-                ngram_range: Tuple[int, int]):
+                ngram_range: Tuple[int, int]) -> np.array:
         """
         Encode a string using murmur hashing function.
 
@@ -111,7 +111,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2 ** 32 - 1)
 
-    def get_fast_hash(self, string: str):
+    def get_fast_hash(self, string: str) -> np.array:
         """
         Encode a string with fast hashing function.
         fast hashing supports both min_hash and minmax_hash encoding.
@@ -134,7 +134,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             return np.array([ngram_min_hash(string, self.ngram_range, seed)
                              for seed in range(self.n_components)])
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None) -> "MinHashEncoder":
         """
         Fit the MinHashEncoder to X. In practice, just initializes a dictionary
         to store encodings to speed up computation.
@@ -153,7 +153,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.hash_dict = LRUDict(capacity=self._capacity)
         return self
 
-    def transform(self, X):
+    def transform(self, X) -> np.array:
         """ Transform X using specified encoding scheme.
 
         Parameters
@@ -216,7 +216,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         if self.handle_missing == 'error':
             if is_nan_idx:
                 raise ValueError(
-                    "Found missing values in input data; set "
+                    "Found missing values in input data ; set "
                     "handle_missing='zero_impute' to encode with missing values. "
                 )
         elif self.handle_missing == 'zero_impute':

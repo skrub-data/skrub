@@ -156,7 +156,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             self.rho_ = self.rho ** (self.batch_size / len(X))
         return unq_X, unq_V, lookup
 
-    def _get_H(self, X) -> np.array:
+    def _get_H(self, X: np.array) -> np.array:
         """
         Return the bag-of-n-grams representation of X.
         """
@@ -188,7 +188,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                     x_squared_norms=row_norms(V, squared=True),
                     random_state=self.random_state,
                     n_local_trials=None)
-                W = W + .1 # To avoid restricting topics to few n-grams only
+                W = W + .1  # To avoid restricting topics to a few n-grams only
         elif self.init == 'random':
             W = self.random_state.gamma(
                 shape=self.gamma_shape_prior, scale=self.gamma_scale_prior,
@@ -373,21 +373,23 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             'kullback-leibler', square_root=False)
         return kl_divergence
 
-    def partial_fit(self, X, y=None):
+    def partial_fit(self, X, y=None) -> "GapEncoderColumn":
         """
         Partial fit of the GapEncoder on X.
-        To be used in a online learning procedure where batches of data are
+        To be used in an online learning procedure where batches of data are
         coming one by one.
 
         Parameters
         ----------
         X : array-like, shape (n_samples, )
             The string data to fit the model on.
+        y : None
+            Unused, only here for compatibility.
         
         Returns
         -------
         self
-        
+            The fitted GapEncoderColumn instance.
         """
         
         # Init H_dict_ with empty dict if it's the first call of partial_fit
@@ -438,7 +440,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def _add_unseen_keys_to_H_dict(self, X):
+    def _add_unseen_keys_to_H_dict(self, X) -> None:
         """
         Add activations of unseen string categories from X to H_dict.
         """
@@ -453,7 +455,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 unseen_V, np.ones((unseen_V.shape[0], self.n_components)))
             self.H_dict_.update(zip(unseen_X, unseen_H))
 
-    def transform(self, X):
+    def transform(self, X) -> np.array:
         """
         Return the encoded vectors (activations) H of input strings in X.
         Given the learnt topics W, the activations H are tuned to fit V = HW.
@@ -572,7 +574,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     rescale_W : bool, default=True
         If true, the weight matrix W is rescaled at each iteration
-        to have an l1 norm equal to 1 for each row.
+        to have a l1 norm equal to 1 for each row.
 
     max_iter_e_step : int, default=20
         Maximum number of iterations to adjust the activations h at each step.
@@ -691,11 +693,13 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         ----------
         X : array-like, shape (n_samples, n_features)
             The string data to fit the model on.
+        y : None
+            Unused, only here for compatibility.
         
         Returns
         -------
         self
-        
+            Fitted GapEncoder instance.
         """
         # Copy parameter rho
         self.rho_ = self.rho
@@ -711,7 +715,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             self.fitted_models_.append(col_enc.fit(X[:, k]))
         return self
 
-    def transform(self, X):
+    def transform(self, X) -> np.array:
         """
         Return the encoded vectors (activations) H of input strings in X.
         Given the learnt topics W, the activations H are tuned to fit V = HW.
@@ -744,7 +748,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     def partial_fit(self, X, y=None) -> "GapEncoder":
         """
         Partial fit of the GapEncoder on X.
-        To be used in a online learning procedure where batches of data are
+        To be used in an online learning procedure where batches of data are
         coming one by one.
 
         Parameters
@@ -801,29 +805,28 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         
         topic_labels : list of strings
             The labels that best describe each topic.
-        
         """
         assert hasattr(self, 'fitted_models_'), (
             'ERROR: GapEncoder must be fitted first.')
         # Generate prefixes
         if isinstance(col_names, str) and col_names == 'auto':
-            if hasattr(self, 'column_names_'): # Use column names
-                prefixes = [s + ': ' for s in self.column_names_]
+            if hasattr(self, 'column_names_'):  # Use column names
+                prefixes = [f'{col}: ' for col in self.column_names_]
             else: # Use 'col1: ', ... 'colN: ' as prefixes
-                prefixes = [f'col{k}: ' for k in range(len(self.fitted_models_))]
+                prefixes = [f'col{i}: ' for i in range(len(self.fitted_models_))]
         elif col_names is None:  # Empty prefixes
             prefixes = [''] * len(self.fitted_models_)
         else:
-            prefixes = [s + ': ' for s in col_names]
+            prefixes = [f'{col}: ' for col in col_names]
         labels = list()
         for k, enc in enumerate(self.fitted_models_):
             col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
             labels.extend(col_labels)
         return labels
     
-    def get_feature_names(
-        self, input_features=None, col_names=None, n_labels=3
-    ):
+    def get_feature_names(self, input_features=None,
+                          col_names: List[str] = None, n_labels: int = 3
+                          ) -> List[str]:
         """
         Ensures compatibility with sklearn < 1.0.
         Use `get_feature_names_out` instead.
@@ -861,7 +864,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         return kl_divergence
 
 
-def _rescale_W(W: np.array, A: np.array):
+def _rescale_W(W: np.array, A: np.array) -> None:
     """
     Rescale the topics W to have a L1-norm equal to 1.
     Note that they are modified in-place.

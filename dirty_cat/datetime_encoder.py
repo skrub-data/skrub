@@ -57,9 +57,9 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self,
-                 extract_until="hour",
+                 extract_until: AcceptedTimeValues = "hour",
                  add_day_of_the_week: bool = False):
-        self.extract_until: AcceptedTimeValues = extract_until
+        self.extract_until = extract_until
         self.add_day_of_the_week = add_day_of_the_week
 
     def _more_tags(self):
@@ -101,12 +101,13 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             tz = pd.DatetimeIndex(date_series).tz
             # Compute the time in seconds from the epoch time UTC
             if tz is None:
-                return (pd.to_datetime(date_series) - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+                return (pd.to_datetime(date_series) -
+                        pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
             else:
                 return (pd.DatetimeIndex(date_series).tz_convert("utc") -
                         pd.Timestamp("1970-01-01", tz="utc")) // pd.Timedelta('1s')
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None) -> "DatetimeEncoder":
         """
         Fit the DatetimeEncoder to X. In practice, just stores which extracted
         features are not constant.
@@ -156,7 +157,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X, y=None):
+    def transform(self, X, y=None) -> np.array:
         """ Transform X by replacing each datetime column with
         corresponding numerical features.
 
@@ -164,6 +165,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         ----------
         X : array-like, shape (n_samples, n_features)
             The data to transform, where each column is a datetime feature.
+        y : None
+            Unused, only here for compatibility.
 
         Returns
         -------
@@ -193,9 +196,9 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         """
         Returns clean feature names with format "<column_name>_<new_feature>"
         if the original data has column names, otherwise with format
-        "<column_index>_<new_feature>". new_feature is one of ["year", "month",
-        "day", "hour", "minute", "second", "millisecond", "microsecond",
-        "nanosecond", "dayofweek"]
+        "<column_index>_<new_feature>" where `<new_feature>` is one of
+        ["year", "month", "day", "hour", "minute", "second", "millisecond",
+        "microsecond", "nanosecond", "dayofweek"].
         """
         feature_names = []
         for i in self.features_per_column_.keys():

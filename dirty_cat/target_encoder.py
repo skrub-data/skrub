@@ -1,6 +1,8 @@
 import collections
 import numpy as np
 
+from typing import List, Dict
+
 from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
@@ -67,6 +69,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     high-cardinality categorical attributes in classification and prediction
     problems.
     """
+
+    n_features_in_: int
+    _label_encoders_: List[LabelEncoder]
+    categories_: List[np.array]
+    n_: int
+
     def __init__(self,
                  categories='auto',
                  clf_type='binary-clf',
@@ -78,14 +86,16 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.handle_unknown = handle_unknown
         self.handle_missing = handle_missing
 
-    def _more_tags(self):
+    def _more_tags(self) -> Dict[str, List[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """
         return {"X_types": ["categorical"]}
 
-    def fit(self, X, y):
-        """Fit the TargetEncoder to X.
+    def fit(self, X, y) -> "TargetEncoder":
+        """
+        Fit the TargetEncoder to X.
+
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features]
@@ -96,6 +106,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         Returns
         -------
         self
+            Fitted TargetEncoder instance.
         """
         X = check_input(X)
         self.n_features_in_ = X.shape[1]
@@ -144,6 +155,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             X = check_array(X, dtype=np.object)
         else:
             X = X_temp
+        X: np.array
 
         n_samples, n_features = X.shape
 
@@ -187,8 +199,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
-    def transform(self, X):
-        """Transform X using the specified encoding scheme.
+    def transform(self, X) -> np.array:
+        """
+        Transform X using the specified encoding scheme.
 
         Parameters
         ----------

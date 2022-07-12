@@ -10,11 +10,10 @@ The principle is as follows:
      max-int overflow). The corresponding operation defines a random
      order in the interval [-maxint, maxint]
   3. Computing this dot product over a sliding window (to compute it for
-     every n-gram is a convolution
-  4. We can then take the min (or the max) of the resulting sliding
-  window
-
+     every n-gram is a convolution)
+  4. We can then take the min (or the max) of the resulting sliding window
 """
+
 import functools
 import numpy as np
 
@@ -41,7 +40,6 @@ def gen_atom(atom_len, seed=0):
     array, shape (atom_len, )
         An array of random integers of length atom_len and dtype int32
         (assuming dtype_size=32).
-
     """
     rng = np.random.RandomState(seed)
     atom = rng.randint(-MAXINT32, MAXINT32, size=atom_len,
@@ -70,7 +68,6 @@ def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
     -------
     int or tuple 
         The min_hash or (min_hash, max_hash) of the n-grams of the string.
-
     """
     # Create a numerical 1D array from the string
     array = np.frombuffer(string.encode(), dtype='int8', count=len(string))
