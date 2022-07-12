@@ -19,7 +19,6 @@ from collections import namedtuple
 from typing import Union, Dict, Any
 from sklearn.datasets import fetch_openml
 
-from dirty_cat.utils import Version
 from dirty_cat.datasets.utils import get_data_dir
 
 
