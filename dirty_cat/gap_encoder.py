@@ -284,12 +284,15 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return self
 
     def get_feature_names(self, n_labels=3, prefix=''):
-        """ Deprecated, use "get_feature_names_out"
+        """
+        Ensures compatibility with sklearn < 1.0.
+        Use `get_feature_names_out` instead.
         """
         warnings.warn(
             "get_feature_names is deprecated in scikit-learn > 1.0. "
             "use get_feature_names_out instead",
             DeprecationWarning,
+            stacklevel=2,
             )
         return self.get_feature_names_out(n_labels=n_labels, prefix=prefix)
 
@@ -821,12 +824,17 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     def get_feature_names(
         self, input_features=None, col_names=None, n_labels=3
     ):
-        """ Deprecated, use "get_feature_names_out"
         """
-        warnings.warn(
-            "get_feature_names is deprecated in scikit-learn > 1.0. "
-            "use get_feature_names_out instead",
-            DeprecationWarning,
+        Ensures compatibility with sklearn < 1.0.
+        Use `get_feature_names_out` instead.
+        """
+        if Version(sklearn_version) >= '1.0':
+            warnings.warn(
+                "Following the changes in scikit-learn 1.0, "
+                "get_feature_names is deprecated. "
+                "Use get_feature_names_out instead.",
+                DeprecationWarning,
+                stacklevel=2,
             )
         return self.get_feature_names_out(col_names, n_labels)
 
