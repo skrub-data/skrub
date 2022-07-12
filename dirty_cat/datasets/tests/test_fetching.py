@@ -110,7 +110,7 @@ def test_fetch_openml_dataset():
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
 
 
-@mock.patch("pathlib.Path.is_file")
+@mock.patch("dirty_cat.datasets.fetching.Path.is_file")
 @mock.patch("dirty_cat.datasets.fetching._get_features")
 @mock.patch("dirty_cat.datasets.fetching._get_details")
 @mock.patch("dirty_cat.datasets.fetching._export_gz_data_to_csv")
@@ -156,19 +156,21 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     mock_get_details.assert_called_once()
 
 
-@mock.patch('sklearn.datasets.fetch_openml')
+@mock.patch('dirty_cat.datasets.fetching.fetch_openml')
 def test__download_and_write_openml_dataset(mock_fetch_openml):
     """Tests function ``_download_and_write_openml_dataset()``."""
 
-    test_data_dir = get_test_data_dir()
-    _download_and_write_openml_dataset(2, test_data_dir)
+    dataset_id = 2
 
-    mock_fetch_openml.assert_called_once_with(data_id=1,
+    test_data_dir = get_test_data_dir()
+    _download_and_write_openml_dataset(dataset_id, test_data_dir)
+
+    mock_fetch_openml.assert_called_once_with(data_id=dataset_id,
                                               data_home=str(test_data_dir),
                                               as_frame=True)
 
 
-@mock.patch("pathlib.Path.is_file")
+@mock.patch("dirty_cat.datasets.fetching.Path.is_file")
 def test__read_json_from_gz(mock_pathlib_path_isfile):
     """Tests function ``_read_json_from_gz()``."""
 

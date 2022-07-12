@@ -10,7 +10,6 @@ Scikit-Learn's ``fetch_openml()`` function.
 
 import gzip
 import json
-import sklearn
 import warnings
 import pandas as pd
 
