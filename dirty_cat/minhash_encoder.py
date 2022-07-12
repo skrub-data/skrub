@@ -144,7 +144,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None):
         """
-        Fit the MinHashEncoder to X. Does nothing, just for compatibility with sklearn API.
+        Fit the MinHashEncoder to X. In practice, just initializes a dictionary
+        to store encodings to speed up computation.
         Parameters
         ----------
         X : array-like, shape (n_samples, ) or (n_samples, 1)
@@ -155,6 +156,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self
             The fitted MinHashEncoder instance.
         """
+        self.hash_dict = LRUDict(capacity=self._capacity)
         return self
 
     def transform(self, X):
@@ -189,21 +191,23 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         def compute_hash(x):
             # Function called by joblib to compute the hash
-            if x == "NAN":  # true if x is a missing value
-                return np.zeros(self.n_components)
-            else:
-                if self.hashing == "fast":
-                    return self.get_fast_hash(x)
-                elif self.hashing == "murmur":
-                    return self.minhash(
-                        x,
-                        n_components=self.n_components,
-                        ngram_range=self.ngram_range
-                    )
+            if x not in self.hash_dict:
+                if x == "NAN":  # true if x is a missing value
+                    self.hash_dict[x] = np.zeros(self.n_components)
                 else:
-                    raise ValueError("hashing function must be 'fast' or"
-                                     "'murmur', got '{}'"
-                                     "".format(self.hashing))
+                    if self.hashing == "fast":
+                        self.hash_dict[x] = self.get_fast_hash(x)
+                    elif self.hashing == "murmur":
+                        self.hash_dict[x] = self.minhash(
+                            x,
+                            n_components=self.n_components,
+                            ngram_range=self.ngram_range
+                        )
+                    else:
+                        raise ValueError("hashing function must be 'fast' or"
+                                         "'murmur', got '{}'"
+                                         "".format(self.hashing))
+            return self.hash_dict[x]
 
         # Compute the hashes for unique values
         unique_x, indices_x = np.unique(X, return_inverse=True)
