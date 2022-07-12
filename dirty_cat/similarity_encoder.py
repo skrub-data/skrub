@@ -15,7 +15,6 @@ The principle is as follows:
 import warnings
 
 import numpy as np
-from distutils.version import LooseVersion
 from joblib import Parallel, delayed
 from scipy import sparse
 import sklearn
@@ -26,6 +25,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
+from dirty_cat.utils import Version
 from . import string_distances
 from .string_distances import get_ngram_count, preprocess
 
@@ -325,12 +325,8 @@ class SimilarityEncoder(OneHotEncoder):
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
 
-        if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
-            Xlist, n_samples, n_features = self._check_X(X)
-        else:
-            X = self._check_X(X)
-            Xlist = X.T
-            n_samples, n_features = X.shape
+        Xlist, n_samples, n_features = self._check_X(X)
+        self.n_features_in_ = n_features
 
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
@@ -404,9 +400,8 @@ class SimilarityEncoder(OneHotEncoder):
                 self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
                 self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
 
-        if LooseVersion(sklearn.__version__) >= LooseVersion('0.21'):
-            self.drop_idx_ = self._compute_drop_idx()
-        if LooseVersion(sklearn.__version__) >= LooseVersion('1.1.0'):
+        self.drop_idx_ = self._compute_drop_idx()
+        if Version(sklearn.__version__) >= Version('1.1.0'):
             self._infrequent_enabled = False
 
         return self
@@ -447,12 +442,7 @@ class SimilarityEncoder(OneHotEncoder):
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
 
-        if LooseVersion(sklearn.__version__) > LooseVersion('0.21'):
-            Xlist, n_samples, n_features = self._check_X(X)
-        else:
-            X = self._check_X(X)
-            Xlist = X.T
-            n_samples, n_features = X.shape
+        Xlist, n_samples, n_features = self._check_X(X)
 
         for i in range(n_features):
             Xi = Xlist[i]

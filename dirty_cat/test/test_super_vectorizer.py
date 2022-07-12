@@ -7,10 +7,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 from sklearn.exceptions import NotFittedError
 
-from distutils.version import LooseVersion
 
 from dirty_cat import SuperVectorizer
 from dirty_cat import GapEncoder
+from dirty_cat.utils import Version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):
@@ -330,17 +330,17 @@ def test_with_arrays():
     vectorizer.fit_transform(X)
     check_same_transformers(expected_transformers, vectorizer.transformers)
 
+
 def test_get_feature_names_out():
     X = _get_clean_dataframe()
 
     vectorizer_w_pass = SuperVectorizer(remainder='passthrough')
     vectorizer_w_pass.fit(X)
 
-    if LooseVersion(sklearn.__version__) < LooseVersion('0.23'):
+    if Version(sklearn.__version__) < Version('0.23'):
         with pytest.raises(NotImplementedError):
             # Prior to sklearn 0.23, ColumnTransformer.get_feature_names
             # with "passthrough" transformer(s) raises a NotImplementedError
-            assert vectorizer_w_pass.get_feature_names()
             assert vectorizer_w_pass.get_feature_names_out()
     else:
         expected_feature_names_pass = [  # Order matters. If it doesn't, convert to set.
@@ -349,8 +349,10 @@ def test_get_feature_names_out():
             'cat1_no', 'cat1_yes', 'cat2_20K+', 'cat2_30K+', 'cat2_40K+', 'cat2_50K+', 'cat2_60K+',
             'int', 'float'
         ]
-        assert vectorizer_w_pass.get_feature_names() == expected_feature_names_pass
-        assert vectorizer_w_pass.get_feature_names_out() == expected_feature_names_pass
+        if Version(sklearn.__version__) < Version('1.0'):
+            assert vectorizer_w_pass.get_feature_names() == expected_feature_names_pass
+        else:
+            assert vectorizer_w_pass.get_feature_names_out() == expected_feature_names_pass
 
     vectorizer_w_drop = SuperVectorizer(remainder='drop')
     vectorizer_w_drop.fit(X)
@@ -360,8 +362,10 @@ def test_get_feature_names_out():
         'str2_chef', 'str2_lawyer', 'str2_manager', 'str2_officer', 'str2_teacher',
         'cat1_no', 'cat1_yes', 'cat2_20K+', 'cat2_30K+', 'cat2_40K+', 'cat2_50K+', 'cat2_60K+'
     ]
-    assert vectorizer_w_drop.get_feature_names() == expected_feature_names_drop
-    assert vectorizer_w_drop.get_feature_names_out() == expected_feature_names_drop
+    if Version(sklearn.__version__) < Version('1.0'):
+        assert vectorizer_w_drop.get_feature_names() == expected_feature_names_drop
+    else:
+        assert vectorizer_w_drop.get_feature_names_out() == expected_feature_names_drop
 
 
 def test_fit():
@@ -370,7 +374,7 @@ def test_fit():
     # See GH#193
     sup_vec = SuperVectorizer()
     with pytest.raises(NotFittedError):
-        if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+        if Version(sklearn.__version__) >= Version('0.22'):
             assert check_is_fitted(sup_vec)
         else:
             assert check_is_fitted(sup_vec, attributes=dir(sup_vec))

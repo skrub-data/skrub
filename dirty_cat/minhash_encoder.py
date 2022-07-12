@@ -15,7 +15,6 @@ With this procedure, strings that share many n-grams have greater
 probability of having same encoding values. These encodings thus capture
 morphological similarities between strings.
 """
-import joblib
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import murmurhash3_32
@@ -58,6 +57,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
 
     """
+    _capacity = 2 ** 10
 
     def __init__(self, n_components=30, ngram_range=(2, 4),
                  hashing='fast', minmax_hash=False,
@@ -67,10 +67,14 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.n_components = n_components
         self.hashing = hashing
         self.minmax_hash = minmax_hash
-        self.count = 0
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
-        self._capacity = 2 ** 10
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {"X_types": ["categorical"]}
 
     def get_unique_ngrams(self, string, ngram_range):
         """ Return the set of unique n-grams of a string.
@@ -140,7 +144,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                                    for seed in range(self.n_components // 2)])
         else:
             return np.array([ngram_min_hash(string, self.ngram_range, seed)
-                             for seed in range(self.n_components)])
+                            for seed in range(self.n_components)])
 
     def fit(self, X, y=None):
         """
@@ -156,6 +160,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self
             The fitted MinHashEncoder instance.
         """
+        self.count = 0
         self.hash_dict = LRUDict(capacity=self._capacity)
         return self
 
@@ -172,11 +177,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         X = check_input(X)
         if self.minmax_hash:
-            assert self.n_components % 2 == 0, \
-                "n_components should be even when minmax_hash=True"
+            assert self.n_components % 2 == 0,\
+                    "n_components should be even when minmax_hash=True"
         if self.hashing == 'murmur':
-            assert not (self.minmax_hash), \
-                "minmax_hash not implemented with murmur"
+            assert not(self.minmax_hash),\
+                   "minmax_hash not implemented with murmur"
         if self.handle_missing not in ['error', 'zero_impute']:
             template = ("handle_missing should be either 'error' or "
                         "'zero_impute', got %s")
@@ -211,7 +216,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         # Compute the hashes for unique values
         unique_x, indices_x = np.unique(X, return_inverse=True)
-        unique_x_trans = joblib.Parallel(n_jobs=self.n_jobs)(delayed(compute_hash)(x) for x in unique_x)
+        unique_x_trans = Parallel(n_jobs=self.n_jobs)(delayed(compute_hash)(x) for x in unique_x)
         # Match the hashes of the unique value to the original values
         X_out = np.stack(unique_x_trans)[indices_x].reshape(len(X), X.shape[1] * self.n_components)
 

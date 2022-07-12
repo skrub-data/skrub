@@ -16,7 +16,6 @@ The principle is as follows:
 """
 import warnings
 import numpy as np
-from distutils.version import LooseVersion
 from scipy import sparse
 from sklearn import __version__ as sklearn_version
 from sklearn.utils import check_random_state, gen_batches
@@ -28,16 +27,21 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils.fixes import _object_dtype_isnan
 import pandas as pd
 from .utils import check_input
+from dirty_cat.utils import Version
 
-if LooseVersion(sklearn_version) < LooseVersion('0.22'):
-    from sklearn.cluster.k_means_ import _k_init
-elif LooseVersion(sklearn_version) < LooseVersion('0.24'):
+if Version(sklearn_version) == Version('0.22'):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        from sklearn.cluster.k_means_ import _k_init
+elif Version(sklearn_version) < Version('0.24'):
     from sklearn.cluster._kmeans import _k_init
 else:
     from sklearn.cluster import kmeans_plusplus
 
-if LooseVersion(sklearn_version) < LooseVersion('0.22'):
-    from sklearn.decomposition.nmf import _beta_divergence
+if Version(sklearn_version) == Version('0.22'):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        from sklearn.decomposition.nmf import _beta_divergence
 else:
     from sklearn.decomposition._nmf import _beta_divergence
 
@@ -58,7 +62,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.gamma_shape_prior = gamma_shape_prior  # 'a' parameter
         self.gamma_scale_prior = gamma_scale_prior  # 'b' parameter
         self.rho = rho
-        self.rho_ = self.rho
         self.rescale_rho = rescale_rho
         self.batch_size = batch_size
         self.tol = tol
@@ -106,12 +109,12 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             unq_V = sparse.hstack((unq_V, unq_V2), format='csr')
 
         if not self.hashing: # Build n-grams/word vocabulary
-            if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+            if Version(sklearn_version) < Version('1.0'):
                 self.vocabulary = self.ngrams_count_.get_feature_names()
             else:
                 self.vocabulary = self.ngrams_count_.get_feature_names_out()
             if self.add_words:
-                if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+                if Version(sklearn_version) < Version('1.0'):
                     self.vocabulary = np.concatenate((
                         self.vocabulary,
                         self.word_count_.get_feature_names()
@@ -153,7 +156,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         n-grams counts.
         """
         if self.init == 'k-means++':
-            if LooseVersion(sklearn_version) < LooseVersion('0.24'):
+            if Version(sklearn_version) < Version('0.24'):
                 W = _k_init(
                     V, self.n_components,
                     x_squared_norms=row_norms(V, squared=True),
@@ -179,7 +182,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_components:
-                if LooseVersion(sklearn_version) < LooseVersion('0.24'):
+                if Version(sklearn_version) < Version('0.24'):
                     W2 = _k_init(
                         V, self.n_components - W.shape[0],
                         x_squared_norms=row_norms(V, squared=True),
@@ -214,6 +217,8 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         -------
         self
         """
+        # Copy parameter rho
+        self.rho_ = self.rho
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Make n-grams counts matrix unq_V
@@ -254,12 +259,15 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return self
 
     def get_feature_names(self, n_labels=3, prefix=''):
-        """ Deprecated, use "get_feature_names_out"
+        """
+        Ensures compatibility with sklearn < 1.0.
+        Use `get_feature_names_out` instead.
         """
         warnings.warn(
             "get_feature_names is deprecated in scikit-learn > 1.0. "
             "use get_feature_names_out instead",
             DeprecationWarning,
+            stacklevel=2,
             )
         return self.get_feature_names_out(n_labels=n_labels,
                                           prefix=prefix)
@@ -284,7 +292,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         """
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
-        if LooseVersion(sklearn_version) < LooseVersion('1.0'):
+        if Version(sklearn_version) < Version('1.0'):
             vocabulary = np.array(vectorizer.get_feature_names())
         else:
             vocabulary = np.array(vectorizer.get_feature_names_out())
@@ -359,6 +367,9 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         # Init H_dict_ with empty dict if it's the first call of partial_fit
         if not hasattr(self, 'H_dict_'):
             self.H_dict_ = dict()
+        # Same thing for the rho_ parameter
+        if not hasattr(self, 'rho_'):
+            self.rho_ = self.rho
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "ERROR: Input data is not string."
         # Check if it is not the first batch
@@ -569,7 +580,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.gamma_shape_prior = gamma_shape_prior  # 'a' parameter
         self.gamma_scale_prior = gamma_scale_prior  # 'b' parameter
         self.rho = rho
-        self.rho_ = self.rho
         self.rescale_rho = rescale_rho
         self.batch_size = batch_size
         self.tol = tol
@@ -584,6 +594,12 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
         self.handle_missing = handle_missing
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {"X_types": ["categorical"]}
 
     def _create_column_gap_encoder(self) -> GapEncoderColumn:
         return GapEncoderColumn(
@@ -641,6 +657,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self
         
         """
+        # Copy parameter rho
+        self.rho_ = self.rho
         # If X is a dataframe, store its column names
         if isinstance(X, pd.DataFrame):
             self.column_names_ = list(X.columns)
@@ -762,12 +780,17 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     def get_feature_names(
         self, input_features=None, col_names=None, n_labels=3
     ):
-        """ Deprecated, use "get_feature_names_out"
         """
-        warnings.warn(
-            "get_feature_names is deprecated in scikit-learn > 1.0. "
-            "use get_feature_names_out instead",
-            DeprecationWarning,
+        Ensures compatibility with sklearn < 1.0.
+        Use `get_feature_names_out` instead.
+        """
+        if Version(sklearn_version) >= '1.0':
+            warnings.warn(
+                "Following the changes in scikit-learn 1.0, "
+                "get_feature_names is deprecated. "
+                "Use get_feature_names_out instead.",
+                DeprecationWarning,
+                stacklevel=2,
             )
         return self.get_feature_names_out(col_names, n_labels)
         

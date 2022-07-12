@@ -15,15 +15,40 @@ import warnings
 import pandas as pd
 
 from pathlib import Path
-from distutils.version import LooseVersion
+from functools import wraps
+from json import JSONDecodeError
+from urllib.error import URLError
 
 from unittest import mock
 from unittest.mock import mock_open
 
+from dirty_cat.utils import Version
+from dirty_cat.datasets import fetching
+from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
+from dirty_cat.datasets.fetching import (
+    _download_and_write_openml_dataset, _read_json_from_gz,
+    _features_to_csv_format, _export_gz_data_to_csv,
+    _get_details, _get_features, Details, Features,
+    fetch_openml_dataset as _fetch_openml_dataset,
+)
+
+
+@wraps(_fetch_openml_dataset)
+def fetch_openml_dataset(*args, **kwargs):
+    """
+    Wrapper for the fetching function.
+    Filters out specific warnings.
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter(
+            action='ignore',
+            category=UserWarning,
+        )
+        return _fetch_openml_dataset(*args, **kwargs)
+
 
 def get_test_data_dir() -> Path:
-    from dirty_cat.datasets.utils import get_data_dir
-    return get_data_dir("tests")
+    return _get_data_dir("tests")
 
 
 def test_fetch_openml_dataset():
@@ -34,9 +59,6 @@ def test_fetch_openml_dataset():
 
     Reference: https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/datasets/tests/test_openml.py
     """
-
-    from dirty_cat.datasets.fetching import fetch_openml_dataset
-    from urllib.error import URLError
 
     # Hard-coded information about the test dataset.
     # Centralizes used information here.
@@ -62,8 +84,10 @@ def test_fetch_openml_dataset():
                                             data_directory=test_data_dir)
 
             # Valid call
-            returned_info = fetch_openml_dataset(dataset_id=test_dataset["id"],
-                                                 data_directory=test_data_dir)
+            returned_info = fetch_openml_dataset(
+                dataset_id=test_dataset["id"],
+                data_directory=test_data_dir,
+            )
 
         except URLError:
             warnings.warn(
@@ -107,9 +131,6 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     we mock the functions to test its inner mechanisms.
     """
 
-    from dirty_cat.datasets.fetching import fetch_openml_dataset, Details, \
-        Features
-
     mock_get_details.return_value = Details("Dataset_name", "123456",
                                             "Dummy dataset description.")
     mock_get_features.return_value = Features(["id", "name", "transaction_id",
@@ -147,12 +168,10 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
 def test__download_and_write_openml_dataset(mock_fetch_openml):
     """Tests function ``_download_and_write_openml_dataset()``."""
 
-    from dirty_cat.datasets.fetching import _download_and_write_openml_dataset
-
     test_data_dir = get_test_data_dir()
     _download_and_write_openml_dataset(1, test_data_dir)
 
-    if LooseVersion(sklearn.__version__) >= LooseVersion('0.22'):
+    if Version(sklearn.__version__) >= Version('0.22'):
         mock_fetch_openml.assert_called_once_with(data_id=1,
                                                   data_home=str(test_data_dir),
                                                   as_frame=True)
@@ -164,9 +183,6 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
 @mock.patch("pathlib.Path.is_file")
 def test__read_json_from_gz(mock_pathlib_path_isfile):
     """Tests function ``_read_json_from_gz()``."""
-
-    from dirty_cat.datasets.fetching import _read_json_from_gz
-    from json import JSONDecodeError
 
     dummy_file_path = Path("file/path.gz")
 
@@ -195,8 +211,6 @@ def test__read_json_from_gz(mock_pathlib_path_isfile):
 def test__get_details(mock_read_json_from_gz):
     """Tests function ``_get_details()``."""
 
-    from dirty_cat.datasets.fetching import Details, _get_details
-
     expected_return_value = Details("Dataset_name", "123456",
                                     "Dummy dataset description.")
 
@@ -218,8 +232,6 @@ def test__get_details(mock_read_json_from_gz):
 @mock.patch("dirty_cat.datasets.fetching._read_json_from_gz")
 def test__get_features(mock_read_json_from_gz):
     """Tests function ``_get_features()``."""
-
-    from dirty_cat.datasets.fetching import Features, _get_features
 
     expected_return_value = Features(["id", "name", "transaction_id",
                                       "owner", "recipient"])
@@ -243,7 +255,6 @@ def test__get_features(mock_read_json_from_gz):
 
 def test__export_gz_data_to_csv():
     """Tests function ``_export_gz_data_to_csv()``."""
-    from dirty_cat.datasets.fetching import _export_gz_data_to_csv, Features
 
     features = Features(["top-left-square",
                          "top-middle-square",
@@ -279,8 +290,6 @@ def test__export_gz_data_to_csv():
 def test__features_to_csv_format():
     """Tests function ``_features_to_csv_format()``."""
 
-    from dirty_cat.datasets.fetching import Features, _features_to_csv_format
-
     features = Features(["id", "name", "transaction_id", "owner", "recipient"])
     expected_return_value = "id,name,transaction_id,owner,recipient"
     assert _features_to_csv_format(features) == expected_return_value
@@ -291,8 +300,6 @@ def test__features_to_csv_format():
 def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
                              mock_fetch_openml_dataset):
     """Tests functions ``fetch_*()``."""
-
-    from dirty_cat.datasets import fetching
 
     mock_fetch_openml_dataset.return_value = {
         'description': 'This is a dataset.',

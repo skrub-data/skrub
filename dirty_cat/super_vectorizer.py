@@ -15,15 +15,14 @@ import pandas as pd
 
 from warnings import warn
 from typing import Union, Optional, List
-from distutils.version import LooseVersion
 
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn import __version__ as sklearn_version
 
-from dirty_cat import GapEncoder
-
-_sklearn_loose_version = LooseVersion(sklearn.__version__)
+from dirty_cat import GapEncoder, DatetimeEncoder
+from dirty_cat.utils import Version, check_input
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -65,17 +64,19 @@ class SuperVectorizer(ColumnTransformer):
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
 
-    low_card_cat_transformer: Transformer or str or None, default=OneHotEncoder()
+    low_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
+        Default value None is converted to `OneHotEncoder()`.
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    high_card_cat_transformer: Transformer or str or None, default=GapEncoder(n_components=30)
+    high_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
+        Default value None is converted to `GapEncoder(n_components=30)`.
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
@@ -90,7 +91,8 @@ class SuperVectorizer(ColumnTransformer):
 
     datetime_transformer: Transformer or str or None, default=None
         Transformer used on datetime features.
-        Can either be a transformer object instance,
+        Default value None is converted to `DatetimeEncoder()`.
+        Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
@@ -108,7 +110,7 @@ class SuperVectorizer(ColumnTransformer):
         'skip' will not impute at all.
         When imputed, missing values are replaced by the string 'missing'.
         See also attribute `imputed_columns_`.
-        
+
     remainder : {'drop', 'passthrough'} or estimator, default='drop'
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
@@ -122,24 +124,24 @@ class SuperVectorizer(ColumnTransformer):
         estimator must support :term:`fit` and :term:`transform`.
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
-        
+
     sparse_threshold: float, default=0.3
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
-        lower than this value. Use sparse_threshold=0 to always return dense. 
+        lower than this value. Use sparse_threshold=0 to always return dense.
         When the transformed output consists of all dense data, the stacked result
         will be dense, and this keyword will be ignored.
-        
+
     n_jobs : int, default=None
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
-        
+
     transformer_weights : dict, default=None
         Multiplicative weights for features per transformer. The output of the
         transformer is multiplied by these weights. Keys are transformer names,
         values the weights.
-        
+
     verbose : bool, default=False
         If True, the time elapsed while fitting each transformer will be
         printed as it is completed
@@ -173,8 +175,8 @@ class SuperVectorizer(ColumnTransformer):
 
     def __init__(self, *,
                  cardinality_threshold: int = 40,
-                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = OneHotEncoder(),
-                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = GapEncoder(n_components=30),
+                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = None,
+                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = None,
                  numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
                  datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
                  auto_cast: bool = True,
@@ -201,6 +203,28 @@ class SuperVectorizer(ColumnTransformer):
         self.n_jobs = n_jobs
         self.transformer_weights = transformer_weights
         self.verbose = verbose
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {"allow_nan": [True]}
+
+    def _clone_transformers(self):
+        if self.low_card_cat_transformer is not None:
+            self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
+        else:
+            self.low_card_cat_transformer_ = OneHotEncoder()
+        if self.high_card_cat_transformer is not None:
+            self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
+        else:
+            self.high_card_cat_transformer_ = GapEncoder(n_components=30)
+        if self.datetime_transformer is not None:
+            self.datetime_transformer_ = clone(self.datetime_transformer)
+        else:
+            self.datetime_transformer_ = DatetimeEncoder()
+
+        #TODO check that the provided transformers are valid
 
     @staticmethod
     def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
@@ -247,7 +271,8 @@ class SuperVectorizer(ColumnTransformer):
                 except:
                     # Only try to convert to datetime if the variable isn't numeric.
                     try:
-                        X[col] = pd.to_datetime(X[col], errors='raise')
+                        X[col] = pd.to_datetime(X[col], errors='raise',
+                                                infer_datetime_format=True)
                     except:
                         pass
             # Cast pandas dtypes to numpy dtypes
@@ -330,6 +355,7 @@ class SuperVectorizer(ColumnTransformer):
             usually because transformers passed do not match any column.
             To fix the issue, try passing the least amount of None as encoders.
         """
+        self._clone_transformers()
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
@@ -346,9 +372,12 @@ class SuperVectorizer(ColumnTransformer):
             self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
 
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(include=['int', 'float']).columns.to_list()
+        numeric_columns = X.select_dtypes(include=['int', 'float',
+                                                   np.float64, np.float32, np.float16,
+                                                   np.int64, np.int32, np.int16,
+                                                   np.uint64, np.uint32, np.uint16]).columns.to_list()
         categorical_columns = X.select_dtypes(include=['string', 'object', 'category']).columns.to_list()
-        datetime_columns = X.select_dtypes(include='datetime').columns.to_list()
+        datetime_columns = X.select_dtypes(include=['datetime', "datetimetz"]).columns.to_list()
 
         # Divide categorical columns by cardinality
         low_card_cat_columns = [
@@ -364,9 +393,9 @@ class SuperVectorizer(ColumnTransformer):
         # Create the list of all the transformers.
         all_transformers = [
             ('numeric', self.numerical_transformer, numeric_columns),
-            ('datetime', self.datetime_transformer, datetime_columns),
-            ('low_card_cat', self.low_card_cat_transformer, low_card_cat_columns),
-            ('high_card_cat', self.high_card_cat_transformer, high_card_cat_columns),
+            ('datetime', self.datetime_transformer_, datetime_columns),
+            ('low_card_cat', self.low_card_cat_transformer_, low_card_cat_columns),
+            ('high_card_cat', self.high_card_cat_transformer_, high_card_cat_columns),
         ]
         # We will now filter this list, by keeping only the ones with:
         # - at least one column
@@ -402,7 +431,7 @@ class SuperVectorizer(ColumnTransformer):
                     impute: bool = False
 
                     if isinstance(trans, OneHotEncoder) \
-                            and _sklearn_loose_version < LooseVersion('0.24'):
+                            and Version(sklearn_version) < Version('0.24'):
                         impute = True
 
                     if impute:
@@ -427,7 +456,19 @@ class SuperVectorizer(ColumnTransformer):
         if self.verbose:
             print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
 
-        return super().fit_transform(X, y)
+        check_input(X)
+
+        res = super().fit_transform(X, y)
+
+        # for the "remainder" columns, the ColumnTransformer transformers_ attribute
+        # contains the index instead of the column name, so we convert it to the column name
+        # if there is less than 20 columns in the remainder.
+        for i, tup in enumerate(self.transformers_):
+            name, enc, cols = tup  # Unpack
+            if name == "remainder" and len(cols) < 20:
+                self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
+
+        return res
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """
@@ -436,9 +477,9 @@ class SuperVectorizer(ColumnTransformer):
         e.g. "job_title_Police officer",
         or "<column_name>" if not encoded.
         """
-        if _sklearn_loose_version < LooseVersion('0.23'):
+        if Version(sklearn_version) < Version('0.23'):
             try:
-                if _sklearn_loose_version < LooseVersion('1.0'):
+                if Version(sklearn_version) < Version('1.0'):
                     ct_feature_names = super().get_feature_names()
                 else:
                     ct_feature_names = super().get_feature_names_out()
@@ -450,7 +491,7 @@ class SuperVectorizer(ColumnTransformer):
                     'transformers, or update your copy of scikit-learn.'
                 )
         else:
-            if _sklearn_loose_version < LooseVersion('1.0'):
+            if Version(sklearn_version) < Version('1.0'):
                 ct_feature_names = super().get_feature_names()
             else:
                 ct_feature_names = super().get_feature_names_out()
@@ -468,7 +509,10 @@ class SuperVectorizer(ColumnTransformer):
             if not hasattr(trans, 'get_feature_names'):
                 all_trans_feature_names.extend(cols)
             else:
-                trans_feature_names = trans.get_feature_names(cols)
+                if Version(sklearn_version) < Version('1.0'):
+                    trans_feature_names = trans.get_feature_names(cols)
+                else:
+                    trans_feature_names = trans.get_feature_names_out(cols)
                 all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
@@ -478,11 +522,16 @@ class SuperVectorizer(ColumnTransformer):
         return all_trans_feature_names
     
     def get_feature_names(self) -> List[str]:
-        """ Deprecated, use "get_feature_names_out"
         """
-        warn(
-            "get_feature_names is deprecated in scikit-learn > 1.0. "
-            "use get_feature_names_out instead",
-            DeprecationWarning,
+        Ensures compatibility with sklearn < 1.0.
+        Use `get_feature_names_out` instead.
+        """
+        if Version(sklearn_version) >= '1.0':
+            warn(
+                "Following the changes in scikit-learn 1.0, "
+                "get_feature_names is deprecated. "
+                "Use get_feature_names_out instead.",
+                DeprecationWarning,
+                stacklevel=2,
             )
         return self.get_feature_names_out()

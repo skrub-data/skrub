@@ -1,8 +1,39 @@
+Release 0.3
+============
+
+Major changes
+-------------
+
+* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
+    columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
+    in the SuperVectorizer for datetime columns.
+
+Notes
+-----
+
+* The transformers_ attribute of the SuperVectorizer now contains column names
+instead of column indices for the "remainder" columns.
+
+* The MinHashEncoder now supports a `n_jobs` parameter to parallelize
+the hashes computation.
+
+
+Release 0.2.2
+=============
+
+Bug-fixes
+---------
+
+* Fixed a bug in the :class:`SuperVectorizer` causing a `FutureWarning`
+  when using the `get_feature_names_out` method.
+
+
 Release 0.2.1
 =============
 
 Major changes
 -------------
+
 * Improvements to the :class:`SuperVectorizer`
 
     - Type detection works better: handles dates, numerics columns encoded as strings,
@@ -23,6 +54,8 @@ Bug-fixes
 * Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
 
 * GapEncoder's `get_feature_names_out` now accepts all iterators, not just lists.  
+
+* Fixed `DeprecationWarning` raised by the usage of `distutils.version.LooseVersion`
 
 Notes
 -----
