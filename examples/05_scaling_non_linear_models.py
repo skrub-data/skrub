@@ -366,7 +366,7 @@ n_out_encoder = 1000
 n_out_rbf = 5000
 n_samples_encoder = 10000
 
-X_encoder, _ = get_X_y(nrows=n_samples_encoder, names=columns_names)
+X_encoder, _ = get_X_y(nrows=n_samples_encoder)
 
 # Fit the rbf_sampler with the similarity matrix.
 column_transformer = make_column_transformer(

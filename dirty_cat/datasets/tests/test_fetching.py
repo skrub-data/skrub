@@ -4,7 +4,6 @@ Tests fetching.py (datasets fetching off OpenML.org).
 
 import pytest
 import shutil
-import sklearn
 import warnings
 import pandas as pd
 
@@ -16,7 +15,6 @@ from urllib.error import URLError
 from unittest import mock
 from unittest.mock import mock_open
 
-from dirty_cat.utils import Version
 from dirty_cat.datasets import fetching
 from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
 from dirty_cat.datasets.fetching import (
@@ -132,7 +130,7 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
 
     test_data_dir = get_test_data_dir()
 
-    # We test the function to see if it behaves correctly when files exists
+    # We test the function to see if it behaves correctly when files exist
     mock_pathlib_path_isfile.return_value = True
 
     fetch_openml_dataset(50, test_data_dir)
@@ -145,7 +143,7 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     # Reset mocks
     mock_get_details.reset_mock()
 
-    # This time, the files does not exists
+    # This time, the files do not exist
     mock_pathlib_path_isfile.return_value = False
 
     fetch_openml_dataset(50, test_data_dir)
@@ -165,13 +163,9 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
     test_data_dir = get_test_data_dir()
     _download_and_write_openml_dataset(1, test_data_dir)
 
-    if Version(sklearn.__version__) >= Version('0.22'):
-        mock_fetch_openml.assert_called_once_with(data_id=1,
-                                                  data_home=str(test_data_dir),
-                                                  as_frame=True)
-    else:
-        mock_fetch_openml.assert_called_once_with(data_id=1,
-                                                  data_home=str(test_data_dir))
+    mock_fetch_openml.assert_called_once_with(data_id=1,
+                                              data_home=str(test_data_dir),
+                                              as_frame=True)
 
 
 @mock.patch("pathlib.Path.is_file")
@@ -277,8 +271,10 @@ def test__export_gz_data_to_csv():
         with mock.patch("gzip.open",
                         mock_open(read_data=arff_data)) as mock_gzip_open:
             _export_gz_data_to_csv(dummy_gz, dummy_csv, features)
-            mock_pathlib_path_open.assert_called_with(mode='w', encoding='utf8')
-            mock_gzip_open.assert_called_with(dummy_gz, mode='rt', encoding='utf8')
+            mock_pathlib_path_open.assert_called_with(mode='w',
+                                                      encoding='utf8')
+            mock_gzip_open.assert_called_with(dummy_gz, mode='rt',
+                                              encoding='utf8')
 
 
 def test__features_to_csv_format():
@@ -323,8 +319,8 @@ def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
     ):
         mock_fetch_dataset_as_namedtuple.return_value = expected_return_value
 
-        returned_value = fetching.fetch_employee_salaries(drop_linked=False,
-                                                          drop_irrelevant=False)
+        returned_value = fetching.fetch_employee_salaries(
+            drop_linked=False, drop_irrelevant=False)
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()

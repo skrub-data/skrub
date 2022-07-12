@@ -158,22 +158,14 @@ def _download_and_write_openml_dataset(dataset_id: int,
         If there is no Internet connection.
 
     """
-
-    fetch_kwargs = {}
-    if Version(sklearn.__version__) >= Version('0.22'):
-        fetch_kwargs.update({'as_frame': True})
-
     # The ``fetch_openml()`` function returns a Scikit-Learn ``Bunch`` object,
     # which behaves just like a ``namedtuple``.
     # However, we do not want to save this data into memory:
     # we will read it from the disk later.
-    #
-    # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
-    # and ``urllib.error.URLError`` if there is no Internet connection.
     fetch_openml(
         data_id=dataset_id,
         data_home=str(data_directory),
-        **fetch_kwargs
+        as_frame=True,
     )
 
 
