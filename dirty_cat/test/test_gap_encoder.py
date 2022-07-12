@@ -3,7 +3,9 @@ import numpy as np
 import pytest
 import pandas as pd
 
+from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_20newsgroups
+from dirty_cat.utils import Version
 from dirty_cat import GapEncoder
 
 @pytest.mark.parametrize("init1, analyzer1, analyzer2",[
@@ -118,8 +120,12 @@ def test_get_feature_names_out(n_samples=70):
     X = np.array([X_txt, X_txt]).T
     enc = GapEncoder(random_state=42)
     enc.fit(X)
-    with pytest.warns(DeprecationWarning):
+    # Expect a warning if sklearn >= 1.0
+    if Version(sklearn_version) < "1.0":
         feature_names_1 = enc.get_feature_names()
+    else:
+        with pytest.warns(DeprecationWarning):
+            feature_names_1 = enc.get_feature_names()
     feature_names_2 = enc.get_feature_names_out()
     for topic_labels in [feature_names_1, feature_names_2]:
         # Check number of labels
