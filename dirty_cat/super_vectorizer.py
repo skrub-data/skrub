@@ -19,13 +19,10 @@ from typing import Union, Optional, List
 from sklearn.base import BaseEstimator, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn import __version__ as sklearn_version
 
 from dirty_cat import GapEncoder, DatetimeEncoder
-from dirty_cat.utils import check_input
-from dirty_cat.utils import Version
-
-
-_sklearn_loose_version = Version(sklearn.__version__)
+from dirty_cat.utils import Version, check_input
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -375,9 +372,9 @@ class SuperVectorizer(ColumnTransformer):
             self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
 
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(include=['int', 'float', 
+        numeric_columns = X.select_dtypes(include=['int', 'float',
                                                    np.float64, np.float32, np.float16,
-                                                   np.int64, np.int32, np.int16, 
+                                                   np.int64, np.int32, np.int16,
                                                    np.uint64, np.uint32, np.uint16]).columns.to_list()
         categorical_columns = X.select_dtypes(include=['string', 'object', 'category']).columns.to_list()
         datetime_columns = X.select_dtypes(include=['datetime', "datetimetz"]).columns.to_list()
@@ -434,7 +431,7 @@ class SuperVectorizer(ColumnTransformer):
                     impute: bool = False
 
                     if isinstance(trans, OneHotEncoder) \
-                            and _sklearn_loose_version < Version('0.24'):
+                            and Version(sklearn_version) < Version('0.24'):
                         impute = True
 
                     if impute:
@@ -471,7 +468,6 @@ class SuperVectorizer(ColumnTransformer):
             if name == "remainder" and len(cols) < 20:
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
 
-
         return res
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
@@ -481,9 +477,9 @@ class SuperVectorizer(ColumnTransformer):
         e.g. "job_title_Police officer",
         or "<column_name>" if not encoded.
         """
-        if _sklearn_loose_version < Version('0.23'):
+        if Version(sklearn_version) < Version('0.23'):
             try:
-                if _sklearn_loose_version < Version('1.0'):
+                if Version(sklearn_version) < Version('1.0'):
                     ct_feature_names = super().get_feature_names()
                 else:
                     ct_feature_names = super().get_feature_names_out()
@@ -495,7 +491,7 @@ class SuperVectorizer(ColumnTransformer):
                     'transformers, or update your copy of scikit-learn.'
                 )
         else:
-            if _sklearn_loose_version < Version('1.0'):
+            if Version(sklearn_version) < Version('1.0'):
                 ct_feature_names = super().get_feature_names()
             else:
                 ct_feature_names = super().get_feature_names_out()
@@ -513,7 +509,7 @@ class SuperVectorizer(ColumnTransformer):
             if not hasattr(trans, 'get_feature_names'):
                 all_trans_feature_names.extend(cols)
             else:
-                if _sklearn_loose_version < Version('1.0'):
+                if Version(sklearn_version) < Version('1.0'):
                     trans_feature_names = trans.get_feature_names(cols)
                 else:
                     trans_feature_names = trans.get_feature_names_out(cols)
@@ -526,11 +522,16 @@ class SuperVectorizer(ColumnTransformer):
         return all_trans_feature_names
     
     def get_feature_names(self) -> List[str]:
-        """ Deprecated, use "get_feature_names_out"
         """
-        warn(
-            "get_feature_names is deprecated in scikit-learn > 1.0. "
-            "use get_feature_names_out instead",
-            DeprecationWarning,
+        Ensures compatibility with sklearn < 1.0.
+        Use `get_feature_names_out` instead.
+        """
+        if Version(sklearn_version) >= '1.0':
+            warn(
+                "Following the changes in scikit-learn 1.0, "
+                "get_feature_names is deprecated. "
+                "Use get_feature_names_out instead.",
+                DeprecationWarning,
+                stacklevel=2,
             )
         return self.get_feature_names_out()

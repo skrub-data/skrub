@@ -1,11 +1,14 @@
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+
+from warnings import warn
 from typing import List
 
+from sklearn import __version__ as sklearn_version
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat.utils import check_input
+from dirty_cat.utils import check_input, Version
 
 # Some functions need aliases
 WORD_TO_ALIAS = {"year": "Y", "month": "M", "day": "D", "hour": "H", "minute": "min", "second": "S",
@@ -181,5 +184,13 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Ensures compatibility with sklearn < 1.0, and returns the output of
         get_feature_names_out.
         """
+        if Version(sklearn_version) >= '1.0':
+            warn(
+                "Following the changes in scikit-learn 1.0, "
+                "get_feature_names is deprecated. "
+                "Use get_feature_names_out instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         return self.get_feature_names_out()
 
