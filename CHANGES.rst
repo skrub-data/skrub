@@ -7,6 +7,7 @@ Major changes
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the SuperVectorizer for datetime columns.
+* Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
 
 Notes
 -----

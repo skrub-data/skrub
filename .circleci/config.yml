@@ -3,11 +3,11 @@ version: 2
 jobs:
   python3:
     docker:
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.8.1
     environment:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv
-      - PYTHON_VERSION: 3.8
+      - PYTHON_VERSION: 3.8.1
       - OMP_NUM_THREADS: 2 # Avoid overcommit with HistGradientBoosting
     steps:
       - checkout
@@ -31,7 +31,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.8.1
     steps:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh
