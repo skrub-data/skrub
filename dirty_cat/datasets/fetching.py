@@ -37,10 +37,10 @@ DatasetInfoOnly = namedtuple('Dataset', ('description', 'source', 'path',
 # available via the function ``get_data_dir()``.
 DETAILS_DIRECTORY: str = "openml/openml.org/api/v1/json/data/"
 
-# Same as above ; for the datasets features location.
+# Same as above; for the datasets features location.
 FEATURES_DIRECTORY: str = "openml/openml.org/api/v1/json/data/features/"
 
-# Same as above ; for the datasets data location.
+# Same as above; for the datasets data location.
 DATA_DIRECTORY: str = "openml/openml.org/data/v1/download/"
 
 # The IDs of the datasets, from OpenML.

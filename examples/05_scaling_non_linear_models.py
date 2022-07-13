@@ -108,7 +108,7 @@ print(drug_directory.description)
 #
 # The :code:`NONPROPRIETARYNAME` column, is composed of textual observations
 # describing each drug's composition. The :code:`PRODUCTTYPENAME` column
-# consists of categorical values ; we therefore a classification problem.
+# consists of categorical values; we therefore a classification problem.
 #
 # You can have a glimpse of the values here:
 import pandas as pd
@@ -231,7 +231,7 @@ def get_X_y(**kwargs) -> Tuple[pd.DataFrame, np.array]:
 # .. warning::
 #
 #    In the following steps, we assume the dataset to be shuffled prior to its
-#    loading. Be careful as this is not the case for all datasets !
+#    loading. Be careful as this is not the case for all datasets!
 #    This is important here because we will take the :math:`n` first
 #    observations for the training set and the next :math:`m` observations for
 #    the test set repeatably.
@@ -335,7 +335,7 @@ for n in train_set_sizes:
 # Kernel approximation methods such as |RBF| or |NYS| [#nys_ref]_ try to
 # approximate this similarity matrix, without actually creating it. By allowing
 # the program to not compute the perfect similarity matrix, **the problem
-# complexity becomes linear** ! Furthermore, the samples don't need to be
+# complexity becomes linear**! Furthermore, the samples don't need to be
 # processed at once.
 #
 # We are not bound to use a |SVC| anymore, and can instead use a |RBF| in an
@@ -528,7 +528,7 @@ f.show()
 # shows that there were some significant non-linear relationships
 # between the input and the output. By scaling a kernel method, we successfully
 # took this non-linearity into account in our model, which was far from a
-# trivial task at the beginning of this example !
+# trivial task at the beginning of this example!
 
 ###############################################################################
 # .. rubric:: Footnotes

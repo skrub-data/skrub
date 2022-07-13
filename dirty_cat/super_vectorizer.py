@@ -318,7 +318,7 @@ class SuperVectorizer(ColumnTransformer):
             X = self._auto_cast(X)
             self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
         if X.shape[1] != len(self.columns_):
-            raise ValueError("Passed array does not match column count of "
+            raise ValueError(f"Passed array does not match column count of "
                              f"array seen at fit time. Got {X.shape[1]} "
                              f"columns, expected {len(self.columns_)}")
 
@@ -417,7 +417,7 @@ class SuperVectorizer(ColumnTransformer):
                 self.transformers.append(trans)
 
         if len(self.transformers) == 0:
-            raise RuntimeError('No transformers could be generated !')
+            raise RuntimeError('No transformers could be generated! ')
 
         self.imputed_columns_ = []
         if _has_missing_values(X):
@@ -499,7 +499,7 @@ class SuperVectorizer(ColumnTransformer):
                     'Prior to sklearn 0.23, get_feature_names with '
                     '"passthrough" is unsupported. To use the method, '
                     'either make sure there is no "passthrough" in the '
-                    'transformers, or update your copy of scikit-learn.'
+                    'transformers, or update your copy of scikit-learn. '
                 )
         else:
             if Version(sklearn_version) < Version('1.0'):
@@ -527,7 +527,7 @@ class SuperVectorizer(ColumnTransformer):
                 all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
-            warn('Could not extract clean feature names ; returning defaults.')
+            warn('Could not extract clean feature names; returning defaults. ')
             return ct_feature_names
 
         return all_trans_feature_names
@@ -541,7 +541,7 @@ class SuperVectorizer(ColumnTransformer):
             warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "
-                "Use get_feature_names_out instead.",
+                "Use get_feature_names_out instead. ",
                 DeprecationWarning,
                 stacklevel=2,
             )

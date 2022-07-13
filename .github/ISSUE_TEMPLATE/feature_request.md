@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Got an idea for a new feature, or changing an existing one ? This is the place.
+about: Got an idea for a new feature, or changing an existing one? This is the place.
 title: ''
 labels: 'enhancement'
 assignees: ''

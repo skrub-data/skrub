@@ -173,7 +173,7 @@ def get_kmeans_prototypes(X,
     indexes_prototypes = np.unique(neighbors.kneighbors(centers, 1)[-1])
     if indexes_prototypes.shape[0] < n_prototypes:
         warnings.warn('Final number of unique prototypes is lower than ' +
-                      'n_prototypes (expected)')
+                      'n_prototypes (expected). ')
     return np.sort(X[indexes_prototypes])
 
 
@@ -305,10 +305,10 @@ class SimilarityEncoder(OneHotEncoder):
         if categories in ['k-means', 'most_frequent'] \
                 and (n_prototypes is None or n_prototypes == 0):
             raise ValueError(
-                'n_prototypes expected None or a positive non null integer')
+                'n_prototypes expected None or a positive non null integer. ')
         if categories == 'auto' and n_prototypes is not None:
             warnings.warn(
-                'n_prototypes parameter ignored with category type \'auto\'')
+                'n_prototypes parameter ignored with category type "auto". ')
 
     def get_most_frequent(self, prototypes: List[str]):
         """
@@ -351,7 +351,7 @@ class SimilarityEncoder(OneHotEncoder):
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
                 raise ValueError(
-                    "Found missing values in input data ; set "
+                    "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
             else:
@@ -364,7 +364,7 @@ class SimilarityEncoder(OneHotEncoder):
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
                     raise ValueError(
-                        "Found missing values in input data ; set "
+                        "Found missing values in input data; set "
                         "handle_missing='' to encode with missing values. "
                     )
                 else:
@@ -417,7 +417,7 @@ class SimilarityEncoder(OneHotEncoder):
                         diff = np.unique(Xi[~valid_mask])
                         raise ValueError(
                             f"Found unknown categories {diff} in column {i} "
-                            f"during fit."
+                            f"during fit. "
                         )
                 self.categories_.append(np.array(self.categories[i],
                                                  dtype=object))
@@ -480,7 +480,7 @@ class SimilarityEncoder(OneHotEncoder):
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
                 raise ValueError(
-                    "Found missing values in input data ; set "
+                    "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
             if self.handle_missing != 'error':
@@ -493,7 +493,7 @@ class SimilarityEncoder(OneHotEncoder):
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
                     raise ValueError(
-                        "Found missing values in input data ; set "
+                        "Found missing values in input data; set "
                         "handle_missing='' to encode with missing values. "
                     )
                 else:
@@ -545,7 +545,7 @@ class SimilarityEncoder(OneHotEncoder):
                 last += len(categories)
             return out
         else:
-            raise ValueError(f"Unknown similarity: {self.similarity!r}")
+            raise ValueError(f"Unknown similarity: {self.similarity!r}. ")
 
     def _ngram_similarity_fast(self, X: Union[list, np.array], col_idx: int) -> np.array:
         """ Fast computation of ngram similarity.

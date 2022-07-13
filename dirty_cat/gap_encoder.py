@@ -219,7 +219,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 W = np.concatenate((W, W2), axis=0)
         else:
             raise ValueError(
-                f'Initialization method {self.init!r} does not exist.'
+                f'Initialization method {self.init!r} does not exist. '
             )
         W /= W.sum(axis=1, keepdims=True)
         A = np.ones((self.n_components, self.n_vocab)) * 1e-10
@@ -245,7 +245,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         # Copy parameter rho
         self.rho_ = self.rho
         # Check if first item has str or np.str_ type
-        assert isinstance(X[0], str), "ERROR: Input data is not string."
+        assert isinstance(X[0], str), "Input data is not string. "
         # Make n-grams counts matrix unq_V
         unq_X, unq_V, lookup = self._init_vars(X)
         n_batch = (len(X) - 1) // self.batch_size + 1
@@ -289,11 +289,12 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         Use `get_feature_names_out` instead.
         """
         warnings.warn(
-            "get_feature_names is deprecated in scikit-learn > 1.0. "
-            "use get_feature_names_out instead",
+            "Following the changes in scikit-learn 1.0, "
+            "get_feature_names is deprecated. "
+            "Use get_feature_names_out instead. ",
             DeprecationWarning,
             stacklevel=2,
-            )
+        )
         return self.get_feature_names_out(n_labels=n_labels, prefix=prefix)
 
     def get_feature_names_out(self, n_labels: int = 3, prefix: str = '') -> List[str]:
@@ -399,9 +400,9 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         if not hasattr(self, 'rho_'):
             self.rho_ = self.rho
         # Check if first item has str or np.str_ type
-        assert isinstance(X[0], str), "ERROR: Input data is not string."
+        assert isinstance(X[0], str), "Input data is not string. "
         # Check if it is not the first batch
-        if hasattr(self, 'vocabulary'): # Update unq_X, unq_V with new batch
+        if hasattr(self, 'vocabulary'):  # Update unq_X, unq_V with new batch
             unq_X, lookup = np.unique(X, return_inverse=True)
             unq_V = self.ngrams_count_.transform(unq_X)
             if self.add_words:
@@ -425,7 +426,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             unq_X, unq_V, lookup = self._init_vars(X)
 
         unq_H = self._get_H(unq_X)
-        # Update the activations unq_H
+        # Update unq_H, the activations
         unq_H = _multiplicative_update_h(
             unq_V, self.W_, unq_H,
             epsilon=1e-3, max_iter=self.max_iter_e_step,
@@ -471,7 +472,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             Transformed input.
         """
         # Check if first item has str or np.str_ type
-        assert isinstance(X[0], str), "ERROR: Input data is not string."
+        assert isinstance(X[0], str), "Input data is not string. "
         unq_X = np.unique(X)
         # Build the n-grams counts matrix V for the string data to encode
         unq_V = self.ngrams_count_.transform(unq_X)
@@ -671,15 +672,15 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         """
         if self.handle_missing not in ['error', 'zero_impute']:
             raise ValueError(
-                "handle_missing should be either 'error' or "
-                f"'zero_impute', got {self.handle_missing!r}"
+                f"handle_missing should be either 'error' or "
+                f"'zero_impute', got {self.handle_missing!r}. "
             )
 
         missing_mask = _object_dtype_isnan(X)
 
         if missing_mask.any():
             if self.handle_missing == 'error':
-                raise ValueError('Input data contains missing values.')
+                raise ValueError('Input data contains missing values. ')
             elif self.handle_missing == 'zero_impute':
                 X[missing_mask] = ''
 
@@ -835,7 +836,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             warnings.warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "
-                "Use get_feature_names_out instead.",
+                "Use get_feature_names_out instead. ",
                 DeprecationWarning,
                 stacklevel=2,
             )

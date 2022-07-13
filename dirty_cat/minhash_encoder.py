@@ -169,10 +169,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         X = check_input(X)
         if self.minmax_hash:
             assert self.n_components % 2 == 0, \
-                "n_components should be even when minmax_hash=True"
+                "n_components should be even when minmax_hash=True. "
         if self.hashing == 'murmur':
             assert not self.minmax_hash, \
-                'minmax_hash is not implemented with hashing="murmur"'
+                'minmax_hash is not implemented with hashing="murmur". '
 
         # TODO: Parallelize
         is_nan_idx = False
@@ -216,8 +216,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         if self.handle_missing == 'error':
             if is_nan_idx:
                 raise ValueError(
-                    "Found missing values in input data ; set "
-                    "handle_missing='zero_impute' to encode with missing values. "
+                    "Found missing values in input data; set "
+                    "handle_missing='zero_impute' "
+                    "to encode with missing values. "
                 )
         elif self.handle_missing == 'zero_impute':
             pass

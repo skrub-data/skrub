@@ -118,7 +118,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
                     raise ValueError(
-                        "Found missing values in input data ; set "
+                        "Found missing values in input data; set "
                         "handle_missing='' to encode with missing values. "
                     )
             else:
@@ -131,7 +131,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
                     raise ValueError(
-                        "Found missing values in input data ; set "
+                        "Found missing values in input data; set "
                         "handle_missing='' to encode with missing values. "
                     )
                 else:
@@ -147,7 +147,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError(
-                        "Unsorted categories are not yet supported"
+                        "Unsorted categories are not yet supported. "
                     )
 
         X_temp = check_array(X, dtype=None)
@@ -224,7 +224,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         if hasattr(X, 'iloc') and X.isna().values.any():
             if self.handle_missing == 'error':
                     raise ValueError(
-                        "Found missing values in input data ; set "
+                        "Found missing values in input data; set "
                         "handle_missing='' to encode with missing values. "
                     )
             if self.handle_missing != 'error':
@@ -237,7 +237,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             if X.dtype.kind == 'O' and mask.any():
                 if self.handle_missing == 'error':
                     raise ValueError(
-                        "Found missing values in input data ; set "
+                        "Found missing values in input data; set "
                         "handle_missing='' to encode with missing values. "
                     )
                 if self.handle_missing != 'error':
@@ -261,8 +261,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 if self.handle_unknown == 'error':
                     diff = np.unique(X[~valid_mask, i])
                     raise ValueError(
-                        "Found unknown categories {diff} in column {i} "
-                        "during transform. "
+                        f"Found unknown categories {diff} in column {i} "
+                        f"during transform. "
                     )
                 else:
                     # Set the problematic rows to an acceptable value and

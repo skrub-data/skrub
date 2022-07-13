@@ -84,7 +84,7 @@ class Version:
     >>> # You can also pass the separator for specific cases
     >>> Version('1-5', separator='-') == Version('1-6-5', separator='-')
     >>> Version('1-5', separator='-') == '1-6-5'
-    >>> Version('1-5', separator='-') == '1.6.5'  # Won't work !
+    >>> Version('1-5', separator='-') == '1.6.5'  # Won't work!
     """
 
     def __init__(self, value: str, separator: str = '.'):

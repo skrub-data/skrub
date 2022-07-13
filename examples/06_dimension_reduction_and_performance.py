@@ -52,7 +52,7 @@ def resource_used(func):
         size, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         peak /= (1024 ** 2)  # Convert to megabytes
-        print(f"Run time: {perf_counter() - t0:.2f}s ; "
+        print(f"Run time: {perf_counter() - t0:.2f}s | "
               f"Memory used: {peak:.2f}MB. ")
         return out
 
@@ -138,7 +138,7 @@ t1 = perf_counter()
 print(f'Time to vectorize: {t1 - t0:.3f}s')
 
 ###############################################################################
-# Let's now run a cross-validation !
+# Let's now run a cross-validation!
 from sklearn import pipeline, model_selection
 from sklearn.linear_model import LogisticRegression
 

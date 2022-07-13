@@ -26,7 +26,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     """
     This encoder transforms each datetime column into several numeric columns
     corresponding to temporal features, e.g year, month, day...
-    Constant extracted features are dropped ; for instance, if the year is
+    Constant extracted features are dropped; for instance, if the year is
     always the same in a feature, the extracted "year" column won't be added.
     If the dates are timezone aware, all the features extracted will correspond
     to the provided timezone.
@@ -180,7 +180,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             raise ValueError(
                 f"The number of features in the input data ({X.shape[1]}) "
                 f"does not match the number of features "
-                "seen during fit ({self.n_features_in_}). "
+                f"seen during fit ({self.n_features_in_}). "
             )
         # Create a new array with the extracted features,
         # choosing only features that weren't constant during fit
