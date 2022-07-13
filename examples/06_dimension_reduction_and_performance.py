@@ -78,14 +78,14 @@ from functools import reduce
 
 # Remove the missing lines in X
 na_mask: pd.DataFrame = X.isna()
-X = X.dropna(axis=0).reset_index()
+X = X.dropna(axis=0).reset_index(drop=True)
 
 y = open_payments.y
 # Combine boolean masks ; TODO: simplify
 na_mask = reduce(lambda acc, col: acc | na_mask[col],
                  na_mask.columns, na_mask[na_mask.columns[0]])
 # Drop the lines in y that contained missing values in X
-y = y[~na_mask].reset_index()
+y = y[~na_mask].reset_index(drop=True)
 
 ###############################################################################
 # We'll write down which columns are clean and which are dirty
