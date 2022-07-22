@@ -176,7 +176,7 @@ def test_cv_target_encoder():
     encoder.fit(X, y)
     t = encoder.transform(X)
     ft = encoder.fit_transform(X, y)
-    assert np.all(t = ft) is True
+    assert np.all(t==ft) is True
 
     count_ = {'color': {'Red': 1,
                         'red': 2,
@@ -215,7 +215,7 @@ def test_cv_target_encoder():
     encoder2.fit(X, y)
     t = encoder.transform(X)
     ft = encoder.fit_transform(X, y)
-    assert np.all(t = ft) is True
+    assert np.all(t==ft) is True
 
     Xout2 = encoder2.transform(Xtest)
     assert np.array_equal(Xout, Xout2)
@@ -228,7 +228,7 @@ def test_cv_target_encoder():
     encoder.fit(X, y)
     t = encoder.transform(X)
     ft = encoder.fit_transform(X, y)
-    assert np.all(t = ft) is True
+    assert np.all(t==ft) is True
 
     Xout = encoder.transform(Xtest)
 
