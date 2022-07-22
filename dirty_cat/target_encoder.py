@@ -108,7 +108,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                  cross_val=False,
                  n_folds=5,
                  n_inner_folds=3,
-                 random_state=1):
+                 random_state=None):
         self.categories = categories
         self.dtype = dtype
         self.clf_type = clf_type
@@ -168,6 +168,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
             raise ValueError(template % self.handle_unknown)
+
+        if self.clf_type not in ('regression', 'binary-clf', 'multiclass-clf'):
+            raise ValueError(
+                "Problem type must be either 'regression', 'binary-clf' or 'multiclass-clf' "
+                f"got {self.clf_type} instead."
+            )
 
         if self.categories != 'auto':
             for cats in self.categories:
@@ -266,6 +272,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                     raise ValueError(msg)
                 if self.handle_missing != 'error':
                     X[mask] = self.handle_missing
+
+        if self.clf_type not in ('regression', 'binary-clf', 'multiclass-clf'):
+            raise ValueError(
+                "Problem type must be either 'regression', 'binary-clf' or 'multiclass-clf' "
+                f"got {self.clf_type} instead."
+            )
 
         X_temp = check_array(X, dtype=None)
         y_temp = check_array(self.y, dtype=None, ensure_2d=False)

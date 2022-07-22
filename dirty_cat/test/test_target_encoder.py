@@ -174,6 +174,9 @@ def test_cv_target_encoder():
 
     encoder = target_encoder.TargetEncoder(cross_val=True)
     encoder.fit(X, y)
+    t = encoder.transform(X)
+    ft = encoder.fit_transform(X, y)
+    assert np.all(t = ft) is True
 
     count_ = {'color': {'Red': 1,
                         'red': 2,
@@ -210,6 +213,10 @@ def test_cv_target_encoder():
     # Test same seed returns the same results:
     encoder2 = target_encoder.TargetEncoder(cross_val=True, random_state=1)
     encoder2.fit(X, y)
+    t = encoder.transform(X)
+    ft = encoder.fit_transform(X, y)
+    assert np.all(t = ft) is True
+
     Xout2 = encoder2.transform(Xtest)
     assert np.array_equal(Xout, Xout2)
 
@@ -219,6 +226,10 @@ def test_cv_target_encoder():
     encoder = target_encoder.TargetEncoder(clf_type='multiclass-clf',
                                            cross_val=True, random_state=1)
     encoder.fit(X, y)
+    t = encoder.transform(X)
+    ft = encoder.fit_transform(X, y)
+    assert np.all(t = ft) is True
+
     Xout = encoder.transform(Xtest)
 
     assert np.array_equal(np.unique(y), encoder.classes_)
