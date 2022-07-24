@@ -19,8 +19,14 @@ boosted trees. First we manually assemble a complex encoder for the full
 dataframe, after which we show a much simpler way, albeit with less fine
 control.
 
+Finally, we look at the road safety dataset [##]_ to see how the
+Target Encoder can help us get better results on large datasets 
+if used on cross-validated subsets of data. 
+
 
 .. [#] https://www.openml.org/d/42125
+
+.. [##] https://openml.org/d/42803
 
 
  .. |SV| replace::
@@ -378,6 +384,118 @@ plt.show()
 # most the salary are: being hired for a long time, being a manager, and
 # having a permanent, full-time job :)
 #
+#
+# |
+#
+
+# %%
+# Working on large datasets: Target Encoding with cross-validation
+# ================================================================
+# Here we discuss how to apply efficiently the :class:`TargetEncoder` if the
+# dataset is large. It may be useful to split the data and encode
+# values on a subset. Overfitting is avoided and we may get
+# better test results. This can be done easily by setting the ``cross_val``
+# parameter of the :class:`TargetEncoder` to True.
+
+# It is also possible to choose the number of outer and inner folds
+# into which the data will be splitted (using the ``n_folds`` and
+# ``n_inner_folds`` parameters).
+
+# %%
+# Data Importing and preprocessing
+# --------------------------------
+#
+# We first get the road safety dataset, containing data from
+# road accidents in Great Britain in 1979, with more than
+# 360 000 observations :
+from dirty_cat.datasets import fetch_road_safety
+road_safety = fetch_road_safety()
+# X, our explanatory variables
+X = road_safety.X
+X
+# and y, our target column (the driver's sex)
+y = road_safety.y
+
+# %%
+# Now, let's carry out some basic preprocessing:
+# Keep only the columns that will be used:
+col_to_use = ['Age_of_Driver', 'Age_of_Vehicle', 'Day_of_Week', 'Speed_limit', 'Weather_Conditions', 'Local_Authority_(Highway)']
+X = X[col_to_use]
+# Drop the lines that contained missing values in X and y
+for col in col_to_use:
+    mask = X.isna()[col]
+    X.dropna(subset=[col], inplace=True)
+    y = y[~mask]
+X.reset_index(drop=True, inplace=True)
+y.reset_index(drop=True, inplace=True)
+# There are more than 208 000 observations left.
+
+# %%
+# Defining the encoders
+# ---------------------
+
+# We create our encoders. In this example we will
+# compare the ``OneHotEncoder`` to the ``MinHasEncoder``
+# and the ``TargetEncoder``, used with or without 
+# cross-validated encoding.
+one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
+minhash = MinHashEncoder(n_components=100)
+target = TargetEncoder(clf_type='binary-clf', handle_unknown='ignore', cross_val=False)
+target_cv = TargetEncoder(handle_unknown='ignore', cross_val=True, n_folds=4, n_inner_folds=3)
+encoders = {
+    'one-hot': one_hot,
+    'minhash': minhash,
+    'target': target,
+    'target-cv': target_cv
+}
+
+# %%
+# The results
+# ------------
+# We build the pipeline as before and look at the results
+# We will use a HistGradientBoostingClassifier :
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.model_selection import cross_validate
+all_scores = dict()
+for name, method in encoders.items():
+    encoder = make_column_transformer(
+        (one_hot, ['Day_of_Week', 'Weather_Conditions', 'Speed_limit']),
+        ('passthrough', ['Age_of_Driver', 'Age_of_Vehicle']),
+        # Last but not least, our dirty column
+        (method, ['Local_Authority_(Highway)']),
+        remainder='drop',
+    )
+    pipeline = make_pipeline(encoder, HistGradientBoostingClassifier())
+    scores = cross_validate(pipeline, X, y)
+    test_scores = scores['test_score']
+    print(f'{name} encoding')
+    print(f'r2 score:  mean: {np.mean(test_scores):.3f}; '
+          f'std: {np.std(test_scores):.3f}\n')
+    all_scores[name] = scores
+# The results show that the :class:`TargetEncoder` performs best
+# if the data are split into folds that will then determine the
+# encoded values. It outperforms also the ``OneHotEncoder``.
+
+# %%
+# Plot a summary figure
+# ---------------------
+fit_times = dict()
+test_results = dict()
+for enc in encoders.keys():
+    fit_times[enc] = all_scores[enc]['fit_time']
+    test_results[enc] = all_scores[enc]['test_score']
+_, (ax1, ax2) = plt.subplots(nrows=2, figsize=(4, 3))
+seaborn.boxplot(data=pd.DataFrame(test_results), orient='h', ax=ax1)
+ax1.set_xlabel('Prediction accuracy', size=16)
+[t.set(size=16) for t in ax1.get_yticklabels()]
+seaborn.boxplot(data=pd.DataFrame(fit_times), orient='h', ax=ax2)
+ax2.set_xlabel('Computation time', size=16)
+[t.set(size=16) for t in ax2.get_yticklabels()]
+plt.tight_layout()
+print(test_results)
+
+
+# %%
 #
 # .. topic:: The SuperVectorizer automates preprocessing
 #
