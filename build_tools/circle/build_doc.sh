@@ -122,7 +122,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
 #removed scikit learn from conda since it is installed from master after
 
 source activate testenv
-pip install sphinx-gallery
+pip install sphinx-gallery==0.10.1
 pip install sphinxext-opengraph
 pip install python-Levenshtein
 
