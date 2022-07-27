@@ -7,8 +7,11 @@ Major changes
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the SuperVectorizer for datetime columns.
-* Bumped minimum dependency for scikit-learn: dirty_cat now requires sklearn>=0.22.
 * Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
+* Bumped minimum dependencies:
+  - sklearn>=0.22
+  - scipy>=1.4.0
+  - numpy>=1.17.3
 
 Notes
 -----
