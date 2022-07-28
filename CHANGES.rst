@@ -4,6 +4,8 @@ Release 0.3
 Major changes
 -------------
 
+* New feature: joining tables using :class:`FuzzyJoin` by specifying the two columns on which
+    the join will be perfomed.
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the SuperVectorizer for datetime columns.
