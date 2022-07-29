@@ -88,7 +88,7 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
                 "the list has invalid number of elements."
             )
         right_clean = right_table[right_col]
-        joined = pd.DataFrame(left_table[left_col], columns=[left_col, "col_to_embed"])
+        joined = pd.DataFrame(left_table[left_col], columns=[left_col, right_col])
 
         enc = CountVectorizer(analyzer=self.analyzer, ngram_range=self.ngram_range)
         left_enc = enc.fit_transform(left_table[left_col])
@@ -103,7 +103,7 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         idx_closest = np.ravel(neighbors)
 
         for idx in left_table.index:
-            joined.loc[idx, "col_to_embed"] = right_clean[idx_closest[idx]]
+            joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
         if return_distance:
             return joined, distance
         else:
