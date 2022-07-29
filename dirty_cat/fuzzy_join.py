@@ -1,4 +1,5 @@
 # TODO: add HashingVectorizer as an option.
+# TODO 2: add suffixes to column names.
 
 """
 Fuzzy joining tables using string columns.
@@ -26,7 +27,7 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
     Parameters
     ----------
 
-    analyzer : str, default='char'.
+    analyzer : str, default='char_wb'.
         Analyzer parameter for the CountVectorizer.
         Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
@@ -39,7 +40,7 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, analyzer="char", ngram_range=(2, 4)):
+    def __init__(self, analyzer="char_wb", ngram_range=(2, 4)):
         self.ngram_range = ngram_range
         self.analyzer = analyzer
 
@@ -49,9 +50,9 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         left_table: pd.DataFrame
-            Reference table on which the join will be performed.
+            Table on which the join will be performed.
         right_table: pd.DataFrame
-            Other input table that will be joined.
+            Table that will be joined.
         on: list
             List of left and right table column names on which
             the matching will be perfomed.
