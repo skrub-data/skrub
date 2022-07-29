@@ -74,13 +74,13 @@ def test_fuzzy_join(analyzer, return_distance):
         on=["basketball_teams", "teams_basketball"],
         return_distance=return_distance,
     )
-    
+
     # Check correct shapes of outputs
     assert teams_joined.shape == (9, 2)
     assert dist1.shape == (9, 1)
 
     # Check performance of FuzzyJoin
-    assert (teams_joined == ground_truth).all()
+    assert (teams_joined == ground_truth).all()[1]
 
     teams_joined_2, dist2 = fj.join(
         teams2,
