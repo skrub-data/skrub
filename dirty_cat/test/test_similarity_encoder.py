@@ -2,6 +2,8 @@ import numpy as np
 import numpy.testing
 import pytest
 
+from typing import Callable, Optional
+
 from sklearn import __version__ as sklearn_version
 
 from dirty_cat.utils import Version
@@ -19,7 +21,7 @@ def test_specifying_categories() -> None:
     # In this test, we first find the sorted, unique categories in the training
     # set, and create a SimilarityEncoder by giving it explicitly the computed
     # categories. The test consists in making sure the transformed observations
-    # given by this encoder are equal to the transformed obervations in the
+    # given by this encoder are equal to the transformed observations in the
     # case of a SimilarityEncoder created with categories = 'auto'
 
     observations = [['bar'], ['foo']]
@@ -78,7 +80,7 @@ def _test_missing_values(input_type, missing):
         return
 
 
-def _test_missing_values_transform(input_type, missing) -> None:
+def _test_missing_values_transform(input_type: str, missing: str) -> None:
     observations = [['a', 'b'], ['b', 'a'], ['b', 'b'],
                     ['a', 'c'], ['c', 'a']]
     test_observations = [['a', 'b'], ['b', 'a'], ['b', np.nan],
@@ -106,14 +108,17 @@ def _test_missing_values_transform(input_type, missing) -> None:
         assert np.allclose(encoded, ans)
 
 
-def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None) -> None:
+def _test_similarity(similarity: str, similarity_f: Callable,
+                     hashing_dim: Optional[int] = None,
+                     categories: str = 'auto', n_prototypes: int = None,
+                     ) -> None:
     if n_prototypes is None:
         X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
 
         model = similarity_encoder.SimilarityEncoder(
-            similarity=similarity, hashing_dim=hashing_dim, categories=categories,
-            n_prototypes=n_prototypes)
+            similarity=similarity, hashing_dim=hashing_dim,
+            categories=categories, n_prototypes=n_prototypes)
 
         if similarity == 'ngram':
             model.ngram_range = (3, 3)
@@ -137,8 +142,10 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
 
         try:
             model = similarity_encoder.SimilarityEncoder(
-                similarity=similarity, hashing_dim=hashing_dim, categories=categories,
-                n_prototypes=n_prototypes, random_state=42)
+                similarity=similarity, hashing_dim=hashing_dim,
+                categories=categories, n_prototypes=n_prototypes,
+                random_state=42,
+            )
         except ValueError as e:
             assert (e.__str__() == 'n_prototypes expected None or a positive non null integer')
             return
@@ -215,7 +222,9 @@ def test_kmeans_protoypes() -> None:
 
 
 def test_reproducibility() -> None:
-    sim_enc = similarity_encoder.SimilarityEncoder(categories='k-means', n_prototypes=10, random_state=435)
+    sim_enc = similarity_encoder.SimilarityEncoder(
+        categories='k-means', n_prototypes=10, random_state=435,
+    )
     X = np.array([' %s ' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     prototypes = sim_enc.fit(X).categories_[0]
     for i in range(10):
@@ -244,4 +253,3 @@ def test_get_features() -> None:
         'x0_q', 'x0_r', 'x0_s', 'x0_t', 'x0_u', 'x0_v', 'x0_w', 'x0_x', 'x0_y',
         'x0_z', 'x0_{', 'x0_|', 'x0_}', 'x0_~'
     ]
-

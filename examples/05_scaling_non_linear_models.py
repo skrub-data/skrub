@@ -217,7 +217,7 @@ def preprocess(df: pd.DataFrame) -> Tuple[pd.DataFrame, np.array]:
 
 
 def get_X_y(**kwargs) -> Tuple[pd.DataFrame, np.array]:
-    """Simple wrapper around pd.read_csv that extracts features and labels
+    """Simple wrapper around pd.read_csv that extracts features and labels.
 
     Some systematic preprocessing is also carried out to avoid doing this
     transformation repeatedly in the code.

@@ -49,7 +49,8 @@ def test_fetch_openml_dataset():
     Though, to avoid the test being too long,
     we will download a small dataset (<1000 entries).
 
-    Reference: https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/datasets/tests/test_openml.py
+    Reference:
+    https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/datasets/tests/test_openml.py
     """
 
     # Hard-coded information about the test dataset.

@@ -1,7 +1,9 @@
 import time
-import numpy as np
 import pytest
+import numpy as np
 import pandas as pd
+
+from typing import Literal
 
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_20newsgroups
@@ -16,7 +18,7 @@ from dirty_cat import GapEncoder
     ('random', 'char', 'word'),
     ('k-means', 'char', 'word')
 ])
-def test_analyzer(init1, analyzer1, analyzer2) -> None:
+def test_analyzer(init1: str, analyzer1: str, analyzer2: str) -> None:
     """
     Test if the output is different when the analyzer is 'word' or 'char'.
     If it is, no error ir raised.
@@ -52,7 +54,8 @@ def test_analyzer(init1, analyzer1, analyzer2) -> None:
     (True, 'random', 'char', False),
     (True, 'k-means', 'char_wb', True)
 ])
-def test_gap_encoder(hashing, init, analyzer, add_words, n_samples=70) -> None:
+def test_gap_encoder(hashing: bool, init: str, analyzer: str, add_words: bool,
+                     n_samples: int = 70) -> None:
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X = np.array([X_txt, X_txt]).T
     n_components = 10
@@ -142,7 +145,7 @@ def test_get_feature_names_out(n_samples=70) -> None:
     return
 
 
-def test_overflow_error():
+def test_overflow_error() -> None:
     np.seterr(over='raise', divide='raise')
     r = np.random.RandomState(0)
     X = r.randint(1e5, 1e6, size=(8000, 1)).astype(str)
@@ -151,7 +154,7 @@ def test_overflow_error():
     enc.fit(X)
 
 
-def test_score(n_samples=70):
+def test_score(n_samples: int = 70) -> None:
     X_txt = fetch_20newsgroups(subset='train')['data'][:n_samples]
     X1 = np.array(X_txt)[:, None]
     X2 = np.hstack([X1, X1])
@@ -165,7 +168,7 @@ def test_score(n_samples=70):
 
 
 @pytest.mark.parametrize("missing", ['zero_impute', 'error', 'aaa'])
-def test_missing_values(missing):
+def test_missing_values(missing: str) -> None:
     observations = [['alice', 'bob'], ['bob', 'alice'], ['bob', np.nan],
                     ['alice', 'charlie'], [np.nan, 'alice']]
     observations = np.array(observations, dtype=object)
@@ -184,7 +187,7 @@ def test_missing_values(missing):
             enc.fit_transform(observations)
 
 
-def profile_encoder(init):
+def profile_encoder(init: str) -> None:
     # not a unit test
     info = fetch_employee_salaries()
     data = pd.read_csv(info['path'], **info['read_csv_kwargs'])

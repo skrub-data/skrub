@@ -214,7 +214,13 @@ def test_transform():
     assert np.allclose(X_trans, expected_result, equal_nan=True)
 
     # Check if we find back the date from the time to epoch
-    assert ((pd.to_datetime(X_trans[:, 5], unit="s").tz_localize("utc").tz_convert(X.iloc[:, 0][0].tz) - pd.DatetimeIndex(X.iloc[:, 0])).total_seconds() == 0).all()
+    assert (
+            (
+                pd.to_datetime(X_trans[:, 5], unit="s")
+                .tz_localize("utc")
+                .tz_convert(X.iloc[:, 0][0].tz) - pd.DatetimeIndex(X.iloc[:, 0])
+            ).total_seconds() == 0
+    ).all()
 
     # Check if it's working when the date is constant
     X = get_constant_date_array()

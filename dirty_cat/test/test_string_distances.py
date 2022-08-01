@@ -2,6 +2,8 @@ import unittest
 
 import numpy as np
 
+from typing import List, Tuple
+
 try:
     import Levenshtein
 except ImportError:
@@ -10,7 +12,7 @@ except ImportError:
 from dirty_cat import string_distances
 
 
-def test_get_unique_ngrams():
+def test_get_unique_ngrams() -> None:
     string = 'test'
     true_ngrams = {
         (' ', 't'), ('t', 'e'), ('e', 's'), ('s', 't'),
@@ -23,7 +25,7 @@ def test_get_unique_ngrams():
     assert ngrams == true_ngrams
 
 
-def _random_string_pairs(n_pairs=50, seed=1):
+def _random_string_pairs(n_pairs=50, seed=1) -> List[Tuple[str, str]]:
     rng = np.random.RandomState(seed)
     characters = list(map(chr, range(10000)))
     pairs = []
@@ -36,10 +38,10 @@ def _random_string_pairs(n_pairs=50, seed=1):
     return pairs
 
 
-def _random_common_char_pairs(n_pairs=50, seed=1):
+def _random_common_char_pairs(n_pairs: int = 50, seed: int = 1):
     """
     Return string pairs with a common char at random positions, in order to
-    distinguish different thresholds for matching chararacters in Jaro
+    distinguish different thresholds for matching characters in Jaro
     distance.
     """
     # Make strings with random length and common char at index 0
@@ -72,13 +74,13 @@ def _check_levenshtein_example_results(levenshtein_dist):
     assert levenshtein_dist('axcx', 'abcde') == 3
 
 
-def _check_symmetry(dist_func, *args, **kwargs):
+def _check_symmetry(dist_func, *args, **kwargs) -> None:
     for (a, b) in _random_string_pairs():
         assert dist_func(
             a, b, *args, **kwargs) == dist_func(b, a, *args, **kwargs)
 
 
-def _check_levenshtein_distances():
+def _check_levenshtein_distances() -> None:
     for levenshtein_dist in [
             string_distances.levenshtein_seq]:
         _check_levenshtein_example_results(levenshtein_dist)
@@ -93,7 +95,7 @@ def _check_levenshtein_distances():
                 a, b) == Levenshtein.distance(a, b)
 
 
-def test_levenshtein_ratio():
+def test_levenshtein_ratio() -> None:
     # TODO
     # assert string_distances.levenshtein_ratio('', '') == 1
     # assert string_distances.levenshtein_ratio('', 'abc') == 3
@@ -111,13 +113,13 @@ def test_levenshtein_ratio():
 
 
 # Tests for jaro
-def test_jaro():
+def test_jaro() -> None:
     # If no character in common: similarity is 0
     assert string_distances.jaro('Brian', 'Jesus') == 0
     assert string_distances.jaro_winkler('Brian', 'Jesus') == 0
 
 
-def test_identical_strings():
+def test_identical_strings() -> None:
     # Test that if 2 strings are the same, the similarity
     for string1, _ in _random_string_pairs(n_pairs=10):
         assert string_distances.jaro(string1, string1) == 1
@@ -125,7 +127,7 @@ def test_identical_strings():
         assert string_distances.levenshtein_ratio(string1, string1) == 1
 
 
-def test_compare_implementations():
+def test_compare_implementations() -> None:
     # Compare the implementations of python-Levenshtein to our
     # pure-Python implementations
     if Levenshtein is False:
@@ -153,7 +155,7 @@ def test_compare_implementations():
                 == Levenshtein.ratio(string1, string2))
 
 
-def test_ngram_similarity():
+def test_ngram_similarity() -> None:
     # TODO
     # assert ...
     for n in range(1, 4):

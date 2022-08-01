@@ -405,7 +405,9 @@ def test_transform() -> None:
     s = [34, 5.5, 'private', 'manager', 'yes', '60K+']
     x = np.array(s).reshape(1, -1)
     x_trans = sup_vec.transform(x)
-    assert (x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
+    assert (
+            x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]
+    ).all()
 
 
 def test_fit_transform_equiv() -> None:

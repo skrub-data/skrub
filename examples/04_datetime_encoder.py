@@ -112,7 +112,7 @@ pipeline = make_pipeline(sup_vec, reg)
 # When using date and time features, we often care about predicting the future.
 # In this case, we have to be careful when evaluating our model, because
 # standard tools like cross-validation do not respect the time ordering.
-# Instead we can use the `TimeSeriesSplit` class, which makes sure that
+# Instead, we can use the `TimeSeriesSplit` class, which makes sure that
 # the test set is always in the future.
 X["date.utc"] = pd.to_datetime(X["date.utc"])
 sorted_indices = np.argsort(X["date.utc"])
@@ -186,7 +186,7 @@ plt.show()
 
 ###############################################################################
 # Feature importances
-# ----------------------------
+# -------------------
 # Using the DatetimeEncoder allows us to better understand how the date
 # impacts the NO2 concentration. To this aim, we can compute the
 # importance of the features created by the Datetime encoder, using the

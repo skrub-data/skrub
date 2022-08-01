@@ -65,7 +65,7 @@ for k in range(len(topic_labels)):
 ###############################################################################
 # As expected, topics capture labels that frequently co-occur. For instance,
 # the labels *firefighter*, *rescuer*, *rescue* appear together in
-# *Firefigther/Rescuer III*, or *Fire/Rescue Lieutenant*.
+# *Firefighter/Rescuer III*, or *Fire/Rescue Lieutenant*.
 # 
 # This enables us to understand the encoding of different samples
 

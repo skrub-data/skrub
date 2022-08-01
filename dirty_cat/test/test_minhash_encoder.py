@@ -11,7 +11,7 @@ from dirty_cat import MinHashEncoder
 from dirty_cat.datasets import fetch_employee_salaries
 
 
-def test_MinHashEncoder(n_sample=70) -> None:
+def test_MinHashEncoder(n_sample: int = 70) -> None:
     X_txt = fetch_20newsgroups(subset='train')['data']
     X = np.array(X_txt[:n_sample])[:, None]
 
@@ -75,7 +75,7 @@ def test_input_type() -> None:
     enc.fit_transform(X)
 
 
-def profile_encoder(hashing='fast', minmax_hash=False) -> float:
+def profile_encoder(hashing: str = 'fast', minmax_hash: bool = False) -> float:
     # not a unit test
     employee_salaries = fetch_employee_salaries()
     df = employee_salaries.X
@@ -94,7 +94,7 @@ def profile_encoder(hashing='fast', minmax_hash=False) -> float:
     ['numpy', 'error', 'fast'],
     ['pandas', 'zero_impute', 'murmur'],
     ['numpy', 'zero_impute', 'fast']])
-def test_missing_values(input_type, missing, hashing) -> None:
+def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     X = ['Red',
          np.nan,
          'green',
