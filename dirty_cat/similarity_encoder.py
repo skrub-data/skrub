@@ -569,11 +569,11 @@ class SimilarityEncoder(OneHotEncoder):
         vectorizer = self.vectorizers_[col_idx]
 
         unq_X = np.unique(X)
-        unq_X_ = np.ndarray([preprocess(x) for x in unq_X])
+        unq_X_ = np.array([preprocess(x) for x in unq_X])
 
         X_count_matrix = vectorizer.transform(unq_X_)
         vocabulary_count_matrix = self.vocabulary_count_matrices_[col_idx]
-        vocabulary_ngram_count = np.ndarray(
+        vocabulary_ngram_count = np.array(
             self.vocabulary_ngram_counts_[col_idx]).reshape(-1, 1)
 
         se_dict = {}

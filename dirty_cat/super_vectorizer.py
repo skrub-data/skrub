@@ -288,7 +288,7 @@ class SuperVectorizer(ColumnTransformer):
                     pass
         return X
 
-    def transform(self, X) -> np.array:
+    def transform(self, X) -> np.ndarray:
         """
         Transform X by applying fitted transformers on each column,
         and concatenate the results.
