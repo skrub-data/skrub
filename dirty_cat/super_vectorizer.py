@@ -288,8 +288,9 @@ class SuperVectorizer(ColumnTransformer):
                     pass
         return X
 
-    def transform(self, X) -> np.ndarray:
-        """Transform X by applying fitted transformers on each column,
+    def transform(self, X) -> np.array:
+        """
+        Transform X by applying fitted transformers on each column,
         and concatenate the results.
 
         Parameters
@@ -305,7 +306,6 @@ class SuperVectorizer(ColumnTransformer):
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
-
         """
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)

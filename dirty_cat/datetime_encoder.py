@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from warnings import warn
-from typing import List, Literal, Dict
+from typing import List, Literal, Dict, Optional
 
 from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -46,15 +46,22 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
+    n_features_in_: int
+        Number of features in the data seen during fit.
     n_features_out_: int
         Number of features of the transformed data.
     features_per_column_: Dict[int, List[str]]
         Dictionary mapping the index of the original columns
         to the list of features extracted for each column.
-    col_names_: List[str]
+    col_names_: Optional[List[str]]
         List of the names of the features of the input data,
         if input data was a pandas DataFrame, otherwise None.
     """
+
+    n_features_in_: int
+    n_features_out_: int
+    features_per_column_: Dict[int, List[str]]
+    col_names_: Optional[List[str]]
 
     def __init__(self,
                  extract_until: AcceptedTimeValues = "hour",
@@ -128,11 +135,12 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         self._validate_keywords()
         # Columns to extract for each column,
         # before taking into account constant columns
-        self._to_extract = TIME_LEVELS[:TIME_LEVELS.index(self.extract_until) + 1]
+        self._to_extract = TIME_LEVELS[:TIME_LEVELS.index(
+            self.extract_until) + 1]
         if self.add_day_of_the_week:
             self._to_extract.append("dayofweek")
         if isinstance(X, pd.DataFrame):
-            self.col_names_ = X.columns
+            self.col_names_ = X.columns.to_list()
         else:
             self.col_names_ = None
         X = check_input(X)
@@ -147,18 +155,21 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                     self.features_per_column_[i].append(feature)
             # If some date features have not been extracted, then add the
             # "total_time" feature, which contains the full time to epoch
-            remainder = (pd.to_datetime(X[:, i]) - pd.to_datetime(pd.DatetimeIndex(X[:, i]).floor(
-                WORD_TO_ALIAS[self.extract_until]))).seconds.to_numpy()
+            remainder = (pd.to_datetime(X[:, i]) - pd.to_datetime(
+                pd.DatetimeIndex(X[:, i]).floor(
+                    WORD_TO_ALIAS[self.extract_until]))).seconds.to_numpy()
             if np.nanstd(remainder) > 0:
                 self.features_per_column_[i].append("total_time")
 
         self.n_features_in_ = X.shape[1]
-        self.n_features_out_ = len(np.concatenate(list(self.features_per_column_.values())))
+        self.n_features_out_ = len(np.concatenate(
+            list(self.features_per_column_.values())))
 
         return self
 
     def transform(self, X, y=None) -> np.array:
-        """ Transform X by replacing each datetime column with
+        """
+        Transform X by replacing each datetime column with
         corresponding numerical features.
 
         Parameters

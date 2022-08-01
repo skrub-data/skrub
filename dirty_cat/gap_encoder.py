@@ -57,6 +57,9 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
     """See GapEncoder's docstring."""
 
+    rho_: float
+    H_dict_: Dict[np.array, np.array]
+
     def __init__(self,
                  n_components: int = 10,
                  batch_size: int = 128,
@@ -297,14 +300,14 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         )
         return self.get_feature_names_out(n_labels=n_labels, prefix=prefix)
 
-    def get_feature_names_out(self, n_labels: int = 3, prefix: str = '') -> List[str]:
+    def get_feature_names_out(self, n_labels: int = 3, prefix: str = '',
+                              ) -> List[str]:
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with the highest activations are selected.
         
         Parameters
         ----------
-        
         n_labels : int, default=3
             The number of labels used to describe each topic.
         prefix : str, default=""
@@ -312,11 +315,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        
         topic_labels : list of strings
             The labels that best describe each topic.
-        
         """
+
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
         if Version(sklearn_version) < Version('1.0'):
@@ -350,6 +352,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         kl_divergence : float.
             The Kullback-Leibler divergence.
         """
+
         # Build n-grams/word counts matrix
         unq_X, lookup = np.unique(X, return_inverse=True)
         unq_V = self.ngrams_count_.transform(unq_X)
@@ -483,11 +486,11 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self._add_unseen_keys_to_H_dict(unq_X)
         unq_H = self._get_H(unq_X)
         # Loop over batches
-        for slice in gen_batches(n=unq_H.shape[0],
-                                 batch_size=self.batch_size):
+        for slc in gen_batches(n=unq_H.shape[0],
+                               batch_size=self.batch_size):
             # Given the learnt topics W, optimize H to fit V = HW
-            unq_H[slice] = _multiplicative_update_h(
-                unq_V[slice], self.W_, unq_H[slice],
+            unq_H[slc] = _multiplicative_update_h(
+                unq_V[slc], self.W_, unq_H[slc],
                 epsilon=1e-3, max_iter=100,
                 rescale_W=self.rescale_W,
                 gamma_shape_prior=self.gamma_shape_prior,
@@ -508,36 +511,27 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-
     n_components : int, default=10
         Number of latent categories used to model string data.
-
     batch_size : int, default=128
         Number of samples per batch.
-
     gamma_shape_prior : float, default=1.1
         Shape parameter for the Gamma prior distribution.
-
     gamma_scale_prior : float, default=1.0
         Scale parameter for the Gamma prior distribution.
-
     rho : float, default=0.95
         Weight parameter for the update of the W matrix.
-
     rescale_rho : bool, default=False
         If true, use rho ** (batch_size / len(X)) instead of rho to obtain an
         update rate per iteration that is independent of the batch size.
-
     hashing : bool, default=False
         If true, HashingVectorizer is used instead of CountVectorizer.
         It has the advantage of being very low memory scalable to large
         datasets as there is no need to store a vocabulary dictionary in
         memory.
-
     hashing_n_features : int, default=2**12
         Number of features for the HashingVectorizer. Only relevant if
         hashing=True.
-
     init : str, default='k-means++'
         Initialization method of the W matrix.
         Options: {'k-means++', 'random', 'k-means'}.
@@ -545,41 +539,31 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         If init='random', topics are initialized with a Gamma distribution.
         If init='k-means', topics are initialized with a KMeans on the n-grams
         counts. This usually makes convergence faster but is a bit slower.
-
     tol : float, default=1e-4
         Tolerance for the convergence of the matrix W.
-
     min_iter : int, default=2
         Minimum number of iterations on the input data.
-
     max_iter : int, default=5
         Maximum number of iterations on the input data.
-
     ngram_range : tuple, default=(2, 4)
         The range of ngram length that will be used to build the
         bag-of-n-grams representation of the input data.
-
     analyzer : str, default='char'.
         Analyzer parameter for the CountVectorizer/HashingVectorizer.
         Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
         Option ‘char_wb’ creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-
     add_words : bool, default=False
         If true, add the words counts to the bag-of-n-grams representation
         of the input data.
-
     random_state : int or None, default=None
         Pass an int for reproducible output across multiple function calls.
-
     rescale_W : bool, default=True
         If true, the weight matrix W is rescaled at each iteration
         to have a l1 norm equal to 1 for each row.
-
     max_iter_e_step : int, default=20
         Maximum number of iterations to adjust the activations h at each step.
-
     handle_missing : 'error' or 'empty_impute' (default)
         Whether to raise an error or impute with empty string '' if missing
         values (NaN) are present during fit (default is to impute).
@@ -588,6 +572,9 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
+    rho_: float
+    fitted_models_: List[GapEncoderColumn]
+    column_names_: List[str]
 
     References
     ----------
@@ -596,6 +583,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
     
     """
+
+    rho_: float
+    fitted_models_: List[GapEncoderColumn]
+    column_names_: List[str]
 
     def __init__(self,
                  n_components: int = 10,
@@ -702,6 +693,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self
             Fitted GapEncoder instance.
         """
+
         # Copy parameter rho
         self.rho_ = self.rho
         # If X is a dataframe, store its column names
@@ -723,7 +715,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         When X has several columns, they are encoded separately and
         then concatenated.
         
-        Remark: calling transform mutliple times in a row on the same
+        Remark: calling transform multiple times in a row on the same
         input X can give slightly different encodings. This is expected
         due to a caching mechanism to speed things up.        
 
@@ -737,6 +729,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         H : 2-d array, shape (n_samples, n_topics * n_features)
             Transformed input.
         """
+
         # Check input data shape
         X = check_input(X)
         X = self._handle_missing(X)
@@ -762,8 +755,9 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Returns
         -------
         self
-        
+            Fitted GapEncoder instance.
         """
+
         # If X is a dataframe, store its column names
         if isinstance(X, pd.DataFrame):
             self.column_names_ = list(X.columns)
@@ -781,15 +775,15 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def get_feature_names_out(self,
-                              col_names: Optional[Union[Literal["auto"], List[str]]] = None,
+                              col_names: Optional[Union[Literal["auto"],
+                                                        List[str]]] = None,
                               n_labels: int = 3):
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with the highest activations are selected.
-        
+
         Parameters
         ----------
-        
         col_names : {None, list or str}, default=None
             The column names to be added as prefixes before the labels.
             If col_names == None, no prefixes are used.
@@ -797,13 +791,11 @@ class GapEncoder(BaseEstimator, TransformerMixin):
                 - if the input data was a dataframe, its column names are used,
                 - otherwise, 'col1', ..., 'colN' are used as prefixes.
             Prefixes can be manually set by passing a list  for col_names.
-            
         n_labels : int, default=3
             The number of labels used to describe each topic.
-        
+
         Returns
         -------
-        
         topic_labels : list of strings
             The labels that best describe each topic.
         """
@@ -812,9 +804,13 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         # Generate prefixes
         if isinstance(col_names, str) and col_names == 'auto':
             if hasattr(self, 'column_names_'):  # Use column names
-                prefixes = [f'{col}: ' for col in self.column_names_]
-            else: # Use 'col1: ', ... 'colN: ' as prefixes
-                prefixes = [f'col{i}: ' for i in range(len(self.fitted_models_))]
+                prefixes = [
+                    f'{col}: ' for col in self.column_names_
+                ]
+            else:  # Use 'col1: ', ... 'colN: ' as prefixes
+                prefixes = [
+                    f'col{i}: ' for i in range(len(self.fitted_models_))
+                ]
         elif col_names is None:  # Empty prefixes
             prefixes = [''] * len(self.fitted_models_)
         else:
@@ -877,7 +873,8 @@ def _rescale_W(W: np.array, A: np.array) -> None:
 
 def _multiplicative_update_w(Vt: np.array, W: np.array, A: np.array,
                              B: np.array, Ht: np.array, rescale_W: bool,
-                             rho: float) -> Tuple[np.array, np.array, np.array]:
+                             rho: float,
+                             ) -> Tuple[np.array, np.array, np.array]:
     """
     Multiplicative update step for the topics W.
     """
@@ -904,7 +901,8 @@ def _rescale_h(V: np.array, H: np.array) -> np.array:
 def _multiplicative_update_h(Vt: np.array, W: np.array, Ht: np.array,
                              epsilon: float = 1e-3, max_iter: int = 10,
                              rescale_W: bool = False,
-                             gamma_shape_prior: float = 1.1, gamma_scale_prior: float = 1.):
+                             gamma_shape_prior: float = 1.1,
+                             gamma_scale_prior: float = 1.):
     """
     Multiplicative update step for the activations H.
     """
@@ -935,7 +933,9 @@ def _multiplicative_update_h(Vt: np.array, W: np.array, Ht: np.array,
 
 def batch_lookup(lookup: np.array, n: int = 1,
                  ) -> Generator[Tuple[np.array, np.array], None, None]:
-    """ Make batches of the lookup array. """
+    """
+    Make batches of the lookup array.
+    """
     len_iter = len(lookup)
     for idx in range(0, len_iter, n):
         indices = lookup[slice(idx, min(idx + n, len_iter))]

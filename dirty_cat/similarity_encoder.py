@@ -547,7 +547,8 @@ class SimilarityEncoder(OneHotEncoder):
         else:
             raise ValueError(f"Unknown similarity: {self.similarity!r}. ")
 
-    def _ngram_similarity_fast(self, X: Union[list, np.array], col_idx: int) -> np.array:
+    def _ngram_similarity_fast(self, X: Union[list, np.array], col_idx: int,
+                               ) -> np.array:
         """ Fast computation of ngram similarity.
 
         SimilarityEncoder.transform uses the count vectors of the vocabulary in
@@ -568,11 +569,11 @@ class SimilarityEncoder(OneHotEncoder):
         vectorizer = self.vectorizers_[col_idx]
 
         unq_X = np.unique(X)
-        unq_X_ = np.array([preprocess(x) for x in unq_X])
+        unq_X_ = np.ndarray([preprocess(x) for x in unq_X])
 
         X_count_matrix = vectorizer.transform(unq_X_)
         vocabulary_count_matrix = self.vocabulary_count_matrices_[col_idx]
-        vocabulary_ngram_count = np.array(
+        vocabulary_ngram_count = np.ndarray(
             self.vocabulary_ngram_counts_[col_idx]).reshape(-1, 1)
 
         se_dict = {}

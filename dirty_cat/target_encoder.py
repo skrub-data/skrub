@@ -59,6 +59,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
+    n_features_in_: int
+        Number of features in the data seen during fit.
     categories_ : list of arrays
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).

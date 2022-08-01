@@ -52,6 +52,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
 
+    Attributes
+    ----------
+    hash_dict_: LRUDict
+        Computes hashes.
+
     References
     ----------
     For a detailed description of the method, see
@@ -59,6 +64,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
 
     """
+    hash_dict_: LRUDict
+
     _capacity: int = 2 ** 10
 
     def __init__(self,
@@ -123,7 +130,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        array, shape (n_components, )
+        np.array of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -143,6 +150,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         ----------
         X : array-like, shape (n_samples, ) or (n_samples, 1)
             The string data to encode.
+        y : None
+            Unused, only here for compatibility.
 
         Returns
         -------
@@ -150,11 +159,12 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             The fitted MinHashEncoder instance.
         """
         self.count = 0
-        self.hash_dict = LRUDict(capacity=self._capacity)
+        self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
 
     def transform(self, X) -> np.array:
-        """ Transform X using specified encoding scheme.
+        """
+        Transform X using specified encoding scheme.
 
         Parameters
         ----------
@@ -185,10 +195,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 for i, x in enumerate(X_in):
                     if isinstance(x, float):  # true if x is a missing value
                         is_nan_idx = True
-                    elif x not in self.hash_dict:
-                        X_out[i, k * self.n_components:counter] = self.hash_dict[x] = self.get_fast_hash(x)
+                    elif x not in self.hash_dict_:
+                        X_out[i, k * self.n_components:counter] = self.hash_dict_[x] = self.get_fast_hash(x)
                     else:
-                        X_out[i, k * self.n_components:counter] = self.hash_dict[x]
+                        X_out[i, k * self.n_components:counter] = self.hash_dict_[x]
                 counter += self.n_components
         elif self.hashing == 'murmur':
             X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
@@ -198,14 +208,14 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 for i, x in enumerate(X_in):
                     if isinstance(x, float):
                         is_nan_idx = True
-                    elif x not in self.hash_dict:
-                        X_out[i, k * self.n_components:counter] = self.hash_dict[x] = self.minhash(
+                    elif x not in self.hash_dict_:
+                        X_out[i, k * self.n_components:counter] = self.hash_dict_[x] = self.minhash(
                             x,
                             n_components=self.n_components,
                             ngram_range=self.ngram_range
                         )
                     else:
-                        X_out[i, k * self.n_components:counter] = self.hash_dict[x]
+                        X_out[i, k * self.n_components:counter] = self.hash_dict_[x]
                 counter += self.n_components
         else:
             raise ValueError(

@@ -526,9 +526,9 @@ def fetch_traffic_violations(load_dataframe: bool = True
 
     Description of the dataset:
     > This dataset contains traffic violation information from all electronic
-    traffic violations issued in the Montgomery County, MD. Any information that can be used
-    to uniquely identify the vehicle, the vehicle owner or the officer issuing
-    the violation will not be published.
+    traffic violations issued in the Montgomery County, MD. Any information
+    that can be used to uniquely identify the vehicle, the vehicle owner or
+    the officer issuing the violation will not be published.
 
     Returns
     -------
