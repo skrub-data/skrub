@@ -150,7 +150,7 @@ project: there is still little known about the problems of dirty
 categories. Tradeoffs will emerge in the long run. We really need people
 giving feedback on success and failures with the different techniques and
 pointing us to open datasets on which we can do more empirical work.
-Dirty-cat received funding from `project DirtyData
+dirty-cat received funding from `project DirtyData
 <https://project.inria.fr/dirtydata/>`_ (ANR-17-CE23-0018).
 
 .. [1] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.

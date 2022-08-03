@@ -22,11 +22,6 @@ either chosen as the most frequent categories, or with kmeans clustering.
 .. |OHE| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 
 """
-# Avoid the warning in scikit-learn's LogisticRegression for the change
-# in the solver
-# TODO: move this to the exact place where the warnings are raised
-#import warnings
-#warnings.simplefilter(action='ignore', category=FutureWarning)
 
 ###############################################################################
 # A tool to report memory usage and run time
