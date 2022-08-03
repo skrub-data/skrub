@@ -80,7 +80,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -217,16 +217,16 @@ texinfo_documents = [
 
 # Configuration for intersphinx
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3/', None),
+    'python': ('https://docs.python.org/3', None),
     'numpy': ('https://docs.scipy.org/doc/numpy', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('https://matplotlib.org/', None),
-    'sklearn': ('https://scikit-learn.org/stable/', None),
-    'skimage': ('http://scikit-image.org/docs/stable/', None),
-    'mayavi': ('http://docs.enthought.com/mayavi/mayavi/', None),
-    'statsmodels': ('http://www.statsmodels.org/stable/', None),
-    'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
-    'seaborn': ('http://seaborn.pydata.org/', None),
+    'matplotlib': ('https://matplotlib.org', None),
+    'sklearn': ('https://scikit-learn.org/stable', None),
+    'skimage': ('http://scikit-image.org/docs/stable', None),
+    'mayavi': ('http://docs.enthought.com/mayavi/mayavi', None),
+    'statsmodels': ('http://www.statsmodels.org/stable', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/stable', None),
+    'seaborn': ('http://seaborn.pydata.org', None),
 }
 
 
@@ -237,19 +237,13 @@ sphinx_gallery_conf = {
     'filename_pattern': '',
     'backreferences_dir': os.path.join('generated'),
     'reference_url': {
+        # The module we locally document (so, dirty_cat) uses None
         'dirty_cat': None,
-        'numpy': 'http://docs.scipy.org/doc/numpy',
-        'scipy': 'http://docs.scipy.org/doc/scipy/reference',
-        'pandas': 'http://pandas.pydata.org/pandas-docs/stable',
-        #'seaborn': 'http://seaborn.pydata.org/',
-        #'matplotlib': 'http://matplotlib.org/',
-        'sklearn': 'https://scikit-learn.org/stable/',
-        #'scikit-image': 'http://scikit-image.org/docs/stable/',
-        #'mayavi': 'http://docs.enthought.com/mayavi/mayavi/',
-        #'statsmodels': 'http://www.statsmodels.org/stable/',
+        # We don't specify the other modules as we use the intershpinx ext.
+        # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation
         },
-    'examples_dirs':'../examples',
-    'gallery_dirs':'auto_examples',
+    'examples_dirs': '../examples',
+    'gallery_dirs': 'auto_examples',
     'within_subsection_order': FileNameSortKey,
     'download_all_examples': False,
     'binder': {

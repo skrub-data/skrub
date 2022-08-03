@@ -16,8 +16,8 @@ Major changes
 Notes
 -----
 
-* The transformers_ attribute of the SuperVectorizer now contains column names
-instead of column indices for the "remainder" columns.
+* The `transformers_` attribute of the SuperVectorizer now contains column
+  names instead of column indices for the "remainder" columns.
 * Improvements to the code quality, most notably omnipresent type hinting
 
 
