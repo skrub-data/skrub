@@ -1,6 +1,6 @@
 """
 Handling datetime features with the DatetimeEncoder
-==========================================
+===================================================
 
 We illustrate here how to handle datetime features with the
 DatetimeEncoder.
@@ -55,7 +55,7 @@ encoder = make_column_transformer((cat_encoder, categorical_columns),
 
 ###############################################################################
 # Transforming the input data
-# ..............................................
+# ...........................
 # We can see that the encoder is working as expected: the date feature has
 # been replaced by features for the month, day, hour, and day of the week.
 # Note that the year and minute features have been removed by the encoder
@@ -67,7 +67,7 @@ X_
 
 ###############################################################################
 # One-liner with the SuperVectorizer
-# ..............................................
+# ..................................
 # The DatetimeEncoder is used by default in the SuperVectorizer, which
 # automatically detects datetime features.
 from dirty_cat import SuperVectorizer
@@ -90,7 +90,7 @@ sup_vec.transformers_
 
 ###############################################################################
 # Predictions with date features
-# -----------------------------------------------
+# ------------------------------
 # For prediction tasks, we recommend using the SuperVectorizer inside a
 # pipeline, combined with a model that uses the features extracted by the
 # DatetimeEncoder.
@@ -106,7 +106,7 @@ pipeline = make_pipeline(sup_vec, reg)
 
 ###############################################################################
 # Evaluating the model
-# .......................
+# ....................
 # When using date and time features, we often care about predicting the future.
 # In this case, we have to be careful when evaluating our model, because
 # standard tools like cross-validation do not respect the time ordering.
@@ -184,7 +184,7 @@ plt.show()
 
 ###############################################################################
 # Feature importances
-# ----------------------------
+# -------------------
 # Using the DatetimeEncoder allows us to better understand how the date
 # impacts the NO2 concentration. To this aim, we can compute the
 # importance of the features created by the Datetime encoder, using the
