@@ -347,13 +347,6 @@ class SuperVectorizer(ColumnTransformer):
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
-
-        Raises
-        ------
-        RuntimeError
-            If no transformers could be constructed,
-            usually because transformers passed do not match any column.
-            To fix the issue, try passing the least amount of None as encoders.
         """
         self._clone_transformers()
         # Convert to pandas DataFrame if not already.
@@ -407,7 +400,11 @@ class SuperVectorizer(ColumnTransformer):
                 self.transformers.append(trans)
 
         if len(self.transformers) == 0:
-            raise RuntimeError('No transformers could be generated !')
+            warn(
+                "No column matched to any transformer. ",
+                UserWarning,
+                stacklevel=2,
+            )
 
         self.imputed_columns_ = []
         if _has_missing_values(X):
