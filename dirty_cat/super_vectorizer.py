@@ -167,6 +167,13 @@ class SuperVectorizer(ColumnTransformer):
     imputed_columns_: List[str]
         The list of columns in which we imputed the missing values.
 
+    Raises
+    ------
+    UserWarning
+        If no transformers could be constructed,
+        usually because transformers passed do not match any column.
+        To avoid this warning, try passing the least amount of None as
+        encoders, or filter the warning before calling `fit_transform`.
     """
 
     # Override required parameters
