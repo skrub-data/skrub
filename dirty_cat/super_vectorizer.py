@@ -18,7 +18,7 @@ from typing import Union, Optional, List
 
 from sklearn.base import BaseEstimator, clone
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn import __version__ as sklearn_version
 
 from dirty_cat import GapEncoder, DatetimeEncoder
@@ -57,9 +57,11 @@ class SuperVectorizer(ColumnTransformer):
     ----------
 
     cardinality_threshold: int, default=40
-        Two lists of features will be created depending on this value: strictly
-        under this value, the low cardinality categorical values, and above or
-        equal, the high cardinality categorical values.
+        Two lists of features will be created depending on this value: between
+        3 (included) and this value (excluded) under this value,
+        the low cardinality categorical values, and above or equal,
+        the high cardinality categorical values.
+        The features with a cardinality of <= 2 will get binary encoded.
         Different encoders will be applied to these two groups, defined by
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
@@ -191,6 +193,7 @@ class SuperVectorizer(ColumnTransformer):
         super().__init__(transformers=[])
 
         self.cardinality_threshold = cardinality_threshold
+        self.binary_cat_transformer = OrdinalEncoder()
         self.low_card_cat_transformer = low_card_cat_transformer
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
@@ -380,13 +383,21 @@ class SuperVectorizer(ColumnTransformer):
         datetime_columns = X.select_dtypes(include=['datetime', "datetimetz"]).columns.to_list()
 
         # Divide categorical columns by cardinality
+        _unique_values = {  # Cache for faster assignation down the line
+            col: X[col].nunique()
+            for col in categorical_columns
+        }
+        binary_cat_columns = [
+            col for col in categorical_columns
+            if _unique_values[col] <= 2
+        ]
         low_card_cat_columns = [
             col for col in categorical_columns
-            if X[col].nunique() < self.cardinality_threshold
+            if 2 < _unique_values[col] < self.cardinality_threshold
         ]
         high_card_cat_columns = [
             col for col in categorical_columns
-            if X[col].nunique() >= self.cardinality_threshold
+            if _unique_values[col] >= self.cardinality_threshold
         ]
 
         # Next part: construct the transformers
@@ -394,6 +405,7 @@ class SuperVectorizer(ColumnTransformer):
         all_transformers = [
             ('numeric', self.numerical_transformer, numeric_columns),
             ('datetime', self.datetime_transformer_, datetime_columns),
+            ('binary_cat', self.binary_cat_transformer, binary_cat_columns),
             ('low_card_cat', self.low_card_cat_transformer_, low_card_cat_columns),
             ('high_card_cat', self.high_card_cat_transformer_, high_card_cat_columns),
         ]

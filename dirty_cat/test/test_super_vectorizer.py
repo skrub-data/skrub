@@ -175,28 +175,29 @@ def test_with_clean_data():
     # Define the transformers we'll use throughout the test.
     expected_transformers_df = {
         'numeric': ['int', 'float'],
-        'low_card_cat': ['str1', 'cat1'],
+        'binary_cat': ['str1', 'cat1'],
         'high_card_cat': ['str2', 'cat2'],
     }
     expected_transformers_2 = {
-        'low_card_cat': ['str1', 'str2', 'cat1', 'cat2'],
+        'low_card_cat': ['str2', 'cat2'],
+        'binary_cat': ['str1', 'cat1'],
     }
     expected_transformers_np_no_cast = {
-        'low_card_cat': [2, 4],
+        'binary_cat': [2, 4],
         'high_card_cat': [3, 5],
         'numeric': [0, 1]
     }
     expected_transformers_series = {
-        'low_card_cat': ['cat1'],
+        'binary_cat': ['cat1'],
     }
     expected_transformers_plain = {
         'high_card_cat': ['str2', 'cat2'],
-        'low_card_cat': ['str1', 'cat1'],
+        'binary_cat': ['str1', 'cat1'],
         'numeric': ['int', 'float']
     }
     expected_transformers_np_cast = {
         'numeric': [0, 1],
-        'low_card_cat': [2, 4],
+        'binary_cat': [2, 4],
         'high_card_cat': [3, 5],
     }
     _test_possibilities(
@@ -219,28 +220,29 @@ def test_with_dirty_data():
     # Define the transformers we'll use throughout the test.
     expected_transformers_df = {
         'numeric': ['int', 'float'],
-        'low_card_cat': ['str1', 'cat1'],
+        'binary_cat': ['str1', 'cat1'],
         'high_card_cat': ['str2', 'cat2'],
     }
     expected_transformers_2 = {
-        'low_card_cat': ['str1', 'str2', 'cat1', 'cat2'],
+        'low_card_cat': ['str2', 'cat2'],
+        'binary_cat': ['str1', 'cat1'],
     }
     expected_transformers_np_no_cast = {
-        'low_card_cat': [2, 4],
+        'binary_cat': [2, 4],
         'high_card_cat': [3, 5],
         'numeric': [0, 1],
     }
     expected_transformers_series = {
-        'low_card_cat': ['cat1'],
+        'binary_cat': ['cat1'],
     }
     expected_transformers_plain = {
         'high_card_cat': ['str2', 'cat2'],
-        'low_card_cat': ['str1', 'cat1'],
+        'binary_cat': ['str1', 'cat1'],
         'numeric': ['int', 'float']
     }
     expected_transformers_np_cast = {
         'numeric': [0, 1],
-        'low_card_cat': [2, 4],
+        'binary_cat': [2, 4],
         'high_card_cat': [3, 5],
     }
 
@@ -312,7 +314,7 @@ def test_with_arrays():
     """
     expected_transformers = {
         'numeric': [0, 1],
-        'low_card_cat': [2, 4],
+        'binary_cat': [2, 4],
         'high_card_cat': [3, 5],
     }
     vectorizer =  SuperVectorizer(
@@ -387,7 +389,8 @@ def test_transform():
     s = [34, 5.5, 'private', 'manager', 'yes', '60K+']
     x = np.array(s).reshape(1, -1)
     x_trans = sup_vec.transform(x)
-    assert (x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
+    print(sup_vec.binary_cat_transformer.get_feature_names_out())
+    assert x_trans.tolist() == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]
 
 
 def test_fit_transform_equiv():
