@@ -167,13 +167,6 @@ class SuperVectorizer(ColumnTransformer):
     imputed_columns_: List[str]
         The list of columns in which we imputed the missing values.
 
-    Raises
-    ------
-    UserWarning
-        If no transformers could be constructed,
-        usually because transformers passed do not match any column.
-        To avoid this warning, try passing the least amount of None as
-        encoders, or filter the warning before calling `fit_transform`.
     """
 
     # Override required parameters
@@ -405,13 +398,6 @@ class SuperVectorizer(ColumnTransformer):
             name, enc, cols = trans  # Unpack
             if len(cols) > 0 and enc is not None:
                 self.transformers.append(trans)
-
-        if len(self.transformers) == 0:
-            warn(
-                "No column matched to any transformer. ",
-                UserWarning,
-                stacklevel=2,
-            )
 
         self.imputed_columns_ = []
         if _has_missing_values(X):
