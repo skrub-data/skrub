@@ -333,7 +333,6 @@ def test_transform():
     s = [34, 5.5, 'private', 'manager', 'yes', '60K+']
     x = np.array(s).reshape(1, -1)
     x_trans = sup_vec.transform(x)
-    print(sup_vec.binary_cat_transformer.get_feature_names_out())
     assert x_trans.tolist() == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]
 
 
