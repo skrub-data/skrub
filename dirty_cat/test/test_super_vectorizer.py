@@ -110,15 +110,7 @@ def _get_datetimes_dataframe():
     })
 
 
-def _test_possibilities(
-        X,
-        expected_transformers_df,
-        expected_transformers_2,
-        expected_transformers_np_no_cast,
-        expected_transformers_series,
-        expected_transformers_plain,
-        expected_transformers_np_cast,
-):
+def _test_possibilities(X):
     """
     Do a bunch of tests with the SuperVectorizer.
     We take some expected transformers results as argument. They're usually
@@ -132,10 +124,19 @@ def _test_possibilities(
         numerical_transformer=StandardScaler(),
     )
     # Warning: order-dependant
+    expected_transformers_df = {
+        'numeric': ['int', 'float'],
+        'binary_cat': ['str1', 'cat1'],
+        'high_card_cat': ['str2', 'cat2'],
+    }
     vectorizer_base.fit_transform(X)
     check_same_transformers(expected_transformers_df, vectorizer_base.transformers)
 
     # Test with higher cardinality threshold and no numeric transformer
+    expected_transformers_2 = {
+        'low_card_cat': ['str2', 'cat2'],
+        'binary_cat': ['str1', 'cat1'],
+    }
     vectorizer_default = SuperVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
     check_same_transformers(expected_transformers_2, vectorizer_default.transformers)
@@ -143,10 +144,18 @@ def _test_possibilities(
     # Test with a numpy array
     arr = X.to_numpy()
     # Instead of the columns names, we'll have the column indices.
+    expected_transformers_np_no_cast = {
+        'binary_cat': [2, 4],
+        'high_card_cat': [3, 5],
+        'numeric': [0, 1]
+    }
     vectorizer_base.fit_transform(arr)
     check_same_transformers(expected_transformers_np_no_cast, vectorizer_base.transformers)
 
     # Test with pandas series
+    expected_transformers_series = {
+        'binary_cat': ['cat1'],
+    }
     vectorizer_base.fit_transform(X['cat1'])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
 
@@ -159,9 +168,19 @@ def _test_possibilities(
     )
     X_str = X.astype('object')
     # With pandas
+    expected_transformers_plain = {
+        'high_card_cat': ['str2', 'cat2'],
+        'binary_cat': ['str1', 'cat1'],
+        'numeric': ['int', 'float']
+    }
     vectorizer_cast.fit_transform(X_str)
     check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers)
     # With numpy
+    expected_transformers_np_cast = {
+        'numeric': [0, 1],
+        'binary_cat': [2, 4],
+        'high_card_cat': [3, 5],
+    }
     vectorizer_cast.fit_transform(X_str.to_numpy())
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
 
@@ -171,44 +190,7 @@ def test_with_clean_data():
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a clean dataset.
     """
-    X = _get_clean_dataframe()
-    # Define the transformers we'll use throughout the test.
-    expected_transformers_df = {
-        'numeric': ['int', 'float'],
-        'binary_cat': ['str1', 'cat1'],
-        'high_card_cat': ['str2', 'cat2'],
-    }
-    expected_transformers_2 = {
-        'low_card_cat': ['str2', 'cat2'],
-        'binary_cat': ['str1', 'cat1'],
-    }
-    expected_transformers_np_no_cast = {
-        'binary_cat': [2, 4],
-        'high_card_cat': [3, 5],
-        'numeric': [0, 1]
-    }
-    expected_transformers_series = {
-        'binary_cat': ['cat1'],
-    }
-    expected_transformers_plain = {
-        'high_card_cat': ['str2', 'cat2'],
-        'binary_cat': ['str1', 'cat1'],
-        'numeric': ['int', 'float']
-    }
-    expected_transformers_np_cast = {
-        'numeric': [0, 1],
-        'binary_cat': [2, 4],
-        'high_card_cat': [3, 5],
-    }
-    _test_possibilities(
-        X,
-        expected_transformers_df,
-        expected_transformers_2,
-        expected_transformers_np_no_cast,
-        expected_transformers_series,
-        expected_transformers_plain,
-        expected_transformers_np_cast,
-    )
+    _test_possibilities(_get_clean_dataframe())
 
 
 def test_with_dirty_data():
@@ -216,45 +198,7 @@ def test_with_dirty_data():
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a dataset containing missing values.
     """
-    X = _get_dirty_dataframe()
-    # Define the transformers we'll use throughout the test.
-    expected_transformers_df = {
-        'numeric': ['int', 'float'],
-        'binary_cat': ['str1', 'cat1'],
-        'high_card_cat': ['str2', 'cat2'],
-    }
-    expected_transformers_2 = {
-        'low_card_cat': ['str2', 'cat2'],
-        'binary_cat': ['str1', 'cat1'],
-    }
-    expected_transformers_np_no_cast = {
-        'binary_cat': [2, 4],
-        'high_card_cat': [3, 5],
-        'numeric': [0, 1],
-    }
-    expected_transformers_series = {
-        'binary_cat': ['cat1'],
-    }
-    expected_transformers_plain = {
-        'high_card_cat': ['str2', 'cat2'],
-        'binary_cat': ['str1', 'cat1'],
-        'numeric': ['int', 'float']
-    }
-    expected_transformers_np_cast = {
-        'numeric': [0, 1],
-        'binary_cat': [2, 4],
-        'high_card_cat': [3, 5],
-    }
-
-    _test_possibilities(
-        X,
-        expected_transformers_df,
-        expected_transformers_2,
-        expected_transformers_np_no_cast,
-        expected_transformers_series,
-        expected_transformers_plain,
-        expected_transformers_np_cast,
-    )
+    _test_possibilities(_get_dirty_dataframe())
 
 
 def test_auto_cast():
