@@ -18,7 +18,7 @@ from typing import Union, Optional, List
 
 from sklearn.base import BaseEstimator, clone
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder
 from sklearn import __version__ as sklearn_version
 
 from dirty_cat import GapEncoder, DatetimeEncoder
@@ -193,7 +193,7 @@ class SuperVectorizer(ColumnTransformer):
         super().__init__(transformers=[])
 
         self.cardinality_threshold = cardinality_threshold
-        self.binary_cat_transformer = OrdinalEncoder()
+        self.binary_cat_transformer = OneHotEncoder(drop='if_binary')
         self.low_card_cat_transformer = low_card_cat_transformer
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
