@@ -14,53 +14,84 @@ dirty_cat
 .. |codecov| image:: https://img.shields.io/codecov/c/github/dirty-cat/dirty_cat/master
 .. |circleci| image:: https://img.shields.io/circleci/build/github/dirty-cat/dirty_cat/master?label=CircleCI
 
-dirty_cat is a Python module for machine-learning on dirty categorical variables.
+`dirty_cat <https://dirty-cat.github.io/>`_ is a Python library
+that facilitates machine-learning on dirty categorical variables.
 
-Website: https://dirty-cat.github.io/
+The techniques implemented are based on science!
+For a detailed description of the problem of encoding dirty categorical data, see
+`Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
+and `Encoding high-cardinality string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
-dirty_cat's SuperVectorizer automatically turns pandas data frames into
-numerical arrays suitable for learning.
+If you like the package, please *spread the word*, and ⭐ the repository !
 
-For a detailed description of the problem of encoding dirty categorical data,
-see `Similarity encoding for learning with dirty categorical variables
-<https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality string categorical variables
-<https://hal.inria.fr/hal-02171256v4>`_ [2]_.
+
+
+When to use?
+------------
+
+dirty_cat assumes a correlation between the textual (morphological) similarities
+in the feature(s) and the similarities in the target.
+
+For this example, let's consider the species
+
+dirty_cat encoders can be easily integrated in already existing
+scikit-learn pipelines as they are compliant with the library's principles.
+
+As such, they can be drop-in replacements for other encoders !
+
+Encoders
+--------
+
+dirty_cat provides various tools for dealing with dirty data:
+
+- The `SimilarityEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.SimilarityEncoder.html>`_
+- The `GapEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.GapEncoder.html>`_
+- The `MinHashEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.MinHashEncoder.html>`_
+- The `SuperVectorizer <https://dirty-cat.github.io/stable/generated/dirty_cat.SuperVectorizer.html>`_
+- The `DatetimeEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.DatetimeEncoder.html>`_
+
+You can find more details and examples on `the website <https://dirty-cat.github.io/>`_.
+
+Benchmark
+---------
+
+
 
 Installation
 ------------
 
+dirty_cat can be easily installed via `pip`::
+
+    pip install dirty_cat
+
 Dependencies
 ~~~~~~~~~~~~
 
-dirty_cat requires:
-
-- Python (>= 3.8)
-- NumPy (>= 1.17.3)
-- SciPy (>= 1.4.0)
-- scikit-learn (>= 0.21.0)
-- pandas (>= 1.1.5)
-
-Optional dependency:
-
-- python-Levenshtein for faster edit distances (not used for the n-gram
-  distance)
-
-User installation
-~~~~~~~~~~~~~~~~~
-
-If you already have a working installation of NumPy and SciPy,
-the easiest way to install dirty_cat is using ``pip`` ::
-
-    pip install -U --user dirty_cat
+Dependencies and minimal versions are listed in the file `min-requirements.txt`
 
 Other implementations
-~~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 -  Spark ML: https://github.com/rakutentech/spark-dirty-cat
 
+Contributing
+------------
+
+If you want to encourage development of dirty_cat,
+the best thing to do now is to *spread the word*!
+
+If you encounter an issue during use of dirty_cat, please
+`open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_ or
+`submit a pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.
+Don't hesitate, you're helping to make this project better for everyone!
 
 References
-~~~~~~~~~~
+----------
 
 .. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
 .. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
+
+Notes
+-----
+
+The library is provided under the `BSD 3-clause licence <https://github.com/dirty-cat/dirty_cat/blob/master/LICENSE.txt>`_.
