@@ -196,7 +196,7 @@ def profile_encoder(Encoder, init):
 if __name__ == '__main__':
     
     print('test_analyzer')
-    test_analyzer('k-means++', 'char_wb', 'word')
+    test_analyzer()
     print('test_analyzer passed')
     print('start test_gap_encoder')
     test_gap_encoder(True, 'k-means++', 'char', False)
