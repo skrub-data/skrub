@@ -67,35 +67,36 @@ class SuperVectorizer(ColumnTransformer):
     low_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Default value None is converted to `OneHotEncoder()`.
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`OneHotEncoder()`).
 
     high_card_cat_transformer: Transformer or str or None, default=None
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
-        Default value None is converted to `GapEncoder(n_components=30)`.
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`GapEncoder(n_components=30)`).
 
     numerical_transformer: Transformer or str or None, default=None
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (here nothing).
 
     datetime_transformer: Transformer or str or None, default=None
         Transformer used on datetime features.
-        Default value None is converted to `DatetimeEncoder()`.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`DatetimeEncoder()`).
 
     auto_cast: bool, default=True
         If set to `True`, will try to convert each column to the best possible
