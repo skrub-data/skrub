@@ -212,20 +212,28 @@ class SuperVectorizer(ColumnTransformer):
         return {"allow_nan": [True]}
 
     def _clone_transformers(self):
-        if self.low_card_cat_transformer is not None:
+        if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
-        else:
+        elif self.low_card_cat_transformer is None:
             self.low_card_cat_transformer_ = OneHotEncoder()
-        if self.high_card_cat_transformer is not None:
-            self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
         else:
-            self.high_card_cat_transformer_ = GapEncoder(n_components=30)
-        if self.datetime_transformer is not None:
-            self.datetime_transformer_ = clone(self.datetime_transformer)
-        else:
-            self.datetime_transformer_ = DatetimeEncoder()
+            self.low_card_cat_transformer_ = self.low_card_cat_transformer
 
-        #TODO check that the provided transformers are valid
+        if isinstance(self.high_card_cat_transformer, sklearn.base.TransformerMixin):
+            self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
+        elif self.high_card_cat_transformer is None:
+            self.high_card_cat_transformer_ = GapEncoder(n_components=30)
+        else:
+            self.high_card_cat_transformer_ = self.high_card_cat_transformer
+
+        if isinstance(self.datetime_transformer, sklearn.base.TransformerMixin):
+            self.datetime_transformer_ = clone(self.datetime_transformer)
+        elif self.datetime_transformer is None:
+            self.datetime_transformer_ = DatetimeEncoder()
+        else:
+            self.datetime_transformer_ = self.datetime_transformer
+
+        # TODO check that the provided transformers are valid
 
     @staticmethod
     def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
@@ -248,20 +256,18 @@ class SuperVectorizer(ColumnTransformer):
 
         # Handle missing values
         for col in X.columns:
-            contains_missing: bool = _has_missing_values(X[col])
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
             # because the former tends to raise all kind of issues when dealing
             # with scikit-learn (as of version 0.24).
-            if contains_missing:
+            if _has_missing_values(X[col]):
                 # Some numerical dtypes like Int64 or Float64 only support
                 # pd.NA so they must be converted to np.float64 before.
                 if pd.api.types.is_numeric_dtype(X[col]):
                     X[col] = X[col].astype(np.float64)
-                X[col].fillna(value=np.nan, inplace=True)
+                X[col] = X[col].fillna(np.nan)
         STR_NA_VALUES = ['null', '', '1.#QNAN', '#NA', 'nan', '#N/A N/A', '-1.#QNAN', '<NA>', '-1.#IND', '-nan', 'n/a',
                          '-NaN', '1.#IND', 'NULL', 'NA', 'N/A', '#N/A', 'NaN']  # taken from pandas.io.parsers (version 1.1.4)
-        X = X.replace(STR_NA_VALUES + [None, "?", "..."],
-                      np.nan)
+        X = X.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
         X = X.replace(r'^\s+$', np.nan, regex=True) # replace whitespace only
 
         # Convert to best possible data type
@@ -277,7 +283,7 @@ class SuperVectorizer(ColumnTransformer):
                     except:
                         pass
             # Cast pandas dtypes to numpy dtypes
-            # for earlier versions of sklearn
+            # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
                 try:
                     X[col] = X[col].astype(X[col].dtype.type, errors='ignore')

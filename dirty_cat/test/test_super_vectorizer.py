@@ -414,6 +414,29 @@ def test_fit_transform_equiv():
     assert np.allclose(enc1_x2, enc2_x2, rtol=0, atol=0, equal_nan=True)
 
 
+def test_passthrough():
+    """
+    Tests that when passed no encoders, the SuperVectorizer
+    returns the dataset as-is.
+    """
+    X_clean = _get_clean_dataframe()
+    X_dirty = _get_dirty_dataframe()
+
+    sv = SuperVectorizer(
+        low_card_cat_transformer='passthrough',
+        high_card_cat_transformer='passthrough',
+        datetime_transformer='passthrough',
+        numerical_transformer='passthrough',
+        impute_missing='skip',
+    )
+
+    X_enc_dirty = sv.fit_transform(X_dirty)
+    X_enc_clean = sv.fit_transform(X_clean)
+
+    assert X_dirty.to_numpy() == X_enc_dirty
+    assert X_clean.to_numpy() == X_enc_clean
+
+
 if __name__ == '__main__':
     print('start test_super_vectorizer with clean df')
     test_with_clean_data()
@@ -436,5 +459,8 @@ if __name__ == '__main__':
     print('start fit_transform_equiv')
     test_fit_transform_equiv()
     print('fit_transform_equiv passed')
+    print('start test_passthrough')
+    test_passthrough()
+    print('test_passthrough passed')
 
     print('Done')
