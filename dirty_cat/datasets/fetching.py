@@ -334,7 +334,7 @@ def fetch_employee_salaries(load_dataframe: bool = True,
                             drop_linked: bool = True,
                             drop_irrelevant: bool = True,
                             ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the employee_salaries dataset, available at
+    """Fetches the employee_salaries dataset (regression), available at
     https://openml.org/d/42125
 
     Description of the dataset:
@@ -386,7 +386,7 @@ def fetch_employee_salaries(load_dataframe: bool = True,
 
 def fetch_road_safety(load_dataframe: bool = True,
                       ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the road safety dataset, available at
+    """Fetches the road safety dataset (classification), available at
     https://openml.org/d/42803
 
     Description of the dataset:
@@ -419,7 +419,7 @@ def fetch_road_safety(load_dataframe: bool = True,
 
 def fetch_medical_charge(load_dataframe: bool = True
                          ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the medical charge dataset, available at
+    """Fetches the medical charge dataset (regression), available at
     https://openml.org/d/42720
 
     Description of the dataset:
@@ -457,7 +457,7 @@ def fetch_medical_charge(load_dataframe: bool = True
 
 def fetch_midwest_survey(load_dataframe: bool = True
                          ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the midwest survey dataset, available at
+    """Fetches the midwest survey dataset (classification), available at
     https://openml.org/d/42805
 
     Description of the dataset:
@@ -488,7 +488,7 @@ def fetch_midwest_survey(load_dataframe: bool = True
 
 def fetch_open_payments(load_dataframe: bool = True
                         ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the open payments dataset, available at
+    """Fetches the open payments dataset (classification), available at
     https://openml.org/d/42738
 
     Description of the dataset:
@@ -521,7 +521,7 @@ def fetch_open_payments(load_dataframe: bool = True
 
 def fetch_traffic_violations(load_dataframe: bool = True
                              ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the traffic violations dataset, available at
+    """Fetches the traffic violations dataset (classification), available at
     https://openml.org/d/42132
 
     Description of the dataset:
@@ -556,7 +556,7 @@ def fetch_traffic_violations(load_dataframe: bool = True
 
 def fetch_drug_directory(load_dataframe: bool = True
                          ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the drug directory dataset, available at
+    """Fetches the drug directory dataset (classification), available at
     https://openml.org/d/43044
 
     Description of the dataset:
