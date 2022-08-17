@@ -306,6 +306,7 @@ def test_import_all_datasets(mock_fetch_dataset_as_dataclass,
     """Tests functions ``fetch_*()``."""
 
     mock_fetch_openml_dataset.return_value = {
+        'name': 'Example dataset',
         'description': 'This is a dataset.',
         'source': 'https://www.openml.org/',
         'target': 'To_predict',
@@ -314,6 +315,7 @@ def test_import_all_datasets(mock_fetch_dataset_as_dataclass,
     }
 
     expected_return_value_all = fetching.DatasetAll(
+        name='Example dataset',
         description="This is a dataset.",
         source="https://www.openml.org/",
         path=Path("/path/to/file.csv"),
@@ -322,6 +324,7 @@ def test_import_all_datasets(mock_fetch_dataset_as_dataclass,
     )
 
     expected_return_value_info_only = fetching.DatasetInfoOnly(
+        name='Example dataset',
         description="This is a dataset.",
         source="https://www.openml.org/",
         target='To_predict',

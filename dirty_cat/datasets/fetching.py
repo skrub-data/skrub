@@ -69,6 +69,7 @@ class Features:
 
 @dataclass(unsafe_hash=True)
 class DatasetAll:
+    name: str
     description: str
     X: pd.DataFrame
     y: pd.Series
@@ -78,6 +79,7 @@ class DatasetAll:
 
 @dataclass(unsafe_hash=True)
 class DatasetInfoOnly:
+    name: str
     description: str
     source: str
     target: str
@@ -320,7 +322,9 @@ def _features_to_csv_format(features: Features) -> str:
     return ",".join(features.names)
 
 
-def fetch_dataset_as_dataclass(dataset_id: int, target: str,
+def fetch_dataset_as_dataclass(dataset_name: str,
+                               dataset_id: int,
+                               target: str,
                                read_csv_kwargs: dict,
                                load_dataframe: bool,
                                ) -> Union[DatasetAll, DatasetInfoOnly]:
@@ -346,6 +350,7 @@ def fetch_dataset_as_dataclass(dataset_id: int, target: str,
         y = df[target]
         X = df.drop(target, axis='columns')
         dataset = DatasetAll(
+            name=dataset_name,
             description=info['description'],
             X=X,
             y=y,
@@ -354,6 +359,7 @@ def fetch_dataset_as_dataclass(dataset_id: int, target: str,
         )
     else:
         dataset = DatasetInfoOnly(
+            name=dataset_name,
             description=info['description'],
             source=info['source'],
             target=target,
@@ -399,6 +405,7 @@ def fetch_employee_salaries(load_dataframe: bool = True,
         If `load_dataframe=False`
     """
     dataset = fetch_dataset_as_dataclass(
+        dataset_name='Employee salaries',
         dataset_id=EMPLOYEE_SALARIES_ID,
         target='current_annual_salary',
         read_csv_kwargs={
@@ -438,6 +445,7 @@ def fetch_road_safety(load_dataframe: bool = True,
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
+        dataset_name='Road safety',
         dataset_id=ROAD_SAFETY_ID,
         target='Sex_of_Driver',
         read_csv_kwargs={
@@ -471,6 +479,7 @@ def fetch_medical_charge(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
+        dataset_name='Medical charge',
         dataset_id=MEDICAL_CHARGE_ID,
         target='Average_Total_Payments',
         read_csv_kwargs={
@@ -498,6 +507,7 @@ def fetch_midwest_survey(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
+        dataset_name='Midwest survey',
         dataset_id=MIDWEST_SURVEY_ID,
         target='Census_Region',
         read_csv_kwargs={
@@ -526,6 +536,7 @@ def fetch_open_payments(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
+        dataset_name='Open payments',
         dataset_id=OPEN_PAYMENTS_ID,
         target='status',
         read_csv_kwargs={
@@ -557,6 +568,7 @@ def fetch_traffic_violations(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
+        dataset_name='Traffic violations',
         dataset_id=TRAFFIC_VIOLATIONS_ID,
         target='violation_type',
         read_csv_kwargs={
@@ -586,6 +598,7 @@ def fetch_drug_directory(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
+        dataset_name='Drug directory',
         dataset_id=DRUG_DIRECTORY_ID,
         target='PRODUCTTYPENAME',
         read_csv_kwargs={
