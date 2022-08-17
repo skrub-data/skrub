@@ -419,8 +419,8 @@ def test_passthrough():
     Tests that when passed no encoders, the SuperVectorizer
     returns the dataset as-is.
     """
-    X_clean = _get_clean_dataframe()
     X_dirty = _get_dirty_dataframe()
+    X_clean = _get_clean_dataframe()
 
     sv = SuperVectorizer(
         low_card_cat_transformer='passthrough',
@@ -428,6 +428,7 @@ def test_passthrough():
         datetime_transformer='passthrough',
         numerical_transformer='passthrough',
         impute_missing='skip',
+        auto_cast=False,
     )
 
     X_enc_dirty = sv.fit_transform(X_dirty)

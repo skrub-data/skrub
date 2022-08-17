@@ -453,7 +453,7 @@ class SuperVectorizer(ColumnTransformer):
         if self.verbose:
             print(f'[SuperVectorizer] Assigned transformers: {self.transformers}')
 
-        check_input(X)
+        #check_input(X)
 
         res = super().fit_transform(X, y)
 
