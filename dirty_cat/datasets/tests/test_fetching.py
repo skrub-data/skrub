@@ -131,10 +131,14 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     we mock the functions to test its inner mechanisms.
     """
 
-    mock_get_details.return_value = Details("Dataset_name", "123456",
-                                            "Dummy dataset description.")
-    mock_get_features.return_value = Features(["id", "name", "transaction_id",
-                                               "owner", "recipient"])
+    mock_get_details.return_value = Details(
+        name="Dataset_name",
+        file_id="123456",
+        description="Dummy dataset description."
+    )
+    mock_get_features.return_value = Features(
+        names=["id", "name", "transaction_id", "owner", "recipient"]
+    )
 
     test_data_dir = get_test_data_dir()
 
@@ -296,19 +300,22 @@ def test__features_to_csv_format():
 
 
 @mock.patch('dirty_cat.datasets.fetching.fetch_openml_dataset')
-@mock.patch("dirty_cat.datasets.fetching.fetch_dataset_as_namedtuple")
-def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
+@mock.patch("dirty_cat.datasets.fetching.fetch_dataset_as_dataclass")
+def test_import_all_datasets(mock_fetch_dataset_as_dataclass,
                              mock_fetch_openml_dataset):
     """Tests functions ``fetch_*()``."""
 
     mock_fetch_openml_dataset.return_value = {
+        'name': 'Example dataset',
         'description': 'This is a dataset.',
         'source': 'https://www.openml.org/',
+        'target': 'To_predict',
         'path': Path("/path/to/file.csv"),
         'read_csv_kwargs': {'a': 'b'},
     }
 
     expected_return_value_all = fetching.DatasetAll(
+        name='Example dataset',
         description="This is a dataset.",
         source="https://www.openml.org/",
         path=Path("/path/to/file.csv"),
@@ -317,8 +324,10 @@ def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
     )
 
     expected_return_value_info_only = fetching.DatasetInfoOnly(
+        name='Example dataset',
         description="This is a dataset.",
         source="https://www.openml.org/",
+        target='To_predict',
         path=Path("/path/to/file.csv"),
         read_csv_kwargs={'a': 'b'},
     )
@@ -327,7 +336,7 @@ def test_import_all_datasets(mock_fetch_dataset_as_namedtuple,
         [expected_return_value_all, expected_return_value_info_only],
         [True, False],
     ):
-        mock_fetch_dataset_as_namedtuple.return_value = expected_return_value
+        mock_fetch_dataset_as_dataclass.return_value = expected_return_value
 
         returned_value = fetching.fetch_employee_salaries(drop_linked=False,
                                                           drop_irrelevant=False)
