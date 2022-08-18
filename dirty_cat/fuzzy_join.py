@@ -1,5 +1,10 @@
 # TODO: add HashingVectorizer as an option.
 # TODO 2: add suffixes to column names.
+# TODO 3: compute precision confidence of join using distances.
+# TODO 4: create method append that appends tables with dirty column names.
+# TODO 5: add many-to-one, many-to-many joins.
+# TODO 6: add custom match dictionary
+# TODO 7: add option that requires 100% exact match (if ID matching)
 
 """
 Fuzzy joining tables using string columns.
@@ -90,11 +95,11 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         right_clean = right_table[right_col]
         joined = pd.DataFrame(left_table[left_col], columns=[left_col, right_col])
 
-        enc = CountVectorizer(analyzer=self.analyzer, ngram_range=self.ngram_range)
-        left_enc = enc.fit_transform(left_table[left_col])
-        right_enc = enc.transform(right_table[right_col])
-        left_enc = TfidfTransformer().fit_transform(left_enc)
-        right_enc = TfidfTransformer().fit_transform(right_enc)
+        # Does a Count Vectorization and then a Tfidf Transformation:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        vectorizer = TfidfVectorizer(analyzer=self.analyzer, ngram_range=self.ngram_range)
+        left_enc = vectorizer.fit_transform(left_table[left_col])
+        right_enc = vectorizer.fit_transform(right_table[right_col])
 
         # Find closest neighbor using KNN :
         neigh = NearestNeighbors(n_neighbors=1)
