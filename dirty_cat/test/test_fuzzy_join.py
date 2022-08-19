@@ -67,7 +67,7 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
     )
 
     fj = FuzzyJoin(analyzer=analyzer, precision=precision,
-                   precision_threshold=0.5)
+                   precision_threshold=0.1)
 
     teams_joined, dist1 = fj.join(
         teams1,
