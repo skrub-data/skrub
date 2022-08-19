@@ -4,7 +4,7 @@ from dirty_cat import FuzzyJoin
 
 
 @pytest.mark.parametrize(
-    "analyzer, precision", [("char", "closest"), ("char_wb", "2dball")]
+    "analyzer, precision", [("char", "nearest"), ("char_wb", "2dball")]
 )
 def test_fuzzy_join(analyzer, precision, return_distance=True):
     teams1 = pd.DataFrame(
