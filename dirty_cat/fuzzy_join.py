@@ -1,11 +1,3 @@
-# TODO: add HashingVectorizer as an option.
-# TODO 2: add suffixes to column names.
-# TODO 3: compute precision confidence of join using distances.
-# TODO 4: create method append that appends tables with dirty column names.
-# TODO 5: add many-to-one, many-to-many joins.
-# TODO 6: add custom match dictionary
-# TODO 7: add option that requires 100% exact match (if ID matching)
-
 """
 Fuzzy joining tables using string columns.
 The principle is as follows:
@@ -32,24 +24,35 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
     Parameters
     ----------
 
-    analyzer : str, default='char_wb'.
+    analyzer : str, default=`char_wb`
         Analyzer parameter for the CountVectorizer.
-        Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
+        Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
-        Option ‘char_wb’ creates character n-grams only from text inside word
+        Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
     ngram_range : tuple (min_n, max_n), default=(2, 4)
         The lower and upper boundary of the range of n-values for different
         n-grams to be extracted. All values of n such that min_n <= n <= max_n.
         will be used.
+    precision : {`nearest`, `2dballtree`}, default=`nearest`
+        Type of measure that is used to determine the precision of the joined entities.
+        If `nearest`, returns the neirest neighbor match. 
+        If `2dballtree`, return the nearest neighbor if the estimated precision is
+        under the precision threshold.
+    precision_threshold : float, default=0.5
+        Used only if precision is `2dballtree`. Determines the level of precision
+        required to match the two column values. If not matched, all columns have
+        `nan`'s.
 
     """
 
-    def __init__(self, analyzer="char_wb", ngram_range=(2, 4)):
+    def __init__(self, analyzer="char_wb", ngram_range=(2, 4), precision='nearest', precision_threshold=0.5):
         self.ngram_range = ngram_range
         self.analyzer = analyzer
+        self.precision = precision
+        self.precision_threshold = precision_threshold
 
-    def join(self, left_table, right_table, on, return_distance=False):
+    def join(self, left_table, right_table, on, return_distance=True):
         """Join left and right table.
 
         Parameters
@@ -61,7 +64,7 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         on: list
             List of left and right table column names on which
             the matching will be perfomed.
-        distance: boolean
+        return_distance: boolean
             Wheter to return distance between nearest matched categories.
 
         Returns:
@@ -95,11 +98,11 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         right_clean = right_table[right_col]
         joined = pd.DataFrame(left_table[left_col], columns=[left_col, right_col])
 
-        # Does a Count Vectorization and then a Tfidf Transformation:
-        from sklearn.feature_extraction.text import TfidfVectorizer
-        vectorizer = TfidfVectorizer(analyzer=self.analyzer, ngram_range=self.ngram_range)
-        left_enc = vectorizer.fit_transform(left_table[left_col])
-        right_enc = vectorizer.fit_transform(right_table[right_col])
+        enc = CountVectorizer(analyzer=self.analyzer, ngram_range=self.ngram_range)
+        left_enc = enc.fit_transform(left_table[left_col])
+        right_enc = enc.transform(right_table[right_col])
+        left_enc = TfidfTransformer().fit_transform(left_enc)
+        right_enc = TfidfTransformer().fit_transform(right_enc)
 
         # Find closest neighbor using KNN :
         neigh = NearestNeighbors(n_neighbors=1)
@@ -107,8 +110,35 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
         idx_closest = np.ravel(neighbors)
 
-        for idx in left_table.index:
-            joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
+        if self.precision == 'nearest':
+            for idx in left_table.index:
+                joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
+
+        if self.precision == '2dball':
+            prec = []
+            for i in range(left_enc.shape[0]):
+                # Find all neighbors in a 2dball radius:
+                dist = 2 * distance[i]
+                n_neigh = NearestNeighbors(radius=dist)
+                n_neigh.fit(right_enc)
+                rng = n_neigh.radius_neighbors(left_enc[i])
+                # Distances to closest neighbors:
+                # twodball_dist = rng[0][0]
+                # Their indices:
+                twodball_pts = rng[1][0]
+                prec.append(1 / len(twodball_pts))
+                # Compute the estimated True Positive, False Positive:
+                TP = sum(prec)
+                FP = sum([1 - value for value in prec])
+                # Finally, estimated precision and recall:
+                est_precision = TP/(TP+FP)
+                # est_recall = 1 - est_precision
+            for idx in left_table.index:
+                if prec[idx] >= self.precision_threshold:
+                    joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
+                else:
+                    joined.loc[idx, right_col] = np.nan
+
         if return_distance:
             return joined, distance
         else:

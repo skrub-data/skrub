@@ -4,9 +4,9 @@ from dirty_cat import FuzzyJoin
 
 
 @pytest.mark.parametrize(
-    "analyzer, return_distance", [("char", True), ("char_wb", True)]
+    "analyzer, precision", [("char", "closest"), ("char_wb", "2dball")]
 )
-def test_fuzzy_join(analyzer, return_distance):
+def test_fuzzy_join(analyzer, precision, return_distance=True):
     teams1 = pd.DataFrame(
         {
             "basketball_teams": [
@@ -66,7 +66,8 @@ def test_fuzzy_join(analyzer, return_distance):
         }
     )
 
-    fj = FuzzyJoin(analyzer=analyzer)
+    fj = FuzzyJoin(analyzer=analyzer, precision=precision,
+                   precision_threshold=0.5)
 
     teams_joined, dist1 = fj.join(
         teams1,
@@ -88,7 +89,7 @@ def test_fuzzy_join(analyzer, return_distance):
         on=["teams_basketball", "basketball_teams"],
         return_distance=return_distance,
     )
-    
+
     # Joining is always done on the left table and thus takes it shape:
     assert teams_joined_2.shape == (10, 2)
     assert dist2.shape == (10, 1)
