@@ -306,6 +306,7 @@ def test_auto_cast():
     for col in X_trans.columns:
         assert type_equality(expected_types_dirty_dataframe[col], X_trans[col].dtype)
 
+
 def test_with_arrays():
     """
     Check that the SuperVectorizer works if we input a list of lists or a numpy array.
@@ -315,7 +316,7 @@ def test_with_arrays():
         'low_card_cat': [2, 4],
         'high_card_cat': [3, 5],
     }
-    vectorizer =  SuperVectorizer(
+    vectorizer = SuperVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
         high_card_cat_transformer=GapEncoder(n_components=2),
@@ -398,16 +399,11 @@ def test_fit_transform_equiv():
     X1 = _get_clean_dataframe()
     X2 = _get_dirty_dataframe()
 
-    sup_vec1 = SuperVectorizer()
-    sup_vec2 = SuperVectorizer()
-    sup_vec3 = SuperVectorizer()
-    sup_vec4 = SuperVectorizer()
+    enc1_x1 = SuperVectorizer().fit_transform(X1)
+    enc2_x1 = SuperVectorizer().fit(X1).transform(X1)
 
-    enc1_x1 = sup_vec1.fit_transform(X1)
-    enc2_x1 = sup_vec2.fit(X1).transform(X1)
-
-    enc1_x2 = sup_vec3.fit_transform(X2)
-    enc2_x2 = sup_vec4.fit(X2).transform(X2)
+    enc1_x2 = SuperVectorizer().fit_transform(X2)
+    enc2_x2 = SuperVectorizer().fit(X2).transform(X2)
 
     assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 

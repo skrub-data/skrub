@@ -8,18 +8,16 @@ manually categorize them beforehand, or construct complex Pipelines.
 
 # Author: Lilian Boulard <lilian@boulard.fr> | https://github.com/LilianBoulard
 
-import sklearn
-
 import numpy as np
 import pandas as pd
 
 from warnings import warn
-from typing import Union, Optional, List
-
-from sklearn.base import BaseEstimator, clone
+from typing import Union, Optional, List, Tuple
+from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn import __version__ as sklearn_version
+from pandas.core.dtypes.base import ExtensionDtype
 
 from dirty_cat import GapEncoder, DatetimeEncoder
 from dirty_cat.utils import Version, check_input
@@ -32,16 +30,29 @@ def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
     return any(df.isnull())
 
 
-def _replace_missing_in_col(df: pd.Series, value: str = "missing") -> pd.Series:
+def _replace_false_missing(ser: pd.Series) -> pd.Series:
+    STR_NA_VALUES = [
+        'null', '', '1.#QNAN', '#NA', 'nan', '#N/A N/A',
+        '-1.#QNAN', '<NA>', '-1.#IND', '-nan', 'n/a', '-NaN',
+        '1.#IND', 'NULL', 'NA', 'N/A', '#N/A', 'NaN',
+    ]  # taken from pandas.io.parsers (version 1.1.4)
+    ser = ser.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
+    ser = ser.replace(r'^\s+$', np.nan, regex=True)  # Replace whitespaces
+    return ser
+
+
+def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Series:
     """
     Takes a Series with string data, replaces the missing values, and returns it.
     """
-    dtype_name = df.dtype.name
+    ser = _replace_false_missing(ser)
+    if ser.dtype.name == 'category' and (value not in ser.cat.categories):
+        ser = ser.cat.add_categories([value])
+    ser = ser.fillna(value=value)
+    return ser
 
-    if dtype_name == 'category' and (value not in df.cat.categories):
-        df = df.cat.add_categories(value)
-    df = df.fillna(value=value)
-    return df
+
+OptionalTransformer = Optional[Union[TransformerMixin, str]]
 
 
 class SuperVectorizer(ColumnTransformer):
@@ -102,11 +113,11 @@ class SuperVectorizer(ColumnTransformer):
         data type (dtype).
 
     impute_missing: str, default='auto'
-        When to impute missing values in string columns.
+        When to impute missing values in categorical columns.
         'auto' will impute missing values if it's considered appropriate
         (we are using an encoder that does not support missing values and/or
         specific versions of pandas, numpy and scikit-learn).
-        'force' will impute all missing values.
+        'force' will impute missing values in all columns.
         'skip' will not impute at all.
         When imputed, missing values are replaced by the string 'missing'.
         See also attribute `imputed_columns_`.
@@ -157,8 +168,9 @@ class SuperVectorizer(ColumnTransformer):
         or "passthrough" or "drop"
         (3) the list of column names or index
 
-    columns_: List[Union[str, int]]
-        The column names of fitted array.
+    columns_: pd.Index
+        The fitted array's columns. They are applied to the data passed
+        to the `transform` method.
 
     types_: Dict[str, type]
         A mapping of inferred types per column.
@@ -171,14 +183,13 @@ class SuperVectorizer(ColumnTransformer):
 
     # Override required parameters
     _required_parameters = []
-    OptionalEstimator = Optional[Union[BaseEstimator, str]]
 
     def __init__(self, *,
                  cardinality_threshold: int = 40,
-                 low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = None,
-                 high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = None,
-                 numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
-                 datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
+                 low_card_cat_transformer: OptionalTransformer = None,
+                 high_card_cat_transformer: OptionalTransformer = None,
+                 numerical_transformer: OptionalTransformer = None,
+                 datetime_transformer: OptionalTransformer = None,
                  auto_cast: bool = True,
                  impute_missing: str = 'auto',
                  # Following parameters are inherited from ColumnTransformer
@@ -226,11 +237,10 @@ class SuperVectorizer(ColumnTransformer):
 
         #TODO check that the provided transformers are valid
 
-    @staticmethod
-    def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
+    def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
         """
-        Takes a dataframe and tries to convert its columns to the best
-        possible data type.
+        Used during fit: takes a dataframe and tries to convert
+        its columns to their best possible data type.
 
         Parameters
         ----------
@@ -243,10 +253,9 @@ class SuperVectorizer(ColumnTransformer):
             The same pandas DataFrame, with its columns casted to the best possible
             data type.
         """
-        from pandas.core.dtypes.base import ExtensionDtype
-
         # Handle missing values
         for col in X.columns:
+            X[col] = _replace_false_missing(X[col])
             contains_missing: bool = _has_missing_values(X[col])
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
             # because the former tends to raise all kind of issues when dealing
@@ -257,13 +266,9 @@ class SuperVectorizer(ColumnTransformer):
                 if pd.api.types.is_numeric_dtype(X[col]):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
-        STR_NA_VALUES = ['null', '', '1.#QNAN', '#NA', 'nan', '#N/A N/A', '-1.#QNAN', '<NA>', '-1.#IND', '-nan', 'n/a',
-                         '-NaN', '1.#IND', 'NULL', 'NA', 'N/A', '#N/A', 'NaN']  # taken from pandas.io.parsers (version 1.1.4)
-        X = X.replace(STR_NA_VALUES + [None, "?", "..."],
-                      np.nan)
-        X = X.replace(r'^\s+$', np.nan, regex=True) # replace whitespace only
 
         # Convert to best possible data type
+        self.types_ = {}
         for col in X.columns:
             if not pd.api.types.is_datetime64_any_dtype(X[col]): # we don't want to cast datetime64
                 try:
@@ -282,6 +287,18 @@ class SuperVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(X[col].dtype.type, errors='ignore')
                 except (TypeError, ValueError):
                     pass
+            self.types_.update({col: X[col].dtype})
+        return X
+
+    def _apply_cast(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        Used during transform: takes a pandas dataframe,
+        and applies the best data types learnt during fitting.
+        """
+        for col in X.columns:
+            X[col] = _replace_false_missing(X[col])
+        for col, dtype in self.types_.items():
+            X[col] = X[col].astype(dtype)
         return X
 
     def transform(self, X) -> np.ndarray:
@@ -302,28 +319,27 @@ class SuperVectorizer(ColumnTransformer):
             sparse matrices.
 
         """
+        if X.shape[1] != self.n_features_in_:
+            raise ValueError("Passed array does not match column count of "
+                             f"array seen at fit time. Got {X.shape[1]} "
+                             f"columns, expected {self.n_features_in_}")
+
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
         else:
             # Create a copy to avoid altering the original data.
             X = X.copy()
+
+        if (X.columns != self.columns_).all():
+            X.columns = self.columns_
+
         # Auto cast the imported data to avoid having issues with
         # `object` dtype when we will cast columns to the fitted types.
         if self.auto_cast:
-            X = self._auto_cast(X)
-            self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
-        if X.shape[1] != len(self.columns_):
-            raise ValueError("Passed array does not match column count of "
-                             f"array seen at fit time. Got {X.shape[1]} "
-                             f"columns, expected {len(self.columns_)}")
-
-        # If the DataFrame does not have named columns already,
-        # apply the learnt columns
-        if pd.api.types.is_numeric_dtype(X.columns):
-            X.columns = self.columns_
+            X = self._apply_cast(X)
 
         for col in self.imputed_columns_:
-            X[col] = _replace_missing_in_col(X[col])
+            X[col] = _replace_missing_in_cat_col(X[col])
 
         return super().transform(X)
 
@@ -369,7 +385,6 @@ class SuperVectorizer(ColumnTransformer):
         # We'll keep the results so we can apply the types in transform.
         if self.auto_cast:
             X = self._auto_cast(X)
-            self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
 
         # Select columns by dtype
         numeric_columns = X.select_dtypes(include=['int', 'float',
@@ -391,7 +406,7 @@ class SuperVectorizer(ColumnTransformer):
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers = [
+        all_transformers: List[Tuple[str, OptionalTransformer, List[str]]] = [
             ('numeric', self.numerical_transformer, numeric_columns),
             ('datetime', self.datetime_transformer_, datetime_columns),
             ('low_card_cat', self.low_card_cat_transformer_, low_card_cat_columns),
@@ -416,7 +431,7 @@ class SuperVectorizer(ColumnTransformer):
                 for col in X.columns:
                     # Do not impute numeric columns
                     if not pd.api.types.is_numeric_dtype(X[col]):
-                        X[col] = _replace_missing_in_col(X[col])
+                        X[col] = _replace_missing_in_cat_col(X[col])
                         self.imputed_columns_.append(col)
 
             elif self.impute_missing == 'skip':
@@ -438,7 +453,7 @@ class SuperVectorizer(ColumnTransformer):
                         for col in cols:
                             # Do not impute numeric columns
                             if not pd.api.types.is_numeric_dtype(X[col]):
-                                X[col] = _replace_missing_in_col(X[col])
+                                X[col] = _replace_missing_in_cat_col(X[col])
                                 self.imputed_columns_.append(col)
 
             else:
