@@ -52,7 +52,7 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         self.precision = precision
         self.precision_threshold = precision_threshold
 
-    def join(self, left_table, right_table, on, return_distance=True):
+    def join(self, left_table, right_table, on, return_distance=True, suffixes=('_l', '_r')):
         """Join left and right table.
 
         Parameters
@@ -64,8 +64,10 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         on: list
             List of left and right table column names on which
             the matching will be perfomed.
-        return_distance: boolean
+        return_distance: boolean, default=True
             Wheter to return distance between nearest matched categories.
+        suffixes: tuple, default=('_x', '_y')
+            A list of strings indicating the suffix to add when overlaping column names.
 
         Returns:
         --------
@@ -74,19 +76,36 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
 
         """
 
+        lt = left_table.copy()
+        rt = right_table.copy()
+
         if self.analyzer not in ["char", "word", "char_wb"]:
             raise ValueError(
                 "analyzer should be either 'char', 'word' or",
                 f"'char_wb', got {self.analyzer}",
             )
+
+        if len(suffixes)!=2:
+            raise ValueError(f"Number of suffixes specified is different than two: {suffixes}")
+        lsuffix, rsuffix = suffixes
+        if not lsuffix and not rsuffix:
+            raise ValueError(f"Tuple {suffixes} has invalid number of elements.")
+        overlap_cols = lt._info_axis.intersection(rt._info_axis)
+        if len(overlap_cols)>0:
+            for i in range(len(overlap_cols)):
+                new_name_l = overlap_cols[i] + lsuffix
+                new_name_r = overlap_cols[i] + rsuffix
+            lt.rename(columns = {overlap_cols[i]:new_name_l}, inplace = True)
+            rt.rename(columns = {overlap_cols[i]:new_name_r}, inplace = True)
+
         if not isinstance(on, list):
             raise ValueError(
                 f"value {on} was specified for parameter 'on', "
                 "which has invalid type, expected list of column names."
             )
         if len(on) == 1:
-            left_col = on[0]
-            right_col = on[0]
+            left_col = on[0] + lsuffix
+            right_col = on[0] + rsuffix
         elif len(on) == 2:
             left_col = on[0]
             right_col = on[1]
@@ -95,12 +114,13 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
                 f"List {on} was specified for parameter 'on', "
                 "the list has invalid number of elements."
             )
-        right_clean = right_table[right_col]
-        joined = pd.DataFrame(left_table[left_col], columns=[left_col, right_col])
+
+        right_clean = rt[right_col]
+        joined = pd.DataFrame(lt[left_col], columns=[left_col, right_col])
 
         enc = CountVectorizer(analyzer=self.analyzer, ngram_range=self.ngram_range)
-        left_enc = enc.fit_transform(left_table[left_col])
-        right_enc = enc.transform(right_table[right_col])
+        left_enc = enc.fit_transform(lt[left_col])
+        right_enc = enc.transform(rt[right_col])
         left_enc = TfidfTransformer().fit_transform(left_enc)
         right_enc = TfidfTransformer().fit_transform(right_enc)
 
@@ -111,7 +131,7 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         idx_closest = np.ravel(neighbors)
 
         if self.precision == 'nearest':
-            for idx in left_table.index:
+            for idx in lt.index:
                 joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
 
         if self.precision == '2dball':
@@ -133,7 +153,7 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
                 # Finally, estimated precision and recall:
                 est_precision = TP/(TP+FP)
                 # est_recall = 1 - est_precision
-            for idx in left_table.index:
+            for idx in lt.index:
                 if prec[idx] >= self.precision_threshold:
                     joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
                 else:
