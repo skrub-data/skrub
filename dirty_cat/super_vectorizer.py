@@ -319,10 +319,10 @@ class SuperVectorizer(ColumnTransformer):
             sparse matrices.
 
         """
-        if X.shape[1] != self.n_features_in_:
+        if X.shape[1] != len(self.columns_):
             raise ValueError("Passed array does not match column count of "
                              f"array seen at fit time. Got {X.shape[1]} "
-                             f"columns, expected {self.n_features_in_}")
+                             f"columns, expected {len(self.columns_)}")
 
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
