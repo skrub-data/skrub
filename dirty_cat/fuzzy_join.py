@@ -34,12 +34,11 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         The lower and upper boundary of the range of n-values for different
         n-grams to be extracted. All values of n such that min_n <= n <= max_n.
         will be used.
-    precision : {`nearest`, `2dballtree`, `identical`}, default=`nearest`
+    precision : {`nearest`, `2dballtree`}, default=`nearest`
         Type of measure that is used to determine the precision of the joined entities.
         If `nearest`, returns the neirest neighbor match. 
         If `2dballtree`, return the nearest neighbor if the estimated precision is
         under the precision threshold.
-        If `identical`, only exact matches joining will be performed.
     precision_threshold : float, default=0.5
         Used only if precision is `2dballtree`. Determines the level of precision
         required to match the two column values. If not matched, all columns have
@@ -127,63 +126,43 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         left_enc = enc.fit_transform(lt[left_col])
         right_enc = enc.transform(rt[right_col])
         
-        if self.precision == 'identical':
-            # Find closest neighbor using KNN :
-            neigh = NearestNeighbors(n_neighbors=1)
-            neigh.fit(right_enc)
-            distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
-            idx_closest = np.ravel(neighbors)
+        left_enc = TfidfTransformer().fit_transform(left_enc)
+        right_enc = TfidfTransformer().fit_transform(right_enc)
 
-            enc2 = CountVectorizer(analyzer=self.analyzer, ngram_range=self.ngram_range)
-            right_enc2 = enc2.fit_transform(rt[right_col])
-            left_enc2 = enc2.transform(lt[left_col])
+        # Find closest neighbor using KNN :
+        neigh = NearestNeighbors(n_neighbors=1)
+        neigh.fit(right_enc)
+        distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
+        idx_closest = np.ravel(neighbors)
 
-            # In case of missing words in one table :
-            neigh2 = NearestNeighbors(n_neighbors=1)
-            neigh2.fit(left_enc2)
-            distance2, _neighbors2 = neigh2.kneighbors(right_enc2, return_distance=True)
+        if self.precision == 'nearest':
+            for idx in lt.index:
+                joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
 
-            for idx in left_table.index:
-                if distance[idx]==0 and distance2[idx_closest[idx]]==0:
-                    joined.loc[idx, right_col] = right_clean[idx_closest[idx]]        
-        else:
-            left_enc = TfidfTransformer().fit_transform(left_enc)
-            right_enc = TfidfTransformer().fit_transform(right_enc)
-
-            # Find closest neighbor using KNN :
-            neigh = NearestNeighbors(n_neighbors=1)
-            neigh.fit(right_enc)
-            distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
-            idx_closest = np.ravel(neighbors)
-
-            if self.precision == 'nearest':
-                for idx in lt.index:
+        if self.precision == '2dball':
+            prec = []
+            for i in range(left_enc.shape[0]):
+                # Find all neighbors in a 2dball radius:
+                dist = 2 * distance[i]
+                n_neigh = NearestNeighbors(radius=dist)
+                n_neigh.fit(right_enc)
+                rng = n_neigh.radius_neighbors(left_enc[i])
+                # Distances to closest neighbors:
+                # twodball_dist = rng[0][0]
+                # Their indices:
+                twodball_pts = rng[1][0]
+                prec.append(1 / len(twodball_pts))
+                # Compute the estimated True Positive, False Positive:
+                TP = sum(prec)
+                FP = sum([1 - value for value in prec])
+                # Finally, estimated precision and recall:
+                est_precision = TP/(TP+FP)
+                # est_recall = 1 - est_precision
+            for idx in lt.index:
+                if prec[idx] >= self.precision_threshold:
                     joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
-
-            if self.precision == '2dball':
-                prec = []
-                for i in range(left_enc.shape[0]):
-                    # Find all neighbors in a 2dball radius:
-                    dist = 2 * distance[i]
-                    n_neigh = NearestNeighbors(radius=dist)
-                    n_neigh.fit(right_enc)
-                    rng = n_neigh.radius_neighbors(left_enc[i])
-                    # Distances to closest neighbors:
-                    # twodball_dist = rng[0][0]
-                    # Their indices:
-                    twodball_pts = rng[1][0]
-                    prec.append(1 / len(twodball_pts))
-                    # Compute the estimated True Positive, False Positive:
-                    TP = sum(prec)
-                    FP = sum([1 - value for value in prec])
-                    # Finally, estimated precision and recall:
-                    est_precision = TP/(TP+FP)
-                    # est_recall = 1 - est_precision
-                for idx in lt.index:
-                    if prec[idx] >= self.precision_threshold:
-                        joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
-                    else:
-                        joined.loc[idx, right_col] = np.nan
+                else:
+                    joined.loc[idx, right_col] = np.nan
 
         if return_distance:
             return joined, distance

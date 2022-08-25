@@ -4,7 +4,7 @@ from dirty_cat import FuzzyJoin
 
 
 @pytest.mark.parametrize(
-    "analyzer, precision", [("char", "nearest"), ("char_wb", "2dball"), ("char_wb", "identical")]
+    "analyzer, precision", [("char", "nearest"), ("char_wb", "2dball")]
 )
 def test_fuzzy_join(analyzer, precision, return_distance=True):
     teams1 = pd.DataFrame(
@@ -80,9 +80,7 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
     assert teams_joined.shape == (9, 2)
     assert dist1.shape == (9, 1)
 
-    # Check performance of FuzzyJoin (if precision=='identical', on)
-    if precision in {'nearest', '2dball'}:
-        assert (teams_joined == ground_truth).all()[1]
+    assert (teams_joined == ground_truth).all()[1]
 
     teams_joined_2, dist2 = fj.join(
         teams2,
