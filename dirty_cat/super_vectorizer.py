@@ -36,6 +36,7 @@ def _replace_false_missing(ser: pd.Series) -> pd.Series:
         '-1.#QNAN', '<NA>', '-1.#IND', '-nan', 'n/a', '-NaN',
         '1.#IND', 'NULL', 'NA', 'N/A', '#N/A', 'NaN',
     ]  # taken from pandas.io.parsers (version 1.1.4)
+    ser = ser.replace({pd.NA: np.nan})
     ser = ser.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
     ser = ser.replace(r'^\s+$', np.nan, regex=True)  # Replace whitespaces
     return ser
