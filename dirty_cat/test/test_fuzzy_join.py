@@ -99,6 +99,8 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
         teams1,
         on=["teams_basketball", "basketball_teams"],
         return_distance=return_distance,
+        analyzer=analyzer, precision=precision,
+        precision_threshold=0.1
     )
 
     # Check invariability of joining:
