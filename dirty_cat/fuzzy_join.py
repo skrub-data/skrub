@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-def fuzzy_join(left_table, right_table, on, return_distance=True, suffixes=('_l', '_r'), 
+def FuzzyJoin(left_table, right_table, on, return_distance=True, suffixes=('_l', '_r'), 
                analyzer="char_wb", ngram_range=(2, 4), precision='nearest', precision_threshold=0.5):
     """
     Join tables based on categorical string columns as joining keys.

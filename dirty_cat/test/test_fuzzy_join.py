@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from dirty_cat import fuzzy_join
+from dirty_cat.fuzzy_join import FuzzyJoin
 
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
         }
     )
 
-    teams_joined, dist1 = fuzzy_join(
+    teams_joined, dist1 = FuzzyJoin(
         teams1,
         teams2,
         on=["basketball_teams", "teams_basketball"],
@@ -81,7 +81,7 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
 
     assert (teams_joined == ground_truth).all()[1]
 
-    teams_joined_2, dist2 = fuzzy_join(
+    teams_joined_2, dist2 = FuzzyJoin(
         teams2,
         teams1,
         on=["teams_basketball", "basketball_teams"],
@@ -94,7 +94,7 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
     assert teams_joined_2.shape == (10, 2)
     assert dist2.shape == (10, 1)
 
-    teams_joined_3, dist3 = fuzzy_join(
+    teams_joined_3, dist3 = FuzzyJoin(
         teams2,
         teams1,
         on=["teams_basketball", "basketball_teams"],
