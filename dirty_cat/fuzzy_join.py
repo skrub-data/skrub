@@ -72,7 +72,7 @@ def FuzzyJoin(left_table, right_table, on, return_distance=True, suffixes=('_l',
             f"'char_wb', got {analyzer}",
         )
 
-    if precision not in ["nearest", "2dballtree"]:
+    if precision not in ["nearest", "2dball"]:
         raise ValueError(
             "precision should be either 'nearest' or",
             f"'2dballtree', got {precision}",
