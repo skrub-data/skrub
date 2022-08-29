@@ -12,6 +12,10 @@ Major changes
   - scipy>=1.4.0
   - numpy>=1.17.3
 
+* Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
+    The :class:`SimilarityEncoder` now exclusively uses `ngram` for similarities,
+    and the `similarity` parameter is deprecated. It will be removed in 0.5.
+
 Notes
 -----
 

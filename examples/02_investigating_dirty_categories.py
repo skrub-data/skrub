@@ -62,7 +62,7 @@ sorted_values = values['employee_position_title'].sort_values().unique()
 
 from dirty_cat import SimilarityEncoder
 
-similarity_encoder = SimilarityEncoder(similarity='ngram')
+similarity_encoder = SimilarityEncoder()
 transformed_values = similarity_encoder.fit_transform(
     sorted_values.reshape(-1, 1))
 

@@ -26,7 +26,6 @@ from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
 from dirty_cat.utils import Version
-from . import string_distances
 from .string_distances import get_ngram_count, preprocess
 
 
@@ -158,13 +157,6 @@ def get_kmeans_prototypes(X, n_prototypes, hashing_dim=128,
     return np.sort(X[indexes_prototypes])
 
 
-_VECTORIZED_EDIT_DISTANCES = {
-    'levenshtein-ratio': np.vectorize(string_distances.levenshtein_ratio),
-    'jaro': np.vectorize(string_distances.jaro),
-    'jaro-winkler': np.vectorize(string_distances.jaro_winkler),
-}
-
-
 class SimilarityEncoder(OneHotEncoder):
     """Encode string categorical features as a numeric array.
 
@@ -172,21 +164,18 @@ class SimilarityEncoder(OneHotEncoder):
     strings.
     The method is based on calculating the morphological similarities
     between the categories.
-    The categories can be encoded using one of the implemented string
-    similarities: ``similarity='ngram'`` (default), 'levenshtein-ratio',
-    'jaro', or 'jaro-winkler'.
     This encoding is an alternative to OneHotEncoder in the case of
     dirty categorical variables.
 
     Parameters
     ----------
-    similarity : str {'ngram', 'levenshtein-ratio', 'jaro', or\
-'jaro-winkler'}
-        The type of pairwise string similarity to use.
+    similarity : None
+        Deprecated in dirty_cat 0.3, will be removed in 0.5.
+        Was used to specify the type of pairwise string similarity to use.
+        Since 0.3, only the ngram similarity is supported.
 
     ngram_range : tuple (min_n, max_n), default=(2, 4)
-        Only significant for ``similarity='ngram'``. The range of
-        values for the n_gram similarity.
+        The range of values for the n_gram similarity.
 
     categories : 'auto', 'k-means', 'most_frequent' or a list of lists/arrays
     of values.
@@ -249,7 +238,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     """
 
-    def __init__(self, similarity='ngram', ngram_range=(2, 4),
+    def __init__(self, similarity=None, ngram_range=(2, 4),
                  categories='auto', dtype=np.float64,
                  handle_unknown='ignore', handle_missing='', hashing_dim=None,
                  n_prototypes=None, random_state=None, n_jobs=None):
@@ -258,12 +247,21 @@ class SimilarityEncoder(OneHotEncoder):
         self.dtype = dtype
         self.handle_unknown = handle_unknown
         self.handle_missing = handle_missing
-        self.similarity = similarity
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
         self.n_prototypes = n_prototypes
         self.random_state = random_state
         self.n_jobs = n_jobs
+
+        if similarity is not None:
+            warnings.warn(
+                'The "similarity" argument is deprecated since dirty_cat 0.3, '
+                'and will be removed in 0.5.' 
+                'The n-gram similarity is the only one currently supported. ',
+                category=UserWarning,
+                stacklevel=2
+            )
+        self.similarity = None
 
         if not isinstance(categories, list):
             assert categories in [None, 'auto', 'k-means', 'most_frequent']
@@ -371,34 +369,33 @@ class SimilarityEncoder(OneHotEncoder):
                 self.categories_.append(np.array(self.categories[i],
                                                  dtype=object))
 
-        if self.similarity == 'ngram':
-            self.vectorizers_ = []
-            self.vocabulary_count_matrices_ = []
-            self.vocabulary_ngram_counts_ = []
+        self.vectorizers_ = []
+        self.vocabulary_count_matrices_ = []
+        self.vocabulary_ngram_counts_ = []
 
-            for i in range(n_features):
-                vectorizer = CountVectorizer(
-                    analyzer='char', ngram_range=self.ngram_range,
-                    dtype=self.dtype, strip_accents=None)
+        for i in range(n_features):
+            vectorizer = CountVectorizer(
+                analyzer='char', ngram_range=self.ngram_range,
+                dtype=self.dtype, strip_accents=None)
 
-                # Store the raw-categories (and not the preprocessed
-                # categories) but use the preprocessed categories to compute
-                # the stored count_matrices. This done to preserve the
-                # equivalency between the user input and the categories_
-                # attribute of the SimilarityEncoder, while being compliant
-                # with the CountVectorizer preprocessing steps.
-                preprocessed_categories = np.array(list(map(
-                    preprocess, self.categories_[i])), dtype=object)
+            # Store the raw-categories (and not the preprocessed
+            # categories) but use the preprocessed categories to compute
+            # the stored count_matrices. This done to preserve the
+            # equivalency between the user input and the categories_
+            # attribute of the SimilarityEncoder, while being compliant
+            # with the CountVectorizer preprocessing steps.
+            preprocessed_categories = np.array(list(map(
+                preprocess, self.categories_[i])), dtype=object)
 
-                vocabulary_count_matrix = vectorizer.fit_transform(
-                    preprocessed_categories)
+            vocabulary_count_matrix = vectorizer.fit_transform(
+                preprocessed_categories)
 
-                vocabulary_ngram_count = list(map(lambda x: get_ngram_count(
-                    preprocess(x), self.ngram_range), self.categories_[i]))
+            vocabulary_ngram_count = list(map(lambda x: get_ngram_count(
+                preprocess(x), self.ngram_range), self.categories_[i]))
 
-                self.vectorizers_.append(vectorizer)
-                self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
-                self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
+            self.vectorizers_.append(vectorizer)
+            self.vocabulary_count_matrices_.append(vocabulary_count_matrix)
+            self.vocabulary_ngram_counts_.append(vocabulary_ngram_count)
 
         self.drop_idx_ = self._compute_drop_idx()
         if Version(sklearn.__version__) >= Version('1.1.0'):
@@ -455,43 +452,26 @@ class SimilarityEncoder(OneHotEncoder):
                            " during transform".format(diff, i))
                     raise ValueError(msg)
 
-        if self.similarity in ('levenshtein-ratio',
-                               'jaro',
-                               'jaro-winkler'):
-            out = []
-            vect = _VECTORIZED_EDIT_DISTANCES[self.similarity]
-            for j, cats in enumerate(self.categories_):
-                unqX = np.unique(Xlist[j])
-                encoder_dict = {x: vect(x, cats.reshape(1, -1))
-                                for x in unqX}
-                encoder = [encoder_dict[x] for x in Xlist[j]]
-                encoder = np.vstack(encoder)
-                out.append(encoder)
-            return np.hstack(out)
+        min_n, max_n = self.ngram_range
 
-        elif self.similarity == 'ngram':
-            min_n, max_n = self.ngram_range
+        total_length = sum(len(x) for x in self.categories_)
+        out = np.empty((len(X), total_length), dtype=self.dtype)
+        last = 0
+        for j, cats in enumerate(self.categories_):
+            if fast:
+                encoded_Xj = self._ngram_similarity_fast(Xlist[j], j)
+            else:
+                encoded_Xj = ngram_similarity(
+                    Xlist[j], cats, ngram_range=(min_n, max_n),
+                    hashing_dim=self.hashing_dim, dtype=np.float32)
 
-            total_length = sum(len(x) for x in self.categories_)
-            out = np.empty((len(X), total_length), dtype=self.dtype)
-            last = 0
-            for j, cats in enumerate(self.categories_):
-                if fast:
-                    encoded_Xj = self._ngram_similarity_fast(Xlist[j], j)
-                else:
-                    encoded_Xj = ngram_similarity(
-                        Xlist[j], cats, ngram_range=(min_n, max_n),
-                        hashing_dim=self.hashing_dim, dtype=np.float32)
-
-                out[:, last:last + len(cats)] = encoded_Xj
-                last += len(cats)
-            return out
-        else:
-            raise ValueError("Unknown similarity: '%s'" % self.similarity)
+            out[:, last:last + len(cats)] = encoded_Xj
+            last += len(cats)
+        return out
 
     def _ngram_similarity_fast(self, X, col_idx):
         """
-        Fast computation of ngram similarity, for SimilarityEncoder.
+        Fast computation of ngram similarity.
 
 
         SimilarityEncoder.transform uses the count vectors of the vocabulary in

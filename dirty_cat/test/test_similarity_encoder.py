@@ -26,9 +26,8 @@ def test_specifying_categories():
     categories = [['bar', 'foo']]
 
     sim_enc_with_cat = similarity_encoder.SimilarityEncoder(
-        categories=categories, ngram_range=(2, 3), similarity='ngram')
-    sim_enc_auto_cat = similarity_encoder.SimilarityEncoder(
-        ngram_range=(2, 3), similarity='ngram')
+        categories=categories, ngram_range=(2, 3))
+    sim_enc_auto_cat = similarity_encoder.SimilarityEncoder(ngram_range=(2, 3))
 
     feature_matrix_with_cat = sim_enc_with_cat.fit_transform(observations)
     feature_matrix_auto_cat = sim_enc_auto_cat.fit_transform(observations)
@@ -41,7 +40,7 @@ def test_fast_ngram_similarity():
     observations = [['foo'], ['baz']]
 
     sim_enc = similarity_encoder.SimilarityEncoder(
-        similarity='ngram', ngram_range=(2, 2), categories=vocabulary)
+        ngram_range=(2, 2), categories=vocabulary)
 
     sim_enc.fit(observations)
     feature_matrix = sim_enc.transform(observations, fast=False)
@@ -111,27 +110,21 @@ def _test_missing_values_transform(input_type, missing):
         assert np.allclose(encoded, ans)
 
 
-def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
+def _test_similarity(similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
     if n_prototypes is None:
         X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
 
         model = similarity_encoder.SimilarityEncoder(
-            similarity=similarity, hashing_dim=hashing_dim, categories=categories,
-            n_prototypes=n_prototypes)
-
-        if similarity == 'ngram':
-            model.ngram_range = (3, 3)
+            hashing_dim=hashing_dim, categories=categories,
+            n_prototypes=n_prototypes, ngram_range=(3, 3))
 
         encoder = model.fit(X).transform(X_test)
 
         ans = np.zeros((len(X_test), len(X)))
         for i, x_t in enumerate(X_test.reshape(-1)):
             for j, x in enumerate(X.reshape(-1)):
-                if similarity == 'ngram':
-                    ans[i, j] = similarity_f(x_t, x, 3)
-                else:
-                    ans[i, j] = similarity_f(x_t, x)
+                ans[i, j] = similarity_f(x_t, x, 3)
         numpy.testing.assert_almost_equal(encoder, ans)
     else:
         X = np.array(
@@ -142,14 +135,11 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
 
         try:
             model = similarity_encoder.SimilarityEncoder(
-                similarity=similarity, hashing_dim=hashing_dim, categories=categories,
-                n_prototypes=n_prototypes, random_state=42)
+                hashing_dim=hashing_dim, categories=categories,
+                n_prototypes=n_prototypes, random_state=42, ngram_range=(3, 3))
         except ValueError as e:
             assert (e.__str__() == 'n_prototypes expected None or a positive non null integer')
             return
-
-        if similarity == 'ngram':
-            model.ngram_range = (3, 3)
 
         encoder = model.fit(X).transform(X_test)
         if n_prototypes == 1:
@@ -165,10 +155,7 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
                         len(np.array(model.categories_).reshape(-1))))
         for i, x_t in enumerate(X_test.reshape(-1)):
             for j, x in enumerate(np.array(model.categories_).reshape(-1)):
-                if similarity == 'ngram':
-                    ans[i, j] = similarity_f(x_t, x, 3)
-                else:
-                    ans[i, j] = similarity_f(x_t, x)
+                ans[i, j] = similarity_f(x_t, x, 3)
 
         numpy.testing.assert_almost_equal(encoder, ans)
 
@@ -177,31 +164,15 @@ def test_similarity_encoder():
     categories = ['auto', 'most_frequent', 'k-means']
     for category in categories:
         if category == 'auto':
-            _test_similarity('levenshtein-ratio',
-                             string_distances.levenshtein_ratio,
-                             categories=category,
-                             n_prototypes=None)
-            _test_similarity('jaro-winkler', string_distances.jaro_winkler,
+            _test_similarity(string_distances.ngram_similarity,
                              categories=category, n_prototypes=None)
-            _test_similarity('jaro', string_distances.jaro,
-                             categories=category, n_prototypes=None)
-            _test_similarity('ngram', string_distances.ngram_similarity,
-                             categories=category, n_prototypes=None)
-            _test_similarity('ngram', string_distances.ngram_similarity,
+            _test_similarity(string_distances.ngram_similarity,
                              hashing_dim=2 ** 16, categories=category)
         else:
             for i in range(1, 4):
-                _test_similarity('levenshtein-ratio',
-                                 string_distances.levenshtein_ratio,
-                                 categories=category,
-                                 n_prototypes=i)
-                _test_similarity('jaro-winkler', string_distances.jaro_winkler,
+                _test_similarity(string_distances.ngram_similarity,
                                  categories=category, n_prototypes=i)
-                _test_similarity('jaro', string_distances.jaro,
-                                 categories=category, n_prototypes=i)
-                _test_similarity('ngram', string_distances.ngram_similarity,
-                                 categories=category, n_prototypes=i)
-                _test_similarity('ngram', string_distances.ngram_similarity,
+                _test_similarity(string_distances.ngram_similarity,
                                  hashing_dim=2 ** 16, categories=category,
                                  n_prototypes=i)
 

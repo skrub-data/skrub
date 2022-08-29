@@ -105,7 +105,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from dirty_cat import SimilarityEncoder
 
-sim_enc = SimilarityEncoder(similarity='ngram')
+sim_enc = SimilarityEncoder()
 
 transformers = [
     ('one_hot', OneHotEncoder(sparse=False, handle_unknown='ignore'), clean_columns),
@@ -145,8 +145,7 @@ times['Default options'] = results['fit_time']
 # The most frequent strategy selects the n most frequent values in a dirty
 # categorical variable to reduce the dimensionality of the problem and thus
 # speed things up. We select manually the number of prototypes we want to use.
-sim_enc = SimilarityEncoder(similarity='ngram', categories='most_frequent',
-                            n_prototypes=100)
+sim_enc = SimilarityEncoder(categories='most_frequent', n_prototypes=100)
 
 column_trans = ColumnTransformer(
     transformers=transformers + [('sim_enc', sim_enc, dirty_columns)],
@@ -170,8 +169,7 @@ times['Most frequent'] = results['fit_time']
 # K-means strategy is also a dimensionality reduction technique.
 # SimilarityEncoder can apply a K-means and nearest neighbors algorithm
 # to find the prototypes. The number of prototypes is set manually.
-sim_enc = SimilarityEncoder(similarity='ngram', categories='k-means',
-                            n_prototypes=100)
+sim_enc = SimilarityEncoder(categories='k-means', n_prototypes=100)
 
 column_trans = ColumnTransformer(
     transformers=transformers + [('sim_enc', sim_enc, dirty_columns)],
