@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from dirty_cat import FuzzyJoin
+from dirty_cat import fuzzy_join
 
 
 @pytest.mark.parametrize(
@@ -66,14 +66,13 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
         }
     )
 
-    fj = FuzzyJoin(analyzer=analyzer, precision=precision,
-                   precision_threshold=0.1)
-
-    teams_joined, dist1 = fj.join(
+    teams_joined, dist1 = fuzzy_join(
         teams1,
         teams2,
         on=["basketball_teams", "teams_basketball"],
         return_distance=return_distance,
+        analyzer=analyzer, precision=precision,
+        precision_threshold=0.1
     )
 
     # Check correct shapes of outputs
@@ -82,21 +81,20 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
 
     assert (teams_joined == ground_truth).all()[1]
 
-    teams_joined_2, dist2 = fj.join(
+    teams_joined_2, dist2 = fuzzy_join(
         teams2,
         teams1,
         on=["teams_basketball", "basketball_teams"],
         return_distance=return_distance,
+        analyzer=analyzer, precision=precision,
+        precision_threshold=0.1
     )
 
     # Joining is always done on the left table and thus takes it shape:
     assert teams_joined_2.shape == (10, 2)
     assert dist2.shape == (10, 1)
 
-    fj_2 = FuzzyJoin(analyzer=analyzer, precision=precision,
-                   precision_threshold=0.1)
-
-    teams_joined_3, dist3 = fj_2.join(
+    teams_joined_3, dist3 = fuzzy_join(
         teams2,
         teams1,
         on=["teams_basketball", "basketball_teams"],

@@ -9,7 +9,7 @@ from fasttext import load_model
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
 from thefuzz import process
 from autofj import AutoFJ
-from dirty_cat import FuzzyJoin
+from dirty_cat import fuzzy_join
 
 
 def fetch_data(dataset_name):
@@ -105,10 +105,9 @@ def evaluate(pred_joins, gt_joins):
 
 
 def FuzzyJoin_precision_recall(left, right, gt, left_col, right_col):
-    fj = FuzzyJoin()
     cols = [left_col, right_col]
 
-    joined_fj, dist = fj.join(left, right, on=cols, return_distance=True)
+    joined_fj, dist = fuzzy_join(left, right, on=cols, return_distance=True)
 
     pr_list = []
     re_list = []

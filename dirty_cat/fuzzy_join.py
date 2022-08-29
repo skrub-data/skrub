@@ -17,13 +17,25 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-class FuzzyJoin(BaseEstimator, TransformerMixin):
+def fuzzy_join(left_table, right_table, on, return_distance=True, suffixes=('_l', '_r'), 
+               analyzer="char_wb", ngram_range=(2, 4), precision='nearest', precision_threshold=0.5):
     """
     Join tables based on categorical string columns as joining keys.
 
     Parameters
     ----------
 
+    left_table: pd.DataFrame
+            Table on which the join will be performed.
+    right_table: pd.DataFrame
+            Table that will be joined.
+    on: list
+            List of left and right table column names on which
+            the matching will be perfomed.
+    return_distance: boolean, default=True
+            Wheter to return distance between nearest matched categories.
+    suffixes: tuple, default=('_x', '_y')
+            A list of strings indicating the suffix to add when overlaping column names.
     analyzer : str, default=`char_wb`
         Analyzer parameter for the CountVectorizer.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
@@ -43,128 +55,109 @@ class FuzzyJoin(BaseEstimator, TransformerMixin):
         Used only if precision is `2dballtree`. Determines the level of precision
         required to match the two column values. If not matched, all columns have
         `nan`'s.
-
-    """
-
-    def __init__(self, analyzer="char_wb", ngram_range=(2, 4), precision='nearest', precision_threshold=0.5):
-        self.ngram_range = ngram_range
-        self.analyzer = analyzer
-        self.precision = precision
-        self.precision_threshold = precision_threshold
-
-    def join(self, left_table, right_table, on, return_distance=True, suffixes=('_l', '_r')):
-        """Join left and right table.
-
-        Parameters
-        ----------
-        left_table: pd.DataFrame
-            Table on which the join will be performed.
-        right_table: pd.DataFrame
-            Table that will be joined.
-        on: list
-            List of left and right table column names on which
-            the matching will be perfomed.
-        return_distance: boolean, default=True
-            Wheter to return distance between nearest matched categories.
-        suffixes: tuple, default=('_x', '_y')
-            A list of strings indicating the suffix to add when overlaping column names.
-
-        Returns:
-        --------
-            joined: pd.DataFrame
-                A joined table.
+    Returns:
+    --------
+    joined: pd.DataFrame
+        A joined table.
+    distance : 
 
         """
 
-        lt = left_table.copy()
-        rt = right_table.copy()
+    lt = left_table.copy()
+    rt = right_table.copy()
 
-        if self.analyzer not in ["char", "word", "char_wb"]:
-            raise ValueError(
-                "analyzer should be either 'char', 'word' or",
-                f"'char_wb', got {self.analyzer}",
-            )
+    if analyzer not in ["char", "word", "char_wb"]:
+        raise ValueError(
+            "analyzer should be either 'char', 'word' or",
+            f"'char_wb', got {analyzer}",
+        )
 
-        if len(suffixes)!=2:
-            raise ValueError(f"Number of suffixes specified is different than two: {suffixes}")
-        lsuffix, rsuffix = suffixes
-        if not lsuffix and not rsuffix:
-            raise ValueError(f"Tuple {suffixes} has invalid number of elements.")
-        overlap_cols = lt._info_axis.intersection(rt._info_axis)
-        if len(overlap_cols)>0:
-            for i in range(len(overlap_cols)):
-                new_name_l = overlap_cols[i] + lsuffix
-                new_name_r = overlap_cols[i] + rsuffix
-            lt.rename(columns = {overlap_cols[i]:new_name_l}, inplace = True)
-            rt.rename(columns = {overlap_cols[i]:new_name_r}, inplace = True)
+    if precision not in ["nearest", "2dballtree"]:
+        raise ValueError(
+            "precision should be either 'nearest' or",
+            f"'2dballtree', got {precision}",
+        )
 
-        if not isinstance(on, list):
-            raise ValueError(
-                f"value {on} was specified for parameter 'on', "
-                "which has invalid type, expected list of column names."
-            )
-        if len(on) == 1:
-            left_col = on[0] + lsuffix
-            right_col = on[0] + rsuffix
-        elif len(on) == 2:
-            left_col = on[0]
-            right_col = on[1]
-        else:
-            raise ValueError(
-                f"List {on} was specified for parameter 'on', "
-                "the list has invalid number of elements."
-            )
+    if len(suffixes)!=2:
+        raise ValueError(f"Number of suffixes specified is different than two: {suffixes}")
+    lsuffix, rsuffix = suffixes
+    if not lsuffix and not rsuffix:
+        raise ValueError(f"Tuple {suffixes} has invalid number of elements.")
+    overlap_cols = lt._info_axis.intersection(rt._info_axis)
+    if len(overlap_cols)>0:
+        for i in range(len(overlap_cols)):
+            new_name_l = overlap_cols[i] + lsuffix
+            new_name_r = overlap_cols[i] + rsuffix
+        lt.rename(columns = {overlap_cols[i]:new_name_l}, inplace = True)
+        rt.rename(columns = {overlap_cols[i]:new_name_r}, inplace = True)
 
-        # Force analyzing all words when searching for identical mathching:
-        if self.analyzer=='word' and self.precision=='identical':
-            self.ngram_range=(1,1)
+    if not isinstance(on, list):
+        raise ValueError(
+            f"value {on} was specified for parameter 'on', "
+            "which has invalid type, expected list of column names."
+        )
+    if len(on) == 1:
+        left_col = on[0] + lsuffix
+        right_col = on[0] + rsuffix
+    elif len(on) == 2:
+        left_col = on[0]
+        right_col = on[1]
+    else:
+        raise ValueError(
+            f"List {on} was specified for parameter 'on', "
+            "the list has invalid number of elements."
+        )
 
-        right_clean = rt[right_col]
-        joined = pd.DataFrame(lt[left_col], columns=[left_col, right_col])
+    # Force analyzing all words when searching for identical mathching:
+    if analyzer=='word' and precision=='identical':
+        ngram_range=(1,1)
 
-        enc = CountVectorizer(analyzer=self.analyzer, ngram_range=self.ngram_range)
-        left_enc = enc.fit_transform(lt[left_col])
-        right_enc = enc.transform(rt[right_col])
-        
-        left_enc = TfidfTransformer().fit_transform(left_enc)
-        right_enc = TfidfTransformer().fit_transform(right_enc)
+    right_clean = rt[right_col]
+    joined = pd.DataFrame(lt[left_col], columns=[left_col, right_col])
 
-        # Find closest neighbor using KNN :
-        neigh = NearestNeighbors(n_neighbors=1)
-        neigh.fit(right_enc)
-        distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
-        idx_closest = np.ravel(neighbors)
+    enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    left_enc = enc.fit_transform(lt[left_col])
+    right_enc = enc.transform(rt[right_col])
+    
+    left_enc = TfidfTransformer().fit_transform(left_enc)
+    right_enc = TfidfTransformer().fit_transform(right_enc)
 
-        if self.precision == 'nearest':
-            for idx in lt.index:
+    # Find closest neighbor using KNN :
+    neigh = NearestNeighbors(n_neighbors=1)
+    neigh.fit(right_enc)
+    distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
+    idx_closest = np.ravel(neighbors)
+
+    if precision == 'nearest':
+        for idx in lt.index:
+            joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
+
+    if precision == '2dball':
+        prec = []
+        for i in range(left_enc.shape[0]):
+            # Find all neighbors in a 2dball radius:
+            dist = 2 * distance[i]
+            n_neigh = NearestNeighbors(radius=dist)
+            n_neigh.fit(right_enc)
+            rng = n_neigh.radius_neighbors(left_enc[i])
+            # Distances to closest neighbors:
+            # twodball_dist = rng[0][0]
+            # Their indices:
+            twodball_pts = rng[1][0]
+            prec.append(1 / len(twodball_pts))
+            # Compute the estimated True Positive, False Positive:
+            TP = sum(prec)
+            FP = sum([1 - value for value in prec])
+            # Finally, estimated precision and recall:
+            est_precision = TP/(TP+FP)
+            # est_recall = 1 - est_precision
+        for idx in lt.index:
+            if prec[idx] >= precision_threshold:
                 joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
+            else:
+                joined.loc[idx, right_col] = np.nan
 
-        if self.precision == '2dball':
-            prec = []
-            for i in range(left_enc.shape[0]):
-                # Find all neighbors in a 2dball radius:
-                dist = 2 * distance[i]
-                n_neigh = NearestNeighbors(radius=dist)
-                n_neigh.fit(right_enc)
-                rng = n_neigh.radius_neighbors(left_enc[i])
-                # Distances to closest neighbors:
-                # twodball_dist = rng[0][0]
-                # Their indices:
-                twodball_pts = rng[1][0]
-                prec.append(1 / len(twodball_pts))
-                # Compute the estimated True Positive, False Positive:
-                TP = sum(prec)
-                FP = sum([1 - value for value in prec])
-                # Finally, estimated precision and recall:
-                est_precision = TP/(TP+FP)
-                # est_recall = 1 - est_precision
-            for idx in lt.index:
-                if prec[idx] >= self.precision_threshold:
-                    joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
-                else:
-                    joined.loc[idx, right_col] = np.nan
-
-        if return_distance:
-            return joined, distance
-        else:
-            return joined
+    if return_distance:
+        return joined, distance
+    else:
+        return joined
