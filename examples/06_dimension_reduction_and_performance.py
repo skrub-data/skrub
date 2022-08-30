@@ -121,7 +121,7 @@ clean_col_transformer = [
 column_trans = ColumnTransformer(
     transformers=clean_col_transformer + [
         ('sim_enc',
-         SimilarityEncoder(similarity='ngram'),
+         SimilarityEncoder(),
          dirty_columns)
     ],
     remainder='drop')
@@ -162,8 +162,7 @@ times['Default options'] = results['fit_time']
 column_trans = ColumnTransformer(
     transformers=clean_col_transformer + [
         ('sim_enc',
-         SimilarityEncoder(similarity='ngram', categories='most_frequent',
-                           n_prototypes=100),
+         SimilarityEncoder(categories='most_frequent', n_prototypes=100),
          dirty_columns)
     ],
     remainder='drop')
@@ -191,8 +190,7 @@ times['Most frequent'] = results['fit_time']
 column_trans = ColumnTransformer(
     transformers=clean_col_transformer + [
         ('sim_enc',
-         SimilarityEncoder(similarity='ngram', categories='k-means',
-                           n_prototypes=100),
+         SimilarityEncoder(categories='k-means', n_prototypes=100),
          dirty_columns)
     ],
     remainder='drop')

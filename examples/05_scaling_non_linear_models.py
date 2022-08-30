@@ -144,7 +144,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import make_column_transformer
 
 column_transformer = make_column_transformer(
-    (SimilarityEncoder(similarity='ngram'), ['NONPROPRIETARYNAME']),
+    (SimilarityEncoder(), ['NONPROPRIETARYNAME']),
     (OneHotEncoder(handle_unknown='ignore'), ['DOSAGEFORMNAME', 'ROUTENAME']),
     sparse_threshold=1,
 )
@@ -371,7 +371,7 @@ X_encoder, _ = get_X_y(nrows=n_samples_encoder)
 # Fit the rbf_sampler with the similarity matrix.
 column_transformer = make_column_transformer(
     (
-        SimilarityEncoder(similarity='ngram', categories='most_frequent',
+        SimilarityEncoder(categories='most_frequent',
                           n_prototypes=n_out_encoder,
                           random_state=42, ngram_range=(2, 4)),
         ['NONPROPRIETARYNAME']
