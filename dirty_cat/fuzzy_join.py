@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
-def FuzzyJoin(left_table, right_table, on, return_distance=True, suffixes=('_l', '_r'), 
+def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l', '_r'), 
                analyzer="char_wb", ngram_range=(2, 4), precision='nearest', precision_threshold=0.5):
     """
     Join tables based on categorical string columns as joining keys.
@@ -112,8 +112,8 @@ def FuzzyJoin(left_table, right_table, on, return_distance=True, suffixes=('_l',
     if analyzer=='word' and precision=='identical':
         ngram_range=(1,1)
 
-    right_clean = rt[right_col]
-    joined = pd.DataFrame(lt[left_col], columns=[left_col, right_col])
+    cols = list(lt.columns) + list(rt.columns)
+    joined = pd.DataFrame(lt, columns=cols)
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     left_enc = enc.fit_transform(lt[left_col])
@@ -130,7 +130,7 @@ def FuzzyJoin(left_table, right_table, on, return_distance=True, suffixes=('_l',
 
     if precision == 'nearest':
         for idx in lt.index:
-            joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
+            joined.loc[idx, rt.columns] = list(rt.iloc[idx_closest[idx]])
 
     if precision == '2dball':
         prec = []
@@ -153,9 +153,9 @@ def FuzzyJoin(left_table, right_table, on, return_distance=True, suffixes=('_l',
             # est_recall = 1 - est_precision
         for idx in lt.index:
             if prec[idx] >= precision_threshold:
-                joined.loc[idx, right_col] = right_clean[idx_closest[idx]]
+                joined.loc[idx, rt.columns] = list(rt.iloc[idx_closest[idx]])
             else:
-                joined.loc[idx, right_col] = np.nan
+                joined.loc[idx, rt.columns] = np.nan
 
     if return_distance:
         return joined, distance
