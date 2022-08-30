@@ -33,8 +33,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    extract_until : {"year", "month", "day", "hour", "minute", "second", \
-                    "millisecond", "microsecond", "nanosecond"}, default="hour"
+    extract_until : {"year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"}, default="hour"
         Extract up to this granularity.
         If all features have not been extracted, add the "total_time" feature,
         which contains the time to epoch (in seconds).
