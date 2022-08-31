@@ -805,16 +805,16 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         if isinstance(col_names, str) and col_names == 'auto':
             if hasattr(self, 'column_names_'):  # Use column names
                 prefixes = [
-                    f'{col}: ' for col in self.column_names_
+                    '%s: ' % col for col in self.column_names_
                 ]
             else:  # Use 'col1: ', ... 'colN: ' as prefixes
                 prefixes = [
-                    f'col{i}: ' for i in range(len(self.fitted_models_))
+                    'col%d: ' % i for i in range(len(self.fitted_models_))
                 ]
         elif col_names is None:  # Empty prefixes
             prefixes = [''] * len(self.fitted_models_)
         else:
-            prefixes = [f'{col}: ' for col in col_names]
+            prefixes = ['%s: ' % col for col in col_names]
         labels = list()
         for k, enc in enumerate(self.fitted_models_):
             col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
