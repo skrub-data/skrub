@@ -3,16 +3,17 @@ Some string distances
 """
 
 import re
-import numpy as np
 
+from typing import Tuple
 from collections import Counter
 
 
 # TODO vectorize these functions (accept arrays)
 
 
-def get_ngram_count(X, ngram_range):
-    """Compute the number of ngrams in a string.
+def get_ngram_count(string: str, ngram_range: Tuple[int, int]) -> int:
+    """
+    Compute the number of ngrams in a string.
 
     Here is where the formula comes from:
 
@@ -27,17 +28,18 @@ def get_ngram_count(X, ngram_range):
     ngram_count = 0
 
     for i in range(min_n, max_n + 1):
-        ngram_count += len(X) - i + 1
+        ngram_count += len(string) - i + 1
 
     return ngram_count
 
 
-def preprocess(x):
-    """Combine preprocessing done by CountVectorizer and the SimilarityEncoder.
+def preprocess(x: str) -> str:
+    """
+    Combine preprocessing done by CountVectorizer and the SimilarityEncoder.
 
     Different methods exist to compute the number of ngrams in a string:
 
-    - Simply sum the values of a count vector, which is the ouput of a
+    - Simply sum the values of a count vector, which is the output of a
       CountVectorizer with analyzer="char", and a specific ngram_range
     - Compute the number of ngrams using a formula (see ``get_ngram_count``)
 
@@ -48,22 +50,39 @@ def preprocess(x):
     prior to the CountVectorizer.
     """
 
-    # preprocessing step done in ngram_similarity
-    x = ' %s ' % x
+    # Preprocessing step done in ngram_similarity
+    x = f' {x} '
 
-    # preprocessing step done in the CountVectorizer
+    # Preprocessing step done in the CountVectorizer
     _white_spaces = re.compile(r"\s\s+")
 
     return _white_spaces.sub(' ', x)
 
 
-def get_unique_ngrams(string, n):
-    """ Return the set of different tri-grams in a string
+def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
+    """
+    Return the set of unique n-grams of a string.
+
+    Parameters
+    ----------
+    string : str
+        The string to split in n-grams.
+    ngram_range : tuple (min_n, max_n)
+    The lower and upper boundary of the range of n-values for different
+    n-grams to be extracted. All values of n such that min_n <= n <= max_n.
+
+    Returns
+    -------
+    set
+        The set of unique n-grams of the string.
     """
     spaces = ' '  # * (n // 2 + n % 2)
     string = spaces + " ".join(string.lower().split()) + spaces
-    string_list = [string[i:] for i in range(n)]
-    return set(zip(*string_list))
+    ngram_set = set()
+    for n in range(ngram_range[0], ngram_range[1] + 1):
+        string_list = [string[i:] for i in range(n)]
+        ngram_set |= set(zip(*string_list))
+    return ngram_set
 
 
 def get_ngrams(string, n):

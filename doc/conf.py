@@ -28,17 +28,18 @@ import os
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.doctest',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.mathjax',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.githubpages',
-              'sphinx.ext.napoleon',
-              'sphinx.ext.autodoc.typehints',
-              'sphinx_gallery.gen_gallery',
-              ]
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.doctest',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.githubpages',
+     'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc.typehints',
+    'sphinx_gallery.gen_gallery',
+]
 
 try:
     import sphinxext.opengraph
@@ -68,8 +69,7 @@ author = u'dirty_cat developers'
 # built documents.
 #
 # The short X.Y version.
-version_file = os.path.join(
-    '..', 'dirty_cat', 'VERSION.txt')
+version_file = os.path.join('..', 'dirty_cat', 'VERSION.txt')
 with open(version_file) as fh:
     version = fh.read().strip()
 # The full version, including alpha/beta/rc tags.
@@ -100,10 +100,7 @@ autosummary_generate = True
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = ['_templates']
 
-
 autodoc_default_flags = ['members', 'inherited-members']
-
-
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -158,7 +155,7 @@ html_theme_options = {
 html_static_path = ['_static']
 
 
-# Modify the title, so as to get good social-media links
+# Modify the title to get good social-media links
 html_title = "&mdash; Dirty cat"
 
 # -- Options for HTMLHelp output ------------------------------------------
@@ -213,7 +210,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'dirty_cat', u'dirty_cat Documentation',
-     author, 'dirty_cat', 'Learning on non-curater categorical data.',
+     author, 'dirty_cat', 'Learning on non-curated categorical data.',
      'Data Science'),
 ]
 
@@ -264,7 +261,7 @@ sphinx_gallery_conf = {
 ogp_site_url = "https://dirty-cat.github.io/stable/"
 ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
 ogp_use_first_image = True
-ogp_site_name = "Dirty cat"
+ogp_site_name = "dirty_cat"
 
 # -- sphinxext.napoleon configuration --------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html

@@ -1,9 +1,23 @@
 import numpy as np
 
+from typing import List, Tuple
 from dirty_cat import string_distances
 
 
-def _random_string_pairs(n_pairs=50, seed=1):
+def test_get_unique_ngrams() -> None:
+    string = 'test'
+    true_ngrams = {
+        (' ', 't'), ('t', 'e'), ('e', 's'), ('s', 't'),
+        ('t', ' '), (' ', 't', 'e'), ('t', 'e', 's'),
+        ('e', 's', 't'), ('s', 't', ' '), (' ', 't', 'e', 's'),
+        ('t', 'e', 's', 't'), ('e', 's', 't', ' ')
+    }
+    ngram_range = (2, 4)
+    ngrams = string_distances.get_unique_ngrams(string, ngram_range)
+    assert ngrams == true_ngrams
+
+
+def _random_string_pairs(n_pairs=50, seed=1) -> List[Tuple[str, str]]:
     rng = np.random.RandomState(seed)
     characters = list(map(chr, range(10000)))
     pairs = []
@@ -16,13 +30,13 @@ def _random_string_pairs(n_pairs=50, seed=1):
     return pairs
 
 
-def _check_symmetry(dist_func, *args, **kwargs):
+def _check_symmetry(dist_func, *args, **kwargs) -> None:
     for (a, b) in _random_string_pairs():
         assert dist_func(
             a, b, *args, **kwargs) == dist_func(b, a, *args, **kwargs)
 
 
-def test_ngram_similarity():
+def test_ngram_similarity() -> None:
     # TODO
     # assert ...
     for n in range(1, 4):

@@ -6,14 +6,14 @@ labels: 'enhancement'
 assignees: ''
 
 ---
-<!--Provide a brief description what you would like changes and why.-->
+<!--Provide a brief description of what you'd like to change and why-->
 
 
-<!--Please fill in the following information, to the best of your ability.-->
-### Benefits to the change
+<!--Please fill in the following information, to the best of your ability-->
 
+Benefits to the change:
 
-### Pseudocode for the new behavior, if applicable
+Pseudocode for the new behavior (if applicable):
 
 ```python
 
