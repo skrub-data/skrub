@@ -396,18 +396,14 @@ def test_fit_transform_equiv():
     We will test the equivalence between using `.fit_transform(X)`
     and `.fit(X).transform(X).`
     """
-    X1 = _get_clean_dataframe()
-    X2 = _get_dirty_dataframe()
+    for X in [
+        _get_clean_dataframe(),
+        _get_dirty_dataframe(),
+    ]:
+        enc1_x1 = SuperVectorizer().fit_transform(X)
+        enc2_x1 = SuperVectorizer().fit(X).transform(X)
 
-    enc1_x1 = SuperVectorizer().fit_transform(X1)
-    enc2_x1 = SuperVectorizer().fit(X1).transform(X1)
-
-    enc1_x2 = SuperVectorizer().fit_transform(X2)
-    enc2_x2 = SuperVectorizer().fit(X2).transform(X2)
-
-    assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
-
-    assert np.allclose(enc1_x2, enc2_x2, rtol=0, atol=0, equal_nan=True)
+        assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
 
 if __name__ == '__main__':
