@@ -93,8 +93,7 @@ fi
 
 # Installing required system packages to support the rendering of math
 # notation in the HTML documentation
-# `--allow-releaseinfo-change` added based on https://stackoverflow.com/q/68802802/9084059
-sudo -E apt-get -yq --allow-releaseinfo-change update
+sudo -E apt-get -yq update
 sudo -E apt-get -yq remove texlive-binaries --purge
 sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes \
     install dvipng texlive-latex-base texlive-latex-extra \
