@@ -53,13 +53,12 @@ pipeline you can tweak.
 
 .. raw:: html
 
-    </div>
     <div class="flex-content" style="border: 0px;">
     <iframe style="display: block; margin: auto; width: 100%;" width="560" height="315"
      src="https://www.youtube.com/embed/_GNaaeEI2tg" frameborder="0"
      allow="accelerometer; autoplay; clipboard-write;
      encrypted-media; gyroscope; picture-in-picture" allowfullscreen
-    ></iframe>
+    ></iframe></div>
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
