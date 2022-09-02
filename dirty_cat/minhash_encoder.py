@@ -52,6 +52,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
 
+    Attributes
+    ----------
+    hash_dict_ : LRUDict
+        Computed hashes.
+
     References
     ----------
     For a detailed description of the method, see

@@ -89,8 +89,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def fit(self, X, y):
-        """Fit the TargetEncoder to X.
+    def fit(self, X, y) -> "TargetEncoder":
+        """
+        Fit the TargetEncoder to X.
 
         Parameters
         ----------

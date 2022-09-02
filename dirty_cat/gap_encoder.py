@@ -784,12 +784,12 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        col_names : {None, list or str}, default=None
+        col_names : typing.Optional[typing.Union[typing.Literal["auto"], typing.List[str]]], default=None
             The column names to be added as prefixes before the labels.
             If col_names == None, no prefixes are used.
             If col_names == 'auto', column names are automatically defined:
-                - if the input data was a dataframe, its column names are used
-                - otherwise, 'col1', ..., 'colN' are used as prefixes
+                - if the input data was a dataframe, its column names are used,
+                - otherwise, 'col1', ..., 'colN' are used as prefixes.
             Prefixes can be manually set by passing a list for col_names.
             
         n_labels : int, default=3

@@ -307,12 +307,10 @@ class SimilarityEncoder(OneHotEncoder):
         """
         Get the most frequent category prototypes.
 
-    def get_most_frequent(self, prototypes):
-        """ Get the most frequent category prototypes
-
         Parameters
         ----------
-        prototypes : the list of values for a category variable
+        prototypes : typing.List[str]
+            The list of values for a category variable.
 
         Returns
         -------
@@ -330,6 +328,8 @@ class SimilarityEncoder(OneHotEncoder):
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to determine the categories of each feature.
+        y : None
+            Unused, only here for compatibility.
 
         Returns
         -------
