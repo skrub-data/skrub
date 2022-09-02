@@ -1,14 +1,15 @@
 import collections
-import numpy as np
+from typing import Any, Hashable, Tuple, Union
 
+import numpy as np
 from sklearn.utils import check_array
-from typing import Tuple, Union, Any, Hashable
 
 
 class LRUDict:
-    """ dict with limited capacity
+    """dict with limited capacity
 
     Using LRU eviction avoids memorizing a full dataset"""
+
     def __init__(self, capacity: int):
         self.capacity = capacity
         self.cache = collections.OrderedDict()
@@ -48,7 +49,7 @@ def check_input(X) -> np.array:
         force_all_finite=False,
     )
     # If the array contains both NaNs and strings, convert to object type
-    if X_.dtype.kind in {'U', 'S'}:  # contains strings
+    if X_.dtype.kind in {"U", "S"}:  # contains strings
         if np.any(X_ == "nan"):  # missing value converted to string
             return check_array(
                 np.array(X, dtype=object),
@@ -87,18 +88,20 @@ class Version:
     >>> Version('1-5', separator='-') == '1.6.5'  # Won't work!
     """
 
-    def __init__(self, value: str, separator: str = '.'):
+    def __init__(self, value: str, separator: str = "."):
         self.separator = separator
         self.major, self.minor = self._parse_version(value)
 
     def __repr__(self):
-        return f'Version({self.major}.{self.minor})'
+        return f"Version({self.major}.{self.minor})"
 
     def _parse_version(self, value: str) -> Tuple[int, int]:
         raw_parts = value.split(self.separator)
         if len(raw_parts) == 0:
-            raise ValueError(f'Could not extract version from {value!r} '
-                             f'(separator: {self.separator!r})')
+            raise ValueError(
+                f"Could not extract version from {value!r} "
+                f"(separator: {self.separator!r})"
+            )
         elif len(raw_parts) == 1:
             major = int(raw_parts[0])
             minor = 0
