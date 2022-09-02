@@ -1,14 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Fetching functions to retrieve example datasets, using
 Scikit-Learn's ``fetch_openml()`` function.
 """
-
-
-# Author:
-# Lilian Boulard <lilian@boulard.fr>
-# https://github.com/LilianBoulard
 
 # Future notes:
 # - Watch out for ``fetch_openml()`` API modifications:
@@ -17,24 +10,15 @@ Scikit-Learn's ``fetch_openml()`` function.
 
 import gzip
 import json
-import sklearn
 import warnings
 import pandas as pd
 
 from pathlib import Path
-from collections import namedtuple
-from typing import Union, Dict, Any
+from dataclasses import dataclass
+from typing import Union, Dict, Any, List
+from sklearn.datasets import fetch_openml
 
-from dirty_cat.utils import Version
 from dirty_cat.datasets.utils import get_data_dir
-
-
-Details = namedtuple("Details", ["name", "file_id", "description"])
-Features = namedtuple("Features", ["names"])
-
-DatasetAll = namedtuple('Dataset', ('description', 'X', 'y', 'source', 'path'))
-DatasetInfoOnly = namedtuple('Dataset', ('description', 'source', 'path',
-                                         'read_csv_kwargs'))
 
 # Directory where the ``.gz`` files containing the
 # details on downloaded datasets are stored.
@@ -43,24 +27,56 @@ DatasetInfoOnly = namedtuple('Dataset', ('description', 'source', 'path',
 # ``Experimental`` so the structure might change in future releases.
 # This path will be concatenated to the dirty_cat data directory,
 # available via the function ``get_data_dir()``.
-DETAILS_DIRECTORY = "openml/openml.org/api/v1/json/data/"
+DETAILS_DIRECTORY: str = "openml/openml.org/api/v1/json/data/"
 
-# Same as above ; for the datasets features location.
-FEATURES_DIRECTORY = "openml/openml.org/api/v1/json/data/features/"
+# Same as above; for the datasets features location.
+FEATURES_DIRECTORY: str = "openml/openml.org/api/v1/json/data/features/"
 
-# Same as above ; for the datasets data location.
-DATA_DIRECTORY = "openml/openml.org/data/v1/download/"
+# Same as above; for the datasets data location.
+DATA_DIRECTORY: str = "openml/openml.org/data/v1/download/"
 
 # The IDs of the datasets, from OpenML.
 # For each dataset, its URL is constructed as follows:
-openml_url = "https://www.openml.org/d/{ID}"
-ROAD_SAFETY_ID = 42803
-OPEN_PAYMENTS_ID = 42738
-MIDWEST_SURVEY_ID = 42805
-MEDICAL_CHARGE_ID = 42720
-EMPLOYEE_SALARIES_ID = 42125
-TRAFFIC_VIOLATIONS_ID = 42132
-DRUG_DIRECTORY_ID = 43044
+openml_url: str = "https://www.openml.org/d/{ID}"
+ROAD_SAFETY_ID: int = 42803
+OPEN_PAYMENTS_ID: int = 42738
+MIDWEST_SURVEY_ID: int = 42805
+MEDICAL_CHARGE_ID: int = 42720
+EMPLOYEE_SALARIES_ID: int = 42125
+TRAFFIC_VIOLATIONS_ID: int = 42132
+DRUG_DIRECTORY_ID: int = 43044
+
+
+@dataclass(unsafe_hash=True)
+class Details:
+    name: str
+    file_id: str
+    description: str
+
+
+@dataclass(unsafe_hash=True)
+class Features:
+    names: List[str]
+
+
+@dataclass(unsafe_hash=True)
+class DatasetAll:
+    name: str
+    description: str
+    X: pd.DataFrame
+    y: pd.Series
+    source: str
+    path: Path
+
+
+@dataclass(unsafe_hash=True)
+class DatasetInfoOnly:
+    name: str
+    description: str
+    source: str
+    target: str
+    path: Path
+    read_csv_kwargs: Dict[str, Any]
 
 
 def fetch_openml_dataset(dataset_id: int,
@@ -123,7 +139,7 @@ def fetch_openml_dataset(dataset_id: int,
     data_gz_path = data_directory / DATA_DIRECTORY / f'{file_id}.gz'
 
     if not data_gz_path.is_file():
-        # This is a double-check.
+        # double-check.
         # If the data file does not exist, download the dataset.
         _download_and_write_openml_dataset(dataset_id=dataset_id,
                                            data_directory=data_directory)
@@ -164,23 +180,14 @@ def _download_and_write_openml_dataset(dataset_id: int,
         If there is no Internet connection.
 
     """
-    from sklearn.datasets import fetch_openml
-
-    fetch_kwargs = {}
-    if Version(sklearn.__version__) >= Version('0.22'):
-        fetch_kwargs.update({'as_frame': True})
-
     # The ``fetch_openml()`` function returns a Scikit-Learn ``Bunch`` object,
     # which behaves just like a ``namedtuple``.
     # However, we do not want to save this data into memory:
     # we will read it from the disk later.
-    #
-    # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
-    # and ``urllib.error.URLError`` if there is no Internet connection.
     fetch_openml(
         data_id=dataset_id,
         data_home=str(data_directory),
-        **fetch_kwargs
+        as_frame=True,
     )
 
 
@@ -198,7 +205,7 @@ def _read_json_from_gz(compressed_dir_path: Path) -> dict:
     -------
     dict
         The information contained in the file,
-        converted from plain-text JSON.
+        parsed from plain-text JSON.
 
     """
     if not compressed_dir_path.is_file():
@@ -231,12 +238,11 @@ def _get_details(compressed_dir_path: Path) -> Details:
     # We filter out the irrelevant information.
     # If you want to modify this list (to add or remove items)
     # you must also modify the ``Details`` object definition.
-    f_details = {
-        "name": details["name"],
-        "file_id": details["file_id"],
-        "description": details["description"],
-    }
-    return Details(*f_details.values())
+    return Details(
+        name=details["name"],
+        file_id=details["file_id"],
+        description=details["description"],
+    )
 
 
 def _get_features(compressed_dir_path: Path) -> Features:
@@ -259,10 +265,9 @@ def _get_features(compressed_dir_path: Path) -> Features:
     # We filter out the irrelevant information.
     # If you want to modify this list (to add or remove items)
     # you must also modify the ``Features`` object definition.
-    features = {
-        "names": [column["name"] for column in raw_features["feature"]]
-    }
-    return Features(*features.values())
+    return Features(
+        names=[column["name"] for column in raw_features["feature"]]
+    )
 
 
 def _export_gz_data_to_csv(compressed_dir_path: Path,
@@ -300,10 +305,12 @@ def _features_to_csv_format(features: Features) -> str:
     return ",".join(features.names)
 
 
-def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
-                                read_csv_kwargs: dict,
-                                load_dataframe: bool,
-                                ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_dataset_as_dataclass(dataset_name: str,
+                               dataset_id: int,
+                               target: str,
+                               read_csv_kwargs: dict,
+                               load_dataframe: bool,
+                               ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
     Takes a dataset identifier, a target column name,
     and some additional keyword arguments for `pd.read_csv`.
@@ -326,6 +333,7 @@ def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
         y = df[target]
         X = df.drop(target, axis='columns')
         dataset = DatasetAll(
+            name=dataset_name,
             description=info['description'],
             X=X,
             y=y,
@@ -334,8 +342,10 @@ def fetch_dataset_as_namedtuple(dataset_id: int, target: str,
         )
     else:
         dataset = DatasetInfoOnly(
+            name=dataset_name,
             description=info['description'],
             source=info['source'],
+            target=target,
             path=info['path'],
             read_csv_kwargs=read_csv_kwargs,
         )
@@ -376,12 +386,9 @@ def fetch_employee_salaries(load_dataframe: bool = True,
 
     DatasetInfoOnly
         If `load_dataframe=False`
-
-    See Also
-    --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
-    dataset = fetch_dataset_as_namedtuple(
+    dataset = fetch_dataset_as_dataclass(
+        dataset_name='Employee salaries',
         dataset_id=EMPLOYEE_SALARIES_ID,
         target='current_annual_salary',
         read_csv_kwargs={
@@ -419,12 +426,9 @@ def fetch_road_safety(load_dataframe: bool = True,
 
     DatasetInfoOnly
         If `load_dataframe=False`
-
-    See Also
-    --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
-    return fetch_dataset_as_namedtuple(
+    return fetch_dataset_as_dataclass(
+        dataset_name='Road safety',
         dataset_id=ROAD_SAFETY_ID,
         target='Sex_of_Driver',
         read_csv_kwargs={
@@ -456,12 +460,9 @@ def fetch_medical_charge(load_dataframe: bool = True
 
     DatasetInfoOnly
         If `load_dataframe=False`
-
-    See Also
-    --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
-    return fetch_dataset_as_namedtuple(
+    return fetch_dataset_as_dataclass(
+        dataset_name='Medical charge',
         dataset_id=MEDICAL_CHARGE_ID,
         target='Average_Total_Payments',
         read_csv_kwargs={
@@ -487,12 +488,9 @@ def fetch_midwest_survey(load_dataframe: bool = True
 
     DatasetInfoOnly
         If `load_dataframe=False`
-
-    See Also
-    --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
-    return fetch_dataset_as_namedtuple(
+    return fetch_dataset_as_dataclass(
+        dataset_name='Midwest survey',
         dataset_id=MIDWEST_SURVEY_ID,
         target='Census_Region',
         read_csv_kwargs={
@@ -519,12 +517,9 @@ def fetch_open_payments(load_dataframe: bool = True
 
     DatasetInfoOnly
         If `load_dataframe=False`
-
-    See Also
-    --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
-    return fetch_dataset_as_namedtuple(
+    return fetch_dataset_as_dataclass(
+        dataset_name='Open payments',
         dataset_id=OPEN_PAYMENTS_ID,
         target='status',
         read_csv_kwargs={
@@ -543,9 +538,9 @@ def fetch_traffic_violations(load_dataframe: bool = True
 
     Description of the dataset:
     > This dataset contains traffic violation information from all electronic
-    traffic violations issued in the Montgomery County, MD. Any information that can be used
-    to uniquely identify the vehicle, the vehicle owner or the officer issuing
-    the violation will not be published.
+    traffic violations issued in the Montgomery County, MD. Any information
+    that can be used to uniquely identify the vehicle, the vehicle owner or
+    the officer issuing the violation will not be published.
 
     Returns
     -------
@@ -554,12 +549,9 @@ def fetch_traffic_violations(load_dataframe: bool = True
 
     DatasetInfoOnly
         If `load_dataframe=False`
-
-    See Also
-    --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
-    return fetch_dataset_as_namedtuple(
+    return fetch_dataset_as_dataclass(
+        dataset_name='Traffic violations',
         dataset_id=TRAFFIC_VIOLATIONS_ID,
         target='violation_type',
         read_csv_kwargs={
@@ -587,12 +579,9 @@ def fetch_drug_directory(load_dataframe: bool = True
 
     DatasetInfoOnly
         If `load_dataframe=False`
-
-    See Also
-    --------
-    dirty_cat.datasets.fetch_dataset_as_namedtuple : additional information
     """
-    return fetch_dataset_as_namedtuple(
+    return fetch_dataset_as_dataclass(
+        dataset_name='Drug directory',
         dataset_id=DRUG_DIRECTORY_ID,
         target='PRODUCTTYPENAME',
         read_csv_kwargs={
