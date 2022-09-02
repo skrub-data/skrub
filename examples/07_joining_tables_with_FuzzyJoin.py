@@ -157,5 +157,5 @@ for n in range(len([X1, X2, X3])):
 
 # Our score gets better every time we add additional information into our table !
 
-# This is why dirty_cat's fuzzyjoin is an easy-to-use
+# This is why dirty_cat's FuzzyJoin is an easy-to-use
 # and useful tool.
