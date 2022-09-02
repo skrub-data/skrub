@@ -28,6 +28,7 @@ df.drop(df.tail(1).index, inplace = True)
 # Let's take a look at the table:
 df.head(3)
  
+ #################################################################
 # The Happiness score was computed using the Gallup World Poll survey results. 
 # The report stress out some of the possible explanatory factors: GDP per capita, Social support, Generosity etc.
 # However, these factors here are only estimated indexes used to calculate the happiness score.
