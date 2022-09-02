@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from warnings import warn
-from typing import Union, Optional, List, Dict, Tuple
+from typing import Union, Optional, List, Dict, Tuple, Literal
 
 from sklearn.base import BaseEstimator, clone
 from sklearn.compose import ColumnTransformer
@@ -50,7 +50,7 @@ class SuperVectorizer(ColumnTransformer):
     Parameters
     ----------
 
-    cardinality_threshold: int, default=40
+    cardinality_threshold : int, default=40
         Two lists of features will be created depending on this value: strictly
         under this value, the low cardinality categorical values, and above or
         equal, the high cardinality categorical values.
@@ -58,7 +58,7 @@ class SuperVectorizer(ColumnTransformer):
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
 
-    low_card_cat_transformer: Transformer or str or None, default=None
+    low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Default value None is converted to `OneHotEncoder()`.
@@ -67,7 +67,7 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    high_card_cat_transformer: Transformer or str or None, default=None
+    high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Default value None is converted to `GapEncoder(n_components=30)`.
@@ -76,14 +76,14 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    numerical_transformer: Transformer or str or None, default=None
+    numerical_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    datetime_transformer: Transformer or str or None, default=None
+    datetime_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None
         Transformer used on datetime features.
         Default value None is converted to `DatetimeEncoder()`.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
@@ -91,11 +91,11 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    auto_cast: bool, default=True
+    auto_cast : bool, default=True
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
-    impute_missing: str, default='auto'
+    impute_missing : str, default='auto'
         When to impute missing values in string columns.
         'auto' will impute missing values if it's considered appropriate
         (we are using an encoder that does not support missing values and/or
@@ -105,7 +105,7 @@ class SuperVectorizer(ColumnTransformer):
         When imputed, missing values are replaced by the string 'missing'.
         See also attribute `imputed_columns_`.
 
-    remainder : {'drop', 'passthrough'} or estimator, default='drop'
+    remainder : typing.Union[typing.Literal["drop", "passthrough"], sklearn.base.BaseEstimator], default='drop'
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
         columns are dropped. (default of ``'drop'``).
@@ -143,7 +143,7 @@ class SuperVectorizer(ColumnTransformer):
     Attributes
     ----------
 
-    transformers_: List[Tuple[str, Union[str, BaseEstimator], List[str]]]
+    transformers_: typing.List[typing.Tuple[str, typing.Union[str, sklearn.base.BaseEstimator], typing.List[str]]]
         The final distribution of columns.
         List of three-tuple containing
         (1) the name of the category
@@ -151,14 +151,14 @@ class SuperVectorizer(ColumnTransformer):
         or "passthrough" or "drop"
         (3) the list of column names
 
-    columns_: List[Union[str, int]]
+    columns_: typing.List[typing.Union[str, int]]
         The column names of fitted array.
 
-    types_: Dict[str, type]
+    types_: typing.Dict[str, type]
         A mapping of inferred types per column.
         Key is the column name, value is the inferred dtype.
 
-    imputed_columns_: List[str]
+    imputed_columns_: typing.List[str]
         The list of columns in which we imputed the missing values.
 
     """
@@ -181,7 +181,7 @@ class SuperVectorizer(ColumnTransformer):
                  auto_cast: bool = True,
                  impute_missing: str = 'auto',
                  # The next parameters are inherited from ColumnTransformer
-                 remainder: str = 'passthrough',
+                 remainder: Union[Literal["drop", "passthrough"], BaseEstimator] = 'passthrough',
                  sparse_threshold: float = 0.3,
                  n_jobs: int = None,
                  transformer_weights=None,
@@ -300,8 +300,7 @@ class SuperVectorizer(ColumnTransformer):
 
         Returns
         -------
-        X_t : {array-like, sparse matrix} of \
-                shape (n_samples, sum_n_components)
+        {array-like, sparse matrix} of shape (n_samples, sum_n_components)
             hstack of results of transformers. sum_n_components is the
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
@@ -338,16 +337,15 @@ class SuperVectorizer(ColumnTransformer):
 
         Parameters
         ----------
-        X: {array-like, dataframe} of shape (n_samples, n_features)
+        X : {array-like, dataframe} of shape (n_samples, n_features)
             Input data, of which specified subsets are used to fit the
             transformers.
-
-        y: array-like of shape (n_samples,), default=None
+        y : array-like of shape (n_samples,), default=None
             Targets for supervised learning.
 
         Returns
         -------
-        X_t: {array-like, sparse matrix} of shape (n_samples, sum_n_components)
+        {array-like, sparse matrix} of shape (n_samples, sum_n_components)
             hstack of results of transformers. sum_n_components is the
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
@@ -487,6 +485,11 @@ class SuperVectorizer(ColumnTransformer):
         Returns clean feature names with format
         "<column_name>_<value>" if encoded by OneHotEncoder or alike,
         e.g. "job_title_Police officer", or "<column_name>" otherwise.
+
+        Returns
+        -------
+        typing.List[str]
+            Feature names.
         """
         if Version(sklearn_version) < Version('0.23'):
             try:

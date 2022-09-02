@@ -1,7 +1,7 @@
 import collections
 import numpy as np
 
-from typing import List, Dict
+from typing import List, Dict, Literal, Union
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -27,30 +27,24 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    categories : 'auto' or a list of lists/arrays of values.
+    categories : typing.Union[typing.Literal["auto"], typing.List[typing.List[typing.Union[str, int]]]
         Categories (unique values) per feature:
-
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
-
         The categories used can be found in the ``categories_`` attribute.
-
-    clf_type : string {'regression', 'binary-clf', 'multiclass-clf'}
+    clf_type : typing.Literal["regression", "binary-clf", "multiclass-clf"]
         The type of classification/regression problem.
-
-    dtype : number type, default np.float64
+    dtype : type, default=np.float64
         Desired dtype of output.
-
-    handle_unknown : 'error' (default) or 'ignore'
+    handle_unknown : typing.Literal["error", "ignore"], default="error"
         Whether to raise an error or ignore if a unknown categorical feature is
         present during transform (default is to raise). When this parameter
         is set to 'ignore' and an unknown category is encountered during
         transform, the resulting one-hot encoded columns for this feature
         will be all zeros.
-
-    handle_missing : 'error' or '' (default)
+    handle_missing : typing.Literal["error", ""], default=""
         Whether to raise an error or impute with blank string '' if missing
         values (NaN) are present during fit (default is to impute).
         When this parameter is set to '', and a missing value is encountered
@@ -61,7 +55,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     ----------
     n_features_in_: int
         Number of features in the data seen during fit.
-    categories_ : list of arrays
+    categories_ : typing.List[np.array]
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
 
@@ -78,10 +72,11 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     n_: int
 
     def __init__(self,
-                 categories='auto',
-                 clf_type='binary-clf',
-                 dtype=np.float64, handle_unknown='error',
-                 handle_missing=''):
+                 categories: Union[Literal["auto"], List[Union[List[str], np.array]]] = 'auto',
+                 clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = 'binary-clf',
+                 dtype: type = np.float64,
+                 handle_unknown: Literal["error", "ignore"] = 'error',
+                 handle_missing: Literal["error", ""] = ''):
         self.categories = categories
         self.dtype = dtype
         self.clf_type = clf_type
@@ -107,7 +102,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        self
+        TargetEncoder
             Fitted TargetEncoder instance.
         """
         X = check_input(X)
@@ -212,7 +207,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        X_new : 2-d array
+        2-d np.array
             Transformed input.
         """
         check_is_fitted(self, attributes=["n_features_in_"])

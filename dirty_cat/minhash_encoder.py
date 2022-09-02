@@ -48,14 +48,14 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         might have some concern with its entropy.
     minmax_hash : bool, default=False
         if True, return min hash and max hash concatenated.
-    handle_missing : typing.Literal["error", "zero_impute"] (default=zero_impute)
+    handle_missing : typing.Literal["error", "zero_impute"], default=zero_impute
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
 
     Attributes
     ----------
     hash_dict_ : LRUDict
-        Computes hashes.
+        Computed hashes.
 
     References
     ----------

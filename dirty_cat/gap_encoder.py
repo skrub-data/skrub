@@ -305,7 +305,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with the highest activations are selected.
-        
+
         Parameters
         ----------
         n_labels : int, default=3
@@ -315,7 +315,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        topic_labels : list of strings
+        topic_labels : typing.List[str]
             The labels that best describe each topic.
         """
 
@@ -349,7 +349,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        kl_divergence : float.
+        float.
             The Kullback-Leibler divergence.
         """
 
@@ -392,7 +392,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         
         Returns
         -------
-        self
+        GapEncoderColumn
             The fitted GapEncoderColumn instance.
         """
         
@@ -532,7 +532,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     hashing_n_features : int, default=2**12
         Number of features for the HashingVectorizer. Only relevant if
         hashing=True.
-    init : str, default='k-means++'
+    init : typing.Literal["k-means++", "random", "k-means"], default='k-means++'
         Initialization method of the W matrix.
         Options: {'k-means++', 'random', 'k-means'}.
         If init='k-means++', we use the init method of sklearn.cluster.KMeans.
@@ -545,10 +545,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Minimum number of iterations on the input data.
     max_iter : int, default=5
         Maximum number of iterations on the input data.
-    ngram_range : tuple, default=(2, 4)
+    ngram_range : typing.Tuple[int, int], default=(2, 4)
         The range of ngram length that will be used to build the
         bag-of-n-grams representation of the input data.
-    analyzer : str, default='char'.
+    analyzer : typing.Literal["word", "char", "char_wb"], default='char'.
         Analyzer parameter for the CountVectorizer/HashingVectorizer.
         Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
@@ -557,14 +557,14 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     add_words : bool, default=False
         If true, add the words counts to the bag-of-n-grams representation
         of the input data.
-    random_state : int or None, default=None
+    random_state : typing.Optional[Union[int, RandomState]], default=None
         Pass an int for reproducible output across multiple function calls.
     rescale_W : bool, default=True
         If true, the weight matrix W is rescaled at each iteration
         to have a l1 norm equal to 1 for each row.
     max_iter_e_step : int, default=20
         Maximum number of iterations to adjust the activations h at each step.
-    handle_missing : 'error' or 'empty_impute' (default)
+    handle_missing : typing.Literal["error", "empty_impute"], default=empty_impute
         Whether to raise an error or impute with empty string '' if missing
         values (NaN) are present during fit (default is to impute).
         In the inverse transform, the missing category will be denoted as None.
@@ -573,8 +573,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     Attributes
     ----------
     rho_: float
-    fitted_models_: List[GapEncoderColumn]
-    column_names_: List[str]
+    fitted_models_: typing.List[GapEncoderColumn]
+    column_names_: typing.List[str]
 
     References
     ----------
@@ -690,7 +690,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         
         Returns
         -------
-        self
+        GapEncoder
             Fitted GapEncoder instance.
         """
 
@@ -754,7 +754,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        self
+        GapEncoder
             Fitted GapEncoder instance.
         """
 
@@ -784,7 +784,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        col_names : {None, list or str}, default=None
+        col_names : typing.Optional[typing.Union[typing.Literal["auto"], typing.List[str]]], default=None
             The column names to be added as prefixes before the labels.
             If col_names == None, no prefixes are used.
             If col_names == 'auto', column names are automatically defined:
@@ -851,7 +851,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        kl_divergence : float.
+        float.
             The Kullback-Leibler divergence.
         """
         X = check_input(X)

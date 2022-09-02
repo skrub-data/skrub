@@ -33,7 +33,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    extract_until : {"year", "month", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond"}, default="hour"
+    extract_until : AcceptedTimeValues, default="hour"
         Extract up to this granularity.
         If all features have not been extracted, add the "total_time" feature,
         which contains the time to epoch (in seconds).
@@ -49,10 +49,10 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Number of features in the data seen during fit.
     n_features_out_: int
         Number of features of the transformed data.
-    features_per_column_: Dict[int, List[str]]
+    features_per_column_: typing.Dict[int, typing.List[str]]
         Dictionary mapping the index of the original columns
         to the list of features extracted for each column.
-    col_names_: Optional[List[str]]
+    col_names_: typing.Optional[typing.List[str]]
         List of the names of the features of the input data,
         if input data was a pandas DataFrame, otherwise None.
     """
@@ -127,7 +127,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        self
+        DatetimeEncoder
             Fitted DatetimeEncoder instance.
 
         """
@@ -180,7 +180,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        array, shape (n_samples, n_features_out_)
+        np.array, shape (n_samples, n_features_out_)
             Transformed input.
         """
         check_is_fitted(self, attributes=["n_features_in_", "n_features_out_",

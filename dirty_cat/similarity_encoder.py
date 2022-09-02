@@ -47,21 +47,21 @@ def _ngram_similarity_one_sample_inplace(
 
     Parameters
     ----------
-    x_count_vector: np.array
+    x_count_vector : np.array
         Count vector of the sample based on the ngrams of the vocabulary
-    vocabulary_count_matrix: np.array
+    vocabulary_count_matrix : np.array
         Count vector of the vocabulary based on its ngrams
     str_x: str
         The actual sample string
-    vocabulary_ngram_counts: np.array
+    vocabulary_ngram_counts : np.array
         Number of ngrams for each unique element of the vocabulary
-    se_dict: dict
+    se_dict : dict
         Dictionary containing the similarities for each x in unq_X
-    unq_X: np.array
+    unq_X : np.array
         The arrays of all unique samples
-    i: str
+    i : str
         The index of x_count_vector in the csr count matrix
-    ngram_range: tuple
+    ngram_range : tuple
         n-grams to use for the decomposition, where `n_min <= n <= n_max`.
     """
     nonzero_idx = x_count_vector.indices
@@ -86,8 +86,8 @@ def ngram_similarity(X,
                      dtype: type = np.float64) -> np.array:
     """
     Similarity encoding for dirty categorical variables:
-        Given two arrays of strings, returns the similarity encoding matrix
-        of size len(X) x len(cats)
+    Given two arrays of strings, returns the similarity encoding matrix
+    of size len(X) x len(cats)
 
     ngram_sim(s_i, s_j) =
         ||min(ci, cj)||_1 / (||ci||_1 + ||cj||_1 - ||min(ci, cj)||_1)
@@ -193,14 +193,10 @@ class SimilarityEncoder(OneHotEncoder):
         Deprecated in dirty_cat 0.3, will be removed in 0.5.
         Was used to specify the type of pairwise string similarity to use.
         Since 0.3, only the ngram similarity is supported.
-
     ngram_range : tuple (min_n, max_n), default=(2, 4)
         The range of values for the n_gram similarity.
-
-    categories : 'auto', 'k-means', 'most_frequent' or a list of lists/arrays
-    of values.
+    categories : typing.Union[typing.Literal["auto", "k-means", "most_frequent"], typing.List[typing.List[str]]]
         Categories (unique values) per feature:
-
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
@@ -209,7 +205,6 @@ class SimilarityEncoder(OneHotEncoder):
            categorical variable
         - 'k-means' : Computes the K nearest neighbors of K-mean centroids
            in order to choose the prototype categories
-
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.
@@ -230,21 +225,21 @@ class SimilarityEncoder(OneHotEncoder):
     hashing_dim : int type or None.
         If None, the base vectorizer is CountVectorizer, else it's set to
         HashingVectorizer with a number of features equal to `hashing_dim`.
-    n_prototypes: number of prototype we want to use.
+    n_prototypes : number of prototype we want to use.
         Useful when `most_frequent` or `k-means` is used.
         Must be a positive non-null integer.
-    random_state: either an int used as a seed, a RandomState instance or None.
+    random_state : either an int used as a seed, a RandomState instance or None.
         Useful when `k-means` strategy is used.
-    n_jobs: int, optional
+    n_jobs : int, optional
         maximum number of processes used to compute similarity matrices. Used
         only if ``fast=True`` in ``SimilarityEncoder.transform``
 
     Attributes
     ----------
-    categories_ : list of arrays
+    categories_ : typing.List[np.array]
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
-    _infrequent_enabled: bool, default=False
+    _infrequent_enabled : bool, default=False
         Avoid taking into account the existence of infrequent categories.
 
     References
@@ -308,17 +303,19 @@ class SimilarityEncoder(OneHotEncoder):
             warnings.warn(
                 'n_prototypes parameter ignored with category type "auto". ')
 
-    def get_most_frequent(self, prototypes: List[str]):
+    def get_most_frequent(self, prototypes: List[str]) -> np.array:
         """
         Get the most frequent category prototypes.
 
         Parameters
         ----------
-        prototypes : the list of values for a category variable
+        prototypes : typing.List[str]
+            The list of values for a category variable.
 
         Returns
         -------
-        The n_prototypes most frequent values for a category variable
+        np.array
+            The n_prototypes most frequent values for a category variable.
         """
         values, _ = get_prototype_frequencies(prototypes)
         return values[:self.n_prototypes]
@@ -331,14 +328,13 @@ class SimilarityEncoder(OneHotEncoder):
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to determine the categories of each feature.
-
-        y: None
+        y : None
             Unused, only here for compatibility.
 
         Returns
         -------
-        self
-            The fitted SimilarityEncoder instance
+        SimilarityEncoder
+            The fitted SimilarityEncoder instance.
         """
 
         if self.handle_missing not in ['error', '']:
@@ -456,7 +452,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         return self
 
-    def transform(self, X, fast: bool = True):
+    def transform(self, X, fast: bool = True) -> np.array:
         """
         Transform X using specified encoding scheme.
 
@@ -464,7 +460,6 @@ class SimilarityEncoder(OneHotEncoder):
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to encode.
-
         fast : bool
             Whether to use the fast computation of ngrams.
 
@@ -541,12 +536,11 @@ class SimilarityEncoder(OneHotEncoder):
 
         Parameters
         ----------
-        X: np.array, list
-            observations being transformed.
+        X: typing.Union[list, np.array]
+            Observations being transformed.
         col_idx: int
-            the column index of X in the original feature matrix.
+            The column index of X in the original feature matrix.
         """
-        min_n, max_n = self.ngram_range
         vectorizer = self.vectorizers_[col_idx]
 
         unq_X = np.unique(X)
@@ -564,10 +558,10 @@ class SimilarityEncoder(OneHotEncoder):
                 _ngram_similarity_one_sample_inplace)(
                     X_count_vector, vocabulary_count_matrix, x_str,
                     vocabulary_ngram_count, se_dict, unq_X, i, self.ngram_range
-                )
-                for X_count_vector, x_str, i
-                in zip(X_count_matrix, unq_X_, range(len(unq_X)))
             )
+            for X_count_vector, x_str, i
+            in zip(X_count_matrix, unq_X_, range(len(unq_X)))
+        )
 
         out = np.empty(
             (len(X), vocabulary_count_matrix.shape[0]),
@@ -589,7 +583,7 @@ class SimilarityEncoder(OneHotEncoder):
         ----------
         X : array-like of shape (n_samples, n_features)
             Input samples.
-        y :  array-like of shape (n_samples,) or (n_samples, n_outputs), \
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs), \
                 default=None
             Target values (None for unsupervised transformations).
         **fit_params
