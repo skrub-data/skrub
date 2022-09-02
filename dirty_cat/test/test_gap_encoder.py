@@ -1,16 +1,13 @@
-import time
 import pytest
 import numpy as np
 import pandas as pd
 
-from typing import Literal
-
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_20newsgroups
 
-from dirty_cat.datasets import fetch_employee_salaries
 from dirty_cat.utils import Version
 from dirty_cat import GapEncoder
+
 
 def test_analyzer():
     """
@@ -41,6 +38,7 @@ def test_analyzer():
     # Test inequality between the word and char analyzers output:
     np.testing.assert_raises(AssertionError, np.testing.assert_array_equal,
                              y, y2)
+
 
 @pytest.mark.parametrize("hashing, init, analyzer, add_words", [
     (False, 'k-means++', 'word', True),
@@ -180,20 +178,6 @@ def test_missing_values(missing: str) -> None:
             enc.fit_transform(observations)
 
 
-def profile_encoder(init: str) -> None:
-    # not a unit test
-    info = fetch_employee_salaries()
-    data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
-    X = np.array(data['employee_position_title'])[:, None]
-    t0 = time.time()
-    encoder = GapEncoder(n_components=50, init=init)
-    encoder.fit(X)
-    y = encoder.transform(X)
-    assert y.shape == (len(X), 50)
-    eta = time.time() - t0
-    return eta
-
-
 if __name__ == '__main__':
     
     print('test_analyzer')
@@ -223,13 +207,5 @@ if __name__ == '__main__':
     print('start test_score')
     test_score()
     print('test_score passed')
-    
-    for _ in range(3):
-        print('time profile_encoder(GapEncoder, init="k-means++")')
-        print(f"{profile_encoder('k-means++'):.4} seconds")
-
-    for _ in range(3):
-        print('time profile_encoder(GapEncoder, init="k-means")')
-        print(f"{profile_encoder('k-means'):.4} seconds")
     
     print('Done')
