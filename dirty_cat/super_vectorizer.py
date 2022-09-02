@@ -6,6 +6,8 @@ categorize them beforehand, or construct complex Pipelines.
 
 # Author: Lilian Boulard <lilian@boulard.fr> | https://github.com/LilianBoulard
 
+import sklearn
+
 import numpy as np
 import pandas as pd
 
