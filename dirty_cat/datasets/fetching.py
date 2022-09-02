@@ -1,14 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Fetching functions to retrieve example datasets, using
 Scikit-Learn's ``fetch_openml()`` function.
 """
-
-
-# Author:
-# Lilian Boulard <lilian@boulard.fr>
-# https://github.com/LilianBoulard
 
 # Future notes:
 # - Watch out for ``fetch_openml()`` API modifications:
@@ -17,15 +10,14 @@ Scikit-Learn's ``fetch_openml()`` function.
 
 import gzip
 import json
-import sklearn
 import warnings
 import pandas as pd
 
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Union, Dict, Any, List
+from sklearn.datasets import fetch_openml
 
-from dirty_cat.utils import Version
 from dirty_cat.datasets.utils import get_data_dir
 
 # Directory where the ``.gz`` files containing the
@@ -35,24 +27,24 @@ from dirty_cat.datasets.utils import get_data_dir
 # ``Experimental`` so the structure might change in future releases.
 # This path will be concatenated to the dirty_cat data directory,
 # available via the function ``get_data_dir()``.
-DETAILS_DIRECTORY = "openml/openml.org/api/v1/json/data/"
+DETAILS_DIRECTORY: str = "openml/openml.org/api/v1/json/data/"
 
-# Same as above ; for the datasets features location.
-FEATURES_DIRECTORY = "openml/openml.org/api/v1/json/data/features/"
+# Same as above; for the datasets features location.
+FEATURES_DIRECTORY: str = "openml/openml.org/api/v1/json/data/features/"
 
-# Same as above ; for the datasets data location.
-DATA_DIRECTORY = "openml/openml.org/data/v1/download/"
+# Same as above; for the datasets data location.
+DATA_DIRECTORY: str = "openml/openml.org/data/v1/download/"
 
 # The IDs of the datasets, from OpenML.
 # For each dataset, its URL is constructed as follows:
-openml_url = "https://www.openml.org/d/{ID}"
-ROAD_SAFETY_ID = 42803
-OPEN_PAYMENTS_ID = 42738
-MIDWEST_SURVEY_ID = 42805
-MEDICAL_CHARGE_ID = 42720
-EMPLOYEE_SALARIES_ID = 42125
-TRAFFIC_VIOLATIONS_ID = 42132
-DRUG_DIRECTORY_ID = 43044
+openml_url: str = "https://www.openml.org/d/{ID}"
+ROAD_SAFETY_ID: int = 42803
+OPEN_PAYMENTS_ID: int = 42738
+MIDWEST_SURVEY_ID: int = 42805
+MEDICAL_CHARGE_ID: int = 42720
+EMPLOYEE_SALARIES_ID: int = 42125
+TRAFFIC_VIOLATIONS_ID: int = 42132
+DRUG_DIRECTORY_ID: int = 43044
 
 
 @dataclass(unsafe_hash=True)
@@ -147,7 +139,7 @@ def fetch_openml_dataset(dataset_id: int,
     data_gz_path = data_directory / DATA_DIRECTORY / f'{file_id}.gz'
 
     if not data_gz_path.is_file():
-        # This is a double-check.
+        # double-check.
         # If the data file does not exist, download the dataset.
         _download_and_write_openml_dataset(dataset_id=dataset_id,
                                            data_directory=data_directory)
@@ -188,23 +180,14 @@ def _download_and_write_openml_dataset(dataset_id: int,
         If there is no Internet connection.
 
     """
-    from sklearn.datasets import fetch_openml
-
-    fetch_kwargs = {}
-    if Version(sklearn.__version__) >= Version('0.22'):
-        fetch_kwargs.update({'as_frame': True})
-
     # The ``fetch_openml()`` function returns a Scikit-Learn ``Bunch`` object,
     # which behaves just like a ``namedtuple``.
     # However, we do not want to save this data into memory:
     # we will read it from the disk later.
-    #
-    # Raises ``ValueError`` if the ID is incorrect (does not exist on OpenML)
-    # and ``urllib.error.URLError`` if there is no Internet connection.
     fetch_openml(
         data_id=dataset_id,
         data_home=str(data_directory),
-        **fetch_kwargs
+        as_frame=True,
     )
 
 
@@ -222,7 +205,7 @@ def _read_json_from_gz(compressed_dir_path: Path) -> dict:
     -------
     dict
         The information contained in the file,
-        converted from plain-text JSON.
+        parsed from plain-text JSON.
 
     """
     if not compressed_dir_path.is_file():
@@ -555,9 +538,9 @@ def fetch_traffic_violations(load_dataframe: bool = True
 
     Description of the dataset:
     > This dataset contains traffic violation information from all electronic
-    traffic violations issued in the Montgomery County, MD. Any information that can be used
-    to uniquely identify the vehicle, the vehicle owner or the officer issuing
-    the violation will not be published.
+    traffic violations issued in the Montgomery County, MD. Any information
+    that can be used to uniquely identify the vehicle, the vehicle owner or
+    the officer issuing the violation will not be published.
 
     Returns
     -------

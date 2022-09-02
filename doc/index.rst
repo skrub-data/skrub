@@ -49,6 +49,15 @@ pipeline you can tweak.
     </div>
     </div>
     <div class="flex-container">
+
+.. raw:: html
+
+    <div class="flex-content" style="border: 0px;">
+    <iframe style="display: block; margin: auto; width: 100%;" width="560" height="315"
+     src="https://www.youtube.com/embed/_GNaaeEI2tg" frameborder="0"
+     allow="accelerometer; autoplay; clipboard-write;
+     encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+    ></iframe></div>
     <div class="flex-content" style="border: 0px;">
 
 For a detailed description of the problem of encoding dirty categorical data,
@@ -59,23 +68,13 @@ string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 .. raw:: html
 
     </div>
-    <div class="flex-content" style="border: 0px;">
-    <iframe style="display: block; margin: auto; width: 100%;" width="560" height="315"
-     src="https://www.youtube.com/embed/_GNaaeEI2tg" frameborder="0"
-     allow="accelerometer; autoplay; clipboard-write;
-     encrypted-media; gyroscope; picture-in-picture" allowfullscreen
-    ></iframe>
-
-.. raw:: html
-
-    </div>
     </div>
 
 .. rst-class:: right-align
 
    `Recent changes <CHANGES.html>`_
 
-:Installing: `$ pip install --user dirty_cat`
+:Installing: `$ pip install --user --upgrade dirty_cat`
 
 ______
 
@@ -150,7 +149,7 @@ project: there is still little known about the problems of dirty
 categories. Tradeoffs will emerge in the long run. We really need people
 giving feedback on success and failures with the different techniques and
 pointing us to open datasets on which we can do more empirical work.
-Dirty-cat received funding from `project DirtyData
+dirty-cat received funding from `project DirtyData
 <https://project.inria.fr/dirtydata/>`_ (ANR-17-CE23-0018).
 
 .. [1] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.

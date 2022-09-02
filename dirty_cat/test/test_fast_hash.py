@@ -1,10 +1,10 @@
 from dirty_cat.fast_hash import ngram_min_hash
+from sklearn.datasets import fetch_20newsgroups
 
 
 def test_fast_hash():
 
-    from sklearn import datasets
-    data = datasets.fetch_20newsgroups()
+    data = fetch_20newsgroups()
     a = data.data[0]
 
     min_hash = ngram_min_hash(a, seed=0)
