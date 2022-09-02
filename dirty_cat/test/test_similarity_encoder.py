@@ -2,6 +2,8 @@ import numpy as np
 import numpy.testing
 import pytest
 
+from typing import Callable, Optional
+
 from sklearn import __version__ as sklearn_version
 
 from dirty_cat.utils import Version
@@ -9,7 +11,7 @@ from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
 
-def test_specifying_categories():
+def test_specifying_categories() -> None:
     # When creating a new SimilarityEncoder:
     # - if categories = 'auto', the categories are the sorted, unique training
     # set observations (for each column)
@@ -19,7 +21,7 @@ def test_specifying_categories():
     # In this test, we first find the sorted, unique categories in the training
     # set, and create a SimilarityEncoder by giving it explicitly the computed
     # categories. The test consists in making sure the transformed observations
-    # given by this encoder are equal to the transformed obervations in the
+    # given by this encoder are equal to the transformed observations in the
     # case of a SimilarityEncoder created with categories = 'auto'
 
     observations = [['bar'], ['foo']]
@@ -35,7 +37,7 @@ def test_specifying_categories():
     assert np.allclose(feature_matrix_auto_cat, feature_matrix_with_cat)
 
 
-def test_fast_ngram_similarity():
+def test_fast_ngram_similarity() -> None:
     vocabulary = [['bar', 'foo']]
     observations = [['foo'], ['baz']]
 
@@ -66,21 +68,18 @@ def _test_missing_values(input_type, missing):
 
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
     if missing == 'error':
-        with pytest.raises(ValueError, match=r"Found missing values in input "
-                           "data; set handle_missing='' to encode "
-                           "with missing values"):
+        with pytest.raises(ValueError, match=r"Found missing values in input"):
             sim_enc.fit_transform(observations)
     elif missing == '':
         ans = sim_enc.fit_transform(observations)
         assert np.allclose(encoded, ans)
     else:
-        with pytest.raises(ValueError, match=r"handle_missing"
-                           " should be either 'error' or ''"):
+        with pytest.raises(ValueError, match=r"expected any of"):
             sim_enc.fit_transform(observations)
         return
 
 
-def _test_missing_values_transform(input_type, missing):
+def _test_missing_values_transform(input_type: str, missing: str) -> None:
     observations = [['a', 'b'], ['b', 'a'], ['b', 'b'],
                     ['a', 'c'], ['c', 'a']]
     test_observations = [['a', 'b'], ['b', 'a'], ['b', np.nan],
@@ -100,9 +99,7 @@ def _test_missing_values_transform(input_type, missing):
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
     if missing == 'error':
         sim_enc.fit_transform(observations)
-        with pytest.raises(ValueError, match=r"Found missing values in input "
-                           "data; set handle_missing='' to encode "
-                           "with missing values"):
+        with pytest.raises(ValueError, match=r"Found missing values in input"):
             sim_enc.transform(test_observations)
     elif missing == '':
         sim_enc.fit_transform(observations)
@@ -110,7 +107,9 @@ def _test_missing_values_transform(input_type, missing):
         assert np.allclose(encoded, ans)
 
 
-def _test_similarity(similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
+def _test_similarity(similarity_f: Callable, hashing_dim: Optional[int] = None,
+                     categories: str = 'auto', n_prototypes: int = None,
+                     ) -> None:
     if n_prototypes is None:
         X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
@@ -160,7 +159,7 @@ def _test_similarity(similarity_f, hashing_dim=None, categories='auto', n_protot
         numpy.testing.assert_almost_equal(encoder, ans)
 
 
-def test_similarity_encoder():
+def test_similarity_encoder() -> None:
     categories = ['auto', 'most_frequent', 'k-means']
     for category in categories:
         if category == 'auto':
@@ -184,21 +183,23 @@ def test_similarity_encoder():
             _test_missing_values_transform(input_type, missing)
 
 
-def test_kmeans_protoypes():
+def test_kmeans_protoypes() -> None:
     X_test = np.array(['cbbba', 'baaac', 'accc'])
     proto = get_kmeans_prototypes(X_test, 3)
     assert np.array_equal(np.sort(proto), np.sort(X_test))
 
 
-def test_reproducibility():
-    sim_enc = similarity_encoder.SimilarityEncoder(categories='k-means', n_prototypes=10, random_state=435)
+def test_reproducibility() -> None:
+    sim_enc = similarity_encoder.SimilarityEncoder(
+        categories='k-means', n_prototypes=10, random_state=435,
+    )
     X = np.array([' %s ' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     prototypes = sim_enc.fit(X).categories_[0]
     for i in range(10):
         assert (np.array_equal(prototypes, sim_enc.fit(X).categories_[0]))
 
 
-def test_get_features():
+def test_get_features() -> None:
     # See https://github.com/dirty-cat/dirty_cat/issues/168
     sim_enc = similarity_encoder.SimilarityEncoder(random_state=435)
     X = np.array(['%s' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
@@ -220,4 +221,3 @@ def test_get_features():
         'x0_q', 'x0_r', 'x0_s', 'x0_t', 'x0_u', 'x0_v', 'x0_w', 'x0_x', 'x0_y',
         'x0_z', 'x0_{', 'x0_|', 'x0_}', 'x0_~'
     ]
-
