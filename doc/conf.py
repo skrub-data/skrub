@@ -268,8 +268,9 @@ ogp_site_name = "Dirty cat"
 
 # -- numpydoc configuration --------------------------------------
 
-# https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
-napoleon_use_param = True
+# Produce `plot::` directives for examples that contain `import matplotlib` or
+# `from matplotlib import`.
+numpydoc_use_plots = True
 
 # this is needed for some reason...
 # see https://github.com/numpy/numpydoc/issues/69
