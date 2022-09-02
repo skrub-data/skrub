@@ -39,22 +39,22 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     n_components : int, default=30
         The number of dimension of encoded strings. Numbers around 300 tend to
         lead to good prediction performance, but with more computational cost.
-    ngram_range : tuple (min_n, max_n), default=(2, 4)
+    ngram_range : typing.Tuple[int, int], default=(2, 4)
         The lower and upper boundary of the range of n-values for different
         n-grams to be extracted. All values of n such that min_n <= n <= max_n.
         will be used.
-    hashing : str {'fast', 'murmur'}, default=fast
+    hashing : typing.Literal["fast", "murmur"], default=fast
         Hashing function. fast is faster but
         might have some concern with its entropy.
     minmax_hash : bool, default=False
         if True, return min hash and max hash concatenated.
-    handle_missing : 'error' or 'zero_impute' (default)
+    handle_missing : typing.Literal["error", "zero_impute"] (default=zero_impute)
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
 
     Attributes
     ----------
-    hash_dict_: LRUDict
+    hash_dict_ : LRUDict
         Computes hashes.
 
     References
@@ -97,9 +97,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             The string to encode.
         n_components : int
             The number of dimension of encoded string.
-        ngram_range : tuple (min_n, max_n)
-            The lower and upper boundary of the range of n-values for different
-            n-grams to be extracted.
+        ngram_range : typing.Tuple[int, int]
+            The lower and upper boundaries of the range of n-values for
+            different n-grams to be extracted.
             All values of n such that min_n <= n <= max_n.
 
         Returns
@@ -155,7 +155,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        self
+        MinHashEncoder
             The fitted MinHashEncoder instance.
         """
         self.count = 0
