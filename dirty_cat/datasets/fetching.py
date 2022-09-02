@@ -22,6 +22,7 @@ from dirty_cat.datasets.utils import get_data_dir
 
 from zipfile import ZipFile
 import urllib.request
+import os
 
 # Directory where the ``.gz`` files containing the
 # details on downloaded datasets are stored.
@@ -595,16 +596,15 @@ def fetch_drug_directory(load_dataframe: bool = True
     )
 
 
-def fetch_world_bank_data(data_code, indicator, data_dir=DATA_DIRECTORY):
+def fetch_world_bank_data(data_code, indicator):
+    data_dir=os.path.join(os.getcwd(), 'dirty_cat_data')
+    zip_path = data_dir + '_folder'
     # Download the file :
     url = f'https://api.worldbank.org/v2/en/indicator/{data_code}?downloadformat=csv'
-    path = data_dir 
-    urllib.request.urlretrieve(url, path)
-
-    zip_path = path + '.zip'
+    urllib.request.urlretrieve(url, data_dir)
 
     # Extract csv file :
-    with ZipFile(path, 'r') as f:
+    with ZipFile(data_dir, 'r') as f:
         names = f.namelist()
         for n in names:
             if 'Metadata' not in n:
