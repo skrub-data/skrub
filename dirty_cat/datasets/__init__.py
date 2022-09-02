@@ -10,6 +10,7 @@ from .fetching import fetch_road_safety
 from .fetching import fetch_open_payments
 from .fetching import fetch_drug_directory
 from .fetching import fetch_traffic_violations
+from .fetching import fetch_world_bank_data
 
 __all__ = [
     'get_data_dir',
@@ -20,4 +21,5 @@ __all__ = [
     'fetch_open_payments',
     'fetch_drug_directory',
     'fetch_traffic_violations'
+    'fetch_world_bank_data'
 ]

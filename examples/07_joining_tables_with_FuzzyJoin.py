@@ -1,8 +1,8 @@
 """
-Joining tables with FuzzyJoin
+Joining tables with fuzzyjoin
 ================================
 
-In this example, we show how to join tables with the :function:`FuzzyJoin` function. 
+In this example, we show how to join tables with the :function:`fuzzyjoin` function. 
 We also demonstrate why this method is the most easy and appropriate tool for handling 
 the joining of tables for users that want to improve their machine learning models quickly.
 We go through some of the rich options that allow for manipulation when joining tables,
@@ -22,12 +22,13 @@ in order to create a satisfying prediction model.
 # We import the happiness score data first:
 import pandas as pd
 
-df = pd.read_excel('https://happiness-report.s3.amazonaws.com/2022/Appendix_2_Data_for_Figure_2.1.xls')
+df = pd.read_csv('https://raw.githubusercontent.com/jovan-stojanovic/data/main/Happiness_report_2022.csv')
 df.drop(df.tail(1).index, inplace = True)
 
 # Let's take a look at the table:
 df.head(3)
  
+#################################################################
 # The Happiness score was computed using the Gallup World Poll survey results. 
 # The report stress out some of the possible explanatory factors: GDP per capita, Social support, Generosity etc.
 # However, these factors here are only estimated indexes used to calculate the happiness score.
@@ -44,7 +45,7 @@ y = df[['Happiness score']]
 # we will need to include explanatory factors from other tables.
 
 ###############################################################################
-# Joining tables using FuzzyJoin
+# Joining tables using fuzzyjoin
 # =================================
 #
 # Finding additional tables
@@ -52,12 +53,7 @@ y = df[['Happiness score']]
 
 # Let's inspire ourselfes from the factors used by the Happiness report to explain happiness. 
 # We will extract data from the World Bank databank using the following function:
-def fetch_world_bank_data(data_code, indicator):
-    data = pd.read_excel(f'https://api.worldbank.org/v2/en/indicator/{data_code}?downloadformat=excel', skiprows=3)
-    data[indicator] = data.stack().groupby(level=0).last()
-    data = data[data[indicator]!=data_code]
-    data = data[['Country Name', indicator]]
-    return data
+from dirty_cat.datasets import fetch_world_bank_data
 
 # We then extract GDP per capita by country:
 gdppc = fetch_world_bank_data('NY.GDP.PCAP.CD', 'gdppc')
@@ -75,16 +71,17 @@ legal_rights.head(3)
 # Joining tables
 # -----------------------
 #
-# Now, using dirty_cat's FuzzyJoin function,
+# Now, using dirty_cat's fuzzyjoin function,
 # we need only one line to join two tables
 # without worrying about preprocessing:
 
 # We add GDP per capita to the initial table:
-from dirty_cat._fuzzy_join import FuzzyJoin
-X1 = FuzzyJoin(X, gdppc, on=['Country', 'Country Name'])
+from dirty_cat._fuzzy_join import fuzzyjoin
+X1 = fuzzyjoin(X, gdppc, on=['Country', 'Country Name'])
 X1.head(20)
+#################################################################
 
-# Now, we see that our FuzzyJoin succesfully identified the countries,
+# Now, we see that our fuzzyjoin succesfully identified the countries,
 # even though some country names differ between tables. 
 
 # For instance, Czechia is well identified as Czech Republic and Luxembourg* as Luxembourg. 
@@ -96,30 +93,34 @@ X1.head(20)
 # the data (e.g. remove the * after country name) and look manually
 # for matching patterns in observations. 
 
-# Dirty_cat's FuzzyJoin is the perfect function to avoid doing so (and save time) with great results.
+# Dirty_cat's fuzzyjoin is the perfect function to avoid doing so (and save time) with great results.
 
 # However, we see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
 # because there is simply no match in the two tables.
 X1.iloc[121]
+#################################################################
 
 # In this case, it is better to use the '2dball' precision
 # with a fixed threshold so as to include only precise-enough matches:
 
 # --> To improve precision measurement, here it excludes some good matches as well
-X1 = FuzzyJoin(X, gdppc, on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3)
+X1 = fuzzyjoin(X, gdppc, on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3)
 X1.iloc[121]
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
+#################################################################
 
 # Now let's include other information that may be relevant, such as life expectancy:
-X2 = FuzzyJoin(X1, life_exp,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
+X2 = fuzzyjoin(X1, life_exp,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
 X2.head(3)
+#################################################################
 
 # Note: Here, we use the `keep='left'` option to keep only the left key matching column,
 # so as not to have too much unnecessary columns with country names.
 
 # And the strenght of legal rights in the country:
-X3 = FuzzyJoin(X2, legal_rights,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
+X3 = fuzzyjoin(X2, legal_rights,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
 X3.head(3)
+#################################################################
 
 # Great! Our table has became bigger and full of useful informations.
 # We now only remove categories with missing information:
@@ -156,5 +157,5 @@ for n in range(len([X1, X2, X3])):
 
 # Our score gets better every time we add additional information into our table !
 
-# This is why dirty_cat's FuzzyJoin is an easy-to-use
-# and essential tool for every machine learning problem.
+# This is why dirty_cat's fuzzyjoin is an easy-to-use
+# and useful tool.

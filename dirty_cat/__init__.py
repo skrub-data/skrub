@@ -13,8 +13,8 @@ from .minhash_encoder import MinHashEncoder
 from .gap_encoder import GapEncoder
 from .datetime_encoder import DatetimeEncoder
 from .super_vectorizer import SuperVectorizer
-from ._fuzzy_join import FuzzyJoin
+from ._fuzzy_join import fuzzyjoin
 
 __all__ = ['SimilarityEncoder', 'TargetEncoder', 'MinHashEncoder',
            'GapEncoder', 'DatetimeEncoder', 'SuperVectorizer',
-           'FuzzyJoin']
+           'fuzzyjoin']

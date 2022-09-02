@@ -28,6 +28,9 @@ from typing import Union, Dict, Any
 from dirty_cat.utils import Version
 from dirty_cat.datasets.utils import get_data_dir
 
+from zipfile import ZipFile
+import urllib.request
+
 
 Details = namedtuple("Details", ["name", "file_id", "description"])
 Features = namedtuple("Features", ["names"])
@@ -601,3 +604,30 @@ def fetch_drug_directory(load_dataframe: bool = True
         },
         load_dataframe=load_dataframe,
     )
+
+
+def fetch_world_bank_data(data_code, indicator, data_dir=DATA_DIRECTORY):
+    # Download the file :
+    url = f'https://api.worldbank.org/v2/en/indicator/{data_code}?downloadformat=csv'
+    path = data_dir 
+    urllib.request.urlretrieve(url, path)
+
+    zip_path = path + '.zip'
+
+    # Extract csv file :
+    with ZipFile(path, 'r') as f:
+        names = f.namelist()
+        for n in names:
+            if 'Metadata' not in n:
+                f.extract(
+                n, path=zip_path)
+                true_file = n
+    f.close()
+
+    # Read csv
+    csvfile_path = zip_path + '/' + true_file
+    data = pd.read_csv(csvfile_path, skiprows=3)
+    data[indicator] = data.stack().groupby(level=0).last()
+    data = data[data[indicator]!=data_code]
+    data = data[['Country Name', indicator]]
+    return data
