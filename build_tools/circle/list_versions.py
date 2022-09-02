@@ -33,16 +33,10 @@ def human_readable_data_quantity(quantity, multiple=1024):
             quantity /= multiple
 
 
-def get_pdf_size(version):
-    api_url = ROOT_URL + '%s/_downloads' % version
-    for path_details in json_urlread(api_url):
-        if path_details['name'] == 'scikit-learn-docs.pdf':
-            return human_readable_data_quantity(path_details['size'], 1000)
-
 
 print(':orphan:')
 print()
-heading = 'Available documentation for Scikit-learn'
+heading = 'Available documentation'
 print(heading)
 print('=' * len(heading))
 print()
@@ -65,8 +59,6 @@ for path_details in root_listing:
     if path_details['type'] == 'dir':
         html = urlopen(RAW_FMT % name).read().decode('utf8')
         version_num = VERSION_RE.search(html).group(1)
-        pdf_size = get_pdf_size(name)
-        dirs[name] = (version_num, pdf_size)
 
     if path_details['type'] == 'symlink':
         symlinks[name] = json_urlread(path_details['_links']['self'])['target']
