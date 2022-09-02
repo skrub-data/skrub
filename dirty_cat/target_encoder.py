@@ -87,6 +87,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y):
         """Fit the TargetEncoder to X.
+
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features]

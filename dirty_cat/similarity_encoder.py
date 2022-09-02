@@ -276,9 +276,11 @@ class SimilarityEncoder(OneHotEncoder):
 
     def get_most_frequent(self, prototypes):
         """ Get the most frequent category prototypes
+
         Parameters
         ----------
         prototypes : the list of values for a category variable
+
         Returns
         -------
         The n_prototypes most frequent values for a category variable
@@ -294,6 +296,7 @@ class SimilarityEncoder(OneHotEncoder):
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to determine the categories of each feature.
+
         Returns
         -------
         self
@@ -473,13 +476,13 @@ class SimilarityEncoder(OneHotEncoder):
         """
         Fast computation of ngram similarity.
 
-
         SimilarityEncoder.transform uses the count vectors of the vocabulary in
         its computations. In ngram_similarity, these count vectors have to be
         re-computed each time, which can slow down the execution. In this
         method, the count vectors are recovered from the
         ``vocabulary_count_matrices`` attribute of the SimilarityEncoder,
         speeding up the execution.
+
         Parameters
         ----------
         X: np.array, list

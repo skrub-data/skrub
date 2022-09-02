@@ -47,6 +47,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     handle_missing : 'error' or 'zero_impute' (default)
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
+
     References
     ----------
     For a detailed description of the method, see
