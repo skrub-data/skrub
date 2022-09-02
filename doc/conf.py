@@ -36,7 +36,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-     'sphinx.ext.napoleon',
+    'numpydoc',
     'sphinx.ext.autodoc.typehints',
     'sphinx_gallery.gen_gallery',
 ]
@@ -263,9 +263,15 @@ ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
 ogp_use_first_image = True
 ogp_site_name = "dirty_cat"
 
-# -- sphinxext.napoleon configuration --------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
-napoleon_use_param = True
+# -- numpydoc configuration --------------------------------------
+
+# Produce `plot::` directives for examples that contain `import matplotlib` or
+# `from matplotlib import`.
+numpydoc_use_plots = True
+
+# this is needed for some reason...
+# see https://github.com/numpy/numpydoc/issues/69
+numpydoc_class_members_toctree = False
 
 # -- sphinxext.autodoc configuration ---------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html

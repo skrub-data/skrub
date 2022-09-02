@@ -124,6 +124,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
 source activate testenv
 pip install sphinx-gallery
 pip install sphinxext-opengraph
+pip install numpydoc
 
 pip install scikit-learn
 
