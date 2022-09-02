@@ -1,24 +1,15 @@
-import time
 import pytest
 import numpy as np
 import pandas as pd
 
-from typing import Literal
-
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_20newsgroups
 
-from dirty_cat.datasets import fetch_employee_salaries
 from dirty_cat.utils import Version
 from dirty_cat import GapEncoder
 
 
-@pytest.mark.parametrize("init1, analyzer1, analyzer2", [
-    ('k-means++', 'char', 'word'),
-    ('random', 'char', 'word'),
-    ('k-means', 'char', 'word')
-])
-def test_analyzer(init1: str, analyzer1: str, analyzer2: str) -> None:
+def test_analyzer():
     """
     Test if the output is different when the analyzer is 'word' or 'char'.
     If it is, no error ir raised.
@@ -30,21 +21,21 @@ def test_analyzer(init1: str, analyzer1: str, analyzer2: str) -> None:
     n_components = 10
     # Test first analyzer output:
     encoder = GapEncoder(
-        n_components=n_components, init='k-means++',
-        analyzer=analyzer1, add_words=add_words,
-        random_state=42, rescale_W=True)
+        n_components=n_components, init='k-means++', analyzer='char',
+        add_words=add_words, random_state=42, rescale_W=True,
+    )
     encoder.fit(X)
     y = encoder.transform(X)
     
     # Test the other analyzer output:
     encoder = GapEncoder(
-        n_components=n_components, init='k-means++',
-        analyzer=analyzer2, add_words=add_words,
-        random_state=42)
+        n_components=n_components, init='k-means++', analyzer='word',
+        add_words=add_words, random_state=42,
+    )
     encoder.fit(X)
     y2 = encoder.transform(X)
     
-    # Test inequality btw analyzer word and char output:
+    # Test inequality between the word and char analyzers output:
     np.testing.assert_raises(AssertionError, np.testing.assert_array_equal,
                              y, y2)
 
@@ -187,25 +178,11 @@ def test_missing_values(missing: str) -> None:
             enc.fit_transform(observations)
 
 
-def profile_encoder(init: str) -> None:
-    # not a unit test
-    info = fetch_employee_salaries()
-    data = pd.read_csv(info['path'], **info['read_csv_kwargs'])
-    X = np.array(data['employee_position_title'])[:, None]
-    t0 = time.time()
-    encoder = GapEncoder(n_components=50, init=init)
-    encoder.fit(X)
-    y = encoder.transform(X)
-    assert y.shape == (len(X), 50)
-    eta = time.time() - t0
-    return eta
-
-
 if __name__ == '__main__':
     
     print('test_analyzer')
-    test_analyzer('k-means++', 'char_wb', 'word')
-    print('passed')
+    test_analyzer()
+    print('test_analyzer passed')
 
     print('start test_gap_encoder')
     test_gap_encoder(hashing=True, init='k-means++', analyzer='char', add_words=False)
@@ -230,13 +207,5 @@ if __name__ == '__main__':
     print('start test_score')
     test_score()
     print('test_score passed')
-    
-    for _ in range(3):
-        print('time profile_encoder(GapEncoder, init="k-means++")')
-        print(f"{profile_encoder('k-means++'):.4} seconds")
-
-    for _ in range(3):
-        print('time profile_encoder(GapEncoder, init="k-means")')
-        print(f"{profile_encoder('k-means'):.4} seconds")
     
     print('Done')
