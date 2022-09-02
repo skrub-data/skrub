@@ -49,7 +49,6 @@ pipeline you can tweak.
     </div>
     </div>
     <div class="flex-container">
-    <div class="flex-content" style="border: 0px;">
 
 .. raw:: html
 
@@ -59,6 +58,7 @@ pipeline you can tweak.
      allow="accelerometer; autoplay; clipboard-write;
      encrypted-media; gyroscope; picture-in-picture" allowfullscreen
     ></iframe></div>
+    <div class="flex-content" style="border: 0px;">
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
