@@ -454,8 +454,8 @@ def test_passthrough():
     X_enc_dirty = sv.fit_transform(X_dirty)
     X_enc_clean = sv.fit_transform(X_clean)
 
-    assert X_dirty.to_numpy() == X_enc_dirty
-    assert X_clean.to_numpy() == X_enc_clean
+    assert X_dirty.to_numpy().ravel().tolist() == X_enc_dirty.ravel().tolist()
+    assert (X_clean.to_numpy() == X_enc_clean).all()
 
 
 if __name__ == '__main__':
