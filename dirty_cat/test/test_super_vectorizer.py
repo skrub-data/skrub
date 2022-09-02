@@ -3,7 +3,7 @@ import pytest
 import sklearn
 import pandas as pd
 
-from typing import List, Dict
+from typing import List, Dict, Tuple, Any
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
@@ -334,7 +334,7 @@ def test_with_arrays():
         'low_card_cat': [2, 4],
         'high_card_cat': [3, 5],
     }
-    vectorizer =  SuperVectorizer(
+    vectorizer = SuperVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
         high_card_cat_transformer=GapEncoder(n_components=2),
@@ -439,6 +439,23 @@ def test_passthrough():
     Tests that when passed no encoders, the SuperVectorizer
     returns the dataset as-is.
     """
+
+    def is_equal(elements: Tuple[Any, Any]) -> bool:
+        """
+        Fixture for values that return false when compared with `==`.
+        """
+        elem1, elem2 = elements
+        # Equality doesn't work for these elements
+        ambiguously_equal_values = (np.nan, pd.NA)
+        return (
+            (
+                any(elem1 is val for val in ambiguously_equal_values)
+                and
+                any(elem2 is val for val in ambiguously_equal_values)
+            )
+            or elem1 == elem2
+        )
+
     X_dirty = _get_dirty_dataframe()
     X_clean = _get_clean_dataframe()
 
@@ -454,7 +471,9 @@ def test_passthrough():
     X_enc_dirty = sv.fit_transform(X_dirty)
     X_enc_clean = sv.fit_transform(X_clean)
 
-    assert X_dirty.to_numpy().ravel().tolist() == X_enc_dirty.ravel().tolist()
+    dirty_flat_df = X_dirty.to_numpy().ravel().tolist()
+    dirty_flat_trans_df = X_enc_dirty.ravel().tolist()
+    assert all(map(is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
     assert (X_clean.to_numpy() == X_enc_clean).all()
 
 
