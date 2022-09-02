@@ -14,11 +14,10 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.neighbors import NearestNeighbors
-from sklearn.base import BaseEstimator, TransformerMixin
 
 
-def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l', '_r'), 
-               analyzer="char_wb", ngram_range=(2, 4), precision='nearest', precision_threshold=0.5):
+def FuzzyJoin(left_table, right_table, on, return_distance=False, analyzer="char_wb",
+              ngram_range=(2, 4), precision='nearest', precision_threshold=0.5, suffixes=('_l', '_r'), keep='all',):
     """
     Join tables based on categorical string columns as joining keys.
 
@@ -34,8 +33,6 @@ def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l'
             the matching will be perfomed.
     return_distance: boolean, default=True
             Wheter to return distance between nearest matched categories.
-    suffixes: tuple, default=('_x', '_y')
-            A list of strings indicating the suffix to add when overlaping column names.
     analyzer : str, default=`char_wb`
         Analyzer parameter for the CountVectorizer.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
@@ -55,6 +52,11 @@ def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l'
         Used only if precision is `2dballtree`. Determines the level of precision
         required to match the two column values. If not matched, all columns have
         `nan`'s.
+    suffixes: tuple, default=('_x', '_y')
+            A list of strings indicating the suffix to add when overlaping column names.
+    keep: {'left', 'right', 'all'}, default='all'
+            Wheter to keep the matching columns from the left, right or all tables. 
+
     Returns:
     --------
     joined: pd.DataFrame
@@ -63,8 +65,8 @@ def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l'
 
         """
 
-    lt = left_table.copy()
-    rt = right_table.copy()
+    lt = left_table.reset_index(drop=True).fillna('').copy()
+    rt = right_table.reset_index(drop=True).fillna('').copy()
 
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
@@ -78,6 +80,12 @@ def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l'
             f"'2dballtree', got {precision}",
         )
 
+    if keep not in ["left", "right", "all"]:
+        raise ValueError(
+            "keep should be either 'left', 'right' or",
+            f"'all', got {keep}",
+        )
+
     if len(suffixes)!=2:
         raise ValueError(f"Number of suffixes specified is different than two: {suffixes}")
     lsuffix, rsuffix = suffixes
@@ -88,8 +96,12 @@ def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l'
         for i in range(len(overlap_cols)):
             new_name_l = overlap_cols[i] + lsuffix
             new_name_r = overlap_cols[i] + rsuffix
-        lt.rename(columns = {overlap_cols[i]:new_name_l}, inplace = True)
-        rt.rename(columns = {overlap_cols[i]:new_name_r}, inplace = True)
+            lt.rename(columns = {overlap_cols[i]:new_name_l}, inplace = True)
+            rt.rename(columns = {overlap_cols[i]:new_name_r}, inplace = True)
+            if len(on)==2 and overlap_cols[i] in on[0]:
+                on[0] = new_name_l
+            if len(on)==2 and overlap_cols[i] in on[1]:
+                on[1] = new_name_r
 
     if not isinstance(on, list):
         raise ValueError(
@@ -107,10 +119,6 @@ def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l'
             f"List {on} was specified for parameter 'on', "
             "the list has invalid number of elements."
         )
-
-    # Force analyzing all words when searching for identical mathching:
-    if analyzer=='word' and precision=='identical':
-        ngram_range=(1,1)
 
     cols = list(lt.columns) + list(rt.columns)
     joined = pd.DataFrame(lt, columns=cols)
@@ -157,6 +165,11 @@ def FuzzyJoin(left_table, right_table, on, return_distance=False, suffixes=('_l'
             else:
                 joined.loc[idx, rt.columns] = np.nan
 
+    joined = joined.replace(r'^\s*$', np.nan, regex=True)
+    if keep=='left':
+        joined.drop(columns=[right_col], inplace=True)
+    if keep=='right':
+        joined.drop(columns=[left_col], inplace=True)
     if return_distance:
         return joined, distance
     else:

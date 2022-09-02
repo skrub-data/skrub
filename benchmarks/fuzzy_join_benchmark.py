@@ -9,7 +9,7 @@ from fasttext import load_model
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
 from thefuzz import process
 from autofj import AutoFJ
-from dirty_cat.fuzzy_join import FuzzyJoin
+from dirty_cat._fuzzy_join import FuzzyJoin
 
 
 def fetch_data(dataset_name):

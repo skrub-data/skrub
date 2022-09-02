@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from dirty_cat.fuzzy_join import FuzzyJoin
+from dirty_cat import FuzzyJoin
 
 
 @pytest.mark.parametrize(
