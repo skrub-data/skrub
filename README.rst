@@ -37,13 +37,8 @@ dirty_cat requires:
 - Python (>= 3.8)
 - NumPy (>= 1.17.3)
 - SciPy (>= 1.4.0)
-- scikit-learn (>= 0.21.0)
+- scikit-learn (>= 0.22.0)
 - pandas (>= 1.1.5)
-
-Optional dependency:
-
-- python-Levenshtein for faster edit distances (not used for the n-gram
-  distance)
 
 User installation
 ~~~~~~~~~~~~~~~~~
