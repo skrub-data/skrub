@@ -445,16 +445,7 @@ def test_passthrough():
         Fixture for values that return false when compared with `==`.
         """
         elem1, elem2 = elements
-        # Equality doesn't work for these elements
-        ambiguously_equal_values = (np.nan, pd.NA)
-        return (
-            (
-                any(elem1 is val for val in ambiguously_equal_values)
-                and
-                any(elem2 is val for val in ambiguously_equal_values)
-            )
-            or elem1 == elem2
-        )
+        return pd.isna(elem1) and pd.isna(elem2) or elem1 == elem2
 
     X_dirty = _get_dirty_dataframe()
     X_clean = _get_clean_dataframe()
