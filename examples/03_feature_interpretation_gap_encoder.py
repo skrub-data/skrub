@@ -15,12 +15,14 @@ categorical data.
 # --------------
 #
 # We first get the dataset:
+
 from dirty_cat.datasets import fetch_employee_salaries
 employee_salaries = fetch_employee_salaries()
 print(employee_salaries.description)
 
 ###############################################################################
 # Now, we retrieve the dirty column to encode:
+
 dirty_column = 'employee_position_title'
 X_dirty = employee_salaries.X[[dirty_column]]
 print(X_dirty.head(), end='\n\n')
@@ -31,12 +33,15 @@ print(f'Number of dirty entries = {len(X_dirty)}')
 # -------------------------
 #
 # We first create an instance of the GapEncoder with n_components=10:
+
 from dirty_cat import GapEncoder
+
 enc = GapEncoder(n_components=10, random_state=42)
 
 ###############################################################################
 # Then we fit the model on the dirty categorical data and transform it to
 # obtain encoded vectors of size 10:
+
 X_enc = enc.fit_transform(X_dirty)
 print(f'Shape of encoded vectors = {X_enc.shape}')
 
@@ -60,11 +65,12 @@ for k in range(len(topic_labels)):
 ###############################################################################
 # As expected, topics capture labels that frequently co-occur. For instance,
 # the labels *firefighter*, *rescuer*, *rescue* appear together in
-# *Firefigther/Rescuer III*, or *Fire/Rescue Lieutenant*.
+# *Firefighter/Rescuer III*, or *Fire/Rescue Lieutenant*.
 # 
 # This enables us to understand the encoding of different samples
 
 import matplotlib.pyplot as plt
+
 encoded_labels = enc.transform(X_dirty[:20])
 plt.figure(figsize=(8,10))
 plt.imshow(encoded_labels)

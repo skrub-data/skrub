@@ -1,7 +1,3 @@
-"""
-Datasets module of dirty cat
-"""
-
 from .fetching import get_data_dir
 from .fetching import fetch_medical_charge
 from .fetching import fetch_midwest_survey

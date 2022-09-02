@@ -10,22 +10,23 @@ The principle is as follows:
      max-int overflow). The corresponding operation defines a random
      order in the interval [-maxint, maxint]
   3. Computing this dot product over a sliding window (to compute it for
-     every n-gram is a convolution
-  4. We can then take the min (or the max) of the resulting sliding
-  window
-
+     every n-gram is a convolution)
+  4. We can then take the min (or the max) of the resulting sliding window
 """
+
 import functools
 import numpy as np
 
 # Precompute to avoid the cost and
-# cast to int32 to speedup the min 
+# cast to int32 to speed up the min
 MININT32 = np.int32(-2 ** (32 - 1))
 MAXINT32 = np.int32(2 ** (32 - 1) - 1)
 
+
 @functools.lru_cache(maxsize=1024)
 def gen_atom(atom_len, seed=0):
-    """ Generate a random integer array (atom).
+    """
+    Generate a random integer array (atom).
 
     Parameters
     ----------
@@ -47,7 +48,8 @@ def gen_atom(atom_len, seed=0):
 
 
 def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
-    """ Compute the min/max hash of the ngrams of the string.
+    """
+    Compute the min/max hash of the ngrams of the string.
 
     Parameters
     ----------
@@ -60,12 +62,12 @@ def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
         Integer used to seed the hashing function.
     return_minmax : bool, default=False
         If True, returns both the minhash and maxhash of the string.
-        Else, only returns the minhash. 
+        Else, only returns the minhash.
+
     Returns
     -------
     int or tuple 
         The min_hash or (min_hash, max_hash) of the n-grams of the string.
-
     """
     # Create a numerical 1D array from the string
     array = np.frombuffer(string.encode(), dtype='int8', count=len(string))
