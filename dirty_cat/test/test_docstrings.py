@@ -1,9 +1,9 @@
-from multiprocessing.sharedctypes import Value
-import re
-import pytest
 import inspect
+import re
 from importlib import import_module
 from typing import Optional
+
+import pytest
 
 numpydoc_validation = pytest.importorskip("numpydoc.validate")
 
@@ -68,9 +68,7 @@ FUNCTION_DOCSTRING_IGNORE_SET = {
 def all_estimators():
     module = import_module("dirty_cat")
     classes = inspect.getmembers(module, inspect.isclass)
-    classes = [
-        (name, est_cls) for name, est_cls in classes if not name.startswith("_")
-    ]
+    classes = [(name, est_cls) for name, est_cls in classes if not name.startswith("_")]
     return sorted(classes, key=lambda x: x[0])
 
 
@@ -205,9 +203,8 @@ def test_docstring(Estimator, method, request):
 
 
 if __name__ == "__main__":
-
-    import sys
     import argparse
+    import sys
 
     parser = argparse.ArgumentParser(description="Validate docstrings with numpydoc.")
     parser.add_argument("import_path", help="Import path to validate")
