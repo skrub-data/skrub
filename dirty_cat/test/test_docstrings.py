@@ -1,4 +1,7 @@
 import inspect
+
+# We use the regex module to detect camelCase characters,
+# corresponding to python class name.
 import re
 from importlib import import_module
 from typing import Optional
