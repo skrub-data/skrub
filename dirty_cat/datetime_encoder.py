@@ -1,25 +1,37 @@
+from typing import Dict, List, Literal, Optional
+from warnings import warn
+
 import numpy as np
 import pandas as pd
-
-from warnings import warn
-from typing import List, Literal, Dict, Optional
-
 from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat.utils import check_input, Version
-
+from dirty_cat.utils import Version, check_input
 
 WORD_TO_ALIAS: Dict[str, str] = {
-    "year": "Y", "month": "M", "day": "D",
-    "hour": "H", "minute": "min", "second": "S",
-    "millisecond": "ms", "microsecond": "us", "nanosecond": "N"
+    "year": "Y",
+    "month": "M",
+    "day": "D",
+    "hour": "H",
+    "minute": "min",
+    "second": "S",
+    "millisecond": "ms",
+    "microsecond": "us",
+    "nanosecond": "N",
 }
 TIME_LEVELS: List[str] = list(WORD_TO_ALIAS.keys())
-AcceptedTimeValues = Literal["year", "month", "day",
-                             "hour", "minute", "second",
-                             "millisecond", "microsecond", "nanosecond"]
+AcceptedTimeValues = Literal[
+    "year",
+    "month",
+    "day",
+    "hour",
+    "minute",
+    "second",
+    "millisecond",
+    "microsecond",
+    "nanosecond",
+]
 
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
@@ -62,9 +74,11 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     features_per_column_: Dict[int, List[str]]
     col_names_: Optional[List[str]]
 
-    def __init__(self,
-                 extract_until: AcceptedTimeValues = "hour",
-                 add_day_of_the_week: bool = False):
+    def __init__(
+        self,
+        extract_until: AcceptedTimeValues = "hour",
+        add_day_of_the_week: bool = False,
+    ):
         self.extract_until = extract_until
         self.add_day_of_the_week = add_day_of_the_week
 
@@ -78,7 +92,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         if self.extract_until not in TIME_LEVELS:
             raise ValueError(
                 f'"extract_until" should be one of {TIME_LEVELS}, '
-                f'got {self.extract_until}. '
+                f"got {self.extract_until}. "
             )
 
     @staticmethod
@@ -107,11 +121,14 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             tz = pd.DatetimeIndex(date_series).tz
             # Compute the time in seconds from the epoch time UTC
             if tz is None:
-                return (pd.to_datetime(date_series) -
-                        pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+                return (
+                    pd.to_datetime(date_series) - pd.Timestamp("1970-01-01")
+                ) // pd.Timedelta("1s")
             else:
-                return (pd.DatetimeIndex(date_series).tz_convert("utc") -
-                        pd.Timestamp("1970-01-01", tz="utc")) // pd.Timedelta('1s')
+                return (
+                    pd.DatetimeIndex(date_series).tz_convert("utc")
+                    - pd.Timestamp("1970-01-01", tz="utc")
+                ) // pd.Timedelta("1s")
 
     def fit(self, X, y=None) -> "DatetimeEncoder":
         """
@@ -134,8 +151,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         self._validate_keywords()
         # Columns to extract for each column,
         # before taking into account constant columns
-        self._to_extract = TIME_LEVELS[:TIME_LEVELS.index(
-            self.extract_until) + 1]
+        self._to_extract = TIME_LEVELS[: TIME_LEVELS.index(self.extract_until) + 1]
         if self.add_day_of_the_week:
             self._to_extract.append("dayofweek")
         if isinstance(X, pd.DataFrame):
@@ -154,15 +170,19 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                     self.features_per_column_[i].append(feature)
             # If some date features have not been extracted, then add the
             # "total_time" feature, which contains the full time to epoch
-            remainder = (pd.to_datetime(X[:, i]) - pd.to_datetime(
-                pd.DatetimeIndex(X[:, i]).floor(
-                    WORD_TO_ALIAS[self.extract_until]))).seconds.to_numpy()
+            remainder = (
+                pd.to_datetime(X[:, i])
+                - pd.to_datetime(
+                    pd.DatetimeIndex(X[:, i]).floor(WORD_TO_ALIAS[self.extract_until])
+                )
+            ).seconds.to_numpy()
             if np.nanstd(remainder) > 0:
                 self.features_per_column_[i].append("total_time")
 
         self.n_features_in_ = X.shape[1]
-        self.n_features_out_ = len(np.concatenate(
-            list(self.features_per_column_.values())))
+        self.n_features_out_ = len(
+            np.concatenate(list(self.features_per_column_.values()))
+        )
 
         return self
 
@@ -183,13 +203,15 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         np.array, shape (n_samples, n_features_out_)
             Transformed input.
         """
-        check_is_fitted(self, attributes=["n_features_in_", "n_features_out_",
-                                          "features_per_column_"])
+        check_is_fitted(
+            self,
+            attributes=["n_features_in_", "n_features_out_", "features_per_column_"],
+        )
         X = check_input(X)
         if X.shape[1] != self.n_features_in_:
             raise ValueError(
                 f"The number of features in the input data ({X.shape[1]}) "
-                f"does not match the number of features "
+                "does not match the number of features "
                 f"seen during fit ({self.n_features_in_}). "
             )
         # Create a new array with the extracted features,
@@ -222,7 +244,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Ensures compatibility with sklearn < 1.0, and returns the output of
         get_feature_names_out.
         """
-        if Version(sklearn_version) >= '1.0':
+        if Version(sklearn_version) >= "1.0":
             warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "

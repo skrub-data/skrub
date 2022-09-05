@@ -15,11 +15,12 @@ The principle is as follows:
 """
 
 import functools
+
 import numpy as np
 
 # Precompute to avoid the cost and
 # cast to int32 to speed up the min
-MININT32 = np.int32(-2 ** (32 - 1))
+MININT32 = np.int32(-(2 ** (32 - 1)))
 MAXINT32 = np.int32(2 ** (32 - 1) - 1)
 
 
@@ -42,8 +43,7 @@ def gen_atom(atom_len, seed=0):
         (assuming dtype_size=32).
     """
     rng = np.random.RandomState(seed)
-    atom = rng.randint(-MAXINT32, MAXINT32, size=atom_len,
-                       dtype=np.dtype('int32'))
+    atom = rng.randint(-MAXINT32, MAXINT32, size=atom_len, dtype=np.dtype("int32"))
     return atom
 
 
@@ -56,7 +56,7 @@ def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
     string : str
         String to encode.
     ngram_range : tuple (min_n, max_n), default=(2, 4)
-        The lower and upper boundary of the range of n-values 
+        The lower and upper boundary of the range of n-values
         for different n-grams to be extracted.
     seed : int, default=0
         Integer used to seed the hashing function.
@@ -66,11 +66,11 @@ def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
 
     Returns
     -------
-    int or tuple 
+    int or tuple
         The min_hash or (min_hash, max_hash) of the n-grams of the string.
     """
     # Create a numerical 1D array from the string
-    array = np.frombuffer(string.encode(), dtype='int8', count=len(string))
+    array = np.frombuffer(string.encode(), dtype="int8", count=len(string))
 
     max_hash = MININT32
     min_hash = MAXINT32
@@ -90,9 +90,10 @@ def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
     return min_hash
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Download demo text
     from sklearn import datasets
+
     data = datasets.fetch_20newsgroups()
     a = data.data[0]
 
