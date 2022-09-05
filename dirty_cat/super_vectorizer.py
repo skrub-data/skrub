@@ -54,7 +54,8 @@ def _replace_false_missing(ser: pd.Series) -> pd.Series:
 
 def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Series:
     """
-    Takes a Series with string data, replaces the missing values, and returns it.
+    Takes a Series with string data,
+    replaces the missing values, and returns it.
     """
     ser = _replace_false_missing(ser)
     if pd.api.types.is_categorical_dtype(ser) and (value not in ser.cat.categories):
@@ -195,7 +196,7 @@ class SuperVectorizer(ColumnTransformer):
     """
 
     transformers_: List[Tuple[str, Union[str, TransformerMixin], List[str]]]
-    columns_: List[str]
+    columns_: pd.Index
     types_: Dict[str, type]
     imputed_columns_: List[str]
 
@@ -278,11 +279,10 @@ class SuperVectorizer(ColumnTransformer):
         # Handle missing values
         for col in X.columns:
             X[col] = _replace_false_missing(X[col])
-            contains_missing: bool = _has_missing_values(X[col])
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
             # because the former tends to raise all kind of issues when dealing
             # with scikit-learn (as of version 0.24).
-            if contains_missing:
+            if _has_missing_values(X[col]):
                 # Some numerical dtypes like Int64 or Float64 only support
                 # pd.NA, so they must be converted to np.float64 before.
                 if pd.api.types.is_numeric_dtype(X[col]):
@@ -319,7 +319,15 @@ class SuperVectorizer(ColumnTransformer):
         """
         Used during transform: takes a pandas dataframe,
         and applies the best data types learnt during fitting.
+
+        Does the same thing as `_auto_cast`, but applies learnt info.
         """
+        for col in X.columns:
+            X.loc[:, col] = _replace_false_missing(X[col])
+            if _has_missing_values(X[col]):
+                if pd.api.types.is_numeric_dtype(X[col]):
+                    X.loc[:, col] = X[col].astype(np.float64)
+                X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
             X.loc[:, col] = _replace_missing_in_cat_col(X[col])
         for col, dtype in self.types_.items():
@@ -361,7 +369,7 @@ class SuperVectorizer(ColumnTransformer):
             # Create a copy to avoid altering the original data.
             X = X.copy()
 
-        self.columns_ = X.columns.to_list()
+        self.columns_ = X.columns
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
         # We'll keep the results in order to apply the types in `transform`.
@@ -434,9 +442,7 @@ class SuperVectorizer(ColumnTransformer):
                 if self.impute_missing == "force":
                     for col in X.columns:
                         # Only impute categorical columns
-                        if pd.api.types.is_string_dtype(
-                            X[col]
-                        ) or pd.api.types.is_categorical_dtype(X[col]):
+                        if col in categorical_columns:
                             X.loc[:, col] = _replace_missing_in_cat_col(X[col])
                             self.imputed_columns_.append(col)
 
@@ -452,9 +458,7 @@ class SuperVectorizer(ColumnTransformer):
                         if impute:
                             for col in cols:
                                 # Only impute categorical columns
-                                if pd.api.types.is_string_dtype(
-                                    X[col]
-                                ) or pd.api.types.is_categorical_dtype(X[col]):
+                                if col in categorical_columns:
                                     X.loc[:, col] = _replace_missing_in_cat_col(X[col])
                                     self.imputed_columns_.append(col)
 
@@ -511,7 +515,7 @@ class SuperVectorizer(ColumnTransformer):
         if X.shape[1] != len(self.columns_):
             raise ValueError(
                 "Passed array does not match column count of "
-                f"array seen at fit time. Got {X.shape[1]} "
+                f"array seen during fit. Got {X.shape[1]} "
                 f"columns, expected {len(self.columns_)}"
             )
 
@@ -528,9 +532,6 @@ class SuperVectorizer(ColumnTransformer):
         # `object` dtype when we will cast columns to the fitted types.
         if self.auto_cast:
             X = self._apply_cast(X)
-
-        for col in self.imputed_columns_:
-            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
 
         return super().transform(X)
 
