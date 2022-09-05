@@ -320,55 +320,11 @@ class SuperVectorizer(ColumnTransformer):
         Used during transform: takes a pandas dataframe,
         and applies the best data types learnt during fitting.
         """
-        for col in X.columns:
-            X[col] = _replace_false_missing(X[col])
-        for col, dtype in self.types_.items():
-            X[col] = X[col].astype(dtype)
-        return X
-
-    def transform(self, X) -> np.ndarray:
-        """
-        Transform X by applying fitted transformers on each column,
-        and concatenate the results.
-
-        Parameters
-        ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
-            The data to be transformed.
-
-        Returns
-        -------
-        {array-like, sparse matrix} of shape (n_samples, sum_n_components)
-            hstack of results of transformers. sum_n_components is the
-            sum of n_components (output dimension) over transformers. If
-            any result is a sparse matrix, everything will be converted to
-            sparse matrices.
-        """
-        if X.shape[1] != len(self.columns_):
-            raise ValueError(
-                "Passed array does not match column count of "
-                f"array seen at fit time. Got {X.shape[1]} "
-                f"columns, expected {len(self.columns_)}"
-            )
-
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
-
-        if (X.columns != self.columns_).all():
-            X.columns = self.columns_
-
-        # Auto cast the imported data to avoid having issues with
-        # `object` dtype when we will cast columns to the fitted types.
-        if self.auto_cast:
-            X = self._apply_cast(X)
-
         for col in self.imputed_columns_:
             X.loc[:, col] = _replace_missing_in_cat_col(X[col])
-
-        return super().transform(X)
+        for col, dtype in self.types_.items():
+            X.loc[:, col] = X[col].astype(dtype)
+        return X
 
     def fit_transform(self, X, y=None):
         """
@@ -468,39 +424,46 @@ class SuperVectorizer(ColumnTransformer):
             raise RuntimeError("No transformers could be generated! ")
 
         self.imputed_columns_ = []
-        if _has_missing_values(X):
-            if self.impute_missing == "force":
-                for col in X.columns:
-                    # Do not impute numeric columns
-                    if not pd.api.types.is_numeric_dtype(X[col]):
-                        X.loc[:, col] = _replace_missing_in_cat_col(X[col])
-                        self.imputed_columns_.append(col)
+        if self.impute_missing != "skip":
+            # First, replace false missing
+            for col in X.columns:
+                X.loc[:, col] = _replace_false_missing(X[col])
 
-            elif self.impute_missing == "skip":
-                pass
+            # Then, impute if suiting
+            if _has_missing_values(X):
+                if self.impute_missing == "force":
+                    for col in X.columns:
+                        # Only impute categorical columns
+                        if pd.api.types.is_string_dtype(
+                            X[col]
+                        ) or pd.api.types.is_categorical_dtype(X[col]):
+                            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+                            self.imputed_columns_.append(col)
 
-            elif self.impute_missing == "auto":
-                for name, trans, cols in all_transformers:
-                    impute: bool = False
+                elif self.impute_missing == "auto":
+                    for name, trans, cols in all_transformers:
+                        impute: bool = False
 
-                    if isinstance(trans, OneHotEncoder) and Version(
-                        sklearn_version
-                    ) < Version("0.24"):
-                        impute = True
+                        if isinstance(trans, OneHotEncoder) and Version(
+                            sklearn_version
+                        ) < Version("0.24"):
+                            impute = True
 
-                    if impute:
-                        for col in cols:
-                            # Do not impute numeric columns
-                            if not pd.api.types.is_numeric_dtype(X[col]):
-                                X.loc[:, col] = _replace_missing_in_cat_col(X[col])
-                                self.imputed_columns_.append(col)
+                        if impute:
+                            for col in cols:
+                                # Only impute categorical columns
+                                if pd.api.types.is_string_dtype(
+                                    X[col]
+                                ) or pd.api.types.is_categorical_dtype(X[col]):
+                                    X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+                                    self.imputed_columns_.append(col)
 
-            else:
-                raise ValueError(
-                    "Invalid value for `impute_missing`, expected any of "
-                    "{'auto', 'force', 'skip'}, "
-                    f"got {self.impute_missing!r}. "
-                )
+                else:
+                    raise ValueError(
+                        "Invalid value for `impute_missing`, expected any of "
+                        "{'auto', 'force', 'skip'}, "
+                        f"got {self.impute_missing!r}. "
+                    )
 
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas gives different types depending on whether a column has
@@ -526,6 +489,50 @@ class SuperVectorizer(ColumnTransformer):
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
 
         return res
+
+    def transform(self, X) -> np.ndarray:
+        """
+        Transform X by applying fitted transformers on each column,
+        and concatenate the results.
+
+        Parameters
+        ----------
+        X : {array-like, dataframe} of shape (n_samples, n_features)
+            The data to be transformed.
+
+        Returns
+        -------
+        {array-like, sparse matrix} of shape (n_samples, sum_n_components)
+            hstack of results of transformers. sum_n_components is the
+            sum of n_components (output dimension) over transformers. If
+            any result is a sparse matrix, everything will be converted to
+            sparse matrices.
+        """
+        if X.shape[1] != len(self.columns_):
+            raise ValueError(
+                "Passed array does not match column count of "
+                f"array seen at fit time. Got {X.shape[1]} "
+                f"columns, expected {len(self.columns_)}"
+            )
+
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        else:
+            # Create a copy to avoid altering the original data.
+            X = X.copy()
+
+        if (X.columns != self.columns_).all():
+            X.columns = self.columns_
+
+        # Auto cast the imported data to avoid having issues with
+        # `object` dtype when we will cast columns to the fitted types.
+        if self.auto_cast:
+            X = self._apply_cast(X)
+
+        for col in self.imputed_columns_:
+            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+
+        return super().transform(X)
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """
