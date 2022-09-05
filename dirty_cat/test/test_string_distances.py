@@ -1,16 +1,25 @@
+from typing import List, Tuple
+
 import numpy as np
 
-from typing import List, Tuple
 from dirty_cat import string_distances
 
 
 def test_get_unique_ngrams() -> None:
-    string = 'test'
+    string = "test"
     true_ngrams = {
-        (' ', 't'), ('t', 'e'), ('e', 's'), ('s', 't'),
-        ('t', ' '), (' ', 't', 'e'), ('t', 'e', 's'),
-        ('e', 's', 't'), ('s', 't', ' '), (' ', 't', 'e', 's'),
-        ('t', 'e', 's', 't'), ('e', 's', 't', ' ')
+        (" ", "t"),
+        ("t", "e"),
+        ("e", "s"),
+        ("s", "t"),
+        ("t", " "),
+        (" ", "t", "e"),
+        ("t", "e", "s"),
+        ("e", "s", "t"),
+        ("s", "t", " "),
+        (" ", "t", "e", "s"),
+        ("t", "e", "s", "t"),
+        ("e", "s", "t", " "),
     }
     ngram_range = (2, 4)
     ngrams = string_distances.get_unique_ngrams(string, ngram_range)
@@ -24,16 +33,15 @@ def _random_string_pairs(n_pairs=50, seed=1) -> List[Tuple[str, str]]:
     for n in range(n_pairs):
         s1_len = rng.randint(50)
         s2_len = rng.randint(50)
-        s1 = ''.join(rng.choice(characters, s1_len))
-        s2 = ''.join(rng.choice(characters, s2_len))
+        s1 = "".join(rng.choice(characters, s1_len))
+        s2 = "".join(rng.choice(characters, s2_len))
         pairs.append((s1, s2))
     return pairs
 
 
 def _check_symmetry(dist_func, *args, **kwargs) -> None:
-    for (a, b) in _random_string_pairs():
-        assert dist_func(
-            a, b, *args, **kwargs) == dist_func(b, a, *args, **kwargs)
+    for a, b in _random_string_pairs():
+        assert dist_func(a, b, *args, **kwargs) == dist_func(b, a, *args, **kwargs)
 
 
 def test_ngram_similarity() -> None:
