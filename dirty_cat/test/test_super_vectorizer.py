@@ -1,10 +1,9 @@
+from typing import Any, Dict, List, Tuple
+
 import numpy as np
+import pandas as pd
 import pytest
 import sklearn
-import pandas as pd
-
-from typing import List, Dict, Tuple, Any
-
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
@@ -493,11 +492,11 @@ def test_passthrough():
     X_clean = _get_clean_dataframe()
 
     sv = SuperVectorizer(
-        low_card_cat_transformer='passthrough',
-        high_card_cat_transformer='passthrough',
-        datetime_transformer='passthrough',
-        numerical_transformer='passthrough',
-        impute_missing='skip',
+        low_card_cat_transformer="passthrough",
+        high_card_cat_transformer="passthrough",
+        datetime_transformer="passthrough",
+        numerical_transformer="passthrough",
+        impute_missing="skip",
         auto_cast=False,
     )
 
@@ -511,7 +510,7 @@ def test_passthrough():
 
 
 if __name__ == "__main__":
-    print('start test_super_vectorizer with clean df')
+    print("start test_super_vectorizer with clean df")
     test_with_clean_data()
     print("passed")
 
@@ -533,14 +532,14 @@ if __name__ == "__main__":
 
     print("start test_fit")
     test_fit()
-    print('passed')
+    print("passed")
 
     print("start fit_transform_equiv")
     test_fit_transform_equiv()
-    print('passed')
+    print("passed")
 
     print("start test_passthrough")
     test_passthrough()
-    print('passed')
+    print("passed")
 
     print("Done")

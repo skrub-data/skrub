@@ -9,13 +9,14 @@ from warnings import warn
 
 import numpy as np
 import pandas as pd
+import sklearn
 from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat.utils import Version, check_input
+from dirty_cat.utils import Version
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -490,8 +491,6 @@ class SuperVectorizer(ColumnTransformer):
 
         if self.verbose:
             print(f"[SuperVectorizer] Assigned transformers: {self.transformers}")
-
-        #check_input(X)
 
         res = super().fit_transform(X, y)
 
