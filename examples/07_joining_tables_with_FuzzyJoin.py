@@ -51,12 +51,7 @@ y = df[['Happiness score']]
 #
 # Let's inspire ourselfes from the factors used by the Happiness report to explain happiness.
 # We will extract data from the World Bank databank using the following function:
-def fetch_world_bank_data(data_code, indicator):
-    data = pd.read_excel(f'https://api.worldbank.org/v2/en/indicator/{data_code}?downloadformat=excel', skiprows=3)
-    data[indicator] = data.stack().groupby(level=0).last()
-    data = data[data[indicator] != data_code]
-    data = data[['Country Name', indicator]]
-    return data
+from dirty_cat.datasets import fetch_world_bank_data
 
 # We then extract GDP per capita by country:
 gdppc = fetch_world_bank_data(data_code='NY.GDP.PCAP.CD', indicator='gdppc')
