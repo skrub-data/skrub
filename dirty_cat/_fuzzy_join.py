@@ -46,15 +46,15 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
-    precision : {`nearest`, `circle`}, default=`nearest`
+    precision : {`nearest`, `radius`}, default=`nearest`
         Type of measure that is used to determine the precision of the joined
         entities.
         If `nearest`, returns the neirest neighbor match.
-        If `circle`, return the nearest neighbor if the estimated precision
+        If `radius`, return the nearest neighbor if the estimated precision
         based on the number of neighbors in the 2 times the neirest neighbor
-        distance circle is under the precision threshold.
+        distance radius is under the precision_threshold.
     precision_threshold : float, default=0.5
-        Used only if precision is `circle`. Determines the level of
+        Used only if precision is `radius`. Determines the level of
         precision required to match the two column values. If not matched,
         all columns have `nan`'s.
     suffixes: tuple, default=('_x', '_y')
@@ -77,7 +77,7 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
     There are two main ways to take into account for the similarity between categories.
     When we use precision='nearest', the function will be forced to find the nearest
     match across the possible options.
-    When the neighbors are distant, we may use the precision='circle' option with
+    When the neighbors are distant, we may use the precision='radius' option with
     the precision_threshold value to define the minimal level of precision every
     match should have. If this precision is not reached, matches will be considered
     as inexistant and NaN values will be imputed.
@@ -109,8 +109,8 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
     2  nana  3  sana   8
 
     When we do not want to ignore the precison of the match,
-    we can use the precision='circle' argument and give a threshold:
-    >>> fuzzy_join(df1, df2, on=['a'], precision='circle', precision_threshold=0.3)
+    we can use the precision='radius' argument and give a threshold:
+    >>> fuzzy_join(df1, df2, on=['a'], precision='radius', precision_threshold=0.3)
         a_l  b   a_r    c
     0   ana  1   ana  7.0
     1  lala  2  lala  6.0
@@ -129,10 +129,10 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
             f"'char_wb', got {analyzer}",
         )
 
-    if precision not in ["nearest", "circle"]:
+    if precision not in ["nearest", "radius"]:
         raise ValueError(
             "precision should be either 'nearest' or",
-            f"'circle', got {precision}",
+            f"'radius', got {precision}",
         )
 
     if keep not in ["left", "right", "all"]:
@@ -196,10 +196,10 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
         for idx in lt.index:
             joined.loc[idx, rt.columns] = list(rt.iloc[idx_closest[idx]])
 
-    if precision == 'circle':
+    if precision == 'radius':
         prec = []
         for i in range(left_enc.shape[0]):
-            # Find all neighbors in a 2dball radius:
+            # Find all neighbors in a given radius:
             dist = 2 * distance[i]
             n_neigh = NearestNeighbors(radius=dist)
             n_neigh.fit(right_enc)
