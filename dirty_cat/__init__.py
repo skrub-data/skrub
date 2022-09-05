@@ -3,18 +3,24 @@ dirty_cat: Learning on dirty categories.
 """
 import os
 
-version_file = os.path.join(os.path.dirname(__file__), 'VERSION.txt')
+from .datetime_encoder import DatetimeEncoder
+from .gap_encoder import GapEncoder
+from .minhash_encoder import MinHashEncoder
+from .similarity_encoder import SimilarityEncoder
+from .super_vectorizer import SuperVectorizer
+from .target_encoder import TargetEncoder
+from ._fuzzy_join import fuzzy_join
+
+version_file = os.path.join(os.path.dirname(__file__), "VERSION.txt")
 with open(version_file) as fh:
     __version__ = fh.read().strip()
 
-from .similarity_encoder import SimilarityEncoder
-from .target_encoder import TargetEncoder
-from .minhash_encoder import MinHashEncoder
-from .gap_encoder import GapEncoder
-from .datetime_encoder import DatetimeEncoder
-from .super_vectorizer import SuperVectorizer
-from ._fuzzy_join import fuzzy_join
-
-__all__ = ['SimilarityEncoder', 'TargetEncoder', 'MinHashEncoder',
-           'GapEncoder', 'DatetimeEncoder', 'SuperVectorizer',
-           'fuzzy_join']
+__all__ = [
+    "SimilarityEncoder",
+    "TargetEncoder",
+    "MinHashEncoder",
+    "GapEncoder",
+    "DatetimeEncoder",
+    "SuperVectorizer",
+    "fuzzy_join",
+]

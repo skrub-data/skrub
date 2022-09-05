@@ -1,10 +1,10 @@
-import time
-import pytest
 import random
+import time
+from string import ascii_lowercase
+
 import numpy as np
 import pandas as pd
-
-from string import ascii_lowercase
+import pytest
 from sklearn.datasets import fetch_20newsgroups
 
 from dirty_cat import MinHashEncoder
@@ -12,13 +12,12 @@ from dirty_cat.datasets import fetch_employee_salaries
 
 
 def test_MinHashEncoder(n_sample: int = 70) -> None:
-    X_txt = fetch_20newsgroups(subset='train')['data']
+    X_txt = fetch_20newsgroups(subset="train")["data"]
     X = np.array(X_txt[:n_sample])[:, None]
 
     for minmax_hash in [True, False]:
-        for hashing in ['fast', 'murmur']:
-
-            if minmax_hash and hashing == 'murmur':
+        for hashing in ["fast", "murmur"]:
+            if minmax_hash and hashing == "murmur":
                 pass  # not implemented
 
             # Test output shape
@@ -36,8 +35,8 @@ def test_MinHashEncoder(n_sample: int = 70) -> None:
 
             # Test min property
             if not minmax_hash:
-                X_substring = [x[:x.find(' ')] for x in X[:,0]]
-                X_substring = np.array(X_substring)[:,None]
+                X_substring = [x[: x.find(" ")] for x in X[:, 0]]
+                X_substring = np.array(X_substring)[:, None]
                 encoder = MinHashEncoder(50, hashing=hashing)
                 encoder.fit(X_substring)
                 y_substring = encoder.transform(X_substring)
@@ -50,39 +49,43 @@ def test_multiple_columns() -> None:
     with the MinHashEncoder will not produce an error, and will
     encode the column independently.
     """
-    X = pd.DataFrame([('bird', 'parrot'),
-                      ('bird', 'nightingale'),
-                      ('mammal', 'monkey'),
-                      ('mammal', np.nan)],
-                     columns=('class', 'type'))
-    X1 = X[['class']]
-    X2 = X[['type']]
+    X = pd.DataFrame(
+        [
+            ("bird", "parrot"),
+            ("bird", "nightingale"),
+            ("mammal", "monkey"),
+            ("mammal", np.nan),
+        ],
+        columns=("class", "type"),
+    )
+    X1 = X[["class"]]
+    X2 = X[["type"]]
     fit1 = MinHashEncoder(n_components=30).fit_transform(X1)
     fit2 = MinHashEncoder(n_components=30).fit_transform(X2)
     fit = MinHashEncoder(n_components=30).fit_transform(X)
-    assert np.array_equal(np.array([fit[:, :30], fit[:, 30:60]]),
-                          np.array([fit1, fit2]))
+    assert np.array_equal(
+        np.array([fit[:, :30], fit[:, 30:60]]), np.array([fit1, fit2])
+    )
 
 
 def test_input_type() -> None:
     # Numpy array
-    X = np.array(['alice', 'bob'])[:,None]
+    X = np.array(["alice", "bob"])[:, None]
     enc = MinHashEncoder(n_components=2)
     enc.fit_transform(X)
     # List
-    X = [['alice'], ['bob']]
+    X = [["alice"], ["bob"]]
     enc = MinHashEncoder(n_components=2)
     enc.fit_transform(X)
 
 
-def profile_encoder(hashing: str = 'fast', minmax_hash: bool = False) -> float:
+def profile_encoder(hashing: str = "fast", minmax_hash: bool = False) -> float:
     # not a unit test
     employee_salaries = fetch_employee_salaries()
     df = employee_salaries.X
     X = df[["employee_position_title"]]
     t0 = time.time()
-    enc = MinHashEncoder(n_components=50, hashing=hashing,
-                         minmax_hash=minmax_hash)
+    enc = MinHashEncoder(n_components=50, hashing=hashing, minmax_hash=minmax_hash)
     enc.fit(X)
     y = enc.transform(X)
     assert y.shape == (len(X), 50)
@@ -90,38 +93,36 @@ def profile_encoder(hashing: str = 'fast', minmax_hash: bool = False) -> float:
     return eta
 
 
-@pytest.mark.parametrize("input_type, missing, hashing", [
-    ['numpy', 'error', 'fast'],
-    ['pandas', 'zero_impute', 'murmur'],
-    ['numpy', 'zero_impute', 'fast']])
+@pytest.mark.parametrize(
+    "input_type, missing, hashing",
+    [
+        ["numpy", "error", "fast"],
+        ["pandas", "zero_impute", "murmur"],
+        ["numpy", "zero_impute", "fast"],
+    ],
+)
 def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
-    X = ['Red',
-         np.nan,
-         'green',
-         'blue',
-         'green',
-         'green',
-         'blue',
-         float('nan')]
+    X = ["Red", np.nan, "green", "blue", "green", "green", "blue", float("nan")]
     n = 3
     z = np.zeros(n)
 
-    if input_type == 'numpy':
-        X = np.array(X, dtype=object)[:,None]
-    elif input_type == 'pandas':
+    if input_type == "numpy":
+        X = np.array(X, dtype=object)[:, None]
+    elif input_type == "pandas":
         X = pd.DataFrame(X)
 
-    encoder = MinHashEncoder(n_components=n, hashing=hashing,
-                             minmax_hash=False, handle_missing=missing)
-    if missing == 'error':
+    encoder = MinHashEncoder(
+        n_components=n, hashing=hashing, minmax_hash=False, handle_missing=missing
+    )
+    if missing == "error":
         encoder.fit(X)
-        if input_type in ['numpy', 'pandas']:
+        if input_type in ["numpy", "pandas"]:
             with pytest.raises(ValueError, match=r"missing values in input"):
                 encoder.transform(X)
-    elif missing == 'zero_impute':
+    elif missing == "zero_impute":
         encoder.fit(X)
         y = encoder.transform(X)
-        if input_type == 'list':
+        if input_type == "list":
             assert np.allclose(y[1], y[-1])
         else:
             assert np.array_equal(y[1], z)
@@ -136,7 +137,7 @@ def test_cache_overflow() -> None:
     # Regression test for cache overflow resulting in -1s in encoding
     def get_random_string(length):
         letters = ascii_lowercase
-        result_str = ''.join(random.choice(letters) for _ in range(length))
+        result_str = "".join(random.choice(letters) for _ in range(length))
         return result_str
 
     encoder = MinHashEncoder(n_components=3)
@@ -148,24 +149,24 @@ def test_cache_overflow() -> None:
     assert len(y[y == -1.0]) == 0
 
 
-if __name__ == '__main__':
-    print('start test_MinHashEncoder')
+if __name__ == "__main__":
+    print("start test_MinHashEncoder")
     test_MinHashEncoder()
-    print('passed')
-    
-    print('start test_multiple_columns')
+    print("passed")
+
+    print("start test_multiple_columns")
     test_multiple_columns()
-    print('passed')
+    print("passed")
 
     for _ in range(3):
-        print('time profile_encoder(MinHashEncoder, hashing=fast)')
+        print("time profile_encoder(MinHashEncoder, hashing=fast)")
         print(f"{profile_encoder(hashing='fast'):.4} seconds")
 
     for _ in range(3):
-        print('time profile_encoder(MinHashEncoder, hashing=fast) with minmax')
+        print("time profile_encoder(MinHashEncoder, hashing=fast) with minmax")
         print(f"{profile_encoder(hashing='fast', minmax_hash=True):.4} seconds")
 
-    print('time profile_encoder(MinHashEncoder, hashing=murmur)')
+    print("time profile_encoder(MinHashEncoder, hashing=murmur)")
     print(f"{profile_encoder(hashing='murmur'):.4} seconds")
 
-    print('Done')
+    print("Done")

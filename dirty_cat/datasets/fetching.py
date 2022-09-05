@@ -11,11 +11,11 @@ Scikit-Learn's ``fetch_openml()`` function.
 import gzip
 import json
 import warnings
-import pandas as pd
-
-from pathlib import Path
 from dataclasses import dataclass
-from typing import Union, Dict, Any, List
+from pathlib import Path
+from typing import Any, Dict, List, Union
+
+import pandas as pd
 from sklearn.datasets import fetch_openml
 
 from dirty_cat.datasets.utils import get_data_dir
@@ -83,9 +83,10 @@ class DatasetInfoOnly:
     read_csv_kwargs: Dict[str, Any]
 
 
-def fetch_openml_dataset(dataset_id: int,
-                         data_directory: Path = get_data_dir(),
-                         ) -> Dict[str, Any]:
+def fetch_openml_dataset(
+    dataset_id: int,
+    data_directory: Path = get_data_dir(),
+) -> Dict[str, Any]:
     """
     Gets a dataset from OpenML (https://www.openml.org),
     or from the disk if already downloaded.
@@ -116,8 +117,8 @@ def fetch_openml_dataset(dataset_id: int,
     data_directory = data_directory.resolve()
 
     # Construct the path to the gzip file containing the details on a dataset.
-    details_gz_path = data_directory / DETAILS_DIRECTORY / f'{dataset_id}.gz'
-    features_gz_path = data_directory / FEATURES_DIRECTORY / f'{dataset_id}.gz'
+    details_gz_path = data_directory / DETAILS_DIRECTORY / f"{dataset_id}.gz"
+    features_gz_path = data_directory / FEATURES_DIRECTORY / f"{dataset_id}.gz"
 
     if not details_gz_path.is_file() or not features_gz_path.is_file():
         # If the details file or the features file don't exist,
@@ -131,22 +132,24 @@ def fetch_openml_dataset(dataset_id: int,
             UserWarning,
             stacklevel=2,
         )
-        _download_and_write_openml_dataset(dataset_id=dataset_id,
-                                           data_directory=data_directory)
+        _download_and_write_openml_dataset(
+            dataset_id=dataset_id, data_directory=data_directory
+        )
     details = _get_details(details_gz_path)
 
     # The file ID is required because the data file is named after this ID,
     # and not after the dataset's.
     file_id = details.file_id
-    csv_path = data_directory / f'{details.name}.csv'
+    csv_path = data_directory / f"{details.name}.csv"
 
-    data_gz_path = data_directory / DATA_DIRECTORY / f'{file_id}.gz'
+    data_gz_path = data_directory / DATA_DIRECTORY / f"{file_id}.gz"
 
     if not data_gz_path.is_file():
         # double-check.
         # If the data file does not exist, download the dataset.
-        _download_and_write_openml_dataset(dataset_id=dataset_id,
-                                           data_directory=data_directory)
+        _download_and_write_openml_dataset(
+            dataset_id=dataset_id, data_directory=data_directory
+        )
 
     if not csv_path.is_file():
         # If the CSV file does not exist, use the dataset
@@ -159,12 +162,11 @@ def fetch_openml_dataset(dataset_id: int,
     return {
         "description": details.description,
         "source": url,
-        "path": csv_path.resolve()
+        "path": csv_path.resolve(),
     }
 
 
-def _download_and_write_openml_dataset(dataset_id: int,
-                                       data_directory: Path) -> None:
+def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
     """
     Downloads a dataset from OpenML,
     taking care of creating the directories.
@@ -216,7 +218,7 @@ def _read_json_from_gz(compressed_dir_path: Path) -> dict:
         raise FileNotFoundError(f"Couldn't find file {compressed_dir_path!s}")
 
     # Read content
-    with gzip.open(compressed_dir_path, mode='rt') as gz:
+    with gzip.open(compressed_dir_path, mode="rt") as gz:
         content = gz.read()
 
     details_json = json.JSONDecoder().decode(content)
@@ -269,13 +271,12 @@ def _get_features(compressed_dir_path: Path) -> Features:
     # We filter out the irrelevant information.
     # If you want to modify this list (to add or remove items)
     # you must also modify the ``Features`` object definition.
-    return Features(
-        names=[column["name"] for column in raw_features["feature"]]
-    )
+    return Features(names=[column["name"] for column in raw_features["feature"]])
 
 
-def _export_gz_data_to_csv(compressed_dir_path: Path,
-                           destination_file: Path, features: Features) -> None:
+def _export_gz_data_to_csv(
+    compressed_dir_path: Path, destination_file: Path, features: Features
+) -> None:
     """
     Reads a gzip file containing ARFF data,
     and writes it to a target CSV.
@@ -291,8 +292,8 @@ def _export_gz_data_to_csv(compressed_dir_path: Path,
 
     """
     atdata_found = False
-    with destination_file.open(mode="w", encoding='utf8') as csv:
-        with gzip.open(compressed_dir_path, mode="rt", encoding='utf8') as gz:
+    with destination_file.open(mode="w", encoding="utf8") as csv:
+        with gzip.open(compressed_dir_path, mode="rt", encoding="utf8") as gz:
             csv.write(_features_to_csv_format(features))
             csv.write("\n")
             # We will look at each line of the file until we find
@@ -309,12 +310,13 @@ def _features_to_csv_format(features: Features) -> str:
     return ",".join(features.names)
 
 
-def fetch_dataset_as_dataclass(dataset_name: str,
-                               dataset_id: int,
-                               target: str,
-                               read_csv_kwargs: dict,
-                               load_dataframe: bool,
-                               ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_dataset_as_dataclass(
+    dataset_name: str,
+    dataset_id: int,
+    target: str,
+    read_csv_kwargs: dict,
+    load_dataframe: bool,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     """
     Takes a dataset identifier, a target column name,
     and some additional keyword arguments for `pd.read_csv`.
@@ -333,24 +335,24 @@ def fetch_dataset_as_dataclass(dataset_name: str,
     """
     info = fetch_openml_dataset(dataset_id)
     if load_dataframe:
-        df = pd.read_csv(info['path'], **read_csv_kwargs)
+        df = pd.read_csv(info["path"], **read_csv_kwargs)
         y = df[target]
-        X = df.drop(target, axis='columns')
+        X = df.drop(target, axis="columns")
         dataset = DatasetAll(
             name=dataset_name,
-            description=info['description'],
+            description=info["description"],
             X=X,
             y=y,
-            source=info['source'],
-            path=info['path'],
+            source=info["source"],
+            path=info["path"],
         )
     else:
         dataset = DatasetInfoOnly(
             name=dataset_name,
-            description=info['description'],
-            source=info['source'],
+            description=info["description"],
+            source=info["source"],
             target=target,
-            path=info['path'],
+            path=info["path"],
             read_csv_kwargs=read_csv_kwargs,
         )
 
@@ -361,10 +363,11 @@ def fetch_dataset_as_dataclass(dataset_name: str,
 # Public API
 
 
-def fetch_employee_salaries(load_dataframe: bool = True,
-                            drop_linked: bool = True,
-                            drop_irrelevant: bool = True,
-                            ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_employee_salaries(
+    load_dataframe: bool = True,
+    drop_linked: bool = True,
+    drop_irrelevant: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the employee_salaries dataset (regression), available at
     https://openml.org/d/42125
 
@@ -392,28 +395,30 @@ def fetch_employee_salaries(load_dataframe: bool = True,
         If `load_dataframe=False`
     """
     dataset = fetch_dataset_as_dataclass(
-        dataset_name='Employee salaries',
+        dataset_name="Employee salaries",
         dataset_id=EMPLOYEE_SALARIES_ID,
-        target='current_annual_salary',
+        target="current_annual_salary",
         read_csv_kwargs={
-            'quotechar': "'",
-            'escapechar': '\\',
-            'na_values': ['?'],
+            "quotechar": "'",
+            "escapechar": "\\",
+            "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
     )
     if load_dataframe:
         if drop_linked:
-            dataset.X.drop(["2016_gross_pay_received", "2016_overtime_pay"],
-                           axis=1, inplace=True)
+            dataset.X.drop(
+                ["2016_gross_pay_received", "2016_overtime_pay"], axis=1, inplace=True
+            )
         if drop_irrelevant:
             dataset.X.drop(["full_name"], axis=1, inplace=True)
 
     return dataset
 
 
-def fetch_road_safety(load_dataframe: bool = True,
-                      ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_road_safety(
+    load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the road safety dataset (classification), available at
     https://openml.org/d/42803
 
@@ -432,18 +437,19 @@ def fetch_road_safety(load_dataframe: bool = True,
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
-        dataset_name='Road safety',
+        dataset_name="Road safety",
         dataset_id=ROAD_SAFETY_ID,
-        target='Sex_of_Driver',
+        target="Sex_of_Driver",
         read_csv_kwargs={
-            'na_values': ['?'],
+            "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
     )
 
 
-def fetch_medical_charge(load_dataframe: bool = True
-                         ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_medical_charge(
+    load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the medical charge dataset (regression), available at
     https://openml.org/d/42720
 
@@ -466,19 +472,20 @@ def fetch_medical_charge(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
-        dataset_name='Medical charge',
+        dataset_name="Medical charge",
         dataset_id=MEDICAL_CHARGE_ID,
-        target='Average_Total_Payments',
+        target="Average_Total_Payments",
         read_csv_kwargs={
-            'quotechar': "'",
-            'escapechar': '\\',
+            "quotechar": "'",
+            "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
     )
 
 
-def fetch_midwest_survey(load_dataframe: bool = True
-                         ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_midwest_survey(
+    load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the midwest survey dataset (classification), available at
     https://openml.org/d/42805
 
@@ -494,19 +501,20 @@ def fetch_midwest_survey(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
-        dataset_name='Midwest survey',
+        dataset_name="Midwest survey",
         dataset_id=MIDWEST_SURVEY_ID,
-        target='Census_Region',
+        target="Census_Region",
         read_csv_kwargs={
-            'quotechar': "'",
-            'escapechar': '\\',
+            "quotechar": "'",
+            "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
     )
 
 
-def fetch_open_payments(load_dataframe: bool = True
-                        ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_open_payments(
+    load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the open payments dataset (classification), available at
     https://openml.org/d/42738
 
@@ -523,20 +531,21 @@ def fetch_open_payments(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
-        dataset_name='Open payments',
+        dataset_name="Open payments",
         dataset_id=OPEN_PAYMENTS_ID,
-        target='status',
+        target="status",
         read_csv_kwargs={
-            'quotechar': "'",
-            'escapechar': '\\',
-            'na_values': ['?'],
+            "quotechar": "'",
+            "escapechar": "\\",
+            "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
     )
 
 
-def fetch_traffic_violations(load_dataframe: bool = True
-                             ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_traffic_violations(
+    load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the traffic violations dataset (classification), available at
     https://openml.org/d/42132
 
@@ -555,20 +564,21 @@ def fetch_traffic_violations(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
-        dataset_name='Traffic violations',
+        dataset_name="Traffic violations",
         dataset_id=TRAFFIC_VIOLATIONS_ID,
-        target='violation_type',
+        target="violation_type",
         read_csv_kwargs={
-            'quotechar': "'",
-            'escapechar': '\\',
-            'na_values': ['?'],
+            "quotechar": "'",
+            "escapechar": "\\",
+            "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
     )
 
 
-def fetch_drug_directory(load_dataframe: bool = True
-                         ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_drug_directory(
+    load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the drug directory dataset (classification), available at
     https://openml.org/d/43044
 
@@ -585,12 +595,12 @@ def fetch_drug_directory(load_dataframe: bool = True
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
-        dataset_name='Drug directory',
+        dataset_name="Drug directory",
         dataset_id=DRUG_DIRECTORY_ID,
-        target='PRODUCTTYPENAME',
+        target="PRODUCTTYPENAME",
         read_csv_kwargs={
-            'quotechar': "'",
-            'escapechar': '\\',
+            "quotechar": "'",
+            "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
     )
