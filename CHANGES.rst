@@ -12,6 +12,7 @@ Major changes
   - sklearn>=0.22
   - scipy>=1.4.0
   - numpy>=1.17.3
+  - pandas>=1.2.0
 
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
     The :class:`SimilarityEncoder` now exclusively uses `ngram` for similarities,
@@ -47,7 +48,7 @@ Major changes
 
 * "get_feature_names" becomes "get_feature_names_out", following changes in the scikit-learn API.
     "get_feature_names" is deprecated in scikit-learn > 1.0.
-    
+
 * Improvements to the :class:`MinHashEncoder`
     - It is now possible to fit multiple columns simultaneously with the MinHashEncoder.
     Very useful when using for instance the sklearn.compose.make_column_transformer method,
@@ -59,7 +60,7 @@ Bug-fixes
 
 * Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
 
-* GapEncoder's `get_feature_names_out` now accepts all iterators, not just lists.  
+* GapEncoder's `get_feature_names_out` now accepts all iterators, not just lists.
 
 * Fixed `DeprecationWarning` raised by the usage of `distutils.version.LooseVersion`
 
@@ -198,7 +199,7 @@ Release 0.0.7
 * **datasets.fetch_employee_salaries**: change the origin of download for employee_salaries.
 
   - The function now return a bunch with a dataframe under the field "data",
-    and not the path to the csv file. 
+    and not the path to the csv file.
   - The field "description" has been renamed to "DESCR".
 
 * **SimilarityEncoder**: Fixed a bug when using the Jaro-Winkler distance as a

@@ -38,7 +38,7 @@ dirty_cat requires:
 - NumPy (>= 1.17.3)
 - SciPy (>= 1.4.0)
 - scikit-learn (>= 0.22.0)
-- pandas (>= 1.1.5)
+- pandas (>= 1.2.0)
 
 User installation
 ~~~~~~~~~~~~~~~~~

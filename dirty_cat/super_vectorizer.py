@@ -47,7 +47,6 @@ def _replace_false_missing(ser: pd.Series) -> pd.Series:
         "#N/A",
         "NaN",
     ]  # taken from pandas.io.parsers (version 1.1.4)
-    ser = ser.replace({pd.NA: np.nan})
     ser = ser.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
     ser = ser.replace(r"^\s+$", np.nan, regex=True)  # Replace whitespaces
     return ser
@@ -64,7 +63,9 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
-OptionalTransformer = Optional[Union[TransformerMixin, str]]
+OptionalTransformer = Optional[
+    Union[TransformerMixin, Literal["drop", "remainder", "passthrough"]]
+]
 
 
 class SuperVectorizer(ColumnTransformer):
@@ -87,7 +88,7 @@ class SuperVectorizer(ColumnTransformer):
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
 
-    low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None  # noqa
+    low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Default value None is converted to `OneHotEncoder()`.
@@ -96,7 +97,7 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None  # noqa
+    high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Default value None is converted to `GapEncoder(n_components=30)`.
@@ -105,14 +106,14 @@ class SuperVectorizer(ColumnTransformer):
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    numerical_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator,str]], default=None  # noqa
+    numerical_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
 
-    datetime_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None
+    datetime_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None
         Transformer used on datetime features.
         Default value None is converted to `DatetimeEncoder()`.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
