@@ -475,18 +475,19 @@ def test_fit_transform_equiv() -> None:
     assert np.allclose(enc1_x2, enc2_x2, rtol=0, atol=0, equal_nan=True)
 
 
+def _is_equal(elements: Tuple[Any, Any]) -> bool:
+    """
+    Fixture for values that return false when compared with `==`.
+    """
+    elem1, elem2 = elements  # Unpack
+    return pd.isna(elem1) and pd.isna(elem2) or elem1 == elem2
+
+
 def test_passthrough():
     """
     Tests that when passed no encoders, the SuperVectorizer
     returns the dataset as-is.
     """
-
-    def is_equal(elements: Tuple[Any, Any]) -> bool:
-        """
-        Fixture for values that return false when compared with `==`.
-        """
-        elem1, elem2 = elements
-        return pd.isna(elem1) and pd.isna(elem2) or elem1 == elem2
 
     X_dirty = _get_dirty_dataframe()
     X_clean = _get_clean_dataframe()
@@ -505,7 +506,7 @@ def test_passthrough():
 
     dirty_flat_df = X_dirty.to_numpy().ravel().tolist()
     dirty_flat_trans_df = X_enc_dirty.ravel().tolist()
-    assert all(map(is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
+    assert all(map(_is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
     assert (X_clean.to_numpy() == X_enc_clean).all()
 
 
