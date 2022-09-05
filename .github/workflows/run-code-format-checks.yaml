@@ -1,0 +1,21 @@
+name: Run code format checks
+on:
+  pull_request:
+  push: { branches: main }
+
+jobs:
+  run-pre-commit-checks:
+    name: Run pre-commit checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install pre-commit setup
+      run: |
+        pip install pre-commit
+        pre-commit install
+
+    - name: Run checks
+      run: pre-commit run

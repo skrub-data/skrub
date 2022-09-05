@@ -28,17 +28,18 @@ import os
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.doctest',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.mathjax',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.githubpages',
-              'sphinx.ext.napoleon',
-              'sphinx.ext.autodoc.typehints',
-              'sphinx_gallery.gen_gallery',
-              ]
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.doctest',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.githubpages',
+    'numpydoc',
+    'sphinx.ext.autodoc.typehints',
+    'sphinx_gallery.gen_gallery',
+]
 
 try:
     import sphinxext.opengraph
@@ -68,8 +69,7 @@ author = u'dirty_cat developers'
 # built documents.
 #
 # The short X.Y version.
-version_file = os.path.join(
-    '..', 'dirty_cat', 'VERSION.txt')
+version_file = os.path.join('..', 'dirty_cat', 'VERSION.txt')
 with open(version_file) as fh:
     version = fh.read().strip()
 # The full version, including alpha/beta/rc tags.
@@ -80,7 +80,7 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -100,10 +100,7 @@ autosummary_generate = True
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = ['_templates']
 
-
 autodoc_default_flags = ['members', 'inherited-members']
-
-
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -158,7 +155,7 @@ html_theme_options = {
 html_static_path = ['_static']
 
 
-# Modify the title, so as to get good social-media links
+# Modify the title to get good social-media links
 html_title = "&mdash; Dirty cat"
 
 # -- Options for HTMLHelp output ------------------------------------------
@@ -213,23 +210,23 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'dirty_cat', u'dirty_cat Documentation',
-     author, 'dirty_cat', 'Learning on non-curater categorical data.',
+     author, 'dirty_cat', 'Learning on non-curated categorical data.',
      'Data Science'),
 ]
 
 
 # Configuration for intersphinx
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3/', None),
+    'python': ('https://docs.python.org/3', None),
     'numpy': ('https://docs.scipy.org/doc/numpy', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('https://matplotlib.org/', None),
-    'sklearn': ('https://scikit-learn.org/stable/', None),
-    'skimage': ('http://scikit-image.org/docs/stable/', None),
-    'mayavi': ('http://docs.enthought.com/mayavi/mayavi/', None),
-    'statsmodels': ('http://www.statsmodels.org/stable/', None),
-    'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
-    'seaborn': ('http://seaborn.pydata.org/', None),
+    'matplotlib': ('https://matplotlib.org', None),
+    'sklearn': ('https://scikit-learn.org/stable', None),
+    'skimage': ('http://scikit-image.org/docs/stable', None),
+    'mayavi': ('http://docs.enthought.com/mayavi/mayavi', None),
+    'statsmodels': ('http://www.statsmodels.org/stable', None),
+    'pandas': ('http://pandas.pydata.org/pandas-docs/stable', None),
+    'seaborn': ('http://seaborn.pydata.org', None),
 }
 
 
@@ -240,19 +237,13 @@ sphinx_gallery_conf = {
     'filename_pattern': '',
     'backreferences_dir': os.path.join('generated'),
     'reference_url': {
+        # The module we locally document (so, dirty_cat) uses None
         'dirty_cat': None,
-        'numpy': 'http://docs.scipy.org/doc/numpy',
-        'scipy': 'http://docs.scipy.org/doc/scipy/reference',
-        'pandas': 'http://pandas.pydata.org/pandas-docs/stable',
-        #'seaborn': 'http://seaborn.pydata.org/',
-        #'matplotlib': 'http://matplotlib.org/',
-        'sklearn': 'https://scikit-learn.org/stable/',
-        #'scikit-image': 'http://scikit-image.org/docs/stable/',
-        #'mayavi': 'http://docs.enthought.com/mayavi/mayavi/',
-        #'statsmodels': 'http://www.statsmodels.org/stable/',
+        # We don't specify the other modules as we use the intershpinx ext.
+        # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation
         },
-    'examples_dirs':'../examples',
-    'gallery_dirs':'auto_examples',
+    'examples_dirs': '../examples',
+    'gallery_dirs': 'auto_examples',
     'within_subsection_order': FileNameSortKey,
     'download_all_examples': False,
     'binder': {
@@ -270,11 +261,17 @@ sphinx_gallery_conf = {
 ogp_site_url = "https://dirty-cat.github.io/stable/"
 ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
 ogp_use_first_image = True
-ogp_site_name = "Dirty cat"
+ogp_site_name = "dirty_cat"
 
-# -- sphinxext.napoleon configuration --------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
-napoleon_use_param = True
+# -- numpydoc configuration --------------------------------------
+
+# Produce `plot::` directives for examples that contain `import matplotlib` or
+# `from matplotlib import`.
+numpydoc_use_plots = True
+
+# this is needed for some reason...
+# see https://github.com/numpy/numpydoc/issues/69
+numpydoc_class_members_toctree = False
 
 # -- sphinxext.autodoc configuration ---------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html

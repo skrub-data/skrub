@@ -10,7 +10,7 @@ sources.
 
 Here we look at a dataset on wages [#]_ where the column *Employee
 Position Title* contains dirty categories. On such a column, standard
-categorical encodings leads to very high dimensions and can loose
+categorical encodings leads to very high dimensions and can lose
 information on which categories are similar.
 
 We investigate various encodings of this dirty column for the machine
@@ -60,6 +60,7 @@ if used on cross-validated subsets of data.
 #
 # We first retrieve the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
+
 employee_salaries = fetch_employee_salaries()
 
 # %%
@@ -75,11 +76,12 @@ y.name
 # %%
 # Now, let's carry out some basic preprocessing:
 import pandas as pd
+
 X['date_first_hired'] = pd.to_datetime(X['date_first_hired'])
 X['year_first_hired'] = X['date_first_hired'].apply(lambda x: x.year)
-# Get mask of rows with missing values in gender
+# Get a mask of the rows with missing values in "gender"
 mask = X.isna()['gender']
-# And remove the lines accordingly
+# And remove them
 X.dropna(subset=['gender'], inplace=True)
 y = y[~mask]
 
@@ -110,6 +112,7 @@ one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
 # alongside with the column names on which each must be applied
 
 from sklearn.compose import make_column_transformer
+
 encoder = make_column_transformer(
     (one_hot, ['gender', 'department_name', 'assignment_category']),
     ('passthrough', ['year_first_hired']),
@@ -127,7 +130,9 @@ encoder = make_column_transformer(
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
+
 from sklearn.pipeline import make_pipeline
+
 pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
 
 # %%
@@ -139,19 +144,21 @@ pipeline.fit(X, y)
 # -----------------------
 #
 # The one-hot encoder is actually not well suited to the 'Employee
-# Position Title' column, as this columns contains 400 different entries:
+# Position Title' column, as this column contains 400 different entries:
 import numpy as np
+
 np.unique(y)
 
 # %%
 # We will now experiment with encoders specially made for handling
 # dirty columns
-from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder,\
-    GapEncoder
+
+from dirty_cat import (SimilarityEncoder, TargetEncoder,
+                       MinHashEncoder, GapEncoder)
 
 encoders = {
     'one-hot': one_hot,
-    'similarity': SimilarityEncoder(similarity='ngram'),
+    'similarity': SimilarityEncoder(),
     'target': TargetEncoder(handle_unknown='ignore'),
     'minhash': MinHashEncoder(n_components=100),
     'gap': GapEncoder(n_components=100),
@@ -190,6 +197,7 @@ for name, method in encoders.items():
 
 import seaborn
 import matplotlib.pyplot as plt
+
 plt.figure(figsize=(4, 3))
 ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
 plt.ylabel('Encoding', size=20)
@@ -225,8 +233,9 @@ X = employee_salaries.X
 y = employee_salaries.y
 
 # %%
-# We'll drop a column we don't want
-X = X.drop(['date_first_hired'], axis=1)  # Redundant with "year_first_hired"
+# We'll drop the "date_first_hired" column as it's redundant with
+# "year_first_hired".
+X = X.drop(['date_first_hired'], axis=1)
 
 # %%
 # We still have a complex and heterogeneous dataframe:
@@ -244,7 +253,7 @@ X
 # such as gradient boosted trees, gives **a machine-learning method that
 # can be readily applied to the dataframe**.
 #
-# The SuperVectorizer requires at least dirty_cat 0.2.0. 
+# The |SV| requires at least dirty_cat 0.2.0.
 #
 
 from dirty_cat import SuperVectorizer
@@ -258,6 +267,7 @@ pipeline = make_pipeline(
 # Let's perform a cross-validation to see how well this model predicts
 
 from sklearn.model_selection import cross_val_score
+
 scores = cross_val_score(pipeline, X, y, scoring='r2')
 
 print(f'scores={scores}')
@@ -274,12 +284,13 @@ print(f'std={np.std(scores)}')
 # ------------------------------
 #
 # Let us perform the same workflow, but without the |Pipeline|, so we can
-# analyze its mechanisms along the way.
+# analyze the SuperVectorizer's mechanisms along the way.
 sup_vec = SuperVectorizer(auto_cast=True)
 
 # %%
 # We split the data between train and test, and transform them:
 from sklearn.model_selection import train_test_split
+
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.15, random_state=42
 )
@@ -293,7 +304,7 @@ X_train_enc
 
 # %%
 # They have more columns than the original dataframe, but not much more:
-(X_train.shape, X_train_enc.shape)
+X_train.shape, X_train_enc.shape
 
 # %%
 # Inspecting the features created
@@ -301,11 +312,13 @@ X_train_enc
 #
 # The |SV| assigns a transformer for each column. We can inspect this
 # choice:
-sup_vec.transformers_
+from pprint import pprint
+
+pprint(sup_vec.transformers_)
 
 # %%
 # This is what is being passed to the |ColumnTransformer| under the hood.
-# If you're familiar with how the later works, it should be very intuitive.
+# If you're familiar with how the latter works, it should be very intuitive.
 # We can notice it classified the columns "gender" and "assignment_category"
 # as low cardinality string variables.
 # A |OneHotEncoder| will be applied to these columns.
@@ -347,12 +360,15 @@ len(feature_names)
 #    instead (which are less subject to biases)
 #
 # First, let's train the |RandomForestRegressor|,
+
 from sklearn.ensemble import RandomForestRegressor
+
 regressor = RandomForestRegressor()
 regressor.fit(X_train_enc, y_train)
 
 # %%
 # Retrieving the feature importances
+
 importances = regressor.feature_importances_
 std = np.std(
     [
@@ -369,6 +385,7 @@ indices = list(reversed(indices))
 # Plotting the results:
 
 import matplotlib.pyplot as plt
+
 plt.figure(figsize=(12, 9))
 plt.title("Feature importances")
 n = 20

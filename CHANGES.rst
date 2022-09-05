@@ -7,6 +7,15 @@ Major changes
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the SuperVectorizer for datetime columns.
+* Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
+* Bumped minimum dependencies:
+  - sklearn>=0.22
+  - scipy>=1.4.0
+  - numpy>=1.17.3
+
+* Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
+    The :class:`SimilarityEncoder` now exclusively uses `ngram` for similarities,
+    and the `similarity` parameter is deprecated. It will be removed in 0.5.
 
 * :class:`TargetEncoder` can now perform cross-validation loops to encode categories, thus avoiding
     overfitting. This is done using the `cross_val` parameter, and the number of splits of the
@@ -15,8 +24,8 @@ Major changes
 Notes
 -----
 
-* The transformers_ attribute of the SuperVectorizer now contains column names
-instead of column indices for the "remainder" columns.
+* The `transformers_` attribute of the SuperVectorizer now contains column
+  names instead of column indices for the "remainder" columns.
 
 * Two new examples have been added to illustrate the majors changes: the new
 :class"`DatetimeEncoder` and the new features of the :class:`TargetEncoder`.

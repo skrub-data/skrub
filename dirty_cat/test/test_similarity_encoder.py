@@ -2,6 +2,8 @@ import numpy as np
 import numpy.testing
 import pytest
 
+from typing import Callable, Optional
+
 from sklearn import __version__ as sklearn_version
 
 from dirty_cat.utils import Version
@@ -9,7 +11,7 @@ from dirty_cat import similarity_encoder, string_distances
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
 
-def test_specifying_categories():
+def test_specifying_categories() -> None:
     # When creating a new SimilarityEncoder:
     # - if categories = 'auto', the categories are the sorted, unique training
     # set observations (for each column)
@@ -19,16 +21,15 @@ def test_specifying_categories():
     # In this test, we first find the sorted, unique categories in the training
     # set, and create a SimilarityEncoder by giving it explicitly the computed
     # categories. The test consists in making sure the transformed observations
-    # given by this encoder are equal to the transformed obervations in the
+    # given by this encoder are equal to the transformed observations in the
     # case of a SimilarityEncoder created with categories = 'auto'
 
     observations = [['bar'], ['foo']]
     categories = [['bar', 'foo']]
 
     sim_enc_with_cat = similarity_encoder.SimilarityEncoder(
-        categories=categories, ngram_range=(2, 3), similarity='ngram')
-    sim_enc_auto_cat = similarity_encoder.SimilarityEncoder(
-        ngram_range=(2, 3), similarity='ngram')
+        categories=categories, ngram_range=(2, 3))
+    sim_enc_auto_cat = similarity_encoder.SimilarityEncoder(ngram_range=(2, 3))
 
     feature_matrix_with_cat = sim_enc_with_cat.fit_transform(observations)
     feature_matrix_auto_cat = sim_enc_auto_cat.fit_transform(observations)
@@ -36,12 +37,12 @@ def test_specifying_categories():
     assert np.allclose(feature_matrix_auto_cat, feature_matrix_with_cat)
 
 
-def test_fast_ngram_similarity():
+def test_fast_ngram_similarity() -> None:
     vocabulary = [['bar', 'foo']]
     observations = [['foo'], ['baz']]
 
     sim_enc = similarity_encoder.SimilarityEncoder(
-        similarity='ngram', ngram_range=(2, 2), categories=vocabulary)
+        ngram_range=(2, 2), categories=vocabulary)
 
     sim_enc.fit(observations)
     feature_matrix = sim_enc.transform(observations, fast=False)
@@ -67,21 +68,18 @@ def _test_missing_values(input_type, missing):
 
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
     if missing == 'error':
-        with pytest.raises(ValueError, match=r"Found missing values in input "
-                           "data; set handle_missing='' to encode "
-                           "with missing values"):
+        with pytest.raises(ValueError, match=r"Found missing values in input"):
             sim_enc.fit_transform(observations)
     elif missing == '':
         ans = sim_enc.fit_transform(observations)
         assert np.allclose(encoded, ans)
     else:
-        with pytest.raises(ValueError, match=r"handle_missing"
-                           " should be either 'error' or ''"):
+        with pytest.raises(ValueError, match=r"expected any of"):
             sim_enc.fit_transform(observations)
         return
 
 
-def _test_missing_values_transform(input_type, missing):
+def _test_missing_values_transform(input_type: str, missing: str) -> None:
     observations = [['a', 'b'], ['b', 'a'], ['b', 'b'],
                     ['a', 'c'], ['c', 'a']]
     test_observations = [['a', 'b'], ['b', 'a'], ['b', np.nan],
@@ -101,9 +99,7 @@ def _test_missing_values_transform(input_type, missing):
     sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
     if missing == 'error':
         sim_enc.fit_transform(observations)
-        with pytest.raises(ValueError, match=r"Found missing values in input "
-                           "data; set handle_missing='' to encode "
-                           "with missing values"):
+        with pytest.raises(ValueError, match=r"Found missing values in input"):
             sim_enc.transform(test_observations)
     elif missing == '':
         sim_enc.fit_transform(observations)
@@ -111,27 +107,23 @@ def _test_missing_values_transform(input_type, missing):
         assert np.allclose(encoded, ans)
 
 
-def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='auto', n_prototypes=None):
+def _test_similarity(similarity_f: Callable, hashing_dim: Optional[int] = None,
+                     categories: str = 'auto', n_prototypes: int = None,
+                     ) -> None:
     if n_prototypes is None:
         X = np.array(['aa', 'aaa', 'aaab']).reshape(-1, 1)
         X_test = np.array([['Aa', 'aAa', 'aaa', 'aaab', ' aaa  c']]).reshape(-1, 1)
 
         model = similarity_encoder.SimilarityEncoder(
-            similarity=similarity, hashing_dim=hashing_dim, categories=categories,
-            n_prototypes=n_prototypes)
-
-        if similarity == 'ngram':
-            model.ngram_range = (3, 3)
+            hashing_dim=hashing_dim, categories=categories,
+            n_prototypes=n_prototypes, ngram_range=(3, 3))
 
         encoder = model.fit(X).transform(X_test)
 
         ans = np.zeros((len(X_test), len(X)))
         for i, x_t in enumerate(X_test.reshape(-1)):
             for j, x in enumerate(X.reshape(-1)):
-                if similarity == 'ngram':
-                    ans[i, j] = similarity_f(x_t, x, 3)
-                else:
-                    ans[i, j] = similarity_f(x_t, x)
+                ans[i, j] = similarity_f(x_t, x, 3)
         numpy.testing.assert_almost_equal(encoder, ans)
     else:
         X = np.array(
@@ -142,14 +134,11 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
 
         try:
             model = similarity_encoder.SimilarityEncoder(
-                similarity=similarity, hashing_dim=hashing_dim, categories=categories,
-                n_prototypes=n_prototypes, random_state=42)
+                hashing_dim=hashing_dim, categories=categories,
+                n_prototypes=n_prototypes, random_state=42, ngram_range=(3, 3))
         except ValueError as e:
             assert (e.__str__() == 'n_prototypes expected None or a positive non null integer')
             return
-
-        if similarity == 'ngram':
-            model.ngram_range = (3, 3)
 
         encoder = model.fit(X).transform(X_test)
         if n_prototypes == 1:
@@ -165,43 +154,24 @@ def _test_similarity(similarity, similarity_f, hashing_dim=None, categories='aut
                         len(np.array(model.categories_).reshape(-1))))
         for i, x_t in enumerate(X_test.reshape(-1)):
             for j, x in enumerate(np.array(model.categories_).reshape(-1)):
-                if similarity == 'ngram':
-                    ans[i, j] = similarity_f(x_t, x, 3)
-                else:
-                    ans[i, j] = similarity_f(x_t, x)
+                ans[i, j] = similarity_f(x_t, x, 3)
 
         numpy.testing.assert_almost_equal(encoder, ans)
 
 
-def test_similarity_encoder():
+def test_similarity_encoder() -> None:
     categories = ['auto', 'most_frequent', 'k-means']
     for category in categories:
         if category == 'auto':
-            _test_similarity('levenshtein-ratio',
-                             string_distances.levenshtein_ratio,
-                             categories=category,
-                             n_prototypes=None)
-            _test_similarity('jaro-winkler', string_distances.jaro_winkler,
+            _test_similarity(string_distances.ngram_similarity,
                              categories=category, n_prototypes=None)
-            _test_similarity('jaro', string_distances.jaro,
-                             categories=category, n_prototypes=None)
-            _test_similarity('ngram', string_distances.ngram_similarity,
-                             categories=category, n_prototypes=None)
-            _test_similarity('ngram', string_distances.ngram_similarity,
+            _test_similarity(string_distances.ngram_similarity,
                              hashing_dim=2 ** 16, categories=category)
         else:
             for i in range(1, 4):
-                _test_similarity('levenshtein-ratio',
-                                 string_distances.levenshtein_ratio,
-                                 categories=category,
-                                 n_prototypes=i)
-                _test_similarity('jaro-winkler', string_distances.jaro_winkler,
+                _test_similarity(string_distances.ngram_similarity,
                                  categories=category, n_prototypes=i)
-                _test_similarity('jaro', string_distances.jaro,
-                                 categories=category, n_prototypes=i)
-                _test_similarity('ngram', string_distances.ngram_similarity,
-                                 categories=category, n_prototypes=i)
-                _test_similarity('ngram', string_distances.ngram_similarity,
+                _test_similarity(string_distances.ngram_similarity,
                                  hashing_dim=2 ** 16, categories=category,
                                  n_prototypes=i)
 
@@ -213,21 +183,23 @@ def test_similarity_encoder():
             _test_missing_values_transform(input_type, missing)
 
 
-def test_kmeans_protoypes():
+def test_kmeans_protoypes() -> None:
     X_test = np.array(['cbbba', 'baaac', 'accc'])
     proto = get_kmeans_prototypes(X_test, 3)
     assert np.array_equal(np.sort(proto), np.sort(X_test))
 
 
-def test_reproducibility():
-    sim_enc = similarity_encoder.SimilarityEncoder(categories='k-means', n_prototypes=10, random_state=435)
+def test_reproducibility() -> None:
+    sim_enc = similarity_encoder.SimilarityEncoder(
+        categories='k-means', n_prototypes=10, random_state=435,
+    )
     X = np.array([' %s ' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     prototypes = sim_enc.fit(X).categories_[0]
     for i in range(10):
         assert (np.array_equal(prototypes, sim_enc.fit(X).categories_[0]))
 
 
-def test_get_features():
+def test_get_features() -> None:
     # See https://github.com/dirty-cat/dirty_cat/issues/168
     sim_enc = similarity_encoder.SimilarityEncoder(random_state=435)
     X = np.array(['%s' % chr(i) for i in range(32, 127)]).reshape((-1, 1))
@@ -249,4 +221,3 @@ def test_get_features():
         'x0_q', 'x0_r', 'x0_s', 'x0_t', 'x0_u', 'x0_v', 'x0_w', 'x0_x', 'x0_y',
         'x0_z', 'x0_{', 'x0_|', 'x0_}', 'x0_~'
     ]
-

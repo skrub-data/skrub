@@ -123,18 +123,18 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
 source activate testenv
 pip install sphinx-gallery
 pip install sphinxext-opengraph
-pip install python-Levenshtein
+pip install numpydoc
 
 pip install scikit-learn
 
 # Build and install the project in dev mode
 python setup.py develop
 
-if [[ "$CIRCLE_BRANCH" =~ ^master$ && -z "$CI_PULL_REQUEST" ]]
-then
-    # List available documentation versions if on master
-    python build_tools/circle/list_versions.py > doc/versions.rst
-fi
+#if [[ "$CIRCLE_BRANCH" =~ ^master$ && -z "$CI_PULL_REQUEST" ]]
+#then
+#    # List available documentation versions if on master
+#    python build_tools/circle/list_versions.py > doc/versions.rst
+#fi
 
 # The pipefail is requested to propagate exit code
 set -o pipefail && cd doc && make $make_args 2>&1 | tee ~/log.txt
