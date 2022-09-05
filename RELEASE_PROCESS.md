@@ -5,7 +5,7 @@
 This document is aimed toward established contributors the project.
 
 If you're a user looking to install dirty_cat, please refer to
-the instructions in the [README](README.rst) !
+the instructions in the [README](README.rst)!
 
 ### Process
 
@@ -41,4 +41,4 @@ here are the main steps and appropriate resources:
 - [Packaging and distributing software - Python Packaging User Guide](https://packaging.python.org/guides/distributing-packages-using-setuptools/)
 - [Publishing (Perfect) Python Packages on PyPi](https://youtu.be/GIF3LaRqgXo)
 - [Managing releases in a repository](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
-- [Should I deploy today ?](https://shouldideploy.today/)
+- [Should I deploy today?](https://shouldideploy.today/)

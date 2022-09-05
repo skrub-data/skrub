@@ -71,10 +71,11 @@ X_
 # The DatetimeEncoder is used by default in the SuperVectorizer, which
 # automatically detects datetime features.
 from dirty_cat import SuperVectorizer
+from pprint import pprint
 
 sup_vec = SuperVectorizer()
 sup_vec.fit_transform(X)
-sup_vec.get_feature_names_out()
+pprint(sup_vec.get_feature_names_out())
 
 ###############################################################################
 # If we want the day of the week, we can just replace SuperVectorizer's default
@@ -85,8 +86,9 @@ sup_vec.fit_transform(X)
 sup_vec.get_feature_names_out()
 
 ###############################################################################
-# We can see that the SuperVectorizer is indeed using a DatetimeEncoder for the datetime features.
-sup_vec.transformers_
+# We can see that the SuperVectorizer is indeed using
+# a DatetimeEncoder for the datetime features.
+pprint(sup_vec.transformers_)
 
 ###############################################################################
 # Predictions with date features
@@ -110,7 +112,7 @@ pipeline = make_pipeline(sup_vec, reg)
 # When using date and time features, we often care about predicting the future.
 # In this case, we have to be careful when evaluating our model, because
 # standard tools like cross-validation do not respect the time ordering.
-# Instead we can use the `TimeSeriesSplit` class, which makes sure that
+# Instead, we can use the `TimeSeriesSplit` class, which makes sure that
 # the test set is always in the future.
 X["date.utc"] = pd.to_datetime(X["date.utc"])
 sorted_indices = np.argsort(X["date.utc"])
