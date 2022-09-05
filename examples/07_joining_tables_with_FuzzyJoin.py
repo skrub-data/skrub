@@ -20,7 +20,7 @@ in order to create a satisfying prediction model.
 # We import the happiness score data first:
 import pandas as pd
 
-df = pd.read_csv('https://raw.githubusercontent.com/jovan-stojanovic/data/main/Happiness_report_2022.csv', thousands=',')
+df = pd.read_csv('https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv', thousands=',')
 df.drop(df.tail(1).index, inplace = True)
 
 # Let's take a look at the table:
