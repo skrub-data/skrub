@@ -182,8 +182,7 @@ def fuzzy_join(left_table: pd.DataFrame,
         right_col = on[1]
     else:
         raise ValueError(
-            f"List {on} was specified for parameter 'on', "
-            "the list has invalid number of elements."
+            f"Expected a list with one or two elements for parameter 'on', received {len(on)} ({on!r})."
         )
 
     cols = list(lt.columns) + list(rt.columns)
