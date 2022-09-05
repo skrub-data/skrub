@@ -21,11 +21,11 @@ in order to create a satisfying prediction model.
 import pandas as pd
 
 df = pd.read_csv('https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv', thousands=',')
-df.drop(df.tail(1).index, inplace = True)
+df.drop(df.tail(1).index, inplace=True)
 
 # Let's take a look at the table:
 df.head(3)
- 
+
 #################################################################
 # The Happiness score was computed using the Gallup World Poll survey results. 
 # The report stress out some of the possible explanatory factors: GDP per capita, Social support, Generosity etc.
@@ -33,8 +33,8 @@ df.head(3)
 
 ###############################################################################
 # The sum of all explanatory indexes is then the happiness score itself:
-df['Sum_of_factors'] = df.iloc[:,[5,6,7,8,9,10,11]].sum(axis=1)
-df[['Happiness score','Sum_of_factors']].head(3)
+df['Sum_of_factors'] = df.iloc[:, [5, 6, 7, 8, 9, 10, 11]].sum(axis=1)
+df[['Happiness score', 'Sum_of_factors']].head(3)
 #################################################################
 # Thus, we cannot use them for our prediction model.
 X = df[['Country']]
@@ -49,9 +49,14 @@ y = df[['Happiness score']]
 # Finding additional tables
 # ---------------------------
 #
-# Let's inspire ourselfes from the factors used by the Happiness report to explain happiness. 
+# Let's inspire ourselfes from the factors used by the Happiness report to explain happiness.
 # We will extract data from the World Bank databank using the following function:
-from dirty_cat.datasets import fetch_world_bank_data
+def fetch_world_bank_data(data_code, indicator):
+    data = pd.read_excel(f'https://api.worldbank.org/v2/en/indicator/{data_code}?downloadformat=excel', skiprows=3)
+    data[indicator] = data.stack().groupby(level=0).last()
+    data = data[data[indicator] != data_code]
+    data = data[['Country Name', indicator]]
+    return data
 
 # We then extract GDP per capita by country:
 gdppc = fetch_world_bank_data(data_code='NY.GDP.PCAP.CD', indicator='gdppc')
@@ -80,9 +85,9 @@ X1.head(20)
 #################################################################
 #
 # Now, we see that our :func:`fuzzy_join` succesfully identified the countries,
-# even though some country names differ between tables. 
+# even though some country names differ between tables.
 #
-# For instance, 'Czechia' is well identified as 'Czech Republic' and 'Luxembourg*' as 'Luxembourg'. 
+# For instance, 'Czechia' is well identified as 'Czech Republic' and 'Luxembourg*' as 'Luxembourg'.
 #
 # .. topic:: Note:
 #
@@ -91,7 +96,7 @@ X1.head(20)
 #    which searches only for exact matches.
 #    In this case, to reach the best result, we would have to manually clean
 #    the data (e.g. remove the * after country name) and look manually
-#    for matching patterns in observations. 
+#    for matching patterns in observations.
 #
 # Dirty_cat's :func:`fuzzy_join` is the perfect function to avoid doing so (and save time) with great results.
 #
@@ -104,13 +109,15 @@ X1.iloc[121]
 # with a fixed threshold so as to include only precise-enough matches:
 #
 # --> To improve precision measurement, here it excludes some good matches as well
-X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'], precision='radius', precision_threshold=0.3)
+X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'],
+                precision='radius', precision_threshold=0.3)
 X1.iloc[121]
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
 #################################################################
 #
 # Now let's include other information that may be relevant, such as life expectancy:
-X2 = fuzzy_join(X1, life_exp,  on=['Country', 'Country Name'], precision='radius', precision_threshold=0.3, keep='left')
+X2 = fuzzy_join(X1, life_exp,  on=['Country', 'Country Name'],
+                precision='radius', precision_threshold=0.3, keep='left')
 X2.head(3)
 #################################################################
 # .. topic:: Note:
@@ -119,7 +126,8 @@ X2.head(3)
 #    so as not to have too much unnecessary columns with country names.
 #
 # And the strenght of legal rights in the country:
-X3 = fuzzy_join(X2, legal_rights,  on=['Country', 'Country Name'], precision='radius', precision_threshold=0.3, keep='left')
+X3 = fuzzy_join(X2, legal_rights,  on=['Country', 'Country Name'],
+                precision='radius', precision_threshold=0.3, keep='left')
 X3.head(3)
 #################################################################
 #
@@ -148,7 +156,7 @@ hgdb = HistGradientBoostingRegressor(random_state=0)
 cv = KFold(n_splits=4, shuffle=True, random_state=0)
 
 #################################################################
-# To evaluate our model, we will apply a `4-fold cross-validation`. 
+# To evaluate our model, we will apply a `4-fold cross-validation`.
 # We evaluate our model using the `R2` score.
 #
 # Let's finally assess the results of our models:

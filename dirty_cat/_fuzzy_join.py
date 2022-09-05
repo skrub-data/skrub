@@ -14,11 +14,20 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.neighbors import NearestNeighbors
+from typing import List, Literal, Tuple
 
 
-def fuzzy_join(left_table, right_table, on, return_distance=False,
-               analyzer="char_wb", ngram_range=(2, 4), precision='nearest',
-               precision_threshold=0.5, suffixes=('_l', '_r'), keep='all',):
+def fuzzy_join(left_table: pd.DataFrame,
+               right_table: pd.DataFrame,
+               on: List[str],
+               return_distance: bool = False,
+               analyzer: Literal["word", "char", "char_wb"] = "char_wb",
+               ngram_range: Tuple[int, int] = (2, 4),
+               precision: Literal["nearest", "radius"] = 'nearest',
+               precision_threshold: float = 0.5,
+               suffixes: Tuple[str, str] = ('_l', '_r'),
+               keep: str = 'all',
+               ) -> pd.DataFrame:
     """
     Join two tables based on categorical string columns as joining keys,
     and approximate matching via string similarity across the two tables.
@@ -74,26 +83,27 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
 
     Notes
     -----
-    There are two main ways to take into account for the similarity between categories.
-    When we use precision='nearest', the function will be forced to find the nearest
-    match across the possible options.
-    When the neighbors are distant, we may use the precision='radius' option with
-    the precision_threshold value to define the minimal level of precision every
-    match should have. If this precision is not reached, matches will be considered
-    as inexistant and NaN values will be imputed.
+    There are two main ways to take into account for the similarity between
+    categories.
+    When we use precision='nearest', the function will be forced to find the
+    nearest match across the possible options.
+    When the neighbors are distant, we may use the precision='radius' option
+    with the precision_threshold value to define the minimal level of precision
+    every match should have. If this precision is not reached, matches will be
+    considered as inexistant and NaN values will be imputed.
     See example below for an illustration.
 
     Examples
     --------
     >>> df1 = pd.DataFrame({'a': ['ana', 'lala', 'nana'], 'b': [1, 2, 3]})
     >>> df2 = pd.DataFrame({'a': ['anna', 'lala', 'ana', 'sana'], 'c': [5, 6, 7, 8]})
-    
+
     >>> df1
         a  b
     0   ana  1
     1  lala  2
     2  nana  3
-    
+
     >>> df2
         a  c
     0  anna  5
