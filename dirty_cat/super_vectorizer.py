@@ -57,7 +57,7 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     Takes a Series with string data, replaces the missing values, and returns it.
     """
     ser = _replace_false_missing(ser)
-    if ser.dtype.name == "category" and (value not in ser.cat.categories):
+    if pd.api.types.is_categorical_dtype(ser) and (value not in ser.cat.categories):
         ser = ser.cat.add_categories([value])
     ser = ser.fillna(value=value)
     return ser
