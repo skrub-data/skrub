@@ -1,13 +1,13 @@
 import collections
+from typing import Dict, List, Literal, Union
+
 import numpy as np
-
-from typing import List, Dict, Literal, Union
-
-from sklearn.preprocessing import LabelEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
+
 from dirty_cat.utils import check_input
 
 
@@ -27,7 +27,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    categories : typing.Union[typing.Literal["auto"], typing.List[typing.List[typing.Union[str, int]]]
+    categories : typing.Union[typing.Literal["auto"], typing.List[typing.List[typing.Union[str, int]]]  # noqa
         Categories (unique values) per feature:
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
@@ -71,12 +71,14 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     categories_: List[np.array]
     n_: int
 
-    def __init__(self,
-                 categories: Union[Literal["auto"], List[Union[List[str], np.array]]] = 'auto',
-                 clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = 'binary-clf',
-                 dtype: type = np.float64,
-                 handle_unknown: Literal["error", "ignore"] = 'error',
-                 handle_missing: Literal["error", ""] = ''):
+    def __init__(
+        self,
+        categories: Union[Literal["auto"], List[Union[List[str], np.array]]] = "auto",
+        clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = "binary-clf",
+        dtype: type = np.float64,
+        handle_unknown: Literal["error", "ignore"] = "error",
+        handle_missing: Literal["error", ""] = "",
+    ):
         self.categories = categories
         self.dtype = dtype
         self.clf_type = clf_type
@@ -107,26 +109,26 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         """
         X = check_input(X)
         self.n_features_in_ = X.shape[1]
-        if self.handle_missing not in ['error', '']:
+        if self.handle_missing not in ["error", ""]:
             raise ValueError(
                 f"Got handle_missing={self.handle_missing!r}, but expected "
-                f"any of {{'error', ''}}. "
+                "any of {'error', ''}. "
             )
-        if hasattr(X, 'iloc') and X.isna().values.any():
-            if self.handle_missing == 'error':
-                    raise ValueError(
-                        "Found missing values in input data; set "
-                        "handle_missing='' to encode with missing values. "
-                    )
+        if hasattr(X, "iloc") and X.isna().values.any():
+            if self.handle_missing == "error":
+                raise ValueError(
+                    "Found missing values in input data; set "
+                    "handle_missing='' to encode with missing values. "
+                )
             else:
                 X = X.fillna(self.handle_missing)
-        elif not hasattr(X, 'dtype') and isinstance(X, list):
+        elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)
 
-        if hasattr(X, 'dtype'):
+        if hasattr(X, "dtype"):
             mask = _object_dtype_isnan(X)
-            if X.dtype.kind == 'O' and mask.any():
-                if self.handle_missing == 'error':
+            if X.dtype.kind == "O" and mask.any():
+                if self.handle_missing == "error":
                     raise ValueError(
                         "Found missing values in input data; set "
                         "handle_missing='' to encode with missing values. "
@@ -134,21 +136,19 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 else:
                     X[mask] = self.handle_missing
 
-        if self.handle_unknown not in ['error', 'ignore']:
+        if self.handle_unknown not in ["error", "ignore"]:
             raise ValueError(
-                f'Got handle_unknown={self.handle_unknown!r}, but expected'
-                f'any of {{"error", "ignore"}}. '
+                f"Got handle_unknown={self.handle_unknown!r}, but expected"
+                'any of {"error", "ignore"}. '
             )
 
-        if self.categories != 'auto':
+        if self.categories != "auto":
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
-                    raise ValueError(
-                        "Unsorted categories are not yet supported. "
-                    )
+                    raise ValueError("Unsorted categories are not yet supported. ")
 
         X_temp = check_array(X, dtype=None)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
+        if not hasattr(X, "dtype") and np.issubdtype(X_temp.dtype, np.str_):
             X = check_array(X, dtype=np.object)
         else:
             X = X_temp
@@ -161,38 +161,42 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         for j in range(n_features):
             le = self._label_encoders_[j]
             Xj = X[:, j]
-            if self.categories == 'auto':
+            if self.categories == "auto":
                 le.fit(Xj)
             else:
-                if self.handle_unknown == 'error':
+                if self.handle_unknown == "error":
                     valid_mask = np.in1d(Xj, self.categories[j])
                     if not np.all(valid_mask):
                         diff = np.unique(Xj[~valid_mask])
                         raise ValueError(
-                            f"Found unknown categories {diff} in column {j}"
-                            f" during fit"
+                            f"Found unknown categories {diff} in column {j} during fit"
                         )
                 le.classes_ = np.array(self.categories[j])
 
         self.categories_ = [le.classes_ for le in self._label_encoders_]
         self.n_ = len(y)
-        if self.clf_type in ['binary-clf', 'regression']:
-            self.Eyx_ = [{cat: np.mean(y[X[:, j] == cat])
-                          for cat in self.categories_[j]}
-                         for j in range(len(self.categories_))]
+        if self.clf_type in ["binary-clf", "regression"]:
+            self.Eyx_ = [
+                {cat: np.mean(y[X[:, j] == cat]) for cat in self.categories_[j]}
+                for j in range(len(self.categories_))
+            ]
             self.Ey_ = np.mean(y)
-            self.counter_ = {j: collections.Counter(X[:, j])
-                             for j in range(n_features)}
-        if self.clf_type in ['multiclass-clf']:
+            self.counter_ = {j: collections.Counter(X[:, j]) for j in range(n_features)}
+        if self.clf_type in ["multiclass-clf"]:
             self.classes_ = np.unique(y)
 
-            self.Eyx_ = {c: [{cat: np.mean((y == c)[X[:, j] == cat])
-                              for cat in self.categories_[j]}
-                             for j in range(len(self.categories_))]
-                         for c in self.classes_}
+            self.Eyx_ = {
+                c: [
+                    {
+                        cat: np.mean((y == c)[X[:, j] == cat])
+                        for cat in self.categories_[j]
+                    }
+                    for j in range(len(self.categories_))
+                ]
+                for c in self.classes_
+            }
             self.Ey_ = {c: np.mean(y == c) for c in self.classes_}
-            self.counter_ = {j: collections.Counter(X[:, j])
-                             for j in range(n_features)}
+            self.counter_ = {j: collections.Counter(X[:, j]) for j in range(n_features)}
         self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
@@ -203,7 +207,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features_new]
-            The data to encode. 
+            The data to encode.
 
         Returns
         -------
@@ -215,33 +219,33 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         if X.shape[1] != self.n_features_in_:
             raise ValueError(
                 f"The number of features in the input data ({X.shape[1]}) "
-                f"does not match the number of features "
+                "does not match the number of features "
                 f"seen during fit ({self.n_features_in_})."
             )
-        if hasattr(X, 'iloc') and X.isna().values.any():
-            if self.handle_missing == 'error':
-                    raise ValueError(
-                        "Found missing values in input data; set "
-                        "handle_missing='' to encode with missing values. "
-                    )
-            if self.handle_missing != 'error':
+        if hasattr(X, "iloc") and X.isna().values.any():
+            if self.handle_missing == "error":
+                raise ValueError(
+                    "Found missing values in input data; set "
+                    "handle_missing='' to encode with missing values. "
+                )
+            if self.handle_missing != "error":
                 X = X.fillna(self.handle_missing)
-        elif not hasattr(X, 'dtype') and isinstance(X, list):
+        elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)
 
-        if hasattr(X, 'dtype'):
+        if hasattr(X, "dtype"):
             mask = _object_dtype_isnan(X)
-            if X.dtype.kind == 'O' and mask.any():
-                if self.handle_missing == 'error':
+            if X.dtype.kind == "O" and mask.any():
+                if self.handle_missing == "error":
                     raise ValueError(
                         "Found missing values in input data; set "
                         "handle_missing='' to encode with missing values. "
                     )
-                if self.handle_missing != 'error':
+                if self.handle_missing != "error":
                     X[mask] = self.handle_missing
 
         X_temp = check_array(X, dtype=None)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
+        if not hasattr(X, "dtype") and np.issubdtype(X_temp.dtype, np.str_):
             X = check_array(X, dtype=np.object)
         else:
             X = X_temp
@@ -255,11 +259,11 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             valid_mask = np.in1d(Xi, self.categories_[i])
 
             if not np.all(valid_mask):
-                if self.handle_unknown == 'error':
+                if self.handle_unknown == "error":
                     diff = np.unique(X[~valid_mask, i])
                     raise ValueError(
                         f"Found unknown categories {diff} in column {i} "
-                        f"during transform. "
+                        "during transform. "
                     )
                 else:
                     # Set the problematic rows to an acceptable value and
@@ -275,31 +279,30 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         for j, cats in enumerate(self.categories_):
             unqX = np.unique(X[:, j])
             encoder = {x: 0 for x in unqX}
-            if self.clf_type in ['binary-clf', 'regression']:
+            if self.clf_type in ["binary-clf", "regression"]:
                 for x in unqX:
                     if x not in cats:
                         Eyx = 0
                     else:
                         Eyx = self.Eyx_[j][x]
-                    lambda_n = lambda_(self.counter_[j][x], self.n_/self.k_[j])
-                    encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
+                    lambda_n = lambda_(self.counter_[j][x], self.n_ / self.k_[j])
+                    encoder[x] = lambda_n * Eyx + (1 - lambda_n) * self.Ey_
                 x_out = np.zeros((len(X[:, j]), 1))
                 for i, x in enumerate(X[:, j]):
                     x_out[i, 0] = encoder[x]
                 out.append(x_out.reshape(-1, 1))
-            if self.clf_type == 'multiclass-clf':
+            if self.clf_type == "multiclass-clf":
                 x_out = np.zeros((len(X[:, j]), len(self.classes_)))
                 lambda_n = {x: 0 for x in unqX}
                 for x in unqX:
-                    lambda_n[x] = lambda_(self.counter_[j][x], self.n_/self.k_[j])
+                    lambda_n[x] = lambda_(self.counter_[j][x], self.n_ / self.k_[j])
                 for k, c in enumerate(np.unique(self.classes_)):
                     for x in unqX:
                         if x not in cats:
                             Eyx = 0
                         else:
                             Eyx = self.Eyx_[c][j][x]
-                        encoder[x] = lambda_n[x]*Eyx + \
-                            (1 - lambda_n[x])*self.Ey_[c]
+                        encoder[x] = lambda_n[x] * Eyx + (1 - lambda_n[x]) * self.Ey_[c]
                     for i, x in enumerate(X[:, j]):
                         x_out[i, k] = encoder[x]
                 out.append(x_out)

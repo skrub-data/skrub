@@ -2,27 +2,31 @@
 Tests fetching.py (datasets fetching off OpenML.org).
 """
 
-import pytest
 import shutil
 import warnings
-import pandas as pd
-
-from pathlib import Path
 from functools import wraps
 from json import JSONDecodeError
-from urllib.error import URLError
-
+from pathlib import Path
 from unittest import mock
 from unittest.mock import mock_open
+from urllib.error import URLError
+
+import pandas as pd
+import pytest
 
 from dirty_cat.datasets import fetching
-from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
 from dirty_cat.datasets.fetching import (
-    _download_and_write_openml_dataset, _read_json_from_gz,
-    _features_to_csv_format, _export_gz_data_to_csv,
-    _get_details, _get_features, Details, Features,
-    fetch_openml_dataset as _fetch_openml_dataset,
+    Details,
+    Features,
+    _download_and_write_openml_dataset,
+    _export_gz_data_to_csv,
+    _features_to_csv_format,
+    _get_details,
+    _get_features,
+    _read_json_from_gz,
 )
+from dirty_cat.datasets.fetching import fetch_openml_dataset as _fetch_openml_dataset
+from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
 
 
 @wraps(_fetch_openml_dataset)
@@ -33,7 +37,7 @@ def fetch_openml_dataset(*args, **kwargs):
     """
     with warnings.catch_warnings():
         warnings.simplefilter(
-            action='ignore',
+            action="ignore",
             category=UserWarning,
         )
         return _fetch_openml_dataset(*args, **kwargs)
@@ -68,13 +72,12 @@ def test_fetch_openml_dataset():
 
     try:  # Try-finally block used to remove the test data directory at the end
         try:
-
             # First, we want to purposefully test ValueError exceptions.
             with pytest.raises(ValueError):
-                assert fetch_openml_dataset(dataset_id=0,
-                                            data_directory=test_data_dir)
-                assert fetch_openml_dataset(dataset_id=2**32,
-                                            data_directory=test_data_dir)
+                assert fetch_openml_dataset(dataset_id=0, data_directory=test_data_dir)
+                assert fetch_openml_dataset(
+                    dataset_id=2**32, data_directory=test_data_dir
+                )
 
             # Valid call
             returned_info = fetch_openml_dataset(
@@ -90,8 +93,8 @@ def test_fetch_openml_dataset():
             # created by ``fetch_openml()``,  and the
             # ``.gz`` files within in order to finish the test.
             pytest.skip(
-                'Exception: Skipping this test because we encountered an '
-                'issue probably related to an Internet connection problem. '
+                "Exception: Skipping this test because we encountered an "
+                "issue probably related to an Internet connection problem. "
             )
             return
 
@@ -101,11 +104,14 @@ def test_fetch_openml_dataset():
 
         assert returned_info["path"].is_file()
 
-        dataset: pd.DataFrame = pd.read_csv(returned_info["path"], sep=",",
-                                            quotechar="'", escapechar="\\")
+        dataset: pd.DataFrame = pd.read_csv(
+            returned_info["path"], sep=",", quotechar="'", escapechar="\\"
+        )
 
-        assert dataset.shape == (test_dataset["dataset_rows_count"],
-                                 test_dataset["dataset_columns_count"])
+        assert dataset.shape == (
+            test_dataset["dataset_rows_count"],
+            test_dataset["dataset_columns_count"],
+        )
 
     finally:
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
@@ -116,18 +122,20 @@ def test_fetch_openml_dataset():
 @mock.patch("dirty_cat.datasets.fetching._get_details")
 @mock.patch("dirty_cat.datasets.fetching._export_gz_data_to_csv")
 @mock.patch("dirty_cat.datasets.fetching._download_and_write_openml_dataset")
-def test_fetch_openml_dataset_mocked(mock_download, mock_export,
-                                     mock_get_details, mock_get_features,
-                                     mock_pathlib_path_isfile):
+def test_fetch_openml_dataset_mocked(
+    mock_download,
+    mock_export,
+    mock_get_details,
+    mock_get_features,
+    mock_pathlib_path_isfile,
+):
     """
     Test function ``fetch_openml_dataset()``, but this time,
     we mock the functions to test its inner mechanisms.
     """
 
     mock_get_details.return_value = Details(
-        name="Dataset_name",
-        file_id="123456",
-        description="Dummy dataset description."
+        name="Dataset_name", file_id="123456", description="Dummy dataset description."
     )
     mock_get_features.return_value = Features(
         names=["id", "name", "transaction_id", "owner", "recipient"]
@@ -154,14 +162,13 @@ def test_fetch_openml_dataset_mocked(mock_download, mock_export,
     fetch_openml_dataset(50, test_data_dir)
 
     # Download should be called twice
-    mock_download.assert_called_with(dataset_id=50,
-                                     data_directory=get_test_data_dir())
+    mock_download.assert_called_with(dataset_id=50, data_directory=get_test_data_dir())
     mock_export.assert_called_once()
     mock_get_features.assert_called_once()
     mock_get_details.assert_called_once()
 
 
-@mock.patch('dirty_cat.datasets.fetching.fetch_openml')
+@mock.patch("dirty_cat.datasets.fetching.fetch_openml")
 def test__download_and_write_openml_dataset(mock_fetch_openml):
     """Tests function ``_download_and_write_openml_dataset()``."""
 
@@ -170,9 +177,9 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
     test_data_dir = get_test_data_dir()
     _download_and_write_openml_dataset(dataset_id, test_data_dir)
 
-    mock_fetch_openml.assert_called_once_with(data_id=dataset_id,
-                                              data_home=str(test_data_dir),
-                                              as_frame=True)
+    mock_fetch_openml.assert_called_once_with(
+        data_id=dataset_id, data_home=str(test_data_dir), as_frame=True
+    )
 
 
 @mock.patch("dirty_cat.datasets.fetching.Path.is_file")
@@ -189,16 +196,18 @@ def test__read_json_from_gz(mock_pathlib_path_isfile):
     # Passing a valid file path,
     # but reading it does not return JSON-encoded data.
     mock_pathlib_path_isfile.return_value = True
-    with mock.patch("gzip.open", mock_open(
-            read_data='This is not JSON-encoded data!')) as _:
+    with mock.patch(
+        "gzip.open", mock_open(read_data="This is not JSON-encoded data!")
+    ) as _:
         with pytest.raises(JSONDecodeError):
             assert _read_json_from_gz(dummy_file_path)
 
     # Passing a valid file path, and reading it
     # returns valid JSON-encoded data.
     expected_return_value = {"data": "This is JSON-encoded data!"}
-    with mock.patch("gzip.open", mock_open(
-            read_data='{"data": "This is JSON-encoded data!"}')) as _:
+    with mock.patch(
+        "gzip.open", mock_open(read_data='{"data": "This is JSON-encoded data!"}')
+    ) as _:
         assert _read_json_from_gz(dummy_file_path) == expected_return_value
 
 
@@ -206,8 +215,9 @@ def test__read_json_from_gz(mock_pathlib_path_isfile):
 def test__get_details(mock_read_json_from_gz):
     """Tests function ``_get_details()``."""
 
-    expected_return_value = Details("Dataset_name", "123456",
-                                    "Dummy dataset description.")
+    expected_return_value = Details(
+        "Dataset_name", "123456", "Dummy dataset description."
+    )
 
     mock_read_json_from_gz.return_value = {
         "data_set_description": {
@@ -228,8 +238,9 @@ def test__get_details(mock_read_json_from_gz):
 def test__get_features(mock_read_json_from_gz):
     """Tests function ``_get_features()``."""
 
-    expected_return_value = Features(["id", "name", "transaction_id",
-                                      "owner", "recipient"])
+    expected_return_value = Features(
+        ["id", "name", "transaction_id", "owner", "recipient"]
+    )
 
     mock_read_json_from_gz.return_value = {
         "data_features": {
@@ -251,16 +262,20 @@ def test__get_features(mock_read_json_from_gz):
 def test__export_gz_data_to_csv():
     """Tests function ``_export_gz_data_to_csv()``."""
 
-    features = Features(["top-left-square",
-                         "top-middle-square",
-                         "top-right-square",
-                         "middle-left-square",
-                         "middle-middle-square",
-                         "middle-right-square",
-                         "bottom-left-square",
-                         "bottom-middle-square",
-                         "bottom-right-square",
-                         "Class"])
+    features = Features(
+        [
+            "top-left-square",
+            "top-middle-square",
+            "top-right-square",
+            "middle-left-square",
+            "middle-middle-square",
+            "middle-right-square",
+            "bottom-left-square",
+            "bottom-middle-square",
+            "bottom-right-square",
+            "Class",
+        ]
+    )
     arff_data = (
         "% This is a comment\n"
         "@relation tic-tac-toe\n"
@@ -273,15 +288,13 @@ def test__export_gz_data_to_csv():
     dummy_gz = Path("/dummy/file.gz")
     dummy_csv = Path("/dummy/file.csv")
 
-    with mock.patch("pathlib.Path.open",
-                    mock_open(read_data="")) as mock_pathlib_path_open:
-        with mock.patch("gzip.open",
-                        mock_open(read_data=arff_data)) as mock_gzip_open:
+    with mock.patch(
+        "pathlib.Path.open", mock_open(read_data="")
+    ) as mock_pathlib_path_open:
+        with mock.patch("gzip.open", mock_open(read_data=arff_data)) as mock_gzip_open:
             _export_gz_data_to_csv(dummy_gz, dummy_csv, features)
-            mock_pathlib_path_open.assert_called_with(mode='w',
-                                                      encoding='utf8')
-            mock_gzip_open.assert_called_with(dummy_gz, mode='rt',
-                                              encoding='utf8')
+            mock_pathlib_path_open.assert_called_with(mode="w", encoding="utf8")
+            mock_gzip_open.assert_called_with(dummy_gz, mode="rt", encoding="utf8")
 
 
 def test__features_to_csv_format():
@@ -292,37 +305,42 @@ def test__features_to_csv_format():
     assert _features_to_csv_format(features) == expected_return_value
 
 
-@mock.patch('dirty_cat.datasets.fetching.fetch_openml_dataset')
+@mock.patch("dirty_cat.datasets.fetching.fetch_openml_dataset")
 @mock.patch("dirty_cat.datasets.fetching.fetch_dataset_as_dataclass")
-def test_import_all_datasets(mock_fetch_dataset_as_dataclass,
-                             mock_fetch_openml_dataset):
+def test_import_all_datasets(
+    mock_fetch_dataset_as_dataclass, mock_fetch_openml_dataset
+):
     """Tests functions ``fetch_*()``."""
 
     mock_fetch_openml_dataset.return_value = {
-        'name': 'Example dataset',
-        'description': 'This is a dataset.',
-        'source': 'https://www.openml.org/',
-        'target': 'To_predict',
-        'path': Path("/path/to/file.csv"),
-        'read_csv_kwargs': {'a': 'b'},
+        "name": "Example dataset",
+        "description": "This is a dataset.",
+        "source": "https://www.openml.org/",
+        "target": "To_predict",
+        "path": Path("/path/to/file.csv"),
+        "read_csv_kwargs": {"a": "b"},
     }
 
     expected_return_value_all = fetching.DatasetAll(
-        name='Example dataset',
+        name="Example dataset",
         description="This is a dataset.",
         source="https://www.openml.org/",
         path=Path("/path/to/file.csv"),
         X=pd.DataFrame([1, 2, 3, 4]),
-        y=pd.Series([5, ]),
+        y=pd.Series(
+            [
+                5,
+            ]
+        ),
     )
 
     expected_return_value_info_only = fetching.DatasetInfoOnly(
-        name='Example dataset',
+        name="Example dataset",
         description="This is a dataset.",
         source="https://www.openml.org/",
-        target='To_predict',
+        target="To_predict",
         path=Path("/path/to/file.csv"),
-        read_csv_kwargs={'a': 'b'},
+        read_csv_kwargs={"a": "b"},
     )
 
     for expected_return_value, load_dataframe in zip(
@@ -332,7 +350,8 @@ def test_import_all_datasets(mock_fetch_dataset_as_dataclass,
         mock_fetch_dataset_as_dataclass.return_value = expected_return_value
 
         returned_value = fetching.fetch_employee_salaries(
-            drop_linked=False, drop_irrelevant=False)
+            drop_linked=False, drop_irrelevant=False
+        )
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()

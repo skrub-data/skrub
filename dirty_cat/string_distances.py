@@ -3,10 +3,8 @@ Some string distances
 """
 
 import re
-
-from typing import Tuple
 from collections import Counter
-
+from typing import Tuple
 
 # TODO vectorize these functions (accept arrays)
 
@@ -51,12 +49,12 @@ def preprocess(x: str) -> str:
     """
 
     # Preprocessing step done in ngram_similarity
-    x = f' {x} '
+    x = f" {x} "
 
     # Preprocessing step done in the CountVectorizer
     _white_spaces = re.compile(r"\s\s+")
 
-    return _white_spaces.sub(' ', x)
+    return _white_spaces.sub(" ", x)
 
 
 def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
@@ -76,7 +74,7 @@ def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
     set
         The set of unique n-grams of the string.
     """
-    spaces = ' '  # * (n // 2 + n % 2)
+    spaces = " "  # * (n // 2 + n % 2)
     string = spaces + " ".join(string.lower().split()) + spaces
     ngram_set = set()
     for n in range(ngram_range[0], ngram_range[1] + 1):
@@ -86,18 +84,16 @@ def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
 
 
 def get_ngrams(string, n):
-    """ Return the set of different tri-grams in a string
-    """
+    """Return the set of different tri-grams in a string"""
     # Pure Python implementation: no numpy
-    spaces = ' '  # * (n // 2 + n % 2)
+    spaces = " "  # * (n // 2 + n % 2)
     string = spaces + " ".join(string.lower().split()) + spaces
     string_list = [string[i:] for i in range(n)]
     return list(zip(*string_list))
 
 
 def ngram_similarity(string1, string2, n, preprocess_strings=True):
-    """ n-gram similarity between two strings
-    """
+    """n-gram similarity between two strings"""
     if preprocess_strings:
         string1, string2 = preprocess(string1), preprocess(string2)
 
@@ -109,11 +105,11 @@ def ngram_similarity(string1, string2, n, preprocess_strings=True):
 
     samegrams = sum((count1 & count2).values())
     allgrams = len(ngrams1) + len(ngrams2)
-    similarity = samegrams/(allgrams - samegrams)
+    similarity = samegrams / (allgrams - samegrams)
     return similarity
 
 
-if __name__ == '__main__':
-    s1 = 'aa'
-    s2 = 'aaab'
-    print('3-gram similarity: %.3f' % ngram_similarity(s1, s2, 3))
+if __name__ == "__main__":
+    s1 = "aa"
+    s2 = "aaab"
+    print("3-gram similarity: %.3f" % ngram_similarity(s1, s2, 3))
