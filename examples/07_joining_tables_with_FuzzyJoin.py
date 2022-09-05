@@ -66,8 +66,8 @@ legal_rights = fetch_world_bank_data('IC.LGL.CRED.XQ', 'legal_rights')
 legal_rights.head(3)
 
 ###############################################################################
-# Joining new World Bank tables to our initial one
-# =================================================
+# Joining World Bank tables to our initial one
+# ----------------------------------------------
 #
 # Now, using dirty_cat's :func:`fuzzy_join` function,
 # we need only one line to join two tables
@@ -136,7 +136,7 @@ X3 = X3[mask]
 
 ###############################################################################
 # Prediction model
-# ==============================
+#  ---------------------
 #
 #
 # Let us now define the model that will be used to predict the happiness score:
