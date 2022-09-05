@@ -142,8 +142,8 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
         )
 
     if len(suffixes) != 2:
-        raise ValueError(f"Number of suffixes specified is different\
-                         than two: {suffixes}")
+        raise ValueError(f"Invalid number of suffixes: expected 2,\
+                         got {len(suffixes)}({suffixes!r})")
     lsuffix, rsuffix = suffixes
     if not lsuffix and not rsuffix:
         raise ValueError(f"Tuple {suffixes} has invalid number of elements.")
@@ -186,7 +186,7 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
     left_enc = TfidfTransformer().fit_transform(left_enc)
     right_enc = TfidfTransformer().fit_transform(right_enc)
 
-    # Find closest neighbor using KNN :
+    # Find nearest neighbor using KNN :
     neigh = NearestNeighbors(n_neighbors=1)
     neigh.fit(right_enc)
     distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
@@ -204,9 +204,7 @@ def fuzzy_join(left_table, right_table, on, return_distance=False,
             n_neigh = NearestNeighbors(radius=dist)
             n_neigh.fit(right_enc)
             rng = n_neigh.radius_neighbors(left_enc[i])
-            # Distances to closest neighbors:
-            # twodball_dist = rng[0][0]
-            # Their indices:
+            # Indices of nearest neighbors:
             twodball_pts = rng[1][0]
             prec.append(1 / len(twodball_pts))
         for idx in lt.index:
