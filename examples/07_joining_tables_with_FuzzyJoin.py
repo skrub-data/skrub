@@ -82,14 +82,16 @@ X1.head(20)
 # Now, we see that our :func:`fuzzy_join` succesfully identified the countries,
 # even though some country names differ between tables. 
 #
-# For instance, Czechia is well identified as Czech Republic and Luxembourg* as Luxembourg. 
+# For instance, 'Czechia' is well identified as 'Czech Republic' and 'Luxembourg*' as 'Luxembourg'. 
 #
-# This would all be missed out if we were using other methods such as
-# [pandas.DataFrame.join](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.join.html),
-# which searches only for exact matches.
-# In this case, to reach the best result, we would have to manually clean
-# the data (e.g. remove the * after country name) and look manually
-# for matching patterns in observations. 
+# .. topic:: Note:
+#
+#    This would all be missed out if we were using other methods such as
+#    `pandas.DataFrame.join <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.join.html>`_,
+#    which searches only for exact matches.
+#    In this case, to reach the best result, we would have to manually clean
+#    the data (e.g. remove the * after country name) and look manually
+#    for matching patterns in observations. 
 #
 # Dirty_cat's :func:`fuzzy_join` is the perfect function to avoid doing so (and save time) with great results.
 #
@@ -111,8 +113,8 @@ X1.iloc[121]
 X2 = fuzzy_join(X1, life_exp,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
 X2.head(3)
 #################################################################
-#
 # .. topic:: Note:
+#
 #    Here, we use the `keep='left'` option to keep only the left key matching column,
 #    so as not to have too much unnecessary columns with country names.
 #
@@ -136,7 +138,7 @@ X3 = X3[mask]
 
 ###############################################################################
 # Prediction model
-#  ---------------------
+# ---------------------
 #
 #
 # Let us now define the model that will be used to predict the happiness score:
