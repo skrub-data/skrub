@@ -1,16 +1,14 @@
 """
-Joining tables with fuzzyjoin
+Joining tables with fuzzy_join
 ================================
 
-In this example, we show how to join tables with the :function:`fuzzyjoin` function. 
+In this example, we show how to join tables with the :func:`fuzzy_join` function. 
 We also demonstrate why this method is the most easy and appropriate tool for handling 
 the joining of tables for users that want to improve their machine learning models quickly.
-We go through some of the rich options that allow for manipulation when joining tables,
-such as taking into account the precision of the match.
 
-To do so, we will predict the happiness score of a country from
-the 2022 [World Happiness Report](https://worldhappiness.report/).
-We will also use data provided from the [World Bank open data platform](https://data.worldbank.org/)
+We will illustrate the join to predict the happiness score of a country from
+the `2022 World Happiness Report <https://worldhappiness.report/>`_.
+We will also use data provided from `the World Bank open data platform <https://data.worldbank.org/>`_
 in order to create a satisfying prediction model.
 
 """
@@ -36,6 +34,7 @@ df.head(3)
 # The sum of all explanatory indexes is then the happiness score itself:
 df['Sum_of_factors'] = df.iloc[:,[5,6,7,8,9,10,11]].sum(axis=1)
 df[['Happiness score','Sum_of_factors']].head(3)
+#################################################################
 
 # Thus, we cannot use them for our prediction model.
 X = df[['Country']]
@@ -45,9 +44,6 @@ y = df[['Happiness score']]
 # we will need to include explanatory factors from other tables.
 
 ###############################################################################
-# Joining tables using fuzzyjoin
-# =================================
-#
 # Finding additional tables
 # ---------------------------
 
@@ -67,21 +63,20 @@ life_exp.head(3)
 legal_rights = fetch_world_bank_data('IC.LGL.CRED.XQ', indicator='legal_rights')
 legal_rights.head(3)
 
+# Joining new World Bank tables to our initial one
+# =================================================
 
-# Joining tables
-# -----------------------
-#
-# Now, using dirty_cat's fuzzyjoin function,
+# Now, using dirty_cat's :func:`fuzzy_join` function,
 # we need only one line to join two tables
 # without worrying about preprocessing:
 
 # We add GDP per capita to the initial table:
-from dirty_cat._fuzzy_join import fuzzyjoin
-X1 = fuzzyjoin(X, gdppc, on=['Country', 'Country Name'])
+from dirty_cat._fuzzy_join import fuzzy_join
+X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'])
 X1.head(20)
 #################################################################
 
-# Now, we see that our fuzzyjoin succesfully identified the countries,
+# Now, we see that our :func:`fuzzy_join` succesfully identified the countries,
 # even though some country names differ between tables. 
 
 # For instance, Czechia is well identified as Czech Republic and Luxembourg* as Luxembourg. 
@@ -93,7 +88,7 @@ X1.head(20)
 # the data (e.g. remove the * after country name) and look manually
 # for matching patterns in observations. 
 
-# Dirty_cat's fuzzyjoin is the perfect function to avoid doing so (and save time) with great results.
+# Dirty_cat's :func:`fuzzy_join` is the perfect function to avoid doing so (and save time) with great results.
 
 # However, we see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
 # because there is simply no match in the two tables.
@@ -104,21 +99,22 @@ X1.iloc[121]
 # with a fixed threshold so as to include only precise-enough matches:
 
 # --> To improve precision measurement, here it excludes some good matches as well
-X1 = fuzzyjoin(X, gdppc, on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3)
+X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3)
 X1.iloc[121]
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
 #################################################################
 
 # Now let's include other information that may be relevant, such as life expectancy:
-X2 = fuzzyjoin(X1, life_exp,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
+X2 = fuzzy_join(X1, life_exp,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
 X2.head(3)
 #################################################################
 
-# Note: Here, we use the `keep='left'` option to keep only the left key matching column,
-# so as not to have too much unnecessary columns with country names.
+# .. topic:: Note:
+#    Here, we use the `keep='left'` option to keep only the left key matching column,
+#    so as not to have too much unnecessary columns with country names.
 
 # And the strenght of legal rights in the country:
-X3 = fuzzyjoin(X2, legal_rights,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
+X3 = fuzzy_join(X2, legal_rights,  on=['Country', 'Country Name'], precision='2dball', precision_threshold=0.3, keep='left')
 X3.head(3)
 #################################################################
 
@@ -157,5 +153,5 @@ for n in range(len([X1, X2, X3])):
 
 # Our score gets better every time we add additional information into our table !
 
-# This is why dirty_cat's FuzzyJoin is an easy-to-use
+# This is why dirty_cat's :func:`fuzzy_join` is an easy-to-use
 # and useful tool.

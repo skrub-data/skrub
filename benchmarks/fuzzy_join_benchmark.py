@@ -9,7 +9,7 @@ from fasttext import load_model
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
 from thefuzz import process
 from autofj import AutoFJ
-from dirty_cat._fuzzy_join import fuzzyjoin
+from dirty_cat._fuzzy_join import fuzzy_join
 
 
 def fetch_data(dataset_name):
@@ -104,10 +104,10 @@ def evaluate(pred_joins, gt_joins):
     return precision, recall, f1
 
 
-def fuzzyjoin_precision_recall(left, right, gt, left_col, right_col):
+def fuzzy_join_precision_recall(left, right, gt, left_col, right_col):
     cols = [left_col, right_col]
 
-    joined_fj, dist = fuzzyjoin(left, right, on=cols, return_distance=True)
+    joined_fj, dist = fuzzy_join(left, right, on=cols, return_distance=True)
 
     pr_list = []
     re_list = []
@@ -239,7 +239,7 @@ if __name__ == "__main__":
             for similarity in ["cosine", "l1", "l2"]:
                 if analyser == "word" and max_n_gram > 2:
                     continue
-                precision, recall, f1 = fuzzyjoin_precision_recall(
+                precision, recall, f1 = fuzzy_join_precision_recall(
                     right_1,
                     left_1,
                     gt_1,

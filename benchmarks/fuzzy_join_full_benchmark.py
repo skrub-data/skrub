@@ -1,4 +1,19 @@
-from fuzzy_join_benchmark import *
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.metrics.pairwise import distance_metrics
+from sklearn.preprocessing import StandardScaler
+import fasttext.util
+from fasttext import load_model
+from thefuzz.fuzz import partial_ratio, WRatio, ratio
+from thefuzz import process
+from autofj import AutoFJ
+from dirty_cat._fuzzy_join import fuzzy_join
+from thefuzz.fuzz import partial_ratio, WRatio, ratio
+import fasttext.util
+from fuzzy_join_benchmark import fetch_data, fuzzy_join_precision_recall,\
+    fasttext_precision_recall,thefuzz_precision_recall, autofj_precision_recall
+
 
 if __name__ == "__main__":
     datasets = [
@@ -22,7 +37,7 @@ if __name__ == "__main__":
                     if analyser == "word" and max_n_gram > 2:
                         continue
                     model_name = f"countVectorizer_{analyser}_{max_n_gram}_{similarity}"
-                    precision, recall, f1 = FuzzyJoin_precision_recall(
+                    precision, recall, f1 = fuzzy_join_precision_recall(
                         right_1,
                         left_1,
                         gt_1,

@@ -16,7 +16,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.neighbors import NearestNeighbors
 
 
-def fuzzyjoin(left_table, right_table, on, return_distance=False, analyzer="char_wb",
+def fuzzy_join(left_table, right_table, on, return_distance=False, analyzer="char_wb",
               ngram_range=(2, 4), precision='nearest', precision_threshold=0.5, suffixes=('_l', '_r'), keep='all',):
     """
     Join tables based on categorical string columns as joining keys.
