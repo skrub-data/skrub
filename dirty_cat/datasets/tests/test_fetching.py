@@ -22,8 +22,14 @@ from dirty_cat.datasets.fetching import (
     _features_to_csv_format, _export_gz_data_to_csv,
     _get_details, _get_features, Details, Features,
     fetch_openml_dataset as _fetch_openml_dataset,
+    fetch_world_bank_data
 )
 
+
+def test_fetch_world_bank_data(data_code, indicator_name):
+    df = fetch_world_bank_data(data_code=data_code, indicator=indicator_name)
+    assert isinstance(df, pd.DataFrame)
+    assert df.columns[1]==indicator_name
 
 @wraps(_fetch_openml_dataset)
 def fetch_openml_dataset(*args, **kwargs):
@@ -370,4 +376,5 @@ if __name__ == "__main__":
     print("Tests starting")
     test_fetch_openml_dataset_mocked()
     test_fetch_openml_dataset()
+    test_fetch_world_bank_data('NY.GDP.PCAP.CD', 'gdppc')
     print("Tests passed")
