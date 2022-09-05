@@ -26,8 +26,8 @@ from dirty_cat.datasets.fetching import (
 )
 
 
-def test_fetch_world_bank_data(data_code, indicator_name):
-    df = fetch_world_bank_data(data_code=data_code, indicator=indicator_name)
+def test_fetch_world_bank_data(data_id, indicator_name):
+    df = fetch_world_bank_data(data_code=data_id, indicator=indicator_name)
     assert isinstance(df, pd.DataFrame)
     assert df.columns[1]==indicator_name
 
@@ -376,5 +376,5 @@ if __name__ == "__main__":
     print("Tests starting")
     test_fetch_openml_dataset_mocked()
     test_fetch_openml_dataset()
-    test_fetch_world_bank_data('NY.GDP.PCAP.CD', 'gdppc')
+    test_fetch_world_bank_data(data_id='NY.GDP.PCAP.CD', indicator_name='gdppc')
     print("Tests passed")
