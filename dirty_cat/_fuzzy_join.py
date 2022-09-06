@@ -135,20 +135,17 @@ def fuzzy_join(left_table: pd.DataFrame,
 
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
-            "analyzer should be either 'char', 'word' or",
-            f"'char_wb', got {analyzer}",
+            f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer}",
         )
 
     if precision not in ["nearest", "radius"]:
         raise ValueError(
-            "precision should be either 'nearest' or",
-            f"'radius', got {precision}",
+            f"precision should be either 'nearest' or 'radius', got {precision}",
         )
 
     if keep not in ["left", "right", "all"]:
         raise ValueError(
-            "keep should be either 'left', 'right' or",
-            f"'all', got {keep}",
+            f"keep should be either 'left', 'right' or 'all', got {keep}",
         )
 
     if len(suffixes) != 2:
@@ -182,7 +179,8 @@ def fuzzy_join(left_table: pd.DataFrame,
         right_col = on[1]
     else:
         raise ValueError(
-            f"Expected a list with one or two elements for parameter 'on', received {len(on)} ({on!r})."
+            "Expected a list with one or two elements for parameter 'on',"
+             f"received {len(on)} ({on})."
         )
 
     cols = list(lt.columns) + list(rt.columns)

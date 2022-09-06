@@ -32,9 +32,9 @@ from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
 
 def test_fetch_world_bank_data():
     indicator_name = 'gdppc'
-    df = fetch_world_bank_data('NY.GDP.PCAP.CD', indicator_name)
+    df = fetch_world_bank_data('NY.GDP.PCAP.CD', indicator_name).X
     assert isinstance(df, pd.DataFrame)
-    assert df.columns[1]== indicator_name
+    assert df.columns[1] == indicator_name
 
 
 @wraps(_fetch_openml_dataset)

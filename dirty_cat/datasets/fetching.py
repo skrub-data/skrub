@@ -606,27 +606,50 @@ def fetch_drug_directory(
     )
 
 
-def fetch_world_bank_data(data_code, indicator):
-    data_dir=os.path.join(os.getcwd(), 'dirty_cat_data')
+def fetch_world_bank_data(data_code: str, indicator: str,
+                          load_dataframe: bool = True,
+                          ) -> Union[DatasetAll, DatasetInfoOnly]:
+    data_dir = os.path.join(os.getcwd(), 'dirty_cat_data')
     zip_path = data_dir + '_folder'
     # Download the file :
     url = f'https://api.worldbank.org/v2/en/indicator/{data_code}?downloadformat=csv'
     urllib.request.urlretrieve(url, data_dir)
-
     # Extract csv file :
     with ZipFile(data_dir, 'r') as f:
         names = f.namelist()
         for n in names:
             if 'Metadata' not in n:
                 f.extract(
-                n, path=zip_path)
+                    n, path=zip_path)
                 true_file = n
     f.close()
-
     # Read csv
     csvfile_path = zip_path + '/' + true_file
-    data = pd.read_csv(csvfile_path, skiprows=3)
-    data[indicator] = data.stack().groupby(level=0).last()
-    data = data[data[indicator]!=data_code]
-    data = data[['Country Name', indicator]]
-    return data
+    df = pd.read_csv(csvfile_path, skiprows=3)
+    df[indicator] = df.stack().groupby(level=0).last()
+    df = df[df[indicator] != data_code]
+    df = df[['Country Name', indicator]]
+
+    if load_dataframe:
+        dataset = DatasetAll(
+            name=indicator,
+            description=f'This table shows the {data_code} World Bank\
+            indicator. It can be used as an input table for fuzzy_join.',
+            X=df,
+            y=pd.Series(dtype=object),
+            source=url,
+            path=zip_path,
+        )
+    else:
+        dataset = DatasetInfoOnly(
+            name=indicator,
+            description=f'This table shows the {data_code} World Bank\
+            indicator. It can be used as an input table for fuzzy_join.',
+            source=url,
+            target='To be defined',
+            path=zip_path,
+            read_csv_kwargs={
+                "skiprows": "3",
+                },
+        )
+    return dataset
