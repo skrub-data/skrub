@@ -77,7 +77,7 @@ legal_rights.head(3)
 # without worrying about preprocessing:
 #
 # We add GDP per capita to the initial table:
-from dirty_cat._fuzzy_join import fuzzy_join
+from dirty_cat import fuzzy_join
 X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'])
 X1.head(20)
 #################################################################
