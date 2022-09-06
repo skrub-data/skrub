@@ -9,8 +9,13 @@ Major changes
     in the SuperVectorizer for datetime columns.
 * Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
 * Bumped minimum dependencies:
+  - sklearn>=0.22
   - scipy>=1.4.0
   - numpy>=1.17.3
+
+* Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
+    The :class:`SimilarityEncoder` now exclusively uses `ngram` for similarities,
+    and the `similarity` parameter is deprecated. It will be removed in 0.5.
 
 Notes
 -----
