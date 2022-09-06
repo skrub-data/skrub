@@ -104,7 +104,7 @@ def test_fuzzy_join(analyzer, precision, return_distance=True):
     assert (dist3 == dist2).all()
 
 @pytest.mark.parametrize(
-    "analyzer, precision, keep", [("a_blabla", "p_blabla", "k_blabla"), (1, 26, 34, 45)]
+    "analyzer, precision, keep", [("a_blabla", "p_blabla", "k_blabla"), (1, 26, 34)]
 )
 def test_parameters_error(analyzer, precision, keep):
     """ Testing if correct errors are raised when wrong parameter values are given. """
