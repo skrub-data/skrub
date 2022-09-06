@@ -22,9 +22,7 @@ For a detailed description of the problem of encoding dirty categorical data, se
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
 and `Encoding high-cardinality string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
-If you like the package, please *spread the word*, and ⭐ the repository !
-
-
+If you like the package, please *spread the word*, and ⭐ the repository!
 
 When to use?
 ------------
@@ -40,7 +38,7 @@ scikit-learn pipelines as they are compliant with the library's principles.
 As such, they can be drop-in replacements for other encoders !
 
 Encoders
---------
+~~~~~~~~
 
 dirty_cat provides various tools for dealing with dirty data:
 
@@ -53,7 +51,7 @@ dirty_cat provides various tools for dealing with dirty data:
 You can find more details and examples on `the website <https://dirty-cat.github.io/>`_.
 
 Benchmark
----------
+~~~~~~~~~
 
 
 
@@ -67,7 +65,7 @@ dirty_cat can be easily installed via `pip`::
 Dependencies
 ~~~~~~~~~~~~
 
-Dependencies and minimal versions are listed in the file `min-requirements.txt`
+Dependencies and minimal versions are listed in the file `min-requirements.txt <https://github.com/dirty-cat/dirty_cat/blob/master/requirements-min.txt>`_
 
 Other implementations
 ---------------------
@@ -80,7 +78,7 @@ Contributing
 If you want to encourage development of dirty_cat,
 the best thing to do now is to *spread the word*!
 
-If you encounter an issue during use of dirty_cat, please
+If you encounter an issue while using dirty_cat, please
 `open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_ or
 `submit a pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.
 Don't hesitate, you're helping to make this project better for everyone!
@@ -91,7 +89,13 @@ References
 .. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
 .. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
 
+Citations
+~~~~~~~~~
+
+If you're using dirty_cat in a scientific publication, we would greatly appreciate
+citations:
+
 Notes
------
+~~~~~
 
 The library is provided under the `BSD 3-clause licence <https://github.com/dirty-cat/dirty_cat/blob/master/LICENSE.txt>`_.
