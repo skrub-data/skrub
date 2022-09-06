@@ -23,8 +23,8 @@ def fuzzy_join(left_table: pd.DataFrame,
                return_distance: bool = False,
                analyzer: Literal["word", "char", "char_wb"] = "char_wb",
                ngram_range: Tuple[int, int] = (2, 4),
-               precision: Literal["nearest", "radius"] = 'nearest',
-               precision_threshold: float = 0.5,
+               match_type: Literal["nearest", "radius"] = 'nearest',
+               match_threshold: float = 0.5,
                suffixes: Tuple[str, str] = ('_l', '_r'),
                keep: str = 'all',
                ) -> pd.DataFrame:
@@ -55,15 +55,15 @@ def fuzzy_join(left_table: pd.DataFrame,
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
-    precision : {`nearest`, `radius`}, default=`nearest`
-        Type of measure that is used to determine the precision of the joined
+    match_type : {`nearest`, `radius`}, default=`nearest`
+        Type of measure that is used to estimate the precision of the joined
         entities.
-        If `nearest`, returns the neirest neighbor match.
+        If `nearest`, only returns the neirest neighbor match.
         If `radius`, return the nearest neighbor if the estimated precision
         based on the number of neighbors in the 2 times the neirest neighbor
         distance radius is under the precision_threshold.
-    precision_threshold : float, default=0.5
-        Used only if precision is `radius`. Determines the level of
+    match_threshold : float, default=0.5
+        Used only if match_type is `radius`. Determines the level of
         precision required to match the two column values. If not matched,
         all columns have `nan`'s.
     suffixes: tuple, default=('_x', '_y')
@@ -85,11 +85,11 @@ def fuzzy_join(left_table: pd.DataFrame,
     -----
     There are two main ways to take into account for the similarity between
     categories.
-    When we use precision='nearest', the function will be forced to find the
+    When we use match_type='nearest', the function will be forced to find the
     nearest match across the possible options.
-    When the neighbors are distant, we may use the precision='radius' option
-    with the precision_threshold value to define the minimal level of precision
-    every match should have. If this precision is not reached, matches will be
+    When the neighbors are distant, we may use the match_type='radius' option
+    with the match_threshold value to define the minimal level of precision
+    every match should have. If this is not reached, matches will be
     considered as inexistant and NaN values will be imputed.
     See example below for an illustration.
 
@@ -112,15 +112,15 @@ def fuzzy_join(left_table: pd.DataFrame,
     3  sana  8
 
     To do a simple join based on the nearest match:
-    >>> fuzzy_join(df1, df2, on=['a'], precision='nearest')
+    >>> fuzzy_join(df1, df2, on=['a'], match_type='nearest')
         a_l  b   a_r    c
     0   ana  1   ana   7
     1  lala  2  lala   6
     2  nana  3  sana   8
 
     When we do not want to ignore the precison of the match,
-    we can use the precision='radius' argument and give a threshold:
-    >>> fuzzy_join(df1, df2, on=['a'], precision='radius', precision_threshold=0.3)
+    we can use the match_type='radius' argument and give a threshold:
+    >>> fuzzy_join(df1, df2, on=['a'], match_type='radius', match_threshold=0.3)
         a_l  b   a_r    c
     0   ana  1   ana  7.0
     1  lala  2  lala  6.0
@@ -138,9 +138,9 @@ def fuzzy_join(left_table: pd.DataFrame,
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer}",
         )
 
-    if precision not in ["nearest", "radius"]:
+    if match_type not in ["nearest", "radius"]:
         raise ValueError(
-            f"precision should be either 'nearest' or 'radius', got {precision}",
+            f"match_type should be either 'nearest' or 'radius', got {match_type}",
         )
 
     if keep not in ["left", "right", "all"]:
@@ -180,7 +180,7 @@ def fuzzy_join(left_table: pd.DataFrame,
     else:
         raise ValueError(
             "Expected a list with one or two elements for parameter 'on',"
-             f"received {len(on)} ({on})."
+            f"received {len(on)} ({on})."
         )
 
     cols = list(lt.columns) + list(rt.columns)
@@ -199,12 +199,12 @@ def fuzzy_join(left_table: pd.DataFrame,
     distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
-    if precision == 'nearest':
+    if match_type == 'nearest':
         for idx in lt.index:
             joined.loc[idx, rt.columns] = list(rt.iloc[idx_closest[idx]])
 
-    elif precision == 'radius':
-        prec = []
+    elif match_type == 'radius':
+        prec = np.array()
         for i in range(left_enc.shape[0]):
             # Find all neighbors in a given radius:
             dist = 2 * distance[i]
@@ -215,7 +215,7 @@ def fuzzy_join(left_table: pd.DataFrame,
             twodball_pts = rng[1][0]
             prec.append(1 / len(twodball_pts))
         for idx in lt.index:
-            if prec[idx] >= precision_threshold:
+            if prec[idx] >= match_threshold:
                 joined.loc[idx, rt.columns] = list(rt.iloc[idx_closest[idx]])
             else:
                 joined.loc[idx, rt.columns] = np.nan

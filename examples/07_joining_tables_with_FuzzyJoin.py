@@ -103,19 +103,19 @@ X1.head(20)
 X1.iloc[121]
 #################################################################
 #
-# In this case, it is better to use the 'radius' precision
+# In this case, it is better to use the 'radius' match type
 # with a fixed threshold so as to include only precise-enough matches:
 #
-# --> To improve precision measurement, here it excludes some good matches as well
+# --> To improve match_threshold measurement, here it excludes some good matches as well
 X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'],
-                precision='radius', precision_threshold=0.3)
+                match_type='radius', match_threshold=0.3)
 X1.iloc[121]
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
 #################################################################
 #
 # Now let's include other information that may be relevant, such as life expectancy:
 X2 = fuzzy_join(X1, life_exp,  on=['Country', 'Country Name'],
-                precision='radius', precision_threshold=0.3, keep='left')
+                match_type='radius', match_threshold=0.3, keep='left')
 X2.head(3)
 #################################################################
 # .. topic:: Note:
@@ -125,7 +125,7 @@ X2.head(3)
 #
 # And the strenght of legal rights in the country:
 X3 = fuzzy_join(X2, legal_rights,  on=['Country', 'Country Name'],
-                precision='radius', precision_threshold=0.3, keep='left')
+                match_type='radius', match_threshold=0.3, keep='left')
 X3.head(3)
 #################################################################
 #
