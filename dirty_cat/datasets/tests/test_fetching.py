@@ -35,7 +35,7 @@ def test_fetch_world_bank_data():
     df = fetch_world_bank_data('NY.GDP.PCAP.CD', indicator_name).X
     assert isinstance(df, pd.DataFrame)
     assert df.columns[1] == indicator_name
-
+    assert fetch_world_bank_data('NY.GDP.PCAP.CD', indicator_name, load_dataframe=False).name == indicator_name
 
 @wraps(_fetch_openml_dataset)
 def fetch_openml_dataset(*args, **kwargs):

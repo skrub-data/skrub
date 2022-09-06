@@ -53,14 +53,17 @@ y = df[['Happiness score']]
 # We will extract data from the World Bank databank using the following function:
 from dirty_cat.datasets import fetch_world_bank_data
 
+#################################################################
 # We then extract GDP per capita by country:
 gdppc = fetch_world_bank_data(data_code='NY.GDP.PCAP.CD', indicator='gdppc').X
 gdppc.head(3)
 
+#################################################################
 # Life expectancy by country:
 life_exp = fetch_world_bank_data('SP.DYN.LE00.IN', 'life_exp').X
 life_exp.head(3)
 
+#################################################################
 # And the legal rights strength by country:
 legal_rights = fetch_world_bank_data('IC.LGL.CRED.XQ', 'legal_rights').X
 legal_rights.head(3)

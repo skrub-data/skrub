@@ -149,11 +149,11 @@ def fuzzy_join(left_table: pd.DataFrame,
         )
 
     if len(suffixes) != 2:
-        raise ValueError(f"Invalid number of suffixes: expected 2,\
-                         got {len(suffixes)}({suffixes!r})")
+        raise ValueError("Invalid number of suffixes: expected 2,"
+                         f" got {len(suffixes)}")
     lsuffix, rsuffix = suffixes
     if not lsuffix and not rsuffix:
-        raise ValueError(f"Tuple {suffixes} has invalid number of elements.")
+        raise ValueError(f"Suffixes ({suffixes}) has invalid number of elements.")
     overlap_cols = lt._info_axis.intersection(rt._info_axis)
     if len(overlap_cols) > 0:
         for i in range(len(overlap_cols)):

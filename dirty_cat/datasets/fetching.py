@@ -633,8 +633,8 @@ def fetch_world_bank_data(data_code: str, indicator: str,
     if load_dataframe:
         dataset = DatasetAll(
             name=indicator,
-            description=f'This table shows the {data_code} World Bank\
-            indicator. It can be used as an input table for fuzzy_join.',
+            description=f'This table shows the {data_code} World Bank'
+            'indicator. It can be used as an input table for fuzzy_join.',
             X=df,
             y=pd.Series(dtype=object),
             source=url,
@@ -643,8 +643,8 @@ def fetch_world_bank_data(data_code: str, indicator: str,
     else:
         dataset = DatasetInfoOnly(
             name=indicator,
-            description=f'This table shows the {data_code} World Bank\
-            indicator. It can be used as an input table for fuzzy_join.',
+            description=f'This table shows the {data_code} World Bank'
+            'indicator. It can be used as an input table for fuzzy_join.',
             source=url,
             target='To be defined',
             path=zip_path,
