@@ -203,7 +203,7 @@ def fuzzy_join(left_table: pd.DataFrame,
         for idx in lt.index:
             joined.loc[idx, rt.columns] = list(rt.iloc[idx_closest[idx]])
 
-    if precision == 'radius':
+    elif precision == 'radius':
         prec = []
         for i in range(left_enc.shape[0]):
             # Find all neighbors in a given radius:
