@@ -119,6 +119,14 @@ In some cases, we might even feature it on the official repository!
 
 ### Writing your first Pull Request
 
+#### Preparing the ground
+
+If not already done, you'll want to create an issue first,
+and discuss the changes with the project's maintainers.
+
+Please refer to the previous section *How do I submit a (good) enhancement proposal?*
+for more information.
+
 #### Setting up the environment
 
 Using a dedicated Python environment is highly recommended!
@@ -128,6 +136,13 @@ Different solutions are available, the most common being
 and [pyenv](https://github.com/pyenv/pyenv).
 
 So, first step: create your environment.
+
+For this example, we'll use conda:
+
+```commandline
+conda create python=3.10 --name dirty_cat
+conda activate dirty_cat
+```
 
 Secondly, clone the repository (you'll need to have `git` installed -
 it is already on most linux distributions).
@@ -140,6 +155,7 @@ Next, install the development dependencies. Currently, they are listed in `requi
 
 ```commandline
 pip install -r requirements.txt
+pip install pre-commit
 ```
 
 As the final step of this section, install the git pre-commit hooks:
@@ -147,3 +163,35 @@ As the final step of this section, install the git pre-commit hooks:
 ```commandline
 pre-commit install
 ```
+
+#### Implementation
+
+While writing your implementation, there are a few specific project goals to keep in mind:
+- Pure Python code - no binary extensions, Cython, etc
+- Make production-friendly code
+  - Try to target the broadest range of versions (Python and dependencies)
+  - Use the least amount of dependencies
+  - Make code as backward compatible as possible
+- Prefer performance to readability
+  - Optimized code might be hard to read, so [please comment it](https://stackoverflow.blog/2021/12/23/best-practices-for-writing-code-comments/)
+- Use explicit, borderline verbose variables / function names
+- Public functions / methods / variables / class signatures should be documented and type-hinted
+  - The public API describes the components users of the library will import and use.
+    It's everything that can be imported and does not start with an underscore.
+
+#### Submitting your code
+
+First, you'll want to fork dirty_cat on Github.
+
+That will enable you to push your commits to a branch _on your fork_.
+
+Next, you can use the Github "Compare & pull request" button to submit the PR.
+
+#### Integration
+
+Community consensus is key in the integration process.
+Expect a minimum of 1 to 3 reviews depending on the size of the change
+before we consider merging the PR.
+
+Once again, remember that maintainers are **volunteers** and therefore cannot
+guarantee how much time it will take to review the changes.
