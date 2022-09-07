@@ -400,9 +400,9 @@ def fetch_dataset_as_dataclass(
         If `load_dataframe=False`
 
     """
-    if source is 'openml':
+    if source == 'openml':
         info = fetch_openml_dataset(dataset_id)
-    if source is 'world_bank':
+    if source == 'world_bank':
         info = fetch_world_bank_data(dataset_id, dataset_name)
     if load_dataframe:
         df = pd.read_csv(info["path"], **read_csv_kwargs)
