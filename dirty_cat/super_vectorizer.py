@@ -138,7 +138,7 @@ class SuperVectorizer(ColumnTransformer):
         data type (dtype).
 
     impute_missing : str, default='auto'
-        When to impute missing values _in categorical columns_.
+        When to impute missing values in categorical columns.
         'auto' will impute missing values if it is considered appropriate
         (we are using an encoder that does not support missing values and/or
         specific versions of pandas, numpy and scikit-learn).
