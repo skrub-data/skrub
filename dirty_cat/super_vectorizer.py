@@ -4,13 +4,14 @@ apply encoders to different types of data, without the need to manually
 categorize them beforehand, or construct complex Pipelines.
 """
 
+
 from typing import Dict, List, Literal, Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
 import pandas as pd
-from pandas.core.dtypes.base import ExtensionDtype
 import sklearn
+from pandas.core.dtypes.base import ExtensionDtype
 from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
