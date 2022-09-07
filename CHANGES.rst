@@ -8,6 +8,10 @@ Major changes
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the :class:`SuperVectorizer` for datetime columns.
 * The :class:`SuperVectorizer` has seen some major improvements and bug fixes.
+* **Backward-incompatible change in the SuperVectorizer**: to apply ``remainder``
+  to features (with the ``*_transformer`` parameters), the value ``'remainder'``
+  must be passed, instead of ``None`` in previous versions.
+  ``None`` now indicates that we want to use the default transformer.
 * Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
 * Bumped minimum dependencies:
   - sklearn>=0.22
@@ -16,13 +20,13 @@ Major changes
   - pandas>=1.2.0
 
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
-    The :class:`SimilarityEncoder` now exclusively uses `ngram` for similarities,
-    and the `similarity` parameter is deprecated. It will be removed in 0.5.
+    The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
+    and the ``similarity`` parameter is deprecated. It will be removed in 0.5.
 
 Notes
 -----
 
-* The `transformers_` attribute of the SuperVectorizer now contains column
+* The ``transformers_`` attribute of the SuperVectorizer now contains column
   names instead of column indices for the "remainder" columns.
 
 
