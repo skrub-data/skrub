@@ -28,7 +28,11 @@ def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
     return any(df.isnull())
 
 
-def _replace_false_missing(ser: pd.Series) -> pd.Series:
+def _replace_false_missing(
+    df: Union[pd.DataFrame, pd.Series]
+) -> Union[pd.DataFrame, pd.Series]:
+    # Should not replace "missing" (the string used for imputation in
+    # categorical features).
     STR_NA_VALUES = [
         "null",
         "",
@@ -49,9 +53,9 @@ def _replace_false_missing(ser: pd.Series) -> pd.Series:
         "#N/A",
         "NaN",
     ]  # taken from pandas.io.parsers (version 1.1.4)
-    ser = ser.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
-    ser = ser.replace(r"^\s+$", np.nan, regex=True)  # Replace whitespaces
-    return ser
+    df = df.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
+    df = df.replace(r"^\s+$", np.nan, regex=True)  # Replace whitespaces
+    return df
 
 
 def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Series:
@@ -313,18 +317,22 @@ class SuperVectorizer(ColumnTransformer):
 
         Parameters
         ----------
-        X : {dataframe} of shape (n_samples, n_features)
+        X : pandas.DataFrame of shape (n_samples, n_features)
             The data to be transformed.
 
         Returns
         -------
-        pd.DataFrame
+        pandas.DataFrame
             The same pandas DataFrame, with its columns cast to the best
             possible data type.
         """
+        # We replace in all columns regardless of their type,
+        # as we might have some false missing
+        # in numerical columns for instance.
+        X = _replace_false_missing(X)
+
         # Handle missing values
         for col in X.columns:
-            X[col] = _replace_false_missing(X[col])
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
             # because the former tends to raise all kind of issues when dealing
             # with scikit-learn (as of version 0.24).
@@ -382,23 +390,28 @@ class SuperVectorizer(ColumnTransformer):
 
     def fit_transform(self, X, y=None):
         """
-        Fit all transformers, transform the data, and concatenate the results.
+            Fit all transformers, transform the data, and concatenate the results.
 
-        Parameters
-        ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
-            Input data, of which specified subsets are used to fit the
-            transformers.
-        y : array-like of shape (n_samples,), default=None
-            Targets for supervised learning.
+            Parameters
+            ----------
+            X : {array-like, dataframe} of shape (n_samples, n_features)
+                Input data, of which specified subsets are used to fit the
+                transformers.
+            y : array-like of shape (n_samples,), default=None
+                Targets for supervised learning.
 
-        Returns
-        -------
-        {array-like, sparse matrix} of shape (n_samples, sum_n_components)
-            hstack of results of transformers. sum_n_components is the
-            sum of n_components (output dimension) over transformers. If
-            any result is a sparse matrix, everything will be converted to
-            sparse matrices.
+            Returns
+            -------
+            Number of jobs to run in parallel.
+            ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+            ``-1`` means using all processors.
+
+        transformer_weights : dict, d
+            {array-like, sparse matrix} of shape (n_samples, sum_n_components)
+                hstack of results of transformers. sum_n_components is the
+                sum of n_components (output dimension) over transformers. If
+                any result is a sparse matrix, everything will be converted to
+                sparse matrices.
         """
         self._clone_transformers()
         # Convert to pandas DataFrame if not already.
@@ -470,8 +483,9 @@ class SuperVectorizer(ColumnTransformer):
         self.imputed_columns_ = []
         if self.impute_missing != "skip":
             # First, replace false missing
-            for col in X.columns:
-                X.loc[:, col] = _replace_false_missing(X[col])
+            # This is technically redundant with the call made in `_auto_cast`,
+            # but we do it again anyway.
+            X = _replace_false_missing(X)
 
             # Then, impute if suiting
             if _has_missing_values(X):
@@ -514,7 +528,7 @@ class SuperVectorizer(ColumnTransformer):
         if self.verbose:
             print(f"[SuperVectorizer] Assigned transformers: {self.transformers}")
 
-        res = super().fit_transform(X, y)
+        X_enc = super().fit_transform(X, y)
 
         # For the "remainder" columns, the `ColumnTransformer` `transformers_`
         # attribute contains the index instead of the column name,
@@ -526,7 +540,7 @@ class SuperVectorizer(ColumnTransformer):
                 cols: List[int]
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
 
-        return res
+        return X_enc
 
     def transform(self, X) -> np.ndarray:
         """
