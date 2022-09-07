@@ -199,11 +199,11 @@ def fetch_world_bank_data(dataset_id: str, indicator: str,
     """
 
     # Make path absolute
-    data_directory = str(data_directory.resolve()) + '/world_bank.zip'
-    zip_path = data_directory + '_folder'
+    data_directory = data_directory.resolve() / 'world_bank.zip'
+    zip_path = Path(str(data_directory) + '_folder')
     # Download the file :
     url = f'https://api.worldbank.org/v2/en/indicator/{dataset_id}?downloadformat=csv'
-    urllib.request.urlretrieve(url, str(data_directory))
+    urllib.request.urlretrieve(url, data_directory)
     # Extract csv file :
     with ZipFile(data_directory, 'r') as f:
         names = f.namelist()
