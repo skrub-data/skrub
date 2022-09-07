@@ -214,7 +214,7 @@ def fetch_world_bank_data(dataset_id: str, indicator: str,
                 true_file = n
     f.close()
     # Read csv
-    csv_path = zip_path + '/' + true_file
+    csv_path = zip_path / true_file
     df = pd.read_csv(csv_path, skiprows=3)
     df[indicator] = df.stack().groupby(level=0).last()
     df = df[df[indicator] != dataset_id]
@@ -225,7 +225,7 @@ def fetch_world_bank_data(dataset_id: str, indicator: str,
     return {
         "description": description,
         "source": url,
-        "path": csv_path,
+        "path": csv_path.resolve(),
     }
 
 
