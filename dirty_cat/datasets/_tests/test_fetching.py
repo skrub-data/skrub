@@ -117,11 +117,11 @@ def test_fetch_openml_dataset():
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
 
 
-@mock.patch("dirty_cat.datasets.fetching.Path.is_file")
-@mock.patch("dirty_cat.datasets.fetching._get_features")
-@mock.patch("dirty_cat.datasets.fetching._get_details")
-@mock.patch("dirty_cat.datasets.fetching._export_gz_data_to_csv")
-@mock.patch("dirty_cat.datasets.fetching._download_and_write_openml_dataset")
+@mock.patch("dirty_cat.datasets._fetching.Path.is_file")
+@mock.patch("dirty_cat.datasets._fetching._get_features")
+@mock.patch("dirty_cat.datasets._fetching._get_details")
+@mock.patch("dirty_cat.datasets._fetching._export_gz_data_to_csv")
+@mock.patch("dirty_cat.datasets._fetching._download_and_write_openml_dataset")
 def test_fetch_openml_dataset_mocked(
     mock_download,
     mock_export,
@@ -168,7 +168,7 @@ def test_fetch_openml_dataset_mocked(
     mock_get_details.assert_called_once()
 
 
-@mock.patch("dirty_cat.datasets.fetching.fetch_openml")
+@mock.patch("dirty_cat.datasets._fetching.fetch_openml")
 def test__download_and_write_openml_dataset(mock_fetch_openml):
     """Tests function ``_download_and_write_openml_dataset()``."""
 
@@ -182,7 +182,7 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
     )
 
 
-@mock.patch("dirty_cat.datasets.fetching.Path.is_file")
+@mock.patch("dirty_cat.datasets._fetching.Path.is_file")
 def test__read_json_from_gz(mock_pathlib_path_isfile):
     """Tests function ``_read_json_from_gz()``."""
 
@@ -211,7 +211,7 @@ def test__read_json_from_gz(mock_pathlib_path_isfile):
         assert _read_json_from_gz(dummy_file_path) == expected_return_value
 
 
-@mock.patch("dirty_cat.datasets.fetching._read_json_from_gz")
+@mock.patch("dirty_cat.datasets._fetching._read_json_from_gz")
 def test__get_details(mock_read_json_from_gz):
     """Tests function ``_get_details()``."""
 
@@ -234,7 +234,7 @@ def test__get_details(mock_read_json_from_gz):
     assert returned_value == expected_return_value
 
 
-@mock.patch("dirty_cat.datasets.fetching._read_json_from_gz")
+@mock.patch("dirty_cat.datasets._fetching._read_json_from_gz")
 def test__get_features(mock_read_json_from_gz):
     """Tests function ``_get_features()``."""
 
@@ -305,8 +305,8 @@ def test__features_to_csv_format():
     assert _features_to_csv_format(features) == expected_return_value
 
 
-@mock.patch("dirty_cat.datasets.fetching.fetch_openml_dataset")
-@mock.patch("dirty_cat.datasets.fetching.fetch_dataset_as_dataclass")
+@mock.patch("dirty_cat.datasets._fetching.fetch_openml_dataset")
+@mock.patch("dirty_cat.datasets._fetching.fetch_dataset_as_dataclass")
 def test_import_all_datasets(
     mock_fetch_dataset_as_dataclass, mock_fetch_openml_dataset
 ):
