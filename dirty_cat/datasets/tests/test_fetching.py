@@ -24,7 +24,7 @@ from dirty_cat.datasets.fetching import (
     _get_details,
     _get_features,
     _read_json_from_gz,
-    fetch_world_bank_indicator
+    fetch_world_bank_indicator,
 )
 from dirty_cat.datasets.fetching import fetch_openml_dataset as _fetch_openml_dataset
 from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
@@ -386,17 +386,58 @@ def test_import_all_datasets(
         assert expected_return_value == returned_value
 
 
-def test_fetch_world_bank_data():
-    indicator_name = 'gdppc'
-    df = fetch_world_bank_indicator('NY.GDP.PCAP.CD', indicator_name).X
-    assert isinstance(df, pd.DataFrame)
-    assert df.columns[1] == indicator_name
-    assert fetch_world_bank_indicator('NY.GDP.PCAP.CD', indicator_name, load_dataframe=False).name == indicator_name
+def test_fetch_world_bank_indicator():
+    test_dataset = {
+    "name": 'gdppc',
+    "id": 'NY.GDP.PCAP.CD',
+    "desc_start": "**This table shows**",
+    "url": "https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.CD'?downloadformat=csv",
+    "dataset_columns_count": 2,
+    }
+
+    test_data_dir = get_test_data_dir()
+
+    try:
+        try:
+            # First, we want to purposefully test ValueError exceptions.
+            with pytest.raises(ValueError):
+                assert fetch_world_bank_indicator(dataset_id=0, indicator='blabla')
+                assert fetch_world_bank_indicator(
+                    dataset_id=2**32, indicator='blabla'
+                )
+
+            # Valid call
+            returned_info = fetch_world_bank_indicator(
+                dataset_id=test_dataset["id"],
+                indicator=test_dataset['name']
+            )
+
+        except URLError:
+            warnings.warn(
+                "No internet connection or the website is down, test aborted."
+            )
+            pytest.skip(
+                "Exception: Skipping this test because we encountered an "
+                "issue probably related to an Internet connection problem. "
+            )
+            return
+
+        assert returned_info["description"].startswith(test_dataset["desc_start"])
+        assert returned_info["source"] == test_dataset["url"]
+        assert returned_info["path"].is_file()
+
+        dataset: pd.DataFrame = pd.read_csv(returned_info["path"])
+
+        assert dataset.columns[1] == test_dataset['name']
+        assert dataset.shape[1] == test_dataset["dataset_rows_count"]
+
+    finally:
+        shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
 
 
 if __name__ == "__main__":
     print("Tests starting")
     test_fetch_openml_dataset_mocked()
     test_fetch_openml_dataset()
-    test_fetch_world_bank_data()
+    test_fetch_world_bank_indicator()
     print("Tests passed")

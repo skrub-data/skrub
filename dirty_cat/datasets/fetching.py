@@ -22,7 +22,6 @@ from dirty_cat.datasets.utils import get_data_dir
 
 from zipfile import ZipFile
 import urllib.request
-import os
 
 # Directory where the ``.gz`` files containing the
 # details on downloaded datasets are stored.
@@ -166,9 +165,9 @@ def fetch_openml_dataset(
     }
 
 
-def fetch_world_bank_data(dataset_id: str, indicator: str,
-                          data_directory: Path = get_data_dir(),
-                          ) -> Dict[str, Any]:
+def _fetch_world_bank_data(
+    dataset_id: str, indicator: str, data_directory: Path = get_data_dir(),
+) -> Dict[str, Any]:
     """
     Gets a dataset from World Bank open data platform
     (https://data.worldbank.org/).
@@ -197,22 +196,19 @@ def fetch_world_bank_data(dataset_id: str, indicator: str,
               saved as a CSV file.
 
     """
-
-    # Make path absolute
-    if not os.path.exists(data_directory):
-        os.makedirs(data_directory)
-    data_directory = data_directory.resolve() / 'world_bank.zip'
-    zip_path = Path(str(data_directory) + '_folder')
+    # Create directory if non-existant:
+    data_directory.mkdir(exist_ok=True, parents=True)
+    data_directory = data_directory.resolve() / "world_bank.zip"
+    zip_path = data_directory / "_folder"
     # Download the file :
-    url = f'https://api.worldbank.org/v2/en/indicator/{dataset_id}?downloadformat=csv'
+    url = f"https://api.worldbank.org/v2/en/indicator/{dataset_id}?downloadformat=csv"
     urllib.request.urlretrieve(url, data_directory)
     # Extract csv file :
-    with ZipFile(data_directory, 'r') as f:
+    with ZipFile(data_directory, "r") as f:
         names = f.namelist()
         for n in names:
-            if 'Metadata' not in n:
-                f.extract(
-                    n, path=zip_path)
+            if "Metadata" not in n:
+                f.extract(n, path=zip_path)
                 true_file = n
     f.close()
     # Read csv
@@ -220,10 +216,9 @@ def fetch_world_bank_data(dataset_id: str, indicator: str,
     df = pd.read_csv(csv_path, skiprows=3)
     df[indicator] = df.stack().groupby(level=0).last()
     df = df[df[indicator] != dataset_id]
-    df = df[['Country Name', indicator]]
+    df = df[["Country Name", indicator]]
     df.to_csv(csv_path, index=False)
-    description = f'This table shows the {dataset_id} World Bank'
-    'indicator. It can be used as an input table for fuzzy_join.'
+    description = f"This table shows the {dataset_id} World Bank indicator. It can be used as an input table for fuzzy_join."
     return {
         "description": description,
         "source": url,
@@ -381,7 +376,7 @@ def fetch_dataset_as_dataclass(
     target: str,
     read_csv_kwargs: dict,
     load_dataframe: bool,
-    source: str = 'openml'
+    source: str = "openml",
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
     Takes a dataset identifier, a target column name,
@@ -402,10 +397,10 @@ def fetch_dataset_as_dataclass(
         If `load_dataframe=False`
 
     """
-    if source == 'openml':
+    if source == "openml":
         info = fetch_openml_dataset(dataset_id)
-    if source == 'world_bank':
-        info = fetch_world_bank_data(dataset_id, dataset_name)
+    if source == "world_bank":
+        info = _fetch_world_bank_data(dataset_id, dataset_name)
     if load_dataframe:
         df = pd.read_csv(info["path"], **read_csv_kwargs)
         y = df[target]
@@ -678,15 +673,14 @@ def fetch_drug_directory(
     )
 
 
-def fetch_world_bank_indicator(data_code: str, indicator: str,
-                               load_dataframe: bool = True,
-                               ) -> Union[DatasetAll, DatasetInfoOnly]:
+def fetch_world_bank_indicator(
+    data_code: str, indicator: str, load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
     return fetch_dataset_as_dataclass(
         dataset_name=indicator,
         dataset_id=data_code,
         target=[],
-        read_csv_kwargs={
-        },
+        read_csv_kwargs={},
         load_dataframe=load_dataframe,
-        source='world_bank',
+        source="world_bank",
     )

@@ -4,9 +4,9 @@ from dirty_cat import fuzzy_join
 
 
 @pytest.mark.parametrize(
-    "analyzer, match_type", [("char", "nearest"), ("char_wb", "radius")]
+    "analyzer, match_type, keep", [("char", "nearest", "left"), ("char_wb", "radius", "right")]
 )
-def test_fuzzy_join(analyzer, match_type, return_distance=True):
+def test_fuzzy_join(analyzer, match_type, keep):
     """ Testing if fuzzy_join gives joining results as expected. """
     teams1 = pd.DataFrame(
         {
@@ -67,23 +67,24 @@ def test_fuzzy_join(analyzer, match_type, return_distance=True):
         }
     )
 
+    # Check correct shapes of outputs:
     teams_joined, dist1 = fuzzy_join(
         teams1,
         teams2,
         on=["basketball_teams", "teams_basketball"],
-        return_distance=return_distance,
+        return_distance=True,
         analyzer=analyzer, match_type=match_type,
         match_threshold=0.1
     )
-    # Check correct shapes of outputs
     assert teams_joined.shape == (9, 2)
     assert dist1.shape == (9, 1)
     assert (teams_joined == ground_truth).all()[1]
+    # And on the other way around:
     teams_joined_2, dist2 = fuzzy_join(
         teams2,
         teams1,
         on=["teams_basketball", "basketball_teams"],
-        return_distance=return_distance,
+        return_distance=True,
         analyzer=analyzer, match_type=match_type,
         match_threshold=0.1
     )
@@ -91,16 +92,32 @@ def test_fuzzy_join(analyzer, match_type, return_distance=True):
     assert teams_joined_2.shape == (10, 2)
     assert dist2.shape == (10, 1)
 
+    # Check invariability of joining:
     teams_joined_3 = fuzzy_join(
         teams2,
         teams1,
         on=["teams_basketball", "basketball_teams"],
-        return_distance=False,
         analyzer=analyzer, match_type=match_type,
         match_threshold=0.1
     )
-    # Check invariability of joining:
     pd.testing.assert_frame_equal(teams_joined_2, teams_joined_3)
+
+    # Check keep argument: 
+    teams_kept = fuzzy_join(
+        teams1,
+        teams2,
+        on=["basketball_teams", "teams_basketball"],
+        analyzer=analyzer, match_type=match_type,
+        match_threshold=0.1,
+        keep = keep
+    )
+    # If left, should be identical to the left table column:
+    if keep=='left':
+        pd.testing.assert_frame_equal(teams_kept, teams1)
+    # If right, should take the shape of the left table column:
+    if keep=='right':
+        assert teams_kept.shape == teams1.shape
+
 
 @pytest.mark.parametrize(
     "analyzer, match_type, keep, suffixes", [("a_blabla", "p_blabla", "k_blabla", ['a', 'b', 'c']), (1, 26, 34, [1, 2, 3])]
@@ -109,15 +126,13 @@ def test_parameters_error(analyzer, match_type, keep, suffixes):
     """ Testing if correct errors are raised when wrong parameter values are given. """
     df1 = pd.DataFrame({'a': ['ana', 'lala', 'nana'], 'b': [1, 2, 3]})
     df2 = pd.DataFrame({'a': ['anna', 'lala', 'ana', 'sana'], 'c': [5, 6, 7, 8]})
-    with pytest.raises(ValueError, match=f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer}"):
+    with pytest.raises(ValueError, match=f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}"):
         fuzzy_join(df1, df2, on=['a'], analyzer=analyzer)
-    with pytest.raises(ValueError, match=f"match_type should be either 'nearest' or 'radius', got {match_type}"):
+    with pytest.raises(ValueError, match=f"match_type should be either 'nearest' or 'radius', got {match_type!r}"):
         fuzzy_join(df1, df2, on=['a'], match_type=match_type)
-    with pytest.raises(ValueError, match=f"keep should be either 'left', 'right' or 'all', got {keep}"):
+    with pytest.raises(ValueError, match=f"keep should be either 'left', 'right' or 'all', got {keep!r}"):
         fuzzy_join(df1, df2, on=['a'], keep=keep)
-    with pytest.raises(ValueError, match=f"keep should be either 'left', 'right' or 'all', got {keep}"):
-        fuzzy_join(df1, df2, on=['a'], keep=keep)
-    with pytest.raises(ValueError, match="value a was specified for parameter 'on', which has invalid type, expected list of column names."):
-        fuzzy_join(df1, df2, on='a')
     with pytest.raises(ValueError, match=f"Invalid number of suffixes: expected 2, got 3"):
         fuzzy_join(df1, df2, on='a', suffixes=suffixes)
+    with pytest.raises(ValueError, match="value 'a' was specified for parameter 'on', which has invalid type, expected list of column names."):
+        fuzzy_join(df1, df2, on='a')

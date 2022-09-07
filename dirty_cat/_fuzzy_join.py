@@ -17,17 +17,18 @@ from sklearn.neighbors import NearestNeighbors
 from typing import List, Literal, Tuple
 
 
-def fuzzy_join(left_table: pd.DataFrame,
-               right_table: pd.DataFrame,
-               on: List[str],
-               return_distance: bool = False,
-               analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-               ngram_range: Tuple[int, int] = (2, 4),
-               match_type: Literal["nearest", "radius"] = 'nearest',
-               match_threshold: float = 0.5,
-               suffixes: Tuple[str, str] = ('_l', '_r'),
-               keep: str = 'all',
-               ) -> pd.DataFrame:
+def fuzzy_join(
+    left_table: pd.DataFrame,
+    right_table: pd.DataFrame,
+    on: List[str],
+    return_distance: bool = False,
+    analyzer: Literal["word", "char", "char_wb"] = "char_wb",
+    ngram_range: Tuple[int, int] = (2, 4),
+    match_type: Literal["nearest", "radius"] = "nearest",
+    match_threshold: float = 0.5,
+    suffixes: Tuple[str, str] = ("_l", "_r"),
+    keep: Literal["left", "right", "all"] = "all",
+) -> pd.DataFrame:
     """
     Join two tables based on categorical string columns as joining keys,
     and approximate matching via string similarity across the two tables.
@@ -44,7 +45,7 @@ def fuzzy_join(left_table: pd.DataFrame,
             the matching will be perfomed.
     return_distance: boolean, default=True
             Wheter to return distance between nearest matched categories.
-    analyzer : str, default=`char_wb`
+    analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
         similarities.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
@@ -55,7 +56,7 @@ def fuzzy_join(left_table: pd.DataFrame,
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
-    match_type : {`nearest`, `radius`}, default=`nearest`
+    match_type : typing.Literal["nearest", "radius"], default=`nearest`
         Type of measure that is used to estimate the precision of the joined
         entities.
         If `nearest`, only returns the neirest neighbor match.
@@ -66,10 +67,10 @@ def fuzzy_join(left_table: pd.DataFrame,
         Used only if match_type is `radius`. Determines the level of
         precision required to match the two column values. If not matched,
         all columns have `nan`'s.
-    suffixes: tuple, default=('_x', '_y')
+    suffixes: typing.Tuple[str, str], default=('_x', '_y')
             A list of strings indicating the suffix to add when overlaping
             column names.
-    keep: {'left', 'right', 'all'}, default='all'
+    keep: typing.Literal['left', 'right', 'all'], default='all'
             Wheter to keep the matching columns from the left, right or
             all tables.
 
@@ -130,27 +131,26 @@ def fuzzy_join(left_table: pd.DataFrame,
 
     """
 
-    lt = left_table.reset_index(drop=True).fillna('').copy()
-    rt = right_table.reset_index(drop=True).fillna('').copy()
+    lt = left_table.reset_index(drop=True).fillna("").copy()
+    rt = right_table.reset_index(drop=True).fillna("").copy()
 
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
-            f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer}",
+            f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
 
     if match_type not in ["nearest", "radius"]:
         raise ValueError(
-            f"match_type should be either 'nearest' or 'radius', got {match_type}",
+            f"match_type should be either 'nearest' or 'radius', got {match_type!r}",
         )
 
     if keep not in ["left", "right", "all"]:
-        raise ValueError(
-            f"keep should be either 'left', 'right' or 'all', got {keep}",
-        )
+        raise ValueError(f"keep should be either 'left', 'right' or 'all', got {keep!r}",)
 
     if len(suffixes) != 2:
-        raise ValueError("Invalid number of suffixes: expected 2,"
-                         f" got {len(suffixes)}")
+        raise ValueError(
+            "Invalid number of suffixes: expected 2," f" got {len(suffixes)}"
+        )
     lsuffix, rsuffix = suffixes
     if not lsuffix and not rsuffix:
         raise ValueError(f"Suffixes ({suffixes}) has invalid number of elements.")
@@ -168,7 +168,7 @@ def fuzzy_join(left_table: pd.DataFrame,
 
     if not isinstance(on, list):
         raise ValueError(
-            f"value {on} was specified for parameter 'on', "
+            f"value {on!r} was specified for parameter 'on', "
             "which has invalid type, expected list of column names."
         )
     if len(on) == 1:
@@ -200,10 +200,12 @@ def fuzzy_join(left_table: pd.DataFrame,
 
     lt_arr = np.array(lt)
     rt_arr = np.array(rt)
-    if match_type == 'nearest':
-        joined = np.append(lt_arr, np.array([rt_arr[idx_closest[idr]] for idr in lt.index]), axis=1)
+    if match_type == "nearest":
+        joined = np.append(
+            lt_arr, np.array([rt_arr[idx_closest[idr]] for idr in lt.index]), axis=1
+        )
 
-    elif match_type == 'radius':
+    elif match_type == "radius":
         prec = np.zeros(left_enc.shape[0])
         for i in range(left_enc.shape[0]):
             # Find all neighbors in a given radius:
@@ -214,12 +216,23 @@ def fuzzy_join(left_table: pd.DataFrame,
             # Indices of nearest neighbors:
             twodball_pts = rng[1][0]
             prec[i] = 1 / len(twodball_pts)
-        joined = np.append(lt_arr, np.array([rt_arr[idx_closest[idr]] if prec[idr]>=match_threshold else np.tile(np.nan, (2,)) for idr in lt.index]), axis=1)
+        joined = np.append(
+            lt_arr,
+            np.array(
+                [
+                    rt_arr[idx_closest[idr]]
+                    if prec[idr] >= match_threshold
+                    else np.tile(np.nan, (2,))
+                    for idr in lt.index
+                ]
+            ),
+            axis=1,
+        )
 
-    df_joined = pd.DataFrame(joined, columns=cols).replace(r'^\s*$', np.nan, regex=True)
-    if keep == 'left':
+    df_joined = pd.DataFrame(joined, columns=cols).replace(r"^\s*$", np.nan, regex=True)
+    if keep == "left":
         df_joined.drop(columns=[right_col], inplace=True)
-    if keep == 'right':
+    if keep == "right":
         df_joined.drop(columns=[left_col], inplace=True)
     if return_distance:
         return df_joined, distance
