@@ -297,7 +297,7 @@ class SuperVectorizer(ColumnTransformer):
         elif self.numerical_transformer == "remainder":
             self.numerical_transformer_ = self.remainder
         else:
-            self.numerical_transformer_ = self.high_card_cat_transformer
+            self.numerical_transformer_ = self.numerical_transformer
 
         if isinstance(self.datetime_transformer, sklearn.base.TransformerMixin):
             self.datetime_transformer_ = clone(self.datetime_transformer)
