@@ -272,7 +272,7 @@ class SuperVectorizer(ColumnTransformer):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
             self.low_card_cat_transformer_ = OneHotEncoder()
-        elif self.low_card_cat_transformer_ == "remainder":
+        elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
         else:
             self.low_card_cat_transformer_ = self.low_card_cat_transformer
@@ -281,7 +281,7 @@ class SuperVectorizer(ColumnTransformer):
             self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
         elif self.high_card_cat_transformer is None:
             self.high_card_cat_transformer_ = GapEncoder(n_components=30)
-        elif self.high_card_cat_transformer_ == "remainder":
+        elif self.high_card_cat_transformer == "remainder":
             self.high_card_cat_transformer_ = self.remainder
         else:
             self.high_card_cat_transformer_ = self.high_card_cat_transformer
@@ -290,7 +290,7 @@ class SuperVectorizer(ColumnTransformer):
             self.numerical_transformer_ = clone(self.numerical_transformer)
         elif self.numerical_transformer is None:
             self.numerical_transformer_ = "passthrough"
-        elif self.numerical_transformer_ == "remainder":
+        elif self.numerical_transformer == "remainder":
             self.numerical_transformer_ = self.remainder
         else:
             self.numerical_transformer_ = self.high_card_cat_transformer
@@ -299,7 +299,7 @@ class SuperVectorizer(ColumnTransformer):
             self.datetime_transformer_ = clone(self.datetime_transformer)
         elif self.datetime_transformer is None:
             self.datetime_transformer_ = DatetimeEncoder()
-        elif self.datetime_transformer_ == "remainder":
+        elif self.datetime_transformer == "remainder":
             self.datetime_transformer_ = self.remainder
         else:
             self.datetime_transformer_ = self.datetime_transformer
