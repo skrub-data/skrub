@@ -199,6 +199,8 @@ def fetch_world_bank_data(dataset_id: str, indicator: str,
     """
 
     # Make path absolute
+    if not os.path.exists(data_directory):
+        os.makedirs(data_directory)
     data_directory = data_directory.resolve() / 'world_bank.zip'
     zip_path = Path(str(data_directory) + '_folder')
     # Download the file :
