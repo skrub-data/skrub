@@ -69,7 +69,7 @@ author = u'dirty_cat developers'
 # built documents.
 #
 # The short X.Y version.
-version_file = os.path.join('..', 'dirty_cat', 'VERSION.txt')
+version_file = os.path.join('..', 'dirty_cat', '_VERSION.txt')
 with open(version_file) as fh:
     version = fh.read().strip()
 # The full version, including alpha/beta/rc tags.

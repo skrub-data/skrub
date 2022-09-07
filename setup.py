@@ -4,7 +4,7 @@ import os
 from setuptools import setup, find_packages
 
 version_file = os.path.join(
-    os.path.dirname(__file__), 'dirty_cat', 'VERSION.txt')
+    os.path.dirname(__file__), 'dirty_cat', '_VERSION.txt')
 with open(version_file) as fh:
     VERSION = fh.read().strip()
 
@@ -37,7 +37,7 @@ if __name__ == '__main__':
           ],
           platforms='any',
           packages=find_packages(),
-          package_data={'dirty_cat': ['VERSION.txt']},
+          package_data={'dirty_cat': ['_VERSION.txt']},
           install_requires=['scikit-learn>=0.21', 'numpy>=1.16', 'scipy>=1.2',
                             'pandas>=1.1.5', 'requests', 'joblib'],
           )

@@ -17,7 +17,7 @@ here are the main steps and appropriate resources:
 
 1. Update `dirty_cat/CHANGES.rst`. It should be updated at each PR,
    but double-checking before the release is good practice.
-2. Update `dirty_cat/dirty_cat/VERSION.txt` with the new version number
+2. Update `dirty_cat/dirty_cat/_VERSION.txt` with the new version number
 3. Update `dirty_cat/setup.py`
 4. You have to commit the changes with a new tag: the version you're 
    going to push (e.g. `1.0`) with the commands 
