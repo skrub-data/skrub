@@ -7,7 +7,7 @@ from .fetching import (
     fetch_road_safety,
     fetch_traffic_violations,
     get_data_dir,
-    fetch_world_bank_data,
+    fetch_world_bank_indicator,
 )
 
 __all__ = [
@@ -19,5 +19,5 @@ __all__ = [
     "fetch_open_payments",
     "fetch_drug_directory",
     "fetch_traffic_violations",
-    "fetch_world_bank_data",
+    "fetch_world_bank_indicator",
 ]
