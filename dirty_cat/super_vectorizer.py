@@ -390,28 +390,23 @@ class SuperVectorizer(ColumnTransformer):
 
     def fit_transform(self, X, y=None):
         """
-            Fit all transformers, transform the data, and concatenate the results.
+        Fit all transformers, transform the data, and concatenate the results.
 
-            Parameters
-            ----------
-            X : {array-like, dataframe} of shape (n_samples, n_features)
-                Input data, of which specified subsets are used to fit the
-                transformers.
-            y : array-like of shape (n_samples,), default=None
-                Targets for supervised learning.
+        Parameters
+        ----------
+        X : {array-like, dataframe} of shape (n_samples, n_features)
+            Input data, of which specified subsets are used to fit the
+            transformers.
+        y : array-like of shape (n_samples,), default=None
+            Targets for supervised learning.
 
-            Returns
-            -------
-            Number of jobs to run in parallel.
-            ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-            ``-1`` means using all processors.
-
-        transformer_weights : dict, d
-            {array-like, sparse matrix} of shape (n_samples, sum_n_components)
-                hstack of results of transformers. sum_n_components is the
-                sum of n_components (output dimension) over transformers. If
-                any result is a sparse matrix, everything will be converted to
-                sparse matrices.
+        Returns
+        -------
+        {array-like, sparse matrix} of shape (n_samples, sum_n_components)
+            hstack of results of transformers. sum_n_components is the
+            sum of n_components (output dimension) over transformers. If
+            any result is a sparse matrix, everything will be converted to
+            sparse matrices.
         """
         self._clone_transformers()
         # Convert to pandas DataFrame if not already.
