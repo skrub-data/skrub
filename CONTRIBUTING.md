@@ -151,17 +151,27 @@ it is already on most linux distributions).
 git clone https://github.com/dirty-cat/dirty_cat
 ```
 
-Next, install the development dependencies. Currently, they are listed in `requirements.txt`.
+Next, install the project dependencies. Currently, they are listed in `requirements.txt`.
 
 ```commandline
 pip install -r requirements.txt
-pip install pre-commit
 ```
 
-As the final step of this section, install the git pre-commit hooks:
+Code-formatting and linting is automatically done via
+[`pre-commit`](https://github.com/pre-commit/pre-commit).
+You install this setup using:
 
 ```commandline
+pip install pre-commit
 pre-commit install
+```
+
+A few revisions (formatting the whole code-base for instance) better be
+ignored by `git blame` and IDE integrations. The revisions to be ignored are
+listed in `.git-blame-ignore-revs`, which can be set in your local repository with:
+
+```commandline
+git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 #### Implementation
