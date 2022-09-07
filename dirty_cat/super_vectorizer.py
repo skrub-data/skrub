@@ -508,7 +508,7 @@ class SuperVectorizer(ColumnTransformer):
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas gives different types depending on whether a column has
         # missing values or not.
-        if self.imputed_columns_:
+        if self.imputed_columns_ and self.auto_cast:
             X = self._auto_cast(X)
 
         if self.verbose:
