@@ -408,7 +408,15 @@ class SuperVectorizer(ColumnTransformer):
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
         """
+        if self.impute_missing not in ("skip", "force", "auto"):
+            raise ValueError(
+                "Invalid value for `impute_missing`, expected any of "
+                "{'auto', 'force', 'skip'}, "
+                f"got {self.impute_missing!r}. "
+            )
+
         self._clone_transformers()
+
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
@@ -506,13 +514,6 @@ class SuperVectorizer(ColumnTransformer):
                                 if col in categorical_columns:
                                     X.loc[:, col] = _replace_missing_in_cat_col(X[col])
                                     self.imputed_columns_.append(col)
-
-                else:
-                    raise ValueError(
-                        "Invalid value for `impute_missing`, expected any of "
-                        "{'auto', 'force', 'skip'}, "
-                        f"got {self.impute_missing!r}. "
-                    )
 
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas gives different types depending on whether a column has
