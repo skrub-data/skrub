@@ -187,7 +187,7 @@ class SuperVectorizer(ColumnTransformer):
     Attributes
     ----------
 
-    transformers_: typing.List[typing.Tuple[str, typing.Union[str, sklearn.base.BaseEstimator], typing.List[str]]]  # noqa
+    transformers_: typing.List[typing.Tuple[str, typing.Union[str, sklearn.base.TransformerMixin], typing.List[str]]]  # noqa
         The final distribution of columns.
         List of three-tuple containing
         (1) the name of the category
