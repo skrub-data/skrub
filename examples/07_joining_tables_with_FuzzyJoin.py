@@ -30,16 +30,15 @@ df.head(3)
 # The Happiness score was computed using the Gallup World Poll survey results. 
 # The report stress out some of the possible explanatory factors: GDP per capita, Social support, Generosity etc.
 # However, these factors here are only estimated indexes used to calculate the happiness score.
-
+# Thus, we will not use them for our prediction model.
 ###############################################################################
 # The sum of all explanatory indexes is then the happiness score itself:
 df['Sum_of_factors'] = df.iloc[:, [5, 6, 7, 8, 9, 10, 11]].sum(axis=1)
 df[['Happiness score', 'Sum_of_factors']].head(3)
 #################################################################
-# Thus, we cannot use them for our prediction model.
 X = df[['Country']]
 y = df[['Happiness score']]
-
+# We defined our X and y variables.
 ###############################################################################
 # If we want to create a machine learning model which predicts
 # the happiness index of any new country or future date,
@@ -98,6 +97,9 @@ X1.head(20)
 #
 # Dirty_cat's :func:`fuzzy_join` is the perfect function to avoid doing so (and save time) with great results.
 #
+###############################################################################
+# Keeping only the good matches
+# ------------------------------
 # However, we see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
 # because there is simply no match in the two tables.
 X1.iloc[121]
@@ -141,7 +143,7 @@ X3 = X3[mask]
 
 #################################################################
 # And we are ready to apply a machine learning model to it!
-
+#
 ###############################################################################
 # Prediction model
 # ---------------------
