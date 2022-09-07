@@ -208,7 +208,7 @@ class SuperVectorizer(ColumnTransformer):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    columns_: pd.Index
+    columns_: pandas.Index
         The fitted array's columns. They are applied to the data passed
         to the `transform` method.
 
