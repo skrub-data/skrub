@@ -97,6 +97,8 @@ class SuperVectorizer(ColumnTransformer):
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
+        Features classified under this category are imputed based on the
+        strategy defined with `impute_missing`.
 
     high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with high cardinality
@@ -106,6 +108,8 @@ class SuperVectorizer(ColumnTransformer):
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
+        Features classified under this category are imputed based on the
+        strategy defined with `impute_missing`.
 
     numerical_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on numerical features.
@@ -113,6 +117,8 @@ class SuperVectorizer(ColumnTransformer):
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
+        Features classified under this category are not imputed at all
+        (regardless of `impute_missing`).
 
     datetime_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None
         Transformer used on datetime features.
@@ -121,19 +127,23 @@ class SuperVectorizer(ColumnTransformer):
         a `Pipeline` containing the preprocessing steps,
         None to apply `remainder`, 'drop' for dropping the columns,
         or 'passthrough' to return the unencoded columns.
+        Features classified under this category are not imputed at all
+        (regardless of `impute_missing`).
 
     auto_cast : bool, default=True
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
     impute_missing : str, default='auto'
-        When to impute missing values in categorical columns.
-        'auto' will impute missing values if it's considered appropriate
+        When to impute missing values _in categorical columns_.
+        'auto' will impute missing values if it is considered appropriate
         (we are using an encoder that does not support missing values and/or
         specific versions of pandas, numpy and scikit-learn).
-        'force' will impute missing values in all columns.
+        'force' will impute missing values in all categorical columns.
         'skip' will not impute at all.
         When imputed, missing values are replaced by the string 'missing'.
+        As imputation logic for numerical features can be quite intricate,
+        it is left to the user to manage.
         See also attribute `imputed_columns_`.
 
     remainder : typing.Union[typing.Literal["drop", "passthrough"], sklearn.base.BaseEstimator], default='drop'  # noqa
