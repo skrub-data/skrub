@@ -3,7 +3,7 @@ Joining tables with fuzzy_join
 ================================
 
 In this example, we show how to join tables with the :func:`fuzzy_join` function.
-We also demonstrate why this method is the most easy and appropriate tool for handling 
+We also demonstrate why this method is the most easy and appropriate tool for handling
 the joining of tables for users that want to improve their machine learning models quickly.
 
 We will illustrate the join to predict the happiness score of a country from
@@ -50,21 +50,21 @@ y = df[['Happiness score']]
 #
 # Let's inspire ourselfes from the factors used by the Happiness report to explain happiness.
 # We will extract data from the World Bank databank using the following function:
-from dirty_cat.datasets import fetch_world_bank_data
+from dirty_cat.datasets import fetch_world_bank_indicator
 
 #################################################################
 # We then extract GDP per capita by country:
-gdppc = fetch_world_bank_data(data_code='NY.GDP.PCAP.CD', indicator='gdppc').X
+gdppc = fetch_world_bank_indicator(data_code='NY.GDP.PCAP.CD', indicator='gdppc').X
 gdppc.head(3)
 
 #################################################################
 # Life expectancy by country:
-life_exp = fetch_world_bank_data('SP.DYN.LE00.IN', 'life_exp').X
+life_exp = fetch_world_bank_indicator('SP.DYN.LE00.IN', 'life_exp').X
 life_exp.head(3)
 
 #################################################################
 # And the legal rights strength by country:
-legal_rights = fetch_world_bank_data('IC.LGL.CRED.XQ', 'legal_rights').X
+legal_rights = fetch_world_bank_indicator('IC.LGL.CRED.XQ', 'legal_rights').X
 legal_rights.head(3)
 
 ###############################################################################

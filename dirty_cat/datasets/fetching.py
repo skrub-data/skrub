@@ -166,6 +166,69 @@ def fetch_openml_dataset(
     }
 
 
+def fetch_world_bank_data(dataset_id: str, indicator: str,
+                          data_directory: Path = get_data_dir(),
+                          ) -> Dict[str, Any]:
+    """
+    Gets a dataset from World Bank open data platform
+    (https://data.worldbank.org/).
+
+    Parameters
+    ----------
+    dataset_id: str
+        The ID of the dataset to fetch.
+    indicator: str
+        Name of the indicator to extract.
+    data_directory: Path
+        Optional. A directory to save the data to.
+        By default, the dirty_cat data directory.
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary containing:
+          - ``description``: str
+              The description of the dataset,
+              as gathered from World Bank data.
+          - ``source``: str
+              The dataset's URL from the World Bank data platform.
+          - ``path``: pathlib.Path
+              The local path leading to the dataset,
+              saved as a CSV file.
+
+    """
+
+    # Make path absolute
+    data_directory = str(data_directory.resolve()) + '/world_bank'
+    zip_path = str(data_directory) + '_folder'
+    # Download the file :
+    url = f'https://api.worldbank.org/v2/en/indicator/{dataset_id}?downloadformat=csv'
+    urllib.request.urlretrieve(url, str(data_directory))
+    # Extract csv file :
+    with ZipFile(data_directory, 'r') as f:
+        names = f.namelist()
+        for n in names:
+            if 'Metadata' not in n:
+                f.extract(
+                    n, path=zip_path)
+                true_file = n
+    f.close()
+    # Read csv
+    csv_path = zip_path + '/' + true_file
+    df = pd.read_csv(csv_path, skiprows=3)
+    df[indicator] = df.stack().groupby(level=0).last()
+    df = df[df[indicator] != dataset_id]
+    df = df[['Country Name', indicator]]
+    df.to_csv(csv_path, index=False)
+    description = f'This table shows the {dataset_id} World Bank'
+    'indicator. It can be used as an input table for fuzzy_join.'
+    return {
+        "description": description,
+        "source": url,
+        "path": csv_path,
+    }
+
+
 def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
     """
     Downloads a dataset from OpenML,
@@ -316,6 +379,7 @@ def fetch_dataset_as_dataclass(
     target: str,
     read_csv_kwargs: dict,
     load_dataframe: bool,
+    source: str = 'openml'
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
     Takes a dataset identifier, a target column name,
@@ -323,6 +387,9 @@ def fetch_dataset_as_dataclass(
 
     If you don't need the dataset to be loaded in memory,
     pass `load_dataframe=False`.
+
+    If you are loading data from the World Bank platform,
+    you need to specify `source='world_bank'`.
 
     Returns
     -------
@@ -333,7 +400,10 @@ def fetch_dataset_as_dataclass(
         If `load_dataframe=False`
 
     """
-    info = fetch_openml_dataset(dataset_id)
+    if source is 'openml':
+        info = fetch_openml_dataset(dataset_id)
+    if source is 'world_bank':
+        info = fetch_world_bank_data(dataset_id, dataset_name)
     if load_dataframe:
         df = pd.read_csv(info["path"], **read_csv_kwargs)
         y = df[target]
@@ -606,50 +676,15 @@ def fetch_drug_directory(
     )
 
 
-def fetch_world_bank_data(data_code: str, indicator: str,
-                          load_dataframe: bool = True,
-                          ) -> Union[DatasetAll, DatasetInfoOnly]:
-    data_dir = os.path.join(os.getcwd(), 'dirty_cat_data')
-    zip_path = data_dir + '_folder'
-    # Download the file :
-    url = f'https://api.worldbank.org/v2/en/indicator/{data_code}?downloadformat=csv'
-    urllib.request.urlretrieve(url, data_dir)
-    # Extract csv file :
-    with ZipFile(data_dir, 'r') as f:
-        names = f.namelist()
-        for n in names:
-            if 'Metadata' not in n:
-                f.extract(
-                    n, path=zip_path)
-                true_file = n
-    f.close()
-    # Read csv
-    csvfile_path = zip_path + '/' + true_file
-    df = pd.read_csv(csvfile_path, skiprows=3)
-    df[indicator] = df.stack().groupby(level=0).last()
-    df = df[df[indicator] != data_code]
-    df = df[['Country Name', indicator]]
-
-    if load_dataframe:
-        dataset = DatasetAll(
-            name=indicator,
-            description=f'This table shows the {data_code} World Bank'
-            'indicator. It can be used as an input table for fuzzy_join.',
-            X=df,
-            y=pd.Series(dtype=object),
-            source=url,
-            path=zip_path,
-        )
-    else:
-        dataset = DatasetInfoOnly(
-            name=indicator,
-            description=f'This table shows the {data_code} World Bank'
-            'indicator. It can be used as an input table for fuzzy_join.',
-            source=url,
-            target='To be defined',
-            path=zip_path,
-            read_csv_kwargs={
-                "skiprows": "3",
-                },
-        )
-    return dataset
+def fetch_world_bank_indicator(data_code: str, indicator: str,
+                               load_dataframe: bool = True,
+                               ) -> Union[DatasetAll, DatasetInfoOnly]:
+    return fetch_dataset_as_dataclass(
+        dataset_name=indicator,
+        dataset_id=data_code,
+        target=[],
+        read_csv_kwargs={
+        },
+        load_dataframe=load_dataframe,
+        source='world_bank',
+    )
