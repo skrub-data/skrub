@@ -96,7 +96,7 @@ X1.head(20)
 #    for matching patterns in observations.
 #
 # Dirty_cat's :func:`fuzzy_join` is the perfect function to avoid doing so (and save time) with great results.
-#
+
 ###############################################################################
 # Keeping only the good matches
 # ------------------------------
@@ -143,7 +143,7 @@ X3 = X3[mask]
 
 #################################################################
 # And we are ready to apply a machine learning model to it!
-#
+
 ###############################################################################
 # Prediction model
 # ---------------------
