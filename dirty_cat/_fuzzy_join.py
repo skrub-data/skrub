@@ -184,7 +184,6 @@ def fuzzy_join(left_table: pd.DataFrame,
         )
 
     cols = list(lt.columns) + list(rt.columns)
-    joined = pd.DataFrame(lt, columns=cols)
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     left_enc = enc.fit_transform(lt[left_col])
@@ -199,12 +198,13 @@ def fuzzy_join(left_table: pd.DataFrame,
     distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
+    lt_arr = np.array(lt)
+    rt_arr = np.array(rt)
     if match_type == 'nearest':
-        for idx in lt.index:
-            joined.loc[idx, rt.columns] = list(rt.iloc[idx_closest[idx]])
+        joined = np.append(lt_arr, np.array([rt_arr[idx_closest[idr]] for idr in lt.index]), axis=1)
 
     elif match_type == 'radius':
-        prec = np.array()
+        prec = np.zeros(left_enc.shape[0])
         for i in range(left_enc.shape[0]):
             # Find all neighbors in a given radius:
             dist = 2 * distance[i]
@@ -213,19 +213,15 @@ def fuzzy_join(left_table: pd.DataFrame,
             rng = n_neigh.radius_neighbors(left_enc[i])
             # Indices of nearest neighbors:
             twodball_pts = rng[1][0]
-            prec.append(1 / len(twodball_pts))
-        for idx in lt.index:
-            if prec[idx] >= match_threshold:
-                joined.loc[idx, rt.columns] = list(rt.iloc[idx_closest[idx]])
-            else:
-                joined.loc[idx, rt.columns] = np.nan
+            prec[i] = 1 / len(twodball_pts)
+        joined = np.append(lt_arr, np.array([rt_arr[idx_closest[idr]] if prec[idr]>=match_threshold else np.tile(np.nan, (2,)) for idr in lt.index]), axis=1)
 
-    joined = joined.replace(r'^\s*$', np.nan, regex=True)
+    df_joined = pd.DataFrame(joined, columns=cols).replace(r'^\s*$', np.nan, regex=True)
     if keep == 'left':
-        joined.drop(columns=[right_col], inplace=True)
+        df_joined.drop(columns=[right_col], inplace=True)
     if keep == 'right':
-        joined.drop(columns=[left_col], inplace=True)
+        df_joined.drop(columns=[left_col], inplace=True)
     if return_distance:
-        return joined, distance
+        return df_joined, distance
     else:
-        return joined
+        return df_joined
