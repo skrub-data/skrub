@@ -1,7 +1,7 @@
 """
-Implements the SuperVectorizer: a preprocessor to automatically
-apply encoders to different types of data, without the need to manually
-categorize them beforehand, or construct complex Pipelines.
+Implements the SuperVectorizer: a preprocessor to automatically apply
+transformers/encoders to different types of data, without the need to
+manually categorize them beforehand, or construct complex Pipelines.
 """
 
 
@@ -76,7 +76,8 @@ class SuperVectorizer(ColumnTransformer):
     Easily transforms a heterogeneous data table (such as a dataframe) to
     a numerical array for machine learning. For this it transforms each
     column depending on its data type.
-    It provides a simplified interface for scikit-learn's `ColumnTransformer`.
+    It provides a simplified interface for the :class:`sklearn.compose.ColumnTransformer` ;
+    more documentation of attributes and functions are available in its doc.
 
     .. versionadded:: 0.2.0
 
@@ -87,8 +88,8 @@ class SuperVectorizer(ColumnTransformer):
         Two lists of features will be created depending on this value: strictly
         under this value, the low cardinality categorical values, and above or
         equal, the high cardinality categorical values.
-        Different encoders will be applied to these two groups, defined by
-        the parameters `low_card_cat_transformer` and
+        Different transformers will be applied to these two groups,
+        defined by the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
 
     low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
@@ -97,6 +98,7 @@ class SuperVectorizer(ColumnTransformer):
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or None to use the default transformer (`OneHotEncoder()`).
         Features classified under this category are imputed based on the
@@ -108,6 +110,7 @@ class SuperVectorizer(ColumnTransformer):
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or None to use the default transformer (`GapEncoder(n_components=30)`).
         Features classified under this category are imputed based on the
@@ -118,8 +121,9 @@ class SuperVectorizer(ColumnTransformer):
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (here nothing).
+        or None to use the default transformer (here nothing, so 'passthrough').
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -128,6 +132,7 @@ class SuperVectorizer(ColumnTransformer):
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or None to use the default transformer (`DatetimeEncoder()`).
         Features classified under this category are not imputed at all
@@ -138,7 +143,7 @@ class SuperVectorizer(ColumnTransformer):
         data type (dtype).
 
     impute_missing : str, default='auto'
-        When to impute missing values in categorical columns.
+        When to impute missing values in categorical (textual) columns.
         'auto' will impute missing values if it is considered appropriate
         (we are using an encoder that does not support missing values and/or
         specific versions of pandas, numpy and scikit-learn).
@@ -152,7 +157,7 @@ class SuperVectorizer(ColumnTransformer):
     remainder : typing.Union[typing.Literal["drop", "passthrough"], sklearn.base.TransformerMixin], default='drop'  # noqa
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
-        columns are dropped. (default of ``'drop'``).
+        columns are dropped. (default ``'drop'``).
         By specifying ``remainder='passthrough'``, all remaining columns that
         were not specified in `transformers` will be automatically passed
         through. This subset of columns is concatenated with the output of
@@ -188,12 +193,16 @@ class SuperVectorizer(ColumnTransformer):
     ----------
 
     transformers_: typing.List[typing.Tuple[str, typing.Union[str, sklearn.base.TransformerMixin], typing.List[str]]]  # noqa
-        The final distribution of columns.
-        List of three-tuple containing
-        (1) the name of the category
-        (2) the encoder/transformer instance which will be applied
-        or "passthrough" or "drop"
-        (3) the list of column names
+        The collection of fitted transformers as tuples of
+        (name, fitted_transformer, column). `fitted_transformer` can be an
+        estimator, 'drop', or 'passthrough'. In case there were no columns
+        selected, this will be an unfitted transformer.
+        If there are remaining columns, the final element is a tuple of the
+        form:
+        ('remainder', transformer, remaining_columns) corresponding to the
+        ``remainder`` parameter. If there are remaining columns, then
+        ``len(transformers_)==len(transformers)+1``, otherwise
+        ``len(transformers_)==len(transformers)``.
 
     columns_: pd.Index
         The fitted array's columns. They are applied to the data passed
@@ -202,6 +211,7 @@ class SuperVectorizer(ColumnTransformer):
     types_: typing.Dict[str, type]
         A mapping of inferred types per column.
         Key is the column name, value is the inferred dtype.
+        Exists only if `auto_cast=True`.
 
     imputed_columns_: typing.List[str]
         The list of columns in which we imputed the missing values.
@@ -262,6 +272,8 @@ class SuperVectorizer(ColumnTransformer):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
             self.low_card_cat_transformer_ = OneHotEncoder()
+        elif self.low_card_cat_transformer_ == "remainder":
+            self.low_card_cat_transformer_ = self.remainder
         else:
             self.low_card_cat_transformer_ = self.low_card_cat_transformer
 
@@ -269,13 +281,26 @@ class SuperVectorizer(ColumnTransformer):
             self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
         elif self.high_card_cat_transformer is None:
             self.high_card_cat_transformer_ = GapEncoder(n_components=30)
+        elif self.high_card_cat_transformer_ == "remainder":
+            self.high_card_cat_transformer_ = self.remainder
         else:
             self.high_card_cat_transformer_ = self.high_card_cat_transformer
+
+        if isinstance(self.numerical_transformer, sklearn.base.TransformerMixin):
+            self.numerical_transformer_ = clone(self.numerical_transformer)
+        elif self.numerical_transformer is None:
+            self.numerical_transformer_ = "passthrough"
+        elif self.numerical_transformer_ == "remainder":
+            self.numerical_transformer_ = self.remainder
+        else:
+            self.numerical_transformer_ = self.high_card_cat_transformer
 
         if isinstance(self.datetime_transformer, sklearn.base.TransformerMixin):
             self.datetime_transformer_ = clone(self.datetime_transformer)
         elif self.datetime_transformer is None:
             self.datetime_transformer_ = DatetimeEncoder()
+        elif self.datetime_transformer_ == "remainder":
+            self.datetime_transformer_ = self.remainder
         else:
             self.datetime_transformer_ = self.datetime_transformer
 
@@ -413,7 +438,7 @@ class SuperVectorizer(ColumnTransformer):
             include=["datetime", "datetimetz"]
         ).columns.to_list()
 
-        # Divide categorical columns by cardinality
+        # Classify categorical columns by cardinality
         low_card_cat_columns = [
             col
             for col in categorical_columns
@@ -537,8 +562,6 @@ class SuperVectorizer(ColumnTransformer):
         if (X.columns != self.columns_).all():
             X.columns = self.columns_
 
-        # Auto cast the imported data to avoid having issues with
-        # `object` dtype when we will cast columns to the fitted types.
         if self.auto_cast:
             X = self._apply_cast(X)
 
