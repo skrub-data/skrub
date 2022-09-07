@@ -16,7 +16,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat.utils import Version
+from dirty_cat._utils import Version
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:

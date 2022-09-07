@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 
-from dirty_cat import target_encoder
+from dirty_cat import _target_encoder
 
 
 def test_target_encoder():
-    lambda_ = target_encoder.lambda_
+    lambda_ = _target_encoder.lambda_
     X1 = np.array(
         ["Red", "red", "green", "blue", "green", "green", "blue", "red"]
     ).reshape(-1, 1)
@@ -28,7 +28,7 @@ def test_target_encoder():
         "gender": {"male": 4, "female": 4},
     }
 
-    encoder = target_encoder.TargetEncoder()
+    encoder = _target_encoder.TargetEncoder()
     encoder.fit(X, y)
     for j in range(X.shape[1]):
         assert np.array_equal(encoder.categories_[j], np.unique(X[:, j]))
@@ -64,7 +64,7 @@ def test_target_encoder():
     y = np.array([1, 0, 2, 1, 0, 1, 0, 0])
     n = len(y)
 
-    encoder = target_encoder.TargetEncoder(clf_type="multiclass-clf")
+    encoder = _target_encoder.TargetEncoder(clf_type="multiclass-clf")
     encoder.fit(X, y)
 
     Ey_ = {0: 4 / 8, 1: 3 / 8, 2: 1 / 8}
@@ -132,7 +132,7 @@ def test_target_encoder():
         for j, col in enumerate(["color", "gender"]):
             for i in range(n):
                 ans[i, j * 3 + k] = ans_dict[k][col][Xtest[i, j]]
-    encoder = target_encoder.TargetEncoder(clf_type="multiclass-clf")
+    encoder = _target_encoder.TargetEncoder(clf_type="multiclass-clf")
     encoder.fit(X, y)
     Xout = encoder.transform(Xtest)
     assert np.array_equal(Xout, ans)
@@ -172,7 +172,7 @@ def _test_missing_values(input_type, missing):
         "gender": {"male": 3, "female": 4, "": 1},
     }
 
-    encoder = target_encoder.TargetEncoder(handle_missing=missing)
+    encoder = _target_encoder.TargetEncoder(handle_missing=missing)
     if missing == "error":
         with pytest.raises(ValueError, match=r"Found missing values in input"):
             encoder.fit_transform(X, y)
@@ -227,7 +227,7 @@ def _test_missing_values_transform(input_type, missing):
 
     Ey_ = 3 / 8
 
-    encoder = target_encoder.TargetEncoder(
+    encoder = _target_encoder.TargetEncoder(
         handle_unknown="ignore", handle_missing=missing
     )
     if missing == "error":

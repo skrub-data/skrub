@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from dirty_cat import GapEncoder, SuperVectorizer
-from dirty_cat.utils import Version
+from dirty_cat._utils import Version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):

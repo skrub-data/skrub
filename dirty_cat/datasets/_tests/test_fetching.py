@@ -14,8 +14,8 @@ from urllib.error import URLError
 import pandas as pd
 import pytest
 
-from dirty_cat.datasets import fetching
-from dirty_cat.datasets.fetching import (
+from dirty_cat.datasets import _fetching
+from dirty_cat.datasets._fetching import (
     Details,
     Features,
     _download_and_write_openml_dataset,
@@ -25,8 +25,8 @@ from dirty_cat.datasets.fetching import (
     _get_features,
     _read_json_from_gz,
 )
-from dirty_cat.datasets.fetching import fetch_openml_dataset as _fetch_openml_dataset
-from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
+from dirty_cat.datasets._fetching import fetch_openml_dataset as _fetch_openml_dataset
+from dirty_cat.datasets._utils import get_data_dir as _get_data_dir
 
 
 @wraps(_fetch_openml_dataset)
@@ -321,7 +321,7 @@ def test_import_all_datasets(
         "read_csv_kwargs": {"a": "b"},
     }
 
-    expected_return_value_all = fetching.DatasetAll(
+    expected_return_value_all = _fetching.DatasetAll(
         name="Example dataset",
         description="This is a dataset.",
         source="https://www.openml.org/",
@@ -334,7 +334,7 @@ def test_import_all_datasets(
         ),
     )
 
-    expected_return_value_info_only = fetching.DatasetInfoOnly(
+    expected_return_value_info_only = _fetching.DatasetInfoOnly(
         name="Example dataset",
         description="This is a dataset.",
         source="https://www.openml.org/",
@@ -349,39 +349,39 @@ def test_import_all_datasets(
     ):
         mock_fetch_dataset_as_dataclass.return_value = expected_return_value
 
-        returned_value = fetching.fetch_employee_salaries(
+        returned_value = _fetching.fetch_employee_salaries(
             drop_linked=False, drop_irrelevant=False
         )
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()
 
-        returned_value = fetching.fetch_road_safety()
+        returned_value = _fetching.fetch_road_safety()
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()
 
-        returned_value = fetching.fetch_medical_charge()
+        returned_value = _fetching.fetch_medical_charge()
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()
 
-        returned_value = fetching.fetch_midwest_survey()
+        returned_value = _fetching.fetch_midwest_survey()
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()
 
-        returned_value = fetching.fetch_open_payments()
+        returned_value = _fetching.fetch_open_payments()
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()
 
-        returned_value = fetching.fetch_traffic_violations()
+        returned_value = _fetching.fetch_traffic_violations()
         assert expected_return_value == returned_value
 
         mock_fetch_openml_dataset.reset_mock()
 
-        returned_value = fetching.fetch_drug_directory()
+        returned_value = _fetching.fetch_drug_directory()
         assert expected_return_value == returned_value
 
 

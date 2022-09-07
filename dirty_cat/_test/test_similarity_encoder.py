@@ -5,9 +5,10 @@ import numpy.testing
 import pytest
 from sklearn import __version__ as sklearn_version
 
-from dirty_cat import similarity_encoder, string_distances
-from dirty_cat.similarity_encoder import get_kmeans_prototypes
-from dirty_cat.utils import Version
+from dirty_cat import SimilarityEncoder
+from dirty_cat._similarity_encoder import get_kmeans_prototypes
+from dirty_cat._string_distances import ngram_similarity
+from dirty_cat._utils import Version
 
 
 def test_specifying_categories() -> None:
@@ -26,10 +27,8 @@ def test_specifying_categories() -> None:
     observations = [["bar"], ["foo"]]
     categories = [["bar", "foo"]]
 
-    sim_enc_with_cat = similarity_encoder.SimilarityEncoder(
-        categories=categories, ngram_range=(2, 3)
-    )
-    sim_enc_auto_cat = similarity_encoder.SimilarityEncoder(ngram_range=(2, 3))
+    sim_enc_with_cat = SimilarityEncoder(categories=categories, ngram_range=(2, 3))
+    sim_enc_auto_cat = SimilarityEncoder(ngram_range=(2, 3))
 
     feature_matrix_with_cat = sim_enc_with_cat.fit_transform(observations)
     feature_matrix_auto_cat = sim_enc_auto_cat.fit_transform(observations)
@@ -41,9 +40,7 @@ def test_fast_ngram_similarity() -> None:
     vocabulary = [["bar", "foo"]]
     observations = [["foo"], ["baz"]]
 
-    sim_enc = similarity_encoder.SimilarityEncoder(
-        ngram_range=(2, 2), categories=vocabulary
-    )
+    sim_enc = SimilarityEncoder(ngram_range=(2, 2), categories=vocabulary)
 
     sim_enc.fit(observations)
     feature_matrix = sim_enc.transform(observations, fast=False)
@@ -70,7 +67,7 @@ def _test_missing_values(input_type, missing):
         pd = pytest.importorskip("pandas")
         observations = pd.DataFrame(observations)
 
-    sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
+    sim_enc = SimilarityEncoder(handle_missing=missing)
     if missing == "error":
         with pytest.raises(ValueError, match=r"Found missing values in input"):
             sim_enc.fit_transform(observations)
@@ -108,7 +105,7 @@ def _test_missing_values_transform(input_type: str, missing: str) -> None:
         pd = pytest.importorskip("pandas")
         test_observations = pd.DataFrame(test_observations)
 
-    sim_enc = similarity_encoder.SimilarityEncoder(handle_missing=missing)
+    sim_enc = SimilarityEncoder(handle_missing=missing)
     if missing == "error":
         sim_enc.fit_transform(observations)
         with pytest.raises(ValueError, match=r"Found missing values in input"):
@@ -129,7 +126,7 @@ def _test_similarity(
         X = np.array(["aa", "aaa", "aaab"]).reshape(-1, 1)
         X_test = np.array([["Aa", "aAa", "aaa", "aaab", " aaa  c"]]).reshape(-1, 1)
 
-        model = similarity_encoder.SimilarityEncoder(
+        model = SimilarityEncoder(
             hashing_dim=hashing_dim,
             categories=categories,
             n_prototypes=n_prototypes,
@@ -150,7 +147,7 @@ def _test_similarity(
         X_test = np.array([["Aa", "aAa", "aaa", "aaab", " aaa  c"]]).reshape(-1, 1)
 
         try:
-            model = similarity_encoder.SimilarityEncoder(
+            model = SimilarityEncoder(
                 hashing_dim=hashing_dim,
                 categories=categories,
                 n_prototypes=n_prototypes,
@@ -187,24 +184,24 @@ def test_similarity_encoder() -> None:
     for category in categories:
         if category == "auto":
             _test_similarity(
-                string_distances.ngram_similarity,
+                ngram_similarity,
                 categories=category,
                 n_prototypes=None,
             )
             _test_similarity(
-                string_distances.ngram_similarity,
+                ngram_similarity,
                 hashing_dim=2**16,
                 categories=category,
             )
         else:
             for i in range(1, 4):
                 _test_similarity(
-                    string_distances.ngram_similarity,
+                    ngram_similarity,
                     categories=category,
                     n_prototypes=i,
                 )
                 _test_similarity(
-                    string_distances.ngram_similarity,
+                    ngram_similarity,
                     hashing_dim=2**16,
                     categories=category,
                     n_prototypes=i,
@@ -225,7 +222,7 @@ def test_kmeans_protoypes() -> None:
 
 
 def test_reproducibility() -> None:
-    sim_enc = similarity_encoder.SimilarityEncoder(
+    sim_enc = SimilarityEncoder(
         categories="k-means",
         n_prototypes=10,
         random_state=435,
@@ -238,7 +235,7 @@ def test_reproducibility() -> None:
 
 def test_get_features() -> None:
     # See https://github.com/dirty-cat/dirty_cat/issues/168
-    sim_enc = similarity_encoder.SimilarityEncoder(random_state=435)
+    sim_enc = SimilarityEncoder(random_state=435)
     X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)
     if Version(sklearn_version) < Version("1.0"):

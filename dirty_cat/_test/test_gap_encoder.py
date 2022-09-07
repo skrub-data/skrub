@@ -5,7 +5,7 @@ from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_20newsgroups
 
 from dirty_cat import GapEncoder
-from dirty_cat.utils import Version
+from dirty_cat._utils import Version
 
 
 def test_analyzer():

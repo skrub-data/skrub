@@ -35,7 +35,7 @@ X
 # Encoders for categorical and datetime features
 # ..............................................
 from sklearn.preprocessing import OneHotEncoder
-from dirty_cat.datetime_encoder import DatetimeEncoder
+from dirty_cat import DatetimeEncoder
 
 cat_encoder = OneHotEncoder(handle_unknown="ignore")
 # We encode dates using the day of the week as it is probably relevant,

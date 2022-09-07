@@ -5,7 +5,7 @@ import json
 import re
 import sys
 
-from dirty_cat.utils import Version
+from dirty_cat._utils import Version
 from urllib.request import urlopen
 
 

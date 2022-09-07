@@ -22,9 +22,9 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import murmurhash3_32
 
-from .fast_hash import ngram_min_hash
-from .string_distances import get_unique_ngrams
-from .utils import LRUDict, check_input
+from ._fast_hash import ngram_min_hash
+from ._string_distances import get_unique_ngrams
+from ._utils import LRUDict, check_input
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):

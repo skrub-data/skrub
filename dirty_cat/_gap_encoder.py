@@ -31,9 +31,9 @@ from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
 
-from dirty_cat.utils import Version
+from dirty_cat._utils import Version
 
-from .utils import check_input
+from ._utils import check_input
 
 if Version(sklearn_version) == Version("0.22"):
     with warnings.catch_warnings():
