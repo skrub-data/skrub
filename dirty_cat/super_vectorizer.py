@@ -10,13 +10,14 @@ from warnings import warn
 import numpy as np
 import pandas as pd
 from pandas.core.dtypes.base import ExtensionDtype
+import sklearn
 from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat.utils import Version, check_input
+from dirty_cat.utils import Version
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -89,44 +90,45 @@ class SuperVectorizer(ColumnTransformer):
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
 
-    low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
+    low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Default value None is converted to `OneHotEncoder()`.
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`OneHotEncoder()`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
+    high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
-        Default value None is converted to `GapEncoder(n_components=30)`.
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`GapEncoder(n_components=30)`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    numerical_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
+    numerical_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (here nothing).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    datetime_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, typing.Literal["drop", "remainder", "passthrough"]]], default=None
+    datetime_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None
         Transformer used on datetime features.
-        Default value None is converted to `DatetimeEncoder()`.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`DatetimeEncoder()`).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -146,7 +148,7 @@ class SuperVectorizer(ColumnTransformer):
         it is left to the user to manage.
         See also attribute `imputed_columns_`.
 
-    remainder : typing.Union[typing.Literal["drop", "passthrough"], sklearn.base.BaseEstimator], default='drop'  # noqa
+    remainder : typing.Union[typing.Literal["drop", "passthrough"], sklearn.base.TransformerMixin], default='drop'  # noqa
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
         columns are dropped. (default of ``'drop'``).
@@ -255,18 +257,26 @@ class SuperVectorizer(ColumnTransformer):
         return {"allow_nan": [True]}
 
     def _clone_transformers(self):
-        if self.low_card_cat_transformer is not None:
+        if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
-        else:
+        elif self.low_card_cat_transformer is None:
             self.low_card_cat_transformer_ = OneHotEncoder()
-        if self.high_card_cat_transformer is not None:
+        else:
+            self.low_card_cat_transformer_ = self.low_card_cat_transformer
+
+        if isinstance(self.high_card_cat_transformer, sklearn.base.TransformerMixin):
             self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
-        else:
+        elif self.high_card_cat_transformer is None:
             self.high_card_cat_transformer_ = GapEncoder(n_components=30)
-        if self.datetime_transformer is not None:
-            self.datetime_transformer_ = clone(self.datetime_transformer)
         else:
+            self.high_card_cat_transformer_ = self.high_card_cat_transformer
+
+        if isinstance(self.datetime_transformer, sklearn.base.TransformerMixin):
+            self.datetime_transformer_ = clone(self.datetime_transformer)
+        elif self.datetime_transformer is None:
             self.datetime_transformer_ = DatetimeEncoder()
+        else:
+            self.datetime_transformer_ = self.datetime_transformer
 
         # TODO: check that the provided transformers are valid
 
@@ -316,7 +326,7 @@ class SuperVectorizer(ColumnTransformer):
                     except (ValueError, TypeError):
                         pass
             # Cast pandas dtypes to numpy dtypes
-            # for earlier versions of sklearn
+            # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
                 try:
                     X.loc[:, col] = X[col].astype(X[col].dtype.type, errors="ignore")
@@ -363,13 +373,6 @@ class SuperVectorizer(ColumnTransformer):
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
-
-        Raises
-        ------
-        RuntimeError
-            If no transformers could be constructed,
-            usually because transformers passed do not match any column.
-            To fix the issue, try passing the least amount of None as encoders.
         """
         self._clone_transformers()
         # Convert to pandas DataFrame if not already.
@@ -438,9 +441,6 @@ class SuperVectorizer(ColumnTransformer):
             if len(cols) > 0 and enc is not None:
                 self.transformers.append(trans)
 
-        if len(self.transformers) == 0:
-            raise RuntimeError("No transformers could be generated! ")
-
         self.imputed_columns_ = []
         if self.impute_missing != "skip":
             # First, replace false missing
@@ -487,8 +487,6 @@ class SuperVectorizer(ColumnTransformer):
 
         if self.verbose:
             print(f"[SuperVectorizer] Assigned transformers: {self.transformers}")
-
-        check_input(X)
 
         res = super().fit_transform(X, y)
 
