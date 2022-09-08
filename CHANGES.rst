@@ -14,10 +14,12 @@ Major changes
   - sklearn>=0.22
   - scipy>=1.4.0
   - numpy>=1.17.3
-
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
     The :class:`SimilarityEncoder` now exclusively uses `ngram` for similarities,
     and the `similarity` parameter is deprecated. It will be removed in 0.5.
+* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be
+    used to download any indicator from the World Bank Open Data platform. It only needs the 
+    indicator ID that can be found on the website.
 
 Notes
 -----
