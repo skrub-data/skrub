@@ -104,6 +104,17 @@ class SuperVectorizer(ColumnTransformer):
         `high_card_cat_transformer` respectively.
         The features with a cardinality of <= 2 will get binary encoded.
 
+    binary_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
+        Transformer used on categorical/string features with cardinality <= 2.
+        Can either be a transformer object instance (e.g. `OneHotEncoder()`),
+        a `Pipeline` containing the preprocessing steps,
+        'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`OneHotEncoder(if_binary=True)`).
+        Features classified under this category are imputed based on the
+        strategy defined with `impute_missing`.
+
     low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
@@ -228,6 +239,16 @@ class SuperVectorizer(ColumnTransformer):
     imputed_columns_: typing.List[str]
         The list of columns in which we imputed the missing values.
 
+    Notes
+    -----
+    The column order of the input data is not guaranteed to be the same
+    as the output data (returned by `transform`).
+    This is a due to the way the ColumnTransformer works.
+    However, the output column order will always be the same for different
+    calls to `transform` on a same fitted SuperVectorizer instance.
+    For example, if input data has columns ['name', 'job', 'year], then output
+    columns might be shuffled, e.g., ['job', 'year', 'name'], but every call
+    to `transform` will return this order.
     """
 
     transformers_: List[Tuple[str, Union[str, TransformerMixin], List[str]]]
@@ -242,6 +263,7 @@ class SuperVectorizer(ColumnTransformer):
         self,
         *,
         cardinality_threshold: int = 40,
+        binary_cat_transformer: OptionalTransformer = None,
         low_card_cat_transformer: OptionalTransformer = None,
         high_card_cat_transformer: OptionalTransformer = None,
         numerical_transformer: OptionalTransformer = None,
@@ -260,7 +282,7 @@ class SuperVectorizer(ColumnTransformer):
         super().__init__(transformers=[])
 
         self.cardinality_threshold = cardinality_threshold
-        self.binary_cat_transformer = OneHotEncoder(drop="if_binary")
+        self.binary_cat_transformer = binary_cat_transformer
         self.low_card_cat_transformer = low_card_cat_transformer
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
@@ -290,6 +312,15 @@ class SuperVectorizer(ColumnTransformer):
         Note: typos are not detected here, they are left in and are detected
         down the line in `ColumnTransformer.fit_transform`.
         """
+        if isinstance(self.binary_cat_transformer, sklearn.base.TransformerMixin):
+            self.binary_cat_transformer_ = clone(self.binary_cat_transformer)
+        elif self.binary_cat_transformer is None:
+            self.binary_cat_transformer_ = OneHotEncoder(drop="if_binary")
+        elif self.binary_cat_transformer == "remainder":
+            self.binary_cat_transformer_ = self.remainder
+        else:
+            self.binary_cat_transformer_ = self.binary_cat_transformer
+
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
@@ -473,29 +504,31 @@ class SuperVectorizer(ColumnTransformer):
         ).columns.to_list()
 
         # Classify categorical columns by cardinality
-        _unique_values = {  # Cache for faster assignation down the line
+        _nunique_values = {  # Cache results
             col: X[col].nunique() for col in categorical_columns
         }
         binary_cat_columns = [
-            col for col in categorical_columns if _unique_values[col] <= 2
+            col for col in categorical_columns if _nunique_values[col] <= 2
         ]
         low_card_cat_columns = [
             col
             for col in categorical_columns
-            if 2 < _unique_values[col] < self.cardinality_threshold
+            if 2 < _nunique_values[col] < self.cardinality_threshold
         ]
         high_card_cat_columns = [
             col
             for col in categorical_columns
-            if _unique_values[col] >= self.cardinality_threshold
+            if _nunique_values[col] >= self.cardinality_threshold
         ]
+        # Clear cache
+        del _nunique_values
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
         all_transformers: List[Tuple[str, OptionalTransformer, List[str]]] = [
             ("numeric", self.numerical_transformer, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
-            ("binary_cat", self.binary_cat_transformer, binary_cat_columns),
+            ("binary_cat", self.binary_cat_transformer_, binary_cat_columns),
             ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
             ("high_card_cat", self.high_card_cat_transformer_, high_card_cat_columns),
         ]

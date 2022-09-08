@@ -330,15 +330,13 @@ def test_get_feature_names_out() -> None:
     else:
         # In this test, order matters. If it doesn't, convert to set.
         expected_feature_names_pass = [
-            "str1_private",
             "str1_public",
+            "cat1_yes",
             "str2_chef",
             "str2_lawyer",
             "str2_manager",
             "str2_officer",
             "str2_teacher",
-            "cat1_no",
-            "cat1_yes",
             "cat2_20K+",
             "cat2_30K+",
             "cat2_40K+",
@@ -357,15 +355,13 @@ def test_get_feature_names_out() -> None:
 
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_drop = [
-        "str1_private",
         "str1_public",
+        "cat1_yes",
         "str2_chef",
         "str2_lawyer",
         "str2_manager",
         "str2_officer",
         "str2_teacher",
-        "cat1_no",
-        "cat1_yes",
         "cat2_20K+",
         "cat2_30K+",
         "cat2_40K+",
@@ -394,7 +390,11 @@ def test_transform() -> None:
     s = [34, 5.5, "private", "manager", "yes", "60K+"]
     x = np.array(s).reshape(1, -1)
     x_trans = sup_vec.transform(x)
-    assert x_trans.tolist() == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]
+    assert x_trans.tolist() == [
+        [0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 34.0, 5.5]
+    ]
+    # To understand the list above:
+    # print(dict(zip(sup_vec.get_feature_names_out(), x_trans.tolist()[0])))
 
 
 def test_fit_transform_equiv() -> None:
@@ -430,6 +430,7 @@ def test_passthrough():
     X_clean = _get_clean_dataframe()
 
     sv = SuperVectorizer(
+        binary_cat_transformer="passthrough",
         low_card_cat_transformer="passthrough",
         high_card_cat_transformer="passthrough",
         datetime_transformer="passthrough",
@@ -438,13 +439,20 @@ def test_passthrough():
         auto_cast=False,
     )
 
-    X_enc_dirty = sv.fit_transform(X_dirty)
-    X_enc_clean = sv.fit_transform(X_clean)
+    X_enc_dirty = pd.DataFrame(
+        sv.fit_transform(X_dirty), columns=sv.get_feature_names_out()
+    )
+    X_enc_clean = pd.DataFrame(
+        sv.fit_transform(X_clean), columns=sv.get_feature_names_out()
+    )
+    # Reorder encoded arrays' columns (see SV's doc "Notes" section as to why)
+    X_enc_dirty = X_enc_dirty[X_dirty.columns]
+    X_enc_clean = X_enc_clean[X_clean.columns]
 
     dirty_flat_df = X_dirty.to_numpy().ravel().tolist()
-    dirty_flat_trans_df = X_enc_dirty.ravel().tolist()
+    dirty_flat_trans_df = X_enc_dirty.to_numpy().ravel().tolist()
     assert all(map(_is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
-    assert (X_clean.to_numpy() == X_enc_clean).all()
+    assert (X_clean.to_numpy() == X_enc_clean.to_numpy()).all()
 
 
 if __name__ == "__main__":
