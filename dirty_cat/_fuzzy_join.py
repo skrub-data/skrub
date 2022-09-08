@@ -150,7 +150,7 @@ def fuzzy_join(
 
     if len(suffixes) != 2:
         raise ValueError(
-            "Invalid number of suffixes: expected 2, got {len(suffixes)}"
+            f"Invalid number of suffixes: expected 2, got {len(suffixes)}"
         )
     lsuffix, rsuffix = suffixes
 
