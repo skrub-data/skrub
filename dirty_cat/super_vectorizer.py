@@ -647,24 +647,10 @@ class SuperVectorizer(ColumnTransformer):
         typing.List[str]
             Feature names.
         """
-        if Version(sklearn_version) < Version("0.23"):
-            try:
-                if Version(sklearn_version) < Version("1.0"):
-                    ct_feature_names = super().get_feature_names()
-                else:
-                    ct_feature_names = super().get_feature_names_out()
-            except NotImplementedError:
-                raise NotImplementedError(
-                    "Prior to sklearn 0.23, get_feature_names with "
-                    '"passthrough" is unsupported. To use the method, '
-                    'either make sure there is no "passthrough" in the '
-                    "transformers, or update your copy of scikit-learn. "
-                )
+        if Version(sklearn_version) < Version("1.0"):
+            ct_feature_names = super().get_feature_names()
         else:
-            if Version(sklearn_version) < Version("1.0"):
-                ct_feature_names = super().get_feature_names()
-            else:
-                ct_feature_names = super().get_feature_names_out()
+            ct_feature_names = super().get_feature_names_out()
         all_trans_feature_names = []
 
         for name, trans, cols, _ in self._iter(fitted=True):

@@ -14,7 +14,7 @@ Major changes
   ``None`` now indicates that we want to use the default transformer.
 * Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
 * Bumped minimum dependencies:
-  - sklearn>=0.22
+  - sklearn>=0.23
   - scipy>=1.4.0
   - numpy>=1.17.3
   - pandas>=1.2.0

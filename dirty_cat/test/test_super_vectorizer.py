@@ -322,33 +322,27 @@ def test_get_feature_names_out() -> None:
     vec_w_pass = SuperVectorizer(remainder="passthrough")
     vec_w_pass.fit(X)
 
-    if Version(sklearn.__version__) < Version("0.23"):
-        with pytest.raises(NotImplementedError):
-            # Prior to sklearn 0.23, ColumnTransformer.get_feature_names
-            # with "passthrough" transformer(s) raises a NotImplementedError
-            assert vec_w_pass.get_feature_names_out()
+    # In this test, order matters. If it doesn't, convert to set.
+    expected_feature_names_pass = [
+        "str1_public",
+        "cat1_yes",
+        "str2_chef",
+        "str2_lawyer",
+        "str2_manager",
+        "str2_officer",
+        "str2_teacher",
+        "cat2_20K+",
+        "cat2_30K+",
+        "cat2_40K+",
+        "cat2_50K+",
+        "cat2_60K+",
+        "int",
+        "float",
+    ]
+    if Version(sklearn.__version__) < Version("1.0"):
+        assert vec_w_pass.get_feature_names() == expected_feature_names_pass
     else:
-        # In this test, order matters. If it doesn't, convert to set.
-        expected_feature_names_pass = [
-            "str1_public",
-            "cat1_yes",
-            "str2_chef",
-            "str2_lawyer",
-            "str2_manager",
-            "str2_officer",
-            "str2_teacher",
-            "cat2_20K+",
-            "cat2_30K+",
-            "cat2_40K+",
-            "cat2_50K+",
-            "cat2_60K+",
-            "int",
-            "float",
-        ]
-        if Version(sklearn.__version__) < Version("1.0"):
-            assert vec_w_pass.get_feature_names() == expected_feature_names_pass
-        else:
-            assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
+        assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
 
     vec_w_drop = SuperVectorizer(remainder="drop")
     vec_w_drop.fit(X)
