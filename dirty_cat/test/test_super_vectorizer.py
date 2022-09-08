@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -456,46 +456,82 @@ def test_fit_transform_equiv() -> None:
     We will test the equivalence between using `.fit_transform(X)`
     and `.fit(X).transform(X).`
     """
-    X1 = _get_clean_dataframe()
-    X2 = _get_dirty_dataframe()
+    for X in [
+        _get_clean_dataframe(),
+        _get_dirty_dataframe(),
+    ]:
+        enc1_x1 = SuperVectorizer().fit_transform(X)
+        enc2_x1 = SuperVectorizer().fit(X).transform(X)
 
-    sup_vec1 = SuperVectorizer()
-    sup_vec2 = SuperVectorizer()
-    sup_vec3 = SuperVectorizer()
-    sup_vec4 = SuperVectorizer()
+        assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
-    enc1_x1 = sup_vec1.fit_transform(X1)
-    enc2_x1 = sup_vec2.fit(X1).transform(X1)
 
-    enc1_x2 = sup_vec3.fit_transform(X2)
-    enc2_x2 = sup_vec4.fit(X2).transform(X2)
+def _is_equal(elements: Tuple[Any, Any]) -> bool:
+    """
+    Fixture for values that return false when compared with `==`.
+    """
+    elem1, elem2 = elements  # Unpack
+    return pd.isna(elem1) and pd.isna(elem2) or elem1 == elem2
 
-    assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
-    assert np.allclose(enc1_x2, enc2_x2, rtol=0, atol=0, equal_nan=True)
+def test_passthrough():
+    """
+    Tests that when passed no encoders, the SuperVectorizer
+    returns the dataset as-is.
+    """
+
+    X_dirty = _get_dirty_dataframe()
+    X_clean = _get_clean_dataframe()
+
+    sv = SuperVectorizer(
+        low_card_cat_transformer="passthrough",
+        high_card_cat_transformer="passthrough",
+        datetime_transformer="passthrough",
+        numerical_transformer="passthrough",
+        impute_missing="skip",
+        auto_cast=False,
+    )
+
+    X_enc_dirty = sv.fit_transform(X_dirty)
+    X_enc_clean = sv.fit_transform(X_clean)
+
+    dirty_flat_df = X_dirty.to_numpy().ravel().tolist()
+    dirty_flat_trans_df = X_enc_dirty.ravel().tolist()
+    assert all(map(_is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
+    assert (X_clean.to_numpy() == X_enc_clean).all()
 
 
 if __name__ == "__main__":
     print("start test_super_vectorizer with clean df")
     test_with_clean_data()
     print("passed")
+
     print("start test_super_vectorizer with dirty df")
     test_with_dirty_data()
     print("passed")
+
     print("start test_auto_cast")
     test_auto_cast()
     print("passed")
+
     print("start test_with_arrays")
     test_with_arrays()
-    print("passed")
+    print("test_with_arrays passed")
+
     print("start  test_get_feature_names_out")
     test_get_feature_names_out()
     print("passed")
+
     print("start test_fit")
     test_fit()
     print("passed")
+
     print("start fit_transform_equiv")
     test_fit_transform_equiv()
+    print("passed")
+
+    print("start test_passthrough")
+    test_passthrough()
     print("passed")
 
     print("Done")
