@@ -25,10 +25,11 @@ and `Encoding high-cardinality string categorical variables <https://hal.inria.f
 
 If you like the package, please *spread the word*, and ⭐ the repository!
 
-When is it useful?
-------------------
+What can and cannot dirty_cat do?
+---------------------------------
 
-dirty_cat assumes a correlation between the morphological similarities
+dirty_cat can encode **morphological similarities** in the data,
+which means that dirty_cat assumes a correlation between the similarities
 in the feature we want to encode and similarities in the target.
 
 For example, let's say that we worked with a dataset about employee salaries:
