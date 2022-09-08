@@ -22,7 +22,7 @@ if __name__ == "__main__":
         description="Machine learning with dirty categories.",
         long_description=DESCRIPTION,
         license="BSD",
-        python_requires=">=3.6",
+        python_requires=">=3.8",
         classifiers=[
             "Development Status :: 5 - Production/Stable",
             "Environment :: Console",
