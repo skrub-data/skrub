@@ -1,22 +1,24 @@
 """
-Implements the SuperVectorizer: a preprocessor to automatically
-apply encoders to different types of data, without the need to manually
-categorize them beforehand, or construct complex Pipelines.
+Implements the SuperVectorizer: a preprocessor to automatically apply
+transformers/encoders to different types of data, without the need to
+manually categorize them beforehand, or construct complex Pipelines.
 """
+
+
+from typing import Dict, List, Literal, Optional, Tuple, Union
+from warnings import warn
 
 import numpy as np
 import pandas as pd
-
-from typing import Union, Optional, List, Dict, Tuple, Literal
-from warnings import warn
-
+import sklearn
+from pandas.core.dtypes.base import ExtensionDtype
 from sklearn import __version__ as sklearn_version
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat.utils import Version, check_input
+from dirty_cat.utils import Version
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -26,16 +28,57 @@ def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
     return any(df.isnull())
 
 
-def _replace_missing_in_col(df: pd.Series, value: str = "missing") -> pd.Series:
+def _replace_false_missing(
+    df: Union[pd.DataFrame, pd.Series]
+) -> Union[pd.DataFrame, pd.Series]:
     """
-    Takes a Series with string data, replaces the missing values, and returns it.
+    Takes a DataFrame or a Series, and replaces the "false missing", that is,
+    strings that designate a missing value, but do not have the corresponding
+    type. We convert these strings to np.nan.
+    Also replaces `None` to np.nan.
     """
-    dtype_name = df.dtype.name
-
-    if dtype_name == "category" and (value not in df.cat.categories):
-        df = df.cat.add_categories(value)
-    df = df.fillna(value=value)
+    # Should not replace "missing" (the string used for imputation in
+    # categorical features).
+    STR_NA_VALUES = [
+        "null",
+        "",
+        "1.#QNAN",
+        "#NA",
+        "nan",
+        "#N/A N/A",
+        "-1.#QNAN",
+        "<NA>",
+        "-1.#IND",
+        "-nan",
+        "n/a",
+        "-NaN",
+        "1.#IND",
+        "NULL",
+        "NA",
+        "N/A",
+        "#N/A",
+        "NaN",
+    ]  # taken from pandas.io.parsers (version 1.1.4)
+    df = df.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
+    df = df.replace(r"^\s+$", np.nan, regex=True)  # Replace whitespaces
     return df
+
+
+def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Series:
+    """
+    Takes a Series with string data,
+    replaces the missing values, and returns it.
+    """
+    ser = _replace_false_missing(ser)
+    if pd.api.types.is_categorical_dtype(ser) and (value not in ser.cat.categories):
+        ser = ser.cat.add_categories([value])
+    ser = ser.fillna(value=value)
+    return ser
+
+
+OptionalTransformer = Optional[
+    Union[TransformerMixin, Literal["drop", "remainder", "passthrough"]]
+]
 
 
 class SuperVectorizer(ColumnTransformer):
@@ -43,7 +86,8 @@ class SuperVectorizer(ColumnTransformer):
     Easily transforms a heterogeneous data table (such as a dataframe) to
     a numerical array for machine learning. For this it transforms each
     column depending on its data type.
-    It provides a simplified interface for scikit-learn's `ColumnTransformer`.
+    It provides a simplified interface for the :class:`sklearn.compose.ColumnTransformer` ;
+    more documentation of attributes and functions are available in its doc.
 
     .. versionadded:: 0.2.0
 
@@ -51,66 +95,81 @@ class SuperVectorizer(ColumnTransformer):
     ----------
 
     cardinality_threshold : int, default=40
+        Cardinality threshold for categorical (string) features.
         Two lists of features will be created depending on this value: between
-        3 (included) and this value (excluded) under this value,
-        the low cardinality categorical values, and above or equal,
-        the high cardinality categorical values.
-        The features with a cardinality of <= 2 will get binary encoded.
-        Different encoders will be applied to these two groups, defined by
+        3 (included) and this value (excluded), the low cardinality categorical
+        values, and above or equal, the high cardinality categorical values.
+        Different transformers will be applied to these two groups, defined by
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
+        The features with a cardinality of <= 2 will get binary encoded.
 
-    low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None  # noqa
+    low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Default value None is converted to `OneHotEncoder()`.
         Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`OneHotEncoder()`).
+        Features classified under this category are imputed based on the
+        strategy defined with `impute_missing`.
 
-    high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None  # noqa
+    high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
-        Default value None is converted to `GapEncoder(n_components=30)`.
         Can either be a transformer object instance (e.g. `GapEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`GapEncoder(n_components=30)`).
+        Features classified under this category are imputed based on the
+        strategy defined with `impute_missing`.
 
-    numerical_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator,str]], default=None  # noqa
+    numerical_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (here nothing, so 'passthrough').
+        Features classified under this category are not imputed at all
+        (regardless of `impute_missing`).
 
-    datetime_transformer : typing.Optional[typing.Union[sklearn.base.BaseEstimator, str]], default=None
+    datetime_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None
         Transformer used on datetime features.
-        Default value None is converted to `DatetimeEncoder()`.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
-        None to apply `remainder`, 'drop' for dropping the columns,
-        or 'passthrough' to return the unencoded columns.
+        'drop' for dropping the columns,
+        'remainder' for applying `remainder`,
+        'passthrough' to return the unencoded columns,
+        or None to use the default transformer (`DatetimeEncoder()`).
+        Features classified under this category are not imputed at all
+        (regardless of `impute_missing`).
 
     auto_cast : bool, default=True
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
     impute_missing : str, default='auto'
-        When to impute missing values in string columns.
-        'auto' will impute missing values if it's considered appropriate
+        When to impute missing values in categorical (textual) columns.
+        'auto' will impute missing values if it is considered appropriate
         (we are using an encoder that does not support missing values and/or
         specific versions of pandas, numpy and scikit-learn).
-        'force' will impute all missing values.
+        'force' will impute missing values in all categorical columns.
         'skip' will not impute at all.
         When imputed, missing values are replaced by the string 'missing'.
+        As imputation logic for numerical features can be quite intricate,
+        it is left to the user to manage.
         See also attribute `imputed_columns_`.
 
-    remainder : typing.Union[typing.Literal["drop", "passthrough"], sklearn.base.BaseEstimator], default='drop'  # noqa
+    remainder : typing.Union[typing.Literal["drop", "passthrough"], sklearn.base.TransformerMixin], default='drop'  # noqa
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
-        columns are dropped. (default of ``'drop'``).
+        columns are dropped. (default ``'drop'``).
         By specifying ``remainder='passthrough'``, all remaining columns that
         were not specified in `transformers` will be automatically passed
         through. This subset of columns is concatenated with the output of
@@ -145,47 +204,54 @@ class SuperVectorizer(ColumnTransformer):
     Attributes
     ----------
 
-    transformers_: typing.List[typing.Tuple[str, typing.Union[str, sklearn.base.BaseEstimator], typing.List[str]]]  # noqa
-        The final distribution of columns.
-        List of three-tuple containing
-        (1) the name of the category
-        (2) the encoder/transformer instance which will be applied
-        or "passthrough" or "drop"
-        (3) the list of column names
+    transformers_: typing.List[typing.Tuple[str, typing.Union[str, sklearn.base.TransformerMixin], typing.List[str]]]  # noqa
+        The collection of fitted transformers as tuples of
+        (name, fitted_transformer, column). `fitted_transformer` can be an
+        estimator, 'drop', or 'passthrough'. In case there were no columns
+        selected, this will be an unfitted transformer.
+        If there are remaining columns, the final element is a tuple of the
+        form:
+        ('remainder', transformer, remaining_columns) corresponding to the
+        ``remainder`` parameter. If there are remaining columns, then
+        ``len(transformers_)==len(transformers)+1``, otherwise
+        ``len(transformers_)==len(transformers)``.
 
-    columns_: typing.List[typing.Union[str, int]]
-        The column names of fitted array.
+    columns_: pandas.Index
+        The fitted array's columns. They are applied to the data passed
+        to the `transform` method.
 
     types_: typing.Dict[str, type]
         A mapping of inferred types per column.
         Key is the column name, value is the inferred dtype.
+        Exists only if `auto_cast=True`.
 
     imputed_columns_: typing.List[str]
         The list of columns in which we imputed the missing values.
 
     """
 
-    transformers_: List[Tuple[str, Union[str, BaseEstimator], List[str]]]
-    columns_: List[str]
+    transformers_: List[Tuple[str, Union[str, TransformerMixin], List[str]]]
+    columns_: pd.Index
     types_: Dict[str, type]
     imputed_columns_: List[str]
 
     # Override required parameters
     _required_parameters = []
-    OptionalEstimator = Optional[Union[BaseEstimator, str]]
 
     def __init__(
         self,
         *,
         cardinality_threshold: int = 40,
-        low_card_cat_transformer: Optional[Union[BaseEstimator, str]] = None,
-        high_card_cat_transformer: Optional[Union[BaseEstimator, str]] = None,
-        numerical_transformer: Optional[Union[BaseEstimator, str]] = None,
-        datetime_transformer: Optional[Union[BaseEstimator, str]] = None,
+        low_card_cat_transformer: OptionalTransformer = None,
+        high_card_cat_transformer: OptionalTransformer = None,
+        numerical_transformer: OptionalTransformer = None,
+        datetime_transformer: OptionalTransformer = None,
         auto_cast: bool = True,
         impute_missing: str = "auto",
         # The next parameters are inherited from ColumnTransformer
-        remainder: Union[Literal["drop", "passthrough"], BaseEstimator] = "passthrough",
+        remainder: Union[
+            Literal["drop", "passthrough"], TransformerMixin
+        ] = "passthrough",
         sparse_threshold: float = 0.3,
         n_jobs: int = None,
         transformer_weights=None,
@@ -194,7 +260,7 @@ class SuperVectorizer(ColumnTransformer):
         super().__init__(transformers=[])
 
         self.cardinality_threshold = cardinality_threshold
-        self.binary_cat_transformer = OneHotEncoder(drop='if_binary')
+        self.binary_cat_transformer = OneHotEncoder(drop="if_binary")
         self.low_card_cat_transformer = low_card_cat_transformer
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
@@ -215,78 +281,88 @@ class SuperVectorizer(ColumnTransformer):
         return {"allow_nan": [True]}
 
     def _clone_transformers(self):
-        if self.low_card_cat_transformer is not None:
+        """
+        For each of the different transformers that can be passed,
+        create the corresponding variable name with a trailing underscore,
+        which is the value that will be used in `transformers`.
+        We clone the instances to avoid altering them.
+        See the clone function docstring.
+        Note: typos are not detected here, they are left in and are detected
+        down the line in `ColumnTransformer.fit_transform`.
+        """
+        if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
-        else:
+        elif self.low_card_cat_transformer is None:
             self.low_card_cat_transformer_ = OneHotEncoder()
-        if self.high_card_cat_transformer is not None:
+        elif self.low_card_cat_transformer == "remainder":
+            self.low_card_cat_transformer_ = self.remainder
+        else:
+            self.low_card_cat_transformer_ = self.low_card_cat_transformer
+
+        if isinstance(self.high_card_cat_transformer, sklearn.base.TransformerMixin):
             self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
-        else:
+        elif self.high_card_cat_transformer is None:
             self.high_card_cat_transformer_ = GapEncoder(n_components=30)
-        if self.datetime_transformer is not None:
-            self.datetime_transformer_ = clone(self.datetime_transformer)
+        elif self.high_card_cat_transformer == "remainder":
+            self.high_card_cat_transformer_ = self.remainder
         else:
+            self.high_card_cat_transformer_ = self.high_card_cat_transformer
+
+        if isinstance(self.numerical_transformer, sklearn.base.TransformerMixin):
+            self.numerical_transformer_ = clone(self.numerical_transformer)
+        elif self.numerical_transformer is None:
+            self.numerical_transformer_ = "passthrough"
+        elif self.numerical_transformer == "remainder":
+            self.numerical_transformer_ = self.remainder
+        else:
+            self.numerical_transformer_ = self.numerical_transformer
+
+        if isinstance(self.datetime_transformer, sklearn.base.TransformerMixin):
+            self.datetime_transformer_ = clone(self.datetime_transformer)
+        elif self.datetime_transformer is None:
             self.datetime_transformer_ = DatetimeEncoder()
+        elif self.datetime_transformer == "remainder":
+            self.datetime_transformer_ = self.remainder
+        else:
+            self.datetime_transformer_ = self.datetime_transformer
 
         # TODO: check that the provided transformers are valid
 
-    @staticmethod
-    def _auto_cast(X: pd.DataFrame) -> pd.DataFrame:
+    def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
         """
-        Takes a dataframe and tries to convert its columns to the best
-        possible data type.
+        Used during fit: takes a dataframe and tries to convert
+        its columns to their best possible data type.
 
         Parameters
         ----------
-        X : {dataframe} of shape (n_samples, n_features)
+        X : pandas.DataFrame of shape (n_samples, n_features)
             The data to be transformed.
 
         Returns
         -------
-        pd.DataFrame
+        pandas.DataFrame
             The same pandas DataFrame, with its columns cast to the best
             possible data type.
         """
-        from pandas.core.dtypes.base import ExtensionDtype
+        # We replace in all columns regardless of their type,
+        # as we might have some false missing
+        # in numerical columns for instance.
+        X = _replace_false_missing(X)
 
         # Handle missing values
         for col in X.columns:
-            contains_missing: bool = _has_missing_values(X[col])
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
             # because the former tends to raise all kind of issues when dealing
             # with scikit-learn (as of version 0.24).
-            if contains_missing:
+            if _has_missing_values(X[col]):
                 # Some numerical dtypes like Int64 or Float64 only support
                 # pd.NA, so they must be converted to np.float64 before.
                 if pd.api.types.is_numeric_dtype(X[col]):
                     X.loc[:, col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
-        # taken from pandas.io.parsers (version 1.1.4)
-        STR_NA_VALUES = [
-            "null",
-            "",
-            "1.#QNAN",
-            "#NA",
-            "nan",
-            "#N/A N/A",
-            "-1.#QNAN",
-            "<NA>",
-            "-1.#IND",
-            "-nan",
-            "n/a",
-            "-NaN",
-            "1.#IND",
-            "NULL",
-            "NA",
-            "N/A",
-            "#N/A",
-            "NaN",
-        ]
-        X = X.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
-        X = X.replace(r"^\s+$", np.nan, regex=True)  # replace whitespaces
-
         # Convert to the best possible data type
+        self.types_ = {}
         for col in X.columns:
             if not pd.api.types.is_datetime64_any_dtype(X[col]):
                 # we don't want to cast datetime64
@@ -302,58 +378,33 @@ class SuperVectorizer(ColumnTransformer):
                     except (ValueError, TypeError):
                         pass
             # Cast pandas dtypes to numpy dtypes
-            # for earlier versions of sklearn
+            # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
                 try:
                     X.loc[:, col] = X[col].astype(X[col].dtype.type, errors="ignore")
                 except (TypeError, ValueError):
                     pass
+            self.types_.update({col: X[col].dtype})
         return X
 
-    def transform(self, X) -> np.ndarray:
+    def _apply_cast(self, X: pd.DataFrame) -> pd.DataFrame:
         """
-        Transform X by applying fitted transformers on each column,
-        and concatenate the results.
+        Used during transform: takes a pandas dataframe,
+        and applies the best data types learnt during fitting.
 
-        Parameters
-        ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
-            The data to be transformed.
-
-        Returns
-        -------
-        {array-like, sparse matrix} of shape (n_samples, sum_n_components)
-            hstack of results of transformers. sum_n_components is the
-            sum of n_components (output dimension) over transformers. If
-            any result is a sparse matrix, everything will be converted to
-            sparse matrices.
+        Does the same thing as `_auto_cast`, but applies learnt info.
         """
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
-        # Auto cast the imported data to avoid having issues with
-        # `object` dtype when we will cast columns to the fitted types.
-        if self.auto_cast:
-            X = self._auto_cast(X)
-            self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
-        if X.shape[1] != len(self.columns_):
-            raise ValueError(
-                "Passed array does not match column count of "
-                f"array seen at fit time. Got {X.shape[1]} "
-                f"columns, expected {len(self.columns_)}"
-            )
-
-        # If the DataFrame does not have named columns already,
-        # apply the learnt columns
-        if pd.api.types.is_numeric_dtype(X.columns):
-            X.columns = self.columns_
-
+        for col in X.columns:
+            X.loc[:, col] = _replace_false_missing(X[col])
+            if _has_missing_values(X[col]):
+                if pd.api.types.is_numeric_dtype(X[col]):
+                    X.loc[:, col] = X[col].astype(np.float64)
+                X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
-            X.loc[:, col] = _replace_missing_in_col(X[col])
-
-        return super().transform(X)
+            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+        for col, dtype in self.types_.items():
+            X.loc[:, col] = X[col].astype(dtype)
+        return X
 
     def fit_transform(self, X, y=None):
         """
@@ -374,15 +425,16 @@ class SuperVectorizer(ColumnTransformer):
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
-
-        Raises
-        ------
-        RuntimeError
-            If no transformers could be constructed,
-            usually because transformers passed do not match any column.
-            To fix the issue, try passing the least amount of None as encoders.
         """
+        if self.impute_missing not in ("skip", "force", "auto"):
+            raise ValueError(
+                "Invalid value for `impute_missing`, expected any of "
+                "{'auto', 'force', 'skip'}, "
+                f"got {self.impute_missing!r}. "
+            )
+
         self._clone_transformers()
+
         # Convert to pandas DataFrame if not already.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
@@ -390,13 +442,12 @@ class SuperVectorizer(ColumnTransformer):
             # Create a copy to avoid altering the original data.
             X = X.copy()
 
-        self.columns_ = X.columns.to_list()
+        self.columns_ = X.columns
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
         # We'll keep the results in order to apply the types in `transform`.
         if self.auto_cast:
             X = self._auto_cast(X)
-            self.types_ = {c: t for c, t in zip(X.columns, X.dtypes)}
 
         # Select columns by dtype
         numeric_columns = X.select_dtypes(
@@ -421,14 +472,12 @@ class SuperVectorizer(ColumnTransformer):
             include=["datetime", "datetimetz"]
         ).columns.to_list()
 
-        # Divide categorical columns by cardinality
+        # Classify categorical columns by cardinality
         _unique_values = {  # Cache for faster assignation down the line
-            col: X[col].nunique()
-            for col in categorical_columns
+            col: X[col].nunique() for col in categorical_columns
         }
         binary_cat_columns = [
-            col for col in categorical_columns
-            if _unique_values[col] <= 2
+            col for col in categorical_columns if _unique_values[col] <= 2
         ]
         low_card_cat_columns = [
             col
@@ -443,7 +492,7 @@ class SuperVectorizer(ColumnTransformer):
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers = [
+        all_transformers: List[Tuple[str, OptionalTransformer, List[str]]] = [
             ("numeric", self.numerical_transformer, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
             ("binary_cat", self.binary_cat_transformer, binary_cat_columns),
@@ -459,56 +508,48 @@ class SuperVectorizer(ColumnTransformer):
             if len(cols) > 0 and enc is not None:
                 self.transformers.append(trans)
 
-        if len(self.transformers) == 0:
-            raise RuntimeError("No transformers could be generated! ")
-
         self.imputed_columns_ = []
-        if _has_missing_values(X):
-            if self.impute_missing == "force":
-                for col in X.columns:
-                    # Do not impute numeric columns
-                    if not pd.api.types.is_numeric_dtype(X[col]):
-                        X.loc[:, col] = _replace_missing_in_col(X[col])
-                        self.imputed_columns_.append(col)
+        if self.impute_missing != "skip":
+            # First, replace false missing
+            # This is technically redundant with the call made in `_auto_cast`,
+            # but we do it again anyway.
+            X = _replace_false_missing(X)
 
-            elif self.impute_missing == "skip":
-                pass
+            # Then, impute if suiting
+            if _has_missing_values(X):
+                if self.impute_missing == "force":
+                    for col in X.columns:
+                        # Only impute categorical columns
+                        if col in categorical_columns:
+                            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+                            self.imputed_columns_.append(col)
 
-            elif self.impute_missing == "auto":
-                for name, trans, cols in all_transformers:
-                    impute: bool = False
+                elif self.impute_missing == "auto":
+                    for name, trans, cols in all_transformers:
+                        impute: bool = False
 
-                    if isinstance(trans, OneHotEncoder) and Version(
-                        sklearn_version
-                    ) < Version("0.24"):
-                        impute = True
+                        if isinstance(trans, OneHotEncoder) and Version(
+                            sklearn_version
+                        ) < Version("0.24"):
+                            impute = True
 
-                    if impute:
-                        for col in cols:
-                            # Do not impute numeric columns
-                            if not pd.api.types.is_numeric_dtype(X[col]):
-                                X.loc[:, col] = _replace_missing_in_col(X[col])
-                                self.imputed_columns_.append(col)
-
-            else:
-                raise ValueError(
-                    "Invalid value for `impute_missing`, expected any of "
-                    "{'auto', 'force', 'skip'}, "
-                    f"got {self.impute_missing!r}. "
-                )
+                        if impute:
+                            for col in cols:
+                                # Only impute categorical columns
+                                if col in categorical_columns:
+                                    X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+                                    self.imputed_columns_.append(col)
 
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas gives different types depending on whether a column has
         # missing values or not.
-        if self.imputed_columns_:
+        if self.imputed_columns_ and self.auto_cast:
             X = self._auto_cast(X)
 
         if self.verbose:
             print(f"[SuperVectorizer] Assigned transformers: {self.transformers}")
 
-        check_input(X)
-
-        res = super().fit_transform(X, y)
+        X_enc = super().fit_transform(X, y)
 
         # For the "remainder" columns, the `ColumnTransformer` `transformers_`
         # attribute contains the index instead of the column name,
@@ -520,7 +561,46 @@ class SuperVectorizer(ColumnTransformer):
                 cols: List[int]
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
 
-        return res
+        return X_enc
+
+    def transform(self, X) -> np.ndarray:
+        """
+        Transform X by applying fitted transformers on each column,
+        and concatenate the results.
+
+        Parameters
+        ----------
+        X : {array-like, dataframe} of shape (n_samples, n_features)
+            The data to be transformed.
+
+        Returns
+        -------
+        {array-like, sparse matrix} of shape (n_samples, sum_n_components)
+            hstack of results of transformers. sum_n_components is the
+            sum of n_components (output dimension) over transformers. If
+            any result is a sparse matrix, everything will be converted to
+            sparse matrices.
+        """
+        if X.shape[1] != len(self.columns_):
+            raise ValueError(
+                "Passed array does not match column count of "
+                f"array seen during fit. Got {X.shape[1]} "
+                f"columns, expected {len(self.columns_)}"
+            )
+
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+        else:
+            # Create a copy to avoid altering the original data.
+            X = X.copy()
+
+        if (X.columns != self.columns_).all():
+            X.columns = self.columns_
+
+        if self.auto_cast:
+            X = self._apply_cast(X)
+
+        return super().transform(X)
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """
