@@ -456,23 +456,14 @@ def test_fit_transform_equiv() -> None:
     We will test the equivalence between using `.fit_transform(X)`
     and `.fit(X).transform(X).`
     """
-    X1 = _get_clean_dataframe()
-    X2 = _get_dirty_dataframe()
+    for X in [
+        _get_clean_dataframe(),
+        _get_dirty_dataframe(),
+    ]:
+        enc1_x1 = SuperVectorizer().fit_transform(X)
+        enc2_x1 = SuperVectorizer().fit(X).transform(X)
 
-    sup_vec1 = SuperVectorizer()
-    sup_vec2 = SuperVectorizer()
-    sup_vec3 = SuperVectorizer()
-    sup_vec4 = SuperVectorizer()
-
-    enc1_x1 = sup_vec1.fit_transform(X1)
-    enc2_x1 = sup_vec2.fit(X1).transform(X1)
-
-    enc1_x2 = sup_vec3.fit_transform(X2)
-    enc2_x2 = sup_vec4.fit(X2).transform(X2)
-
-    assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
-
-    assert np.allclose(enc1_x2, enc2_x2, rtol=0, atol=0, equal_nan=True)
+        assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
 
 def _is_equal(elements: Tuple[Any, Any]) -> bool:
