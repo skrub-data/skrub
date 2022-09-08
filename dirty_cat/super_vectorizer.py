@@ -98,11 +98,12 @@ class SuperVectorizer(ColumnTransformer):
         Cardinality threshold for categorical (string) features.
         Two lists of features will be created depending on this value: between
         3 (included) and this value (excluded), the low cardinality categorical
-        values, and above or equal, the high cardinality categorical values.
+        features, and above or equal, the high cardinality categorical features.
         Different transformers will be applied to these two groups, defined by
         the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
-        The features with a cardinality of <= 2 will get binary encoded.
+        The features with a cardinality of <= 2 will be binary encoded
+        (see `binary_cat_transformer`).
 
     binary_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with cardinality <= 2.
