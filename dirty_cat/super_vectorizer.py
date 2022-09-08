@@ -31,6 +31,12 @@ def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
 def _replace_false_missing(
     df: Union[pd.DataFrame, pd.Series]
 ) -> Union[pd.DataFrame, pd.Series]:
+    """
+    Takes a DataFrame or a Series, and replaces the "false missing", that is,
+    strings that designate a missing value, but do not have the corresponding
+    type. We convert these strings to np.nan.
+    Also replaces `None` to np.nan.
+    """
     # Should not replace "missing" (the string used for imputation in
     # categorical features).
     STR_NA_VALUES = [
@@ -272,6 +278,15 @@ class SuperVectorizer(ColumnTransformer):
         return {"allow_nan": [True]}
 
     def _clone_transformers(self):
+        """
+        For each of the different transformers that can be passed,
+        create the corresponding variable name with a trailing underscore,
+        which is the value that will be used in `transformers`.
+        We clone the instances to avoid altering them.
+        See the clone function docstring.
+        Note: typos are not detected here, they are left in and are detected
+        down the line in `ColumnTransformer.fit_transform`.
+        """
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
