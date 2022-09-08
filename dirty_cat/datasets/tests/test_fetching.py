@@ -390,8 +390,8 @@ def test_fetch_world_bank_indicator():
     test_dataset = {
     "name": 'gdppc',
     "id": 'NY.GDP.PCAP.CD',
-    "desc_start": "**This table shows**",
-    "url": "https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.CD'?downloadformat=csv",
+    "desc_start": "This table shows",
+    "url": "https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.CD?downloadformat=csv",
     "dataset_columns_count": 2,
     }
 
@@ -422,14 +422,14 @@ def test_fetch_world_bank_indicator():
             )
             return
 
-        assert returned_info["description"].startswith(test_dataset["desc_start"])
-        assert returned_info["source"] == test_dataset["url"]
-        assert returned_info["path"].is_file()
+        assert returned_info.description.startswith(test_dataset["desc_start"])
+        assert returned_info.source == test_dataset["url"]
+        assert returned_info.path.is_file()
 
-        dataset: pd.DataFrame = pd.read_csv(returned_info["path"])
+        dataset: pd.DataFrame = pd.read_csv(returned_info.path)
 
         assert dataset.columns[1] == test_dataset['name']
-        assert dataset.shape[1] == test_dataset["dataset_rows_count"]
+        assert dataset.shape[1] == test_dataset["dataset_columns_count"]
 
     finally:
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
