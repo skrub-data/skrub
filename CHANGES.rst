@@ -16,20 +16,27 @@ Major changes
 
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
-    in the SuperVectorizer for datetime columns.
+    in the :class:`SuperVectorizer` for datetime columns.
+* The :class:`SuperVectorizer` has seen some major improvements and bug fixes.
+* **Backward-incompatible change in the SuperVectorizer**: to apply ``remainder``
+  to features (with the ``*_transformer`` parameters), the value ``'remainder'``
+  must be passed, instead of ``None`` in previous versions.
+  ``None`` now indicates that we want to use the default transformer.
 * Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
 * Bumped minimum dependencies:
   - sklearn>=0.22
   - scipy>=1.4.0
   - numpy>=1.17.3
+  - pandas>=1.2.0
+
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
-    The :class:`SimilarityEncoder` now exclusively uses `ngram` for similarities,
-    and the `similarity` parameter is deprecated. It will be removed in 0.5.
+    The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
+    and the ``similarity`` parameter is deprecated. It will be removed in 0.5.
 
 Notes
 -----
 
-* The `transformers_` attribute of the SuperVectorizer now contains column
+* The ``transformers_`` attribute of the SuperVectorizer now contains column
   names instead of column indices for the "remainder" columns.
 
 
@@ -56,7 +63,7 @@ Major changes
 
 * "get_feature_names" becomes "get_feature_names_out", following changes in the scikit-learn API.
     "get_feature_names" is deprecated in scikit-learn > 1.0.
-    
+
 * Improvements to the :class:`MinHashEncoder`
     - It is now possible to fit multiple columns simultaneously with the MinHashEncoder.
     Very useful when using for instance the sklearn.compose.make_column_transformer method,
@@ -68,7 +75,7 @@ Bug-fixes
 
 * Fixed a bug that resulted in the **GapEncoder** ignoring the analyzer argument.
 
-* GapEncoder's `get_feature_names_out` now accepts all iterators, not just lists.  
+* GapEncoder's `get_feature_names_out` now accepts all iterators, not just lists.
 
 * Fixed `DeprecationWarning` raised by the usage of `distutils.version.LooseVersion`
 
@@ -207,7 +214,7 @@ Release 0.0.7
 * **datasets.fetch_employee_salaries**: change the origin of download for employee_salaries.
 
   - The function now return a bunch with a dataframe under the field "data",
-    and not the path to the csv file. 
+    and not the path to the csv file.
   - The field "description" has been renamed to "DESCR".
 
 * **SimilarityEncoder**: Fixed a bug when using the Jaro-Winkler distance as a
