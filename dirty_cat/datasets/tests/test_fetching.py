@@ -387,6 +387,10 @@ def test_import_all_datasets(
 
 
 def test_fetch_world_bank_indicator():
+    """
+    Tests the ``fetch_world_bank_indicator()``
+    function in a real environment.
+    """
     test_dataset = {
     "name": 'gdppc',
     "id": 'NY.GDP.PCAP.CD',

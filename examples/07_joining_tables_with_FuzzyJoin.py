@@ -54,7 +54,7 @@ from dirty_cat.datasets import fetch_world_bank_indicator
 
 #################################################################
 # We then extract GDP per capita by country:
-gdppc = fetch_world_bank_indicator(data_code='NY.GDP.PCAP.CD', indicator='gdppc').X
+gdppc = fetch_world_bank_indicator(dataset_id='NY.GDP.PCAP.CD', indicator='gdppc').X
 gdppc.head(3)
 
 #################################################################
