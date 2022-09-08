@@ -401,14 +401,14 @@ def test_fetch_world_bank_indicator():
         try:
             # First, we want to purposefully test ValueError exceptions.
             with pytest.raises(ValueError):
-                assert fetch_world_bank_indicator(dataset_id=0, indicator='blabla')
+                assert fetch_world_bank_indicator(data_code=0, indicator='blabla')
                 assert fetch_world_bank_indicator(
-                    dataset_id=2**32, indicator='blabla'
+                    data_code=2**32, indicator='blabla'
                 )
 
             # Valid call
             returned_info = fetch_world_bank_indicator(
-                dataset_id=test_dataset["id"],
+                data_code=test_dataset["id"],
                 indicator=test_dataset['name']
             )
 
