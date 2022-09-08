@@ -203,14 +203,17 @@ def _fetch_world_bank_data(
     # Download the file :
     url = f"https://api.worldbank.org/v2/en/indicator/{dataset_id}?downloadformat=csv"
     urllib.request.urlretrieve(url, data_directory)
-    # Extract csv file :
-    with ZipFile(data_directory, "r") as f:
-        names = f.namelist()
-        for n in names:
-            if "Metadata" not in n:
-                f.extract(n, path=zip_path)
-                true_file = n
-    f.close()
+    try:
+        # Extract csv file :
+        with ZipFile(data_directory, "r") as f:
+            names = f.namelist()
+            for n in names:
+                if "Metadata" not in n:
+                    f.extract(n, path=zip_path)
+                    true_file = n
+        f.close()
+    except:
+        raise FileNotFoundError(f"Couldn't find file {data_directory!s}, please check dataset_id.")
     # Read csv
     csv_path = zip_path / true_file
     df = pd.read_csv(csv_path, skiprows=3)
@@ -674,11 +677,11 @@ def fetch_drug_directory(
 
 
 def fetch_world_bank_indicator(
-    data_code: str, indicator: str, load_dataframe: bool = True,
+    dataset_id: str, indicator: str, load_dataframe: bool = True,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     return fetch_dataset_as_dataclass(
         dataset_name=indicator,
-        dataset_id=data_code,
+        dataset_id=dataset_id,
         target=[],
         read_csv_kwargs={},
         load_dataframe=load_dataframe,
