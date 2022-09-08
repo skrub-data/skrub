@@ -76,8 +76,8 @@ def fuzzy_join(
 
     Returns:
     --------
-    joined: pd.DataFrame
-        A joined table.
+    df_joined: pd.DataFrame
+        The joined table returned as a DataFrame.
     distance: bool, default=True
         Whether or not to return the distances to the closest matching
         neighbor.
@@ -87,11 +87,12 @@ def fuzzy_join(
     There are two main ways to take into account for the similarity between
     categories.
     When we use match_type='nearest', the function will be forced to find the
-    nearest match across the possible options.
+    nearest match (of the left_table category) across the possible matching
+    options in the right_table column.
     When the neighbors are distant, we may use the match_type='radius' option
-    with the match_threshold value to define the minimal level of precision
-    every match should have. If this is not reached, matches will be
-    considered as inexistant and NaN values will be imputed.
+    with a match_threshold value to define the minimal level of matching
+    precision tolerated. If it is not reached, matches will be
+    considered as not found and NaN values will be imputed.
     See example below for an illustration.
 
     Examples
@@ -149,11 +150,10 @@ def fuzzy_join(
 
     if len(suffixes) != 2:
         raise ValueError(
-            "Invalid number of suffixes: expected 2," f" got {len(suffixes)}"
+            "Invalid number of suffixes: expected 2, got {len(suffixes)}"
         )
     lsuffix, rsuffix = suffixes
-    if not lsuffix and not rsuffix:
-        raise ValueError(f"Suffixes ({suffixes}) has invalid number of elements.")
+
     overlap_cols = lt._info_axis.intersection(rt._info_axis)
     if len(overlap_cols) > 0:
         for i in range(len(overlap_cols)):
@@ -161,6 +161,7 @@ def fuzzy_join(
             new_name_r = overlap_cols[i] + rsuffix
             lt.rename(columns={overlap_cols[i]: new_name_l}, inplace=True)
             rt.rename(columns={overlap_cols[i]: new_name_r}, inplace=True)
+            # Useful in case on[0]==on[1] and overlapping:
             if len(on) == 2 and overlap_cols[i] in on[0]:
                 on[0] = new_name_l
             if len(on) == 2 and overlap_cols[i] in on[1]:
@@ -182,8 +183,6 @@ def fuzzy_join(
             "Expected a list with one or two elements for parameter 'on',"
             f"received {len(on)} ({on})."
         )
-
-    cols = list(lt.columns) + list(rt.columns)
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     left_enc = enc.fit_transform(lt[left_col])
@@ -229,11 +228,14 @@ def fuzzy_join(
             axis=1,
         )
 
+    cols = list(lt.columns) + list(rt.columns)
     df_joined = pd.DataFrame(joined, columns=cols).replace(r"^\s*$", np.nan, regex=True)
+
     if keep == "left":
         df_joined.drop(columns=[right_col], inplace=True)
     if keep == "right":
         df_joined.drop(columns=[left_col], inplace=True)
+
     if return_distance:
         return df_joined, distance
     else:
