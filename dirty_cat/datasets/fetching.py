@@ -679,6 +679,22 @@ def fetch_drug_directory(
 def fetch_world_bank_indicator(
     dataset_id: str, indicator: str, load_dataframe: bool = True,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
+    """Fetches a dataset of an indicator from the World Bank
+       open data platform.
+
+    Description of the dataset:
+    > The dataset contains two columns: the indicator value and the 
+      country names. A list of all available indicators can be found
+      at https://data.worldbank.org/indicator.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
+    """
     return fetch_dataset_as_dataclass(
         dataset_name=indicator,
         dataset_id=dataset_id,

@@ -36,9 +36,9 @@ def fuzzy_join(
     Parameters
     ----------
 
-    left_table: pd.DataFrame
+    left_table: pandas.DataFrame
             Table on which the join will be performed.
-    right_table: pd.DataFrame
+    right_table: pandas.DataFrame
             Table that will be joined.
     on: list
             List of left and right table column names on which
@@ -76,7 +76,7 @@ def fuzzy_join(
 
     Returns:
     --------
-    df_joined: pd.DataFrame
+    df_joined: pandas.DataFrame
         The joined table returned as a DataFrame.
     distance: bool, default=True
         Whether or not to return the distances to the closest matching
