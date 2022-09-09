@@ -418,9 +418,11 @@ class SuperVectorizer(ColumnTransformer):
     def fit_transform(self, X, y=None):
         """
         Fit all transformers, transform the data, and concatenate the results.
-        In summary, it (1) convert features to their best possible types
+        In practice, it (1) converts features to their best possible types
         if `auto_cast=True`, (2) classify columns based on their data type,
         (3) replaces "false missing" (see function `_replace_false_missing`),
+        and imputes categorical columns depending on `impute_missing`, and
+        finally, transforms X.
 
         Parameters
         ----------
