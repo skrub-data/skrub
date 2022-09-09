@@ -161,7 +161,7 @@ def _test_possibilities(X):
     # Warning: order-dependant
     expected_transformers_df = {
         "numeric": ["int", "float"],
-        "binary_cat": ["str1", "cat1"],
+        "low_card_cat": ["str1", "cat1"],
         "high_card_cat": ["str2", "cat2"],
     }
     vectorizer_base.fit_transform(X)
@@ -169,8 +169,7 @@ def _test_possibilities(X):
 
     # Test with higher cardinality threshold and no numeric transformer
     expected_transformers_2 = {
-        "low_card_cat": ["str2", "cat2"],
-        "binary_cat": ["str1", "cat1"],
+        "low_card_cat": ["str1", "str2", "cat1", "cat2"],
     }
     vectorizer_default = SuperVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
@@ -180,7 +179,7 @@ def _test_possibilities(X):
     arr = X.to_numpy()
     # Instead of the columns names, we'll have the column indices.
     expected_transformers_np_no_cast = {
-        "binary_cat": [2, 4],
+        "low_card_cat": [2, 4],
         "high_card_cat": [3, 5],
         "numeric": [0, 1],
     }
@@ -191,7 +190,7 @@ def _test_possibilities(X):
 
     # Test with pandas series
     expected_transformers_series = {
-        "binary_cat": ["cat1"],
+        "low_card_cat": ["cat1"],
     }
     vectorizer_base.fit_transform(X["cat1"])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
@@ -207,7 +206,7 @@ def _test_possibilities(X):
     # With pandas
     expected_transformers_plain = {
         "high_card_cat": ["str2", "cat2"],
-        "binary_cat": ["str1", "cat1"],
+        "low_card_cat": ["str1", "cat1"],
         "numeric": ["int", "float"],
     }
     vectorizer_cast.fit_transform(X_str)
@@ -215,7 +214,7 @@ def _test_possibilities(X):
     # With numpy
     expected_transformers_np_cast = {
         "numeric": [0, 1],
-        "binary_cat": [2, 4],
+        "low_card_cat": [2, 4],
         "high_card_cat": [3, 5],
     }
     vectorizer_cast.fit_transform(X_str.to_numpy())
@@ -297,7 +296,7 @@ def test_with_arrays():
     """
     expected_transformers = {
         "numeric": [0, 1],
-        "binary_cat": [2, 4],
+        "low_card_cat": [2, 4],
         "high_card_cat": [3, 5],
     }
     vectorizer = SuperVectorizer(
@@ -325,12 +324,12 @@ def test_get_feature_names_out() -> None:
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_pass = [
         "str1_public",
-        "cat1_yes",
         "str2_chef",
         "str2_lawyer",
         "str2_manager",
         "str2_officer",
         "str2_teacher",
+        "cat1_yes",
         "cat2_20K+",
         "cat2_30K+",
         "cat2_40K+",
@@ -350,12 +349,12 @@ def test_get_feature_names_out() -> None:
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_drop = [
         "str1_public",
-        "cat1_yes",
         "str2_chef",
         "str2_lawyer",
         "str2_manager",
         "str2_officer",
         "str2_teacher",
+        "cat1_yes",
         "cat2_20K+",
         "cat2_30K+",
         "cat2_40K+",
@@ -385,7 +384,7 @@ def test_transform() -> None:
     x = np.array(s).reshape(1, -1)
     x_trans = sup_vec.transform(x)
     assert x_trans.tolist() == [
-        [0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 34.0, 5.5]
+        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 34.0, 5.5]
     ]
     # To understand the list above:
     # print(dict(zip(sup_vec.get_feature_names_out(), x_trans.tolist()[0])))
@@ -424,7 +423,6 @@ def test_passthrough():
     X_clean = _get_clean_dataframe()
 
     sv = SuperVectorizer(
-        binary_cat_transformer="passthrough",
         low_card_cat_transformer="passthrough",
         high_card_cat_transformer="passthrough",
         datetime_transformer="passthrough",
