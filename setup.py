@@ -39,7 +39,7 @@ if __name__ == "__main__":
         packages=find_packages(),
         package_data={"dirty_cat": ["VERSION.txt"]},
         install_requires=[
-            "scikit-learn>=0.21",
+            "scikit-learn>=0.23",
             "numpy>=1.16",
             "scipy>=1.2",
             "pandas>=1.2.0",
