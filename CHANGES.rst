@@ -11,7 +11,7 @@ Major changes
     in the :class:`SuperVectorizer` for datetime columns.
 * The :class:`SuperVectorizer` has seen some major improvements and bug fixes
   - Fixes the automatic casting logic in ``transform``.
-  - **Behavior change** To avoid dimensionality explosion when a feature has two unique values,
+  - To avoid dimensionality explosion when a feature has two unique values,
     the default encoder (:class:`OneHotEncoder`) now drops one of the two
     vectors (see parameter `drop="if_binary"`).
   - ``fit_transform`` and ``transform`` can now return unencoded features,
