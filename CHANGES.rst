@@ -9,7 +9,7 @@ Major changes
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
     columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
     in the :class:`SuperVectorizer` for datetime columns.
-* The :class:`SuperVectorizer` has seen some major improvements and bug fixes
+* The :class:`SuperVectorizer` has seen some major improvements and bug fixes:
   - Fixes the automatic casting logic in ``transform``.
   - To avoid dimensionality explosion when a feature has two unique values,
     the default encoder (:class:`OneHotEncoder`) now drops one of the two
