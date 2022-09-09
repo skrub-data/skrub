@@ -25,67 +25,50 @@ and `Encoding high-cardinality string categorical variables <https://hal.inria.f
 
 If you like the package, please *spread the word*, and ⭐ the repository!
 
-What can and cannot dirty_cat do?
----------------------------------
+What can dirty_cat do?
+----------------------
 
-dirty_cat can encode **morphological similarities** in the data,
-which means that dirty_cat assumes a correlation between the similarities
-in the feature we want to encode and similarities in the target.
+dirty_cat provides encoders for **morphological similarities** in the data,
+which means that it assumes a correlation between the similarities
+in the feature we want to encode, and similarities in the target.
 
-For example, let's say that we worked with a dataset about employee salaries:
+We usually identify three common cases:
 
-+---------------------+---------------------------+-------------+--------------------+
-| Full name           | Job title                 | Year hired  | Annual salary ($)  |
-+=====================+===========================+=============+====================+
-| Starks-Bey, Prince  | Police Officer III        | 2005        | 89 620             |
-+---------------------+---------------------------+-------------+--------------------+
-| Dolan, Thomas       | Master Police Officer     | 1986        | 97 392             |
-+---------------------+---------------------------+-------------+--------------------+
-| Copas, Robert       | Correctional Officer III  | 2009        | 58 720             |
-+---------------------+---------------------------+-------------+--------------------+
-| Blinkhorn, Russell  | Fire/Rescue Captain       | 1998        | 110 229            |
-+---------------------+---------------------------+-------------+--------------------+
-| Gaston, Birdie      | Correctional Officer II   | 2001        | 77 328             |
-+---------------------+---------------------------+-------------+--------------------+
-| ...                 | ...                       | ...         | ...                |
-+---------------------+---------------------------+-------------+--------------------+
+- **Similarities**: different samples which are alike, or are sub/super-sets.
+  Example: a *Sales Manager* might have a similar salary to a *Marketing Manager*,
+  as they are both managers
 
-We'd like to train a model on this data to be able to estimate the salary of new hired.
+- **Typos**: misspelled words such as *Lawyier* (instead of *Lawyer*),
+  refers to the same job, despite being two different words.
 
-**Similarities**: in the job title column, there are some similarities
-between some of the samples, for example between *Correctional Officer III*
-and *Correctional Officer II*.
-Therefore, we can assume that **salaries of these two employees will be similar**.
+- **Variations**: in some languages - such as French - a same entity
+  (such as a job title) might have different denominations:
+  *Policier* (police officer, male) and *Policière* (police officer, female).
+  Same problem as typos: we have different, very similar words designating the same job.
 
-**Typos**: if there was a *Lawyier* instead of *Lawyer* in the data,
-despite being two different words, the salaries of these employees should
-be very similar as they refer to the same job.
-
-**Variations**: in some languages such as French, a same job title might have
-different denominations: *Avocat* (lawyer, male) and *Avocate* (lawyer, female).
-Same problem as before: we have different, very similar words designating the same job.
-
-Traditional encodings methods such as **one-hot cannot grasp these similarities**,
-and therefore would encode these values **independently**, which directly affects model performance.
+Traditional encoding methods such as **one-hot cannot grasp these similarities**,
+and therefore would encode these values **independently**,
+which directly affects the machine learning model performance.
 
 Historically, this problem is addressed by cleaning the data manually,
 which requires a lot of work.
 
 dirty_cat encoders try to remedy this issue by providing **automatic methods
-to directly process this kind of dirty data in our machine learning pipelines**.
+to directly process this kind of dirty data in the machine learning pipelines**.
 They can be easily integrated in already existing pipelines as they are
 compliant with scikit-learn's API.
 
 As such, they are **drop-in replacements** for scikit-learn encoders !
 
-Encoders
-~~~~~~~~
-
-dirty_cat provides various tools for dealing with dirty data:
+Those provided by dirty_cat include:
 
 - The `SimilarityEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.SimilarityEncoder.html>`_
 - The `GapEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.GapEncoder.html>`_
 - The `MinHashEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.MinHashEncoder.html>`_
+
+The library also implements other tools relevant to this issue,
+and generally useful in machine learning settings:
+
 - The `SuperVectorizer <https://dirty-cat.github.io/stable/generated/dirty_cat.SuperVectorizer.html>`_
 - The `DatetimeEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.DatetimeEncoder.html>`_
 
@@ -97,7 +80,7 @@ What dirty_cat does not
 `Semantic similarities <https://en.wikipedia.org/wiki/Semantic_similarity>`_
 are currently not supported.
 For example, the similarity between *car* and *automobile* is outside the reach
-of the methods implemented in dirty_cat.
+of the methods implemented here.
 
 This kind of problem is tackled by
 `Natural Language Processing <https://en.wikipedia.org/wiki/Natural_language_processing>`_
