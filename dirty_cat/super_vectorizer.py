@@ -96,16 +96,18 @@ class SuperVectorizer(ColumnTransformer):
 
     cardinality_threshold : int, default=40
         Two lists of features will be created depending on this value: strictly
-        under this value, the low cardinality categorical values, and above or
-        equal, the high cardinality categorical values.
+        under this value, the low cardinality categorical features, and above or
+        equal, the high cardinality categorical features.
         Different transformers will be applied to these two groups,
         defined by the parameters `low_card_cat_transformer` and
         `high_card_cat_transformer` respectively.
+        Note: currently, missing values are counted as a single unique value
+        (so they count in the cardinality).
 
     low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance (e.g. `OneHotEncoder()`),
+        Can either be a transformer object instance (e.g. `OneHotEncoder(drop="if_binary")`),
         a `Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
@@ -226,6 +228,16 @@ class SuperVectorizer(ColumnTransformer):
     imputed_columns_: typing.List[str]
         The list of columns in which we imputed the missing values.
 
+    Notes
+    -----
+    The column order of the input data is not guaranteed to be the same
+    as the output data (returned by `transform`).
+    This is a due to the way the ColumnTransformer works.
+    However, the output column order will always be the same for different
+    calls to `transform` on a same fitted SuperVectorizer instance.
+    For example, if input data has columns ['name', 'job', 'year], then output
+    columns might be shuffled, e.g., ['job', 'year', 'name'], but every call
+    to `transform` will return this order.
     """
 
     transformers_: List[Tuple[str, Union[str, TransformerMixin], List[str]]]
@@ -290,7 +302,7 @@ class SuperVectorizer(ColumnTransformer):
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
-            self.low_card_cat_transformer_ = OneHotEncoder()
+            self.low_card_cat_transformer_ = OneHotEncoder(drop="if_binary")
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
         else:
@@ -406,6 +418,11 @@ class SuperVectorizer(ColumnTransformer):
     def fit_transform(self, X, y=None):
         """
         Fit all transformers, transform the data, and concatenate the results.
+        In practice, it (1) converts features to their best possible types
+        if `auto_cast=True`, (2) classify columns based on their data type,
+        (3) replaces "false missing" (see function `_replace_false_missing`),
+        and imputes categorical columns depending on `impute_missing`, and
+        finally, transforms X.
 
         Parameters
         ----------
@@ -470,16 +487,21 @@ class SuperVectorizer(ColumnTransformer):
         ).columns.to_list()
 
         # Classify categorical columns by cardinality
+        _nunique_values = {  # Cache results
+            col: X[col].nunique() for col in categorical_columns
+        }
         low_card_cat_columns = [
             col
             for col in categorical_columns
-            if X[col].nunique() < self.cardinality_threshold
+            if _nunique_values[col] < self.cardinality_threshold
         ]
         high_card_cat_columns = [
             col
             for col in categorical_columns
-            if X[col].nunique() >= self.cardinality_threshold
+            if _nunique_values[col] >= self.cardinality_threshold
         ]
+        # Clear cache
+        del _nunique_values
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
@@ -603,24 +625,10 @@ class SuperVectorizer(ColumnTransformer):
         typing.List[str]
             Feature names.
         """
-        if Version(sklearn_version) < Version("0.23"):
-            try:
-                if Version(sklearn_version) < Version("1.0"):
-                    ct_feature_names = super().get_feature_names()
-                else:
-                    ct_feature_names = super().get_feature_names_out()
-            except NotImplementedError:
-                raise NotImplementedError(
-                    "Prior to sklearn 0.23, get_feature_names with "
-                    '"passthrough" is unsupported. To use the method, '
-                    'either make sure there is no "passthrough" in the '
-                    "transformers, or update your copy of scikit-learn. "
-                )
+        if Version(sklearn_version) < Version("1.0"):
+            ct_feature_names = super().get_feature_names()
         else:
-            if Version(sklearn_version) < Version("1.0"):
-                ct_feature_names = super().get_feature_names()
-            else:
-                ct_feature_names = super().get_feature_names_out()
+            ct_feature_names = super().get_feature_names_out()
         all_trans_feature_names = []
 
         for name, trans, cols, _ in self._iter(fitted=True):
