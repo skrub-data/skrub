@@ -1,3 +1,5 @@
+.. currentmodule:: dirty_cat
+  
 Release 0.3
 ============
 
