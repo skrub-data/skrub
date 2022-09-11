@@ -3,7 +3,7 @@ Implements deduplication based on clustering string similarity matrices.
 This works best if there is a number of underlying categories that
 sometimes appear in the data with small variations and/or misspellings.
 """
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -20,7 +20,8 @@ def deduplicate(
     ngram_range: Tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
     method: str = "average",
-) -> List[str]:
+    return_translation_table: bool = False,
+) -> Union[List[str], Tuple[List[str], pd.Series]]:
     """Deduplicates data by computing the n-gram similarity between unique
     categories in data, performing hierarchical clustering on this similarity
     matrix, and choosing the most frequent element in each cluster as the
@@ -41,27 +42,33 @@ def deduplicate(
         `CountVectorizer` analyzer for computing n-grams, by default "char_wb"
     method : str, optional
         linkage method to use for merging clusters, by default "average"
+    return_translation_table : bool, optional
+        Whether to return a translation table with original words as indices
+        and deduplicated words as values, by default False
 
     Returns
     -------
-    List[str]
-       The deduplicated data.
+    Union[List[str], Tuple[List[str], pd.Series]]
+       Either the deduplicated data (if return_translation_table=False) or a
+       tuple of the deduplicated data and a translation table that maps
+       original data to deduplicated data (if return_translation_table=True).
     """
-    unique_examples, counts = np.unique(data, return_counts=True)
-    ex_series = pd.Series(counts, index=unique_examples)
+    unique_words, counts = np.unique(data, return_counts=True)
     similarity_mat = compute_ngram_similarity(
-        unique_examples, ngram_range=ngram_range, analyzer=analyzer
+        unique_words, ngram_range=ngram_range, analyzer=analyzer
     )
 
-    dense_distance = similarity_mat
-    Z = linkage(dense_distance, method=method, optimal_ordering=True)
+    Z = linkage(similarity_mat, method=method, optimal_ordering=True)
     if n_clusters is None:
         n_clusters = guess_clusters(Z, similarity_mat)
     clusters = fcluster(Z, n_clusters, criterion="maxclust")
 
-    pd_spell_correct = create_spelling_correction(ex_series, clusters)
-    unrolled_corrections = pd_spell_correct[data]
-    return unrolled_corrections
+    translation_table = create_spelling_correction(unique_words, counts, clusters)
+    unrolled_corrections = translation_table[data]
+    if return_translation_table:
+        return unrolled_corrections, translation_table
+    else:
+        return unrolled_corrections
 
 
 def guess_clusters(Z: NDArray, similarity_mat: NDArray) -> int:
@@ -87,14 +94,13 @@ def guess_clusters(Z: NDArray, similarity_mat: NDArray) -> int:
     silhouette_scores = []
     for n_clust in n_clusters:
         labels = fcluster(Z, n_clust, criterion="maxclust")
-        silhouette_avg = silhouette_score(redundant_dist, labels,
-                                          metric="precomputed")
+        silhouette_avg = silhouette_score(redundant_dist, labels, metric="precomputed")
         silhouette_scores.append(silhouette_avg)
     return n_clusters[np.argmax(silhouette_scores)]
 
 
 def create_spelling_correction(
-    count_series: pd.Series, clusters: Sequence[int]
+    unique_words: Sequence[str], counts: Sequence[int], clusters: Sequence[int]
 ) -> pd.Series:
     """Creates a pandas Series that map each cluster member to the most
     frequent cluster member. The assumption is that the most common spelling
@@ -102,6 +108,11 @@ def create_spelling_correction(
 
     Parameters
     ----------
+    unique_words : Sequence[str]
+        A sequence of unique words in the original data.
+    counts : Sequence[int]
+        A sequence of counts of how often each unique word appears in the
+        original data.
     count_series : pd.Series
         A series with unique words (in the original data) as indices and number
         of occurrences of each word in the original data as values.
@@ -115,6 +126,7 @@ def create_spelling_correction(
         Series with unique (original) words as indices and (estimated)
         corrected spelling of each word as values.
     """
+    count_series = pd.Series(counts, index=unique_words)
     original_spelling: List[str] = []
     corrected_spelling: List[str] = []
     for cluster in np.unique(clusters):
