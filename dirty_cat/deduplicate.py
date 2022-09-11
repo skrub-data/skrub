@@ -1,9 +1,9 @@
 """
-Implements deduplication based on clustering string similarity matrices.
+Implements deduplication based on clustering string distance matrices.
 This works best if there is a number of underlying categories that
 sometimes appear in the data with small variations and/or misspellings.
 """
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Literal, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -17,12 +17,14 @@ def deduplicate(
     data: Sequence[str],
     n_clusters: Optional[int] = None,
     ngram_range: Tuple[int, int] = (2, 4),
-    analyzer: str = "char_wb",
-    method: str = "average",
+    analyzer: Literal["word", "char", "char_wb"] = "char_wb",
+    method: Literal[
+        "single", "complete", "average", "centroid", "median", "ward"
+    ] = "average",
     return_translation_table: bool = False,
 ) -> Union[List[str], Tuple[List[str], pd.Series]]:
-    """Deduplicates data by computing the n-gram similarity between unique
-    categories in data, performing hierarchical clustering on this similarity
+    """Deduplicates data by computing the n-gram distance between unique
+    categories in data, performing hierarchical clustering on this distance
     matrix, and choosing the most frequent element in each cluster as the
     'correct' spelling. This method works best if the true number of
     categories is significantly smaller than the number of observed spellings.
@@ -36,7 +38,7 @@ def deduplicate(
         number of clusters that lead to the lowest silhouette score,
         by default None
     ngram_range : Tuple[int, int], optional
-        range to use for computing n-gram similarity, by default (2, 4)
+        range to use for computing n-gram distance, by default (2, 4)
     analyzer : str, optional
         `CountVectorizer` analyzer for computing n-grams, by default "char_wb"
     method : str, optional
@@ -53,13 +55,13 @@ def deduplicate(
        original data to deduplicated data (if return_translation_table=True).
     """
     unique_words, counts = np.unique(data, return_counts=True)
-    similarity_mat = compute_ngram_similarity(
+    distance_mat = compute_ngram_distance(
         unique_words, ngram_range=ngram_range, analyzer=analyzer
     )
 
-    Z = linkage(similarity_mat, method=method, optimal_ordering=True)
+    Z = linkage(distance_mat, method=method, optimal_ordering=True)
     if n_clusters is None:
-        n_clusters = guess_clusters(Z, similarity_mat)
+        n_clusters = guess_clusters(Z, distance_mat)
     clusters = fcluster(Z, n_clusters, criterion="maxclust")
 
     translation_table = create_spelling_correction(unique_words, counts, clusters)
@@ -70,26 +72,26 @@ def deduplicate(
         return unrolled_corrections
 
 
-def guess_clusters(Z: np.ndarray, similarity_mat: np.ndarray) -> int:
+def guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
     """Finds the number of clusters that maximize the silhouette score
-    when clustering `similarity_mat`.
+    when clustering `distance_mat`.
 
     Parameters
     ----------
     Z : np.ndarray
         hierarchical linkage matrix, specifies which clusters to merge.
-    similarity_mat : np.ndarray
-        similarity matrix either in square or condensed form.
+    distance_mat : np.ndarray
+        distance matrix either in square or condensed form.
 
     Returns
     -------
     int
         number of clusters that maximize the silhouette score.
     """
-    max_clusters = similarity_mat.shape[0]
+    max_clusters = distance_mat.shape[0]
     n_clusters = np.arange(2, max_clusters)
     # silhouette score needs a redundant distance matrix
-    redundant_dist = squareform(similarity_mat)
+    redundant_dist = squareform(distance_mat)
     silhouette_scores = []
     for n_clust in n_clusters:
         labels = fcluster(Z, n_clust, criterion="maxclust")
@@ -145,30 +147,31 @@ def create_spelling_correction(
     return pd_spell_correct
 
 
-def compute_ngram_similarity(
+def compute_ngram_distance(
     unique_words: Union[Sequence[str], np.ndarray],
     ngram_range: Tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
 ) -> np.ndarray:
-    """Computes the condensed n-gram similarity matrix between words in
-    `unique_words`, using `CountVectorizer` and `TfidfTransformer`.
+    """Computes the condensed n-gram distance matrix between words in
+    `unique_words`, using the
+    term frequency-inverse document frequency (tf-idf).
 
     Parameters
     ----------
     unique_words : Union[Sequence[str], np.ndarray]
         Sequence or array of unique words from the original data.
     ngram_range : Tuple[int, int], optional
-        The n-gram range to compute the similarity in, by default (2, 4)
+        The n-gram range to compute the distance in, by default (2, 4)
     analyzer : str, optional
         Analyzer to extract n-grams, by default "char_wb"
 
     Returns
     -------
     np.ndarray
-        An n-by-(n-1)/2 matrix of n-gram similarities between `unique_words`.
+        An n-by-(n-1)/2 matrix of n-gram TfIdf distances between `unique_words`.
     """
     enc = CountVectorizer(ngram_range=ngram_range, analyzer=analyzer)
     encoded = TfidfTransformer().fit_transform(enc.fit_transform(unique_words))
 
-    similarity_mat = pdist(-encoded.todense(), metric="euclidean")
-    return similarity_mat
+    distance_mat = pdist(encoded.todense(), metric="euclidean")
+    return distance_mat
