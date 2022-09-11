@@ -7,7 +7,6 @@ from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from numpy.typing import NDArray
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
@@ -71,15 +70,15 @@ def deduplicate(
         return unrolled_corrections
 
 
-def guess_clusters(Z: NDArray, similarity_mat: NDArray) -> int:
+def guess_clusters(Z: np.ndarray, similarity_mat: np.ndarray) -> int:
     """Finds the number of clusters that maximize the silhouette score
     when clustering `similarity_mat`.
 
     Parameters
     ----------
-    Z : NDArray
+    Z : np.ndarray
         hierarchical linkage matrix, specifies which clusters to merge.
-    similarity_mat : NDArray
+    similarity_mat : np.ndarray
         similarity matrix either in square or condensed form.
 
     Returns
@@ -100,7 +99,9 @@ def guess_clusters(Z: NDArray, similarity_mat: NDArray) -> int:
 
 
 def create_spelling_correction(
-    unique_words: Sequence[str], counts: Sequence[int], clusters: Sequence[int]
+    unique_words: Union[Sequence[str], np.ndarray],
+    counts: Union[Sequence[int], np.ndarray],
+    clusters: Sequence[int],
 ) -> pd.Series:
     """Creates a pandas Series that map each cluster member to the most
     frequent cluster member. The assumption is that the most common spelling
@@ -108,11 +109,11 @@ def create_spelling_correction(
 
     Parameters
     ----------
-    unique_words : Sequence[str]
-        A sequence of unique words in the original data.
-    counts : Sequence[int]
-        A sequence of counts of how often each unique word appears in the
-        original data.
+    unique_words : Union[Sequence[str], np.ndarray]
+        A sequence or array of unique words in the original data.
+    counts : Union[Sequence[int], np.ndarray]
+        A sequence or array of counts of how often each unique word appears in
+        the original data.
     count_series : pd.Series
         A series with unique words (in the original data) as indices and number
         of occurrences of each word in the original data as values.
@@ -145,17 +146,17 @@ def create_spelling_correction(
 
 
 def compute_ngram_similarity(
-    unique_words: Sequence[str],
+    unique_words: Union[Sequence[str], np.ndarray],
     ngram_range: Tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
-) -> NDArray:
+) -> np.ndarray:
     """Computes the condensed n-gram similarity matrix between words in
     `unique_words`, using `CountVectorizer` and `TfidfTransformer`.
 
     Parameters
     ----------
-    unique_words : Sequence[str]
-        Sequence of unique words from the original data.
+    unique_words : Union[Sequence[str], np.ndarray]
+        Sequence or array of unique words from the original data.
     ngram_range : Tuple[int, int], optional
         The n-gram range to compute the similarity in, by default (2, 4)
     analyzer : str, optional
@@ -163,7 +164,7 @@ def compute_ngram_similarity(
 
     Returns
     -------
-    NDArray
+    np.ndarray
         An n-by-(n-1)/2 matrix of n-gram similarities between `unique_words`.
     """
     enc = CountVectorizer(ngram_range=ngram_range, analyzer=analyzer)
