@@ -69,7 +69,7 @@ Major changes
 
 * Improvements to the :class:`MinHashEncoder`
     - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`.
-    Very useful when using for instance the `~sklearn.compose.make_column_transformer` method,
+    Very useful when using for instance the :class:`~sklearn.compose.ColumnTransformer` method,
     on multiple columns.
 
 
@@ -254,10 +254,10 @@ Release 0.0.5
 * **SimilarityEncoder**: Change the default ngram range to (2, 4) which
   performs better empirically.
 
-* **SimilarityEncoder**: Added a `most_frequent`` strategy to define
+* **SimilarityEncoder**: Added a `most_frequent` strategy to define
   prototype categories for large-scale learning.
 
-* **SimilarityEncoder**: Added a `k-means`` strategy to define prototype
+* **SimilarityEncoder**: Added a `k-means` strategy to define prototype
   categories for large-scale learning.
 
 * **SimilarityEncoder**: Added the possibility to use hashing ngrams for
