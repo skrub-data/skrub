@@ -9,7 +9,6 @@ from .minhash_encoder import MinHashEncoder
 from .similarity_encoder import SimilarityEncoder
 from .super_vectorizer import SuperVectorizer
 from .target_encoder import TargetEncoder
-from ._fuzzy_join import fuzzy_join
 
 version_file = os.path.join(os.path.dirname(__file__), "VERSION.txt")
 with open(version_file) as fh:
@@ -22,5 +21,4 @@ __all__ = [
     "GapEncoder",
     "DatetimeEncoder",
     "SuperVectorizer",
-    "fuzzy_join",
 ]

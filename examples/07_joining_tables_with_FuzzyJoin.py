@@ -27,7 +27,7 @@ df.drop(df.tail(1).index, inplace=True)
 df.head(3)
 
 #################################################################
-# The Happiness score was computed using the Gallup World Poll survey results. 
+# The Happiness score was computed using the Gallup World Poll survey results.
 # The report stress out some of the possible explanatory factors: GDP per capita, Social support, Generosity etc.
 # However, these factors here are only estimated indexes used to calculate the happiness score.
 # Thus, we will not use them for our prediction model.
@@ -76,7 +76,9 @@ legal_rights.head(3)
 # without worrying about preprocessing:
 #
 # We add GDP per capita to the initial table:
+from dirty_cat.experimental import enable_fuzzy_join
 from dirty_cat import fuzzy_join
+
 X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'])
 X1.head(20)
 #################################################################
