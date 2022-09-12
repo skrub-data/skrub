@@ -122,7 +122,7 @@ encoder = make_column_transformer(
 # We will use a HistGradientBoostingRegressor, which is a good predictor
 # for data with heterogeneous columns
 # (we need to require the experimental feature for scikit-learn version
-# older than 1.0)
+# earlier than 1.0)
 from sklearn import __version__ as sklearn_version
 from dirty_cat.utils import Version
 if Version(sklearn_version) < Version("1.0"):
