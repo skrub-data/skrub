@@ -1,3 +1,14 @@
+"""
+This test suite ensures the docstrings of class methods in
+dirty_cat are formatted according to numpydoc specifications.
+
+`FUNCTION_DOCSTRING_IGNORE_SET` defines a set of class methods
+to skip while running the validation tests, so that CI will
+not fail.
+
+Therefore, developpers having formatted methods to numpydoc
+should also remove their corresponding references from the list.
+"""
 import inspect
 
 # We use the regex module to detect camelCase characters,
