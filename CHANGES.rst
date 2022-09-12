@@ -69,7 +69,7 @@ Major changes
 
 * Improvements to the :class:`MinHashEncoder`
     - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`.
-    Very useful when using for instance the :class:`~sklearn.compose.make_column_transformer` method,
+    Very useful when using for instance the :func:`~sklearn.compose.make_column_transformer` method,
     on multiple columns.
 
 
