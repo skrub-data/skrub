@@ -127,7 +127,7 @@ from sklearn import __version__ as sklearn_version
 from dirty_cat.utils import Version
 if Version(sklearn_version) < Version("1.0"):
     from sklearn.experimental import enable_hist_gradient_boosting
-# now you can import the HGBR from ensemble
+# We can now import the HGBR from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
