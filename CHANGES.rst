@@ -1,7 +1,7 @@
 .. currentmodule:: dirty_cat
   
-Release 0.3
-============
+Release 0.3.0
+==============
 
 Major changes
 -------------
