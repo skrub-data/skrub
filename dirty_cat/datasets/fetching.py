@@ -198,7 +198,7 @@ def _fetch_world_bank_data(
     """
     # Create directory if non-existant:
     data_directory.mkdir(exist_ok=True, parents=True)
-    data_directory = data_directory.resolve() / "world_bank.zip"
+    data_directory = data_directory.resolve() / "world_bank"
     zip_path = Path(str(data_directory) + "_folder")
     # Download the file :
     url = f"https://api.worldbank.org/v2/en/indicator/{dataset_id}?downloadformat=csv"
