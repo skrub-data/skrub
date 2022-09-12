@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Tuple
 
 import numpy as np
 import pandas as pd
@@ -145,15 +145,7 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
     )
 
 
-def _test_possibilities(
-    X,
-    expected_transformers_df: Dict[str, List[str]],
-    expected_transformers_2: Dict[str, List[str]],
-    expected_transformers_np_no_cast: Dict[str, List[int]],
-    expected_transformers_series: Dict[str, List[str]],
-    expected_transformers_plain: Dict[str, List[str]],
-    expected_transformers_np_cast: Dict[str, List[int]],
-):
+def _test_possibilities(X):
     """
     Do a bunch of tests with the SuperVectorizer.
     We take some expected transformers results as argument. They're usually
@@ -167,10 +159,18 @@ def _test_possibilities(
         numerical_transformer=StandardScaler(),
     )
     # Warning: order-dependant
+    expected_transformers_df = {
+        "numeric": ["int", "float"],
+        "low_card_cat": ["str1", "cat1"],
+        "high_card_cat": ["str2", "cat2"],
+    }
     vectorizer_base.fit_transform(X)
     check_same_transformers(expected_transformers_df, vectorizer_base.transformers)
 
     # Test with higher cardinality threshold and no numeric transformer
+    expected_transformers_2 = {
+        "low_card_cat": ["str1", "str2", "cat1", "cat2"],
+    }
     vectorizer_default = SuperVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
     check_same_transformers(expected_transformers_2, vectorizer_default.transformers)
@@ -178,12 +178,20 @@ def _test_possibilities(
     # Test with a numpy array
     arr = X.to_numpy()
     # Instead of the columns names, we'll have the column indices.
+    expected_transformers_np_no_cast = {
+        "low_card_cat": [2, 4],
+        "high_card_cat": [3, 5],
+        "numeric": [0, 1],
+    }
     vectorizer_base.fit_transform(arr)
     check_same_transformers(
         expected_transformers_np_no_cast, vectorizer_base.transformers
     )
 
     # Test with pandas series
+    expected_transformers_series = {
+        "low_card_cat": ["cat1"],
+    }
     vectorizer_base.fit_transform(X["cat1"])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
 
@@ -196,9 +204,19 @@ def _test_possibilities(
     )
     X_str = X.astype("object")
     # With pandas
+    expected_transformers_plain = {
+        "high_card_cat": ["str2", "cat2"],
+        "low_card_cat": ["str1", "cat1"],
+        "numeric": ["int", "float"],
+    }
     vectorizer_cast.fit_transform(X_str)
     check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers)
     # With numpy
+    expected_transformers_np_cast = {
+        "numeric": [0, 1],
+        "low_card_cat": [2, 4],
+        "high_card_cat": [3, 5],
+    }
     vectorizer_cast.fit_transform(X_str.to_numpy())
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
 
@@ -208,43 +226,7 @@ def test_with_clean_data():
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a clean dataset.
     """
-    X = _get_clean_dataframe()
-    # Define the transformers we'll use throughout the test.
-    expected_transformers_df = {
-        "numeric": ["int", "float"],
-        "low_card_cat": ["str1", "cat1"],
-        "high_card_cat": ["str2", "cat2"],
-    }
-    expected_transformers_2 = {
-        "low_card_cat": ["str1", "str2", "cat1", "cat2"],
-    }
-    expected_transformers_np_no_cast = {
-        "low_card_cat": [2, 4],
-        "high_card_cat": [3, 5],
-        "numeric": [0, 1],
-    }
-    expected_transformers_series = {
-        "low_card_cat": ["cat1"],
-    }
-    expected_transformers_plain = {
-        "high_card_cat": ["str2", "cat2"],
-        "low_card_cat": ["str1", "cat1"],
-        "numeric": ["int", "float"],
-    }
-    expected_transformers_np_cast = {
-        "numeric": [0, 1],
-        "low_card_cat": [2, 4],
-        "high_card_cat": [3, 5],
-    }
-    _test_possibilities(
-        X,
-        expected_transformers_df,
-        expected_transformers_2,
-        expected_transformers_np_no_cast,
-        expected_transformers_series,
-        expected_transformers_plain,
-        expected_transformers_np_cast,
-    )
+    _test_possibilities(_get_clean_dataframe())
 
 
 def test_with_dirty_data() -> None:
@@ -252,44 +234,7 @@ def test_with_dirty_data() -> None:
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a dataset containing missing values.
     """
-    X = _get_dirty_dataframe()
-    # Define the transformers we'll use throughout the test.
-    expected_transformers_df = {
-        "numeric": ["int", "float"],
-        "low_card_cat": ["str1", "cat1"],
-        "high_card_cat": ["str2", "cat2"],
-    }
-    expected_transformers_2 = {
-        "low_card_cat": ["str1", "str2", "cat1", "cat2"],
-    }
-    expected_transformers_np_no_cast = {
-        "low_card_cat": [2, 4],
-        "high_card_cat": [3, 5],
-        "numeric": [0, 1],
-    }
-    expected_transformers_series = {
-        "low_card_cat": ["cat1"],
-    }
-    expected_transformers_plain = {
-        "high_card_cat": ["str2", "cat2"],
-        "low_card_cat": ["str1", "cat1"],
-        "numeric": ["int", "float"],
-    }
-    expected_transformers_np_cast = {
-        "numeric": [0, 1],
-        "low_card_cat": [2, 4],
-        "high_card_cat": [3, 5],
-    }
-
-    _test_possibilities(
-        X,
-        expected_transformers_df,
-        expected_transformers_2,
-        expected_transformers_np_no_cast,
-        expected_transformers_series,
-        expected_transformers_plain,
-        expected_transformers_np_cast,
-    )
+    _test_possibilities(_get_dirty_dataframe())
 
 
 def test_auto_cast() -> None:
@@ -376,49 +321,39 @@ def test_get_feature_names_out() -> None:
     vec_w_pass = SuperVectorizer(remainder="passthrough")
     vec_w_pass.fit(X)
 
-    if Version(sklearn.__version__) < Version("0.23"):
-        with pytest.raises(NotImplementedError):
-            # Prior to sklearn 0.23, ColumnTransformer.get_feature_names
-            # with "passthrough" transformer(s) raises a NotImplementedError
-            assert vec_w_pass.get_feature_names_out()
-    else:
-        # In this test, order matters. If it doesn't, convert to set.
-        expected_feature_names_pass = [
-            "str1_private",
-            "str1_public",
-            "str2_chef",
-            "str2_lawyer",
-            "str2_manager",
-            "str2_officer",
-            "str2_teacher",
-            "cat1_no",
-            "cat1_yes",
-            "cat2_20K+",
-            "cat2_30K+",
-            "cat2_40K+",
-            "cat2_50K+",
-            "cat2_60K+",
-            "int",
-            "float",
-        ]
-        if Version(sklearn.__version__) < Version("1.0"):
-            assert vec_w_pass.get_feature_names() == expected_feature_names_pass
-        else:
-            assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
-
-    vec_w_drop = SuperVectorizer(remainder="drop")
-    vec_w_drop.fit(X)
-
     # In this test, order matters. If it doesn't, convert to set.
-    expected_feature_names_drop = [
-        "str1_private",
+    expected_feature_names_pass = [
         "str1_public",
         "str2_chef",
         "str2_lawyer",
         "str2_manager",
         "str2_officer",
         "str2_teacher",
-        "cat1_no",
+        "cat1_yes",
+        "cat2_20K+",
+        "cat2_30K+",
+        "cat2_40K+",
+        "cat2_50K+",
+        "cat2_60K+",
+        "int",
+        "float",
+    ]
+    if Version(sklearn.__version__) < Version("1.0"):
+        assert vec_w_pass.get_feature_names() == expected_feature_names_pass
+    else:
+        assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
+
+    vec_w_drop = SuperVectorizer(remainder="drop")
+    vec_w_drop.fit(X)
+
+    # In this test, order matters. If it doesn't, convert to set.
+    expected_feature_names_drop = [
+        "str1_public",
+        "str2_chef",
+        "str2_lawyer",
+        "str2_manager",
+        "str2_officer",
+        "str2_teacher",
         "cat1_yes",
         "cat2_20K+",
         "cat2_30K+",
@@ -448,7 +383,11 @@ def test_transform() -> None:
     s = [34, 5.5, "private", "manager", "yes", "60K+"]
     x = np.array(s).reshape(1, -1)
     x_trans = sup_vec.transform(x)
-    assert (x_trans == [[1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 34, 5.5]]).all()
+    assert x_trans.tolist() == [
+        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 34.0, 5.5]
+    ]
+    # To understand the list above:
+    # print(dict(zip(sup_vec.get_feature_names_out(), x_trans.tolist()[0])))
 
 
 def test_fit_transform_equiv() -> None:
@@ -492,13 +431,20 @@ def test_passthrough():
         auto_cast=False,
     )
 
-    X_enc_dirty = sv.fit_transform(X_dirty)
-    X_enc_clean = sv.fit_transform(X_clean)
+    X_enc_dirty = pd.DataFrame(
+        sv.fit_transform(X_dirty), columns=sv.get_feature_names_out()
+    )
+    X_enc_clean = pd.DataFrame(
+        sv.fit_transform(X_clean), columns=sv.get_feature_names_out()
+    )
+    # Reorder encoded arrays' columns (see SV's doc "Notes" section as to why)
+    X_enc_dirty = X_enc_dirty[X_dirty.columns]
+    X_enc_clean = X_enc_clean[X_clean.columns]
 
     dirty_flat_df = X_dirty.to_numpy().ravel().tolist()
-    dirty_flat_trans_df = X_enc_dirty.ravel().tolist()
+    dirty_flat_trans_df = X_enc_dirty.to_numpy().ravel().tolist()
     assert all(map(_is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
-    assert (X_clean.to_numpy() == X_enc_clean).all()
+    assert (X_clean.to_numpy() == X_enc_clean.to_numpy()).all()
 
 
 if __name__ == "__main__":
