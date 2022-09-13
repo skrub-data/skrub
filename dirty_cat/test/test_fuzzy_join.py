@@ -3,6 +3,7 @@ import pytest
 
 from dirty_cat.experimental import enable_fuzzy_join
 from dirty_cat import fuzzy_join
+from dirty_cat import print_worst_matches
 
 
 @pytest.mark.parametrize(
@@ -81,6 +82,10 @@ def test_fuzzy_join(analyzer, match_type, keep):
     assert teams_joined.shape == (9, 2)
     assert dist1.shape == (9, 1)
     assert (teams_joined == ground_truth).all()[1]
+
+    wm = print_worst_matches(teams_joined, dist1, n=2)
+    assert wm.shape == (2, 1)
+
     # And on the other way around:
     teams_joined_2, dist2 = fuzzy_join(
         teams2,
@@ -93,6 +98,9 @@ def test_fuzzy_join(analyzer, match_type, keep):
     # Joining is always done on the left table and thus takes it shape:
     assert teams_joined_2.shape == (10, 2)
     assert dist2.shape == (10, 1)
+
+    wm = print_worst_matches(teams_joined, dist1, n=6)
+    assert wm.shape == (6, 1)
 
     # Check invariability of joining:
     teams_joined_3 = fuzzy_join(
