@@ -1,15 +1,17 @@
-from dirty_cat.deduplicate import (
-    deduplicate,
-    guess_clusters,
-    create_spelling_correction,
-    compute_ngram_distance,
-)
+import string
+from typing import List
+
 import numpy as np
 import pytest
-from typing import List
-import string
-from scipy.spatial.distance import squareform
 from scipy.cluster.hierarchy import linkage
+from scipy.spatial.distance import squareform
+
+from dirty_cat.deduplicate import (
+    compute_ngram_distance,
+    create_spelling_correction,
+    deduplicate,
+    guess_clusters,
+)
 
 
 def generate_example_data(examples, entries_per_example, prob_mistake_per_letter):

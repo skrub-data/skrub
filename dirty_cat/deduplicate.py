@@ -168,7 +168,7 @@ def compute_ngram_distance(
     Returns
     -------
     np.ndarray
-        An n-by-(n-1)/2 matrix of n-gram TfIdf distances between `unique_words`.
+        An n-times-(n-1)/2 matrix of n-gram TfIdf distances between `unique_words`.
     """
     enc = CountVectorizer(ngram_range=ngram_range, analyzer=analyzer)
     encoded = TfidfTransformer().fit_transform(enc.fit_transform(unique_words))
