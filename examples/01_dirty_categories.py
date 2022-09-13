@@ -121,6 +121,13 @@ encoder = make_column_transformer(
 #
 # We will use a HistGradientBoostingRegressor, which is a good predictor
 # for data with heterogeneous columns
+# (we need to require the experimental feature for scikit-learn versions
+# earlier than 1.0)
+from sklearn import __version__ as sklearn_version
+from dirty_cat.utils import Version
+if Version(sklearn_version) < Version("1.0"):
+    from sklearn.experimental import enable_hist_gradient_boosting
+# We can now import the HGBR from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
