@@ -3,7 +3,7 @@
 Release 0.4.0
 ==============
 
-* New feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
+* New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category. 
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be
     used to download any indicator from the World Bank Open Data platform. It only needs the 

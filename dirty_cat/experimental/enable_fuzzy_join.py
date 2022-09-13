@@ -14,6 +14,7 @@ flake8 to ignore the import, which appears as unused.
 """
 
 from dirty_cat._fuzzy_join import fuzzy_join
+from dirty_cat._fuzzy_join import print_worst_matches
 
 import dirty_cat
 
@@ -21,4 +22,7 @@ import dirty_cat
 setattr(dirty_cat, "fuzzy_join",
         fuzzy_join)
 
-dirty_cat.__all__ += ["fuzzy_join"]
+setattr(dirty_cat, "print_worst_matches",
+        print_worst_matches)
+
+dirty_cat.__all__ += ["fuzzy_join", "print_worst_matches"]

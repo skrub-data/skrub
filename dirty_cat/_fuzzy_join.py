@@ -240,3 +240,14 @@ def fuzzy_join(
         return df_joined, distance
     else:
         return df_joined
+
+def print_worst_matches(df_joined: pd.DataFrame,
+                        distance: pd.DataFrame,
+                        n: int = 5) -> pd.DataFrame:
+    """" Prints n worst matches for inspection. """
+    max_ind = np.argpartition(distance, -n, axis=0)[-n:]
+    max_dist = pd.Series(distance[max_ind.ravel()].ravel(), index = max_ind.ravel())
+    worst_matches = df_joined.iloc[list(max_ind.ravel())]
+    worst_matches['distance'] = max_dist
+    print("The worst five matches are the following:\n")
+    return worst_matches

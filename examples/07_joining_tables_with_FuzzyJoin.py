@@ -79,8 +79,13 @@ legal_rights.head(3)
 from dirty_cat.experimental import enable_fuzzy_join
 from dirty_cat import fuzzy_join
 
-X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'])
+X1, dist1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'], return_distance=True)
 X1.head(20)
+# .. topic:: Note:
+#
+#    We fix the `return_distance` parameter to `True` so as to keep the distances
+#    of the matchings, that we will use later to establish the worst matches.
+
 #################################################################
 #
 # Now, we see that our :func:`fuzzy_join` succesfully identified the countries,
@@ -102,18 +107,23 @@ X1.head(20)
 ###############################################################################
 # Keeping only the good matches
 # ------------------------------
-# However, we see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
+#################################################################
+# The best way to inspect the matches is to set the `print_worst` parameter to True.
+# This will print out the five worst matches, which will give as an overview of the situation:
+from dirty_cat import print_worst_matches
+print_worst_matches(X1, dist1, n=2)
+# We see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
 # because there is simply no match in the two tables.
-X1.iloc[121]
+
 #################################################################
 #
 # In this case, it is better to use the 'radius' match type
 # with a fixed threshold so as to include only precise-enough matches:
 #
 # --> To improve match_threshold measurement, here it excludes some good matches as well
-X1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'],
-                match_type='radius', match_threshold=0.3)
-X1.iloc[121]
+X1, dist1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'],
+                match_type='radius', match_threshold=0.3, return_distance=True)
+print_worst_matches(X1, dist1, n=2)
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
 #################################################################
 #
@@ -152,8 +162,13 @@ X3 = X3[mask]
 #
 #
 # Let us now define the model that will be used to predict the happiness score:
+from sklearn import __version__ as sklearn_version
+from dirty_cat.utils import Version
+if Version(sklearn_version) < Version("1.0"):
+    from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.model_selection import cross_validate, KFold
+from sklearn.model_selection import KFold
+
 hgdb = HistGradientBoostingRegressor(random_state=0)
 cv = KFold(n_splits=4, shuffle=True, random_state=0)
 
@@ -162,6 +177,7 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # We evaluate our model using the `R2` score.
 #
 # Let's finally assess the results of our models:
+from sklearn.model_selection import cross_validate
 for n in range(len([X1, X2, X3])):
     data = [X1, X2, X3][n] 
     cv_results_t = cross_validate(hgdb, data.select_dtypes(exclude=object), y, cv=cv, scoring='r2')
