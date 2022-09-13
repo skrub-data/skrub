@@ -10,7 +10,7 @@ Release 0.4.0
     indicator ID that can be found on the website.
 
 Release 0.3.0
-==============
+=============
 
 Major changes
 -------------
@@ -28,7 +28,7 @@ Major changes
     like the :class:`~sklearn.compose.ColumnTransformer`'s behavior.
     Previously, a ``RuntimeError`` was raised.
 
-* **Backward-incompatible change in the SuperVectorizer**: 
+* **Backward-incompatible change in the SuperVectorizer**:
   To apply ``remainder`` to features (with the ``*_transformer`` parameters),
   the value ``'remainder'`` must be passed, instead of ``None`` in previous versions.
   ``None`` now indicates that we want to use the default transformer.
