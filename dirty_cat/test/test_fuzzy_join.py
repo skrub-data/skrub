@@ -1,5 +1,7 @@
 import pandas as pd
 import pytest
+
+from dirty_cat.experimental import enable_fuzzy_join
 from dirty_cat import fuzzy_join
 
 

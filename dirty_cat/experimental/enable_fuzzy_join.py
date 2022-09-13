@@ -13,12 +13,12 @@ The ``# noqa`` comment comment can be removed: it just tells linters like
 flake8 to ignore the import, which appears as unused.
 """
 
-from .._fuzzy_join import fuzzy_join
+from dirty_cat._fuzzy_join import fuzzy_join
 
-from .. import dirty_cat
+import dirty_cat
 
 # use settattr to avoid mypy errors when monkeypatching
-setattr(fuzzy_join, "fuzzy_join",
+setattr(dirty_cat, "fuzzy_join",
         fuzzy_join)
 
 dirty_cat.__all__ += ["fuzzy_join"]
