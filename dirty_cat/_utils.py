@@ -77,8 +77,8 @@ class Version:
 
     Examples:
     >>> # Standard usage
-    >>> Version(sklearn.__version__) > Version('0.22')
-    >>> Version(sklearn.__version__) > '0.22'
+    >>> Version(sklearn.__version__) > Version('0.23')
+    >>> Version(sklearn.__version__) > '0.23'
     >>> # In general, pass the version as numbers separated by dots.
     >>> Version('1.5') <= Version('1.6.5')
     >>> Version('1.5') <= '1.6.5'
