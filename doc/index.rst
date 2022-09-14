@@ -57,7 +57,7 @@ pipeline you can tweak.
 
 .. container:: install_instructions
 
-    :Installing: `$ pip install --user --upgrade dirty_cat`
+    :Installing: ``$ pip install --user --upgrade dirty_cat``
 
 
 
