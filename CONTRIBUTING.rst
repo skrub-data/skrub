@@ -6,25 +6,13 @@ First off, thanks for taking the time to contribute!
 The following is a set of guidelines for contributing to
 `dirty_cat <https://github.com/dirty-cat/dirty_cat>`__.
 
-.. raw:: html
+|
 
-   <hr />
+.. contents::
+   :local:
+|
 
-Table of contents
------------------
-
-`I don’t want to read the whole thing I just have a
-question! <#i-dont-want-to-read-the-whole-thing-i-just-have-a-question>`__
-
-`What should I know before I get
-started? <#what-should-i-know-before-i-get-started>`__
-
-`How can I contribute? <#how-can-i-contribute>`__ - `Reporting
-bugs <#reporting-bugs>`__ - `Suggesting
-enhancements <#suggesting-enhancements>`__ - `Writing your first Pull
-Request <#writing-your-first-pull-request>`__
-
-I don’t want to read the whole thing I just have a question!
+I don’t want to read the whole thing I just have a question
 ------------------------------------------------------------
 
 We use GitHub Discussions for general chat and Q&As. `Check it
