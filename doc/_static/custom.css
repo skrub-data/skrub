@@ -355,6 +355,36 @@ div.document div.sphinxsidebar {
     left: 1ex;
 }
 
+/* Small font for the version number */
+div.sphinxsidebarwrapper h4 {
+    margin-top: 0px;
+    font-size: small;
+    font-weight: bold;
+}
+
+/* "Other versions" */
+div.sphinxsidebarwrapper details {
+  width: 50%;
+  float: right;
+}
+
+div.sphinxsidebarwrapper details summary {
+    color: #666;
+}
+
+div.sphinxsidebarwrapper details a{
+    border-bottom-style: none;
+}
+
+div.sphinxsidebarwrapper details ul {
+    list-style: square;
+    margin-left: 1ex;
+    background-color: #EEE;
+    padding-left: 3ex;
+    margin-right: 5ex;
+    border-radius: 0ex 0ex 1ex 1ex;
+}
+
 div.sphinxsidebarwrapper h4 {
     margin-top: 0px;
     font-size: small;
