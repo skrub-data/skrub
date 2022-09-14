@@ -15,7 +15,7 @@ import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Union
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
 from sklearn.datasets import fetch_openml
@@ -198,8 +198,8 @@ def _fetch_world_bank_data(
 
     """
     data_directory.mkdir(exist_ok=True, parents=True)
-    data_directory = data_directory.resolve() / "world_bank"
-    zip_path = Path(str(data_directory) + "_folder")
+    unzip_path = data_directory / "world_bank_unzipped_files"
+    data_directory = data_directory.resolve() / "world_bank.zip"
     # Download the file :
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"
     urllib.request.urlretrieve(url, data_directory)
@@ -209,15 +209,15 @@ def _fetch_world_bank_data(
             names = file.namelist()
             for name in names:
                 if "Metadata" not in name:
-                    file.extract(name, path=zip_path)
+                    file.extract(name, path=unzip_path)
                     true_file = name
         file.close()
-    except NameError:
+    except BadZipFile:
         raise FileNotFoundError(
             f"Couldn't find csv file {data_directory!s}, {indicator_id} seems invalid."
         )
     # Read csv file
-    csv_path = zip_path / true_file
+    csv_path = Path(unzip_path) / true_file
     df = pd.read_csv(csv_path, skiprows=3)
     df[indicator_name] = df.stack().groupby(level=0).last()
     df = df[df[indicator_name] != indicator_id]
@@ -682,8 +682,8 @@ def fetch_drug_directory(
 
 
 def fetch_world_bank_indicator(
-    dataset_id: str,
-    indicator: str,
+    indicator_id: str,
+    indicator_name: str,
     load_dataframe: bool = True,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches a dataset of an indicator from the World Bank
@@ -703,8 +703,8 @@ def fetch_world_bank_indicator(
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
-        dataset_name=indicator,
-        dataset_id=dataset_id,
+        dataset_name=indicator_name,
+        dataset_id=indicator_id,
         target=[],
         read_csv_kwargs={},
         load_dataframe=load_dataframe,
