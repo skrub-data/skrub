@@ -88,13 +88,3 @@ def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
     if return_minmax:
         return min_hash, max_hash
     return min_hash
-
-
-if __name__ == "__main__":
-    # Download demo text
-    from sklearn import datasets
-
-    data = datasets.fetch_20newsgroups()
-    a = data.data[0]
-
-    h = ngram_min_hash(a)
