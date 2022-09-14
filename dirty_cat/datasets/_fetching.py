@@ -579,8 +579,8 @@ def fetch_drug_directory(
     https://openml.org/d/43044
 
     Description of the dataset:
-    > Product listing data submitted to the U.S. FDA for all unfinished,
-    unapproved drugs.
+        Product listing data submitted to the U.S. FDA for all unfinished,
+        unapproved drugs.
 
     Returns
     -------
