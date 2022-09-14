@@ -405,14 +405,16 @@ def test_fetch_world_bank_indicator():
         try:
             # First, we want to purposefully test FileNotFoundError exceptions.
             with pytest.raises(FileNotFoundError):
-                assert fetch_world_bank_indicator(dataset_id=0, indicator="blabla")
                 assert fetch_world_bank_indicator(
-                    dataset_id=2**32, indicator="blabla"
+                    indicator_id=0, indicator_name="blabla"
+                )
+                assert fetch_world_bank_indicator(
+                    indicator_id=2**32, indicator_name="blabla"
                 )
 
             # Valid call
             returned_info = fetch_world_bank_indicator(
-                dataset_id=test_dataset["id"], indicator=test_dataset["name"]
+                indicator_id=test_dataset["id"], indicator_name=test_dataset["name"]
             )
 
         except URLError:
