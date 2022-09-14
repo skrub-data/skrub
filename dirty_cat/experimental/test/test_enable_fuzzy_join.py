@@ -1,6 +1,7 @@
 """Tests for making sure experimental import of fuzzy_join work as expected."""
 
 import textwrap
+
 from sklearn.utils._testing import assert_run_python_script
 
 

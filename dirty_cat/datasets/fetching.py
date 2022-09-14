@@ -10,18 +10,17 @@ Scikit-Learn's ``fetch_openml()`` function.
 
 import gzip
 import json
+import urllib.request
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Union
+from zipfile import ZipFile
 
 import pandas as pd
 from sklearn.datasets import fetch_openml
 
 from dirty_cat.datasets.utils import get_data_dir
-
-from zipfile import ZipFile
-import urllib.request
 
 # Directory where the ``.gz`` files containing the
 # details on downloaded datasets are stored.
@@ -166,7 +165,9 @@ def fetch_openml_dataset(
 
 
 def _fetch_world_bank_data(
-    dataset_id: str, indicator: str, data_directory: Path = get_data_dir(),
+    indicator_id: str,
+    indicator_name: str,
+    data_directory: Path = get_data_dir(),
 ) -> Dict[str, Any]:
     """
     Gets a dataset from World Bank open data platform
@@ -174,9 +175,9 @@ def _fetch_world_bank_data(
 
     Parameters
     ----------
-    dataset_id: str
-        The ID of the dataset to fetch.
-    indicator: str
+    indicator_id: str
+        The ID of the indicator's dataset to fetch.
+    indicator_name: str
         Name of the indicator to extract.
     data_directory: Path
         Optional. A directory to save the data to.
@@ -196,32 +197,36 @@ def _fetch_world_bank_data(
               saved as a CSV file.
 
     """
-    # Create directory if non-existant:
     data_directory.mkdir(exist_ok=True, parents=True)
     data_directory = data_directory.resolve() / "world_bank"
     zip_path = Path(str(data_directory) + "_folder")
     # Download the file :
-    url = f"https://api.worldbank.org/v2/en/indicator/{dataset_id}?downloadformat=csv"
+    url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"
     urllib.request.urlretrieve(url, data_directory)
     try:
-        # Extract csv file :
-        with ZipFile(data_directory, "r") as f:
-            names = f.namelist()
-            for n in names:
-                if "Metadata" not in n:
-                    f.extract(n, path=zip_path)
-                    true_file = n
-        f.close()
-    except:
-        raise FileNotFoundError(f"Couldn't find file {data_directory!s}, please check dataset_id.")
-    # Read csv
+        # Extract csv from zip file :
+        with ZipFile(data_directory, "r") as file:
+            names = file.namelist()
+            for name in names:
+                if "Metadata" not in name:
+                    file.extract(name, path=zip_path)
+                    true_file = name
+        file.close()
+    except NameError:
+        raise FileNotFoundError(
+            f"Couldn't find csv file {data_directory!s}, {indicator_id} seems invalid."
+        )
+    # Read csv file
     csv_path = zip_path / true_file
     df = pd.read_csv(csv_path, skiprows=3)
-    df[indicator] = df.stack().groupby(level=0).last()
-    df = df[df[indicator] != dataset_id]
-    df = df[["Country Name", indicator]]
+    df[indicator_name] = df.stack().groupby(level=0).last()
+    df = df[df[indicator_name] != indicator_id]
+    df = df[["Country Name", indicator_name]]
     df.to_csv(csv_path, index=False)
-    description = f"This table shows the {dataset_id} World Bank indicator. It can be used as an input table for fuzzy_join."
+    description = (
+        f"This table shows the {indicator_id} World Bank indicator. It can be used as"
+        " an input table for fuzzy_join."
+    )
     return {
         "description": description,
         "source": url,
@@ -677,13 +682,15 @@ def fetch_drug_directory(
 
 
 def fetch_world_bank_indicator(
-    dataset_id: str, indicator: str, load_dataframe: bool = True,
+    dataset_id: str,
+    indicator: str,
+    load_dataframe: bool = True,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches a dataset of an indicator from the World Bank
        open data platform.
 
     Description of the dataset:
-    > The dataset contains two columns: the indicator value and the 
+    > The dataset contains two columns: the indicator value and the
       country names. A list of all available indicators can be found
       at https://data.worldbank.org/indicator.
 

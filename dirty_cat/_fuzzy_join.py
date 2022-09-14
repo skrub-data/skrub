@@ -10,11 +10,12 @@ probability of beeing matched together. The join is based on
 morphological similarities between strings.
 """
 
-import pandas as pd
+from typing import List, Literal, Tuple
+
 import numpy as np
+import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.neighbors import NearestNeighbors
-from typing import List, Literal, Tuple
 
 
 def fuzzy_join(
@@ -132,8 +133,8 @@ def fuzzy_join(
 
     """
 
-    lt = left_table.reset_index(drop=True).fillna("").copy()
-    rt = right_table.reset_index(drop=True).fillna("").copy()
+    left_table_clean = left_table.reset_index(drop=True).fillna("").copy()
+    right_table_clean = right_table.reset_index(drop=True).fillna("").copy()
 
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
@@ -146,21 +147,25 @@ def fuzzy_join(
         )
 
     if keep not in ["left", "right", "all"]:
-        raise ValueError(f"keep should be either 'left', 'right' or 'all', got {keep!r}",)
+        raise ValueError(
+            f"keep should be either 'left', 'right' or 'all', got {keep!r}",
+        )
 
     if len(suffixes) != 2:
-        raise ValueError(
-            f"Invalid number of suffixes: expected 2, got {len(suffixes)}"
-        )
+        raise ValueError(f"Invalid number of suffixes: expected 2, got {len(suffixes)}")
     lsuffix, rsuffix = suffixes
 
-    overlap_cols = lt._info_axis.intersection(rt._info_axis)
+    overlap_cols = left_table_clean._info_axis.intersection(
+        right_table_clean._info_axis
+    )
     if len(overlap_cols) > 0:
         for i in range(len(overlap_cols)):
             new_name_l = overlap_cols[i] + lsuffix
             new_name_r = overlap_cols[i] + rsuffix
-            lt.rename(columns={overlap_cols[i]: new_name_l}, inplace=True)
-            rt.rename(columns={overlap_cols[i]: new_name_r}, inplace=True)
+            left_table_clean.rename(columns={overlap_cols[i]: new_name_l}, inplace=True)
+            right_table_clean.rename(
+                columns={overlap_cols[i]: new_name_r}, inplace=True
+            )
             # Useful in case on[0]==on[1] and overlapping:
             if len(on) == 2 and overlap_cols[i] in on[0]:
                 on[0] = new_name_l
@@ -185,8 +190,8 @@ def fuzzy_join(
         )
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-    left_enc = enc.fit_transform(lt[left_col])
-    right_enc = enc.transform(rt[right_col])
+    left_enc = enc.fit_transform(left_table_clean[left_col])
+    right_enc = enc.transform(right_table_clean[right_col])
 
     left_enc = TfidfTransformer().fit_transform(left_enc)
     right_enc = TfidfTransformer().fit_transform(right_enc)
@@ -197,11 +202,13 @@ def fuzzy_join(
     distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
-    lt_arr = np.array(lt)
-    rt_arr = np.array(rt)
+    left_array = np.array(left_table_clean)
+    right_array = np.array(right_table_clean)
     if match_type == "nearest":
         joined = np.append(
-            lt_arr, np.array([rt_arr[idx_closest[idr]] for idr in lt.index]), axis=1
+            left_array,
+            np.array([right_array[idx_closest[idr]] for idr in left_table_clean.index]),
+            axis=1,
         )
 
     elif match_type == "radius":
@@ -216,19 +223,19 @@ def fuzzy_join(
             twodball_pts = rng[1][0]
             prec[i] = 1 / len(twodball_pts)
         joined = np.append(
-            lt_arr,
+            left_array,
             np.array(
                 [
-                    rt_arr[idx_closest[idr]]
+                    right_array[idx_closest[idr]]
                     if prec[idr] >= match_threshold
                     else np.tile(np.nan, (2,))
-                    for idr in lt.index
+                    for idr in left_table_clean.index
                 ]
             ),
             axis=1,
         )
 
-    cols = list(lt.columns) + list(rt.columns)
+    cols = list(left_table_clean.columns) + list(right_table_clean.columns)
     df_joined = pd.DataFrame(joined, columns=cols).replace(r"^\s*$", np.nan, regex=True)
 
     if keep == "left":
@@ -241,13 +248,14 @@ def fuzzy_join(
     else:
         return df_joined
 
-def print_worst_matches(df_joined: pd.DataFrame,
-                        distance: pd.DataFrame,
-                        n: int = 5) -> pd.DataFrame:
-    """" Prints n worst matches for inspection. """
+
+def print_worst_matches(
+    df_joined: pd.DataFrame, distance: pd.DataFrame, n: int = 5
+) -> pd.DataFrame:
+    """ " Prints n worst matches for inspection."""
     max_ind = np.argpartition(distance, -n, axis=0)[-n:]
-    max_dist = pd.Series(distance[max_ind.ravel()].ravel(), index = max_ind.ravel())
+    max_dist = pd.Series(distance[max_ind.ravel()].ravel(), index=max_ind.ravel())
     worst_matches = df_joined.iloc[list(max_ind.ravel())]
-    worst_matches['distance'] = max_dist
+    worst_matches["distance"] = max_dist
     print("The worst five matches are the following:\n")
     return worst_matches
