@@ -355,6 +355,16 @@ div.document div.sphinxsidebar {
     left: 1ex;
 }
 
+div.sphinxsidebarwrapper h4 {
+    margin-top: 0px;
+    font-size: small;
+    font-weight: bold;
+}
+
+div.sphinxsidebarwrapper h1.logo-name {
+    margin-bottom: 0px;
+}
+
 @media screen and (min-width: 876px) {
     div.document div.sphinxsidebar {
 	left: 1%;
