@@ -327,6 +327,11 @@ dl.py.class dl.field-list {
     padding-bottom: .5em;
 }
 
+/* Avoid a double semicolon in the docstrings with latest sphinx */
+dl.field-list > dt:after {
+    content: "";
+  }
+
 p.side-comment {
     font-size: smaller;
     text-align: right;

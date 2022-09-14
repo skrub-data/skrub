@@ -22,7 +22,7 @@ if __name__ == "__main__":
         description="Machine learning with dirty categories.",
         long_description=DESCRIPTION,
         license="BSD",
-        python_requires=">=3.6",
+        python_requires=">=3.8",
         classifiers=[
             "Development Status :: 5 - Production/Stable",
             "Environment :: Console",
@@ -39,9 +39,9 @@ if __name__ == "__main__":
         packages=find_packages(),
         package_data={"dirty_cat": ["VERSION.txt"]},
         install_requires=[
-            "scikit-learn>=0.21",
-            "numpy>=1.16",
-            "scipy>=1.2",
+            "scikit-learn>=0.23.0",
+            "numpy>=1.17.3",
+            "scipy>=1.4.0",
             "pandas>=1.2.0",
             "requests",
             "joblib",
