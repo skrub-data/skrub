@@ -24,9 +24,9 @@ from dirty_cat.datasets.fetching import (
     _get_details,
     _get_features,
     _read_json_from_gz,
-    fetch_world_bank_indicator,
 )
 from dirty_cat.datasets.fetching import fetch_openml_dataset as _fetch_openml_dataset
+from dirty_cat.datasets.fetching import fetch_world_bank_indicator
 from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
 
 
@@ -392,11 +392,11 @@ def test_fetch_world_bank_indicator():
     function in a real environment.
     """
     test_dataset = {
-    "name": 'gdppc',
-    "id": 'NY.GDP.PCAP.CD',
-    "desc_start": "This table shows",
-    "url": "https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.CD?downloadformat=csv",
-    "dataset_columns_count": 2,
+        "name": "gdppc",
+        "id": "NY.GDP.PCAP.CD",
+        "desc_start": "This table shows",
+        "url": "https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.CD?downloadformat=csv",  # noqa
+        "dataset_columns_count": 2,
     }
 
     test_data_dir = get_test_data_dir()
@@ -405,15 +405,14 @@ def test_fetch_world_bank_indicator():
         try:
             # First, we want to purposefully test FileNotFoundError exceptions.
             with pytest.raises(FileNotFoundError):
-                assert fetch_world_bank_indicator(dataset_id=0, indicator='blabla')
+                assert fetch_world_bank_indicator(dataset_id=0, indicator="blabla")
                 assert fetch_world_bank_indicator(
-                    dataset_id=2**32, indicator='blabla'
+                    dataset_id=2**32, indicator="blabla"
                 )
 
             # Valid call
             returned_info = fetch_world_bank_indicator(
-                dataset_id=test_dataset["id"],
-                indicator=test_dataset['name']
+                dataset_id=test_dataset["id"], indicator=test_dataset["name"]
             )
 
         except URLError:
@@ -432,7 +431,8 @@ def test_fetch_world_bank_indicator():
 
         dataset: pd.DataFrame = pd.read_csv(returned_info.path)
 
-        assert dataset.columns[1] == test_dataset['name']
+        assert dataset.columns[1] == test_dataset["name"]
+        assert dataset.columns[0] == "Country Name"
         assert dataset.shape[1] == test_dataset["dataset_columns_count"]
 
     finally:

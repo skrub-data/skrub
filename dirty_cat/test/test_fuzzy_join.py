@@ -2,7 +2,8 @@ import pandas as pd
 import pytest
 
 from dirty_cat import fuzzy_join, print_worst_matches
-from dirty_cat.experimental import enable_fuzzy_join  # noqa
+
+from dirty_cat.experimental import enable_fuzzy_join  # noqa, isort: skip
 
 
 @pytest.mark.parametrize(
