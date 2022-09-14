@@ -362,6 +362,7 @@ div.version-switcher h4 {
     font-weight: bold;
     display: inline-block;
     margin-right: 2ex;
+    vertical-align: top;
 }
 
 /* "Other versions" */
@@ -369,6 +370,7 @@ div.version-switcher details {
     width: 50%;
     min-width: 20ex;
     display: inline-block;
+    vertical-align: top;
 }
 
 div.version-switcher details summary {
