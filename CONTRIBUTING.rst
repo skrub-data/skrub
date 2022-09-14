@@ -194,18 +194,21 @@ Implementation
 ^^^^^^^^^^^^^^
 
 While writing your implementation, there are a few specific project
-goals to keep in mind: - Pure Python code - no binary extensions,
-Cython, etc - Make production-friendly code - Try to target the broadest
-range of versions (Python and dependencies) - Use the least amount of
-dependencies - Make code as backward compatible as possible - Prefer
-performance to readability - Optimized code might be hard to read, so
-`please comment
-it <https://stackoverflow.blog/2021/12/23/best-practices-for-writing-code-comments/>`__
-- Use explicit, borderline verbose variables / function names - Public
-functions / methods / variables / class signatures should be documented
-and type-hinted - The public API describes the components users of the
-library will import and use. It’s everything that can be imported and
-does not start with an underscore.
+goals to keep in mind:
+- Pure Python code - no binary extensions, Cython, etc 
+- Make production-friendly code
+  - Try to target the broadest range of versions (Python and dependencies)
+  - Use the least amount of dependencies
+  - Make code as backward compatible as possible
+- Prefer performance to readability
+  - Optimized code might be hard to read, so `please comment
+    it <https://stackoverflow.blog/2021/12/23/best-practices-for-writing-code-comments/>`__
+- Use explicit, borderline verbose variables / function names
+- Public functions / methods / variables / class signatures should be documented
+  and type-hinted
+  - The public API describes the components users of the
+    library will import and use. It’s everything that can be imported and
+    does not start with an underscore.
 
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
