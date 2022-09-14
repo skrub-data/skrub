@@ -97,14 +97,15 @@ kind of enhancement you’re submitting.
 If the enhancement is validated
 '''''''''''''''''''''''''''''''
 
-Let maintainers know whether : - **You will write the code and submit a
-PR**. Writing the feature yourself is the fastest way to getting it
-implemented in the library, and we’ll help in that process if guidance
-is needed! To go further, refer to the section *Writing your first Pull
-Request*. - **You won’t be able to write the code**, in which case a
-developer interested in the feature can start working on it. Note
-however that maintainers are **volunteers**, and therefore cannot
-guarantee how much time it will take to implement the change.
+Let maintainers know whether : 
+- **You will write the code and submit a PR**. 
+  Writing the feature yourself is the fastest way to getting it
+  implemented in the library, and we’ll help in that process if guidance
+  is needed! To go further, refer to the section *Writing your first Pull Request*.
+- **You won’t be able to write the code**, in which case a
+  developer interested in the feature can start working on it. Note
+  however that maintainers are **volunteers**, and therefore cannot
+  guarantee how much time it will take to implement the change.
 
 If the enhancement is refused
 '''''''''''''''''''''''''''''
