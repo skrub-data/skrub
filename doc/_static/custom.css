@@ -356,39 +356,35 @@ div.document div.sphinxsidebar {
 }
 
 /* Small font for the version number */
-div.sphinxsidebarwrapper h4 {
+div.version-switcher h4 {
     margin-top: 0px;
     font-size: small;
     font-weight: bold;
+    display: inline-block;
 }
 
 /* "Other versions" */
-div.sphinxsidebarwrapper details {
+div.version-switcher details {
   width: 50%;
   float: right;
+  min-width: 20ex;
 }
 
-div.sphinxsidebarwrapper details summary {
+div.version-switcher details summary {
     color: #666;
 }
 
-div.sphinxsidebarwrapper details a{
+div.version-switcher details a{
     border-bottom-style: none;
 }
 
-div.sphinxsidebarwrapper details ul {
+div.version-switcher details ul {
     list-style: square;
     margin-left: 1ex;
     background-color: #EEE;
     padding-left: 3ex;
     margin-right: 5ex;
     border-radius: 0ex 0ex 1ex 1ex;
-}
-
-div.sphinxsidebarwrapper h4 {
-    margin-top: 0px;
-    font-size: small;
-    font-weight: bold;
 }
 
 div.sphinxsidebarwrapper h1.logo-name {
