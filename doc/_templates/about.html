@@ -11,7 +11,16 @@
     <h1 class="logo logo-name">{{ project }}</h1>
     {% endif %}
   </a>
-  <h4>Version {{ version }}</h4>
+  <div class="version-switcher">
+    <h4>Version {{ version }}</h4>
+    <details>
+	<summary>Other versions</summary>
+	<ul>
+	    <li><a href="https://dirty-cat.github.io/stable">Stable</a></li>
+	    <li><a href="https://dirty-cat.github.io/dev">Dev</a></li>
+	</ul>
+    </details>
+  </div>
 </p>
 {% else %}
 <h1 class="logo"><a href="{{ pathto(master_doc) }}">{{ project }}</a></h1>

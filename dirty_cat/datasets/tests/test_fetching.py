@@ -383,10 +383,3 @@ def test_import_all_datasets(
 
         returned_value = _fetching.fetch_drug_directory()
         assert expected_return_value == returned_value
-
-
-if __name__ == "__main__":
-    print("Tests starting")
-    test_fetch_openml_dataset_mocked()
-    test_fetch_openml_dataset()
-    print("Tests passed")
