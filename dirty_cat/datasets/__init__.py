@@ -1,4 +1,4 @@
-from .fetching import (
+from ._fetching import (
     fetch_drug_directory,
     fetch_employee_salaries,
     fetch_medical_charge,

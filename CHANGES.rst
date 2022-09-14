@@ -1,5 +1,14 @@
 .. currentmodule:: dirty_cat
 
+Release 0.4.0
+=============
+
+Minor changes
+-------------
+
+* Unnecessary API has been made private: everything (files, functions, classes)
+  starting with an underscore shouldn't be imported in your code.
+
 Release 0.3.0
 =============
 
@@ -34,7 +43,7 @@ Major changes
 
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
     The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
-    and the ``similarity`` parameter is deprecated. It will be removed in 0.5.
+    and the `similarity` parameter is deprecated. It will be removed in 0.5.
 
 Notes
 -----
@@ -111,7 +120,7 @@ Major changes
     End users should not see any difference regarding this.
   - The frontend, however, changed a little: the fetching functions stay the same
     but their return values were modified in favor of a more Pythonic interface.
-    Refer to the docstrings of functions `dirty_cat.datasets.fetching.fetch_*`
+    Refer to the docstrings of functions `dirty_cat.datasets.fetch_*`
     for more information.
   - The example notebooks were updated to reflect these changes.
 

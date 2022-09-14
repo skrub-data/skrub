@@ -7,7 +7,7 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat.utils import Version, check_input
+from dirty_cat._utils import Version, check_input
 
 WORD_TO_ALIAS: Dict[str, str] = {
     "year": "Y",

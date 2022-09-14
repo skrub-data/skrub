@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Union
 import pandas as pd
 from sklearn.datasets import fetch_openml
 
-from dirty_cat.datasets.utils import get_data_dir
+from dirty_cat.datasets._utils import get_data_dir
 
 # Directory where the ``.gz`` files containing the
 # details on downloaded datasets are stored.

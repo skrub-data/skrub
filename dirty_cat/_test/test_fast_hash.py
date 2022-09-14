@@ -1,6 +1,6 @@
 from sklearn.datasets import fetch_20newsgroups
 
-from dirty_cat.fast_hash import ngram_min_hash
+from dirty_cat._fast_hash import ngram_min_hash
 
 
 def test_fast_hash():

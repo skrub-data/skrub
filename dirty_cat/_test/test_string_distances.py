@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 import numpy as np
 
-from dirty_cat import string_distances
+from dirty_cat import _string_distances
 
 
 def test_get_unique_ngrams() -> None:
@@ -22,7 +22,7 @@ def test_get_unique_ngrams() -> None:
         ("e", "s", "t", " "),
     }
     ngram_range = (2, 4)
-    ngrams = string_distances.get_unique_ngrams(string, ngram_range)
+    ngrams = _string_distances.get_unique_ngrams(string, ngram_range)
     assert ngrams == true_ngrams
 
 
@@ -48,4 +48,4 @@ def test_ngram_similarity() -> None:
     # TODO
     # assert ...
     for n in range(1, 4):
-        _check_symmetry(string_distances.ngram_similarity, n)
+        _check_symmetry(_string_distances.ngram_similarity, n)
