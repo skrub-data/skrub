@@ -40,8 +40,9 @@ To release a new version of dirty_cat, here are the main steps to follow:
     `twine upload dist/*`
 13. It is also good practice at this point to create a new environment
     and try installing and using the library (for example by launching examples).
-    Warning: be aware that conda & such cache packages, so doing `pip install dirty_cat`
-    will use the cached version and not the new one
+    Be sure to install it with the command `pip install dirty_cat==<version>`
+    (e.g. `pip install dirty_cat==1.0`), otherwise some package/env managers such as conda
+    will use the cached version.
 14. To finish the procedure, create a new release on the GitHub repository
 
 ### Resources
