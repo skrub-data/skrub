@@ -371,6 +371,9 @@ div.version-switcher details {
     min-width: 20ex;
     display: inline-block;
     vertical-align: top;
+    height: 3ex;
+    z-index: 100;
+    position: ;
 }
 
 div.version-switcher details summary {
@@ -388,6 +391,9 @@ div.version-switcher details ul {
     padding-left: 3ex;
     margin-right: 5ex;
     border-radius: 0ex 0ex 1ex 1ex;
+    border: #999 solid 1pt;
+    z-index: 100;
+    position: relative;
 }
 
 div.sphinxsidebarwrapper h1.logo-name {
