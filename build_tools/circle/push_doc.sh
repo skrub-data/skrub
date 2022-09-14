@@ -36,11 +36,24 @@ if [ ! -d $DOC_REPO ];
 then git clone "git@github.com:dirty-cat/"$DOC_REPO".git";
 fi
 cd $DOC_REPO
-#git config core.sparseCheckout true
-#echo $dir > .git/info/sparse-checkout
-git checkout $CIRCLE_BRANCH
-git reset --hard origin/$CIRCLE_BRANCH
-git rm -rf $dir/ && rm -rf $dir/
+
+# check if it's a new branch
+
+echo $dir > .git/info/sparse-checkout
+if ! git show HEAD:$dir >/dev/null
+then
+	# directory does not exist. Need to make it so sparse checkout works
+	mkdir $dir
+	touch $dir/index.html
+	git add $dir
+fi
+
+git checkout master
+git reset --hard origin/master
+if [ -d $dir ]
+then
+	git rm -rf $dir/ && rm -rf $dir/
+fi
 cp -R $GENERATED_DOC_DIR $dir
 git config user.email "gael.varoquaux+dirty_cat@gmail.com"
 git config user.name $USERNAME
@@ -48,4 +61,4 @@ git config push.default matching
 git add -f $dir/
 git commit -m "$MSG" $dir
 git push
-echo $MSG 
+echo $MSG

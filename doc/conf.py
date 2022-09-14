@@ -17,7 +17,14 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import shutil
 
+# -- Copy files for docs --------------------------------------------------
+#
+# We avoid duplicating the information, but we do not use symlinks to be
+# able to build the docs on windows
+shutil.copyfile('../RELEASE_PROCESS.rst', 'RELEASE_PROCESS.rst')
+shutil.copyfile('../CHANGES.rst', 'CHANGES.rst')
 
 # -- General configuration ------------------------------------------------
 
