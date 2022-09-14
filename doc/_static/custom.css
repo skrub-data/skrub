@@ -361,13 +361,14 @@ div.version-switcher h4 {
     font-size: small;
     font-weight: bold;
     display: inline-block;
+    margin-right: 2ex;
 }
 
 /* "Other versions" */
 div.version-switcher details {
-  width: 50%;
-  float: right;
-  min-width: 20ex;
+    width: 50%;
+    min-width: 20ex;
+    display: inline-block;
 }
 
 div.version-switcher details summary {
