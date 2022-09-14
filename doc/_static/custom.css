@@ -72,6 +72,19 @@ span.container-title {
     border-bottom: 1px solid #d4d4d4;
 }
 
+div.install-instructions {
+    background-color: #f1fff1;
+    border: 1px solid #d4d4d4;
+    margin: 2ex auto;
+    border-radius: 1ex;
+    padding: 0.5ex 2ex 0.5ex 0.5ex;
+    display: inline-block;
+}
+
+/* div.video {
+    margin: 1ex 25%;
+} */
+
 /* Wide screens: use better the full width */
 @media only screen and (min-width: 1400px) {
     div.body section:first-of-type h1 {
@@ -370,6 +383,10 @@ div.document div.sphinxsidebar {
 p.right-align {
     float: right;
     margin: 0ex;
+}
+
+div.right-align {
+    float: right;
 }
 
 p.centered {
