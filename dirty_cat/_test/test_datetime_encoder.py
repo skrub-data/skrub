@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from dirty_cat.datetime_encoder import DatetimeEncoder
+from dirty_cat._datetime_encoder import DatetimeEncoder
 
 
 def get_date_array() -> np.array:

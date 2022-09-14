@@ -8,7 +8,7 @@ from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat.utils import check_input
+from dirty_cat._utils import check_input
 
 
 def lambda_(x, n):
