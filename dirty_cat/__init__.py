@@ -10,7 +10,7 @@ from ._similarity_encoder import SimilarityEncoder
 from ._super_vectorizer import SuperVectorizer
 from ._target_encoder import TargetEncoder
 
-with open(_Path(__file__).parent / "_VERSION.txt") as _fh:
+with open(_Path(__file__).parent / "VERSION.txt") as _fh:
     __version__ = _fh.read().strip()
 
 __all__ = [

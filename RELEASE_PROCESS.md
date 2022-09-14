@@ -9,7 +9,7 @@ the instructions in the [README](README.rst)!
 
 ### Process
 
-> Going further, we assume you have write-access to both the repository and 
+> Going further, we assume you have write-access to both the repository and
 > the PyPI project page.
 
 To release a new version of dirty_cat,
@@ -17,15 +17,15 @@ here are the main steps and appropriate resources:
 
 1. Update `dirty_cat/CHANGES.rst`. It should be updated at each PR,
    but double-checking before the release is good practice.
-2. Update `dirty_cat/dirty_cat/_VERSION.txt` with the new version number
+2. Update `dirty_cat/dirty_cat/VERSION.txt` with the new version number
 3. Update `dirty_cat/setup.py`
-4. You have to commit the changes with a new tag: the version you're 
-   going to push (e.g. `1.0`) with the commands 
+4. You have to commit the changes with a new tag: the version you're
+   going to push (e.g. `1.0`) with the commands
    `git commit -m "Preparing for release 1.0"`, `git tag 1.0`, `git push`
 6. Next, you will need to install the `twine` package with `pip install twine`
 7. Build the source with `python setup.py bdist_wheel sdist`
 8. [Check if today is a good day for releasing](https://shouldideploy.today/)
-9. It is advised to first push the version on the test package index 
+9. It is advised to first push the version on the test package index
    `test.pypi.org` before the official package index `pypi.org`.
    You can do this with the command
    `twine upload dist/* --repository-url https://test.pypi.org/legacy/`
