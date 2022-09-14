@@ -29,7 +29,7 @@ from dirty_cat.datasets._fetching import fetch_openml_dataset as _fetch_openml_d
 from dirty_cat.datasets._fetching import (
     fetch_world_bank_indicator as _fetch_world_bank_indicator,
 )
-from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
+from dirty_cat.datasets._utils import get_data_dir as _get_data_dir
 
 
 @wraps(_fetch_openml_dataset)
