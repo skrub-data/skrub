@@ -327,6 +327,10 @@ dl.py.class dl.field-list {
     padding-bottom: .5em;
 }
 
+dl.field-list > dt:after {
+    content: "";
+  }
+
 p.side-comment {
     font-size: smaller;
     text-align: right;
