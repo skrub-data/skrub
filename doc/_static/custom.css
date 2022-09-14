@@ -355,10 +355,45 @@ div.document div.sphinxsidebar {
     left: 1ex;
 }
 
-div.sphinxsidebarwrapper h4 {
+/* Small font for the version number */
+div.version-switcher h4 {
     margin-top: 0px;
     font-size: small;
     font-weight: bold;
+    display: inline-block;
+    margin-right: 2ex;
+    vertical-align: top;
+}
+
+/* "Other versions" */
+div.version-switcher details {
+    width: 50%;
+    min-width: 20ex;
+    display: inline-block;
+    vertical-align: top;
+    height: 3ex;
+    z-index: 100;
+    position: ;
+}
+
+div.version-switcher details summary {
+    color: #666;
+}
+
+div.version-switcher details a{
+    border-bottom-color: #EEE;
+}
+
+div.version-switcher details ul {
+    list-style: square;
+    margin-left: 1ex;
+    background-color: #EEE;
+    padding-left: 3ex;
+    margin-right: 5ex;
+    border-radius: 0ex 0ex 1ex 1ex;
+    border: #999 solid 1pt;
+    z-index: 100;
+    position: relative;
 }
 
 div.sphinxsidebarwrapper h1.logo-name {
