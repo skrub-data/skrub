@@ -24,15 +24,15 @@ from dirty_cat.datasets._fetching import (
     _get_details,
     _get_features,
     _read_json_from_gz,
+    fetch_openml_dataset,
 )
-from dirty_cat.datasets._fetching import fetch_openml_dataset as _fetch_openml_dataset
 from dirty_cat.datasets._fetching import (
-    fetch_world_bank_indicator as _fetch_world_bank_indicator,
+    fetch_world_bank_indicator as fetch_world_bank_indicator,
 )
-from dirty_cat.datasets._utils import get_data_dir as _get_data_dir
+from dirty_cat.datasets._utils import get_data_dir as get_data_dir
 
 
-@wraps(_fetch_openml_dataset)
+@wraps(fetch_openml_dataset)
 def fetch_openml_dataset(*args, **kwargs):
     """
     Wrapper for the fetching function.
@@ -43,11 +43,11 @@ def fetch_openml_dataset(*args, **kwargs):
             action="ignore",
             category=UserWarning,
         )
-        return _fetch_openml_dataset(*args, **kwargs)
+        return fetch_openml_dataset(*args, **kwargs)
 
 
 def get_test_data_dir() -> Path:
-    return _get_data_dir("tests")
+    return get_data_dir("tests")
 
 
 def test_fetch_openml_dataset():
@@ -407,15 +407,15 @@ def test_fetch_world_bank_indicator():
         try:
             # First, we want to purposefully test FileNotFoundError exceptions.
             with pytest.raises(FileNotFoundError):
-                assert _fetch_world_bank_indicator(
+                assert fetch_world_bank_indicator(
                     indicator_id=0, indicator_name="blabla"
                 )
-                assert _fetch_world_bank_indicator(
+                assert fetch_world_bank_indicator(
                     indicator_id=2**32, indicator_name="blabla"
                 )
 
             # Valid call
-            returned_info = _fetch_world_bank_indicator(
+            returned_info = fetch_world_bank_indicator(
                 indicator_id=test_dataset["id"], indicator_name=test_dataset["name"]
             )
 
