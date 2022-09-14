@@ -20,7 +20,10 @@ in order to create a satisfying prediction model.
 # We import the happiness score data first:
 import pandas as pd
 
-df = pd.read_csv('https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv', thousands=',')
+df = pd.read_csv(
+    "https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv",
+    thousands=",",
+)
 df.drop(df.tail(1).index, inplace=True)
 
 # Let's take a look at the table:
@@ -33,11 +36,11 @@ df.head(3)
 # Thus, we will not use them for our prediction model.
 ###############################################################################
 # The sum of all explanatory indexes is then the happiness score itself:
-df['Sum_of_factors'] = df.iloc[:, [5, 6, 7, 8, 9, 10, 11]].sum(axis=1)
-df[['Happiness score', 'Sum_of_factors']].head(3)
+df["Sum_of_factors"] = df.iloc[:, [5, 6, 7, 8, 9, 10, 11]].sum(axis=1)
+df[["Happiness score", "Sum_of_factors"]].head(3)
 #################################################################
-X = df[['Country']]
-y = df[['Happiness score']]
+X = df[["Country"]]
+y = df[["Happiness score"]]
 # We defined our X and y variables.
 ###############################################################################
 # If we want to create a machine learning model which predicts
@@ -54,17 +57,19 @@ from dirty_cat.datasets import fetch_world_bank_indicator
 
 #################################################################
 # We then extract GDP per capita by country:
-gdppc = fetch_world_bank_indicator(dataset_id='NY.GDP.PCAP.CD', indicator='gdppc').X
+gdppc = fetch_world_bank_indicator(
+    indicator_id="NY.GDP.PCAP.CD", indicator_name="gdppc"
+).X
 gdppc.head(3)
 
 #################################################################
 # Life expectancy by country:
-life_exp = fetch_world_bank_indicator('SP.DYN.LE00.IN', 'life_exp').X
+life_exp = fetch_world_bank_indicator("SP.DYN.LE00.IN", "life_exp").X
 life_exp.head(3)
 
 #################################################################
 # And the legal rights strength by country:
-legal_rights = fetch_world_bank_indicator('IC.LGL.CRED.XQ', 'legal_rights').X
+legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ", "legal_rights").X
 legal_rights.head(3)
 
 ###############################################################################
@@ -79,7 +84,7 @@ legal_rights.head(3)
 from dirty_cat.experimental import enable_fuzzy_join
 from dirty_cat import fuzzy_join
 
-X1, dist1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'], return_distance=True)
+X1, dist1 = fuzzy_join(X, gdppc, on=["Country", "Country Name"], return_distance=True)
 X1.head(20)
 # .. topic:: Note:
 #
@@ -111,6 +116,7 @@ X1.head(20)
 # The best way to inspect the matches is to set the `print_worst` parameter to True.
 # This will print out the five worst matches, which will give as an overview of the situation:
 from dirty_cat import print_worst_matches
+
 print_worst_matches(X1, dist1, n=2)
 # We see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
 # because there is simply no match in the two tables.
@@ -121,15 +127,27 @@ print_worst_matches(X1, dist1, n=2)
 # with a fixed threshold so as to include only precise-enough matches:
 #
 # --> To improve match_threshold measurement, here it excludes some good matches as well
-X1, dist1 = fuzzy_join(X, gdppc, on=['Country', 'Country Name'],
-                match_type='radius', match_threshold=0.3, return_distance=True)
+X1, dist1 = fuzzy_join(
+    X,
+    gdppc,
+    on=["Country", "Country Name"],
+    match_type="radius",
+    match_threshold=0.3,
+    return_distance=True,
+)
 print_worst_matches(X1, dist1, n=2)
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
 #################################################################
 #
 # Now let's include other information that may be relevant, such as life expectancy:
-X2 = fuzzy_join(X1, life_exp,  on=['Country', 'Country Name'],
-                match_type='radius', match_threshold=0.3, keep='left')
+X2 = fuzzy_join(
+    X1,
+    life_exp,
+    on=["Country", "Country Name"],
+    match_type="radius",
+    match_threshold=0.3,
+    keep="left",
+)
 X2.head(3)
 #################################################################
 # .. topic:: Note:
@@ -138,15 +156,22 @@ X2.head(3)
 #    so as not to have too much unnecessary columns with country names.
 #
 # And the strenght of legal rights in the country:
-X3 = fuzzy_join(X2, legal_rights,  on=['Country', 'Country Name'],
-                match_type='radius', match_threshold=0.3, keep='left')
+X3 = fuzzy_join(
+    X2,
+    legal_rights,
+    on=["Country", "Country Name"],
+    match_type="radius",
+    match_threshold=0.3,
+    keep="left",
+)
 X3.head(3)
 #################################################################
 #
 # Great! Our table has became bigger and full of useful informations.
 # We now only remove categories with missing information:
 import numpy as np
-mask = X3['gdppc'].notna()
+
+mask = X3["gdppc"].notna()
 y = np.ravel(y[mask])
 
 X1 = X1[mask]
@@ -164,6 +189,7 @@ X3 = X3[mask]
 # Let us now define the model that will be used to predict the happiness score:
 from sklearn import __version__ as sklearn_version
 from dirty_cat.utils import Version
+
 if Version(sklearn_version) < Version("1.0"):
     from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
@@ -178,11 +204,16 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 #
 # Let's finally assess the results of our models:
 from sklearn.model_selection import cross_validate
+
 for n in range(len([X1, X2, X3])):
-    data = [X1, X2, X3][n] 
-    cv_results_t = cross_validate(hgdb, data.select_dtypes(exclude=object), y, cv=cv, scoring='r2')
-    cv_r2_t = cv_results_t['test_score']
-    print(f'Mean R2 score with table {n+1} is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}')
+    data = [X1, X2, X3][n]
+    cv_results_t = cross_validate(
+        hgdb, data.select_dtypes(exclude=object), y, cv=cv, scoring="r2"
+    )
+    cv_r2_t = cv_results_t["test_score"]
+    print(
+        f"Mean R2 score with table {n+1} is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
+    )
 
 #################################################################
 # Our score gets better every time we add additional information into our table !
