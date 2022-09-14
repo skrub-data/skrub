@@ -18,7 +18,6 @@ dirty_cat
 `dirty_cat <https://dirty-cat.github.io/>`_ is a Python library
 that facilitates machine-learning on dirty categorical variables.
 
-The techniques implemented are based on science!
 For a detailed description of the problem of encoding dirty categorical data, see
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
 and `Encoding high-cardinality string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
@@ -32,43 +31,16 @@ dirty_cat provides encoders for **morphological similarities** in the data,
 which means that it assumes a correlation between the similarities
 in the feature we want to encode, and similarities in the target.
 
-We usually identify three common cases:
+We usually identify three common cases: **similarities, typos and variations**
 
-- **Similarities**: different samples which are alike, or are sub/super-sets.
-  Example: a *Sales Manager* might have a similar salary to a *Marketing Manager*,
-  as they are both managers
+`Example 1 <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_ goes into detail on how to identify and deal with dirty data.
+using dirty_cat
 
-- **Typos**: misspelled words such as *Lawyier* (instead of *Lawyer*),
-  refers to the same job, despite being two different words.
-
-- **Variations**: in some languages - such as French - a same entity
-  (such as a job title) might have different denominations:
-  *Policier* (police officer, male) and *Policière* (police officer, female).
-  Same problem as typos: we have different, very similar words designating the same job.
-
-Traditional encoding methods such as **one-hot cannot grasp these similarities**,
-and therefore would encode these values **independently**,
-which directly affects the machine learning model performance.
-
-Historically, this problem is addressed by cleaning the data manually,
-which requires a lot of work.
-
-dirty_cat encoders try to remedy this issue by providing **automatic methods
-to directly process this kind of dirty data in the machine learning pipelines**.
-They can be easily integrated in already existing pipelines as they are
-compliant with scikit-learn's API.
-
-As such, they are **drop-in replacements** for scikit-learn encoders !
-
-Those provided by dirty_cat include:
+The encoders and tools provided by dirty_cat include:
 
 - The `SimilarityEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.SimilarityEncoder.html>`_
 - The `GapEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.GapEncoder.html>`_
 - The `MinHashEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.MinHashEncoder.html>`_
-
-The library also implements other tools relevant to this issue,
-and generally useful in machine learning settings:
-
 - The `SuperVectorizer <https://dirty-cat.github.io/stable/generated/dirty_cat.SuperVectorizer.html>`_
 - The `DatetimeEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.DatetimeEncoder.html>`_
 
@@ -134,10 +106,3 @@ References
 
 .. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
 .. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
-
-Notes
-~~~~~
-
-The library is provided under the `BSD 3-clause licence <https://github.com/dirty-cat/dirty_cat/blob/master/LICENSE.txt>`_.
-
-"dirty cat" is the abbreviation of "dirty categories"!
