@@ -25,6 +25,7 @@ import shutil
 # able to build the docs on windows
 shutil.copyfile('../RELEASE_PROCESS.rst', 'RELEASE_PROCESS.rst')
 shutil.copyfile('../CHANGES.rst', 'CHANGES.rst')
+shutil.copyfile('../CONTRIBUTING.rst', 'CONTRIBUTING.rst')
 
 # -- General configuration ------------------------------------------------
 
