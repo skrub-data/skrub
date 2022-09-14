@@ -25,8 +25,10 @@ from dirty_cat.datasets._fetching import (
     _get_features,
     _read_json_from_gz,
 )
-from dirty_cat.datasets.fetching import fetch_openml_dataset as _fetch_openml_dataset
-from dirty_cat.datasets.fetching import fetch_world_bank_indicator
+from dirty_cat.datasets._fetching import fetch_openml_dataset as _fetch_openml_dataset
+from dirty_cat.datasets._fetching import (
+    fetch_world_bank_indicator as _fetch_world_bank_indicator,
+)
 from dirty_cat.datasets.utils import get_data_dir as _get_data_dir
 
 
@@ -405,15 +407,15 @@ def test_fetch_world_bank_indicator():
         try:
             # First, we want to purposefully test FileNotFoundError exceptions.
             with pytest.raises(FileNotFoundError):
-                assert fetch_world_bank_indicator(
+                assert _fetch_world_bank_indicator(
                     indicator_id=0, indicator_name="blabla"
                 )
-                assert fetch_world_bank_indicator(
+                assert _fetch_world_bank_indicator(
                     indicator_id=2**32, indicator_name="blabla"
                 )
 
             # Valid call
-            returned_info = fetch_world_bank_indicator(
+            returned_info = _fetch_world_bank_indicator(
                 indicator_id=test_dataset["id"], indicator_name=test_dataset["name"]
             )
 
