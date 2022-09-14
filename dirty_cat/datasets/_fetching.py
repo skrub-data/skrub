@@ -61,16 +61,33 @@ class Features:
 
 @dataclass(unsafe_hash=True)
 class DatasetAll:
+    """
+    Represents a dataset and its information.
+    With this state, the dataset is loaded in memory as a pandas DataFrame
+    (``X`` and ``y``).
+    """
+
     name: str
     description: str
+    source: str
+    target: str
     X: pd.DataFrame
     y: pd.Series
-    source: str
     path: Path
+    read_csv_kwargs: Dict[str, Any]
 
 
 @dataclass(unsafe_hash=True)
 class DatasetInfoOnly:
+    """
+    Represents a dataset and its information.
+    With this state, the dataset is NOT loaded in memory, but can be read
+    with ``path`` and ``read_csv_kwargs``, as such:
+    .. code:: python
+        ds = fetch_employee_salaries(load_dataframe=False)
+        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+    """
+
     name: str
     description: str
     source: str
@@ -337,10 +354,12 @@ def fetch_dataset_as_dataclass(
         dataset = DatasetAll(
             name=dataset_name,
             description=info["description"],
+            source=info["source"],
+            target=target,
             X=X,
             y=y,
-            source=info["source"],
             path=info["path"],
+            read_csv_kwargs=read_csv_kwargs,
         )
     else:
         dataset = DatasetInfoOnly(
