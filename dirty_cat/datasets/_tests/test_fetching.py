@@ -325,6 +325,7 @@ def test_import_all_datasets(
         name="Example dataset",
         description="This is a dataset.",
         source="https://www.openml.org/",
+        target="To_predict",
         path=Path("/path/to/file.csv"),
         X=pd.DataFrame([1, 2, 3, 4]),
         y=pd.Series(
@@ -332,6 +333,7 @@ def test_import_all_datasets(
                 5,
             ]
         ),
+        read_csv_kwargs={"a": "b"},
     )
 
     expected_return_value_info_only = _fetching.DatasetInfoOnly(
