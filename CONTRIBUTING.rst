@@ -49,18 +49,16 @@ Reporting bugs
 Even if we unit-test our code, using the library is the best way to
 discover new bugs and limitations.
 
-If you stumble upon one, please - `Check if a similar or identical issue
-already
-exists <https://github.com/dirty-cat/dirty_cat/issues?q=is%3Aissue>`__ -
-If yes: - **The issue is still open**: leave the emote :+1: on the
-original message, which will let us know there are several users
-affected by this issue - **The issue has been closed**: - **It has been
-closed by a merged pull request** (1) update your dirty_cat version, or
-(2) the fix has not been released in a version yet - **Otherwise**,
-there might be a ``wontfix`` label, and / or a reason at the bottom of
-the conversation - If not - `File a new
-issue <https://github.com/dirty-cat/dirty_cat/issues/new>`__ (see
-following section)
+If you stumble upon one, please `check if a similar or identical issue already
+exists <https://github.com/dirty-cat/dirty_cat/issues?q=is%3Aissue>`__
+- If yes: 
+  - **The issue is still open**: leave the emote :+1: on the original message, 
+    which will let us know there are several users affected by this issue 
+  - **The issue has been closed**: 
+    - **It has been closed by a merged pull request** (1) update your dirty_cat version, 
+      or (2) the fix has not been released in a version yet
+    - **Otherwise**, there might be a ``wontfix`` label, and / or a reason at the bottom of the conversation 
+- If not, `file a new issue <https://github.com/dirty-cat/dirty_cat/issues/new>`__ (see following section)
 
 How do I submit a (good) bug report?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
