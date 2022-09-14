@@ -213,12 +213,12 @@ def fuzzy_join(
 
     elif match_type == "radius":
         prec = np.zeros(left_enc.shape[0])
+        n_neigh = NearestNeighbors()
+        n_neigh.fit(right_enc)
         for i in range(left_enc.shape[0]):
             # Find all neighbors in a given radius:
             dist = 2 * distance[i]
-            n_neigh = NearestNeighbors(radius=dist)
-            n_neigh.fit(right_enc)
-            rng = n_neigh.radius_neighbors(left_enc[i])
+            rng = n_neigh.radius_neighbors(left_enc[i], radius=dist)
             # Indices of nearest neighbors:
             twodball_pts = rng[1][0]
             prec[i] = 1 / len(twodball_pts)
