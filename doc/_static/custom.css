@@ -381,7 +381,7 @@ div.version-switcher details summary {
 }
 
 div.version-switcher details a{
-    border-bottom-style: none;
+    border-bottom-color: #EEE;
 }
 
 div.version-switcher details ul {
