@@ -188,7 +188,7 @@ X3 = X3[mask]
 #
 # Let us now define the model that will be used to predict the happiness score:
 from sklearn import __version__ as sklearn_version
-from dirty_cat.utils import Version
+from dirty_cat._utils import Version
 
 if Version(sklearn_version) < Version("1.0"):
     from sklearn.experimental import enable_hist_gradient_boosting

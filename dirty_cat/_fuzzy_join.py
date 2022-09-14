@@ -256,6 +256,6 @@ def print_worst_matches(
     max_ind = np.argpartition(distance, -n, axis=0)[-n:]
     max_dist = pd.Series(distance[max_ind.ravel()].ravel(), index=max_ind.ravel())
     worst_matches = df_joined.iloc[list(max_ind.ravel())]
-    worst_matches["distance"] = max_dist
+    worst_matches = worst_matches.assign(distance=max_dist)
     print("The worst five matches are the following:\n")
     return worst_matches
