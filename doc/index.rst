@@ -143,6 +143,7 @@ Data download
    datasets.fetch_open_payments
    datasets.fetch_road_safety
    datasets.fetch_traffic_violations
+   datasets.fetch_drug_directory
    datasets.get_data_dir
 
 About
@@ -167,4 +168,3 @@ dirty-cat received funding from `project DirtyData
 
    Similarity encoding in also available in Spark ML:
    https://github.com/rakutentech/spark-dirty-cat
-
