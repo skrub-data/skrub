@@ -228,7 +228,7 @@ def fuzzy_join(
                 [
                     right_array[idx_closest[idr]]
                     if prec[idr] >= match_threshold
-                    else np.tile(np.nan, (2,))
+                    else np.tile(np.nan, (right_array.shape[1],))
                     for idr in left_table_clean.index
                 ]
             ),
