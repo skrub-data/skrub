@@ -48,11 +48,22 @@ pipeline you can tweak.
 
     </div>
     </div>
-    <div class="flex-container">
+
+.. container:: right-align
+
+   `Recent changes <CHANGES.html>`_
+
+   `Contributing <development.html>`_
+
+.. container:: install_instructions
+
+    :Installing: `$ pip install --user --upgrade dirty_cat`
+
+
 
 .. raw:: html
 
-    <div class="flex-content" style="border: 0px;">
+    <div class="video" style="border: 0px;">
     <iframe style="display: block; margin: auto; width: 100%;" width="560" height="315"
      src="https://www.youtube.com/embed/_GNaaeEI2tg" frameborder="0"
      allow="accelerometer; autoplay; clipboard-write;
@@ -60,26 +71,13 @@ pipeline you can tweak.
     ></iframe></div>
     <div class="flex-content" style="border: 0px;">
 
-For a detailed description of the problem of encoding dirty categorical data,
-see `Similarity encoding for learning with dirty categorical variables
-<https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
-string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
-
 .. raw:: html
 
     </div>
-    </div>
 
-.. rst-class:: right-align
 
-   `Recent changes <CHANGES.html>`_
-
-:Installing: `$ pip install --user --upgrade dirty_cat`
-
-______
-
-Usage
-========
+Usage examples
+===============
 
 .. container:: larger-container
 
@@ -88,6 +86,12 @@ Usage
     :end-before: .. rst-class:: sphx-glr-signature
 
 |
+
+For a detailed description of the problem of encoding dirty categorical data,
+see `Similarity encoding for learning with dirty categorical variables
+<https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
+string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
+
 
 API documentation
 =================
