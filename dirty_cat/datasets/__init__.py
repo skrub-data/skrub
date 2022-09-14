@@ -1,4 +1,6 @@
 from ._fetching import (
+    DatasetAll,
+    DatasetInfoOnly,
     fetch_drug_directory,
     fetch_employee_salaries,
     fetch_medical_charge,
@@ -18,4 +20,6 @@ __all__ = [
     "fetch_open_payments",
     "fetch_drug_directory",
     "fetch_traffic_violations",
+    "DatasetAll",
+    "DatasetInfoOnly",
 ]
