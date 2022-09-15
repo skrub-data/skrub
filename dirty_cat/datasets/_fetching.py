@@ -198,30 +198,26 @@ def _fetch_world_bank_data(
 
     """
     data_directory.mkdir(exist_ok=True, parents=True)
-    unzip_path = data_directory / "world_bank_unzipped_files"
-    data_directory = data_directory.resolve() / "world_bank.zip"
     # Download the file :
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"
-    urllib.request.urlretrieve(url, data_directory)
+    urllib.request.urlretrieve(url)
     try:
-        # Extract csv from zip file :
-        with ZipFile(data_directory, "r") as file:
-            names = file.namelist()
-            for name in names:
-                if "Metadata" not in name:
-                    file.extract(name, path=unzip_path)
-                    true_file = name
-        file.close()
+        filehandle, _ = urllib.request.urlretrieve(url)
+        zip_file_object = ZipFile(filehandle, "r")
+        for name in zip_file_object.namelist():
+            if "Metadata" not in name:
+                true_file = name
+        file = zip_file_object.open(true_file)
     except BadZipFile:
         raise FileNotFoundError(
-            f"Couldn't find csv file {data_directory!s}, {indicator_id} seems invalid."
+            f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."
         )
     # Read csv file
-    csv_path = Path(unzip_path) / true_file
-    df = pd.read_csv(csv_path, skiprows=3)
+    df = pd.read_csv(file, skiprows=3)
     df[indicator_name] = df.stack().groupby(level=0).last()
     df = df[df[indicator_name] != indicator_id]
     df = df[["Country Name", indicator_name]]
+    csv_path = data_directory.resolve() / true_file
     df.to_csv(csv_path, index=False)
     description = (
         f"This table shows the {indicator_id} World Bank indicator. It can be used as"
