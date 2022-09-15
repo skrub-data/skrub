@@ -1,49 +1,31 @@
-#!/usr/bin/env python
-
+from configparser import ConfigParser
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 
-version_file = os.path.join(os.path.dirname(__file__), "dirty_cat", "VERSION.txt")
-with open(version_file) as fh:
-    VERSION = fh.read().strip()
 
-description_file = os.path.join(os.path.dirname(__file__), "README.rst")
-with open(description_file) as fh:
-    DESCRIPTION = fh.read()
+def setup_package():
+    write_requirements()
+    setup()
+
+
+def write_requirements():
+    """Parse dependencies from setup.cfg and write them
+    within the project scope.
+
+    Notes
+    -----
+    It will allow to compare installed versions against
+    required versions at run time, during the import of this package.
+    """
+    setup_file = "setup.cfg"
+    config = ConfigParser()
+    config.read(setup_file)
+    deps = config["options"]["install_requires"].strip()
+    project_dir = config["metadata"]["name"]
+    req_path = os.path.join(project_dir, ".requirements.txt")
+    with open(req_path, "w+") as f:
+        f.write(deps)
 
 
 if __name__ == "__main__":
-    setup(
-        name="dirty_cat",
-        version=VERSION,
-        author="Patricio Cerda",
-        author_email="patricio.cerda@inria.fr",
-        url="http://dirty-cat.github.io/",
-        description="Machine learning with dirty categories.",
-        long_description=DESCRIPTION,
-        license="BSD",
-        python_requires=">=3.8",
-        classifiers=[
-            "Development Status :: 5 - Production/Stable",
-            "Environment :: Console",
-            "Intended Audience :: Science/Research",
-            "License :: OSI Approved :: BSD License",
-            "Operating System :: OS Independent",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
-            "Programming Language :: Python :: 3.10",
-            "Topic :: Scientific/Engineering",
-            "Topic :: Software Development :: Libraries",
-        ],
-        platforms="any",
-        packages=find_packages(),
-        package_data={"dirty_cat": ["VERSION.txt"]},
-        install_requires=[
-            "scikit-learn>=0.23.0",
-            "numpy>=1.17.3",
-            "scipy>=1.4.0",
-            "pandas>=1.2.0",
-            "requests",
-            "joblib",
-        ],
-    )
+    setup_package()
