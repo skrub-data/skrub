@@ -47,6 +47,11 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._target_encoder.TargetEncoder",
     "dirty_cat._target_encoder.TargetEncoder.fit",
     "dirty_cat._target_encoder.TargetEncoder.transform",
+    # The following are not documented in dirty_cat (and thus are out of scope)
+    # They are usually inherited from other libraries.
+    "dirty_cat._super_vectorizer.SuperVectorizer.fit",
+    "dirty_cat._super_vectorizer.SuperVectorizer.set_params",
+    "dirty_cat._super_vectorizer.SuperVectorizer.named_transformers_",
 }
 
 
