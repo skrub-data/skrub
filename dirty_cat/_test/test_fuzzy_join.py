@@ -3,9 +3,7 @@ import pytest
 
 # isort : off
 from dirty_cat.experimental import enable_fuzzy_join  # noqa
-
-from dirty_cat import fuzzy_join, print_worst_matches  # isort: skip
-
+from dirty_cat import fuzzy_join, print_worst_matches
 # isort : on
 
 
