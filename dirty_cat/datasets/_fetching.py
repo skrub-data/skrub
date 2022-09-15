@@ -197,7 +197,6 @@ def _fetch_world_bank_data(
               saved as a CSV file.
 
     """
-    data_directory.mkdir(exist_ok=True, parents=True)
     # Download the file :
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"
     urllib.request.urlretrieve(url)
@@ -212,11 +211,13 @@ def _fetch_world_bank_data(
         raise FileNotFoundError(
             f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."
         )
-    # Read csv file
+    # Read and modify csv file
     df = pd.read_csv(file, skiprows=3)
     df[indicator_name] = df.stack().groupby(level=0).last()
     df = df[df[indicator_name] != indicator_id]
     df = df[["Country Name", indicator_name]]
+    # Save the file
+    data_directory.mkdir(exist_ok=True, parents=True)
     csv_path = data_directory.resolve() / true_file
     df.to_csv(csv_path, index=False)
     description = (

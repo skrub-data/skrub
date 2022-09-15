@@ -211,7 +211,8 @@ for data in (X1, X2, X3):
     )
     cv_r2_t = cv_results_t["test_score"]
     print(
-        f"Mean R2 score with table {n+1} is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
+        f"Mean R2 score with {len(data.columns) - 2} feature columns is"
+        f" {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
     )
 
 #################################################################
