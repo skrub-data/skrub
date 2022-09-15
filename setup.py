@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 import os
 from setuptools import setup
+from pathlib import Path as _Path
 
 
 def setup_package():
@@ -21,10 +22,12 @@ def write_requirements():
     config = ConfigParser()
     config.read(setup_file)
     deps = config["options"]["install_requires"].strip()
-    project_dir = config["metadata"]["name"]
-    req_path = os.path.join(project_dir, ".requirements.txt")
+    project_name = config["metadata"]["name"]
+    project_dir = _Path(__file__).parent / project_name
+    req_path = os.path.join(project_dir, "_config_requirements.py")
     with open(req_path, "w+") as f:
-        f.write(deps)
+        body = "deps = " + str({"deps": deps})
+        f.write(body)
 
 
 if __name__ == "__main__":
