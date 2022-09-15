@@ -1,7 +1,7 @@
 """
 This test suite ensures the docstrings of class methods in
 dirty_cat are formatted according to numpydoc specifications.
-`FUNCTION_DOCSTRING_IGNORE_SET` defines a set of class methods
+`DOCSTRING_TEMP_IGNORE_SET` defines a set of class methods
 to skip while running the validation tests, so that CI will
 not fail.
 Therefore, developers having formatted methods to numpydoc
@@ -15,60 +15,37 @@ from typing import Optional
 import pytest
 from numpydoc.validate import validate
 
-FUNCTION_DOCSTRING_IGNORE_SET = {
+DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._datetime_encoder.DatetimeEncoder",
     "dirty_cat._datetime_encoder.DatetimeEncoder.fit",
-    "dirty_cat._datetime_encoder.DatetimeEncoder.fit_transform",
     "dirty_cat._datetime_encoder.DatetimeEncoder.get_feature_names",
     "dirty_cat._datetime_encoder.DatetimeEncoder.get_feature_names_out",
-    "dirty_cat._datetime_encoder.DatetimeEncoder.get_params",
-    "dirty_cat._datetime_encoder.DatetimeEncoder.set_params",
     "dirty_cat._datetime_encoder.DatetimeEncoder.transform",
     "dirty_cat._gap_encoder.GapEncoder",
     "dirty_cat._gap_encoder.GapEncoder.fit",
-    "dirty_cat._gap_encoder.GapEncoder.fit_transform",
     "dirty_cat._gap_encoder.GapEncoder.get_feature_names",
     "dirty_cat._gap_encoder.GapEncoder.get_feature_names_out",
-    "dirty_cat._gap_encoder.GapEncoder.get_params",
     "dirty_cat._gap_encoder.GapEncoder.partial_fit",
     "dirty_cat._gap_encoder.GapEncoder.score",
-    "dirty_cat._gap_encoder.GapEncoder.set_params",
     "dirty_cat._gap_encoder.GapEncoder.transform",
     "dirty_cat._minhash_encoder.MinHashEncoder",
     "dirty_cat._minhash_encoder.MinHashEncoder.fit",
-    "dirty_cat._minhash_encoder.MinHashEncoder.fit_transform",
     "dirty_cat._minhash_encoder.MinHashEncoder.get_fast_hash",
-    "dirty_cat._minhash_encoder.MinHashEncoder.get_params",
-    "dirty_cat._minhash_encoder.MinHashEncoder.get_unique_ngrams",
     "dirty_cat._minhash_encoder.MinHashEncoder.minhash",
-    "dirty_cat._minhash_encoder.MinHashEncoder.set_params",
     "dirty_cat._minhash_encoder.MinHashEncoder.transform",
     "dirty_cat._similarity_encoder.SimilarityEncoder",
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.fit_transform",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.get_feature_names",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.get_feature_names_out",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.get_most_frequent",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.get_params",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.infrequent_categories_",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.inverse_transform",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.set_params",
     "dirty_cat._similarity_encoder.SimilarityEncoder.transform",
+    "dirty_cat._similarity_encoder.SimilarityEncoder.fit_transform",
     "dirty_cat._super_vectorizer.SuperVectorizer",
-    "dirty_cat._super_vectorizer.SuperVectorizer.OptionalEstimator",
-    "dirty_cat._super_vectorizer.SuperVectorizer.fit",
     "dirty_cat._super_vectorizer.SuperVectorizer.fit_transform",
+    "dirty_cat._super_vectorizer.SuperVectorizer.transform",
+    "dirty_cat._super_vectorizer.SuperVectorizer._auto_cast",
+    "dirty_cat._super_vectorizer.SuperVectorizer._apply_cast",
     "dirty_cat._super_vectorizer.SuperVectorizer.get_feature_names",
     "dirty_cat._super_vectorizer.SuperVectorizer.get_feature_names_out",
-    "dirty_cat._super_vectorizer.SuperVectorizer.get_params",
-    "dirty_cat._super_vectorizer.SuperVectorizer.named_transformers_",
-    "dirty_cat._super_vectorizer.SuperVectorizer.set_params",
-    "dirty_cat._super_vectorizer.SuperVectorizer.transform",
     "dirty_cat._target_encoder.TargetEncoder",
     "dirty_cat._target_encoder.TargetEncoder.fit",
-    "dirty_cat._target_encoder.TargetEncoder.fit_transform",
-    "dirty_cat._target_encoder.TargetEncoder.get_params",
-    "dirty_cat._target_encoder.TargetEncoder.set_params",
     "dirty_cat._target_encoder.TargetEncoder.transform",
 }
 
@@ -193,7 +170,7 @@ def test_docstring(Estimator, method, request):
 
     import_path = ".".join(import_path)
 
-    if import_path in FUNCTION_DOCSTRING_IGNORE_SET:
+    if import_path in DOCSTRING_TEMP_IGNORE_SET:
         request.applymarker(
             pytest.mark.xfail(run=False, reason="TODO pass numpydoc validation")
         )
