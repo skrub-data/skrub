@@ -6,6 +6,8 @@ import re
 from importlib.metadata import version
 from pathlib import Path as _Path
 
+from ._config_requirements import deps
+
 
 def _check_pack_version(dep, package_name, required_version, sign):
     installed_version = version(package_name)
@@ -20,13 +22,10 @@ parent_dir = _Path(__file__).parent
 with open(parent_dir / "VERSION.txt") as _fh:
     _version = _fh.read().strip()
 
-with open(parent_dir / ".requirements.txt") as _gh:
-    deps = _gh.readlines()
+deps = deps["deps"].split("\n")
 for dep in deps:
     dep = dep.strip()
     matches_package = re.findall(r"^[\sa-zA-Z0-9-]+", dep)
-    if len(matches_package) != 1:
-        continue
     package_name = matches_package[0]
     signs = ["<", "<=", ">", ">=", "==", "!="]
     for sign in signs:
