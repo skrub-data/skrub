@@ -13,64 +13,63 @@ from importlib import import_module
 from typing import Optional
 
 import pytest
-
-numpydoc_validation = pytest.importorskip("numpydoc.validate")
+from numpydoc.validate import validate
 
 FUNCTION_DOCSTRING_IGNORE_SET = {
-    "dirty_cat.datetime_encoder.DatetimeEncoder",
-    "dirty_cat.datetime_encoder.DatetimeEncoder.fit",
-    "dirty_cat.datetime_encoder.DatetimeEncoder.fit_transform",
-    "dirty_cat.datetime_encoder.DatetimeEncoder.get_feature_names",
-    "dirty_cat.datetime_encoder.DatetimeEncoder.get_feature_names_out",
-    "dirty_cat.datetime_encoder.DatetimeEncoder.get_params",
-    "dirty_cat.datetime_encoder.DatetimeEncoder.set_params",
-    "dirty_cat.datetime_encoder.DatetimeEncoder.transform",
-    "dirty_cat.gap_encoder.GapEncoder",
-    "dirty_cat.gap_encoder.GapEncoder.fit",
-    "dirty_cat.gap_encoder.GapEncoder.fit_transform",
-    "dirty_cat.gap_encoder.GapEncoder.get_feature_names",
-    "dirty_cat.gap_encoder.GapEncoder.get_feature_names_out",
-    "dirty_cat.gap_encoder.GapEncoder.get_params",
-    "dirty_cat.gap_encoder.GapEncoder.partial_fit",
-    "dirty_cat.gap_encoder.GapEncoder.score",
-    "dirty_cat.gap_encoder.GapEncoder.set_params",
-    "dirty_cat.gap_encoder.GapEncoder.transform",
-    "dirty_cat.minhash_encoder.MinHashEncoder",
-    "dirty_cat.minhash_encoder.MinHashEncoder.fit",
-    "dirty_cat.minhash_encoder.MinHashEncoder.fit_transform",
-    "dirty_cat.minhash_encoder.MinHashEncoder.get_fast_hash",
-    "dirty_cat.minhash_encoder.MinHashEncoder.get_params",
-    "dirty_cat.minhash_encoder.MinHashEncoder.get_unique_ngrams",
-    "dirty_cat.minhash_encoder.MinHashEncoder.minhash",
-    "dirty_cat.minhash_encoder.MinHashEncoder.set_params",
-    "dirty_cat.minhash_encoder.MinHashEncoder.transform",
-    "dirty_cat.similarity_encoder.SimilarityEncoder",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.fit",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.fit_transform",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.get_feature_names",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.get_feature_names_out",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.get_most_frequent",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.get_params",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.infrequent_categories_",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.inverse_transform",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.set_params",
-    "dirty_cat.similarity_encoder.SimilarityEncoder.transform",
-    "dirty_cat.super_vectorizer.SuperVectorizer",
-    "dirty_cat.super_vectorizer.SuperVectorizer.OptionalEstimator",
-    "dirty_cat.super_vectorizer.SuperVectorizer.fit",
-    "dirty_cat.super_vectorizer.SuperVectorizer.fit_transform",
-    "dirty_cat.super_vectorizer.SuperVectorizer.get_feature_names",
-    "dirty_cat.super_vectorizer.SuperVectorizer.get_feature_names_out",
-    "dirty_cat.super_vectorizer.SuperVectorizer.get_params",
-    "dirty_cat.super_vectorizer.SuperVectorizer.named_transformers_",
-    "dirty_cat.super_vectorizer.SuperVectorizer.set_params",
-    "dirty_cat.super_vectorizer.SuperVectorizer.transform",
-    "dirty_cat.target_encoder.TargetEncoder",
-    "dirty_cat.target_encoder.TargetEncoder.fit",
-    "dirty_cat.target_encoder.TargetEncoder.fit_transform",
-    "dirty_cat.target_encoder.TargetEncoder.get_params",
-    "dirty_cat.target_encoder.TargetEncoder.set_params",
-    "dirty_cat.target_encoder.TargetEncoder.transform",
+    "dirty_cat.DatetimeEncoder",
+    "dirty_cat.DatetimeEncoder.fit",
+    "dirty_cat.DatetimeEncoder.fit_transform",
+    "dirty_cat.DatetimeEncoder.get_feature_names",
+    "dirty_cat.DatetimeEncoder.get_feature_names_out",
+    "dirty_cat.DatetimeEncoder.get_params",
+    "dirty_cat.DatetimeEncoder.set_params",
+    "dirty_cat.DatetimeEncoder.transform",
+    "dirty_cat.GapEncoder",
+    "dirty_cat.GapEncoder.fit",
+    "dirty_cat.GapEncoder.fit_transform",
+    "dirty_cat.GapEncoder.get_feature_names",
+    "dirty_cat.GapEncoder.get_feature_names_out",
+    "dirty_cat.GapEncoder.get_params",
+    "dirty_cat.GapEncoder.partial_fit",
+    "dirty_cat.GapEncoder.score",
+    "dirty_cat.GapEncoder.set_params",
+    "dirty_cat.GapEncoder.transform",
+    "dirty_cat.MinHashEncoder",
+    "dirty_cat.MinHashEncoder.fit",
+    "dirty_cat.MinHashEncoder.fit_transform",
+    "dirty_cat.MinHashEncoder.get_fast_hash",
+    "dirty_cat.MinHashEncoder.get_params",
+    "dirty_cat.MinHashEncoder.get_unique_ngrams",
+    "dirty_cat.MinHashEncoder.minhash",
+    "dirty_cat.MinHashEncoder.set_params",
+    "dirty_cat.MinHashEncoder.transform",
+    "dirty_cat.SimilarityEncoder",
+    "dirty_cat.SimilarityEncoder.fit",
+    "dirty_cat.SimilarityEncoder.fit_transform",
+    "dirty_cat.SimilarityEncoder.get_feature_names",
+    "dirty_cat.SimilarityEncoder.get_feature_names_out",
+    "dirty_cat.SimilarityEncoder.get_most_frequent",
+    "dirty_cat.SimilarityEncoder.get_params",
+    "dirty_cat.SimilarityEncoder.infrequent_categories_",
+    "dirty_cat.SimilarityEncoder.inverse_transform",
+    "dirty_cat.SimilarityEncoder.set_params",
+    "dirty_cat.SimilarityEncoder.transform",
+    "dirty_cat.SuperVectorizer",
+    "dirty_cat.SuperVectorizer.OptionalEstimator",
+    "dirty_cat.SuperVectorizer.fit",
+    "dirty_cat.SuperVectorizer.fit_transform",
+    "dirty_cat.SuperVectorizer.get_feature_names",
+    "dirty_cat.SuperVectorizer.get_feature_names_out",
+    "dirty_cat.SuperVectorizer.get_params",
+    "dirty_cat.SuperVectorizer.named_transformers_",
+    "dirty_cat.SuperVectorizer.set_params",
+    "dirty_cat.SuperVectorizer.transform",
+    "dirty_cat.TargetEncoder",
+    "dirty_cat.TargetEncoder.fit",
+    "dirty_cat.TargetEncoder.fit_transform",
+    "dirty_cat.TargetEncoder.get_params",
+    "dirty_cat.TargetEncoder.set_params",
+    "dirty_cat.TargetEncoder.transform",
 }
 
 
@@ -199,7 +198,7 @@ def test_docstring(Estimator, method, request):
             pytest.mark.xfail(run=False, reason="TODO pass numpydoc validation")
         )
 
-    res = numpydoc_validation.validate(import_path)
+    res = validate(import_path)
 
     res["errors"] = list(filter_errors(res["errors"], method, Estimator=Estimator))
 
@@ -218,7 +217,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    res = numpydoc_validation.validate(args.import_path)
+    res = validate(args.import_path)
 
     import_path_sections = args.import_path.split(".")
 
