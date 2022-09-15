@@ -205,8 +205,7 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # Let's finally assess the results of our models:
 from sklearn.model_selection import cross_validate
 
-for n in range(len([X1, X2, X3])):
-    data = [X1, X2, X3][n]
+for data in (X1, X2, X3):
     cv_results_t = cross_validate(
         hgdb, data.select_dtypes(exclude=object), y, cv=cv, scoring="r2"
     )
