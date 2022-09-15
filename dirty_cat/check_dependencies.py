@@ -1,0 +1,38 @@
+"""
+Check versions from .requirements.txt to raise error at init.
+.requirements.txt is written from setup.cfg during setup.
+"""
+import re
+from importlib.metadata import version
+from pathlib import Path as _Path
+
+
+def _check_pack_version(dep, package, required_version, sign):
+    installed_version = version(package)
+    if not eval(f"'{installed_version}' {sign} '{required_version}'"):
+        raise ImportError(
+            f"dirty_cat {_version} requires {dep}, but you have "
+            f"{package} {installed_version} which is incompatible."
+        )
+
+
+parent_dir = _Path(__file__).parent
+with open(parent_dir / "VERSION.txt") as _fh:
+    _version = _fh.read().strip()
+
+with open(parent_dir / ".requirements.txt") as _gh:
+    deps = _gh.readlines()
+for dep in deps:
+    dep = dep.strip()
+    matches_package = re.findall(r"^[\sa-zA-Z0-9-]+", dep)
+    if len(matches_package) != 1:
+        continue
+    package = matches_package[0]
+    signs = ["<", "<=", ">", ">=", "=="]
+    for sign in signs:
+        pattern = rf"{sign}[a-zA-Z0-9.]+"
+        matches_version = re.findall(pattern, dep)
+        if len(matches_version) > 0:
+            sign_version = matches_version[0]
+            package_version = re.findall(r"[a-zA-Z0-9.]+", sign_version)[0]
+            _check_pack_version(dep, package, package_version, sign)
