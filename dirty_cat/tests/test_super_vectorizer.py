@@ -445,39 +445,3 @@ def test_passthrough():
     dirty_flat_trans_df = X_enc_dirty.to_numpy().ravel().tolist()
     assert all(map(_is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
     assert (X_clean.to_numpy() == X_enc_clean.to_numpy()).all()
-
-
-if __name__ == "__main__":
-    print("start test_super_vectorizer with clean df")
-    test_with_clean_data()
-    print("passed")
-
-    print("start test_super_vectorizer with dirty df")
-    test_with_dirty_data()
-    print("passed")
-
-    print("start test_auto_cast")
-    test_auto_cast()
-    print("passed")
-
-    print("start test_with_arrays")
-    test_with_arrays()
-    print("test_with_arrays passed")
-
-    print("start  test_get_feature_names_out")
-    test_get_feature_names_out()
-    print("passed")
-
-    print("start test_fit")
-    test_fit()
-    print("passed")
-
-    print("start fit_transform_equiv")
-    test_fit_transform_equiv()
-    print("passed")
-
-    print("start test_passthrough")
-    test_passthrough()
-    print("passed")
-
-    print("Done")
