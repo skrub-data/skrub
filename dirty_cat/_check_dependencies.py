@@ -7,12 +7,12 @@ from importlib.metadata import version
 from pathlib import Path as _Path
 
 
-def _check_pack_version(dep, package, required_version, sign):
-    installed_version = version(package)
+def _check_pack_version(dep, package_name, required_version, sign):
+    installed_version = version(package_name)
     if not eval(f"'{installed_version}' {sign} '{required_version}'"):
         raise ImportError(
             f"dirty_cat {_version} requires {dep}, but you have "
-            f"{package} {installed_version} which is incompatible."
+            f"{package_name} {installed_version} which is incompatible."
         )
 
 
@@ -27,12 +27,11 @@ for dep in deps:
     matches_package = re.findall(r"^[\sa-zA-Z0-9-]+", dep)
     if len(matches_package) != 1:
         continue
-    package = matches_package[0]
-    signs = ["<", "<=", ">", ">=", "=="]
+    package_name = matches_package[0]
+    signs = ["<", "<=", ">", ">=", "==", "!="]
     for sign in signs:
-        pattern = rf"{sign}[a-zA-Z0-9.]+"
+        pattern = rf"{sign}[a-zA-Z0-9.*]+"
         matches_version = re.findall(pattern, dep)
         if len(matches_version) > 0:
-            sign_version = matches_version[0]
-            package_version = re.findall(r"[a-zA-Z0-9.]+", sign_version)[0]
-            _check_pack_version(dep, package, package_version, sign)
+            required_version = matches_version[0].replace(sign, "")
+            _check_pack_version(dep, package_name, required_version, sign)
