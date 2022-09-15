@@ -14,15 +14,12 @@ from dirty_cat._fuzzy_join import fuzzy_join
 
 def fetch_data(dataset_name):
     """ Fetch datasets from https://github.com/chu-data-lab/AutomaticFuzzyJoin/tree/master/src/autofj/benchmark """
-    left = pd.read_csv(
-        f"https://raw.githubusercontent.com/chu-data-lab/AutomaticFuzzyJoin/master/src/autofj/benchmark/{dataset_name}/left.csv"
-    )
-    right = pd.read_csv(
-        f"https://raw.githubusercontent.com/chu-data-lab/AutomaticFuzzyJoin/master/src/autofj/benchmark/{dataset_name}/right.csv"
-    )
-    gt = pd.read_csv(
-        f"https://raw.githubusercontent.com/chu-data-lab/AutomaticFuzzyJoin/master/src/autofj/benchmark/{dataset_name}/gt.csv"
-    )
+    repository = "chu-data-lab/AutomaticFuzzyJoin"
+    commit = "2e638b2dd17da41abf5ed71575cea94b1d175ccd"
+    base_url = f"https://raw.githubusercontent.com/chu-data-lab/{repository}/blob/{commit}/src/autofj/benchmark/{dataset_name}"  # noqa
+    left = pd.read_csv(f"{base_url}/left.csv")
+    right = pd.read_csv(f"{base_url}/right.csv")
+    gt = pd.read_csv(f"{base_url}/gt.csv")
     return left, right, gt
 
 
