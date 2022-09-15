@@ -131,9 +131,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 ) // pd.Timedelta("1s")
 
     def fit(self, X, y=None) -> "DatetimeEncoder":
-        """
-        Fit the DatetimeEncoder to X. In practice, just stores which extracted
-        features are not constant.
+        """Fit the DatetimeEncoder to X. In practice, just stores which extracted features are not constant.
 
         Parameters
         ----------
@@ -146,7 +144,6 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         -------
         DatetimeEncoder
             Fitted DatetimeEncoder instance.
-
         """
         self._validate_keywords()
         # Columns to extract for each column,
