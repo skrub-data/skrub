@@ -86,6 +86,8 @@ from dirty_cat import fuzzy_join
 
 X1, dist1 = fuzzy_join(X, gdppc, on=["Country", "Country Name"], return_distance=True)
 X1.head(20)
+
+#################################################################
 # .. topic:: Note:
 #
 #    We fix the `return_distance` parameter to `True` so as to keep the distances
