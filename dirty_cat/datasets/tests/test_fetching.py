@@ -394,7 +394,6 @@ def test_fetch_world_bank_indicator():
     function in a real environment.
     """
     test_dataset = {
-        "name": "gdppc",
         "id": "NY.GDP.PCAP.CD",
         "desc_start": "This table shows",
         "url": "https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.CD?downloadformat=csv",  # noqa
@@ -407,17 +406,11 @@ def test_fetch_world_bank_indicator():
         try:
             # First, we want to purposefully test FileNotFoundError exceptions.
             with pytest.raises(FileNotFoundError):
-                assert fetch_world_bank_indicator(
-                    indicator_id=0, indicator_name="blabla"
-                )
-                assert fetch_world_bank_indicator(
-                    indicator_id=2**32, indicator_name="blabla"
-                )
+                assert fetch_world_bank_indicator(indicator_id=0)
+                assert fetch_world_bank_indicator(indicator_id=2**32)
 
             # Valid call
-            returned_info = fetch_world_bank_indicator(
-                indicator_id=test_dataset["id"], indicator_name=test_dataset["name"]
-            )
+            returned_info = fetch_world_bank_indicator(indicator_id=test_dataset["id"])
 
         except URLError:
             warnings.warn(
@@ -435,7 +428,6 @@ def test_fetch_world_bank_indicator():
 
         dataset: pd.DataFrame = pd.read_csv(returned_info.path)
 
-        assert dataset.columns[1] == test_dataset["name"]
         assert dataset.columns[0] == "Country Name"
         assert dataset.shape[1] == test_dataset["dataset_columns_count"]
 
