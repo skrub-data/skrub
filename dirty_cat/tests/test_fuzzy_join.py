@@ -10,10 +10,10 @@ from dirty_cat import fuzzy_join, print_worst_matches  # isort: skip
 
 
 @pytest.mark.parametrize(
-    "analyzer, match_type, keep",
+    "analyzer, match_type, how",
     [("char", "nearest", "left"), ("char_wb", "radius", "right")],
 )
-def test_fuzzy_join(analyzer, match_type, keep):
+def test_fuzzy_join(analyzer, match_type, how):
     """Testing if fuzzy_join gives joining results as expected."""
     teams1 = pd.DataFrame(
         {
@@ -119,7 +119,7 @@ def test_fuzzy_join(analyzer, match_type, keep):
     )
     pd.testing.assert_frame_equal(teams_joined_2, teams_joined_3)
 
-    # Check keep argument:
+    # Check how argument:
     teams_kept = fuzzy_join(
         teams1,
         teams2,
@@ -127,19 +127,19 @@ def test_fuzzy_join(analyzer, match_type, keep):
         analyzer=analyzer,
         match_type=match_type,
         match_threshold=0.1,
-        keep=keep,
+        how=how,
     )
-    if keep == "left":
+    if how == "left":
         pd.testing.assert_frame_equal(teams_kept, teams1)
-    if keep == "right":
+    if how == "right":
         assert teams_kept.shape == teams1.shape
 
 
 @pytest.mark.parametrize(
-    "analyzer, match_type, keep, suffixes",
+    "analyzer, match_type, how, suffixes",
     [("a_blabla", "p_blabla", "k_blabla", ["a", "b", "c"]), (1, 26, 34, [1, 2, 3])],
 )
-def test_parameters_error(analyzer, match_type, keep, suffixes):
+def test_parameters_error(analyzer, match_type, how, suffixes):
     """Testing if correct errors are raised when wrong parameter values are given."""
     df1 = pd.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
     df2 = pd.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
@@ -157,9 +157,9 @@ def test_parameters_error(analyzer, match_type, keep, suffixes):
         fuzzy_join(df1, df2, on=["a"], match_type=match_type)
     with pytest.raises(
         ValueError,
-        match=f"keep should be either 'left', 'right' or 'all', got {keep!r}",
+        match=f"how should be either 'left', 'right' or 'all', got {how!r}",
     ):
-        fuzzy_join(df1, df2, on=["a"], keep=keep)
+        fuzzy_join(df1, df2, on=["a"], how=how)
     with pytest.raises(
         ValueError, match="Invalid number of suffixes: expected 2, got 3"
     ):

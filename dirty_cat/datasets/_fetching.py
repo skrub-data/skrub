@@ -10,6 +10,7 @@ Scikit-Learn's ``fetch_openml()`` function.
 
 import gzip
 import json
+import urllib.error.HTTPError
 import urllib.request
 import warnings
 from dataclasses import dataclass
@@ -198,7 +199,7 @@ def _fetch_world_bank_data(
 
     """
     # Download the file :
-    url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"
+    url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
     urllib.request.urlretrieve(url)
     try:
         filehandle, _ = urllib.request.urlretrieve(url)
@@ -209,7 +210,7 @@ def _fetch_world_bank_data(
         file = zip_file_object.open(true_file)
     except BadZipFile:
         raise FileNotFoundError(
-            f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."
+            f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
         )
     # Read and modify csv file
     df = pd.read_csv(file, skiprows=3)
@@ -221,8 +222,8 @@ def _fetch_world_bank_data(
     csv_path = data_directory.resolve() / true_file
     df.to_csv(csv_path, index=False)
     description = (
-        f"This table shows the {indicator_id} World Bank indicator. It can be used as"
-        " an input table for fuzzy_join."
+        f"This table shows the {indicator_id} World Bank indicator."
+        " It can be used as an input table for fuzzy_join."
     )
     return {
         "description": description,
@@ -231,7 +232,9 @@ def _fetch_world_bank_data(
     }
 
 
-def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
+def _download_and_write_openml_dataset(
+    dataset_id: int, data_directory: Path
+) -> None:  # noqa
     """
     Downloads a dataset from OpenML,
     taking care of creating the directories.

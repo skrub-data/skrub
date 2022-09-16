@@ -115,9 +115,20 @@ X1.head(20)
 # Keeping only the good matches
 # ------------------------------
 #################################################################
-# The best way to inspect the matches is to set the `print_worst` parameter to True.
-# This will print out the five worst matches, which will give as an overview of the situation:
-from dirty_cat import print_worst_matches
+# The best way to inspect the matches is to use the `print_worst_matches` function.
+# This will print out the five worst matches, which will give us an overview of the situation:
+import numpy as np
+
+
+def print_worst_matches(joined_table, distance, n=5):
+    """Prints n worst matches for inspection."""
+    max_ind = np.argpartition(distance, -n, axis=0)[-n:]
+    max_dist = pd.Series(distance[max_ind.ravel()].ravel(), index=max_ind.ravel())
+    worst_matches = joined_table.iloc[list(max_ind.ravel())]
+    worst_matches = worst_matches.assign(distance=max_dist)
+    print("The worst five matches are the following:\n")
+    return worst_matches
+
 
 print_worst_matches(X1, dist1, n=2)
 # We see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
@@ -171,8 +182,6 @@ X3.head(3)
 #
 # Great! Our table has became bigger and full of useful informations.
 # We now only remove categories with missing information:
-import numpy as np
-
 mask = X3["gdppc"].notna()
 y = np.ravel(y[mask])
 

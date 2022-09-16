@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from itertools import product
 
 from sklearn.metrics.pairwise import distance_metrics
 from sklearn.preprocessing import StandardScaler
+
 import fasttext.util
 from fasttext import load_model
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
@@ -13,7 +15,8 @@ from dirty_cat._fuzzy_join import fuzzy_join
 
 
 def fetch_data(dataset_name):
-    """ Fetch datasets from https://github.com/chu-data-lab/AutomaticFuzzyJoin/tree/master/src/autofj/benchmark """
+    """Fetch datasets from https://github.com/chu-data-lab/AutomaticFuzzyJoin/tree/master/src/autofj/benchmark
+    """
     repository = "chu-data-lab/AutomaticFuzzyJoin"
     commit = "2e638b2dd17da41abf5ed71575cea94b1d175ccd"
     base_url = f"https://raw.githubusercontent.com/chu-data-lab/{repository}/blob/{commit}/src/autofj/benchmark/{dataset_name}"  # noqa
@@ -53,7 +56,7 @@ def thefuzz_merge(df_1, df_2, key1, key2, threshold=90, limit=2, scorer=partial_
 
 
 def test_autofj(left, right, gt, target):
-    """ Merging using AutomaticFuzzyJoin """
+    """Merging using AutomaticFuzzyJoin"""
     autofj = AutoFJ(precision_target=target, verbose=True)
     LR_joins = autofj.join(left, right, id_column="id")
 
@@ -65,7 +68,7 @@ def test_autofj(left, right, gt, target):
 
 
 def evaluate(pred_joins, gt_joins):
-    """ Evaluate the performance of fuzzy joins
+    """Evaluate the performance of fuzzy joins
 
     Parameters
     ----------
@@ -231,25 +234,25 @@ if __name__ == "__main__":
 
     pr_list = []
     re_list = []
-    for analyser in ["char", "char_wb"]:
-        for max_n_gram in [4]:  # [2, 3, 4]:
-            for similarity in ["cosine", "l1", "l2"]:
-                if analyser == "word" and max_n_gram > 2:
-                    continue
-                precision, recall, f1 = fuzzy_join_precision_recall(
-                    right_1,
-                    left_1,
-                    gt_1,
-                    "title",
-                    "title",
-                    analyzer=analyser,
-                    ngram_range=(2, max_n_gram),
-                    similarity=similarity,
-                )
-                pr_list.extend(precision)
-                re_list.extend(recall)
-                # plt.plot(recall, precision,
-                #         label=f"countVectorizer_{analyser}_{max_n_gram}_{similarity}")
+    for analyser, max_n_gram, similarity in product(
+        ["char", "char_wb"], [3, 4], ["cosine", "l1", "l2"]
+    ):
+        if analyser == "word" and max_n_gram > 2:
+            continue
+        precision, recall, f1 = fuzzy_join_precision_recall(
+            right_1,
+            left_1,
+            gt_1,
+            "title",
+            "title",
+            analyzer=analyser,
+            ngram_range=(2, max_n_gram),
+            similarity=similarity,
+        )
+        pr_list.extend(precision)
+        re_list.extend(recall)
+        # plt.plot(recall, precision,
+        #         label=f"countVectorizer_{analyser}_{max_n_gram}_{similarity}")
 
     pr_list, re_list = best_precision_recall(np.array(pr_list), np.array(re_list))
     plt.plot(re_list, pr_list, label="countVectorizer")

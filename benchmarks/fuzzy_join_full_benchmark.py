@@ -1,18 +1,26 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from itertools import product
+
 from sklearn.metrics.pairwise import distance_metrics
 from sklearn.preprocessing import StandardScaler
+
 import fasttext.util
 from fasttext import load_model
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
 from thefuzz import process
 from autofj import AutoFJ
-from dirty_cat._fuzzy_join import fuzzy_join
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
 import fasttext.util
-from fuzzy_join_benchmark import fetch_data, fuzzy_join_precision_recall,\
-    fasttext_precision_recall,thefuzz_precision_recall, autofj_precision_recall
+from fuzzy_join_benchmark import (
+    fetch_data,
+    fuzzy_join_precision_recall,
+    fasttext_precision_recall,
+    thefuzz_precision_recall,
+    autofj_precision_recall,
+)
+from dirty_cat._fuzzy_join import fuzzy_join
 
 
 if __name__ == "__main__":
@@ -31,36 +39,36 @@ if __name__ == "__main__":
     df = pd.DataFrame()
     for dataset in datasets:
         left_1, right_1, gt_1 = fetch_data(dataset)
-        for analyser in ["word", "char", "char_wb"]:
-            for max_n_gram in [3, 4]:
-                for similarity in ["cosine", "l1", "l2"]:
-                    if analyser == "word" and max_n_gram > 2:
-                        continue
-                    model_name = f"countVectorizer_{analyser}_{max_n_gram}_{similarity}"
-                    precision, recall, f1 = fuzzy_join_precision_recall(
-                        right_1,
-                        left_1,
-                        gt_1,
-                        "title",
-                        "title",
-                        analyzer=analyser,
-                        ngram_range=(2, max_n_gram),
-                        similarity=similarity,
-                    )
-                    n_points = len(precision)
-                    df = df.append(
-                        pd.DataFrame.from_dict(
-                            {
-                                "dataset": [dataset] * n_points,
-                                "model": [model_name] * n_points,
-                                "precision": precision,
-                                "recall": recall,
-                                "f1": f1,
-                            },
-                            orient="index",
-                        ).transpose(),
-                        ignore_index=True,
-                    )
+        for analyser, max_n_gram, similarity in product(
+            ["word", "char", "char_wb"], [3, 4], ["cosine", "l1", "l2"]
+        ):
+            if analyser == "word" and max_n_gram > 2:
+                continue
+            model_name = f"countVectorizer_{analyser}_{max_n_gram}_{similarity}"
+            precision, recall, f1 = fuzzy_join_precision_recall(
+                right_1,
+                left_1,
+                gt_1,
+                "title",
+                "title",
+                analyzer=analyser,
+                ngram_range=(2, max_n_gram),
+                similarity=similarity,
+            )
+            n_points = len(precision)
+            df = df.append(
+                pd.DataFrame.from_dict(
+                    {
+                        "dataset": [dataset] * n_points,
+                        "model": [model_name] * n_points,
+                        "precision": precision,
+                        "recall": recall,
+                        "f1": f1,
+                    },
+                    orient="index",
+                ).transpose(),
+                ignore_index=True,
+            )
 
         fasttext.util.download_model("en", if_exists="ignore")  # English
         for similarity in ["cosine", "l1", "l2"]:

@@ -25,10 +25,10 @@ def fuzzy_join(
     return_distance: bool = False,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
-    match_type: Literal["nearest", "radius"] = "nearest",
-    match_threshold: float = 0.5,
+    match_type: Literal["nearest"] = "nearest",
+    threshold: float = 0,
     suffixes: Tuple[str, str] = ("_l", "_r"),
-    keep: Literal["left", "right", "all"] = "all",
+    how: Literal["left", "right", "all"] = "all",
 ) -> pd.DataFrame:
     """
     Join two tables based on categorical string columns as joining keys,
@@ -57,21 +57,18 @@ def fuzzy_join(
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
-    match_type : typing.Literal["nearest", "radius"], default=`nearest`
+    match_type : typing.Literal["nearest"], default=`nearest`
         Type of measure that is used to estimate the precision of the joined
         entities.
         If `nearest`, only returns the neirest neighbor match.
-        If `radius`, return the nearest neighbor if the estimated precision
-        based on the number of neighbors in the 2 times the neirest neighbor
-        distance radius is under the precision_threshold.
-    match_threshold : float, default=0.5
-        Used only if match_type is `radius`. Determines the level of
-        precision required to match the two column values. If not matched,
-        all columns have `nan`'s.
+    threshold : float, default=0
+        Distance between the closest matches that will be accepted.
+        In a [0, 1] interval. Closer to 1 means the matches need to be very
+        close, and to 0 that a bigger distance is tolerated.
     suffixes: typing.Tuple[str, str], default=('_x', '_y')
             A list of strings indicating the suffix to add when overlaping
             column names.
-    keep: typing.Literal['left', 'right', 'all'], default='all'
+    how: typing.Literal['left', 'right', 'all'], default='all'
             Wheter to keep the matching columns from the left, right or
             all tables.
 
@@ -85,13 +82,15 @@ def fuzzy_join(
 
     Notes
     -----
-    There are two main ways to take into account for the similarity between
-    categories.
-    When we use match_type='nearest', the function will be forced to find the
+    When return_distance=True, the returned DataFrame gives
+    the distances between closest matches in a [0, 1] interval.
+    0 corresponds to no matching n-grams, while 1 is a
+    perfect match.
+    When we use `threshold=0`, the function will be forced to impute the
     nearest match (of the left_table category) across the possible matching
     options in the right_table column.
-    When the neighbors are distant, we may use the match_type='radius' option
-    with a match_threshold value to define the minimal level of matching
+    When the neighbors are distant, we may use the `threshold` parameter
+    with a value bigger than 0 to define the minimal level of matching
     precision tolerated. If it is not reached, matches will be
     considered as not found and NaN values will be imputed.
     See example below for an illustration.
@@ -115,15 +114,15 @@ def fuzzy_join(
     3  sana  8
 
     To do a simple join based on the nearest match:
-    >>> fuzzy_join(df1, df2, on=['a'], match_type='nearest')
+    >>> fuzzy_join(df1, df2, on=['a'])
         a_l  b   a_r    c
     0   ana  1   ana   7
     1  lala  2  lala   6
     2  nana  3  sana   8
 
-    When we do not want to ignore the precison of the match,
-    we can use the match_type='radius' argument and give a threshold:
-    >>> fuzzy_join(df1, df2, on=['a'], match_type='radius', match_threshold=0.3)
+    When we want to accept only a certain match precison,
+    we can use the `threshold` argument:
+    >>> fuzzy_join(df1, df2, on=['a'], threshold=0.6)
         a_l  b   a_r    c
     0   ana  1   ana  7.0
     1  lala  2  lala  6.0
@@ -146,9 +145,9 @@ def fuzzy_join(
             f"match_type should be either 'nearest' or 'radius', got {match_type!r}",
         )
 
-    if keep not in ["left", "right", "all"]:
+    if how not in ["left", "right", "all"]:
         raise ValueError(
-            f"keep should be either 'left', 'right' or 'all', got {keep!r}",
+            f"how should be either 'left', 'right' or 'all', got {how!r}",
         )
 
     if len(suffixes) != 2:
@@ -202,36 +201,17 @@ def fuzzy_join(
     distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
+    norm_distance = 1 - (distance / 2)
+
     left_array = np.array(left_table_clean)
     right_array = np.array(right_table_clean)
     if match_type == "nearest":
         joined = np.append(
             left_array,
-            np.array([right_array[idx_closest[idr]] for idr in left_table_clean.index]),
-            axis=1,
-        )
-
-    elif match_type == "radius":
-        prec = np.zeros(left_enc.shape[0])
-        n_neigh = NearestNeighbors()
-        n_neigh.fit(right_enc)
-        for i in range(left_enc.shape[0]):
-            # Find all neighbors in a given radius:
-            dist = 2 * distance[i]
-            radius_neigh_indices = n_neigh.radius_neighbors(
-                left_enc[i],
-                radius=dist,
-                return_distance=False,
-            )
-            # Indices of nearest neighbors:
-            twodball_pts = radius_neigh_indices[0]
-            prec[i] = 1 / len(twodball_pts)
-        joined = np.append(
-            left_array,
             np.array(
                 [
                     right_array[idx_closest[idr]]
-                    if prec[idr] >= match_threshold
+                    if norm_distance[idr] >= threshold
                     else np.tile(np.nan, (right_array.shape[1],))
                     for idr in left_table_clean.index
                 ]
@@ -242,24 +222,12 @@ def fuzzy_join(
     cols = list(left_table_clean.columns) + list(right_table_clean.columns)
     df_joined = pd.DataFrame(joined, columns=cols).replace(r"^\s*$", np.nan, regex=True)
 
-    if keep == "left":
+    if how == "left":
         df_joined.drop(columns=[right_col], inplace=True)
-    if keep == "right":
+    if how == "right":
         df_joined.drop(columns=[left_col], inplace=True)
 
     if return_distance:
-        return df_joined, distance
+        return df_joined, norm_distance
     else:
         return df_joined
-
-
-def print_worst_matches(
-    df_joined: pd.DataFrame, distance: pd.DataFrame, n: int = 5
-) -> pd.DataFrame:
-    """ " Prints n worst matches for inspection."""
-    max_ind = np.argpartition(distance, -n, axis=0)[-n:]
-    max_dist = pd.Series(distance[max_ind.ravel()].ravel(), index=max_ind.ravel())
-    worst_matches = df_joined.iloc[list(max_ind.ravel())]
-    worst_matches = worst_matches.assign(distance=max_dist)
-    print("The worst five matches are the following:\n")
-    return worst_matches
