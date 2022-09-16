@@ -1,12 +1,7 @@
 import pandas as pd
 import pytest
 
-# isort : off
-from dirty_cat.experimental import enable_fuzzy_join  # noqa
-
-from dirty_cat import fuzzy_join  # isort: skip
-
-# isort : on
+from dirty_cat import fuzzy_join
 
 
 @pytest.mark.parametrize(
