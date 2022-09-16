@@ -148,11 +148,3 @@ def test_parameters_error(analyzer, how, suffixes):
         ValueError, match="Invalid number of suffixes: expected 2, got 3"
     ):
         fuzzy_join(df1, df2, on="a", suffixes=suffixes)
-    with pytest.raises(
-        ValueError,
-        match=(
-            "value ['a'] was specified for parameter, which has invalid type,"
-            " expected string."
-        ),
-    ):
-        fuzzy_join(df1, df2, on=["a"])
