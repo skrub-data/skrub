@@ -13,16 +13,10 @@ The ``# noqa`` comment comment can be removed: it just tells linters like
 flake8 to ignore the import, which appears as unused.
 """
 
-from dirty_cat._fuzzy_join import fuzzy_join
-from dirty_cat._fuzzy_join import print_worst_matches
-
 import dirty_cat
+from dirty_cat._fuzzy_join import fuzzy_join
 
 # use settattr to avoid mypy errors when monkeypatching
-setattr(dirty_cat, "fuzzy_join",
-        fuzzy_join)
+setattr(dirty_cat, "fuzzy_join", fuzzy_join)
 
-setattr(dirty_cat, "print_worst_matches",
-        print_worst_matches)
-
-dirty_cat.__all__ += ["fuzzy_join", "print_worst_matches"]
+dirty_cat.__all__ += ["fuzzy_join"]
