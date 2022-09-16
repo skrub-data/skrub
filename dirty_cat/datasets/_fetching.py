@@ -10,7 +10,6 @@ Scikit-Learn's ``fetch_openml()`` function.
 
 import gzip
 import json
-import urllib.error.HTTPError
 import urllib.request
 import warnings
 from dataclasses import dataclass

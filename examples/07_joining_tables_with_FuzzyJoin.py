@@ -122,7 +122,7 @@ import numpy as np
 
 def print_worst_matches(joined_table, distance, n=5):
     """Prints n worst matches for inspection."""
-    max_ind = np.argpartition(distance, -n, axis=0)[-n:]
+    max_ind = np.argpartition(distance, n, axis=0)[:n]
     max_dist = pd.Series(distance[max_ind.ravel()].ravel(), index=max_ind.ravel())
     worst_matches = joined_table.iloc[list(max_ind.ravel())]
     worst_matches = worst_matches.assign(distance=max_dist)
@@ -130,25 +130,24 @@ def print_worst_matches(joined_table, distance, n=5):
     return worst_matches
 
 
-print_worst_matches(X1, dist1, n=2)
+print_worst_matches(X1, dist1, n=4)
 # We see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
 # because there is simply no match in the two tables.
 
 #################################################################
 #
-# In this case, it is better to use the 'radius' match type
-# with a fixed threshold so as to include only precise-enough matches:
+# In this case, it is better to use the threshold parameter
+# so as to include only precise-enough matches:
 #
-# --> To improve match_threshold measurement, here it excludes some good matches as well
+# TODO: improve threshold measurement, here it excludes some good matches as well:
 X1, dist1 = fuzzy_join(
     X,
     gdppc,
     on=["Country", "Country Name"],
-    match_type="radius",
-    match_threshold=0.3,
+    threshold=0.4,
     return_distance=True,
 )
-print_worst_matches(X1, dist1, n=2)
+print_worst_matches(X1, dist1, n=4)
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
 #################################################################
 #
@@ -157,8 +156,7 @@ X2 = fuzzy_join(
     X1,
     life_exp,
     on=["Country", "Country Name"],
-    match_type="radius",
-    match_threshold=0.3,
+    threshold=0.3,
     keep="left",
 )
 X2.head(3)
@@ -173,8 +171,7 @@ X3 = fuzzy_join(
     X2,
     legal_rights,
     on=["Country", "Country Name"],
-    match_type="radius",
-    match_threshold=0.3,
+    threshold=0.3,
     keep="left",
 )
 X3.head(3)

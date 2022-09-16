@@ -14,6 +14,7 @@ from typing import List, Literal, Tuple
 
 import numpy as np
 import pandas as pd
+from scipy.sparse import vstack
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.neighbors import NearestNeighbors
 
@@ -122,13 +123,13 @@ def fuzzy_join(
 
     When we want to accept only a certain match precison,
     we can use the `threshold` argument:
-    >>> fuzzy_join(df1, df2, on=['a'], threshold=0.6)
+    >>> fuzzy_join(df1, df2, on=['a'], threshold=1)
         a_l  b   a_r    c
     0   ana  1   ana  7.0
     1  lala  2  lala  6.0
     2  nana  3   NaN  NaN
 
-    As expected, "nana" has no close match and therefore will not be matched.
+    As expected, "nana" has no exact match (`threshold=1`) and is not matched.
 
     """
 
@@ -192,8 +193,11 @@ def fuzzy_join(
     left_enc = enc.fit_transform(left_table_clean[left_col])
     right_enc = enc.transform(right_table_clean[right_col])
 
-    left_enc = TfidfTransformer().fit_transform(left_enc)
-    right_enc = TfidfTransformer().fit_transform(right_enc)
+    all_enc = vstack((left_enc, right_enc))
+
+    tfidf = TfidfTransformer().fit(all_enc)
+    left_enc = tfidf.transform(left_enc)
+    right_enc = tfidf.transform(right_enc)
 
     # Find nearest neighbor using KNN :
     neigh = NearestNeighbors(n_neighbors=1)
