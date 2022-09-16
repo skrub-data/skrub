@@ -24,8 +24,8 @@ def write_requirements():
     deps = config["options"]["install_requires"].strip()
     project_name = config["metadata"]["name"]
     project_dir = _Path(__file__).parent / project_name
-    req_path = os.path.join(project_dir, "_config_requirements.py")
-    with open(req_path, "w+") as f:
+    req_path = project_dir / "_config_requirements.py"
+    with open(req_path, "w") as f:
         body = "deps = " + str({"deps": deps})
         f.write(body)
 
