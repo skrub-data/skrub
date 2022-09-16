@@ -10,7 +10,8 @@ probability of beeing matched together. The join is based on
 morphological similarities between strings.
 """
 
-from typing import List, Literal, Tuple
+import warnings
+from typing import Literal, Tuple
 
 import numpy as np
 import pandas as pd
@@ -20,9 +21,11 @@ from sklearn.neighbors import NearestNeighbors
 
 
 def fuzzy_join(
-    left_table: pd.DataFrame,
-    right_table: pd.DataFrame,
-    on: List[str],
+    left: pd.DataFrame,
+    right: pd.DataFrame,
+    left_on: str = "",
+    right_on: str = "",
+    on: str = "",
     return_distance: bool = False,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
@@ -38,12 +41,22 @@ def fuzzy_join(
     Parameters
     ----------
 
-    left_table: pandas.DataFrame
+    left: pandas.DataFrame
             Table on which the join will be performed.
-    right_table: pandas.DataFrame
+    right: pandas.DataFrame
             Table that will be joined.
-    on: list
-            List of left and right table column names on which
+    how: typing.Literal['left', 'right', 'all'], default='all'
+        Join to keep the matching columns from the left, right or
+        all tables.
+    on: str
+            Name of left and right table column names on which
+            the matching will be perfomed. Must be found in both DataFrames.
+            Use when the `left_on` and `right_on` parameters are not specified.
+    left_on: str
+            Name of left table column names on which
+            the matching will be perfomed.
+    right_on: str
+            Name of right table column names on which
             the matching will be perfomed.
     return_distance: boolean, default=True
             Wheter to return distance between nearest matched categories.
@@ -69,9 +82,6 @@ def fuzzy_join(
     suffixes: typing.Tuple[str, str], default=('_x', '_y')
             A list of strings indicating the suffix to add when overlaping
             column names.
-    how: typing.Literal['left', 'right', 'all'], default='all'
-            Wheter to keep the matching columns from the left, right or
-            all tables.
 
     Returns:
     --------
@@ -88,8 +98,8 @@ def fuzzy_join(
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.
     When we use `threshold=0`, the function will be forced to impute the
-    nearest match (of the left_table category) across the possible matching
-    options in the right_table column.
+    nearest match (of the left table category) across the possible matching
+    options in the right table column.
     When the neighbors are distant, we may use the `threshold` parameter
     with a value bigger than 0 to define the minimal level of matching
     precision tolerated. If it is not reached, matches will be
@@ -115,7 +125,7 @@ def fuzzy_join(
     3  sana  8
 
     To do a simple join based on the nearest match:
-    >>> fuzzy_join(df1, df2, on=['a'])
+    >>> fuzzy_join(df1, df2, on='a')
         a_l  b   a_r    c
     0   ana  1   ana   7
     1  lala  2  lala   6
@@ -123,7 +133,7 @@ def fuzzy_join(
 
     When we want to accept only a certain match precison,
     we can use the `threshold` argument:
-    >>> fuzzy_join(df1, df2, on=['a'], threshold=1)
+    >>> fuzzy_join(df1, df2, on='a', threshold=1)
         a_l  b   a_r    c
     0   ana  1   ana  7.0
     1  lala  2  lala  6.0
@@ -133,8 +143,9 @@ def fuzzy_join(
 
     """
 
-    left_table_clean = left_table.reset_index(drop=True).fillna("").copy()
-    right_table_clean = right_table.reset_index(drop=True).fillna("").copy()
+    warnings.warn("This feature is still experimental.")
+    left_table_clean = left.reset_index(drop=True).fillna("").copy()
+    right_table_clean = right.reset_index(drop=True).fillna("").copy()
 
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
@@ -166,28 +177,24 @@ def fuzzy_join(
             right_table_clean.rename(
                 columns={overlap_cols[i]: new_name_r}, inplace=True
             )
-            # Useful in case on[0]==on[1] and overlapping:
-            if len(on) == 2 and overlap_cols[i] in on[0]:
-                on[0] = new_name_l
-            if len(on) == 2 and overlap_cols[i] in on[1]:
-                on[1] = new_name_r
+            if overlap_cols[i] in left_on:
+                left_on = new_name_l
+            if overlap_cols[i] in right_on:
+                right_on = new_name_r
 
-    if not isinstance(on, list):
-        raise ValueError(
-            f"value {on!r} was specified for parameter 'on', "
-            "which has invalid type, expected list of column names."
-        )
+    for param in [on, left_on, right_on]:
+        if not isinstance(param, str):
+            raise ValueError(
+                f"value {param!r} was specified for parameter, "
+                "which has invalid type, expected string."
+            )
+
     if len(on) == 1:
-        left_col = on[0] + lsuffix
-        right_col = on[0] + rsuffix
-    elif len(on) == 2:
-        left_col = on[0]
-        right_col = on[1]
+        left_col = on + lsuffix
+        right_col = on + rsuffix
     else:
-        raise ValueError(
-            "Expected a list with one or two elements for parameter 'on',"
-            f"received {len(on)} ({on})."
-        )
+        left_col = left_on
+        right_col = right_on
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     left_enc = enc.fit_transform(left_table_clean[left_col])

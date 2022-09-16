@@ -15,6 +15,7 @@ import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Union
+from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
@@ -210,6 +211,10 @@ def _fetch_world_bank_data(
     except BadZipFile:
         raise FileNotFoundError(
             f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
+        )
+    except URLError:
+        raise FileNotFoundError(
+            f"Couldn't find csv file, no internet connection or the website is down."  # noqa
         )
     # Read and modify csv file
     df = pd.read_csv(file, skiprows=3)

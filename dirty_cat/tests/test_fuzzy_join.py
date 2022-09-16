@@ -78,7 +78,8 @@ def test_fuzzy_join(analyzer, how):
     teams_joined, dist1 = fuzzy_join(
         teams1,
         teams2,
-        on=["basketball_teams", "teams_basketball"],
+        left_on="basketball_teams",
+        right_on="teams_basketball",
         return_distance=True,
         analyzer=analyzer,
         threshold=0.1,
@@ -91,7 +92,8 @@ def test_fuzzy_join(analyzer, how):
     teams_joined_2, dist2 = fuzzy_join(
         teams2,
         teams1,
-        on=["teams_basketball", "basketball_teams"],
+        left_on="teams_basketball",
+        right_on="basketball_teams",
         return_distance=True,
         analyzer=analyzer,
         threshold=0.1,
@@ -104,7 +106,8 @@ def test_fuzzy_join(analyzer, how):
     teams_joined_3 = fuzzy_join(
         teams2,
         teams1,
-        on=["teams_basketball", "basketball_teams"],
+        left_on="teams_basketball",
+        right_on="basketball_teams",
         analyzer=analyzer,
         threshold=0.1,
     )
@@ -114,7 +117,8 @@ def test_fuzzy_join(analyzer, how):
     teams_kept = fuzzy_join(
         teams1,
         teams2,
-        on=["basketball_teams", "teams_basketball"],
+        left_on="basketball_teams",
+        right_on="teams_basketball",
         analyzer=analyzer,
         threshold=0.1,
         how=how,
@@ -139,21 +143,21 @@ def test_parameters_error(analyzer, how, suffixes):
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}"
         ),
     ):
-        fuzzy_join(df1, df2, on=["a"], analyzer=analyzer)
+        fuzzy_join(df1, df2, on="a", analyzer=analyzer)
     with pytest.raises(
         ValueError,
         match=f"how should be either 'left', 'right' or 'all', got {how!r}",
     ):
-        fuzzy_join(df1, df2, on=["a"], how=how)
+        fuzzy_join(df1, df2, on="a", how=how)
     with pytest.raises(
         ValueError, match="Invalid number of suffixes: expected 2, got 3"
     ):
-        fuzzy_join(df1, df2, on="a", suffixes=suffixes)
+        fuzzy_join(df1, df2, on=["a"], suffixes=suffixes)
     with pytest.raises(
         ValueError,
         match=(
-            "value 'a' was specified for parameter 'on', which has invalid type,"
-            " expected list of column names."
+            "value ['a'] was specified for parameter, which has invalid type,"
+            " expected string."
         ),
     ):
         fuzzy_join(df1, df2, on="a")
