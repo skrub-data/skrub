@@ -10,10 +10,10 @@ from dirty_cat import fuzzy_join  # isort: skip
 
 
 @pytest.mark.parametrize(
-    "analyzer, match_type, how",
-    [("char", "nearest", "left"), ("char_wb", "radius", "right")],
+    "analyzer, how",
+    [("char", "left"), ("char_wb", "right")],
 )
-def test_fuzzy_join(analyzer, match_type, how):
+def test_fuzzy_join(analyzer, how):
     """Testing if fuzzy_join gives joining results as expected."""
     teams1 = pd.DataFrame(
         {
@@ -81,8 +81,7 @@ def test_fuzzy_join(analyzer, match_type, how):
         on=["basketball_teams", "teams_basketball"],
         return_distance=True,
         analyzer=analyzer,
-        match_type=match_type,
-        match_threshold=0.1,
+        threshold=0.1,
     )
     assert teams_joined.shape == (9, 2)
     assert dist1.shape == (9, 1)
@@ -95,8 +94,7 @@ def test_fuzzy_join(analyzer, match_type, how):
         on=["teams_basketball", "basketball_teams"],
         return_distance=True,
         analyzer=analyzer,
-        match_type=match_type,
-        match_threshold=0.1,
+        threshold=0.1,
     )
     # Joining is always done on the left table and thus takes it shape:
     assert teams_joined_2.shape == (10, 2)
@@ -108,8 +106,7 @@ def test_fuzzy_join(analyzer, match_type, how):
         teams1,
         on=["teams_basketball", "basketball_teams"],
         analyzer=analyzer,
-        match_type=match_type,
-        match_threshold=0.1,
+        threshold=0.1,
     )
     pd.testing.assert_frame_equal(teams_joined_2, teams_joined_3)
 
@@ -119,8 +116,7 @@ def test_fuzzy_join(analyzer, match_type, how):
         teams2,
         on=["basketball_teams", "teams_basketball"],
         analyzer=analyzer,
-        match_type=match_type,
-        match_threshold=0.1,
+        threshold=0.1,
         how=how,
     )
     if how == "left":
@@ -130,10 +126,10 @@ def test_fuzzy_join(analyzer, match_type, how):
 
 
 @pytest.mark.parametrize(
-    "analyzer, match_type, how, suffixes",
-    [("a_blabla", "p_blabla", "k_blabla", ["a", "b", "c"]), (1, 26, 34, [1, 2, 3])],
+    "analyzer, how, suffixes",
+    [("a_blabla", "k_blabla", ["a", "b", "c"]), (1, 34, [1, 2, 3])],
 )
-def test_parameters_error(analyzer, match_type, how, suffixes):
+def test_parameters_error(analyzer, how, suffixes):
     """Testing if correct errors are raised when wrong parameter values are given."""
     df1 = pd.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
     df2 = pd.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
@@ -144,11 +140,6 @@ def test_parameters_error(analyzer, match_type, how, suffixes):
         ),
     ):
         fuzzy_join(df1, df2, on=["a"], analyzer=analyzer)
-    with pytest.raises(
-        ValueError,
-        match=f"match_type should be either 'nearest' or 'radius', got {match_type!r}",
-    ):
-        fuzzy_join(df1, df2, on=["a"], match_type=match_type)
     with pytest.raises(
         ValueError,
         match=f"how should be either 'left', 'right' or 'all', got {how!r}",

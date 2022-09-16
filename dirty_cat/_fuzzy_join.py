@@ -141,9 +141,9 @@ def fuzzy_join(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
 
-    if match_type not in ["nearest", "radius"]:
+    if match_type not in ["nearest"]:
         raise ValueError(
-            f"match_type should be either 'nearest' or 'radius', got {match_type!r}",
+            f"match_type should be either 'nearest' or '', got {match_type!r}",
         )
 
     if how not in ["left", "right", "all"]:
