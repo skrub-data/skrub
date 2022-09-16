@@ -57,9 +57,7 @@ from dirty_cat.datasets import fetch_world_bank_indicator
 
 #################################################################
 # We then extract GDP per capita by country:
-gdppc = fetch_world_bank_indicator(
-    indicator_id="NY.GDP.PCAP.CD", indicator_name="gdppc"
-).X
+gdppc = fetch_world_bank_indicator(indicator_id="NY.GDP.PCAP.CD").X
 gdppc.head(3)
 
 #################################################################
@@ -69,7 +67,7 @@ life_exp.head(3)
 
 #################################################################
 # And the legal rights strength by country:
-legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ", "legal_rights").X
+legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
 legal_rights.head(3)
 
 ###############################################################################
@@ -81,7 +79,6 @@ legal_rights.head(3)
 # without worrying about preprocessing:
 #
 # We add GDP per capita to the initial table:
-from dirty_cat.experimental import enable_fuzzy_join
 from dirty_cat import fuzzy_join
 
 X1, dist1 = fuzzy_join(X, gdppc, on=["Country", "Country Name"], return_distance=True)

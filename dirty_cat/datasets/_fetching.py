@@ -167,7 +167,6 @@ def fetch_openml_dataset(
 
 def _fetch_world_bank_data(
     indicator_id: str,
-    indicator_name: str,
     data_directory: Path = get_data_dir(),
 ) -> Dict[str, Any]:
     """
@@ -178,8 +177,6 @@ def _fetch_world_bank_data(
     ----------
     indicator_id: str
         The ID of the indicator's dataset to fetch.
-    indicator_name: str
-        Name of the indicator to extract.
     data_directory: Path
         Optional. A directory to save the data to.
         By default, the dirty_cat data directory.
@@ -200,24 +197,29 @@ def _fetch_world_bank_data(
     """
     # Download the file :
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
-    urllib.request.urlretrieve(url)
-    try:
-        filehandle, _ = urllib.request.urlretrieve(url)
-        zip_file_object = ZipFile(filehandle, "r")
-        for name in zip_file_object.namelist():
-            if "Metadata" not in name:
-                true_file = name
-        file = zip_file_object.open(true_file)
-    except BadZipFile:
-        raise FileNotFoundError(
-            f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
-        )
-    except URLError:
-        raise FileNotFoundError(
-            f"Couldn't find csv file, no internet connection or the website is down."  # noqa
-        )
+    attempts = 0
+    while attempts < 3:
+        try:
+            filehandle, _ = urllib.request.urlretrieve(url)
+            zip_file_object = ZipFile(filehandle, "r")
+            for name in zip_file_object.namelist():
+                if "Metadata" not in name:
+                    true_file = name
+            file = zip_file_object.open(true_file)
+            attempts = 3
+        except BadZipFile:
+            raise FileNotFoundError(
+                f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
+            )
+            attempts = 3
+        except URLError:
+            raise FileNotFoundError(
+                f"No internet connection or the website is down."  # noqa
+            )
+            attempts += 1
     # Read and modify csv file
     df = pd.read_csv(file, skiprows=3)
+    indicator_name = df.iloc[0, 2]
     df[indicator_name] = df.stack().groupby(level=0).last()
     df = df[df[indicator_name] != indicator_id]
     df = df[["Country Name", indicator_name]]
@@ -230,6 +232,7 @@ def _fetch_world_bank_data(
         " It can be used as an input table for fuzzy_join."
     )
     return {
+        "dataset_name": indicator_name,
         "description": description,
         "source": url,
         "path": csv_path.resolve(),
@@ -412,7 +415,7 @@ def fetch_dataset_as_dataclass(
     if source == "openml":
         info = fetch_openml_dataset(dataset_id)
     if source == "world_bank":
-        info = _fetch_world_bank_data(dataset_id, dataset_name)
+        info = _fetch_world_bank_data(dataset_id)
     if load_dataframe:
         df = pd.read_csv(info["path"], **read_csv_kwargs)
         y = df[target]
@@ -687,7 +690,6 @@ def fetch_drug_directory(
 
 def fetch_world_bank_indicator(
     indicator_id: str,
-    indicator_name: str,
     load_dataframe: bool = True,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches a dataset of an indicator from the World Bank
@@ -707,7 +709,7 @@ def fetch_world_bank_indicator(
         If `load_dataframe=False`
     """
     return fetch_dataset_as_dataclass(
-        dataset_name=indicator_name,
+        dataset_name=f"World Bank indicator {indicator_id}",
         dataset_id=indicator_id,
         target=[],
         read_csv_kwargs={},
