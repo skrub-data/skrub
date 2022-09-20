@@ -75,9 +75,9 @@ def test_fuzzy_join(analyzer, how):
         teams2,
         left_on="basketball_teams",
         right_on="teams_basketball",
-        return_distance=True,
+        return_score=True,
         analyzer=analyzer,
-        threshold=0.1,
+        match_score=0.1,
     )
     assert teams_joined.shape == (9, 2)
     assert dist1.shape == (9, 1)
@@ -89,9 +89,9 @@ def test_fuzzy_join(analyzer, how):
         teams1,
         left_on="teams_basketball",
         right_on="basketball_teams",
-        return_distance=True,
+        return_score=True,
         analyzer=analyzer,
-        threshold=0.1,
+        match_score=0.1,
     )
     # Joining is always done on the left table and thus takes it shape:
     assert teams_joined_2.shape == (10, 2)
@@ -104,7 +104,7 @@ def test_fuzzy_join(analyzer, how):
         left_on="teams_basketball",
         right_on="basketball_teams",
         analyzer=analyzer,
-        threshold=0.1,
+        match_score=0.1,
     )
     pd.testing.assert_frame_equal(teams_joined_2, teams_joined_3)
 
@@ -115,7 +115,7 @@ def test_fuzzy_join(analyzer, how):
         left_on="basketball_teams",
         right_on="teams_basketball",
         analyzer=analyzer,
-        threshold=0.1,
+        match_score=0.1,
         how=how,
     )
     if how == "left":

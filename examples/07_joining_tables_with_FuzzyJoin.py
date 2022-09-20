@@ -81,14 +81,14 @@ legal_rights.head(3)
 # We add GDP per capita to the initial table:
 from dirty_cat import fuzzy_join
 
-X1, dist1 = fuzzy_join(X, gdppc, on=["Country", "Country Name"], return_distance=True)
+X1 = fuzzy_join(X, gdppc, left_on="Country", right_on="Country Name", return_score=True)
 X1.head(20)
 
 #################################################################
 # .. topic:: Note:
 #
-#    We fix the `return_distance` parameter to `True` so as to keep the distances
-#    of the matchings, that we will use later to establish the worst matches.
+#    We fix the `return_score` parameter to `True` so as to keep the matching
+#    score, that we will use later to establish the worst matches.
 
 #################################################################
 #
@@ -117,18 +117,20 @@ X1.head(20)
 import numpy as np
 
 
-def print_worst_matches(joined_table, distance, n=5):
+def print_worst_matches(joined_table, n=5):
     """Prints n worst matches for inspection."""
-    max_ind = np.argpartition(distance, n, axis=0)[:n]
-    max_dist = pd.Series(distance[max_ind.ravel()].ravel(), index=max_ind.ravel())
+    max_ind = np.argpartition(joined_table["distance"], n, axis=0)[:n]
+    max_dist = pd.Series(
+        joined_table["distance"][max_ind.ravel()].ravel(), index=max_ind.ravel()
+    )
     worst_matches = joined_table.iloc[list(max_ind.ravel())]
     worst_matches = worst_matches.assign(distance=max_dist)
     print("The worst five matches are the following:\n")
     return worst_matches
 
 
-print_worst_matches(X1, dist1, n=4)
-# We see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Timor-Leste'),
+print_worst_matches(X1, n=4)
+# We see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Estonia'),
 # because there is simply no match in the two tables.
 
 #################################################################
@@ -137,24 +139,27 @@ print_worst_matches(X1, dist1, n=4)
 # so as to include only precise-enough matches:
 #
 # TODO: improve threshold measurement, here it excludes some good matches as well:
-X1, dist1 = fuzzy_join(
+X1 = fuzzy_join(
     X,
     gdppc,
-    on=["Country", "Country Name"],
-    threshold=0.4,
-    return_distance=True,
+    left_on="Country",
+    right_on="Country Name",
+    match_score=0.45,
+    return_score=True,
 )
-print_worst_matches(X1, dist1, n=4)
+print_worst_matches(X1, n=4)
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
+X1.drop(["distance"], axis=1, inplace=True)
 #################################################################
 #
 # Now let's include other information that may be relevant, such as life expectancy:
 X2 = fuzzy_join(
     X1,
     life_exp,
-    on=["Country", "Country Name"],
-    threshold=0.3,
-    keep="left",
+    left_on="Country",
+    right_on="Country Name",
+    match_score=0.45,
+    how="left",
 )
 X2.head(3)
 #################################################################
@@ -167,16 +172,17 @@ X2.head(3)
 X3 = fuzzy_join(
     X2,
     legal_rights,
-    on=["Country", "Country Name"],
-    threshold=0.3,
-    keep="left",
+    left_on="Country",
+    right_on="Country Name",
+    match_score=0.45,
+    how="left",
 )
 X3.head(3)
 #################################################################
 #
 # Great! Our table has became bigger and full of useful informations.
 # We now only remove categories with missing information:
-mask = X3["gdppc"].notna()
+mask = X3["GDP per capita (current US$)"].notna()
 y = np.ravel(y[mask])
 
 X1 = X1[mask]
@@ -221,7 +227,7 @@ for data in (X1, X2, X3):
     )
 
 #################################################################
-# Our score gets better every time we add additional information into our table !
+# Our score gets better every time we add additional information into our table!
 #
 # This is why dirty_cat's :func:`fuzzy_join` is an easy-to-use
 # and useful tool.

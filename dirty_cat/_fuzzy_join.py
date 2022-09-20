@@ -26,11 +26,11 @@ def fuzzy_join(
     left_on: str = "",
     right_on: str = "",
     on: str = "",
-    return_distance: bool = False,
+    return_score: bool = False,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    ngram_range: Tuple[int, int] = (2, 4),
+    ngram_range: Tuple[int, int] = (2, 2),
     match_type: Literal["nearest"] = "nearest",
-    threshold: float = 0,
+    match_score: float = 0,
     suffixes: Tuple[str, str] = ("_l", "_r"),
     how: Literal["left", "right", "all"] = "all",
 ) -> pd.DataFrame:
@@ -58,8 +58,9 @@ def fuzzy_join(
     right_on: str
             Name of right table column names on which
             the matching will be perfomed.
-    return_distance: boolean, default=True
-            Wheter to return distance between nearest matched categories.
+    return_score: boolean, default=True
+            Wheter to return matching score based on the distance between
+            nearest matched categories.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
         similarities.
@@ -75,7 +76,7 @@ def fuzzy_join(
         Type of measure that is used to estimate the precision of the joined
         entities.
         If `nearest`, only returns the neirest neighbor match.
-    threshold : float, default=0
+    match_score : float, default=0
         Distance between the closest matches that will be accepted.
         In a [0, 1] interval. Closer to 1 means the matches need to be very
         close, and to 0 that a bigger distance is tolerated.
@@ -86,23 +87,22 @@ def fuzzy_join(
     Returns:
     --------
     df_joined: pandas.DataFrame
-        The joined table returned as a DataFrame.
-    distance: bool, default=True
-        Whether or not to return the distances to the closest matching
-        neighbor.
+        The joined table returned as a DataFrame. If `return_score` is True,
+        another column will be added to the DataFrame containing the
+        matching scores.
 
     Notes
     -----
-    When return_distance=True, the returned DataFrame gives
+    When return_score=True, the returned DataFrame gives
     the distances between closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.
-    When we use `threshold=0`, the function will be forced to impute the
-    nearest match (of the left table category) across the possible matching
+    When we use `match_score=0`, the function will be forced to impute the
+    nearest match (of the left table category) across all possible matching
     options in the right table column.
-    When the neighbors are distant, we may use the `threshold` parameter
+    When the neighbors are distant, we may use the `match_score` parameter
     with a value bigger than 0 to define the minimal level of matching
-    precision tolerated. If it is not reached, matches will be
+    score tolerated. If it is not reached, matches will be
     considered as not found and NaN values will be imputed.
     See example below for an illustration.
 
@@ -132,14 +132,14 @@ def fuzzy_join(
     2  nana  3  sana   8
 
     When we want to accept only a certain match precison,
-    we can use the `threshold` argument:
-    >>> fuzzy_join(df1, df2, on='a', threshold=1)
-        a_l  b   a_r    c
-    0   ana  1   ana  7.0
-    1  lala  2  lala  6.0
-    2  nana  3   NaN  NaN
+    we can use the `match_score` argument:
+    >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
+        a_l  b   a_r    c  distance
+    0   ana  1   ana  7.0  1.000000
+    1  lala  2  lala  6.0  1.000000
+    2  nana  3   NaN  NaN  0.532717
 
-    As expected, "nana" has no exact match (`threshold=1`) and is not matched.
+    As expected, "nana" has no exact match (`match_score=1`) and is not matched.
 
     """
 
@@ -189,7 +189,7 @@ def fuzzy_join(
                 "which has invalid type, expected string."
             )
 
-    if len(on) == 1:
+    if len(on) > 1:
         left_col = on + lsuffix
         right_col = on + rsuffix
     else:
@@ -197,8 +197,14 @@ def fuzzy_join(
         right_col = right_on
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-    left_enc = enc.fit_transform(left_table_clean[left_col])
-    right_enc = enc.transform(right_table_clean[right_col])
+
+    all_cats = pd.concat(
+        [left_table_clean[left_col], right_table_clean[right_col]], axis=0
+    )
+
+    enc_cv = enc.fit(all_cats)
+    left_enc = enc_cv.transform(left_table_clean[left_col])
+    right_enc = enc_cv.transform(right_table_clean[right_col])
 
     all_enc = vstack((left_enc, right_enc))
 
@@ -209,7 +215,7 @@ def fuzzy_join(
     # Find nearest neighbor using KNN :
     neigh = NearestNeighbors(n_neighbors=1)
     neigh.fit(right_enc)
-    distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
+    distance, neighbors = neigh.kneighbors(left_enc, return_score=True)
     idx_closest = np.ravel(neighbors)
 
     norm_distance = 1 - (distance / 2)
@@ -222,7 +228,7 @@ def fuzzy_join(
             np.array(
                 [
                     right_array[idx_closest[idr]]
-                    if norm_distance[idr] >= threshold
+                    if norm_distance[idr] >= match_score
                     else np.tile(np.nan, (right_array.shape[1],))
                     for idr in left_table_clean.index
                 ]
@@ -238,7 +244,9 @@ def fuzzy_join(
     if how == "right":
         df_joined.drop(columns=[left_col], inplace=True)
 
-    if return_distance:
-        return df_joined, norm_distance
+    if return_score:
+        return pd.concat(
+            [df_joined, pd.DataFrame(norm_distance, columns=["distance"])], axis=1
+        )
     else:
         return df_joined
