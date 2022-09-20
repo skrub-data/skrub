@@ -26,13 +26,13 @@ def fuzzy_join(
     left_on: str = "",
     right_on: str = "",
     on: str = "",
+    how: Literal["left", "right", "all"] = "all",
     return_score: bool = False,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 2),
     match_type: Literal["nearest"] = "nearest",
     match_score: float = 0,
     suffixes: Tuple[str, str] = ("_l", "_r"),
-    how: Literal["left", "right", "all"] = "all",
 ) -> pd.DataFrame:
     """
     Join two tables based on categorical string columns as joining keys,
@@ -41,24 +41,24 @@ def fuzzy_join(
     Parameters
     ----------
 
-    left: pandas.DataFrame
+    left : pandas.DataFrame
             Table on which the join will be performed.
-    right: pandas.DataFrame
+    right : pandas.DataFrame
             Table that will be joined.
-    how: typing.Literal['left', 'right', 'all'], default='all'
-        Join to keep the matching columns from the left, right or
-        all tables.
-    on: str
-            Name of left and right table column names on which
-            the matching will be perfomed. Must be found in both DataFrames.
-            Use when the `left_on` and `right_on` parameters are not specified.
-    left_on: str
+    left_on : str
             Name of left table column names on which
             the matching will be perfomed.
-    right_on: str
+    right_on : str
             Name of right table column names on which
             the matching will be perfomed.
-    return_score: boolean, default=True
+    on : str
+        Name of left and right table column names on which
+        the matching will be perfomed. Must be found in both DataFrames.
+        Use when the `left_on` and `right_on` parameters are not specified.
+    how : typing.Literal['left', 'right', 'all'], default='all'
+        Join to keep the matching columns from the left, right or
+        all tables.
+    return_score : boolean, default=True
             Wheter to return matching score based on the distance between
             nearest matched categories.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
@@ -80,7 +80,7 @@ def fuzzy_join(
         Distance between the closest matches that will be accepted.
         In a [0, 1] interval. Closer to 1 means the matches need to be very
         close, and to 0 that a bigger distance is tolerated.
-    suffixes: typing.Tuple[str, str], default=('_x', '_y')
+    suffixes : typing.Tuple[str, str], default=('_x', '_y')
             A list of strings indicating the suffix to add when overlaping
             column names.
 
@@ -215,7 +215,7 @@ def fuzzy_join(
     # Find nearest neighbor using KNN :
     neigh = NearestNeighbors(n_neighbors=1)
     neigh.fit(right_enc)
-    distance, neighbors = neigh.kneighbors(left_enc, return_score=True)
+    distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
     norm_distance = 1 - (distance / 2)

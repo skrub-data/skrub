@@ -70,7 +70,7 @@ def test_fuzzy_join(analyzer, how):
     )
 
     # Check correct shapes of outputs:
-    teams_joined, dist1 = fuzzy_join(
+    teams_joined = fuzzy_join(
         teams1,
         teams2,
         left_on="basketball_teams",
@@ -79,12 +79,11 @@ def test_fuzzy_join(analyzer, how):
         analyzer=analyzer,
         match_score=0.1,
     )
-    assert teams_joined.shape == (9, 2)
-    assert dist1.shape == (9, 1)
-    assert (teams_joined == ground_truth).all()[1]
+    assert teams_joined.shape == (9, 3)
+    assert (teams_joined.iloc[:, :2] == ground_truth).all()[1]
 
     # And on the other way around:
-    teams_joined_2, dist2 = fuzzy_join(
+    teams_joined_2 = fuzzy_join(
         teams2,
         teams1,
         left_on="teams_basketball",
@@ -94,8 +93,7 @@ def test_fuzzy_join(analyzer, how):
         match_score=0.1,
     )
     # Joining is always done on the left table and thus takes it shape:
-    assert teams_joined_2.shape == (10, 2)
-    assert dist2.shape == (10, 1)
+    assert teams_joined_2.shape == (10, 3)
 
     # Check invariability of joining:
     teams_joined_3 = fuzzy_join(
@@ -103,6 +101,7 @@ def test_fuzzy_join(analyzer, how):
         teams1,
         left_on="teams_basketball",
         right_on="basketball_teams",
+        return_score=True,
         analyzer=analyzer,
         match_score=0.1,
     )
