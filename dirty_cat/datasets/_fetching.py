@@ -197,26 +197,21 @@ def _fetch_world_bank_data(
     """
     # Download the file :
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
-    attempts = 0
-    while attempts < 3:
-        try:
-            filehandle, _ = urllib.request.urlretrieve(url)
-            zip_file_object = ZipFile(filehandle, "r")
-            for name in zip_file_object.namelist():
-                if "Metadata" not in name:
-                    true_file = name
-            file = zip_file_object.open(true_file)
-            attempts = 3
-        except BadZipFile:
-            raise FileNotFoundError(
-                f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
-            )
-            attempts = 3
-        except URLError:
-            raise FileNotFoundError(
-                f"No internet connection or the website is down."  # noqa
-            )
-            attempts += 1
+    try:
+        filehandle, _ = urllib.request.urlretrieve(url)
+        zip_file_object = ZipFile(filehandle, "r")
+        for name in zip_file_object.namelist():
+            if "Metadata" not in name:
+                true_file = name
+        file = zip_file_object.open(true_file)
+    except BadZipFile:
+        raise FileNotFoundError(
+            f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
+        )
+    except URLError:
+        raise FileNotFoundError(
+            f"No internet connection or the website is down."  # noqa
+        )
     # Read and modify csv file
     df = pd.read_csv(file, skiprows=3)
     indicator_name = df.iloc[0, 2]

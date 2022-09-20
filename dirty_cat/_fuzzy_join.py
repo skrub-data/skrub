@@ -30,7 +30,6 @@ def fuzzy_join(
     return_score: bool = False,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 2),
-    match_type: Literal["nearest"] = "nearest",
     match_score: float = 0,
     suffixes: Tuple[str, str] = ("_l", "_r"),
 ) -> pd.DataFrame:
@@ -72,12 +71,8 @@ def fuzzy_join(
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
-    match_type : typing.Literal["nearest"], default=`nearest`
-        Type of measure that is used to estimate the precision of the joined
-        entities.
-        If `nearest`, only returns the neirest neighbor match.
     match_score : float, default=0
-        Distance between the closest matches that will be accepted.
+        Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. Closer to 1 means the matches need to be very
         close, and to 0 that a bigger distance is tolerated.
     suffixes : typing.Tuple[str, str], default=('_x', '_y')
@@ -139,7 +134,8 @@ def fuzzy_join(
     1  lala  2  lala  6.0  1.000000
     2  nana  3   NaN  NaN  0.532717
 
-    As expected, "nana" has no exact match (`match_score=1`) and is not matched.
+    As expected, "nana" has no exact match (`match_score=1`) and is not
+    matched.
 
     """
 
@@ -150,11 +146,6 @@ def fuzzy_join(
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
-        )
-
-    if match_type not in ["nearest"]:
-        raise ValueError(
-            f"match_type should be either 'nearest' or '', got {match_type!r}",
         )
 
     if how not in ["left", "right", "all"]:
@@ -222,19 +213,18 @@ def fuzzy_join(
 
     left_array = np.array(left_table_clean)
     right_array = np.array(right_table_clean)
-    if match_type == "nearest":
-        joined = np.append(
-            left_array,
-            np.array(
-                [
-                    right_array[idx_closest[idr]]
-                    if norm_distance[idr] >= match_score
-                    else np.tile(np.nan, (right_array.shape[1],))
-                    for idr in left_table_clean.index
-                ]
-            ),
-            axis=1,
-        )
+    joined = np.append(
+        left_array,
+        np.array(
+            [
+                right_array[idx_closest[idr]]
+                if norm_distance[idr] >= match_score
+                else np.tile(np.nan, (right_array.shape[1],))
+                for idr in left_table_clean.index
+            ]
+        ),
+        axis=1,
+    )
 
     cols = list(left_table_clean.columns) + list(right_table_clean.columns)
     df_joined = pd.DataFrame(joined, columns=cols).replace(r"^\s*$", np.nan, regex=True)
