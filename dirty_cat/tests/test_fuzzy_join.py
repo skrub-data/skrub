@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -6,128 +7,83 @@ from dirty_cat import fuzzy_join
 
 @pytest.mark.parametrize(
     "analyzer, how",
-    [("char", "left"), ("char_wb", "right")],
+    [("char", "left"), ("char_wb", "right"), ("word", "left")],
 )
 def test_fuzzy_join(analyzer, how):
     """Testing if fuzzy_join gives joining results as expected."""
-    teams1 = pd.DataFrame(
-        {
-            "basketball_teams": [
-                "LA Lakers",
-                "Charlotte Hornets",
-                "Polonia Warszawa",
-                "Asseco",
-                "Melbourne United (basketball)",
-                "Partizan Belgrade",
-                "Liaoning FL",
-                "P.A.O.K. BC",
-                "New Orlean Plicans",
-            ]
-        }
-    )
-    teams2 = pd.DataFrame(
-        {
-            "teams_basketball": [
-                "Partizan BC",
-                "New Orleans Pelicans",
-                "Charlotte Hornets",
-                "Polonia Warszawa (basketball)",
-                "Real Madrid Baloncesto",
-                "Los Angeles Lakers",
-                "Asseco Gdynia",
-                "PAOK BC",
-                "Melbourne United",
-                "Liaoning Flying Leopards",
-            ]
-        }
-    )
 
+    df1 = pd.DataFrame({"a1": ["ana", "lala", "nana"]})
+    df2 = pd.DataFrame({"a2": ["anna", "lala", "lana", "sana"]})
     ground_truth = pd.DataFrame(
-        {
-            "basketball_teams": [
-                "LA Lakers",
-                "Charlotte Hornets",
-                "Polonia Warszawa",
-                "Asseco",
-                "Melbourne United (basketball)",
-                "Partizan Belgrade",
-                "Liaoning FL",
-                "P.A.O.K. BC",
-                "New Orlean Plicans",
-            ],
-            "teams_basketball": [
-                "Los Angeles Lakers",
-                "Charlotte Hornets",
-                "Polonia Warszawa (basketball)",
-                "Asseco Gdynia",
-                "Melbourne United",
-                "Partizan BC",
-                "Liaoning Flying Leopards",
-                "PAOK BC",
-                "New Orleans Pelicans",
-            ],
-        }
+        {"a1": ["ana", "lala", "nana"], "a2": ["anna", "lala", np.NaN]}
     )
 
-    # Check correct shapes of outputs:
-    teams_joined = fuzzy_join(
-        teams1,
-        teams2,
-        left_on="basketball_teams",
-        right_on="teams_basketball",
+    df_joined = fuzzy_join(
+        left=df1,
+        right=df2,
+        left_on="a1",
+        right_on="a2",
         return_score=True,
         analyzer=analyzer,
-        match_score=0.1,
+        match_score=0.6,
+        how="all",
     )
-    assert teams_joined.shape == (9, 3)
-    assert (teams_joined.iloc[:, :2] == ground_truth).all()[1]
 
-    # And on the other way around:
-    teams_joined_2 = fuzzy_join(
-        teams2,
-        teams1,
-        left_on="teams_basketball",
-        right_on="basketball_teams",
+    n_cols = df1.shape[1] + df2.shape[1] + 1
+
+    assert df_joined.shape == (len(df1), n_cols)
+    pd.testing.assert_frame_equal(
+        df_joined.drop("matching_score", axis=1), ground_truth
+    )
+
+    df_joined2 = fuzzy_join(
+        df2,
+        df1,
+        left_on="a2",
+        right_on="a1",
         return_score=True,
         analyzer=analyzer,
-        match_score=0.1,
+        match_score=0.6,
     )
     # Joining is always done on the left table and thus takes it shape:
-    assert teams_joined_2.shape == (10, 3)
+    assert df_joined2.shape == (df2.shape[0], n_cols)
 
-    # Check invariability of joining:
-    teams_joined_3 = fuzzy_join(
-        teams2,
-        teams1,
-        left_on="teams_basketball",
-        right_on="basketball_teams",
+    df_joined3 = fuzzy_join(
+        df2,
+        df1,
+        left_on="a2",
+        right_on="a1",
         return_score=True,
         analyzer=analyzer,
-        match_score=0.1,
+        match_score=0.6,
     )
-    pd.testing.assert_frame_equal(teams_joined_2, teams_joined_3)
+    pd.testing.assert_frame_equal(df_joined2, df_joined3)
 
-    # Check how argument:
-    teams_kept = fuzzy_join(
-        teams1,
-        teams2,
-        left_on="basketball_teams",
-        right_on="teams_basketball",
+    df_how = fuzzy_join(
+        df1,
+        df2,
+        left_on="a1",
+        right_on="a2",
         analyzer=analyzer,
-        match_score=0.1,
+        match_score=0.6,
         how=how,
     )
     if how == "left":
-        pd.testing.assert_frame_equal(teams_kept, teams1)
+        pd.testing.assert_frame_equal(df_how, df1)
     if how == "right":
-        assert teams_kept.shape == teams1.shape
+        assert df_how.shape == df1.shape
+
+    df_on = fuzzy_join(
+        df_joined, df1, on=["a1"], analyzer=analyzer, suffixes=("1", "2")
+    )
+    assert "a11" and "a12" in df_on.columns
 
 
 @pytest.mark.parametrize(
-    "analyzer, how, suffixes",
-    [("a_blabla", "k_blabla", ["a", "b", "c"]), (1, 34, [1, 2, 3])],
+    "analyzer, how, suffixes, on",
+    [("a_blabla", "k_blabla", ["a", "b", "c"], ["a"]), (1, 34, [1, 2, 3], 3)],
 )
-def test_parameters_error(analyzer, how, suffixes):
+def test_parameters_error(analyzer, how, suffixes, on):
     """Testing if correct errors are raised when wrong parameter values are given."""
     df1 = pd.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
     df2 = pd.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
@@ -147,3 +103,8 @@ def test_parameters_error(analyzer, how, suffixes):
         ValueError, match="Invalid number of suffixes: expected 2, got 3"
     ):
         fuzzy_join(df1, df2, on="a", suffixes=suffixes)
+    with pytest.raises(
+        ValueError,
+        match="Parameter left_on, right_on or on has invalid type, expected string",
+    ):
+        fuzzy_join(df1, df2, on=on)

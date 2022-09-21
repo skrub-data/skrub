@@ -176,8 +176,7 @@ def fuzzy_join(
     for param in [on, left_on, right_on]:
         if not isinstance(param, str):
             raise ValueError(
-                f"value {param!r} was specified for parameter, "
-                "which has invalid type, expected string."
+                "Parameter left_on, right_on or on has invalid type, expected string"
             )
 
     if len(on) > 1:
@@ -236,7 +235,7 @@ def fuzzy_join(
 
     if return_score:
         return pd.concat(
-            [df_joined, pd.DataFrame(norm_distance, columns=["distance"])], axis=1
+            [df_joined, pd.DataFrame(norm_distance, columns=["matching_score"])], axis=1
         )
     else:
         return df_joined
