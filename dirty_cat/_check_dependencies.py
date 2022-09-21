@@ -11,11 +11,18 @@ from ._config_requirements import deps
 
 def _check_pack_version(dep, package_name, required_version, sign):
     installed_version = version(package_name)
-    if not eval(f"'{installed_version}' {sign} '{required_version}'"):
-        raise ImportError(
-            f"dirty_cat {_version} requires {dep}, but you have "
-            f"{package_name} {installed_version} which is incompatible."
-        )
+    error_msg = (
+        f"dirty_cat {_version} requires {dep}, but you have "
+        f"{package_name} {installed_version} which is incompatible."
+    )
+    try:
+        from sklearn.externals._packaging.version import parse as parse_version
+    except ModuleNotFoundError:
+        raise ImportError(error_msg)
+    parsed_installed_version = parse_version(installed_version)
+    parsed_required_version = parse_version(required_version)
+    if not eval(f"'{parsed_installed_version}' {sign} '{parsed_required_version}'"):
+        raise ImportError(error_msg)
 
 
 parent_dir = _Path(__file__).parent
