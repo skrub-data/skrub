@@ -202,7 +202,6 @@ X3 = X3[mask]
 # Prediction model
 # -----------------
 #
-#
 # Let us now define the model that will be used to predict the happiness score:
 from sklearn import __version__ as sklearn_version
 from dirty_cat._utils import Version
