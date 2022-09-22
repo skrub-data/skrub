@@ -184,9 +184,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None) -> np.array:
-        """
-        Transform X by replacing each datetime column with
-        corresponding numerical features.
+        """Transform X by replacing each datetime column with corresponding numerical features.
 
         Parameters
         ----------
