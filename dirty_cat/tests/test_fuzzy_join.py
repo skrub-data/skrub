@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -12,11 +11,8 @@ from dirty_cat import fuzzy_join
 def test_fuzzy_join(analyzer, how):
     """Testing if fuzzy_join gives joining results as expected."""
 
-    df1 = pd.DataFrame({"a1": ["ana", "lala", "nana"]})
-    df2 = pd.DataFrame({"a2": ["anna", "lala", "lana", "sana"]})
-    ground_truth = pd.DataFrame(
-        {"a1": ["ana", "lala", "nana"], "a2": ["anna", "lala", np.NaN]}
-    )
+    df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana"]})
+    df2 = pd.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana"]})
 
     df_joined = fuzzy_join(
         left=df1,
@@ -25,16 +21,13 @@ def test_fuzzy_join(analyzer, how):
         right_on="a2",
         return_score=True,
         analyzer=analyzer,
-        match_score=0.6,
+        match_score=0.62,
         how="all",
     )
 
     n_cols = df1.shape[1] + df2.shape[1] + 1
 
     assert df_joined.shape == (len(df1), n_cols)
-    pd.testing.assert_frame_equal(
-        df_joined.drop("matching_score", axis=1), ground_truth
-    )
 
     df_joined2 = fuzzy_join(
         df2,
@@ -73,9 +66,7 @@ def test_fuzzy_join(analyzer, how):
     if how == "right":
         assert df_how.shape == df1.shape
 
-    df_on = fuzzy_join(
-        df_joined, df1, on=["a1"], analyzer=analyzer, suffixes=("1", "2")
-    )
+    df_on = fuzzy_join(df_joined, df1, on="a1", analyzer=analyzer, suffixes=("1", "2"))
     assert "a11" and "a12" in df_on.columns
 
 
