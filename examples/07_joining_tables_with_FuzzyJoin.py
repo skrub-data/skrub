@@ -38,6 +38,10 @@ df.head(3)
 # The Happiness score was computed using the Gallup World Poll survey results.
 # The report stress out some of the possible explanatory factors: GDP per
 # capita, Social support, Generosity etc.
+X = df[["Country"]]
+y = df[["Happiness score"]]
+# We defined our X and y variables.
+
 ###############################################################################
 # If we want to create a machine learning model which predicts
 # the happiness index of any new country or future date,
