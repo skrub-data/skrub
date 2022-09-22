@@ -1,19 +1,18 @@
 """
-Merging a collection of uncleaned tables
-Merging a collection of tables
-Joining raw tables from multiple data sources
-==============================================
+Merging a collection of dirty tables
+====================================
 
 When combining data from different sources, there is a risk that
 it will not be easily merged, as it comes mislabeled, with errors, duplicated.
 
 In this example, we show how the :func:`fuzzy_join` function allows us to join
-tables without data cleaning by taking into account the label variations.
+tables without cleaning the data and but by taking into account the
+label variations.
 
 Simple and time-saving, this method is intended for users to apply
 before training their machine learning model.
 
-To illustrate, let us join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
+To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
 with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
 in order to create a satisfying prediction model.
 
@@ -35,47 +34,38 @@ df.drop(df.tail(1).index, inplace=True)
 # Let's take a look at the table:
 df.head(3)
 
-#################################################################
+##############################################################################
 # The Happiness score was computed using the Gallup World Poll survey results.
-# The report stress out some of the possible explanatory factors: GDP per capita,
-# Social support, Generosity etc.
-# However, these factors here are only estimated indexes used to calculate the
-# happiness score.
-# Thus, we will not use them for our prediction model.
-###############################################################################
-# The sum of all explanatory indexes is then the happiness score itself:
-df["Sum_of_factors"] = df.iloc[:, [5, 6, 7, 8, 9, 10, 11]].sum(axis=1)
-df[["Happiness score", "Sum_of_factors"]].head(3)
-#################################################################
-X = df[["Country"]]
-y = df[["Happiness score"]]
-# We defined our X and y variables.
+# The report stress out some of the possible explanatory factors: GDP per
+# capita, Social support, Generosity etc.
 ###############################################################################
 # If we want to create a machine learning model which predicts
 # the happiness index of any new country or future date,
 # we will need to include explanatory factors from other tables.
+# What can we add from the available online public data tables?
 
 ###############################################################################
 # Finding additional tables
-# ---------------------------
+# -------------------------
 #
 # Let's inspire ourselfes from the factors used by the Happiness report to
-# explain happiness.
-# We will extract data from the World Bank databank using the following function:
+# find additional features.
+# We will extract data from the World Bank (WB) databank.
+# Luckily, dirty_cat has the following function to do it easily:
 from dirty_cat.datasets import fetch_world_bank_indicator
 
 #################################################################
-# We then extract GDP per capita by country:
+# We extract the table containing GDP per capita by country:
 gdppc = fetch_world_bank_indicator(indicator_id="NY.GDP.PCAP.CD").X
 gdppc.head(3)
 
 #################################################################
-# Life expectancy by country:
+# Then another table, with life expectancy by country:
 life_exp = fetch_world_bank_indicator("SP.DYN.LE00.IN", "life_exp").X
 life_exp.head(3)
 
 #################################################################
-# And the legal rights strength by country:
+# And a table with legal rights strength by country:
 legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
 legal_rights.head(3)
 
@@ -83,15 +73,15 @@ legal_rights.head(3)
 # Joining World Bank tables to our initial one
 # ----------------------------------------------
 #
-# Now, using dirty_cat's :func:`fuzzy_join` function,
-# we need only one line to join two tables
-# without worrying about preprocessing:
+# So now we have our initial table and 3 additional ones that we have
+# extracted.
 #
-# We add GDP per capita to the initial table:
+# To join them with dirty_cat, we only need to do the following:
 from dirty_cat import fuzzy_join
 
 X1 = fuzzy_join(X, gdppc, left_on="Country", right_on="Country Name", return_score=True)
 X1.head(20)
+# We merged the first WB table to our initial one.
 
 #################################################################
 # .. topic:: Note:
@@ -101,7 +91,7 @@ X1.head(20)
 
 #################################################################
 #
-# Now, we see that our :func:`fuzzy_join` succesfully identified the countries,
+# We see that our :func:`fuzzy_join` succesfully identified the countries,
 # even though some country names differ between tables.
 #
 # For instance, 'Czechia' is well identified as 'Czech Republic' and
@@ -116,15 +106,13 @@ X1.head(20)
 #    the data (e.g. remove the * after country name) and look manually
 #    for matching patterns in observations.
 #
-# Dirty_cat's :func:`fuzzy_join` is the perfect function to avoid doing so
-# (and save time) with great results.
+# Let's do some more inspection of the merging done.
 
 ###############################################################################
 # Keeping only the good matches
 # ------------------------------
 #################################################################
-# The best way to inspect the matches is to use the `print_worst_matches` function.
-# This will print out the five worst matches, which will give us an overview of the situation:
+# The best way to inspect the matches is to use the following function:
 import numpy as np
 
 
@@ -140,8 +128,13 @@ def print_worst_matches(joined_table, n=5):
     return worst_matches
 
 
+# This will print out the five worst matches, which will give
+# us an overview of the situation:
+
+
 print_worst_matches(X1, n=4)
-# We see that some matches were unsuccesful (e.g 'Palestinian Territories*' and 'Estonia'),
+# We see that some matches were unsuccesful
+# (e.g 'Palestinian Territories*' and 'Estonia'),
 # because there is simply no match in the two tables.
 
 #################################################################
@@ -159,12 +152,13 @@ X1 = fuzzy_join(
     return_score=True,
 )
 print_worst_matches(X1, n=4)
-# Matches that are not available (or precise enough) are thus marked as `NaN`.
+# Matches that are not available (or precise enough) are marked as `NaN`.
 X1.drop(["distance"], axis=1, inplace=True)
 
 #################################################################
 #
-# Now let's include other information that may be relevant, such as life expectancy:
+# Now let's include other information that may be relevant, such as
+# life expectancy table:
 X2 = fuzzy_join(
     X1,
     life_exp,
@@ -177,10 +171,10 @@ X2.head(3)
 #################################################################
 # .. topic:: Note:
 #
-#    Here, we use the `keep='left'` option to keep only the left key matching column,
-#    so as not to have too much unnecessary columns with country names.
+#    Here, we use the `keep='left'` option to keep only the left key matching
+#    column, so as not to have too much unnecessary columns with country names.
 #
-# And the strenght of legal rights in the country:
+# And the table with a measure of legal rights strenght in the country:
 X3 = fuzzy_join(
     X2,
     legal_rights,
@@ -192,7 +186,7 @@ X3 = fuzzy_join(
 X3.head(3)
 #################################################################
 #
-# Great! Our table has became bigger and full of useful informations.
+# Great! Our joined table has became bigger and full of useful informations.
 # We now only remove categories with missing information:
 mask = X3["GDP per capita (current US$)"].notna()
 y = np.ravel(y[mask])
@@ -206,7 +200,7 @@ X3 = X3[mask]
 
 ###############################################################################
 # Prediction model
-# ---------------------
+# -----------------
 #
 #
 # Let us now define the model that will be used to predict the happiness score:
@@ -242,19 +236,10 @@ for data in (X1, X2, X3):
 # Our score gets better every time we add additional information into our
 # table!
 #
-# This is why dirty_cat's :func:`fuzzy_join` is an easy-to-use
-# and useful tool.
+# Data cleaning varies from dataset to dataset: there are as
+# many ways to clean a table as there are errors. :func:`fuzzy_join`
+# method is generalizable across all datasets.
 #
-# Data cleaning/transformation varies from dataset to dataset: there are as
-# many ways to clean a table as there are errors. This method is
-# generalizable across all datasets.
-#
-# There are as many ways to call as to do it: data cleaning, transformation, wrangling, mapping,
-# cleansing, scrubbing, formatting, filtering, munMost data cleansing tools have limitations in usability:
-#
-# Criticism of data cleaning:
-# Project costs: costs typically in the hundreds of thousands of dollars
-# Time: mastering large-scale data-cleansing software is time-consuming
-# Security: cross-validation requires sharing information, giving an application access across systems, including sensitive legacy systemsging.
-#
+# Data transformation is also often very costly in both time and ressources.
+# :func:`fuzzy_join` is fast and easy-to-use.
 #
