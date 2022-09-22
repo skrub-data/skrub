@@ -209,9 +209,7 @@ def _fetch_world_bank_data(
             f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
         )
     except URLError:
-        raise FileNotFoundError(
-            f"No internet connection or the website is down."  # noqa
-        )
+        raise URLError("No internet connection or the website is down.")  # noqa
     # Read and modify csv file
     df = pd.read_csv(file, skiprows=3)
     indicator_name = df.iloc[0, 2]

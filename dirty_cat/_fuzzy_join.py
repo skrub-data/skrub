@@ -157,6 +157,13 @@ def fuzzy_join(
         raise ValueError(f"Invalid number of suffixes: expected 2, got {len(suffixes)}")
     lsuffix, rsuffix = suffixes
 
+    for param in [on, left_on, right_on]:
+        if not isinstance(param, str):
+            raise ValueError(
+                "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
+                " string"
+            )
+
     overlap_cols = left_table_clean._info_axis.intersection(
         right_table_clean._info_axis
     )
@@ -172,12 +179,6 @@ def fuzzy_join(
                 left_on = new_name_l
             if overlap_cols[i] in right_on:
                 right_on = new_name_r
-
-    for param in [on, left_on, right_on]:
-        if not isinstance(param, str):
-            raise ValueError(
-                "Parameter left_on, right_on or on has invalid type, expected string"
-            )
 
     if len(on) > 1:
         left_col = on + lsuffix

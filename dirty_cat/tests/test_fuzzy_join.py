@@ -6,7 +6,7 @@ from dirty_cat import fuzzy_join
 
 @pytest.mark.parametrize(
     "analyzer, how",
-    [("char", "left"), ("char_wb", "right"), ("word", "left")],
+    [("char", "left"), ("char_wb", "right"), ("word", "all")],
 )
 def test_fuzzy_join(analyzer, how):
     """Testing if fuzzy_join gives joining results as expected."""
@@ -52,6 +52,8 @@ def test_fuzzy_join(analyzer, how):
     )
     pd.testing.assert_frame_equal(df_joined2, df_joined3)
 
+    df1["a2"] = 1
+
     df_how = fuzzy_join(
         df1,
         df2,
@@ -60,14 +62,30 @@ def test_fuzzy_join(analyzer, how):
         analyzer=analyzer,
         match_score=0.6,
         how=how,
+        suffixes=("", "r"),
     )
+
     if how == "left":
         pd.testing.assert_frame_equal(df_how, df1)
     if how == "right":
         assert df_how.shape == df1.shape
 
     df_on = fuzzy_join(df_joined, df1, on="a1", analyzer=analyzer, suffixes=("1", "2"))
-    assert "a11" and "a12" in df_on.columns
+    assert ("a11" and "a12") in df_on.columns
+
+    df2["a1"] = 1
+
+    df = fuzzy_join(
+        df1,
+        df2,
+        left_on="a1",
+        right_on="a2",
+        analyzer=analyzer,
+        match_score=0.6,
+        how=how,
+        suffixes=("l", "r"),
+    )
+    assert ("a1l" and "a1r") in df.columns
 
 
 @pytest.mark.parametrize(
@@ -96,6 +114,8 @@ def test_parameters_error(analyzer, how, suffixes, on):
         fuzzy_join(df1, df2, on="a", suffixes=suffixes)
     with pytest.raises(
         ValueError,
-        match="Parameter left_on, right_on or on has invalid type, expected string",
+        match=(
+            "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected string"
+        ),
     ):
         fuzzy_join(df1, df2, on=on)
