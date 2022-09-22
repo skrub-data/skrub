@@ -122,9 +122,9 @@ import numpy as np
 
 def print_worst_matches(joined_table, n=5):
     """Prints n worst matches for inspection."""
-    max_ind = np.argpartition(joined_table["distance"], n, axis=0)[:n]
+    max_ind = np.argpartition(joined_table["matching_score"], n, axis=0)[:n]
     max_dist = pd.Series(
-        joined_table["distance"][max_ind.ravel()].ravel(), index=max_ind.ravel()
+        joined_table["matching_score"][max_ind.ravel()].ravel(), index=max_ind.ravel()
     )
     worst_matches = joined_table.iloc[list(max_ind.ravel())]
     worst_matches = worst_matches.assign(distance=max_dist)
@@ -157,7 +157,7 @@ X1 = fuzzy_join(
 )
 print_worst_matches(X1, n=4)
 # Matches that are not available (or precise enough) are marked as `NaN`.
-X1.drop(["distance"], axis=1, inplace=True)
+X1.drop(["matching_score"], axis=1, inplace=True)
 
 #################################################################
 #
