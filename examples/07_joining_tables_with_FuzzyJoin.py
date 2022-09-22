@@ -1,14 +1,20 @@
 """
-Joining tables with fuzzy_join
-================================
+Merging a collection of uncleaned tables
+Merging a collection of tables
+Joining raw tables from multiple data sources
+==============================================
 
-In this example, we show how to join tables with the :func:`fuzzy_join` function.
-We also demonstrate why this method is the most easy and appropriate tool for handling
-the joining of tables for users that want to improve their machine learning models quickly.
+When combining data from different sources, there is a risk that
+it will not be easily merged, as it comes mislabeled, with errors, duplicated.
 
-We will illustrate the join to predict the happiness score of a country from
-the `2022 World Happiness Report <https://worldhappiness.report/>`_.
-We will also use data provided from `the World Bank open data platform <https://data.worldbank.org/>`_
+In this example, we show how the :func:`fuzzy_join` function allows us to join
+tables without data cleaning by taking into account the label variations.
+
+Simple and time-saving, this method is intended for users to apply
+before training their machine learning model.
+
+To illustrate, let us join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
+with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
 in order to create a satisfying prediction model.
 
 """
@@ -31,8 +37,10 @@ df.head(3)
 
 #################################################################
 # The Happiness score was computed using the Gallup World Poll survey results.
-# The report stress out some of the possible explanatory factors: GDP per capita, Social support, Generosity etc.
-# However, these factors here are only estimated indexes used to calculate the happiness score.
+# The report stress out some of the possible explanatory factors: GDP per capita,
+# Social support, Generosity etc.
+# However, these factors here are only estimated indexes used to calculate the
+# happiness score.
 # Thus, we will not use them for our prediction model.
 ###############################################################################
 # The sum of all explanatory indexes is then the happiness score itself:
@@ -51,7 +59,8 @@ y = df[["Happiness score"]]
 # Finding additional tables
 # ---------------------------
 #
-# Let's inspire ourselfes from the factors used by the Happiness report to explain happiness.
+# Let's inspire ourselfes from the factors used by the Happiness report to
+# explain happiness.
 # We will extract data from the World Bank databank using the following function:
 from dirty_cat.datasets import fetch_world_bank_indicator
 
@@ -95,7 +104,8 @@ X1.head(20)
 # Now, we see that our :func:`fuzzy_join` succesfully identified the countries,
 # even though some country names differ between tables.
 #
-# For instance, 'Czechia' is well identified as 'Czech Republic' and 'Luxembourg*' as 'Luxembourg'.
+# For instance, 'Czechia' is well identified as 'Czech Republic' and
+# 'Luxembourg*' as 'Luxembourg'.
 #
 # .. topic:: Note:
 #
@@ -106,7 +116,8 @@ X1.head(20)
 #    the data (e.g. remove the * after country name) and look manually
 #    for matching patterns in observations.
 #
-# Dirty_cat's :func:`fuzzy_join` is the perfect function to avoid doing so (and save time) with great results.
+# Dirty_cat's :func:`fuzzy_join` is the perfect function to avoid doing so
+# (and save time) with great results.
 
 ###############################################################################
 # Keeping only the good matches
@@ -150,6 +161,7 @@ X1 = fuzzy_join(
 print_worst_matches(X1, n=4)
 # Matches that are not available (or precise enough) are thus marked as `NaN`.
 X1.drop(["distance"], axis=1, inplace=True)
+
 #################################################################
 #
 # Now let's include other information that may be relevant, such as life expectancy:
@@ -227,7 +239,22 @@ for data in (X1, X2, X3):
     )
 
 #################################################################
-# Our score gets better every time we add additional information into our table!
+# Our score gets better every time we add additional information into our
+# table!
 #
 # This is why dirty_cat's :func:`fuzzy_join` is an easy-to-use
 # and useful tool.
+#
+# Data cleaning/transformation varies from dataset to dataset: there are as
+# many ways to clean a table as there are errors. This method is
+# generalizable across all datasets.
+#
+# There are as many ways to call as to do it: data cleaning, transformation, wrangling, mapping,
+# cleansing, scrubbing, formatting, filtering, munMost data cleansing tools have limitations in usability:
+#
+# Criticism of data cleaning:
+# Project costs: costs typically in the hundreds of thousands of dollars
+# Time: mastering large-scale data-cleansing software is time-consuming
+# Security: cross-validation requires sharing information, giving an application access across systems, including sensitive legacy systemsging.
+#
+#
