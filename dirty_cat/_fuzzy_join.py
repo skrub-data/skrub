@@ -193,6 +193,9 @@ def fuzzy_join(
         [left_table_clean[left_col], right_table_clean[right_col]], axis=0
     )
 
+    left_table_clean.drop_duplicates(subset=[left_col], inplace=True)
+    right_table_clean.drop_duplicates(subset=[right_col], inplace=True)
+
     enc_cv = enc.fit(all_cats)
     left_enc = enc_cv.transform(left_table_clean[left_col])
     right_enc = enc_cv.transform(right_table_clean[right_col])
