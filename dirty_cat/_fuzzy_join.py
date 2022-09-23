@@ -176,9 +176,9 @@ def fuzzy_join(
             right_table_clean.rename(
                 columns={overlap_cols[i]: new_name_r}, inplace=True
             )
-            if overlap_cols[i] in left_on:
+            if left_on is not None and overlap_cols[i] in left_on:
                 left_on = new_name_l
-            if overlap_cols[i] in right_on:
+            if right_on is not None and overlap_cols[i] in right_on:
                 right_on = new_name_r
 
     if on is not None:
