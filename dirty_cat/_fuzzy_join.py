@@ -11,7 +11,7 @@ morphological similarities between strings.
 """
 
 import warnings
-from typing import Literal, Tuple
+from typing import Literal, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -23,13 +23,13 @@ from sklearn.neighbors import NearestNeighbors
 def fuzzy_join(
     left: pd.DataFrame,
     right: pd.DataFrame,
-    left_on: str = "",
-    right_on: str = "",
-    on: str = "",
+    left_on: Union[str, None] = None,
+    right_on: Union[str, None] = None,
+    on: Union[str, None] = None,
     how: Literal["left", "right", "all"] = "all",
     return_score: bool = False,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    ngram_range: Tuple[int, int] = (2, 2),
+    ngram_range: Tuple[int, int] = (2, 4),
     match_score: float = 0,
     suffixes: Tuple[str, str] = ("_l", "_r"),
 ) -> pd.DataFrame:
@@ -44,13 +44,13 @@ def fuzzy_join(
             Table on which the join will be performed.
     right : pandas.DataFrame
             Table that will be joined.
-    left_on : str
+    left_on : typing.Union[str, None]
             Name of left table column names on which
             the matching will be perfomed.
-    right_on : str
+    right_on : typing.Union[str, None]
             Name of right table column names on which
             the matching will be perfomed.
-    on : str
+    on : typing.Union[str, None]
         Name of left and right table column names on which
         the matching will be perfomed. Must be found in both DataFrames.
         Use when the `left_on` and `right_on` parameters are not specified.
@@ -140,8 +140,6 @@ def fuzzy_join(
     """
 
     warnings.warn("This feature is still experimental.")
-    left_table_clean = left.reset_index(drop=True).fillna("").copy()
-    right_table_clean = right.reset_index(drop=True).fillna("").copy()
 
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
@@ -158,11 +156,14 @@ def fuzzy_join(
     lsuffix, rsuffix = suffixes
 
     for param in [on, left_on, right_on]:
-        if not isinstance(param, str):
+        if param is not None and not isinstance(param, str):
             raise ValueError(
                 "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
                 " string"
             )
+
+    left_table_clean = left.reset_index(drop=True).copy()
+    right_table_clean = right.reset_index(drop=True).copy()
 
     overlap_cols = left_table_clean._info_axis.intersection(
         right_table_clean._info_axis
@@ -180,21 +181,28 @@ def fuzzy_join(
             if overlap_cols[i] in right_on:
                 right_on = new_name_r
 
-    if len(on) > 1:
+    if on is not None:
         left_col = on + lsuffix
         right_col = on + rsuffix
-    else:
+    elif left_on is not None and right_on is not None:
         left_col = left_on
         right_col = right_on
+
+    left_table_clean.dropna(subset=[left_col], inplace=True)
+    right_table_clean.dropna(subset=[right_col], inplace=True)
+
+    left_table_clean.drop_duplicates(subset=[left_col], inplace=True)
+    right_table_clean.drop_duplicates(subset=[right_col], inplace=True)
+
+    # Make sure that the column types are string:
+    left_table_clean[left_col] = left_table_clean[left_col].astype(str)
+    right_table_clean[right_col] = right_table_clean[right_col].astype(str)
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
     all_cats = pd.concat(
         [left_table_clean[left_col], right_table_clean[right_col]], axis=0
     )
-
-    left_table_clean.drop_duplicates(subset=[left_col], inplace=True)
-    right_table_clean.drop_duplicates(subset=[right_col], inplace=True)
 
     enc_cv = enc.fit(all_cats)
     left_enc = enc_cv.transform(left_table_clean[left_col])

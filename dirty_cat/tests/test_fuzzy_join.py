@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -11,8 +12,8 @@ from dirty_cat import fuzzy_join
 def test_fuzzy_join(analyzer, how):
     """Testing if fuzzy_join gives joining results as expected."""
 
-    df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana"]})
-    df2 = pd.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana"]})
+    df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
+    df2 = pd.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]})
 
     df_joined = fuzzy_join(
         left=df1,
@@ -27,7 +28,7 @@ def test_fuzzy_join(analyzer, how):
 
     n_cols = df1.shape[1] + df2.shape[1] + 1
 
-    assert df_joined.shape == (len(df1), n_cols)
+    assert df_joined.shape == (len(df1.dropna()), n_cols)
 
     df_joined2 = fuzzy_join(
         df2,
@@ -39,7 +40,7 @@ def test_fuzzy_join(analyzer, how):
         match_score=0.6,
     )
     # Joining is always done on the left table and thus takes it shape:
-    assert df_joined2.shape == (df2.shape[0], n_cols)
+    assert df_joined2.shape == (len(df2.dropna()), n_cols)
 
     df_joined3 = fuzzy_join(
         df2,
@@ -66,9 +67,9 @@ def test_fuzzy_join(analyzer, how):
     )
 
     if how == "left":
-        pd.testing.assert_frame_equal(df_how, df1)
+        pd.testing.assert_frame_equal(df_how, df1.dropna())
     if how == "right":
-        assert df_how.shape == df1.shape
+        assert df_how.shape == (len(df1.dropna()), df1.shape[1])
 
     df_on = fuzzy_join(df_joined, df1, on="a1", analyzer=analyzer, suffixes=("1", "2"))
     assert ("a11" and "a12") in df_on.columns
