@@ -6,13 +6,14 @@ dirty_cat
    :alt: dirty_cat logo
 
 
-|py_ver| |pypi_var| |pypi_dl| |codecov| |circleci|
+|py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |Black|
 
 .. |py_ver| image:: https://img.shields.io/pypi/pyversions/dirty_cat
 .. |pypi_var| image:: https://img.shields.io/pypi/v/dirty_cat?color=informational
 .. |pypi_dl| image:: https://img.shields.io/pypi/dm/dirty_cat
 .. |codecov| image:: https://img.shields.io/codecov/c/github/dirty-cat/dirty_cat/master
 .. |circleci| image:: https://img.shields.io/circleci/build/github/dirty-cat/dirty_cat/master?label=CircleCI
+.. |Black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
 dirty_cat is a Python module for machine-learning on dirty categorical variables.
 
@@ -37,8 +38,8 @@ dirty_cat requires:
 - Python (>= 3.8)
 - NumPy (>= 1.17.3)
 - SciPy (>= 1.4.0)
-- scikit-learn (>= 0.22.0)
-- pandas (>= 1.1.5)
+- scikit-learn (>= 0.23.0)
+- pandas (>= 1.2.0)
 
 User installation
 ~~~~~~~~~~~~~~~~~

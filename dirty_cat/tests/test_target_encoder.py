@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 
-from dirty_cat import target_encoder
+from dirty_cat import _target_encoder
 
 
 def test_target_encoder():
-    lambda_ = target_encoder.lambda_
+    lambda_ = _target_encoder.lambda_
     X1 = np.array(
         ["Red", "red", "green", "blue", "green", "green", "blue", "red"]
     ).reshape(-1, 1)
@@ -28,7 +28,7 @@ def test_target_encoder():
         "gender": {"male": 4, "female": 4},
     }
 
-    encoder = target_encoder.TargetEncoder()
+    encoder = _target_encoder.TargetEncoder()
     encoder.fit(X, y)
     for j in range(X.shape[1]):
         assert np.array_equal(encoder.categories_[j], np.unique(X[:, j]))
@@ -64,7 +64,7 @@ def test_target_encoder():
     y = np.array([1, 0, 2, 1, 0, 1, 0, 0])
     n = len(y)
 
-    encoder = target_encoder.TargetEncoder(clf_type="multiclass-clf")
+    encoder = _target_encoder.TargetEncoder(clf_type="multiclass-clf")
     encoder.fit(X, y)
 
     Ey_ = {0: 4 / 8, 1: 3 / 8, 2: 1 / 8}
@@ -106,84 +106,61 @@ def test_target_encoder():
             for var in Eyx_[k]
         }
 
-    ans = np.zeros((n, 2*3))
+    ans = np.zeros((n, 2 * 3))
     for k in [0, 1, 2]:
         for j, col in enumerate(["color", "gender"]):
             for i in range(n):
                 ans[i, j * 3 + k] = ans_dict[k][col][Xtest[i, j]]
-    encoder = target_encoder.TargetEncoder(clf_type="multiclass-clf")
+    encoder = _target_encoder.TargetEncoder(clf_type="multiclass-clf")
     encoder.fit(X, y)
     Xout = encoder.transform(Xtest)
     assert np.array_equal(Xout, ans)
 
 
 def test_cv_target_encoder():
-    X1 = np.array(['Red',
-                   'red',
-                   'green',
-                   'blue',
-                   'green',
-                   'green',
-                   'blue',
-                   'red']).reshape(-1, 1)
-    X2 = np.array(['male',
-                   'male',
-                   'female',
-                   'male',
-                   'female',
-                   'female',
-                   'female',
-                   'male']).reshape(-1, 1)
+    X1 = np.array(
+        ["Red", "red", "green", "blue", "green", "green", "blue", "red"]
+    ).reshape(-1, 1)
+    X2 = np.array(
+        ["male", "male", "female", "male", "female", "female", "female", "male"]
+    ).reshape(-1, 1)
     X = np.hstack([X1, X2])
 
     # Case 1: binary-classification and regression
     y = np.array([1, 0, 0, 1, 0, 1, 0, 0])
-    n = len(y)
 
-    encoder = target_encoder.TargetEncoder(cross_val=True)
+    encoder = _target_encoder.TargetEncoder(cross_val=True)
     encoder.fit(X, y)
     t = encoder.transform(X)
     ft = encoder.fit_transform(X, y)
-    assert np.all(t==ft)==True
+    assert np.all(t == ft)
 
-    count_ = {'color': {'Red': 1,
-                        'red': 2,
-                        'green': 3,
-                        'blue': 2},
-              'gender': {'male': 4,
-                         'female': 4}}
-    assert count_['color'] == encoder.counter_[0]
-    assert count_['gender'] == encoder.counter_[1]
+    count_ = {
+        "color": {"Red": 1, "red": 2, "green": 3, "blue": 2},
+        "gender": {"male": 4, "female": 4},
+    }
+    assert count_["color"] == encoder.counter_[0]
+    assert count_["gender"] == encoder.counter_[1]
 
     for j in range(X.shape[1]):
         assert np.array_equal(encoder.categories_[j], np.unique(X[:, j]))
 
-    Xtest1 = np.array(['Red',
-                       'red',
-                       'blue',
-                       'green',
-                       'Red',
-                       'red',
-                       'blue',
-                       'green']).reshape(-1, 1)
-    Xtest2 = np.array(['male',
-                       'male',
-                       'male',
-                       'male',
-                       'female',
-                       'female',
-                       'female',
-                       'female']).reshape(-1, 1)
+    Xtest1 = np.array(
+        ["Red", "red", "blue", "green", "Red", "red", "blue", "green"]
+    ).reshape(-1, 1)
+    Xtest2 = np.array(
+        ["male", "male", "male", "male", "female", "female", "female", "female"]
+    ).reshape(-1, 1)
     Xtest = np.hstack([Xtest1, Xtest2])
 
     Xout = encoder.transform(Xtest)
 
     # Test same seed returns the same results:
-    encoder2 = target_encoder.TargetEncoder(cross_val=True)
+    encoder2 = _target_encoder.TargetEncoder(cross_val=True)
     encoder2.fit(X, y)
     t = encoder.transform(X)
     ft = encoder.fit_transform(X, y)
-    assert np.all(t==ft)==True
+    assert np.all(t == ft)
 
     Xout2 = encoder2.transform(Xtest)
     assert np.array_equal(Xout, Xout2)
@@ -191,43 +168,41 @@ def test_cv_target_encoder():
     # Case 2: multiclass-classification
     y = np.array([1, 0, 2, 1, 0, 1, 0, 0])
 
-    encoder = target_encoder.TargetEncoder(clf_type='multiclass-clf',
-                                           cross_val=True)
+    encoder = _target_encoder.TargetEncoder(clf_type="multiclass-clf", cross_val=True)
     encoder.fit(X, y)
     t = encoder.transform(X)
     ft = encoder.fit_transform(X, y)
-    assert np.all(t==ft)==True
+    assert np.all(t == ft)
 
     Xout = encoder.transform(Xtest)
 
     assert np.array_equal(np.unique(y), encoder.classes_)
 
-    count_ = {'color': {'Red': 1,
-                        'red': 2,
-                        'green': 3,
-                        'blue': 2},
-              'gender': {'male': 4,
-                         'female': 4}}
-    assert count_['color'] == encoder.counter_[0]
-    assert count_['gender'] == encoder.counter_[1]
+    count_ = {
+        "color": {"Red": 1, "red": 2, "green": 3, "blue": 2},
+        "gender": {"male": 4, "female": 4},
+    }
+    assert count_["color"] == encoder.counter_[0]
+    assert count_["gender"] == encoder.counter_[1]
 
     # Test same seed returns the same results:
-    encoder2 = target_encoder.TargetEncoder(clf_type='multiclass-clf',
-                             cross_val=True)
+    encoder2 = _target_encoder.TargetEncoder(clf_type="multiclass-clf", cross_val=True)
     encoder2.fit(X, y)
     Xout2 = encoder2.transform(Xtest)
     assert np.array_equal(Xout, Xout2)
 
 
 def _test_missing_values(input_type, missing, cv=False):
-    X = [['Red', 'male'],
-         [np.nan, 'male'],
-         ['green', 'female'],
-         ['blue', 'male'],
-         ['green', 'female'],
-         ['green', 'female'],
-         ['blue', 'female'],
-         [np.nan, np.nan]]
+    X = [
+        ["Red", "male"],
+        [np.nan, "male"],
+        ["green", "female"],
+        ["blue", "male"],
+        ["green", "female"],
+        ["green", "female"],
+        ["blue", "female"],
+        [np.nan, np.nan],
+    ]
 
     color_cat = ["Red", "", "green", "blue"]
     gender_cat = ["male", "", "female"]
@@ -251,8 +226,8 @@ def _test_missing_values(input_type, missing, cv=False):
         "gender": {"male": 3, "female": 4, "": 1},
     }
 
-    encoder = target_encoder.TargetEncoder(handle_missing=missing, cross_val=cv)
-    if missing == 'error':
+    encoder = _target_encoder.TargetEncoder(handle_missing=missing, cross_val=cv)
+    if missing == "error":
         with pytest.raises(ValueError, match=r"Found missing values in input"):
             encoder.fit_transform(X, y)
         return
@@ -273,25 +248,29 @@ def _test_missing_values(input_type, missing, cv=False):
 
 
 def _test_missing_values_transform(input_type, missing, cv=False):
-    X = [['Red', 'male'],
-         ['red', 'male'],
-         ['green', 'female'],
-         ['blue', 'male'],
-         ['green', 'female'],
-         ['green', 'female'],
-         ['blue', 'female'],
-         ['red', 'male']]
+    X = [
+        ["Red", "male"],
+        ["red", "male"],
+        ["green", "female"],
+        ["blue", "male"],
+        ["green", "female"],
+        ["green", "female"],
+        ["blue", "female"],
+        ["red", "male"],
+    ]
 
-    X_test = [['Red', 'male'],
-              [np.nan, 'male'],
-              ['green', 'female'],
-              ['blue', 'male'],
-              ['green', 'female'],
-              ['green', 'female'],
-              ['blue', 'female'],
-              [np.nan, np.nan]]
+    X_test = [
+        ["Red", "male"],
+        [np.nan, "male"],
+        ["green", "female"],
+        ["blue", "male"],
+        ["green", "female"],
+        ["green", "female"],
+        ["blue", "female"],
+        [np.nan, np.nan],
+    ]
 
-    if input_type == 'numpy':
+    if input_type == "numpy":
         X_test = np.array(X_test, dtype=object)
     elif input_type == "pandas":
         pd = pytest.importorskip("pandas")
@@ -300,10 +279,10 @@ def _test_missing_values_transform(input_type, missing, cv=False):
     # Case 1: binary-classification and regression
     y = np.array([1, 0, 0, 1, 0, 1, 0, 0])
 
-    encoder = target_encoder.TargetEncoder(handle_unknown='ignore',
-                                           handle_missing=missing,
-                                           cross_val=cv)
-    if missing == 'error':
+    encoder = _target_encoder.TargetEncoder(
+        handle_unknown="ignore", handle_missing=missing, cross_val=cv
+    )
+    if missing == "error":
         encoder.fit_transform(X, y)
         with pytest.raises(ValueError, match=r"Found missing values in input"):
             encoder.transform(X_test)
@@ -324,15 +303,15 @@ def test_missing_values():
             _test_missing_values_transform(input_type, missing, cv=True)
 
 
-if __name__ == '__main__':
-    print('start test_target_encoder')
+if __name__ == "__main__":
+    print("start test_target_encoder")
     test_target_encoder()
-    print('test_target_encoder passed')
+    print("test_target_encoder passed")
 
-    print('start test_target_encoder with K-fold encoding')
+    print("start test_target_encoder with K-fold encoding")
     test_cv_target_encoder()
-    print('test_target_encoder with K-fold encoding passed')
+    print("test_target_encoder with K-fold encoding passed")
 
-    print('start test_missing_values')
+    print("start test_missing_values")
     test_missing_values()
-    print('test_missing_values passed')
+    print("test_missing_values passed")

@@ -1,15 +1,16 @@
 import collections
 from typing import Dict, List, Literal, Union
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
-from sklearn.model_selection import KFold
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat.utils import check_input
+from dirty_cat._utils import check_input
 
 
 def lambda_(x, n):
@@ -17,7 +18,7 @@ def lambda_(x, n):
 
 
 def arr_mean(X_g, y_g):
-    """ Find the group mean of numpy arrays with categories """
+    """Find the group mean of numpy arrays with categories"""
     X_uniques = np.unique(X_g)
     grouped = [y_g[X_g == xi] for xi in X_uniques]
     mean = [gr.mean() for gr in grouped]
@@ -101,16 +102,18 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     categories_: List[np.array]
     n_: int
 
-    def __init__(self,
-                 categories: Union[Literal["auto"], List[Union[List[str], np.array]]] = 'auto',
-                 clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = 'binary-clf',
-                 dtype: type = np.float64,
-                 handle_unknown: Literal["error", "ignore"] = 'error',
-                 handle_missing: Literal["error", ""] = '',
-                 cross_val=False,
-                 n_folds=5,
-                 n_inner_folds=3,
-                 random_state=None):
+    def __init__(
+        self,
+        categories: Union[Literal["auto"], List[Union[List[str], np.array]]] = "auto",
+        clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = "binary-clf",
+        dtype: type = np.float64,
+        handle_unknown: Literal["error", "ignore"] = "error",
+        handle_missing: Literal["error", ""] = "",
+        cross_val=False,
+        n_folds=5,
+        n_inner_folds=3,
+        random_state=None,
+    ):
         self.categories = categories
         self.dtype = dtype
         self.clf_type = clf_type
@@ -178,20 +181,20 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 'any of {"error", "ignore"}. '
             )
 
-        if self.clf_type not in ('regression', 'binary-clf', 'multiclass-clf'):
+        if self.clf_type not in ("regression", "binary-clf", "multiclass-clf"):
             raise ValueError(
-                "Problem type must be either 'regression', 'binary-clf' or 'multiclass-clf' "
-                f"got {self.clf_type} instead."
+                "Problem type must be either 'regression', 'binary-clf' or"
+                f" 'multiclass-clf' got {self.clf_type} instead."
             )
 
-        if self.categories != 'auto':
+        if self.categories != "auto":
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet supported. ")
 
         X_temp = check_array(X, dtype=None)
         y_temp = check_array(y, dtype=None, ensure_2d=False)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
+        if not hasattr(X, "dtype") and np.issubdtype(X_temp.dtype, np.str_):
             X = check_array(X, dtype=np.object)
             y = check_array(y, dtype=np.object, ensure_2d=False)
         else:
@@ -290,15 +293,15 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 if self.handle_missing != "error":
                     X[mask] = self.handle_missing
 
-        if self.clf_type not in ('regression', 'binary-clf', 'multiclass-clf'):
+        if self.clf_type not in ("regression", "binary-clf", "multiclass-clf"):
             raise ValueError(
-                "Problem type must be either 'regression', 'binary-clf' or 'multiclass-clf' "
-                f"got {self.clf_type} instead."
+                "Problem type must be either 'regression', 'binary-clf' or"
+                f" 'multiclass-clf' got {self.clf_type} instead."
             )
 
         X_temp = check_array(X, dtype=None)
         y_temp = check_array(self.y, dtype=None, ensure_2d=False)
-        if not hasattr(X, 'dtype') and np.issubdtype(X_temp.dtype, np.str_):
+        if not hasattr(X, "dtype") and np.issubdtype(X_temp.dtype, np.str_):
             X = check_array(X, dtype=np.object)
             y = check_array(self.y, dtype=np.object, ensure_2d=False)
         else:
@@ -335,32 +338,32 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             for j, cats in enumerate(self.categories_):
                 unqX = np.unique(X[:, j])
                 encoder = {x: 0 for x in unqX}
-                if self.clf_type in ['binary-clf', 'regression']:
+                if self.clf_type in ["binary-clf", "regression"]:
                     for x in unqX:
                         if x not in cats:
                             Eyx = 0
                         else:
                             Eyx = self.Eyx_[j][x]
-                        lambda_n = lambda_(self.counter_[j][x], self.n_/self.k_[j])
-                        encoder[x] = lambda_n*Eyx + (1 - lambda_n)*self.Ey_
+                        lambda_n = lambda_(self.counter_[j][x], self.n_ / self.k_[j])
+                        encoder[x] = lambda_n * Eyx + (1 - lambda_n) * self.Ey_
                     x_out = np.zeros((len(X[:, j]), 1))
                     for i, x in enumerate(X[:, j]):
                         x_out[i, 0] = encoder[x]
                     out.append(x_out.reshape(-1, 1))
-                if self.clf_type == 'multiclass-clf':
+                if self.clf_type == "multiclass-clf":
                     x_out = np.zeros((len(X[:, j]), len(self.classes_)))
                     lambda_n = {x: 0 for x in unqX}
                     for x in unqX:
-                        lambda_n[x] = lambda_(self.counter_[j][x],
-                                              self.n_/self.k_[j])
+                        lambda_n[x] = lambda_(self.counter_[j][x], self.n_ / self.k_[j])
                     for k, c in enumerate(np.unique(self.classes_)):
                         for x in unqX:
                             if x not in cats:
                                 Eyx = 0
                             else:
                                 Eyx = self.Eyx_[c][j][x]
-                            encoder[x] = lambda_n[x]*Eyx + \
-                                (1 - lambda_n[x])*self.Ey_[c]
+                            encoder[x] = (
+                                lambda_n[x] * Eyx + (1 - lambda_n[x]) * self.Ey_[c]
+                            )
                         for i, x in enumerate(X[:, j]):
                             x_out[i, k] = encoder[x]
                     out.append(x_out)
@@ -368,8 +371,9 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         if self.cross_val is True:
             np.random.seed(1)
-            kf = KFold(n_splits=self.n_folds, shuffle=True,
-                       random_state=self.random_state)
+            kf = KFold(
+                n_splits=self.n_folds, shuffle=True, random_state=self.random_state
+            )
             # Global mean of the target, applied to unknown values
             global_mean = y.mean()
             split = 0
@@ -380,8 +384,11 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 for infold, oof in kf.split(X[:, j]):
                     inner_means_df = pd.DataFrame()
                     infold_mean = y[infold].mean()
-                    kf_inner = KFold(n_splits=self.n_inner_folds,
-                                     shuffle=True, random_state=self.random_state)
+                    kf_inner = KFold(
+                        n_splits=self.n_inner_folds,
+                        shuffle=True,
+                        random_state=self.random_state,
+                    )
                     inner_split = 0
                     for infold_inner, oof_inner in kf_inner.split(X[:, j][infold]):
                         X_a = X[:, j][infold][infold_inner]

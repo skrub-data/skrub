@@ -7,7 +7,7 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat.utils import Version, check_input
+from dirty_cat._utils import Version, check_input
 
 WORD_TO_ALIAS: Dict[str, str] = {
     "year": "Y",
@@ -131,9 +131,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 ) // pd.Timedelta("1s")
 
     def fit(self, X, y=None) -> "DatetimeEncoder":
-        """
-        Fit the DatetimeEncoder to X. In practice, just stores which extracted
-        features are not constant.
+        """Fit the DatetimeEncoder to X. In practice, just stores which extracted features are not constant.
 
         Parameters
         ----------
@@ -146,7 +144,6 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         -------
         DatetimeEncoder
             Fitted DatetimeEncoder instance.
-
         """
         self._validate_keywords()
         # Columns to extract for each column,
@@ -187,9 +184,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None) -> np.array:
-        """
-        Transform X by replacing each datetime column with
-        corresponding numerical features.
+        """Transform X by replacing each datetime column with corresponding numerical features.
 
         Parameters
         ----------

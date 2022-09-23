@@ -5,7 +5,7 @@ from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_20newsgroups
 
 from dirty_cat import GapEncoder
-from dirty_cat.utils import Version
+from dirty_cat._utils import Version
 
 
 def test_analyzer():
@@ -200,35 +200,3 @@ def test_missing_values(missing: str) -> None:
             r"'error' or 'zero_impute', got 'aaa'",
         ):
             enc.fit_transform(observations)
-
-
-if __name__ == "__main__":
-    print("test_analyzer")
-    test_analyzer()
-    print("test_analyzer passed")
-
-    print("start test_gap_encoder")
-    test_gap_encoder(hashing=True, init="k-means++", analyzer="char", add_words=False)
-    print("passed")
-
-    print("start test_input_type")
-    test_input_type()
-    print("passed")
-
-    print("start test_partial_fit")
-    test_partial_fit()
-    print("passed")
-
-    print("start test_get_feature_names_out")
-    test_get_feature_names_out()
-    print("passed")
-
-    print("start test_overflow_error")
-    test_overflow_error()
-    print("passed")
-
-    print("start test_score")
-    test_score()
-    print("test_score passed")
-
-    print("Done")

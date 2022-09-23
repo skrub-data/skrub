@@ -1,11 +1,12 @@
 numpy==1.17.3
 scipy==1.4.0
-scikit-learn==0.22.0
+scikit-learn==0.23.0
 pytest
 pytest-cov
 coverage
 matplotlib
-pandas==1.1.5
+pandas==1.2.0
 cython
 joblib
 seaborn
+numpydoc

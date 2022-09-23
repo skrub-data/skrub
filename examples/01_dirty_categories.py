@@ -20,8 +20,8 @@ dataframe, after which we show a much simpler way, albeit with less fine
 control.
 
 Finally, we look at the road safety dataset [##]_ to see how the
-Target Encoder can help us get better results on large datasets 
-if used on cross-validated subsets of data. 
+Target Encoder can help us get better results on large datasets
+if used on cross-validated subsets of data.
 
 
 .. [#] https://www.openml.org/d/42125
@@ -77,12 +77,12 @@ y.name
 # Now, let's carry out some basic preprocessing:
 import pandas as pd
 
-X['date_first_hired'] = pd.to_datetime(X['date_first_hired'])
-X['year_first_hired'] = X['date_first_hired'].apply(lambda x: x.year)
+X["date_first_hired"] = pd.to_datetime(X["date_first_hired"])
+X["year_first_hired"] = X["date_first_hired"].apply(lambda x: x.year)
 # Get a mask of the rows with missing values in "gender"
-mask = X.isna()['gender']
+mask = X.isna()["gender"]
 # And remove them
-X.dropna(subset=['gender'], inplace=True)
+X.dropna(subset=["gender"], inplace=True)
 y = y[~mask]
 
 # %%
@@ -104,7 +104,7 @@ y = y[~mask]
 # representation
 from sklearn.preprocessing import OneHotEncoder
 
-one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
+one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 # %%
 # We assemble these to apply them to the relevant columns.
@@ -114,12 +114,12 @@ one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
 from sklearn.compose import make_column_transformer
 
 encoder = make_column_transformer(
-    (one_hot, ['gender', 'department_name', 'assignment_category']),
-    ('passthrough', ['year_first_hired']),
+    (one_hot, ["gender", "department_name", "assignment_category"]),
+    ("passthrough", ["year_first_hired"]),
     # Last but not least, our dirty column
-    (one_hot, ['employee_position_title']),
-    remainder='drop',
-   )
+    (one_hot, ["employee_position_title"]),
+    remainder="drop",
+)
 
 # %%
 # Pipelining an encoder with a learner
@@ -127,6 +127,14 @@ encoder = make_column_transformer(
 #
 # We will use a HistGradientBoostingRegressor, which is a good predictor
 # for data with heterogeneous columns
+# (we need to require the experimental feature for scikit-learn versions
+# earlier than 1.0)
+import sklearn
+from sklearn.utils.fixes import parse_version
+
+if parse_version(sklearn.__version__) < parse_version("1.0"):
+    from sklearn.experimental import enable_hist_gradient_boosting
+# We can now import the HGBR from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
@@ -153,15 +161,14 @@ np.unique(y)
 # We will now experiment with encoders specially made for handling
 # dirty columns
 
-from dirty_cat import (SimilarityEncoder, TargetEncoder,
-                       MinHashEncoder, GapEncoder)
+from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder, GapEncoder
 
 encoders = {
-    'one-hot': one_hot,
-    'similarity': SimilarityEncoder(),
-    'target': TargetEncoder(handle_unknown='ignore'),
-    'minhash': MinHashEncoder(n_components=100),
-    'gap': GapEncoder(n_components=100),
+    "one-hot": one_hot,
+    "similarity": SimilarityEncoder(),
+    "target": TargetEncoder(handle_unknown="ignore"),
+    "minhash": MinHashEncoder(n_components=100),
+    "gap": GapEncoder(n_components=100),
 }
 
 # %%
@@ -175,18 +182,17 @@ all_scores = dict()
 
 for name, method in encoders.items():
     encoder = make_column_transformer(
-        (one_hot, ['gender', 'department_name', 'assignment_category']),
-        ('passthrough', ['year_first_hired']),
+        (one_hot, ["gender", "department_name", "assignment_category"]),
+        ("passthrough", ["year_first_hired"]),
         # Last but not least, our dirty column
-        (method, ['employee_position_title']),
-        remainder='drop',
+        (method, ["employee_position_title"]),
+        remainder="drop",
     )
 
     pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
     scores = cross_val_score(pipeline, X, y)
-    print(f'{name} encoding')
-    print(f'r2 score:  mean: {np.mean(scores):.3f}; '
-          f'std: {np.std(scores):.3f}\n')
+    print(f"{name} encoding")
+    print(f"r2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
     all_scores[name] = scores
 
 # %%
@@ -199,9 +205,9 @@ import seaborn
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(4, 3))
-ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
-plt.ylabel('Encoding', size=20)
-plt.xlabel('Prediction accuracy     ', size=20)
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient="h")
+plt.ylabel("Encoding", size=20)
+plt.xlabel("Prediction accuracy     ", size=20)
 plt.yticks(size=20)
 plt.tight_layout()
 
@@ -235,7 +241,7 @@ y = employee_salaries.y
 # %%
 # We'll drop the "date_first_hired" column as it's redundant with
 # "year_first_hired".
-X = X.drop(['date_first_hired'], axis=1)
+X = X.drop(["date_first_hired"], axis=1)
 
 # %%
 # We still have a complex and heterogeneous dataframe:
@@ -259,8 +265,7 @@ X
 from dirty_cat import SuperVectorizer
 
 pipeline = make_pipeline(
-    SuperVectorizer(auto_cast=True),
-    HistGradientBoostingRegressor()
+    SuperVectorizer(auto_cast=True), HistGradientBoostingRegressor()
 )
 
 # %%
@@ -268,11 +273,11 @@ pipeline = make_pipeline(
 
 from sklearn.model_selection import cross_val_score
 
-scores = cross_val_score(pipeline, X, y, scoring='r2')
+scores = cross_val_score(pipeline, X, y, scoring="r2")
 
-print(f'scores={scores}')
-print(f'mean={np.mean(scores)}')
-print(f'std={np.std(scores)}')
+print(f"scores={scores}")
+print(f"mean={np.mean(scores)}")
+print(f"std={np.std(scores)}")
 
 # %%
 # The prediction performed here is pretty much as good as above
@@ -370,13 +375,7 @@ regressor.fit(X_train_enc, y_train)
 # Retrieving the feature importances
 
 importances = regressor.feature_importances_
-std = np.std(
-    [
-        tree.feature_importances_
-        for tree in regressor.estimators_
-    ],
-    axis=0
-)
+std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
 indices = np.argsort(importances)
 # Sort from least to most
 indices = list(reversed(indices))
@@ -426,6 +425,7 @@ plt.show()
 # road accidents in Great Britain in 1979, with more than
 # 360 000 observations :
 from dirty_cat.datasets import fetch_road_safety
+
 road_safety = fetch_road_safety()
 # X, our explanatory variables
 X = road_safety.X
@@ -436,7 +436,14 @@ y = road_safety.y
 # %%
 # Now, let's carry out some basic preprocessing:
 # Keep only the columns that will be used:
-col_to_use = ['Age_of_Driver', 'Age_of_Vehicle', 'Day_of_Week', 'Speed_limit', 'Weather_Conditions', 'Local_Authority_(Highway)']
+col_to_use = [
+    "Age_of_Driver",
+    "Age_of_Vehicle",
+    "Day_of_Week",
+    "Speed_limit",
+    "Weather_Conditions",
+    "Local_Authority_(Highway)",
+]
 X = X[col_to_use]
 # Drop the lines that contained missing values in X and y
 for col in col_to_use:
@@ -453,17 +460,19 @@ y.reset_index(drop=True, inplace=True)
 
 # We create our encoders. In this example we will
 # compare the ``OneHotEncoder`` to the ``MinHasEncoder``
-# and the ``TargetEncoder``, used with or without 
+# and the ``TargetEncoder``, used with or without
 # cross-validated encoding.
-one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
+one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 minhash = MinHashEncoder(n_components=100)
-target = TargetEncoder(clf_type='binary-clf', handle_unknown='ignore', cross_val=False)
-target_cv = TargetEncoder(handle_unknown='ignore', cross_val=True, n_folds=4, n_inner_folds=3)
+target = TargetEncoder(clf_type="binary-clf", handle_unknown="ignore", cross_val=False)
+target_cv = TargetEncoder(
+    handle_unknown="ignore", cross_val=True, n_folds=4, n_inner_folds=3
+)
 encoders = {
-    'one-hot': one_hot,
-    'minhash': minhash,
-    'target': target,
-    'target-cv': target_cv
+    "one-hot": one_hot,
+    "minhash": minhash,
+    "target": target,
+    "target-cv": target_cv,
 }
 
 # %%
@@ -473,21 +482,23 @@ encoders = {
 # We will use a HistGradientBoostingClassifier :
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import cross_validate
+
 all_scores = dict()
 for name, method in encoders.items():
     encoder = make_column_transformer(
-        (one_hot, ['Day_of_Week', 'Weather_Conditions', 'Speed_limit']),
-        ('passthrough', ['Age_of_Driver', 'Age_of_Vehicle']),
+        (one_hot, ["Day_of_Week", "Weather_Conditions", "Speed_limit"]),
+        ("passthrough", ["Age_of_Driver", "Age_of_Vehicle"]),
         # Last but not least, our dirty column
-        (method, ['Local_Authority_(Highway)']),
-        remainder='drop',
+        (method, ["Local_Authority_(Highway)"]),
+        remainder="drop",
     )
     pipeline = make_pipeline(encoder, HistGradientBoostingClassifier())
     scores = cross_validate(pipeline, X, y)
-    test_scores = scores['test_score']
-    print(f'{name} encoding')
-    print(f'r2 score:  mean: {np.mean(test_scores):.3f}; '
-          f'std: {np.std(test_scores):.3f}\n')
+    test_scores = scores["test_score"]
+    print(f"{name} encoding")
+    print(
+        f"r2 score:  mean: {np.mean(test_scores):.3f}; std: {np.std(test_scores):.3f}\n"
+    )
     all_scores[name] = scores
 # The results show that the :class:`TargetEncoder` performs best
 # if the data are split into folds that will then determine the
@@ -499,14 +510,14 @@ for name, method in encoders.items():
 fit_times = dict()
 test_results = dict()
 for enc in encoders.keys():
-    fit_times[enc] = all_scores[enc]['fit_time']
-    test_results[enc] = all_scores[enc]['test_score']
+    fit_times[enc] = all_scores[enc]["fit_time"]
+    test_results[enc] = all_scores[enc]["test_score"]
 _, (ax1, ax2) = plt.subplots(nrows=2, figsize=(4, 3))
-seaborn.boxplot(data=pd.DataFrame(test_results), orient='h', ax=ax1)
-ax1.set_xlabel('Prediction accuracy', size=16)
+seaborn.boxplot(data=pd.DataFrame(test_results), orient="h", ax=ax1)
+ax1.set_xlabel("Prediction accuracy", size=16)
 [t.set(size=16) for t in ax1.get_yticklabels()]
-seaborn.boxplot(data=pd.DataFrame(fit_times), orient='h', ax=ax2)
-ax2.set_xlabel('Computation time', size=16)
+seaborn.boxplot(data=pd.DataFrame(fit_times), orient="h", ax=ax2)
+ax2.set_xlabel("Computation time", size=16)
 [t.set(size=16) for t in ax2.get_yticklabels()]
 plt.tight_layout()
 print(test_results)

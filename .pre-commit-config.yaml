@@ -13,6 +13,7 @@ repos:
     rev: 5.0.4
     hooks:
     -   id: flake8
+        files: dirty_cat/
         types: [file, python]
 -   repo: https://github.com/PyCQA/isort
     rev: 5.10.1

@@ -31,25 +31,16 @@ from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
 
-from dirty_cat.utils import Version
+from dirty_cat._utils import Version
 
-from .utils import check_input
+from ._utils import check_input
 
-if Version(sklearn_version) == Version("0.22"):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        from sklearn.cluster.k_means_ import _k_init
-elif Version(sklearn_version) < Version("0.24"):
+if Version(sklearn_version) < Version("0.24"):
     from sklearn.cluster._kmeans import _k_init
 else:
     from sklearn.cluster import kmeans_plusplus
 
-if Version(sklearn_version) == Version("0.22"):
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        from sklearn.decomposition.nmf import _beta_divergence
-else:
-    from sklearn.decomposition._nmf import _beta_divergence
+from sklearn.decomposition._nmf import _beta_divergence
 
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
