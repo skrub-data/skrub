@@ -122,7 +122,8 @@ def fuzzy_join(
     2   ana  7
     3  sana  8
 
-    To do a simple join based on the nearest match::
+    To do a simple join based on the nearest match:
+
     >>> fuzzy_join(df1, df2, on='a')
         a_l  b   a_r    c
     0   ana  1   ana   7
@@ -130,7 +131,8 @@ def fuzzy_join(
     2  nana  3  sana   8
 
     When we want to accept only a certain match precison,
-    we can use the `match_score` argument::
+    we can use the `match_score` argument:
+
     >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
         a_l  b   a_r    c  distance
     0   ana  1   ana  7.0  1.000000
