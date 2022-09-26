@@ -112,35 +112,34 @@ def fuzzy_join(
     >>> df2 = pd.DataFrame({'a': ['anna', 'lala', 'ana', 'sana'], 'c': [5, 6, 7, 8]})
 
     >>> df1
-           a  b
-       0   ana  1
-       1  lala  2
-       2  nana  3
+        a  b
+    0   ana  1
+    1  lala  2
+    2  nana  3
 
     >>> df2
-           a  c
-       0  anna  5
-       1  lala  6
-       2   ana  7
-       3  sana  8
+        a  c
+    0  anna  5
+    1  lala  6
+    2   ana  7
+    3  sana  8
 
     To do a simple join based on the nearest match::
     >>> fuzzy_join(df1, df2, on='a')
-           a_l  b   a_r    c
-       0   ana  1   ana   7
-       1  lala  2  lala   6
-       2  nana  3  sana   8
+        a_l  b   a_r    c
+    0   ana  1   ana   7
+    1  lala  2  lala   6
+    2  nana  3  sana   8
 
     When we want to accept only a certain match precison,
     we can use the `match_score` argument::
     >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
-           a_l  b   a_r    c  distance
-       0   ana  1   ana  7.0  1.000000
-       1  lala  2  lala  6.0  1.000000
-       2  nana  3   NaN  NaN  0.532717
+        a_l  b   a_r    c  distance
+    0   ana  1   ana  7.0  1.000000
+    1  lala  2  lala  6.0  1.000000
+    2  nana  3   NaN  NaN  0.532717
 
     As expected, the category "nana" has no exact match (`match_score=1`).
-
     """
 
     warnings.warn("This feature is still experimental.")
