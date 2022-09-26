@@ -31,6 +31,7 @@ def fuzzy_join(
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     match_score: float = 0,
+    drop_unmatched=False,
     suffixes: Tuple[str, str] = ("_l", "_r"),
 ) -> pd.DataFrame:
     """
@@ -41,25 +42,24 @@ def fuzzy_join(
     ----------
 
     left : pandas.DataFrame
-            Table on which the join will be performed.
+        A table to merge.
     right : pandas.DataFrame
-            Table that will be joined.
+        A table used to merge with.
     left_on : typing.Union[str, None]
-            Name of left table column names on which
-            the matching will be perfomed.
+        Name of left table column to join.
     right_on : typing.Union[str, None]
-            Name of right table column names on which
-            the matching will be perfomed.
+        Name of right table key column to join
+        with left table key column.
     on : typing.Union[str, None]
-        Name of left and right table column names on which
-        the matching will be perfomed. Must be found in both DataFrames.
-        Use when the `left_on` and `right_on` parameters are not specified.
+        Name of common left and right table join key columns.
+        Must be found in both DataFrames. Use only if `left_on`
+        and `right_on` parameters are not specified.
     how : typing.Literal['left', 'right', 'all'], default='all'
-        Join to keep the matching columns from the left, right or
+        Keep the join key columns from the left, right or
         all tables.
     return_score : boolean, default=True
-            Wheter to return matching score based on the distance between
-            nearest matched categories.
+        Wheter to return matching score based on the distance between
+        nearest matched categories.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
         similarities.
@@ -75,9 +75,11 @@ def fuzzy_join(
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. Closer to 1 means the matches need to be very
         close, and to 0 that a bigger distance is tolerated.
+    drop_unmatched : boolean, default=False
+        Remove categories for which a match was not found in the two tables.
     suffixes : typing.Tuple[str, str], default=('_x', '_y')
-            A list of strings indicating the suffix to add when overlaping
-            column names.
+        A list of strings indicating the suffix to add when overlaping
+        column names.
 
     Returns:
     --------
@@ -240,14 +242,14 @@ def fuzzy_join(
     cols = list(left_table_clean.columns) + list(right_table_clean.columns)
     df_joined = pd.DataFrame(joined, columns=cols).replace(r"^\s*$", np.nan, regex=True)
 
-    if how == "left":
-        df_joined.drop(columns=[right_col], inplace=True)
-    if how == "right":
-        df_joined.drop(columns=[left_col], inplace=True)
-
     if return_score:
-        return pd.concat(
+        df_joined = pd.concat(
             [df_joined, pd.DataFrame(norm_distance, columns=["matching_score"])], axis=1
         )
-    else:
-        return df_joined
+    if drop_unmatched:
+        df_joined.dropna(subset=[left_col, right_col], inplace=True)
+    if how == "left":
+        df_joined.drop(columns=[right_col], inplace=True)
+    elif how == "right":
+        df_joined.drop(columns=[left_col], inplace=True)
+    return df_joined

@@ -20,10 +20,9 @@ def test_fuzzy_join(analyzer, how):
         right=df2,
         left_on="a1",
         right_on="a2",
+        match_score=0.5,
         return_score=True,
         analyzer=analyzer,
-        match_score=0.62,
-        how="all",
     )
 
     n_cols = df1.shape[1] + df2.shape[1] + 1
@@ -35,9 +34,9 @@ def test_fuzzy_join(analyzer, how):
         df1,
         left_on="a2",
         right_on="a1",
+        match_score=0.45,
         return_score=True,
         analyzer=analyzer,
-        match_score=0.6,
     )
     # Joining is always done on the left table and thus takes it shape:
     assert df_joined2.shape == (len(df2.dropna()), n_cols)
@@ -47,9 +46,9 @@ def test_fuzzy_join(analyzer, how):
         df1,
         left_on="a2",
         right_on="a1",
+        match_score=0.45,
         return_score=True,
         analyzer=analyzer,
-        match_score=0.6,
     )
     pd.testing.assert_frame_equal(df_joined2, df_joined3)
 
@@ -61,7 +60,6 @@ def test_fuzzy_join(analyzer, how):
         left_on="a1",
         right_on="a2",
         analyzer=analyzer,
-        match_score=0.6,
         how=how,
         suffixes=("", "r"),
     )
@@ -82,11 +80,22 @@ def test_fuzzy_join(analyzer, how):
         left_on="a1",
         right_on="a2",
         analyzer=analyzer,
-        match_score=0.6,
-        how=how,
+        return_score=True,
         suffixes=("l", "r"),
     )
     assert ("a1l" and "a1r") in df.columns
+
+    df_dropna = fuzzy_join(
+        left=df1,
+        right=df2,
+        left_on="a1",
+        right_on="a2",
+        analyzer=analyzer,
+        match_score=0.5,
+        return_score=True,
+        drop_unmatched=True,
+    )
+    assert df_dropna.shape[0] == df_joined.dropna().shape[0]
 
 
 @pytest.mark.parametrize(

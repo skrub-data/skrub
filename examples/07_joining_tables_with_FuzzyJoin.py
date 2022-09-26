@@ -6,7 +6,7 @@ When combining data from different sources, there is a risk that
 it will not be easily merged, as it comes mislabeled, with errors, duplicated.
 
 In this example, we show how the :func:`fuzzy_join` function allows us to join
-tables without cleaning the data and but by taking into account the
+tables without cleaning the data by taking into account the
 label variations.
 
 Simple and time-saving, this method is intended for users to apply
@@ -14,15 +14,15 @@ before training their machine learning model.
 
 To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
 with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
-in order to create a satisfying prediction model.
+in order to create a satisfying first prediction model.
 
 """
 
-###############################################################################
+#######################################################################
 # Data Importing and preprocessing
 # --------------------------------
 #
-# We import the happiness score data first:
+# We import the happiness score table first:
 import pandas as pd
 
 df = pd.read_csv(
@@ -35,26 +35,26 @@ df.drop(df.tail(1).index, inplace=True)
 df.head(3)
 
 ##############################################################################
-# The Happiness score was computed using the Gallup World Poll survey results.
-# The report stress out some of the possible explanatory factors: GDP per
-# capita, Social support, Generosity etc.
+# The is a table that contains the happiness index of a country along with
+# some of the possible explanatory factors: GDP per capita, Social support,
+# Generosity etc.
+# For more information, read the `World Happiness Report website <https://worldhappiness.report/>`_.
 X = df[["Country"]]
 y = df[["Happiness score"]]
-# We defined our X and y variables.
+# We keep the country names in our X table and we create
+# the y table with the happiness score (our prediction target).
 
-###############################################################################
-# If we want to create a machine learning model which predicts
-# the happiness index of any new country or future date,
-# we will need to include explanatory factors from other tables.
-# What can we add from the available online public data tables?
+############################################################################
+# Now, we will need to include explanatory factors from other tables.
+# What can we add from the available online public data tables to complete
+# our X table?
 
-###############################################################################
+#############################################################################
 # Finding additional tables
 # -------------------------
 #
-# Let's inspire ourselfes from the factors used by the Happiness report to
-# find additional features.
-# We will extract data from the World Bank (WB) databank.
+# Interesting tables can be found on the the World Bank (WB) databank.
+# We will extract data from their website and include them in our model.
 # Luckily, dirty_cat has the following function to do it easily:
 from dirty_cat.datasets import fetch_world_bank_indicator
 
@@ -73,17 +73,24 @@ life_exp.head(3)
 legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
 legal_rights.head(3)
 
-###############################################################################
+#######################################################################
 # Joining World Bank tables to our initial one
 # ----------------------------------------------
 #
-# So now we have our initial table and 3 additional ones that we have
+# So now we have our initial table, X, and 3 additional ones that we have
 # extracted.
 #
 # To join them with dirty_cat, we only need to do the following:
 from dirty_cat import fuzzy_join
 
-X1 = fuzzy_join(X, gdppc, left_on="Country", right_on="Country Name", return_score=True)
+X1 = fuzzy_join(
+    X,  # our table to join
+    gdppc,  # the table to join with
+    left_on="Country",  # the first join key column
+    right_on="Country Name",  # the second join key column
+    return_score=True,
+)
+
 X1.head(20)
 # We merged the first WB table to our initial one.
 
@@ -112,7 +119,7 @@ X1.head(20)
 #
 # Let's do some more inspection of the merging done.
 
-###############################################################################
+######################################################################
 # Keeping only the good matches
 # ------------------------------
 #################################################################
@@ -138,7 +145,7 @@ def print_worst_matches(joined_table, n=5):
 
 print_worst_matches(X1, n=4)
 # We see that some matches were unsuccesful
-# (e.g 'Palestinian Territories*' and 'Estonia'),
+# (e.g 'Palestinian Territories*' and 'Palau'),
 # because there is simply no match in the two tables.
 
 #################################################################
@@ -146,18 +153,16 @@ print_worst_matches(X1, n=4)
 # In this case, it is better to use the threshold parameter
 # so as to include only precise-enough matches:
 #
-# TODO: improve threshold measurement, here it excludes some good matches as well:
 X1 = fuzzy_join(
     X,
     gdppc,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
+    match_score=0.35,
     return_score=True,
 )
 print_worst_matches(X1, n=4)
 # Matches that are not available (or precise enough) are marked as `NaN`.
-X1.drop(["matching_score"], axis=1, inplace=True)
 
 #################################################################
 #
@@ -171,6 +176,7 @@ X2 = fuzzy_join(
     match_score=0.45,
     how="left",
 )
+
 X2.head(3)
 #################################################################
 # .. topic:: Note:
@@ -187,22 +193,22 @@ X3 = fuzzy_join(
     match_score=0.45,
     how="left",
 )
+
 X3.head(3)
 #################################################################
 #
 # Great! Our joined table has became bigger and full of useful informations.
-# We now only remove categories with missing information:
+# We now only remove missing or unused information:
+X3.drop(["matching_score"], axis=1, inplace=True)
 mask = X3["GDP per capita (current US$)"].notna()
-y = np.ravel(y[mask])
-
-X1 = X1[mask]
-X2 = X2[mask]
 X3 = X3[mask]
 
-#################################################################
-# And we are ready to apply a machine learning model to it!
+y = np.ravel(y[mask])
 
-###############################################################################
+#################################################################
+# And we are ready to apply a first machine learning model to it!
+
+###################################################################
 # Prediction model
 # -----------------
 #
@@ -216,7 +222,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import KFold
 
 hgdb = HistGradientBoostingRegressor(random_state=0)
-cv = KFold(n_splits=4, shuffle=True, random_state=0)
+cv = KFold(n_splits=2, shuffle=True, random_state=0)
 
 #################################################################
 # To evaluate our model, we will apply a `4-fold cross-validation`.
@@ -225,19 +231,17 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # Let's finally assess the results of our models:
 from sklearn.model_selection import cross_validate
 
-for data in (X1, X2, X3):
-    cv_results_t = cross_validate(
-        hgdb, data.select_dtypes(exclude=object), y, cv=cv, scoring="r2"
-    )
-    cv_r2_t = cv_results_t["test_score"]
-    print(
-        f"Mean R2 score with {len(data.columns) - 2} feature columns is"
-        f" {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
-    )
+cv_results_t = cross_validate(
+    hgdb, X3.select_dtypes(exclude=object), y, cv=cv, scoring="r2"
+)
+cv_r2_t = cv_results_t["test_score"]
+print(
+    f"Mean R2 score with {len(X3.columns) - 2} feature columns is"
+    f" {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
+)
 
 #################################################################
-# Our score gets better every time we add additional information into our
-# table!
+# We have a satisfying first result: an R2 of 0.63!
 #
 # Data cleaning varies from dataset to dataset: there are as
 # many ways to clean a table as there are errors. :func:`fuzzy_join`
@@ -246,3 +250,5 @@ for data in (X1, X2, X3):
 # Data transformation is also often very costly in both time and ressources.
 # :func:`fuzzy_join` is fast and easy-to-use.
 #
+# Now up to you, try improving our model by adding information into it and
+# beat our result!
