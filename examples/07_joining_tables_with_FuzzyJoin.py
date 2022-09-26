@@ -1,5 +1,5 @@
 """
-Merging a collection of dirty tables
+Merging dirty tables: fuzzy join
 ====================================
 
 When combining data from different sources, there is a risk that
@@ -31,20 +31,23 @@ df = pd.read_csv(
 )
 df.drop(df.tail(1).index, inplace=True)
 
-# Let's take a look at the table:
+#######################################################################
+# Let's look at the table:
 df.head(3)
 
 ##############################################################################
 # The is a table that contains the happiness index of a country along with
 # some of the possible explanatory factors: GDP per capita, Social support,
 # Generosity etc.
+#
 # For more information, read the `World Happiness Report website <https://worldhappiness.report/>`_.
 X = df[["Country"]]
 y = df[["Happiness score"]]
+#######################################################################
 # We keep the country names in our X table and we create
 # the y table with the happiness score (our prediction target).
-
-############################################################################
+#
+#
 # Now, we will need to include explanatory factors from other tables.
 # What can we add from the available online public data tables to complete
 # our X table?
@@ -79,6 +82,11 @@ legal_rights.head(3)
 #
 # So now we have our initial table, X, and 3 additional ones that we have
 # extracted.
+#
+
+#################################################
+# 1. Joining GDP per capita table
+# ................................
 #
 # To join them with dirty_cat, we only need to do the following:
 from dirty_cat import fuzzy_join
@@ -129,21 +137,22 @@ import numpy as np
 
 def print_worst_matches(joined_table, n=5):
     """Prints n worst matches for inspection."""
-    max_ind = np.argpartition(joined_table["matching_score"], n, axis=0)[:n]
+    max_ind = np.argsort(joined_table["matching_score"], axis=0)[:n]
     max_dist = pd.Series(
         joined_table["matching_score"][max_ind.ravel()].ravel(), index=max_ind.ravel()
     )
     worst_matches = joined_table.iloc[list(max_ind.ravel())]
     worst_matches = worst_matches.assign(distance=max_dist)
-    print("The worst five matches are the following:\n")
+    print("The worst five matches are the following:")
     return worst_matches
 
 
+#################################################################
 # This will print out the five worst matches, which will give
 # us an overview of the situation:
 
-
 print_worst_matches(X1, n=4)
+#################################################################
 # We see that some matches were unsuccesful
 # (e.g 'Palestinian Territories*' and 'Palau'),
 # because there is simply no match in the two tables.
@@ -162,9 +171,33 @@ X1 = fuzzy_join(
     return_score=True,
 )
 print_worst_matches(X1, n=4)
+#################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
+# We will remove them:
+
+mask = X1["GDP per capita (current US$)"].notna()
+X1 = X1[mask]
 
 #################################################################
+#
+# We can finally plot and look at the link between GDP per capita and happiness:
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+fig = sns.scatterplot(x=X1["GDP per capita (current US$)"], y=y)
+fig.set_ylabel("Happiness index")
+fig.set_title("Is having a higher GDP per capita sign of happiness?")
+plt.show()
+
+#################################################
+# It seems that the happiest countries are those
+# having a high GDP per capita. But countries with
+# However, unhappy countries are not only those that have
+# a small GDP per capita. We have to search for other patterns.
+
+#################################################
+# 2. Joining life expectancy table
+# ................................
 #
 # Now let's include other information that may be relevant, such as
 # life expectancy table:
@@ -178,13 +211,27 @@ X2 = fuzzy_join(
 )
 
 X2.head(3)
-#################################################################
+
+#################################################
+# Let's plot this relation:
+fig = sns.scatterplot(x=X2["Life expectancy at birth, total (years)"], y=y)
+fig.set_ylabel("Happiness index")
+fig.set_title("Is having a higher life expectancy linked to happiness?")
+plt.show()
+
+# It seems the answer is yes!
+# Countries with higher life expectancy are clearly more happy.
+
+
+#################################################
+# 3. Joining legal rights strength table
+# ................................
 # .. topic:: Note:
 #
 #    Here, we use the `keep='left'` option to keep only the left key matching
 #    column, so as not to have too much unnecessary columns with country names.
 #
-# And the table with a measure of legal rights strenght in the country:
+# And the table with a measure of legal rights strength in the country:
 X3 = fuzzy_join(
     X2,
     legal_rights,
@@ -195,13 +242,23 @@ X3 = fuzzy_join(
 )
 
 X3.head(3)
+
+#################################################
+# Let's take a look at their correspondance in a figure:
+fig = sns.boxplot(x=X3["Strength of legal rights index (0=weak to 12=strong)"], y=y)
+fig.set_ylabel("Happiness index")
+fig.set_title("Does legal streght lead to happiness?")
+plt.show()
+
+#################################################################
+# It seems that some level of legal strenght (around 4)
+# is necessary for happiness, but then it becomes much less relevant!
+
 #################################################################
 #
 # Great! Our joined table has became bigger and full of useful informations.
 # We now only remove missing or unused information:
 X3.drop(["matching_score"], axis=1, inplace=True)
-mask = X3["GDP per capita (current US$)"].notna()
-X3 = X3[mask]
 
 y = np.ravel(y[mask])
 
@@ -234,7 +291,9 @@ from sklearn.model_selection import cross_validate
 cv_results_t = cross_validate(
     hgdb, X3.select_dtypes(exclude=object), y, cv=cv, scoring="r2"
 )
+
 cv_r2_t = cv_results_t["test_score"]
+
 print(
     f"Mean R2 score with {len(X3.columns) - 2} feature columns is"
     f" {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"

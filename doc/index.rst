@@ -130,7 +130,7 @@ Other encoders
    DatetimeEncoder
 
 Joining tables
---------------
+---------------
 
 .. autosummary::
    :toctree: generated/
