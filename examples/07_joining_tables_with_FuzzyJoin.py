@@ -127,9 +127,6 @@ X1.head(20)
 #
 # Let's do some more inspection of the merging done.
 
-######################################################################
-# Keeping only the good matches
-# ------------------------------
 #################################################################
 # The best way to inspect the matches is to use the following function:
 import numpy as np
@@ -148,7 +145,7 @@ def print_worst_matches(joined_table, n=5):
 
 
 #################################################################
-# This will print out the five worst matches, which will give
+# Let's print the four worst matches, which will give
 # us an overview of the situation:
 
 print_worst_matches(X1, n=4)
@@ -177,6 +174,7 @@ print_worst_matches(X1, n=4)
 
 mask = X1["GDP per capita (current US$)"].notna()
 X1 = X1[mask]
+y = np.ravel(y[mask])
 
 #################################################################
 #
@@ -260,8 +258,6 @@ plt.show()
 # We now only remove missing or unused information:
 X3.drop(["matching_score"], axis=1, inplace=True)
 
-y = np.ravel(y[mask])
-
 #################################################################
 # And we are ready to apply a first machine learning model to it!
 
@@ -271,9 +267,8 @@ y = np.ravel(y[mask])
 #
 # Let us now define the model that will be used to predict the happiness score:
 from sklearn import __version__ as sklearn_version
-from dirty_cat._utils import Version
 
-if Version(sklearn_version) < Version("1.0"):
+if sklearn_version < "1.0":
     from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import KFold
