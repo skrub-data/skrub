@@ -189,9 +189,9 @@ plt.show()
 
 #################################################
 # It seems that the happiest countries are those
-# having a high GDP per capita. But countries with
-# However, unhappy countries are not only those that have
-# a small GDP per capita. We have to search for other patterns.
+# having a high GDP per capita.
+# However, unhappy countries do not have only low levels
+# of GDP per capita. We have to search for other patterns.
 
 #################################################
 # 2. Joining life expectancy table
