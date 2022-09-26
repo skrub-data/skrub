@@ -94,17 +94,13 @@ def fuzzy_join(
     the distances between closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.
-
     When we use `match_score=0`, the function will be forced to impute the
     nearest match (of the left table category) across all possible matching
     options in the right table column.
-
     When the neighbors are distant, we may use the `match_score` parameter
     with a value bigger than 0 to define the minimal level of matching
     score tolerated. If it is not reached, matches will be
     considered as not found and NaN values will be imputed.
-
-    See example below for an illustration.
 
     Example
     -------
