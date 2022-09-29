@@ -3,11 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from itertools import product
 
-from sklearn.metrics.pairwise import distance_metrics
-from sklearn.preprocessing import StandardScaler
-
-import fasttext.util
-from fasttext import load_model
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
 from thefuzz import process
 from autofj import AutoFJ
@@ -18,8 +13,7 @@ def fetch_data(dataset_name):
     """Fetch datasets from https://github.com/chu-data-lab/AutomaticFuzzyJoin/tree/master/src/autofj/benchmark
     """
     repository = "chu-data-lab/AutomaticFuzzyJoin"
-    commit = "2e638b2dd17da41abf5ed71575cea94b1d175ccd"
-    base_url = f"https://raw.githubusercontent.com/chu-data-lab/{repository}/blob/{commit}/src/autofj/benchmark/{dataset_name}"  # noqa
+    base_url = f"https://raw.githubusercontent.com/{repository}/master/src/autofj/benchmark/{dataset_name}"  # noqa
     left = pd.read_csv(f"{base_url}/left.csv")
     right = pd.read_csv(f"{base_url}/right.csv")
     gt = pd.read_csv(f"{base_url}/gt.csv")
@@ -93,7 +87,6 @@ def evaluate(pred_joins, gt_joins):
     gt = {(le, ri) for le, ri in gt_joins}
 
     tp = pred.intersection(gt)
-
     precision = len(tp) / len(pred)
     recall = len(tp) / len(gt)
     # print('Precision', precision, 'Recall', recall)
@@ -104,67 +97,28 @@ def evaluate(pred_joins, gt_joins):
     return precision, recall, f1
 
 
-def fuzzy_join_precision_recall(left, right, gt, left_col, right_col):
-    cols = [left_col, right_col]
-
-    joined_fj, dist = fuzzy_join(left, right, on=cols, return_distance=True)
-
+def fuzzy_join_precision_recall(
+    left, right, gt, left_col, right_col, analyzer, ngram_range
+):
+    joined_fj = fuzzy_join(
+        right,
+        left,
+        left_on=left_col,
+        right_on=right_col,
+        analyzer=analyzer,
+        ngram_range=ngram_range,
+        return_score=True,
+    )
     pr_list = []
     re_list = []
     f1_list = []
-    dist_ord = np.argsort(np.ravel(dist))
-
-    for k in range(1, len(left), 10):
-        mask = dist_ord[:k]
-        joined_k = joined_fj.iloc[mask]
-        pr, re, f1 = evaluate(
-            list(zip(joined_k["col_to_embed"], joined_k[right_col])),
-            list(zip(gt["title_l"], gt["title_r"])),
-        )
-        pr_list.append(pr)
-        re_list.append(re)
-        f1_list.append(f1)
-    return pr_list, re_list, f1_list
-
-
-def fasttext_precision_recall(left, right, gt, left_col, right_col, similarity):
-    right_clean = right[right_col]
-    joined = pd.DataFrame(left[left_col], columns=[left_col, "col_to_embed"])
-    pr_list = []
-    re_list = []
-    f1_list = []
-
-    ft_model = load_model("cc.en.300.bin")
-    left_enc = [
-        ft_model.get_word_vector(word.lower()).astype("float32")
-        for word in left[left_col]
-    ]
-    right_enc = [
-        ft_model.get_word_vector(word.lower()).astype("float32")
-        for word in right[right_col]
-    ]
-
-    left_enc = StandardScaler().fit_transform(left_enc)
-    right_enc = StandardScaler().fit_transform(right_enc)
-
-    metric = distance_metrics()[similarity]
-    sim = metric(left_enc, right_enc)
-
-    idx_closest = np.argmin(sim, axis=1)
-    dist = sim[range(len(sim)), idx_closest]
-    dist_ord = np.argsort(np.ravel(dist))
-    for idx in left.index:
-        joined.loc[idx, "col_to_embed"] = right_clean[idx_closest[idx]]
-    for k in range(1, len(left), 10):
-        mask = dist_ord[:k]
-        joined_k = joined.iloc[mask]
-        pr, re, f1 = evaluate(
-            list(zip(joined_k["col_to_embed"], joined_k[right_col])),
-            list(zip(gt["title_l"], gt["title_r"])),
-        )
-        pr_list.append(pr)
-        re_list.append(re)
-        f1_list.append(f1)
+    pr, re, f1 = evaluate(
+        list(zip(joined_fj["title_r"], joined_fj["title_l"])),
+        list(zip(gt["title_l"], gt["title_r"])),
+    )
+    pr_list.append(pr)
+    re_list.append(re)
+    f1_list.append(f1)
     return pr_list, re_list, f1_list
 
 
@@ -188,7 +142,6 @@ def thefuzz_precision_recall(
             list(zip(joined[left_col], joined["matches"])),
             list(zip(gt["title_l"], gt["title_r"])),
         )
-
         pr_list.append(pr)
         re_list.append(re)
         f1_list.append(f1)
@@ -229,71 +182,51 @@ def best_precision_recall(pr_list, re_list, n_bins=13):
     return res_pr, res_re
 
 
-if __name__ == "__main__":
-    left_1, right_1, gt_1 = fetch_data("Country")
+left_1, right_1, gt_1 = fetch_data("Country")
 
-    pr_list = []
-    re_list = []
-    for analyser, max_n_gram, similarity in product(
-        ["char", "char_wb"], [3, 4], ["cosine", "l1", "l2"]
-    ):
-        if analyser == "word" and max_n_gram > 2:
-            continue
-        precision, recall, f1 = fuzzy_join_precision_recall(
-            right_1,
-            left_1,
-            gt_1,
-            "title",
-            "title",
-            analyzer=analyser,
-            ngram_range=(2, max_n_gram),
-            similarity=similarity,
-        )
-        pr_list.extend(precision)
-        re_list.extend(recall)
-        # plt.plot(recall, precision,
-        #         label=f"countVectorizer_{analyser}_{max_n_gram}_{similarity}")
-
-    pr_list, re_list = best_precision_recall(np.array(pr_list), np.array(re_list))
-    plt.plot(re_list, pr_list, label="countVectorizer")
-
-    pr_list_ft = []
-    re_list_ft = []
-    fasttext.util.download_model("en", if_exists="ignore")  # English
-    for similarity in ["cosine", "l1", "l2"]:
-        precision_ft, recall_ft, f1_ft = fasttext_precision_recall(
-            right_1, left_1, gt_1, "title", "title", similarity=similarity
-        )
-        # plt.plot(recall_ft, precision_ft, label=f'fasttext_{similarity}')
-        pr_list_ft.extend(precision_ft)
-        re_list_ft.extend(recall_ft)
-
-    pr_list_ft, re_list_ft = best_precision_recall(
-        np.array(pr_list_ft), np.array(re_list_ft)
+pr_list = []
+re_list = []
+for analyzer, max_n_gram in product(["char", "char_wb"], [3, 4, 5]):
+    if analyzer == "word" and max_n_gram > 2:
+        continue
+    precision, recall, f1 = fuzzy_join_precision_recall(
+        left=left_1,
+        right=right_1,
+        gt=gt_1,
+        left_col="title",
+        right_col="title",
+        analyzer=analyzer,
+        ngram_range=(2, max_n_gram),
     )
-    plt.plot(re_list_ft, pr_list_ft, label="fasttext")
+    pr_list.extend(precision)
+    re_list.extend(recall)
+    # plt.plot(recall, precision,
+    #         label=f"fuzzy_join_{analyzer}_{max_n_gram}_{similarity}")
 
-    pr_list_fw = []
-    re_list_fw = []
-    for scorer in partial_ratio, ratio, WRatio:
-        precision_fw, recall_fw, f1_fw = thefuzz_precision_recall(
-            left_1, right_1, gt_1, "title", "title", scorer=scorer
-        )
-        pr_list_fw.extend(precision_fw)
-        re_list_fw.extend(recall_fw)
+pr_list, re_list = best_precision_recall(np.array(pr_list), np.array(re_list))
+plt.plot(re_list, pr_list, label="fuzzy_join")
 
-    pr_list_fw, re_list_fw = best_precision_recall(
-        np.array(pr_list_fw), np.array(re_list_fw)
+pr_list_fw = []
+re_list_fw = []
+for scorer in partial_ratio, ratio, WRatio:
+    precision_fw, recall_fw, f1_fw = thefuzz_precision_recall(
+        left_1, right_1, gt_1, "title", "title", scorer=scorer
     )
-    plt.plot(re_list_fw, pr_list_fw, label="thefuzz")
-    # plt.plot(recall_fw, precision_fw, label=f'thefuzz_{scorer.__name__}')
+    pr_list_fw.extend(precision_fw)
+    re_list_fw.extend(recall_fw)
 
-    precision_fj, recall_fj, f1_fj = autofj_precision_recall(left_1, right_1, gt_1)
-    plt.plot(recall_fj, precision_fj, label="autofj")
+pr_list_fw, re_list_fw = best_precision_recall(
+    np.array(pr_list_fw), np.array(re_list_fw)
+)
+plt.plot(re_list_fw, pr_list_fw, label="thefuzz")
+# plt.plot(recall_fw, precision_fw, label=f'thefuzz_{scorer.__name__}')
 
-    plt.xlabel("Recall")
-    plt.ylabel("Precision")
-    plt.legend()
-    plt.title("Best Precision / recall on Country")
-    plt.savefig("precision_recall.png")
-    # plt.show()
+precision_fj, recall_fj, f1_fj = autofj_precision_recall(left_1, right_1, gt_1)
+plt.plot(recall_fj, precision_fj, label="autofj")
+
+plt.xlabel("Recall")
+plt.ylabel("Precision")
+plt.legend()
+plt.title("Best Precision / recall on Country")
+plt.savefig("precision_recall.png")
+# plt.show()

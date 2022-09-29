@@ -173,6 +173,8 @@ def fuzzy_join(
         right_table_clean._info_axis
     )
     if len(overlap_cols) > 0:
+        if suffixes[0] == "" and suffixes[1] == "":
+            raise ValueError(f"columns overlap but no suffix specified: {overlap_cols}")
         for i in range(len(overlap_cols)):
             new_name_l = overlap_cols[i] + lsuffix
             new_name_r = overlap_cols[i] + rsuffix
@@ -195,12 +197,13 @@ def fuzzy_join(
     left_table_clean.dropna(subset=[left_col], inplace=True)
     right_table_clean.dropna(subset=[right_col], inplace=True)
 
-    left_table_clean.drop_duplicates(subset=[left_col], inplace=True)
-    right_table_clean.drop_duplicates(subset=[right_col], inplace=True)
-
-    # Make sure that the column types are string:
-    left_table_clean[left_col] = left_table_clean[left_col].astype(str)
-    right_table_clean[right_col] = right_table_clean[right_col].astype(str)
+    # Make sure that the column types are string and categorical:
+    left_table_clean[left_col] = (
+        left_table_clean[left_col].astype(str).astype("category")
+    )
+    right_table_clean[right_col] = (
+        right_table_clean[right_col].astype(str).astype("category")
+    )
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
@@ -244,6 +247,11 @@ def fuzzy_join(
     cols = list(left_table_clean.columns) + list(right_table_clean.columns)
     df_joined = pd.DataFrame(joined, columns=cols).replace(r"^\s*$", np.nan, regex=True)
 
+    duplicate_names = df_joined.columns.duplicated(keep=False)
+    if sum(duplicate_names) > 0:
+        warnings.warn("Column names overlaps. Please set appropriate suffixes.")
+        idx_to_keep = list(np.where(duplicate_names is False)[0])
+
     if return_score:
         df_joined = pd.concat(
             [df_joined, pd.DataFrame(norm_distance, columns=["matching_score"])], axis=1
@@ -251,7 +259,17 @@ def fuzzy_join(
     if drop_unmatched:
         df_joined.dropna(subset=[left_col, right_col], inplace=True)
     if how == "left":
-        df_joined.drop(columns=[right_col], inplace=True)
+        if sum(duplicate_names) > 0:
+            idx_to_keep.append(np.where(duplicate_names is True)[0][0])
+            idx_to_keep.sort()
+            df_joined = df_joined.iloc[:, idx_to_keep]
+        else:
+            df_joined.drop(columns=[right_col], inplace=True)
     elif how == "right":
-        df_joined.drop(columns=[left_col], inplace=True)
+        if sum(duplicate_names) > 0:
+            idx_to_keep.append(np.where(duplicate_names is True)[0][1])
+            idx_to_keep.sort()
+            df_joined = df_joined.iloc[:, idx_to_keep]
+        else:
+            df_joined.drop(columns=[left_col], inplace=True)
     return df_joined
