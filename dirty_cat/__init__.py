@@ -3,9 +3,17 @@ dirty_cat: Learning on dirty categories.
 """
 from pathlib import Path as _Path
 
-from ._check_dependencies import check_dependencies
+try:
+    from ._check_dependencies import check_dependencies
 
-check_dependencies()
+    check_dependencies()
+except ModuleNotFoundError:
+    import warnings
+
+    warnings.warn(
+        "pkg_resources is not available, dependencies versions will not be checked."
+    )
+
 
 from ._datetime_encoder import DatetimeEncoder  # noqa: E402
 from ._gap_encoder import GapEncoder  # noqa: E402
