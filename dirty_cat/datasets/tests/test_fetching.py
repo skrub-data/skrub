@@ -451,9 +451,8 @@ def test_fetch_world_bank_indicator():
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
 
 
-if __name__ == "__main__":
-    print("Tests starting")
-    test_fetch_openml_dataset_mocked()
-    test_fetch_openml_dataset()
-    test_fetch_world_bank_indicator()
-    print("Tests passed")
+print("Tests starting")
+test_fetch_openml_dataset_mocked()
+test_fetch_openml_dataset()
+test_fetch_world_bank_indicator()
+print("Tests passed")

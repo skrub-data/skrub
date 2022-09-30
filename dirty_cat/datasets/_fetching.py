@@ -195,33 +195,48 @@ def _fetch_world_bank_data(
               saved as a CSV file.
 
     """
-    # Download the file :
+    # See if file available locally :
+    path = f"{data_directory}/{indicator_id}.csv"
+    csv_path = Path(path)
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
-    try:
-        filehandle, _ = urllib.request.urlretrieve(url)
-        zip_file_object = ZipFile(filehandle, "r")
-        for name in zip_file_object.namelist():
-            if "Metadata" not in name:
-                true_file = name
-        file = zip_file_object.open(true_file)
-    except BadZipFile:
-        raise FileNotFoundError(
-            f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
+    if csv_path.is_file() is True:
+        df = pd.read_csv(csv_path, nrows=0)
+        indicator_name = df.columns[1]
+    else:
+        warnings.warn(
+            f"Could not find the dataset {indicator_id} locally. "
+            "Downloading it from World Bank data; this might take a while... "
+            "If it is interrupted, some files might be invalid/incomplete: "
+            "if on the following run, the fetching raises errors, you can try "
+            f"fixing this issue by deleting the directory {csv_path!s}.",
+            UserWarning,
+            stacklevel=2,
         )
-    except URLError:
-        raise URLError("No internet connection or the website is down.")  # noqa
-    # Read and modify csv file
-    df = pd.read_csv(file, skiprows=3)
-    indicator_name = df.iloc[0, 2]
-    df[indicator_name] = df.stack().groupby(level=0).last()
-    df = df[df[indicator_name] != indicator_id]
-    df = df[["Country Name", indicator_name]]
-    # Save the file
-    data_directory.mkdir(exist_ok=True, parents=True)
-    csv_path = data_directory.resolve() / true_file
-    df.to_csv(csv_path, index=False)
+        try:
+            filehandle, _ = urllib.request.urlretrieve(url)
+            zip_file_object = ZipFile(filehandle, "r")
+            for name in zip_file_object.namelist():
+                if "Metadata" not in name:
+                    true_file = name
+            file = zip_file_object.open(true_file)
+        except BadZipFile:
+            raise FileNotFoundError(
+                f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
+            )
+        except URLError:
+            raise URLError("No internet connection or the website is down.")  # noqa
+        # Read and modify csv file
+        df = pd.read_csv(file, skiprows=3)
+        indicator_name = df.iloc[0, 2]
+        df[indicator_name] = df.stack().groupby(level=0).last()
+        df = df[df[indicator_name] != indicator_id]
+        df = df[["Country Name", indicator_name]]
+        # Save the file
+        data_directory.mkdir(exist_ok=True, parents=True)
+        csv_path = data_directory.resolve() / (indicator_id + ".csv")
+        df.to_csv(csv_path, index=False)
     description = (
-        f"This table shows the {indicator_id} World Bank indicator."
+        f"This table shows the {indicator_name} World Bank indicator."
         " It can be used as an input table for fuzzy_join."
     )
     return {
