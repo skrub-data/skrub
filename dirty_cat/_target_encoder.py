@@ -64,6 +64,32 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     For more details, see Micci-Barreca, 2001: A preprocessing scheme for
     high-cardinality categorical attributes in classification and prediction
     problems.
+
+    Examples
+    --------
+    >>> enc = TargetEncoder(handle_unknown='ignore')
+    >>> X = [['male'], ['Male'], ['Female'], ['male'], ['Female']]
+    >>> y = np.array([1, 2, 3, 4, 5])
+
+    >>> enc.fit(X, y)
+    TargetEncoder(handle_unknown='ignore')
+
+    There encoder has found the following categories:
+
+    >>> enc.categories_
+    [array(['Female', 'Male', 'female', 'male'], dtype='<U6')]
+
+    We look at the encoded categories :
+
+    >>> enc.transform(X)
+    array([[3.44444444],
+        [2.11111111],
+        [3.61538462],
+        [3.44444444],
+        [3.61538462]])
+
+    As expected, they were encoded according to their influence on y.
+
     """
 
     n_features_in_: int
