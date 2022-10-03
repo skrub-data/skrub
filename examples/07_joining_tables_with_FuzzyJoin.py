@@ -139,7 +139,7 @@ def print_worst_matches(joined_table, n=5):
         joined_table["matching_score"][max_ind.ravel()].ravel(), index=max_ind.ravel()
     )
     worst_matches = joined_table.iloc[list(max_ind.ravel())]
-    worst_matches = worst_matches.assign(distance=max_dist)
+    worst_matches = worst_matches.assign(matching_score=max_dist)
     return worst_matches
 
 
@@ -167,23 +167,30 @@ X1 = fuzzy_join(
     return_score=True,
 )
 print_worst_matches(X1, n=4)
+
 #################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
-# We will remove them:
+# We will remove them, as well as missing or unused information:
 
 mask = X1["GDP per capita (current US$)"].notna()
 X1 = X1[mask]
 y = np.ravel(y[mask])
 
+X1.drop(["matching_score"], axis=1, inplace=True)
+
 #################################################################
 #
-# We can finally plot and look at the link between GDP per capita and happiness:
+# We can finally plot and look at the link between GDP per capita
+# and happiness:
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-fig = sns.scatterplot(x=X1["GDP per capita (current US$)"], y=y)
-fig.set_ylabel("Happiness index")
-fig.set_title("Is having a higher GDP per capita sign of happiness?")
+sns.set_context("notebook")
+
+plt.figure(figsize=(4, 3))
+ax = sns.regplot(x=X1["GDP per capita (current US$)"], y=y, lowess=True)
+ax.set_ylabel("Happiness index")
+ax.set_title("Is having a higher GDP per capita sign of happiness?")
 plt.show()
 
 #################################################
@@ -211,7 +218,8 @@ X2.head(3)
 
 #################################################
 # Let's plot this relation:
-fig = sns.scatterplot(x=X2["Life expectancy at birth, total (years)"], y=y)
+plt.figure(figsize=(4, 3))
+fig = sns.regplot(x=X2["Life expectancy at birth, total (years)"], y=y, lowess=True)
 fig.set_ylabel("Happiness index")
 fig.set_title("Is having a higher life expectancy linked to happiness?")
 plt.show()
@@ -243,7 +251,8 @@ X3.head(3)
 
 #################################################
 # Let's take a look at their correspondance in a figure:
-fig = sns.boxplot(x=X3["Strength of legal rights index (0=weak to 12=strong)"], y=y)
+plt.figure(figsize=(4, 3))
+fig = sns.regplot(x=X3["Strength of legal rights index (0=weak to 12=strong)"], y=y)
 fig.set_ylabel("Happiness index")
 fig.set_title("Does a country's legal rights strength lead to happiness?")
 plt.show()
@@ -253,13 +262,8 @@ plt.show()
 # is necessary for happiness, but then it becomes much less relevant!
 
 #################################################################
-#
 # Great! Our joined table has became bigger and full of useful informations.
-# We now only remove missing or unused information:
-X3.drop(["matching_score"], axis=1, inplace=True)
-
-#################################################################
-# And we are ready to apply a first machine learning model to it!
+# And now we are ready to apply a first machine learning model to it!
 
 ###################################################################
 # Prediction model

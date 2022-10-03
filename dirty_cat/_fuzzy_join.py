@@ -134,7 +134,7 @@ def fuzzy_join(
     we can use the `match_score` argument:
 
     >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
-        a_l  b   a_r    c  distance
+        a_l  b   a_r    c  matching_score
     0   ana  1   ana  7.0  1.000000
     1  lala  2  lala  6.0  1.000000
     2  nana  3   NaN  NaN  0.532717
