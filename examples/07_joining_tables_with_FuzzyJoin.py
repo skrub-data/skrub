@@ -43,6 +43,7 @@ df.head(3)
 # For more information, read the `World Happiness Report <https://worldhappiness.report/>`_.
 X = df[["Country"]]
 y = df[["Happiness score"]]
+
 #######################################################################
 # We keep the country names in our X table and we create
 # the y table with the happiness score (our prediction target).
@@ -148,6 +149,7 @@ def print_worst_matches(joined_table, n=5):
 # us an overview of the situation:
 
 print_worst_matches(X1, n=4)
+
 #################################################################
 # We see that some matches were unsuccesful
 # (e.g 'Palestinian Territories*' and 'Palau'),
