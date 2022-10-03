@@ -40,7 +40,7 @@ df.head(3)
 # some of the possible explanatory factors: GDP per capita, Social support,
 # Generosity etc.
 #
-# For more information, read the `World Happiness Report website <https://worldhappiness.report/>`_.
+# For more information, read the `World Happiness Report <https://worldhappiness.report/>`_.
 X = df[["Country"]]
 y = df[["Happiness score"]]
 #######################################################################
@@ -48,16 +48,16 @@ y = df[["Happiness score"]]
 # the y table with the happiness score (our prediction target).
 #
 #
-# Now, we will need to include explanatory factors from other tables.
-# What can we add from the available online public data tables to complete
+# Now, we need to include explanatory factors from other tables.
+# What can we add from the available open public datasets to complete
 # our X table?
 
 #############################################################################
 # Finding additional tables
 # -------------------------
 #
-# Interesting tables can be found on the the World Bank (WB) databank.
-# We will extract data from their website and include them in our model.
+# Interesting tables can be found on `the World Bank open data platform <https://data.worldbank.org/>`_.
+# We will extract data from it and include them in our model.
 # Luckily, dirty_cat has the following function to do it easily:
 from dirty_cat.datasets import fetch_world_bank_indicator
 
@@ -119,11 +119,11 @@ X1.head(20)
 # .. topic:: Note:
 #
 #    This would all be missed out if we were using other methods such as
-#    `pandas.DataFrame.join <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.join.html>`_,
-#    which searches only for exact matches.
-#    In this case, to reach the best result, we would have to manually clean
-#    the data (e.g. remove the * after country name) and look manually
-#    for matching patterns in observations.
+#    `pandas.merge <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.merge.html>`_,
+#    which can only find exact matches.
+#    In this case, to reach the best result, we would have to 'manually' clean
+#    the data (e.g. remove the * after country name) and look
+#    for matching patterns in every observation.
 #
 # Let's do some more inspection of the merging done.
 
@@ -140,7 +140,6 @@ def print_worst_matches(joined_table, n=5):
     )
     worst_matches = joined_table.iloc[list(max_ind.ravel())]
     worst_matches = worst_matches.assign(distance=max_dist)
-    print("The worst five matches are the following:")
     return worst_matches
 
 
@@ -217,8 +216,9 @@ fig.set_ylabel("Happiness index")
 fig.set_title("Is having a higher life expectancy linked to happiness?")
 plt.show()
 
+#################################################
 # It seems the answer is yes!
-# Countries with higher life expectancy are clearly more happy.
+# Countries with higher life expectancy are also happier.
 
 
 #################################################
@@ -227,7 +227,7 @@ plt.show()
 # .. topic:: Note:
 #
 #    Here, we use the `keep='left'` option to keep only the left key matching
-#    column, so as not to have too much unnecessary columns with country names.
+#    column, so as not to have unnecessary overlaping column with country names.
 #
 # And the table with a measure of legal rights strength in the country:
 X3 = fuzzy_join(
