@@ -188,7 +188,7 @@ import seaborn as sns
 sns.set_context("notebook")
 
 plt.figure(figsize=(4, 3))
-ax = sns.regplot(x=X1["GDP per capita (current US$)"], y=y, lowess=True)
+ax = sns.regplot(x=X1["GDP per capita (current US$)"], y=y, logx=True)
 ax.set_ylabel("Happiness index")
 ax.set_title("Is having a higher GDP per capita sign of happiness?")
 plt.show()
@@ -219,7 +219,9 @@ X2.head(3)
 #################################################
 # Let's plot this relation:
 plt.figure(figsize=(4, 3))
-fig = sns.regplot(x=X2["Life expectancy at birth, total (years)"], y=y, lowess=True)
+fig = sns.regplot(
+    x=X2["Life expectancy at birth, total (years)"], y=y, fit_reg=True, ci=0
+)
 fig.set_ylabel("Happiness index")
 fig.set_title("Is having a higher life expectancy linked to happiness?")
 plt.show()
@@ -258,7 +260,7 @@ fig.set_title("Does a country's legal rights strength lead to happiness?")
 plt.show()
 
 #################################################################
-# It seems that some level of legal strenght (around 4)
+# It seems that some level of legal strenght (above 7)
 # is necessary for happiness, but then it becomes much less relevant!
 
 #################################################################
