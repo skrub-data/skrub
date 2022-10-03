@@ -245,7 +245,7 @@ X3.head(3)
 # Let's take a look at their correspondance in a figure:
 fig = sns.boxplot(x=X3["Strength of legal rights index (0=weak to 12=strong)"], y=y)
 fig.set_ylabel("Happiness index")
-fig.set_title("Does legal streght lead to happiness?")
+fig.set_title("Does a country's legal rights strength lead to happiness?")
 plt.show()
 
 #################################################################
@@ -305,4 +305,4 @@ print(
 # :func:`fuzzy_join` is fast and easy-to-use.
 #
 # Now up to you, try improving our model by adding information into it and
-# beat our result!
+# beating our result!
