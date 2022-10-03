@@ -193,6 +193,7 @@ plt.figure(figsize=(4, 3))
 ax = sns.regplot(x=X1["GDP per capita (current US$)"], y=y, logx=True)
 ax.set_ylabel("Happiness index")
 ax.set_title("Is having a higher GDP per capita sign of happiness?")
+plt.tight_layout()
 plt.show()
 
 #################################################
@@ -226,6 +227,7 @@ fig = sns.regplot(
 )
 fig.set_ylabel("Happiness index")
 fig.set_title("Is having a higher life expectancy linked to happiness?")
+plt.tight_layout()
 plt.show()
 
 #################################################
@@ -259,6 +261,7 @@ plt.figure(figsize=(4, 3))
 fig = sns.regplot(x=X3["Strength of legal rights index (0=weak to 12=strong)"], y=y)
 fig.set_ylabel("Happiness index")
 fig.set_title("Does a country's legal rights strength lead to happiness?")
+plt.tight_layout()
 plt.show()
 
 #################################################################
