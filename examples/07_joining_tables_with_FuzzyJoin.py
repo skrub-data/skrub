@@ -192,7 +192,7 @@ sns.set_context("notebook")
 plt.figure(figsize=(4, 3))
 ax = sns.regplot(x=X1["GDP per capita (current US$)"], y=y, logx=True)
 ax.set_ylabel("Happiness index")
-ax.set_title("Is having a higher GDP per capita sign of happiness?")
+ax.set_title("Is a higher GDP per capita linked to happiness?")
 plt.tight_layout()
 plt.show()
 
@@ -226,7 +226,7 @@ fig = sns.regplot(
     x=X2["Life expectancy at birth, total (years)"], y=y, fit_reg=True, ci=0
 )
 fig.set_ylabel("Happiness index")
-fig.set_title("Is having a higher life expectancy linked to happiness?")
+fig.set_title("Is a higher life expectancy linked to happiness?")
 plt.tight_layout()
 plt.show()
 
@@ -265,8 +265,8 @@ plt.tight_layout()
 plt.show()
 
 #################################################################
-# It seems that some level of legal strenght (above 7)
-# is necessary for happiness, but then it becomes much less relevant!
+# From this plot, it is not clear that this measure of legal strength
+# is linked to happiness.
 
 #################################################################
 # Great! Our joined table has became bigger and full of useful informations.

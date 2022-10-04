@@ -30,7 +30,7 @@ from dirty_cat.datasets._fetching import fetch_openml_dataset as _fetch_openml_d
 from dirty_cat.datasets._fetching import (
     fetch_world_bank_indicator as fetch_world_bank_indicator,
 )
-from dirty_cat.datasets._utils import get_data_dir as get_data_dir
+from dirty_cat.datasets._utils import get_data_dir as _get_data_dir
 
 
 @wraps(_fetch_openml_dataset)
@@ -48,7 +48,7 @@ def fetch_openml_dataset(*args, **kwargs):
 
 
 def get_test_data_dir() -> Path:
-    return get_data_dir("tests")
+    return _get_data_dir("tests")
 
 
 def test_fetch_openml_dataset():
@@ -449,10 +449,3 @@ def test_fetch_world_bank_indicator():
 
     finally:
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
-
-
-print("Tests starting")
-test_fetch_openml_dataset_mocked()
-test_fetch_openml_dataset()
-test_fetch_world_bank_indicator()
-print("Tests passed")
