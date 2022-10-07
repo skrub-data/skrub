@@ -161,6 +161,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             )
 
     def compute_hash(self, x) -> np.array:
+        """
+        Check if the string is in the hash dictionary, if not, compute the
+        hash using the specified hashing function and add it to the dictionary.
+        """
         # Function called by joblib to compute the hash
         if x not in self.hash_dict_:
             if x == "NAN":  # true if x is a missing value
