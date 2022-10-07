@@ -79,8 +79,8 @@ def test_input_type() -> None:
     enc.fit_transform(X)
 
 
-def profile_encoder(hashing='fast', minmax_hash=False):
-    # not an unit test
+def profile_encoder(hashing: str = "fast", minmax_hash: bool = False) -> float:
+    # not a unit test
     employee_salaries = fetch_employee_salaries()
     df = employee_salaries.X
     X = df[["employee_position_title"]]
@@ -133,6 +133,7 @@ def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
             encoder.fit_transform(X)
     return
 
+
 def test_missing_values_none():
     # Test that "None" is also understood as a missing value
     a = np.array([['a', 'b', None, 'c']], dtype=object).T
@@ -148,6 +149,7 @@ def test_cache_overflow() -> None:
         letters = ascii_lowercase
         result_str = "".join(random.choice(letters) for _ in range(length))
         return result_str
+
     encoder = MinHashEncoder(n_components=3)
     capacity = encoder._capacity
     raw_data = [get_random_string(10) for _ in range(capacity + 1)]
@@ -155,6 +157,7 @@ def test_cache_overflow() -> None:
     y = encoder.fit_transform(raw_data)
 
     assert len(y[y == -1.0]) == 0
+
 
 @pytest.mark.parametrize("idx", range(3))
 def test_min_hash_encoder_hashing_fast_minmax_hash(idx):

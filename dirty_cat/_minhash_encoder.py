@@ -69,17 +69,19 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
 
     """
+
     hash_dict_: LRUDict
+
     _capacity: int = 2 ** 10
 
     def __init__(
-            self,
-            n_components: int = 30,
-            ngram_range: Tuple[int, int] = (2, 4),
-            hashing: Literal["fast", "murmur"] = "fast",
-            minmax_hash: bool = False,
-            handle_missing: Literal["error", "zero_impute"] = "zero_impute",
-            n_jobs: int = None,
+        self,
+        n_components: int = 30,
+        ngram_range: Tuple[int, int] = (2, 4),
+        hashing: Literal["fast", "murmur"] = "fast",
+        minmax_hash: bool = False,
+        handle_missing: Literal["error", "zero_impute"] = "zero_impute",
+        n_jobs: int = None,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -95,7 +97,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return {"X_types": ["categorical"]}
 
     def minhash(
-            self, string: str, n_components: int, ngram_range: Tuple[int, int]
+        self, string: str, n_components: int, ngram_range: Tuple[int, int]
     ) -> np.array:
         """
         Encode a string using murmur hashing function.
