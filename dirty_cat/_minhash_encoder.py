@@ -205,7 +205,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : array-like, shape (n_samples, ) or (n_samples, 1)
-            The string data to encode.
+            The string data to encode. Only here for compatibility.
         y : None
             Unused, only here for compatibility.
 
