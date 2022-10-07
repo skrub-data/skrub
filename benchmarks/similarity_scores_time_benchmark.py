@@ -61,10 +61,10 @@ def benchmark(X_b, y_b, strat='k-means', limit=50000, n_proto=100, hash_dim=None
     y_b = y_b[:limit].copy()
 
     if strat == 'k-means':
-        sim_enc = SimilarityEncoder(similarity='ngram', ngram_range=ngram_range, categories='k-means',
+        sim_enc = SimilarityEncoder(ngram_range=ngram_range, categories='k-means',
                                     hashing_dim=hash_dim, n_prototypes=n_proto, random_state=3498)
     else:
-        sim_enc = SimilarityEncoder(similarity='ngram', ngram_range=ngram_range, categories='most_frequent',
+        sim_enc = SimilarityEncoder(ngram_range=ngram_range, categories='most_frequent',
                                     hashing_dim=hash_dim, n_prototypes=n_proto, random_state=3498)
 
     column_trans = ColumnTransformer(

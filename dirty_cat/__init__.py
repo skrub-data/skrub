@@ -1,19 +1,23 @@
 """
 dirty_cat: Learning on dirty categories.
 """
-import os
+from pathlib import Path as _Path
 
-version_file = os.path.join(os.path.dirname(__file__), 'VERSION.txt')
-with open(version_file) as fh:
-    __version__ = fh.read().strip()
+from ._datetime_encoder import DatetimeEncoder
+from ._gap_encoder import GapEncoder
+from ._minhash_encoder import MinHashEncoder
+from ._similarity_encoder import SimilarityEncoder
+from ._super_vectorizer import SuperVectorizer
+from ._target_encoder import TargetEncoder
 
-from .similarity_encoder import SimilarityEncoder
-from .target_encoder import TargetEncoder
-from .minhash_encoder import MinHashEncoder
-from .gap_encoder import GapEncoder
-from .datetime_encoder import DatetimeEncoder
-from .super_vectorizer import SuperVectorizer
+with open(_Path(__file__).parent / "VERSION.txt") as _fh:
+    __version__ = _fh.read().strip()
 
-
-__all__ = ['SimilarityEncoder', 'TargetEncoder', 'MinHashEncoder',
-           'GapEncoder', 'DatetimeEncoder', 'SuperVectorizer']
+__all__ = [
+    "SimilarityEncoder",
+    "TargetEncoder",
+    "MinHashEncoder",
+    "GapEncoder",
+    "DatetimeEncoder",
+    "SuperVectorizer",
+]

@@ -17,7 +17,15 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import shutil
 
+# -- Copy files for docs --------------------------------------------------
+#
+# We avoid duplicating the information, but we do not use symlinks to be
+# able to build the docs on windows
+shutil.copyfile('../RELEASE_PROCESS.rst', 'RELEASE_PROCESS.rst')
+shutil.copyfile('../CHANGES.rst', 'CHANGES.rst')
+shutil.copyfile('../CONTRIBUTING.rst', 'CONTRIBUTING.rst')
 
 # -- General configuration ------------------------------------------------
 
@@ -28,48 +36,49 @@ import os
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.autosummary',
-              'sphinx.ext.doctest',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.mathjax',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.githubpages',
-              'sphinx.ext.napoleon',
-              'sphinx.ext.autodoc.typehints',
-              'sphinx_gallery.gen_gallery',
-              ]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
+    "numpydoc",
+    "sphinx.ext.autodoc.typehints",
+    "sphinx_gallery.gen_gallery",
+]
 
 try:
-    import sphinxext.opengraph
-    extensions.append('sphinxext.opengraph')
+    import sphinxext.opengraph  # noqa
+
+    extensions.append("sphinxext.opengraph")
 except ImportError:
     print("ERROR: sphinxext.opengraph import failed")
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = u'dirty_cat'
-copyright = u'2018-2021, dirty_cat developers'
-author = u'dirty_cat developers'
+project = "dirty_cat"
+copyright = "2018-2021, dirty_cat developers"
+author = "dirty_cat developers"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version_file = os.path.join(
-    '..', 'dirty_cat', 'VERSION.txt')
+version_file = os.path.join("..", "dirty_cat", "VERSION.txt")
 with open(version_file) as fh:
     version = fh.read().strip()
 # The full version, including alpha/beta/rc tags.
@@ -80,15 +89,15 @@ release = version
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
@@ -98,12 +107,9 @@ todo_include_todos = False
 autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
-#templates_path = ['_templates']
+# templates_path = ['_templates']
 
-
-autodoc_default_flags = ['members', 'inherited-members']
-
-
+autodoc_default_flags = ["members", "inherited-members"]
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -111,23 +117,23 @@ autodoc_default_flags = ['members', 'inherited-members']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = "alabaster"
 # Doc: https://alabaster.readthedocs.io/en/latest/customization.html
 
 html_sidebars = {
-    '**': [
-        'about.html',
-        'globallinks.html',
-        'localtoc.html',
-        'relations.html',
-        #'searchbox.html',
+    "**": [
+        "about.html",
+        "globallinks.html",
+        "localtoc.html",
+        "relations.html",
+        # 'searchbox.html',
     ],
-    'index': [
-        'about.html',
-        'globallinks.html',
-        'relations.html',
-        #'searchbox.html',
-    ]
+    "index": [
+        "about.html",
+        "globallinks.html",
+        "relations.html",
+        # 'searchbox.html',
+    ],
 }
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -135,36 +141,36 @@ html_sidebars = {
 # documentation.
 #
 html_theme_options = {
-    'logo': 'dirty_cat.svg',
-    'github_user': 'dirty-cat',
-    'github_repo': 'dirty_cat',
-    'github_button': 'true',
-    'github_type': 'star',
-    'github_count': 'true',
-    'show_powered_by': 'false',
-    'logo_name': 'true',
-    'gray_1': "#030",
-    'gray_2': "#F1FFF1",
-    'link': "#076B00",
-#    'gray_3': "#090",
-    'fixed_sidebar': 'true',
-    'note_bg': "rgb(246, 248, 250);",
-    'topic_bg': "rgb(246, 248, 250);",
+    "logo": "dirty_cat.svg",
+    "github_user": "dirty-cat",
+    "github_repo": "dirty_cat",
+    "github_button": "true",
+    "github_type": "star",
+    "github_count": "true",
+    "show_powered_by": "false",
+    "logo_name": "true",
+    "gray_1": "#030",
+    "gray_2": "#F1FFF1",
+    "link": "#076B00",
+    #    'gray_3': "#090",
+    "fixed_sidebar": "true",
+    "note_bg": "rgb(246, 248, 250);",
+    "topic_bg": "rgb(246, 248, 250);",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 
-# Modify the title, so as to get good social-media links
+# Modify the title to get good social-media links
 html_title = "&mdash; Dirty cat"
 
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'dirty_catdoc'
+htmlhelp_basename = "dirty_catdoc"
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -173,15 +179,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -191,8 +194,13 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'dirty_cat.tex', u'dirty\\_cat Documentation',
-     u'dirty\\_cat developers', 'manual'),
+    (
+        master_doc,
+        "dirty_cat.tex",
+        "dirty\\_cat Documentation",
+        "dirty\\_cat developers",
+        "manual",
+    ),
 ]
 
 
@@ -200,10 +208,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'dirty_cat', u'dirty_cat Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, "dirty_cat", "dirty_cat Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------
@@ -212,73 +217,79 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'dirty_cat', u'dirty_cat Documentation',
-     author, 'dirty_cat', 'Learning on non-curater categorical data.',
-     'Data Science'),
+    (
+        master_doc,
+        "dirty_cat",
+        "dirty_cat Documentation",
+        author,
+        "dirty_cat",
+        "Learning on non-curated categorical data.",
+        "Data Science",
+    ),
 ]
 
 
 # Configuration for intersphinx
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy', None),
-    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
-    'matplotlib': ('https://matplotlib.org/', None),
-    'sklearn': ('https://scikit-learn.org/stable/', None),
-    'skimage': ('http://scikit-image.org/docs/stable/', None),
-    'mayavi': ('http://docs.enthought.com/mayavi/mayavi/', None),
-    'statsmodels': ('http://www.statsmodels.org/stable/', None),
-    'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
-    'seaborn': ('http://seaborn.pydata.org/', None),
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://docs.scipy.org/doc/numpy", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
+    "matplotlib": ("https://matplotlib.org", None),
+    "sklearn": ("https://scikit-learn.org/stable", None),
+    "skimage": ("http://scikit-image.org/docs/stable", None),
+    "mayavi": ("http://docs.enthought.com/mayavi/mayavi", None),
+    "statsmodels": ("http://www.statsmodels.org/stable", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/stable", None),
+    "seaborn": ("http://seaborn.pydata.org", None),
 }
 
 
 # -- sphinx-gallery configuration -----------------------------------------
-from sphinx_gallery.sorting import FileNameSortKey
+from sphinx_gallery.sorting import FileNameSortKey  # noqa
+
 sphinx_gallery_conf = {
-    'doc_module': 'dirty_cat',
-    'filename_pattern': '',
-    'backreferences_dir': os.path.join('generated'),
-    'reference_url': {
-        'dirty_cat': None,
-        'numpy': 'http://docs.scipy.org/doc/numpy',
-        'scipy': 'http://docs.scipy.org/doc/scipy/reference',
-        'pandas': 'http://pandas.pydata.org/pandas-docs/stable',
-        #'seaborn': 'http://seaborn.pydata.org/',
-        #'matplotlib': 'http://matplotlib.org/',
-        'sklearn': 'https://scikit-learn.org/stable/',
-        #'scikit-image': 'http://scikit-image.org/docs/stable/',
-        #'mayavi': 'http://docs.enthought.com/mayavi/mayavi/',
-        #'statsmodels': 'http://www.statsmodels.org/stable/',
-        },
-    'examples_dirs':'../examples',
-    'gallery_dirs':'auto_examples',
-    'within_subsection_order': FileNameSortKey,
-    'download_all_examples': False,
-    'binder': {
-        'org': 'dirty-cat',
-        'repo': 'dirty-cat.github.io',
-        'binderhub_url': 'https://mybinder.org',
-        'branch': 'master',
-        'dependencies': ['../requirements.txt',
-                         'binder/requirements.txt'],
-        'notebooks_dir': 'dev'
-    }
+    "doc_module": "dirty_cat",
+    "filename_pattern": "",
+    "backreferences_dir": os.path.join("generated"),
+    "reference_url": {
+        # The module we locally document (so, dirty_cat) uses None
+        "dirty_cat": None,
+        # We don't specify the other modules as we use the intershpinx ext.
+        # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
+    },
+    "examples_dirs": "../examples",
+    "gallery_dirs": "auto_examples",
+    "within_subsection_order": FileNameSortKey,
+    "download_all_examples": False,
+    "binder": {
+        "org": "dirty-cat",
+        "repo": "dirty-cat.github.io",
+        "binderhub_url": "https://mybinder.org",
+        "branch": "master",
+        "dependencies": ["../requirements.txt", "binder/requirements.txt"],
+        "notebooks_dir": "dev",
+    },
 }
 
 # -- sphinxext.opengraph configuration -------------------------------------
 ogp_site_url = "https://dirty-cat.github.io/stable/"
 ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
 ogp_use_first_image = True
-ogp_site_name = "Dirty cat"
+ogp_site_name = "dirty_cat"
 
-# -- sphinxext.napoleon configuration --------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html
-napoleon_use_param = True
+# -- numpydoc configuration --------------------------------------
+
+# Produce `plot::` directives for examples that contain `import matplotlib` or
+# `from matplotlib import`.
+numpydoc_use_plots = True
+
+# this is needed for some reason...
+# see https://github.com/numpy/numpydoc/issues/69
+numpydoc_class_members_toctree = False
 
 # -- sphinxext.autodoc configuration ---------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 autodoc_typehints = "none"
 
 # -- The javascript to highlight the toc as we scroll ----------------------
-html_js_files = ['scrolltoc.js']
+html_js_files = ["scrolltoc.js"]

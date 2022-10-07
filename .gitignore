@@ -57,5 +57,8 @@ dirty_cat/datasets/data/*
 doc/_build
 doc/auto_examples
 doc/generated
+doc/CHANGES.rst
+doc/RELEASE_PROCESS.rst
+doc/CONTRIBUTING.rst
 .DS_Store
 

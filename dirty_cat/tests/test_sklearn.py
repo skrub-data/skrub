@@ -1,6 +1,12 @@
-from sklearn.utils.estimator_checks import check_estimator, parametrize_with_checks
+from sklearn.utils.estimator_checks import check_estimator
 
-from dirty_cat import DatetimeEncoder, GapEncoder, MinHashEncoder, SimilarityEncoder, SuperVectorizer, TargetEncoder
+from dirty_cat import (
+    DatetimeEncoder,
+    GapEncoder,
+    MinHashEncoder,
+    SimilarityEncoder,
+    TargetEncoder,
+)
 
 
 def test_sklearn_compatible_DatetimeEncoder():
@@ -19,7 +25,7 @@ def test_sklearn_compatible_SimilarityEncoder():
     check_estimator(SimilarityEncoder())
 
 
-#def test_sklearn_compatible_SuperVectorizer():
+# def test_sklearn_compatible_SuperVectorizer():
 #    check_estimator(SuperVectorizer())
 
 

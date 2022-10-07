@@ -1,7 +1,7 @@
 
-=================================================
+===============================================
 dirty_cat: machine learning on dirty categories
-=================================================
+===============================================
 
 .. toctree::
    :maxdepth: 2
@@ -48,39 +48,36 @@ pipeline you can tweak.
 
     </div>
     </div>
-    <div class="flex-container">
-    <div class="flex-content" style="border: 0px;">
 
-For a detailed description of the problem of encoding dirty categorical data,
-see `Similarity encoding for learning with dirty categorical variables
-<https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
-string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
+.. container:: right-align
+
+   `Recent changes <CHANGES.html>`_
+
+   `Contributing <development.html>`_
+
+.. container:: install_instructions
+
+    :Installing: ``$ pip install --user --upgrade dirty_cat``
+
+
 
 .. raw:: html
 
-    </div>
-    <div class="flex-content" style="border: 0px;">
+    <div class="video" style="border: 0px;">
     <iframe style="display: block; margin: auto; width: 100%;" width="560" height="315"
      src="https://www.youtube.com/embed/_GNaaeEI2tg" frameborder="0"
      allow="accelerometer; autoplay; clipboard-write;
      encrypted-media; gyroscope; picture-in-picture" allowfullscreen
-    ></iframe>
+    ></iframe></div>
+    <div class="flex-content" style="border: 0px;">
 
 .. raw:: html
 
     </div>
-    </div>
 
-.. rst-class:: right-align
 
-   `Recent changes <CHANGES.html>`_
-
-:Installing: `$ pip install --user dirty_cat`
-
-______
-
-Usage
-========
+Usage examples
+===============
 
 .. container:: larger-container
 
@@ -89,6 +86,12 @@ Usage
     :end-before: .. rst-class:: sphx-glr-signature
 
 |
+
+For a detailed description of the problem of encoding dirty categorical data,
+see `Similarity encoding for learning with dirty categorical variables
+<https://hal.inria.fr/hal-01806175>`_ [1]_ and `Encoding high-cardinality
+string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
+
 
 API documentation
 =================
@@ -150,7 +153,7 @@ project: there is still little known about the problems of dirty
 categories. Tradeoffs will emerge in the long run. We really need people
 giving feedback on success and failures with the different techniques and
 pointing us to open datasets on which we can do more empirical work.
-Dirty-cat received funding from `project DirtyData
+dirty-cat received funding from `project DirtyData
 <https://project.inria.fr/dirtydata/>`_ (ANR-17-CE23-0018).
 
 .. [1] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
