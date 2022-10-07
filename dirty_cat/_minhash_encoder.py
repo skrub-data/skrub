@@ -26,6 +26,7 @@ from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
 from ._utils import LRUDict, check_input
 
+NoneType = type(None)
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """
@@ -208,7 +209,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             for k in range(X.shape[1]):
                 X_in = X[:, k].reshape(-1)
                 for i, x in enumerate(X_in):
-                    if isinstance(x, float):  # true if x is a missing value
+                    if (isinstance(x, float)  # true if x is a missing value
+                        or x is None):
                         is_nan_idx = True
                     elif x not in self.hash_dict_:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[

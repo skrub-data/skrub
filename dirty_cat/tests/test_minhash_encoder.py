@@ -133,6 +133,15 @@ def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     return
 
 
+def test_missing_values_none():
+    # Test that "None" is also understood as a missing value
+    a = np.array([['a', 'b', None, 'c']], dtype=object).T
+
+    enc = MinHashEncoder()
+    d = enc.fit_transform(a)
+    np.testing.assert_array_equal(d[2], 0)
+
+
 def test_cache_overflow() -> None:
     # Regression test for cache overflow resulting in -1s in encoding
     def get_random_string(length):
