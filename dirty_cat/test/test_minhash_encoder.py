@@ -201,8 +201,28 @@ def test_backend_respected():
         encoder.fit_transform(X)
 
     assert ba.count > 0
+def test_correct_arguments():
+    # Test that the correct arguments are passed to the hashing function
+    X = np.array(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])[:, None]
+    # Write an incorrect value for the `hashing` argument
+    with pytest.raises(ValueError, match=r"hashing function should be either"):
+        encoder = MinHashEncoder(n_components=3, hashing='incorrect')
+        encoder.fit_transform(X)
 
+    # Write an incorrect value for the `handle_missing` argument
+    with pytest.raises(ValueError, match=r"handle_missing should be either"):
+        encoder = MinHashEncoder(n_components=3, handle_missing='incorrect')
+        encoder.fit_transform(X)
 
+    # Use minmax_hash with murmur hashing
+    with pytest.raises(ValueError, match=r"minmax_hash encoding is not supported"):
+        encoder = MinHashEncoder(n_components=2, minmax_hash=True, hashing='murmur')
+        encoder.fit_transform(X)
+
+    # Use minmax_hash with an odd number of components
+    with pytest.raises(ValueError, match=r"n_components should be even"):
+        encoder = MinHashEncoder(n_components=3, minmax_hash=True)
+        encoder.fit_transform(X)
 
 
 
@@ -230,5 +250,7 @@ if __name__ == '__main__':
     test_parallelism()
     print('joblib backend test')
     test_backend_respected()
+    print('correct arguments test')
+    test_correct_arguments()
 
     print('Done')

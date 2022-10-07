@@ -163,7 +163,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                         ngram_range=self.ngram_range
                     )
                 else:
-                    raise ValueError("hashing function must be 'fast' or"
+                    raise ValueError("hashing function should be either 'fast' or"
                                      "'murmur', got '{}'"
                                      "".format(self.hashing))
         return self.hash_dict[x]
@@ -199,11 +199,14 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         X = check_input(X)
         if self.minmax_hash:
-            assert self.n_components % 2 == 0,\
-                    "n_components should be even when minmax_hash=True"
+            if self.n_components % 2 != 0:
+                raise ValueError("n_components should be even when using"
+                                 "minmax_hash encoding, got {}"
+                                 "".format(self.n_components))
         if self.hashing == 'murmur':
-            assert not(self.minmax_hash),\
-                   "minmax_hash not implemented with murmur"
+            if self.minmax_hash:
+                raise ValueError("minmax_hash encoding is not supported"
+                                 "with murmur hashing function")
         if self.handle_missing not in ['error', 'zero_impute']:
             template = ("handle_missing should be either 'error' or "
                         "'zero_impute', got %s")
