@@ -47,9 +47,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     handle_missing : 'error' or 'zero_impute' (default)
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
-    n_jobs : int, default=-1
-        The number of jobs to run in parallel. If -1, then the number of
-        jobs is set to the number of cores.
+    n_jobs : int, default=None
+        The number of jobs to run in parallel. The hash computations for all unique elements are parallelized.
+        None means 1 unless in a `joblib.parallel_backend context <https://joblib.readthedocs.io/en/latest/parallel.html>`_.
+        -1 means using all processors.
+        See `Scikit-learn Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_. for more details.
     References
     ----------
     For a detailed description of the method, see
@@ -62,7 +64,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, n_components=30, ngram_range=(2, 4),
                  hashing='fast', minmax_hash=False,
                  handle_missing='zero_impute',
-                 n_jobs=-1):
+                 n_jobs=None):
         self.ngram_range = ngram_range
         self.n_components = n_components
         self.hashing = hashing

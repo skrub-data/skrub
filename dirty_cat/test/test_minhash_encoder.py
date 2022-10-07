@@ -4,9 +4,12 @@ from string import ascii_lowercase
 import numpy as np
 import pandas as pd
 import pytest
+import joblib
 
 from sklearn.datasets import fetch_20newsgroups
 from dirty_cat import MinHashEncoder
+from sklearn.utils._testing import skip_if_no_parallel
+from sklearn.utils._testing import assert_array_equal
 
 def test_MinHashEncoder(n_sample=70, minmax_hash=False):
     X_txt = fetch_20newsgroups(subset='train')['data']
@@ -155,6 +158,53 @@ def test_cache_overflow():
 
     assert len(y[y == -1.0]) == 0
 
+@skip_if_no_parallel
+def test_parallelism():
+    # Test that parallelism works
+    encoder = MinHashEncoder(n_components=3, n_jobs=1)
+    X = np.array(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])[:, None]
+    y = encoder.fit_transform(X)
+    for n_jobs in [None, 2, -1]:
+        encoder = MinHashEncoder(n_components=3, n_jobs=n_jobs)
+        y_parallel = encoder.fit_transform(X)
+        assert_array_equal(y, y_parallel)
+
+    # Test with threading backend
+    encoder = MinHashEncoder(n_components=3, n_jobs=2)
+    with joblib.parallel_backend('threading'):
+        y_threading = encoder.fit_transform(X)
+    assert_array_equal(y, y_threading)
+    assert encoder.n_jobs == 2
+
+DEFAULT_JOBLIB_BACKEND = joblib.parallel.get_active_backend()[0].__class__
+class MyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
+    def __init__(self, *args, **kwargs):
+        self.count = 0
+        super().__init__(*args, **kwargs)
+
+    def start_call(self):
+        self.count += 1
+        return super().start_call()
+
+joblib.register_parallel_backend("testing", MyBackend)
+@skip_if_no_parallel
+def test_backend_respected():
+    """
+    Test that the joblib backend is used
+    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py
+    """
+    # Test that parallelism works
+    encoder = MinHashEncoder(n_components=3, n_jobs=2)
+    X = np.array(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])[:, None]
+
+    with joblib.parallel_backend("testing") as (ba, n_jobs):
+        encoder.fit_transform(X)
+
+    assert ba.count > 0
+
+
+
+
 
 if __name__ == '__main__':
     print('start test')
@@ -176,5 +226,9 @@ if __name__ == '__main__':
     print('time profile_encoder(MinHashEncoder, hashing=murmur)')
     print("{:.4} seconds".format(
         profile_encoder(MinHashEncoder, hashing='murmur')))
+    print("Parallelism test")
+    test_parallelism()
+    print('joblib backend test')
+    test_backend_respected()
 
     print('Done')
