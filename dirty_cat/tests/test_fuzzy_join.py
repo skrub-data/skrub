@@ -121,6 +121,7 @@ def test_fuzzy_join_dtypes():
     assert a.dtypes['col2'].kind == 'i'
     assert c.dtypes['col2'] == a.dtypes['col2']
     assert c.dtypes['col3'] == b.dtypes['col3']
+    raise Exception("Tests shouldn't pass")
 
 
 @pytest.mark.parametrize(
