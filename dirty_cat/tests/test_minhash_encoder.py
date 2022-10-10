@@ -12,7 +12,7 @@ from dirty_cat import MinHashEncoder
     "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
 )
 def test_MinHashEncoder(hashing, minmax_hash) -> None:
-    X = np.array([" alice", " bob", "bob and alice", "alice and bob"])[:, None]
+    X = np.array(["al ice", "b ob", "bob and alice", "alice and bob"])[:, None]
     # Test output shape
     encoder = MinHashEncoder(n_components=2, hashing=hashing)
     encoder.fit(X)
@@ -21,18 +21,18 @@ def test_MinHashEncoder(hashing, minmax_hash) -> None:
     assert len(set(y[0])) == 2
 
     # Test same seed return the same output
-    encoder = MinHashEncoder(2, hashing=hashing)
-    encoder.fit(X)
-    y2 = encoder.transform(X)
+    encoder2 = MinHashEncoder(2, hashing=hashing)
+    encoder2.fit(X)
+    y2 = encoder2.transform(X)
     np.testing.assert_array_equal(y, y2)
 
     # Test min property
     if not minmax_hash:
         X_substring = [x[: x.find(" ")] for x in X[:, 0]]
         X_substring = np.array(X_substring)[:, None]
-        encoder = MinHashEncoder(2, hashing=hashing)
-        encoder.fit(X_substring)
-        y_substring = encoder.transform(X_substring)
+        encoder3 = MinHashEncoder(2, hashing=hashing)
+        encoder3.fit(X_substring)
+        y_substring = encoder3.transform(X_substring)
         np.testing.assert_array_less(y - y_substring, 0.001)
 
 

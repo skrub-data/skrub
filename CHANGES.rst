@@ -21,7 +21,7 @@ Minor changes
 Bug fixes
 ---------
 
-* :class:`MinHashEncoder` now considers `None` as missing values, rather
+* :class:`MinHashEncoder` now considers `None` and empty strings as missing values, rather
   than raising an error.
 
 Release 0.3.0

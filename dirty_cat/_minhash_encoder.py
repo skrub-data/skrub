@@ -223,6 +223,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                         or x is None
                     ):
                         is_nan_idx = True
+                    elif len(x) == 0:
+                        is_nan_idx = True
                     elif x not in self.hash_dict_:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[
                             x
@@ -237,6 +239,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 X_in = X[:, k].reshape(-1)
                 for i, x in enumerate(X_in):
                     if isinstance(x, float) or x is None:
+                        is_nan_idx = True
+                    elif len(x) == 0:
                         is_nan_idx = True
                     elif x not in self.hash_dict_:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[
