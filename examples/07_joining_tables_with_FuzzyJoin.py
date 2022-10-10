@@ -57,7 +57,7 @@ y = df[["Happiness score"]]
 # complete our covariates (X table).
 #
 # Interesting tables can be found on `the World Bank open data platform
-# <https://data.worldbank.org/>`_, for which we have a downloafing
+# <https://data.worldbank.org/>`_, for which we have a downloading
 # function:
 from dirty_cat.datasets import fetch_world_bank_indicator
 
