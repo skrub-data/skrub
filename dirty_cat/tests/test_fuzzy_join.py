@@ -10,7 +10,7 @@ from dirty_cat import fuzzy_join
     [("char", "left"), ("char_wb", "right"), ("word", "all")],
 )
 def test_fuzzy_join(analyzer, how):
-    """Testing if fuzzy_join gives joining results as expected."""
+    """Testing if fuzzy_join results are as expected."""
 
     df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
     df2 = pd.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]})
@@ -144,3 +144,27 @@ def test_parameters_error(analyzer, how, suffixes, on):
         ),
     ):
         fuzzy_join(df1, df2, on=on)
+
+
+def test_duplicate_columns_drop():
+    df1 = pd.DataFrame(
+        {"a1": ["ana", "lala", "nana et sana", np.NaN], "b": [14, 13, 51, np.NaN]}
+    )
+    df2 = pd.DataFrame(
+        {
+            "a2": ["anna", "lala et nana", "lana", "sana", np.NaN],
+            "b": [1, 3, 6, 7, np.NaN],
+        }
+    )
+
+    for h in ["left", "right"]:
+        df_joined = fuzzy_join(
+            left=df1,
+            right=df2,
+            left_on="a1",
+            right_on="a2",
+            analyzer="char",
+            suffixes=("1", "1"),
+            how=h,
+        )
+        pd.testing.assert_frame_equal(df_joined, df_joined.dropna())

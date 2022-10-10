@@ -2,15 +2,14 @@
 Merging dirty tables: fuzzy join
 ====================================
 
-When combining data from different sources, there is a risk that
-it will not be easily merged, as it comes mislabeled, with errors, duplicated.
+Here we show how to combine data from different sources,
+with a vocabulary not well normalized.
+Joining is difficult: one entry on one side does not have
+an exact match on the other side.
 
-In this example, we show how the :func:`fuzzy_join` function allows us to join
+In this example, the :func:`fuzzy_join` function allows us to join
 tables without cleaning the data by taking into account the
 label variations.
-
-Simple and time-saving, this method is intended for users to apply
-before training their machine learning model.
 
 To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
 with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
@@ -36,7 +35,7 @@ df.drop(df.tail(1).index, inplace=True)
 df.head(3)
 
 ##############################################################################
-# The is a table that contains the happiness index of a country along with
+# This is a table that contains the happiness index of a country along with
 # some of the possible explanatory factors: GDP per capita, Social support,
 # Generosity etc.
 #

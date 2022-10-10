@@ -9,4 +9,4 @@ joblib
 pandas
 scikit-learn
 numpydoc
-statsmodel
+statsmodels
