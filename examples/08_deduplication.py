@@ -89,7 +89,6 @@ _ = plt.ylabel("Counts")
 #
 # The idea is to use the fact that the string-distance of each misspelled medication name will be closest to either the correctly or incorrectly spelled orginal medication name - and therefore form clusters.
 
-# In[8]:
 
 
 from dirty_cat.deduplicate import deduplicate, compute_ngram_distance
@@ -117,7 +116,6 @@ sns.heatmap(
 
 # The number of clusters will need some adjustment depending on the data you have. If no fixed number of clusters is given, `deduplicate` tries to set it automatically via the [silhouette score](https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient).
 
-# In[18]:
 
 
 deduplicated_data, translation_table = deduplicate(data, return_translation_table=True)
@@ -144,8 +142,6 @@ translation_table.head()
 
 
 # Since the number of correct spellings will likely be much smaller than the number of original categories, we can print the estimated cluster and their most common exemplars (the guessed correct spelling):
-
-# In[16]:
 
 
 def print_corrections(spell_correct):
