@@ -118,6 +118,7 @@ def test_fuzzy_join_dtypes():
     a = pd.DataFrame({'col1': ['aaa', 'bbb'], 'col2': [1, 2]})
     b = pd.DataFrame({'col1': ['aaa_', 'bbb_'], 'col3': [1, 2]})
     c = fuzzy_join(a, b, on='col1')
+    assert a.dtypes['col2'].kind == 'i'
     assert c.dtypes['col2'] == a.dtypes['col2']
     assert c.dtypes['col3'] == b.dtypes['col3']
 
