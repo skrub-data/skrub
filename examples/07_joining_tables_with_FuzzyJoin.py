@@ -78,7 +78,7 @@ legal_rights.head(3)
 
 #######################################################################
 # A correspondance problem
-# --------------------------
+# ------------------------
 #
 # Alas, the entries for countries do not perfectly match between our
 # original table (X), and those that we downloaded from the worldbank:
