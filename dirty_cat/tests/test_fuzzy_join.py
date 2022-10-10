@@ -113,6 +113,15 @@ def test_fuzzy_join(analyzer, how):
     assert df_dropna.shape[0] == df_joined.dropna().shape[0]
 
 
+def test_fuzzy_join_dtypes():
+    # Test that the dtypes of dataframes are maintained after join
+    a = pd.DataFrame({'col1': ['aaa', 'bbb'], 'col2': [1, 2]})
+    b = pd.DataFrame({'col1': ['aaa_', 'bbb_'], 'col3': [1, 2]})
+    c = fuzzy_join(a, b, on='col1')
+    assert c.dtypes['col2'] == a.dtypes['col2']
+    assert c.dtypes['col3'] == b.dtypes['col3']
+
+
 @pytest.mark.parametrize(
     "analyzer, how, suffixes, on",
     [("a_blabla", "k_blabla", ["a", "b", "c"], ["a"]), (1, 34, [1, 2, 3], 3)],

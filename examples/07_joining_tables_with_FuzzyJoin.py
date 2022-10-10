@@ -41,13 +41,11 @@ df.head(3)
 # Generosity etc.
 #
 # For more information, read the `World Happiness Report <https://worldhappiness.report/>`_.
-X = df[["Country"]]
-y = df[["Happiness score"]]
 
 #######################################################################
-# We keep the country names in our X table and we create
-# the y table with the happiness score (our prediction target, or
-# exogenous variable).
+# For the sake of this example, we only keep the country names and our
+# variable of interest: the happiness score
+df = df[["Country", "Happiness score"]]
 
 #############################################################################
 # Additional tables from other sources
@@ -83,13 +81,13 @@ legal_rights.head(3)
 # Alas, the entries for countries do not perfectly match between our
 # original table (X), and those that we downloaded from the worldbank:
 
-X.sort_values(by='Country').tail(7)
+df.sort_values(by='Country').tail(7)
 
 #######################################################################
 gdppc.sort_values(by='Country Name').tail(7)
 
 #######################################################################
-# We can see that Yemen is written "Yemen*" on one side, and 
+# We can see that Yemen is written "Yemen*" on one side, and
 # "Yemen, Rep." on the other.
 #
 # We also have entries that probably do not have correspondances: "World"
@@ -99,7 +97,7 @@ gdppc.sort_values(by='Country Name').tail(7)
 # Joining tables with imperfect correspondance
 # --------------------------------------------
 #
-# We will now join our initial table, X, with the 3 additional ones that
+# We will now join our initial table, df, with the 3 additional ones that
 # we have extracted.
 #
 
@@ -110,15 +108,15 @@ gdppc.sort_values(by='Country Name').tail(7)
 # To join them with dirty_cat, we only need to do the following:
 from dirty_cat import fuzzy_join
 
-X1 = fuzzy_join(
-    X,  # our table to join
+df1 = fuzzy_join(
+    df,  # our table to join
     gdppc,  # the table to join with
     left_on="Country",  # the first join key column
     right_on="Country Name",  # the second join key column
     return_score=True,
 )
 
-X1.head(20)
+df1.head(20)
 # We merged the first WB table to our initial one.
 
 #################################################################
@@ -166,7 +164,7 @@ def print_worst_matches(joined_table, n=5):
 # Let's print the four worst matches, which will give
 # us an overview of the situation:
 
-print_worst_matches(X1, n=4)
+print_worst_matches(df1, n=4)
 
 #################################################################
 # We see that some matches were unsuccesful
@@ -178,25 +176,24 @@ print_worst_matches(X1, n=4)
 # In this case, it is better to use the threshold parameter
 # so as to include only precise-enough matches:
 #
-X1 = fuzzy_join(
-    X,
+df1 = fuzzy_join(
+    df,
     gdppc,
     left_on="Country",
     right_on="Country Name",
     match_score=0.35,
     return_score=True,
 )
-print_worst_matches(X1, n=4)
+print_worst_matches(df1, n=4)
 
 #################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
 # We will remove them, as well as missing or unused information:
 
-mask = X1["GDP per capita (current US$)"].notna()
-X1 = X1[mask]
-y = np.ravel(y[mask])
+mask = df1["GDP per capita (current US$)"].notna()
+df1 = df1[mask]
 
-X1.drop(["matching_score"], axis=1, inplace=True)
+df1.drop(["matching_score"], axis=1, inplace=True)
 
 #################################################################
 #
@@ -208,7 +205,9 @@ import seaborn as sns
 sns.set_context("notebook")
 
 plt.figure(figsize=(4, 3))
-ax = sns.regplot(x=X1["GDP per capita (current US$)"], y=y, lowess=True)
+ax = sns.regplot(data=df1,
+                 x="GDP per capita (current US$)",
+                 y="Happiness score", lowess=True)
 ax.set_ylabel("Happiness index")
 ax.set_title("Is a higher GDP per capita linked to happiness?")
 plt.tight_layout()
@@ -226,8 +225,8 @@ plt.show()
 #
 # Now let's include other information that may be relevant, such as
 # life expectancy table:
-X2 = fuzzy_join(
-    X1,
+df2 = fuzzy_join(
+    df1,
     life_exp,
     left_on="Country",
     right_on="Country Name",
@@ -235,12 +234,15 @@ X2 = fuzzy_join(
     how="left",
 )
 
-X2.head(3)
+df2.head(3)
 
 #################################################
 # Let's plot this relation:
 plt.figure(figsize=(4, 3))
-fig = sns.regplot(x=X2["Life expectancy at birth, total (years)"], y=y, lowess=True)
+fig = sns.regplot(data=df2,
+                  x="Life expectancy at birth, total (years)",
+                  y="Happiness score",
+                  lowess=True)
 fig.set_ylabel("Happiness index")
 fig.set_title("Is a higher life expectancy linked to happiness?")
 plt.tight_layout()
@@ -260,8 +262,8 @@ plt.show()
 #    column, so as not to have unnecessary overlaping column with country names.
 #
 # And the table with a measure of legal rights strength in the country:
-X3 = fuzzy_join(
-    X2,
+df3 = fuzzy_join(
+    df2,
     legal_rights,
     left_on="Country",
     right_on="Country Name",
@@ -269,14 +271,16 @@ X3 = fuzzy_join(
     how="left",
 )
 
-X3.head(3)
+df3.head(3)
 
 #################################################
 # Let's take a look at their correspondance in a figure:
 plt.figure(figsize=(4, 3))
-fig = sns.regplot(
-    x=X3["Strength of legal rights index (0=weak to 12=strong)"], y=y, lowess=True
-)
+fig = sns.regplot(data=df3,
+                  x="Strength of legal rights index (0=weak to 12=strong)",
+                  y="Happiness score",
+                  lowess=True,
+                )
 fig.set_ylabel("Happiness index")
 fig.set_title("Does a country's legal rights strength lead to happiness?")
 plt.tight_layout()
@@ -294,6 +298,12 @@ plt.show()
 # Prediction model
 # -----------------
 #
+# We now separate our covariates (X), from the target (or exogenous)
+# variables: y
+X = df3.drop("Happiness score", axis=1).select_dtypes(exclude=object)
+y = df3[["Happiness score"]]
+
+###################################################################
 # Let us now define the model that will be used to predict the happiness score:
 from sklearn import __version__ as sklearn_version
 
@@ -313,13 +323,13 @@ cv = KFold(n_splits=2, shuffle=True, random_state=0)
 from sklearn.model_selection import cross_validate
 
 cv_results_t = cross_validate(
-    hgdb, X3.select_dtypes(exclude=object), y, cv=cv, scoring="r2"
+    hgdb, X, y, cv=cv, scoring="r2"
 )
 
 cv_r2_t = cv_results_t["test_score"]
 
 print(
-    f"Mean R2 score with {len(X3.columns) - 2} feature columns is"
+    f"Mean R2 score with {len(X.columns) - 2} feature columns is"
     f" {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
 )
 
