@@ -4,6 +4,7 @@ Merging dirty tables: fuzzy join
 
 Here we show how to combine data from different sources,
 with a vocabulary not well normalized.
+
 Joining is difficult: one entry on one side does not have
 an exact match on the other side.
 
