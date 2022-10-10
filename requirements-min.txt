@@ -10,3 +10,4 @@ cython
 joblib
 seaborn
 numpydoc
+statsmodel

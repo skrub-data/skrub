@@ -190,7 +190,7 @@ import seaborn as sns
 sns.set_context("notebook")
 
 plt.figure(figsize=(4, 3))
-ax = sns.regplot(x=X1["GDP per capita (current US$)"], y=y, logx=True)
+ax = sns.regplot(x=X1["GDP per capita (current US$)"], y=y, lowess=True)
 ax.set_ylabel("Happiness index")
 ax.set_title("Is a higher GDP per capita linked to happiness?")
 plt.tight_layout()
@@ -222,9 +222,7 @@ X2.head(3)
 #################################################
 # Let's plot this relation:
 plt.figure(figsize=(4, 3))
-fig = sns.regplot(
-    x=X2["Life expectancy at birth, total (years)"], y=y, fit_reg=True, ci=0
-)
+fig = sns.regplot(x=X2["Life expectancy at birth, total (years)"], y=y, lowess=True)
 fig.set_ylabel("Happiness index")
 fig.set_title("Is a higher life expectancy linked to happiness?")
 plt.tight_layout()
@@ -258,7 +256,9 @@ X3.head(3)
 #################################################
 # Let's take a look at their correspondance in a figure:
 plt.figure(figsize=(4, 3))
-fig = sns.regplot(x=X3["Strength of legal rights index (0=weak to 12=strong)"], y=y)
+fig = sns.regplot(
+    x=X3["Strength of legal rights index (0=weak to 12=strong)"], y=y, lowess=True
+)
 fig.set_ylabel("Happiness index")
 fig.set_title("Does a country's legal rights strength lead to happiness?")
 plt.tight_layout()
