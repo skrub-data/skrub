@@ -4,6 +4,7 @@ Merging dirty tables: fuzzy join
 
 Here we show how to combine data from different sources,
 with a vocabulary not well normalized.
+
 Joining is difficult: one entry on one side does not have
 an exact match on the other side.
 
@@ -45,20 +46,19 @@ y = df[["Happiness score"]]
 
 #######################################################################
 # We keep the country names in our X table and we create
-# the y table with the happiness score (our prediction target).
-#
-#
-# Now, we need to include explanatory factors from other tables.
-# What can we add from the available open public datasets to complete
-# our X table?
+# the y table with the happiness score (our prediction target, or
+# exogenous variable).
 
 #############################################################################
-# Finding additional tables
-# -------------------------
+# Additional tables from other sources
+# ------------------------------------
 #
-# Interesting tables can be found on `the World Bank open data platform <https://data.worldbank.org/>`_.
-# We will extract data from it and include them in our model.
-# Luckily, the following function helps us do it easily:
+# Now, we need to include explanatory factors from other sources, to
+# complete our covariates (X table).
+#
+# Interesting tables can be found on `the World Bank open data platform
+# <https://data.worldbank.org/>`_, for which we have a downloading
+# function:
 from dirty_cat.datasets import fetch_world_bank_indicator
 
 #################################################################
@@ -77,11 +77,30 @@ legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
 legal_rights.head(3)
 
 #######################################################################
-# Joining World Bank tables to our initial one
-# ----------------------------------------------
+# A correspondance problem
+# ------------------------
 #
-# So now we have our initial table, X, and 3 additional ones that we have
-# extracted.
+# Alas, the entries for countries do not perfectly match between our
+# original table (X), and those that we downloaded from the worldbank:
+
+X.sort_values(by='Country').tail(7)
+
+#######################################################################
+gdppc.sort_values(by='Country Name').tail(7)
+
+#######################################################################
+# We can see that Yemen is written "Yemen*" on one side, and 
+# "Yemen, Rep." on the other.
+#
+# We also have entries that probably do not have correspondances: "World"
+# on one side, whereas the other table only has country-level data.
+
+#######################################################################
+# Joining tables with imperfect correspondance
+# --------------------------------------------
+#
+# We will now join our initial table, X, with the 3 additional ones that
+# we have extracted.
 #
 
 #################################################
