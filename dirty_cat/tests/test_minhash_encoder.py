@@ -152,6 +152,10 @@ def test_missing_values_none():
     d = enc.fit_transform(a)
     np.testing.assert_array_equal(d[2], 0)
 
+    e = np.array([["a", "b", "", "c"]], dtype=object).T
+    f = enc.fit_transform(e)
+    np.testing.assert_array_equal(f[2], 0)
+
 
 def test_cache_overflow() -> None:
     # Regression test for cache overflow resulting in -1s in encoding
