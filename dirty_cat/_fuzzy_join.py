@@ -176,7 +176,7 @@ def fuzzy_join(
     )
     if len(overlap_cols) > 0:
         if suffixes[0] == "" and suffixes[1] == "":
-            raise ValueError(f"columns overlap but no suffix specified: {overlap_cols}")
+            raise ValueError(f"Columns overlap but no suffix specified: {overlap_cols}")
         for i in range(len(overlap_cols)):
             new_name_l = overlap_cols[i] + lsuffix
             new_name_r = overlap_cols[i] + rsuffix

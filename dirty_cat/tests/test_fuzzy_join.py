@@ -74,6 +74,21 @@ def test_fuzzy_join(analyzer, how):
 
     df2["a1"] = 1
 
+    with pytest.raises(
+        ValueError,
+        match=r"Columns overlap but no suffix",
+    ):
+        fuzzy_join(df1, df2, left_on="a1", right_on="a2", suffixes=("", ""))
+
+    if analyzer == "word":
+        with pytest.warns(
+            UserWarning,
+            match=r"Column names overlaps.",
+        ):
+            fuzzy_join(
+                df1, df2, left_on="a1", right_on="a2", suffixes=("a", "a"), how=how
+            )
+
     df = fuzzy_join(
         df1,
         df2,

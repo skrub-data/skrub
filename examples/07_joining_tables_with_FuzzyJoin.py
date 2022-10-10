@@ -59,7 +59,7 @@ y = df[["Happiness score"]]
 #
 # Interesting tables can be found on `the World Bank open data platform <https://data.worldbank.org/>`_.
 # We will extract data from it and include them in our model.
-# Luckily, dirty_cat has the following function to do it easily:
+# Luckily, the following function helps us do it easily:
 from dirty_cat.datasets import fetch_world_bank_indicator
 
 #################################################################
@@ -107,7 +107,7 @@ X1.head(20)
 # .. topic:: Note:
 #
 #    We fix the `return_score` parameter to `True` so as to keep the matching
-#    score, that we will use later to establish the worst matches.
+#    score, that we will use later to show what are the worst matches.
 
 #################################################################
 #
