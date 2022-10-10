@@ -97,7 +97,7 @@ gdppc.sort_values(by='Country Name').tail(7)
 
 #######################################################################
 # Joining tables with imperfect correspondance
-# ----------------------------------------------
+# --------------------------------------------
 #
 # We will now join our initial table, X, with the 3 additional ones that
 # we have extracted.
