@@ -12,12 +12,20 @@ Major changes
     used to download any indicator from the World Bank Open Data platform. It only needs the
     indicator ID that can be found on the website.
 
-Minor changes
+Major changes
 -------------
 
 * Unnecessary API has been made private: everything (files, functions, classes)
   starting with an underscore shouldn't be imported in your code.
 
+Minor changes
+-------------
+
+Bug fixes
+---------
+
+* :class:`MinHashEncoder` now considers `None` as missing values, rather
+  than raising an error.
 
 Release 0.3.0
 =============
@@ -65,7 +73,7 @@ Notes
 Release 0.2.2
 =============
 
-Bug-fixes
+Bug fixes
 ---------
 
 * Fixed a bug in the :class:`SuperVectorizer` causing a `FutureWarning`
