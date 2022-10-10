@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import mock_open
 from urllib.error import URLError
+from zipfile import BadZipFile
 
 import pandas as pd
 import pytest
@@ -26,6 +27,9 @@ from dirty_cat.datasets._fetching import (
     _read_json_from_gz,
 )
 from dirty_cat.datasets._fetching import fetch_openml_dataset as _fetch_openml_dataset
+from dirty_cat.datasets._fetching import (
+    fetch_world_bank_indicator as fetch_world_bank_indicator,
+)
 from dirty_cat.datasets._utils import get_data_dir as _get_data_dir
 
 
@@ -383,3 +387,65 @@ def test_import_all_datasets(
 
         returned_value = _fetching.fetch_drug_directory()
         assert expected_return_value == returned_value
+
+
+def test_fetch_world_bank_indicator():
+    """
+    Tests the ``fetch_world_bank_indicator()``
+    function in a real environment.
+    """
+    test_dataset = {
+        "id": "NY.GDP.PCAP.CD",
+        "desc_start": "This table shows",
+        "url": "https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.CD?downloadformat=csv",  # noqa
+        "dataset_columns_count": 2,
+    }
+
+    test_data_dir = get_test_data_dir()
+
+    try:
+        try:
+            # First, we want to purposefully test FileNotFoundError exceptions.
+            with pytest.raises(FileNotFoundError):
+                assert fetch_world_bank_indicator(indicator_id=0)
+                assert fetch_world_bank_indicator(indicator_id=2**32)
+
+            # Valid call
+            returned_info = fetch_world_bank_indicator(indicator_id=test_dataset["id"])
+
+        except BadZipFile:
+            test_id = test_dataset["id"]
+            with pytest.raises(
+                FileNotFoundError,
+                match=(
+                    f"Couldn't find csv file, the indicator id {test_id} seems invalid."
+                ),
+            ):
+                fetch_world_bank_indicator(indicator_id=test_dataset["id"])
+
+        except URLError:
+            with pytest.raises(
+                URLError,
+                match="<urlopen error No internet connection or the website is down.>",
+            ):
+                fetch_world_bank_indicator(indicator_id=test_dataset["id"])
+            warnings.warn(
+                "No internet connection or the website is down, test aborted."
+            )
+            pytest.skip(
+                "Exception: Skipping this test because we encountered an "
+                "issue probably related to an Internet connection problem. "
+            )
+            return
+
+        assert returned_info.description.startswith(test_dataset["desc_start"])
+        assert returned_info.source == test_dataset["url"]
+        assert returned_info.path.is_file()
+
+        dataset: pd.DataFrame = pd.read_csv(returned_info.path)
+
+        assert dataset.columns[0] == "Country Name"
+        assert dataset.shape[1] == test_dataset["dataset_columns_count"]
+
+    finally:
+        shutil.rmtree(path=str(test_data_dir), ignore_errors=True)

@@ -129,6 +129,16 @@ Other encoders
 
    DatetimeEncoder
 
+Joining tables
+---------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+
+   fuzzy_join
+
 Data download
 -----------------------
 
@@ -143,6 +153,7 @@ Data download
    datasets.fetch_open_payments
    datasets.fetch_road_safety
    datasets.fetch_traffic_violations
+   datasets.fetch_world_bank_indicator
    datasets.get_data_dir
 
 About
@@ -167,4 +178,3 @@ dirty-cat received funding from `project DirtyData
 
    Similarity encoding in also available in Spark ML:
    https://github.com/rakutentech/spark-dirty-cat
-
