@@ -27,13 +27,12 @@ def fuzzy_join(
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
-    how: Literal["left", "right", "all"] = "all",
-    return_score: bool = False,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
+    return_score: bool = False,
     match_score: float = 0,
     drop_unmatched=False,
-    suffixes: Tuple[str, str] = ("_l", "_r"),
+    suffixes: Tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
     """
     Join two tables categorical string columns based on approximate
@@ -55,12 +54,6 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    how : typing.Literal['left', 'right', 'all'], default='all'
-        Keep the join key columns from the left, right or
-        all tables.
-    return_score : boolean, default=True
-        Wheter to return matching score based on the distance between
-        nearest matched categories.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
         similarities.
@@ -72,6 +65,9 @@ def fuzzy_join(
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
+    return_score : boolean, default=True
+        Wheter to return matching score based on the distance between
+        nearest matched categories.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. Closer to 1 means the matches need to be very
@@ -152,15 +148,6 @@ def fuzzy_join(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
 
-    if how not in ["left", "right", "all"]:
-        raise ValueError(
-            f"how should be either 'left', 'right' or 'all', got {how!r}",
-        )
-
-    if len(suffixes) != 2:
-        raise ValueError(f"Invalid number of suffixes: expected 2, got {len(suffixes)}")
-    lsuffix, rsuffix = suffixes
-
     for param in [on, left_on, right_on]:
         if param is not None and not isinstance(param, str):
             raise ValueError(
@@ -171,48 +158,26 @@ def fuzzy_join(
     left_table_clean = left.reset_index(drop=True).copy()
     right_table_clean = right.reset_index(drop=True).copy()
 
-    overlap_cols = left_table_clean._info_axis.intersection(
-        right_table_clean._info_axis
-    )
-    if len(overlap_cols) > 0:
-        if suffixes[0] == "" and suffixes[1] == "":
-            raise ValueError(f"Columns overlap but no suffix specified: {overlap_cols}")
-        for i in range(len(overlap_cols)):
-            new_name_l = overlap_cols[i] + lsuffix
-            new_name_r = overlap_cols[i] + rsuffix
-            left_table_clean.rename(columns={overlap_cols[i]: new_name_l}, inplace=True)
-            right_table_clean.rename(
-                columns={overlap_cols[i]: new_name_r}, inplace=True
-            )
-            if left_on is not None and overlap_cols[i] in left_on:
-                left_on = new_name_l
-            if right_on is not None and overlap_cols[i] in right_on:
-                right_on = new_name_r
-
     if on is not None:
-        left_col = on + lsuffix
-        right_col = on + rsuffix
+        left_col = on
+        right_col = on
     elif left_on is not None and right_on is not None:
         left_col = left_on
         right_col = right_on
+    else:
+        raise ValueError("Parameter 'left_on', 'right_on' or 'on' is missing")
 
     # Drop missing values in key columns
     left_table_clean.dropna(subset=[left_col], inplace=True)
     right_table_clean.dropna(subset=[right_col], inplace=True)
 
     # Make sure that the column types are string and categorical:
-    left_table_clean[left_col] = (
-        left_table_clean[left_col].astype(str).astype("category")
-    )
-    right_table_clean[right_col] = (
-        right_table_clean[right_col].astype(str).astype("category")
-    )
+    left_col_clean = left_table_clean[left_col].astype(str).astype("category")
+    right_col_clean = right_table_clean[right_col].astype(str).astype("category")
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
-    all_cats = pd.concat(
-        [left_table_clean[left_col], right_table_clean[right_col]], axis=0
-    )
+    all_cats = pd.concat([left_col_clean, right_col_clean], axis=0)
 
     enc_cv = enc.fit(all_cats)
     left_enc = enc_cv.transform(left_table_clean[left_col])
@@ -230,49 +195,23 @@ def fuzzy_join(
     distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
+    left_table_clean["fj_idx"] = idx_closest
+    right_table_clean["fj_idx"] = right_table_clean.index
+
     norm_distance = 1 - (distance / 2)
+    if drop_unmatched:
+        left_table_clean = left_table_clean[match_score <= norm_distance]
+    else:
+        left_table_clean.loc[np.ravel(match_score >= norm_distance), left_col] = np.NaN
 
-    left_array = np.array(left_table_clean)
-    right_array = np.array(right_table_clean)
-    joined = np.append(
-        left_array,
-        np.array(
-            [
-                right_array[idx_closest[idr]]
-                if norm_distance[idr] >= match_score
-                else np.tile(np.nan, (right_array.shape[1],))
-                for idr in left_table_clean.index
-            ]
-        ),
-        axis=1,
+    df_joined = pd.merge(
+        left_table_clean, right_table_clean, on="fj_idx", suffixes=suffixes, how="left"
     )
-
-    cols = list(left_table_clean.columns) + list(right_table_clean.columns)
-    df_joined = pd.DataFrame(joined, columns=cols).replace(r"^\s*$", np.nan, regex=True)
-
-    duplicate_names = df_joined.columns.duplicated(keep=False)
-    if sum(duplicate_names) > 0:
-        warnings.warn("Column names overlaps. Please set appropriate suffixes.")
-        idx_to_keep = list(np.where(~duplicate_names)[0])
+    df_joined.drop(columns=["fj_idx"], inplace=True)
 
     if return_score:
         df_joined = pd.concat(
             [df_joined, pd.DataFrame(norm_distance, columns=["matching_score"])], axis=1
         )
-    if drop_unmatched:
-        df_joined.dropna(subset=[left_col, right_col], inplace=True)
-    if how == "left":
-        if sum(duplicate_names) > 0:
-            idx_to_keep.append(np.where(duplicate_names)[0][0])
-            idx_to_keep.sort()
-            df_joined = df_joined.iloc[:, idx_to_keep]
-        else:
-            df_joined.drop(columns=[right_col], inplace=True)
-    elif how == "right":
-        if sum(duplicate_names) > 0:
-            idx_to_keep.append(np.where(duplicate_names)[0][1])
-            idx_to_keep.sort()
-            df_joined = df_joined.iloc[:, idx_to_keep]
-        else:
-            df_joined.drop(columns=[left_col], inplace=True)
+
     return df_joined

@@ -81,10 +81,10 @@ legal_rights.head(3)
 # Alas, the entries for countries do not perfectly match between our
 # original table (X), and those that we downloaded from the worldbank:
 
-df.sort_values(by='Country').tail(7)
+df.sort_values(by="Country").tail(7)
 
 #######################################################################
-gdppc.sort_values(by='Country Name').tail(7)
+gdppc.sort_values(by="Country Name").tail(7)
 
 #######################################################################
 # We can see that Yemen is written "Yemen*" on one side, and
@@ -188,12 +188,16 @@ print_worst_matches(df1, n=4)
 
 #################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
-# We will remove them, as well as missing or unused information:
+# We will remove them using the drop_unmatched parameter:
 
-mask = df1["GDP per capita (current US$)"].notna()
-df1 = df1[mask]
-
-df1.drop(["matching_score"], axis=1, inplace=True)
+df1 = fuzzy_join(
+    df,
+    gdppc,
+    left_on="Country",
+    right_on="Country Name",
+    match_score=0.35,
+    drop_unmatched=True,
+)
 
 #################################################################
 #
@@ -205,9 +209,9 @@ import seaborn as sns
 sns.set_context("notebook")
 
 plt.figure(figsize=(4, 3))
-ax = sns.regplot(data=df1,
-                 x="GDP per capita (current US$)",
-                 y="Happiness score", lowess=True)
+ax = sns.regplot(
+    data=df1, x="GDP per capita (current US$)", y="Happiness score", lowess=True
+)
 ax.set_ylabel("Happiness index")
 ax.set_title("Is a higher GDP per capita linked to happiness?")
 plt.tight_layout()
@@ -230,8 +234,7 @@ df2 = fuzzy_join(
     life_exp,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
-    how="left",
+    match_score=0.35,
 )
 
 df2.head(3)
@@ -239,10 +242,12 @@ df2.head(3)
 #################################################
 # Let's plot this relation:
 plt.figure(figsize=(4, 3))
-fig = sns.regplot(data=df2,
-                  x="Life expectancy at birth, total (years)",
-                  y="Happiness score",
-                  lowess=True)
+fig = sns.regplot(
+    data=df2,
+    x="Life expectancy at birth, total (years)",
+    y="Happiness score",
+    lowess=True,
+)
 fig.set_ylabel("Happiness index")
 fig.set_title("Is a higher life expectancy linked to happiness?")
 plt.tight_layout()
@@ -267,8 +272,7 @@ df3 = fuzzy_join(
     legal_rights,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
-    how="left",
+    match_score=0.35,
 )
 
 df3.head(3)
@@ -276,11 +280,12 @@ df3.head(3)
 #################################################
 # Let's take a look at their correspondance in a figure:
 plt.figure(figsize=(4, 3))
-fig = sns.regplot(data=df3,
-                  x="Strength of legal rights index (0=weak to 12=strong)",
-                  y="Happiness score",
-                  lowess=True,
-                )
+fig = sns.regplot(
+    data=df3,
+    x="Strength of legal rights index (0=weak to 12=strong)",
+    y="Happiness score",
+    lowess=True,
+)
 fig.set_ylabel("Happiness index")
 fig.set_title("Does a country's legal rights strength lead to happiness?")
 plt.tight_layout()
@@ -322,9 +327,7 @@ cv = KFold(n_splits=2, shuffle=True, random_state=0)
 # Let's finally assess the results of our models:
 from sklearn.model_selection import cross_validate
 
-cv_results_t = cross_validate(
-    hgdb, X, y, cv=cv, scoring="r2"
-)
+cv_results_t = cross_validate(hgdb, X, y, cv=cv, scoring="r2")
 
 cv_r2_t = cv_results_t["test_score"]
 
@@ -334,7 +337,7 @@ print(
 )
 
 #################################################################
-# We have a satisfying first result: an R2 of 0.63!
+# We have a satisfying first result: an R2 of 0.66!
 #
 # Data cleaning varies from dataset to dataset: there are as
 # many ways to clean a table as there are errors. :func:`fuzzy_join`
