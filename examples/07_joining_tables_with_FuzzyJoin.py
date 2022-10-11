@@ -236,8 +236,7 @@ df2 = fuzzy_join(
     life_exp,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.35,
-    drop_unmatched=True,
+    match_score=0.45,
 )
 
 df2.drop(columns=["Country Name"], inplace=True)
@@ -277,11 +276,10 @@ df3 = fuzzy_join(
     legal_rights,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.35,
-    drop_unmatched=True,
+    match_score=0.45,
 )
 
-df2.drop(columns=["Country Name"], inplace=True)
+df3.drop(columns=["Country Name"], inplace=True)
 
 df3.head(3)
 
