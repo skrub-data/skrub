@@ -199,6 +199,8 @@ df1 = fuzzy_join(
     drop_unmatched=True,
 )
 
+df1.drop(columns=["Country Name"], inplace=True)
+
 #################################################################
 #
 # We can finally plot and look at the link between GDP per capita
@@ -235,7 +237,10 @@ df2 = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     match_score=0.35,
+    drop_unmatched=True,
 )
+
+df2.drop(columns=["Country Name"], inplace=True)
 
 df2.head(3)
 
@@ -273,7 +278,10 @@ df3 = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     match_score=0.35,
+    drop_unmatched=True,
 )
+
+df2.drop(columns=["Country Name"], inplace=True)
 
 df3.head(3)
 
