@@ -31,7 +31,7 @@ def fuzzy_join(
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
     match_score: float = 0,
-    drop_unmatched=False,
+    drop_unmatched: bool = False,
     suffixes: Tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
     """
@@ -201,6 +201,7 @@ def fuzzy_join(
     norm_distance = np.round(1 - (distance / 2), 6)
     if drop_unmatched:
         left_table_clean = left_table_clean[match_score <= norm_distance]
+        norm_distance = norm_distance[match_score <= norm_distance]
     else:
         left_table_clean.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
 
@@ -208,12 +209,13 @@ def fuzzy_join(
         left_table_clean, right_table_clean, on="fj_idx", suffixes=suffixes, how="left"
     )
 
-    if drop_unmatched is False:
-        norm_distance = norm_distance[df_joined["fj_nan"] != 1]
-        df_joined = df_joined[df_joined["fj_nan"] != 1].reset_index(drop=True)
-        df_joined.drop(columns=["fj_idx", "fj_nan"], inplace=True)
-    else:
+    if drop_unmatched:
         df_joined.drop(columns=["fj_idx"], inplace=True)
+    else:
+        idx = df_joined.index[df_joined["fj_nan"] == 1]
+        if len(idx) != 0:
+            df_joined.iloc[idx, df_joined.columns.get_loc("fj_idx") :] = np.NaN
+        df_joined.drop(columns=["fj_idx", "fj_nan"], inplace=True)
 
     if return_score:
         df_joined = pd.concat(

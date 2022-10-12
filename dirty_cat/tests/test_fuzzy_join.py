@@ -115,3 +115,8 @@ def test_drop_unmatched():
     b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
     c = fuzzy_join(a, b, on="col1", match_score=0.5, drop_unmatched=True)
     assert c.shape == (2, 4)
+
+    a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
+    b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
+    c = fuzzy_join(a, b, on="col1", match_score=0.5)
+    assert sum(c["col3"].isna()) > 0
