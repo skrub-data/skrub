@@ -17,7 +17,7 @@ def test_fuzzy_join(analyzer):
         right=df2,
         left_on="a1",
         right_on="a2",
-        match_score=0.5,
+        match_score=0.45,
         return_score=True,
         analyzer=analyzer,
     )
@@ -31,7 +31,7 @@ def test_fuzzy_join(analyzer):
         df1,
         left_on="a2",
         right_on="a1",
-        match_score=0.45,
+        match_score=0.35,
         return_score=True,
         analyzer=analyzer,
     )
@@ -43,7 +43,7 @@ def test_fuzzy_join(analyzer):
         df1,
         left_on="a2",
         right_on="a1",
-        match_score=0.45,
+        match_score=0.35,
         return_score=True,
         analyzer=analyzer,
     )

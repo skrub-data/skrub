@@ -105,7 +105,7 @@ def fuzzy_join(
     Examples
     --------
     >>> df1 = pd.DataFrame({'a': ['ana', 'lala', 'nana'], 'b': [1, 2, 3]})
-    >>> df2 = pd.DataFrame({'a': ['anna', 'lala', 'ana', 'sana'], 'c': [5, 6, 7, 8]})
+    >>> df2 = pd.DataFrame({'a': ['anna', 'lala', 'ana', 'nnana'], 'c': [5, 6, 7, 8]})
 
     >>> df1
         a  b
@@ -114,25 +114,25 @@ def fuzzy_join(
     2  nana  3
 
     >>> df2
-        a  c
+        a    c
     0  anna  5
     1  lala  6
-    2   ana  7
-    3  sana  8
+    2  ana   7
+    3  nnana 8
 
     To do a simple join based on the nearest match:
 
     >>> fuzzy_join(df1, df2, on='a')
-        a_l  b   a_r    c
-    0   ana  1   ana   7
-    1  lala  2  lala   6
-    2  nana  3  sana   8
+        a_x  b   a_y    c
+    0   ana  1   ana    7
+    1  lala  2  lala    6
+    2  nana  3  nnana   8
 
     When we want to accept only a certain match precison,
     we can use the `match_score` argument:
 
     >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
-        a_l  b   a_r    c  matching_score
+        a_x  b   a_y    c  matching_score
     0   ana  1   ana  7.0  1.000000
     1  lala  2  lala  6.0  1.000000
     2  nana  3   NaN  NaN  0.532717
@@ -198,16 +198,22 @@ def fuzzy_join(
     left_table_clean["fj_idx"] = idx_closest
     right_table_clean["fj_idx"] = right_table_clean.index
 
-    norm_distance = 1 - (distance / 2)
+    norm_distance = np.round(1 - (distance / 2), 6)
     if drop_unmatched:
         left_table_clean = left_table_clean[match_score <= norm_distance]
     else:
-        left_table_clean.loc[np.ravel(match_score >= norm_distance), left_col] = np.NaN
+        left_table_clean.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
 
     df_joined = pd.merge(
         left_table_clean, right_table_clean, on="fj_idx", suffixes=suffixes, how="left"
     )
-    df_joined.drop(columns=["fj_idx"], inplace=True)
+
+    if drop_unmatched is False:
+        norm_distance = norm_distance[df_joined["fj_nan"] != 1]
+        df_joined = df_joined[df_joined["fj_nan"] != 1].reset_index(drop=True)
+        df_joined.drop(columns=["fj_idx", "fj_nan"], inplace=True)
+    else:
+        df_joined.drop(columns=["fj_idx"], inplace=True)
 
     if return_score:
         df_joined = pd.concat(
