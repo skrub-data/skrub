@@ -180,8 +180,8 @@ def fuzzy_join(
     all_cats = pd.concat([left_col_clean, right_col_clean], axis=0)
 
     enc_cv = enc.fit(all_cats)
-    left_enc = enc_cv.transform(left_table_clean[left_col])
-    right_enc = enc_cv.transform(right_table_clean[right_col])
+    left_enc = enc_cv.transform(left_col_clean)
+    right_enc = enc_cv.transform(right_col_clean)
 
     all_enc = vstack((left_enc, right_enc))
 
