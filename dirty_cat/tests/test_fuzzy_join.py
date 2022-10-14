@@ -29,6 +29,7 @@ def test_fuzzy_join(analyzer):
     df_joined2 = fuzzy_join(
         df2,
         df1,
+        how="left",
         left_on="a2",
         right_on="a1",
         match_score=0.35,
@@ -39,10 +40,11 @@ def test_fuzzy_join(analyzer):
     assert df_joined2.shape == (len(df2.dropna()), n_cols)
 
     df_joined3 = fuzzy_join(
-        df2,
         df1,
-        left_on="a2",
-        right_on="a1",
+        df2,
+        how="right",
+        right_on="a2",
+        left_on="a1",
         match_score=0.35,
         return_score=True,
         analyzer=analyzer,
@@ -79,10 +81,10 @@ def test_fuzzy_join_dtypes():
 
 
 @pytest.mark.parametrize(
-    "analyzer, on",
-    [("a_blabla", ["a"]), (1, 3)],
+    "analyzer, on, how",
+    [("a_blabla", ["a"], "left"), (1, 3, "right")],
 )
-def test_parameters_error(analyzer, on):
+def test_parameters_error(analyzer, on, how):
     """Testing if correct errors are raised when wrong parameter values are given."""
     df1 = pd.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
     df2 = pd.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
@@ -92,12 +94,12 @@ def test_parameters_error(analyzer, on):
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}"
         ),
     ):
-        fuzzy_join(df1, df2, on="a", analyzer=analyzer)
+        fuzzy_join(df1, df2, on="a", analyzer=analyzer, how=how)
     with pytest.raises(
         KeyError,
         match=r"Parameter 'left_on', 'right_on' or 'on' has invalid type",
     ):
-        fuzzy_join(df1, df2, on=on)
+        fuzzy_join(df1, df2, on=on, how=how)
 
 
 def test_missing_keys():
@@ -120,3 +122,27 @@ def test_drop_unmatched():
     b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
     c = fuzzy_join(a, b, on="col1", match_score=0.5)
     assert sum(c["col3"].isna()) > 0
+
+
+def test_how_param():
+    """Test correct shape of left and right join. Test if error raised
+    when incorrect parameter value."""
+    a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
+    b = pd.DataFrame(
+        {
+            "col2": ["aaa_", "bbb_", "ccc", "ddd", "eee", "fff"],
+            "col3": [1, 2, 3, 4, 5, 6],
+        }
+    )
+
+    c = fuzzy_join(a, b, left_on="col1", right_on="col2", how="left")
+    assert c.shape == (len(a), 4)
+
+    c = fuzzy_join(a, b, left_on="col1", right_on="col2", how="right")
+    assert c.shape == (len(b), 4)
+
+    with pytest.raises(
+        ValueError,
+        match=r"how should be either 'left' or 'right', got",
+    ):
+        c = fuzzy_join(a, b, how="inner")

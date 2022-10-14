@@ -24,6 +24,7 @@ from sklearn.neighbors import NearestNeighbors
 def fuzzy_join(
     left: pd.DataFrame,
     right: pd.DataFrame,
+    how: Literal["left", "right"] = "left",
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
@@ -45,6 +46,8 @@ def fuzzy_join(
         A table to merge.
     right : pandas.DataFrame
         A table used to merge with.
+    how: typing.Literal["left", "right"], default=`left`
+        Type of merge to be performed.
     left_on : typing.Union[str, None]
         Name of left table column to join.
     right_on : typing.Union[str, None]
@@ -148,6 +151,11 @@ def fuzzy_join(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
 
+    if how not in ["left", "right"]:
+        raise ValueError(
+            f"how should be either 'left' or 'right', got {how!r}",
+        )
+
     for param in [on, left_on, right_on]:
         if param is not None and not isinstance(param, str):
             raise KeyError(
@@ -155,15 +163,24 @@ def fuzzy_join(
                 " string"
             )
 
-    left_table_clean = left.reset_index(drop=True).copy()
-    right_table_clean = right.reset_index(drop=True).copy()
+    if how == "left":
+        left_table_clean = left.reset_index(drop=True).copy()
+        right_table_clean = right.reset_index(drop=True).copy()
+    else:
+        # We inverse the process so that the join is performed on the right column
+        left_table_clean = right.reset_index(drop=True).copy()
+        right_table_clean = left.reset_index(drop=True).copy()
 
     if on is not None:
         left_col = on
         right_col = on
     elif left_on is not None and right_on is not None:
-        left_col = left_on
-        right_col = right_on
+        if how == "left":
+            left_col = left_on
+            right_col = right_on
+        else:
+            left_col = right_on
+            right_col = left_on
     else:
         raise KeyError(
             "Required parameter missing: either parameter"
