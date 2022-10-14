@@ -94,7 +94,7 @@ def test_parameters_error(analyzer, on):
     ):
         fuzzy_join(df1, df2, on="a", analyzer=analyzer)
     with pytest.raises(
-        ValueError,
+        KeyError,
         match=r"Parameter 'left_on', 'right_on' or 'on' has invalid type",
     ):
         fuzzy_join(df1, df2, on=on)
@@ -104,8 +104,8 @@ def test_missing_keys():
     a = pd.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
     with pytest.raises(
-        ValueError,
-        match="Parameter 'left_on', 'right_on' or 'on' is missing",
+        KeyError,
+        match="Required parameter missing: either parameter",
     ):
         fuzzy_join(a, b, left_on="col1")
 

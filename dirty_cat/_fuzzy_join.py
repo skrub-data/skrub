@@ -150,7 +150,7 @@ def fuzzy_join(
 
     for param in [on, left_on, right_on]:
         if param is not None and not isinstance(param, str):
-            raise ValueError(
+            raise KeyError(
                 "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
                 " string"
             )
@@ -165,19 +165,22 @@ def fuzzy_join(
         left_col = left_on
         right_col = right_on
     else:
-        raise ValueError("Parameter 'left_on', 'right_on' or 'on' is missing")
+        raise KeyError(
+            "Required parameter missing: either parameter"
+            "'on' or the pair 'left_on', 'right_on' should be specified."
+        )
 
     # Drop missing values in key columns
     left_table_clean.dropna(subset=[left_col], inplace=True)
     right_table_clean.dropna(subset=[right_col], inplace=True)
 
     # Make sure that the column types are string and categorical:
-    left_col_clean = left_table_clean[left_col].astype(str).astype("category")
-    right_col_clean = right_table_clean[right_col].astype(str).astype("category")
+    left_col_clean = left_table_clean[left_col].astype(str)
+    right_col_clean = right_table_clean[right_col].astype(str)
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
-    all_cats = pd.concat([left_col_clean, right_col_clean], axis=0)
+    all_cats = pd.concat([left_col_clean, right_col_clean], axis=0).unique()
 
     enc_cv = enc.fit(all_cats)
     left_enc = enc_cv.transform(left_col_clean)
@@ -198,7 +201,7 @@ def fuzzy_join(
     left_table_clean["fj_idx"] = idx_closest
     right_table_clean["fj_idx"] = right_table_clean.index
 
-    norm_distance = np.round(1 - (distance / 2), 6)
+    norm_distance = 1 - (distance / 2)
     if drop_unmatched:
         left_table_clean = left_table_clean[match_score <= norm_distance]
         norm_distance = norm_distance[match_score <= norm_distance]
