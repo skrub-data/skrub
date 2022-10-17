@@ -47,7 +47,10 @@ def fuzzy_join(
     right : pandas.DataFrame
         A table used to merge with.
     how: typing.Literal["left", "right"], default=`left`
-        Type of merge to be performed.
+        Type of merge to be performed. Note that unlike pandas' merge, 
+        only "left" and "right" are supported so far, as the fuzzy-join comes
+        with its own mechanism to resolve lack of correspondence between
+        left and right tables.
     left_on : typing.Union[str, None]
         Name of left table column to join.
     right_on : typing.Union[str, None]
