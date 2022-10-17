@@ -97,7 +97,7 @@ def test_parameters_error(analyzer, on, how):
         fuzzy_join(df1, df2, on="a", analyzer=analyzer, how=how)
     with pytest.raises(
         KeyError,
-        match=r"Parameter 'left_on', 'right_on' or 'on' has invalid type",
+        match=r"invalid type",
     ):
         fuzzy_join(df1, df2, on=on, how=how)
 
