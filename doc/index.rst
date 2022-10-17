@@ -129,6 +129,16 @@ Other encoders
 
    DatetimeEncoder
 
+Joining tables
+---------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+
+   fuzzy_join
+
 Data download
 -----------------------
 
@@ -144,6 +154,7 @@ Data download
    datasets.fetch_road_safety
    datasets.fetch_traffic_violations
    datasets.fetch_drug_directory
+   datasets.fetch_world_bank_indicator
    datasets.get_data_dir
 
 About

@@ -117,7 +117,7 @@ conda update --yes --quiet conda
 conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
   pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx \
-  seaborn pillow cython joblib pandas="${PANDAS_VERSION:-*}"
+  seaborn statsmodels pillow cython joblib pandas="${PANDAS_VERSION:-*}"
 #removed scikit learn from conda since it is installed from master after
 
 source activate testenv

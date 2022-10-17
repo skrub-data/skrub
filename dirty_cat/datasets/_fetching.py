@@ -10,10 +10,13 @@ Scikit-Learn's ``fetch_openml()`` function.
 
 import gzip
 import json
+import urllib.request
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Union
+from urllib.error import URLError
+from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
 from sklearn.datasets import fetch_openml
@@ -179,7 +182,91 @@ def fetch_openml_dataset(
     }
 
 
-def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
+def _fetch_world_bank_data(
+    indicator_id: str,
+    data_directory: Path = get_data_dir(),
+) -> Dict[str, Any]:
+    """
+    Gets a dataset from World Bank open data platform
+    (https://data.worldbank.org/).
+
+    Parameters
+    ----------
+    indicator_id: str
+        The ID of the indicator's dataset to fetch.
+    data_directory: Path
+        Optional. A directory to save the data to.
+        By default, the dirty_cat data directory.
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary containing:
+          - ``description``: str
+              The description of the dataset,
+              as gathered from World Bank data.
+          - ``source``: str
+              The dataset's URL from the World Bank data platform.
+          - ``path``: pathlib.Path
+              The local path leading to the dataset,
+              saved as a CSV file.
+
+    """
+    # See if file available locally :
+    path = f"{data_directory}/{indicator_id}.csv"
+    csv_path = Path(path)
+    url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
+    if csv_path.is_file() is True:
+        df = pd.read_csv(csv_path, nrows=0)
+        indicator_name = df.columns[1]
+    else:
+        warnings.warn(
+            f"Could not find the dataset {indicator_id} locally. "
+            "Downloading it from World Bank data; this might take a while... "
+            "If it is interrupted, some files might be invalid/incomplete: "
+            "if on the following run, the fetching raises errors, you can try "
+            f"fixing this issue by deleting the directory {csv_path!s}.",
+            UserWarning,
+            stacklevel=2,
+        )
+        try:
+            filehandle, _ = urllib.request.urlretrieve(url)
+            zip_file_object = ZipFile(filehandle, "r")
+            for name in zip_file_object.namelist():
+                if "Metadata" not in name:
+                    true_file = name
+            file = zip_file_object.open(true_file)
+        except BadZipFile:
+            raise FileNotFoundError(
+                f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
+            )
+        except URLError:
+            raise URLError("No internet connection or the website is down.")  # noqa
+        # Read and modify csv file
+        df = pd.read_csv(file, skiprows=3)
+        indicator_name = df.iloc[0, 2]
+        df[indicator_name] = df.stack().groupby(level=0).last()
+        df = df[df[indicator_name] != indicator_id]
+        df = df[["Country Name", indicator_name]]
+        # Save the file
+        data_directory.mkdir(exist_ok=True, parents=True)
+        csv_path = data_directory.resolve() / (indicator_id + ".csv")
+        df.to_csv(csv_path, index=False)
+    description = (
+        f"This table shows the {indicator_name} World Bank indicator."
+        " It can be used as an input table for fuzzy_join."
+    )
+    return {
+        "dataset_name": indicator_name,
+        "description": description,
+        "source": url,
+        "path": csv_path.resolve(),
+    }
+
+
+def _download_and_write_openml_dataset(
+    dataset_id: int, data_directory: Path
+) -> None:  # noqa
     """
     Downloads a dataset from OpenML,
     taking care of creating the directories.
@@ -329,6 +416,7 @@ def fetch_dataset_as_dataclass(
     target: str,
     read_csv_kwargs: dict,
     load_dataframe: bool,
+    source: str = "openml",
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
     Takes a dataset identifier, a target column name,
@@ -336,6 +424,9 @@ def fetch_dataset_as_dataclass(
 
     If you don't need the dataset to be loaded in memory,
     pass `load_dataframe=False`.
+
+    If you are loading data from the World Bank platform,
+    you need to specify `source='world_bank'`.
 
     Returns
     -------
@@ -346,7 +437,10 @@ def fetch_dataset_as_dataclass(
         If `load_dataframe=False`
 
     """
-    info = fetch_openml_dataset(dataset_id)
+    if source == "openml":
+        info = fetch_openml_dataset(dataset_id)
+    if source == "world_bank":
+        info = _fetch_world_bank_data(dataset_id)
     if load_dataframe:
         df = pd.read_csv(info["path"], **read_csv_kwargs)
         y = df[target]
@@ -618,4 +712,34 @@ def fetch_drug_directory(
             "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
+    )
+
+
+def fetch_world_bank_indicator(
+    indicator_id: str,
+    load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
+    """Fetches a dataset of an indicator from the World Bank
+       open data platform.
+
+    Description of the dataset:
+    > The dataset contains two columns: the indicator value and the
+      country names. A list of all available indicators can be found
+      at https://data.worldbank.org/indicator.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
+    """
+    return fetch_dataset_as_dataclass(
+        dataset_name=f"World Bank indicator {indicator_id}",
+        dataset_id=indicator_id,
+        target=[],
+        read_csv_kwargs={},
+        load_dataframe=load_dataframe,
+        source="world_bank",
     )

@@ -9,3 +9,4 @@ pandas==1.2.0
 cython
 joblib
 seaborn
+numpydoc
