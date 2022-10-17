@@ -20,7 +20,7 @@ def test_MinHashEncoder(hashing, minmax_hash) -> None:
     assert y.shape == (4, 2), str(y.shape)
     assert len(set(y[0])) == 2
 
-    # Test same seed return the same output
+    # Test that using the same seed returns the same output
     encoder2 = MinHashEncoder(2, hashing=hashing)
     encoder2.fit(X)
     y2 = encoder2.transform(X)
