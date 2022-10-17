@@ -71,7 +71,9 @@ def test_fuzzy_join(analyzer):
 
 
 def test_fuzzy_join_dtypes():
-    # Test that the dtypes of dataframes are maintained after join
+    """
+    Test that the dtypes of dataframes are maintained after join
+    """
     a = pd.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
     c = fuzzy_join(a, b, on="col1")
