@@ -125,8 +125,10 @@ def test_drop_unmatched():
 
 
 def test_how_param():
-    """Test correct shape of left and right join. Test if error raised
-    when incorrect parameter value."""
+    """
+    Test correct shape of left and right joins. 
+    Also test if an error is raised when an incorrect parameter value is passed.
+    """
     a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = pd.DataFrame(
         {
