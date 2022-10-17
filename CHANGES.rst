@@ -11,15 +11,12 @@ Major changes
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be
     used to download any indicator from the World Bank Open Data platform. It only needs the
     indicator ID that can be found on the website.
-
-Major changes
--------------
-
 * Unnecessary API has been made private: everything (files, functions, classes)
   starting with an underscore shouldn't be imported in your code.
 
 Minor changes
 -------------
+* Removed example `Fitting scalable, non-linear models on data with dirty categories`.
 
 Bug fixes
 ---------

@@ -83,13 +83,13 @@ legal_rights.head(3)
 # Alas, the entries for countries do not perfectly match between our
 # original table (X), and those that we downloaded from the worldbank:
 
-X.sort_values(by='Country').tail(7)
+X.sort_values(by="Country").tail(7)
 
 #######################################################################
-gdppc.sort_values(by='Country Name').tail(7)
+gdppc.sort_values(by="Country Name").tail(7)
 
 #######################################################################
-# We can see that Yemen is written "Yemen*" on one side, and 
+# We can see that Yemen is written "Yemen*" on one side, and
 # "Yemen, Rep." on the other.
 #
 # We also have entries that probably do not have correspondances: "World"
