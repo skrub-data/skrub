@@ -109,7 +109,7 @@ def test_missing_keys():
     b = pd.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
     with pytest.raises(
         KeyError,
-        match="Required parameter missing: either parameter",
+        match=r"Required parameter missing",
     ):
         fuzzy_join(a, b, left_on="col1")
 
