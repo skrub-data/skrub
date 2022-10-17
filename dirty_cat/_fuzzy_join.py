@@ -72,7 +72,7 @@ def fuzzy_join(
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
     return_score : boolean, default=True
-        Wheter to return matching score based on the distance between
+        Whether to return matching score based on the distance between
         nearest matched categories.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
