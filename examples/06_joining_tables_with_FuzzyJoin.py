@@ -79,7 +79,8 @@ legal_rights.head(3)
 # ------------------------
 #
 # Alas, the entries for countries do not perfectly match between our
-# original table (X), and those that we downloaded from the worldbank:
+# original table (df), and those that we downloaded from the worldbank
+# (gdppc):
 
 df.sort_values(by="Country").tail(7)
 
