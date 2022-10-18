@@ -132,7 +132,7 @@ python setup.py develop
 
 #if [[ "$CIRCLE_BRANCH" =~ ^master$ && -z "$CI_PULL_REQUEST" ]]
 #then
-#    # List available documentation versions if on master
+#    # List available documentation versions if on default branch
 #    python build_tools/circle/list_versions.py > doc/versions.rst
 #fi
 
