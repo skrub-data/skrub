@@ -22,7 +22,7 @@ For a detailed description of the problem of encoding dirty categorical data, se
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
 and `Encoding high-cardinality string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
-If you like the package, please *spread the word*, and ⭐ the repository!
+If you like the package, please *spread the word*, and ⭐ `the repository <https://github.com/dirty-cat/dirty_cat/>`_!
 
 What can dirty_cat do?
 ----------------------
@@ -34,9 +34,9 @@ in the feature we want to encode, and similarities in the target.
 We usually identify three common cases: **similarities, typos and variations**
 
 `The first example notebook <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
-goes into detail on how to identify and deal with dirty data using dirty_cat.
+goes in-depth on how to identify and deal with dirty data using the dirty_cat library.
 
-The encoders and tools provided by dirty_cat include:
+The encoders and tools provided as part of dirty_cat include:
 
 - The `SimilarityEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.SimilarityEncoder.html>`_
 - The `GapEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.GapEncoder.html>`_
@@ -84,7 +84,7 @@ If you want to encourage development of dirty_cat,
 the best thing to do is to *spread the word*!
 
 If you encounter an issue while using dirty_cat, please
-`open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_ or
+`open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_ and/or
 `submit a pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.
 Don't hesitate, you're helping to make this project better for everyone!
 
