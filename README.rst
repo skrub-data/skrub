@@ -11,8 +11,8 @@ dirty_cat
 .. |py_ver| image:: https://img.shields.io/pypi/pyversions/dirty_cat
 .. |pypi_var| image:: https://img.shields.io/pypi/v/dirty_cat?color=informational
 .. |pypi_dl| image:: https://img.shields.io/pypi/dm/dirty_cat
-.. |codecov| image:: https://img.shields.io/codecov/c/github/dirty-cat/dirty_cat/master
-.. |circleci| image:: https://img.shields.io/circleci/build/github/dirty-cat/dirty_cat/master?label=CircleCI
+.. |codecov| image:: https://img.shields.io/codecov/c/github/dirty-cat/dirty_cat/main
+.. |circleci| image:: https://img.shields.io/circleci/build/github/dirty-cat/dirty_cat/main?label=CircleCI
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
 `dirty_cat <https://dirty-cat.github.io/>`_ is a Python library
@@ -33,8 +33,8 @@ in the feature we want to encode, and similarities in the target.
 
 We usually identify three common cases: **similarities, typos and variations**
 
-`Example 1 <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_ goes into detail on how to identify and deal with dirty data.
-using dirty_cat
+`Example 1 <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
+goes into detail on how to identify and deal with dirty data using dirty_cat.
 
 The encoders and tools provided by dirty_cat include:
 
@@ -70,7 +70,7 @@ dirty_cat can be easily installed via `pip`::
 Dependencies
 ~~~~~~~~~~~~
 
-Dependencies and minimal versions are listed in the file `min-requirements.txt <https://github.com/dirty-cat/dirty_cat/blob/master/requirements-min.txt>`_
+Dependencies and minimal versions are listed in the file `min-requirements.txt <https://github.com/dirty-cat/dirty_cat/blob/main/requirements-min.txt>`_
 
 Related projects
 ----------------
@@ -98,6 +98,7 @@ Don't hesitate, you're helping to make this project better for everyone!
 Additional resources
 --------------------
 
+* `dirty_cat website <https://dirty-cat.github.io>`_
 * `Introductory video (YouTube) <https://youtu.be/_GNaaeEI2tg>`_
 * `Overview poster for EuroSciPy 2022 (Google Drive) <https://drive.google.com/file/d/1TtmJ3VjASy6rGlKe0txKacM-DdvJdIvB/view?usp=sharing>`_
 
