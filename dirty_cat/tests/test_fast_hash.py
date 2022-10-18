@@ -1,6 +1,6 @@
 from sklearn.datasets import fetch_20newsgroups
 
-from dirty_cat.fast_hash import ngram_min_hash
+from dirty_cat._fast_hash import ngram_min_hash
 
 
 def test_fast_hash():
@@ -16,7 +16,3 @@ def test_fast_hash():
 
     min_hash4 = ngram_min_hash(a, seed=0, return_minmax=True)
     assert len(min_hash4) == 2
-
-
-if __name__ == "__main__":
-    test_fast_hash()

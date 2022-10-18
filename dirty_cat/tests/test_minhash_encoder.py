@@ -133,6 +133,15 @@ def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     return
 
 
+def test_missing_values_none():
+    # Test that "None" is also understood as a missing value
+    a = np.array([['a', 'b', None, 'c']], dtype=object).T
+
+    enc = MinHashEncoder()
+    d = enc.fit_transform(a)
+    np.testing.assert_array_equal(d[2], 0)
+
+
 def test_cache_overflow() -> None:
     # Regression test for cache overflow resulting in -1s in encoding
     def get_random_string(length):
@@ -149,24 +158,15 @@ def test_cache_overflow() -> None:
     assert len(y[y == -1.0]) == 0
 
 
-if __name__ == "__main__":
-    print("start test_MinHashEncoder")
-    test_MinHashEncoder()
-    print("passed")
+@pytest.mark.parametrize("idx", range(3))
+def test_min_hash_encoder_hashing_fast_minmax_hash(idx):
+    print(f"{profile_encoder(hashing='fast', minmax_hash=True):.4} seconds")
 
-    print("start test_multiple_columns")
-    test_multiple_columns()
-    print("passed")
 
-    for _ in range(3):
-        print("time profile_encoder(MinHashEncoder, hashing=fast)")
-        print(f"{profile_encoder(hashing='fast'):.4} seconds")
+@pytest.mark.parametrize("idx", range(3))
+def test_min_hash_encoder_hashing_fast(idx):
+    print(f"{profile_encoder(hashing='fast'):.4} seconds")
 
-    for _ in range(3):
-        print("time profile_encoder(MinHashEncoder, hashing=fast) with minmax")
-        print(f"{profile_encoder(hashing='fast', minmax_hash=True):.4} seconds")
 
-    print("time profile_encoder(MinHashEncoder, hashing=murmur)")
+def test_min_hash_encoder_mumur():
     print(f"{profile_encoder(hashing='murmur'):.4} seconds")
-
-    print("Done")

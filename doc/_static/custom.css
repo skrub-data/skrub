@@ -72,6 +72,19 @@ span.container-title {
     border-bottom: 1px solid #d4d4d4;
 }
 
+div.install-instructions {
+    background-color: #f1fff1;
+    border: 1px solid #d4d4d4;
+    margin: 2ex auto;
+    border-radius: 1ex;
+    padding: 0.5ex 2ex 0.5ex 0.5ex;
+    display: inline-block;
+}
+
+/* div.video {
+    margin: 1ex 25%;
+} */
+
 /* Wide screens: use better the full width */
 @media only screen and (min-width: 1400px) {
     div.body section:first-of-type h1 {
@@ -342,6 +355,51 @@ div.document div.sphinxsidebar {
     left: 1ex;
 }
 
+/* Small font for the version number */
+div.version-switcher h4 {
+    margin-top: 0px;
+    font-size: small;
+    font-weight: bold;
+    display: inline-block;
+    margin-right: 2ex;
+    vertical-align: top;
+}
+
+/* "Other versions" */
+div.version-switcher details {
+    width: 50%;
+    min-width: 20ex;
+    display: inline-block;
+    vertical-align: top;
+    height: 3ex;
+    z-index: 100;
+    position: ;
+}
+
+div.version-switcher details summary {
+    color: #666;
+}
+
+div.version-switcher details a{
+    border-bottom-color: #EEE;
+}
+
+div.version-switcher details ul {
+    list-style: square;
+    margin-left: 1ex;
+    background-color: #EEE;
+    padding-left: 3ex;
+    margin-right: 5ex;
+    border-radius: 0ex 0ex 1ex 1ex;
+    border: #999 solid 1pt;
+    z-index: 100;
+    position: relative;
+}
+
+div.sphinxsidebarwrapper h1.logo-name {
+    margin-bottom: 0px;
+}
+
 @media screen and (min-width: 876px) {
     div.document div.sphinxsidebar {
 	left: 1%;
@@ -370,6 +428,10 @@ div.document div.sphinxsidebar {
 p.right-align {
     float: right;
     margin: 0ex;
+}
+
+div.right-align {
+    float: right;
 }
 
 p.centered {

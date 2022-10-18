@@ -1,5 +1,29 @@
 .. currentmodule:: dirty_cat
 
+Release 0.4.0
+==============
+
+Major changes
+-------------
+
+* New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
+  on string similarities and the nearest neighbors matches are found for each category.
+* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be
+    used to download any indicator from the World Bank Open Data platform. It only needs the
+    indicator ID that can be found on the website.
+* Unnecessary API has been made private: everything (files, functions, classes)
+  starting with an underscore shouldn't be imported in your code.
+
+Minor changes
+-------------
+* Removed example `Fitting scalable, non-linear models on data with dirty categories`.
+
+Bug fixes
+---------
+
+* :class:`MinHashEncoder` now considers `None` as missing values, rather
+  than raising an error.
+
 Release 0.3.0
 =============
 
@@ -27,14 +51,14 @@ Major changes
 * Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
 
 * Bumped minimum dependencies:
-  - sklearn>=0.23
+  - scikit-learn>=0.23
   - scipy>=1.4.0
   - numpy>=1.17.3
   - pandas>=1.2.0
 
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
     The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
-    and the ``similarity`` parameter is deprecated. It will be removed in 0.5.
+    and the `similarity` parameter is deprecated. It will be removed in 0.5.
 
 Notes
 -----
@@ -46,7 +70,7 @@ Notes
 Release 0.2.2
 =============
 
-Bug-fixes
+Bug fixes
 ---------
 
 * Fixed a bug in the :class:`SuperVectorizer` causing a `FutureWarning`
@@ -111,7 +135,7 @@ Major changes
     End users should not see any difference regarding this.
   - The frontend, however, changed a little: the fetching functions stay the same
     but their return values were modified in favor of a more Pythonic interface.
-    Refer to the docstrings of functions `dirty_cat.datasets.fetching.fetch_*`
+    Refer to the docstrings of functions `dirty_cat.datasets.fetch_*`
     for more information.
   - The example notebooks were updated to reflect these changes.
 

@@ -46,9 +46,8 @@ def resource_used(func):
         out = func(*args, **kwargs)
         size, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
-        peak /= (1024 ** 2)  # Convert to megabytes
-        print(f"Run time: {perf_counter() - t0:.2f}s | "
-              f"Memory used: {peak:.2f}MB. ")
+        peak /= 1024**2  # Convert to megabytes
+        print(f"Run time: {perf_counter() - t0:.2f}s | Memory used: {peak:.2f}MB. ")
         return out
 
     return wrapped_func
@@ -84,13 +83,13 @@ y = y[~na_mask].reset_index(drop=True)
 ###############################################################################
 # We'll write down which columns are clean and which are dirty
 clean_columns = [
-    'Applicable_Manufacturer_or_Applicable_GPO_Making_Payment_Name',
-    'Dispute_Status_for_Publication',
-    'Physician_Specialty',
+    "Applicable_Manufacturer_or_Applicable_GPO_Making_Payment_Name",
+    "Dispute_Status_for_Publication",
+    "Physician_Specialty",
 ]
 dirty_columns = [
-    'Name_of_Associated_Covered_Device_or_Medical_Supply1',
-    'Name_of_Associated_Covered_Drug_or_Biological1',
+    "Name_of_Associated_Covered_Device_or_Medical_Supply1",
+    "Name_of_Associated_Covered_Drug_or_Biological1",
 ]
 
 ###############################################################################
@@ -113,23 +112,19 @@ from sklearn.compose import ColumnTransformer
 from dirty_cat import SimilarityEncoder
 
 clean_col_transformer = [
-    ('one_hot',
-     OneHotEncoder(sparse=False, handle_unknown='ignore'),
-     clean_columns),
+    ("one_hot", OneHotEncoder(sparse=False, handle_unknown="ignore"), clean_columns),
 ]
 
 column_trans = ColumnTransformer(
-    transformers=clean_col_transformer + [
-        ('sim_enc',
-         SimilarityEncoder(),
-         dirty_columns)
-    ],
-    remainder='drop')
+    transformers=clean_col_transformer
+    + [("sim_enc", SimilarityEncoder(), dirty_columns)],
+    remainder="drop",
+)
 
 t0 = perf_counter()
 X_enc = column_trans.fit_transform(X)
 t1 = perf_counter()
-print(f'Time to vectorize: {t1 - t0:.3f}s')
+print(f"Time to vectorize: {t1 - t0:.3f}s")
 
 ###############################################################################
 # Let's now run a cross-validation!
@@ -146,9 +141,9 @@ print(f"Cross-validation score: {results['test_score']}")
 ###############################################################################
 # Store results for later
 scores = dict()
-scores['Default options'] = results['test_score']
+scores["Default options"] = results["test_score"]
 times = dict()
-times['Default options'] = results['fit_time']
+times["Default options"] = results["fit_time"]
 
 ###############################################################################
 # Most frequent strategy to define prototypes
@@ -160,12 +155,16 @@ times['Default options'] = results['fit_time']
 # Here, we arbitrarily choose 100 as the number of prototypes we want to use.
 
 column_trans = ColumnTransformer(
-    transformers=clean_col_transformer + [
-        ('sim_enc',
-         SimilarityEncoder(categories='most_frequent', n_prototypes=100),
-         dirty_columns)
+    transformers=clean_col_transformer
+    + [
+        (
+            "sim_enc",
+            SimilarityEncoder(categories="most_frequent", n_prototypes=100),
+            dirty_columns,
+        )
     ],
-    remainder='drop')
+    remainder="drop",
+)
 
 ###############################################################################
 # Check that the prediction is still as good
@@ -175,8 +174,8 @@ print(f"Cross-validation score: {results['test_score']}")
 
 ###############################################################################
 # Store results for later
-scores['Most frequent'] = results['test_score']
-times['Most frequent'] = results['fit_time']
+scores["Most frequent"] = results["test_score"]
+times["Most frequent"] = results["fit_time"]
 
 ###############################################################################
 # KMeans strategy to define prototypes
@@ -188,23 +187,27 @@ times['Most frequent'] = results['fit_time']
 # we chose here is arbitrary.
 
 column_trans = ColumnTransformer(
-    transformers=clean_col_transformer + [
-        ('sim_enc',
-         SimilarityEncoder(categories='k-means', n_prototypes=100),
-         dirty_columns)
+    transformers=clean_col_transformer
+    + [
+        (
+            "sim_enc",
+            SimilarityEncoder(categories="k-means", n_prototypes=100),
+            dirty_columns,
+        )
     ],
-    remainder='drop')
+    remainder="drop",
+)
 
 ###############################################################################
 # Check that the prediction is still as good
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, X, y)
-print("Cross-validation score: %s" % results['test_score'])
+print("Cross-validation score: %s" % results["test_score"])
 
 ###############################################################################
 # Store results for later
-scores['KMeans'] = results['test_score']
-times['KMeans'] = results['fit_time']
+scores["KMeans"] = results["test_score"]
+times["KMeans"] = results["fit_time"]
 
 ###############################################################################
 # Summary
@@ -213,11 +216,11 @@ import seaborn
 import matplotlib.pyplot as plt
 
 _, (ax1, ax2) = plt.subplots(nrows=2, figsize=(4, 3))
-seaborn.boxplot(data=pd.DataFrame(scores), orient='h', ax=ax1)
-ax1.set_xlabel('Prediction accuracy', size=16)
+seaborn.boxplot(data=pd.DataFrame(scores), orient="h", ax=ax1)
+ax1.set_xlabel("Prediction accuracy", size=16)
 [t.set(size=16) for t in ax1.get_yticklabels()]
 
-seaborn.boxplot(data=pd.DataFrame(times), orient='h', ax=ax2)
-ax2.set_xlabel('Computation time', size=16)
+seaborn.boxplot(data=pd.DataFrame(times), orient="h", ax=ax2)
+ax2.set_xlabel("Computation time", size=16)
 [t.set(size=16) for t in ax2.get_yticklabels()]
 plt.tight_layout()

@@ -5,7 +5,7 @@ coverage:
   status:
     project:
       default:
-        # Commits pushed to master should not make the overall
+        # Commits pushed to the main branch should not make the overall
         # project coverage decrease by more than 1%:
         target: auto
         threshold: 1%

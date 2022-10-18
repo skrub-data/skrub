@@ -1,6 +1,6 @@
 import pytest
 
-from dirty_cat.utils import LRUDict, Version
+from dirty_cat._utils import LRUDict, Version
 
 
 def test_lrudict():
