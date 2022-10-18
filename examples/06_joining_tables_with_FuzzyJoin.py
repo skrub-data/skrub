@@ -26,7 +26,7 @@ in order to create a satisfying first prediction model.
 import pandas as pd
 
 df = pd.read_csv(
-    "https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv",
+    "https://raw.githubusercontent.com/dirty-cat/datasets/main/data/Happiness_report_2022.csv",
     thousands=",",
 )
 df.drop(df.tail(1).index, inplace=True)

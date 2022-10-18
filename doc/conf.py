@@ -23,9 +23,9 @@ import shutil
 #
 # We avoid duplicating the information, but we do not use symlinks to be
 # able to build the docs on windows
-shutil.copyfile('../RELEASE_PROCESS.rst', 'RELEASE_PROCESS.rst')
-shutil.copyfile('../CHANGES.rst', 'CHANGES.rst')
-shutil.copyfile('../CONTRIBUTING.rst', 'CONTRIBUTING.rst')
+shutil.copyfile("../RELEASE_PROCESS.rst", "RELEASE_PROCESS.rst")
+shutil.copyfile("../CHANGES.rst", "CHANGES.rst")
+shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
 
 # -- General configuration ------------------------------------------------
 
@@ -265,7 +265,7 @@ sphinx_gallery_conf = {
         "org": "dirty-cat",
         "repo": "dirty-cat.github.io",
         "binderhub_url": "https://mybinder.org",
-        "branch": "master",
+        "branch": "main",
         "dependencies": ["../requirements.txt", "binder/requirements.txt"],
         "notebooks_dir": "dev",
     },

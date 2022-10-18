@@ -11,8 +11,8 @@ dirty_cat
 .. |py_ver| image:: https://img.shields.io/pypi/pyversions/dirty_cat
 .. |pypi_var| image:: https://img.shields.io/pypi/v/dirty_cat?color=informational
 .. |pypi_dl| image:: https://img.shields.io/pypi/dm/dirty_cat
-.. |codecov| image:: https://img.shields.io/codecov/c/github/dirty-cat/dirty_cat/master
-.. |circleci| image:: https://img.shields.io/circleci/build/github/dirty-cat/dirty_cat/master?label=CircleCI
+.. |codecov| image:: https://img.shields.io/codecov/c/github/dirty-cat/dirty_cat/main
+.. |circleci| image:: https://img.shields.io/circleci/build/github/dirty-cat/dirty_cat/main?label=CircleCI
 .. |Black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
 dirty_cat is a Python module for machine-learning on dirty categorical variables.
