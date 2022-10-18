@@ -6,7 +6,7 @@ import pytest
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
-from dirty_cat.deduplicate import (
+from dirty_cat._deduplicate import (
     compute_ngram_distance,
     create_spelling_correction,
     deduplicate,
@@ -14,7 +14,7 @@ from dirty_cat.deduplicate import (
 )
 
 
-def generate_example_data(examples, entries_per_example, prob_mistake_per_letter):
+def generate_example_data(examples, entries_per_example, prob_mistake_per_letter, rng):
     """Helper function to generate data consisting of multiple entries per example.
     Characters are misspelled with probability `prob_mistake_per_letter`"""
 
@@ -25,12 +25,12 @@ def generate_example_data(examples, entries_per_example, prob_mistake_per_letter
         str_as_list = np.array([list(example)] * n_ex)
         # randomly choose which characters are misspelled
         idxes = np.where(
-            np.random.random(len(example[0]) * n_ex) < prob_mistake_per_letter
+            rng.random_sample(len(example[0]) * n_ex) < prob_mistake_per_letter
         )[0]
         # and randomly pick with which character to replace
         replacements = [
             string.ascii_lowercase[i]
-            for i in np.random.choice(np.arange(26), len(idxes)).astype(int)
+            for i in rng.choice(np.arange(26), len(idxes)).astype(int)
         ]
         # introduce spelling mistakes at right examples and right char locations per example
         str_as_list[idxes // len_ex, idxes % len_ex] = replacements
@@ -48,7 +48,8 @@ def test_deduplicate(
     prob_mistake_per_letter: float,
     seed: int = 123,
 ) -> None:
-    np.random.seed(seed)
+    rng = np.random.RandomState(seed)
+
     # hard coded to fix ground truth string similarities
     clean_categories = [
         "Example Category",
@@ -60,7 +61,7 @@ def test_deduplicate(
     n_clusters = len(entries_per_category)
     clean_categories = clean_categories[:n_clusters]
     data = generate_example_data(
-        clean_categories, entries_per_category, prob_mistake_per_letter
+        clean_categories, entries_per_category, prob_mistake_per_letter, rng
     )
     deduplicated_data = np.array(deduplicate(data, n_clusters=None))
     assert deduplicated_data.shape[0] == data.shape[0]
@@ -97,11 +98,12 @@ def test_guess_clusters() -> None:
     assert n_clusters == len(np.unique(words))
 
 
-def test_create_spelling_correction() -> None:
+def test_create_spelling_correction(seed: int = 123) -> None:
+    rng = np.random.RandomState(seed)
     n_clusters = 3
     samples_per_cluster = 10
     counts = np.concatenate(
-        [np.random.randint(0, 100, samples_per_cluster) for _ in range(n_clusters)]
+        [rng.random_integers(0, 100, samples_per_cluster) for _ in range(n_clusters)]
     )
     clusters = (
         np.repeat(np.arange(n_clusters), samples_per_cluster).astype("int").tolist()

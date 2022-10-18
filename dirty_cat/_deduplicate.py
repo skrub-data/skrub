@@ -13,6 +13,36 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.metrics import silhouette_score
 
 
+def compute_ngram_distance(
+    unique_words: Union[Sequence[str], np.ndarray],
+    ngram_range: Tuple[int, int] = (2, 4),
+    analyzer: str = "char_wb",
+) -> np.ndarray:
+    """Computes the condensed n-gram distance matrix between words in
+    `unique_words`, using the
+    term frequency-inverse document frequency (tf-idf).
+
+    Parameters
+    ----------
+    unique_words : Union[Sequence[str], np.ndarray]
+        Sequence or array of unique words from the original data.
+    ngram_range : Tuple[int, int], optional
+        The n-gram range to compute the distance in, by default (2, 4)
+    analyzer : str, optional
+        Analyzer to extract n-grams, by default "char_wb"
+
+    Returns
+    -------
+    np.ndarray
+        An n-times-(n-1)/2 matrix of n-gram TfIdf distances between `unique_words`.
+    """
+    enc = CountVectorizer(ngram_range=ngram_range, analyzer=analyzer)
+    encoded = TfidfTransformer().fit_transform(enc.fit_transform(unique_words))
+
+    distance_mat = pdist(encoded.todense(), metric="euclidean")
+    return distance_mat
+
+
 def deduplicate(
     data: Sequence[str],
     n_clusters: Optional[int] = None,
@@ -136,42 +166,10 @@ def create_spelling_correction(
         sorted_spellings = (
             count_series.loc[clusters == cluster]
             .sort_values(ascending=False)
-            .index.values
+            .index.tolist()
         )
-        original_spelling.extend(sorted_spellings.tolist())
+        original_spelling.extend(sorted_spellings)
         # assumes spelling that occurs most frequently in cluster is correct
-        corrected_spelling.extend(
-            np.repeat(sorted_spellings[0], sorted_spellings.shape[0])
-        )
+        corrected_spelling.extend(sorted_spellings[:1] * len(sorted_spellings))
     pd_spell_correct = pd.Series(corrected_spelling, index=original_spelling)
     return pd_spell_correct
-
-
-def compute_ngram_distance(
-    unique_words: Union[Sequence[str], np.ndarray],
-    ngram_range: Tuple[int, int] = (2, 4),
-    analyzer: str = "char_wb",
-) -> np.ndarray:
-    """Computes the condensed n-gram distance matrix between words in
-    `unique_words`, using the
-    term frequency-inverse document frequency (tf-idf).
-
-    Parameters
-    ----------
-    unique_words : Union[Sequence[str], np.ndarray]
-        Sequence or array of unique words from the original data.
-    ngram_range : Tuple[int, int], optional
-        The n-gram range to compute the distance in, by default (2, 4)
-    analyzer : str, optional
-        Analyzer to extract n-grams, by default "char_wb"
-
-    Returns
-    -------
-    np.ndarray
-        An n-times-(n-1)/2 matrix of n-gram TfIdf distances between `unique_words`.
-    """
-    enc = CountVectorizer(ngram_range=ngram_range, analyzer=analyzer)
-    encoded = TfidfTransformer().fit_transform(enc.fit_transform(unique_words))
-
-    distance_mat = pdist(encoded.todense(), metric="euclidean")
-    return distance_mat
