@@ -138,20 +138,12 @@ def test_target_encoder():
     assert np.array_equal(Xout, ans)
 
 
-@pytest.mark.parametrize(
-    "input_type, missing",
-    [
-        ("list", "aaa"),
-        ("numpy", "error"),
-        ("pandas", ""),
-        ("list", "error"),
-        ("numpy", ""),
-        ("pandas", "aaa"),
-        ("list", ""),
-        ("numpy", "aaa"),
-        ("pandas", "error"),
-    ],
-)
+input_types = ["list", "numpy", "pandas"]
+missings = ["", "aaa", "error"]
+
+
+@pytest.mark.parametrize("input_type", input_types)
+@pytest.mark.parametrize("missing", missings)
 def test_missing_values(input_type, missing):
     X = [
         ["Red", "male"],
@@ -207,20 +199,8 @@ def test_missing_values(input_type, missing):
         return
 
 
-@pytest.mark.parametrize(
-    "input_type, missing",
-    [
-        ("list", "aaa"),
-        ("numpy", "error"),
-        ("pandas", ""),
-        ("list", "error"),
-        ("numpy", ""),
-        ("pandas", "aaa"),
-        ("list", ""),
-        ("numpy", "aaa"),
-        ("pandas", "error"),
-    ],
-)
+@pytest.mark.parametrize("input_type", input_types)
+@pytest.mark.parametrize("missing", missings)
 def test_missing_values_transform(input_type, missing):
     X = [
         ["Red", "male"],
@@ -271,7 +251,7 @@ def test_missing_values_transform(input_type, missing):
 
 
 def test_errors():
-    """ " Test the different erros that may be raised during the fit and transform."""
+    """Test the different errors that may be raised during fit and transform"""
     enc = _target_encoder.TargetEncoder(handle_unknown="blabla")
     X = [[1], [2], [2], [3], [4]]
     y = np.array([1, 2, 3, 4, 5])
