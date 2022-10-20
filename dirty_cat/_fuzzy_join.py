@@ -47,7 +47,7 @@ def fuzzy_join(
     right : pandas.DataFrame
         A table used to merge with.
     how: typing.Literal["left", "right"], default=`left`
-        Type of merge to be performed. Note that unlike pandas' merge, 
+        Type of merge to be performed. Note that unlike pandas' merge,
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
@@ -166,24 +166,15 @@ def fuzzy_join(
                 " string"
             )
 
-    if how == "left":
-        left_table_clean = left.reset_index(drop=True).copy()
-        right_table_clean = right.reset_index(drop=True).copy()
-    else:
-        # We inverse the process so that the join is performed on the right column
-        left_table_clean = right.reset_index(drop=True).copy()
-        right_table_clean = left.reset_index(drop=True).copy()
+    left_table_clean = left.reset_index(drop=True).copy()
+    right_table_clean = right.reset_index(drop=True).copy()
 
     if on is not None:
         left_col = on
         right_col = on
     elif left_on is not None and right_on is not None:
-        if how == "left":
-            left_col = left_on
-            right_col = right_on
-        else:
-            left_col = right_on
-            right_col = left_on
+        left_col = left_on
+        right_col = right_on
     else:
         raise KeyError(
             "Required parameter missing: either parameter"
@@ -214,22 +205,38 @@ def fuzzy_join(
 
     # Find nearest neighbor using KNN :
     neigh = NearestNeighbors(n_neighbors=1)
-    neigh.fit(right_enc)
-    distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
-    idx_closest = np.ravel(neighbors)
 
-    left_table_clean["fj_idx"] = idx_closest
-    right_table_clean["fj_idx"] = right_table_clean.index
+    if how == "left":
+        neigh.fit(right_enc)
+        distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
+        idx_closest = np.ravel(neighbors)
 
-    norm_distance = 1 - (distance / 2)
-    if drop_unmatched:
-        left_table_clean = left_table_clean[match_score <= norm_distance]
-        norm_distance = norm_distance[match_score <= norm_distance]
+        left_table_clean["fj_idx"] = idx_closest
+        right_table_clean["fj_idx"] = right_table_clean.index
+
+        norm_distance = 1 - (distance / 2)
+        if drop_unmatched:
+            left_table_clean = left_table_clean[match_score <= norm_distance]
+            norm_distance = norm_distance[match_score <= norm_distance]
+        else:
+            left_table_clean.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
     else:
-        left_table_clean.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
+        neigh.fit(left_enc)
+        distance, neighbors = neigh.kneighbors(right_enc, return_distance=True)
+        idx_closest = np.ravel(neighbors)
+
+        right_table_clean["fj_idx"] = idx_closest
+        left_table_clean["fj_idx"] = left_table_clean.index
+
+        norm_distance = 1 - (distance / 2)
+        if drop_unmatched:
+            right_table_clean = right_table_clean[match_score <= norm_distance]
+            norm_distance = norm_distance[match_score <= norm_distance]
+        else:
+            right_table_clean.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
 
     df_joined = pd.merge(
-        left_table_clean, right_table_clean, on="fj_idx", suffixes=suffixes, how="left"
+        left_table_clean, right_table_clean, on="fj_idx", suffixes=suffixes, how=how
     )
 
     if drop_unmatched:
