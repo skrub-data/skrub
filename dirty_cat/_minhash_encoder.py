@@ -90,7 +90,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def minhash(self, string: str) -> np.array:
+    def _minhash(self, string: str) -> np.array:
         """
         Encode a string using murmur hashing function.
 
