@@ -18,8 +18,6 @@ Minor changes
 -------------
 * Removed example `Fitting scalable, non-linear models on data with dirty categories`.
 
-* :class:`MinHashEncoder`'s `minhash` method is no longer public.
-
 Bug fixes
 ---------
 

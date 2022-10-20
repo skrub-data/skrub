@@ -90,7 +90,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def _minhash(self, string: str) -> np.array:
+    def get_murmur_hash(self, string: str) -> np.array:
         """
         Encode a string using murmur hashing function.
 
@@ -245,7 +245,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     elif x not in self.hash_dict_:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[
                             x
-                        ] = self.minhash(x)
+                        ] = self.get_murmur_hash(x)
                     else:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[x]
                 counter += self.n_components
