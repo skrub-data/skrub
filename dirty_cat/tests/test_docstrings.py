@@ -29,7 +29,7 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._minhash_encoder.MinHashEncoder",
     "dirty_cat._minhash_encoder.MinHashEncoder.fit",
     "dirty_cat._minhash_encoder.MinHashEncoder.get_fast_hash",
-    "dirty_cat._minhash_encoder.MinHashEncoder.minhash",
+    "dirty_cat._minhash_encoder.MinHashEncoder.get_murmur_hash",
     "dirty_cat._minhash_encoder.MinHashEncoder.transform",
     "dirty_cat._similarity_encoder.SimilarityEncoder",
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit",
