@@ -191,3 +191,17 @@ def test_fuzzy_join_pandas_comparison():
 
     # Same for the right join:
     assert result_r.iloc[:, 1:].isin(result_r_fj).all().all()
+
+    left = left.sample(frac=1, random_state=0)
+    result_s = pd.merge(left, right, on="key", how="left", sort=True)
+    result_s_fj = fuzzy_join(left, right, on="key", how="left", sort=True)
+    pd.testing.assert_series_equal(
+        result_s["key"], result_s_fj["key_x"], check_names=False
+    )
+
+    right = right.sample(frac=1, random_state=0)
+    result_sr = pd.merge(left, right, on="key", how="right", sort=True)
+    result_sr_fj = fuzzy_join(left, right, on="key", how="right", sort=True)
+    pd.testing.assert_series_equal(
+        result_sr["key"], result_sr_fj["key_x"], check_names=False
+    )

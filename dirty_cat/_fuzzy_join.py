@@ -33,6 +33,7 @@ def fuzzy_join(
     return_score: bool = False,
     match_score: float = 0,
     drop_unmatched: bool = False,
+    sort: bool = False,
     suffixes: Tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
     """
@@ -81,6 +82,10 @@ def fuzzy_join(
         is tolerated.
     drop_unmatched : boolean, default=False
         Remove categories for which a match was not found in the two tables.
+    sort : boolean, default=False
+        Sort the join keys lexicographically in the result DataFrame.
+        If False, the order of the join keys depends on the join type
+        (`how` keyword).
     suffixes : typing.Tuple[str, str], default=('_x', '_y')
         A list of strings indicating the suffix to add when overlaping
         column names.
@@ -234,6 +239,11 @@ def fuzzy_join(
             norm_distance = norm_distance[match_score <= norm_distance]
         else:
             right_table_clean.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
+
+    if sort and how == "left":
+        left_table_clean.sort_values(by=[left_col], inplace=True)
+    elif sort and how == "right":
+        right_table_clean.sort_values(by=[right_col], inplace=True)
 
     df_joined = pd.merge(
         left_table_clean, right_table_clean, on="fj_idx", suffixes=suffixes, how=how
