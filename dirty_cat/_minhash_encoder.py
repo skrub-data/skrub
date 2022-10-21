@@ -107,7 +107,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        array, shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string.
         """
         min_hashes = np.ones(self.n_components) * np.infty
@@ -136,7 +136,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        np.array of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -196,7 +196,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        array, shape (n_samples, n_components)
+        ndarray of shape (n_samples, n_components)
             Transformed input.
         """
         X = check_input(X)
