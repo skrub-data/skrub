@@ -153,6 +153,7 @@ Data download
    datasets.fetch_open_payments
    datasets.fetch_road_safety
    datasets.fetch_traffic_violations
+   datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
    datasets.get_data_dir
 
