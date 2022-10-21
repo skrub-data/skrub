@@ -1,10 +1,13 @@
 """
-Investigating dirty categories
-==============================
+Investigating and interpreting dirty categories
+===============================================
 
 What are dirty categorical variables and how can
-a good encoding help with statistical learning. We
-use as example the `employee salaries <https://www.openml.org/d/42125>`_
+a good encoding help with statistical learning.
+We then illustrate how categorical encodings obtained with
+the :class:GapEncoder can be interpreted in terms of latent topics.
+
+We use as example the `employee salaries <https://www.openml.org/d/42125>`_
 dataset.
 """
 
@@ -176,11 +179,9 @@ f4.tight_layout()
 # Feature interpretation with the :class:GapEncoder
 # -------------------------------------------------
 #
-# We illustrate here how categorical encodings obtained with the :class:GapEncoder
-# can be interpreted in terms of latent topics.
 
 ###############################################################################
-# Now, we retrieve the dirty column to encode:
+# We retrieve the dirty column to encode:
 
 dirty_column = "employee_position_title"
 X_dirty = data[[dirty_column]]
