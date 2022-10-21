@@ -2,9 +2,9 @@
 Investigating dirty categories
 ==============================
 
-What are dirty categorical variables and how can a good encoding help
-with statistical learning. We use as example the
-`employee salaries <https://catalog.data.gov/dataset/employee-salaries-2016>`_
+What are dirty categorical variables and how can
+a good encoding help with statistical learning. We
+use as example the `employee salaries <https://www.openml.org/d/42125>`_
 dataset.
 """
 
@@ -56,7 +56,7 @@ values.insert(0, "current_annual_salary", employee_salaries.y)
 # ---------------------------------
 #
 # That's where our encoders get into play.
-# In order to robustly embed dirty semantic data, the SimilarityEncoder
+# In order to robustly embed dirty semantic data, the :class:SimilarityEncoder
 # creates a similarity matrix based on the 3-gram structure of the data.
 
 sorted_values = values["employee_position_title"].sort_values().unique()
@@ -135,10 +135,9 @@ f2.tight_layout()
 # "communication" part (not initially present in the category as a unique word)
 # as well as the technician part of this category.
 
-
 #########################################################################
-# Encoding categorical data using SimilarityEncoder
-# -------------------------------------------------
+# Encoding categorical data using :class:SimilarityEncoder
+# --------------------------------------------------------
 #
 # A typical data-science workflow uses one-hot encoding to represent
 # categories.
@@ -159,8 +158,8 @@ f3.tight_layout()
 #########################################################################
 # The corresponding is very sparse
 #
-# SimilarityEncoder can be used to replace one-hot encoding capturing the
-# similarities:
+# :class:SimilarityEncoder can be used to replace one-hot encoding
+# capturing the similarities:
 
 f4, ax4 = plt.subplots(figsize=(6, 6))
 similarity_encoded = similarity_encoder.fit_transform(employee_position_titles)
@@ -174,10 +173,10 @@ f4.tight_layout()
 # similarity encoding impacts prediction performance.
 
 #########################################################################
-# Feature interpretation with the GapEncoder
-# ------------------------------------------
+# Feature interpretation with the :class:GapEncoder
+# -------------------------------------------------
 #
-# We illustrate here how categorical encodings obtained with the GapEncoder
+# We illustrate here how categorical encodings obtained with the :class:GapEncoder
 # can be interpreted in terms of latent topics.
 
 ###############################################################################
@@ -192,7 +191,7 @@ print(f"Number of dirty entries = {len(X_dirty)}")
 # Encoding dirty job titles
 # -------------------------
 #
-# We first create an instance of the GapEncoder with n_components=10:
+# We first create an instance of the :class:GapEncoder with n_components=10:
 
 from dirty_cat import GapEncoder
 
@@ -209,10 +208,10 @@ print(f"Shape of encoded vectors = {X_enc.shape}")
 # Interpreting encoded vectors
 # ----------------------------
 #
-# The GapEncoder can be understood as a continuous encoding on a set of latent
-# topics estimated from the data. The latent topics are built by
-# capturing combinations of substrings that frequently co-occur, and encoded
-# vectors correspond to their activations.
+# The :class:GapEncoder can be understood as a continuous encoding
+# on a set of latent topics estimated from the data. The latent topics
+# are built by capturing combinations of substrings that frequently
+# co-occur, and encoded vectors correspond to their activations.
 # To interpret these latent topics, we select for each of them a few labels
 # from the input data with the highest activations.
 # In the example below we select 3 labels to summarize each topic.
