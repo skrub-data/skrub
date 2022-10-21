@@ -191,7 +191,7 @@ print(f"Number of dirty entries = {len(X_dirty)}")
 
 ###############################################################################
 # Encoding dirty job titles
-# -------------------------
+# .........................
 #
 # We first create an instance of the :class:`GapEncoder` with n_components=10:
 
@@ -208,7 +208,7 @@ print(f"Shape of encoded vectors = {X_enc.shape}")
 
 ###############################################################################
 # Interpreting encoded vectors
-# ----------------------------
+# ............................
 #
 # The :class:`GapEncoder` can be understood as a continuous encoding
 # on a set of latent topics estimated from the data. The latent topics
