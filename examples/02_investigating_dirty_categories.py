@@ -61,7 +61,7 @@ values.insert(0, "current_annual_salary", employee_salaries.y)
 #
 # That's where our encoders get into play.
 # In order to robustly embed dirty semantic data, the :class:`SimilarityEncoder`
-# creates a similarity matrix based on the 3-gram structure of the data.
+# creates a similarity matrix based on the n-gram representation of the data.
 
 sorted_values = values["employee_position_title"].sort_values().unique()
 
@@ -148,9 +148,11 @@ f2.tight_layout()
 
 from sklearn.preprocessing import OneHotEncoder
 
-# encoding simply a subset of the observations
-n_obs = 20
-employee_position_titles = values["employee_position_title"].head(n_obs).to_frame()
+# We'll encode a subset of the all the observations
+n_observations = 20
+employee_position_titles = (
+    values["employee_position_title"].head(n_observations).to_frame()
+)
 categorical_encoder = OneHotEncoder(sparse=False)
 one_hot_encoded = categorical_encoder.fit_transform(employee_position_titles)
 f3, ax3 = plt.subplots(figsize=(6, 6))
@@ -160,10 +162,10 @@ ax3.axis("off")
 f3.tight_layout()
 
 #########################################################################
-# The corresponding is very sparse
+# As we can see, the result of the one-hot encoding is very sparse
 #
 # :class:`SimilarityEncoder` can be used to replace one-hot encoding
-# capturing the similarities:
+# and be able to capture the similarities:
 
 f4, ax4 = plt.subplots(figsize=(6, 6))
 similarity_encoded = similarity_encoder.fit_transform(employee_position_titles)
@@ -182,7 +184,7 @@ f4.tight_layout()
 #
 
 ###############################################################################
-# We retrieve the dirty column to encode:
+# First, let's retrieve the dirty column to encode:
 
 dirty_column = "employee_position_title"
 X_dirty = data[[dirty_column]]
@@ -193,15 +195,15 @@ print(f"Number of dirty entries = {len(X_dirty)}")
 # Encoding dirty job titles
 # .........................
 #
-# We first create an instance of the :class:`GapEncoder` with n_components=10:
+# Then, we'll create an instance of the :class:`GapEncoder` with 10 components:
 
 from dirty_cat import GapEncoder
 
 enc = GapEncoder(n_components=10, random_state=42)
 
 ###############################################################################
-# Then we fit the model on the dirty categorical data and transform it to
-# obtain encoded vectors of size 10:
+# Finally, we'll fit the model on the dirty categorical data and transform it
+# in order to obtain encoded vectors of size 10:
 
 X_enc = enc.fit_transform(X_dirty)
 print(f"Shape of encoded vectors = {X_enc.shape}")
