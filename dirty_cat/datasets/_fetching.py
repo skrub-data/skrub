@@ -10,10 +10,13 @@ Scikit-Learn's ``fetch_openml()`` function.
 
 import gzip
 import json
+import urllib.request
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Union
+from urllib.error import URLError
+from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
 from sklearn.datasets import fetch_openml
@@ -61,16 +64,38 @@ class Features:
 
 @dataclass(unsafe_hash=True)
 class DatasetAll:
+    """
+    Represents a dataset and its information.
+    With this state, the dataset is loaded in memory as a pandas DataFrame
+    (``X`` and ``y``).
+    Additional information such as `path` and `read_csv_kwargs` are provided
+    in case the dataframe has to be read from disk, as such:
+    .. code:: python
+        ds = fetch_employee_salaries(load_dataframe=False)
+        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+    """
+
     name: str
     description: str
+    source: str
+    target: str
     X: pd.DataFrame
     y: pd.Series
-    source: str
     path: Path
+    read_csv_kwargs: Dict[str, Any]
 
 
 @dataclass(unsafe_hash=True)
 class DatasetInfoOnly:
+    """
+    Represents a dataset and its information.
+    With this state, the dataset is NOT loaded in memory, but can be read
+    with ``path`` and ``read_csv_kwargs``, as such:
+    .. code:: python
+        ds = fetch_employee_salaries(load_dataframe=False)
+        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+    """
+
     name: str
     description: str
     source: str
@@ -162,7 +187,91 @@ def fetch_openml_dataset(
     }
 
 
-def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
+def _fetch_world_bank_data(
+    indicator_id: str,
+    data_directory: Path = get_data_dir(),
+) -> Dict[str, Any]:
+    """
+    Gets a dataset from World Bank open data platform
+    (https://data.worldbank.org/).
+
+    Parameters
+    ----------
+    indicator_id: str
+        The ID of the indicator's dataset to fetch.
+    data_directory: Path
+        Optional. A directory to save the data to.
+        By default, the dirty_cat data directory.
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary containing:
+          - ``description``: str
+              The description of the dataset,
+              as gathered from World Bank data.
+          - ``source``: str
+              The dataset's URL from the World Bank data platform.
+          - ``path``: pathlib.Path
+              The local path leading to the dataset,
+              saved as a CSV file.
+
+    """
+    # See if file available locally :
+    path = f"{data_directory}/{indicator_id}.csv"
+    csv_path = Path(path)
+    url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
+    if csv_path.is_file() is True:
+        df = pd.read_csv(csv_path, nrows=0)
+        indicator_name = df.columns[1]
+    else:
+        warnings.warn(
+            f"Could not find the dataset {indicator_id} locally. "
+            "Downloading it from World Bank data; this might take a while... "
+            "If it is interrupted, some files might be invalid/incomplete: "
+            "if on the following run, the fetching raises errors, you can try "
+            f"fixing this issue by deleting the directory {csv_path!s}.",
+            UserWarning,
+            stacklevel=2,
+        )
+        try:
+            filehandle, _ = urllib.request.urlretrieve(url)
+            zip_file_object = ZipFile(filehandle, "r")
+            for name in zip_file_object.namelist():
+                if "Metadata" not in name:
+                    true_file = name
+            file = zip_file_object.open(true_file)
+        except BadZipFile:
+            raise FileNotFoundError(
+                f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
+            )
+        except URLError:
+            raise URLError("No internet connection or the website is down.")  # noqa
+        # Read and modify csv file
+        df = pd.read_csv(file, skiprows=3)
+        indicator_name = df.iloc[0, 2]
+        df[indicator_name] = df.stack().groupby(level=0).last()
+        df = df[df[indicator_name] != indicator_id]
+        df = df[["Country Name", indicator_name]]
+        # Save the file
+        data_directory.mkdir(exist_ok=True, parents=True)
+        csv_path = data_directory.resolve() / (indicator_id + ".csv")
+        df.to_csv(csv_path, index=False)
+    description = (
+        f"This table shows the {indicator_name} World Bank indicator."
+        " It can be used as an input table for fuzzy_join."
+    )
+    return {
+        "dataset_name": indicator_name,
+        "description": description,
+        "source": url,
+        "path": csv_path.resolve(),
+    }
+
+
+def _download_and_write_openml_dataset(
+    dataset_id: int, data_directory: Path
+) -> None:  # noqa
     """
     Downloads a dataset from OpenML,
     taking care of creating the directories.
@@ -312,6 +421,7 @@ def fetch_dataset_as_dataclass(
     target: str,
     read_csv_kwargs: dict,
     load_dataframe: bool,
+    source: str = "openml",
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
     Takes a dataset identifier, a target column name,
@@ -319,6 +429,9 @@ def fetch_dataset_as_dataclass(
 
     If you don't need the dataset to be loaded in memory,
     pass `load_dataframe=False`.
+
+    If you are loading data from the World Bank platform,
+    you need to specify `source='world_bank'`.
 
     Returns
     -------
@@ -329,7 +442,10 @@ def fetch_dataset_as_dataclass(
         If `load_dataframe=False`
 
     """
-    info = fetch_openml_dataset(dataset_id)
+    if source == "openml":
+        info = fetch_openml_dataset(dataset_id)
+    if source == "world_bank":
+        info = _fetch_world_bank_data(dataset_id)
     if load_dataframe:
         df = pd.read_csv(info["path"], **read_csv_kwargs)
         y = df[target]
@@ -337,10 +453,12 @@ def fetch_dataset_as_dataclass(
         dataset = DatasetAll(
             name=dataset_name,
             description=info["description"],
+            source=info["source"],
+            target=target,
             X=X,
             y=y,
-            source=info["source"],
             path=info["path"],
+            read_csv_kwargs=read_csv_kwargs,
         )
     else:
         dataset = DatasetInfoOnly(
@@ -368,9 +486,9 @@ def fetch_employee_salaries(
     https://openml.org/d/42125
 
     Description of the dataset:
-    > Annual salary information including gross pay and overtime pay for all
-    active, permanent employees of Montgomery County, MD paid in calendar
-    year 2016. This information will be published annually each year.
+        Annual salary information including gross pay and overtime pay for all
+        active, permanent employees of Montgomery County, MD paid in calendar
+        year 2016. This information will be published annually each year.
 
     Parameters
     ----------
@@ -419,10 +537,10 @@ def fetch_road_safety(
     https://openml.org/d/42803
 
     Description of the dataset:
-    > Data reported to the police about the circumstances of personal injury
-    road accidents in Great Britain from 1979, and the maker and model
-    information of vehicles involved in the respective accident. This version
-    includes data up to 2015.
+        Data reported to the police about the circumstances of personal injury
+        road accidents in Great Britain from 1979, and the maker and model
+        information of vehicles involved in the respective accident.
+        This version includes data up to 2015.
 
     Returns
     -------
@@ -450,14 +568,14 @@ def fetch_medical_charge(
     https://openml.org/d/42720
 
     Description of the dataset:
-    > The Inpatient Utilization and Payment Public Use File (Inpatient PUF)
-    provides information on inpatient discharges for Medicare fee-for-service
-    beneficiaries. The Inpatient PUF includes information on utilization,
-    payment (total payment and Medicare payment), and hospital-specific charges
-    for the more than 3,000 U.S. hospitals that receive Medicare Inpatient
-    Prospective Payment System (IPPS) payments. The PUF is organized by
-    hospital and Medicare Severity Diagnosis Related Group (MS-DRG) and
-    covers Fiscal Year (FY) 2011 through FY 2016.
+        The Inpatient Utilization and Payment Public Use File (Inpatient PUF)
+        provides information on inpatient discharges for Medicare
+        fee-for-service beneficiaries. The Inpatient PUF includes information
+        on utilization, payment (total payment and Medicare payment), and
+        hospital-specific charges for the more than 3,000 U.S. hospitals that
+        receive Medicare Inpatient Prospective Payment System (IPPS) payments.
+        The PUF is organized by hospital and Medicare Severity Diagnosis
+        Related Group (MS-DRG) and covers Fiscal Year (FY) 2011 through FY 2016.
 
     Returns
     -------
@@ -486,7 +604,7 @@ def fetch_midwest_survey(
     https://openml.org/d/42805
 
     Description of the dataset:
-    > Survey to know if people self-identify as Midwesterners.
+        Survey to know if people self-identify as Midwesterners.
 
     Returns
     -------
@@ -515,8 +633,8 @@ def fetch_open_payments(
     https://openml.org/d/42738
 
     Description of the dataset:
-    > Payments given by healthcare manufacturing companies to medical doctors
-    or hospitals.
+        Payments given by healthcare manufacturing companies to medical doctors
+        or hospitals.
 
     Returns
     -------
@@ -546,10 +664,10 @@ def fetch_traffic_violations(
     https://openml.org/d/42132
 
     Description of the dataset:
-    > This dataset contains traffic violation information from all electronic
-    traffic violations issued in the Montgomery County, MD. Any information
-    that can be used to uniquely identify the vehicle, the vehicle owner or
-    the officer issuing the violation will not be published.
+        This dataset contains traffic violation information from all electronic
+        traffic violations issued in the Montgomery County, MD. Any information
+        that can be used to uniquely identify the vehicle, the vehicle owner or
+        the officer issuing the violation will not be published.
 
     Returns
     -------
@@ -579,8 +697,8 @@ def fetch_drug_directory(
     https://openml.org/d/43044
 
     Description of the dataset:
-    > Product listing data submitted to the U.S. FDA for all unfinished,
-    unapproved drugs.
+        Product listing data submitted to the U.S. FDA for all unfinished,
+        unapproved drugs.
 
     Returns
     -------
@@ -599,4 +717,34 @@ def fetch_drug_directory(
             "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
+    )
+
+
+def fetch_world_bank_indicator(
+    indicator_id: str,
+    load_dataframe: bool = True,
+) -> Union[DatasetAll, DatasetInfoOnly]:
+    """Fetches a dataset of an indicator from the World Bank
+       open data platform.
+
+    Description of the dataset:
+    > The dataset contains two columns: the indicator value and the
+      country names. A list of all available indicators can be found
+      at https://data.worldbank.org/indicator.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
+    """
+    return fetch_dataset_as_dataclass(
+        dataset_name=f"World Bank indicator {indicator_id}",
+        dataset_id=indicator_id,
+        target=[],
+        read_csv_kwargs={},
+        load_dataframe=load_dataframe,
+        source="world_bank",
     )
