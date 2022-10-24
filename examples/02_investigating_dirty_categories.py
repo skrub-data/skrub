@@ -3,7 +3,7 @@ Investigating and interpreting dirty categories
 ===============================================
 
 What are dirty categorical variables and how can
-a good encoding help with statistical learning.
+a good encoding help with statistical learning?
 
 We illustrate how categorical encodings obtained with
 the :class:`GapEncoder` can be interpreted in terms of latent topics.
@@ -16,7 +16,7 @@ dataset.
 # What do we mean by dirty categories?
 # ------------------------------------
 #
-# Let's look at a dataset called employee salaries:
+# Let's look at the dataset:
 from dirty_cat import datasets
 
 employee_salaries = datasets.fetch_employee_salaries()
@@ -25,7 +25,7 @@ data = employee_salaries.X
 print(data.head(n=5))
 
 #########################################################################
-# Here is how many unique entries there is per column
+# Here is how many unique entries there is per column:
 print(data.nunique())
 
 #########################################################################
@@ -33,15 +33,16 @@ print(data.nunique())
 print(data["employee_position_title"].value_counts().sort_index())
 
 #########################################################################
-# These different entries are often variations on the same entities:
-# for example, there are 3 kinds of Accountant/Auditor.
+# These different entries are often variations of the same entity.
+# For example, there are 3 kinds of Accountant/Auditor.
 #
 # Such variations will break traditional categorical encoding methods:
 #
-# * Using simple one-hot encoding will create orthogonal features,
-#   whereas it is clear that those 3 terms have a lot in common.
+# * Using simple `one-hot encoding <https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html>`_
+#   will create orthogonal features, whereas it is clear that
+#   those 3 terms have a lot in common.
 #
-# * If we wanted to use word embedding methods such as Word2vec,
+# * If we wanted to use word embedding methods such as `Word2vec <https://www.tensorflow.org/tutorials/text/word2vec>`_,
 #   we would have to go through a cleaning phase: those algorithms
 #   are not trained to work on data such as 'Accountant/Auditor I'.
 #   However, this can be error-prone and time-consuming.
@@ -75,7 +76,7 @@ transformed_values = similarity_encoder.fit_transform(sorted_values.reshape(-1, 
 # ................................................................
 #
 # Let's now plot a couple of points at random using a low-dimensional
-# representation to get an intuition of what the similarity encoder is doing:
+# representation to get an intuition of what the :class:`SimilarityEncoder` is doing:
 
 from sklearn.manifold import MDS
 
@@ -134,49 +135,11 @@ f2.tight_layout()
 ########################################################################
 # As shown in the previous plot, we see that the nearest neighbor of
 # "Communication Equipment Technician"
-# is "telecommunication technician", although it is also
-# very close to senior "supply technician": therefore, we grasp the
-# "communication" part (not initially present in the category as a unique word)
-# as well as the technician part of this category.
+# is "Telecommunication Technician", although it is also
+# very close to senior "Supply Technician": therefore, we grasp the
+# "Communication" part (not initially present in the category as a unique word)
+# as well as the "Technician" part of this category.
 
-#########################################################################
-# Encoding categorical data using :class:`SimilarityEncoder`
-# ----------------------------------------------------------
-#
-# A typical data-science workflow uses one-hot encoding to represent
-# categories.
-
-from sklearn.preprocessing import OneHotEncoder
-
-# We'll encode a subset of the all the observations
-n_observations = 20
-employee_position_titles = (
-    values["employee_position_title"].head(n_observations).to_frame()
-)
-categorical_encoder = OneHotEncoder(sparse=False)
-one_hot_encoded = categorical_encoder.fit_transform(employee_position_titles)
-f3, ax3 = plt.subplots(figsize=(6, 6))
-ax3.matshow(one_hot_encoded)
-ax3.set_title("Employee Position Title values, one-hot encoded")
-ax3.axis("off")
-f3.tight_layout()
-
-#########################################################################
-# As we can see, the result of the one-hot encoding is very sparse
-#
-# :class:`SimilarityEncoder` can be used to replace one-hot encoding
-# and be able to capture the similarities:
-
-f4, ax4 = plt.subplots(figsize=(6, 6))
-similarity_encoded = similarity_encoder.fit_transform(employee_position_titles)
-ax4.matshow(similarity_encoded)
-ax4.set_title("Employee Position Title values, similarity encoded")
-ax4.axis("off")
-f4.tight_layout()
-
-#########################################################################
-# Other examples in the dirty_cat documentation show how
-# similarity encoding impacts prediction performance.
 
 #########################################################################
 # Feature interpretation with the :class:`GapEncoder`
@@ -184,6 +147,10 @@ f4.tight_layout()
 #
 
 ###############################################################################
+# The :class:`GapEncoder` is another encoder, better than the
+# :class:`SimilarityEncoder` in the sense that it is faster and
+# interpretable, which we will present now.
+#
 # First, let's retrieve the dirty column to encode:
 
 dirty_column = "employee_position_title"
