@@ -32,6 +32,11 @@ jobs:
         matrix:
             os: ["ubuntu-latest", "macos-latest"]
             python-version: ["3.8", "3.9", "3.10"]
+            # Install the min or latest dependencies for dirty_cat
+            # as defined in setup.cfg at [options.extra_require].
+            #
+            # Installing these extra dependencies will overwrite the already
+            # installed version defined at install_requires.
             dependencies-version-type: ["min", "latest"]
             include:
               - dependencies-version: "dev"
