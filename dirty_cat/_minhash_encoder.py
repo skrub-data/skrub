@@ -228,7 +228,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     elif x not in self.hash_dict_:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[
                             x
-                        ] = self.get_fast_hash(x)
+                        ] = self._get_fast_hash(x)
                     else:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[x]
                 counter += self.n_components
@@ -245,7 +245,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     elif x not in self.hash_dict_:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[
                             x
-                        ] = self.get_murmur_hash(x)
+                        ] = self._get_murmur_hash(x)
                     else:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[x]
                 counter += self.n_components
