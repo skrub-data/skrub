@@ -102,6 +102,9 @@ def fuzzy_join(
     For regular joins, the output of fuzzy_join is identical
     to pandas.merge, except that both key columns are returned.
 
+    Joining on indexes and multiple columns is not
+    supported.
+
     When return_score=True, the returned DataFrame gives
     the distances between closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
@@ -174,6 +177,7 @@ def fuzzy_join(
                 " string"
             )
 
+    # TODO: enable joining on multiple keys as in pandas.merge
     if on is not None:
         left_col = on
         right_col = on
@@ -239,7 +243,7 @@ def fuzzy_join(
     if sort:
         main_table.sort_values(by=[main_col], inplace=True)
 
-    # To keep order of columns as in pandas.merge
+    # To keep order of columns as in pandas.merge (always left table first)
     if how == "left":
         df_joined = pd.merge(
             main_table, aux_table, on="fj_idx", suffixes=suffixes, how=how
