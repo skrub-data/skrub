@@ -44,7 +44,7 @@ jobs:
               - dependencies-version: "dev, min-py310"
                 python-version: "3.10"
                 dependencies-version-type: "min"
-    name: ${{ matrix.os }} with Python ${{ matrix.python-version }} and $${{ matrix.dependencies-version-type }} package versions
+    name: ${{ matrix.os }} with Python ${{ matrix.python-version }} and ${{ matrix.dependencies-version-type }} package versions
     defaults:
       run:
         shell: bash
