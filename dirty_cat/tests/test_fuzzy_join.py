@@ -124,14 +124,11 @@ def test_drop_unmatched():
     c2 = fuzzy_join(a, b, on="col1", match_score=0.5)
     assert sum(c2["col3"].isna()) > 0
 
-    c3 = fuzzy_join(a, b, on="col1", match_score=0.5)
+    c3 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5)
     assert sum(c3["col3"].isna()) > 0
 
-    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5)
-    assert sum(c4["col3"].isna()) > 0
-
-    c5 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5, drop_unmatched=True)
-    assert c5.shape == (2, 4)
+    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5, drop_unmatched=True)
+    assert c4.shape == (2, 4)
 
 
 def test_how_param():

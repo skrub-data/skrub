@@ -171,9 +171,6 @@ def fuzzy_join(
                 " string"
             )
 
-    left_table_clean = left.reset_index(drop=True).copy()
-    right_table_clean = right.reset_index(drop=True).copy()
-
     if on is not None:
         left_col = on
         right_col = on
@@ -186,68 +183,68 @@ def fuzzy_join(
             "'on' or the pair 'left_on', 'right_on' should be specified."
         )
 
+    if how == "left":
+        main_table = left.reset_index(drop=True).copy()
+        aux_table = right.reset_index(drop=True).copy()
+        main_col = left_col
+        aux_col = right_col
+    else:
+        main_table = right.reset_index(drop=True).copy()
+        aux_table = left.reset_index(drop=True).copy()
+        main_col = right_col
+        aux_col = left_col
+
     # Drop missing values in key columns
-    left_table_clean.dropna(subset=[left_col], inplace=True)
-    right_table_clean.dropna(subset=[right_col], inplace=True)
+    main_table.dropna(subset=[main_col], inplace=True)
+    aux_table.dropna(subset=[aux_col], inplace=True)
 
     # Make sure that the column types are string and categorical:
-    left_col_clean = left_table_clean[left_col].astype(str)
-    right_col_clean = right_table_clean[right_col].astype(str)
+    main_col_clean = main_table[main_col].astype(str)
+    aux_col_clean = aux_table[aux_col].astype(str)
 
     enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
-    all_cats = pd.concat([left_col_clean, right_col_clean], axis=0).unique()
+    all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
     enc_cv = enc.fit(all_cats)
-    left_enc = enc_cv.transform(left_col_clean)
-    right_enc = enc_cv.transform(right_col_clean)
+    main_enc = enc_cv.transform(main_col_clean)
+    aux_enc = enc_cv.transform(aux_col_clean)
 
-    all_enc = vstack((left_enc, right_enc))
+    all_enc = vstack((main_enc, aux_enc))
 
     tfidf = TfidfTransformer().fit(all_enc)
-    left_enc = tfidf.transform(left_enc)
-    right_enc = tfidf.transform(right_enc)
+    main_enc = tfidf.transform(main_enc)
+    aux_enc = tfidf.transform(aux_enc)
 
     # Find nearest neighbor using KNN :
     neigh = NearestNeighbors(n_neighbors=1)
 
-    if how == "left":
-        neigh.fit(right_enc)
-        distance, neighbors = neigh.kneighbors(left_enc, return_distance=True)
-        idx_closest = np.ravel(neighbors)
+    neigh.fit(aux_enc)
+    distance, neighbors = neigh.kneighbors(main_enc, return_distance=True)
+    idx_closest = np.ravel(neighbors)
 
-        left_table_clean["fj_idx"] = idx_closest
-        right_table_clean["fj_idx"] = right_table_clean.index
+    main_table["fj_idx"] = idx_closest
+    aux_table["fj_idx"] = aux_table.index
 
-        norm_distance = 1 - (distance / 2)
-        if drop_unmatched:
-            left_table_clean = left_table_clean[match_score <= norm_distance]
-            norm_distance = norm_distance[match_score <= norm_distance]
-        else:
-            left_table_clean.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
+    norm_distance = 1 - (distance / 2)
+    if drop_unmatched:
+        main_table = main_table[match_score <= norm_distance]
+        norm_distance = norm_distance[match_score <= norm_distance]
     else:
-        neigh.fit(left_enc)
-        distance, neighbors = neigh.kneighbors(right_enc, return_distance=True)
-        idx_closest = np.ravel(neighbors)
+        main_table.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
 
-        right_table_clean["fj_idx"] = idx_closest
-        left_table_clean["fj_idx"] = left_table_clean.index
+    if sort:
+        main_table.sort_values(by=[main_col], inplace=True)
 
-        norm_distance = 1 - (distance / 2)
-        if drop_unmatched:
-            right_table_clean = right_table_clean[match_score <= norm_distance]
-            norm_distance = norm_distance[match_score <= norm_distance]
-        else:
-            right_table_clean.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
-
-    if sort and how == "left":
-        left_table_clean.sort_values(by=[left_col], inplace=True)
-    elif sort and how == "right":
-        right_table_clean.sort_values(by=[right_col], inplace=True)
-
-    df_joined = pd.merge(
-        left_table_clean, right_table_clean, on="fj_idx", suffixes=suffixes, how=how
-    )
+    # To keep order of columns as in pandas.merge
+    if how == "left":
+        df_joined = pd.merge(
+            main_table, aux_table, on="fj_idx", suffixes=suffixes, how=how
+        )
+    else:
+        df_joined = pd.merge(
+            aux_table, main_table, on="fj_idx", suffixes=suffixes, how=how
+        )
 
     if drop_unmatched:
         df_joined.drop(columns=["fj_idx"], inplace=True)
