@@ -90,7 +90,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def get_murmur_hash(self, string: str) -> np.array:
+    def _get_murmur_hash(self, string: str) -> np.array:
         """
         Encode a string using murmur hashing function.
 
@@ -124,7 +124,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
-    def get_fast_hash(self, string: str) -> np.array:
+    def _get_fast_hash(self, string: str) -> np.array:
         """
         Encode a string with fast hashing function.
         fast hashing supports both min_hash and minmax_hash encoding.
