@@ -27,24 +27,12 @@ If you like the package, please *spread the word*, and ⭐ `the repository <http
 What can dirty_cat do?
 ----------------------
 
-dirty_cat provides encoders for **morphological similarities** in the data,
-which means that it assumes a correlation between the similarities
-in the feature we want to encode, and similarities in the target.
+dirty_cat provides tools and encoders for **morphological similarities**.
 
 We usually identify three common cases: **similarities, typos and variations**
 
 `The first example notebook <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
 goes in-depth on how to identify and deal with dirty data using the dirty_cat library.
-
-The encoders and tools provided as part of dirty_cat include:
-
-- The `SimilarityEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.SimilarityEncoder.html>`_
-- The `GapEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.GapEncoder.html>`_
-- The `MinHashEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.MinHashEncoder.html>`_
-- The `SuperVectorizer <https://dirty-cat.github.io/stable/generated/dirty_cat.SuperVectorizer.html>`_
-- The `DatetimeEncoder <https://dirty-cat.github.io/stable/generated/dirty_cat.DatetimeEncoder.html>`_
-
-You can find more details along with examples on `the website <https://dirty-cat.github.io/>`_.
 
 What dirty_cat does not
 ~~~~~~~~~~~~~~~~~~~~~~~
