@@ -99,6 +99,9 @@ def fuzzy_join(
 
     Notes
     -----
+    For regular joins, the output of fuzzy_join is identical
+    to pandas.merge, except that both key columns are returned.
+
     When return_score=True, the returned DataFrame gives
     the distances between closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a

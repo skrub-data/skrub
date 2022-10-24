@@ -179,26 +179,25 @@ def test_fuzzy_join_pandas_comparison():
     result = pd.merge(left, right, on="key", how="left")
     result_fj = fuzzy_join(left, right, on="key", how="left")
 
-    # Left and right keys are kept in fuzzy_join, only
-    # left in pandas.merge but the joined columns should be the same
-    assert result.iloc[:, 1:].isin(result_fj).all().all()
+    result_fj.drop(columns=["key_y"], inplace=True)
+    result_fj.rename(columns={"key_x": "key"}, inplace=True)
 
-    result_r_fj = fuzzy_join(left, right, on="key", how="right")
+    pd.testing.assert_frame_equal(result, result_fj)
+
     result_r = pd.merge(left, right, on="key", how="right")
+    result_r_fj = fuzzy_join(left, right, on="key", how="right")
 
-    # Same for the right join:
-    assert result_r.iloc[:, 1:].isin(result_r_fj).all().all()
+    result_r_fj.drop(columns=["key_y"], inplace=True)
+    result_r_fj.rename(columns={"key_x": "key"}, inplace=True)
+
+    pd.testing.assert_frame_equal(result_r, result_r_fj)
 
     left = left.sample(frac=1, random_state=0)
+    right = right.sample(frac=1, random_state=0)
     result_s = pd.merge(left, right, on="key", how="left", sort=True)
     result_s_fj = fuzzy_join(left, right, on="key", how="left", sort=True)
-    pd.testing.assert_series_equal(
-        result_s["key"], result_s_fj["key_x"], check_names=False
-    )
 
-    right = right.sample(frac=1, random_state=0)
-    result_sr = pd.merge(left, right, on="key", how="right", sort=True)
-    result_sr_fj = fuzzy_join(left, right, on="key", how="right", sort=True)
-    pd.testing.assert_series_equal(
-        result_sr["key"], result_sr_fj["key_x"], check_names=False
-    )
+    result_s_fj.drop(columns=["key_y"], inplace=True)
+    result_s_fj.rename(columns={"key_x": "key"}, inplace=True)
+
+    pd.testing.assert_frame_equal(result_s, result_s_fj)
