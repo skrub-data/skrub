@@ -100,16 +100,14 @@ def test_encoder_params(hashing, minmax_hash) -> None:
     assert y2.shape == (len(X2), 50)
 
 
-@pytest.mark.parametrize(
-    "input_type, missing, hashing",
-    [
-        ["numpy", "error", "fast"],
-        ["pandas", "zero_impute", "murmur"],
-        ["numpy", "zero_impute", "fast"],
-        ["numpy", "zero_impute", "aaa"],
-        ["numpy", "aaaa", "fast"],
-    ],
-)
+input_types = ["numpy", "pandas"]
+missings = ["error", "zero_impute", "aaa"]
+hashings = ["fast", "murmur", "aaa"]
+
+
+@pytest.mark.parametrize("input_type", input_types)
+@pytest.mark.parametrize("missing", missings)
+@pytest.mark.parametrize("hashing", hashings)
 def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     X = ["Red", np.nan, "green", "blue", "green", "green", "blue", float("nan")]
     n = 3
