@@ -18,10 +18,12 @@ Minor changes
 -------------
 * Removed example `Fitting scalable, non-linear models on data with dirty categories`.
 
+* :class:`MinHashEncoder`'s `minhash` method is no longer public.
+
 Bug fixes
 ---------
 
-* :class:`MinHashEncoder` now considers `None` as missing values, rather
+* :class:`MinHashEncoder` now considers `None` and empty strings as missing values, rather
   than raising an error.
 
 Release 0.3.0
