@@ -1,6 +1,6 @@
 """
 Merging dirty tables: fuzzy join
-====================================
+================================
 
 Here we show how to combine data from different sources,
 with a vocabulary not well normalized.
@@ -265,7 +265,7 @@ plt.show()
 
 #################################################
 # 3. Joining legal rights strength table
-# ................................
+# ......................................
 # .. topic:: Note:
 #
 #    Here, we use the `keep='left'` option to keep only the left key matching
@@ -308,7 +308,7 @@ plt.show()
 
 ###################################################################
 # Prediction model
-# -----------------
+# ----------------
 #
 # We now separate our covariates (X), from the target (or exogenous)
 # variables: y

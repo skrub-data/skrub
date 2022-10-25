@@ -42,7 +42,6 @@ def fuzzy_join(
 
     Parameters
     ----------
-
     left : pandas.DataFrame
         A table to merge.
     right : pandas.DataFrame

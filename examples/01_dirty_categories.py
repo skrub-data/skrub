@@ -1,5 +1,4 @@
 """
-==============================================================
 Dirty categories: machine learning with non normalized strings
 ==============================================================
 
@@ -14,7 +13,7 @@ categorical encodings leads to very high dimensions and can lose
 information on which categories are similar.
 
 We investigate various encodings of this dirty column for the machine
-learning workflow, predicting the *current annual salary* with gradient
+learning workflow, predicting the *Current Annual Salary* with gradient
 boosted trees. First we manually assemble a complex encoder for the full
 dataframe, after which we show a much simpler way, albeit with less fine
 control.
@@ -41,7 +40,8 @@ control.
  .. |Gap| replace::
      :class:`~dirty_cat.GapEncoder`
 
- .. |SE| replace:: :class:`~dirty_cat.SimilarityEncoder`
+ .. |SE| replace::
+     :class:`~dirty_cat.SimilarityEncoder`
 
  .. |permutation importances| replace::
      :func:`~sklearn.inspection.permutation_importance`
@@ -71,12 +71,12 @@ y.name
 # Now, let's carry out some basic preprocessing:
 import pandas as pd
 
-X['date_first_hired'] = pd.to_datetime(X['date_first_hired'])
-X['year_first_hired'] = X['date_first_hired'].apply(lambda x: x.year)
+X["date_first_hired"] = pd.to_datetime(X["date_first_hired"])
+X["year_first_hired"] = X["date_first_hired"].apply(lambda x: x.year)
 # Get a mask of the rows with missing values in "gender"
-mask = X.isna()['gender']
+mask = X.isna()["gender"]
 # And remove them
-X.dropna(subset=['gender'], inplace=True)
+X.dropna(subset=["gender"], inplace=True)
 y = y[~mask]
 
 # %%
@@ -98,7 +98,7 @@ y = y[~mask]
 # representation
 from sklearn.preprocessing import OneHotEncoder
 
-one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
+one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 # %%
 # We assemble these to apply them to the relevant columns.
@@ -108,12 +108,12 @@ one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
 from sklearn.compose import make_column_transformer
 
 encoder = make_column_transformer(
-    (one_hot, ['gender', 'department_name', 'assignment_category']),
-    ('passthrough', ['year_first_hired']),
+    (one_hot, ["gender", "department_name", "assignment_category"]),
+    ("passthrough", ["year_first_hired"]),
     # Last but not least, our dirty column
-    (one_hot, ['employee_position_title']),
-    remainder='drop',
-   )
+    (one_hot, ["employee_position_title"]),
+    remainder="drop",
+)
 
 # %%
 # Pipelining an encoder with a learner
@@ -125,6 +125,7 @@ encoder = make_column_transformer(
 # earlier than 1.0)
 import sklearn
 from sklearn.utils.fixes import parse_version
+
 if parse_version(sklearn.__version__) < parse_version("1.0"):
     from sklearn.experimental import enable_hist_gradient_boosting
 # We can now import the HGBR from ensemble
@@ -154,15 +155,14 @@ np.unique(y)
 # We will now experiment with encoders specially made for handling
 # dirty columns
 
-from dirty_cat import (SimilarityEncoder, TargetEncoder,
-                       MinHashEncoder, GapEncoder)
+from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder, GapEncoder
 
 encoders = {
-    'one-hot': one_hot,
-    'similarity': SimilarityEncoder(),
-    'target': TargetEncoder(handle_unknown='ignore'),
-    'minhash': MinHashEncoder(n_components=100),
-    'gap': GapEncoder(n_components=100),
+    "one-hot": one_hot,
+    "similarity": SimilarityEncoder(),
+    "target": TargetEncoder(handle_unknown="ignore"),
+    "minhash": MinHashEncoder(n_components=100),
+    "gap": GapEncoder(n_components=100),
 }
 
 # %%
@@ -176,18 +176,17 @@ all_scores = dict()
 
 for name, method in encoders.items():
     encoder = make_column_transformer(
-        (one_hot, ['gender', 'department_name', 'assignment_category']),
-        ('passthrough', ['year_first_hired']),
+        (one_hot, ["gender", "department_name", "assignment_category"]),
+        ("passthrough", ["year_first_hired"]),
         # Last but not least, our dirty column
-        (method, ['employee_position_title']),
-        remainder='drop',
+        (method, ["employee_position_title"]),
+        remainder="drop",
     )
 
     pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
     scores = cross_val_score(pipeline, X, y)
-    print(f'{name} encoding')
-    print(f'r2 score:  mean: {np.mean(scores):.3f}; '
-          f'std: {np.std(scores):.3f}\n')
+    print(f"{name} encoding")
+    print(f"r2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
     all_scores[name] = scores
 
 # %%
@@ -200,21 +199,21 @@ import seaborn
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(4, 3))
-ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
-plt.ylabel('Encoding', size=20)
-plt.xlabel('Prediction accuracy     ', size=20)
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient="h")
+plt.ylabel("Encoding", size=20)
+plt.xlabel("Prediction accuracy     ", size=20)
 plt.yticks(size=20)
 plt.tight_layout()
 
 # %%
 # The clear trend is that encoders grasping the similarities in the category
-# (similarity, minhash, and gap) perform better than those discarding it.
+# (|SE|, minhash, and |Gap|) perform better than those discarding it.
 #
-# SimilarityEncoder is the best performer, but it is less scalable on big
-# data than MinHashEncoder and GapEncoder. The most scalable encoder is
-# the MinHashEncoder. GapEncoder, on the other hand, has the benefit that
+# |SE| is the best performer, but it is less scalable on big
+# data than MinHashEncoder and |Gap|. The most scalable encoder is
+# the MinHashEncoder. |Gap|, on the other hand, has the benefit that
 # it provides interpretable features
-# (see :ref:`sphx_glr_auto_examples_03_feature_interpretation_gap_encoder.py`)
+# (see [example 2])
 #
 # |
 #
@@ -236,7 +235,7 @@ y = employee_salaries.y
 # %%
 # We'll drop the "date_first_hired" column as it's redundant with
 # "year_first_hired".
-X = X.drop(['date_first_hired'], axis=1)
+X = X.drop(["date_first_hired"], axis=1)
 
 # %%
 # We still have a complex and heterogeneous dataframe:
@@ -260,8 +259,7 @@ X
 from dirty_cat import SuperVectorizer
 
 pipeline = make_pipeline(
-    SuperVectorizer(auto_cast=True),
-    HistGradientBoostingRegressor()
+    SuperVectorizer(auto_cast=True), HistGradientBoostingRegressor()
 )
 
 # %%
@@ -269,11 +267,11 @@ pipeline = make_pipeline(
 
 from sklearn.model_selection import cross_val_score
 
-scores = cross_val_score(pipeline, X, y, scoring='r2')
+scores = cross_val_score(pipeline, X, y, scoring="r2")
 
-print(f'scores={scores}')
-print(f'mean={np.mean(scores)}')
-print(f'std={np.std(scores)}')
+print(f"scores={scores}")
+print(f"mean={np.mean(scores)}")
+print(f"std={np.std(scores)}")
 
 # %%
 # The prediction performed here is pretty much as good as above
@@ -371,13 +369,7 @@ regressor.fit(X_train_enc, y_train)
 # Retrieving the feature importances
 
 importances = regressor.feature_importances_
-std = np.std(
-    [
-        tree.feature_importances_
-        for tree in regressor.estimators_
-    ],
-    axis=0
-)
+std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
 indices = np.argsort(importances)
 # Sort from least to most
 indices = list(reversed(indices))
