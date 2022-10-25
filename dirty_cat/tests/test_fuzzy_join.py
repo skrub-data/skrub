@@ -49,7 +49,7 @@ def test_fuzzy_join(analyzer):
         return_score=True,
         analyzer=analyzer,
     )
-    pd.testing.assert_frame_equal(df_joined2, df_joined3)
+    assert df_joined2.isin(df_joined3).all().all()
 
     df1["a2"] = 1
 
@@ -117,18 +117,23 @@ def test_missing_keys():
 def test_drop_unmatched():
     a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
-    c = fuzzy_join(a, b, on="col1", match_score=0.5, drop_unmatched=True)
-    assert c.shape == (2, 4)
 
-    a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
-    b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
-    c = fuzzy_join(a, b, on="col1", match_score=0.5)
-    assert sum(c["col3"].isna()) > 0
+    c1 = fuzzy_join(a, b, on="col1", match_score=0.5, drop_unmatched=True)
+    assert c1.shape == (2, 4)
+
+    c2 = fuzzy_join(a, b, on="col1", match_score=0.5)
+    assert sum(c2["col3"].isna()) > 0
+
+    c3 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5)
+    assert sum(c3["col3"].isna()) > 0
+
+    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5, drop_unmatched=True)
+    assert c4.shape == (2, 4)
 
 
 def test_how_param():
     """
-    Test correct shape of left and right joins. 
+    Test correct shape of left and right joins.
     Also test if an error is raised when an incorrect parameter value is passed.
     """
     a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
@@ -150,3 +155,49 @@ def test_how_param():
         match=r"how should be either 'left' or 'right', got",
     ):
         c = fuzzy_join(a, b, how="inner")
+
+
+def test_fuzzy_join_pandas_comparison():
+    """Tests if fuzzy_join's output is as similar as
+    possible with pandas.merge"""
+    left = pd.DataFrame(
+        {
+            "key": ["K0", "K1", "K2", "K3"],
+            "A": ["A0", "A1", "A2", "A3"],
+            "B": ["B0", "B1", "B2", "B3"],
+        }
+    )
+
+    right = pd.DataFrame(
+        {
+            "key": ["K0", "K1", "K2", "K3"],
+            "C": ["C0", "C1", "C2", "C3"],
+            "D": ["D0", "D1", "D2", "D3"],
+        }
+    )
+
+    result = pd.merge(left, right, on="key", how="left")
+    result_fj = fuzzy_join(left, right, on="key", how="left")
+
+    result_fj.drop(columns=["key_y"], inplace=True)
+    result_fj.rename(columns={"key_x": "key"}, inplace=True)
+
+    pd.testing.assert_frame_equal(result, result_fj)
+
+    result_r = pd.merge(left, right, on="key", how="right")
+    result_r_fj = fuzzy_join(left, right, on="key", how="right")
+
+    result_r_fj.drop(columns=["key_y"], inplace=True)
+    result_r_fj.rename(columns={"key_x": "key"}, inplace=True)
+
+    pd.testing.assert_frame_equal(result_r, result_r_fj)
+
+    left = left.sample(frac=1, random_state=0)
+    right = right.sample(frac=1, random_state=0)
+    result_s = pd.merge(left, right, on="key", how="left", sort=True)
+    result_s_fj = fuzzy_join(left, right, on="key", how="left", sort=True)
+
+    result_s_fj.drop(columns=["key_y"], inplace=True)
+    result_s_fj.rename(columns={"key_x": "key"}, inplace=True)
+
+    pd.testing.assert_frame_equal(result_s, result_s_fj)
