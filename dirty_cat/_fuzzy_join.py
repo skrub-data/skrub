@@ -145,7 +145,7 @@ def fuzzy_join(
     1  lala  2  lala    6
     2  nana  3  nnana   8
 
-    When we want to accept only a certain match precison,
+    When we want to accept only a certain match precision,
     we can use the `match_score` argument:
 
     >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
