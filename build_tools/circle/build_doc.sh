@@ -49,8 +49,8 @@ get_build_type() {
         echo BUILD: not a pull request
         return
     fi
-    git_range="origin/master...$CIRCLE_SHA1"
-    git fetch origin master >&2 || (echo QUICK BUILD: failed to get changed filenames for $git_range; return)
+    git_range="origin/main...$CIRCLE_SHA1"
+    git fetch origin main >&2 || (echo QUICK BUILD: failed to get changed filenames for $git_range; return)
     filenames=$(git diff --name-only $git_range)
     if [ -z "$filenames" ]
     then
@@ -76,7 +76,7 @@ then
     exit 0
 fi
 
-if [[ "$CIRCLE_BRANCH" =~ ^master$|^[0-9]+\.[0-9]+\.X$ && -z "$CI_PULL_REQUEST" ]]
+if [[ "$CIRCLE_BRANCH" =~ ^main$|^[0-9]+\.[0-9]+\.X$ && -z "$CI_PULL_REQUEST" ]]
 then
     make_args="html"
 elif [[ "$build_type" =~ ^QUICK ]]
@@ -118,7 +118,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
   pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx \
   seaborn statsmodels pillow cython joblib pandas="${PANDAS_VERSION:-*}"
-#removed scikit learn from conda since it is installed from master after
+#removed scikit learn from conda since it is installed from main after
 
 source activate testenv
 pip install sphinx-gallery
@@ -130,7 +130,7 @@ pip install scikit-learn
 # Build and install the project in dev mode
 python setup.py develop
 
-#if [[ "$CIRCLE_BRANCH" =~ ^master$ && -z "$CI_PULL_REQUEST" ]]
+#if [[ "$CIRCLE_BRANCH" =~ ^main$ && -z "$CI_PULL_REQUEST" ]]
 #then
 #    # List available documentation versions if on default branch
 #    python build_tools/circle/list_versions.py > doc/versions.rst
@@ -143,7 +143,7 @@ cd -
 set +o pipefail
 
 affected_doc_paths() {
-    files=$(git diff --name-only origin/master...$CIRCLE_SHA1)
+    files=$(git diff --name-only origin/main...$CIRCLE_SHA1)
     echo "$files" | grep ^doc/.*\.rst | sed 's/^doc\/\(.*\)\.rst$/\1.html/'
     echo "$files" | grep ^examples/.*.py | sed 's/^\(.*\)\.py$/auto_\1.html/'
     project_files=$(echo "$files" | grep '^dirty_cat/')
