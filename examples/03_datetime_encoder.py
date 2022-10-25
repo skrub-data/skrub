@@ -14,16 +14,19 @@ easily.
 """
 
 import warnings
+
 warnings.filterwarnings("ignore")
 
 ###############################################################################
 # **Data Importing**: We first fetch the dataset.
-# 
+#
 # We want to predict the NO2 air concentration in different cities, based
 # on the date and the time of measurement.
 import pandas as pd
 
-data = pd.read_csv("https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/air_quality_no2_long.csv")
+data = pd.read_csv(
+    "https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/air_quality_no2_long.csv"
+)
 y = data["value"]
 X = data[["city", "date.utc"]]
 X
@@ -31,7 +34,7 @@ X
 ###############################################################################
 # Encoding the data to numerical representations
 # -----------------------------------------------
-# 
+#
 # Encoders for categorical and datetime features
 # ..............................................
 from sklearn.preprocessing import OneHotEncoder
@@ -41,17 +44,18 @@ cat_encoder = OneHotEncoder(handle_unknown="ignore")
 # We encode dates using the day of the week as it is probably relevant,
 # but no longer than minutes: we are probably not interested in seconds
 # and below
-datetime_encoder = DatetimeEncoder(add_day_of_the_week=True,
-                                   extract_until="minute")
+datetime_encoder = DatetimeEncoder(add_day_of_the_week=True, extract_until="minute")
 
 from sklearn.compose import make_column_transformer
 
 datetime_columns = ["date.utc"]
 categorical_columns = ["city"]
 
-encoder = make_column_transformer((cat_encoder, categorical_columns),
-                                  (datetime_encoder, datetime_columns),
-                                  remainder="drop")
+encoder = make_column_transformer(
+    (cat_encoder, categorical_columns),
+    (datetime_encoder, datetime_columns),
+    remainder="drop",
+)
 
 ###############################################################################
 # Transforming the input data
@@ -80,8 +84,8 @@ pprint(sup_vec.get_feature_names_out())
 ###############################################################################
 # If we want the day of the week, we can just replace SuperVectorizer's default
 sup_vec = SuperVectorizer(
-        datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
-    )
+    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
+)
 sup_vec.fit_transform(X)
 sup_vec.get_feature_names_out()
 
@@ -101,8 +105,8 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
 sup_vec = SuperVectorizer(
-        datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
-    )
+    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
+)
 reg = HistGradientBoostingRegressor()
 pipeline = make_pipeline(sup_vec, reg)
 
@@ -121,8 +125,9 @@ y = y.iloc[sorted_indices]
 
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 
-cross_val_score(pipeline, X, y, scoring="neg_mean_squared_error",
-                cv=TimeSeriesSplit(n_splits=5))
+cross_val_score(
+    pipeline, X, y, scoring="neg_mean_squared_error", cv=TimeSeriesSplit(n_splits=5)
+)
 
 ###############################################################################
 # Plotting the prediction
@@ -139,19 +144,22 @@ y_train = y[X["date.utc"] < "2019-06-01"]
 y_test = y[X["date.utc"] >= "2019-06-01"]
 
 pipeline.fit(X_train, y_train)
-fig, axs = plt.subplots(nrows=len(X_test.city.unique()), ncols=1,
-                        figsize=(12, 9))
+fig, axs = plt.subplots(nrows=len(X_test.city.unique()), ncols=1, figsize=(12, 9))
 
 for i, city in enumerate(X_test.city.unique()):
-    axs[i].plot(X.loc[X.city == city, "date.utc"],
-                y.loc[X.city == city], label="Actual")
-    axs[i].plot(X_test.loc[X_test.city == city, "date.utc"],
-                pipeline.predict(X_test.loc[X_test.city == city]),
-                label="Predicted")
+    axs[i].plot(
+        X.loc[X.city == city, "date.utc"], y.loc[X.city == city], label="Actual"
+    )
+    axs[i].plot(
+        X_test.loc[X_test.city == city, "date.utc"],
+        pipeline.predict(X_test.loc[X_test.city == city]),
+        label="Predicted",
+    )
     axs[i].set_title(city)
     axs[i].set_ylabel("NO2")
     axs[i].xaxis.set_major_formatter(
-        ConciseDateFormatter(axs[i].xaxis.get_major_locator()))
+        ConciseDateFormatter(axs[i].xaxis.get_major_locator())
+    )
     axs[i].legend()
 plt.show()
 
@@ -168,19 +176,26 @@ y_train_zoomed = y[X["date.utc"] < "2019-06-03"]
 y_test_zoomed = y[X["date.utc"] >= "2019-06-03"]
 
 pipeline.fit(X_train, y_train)
-fig, axs = plt.subplots(nrows=len(X_test_zoomed.city.unique()), ncols=1,
-                        figsize=(12, 9))
+fig, axs = plt.subplots(
+    nrows=len(X_test_zoomed.city.unique()), ncols=1, figsize=(12, 9)
+)
 
 for i, city in enumerate(X_test_zoomed.city.unique()):
-    axs[i].plot(X_zoomed.loc[X_zoomed.city == city, "date.utc"],
-                y_zoomed.loc[X_zoomed.city == city], label="Actual")
-    axs[i].plot(X_test_zoomed.loc[X_test_zoomed.city == city, "date.utc"],
-                pipeline.predict(X_test_zoomed.loc[X_test_zoomed.city == city]),
-                label="Predicted")
+    axs[i].plot(
+        X_zoomed.loc[X_zoomed.city == city, "date.utc"],
+        y_zoomed.loc[X_zoomed.city == city],
+        label="Actual",
+    )
+    axs[i].plot(
+        X_test_zoomed.loc[X_test_zoomed.city == city, "date.utc"],
+        pipeline.predict(X_test_zoomed.loc[X_test_zoomed.city == city]),
+        label="Predicted",
+    )
     axs[i].set_title(city)
     axs[i].set_ylabel("NO2")
     axs[i].xaxis.set_major_formatter(
-        ConciseDateFormatter(axs[i].xaxis.get_major_locator()))
+        ConciseDateFormatter(axs[i].xaxis.get_major_locator())
+    )
     axs[i].legend()
 plt.show()
 
@@ -197,8 +212,8 @@ plt.show()
 from sklearn.inspection import permutation_importance
 
 sup_vec = SuperVectorizer(
-        datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
-    )
+    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
+)
 
 # In this case, we don't use a pipeline, because we want to compute the
 # importance of the features created by the DatetimeEncoder
