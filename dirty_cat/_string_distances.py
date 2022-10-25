@@ -66,8 +66,8 @@ def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
     string : str
         The string to split in n-grams.
     ngram_range : tuple (min_n, max_n)
-    The lower and upper boundary of the range of n-values for different
-    n-grams to be extracted. All values of n such that min_n <= n <= max_n.
+        The lower and upper boundary of the range of n-values for different
+        n-grams to be extracted. All values of n such that min_n <= n <= max_n.
 
     Returns
     -------

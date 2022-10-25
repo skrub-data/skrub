@@ -64,16 +64,38 @@ class Features:
 
 @dataclass(unsafe_hash=True)
 class DatasetAll:
+    """
+    Represents a dataset and its information.
+    With this state, the dataset is loaded in memory as a pandas DataFrame
+    (``X`` and ``y``).
+    Additional information such as `path` and `read_csv_kwargs` are provided
+    in case the dataframe has to be read from disk, as such:
+    .. code:: python
+        ds = fetch_employee_salaries(load_dataframe=False)
+        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+    """
+
     name: str
     description: str
+    source: str
+    target: str
     X: pd.DataFrame
     y: pd.Series
-    source: str
     path: Path
+    read_csv_kwargs: Dict[str, Any]
 
 
 @dataclass(unsafe_hash=True)
 class DatasetInfoOnly:
+    """
+    Represents a dataset and its information.
+    With this state, the dataset is NOT loaded in memory, but can be read
+    with ``path`` and ``read_csv_kwargs``, as such:
+    .. code:: python
+        ds = fetch_employee_salaries(load_dataframe=False)
+        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+    """
+
     name: str
     description: str
     source: str
@@ -431,10 +453,12 @@ def fetch_dataset_as_dataclass(
         dataset = DatasetAll(
             name=dataset_name,
             description=info["description"],
+            source=info["source"],
+            target=target,
             X=X,
             y=y,
-            source=info["source"],
             path=info["path"],
+            read_csv_kwargs=read_csv_kwargs,
         )
     else:
         dataset = DatasetInfoOnly(
@@ -462,9 +486,9 @@ def fetch_employee_salaries(
     https://openml.org/d/42125
 
     Description of the dataset:
-    > Annual salary information including gross pay and overtime pay for all
-    active, permanent employees of Montgomery County, MD paid in calendar
-    year 2016. This information will be published annually each year.
+        Annual salary information including gross pay and overtime pay for all
+        active, permanent employees of Montgomery County, MD paid in calendar
+        year 2016. This information will be published annually each year.
 
     Parameters
     ----------
@@ -513,10 +537,10 @@ def fetch_road_safety(
     https://openml.org/d/42803
 
     Description of the dataset:
-    > Data reported to the police about the circumstances of personal injury
-    road accidents in Great Britain from 1979, and the maker and model
-    information of vehicles involved in the respective accident. This version
-    includes data up to 2015.
+        Data reported to the police about the circumstances of personal injury
+        road accidents in Great Britain from 1979, and the maker and model
+        information of vehicles involved in the respective accident.
+        This version includes data up to 2015.
 
     Returns
     -------
@@ -544,14 +568,14 @@ def fetch_medical_charge(
     https://openml.org/d/42720
 
     Description of the dataset:
-    > The Inpatient Utilization and Payment Public Use File (Inpatient PUF)
-    provides information on inpatient discharges for Medicare fee-for-service
-    beneficiaries. The Inpatient PUF includes information on utilization,
-    payment (total payment and Medicare payment), and hospital-specific charges
-    for the more than 3,000 U.S. hospitals that receive Medicare Inpatient
-    Prospective Payment System (IPPS) payments. The PUF is organized by
-    hospital and Medicare Severity Diagnosis Related Group (MS-DRG) and
-    covers Fiscal Year (FY) 2011 through FY 2016.
+        The Inpatient Utilization and Payment Public Use File (Inpatient PUF)
+        provides information on inpatient discharges for Medicare
+        fee-for-service beneficiaries. The Inpatient PUF includes information
+        on utilization, payment (total payment and Medicare payment), and
+        hospital-specific charges for the more than 3,000 U.S. hospitals that
+        receive Medicare Inpatient Prospective Payment System (IPPS) payments.
+        The PUF is organized by hospital and Medicare Severity Diagnosis
+        Related Group (MS-DRG) and covers Fiscal Year (FY) 2011 through FY 2016.
 
     Returns
     -------
@@ -580,7 +604,7 @@ def fetch_midwest_survey(
     https://openml.org/d/42805
 
     Description of the dataset:
-    > Survey to know if people self-identify as Midwesterners.
+        Survey to know if people self-identify as Midwesterners.
 
     Returns
     -------
@@ -609,8 +633,8 @@ def fetch_open_payments(
     https://openml.org/d/42738
 
     Description of the dataset:
-    > Payments given by healthcare manufacturing companies to medical doctors
-    or hospitals.
+        Payments given by healthcare manufacturing companies to medical doctors
+        or hospitals.
 
     Returns
     -------
@@ -640,10 +664,10 @@ def fetch_traffic_violations(
     https://openml.org/d/42132
 
     Description of the dataset:
-    > This dataset contains traffic violation information from all electronic
-    traffic violations issued in the Montgomery County, MD. Any information
-    that can be used to uniquely identify the vehicle, the vehicle owner or
-    the officer issuing the violation will not be published.
+        This dataset contains traffic violation information from all electronic
+        traffic violations issued in the Montgomery County, MD. Any information
+        that can be used to uniquely identify the vehicle, the vehicle owner or
+        the officer issuing the violation will not be published.
 
     Returns
     -------
@@ -673,8 +697,8 @@ def fetch_drug_directory(
     https://openml.org/d/43044
 
     Description of the dataset:
-    > Product listing data submitted to the U.S. FDA for all unfinished,
-    unapproved drugs.
+        Product listing data submitted to the U.S. FDA for all unfinished,
+        unapproved drugs.
 
     Returns
     -------
