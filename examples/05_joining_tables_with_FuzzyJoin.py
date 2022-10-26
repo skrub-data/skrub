@@ -117,7 +117,7 @@ df1 = fuzzy_join(
     return_score=True,
 )
 
-df1.head(20)
+df1.tail(20)
 # We merged the first WB table to our initial one.
 
 #################################################################
