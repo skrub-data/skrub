@@ -1,9 +1,9 @@
 """
-Handling datetime features with the |DtE|
-=========================================
+Handling datetime features with the DatetimeEncoder
+===================================================
 
 We illustrate here how to handle datetime features with the
-|DtE|.
+DatetimeEncoder.
 
 The |DtE| breaks down each datetime
 features into several numerical features, by extracting relevant
@@ -25,7 +25,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 ###############################################################################
-# **Data Importing**: We first fetch the dataset.
+# Data Importing
+# --------------
+#
+# We first fetch the dataset.
 #
 # We want to predict the NO2 air concentration in different cities, based
 # on the date and the time of measurement.
@@ -40,7 +43,7 @@ X
 
 ###############################################################################
 # Encoding the data to numerical representations
-# -----------------------------------------------
+# ----------------------------------------------
 #
 # Encoders for categorical and datetime features
 # ..............................................
@@ -89,7 +92,7 @@ sup_vec.fit_transform(X)
 pprint(sup_vec.get_feature_names_out())
 
 ###############################################################################
-# If we want the day of the week, we can just replace |SV|'s default
+# If we want the day of the week, we can just replace |SV|'s default parameter:
 sup_vec = SuperVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
@@ -123,8 +126,8 @@ pipeline = make_pipeline(sup_vec, reg)
 # When using date and time features, we often care about predicting the future.
 # In this case, we have to be careful when evaluating our model, because
 # standard tools like cross-validation do not respect the time ordering.
-# Instead, we can use the `TimeSeriesSplit` class, which makes sure that
-# the test set is always in the future.
+# Instead, we can use the :class:`~sklearn.model_selection.TimeSeriesSplit`,
+# which makes sure that the test set is always in the future.
 X["date.utc"] = pd.to_datetime(X["date.utc"])
 sorted_indices = np.argsort(X["date.utc"])
 X = X.iloc[sorted_indices]
@@ -171,7 +174,7 @@ for i, city in enumerate(X_test.city.unique()):
 plt.show()
 
 ###############################################################################
-# Let's zoom on a few days
+# Let's zoom on a few days:
 
 X_zoomed = X[X["date.utc"] <= "2019-06-04"][X["date.utc"] >= "2019-06-01"]
 y_zoomed = y[X["date.utc"] <= "2019-06-04"][X["date.utc"] >= "2019-06-01"]
@@ -212,8 +215,8 @@ plt.show()
 # Using the |DtE| allows us to better understand how the date
 # impacts the NO2 concentration. To this aim, we can compute the
 # importance of the features created by the |DtE|, using the
-# `permutation_importance` function, which basically shuffles a feature
-# and sees how the model changes its prediction
+# :func:`~sklearn.inspection.permutation_importance` function, which
+# basically shuffles a feature and sees how the model changes its prediction.
 
 ###############################################################################
 from sklearn.inspection import permutation_importance
@@ -223,7 +226,7 @@ sup_vec = SuperVectorizer(
 )
 
 # In this case, we don't use a pipeline, because we want to compute the
-# importance of the features created by the |DtE|
+# importance of the features created by the DatetimeEncoder
 X_ = sup_vec.fit_transform(X)
 reg = HistGradientBoostingRegressor().fit(X_, y)
 result = permutation_importance(reg, X_, y, n_repeats=10, random_state=0)

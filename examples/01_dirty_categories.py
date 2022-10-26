@@ -7,13 +7,13 @@ preparation. In particular categories may appear with many morphological
 variants, when they have been manually input or assembled from diverse
 sources.
 
-Here we look at a dataset on wages [#]_ where the column *Employee
-Position Title* contains dirty categories. On such a column, standard
+Here we look at a dataset on wages [#]_ where the column 'Employee
+Position Title' contains dirty categories. On such a column, standard
 categorical encodings leads to very high dimensions and can lose
 information on which categories are similar.
 
 We investigate various encodings of this dirty column for the machine
-learning workflow, predicting the *Current Annual Salary* with gradient
+learning workflow, predicting the 'Current Annual Salary' with gradient
 boosted trees. First we manually assemble a complex encoder for the full
 dataframe, after which we show a much simpler way, albeit with less fine
 control.
@@ -69,7 +69,7 @@ X = employee_salaries.X
 X
 
 # %%
-# and y, our target column (the annual salary)
+# and y, our target column (the annual salary):
 y = employee_salaries.y
 y.name
 
@@ -79,7 +79,7 @@ import pandas as pd
 
 X["date_first_hired"] = pd.to_datetime(X["date_first_hired"])
 X["year_first_hired"] = X["date_first_hired"].apply(lambda x: x.year)
-# Get a mask of the rows with missing values in "gender"
+# Get a mask of the rows with missing values in 'gender'
 mask = X.isna()["gender"]
 # And remove them
 X.dropna(subset=["gender"], inplace=True)
@@ -101,7 +101,7 @@ y = y[~mask]
 # ........................
 #
 # An encoder is needed to turn a categorical column into a numerical
-# representation
+# representation:
 from sklearn.preprocessing import OneHotEncoder
 
 one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
@@ -109,7 +109,7 @@ one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 # %%
 # We assemble these to apply them to the relevant columns.
 # The |ColumnTransformer| is created by specifying a set of transformers
-# alongside with the column names on which each must be applied
+# alongside with the column names on which each must be applied:
 
 from sklearn.compose import make_column_transformer
 
@@ -128,20 +128,19 @@ encoder = make_column_transformer(
 # We will use a |HGBR|,
 # which is a good predictor for data with heterogeneous columns
 # (we need to require the experimental feature for scikit-learn versions
-# earlier than 1.0)
+# earlier than 1.0):
 from sklearn.experimental import enable_hist_gradient_boosting
 
 # We can now import the |HGBR| from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
-
 from sklearn.pipeline import make_pipeline
 
 pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
 
 # %%
-# The pipeline can be readily applied to the dataframe for prediction
+# The pipeline can be readily applied to the dataframe for prediction:
 pipeline.fit(X, y)
 
 # %%
@@ -156,7 +155,7 @@ np.unique(y)
 
 # %%
 # We will now experiment with encoders specially made for handling
-# dirty columns
+# dirty columns:
 
 from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder, GapEncoder
 
@@ -209,14 +208,14 @@ plt.yticks(size=20)
 plt.tight_layout()
 
 # %%
-# The clear trend is that encoders grasping the similarities in the category
+# The clear trend is that encoders grasping similarities between categories
 # (|SE|, |MinHash|, and |Gap|) perform better than those discarding it.
 #
 # |SE| is the best performer, but it is less scalable on big
-# data than |MinHash| and |Gap|. The most scalable encoder is
-# the |MinHash|. |Gap|, on the other hand, has the benefit that
+# data than the |MinHash| and |Gap|. The most scalable encoder is
+# the |MinHash|. On the other hand, |Gap| has the benefit that
 # it provides interpretable features
-# (see [example 2])
+# (see :ref:`sphx_glr_auto_examples_02_investigating_dirty_categories.py`)
 #
 # |
 #
@@ -236,8 +235,8 @@ X = employee_salaries.X
 y = employee_salaries.y
 
 # %%
-# We'll drop the "date_first_hired" column as it's redundant with
-# "year_first_hired".
+# We'll drop the 'date_first_hired' column as it's redundant with
+# 'year_first_hired'.
 X = X.drop(["date_first_hired"], axis=1)
 
 # %%
@@ -266,7 +265,7 @@ pipeline = make_pipeline(
 )
 
 # %%
-# Let's perform a cross-validation to see how well this model predicts
+# Let's perform a cross-validation to see how well this model predicts:
 
 from sklearn.model_selection import cross_val_score
 
@@ -321,7 +320,7 @@ pprint(sup_vec.transformers_)
 # %%
 # This is what is being passed to the |ColumnTransformer| under the hood.
 # If you're familiar with how the latter works, it should be very intuitive.
-# We can notice it classified the columns "gender" and "assignment_category"
+# We can notice it classified the columns 'gender' and 'assignment_category'
 # as low cardinality string variables.
 # A |OneHotEncoder| will be applied to these columns.
 #
@@ -341,11 +340,11 @@ feature_names[:8]
 
 # %%
 # As we can see, it gave us interpretable columns.
-# This is because we used |Gap| on the column "division",
+# This is because we used |Gap| on the column 'division',
 # which was classified as a high cardinality string variable.
 # (default values, see |SV|'s docstring).
 #
-# In total, we have reasonable number of encoded columns.
+# In total, we have a reasonable number of encoded columns:
 len(feature_names)
 
 
@@ -353,15 +352,15 @@ len(feature_names)
 # Feature importances in the statistical model
 # --------------------------------------------
 #
-# In this section, we will train a regressor, and plot the feature importances
+# In this section, we will train a regressor, and plot the feature importances.
 #
 # .. topic:: Note:
 #
-#    To minimize compute time, use the feature importances computed by the
+#    To minimize computation time, we use the feature importances computed by the
 #    |RandomForestRegressor|, but you should prefer |permutation importances|
-#    instead (which are less subject to biases)
+#    instead (which are less subject to biases).
 #
-# First, let's train the |RandomForestRegressor|,
+# First, let's train the |RandomForestRegressor|:
 
 from sklearn.ensemble import RandomForestRegressor
 
@@ -369,7 +368,7 @@ regressor = RandomForestRegressor()
 regressor.fit(X_train_enc, y_train)
 
 # %%
-# Retrieving the feature importances
+# Retrieving the feature importances:
 
 importances = regressor.feature_importances_
 std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)

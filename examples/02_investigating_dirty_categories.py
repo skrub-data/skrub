@@ -37,7 +37,7 @@ data = employee_salaries.X
 print(data.head(n=5))
 
 #########################################################################
-# Here is how many unique entries there is per column:
+# Here is the number of unique entries per column:
 print(data.nunique())
 
 #########################################################################
@@ -46,17 +46,17 @@ print(data["employee_position_title"].value_counts().sort_index())
 
 #########################################################################
 # These different entries are often variations of the same entity.
-# For example, there are 3 kinds of Accountant/Auditor.
+# For example, there are 3 kinds of "Accountant/Auditor".
 #
 # Such variations will break traditional categorical encoding methods:
 #
-# * Using simple |OneHotEncoder|
+# * Using a simple |OneHotEncoder|
 #   will create orthogonal features, whereas it is clear that
 #   those 3 terms have a lot in common.
 #
 # * If we wanted to use word embedding methods such as `Word2vec <https://www.tensorflow.org/tutorials/text/word2vec>`_,
 #   we would have to go through a cleaning phase: those algorithms
-#   are not trained to work on data such as 'Accountant/Auditor I'.
+#   are not trained to work on data such as "Accountant/Auditor I".
 #   However, this can be error-prone and time-consuming.
 #
 # The problem becomes easier if we can capture relationships between
@@ -159,8 +159,8 @@ f2.tight_layout()
 #
 
 ###############################################################################
-# The |Gap| is another encoder, better than the
-# |SE| in the sense that it is faster and
+# The |Gap| is a better encoder than the
+# |SE| in the sense that it is more scalable and
 # interpretable, which we will present now.
 #
 # First, let's retrieve the dirty column to encode:
@@ -206,8 +206,8 @@ for k in range(len(topic_labels)):
 
 ###############################################################################
 # As expected, topics capture labels that frequently co-occur. For instance,
-# the labels *firefighter*, *rescuer*, *rescue* appear together in
-# *Firefighter/Rescuer III*, or *Fire/Rescue Lieutenant*.
+# the labels "firefighter", "rescuer", "rescue" appear together in
+# "Firefighter/Rescuer III", or "Fire/Rescue Lieutenant".
 #
 # This enables us to understand the encoding of different samples
 

@@ -2,8 +2,8 @@
 Scalability considerations for similarity encoding
 ==================================================
 
-We discuss in this notebook how to efficiently apply the |SE| to larger
-datasets: reducing the number of reference categories to "prototypes",
+We discuss in this notebook how to efficiently apply the SimilarityEncoder
+to larger datasets: reducing the number of reference categories to `prototypes`,
 either chosen as the most frequent categories, or with kmeans clustering.
 
 
@@ -13,13 +13,13 @@ either chosen as the most frequent categories, or with kmeans clustering.
     and should be preferred in large-scale settings.
 
 
-.. |SE| replace:: :class:`~dirty_cat.SimilarityEncoder`
+ .. |SE| replace:: :class:`~dirty_cat.SimilarityEncoder`
 
-.. |Gap| replace:: :class:`~dirty_cat.GapEncoder`
+ .. |Gap| replace:: :class:`~dirty_cat.GapEncoder`
 
-.. |ColumnTransformer| replace:: :class:`~sklearn.compose.ColumnTransformer`
+ .. |ColumnTransformer| replace:: :class:`~sklearn.compose.ColumnTransformer`
 
-.. |OHE| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
+ .. |OHE| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 
 """
 
@@ -28,7 +28,7 @@ either chosen as the most frequent categories, or with kmeans clustering.
 # ------------------------------------------
 #
 # For this example, we build a small tool that reports memory
-# usage and compute time of a function
+# usage and compute time of a function:
 from time import perf_counter
 import functools
 import tracemalloc
@@ -57,7 +57,7 @@ def resource_used(func):
 # Data Importing and preprocessing
 # --------------------------------
 #
-# First, let's fetch the dataset we'll use further down
+# First, let's fetch the dataset we'll use further down:
 import pandas as pd
 from dirty_cat.datasets import fetch_open_payments
 
@@ -67,7 +67,7 @@ X = open_payments.X
 open_payments.description
 
 ###############################################################################
-# We'll perform a some cleaning
+# We'll perform some cleaning:
 from functools import reduce
 
 # Remove the missing lines in X
@@ -81,7 +81,7 @@ na_mask = na_mask.any(axis=1)
 y = y[~na_mask].reset_index(drop=True)
 
 ###############################################################################
-# We'll write down which columns are clean and which are dirty
+# We'll write down which columns are clean and which are dirty:
 clean_columns = [
     "Applicable_Manufacturer_or_Applicable_GPO_Making_Payment_Name",
     "Dispute_Status_for_Publication",
@@ -106,7 +106,7 @@ X[dirty_columns].nunique()
 # -------------------------
 #
 # Let us build our vectorizer, using a |ColumnTransformer| to combine
-# a |OHE| and a |SE|
+# a |OHE| and a |SE|.
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from dirty_cat import SimilarityEncoder
@@ -127,7 +127,7 @@ t1 = perf_counter()
 print(f"Time to vectorize: {t1 - t0:.3f}s")
 
 ###############################################################################
-# Let's now run a cross-validation!
+# Let's now run a cross-validation:
 from sklearn import pipeline, model_selection
 from sklearn.linear_model import LogisticRegression
 
@@ -139,7 +139,7 @@ results = resource_used(model_selection.cross_validate)(model, X, y)
 print(f"Cross-validation score: {results['test_score']}")
 
 ###############################################################################
-# Store results for later
+# We store the results for later:
 scores = dict()
 scores["Default options"] = results["test_score"]
 times = dict()
@@ -149,7 +149,7 @@ times["Default options"] = results["fit_time"]
 # Most frequent strategy to define prototypes
 # -------------------------------------------
 #
-# The `most_frequent` strategy selects the `n` most frequent
+# The ``most_frequent`` strategy selects the `n` most frequent
 # values in a dirty categorical variable to reduce the dimensionality of the
 # problem and thus speed things up.
 # Here, we arbitrarily choose 100 as the number of prototypes we want to use.
@@ -167,13 +167,13 @@ column_trans = ColumnTransformer(
 )
 
 ###############################################################################
-# Check that the prediction is still as good
+# Check that the prediction is still as good:
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, X, y)
 print(f"Cross-validation score: {results['test_score']}")
-
+S
 ###############################################################################
-# Store results for later
+# Store results for later:
 scores["Most frequent"] = results["test_score"]
 times["Most frequent"] = results["fit_time"]
 
@@ -181,7 +181,7 @@ times["Most frequent"] = results["fit_time"]
 # KMeans strategy to define prototypes
 # ------------------------------------
 #
-# The k-means strategy is also a dimensionality reduction technique.
+# The ``k-means`` strategy is also a dimensionality reduction technique.
 # The |SE| can apply a K-means and nearest neighbors
 # algorithm to find the prototypes. Once again, the number of prototypes
 # we chose here is arbitrary.
@@ -199,13 +199,13 @@ column_trans = ColumnTransformer(
 )
 
 ###############################################################################
-# Check that the prediction is still as good
+# Check that the prediction is still as good:
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, X, y)
 print("Cross-validation score: %s" % results["test_score"])
 
 ###############################################################################
-# Store results for later
+# Store results for later:
 scores["KMeans"] = results["test_score"]
 times["KMeans"] = results["fit_time"]
 

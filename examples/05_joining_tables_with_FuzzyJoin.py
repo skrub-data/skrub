@@ -43,11 +43,10 @@ df.head(3)
 # some of the possible explanatory factors: GDP per capita, Social support,
 # Generosity etc.
 #
-# For more information, read the `World Happiness Report <https://worldhappiness.report/>`_.
 
 #######################################################################
 # For the sake of this example, we only keep the country names and our
-# variable of interest: the happiness score
+# variable of interest: the 'Happiness score'.
 df = df[["Country", "Happiness score"]]
 
 #############################################################################
@@ -126,7 +125,7 @@ df1.tail(20)
 #################################################################
 # .. topic:: Note:
 #
-#    We fix the `return_score` parameter to `True` so as to keep the matching
+#    We fix the ``return_score`` parameter to `True` so as to keep the matching
 #    score, that we will use later to show what are the worst matches.
 
 #################################################################
@@ -134,15 +133,15 @@ df1.tail(20)
 # We see that our |fj| succesfully identified the countries,
 # even though some country names differ between tables.
 #
-# For instance, 'Czechia' is well identified as 'Czech Republic' and
-# 'Luxembourg*' as 'Luxembourg'.
+# For instance, "Czechia" is well identified as "Czech Republic" and
+# "Luxembourg*" as "Luxembourg".
 #
 # .. topic:: Note:
 #
 #    This would all be missed out if we were using other methods such as
 #    `pandas.merge <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.merge.html>`_,
 #    which can only find exact matches.
-#    In this case, to reach the best result, we would have to 'manually' clean
+#    In this case, to reach the best result, we would have to `manually` clean
 #    the data (e.g. remove the * after country name) and look
 #    for matching patterns in every observation.
 #
@@ -172,7 +171,7 @@ print_worst_matches(df1, n=4)
 
 #################################################################
 # We see that some matches were unsuccesful
-# (e.g 'Palestinian Territories*' and 'Palau'),
+# (e.g "Palestinian Territories*" and "Palau"),
 # because there is simply no match in the two tables.
 
 #################################################################
@@ -233,8 +232,8 @@ plt.show()
 # 2. Joining life expectancy table
 # ................................
 #
-# Now let's include other information that may be relevant, such as
-# life expectancy table:
+# Now let's include other information that may be relevant, such as in the
+# life_exp table:
 df2 = fuzzy_join(
     df1,
     life_exp,
