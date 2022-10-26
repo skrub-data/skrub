@@ -3,6 +3,14 @@
     https://github.com/bitprophet/alabaster/blob/master/alabaster/about.html
     Only the "Version" number is added.
 -->
+{% if "dev" in version %}
+<div class="warn-banner">
+    <p>
+        This is the documentation for the unstable development version.<br />
+        <a href="https://dirty-cat.github.io/stable/">Click here to go to the stable version documentation</a>.
+    </p>
+</div>
+{% endif %}
 {% if theme_logo %}
 <p class="logo">
   <a href="{{ pathto(master_doc) }}">
