@@ -136,7 +136,11 @@ y = y.iloc[sorted_indices]
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 
 cross_val_score(
-    pipeline, X, y, scoring="neg_mean_squared_error", cv=TimeSeriesSplit(n_splits=5)
+    pipeline,
+    X,
+    y,
+    scoring="neg_mean_squared_error",
+    cv=TimeSeriesSplit(n_splits=5),
 )
 
 ###############################################################################
@@ -158,7 +162,9 @@ fig, axs = plt.subplots(nrows=len(X_test.city.unique()), ncols=1, figsize=(12, 9
 
 for i, city in enumerate(X_test.city.unique()):
     axs[i].plot(
-        X.loc[X.city == city, "date.utc"], y.loc[X.city == city], label="Actual"
+        X.loc[X.city == city, "date.utc"],
+        y.loc[X.city == city],
+        label="Actual",
     )
     axs[i].plot(
         X_test.loc[X_test.city == city, "date.utc"],

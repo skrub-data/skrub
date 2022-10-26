@@ -112,7 +112,11 @@ from sklearn.compose import ColumnTransformer
 from dirty_cat import SimilarityEncoder
 
 clean_col_transformer = [
-    ("one_hot", OneHotEncoder(sparse=False, handle_unknown="ignore"), clean_columns),
+    (
+        "one_hot",
+        OneHotEncoder(sparse=False, handle_unknown="ignore"),
+        clean_columns,
+    ),
 ]
 
 column_trans = ColumnTransformer(
@@ -171,7 +175,7 @@ column_trans = ColumnTransformer(
 model = pipeline.make_pipeline(column_trans, log_reg)
 results = resource_used(model_selection.cross_validate)(model, X, y)
 print(f"Cross-validation score: {results['test_score']}")
-S
+
 ###############################################################################
 # Store results for later:
 scores["Most frequent"] = results["test_score"]

@@ -157,7 +157,12 @@ np.unique(y)
 # We will now experiment with encoders specially made for handling
 # dirty columns:
 
-from dirty_cat import SimilarityEncoder, TargetEncoder, MinHashEncoder, GapEncoder
+from dirty_cat import (
+    SimilarityEncoder,
+    TargetEncoder,
+    MinHashEncoder,
+    GapEncoder,
+)
 
 encoders = {
     "one-hot": one_hot,

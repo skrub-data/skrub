@@ -156,7 +156,8 @@ def print_worst_matches(joined_table, n=5):
     """Prints n worst matches for inspection."""
     max_ind = np.argsort(joined_table["matching_score"], axis=0)[:n]
     max_dist = pd.Series(
-        joined_table["matching_score"][max_ind.ravel()].ravel(), index=max_ind.ravel()
+        joined_table["matching_score"][max_ind.ravel()].ravel(),
+        index=max_ind.ravel(),
     )
     worst_matches = joined_table.iloc[list(max_ind.ravel())]
     worst_matches = worst_matches.assign(matching_score=max_dist)
@@ -215,7 +216,10 @@ sns.set_context("notebook")
 
 plt.figure(figsize=(4, 3))
 ax = sns.regplot(
-    data=df1, x="GDP per capita (current US$)", y="Happiness score", lowess=True
+    data=df1,
+    x="GDP per capita (current US$)",
+    y="Happiness score",
+    lowess=True,
 )
 ax.set_ylabel("Happiness index")
 ax.set_title("Is a higher GDP per capita linked to happiness?")

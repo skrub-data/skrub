@@ -124,7 +124,12 @@ f, ax = plt.subplots()
 ax.scatter(x=two_dim_data[indices, 0], y=two_dim_data[indices, 1])
 # adding the legend
 for x in indices:
-    ax.text(x=two_dim_data[x, 0], y=two_dim_data[x, 1], s=sorted_values[x], fontsize=8)
+    ax.text(
+        x=two_dim_data[x, 0],
+        y=two_dim_data[x, 1],
+        s=sorted_values[x],
+        fontsize=8,
+    )
 ax.set_title("multi-dimensional-scaling representation using a 3gram similarity matrix")
 
 #########################################################################
