@@ -6,10 +6,22 @@ What are dirty categorical variables and how can
 a good encoding help with statistical learning?
 
 We illustrate how categorical encodings obtained with
-the :class:`GapEncoder` can be interpreted in terms of latent topics.
+the |Gap| can be interpreted in terms of latent topics.
 
 We use as example the `employee salaries <https://www.openml.org/d/42125>`_
 dataset.
+
+
+.. |Gap| replace::
+     :class:`~dirty_cat.GapEncoder`
+
+.. |OneHotEncoder| replace::
+     :class:`~sklearn.preprocessing.OneHotEncoder`
+
+.. |SE| replace::
+     :class:`~dirty_cat.SimilarityEncoder`
+
+
 """
 
 #########################################################################
@@ -38,7 +50,7 @@ print(data["employee_position_title"].value_counts().sort_index())
 #
 # Such variations will break traditional categorical encoding methods:
 #
-# * Using simple `one-hot encoding <https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html>`_
+# * Using simple |OneHotEncoder|
 #   will create orthogonal features, whereas it is clear that
 #   those 3 terms have a lot in common.
 #
@@ -61,7 +73,7 @@ values.insert(0, "current_annual_salary", employee_salaries.y)
 # ---------------------------------
 #
 # That's where our encoders get into play.
-# In order to robustly embed dirty semantic data, the :class:`SimilarityEncoder`
+# In order to robustly embed dirty semantic data, the |SE|
 # creates a similarity matrix based on the n-gram representation of the data.
 
 sorted_values = values["employee_position_title"].sort_values().unique()
@@ -76,7 +88,7 @@ transformed_values = similarity_encoder.fit_transform(sorted_values.reshape(-1, 
 # ................................................................
 #
 # Let's now plot a couple of points at random using a low-dimensional
-# representation to get an intuition of what the :class:`SimilarityEncoder` is doing:
+# representation to get an intuition of what the |SE| is doing:
 
 from sklearn.manifold import MDS
 
@@ -142,13 +154,13 @@ f2.tight_layout()
 
 
 #########################################################################
-# Feature interpretation with the :class:`GapEncoder`
-# ---------------------------------------------------
+# Feature interpretation with the |Gap|
+# -------------------------------------
 #
 
 ###############################################################################
-# The :class:`GapEncoder` is another encoder, better than the
-# :class:`SimilarityEncoder` in the sense that it is faster and
+# The |Gap| is another encoder, better than the
+# |SE| in the sense that it is faster and
 # interpretable, which we will present now.
 #
 # First, let's retrieve the dirty column to encode:
@@ -162,7 +174,7 @@ print(f"Number of dirty entries = {len(X_dirty)}")
 # Encoding dirty job titles
 # .........................
 #
-# Then, we'll create an instance of the :class:`GapEncoder` with 10 components:
+# Then, we'll create an instance of the |Gap| with 10 components:
 
 from dirty_cat import GapEncoder
 
@@ -179,7 +191,7 @@ print(f"Shape of encoded vectors = {X_enc.shape}")
 # Interpreting encoded vectors
 # ............................
 #
-# The :class:`GapEncoder` can be understood as a continuous encoding
+# The |Gap| can be understood as a continuous encoding
 # on a set of latent topics estimated from the data. The latent topics
 # are built by capturing combinations of substrings that frequently
 # co-occur, and encoded vectors correspond to their activations.

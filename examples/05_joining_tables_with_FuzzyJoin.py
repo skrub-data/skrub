@@ -8,13 +8,16 @@ with a vocabulary not well normalized.
 Joining is difficult: one entry on one side does not have
 an exact match on the other side.
 
-In this example, the :func:`fuzzy_join` function allows us to join
+In this example, the |fj| function allows us to join
 tables without cleaning the data by taking into account the
 label variations.
 
 To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
 with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
 in order to create a satisfying first prediction model.
+
+
+.. |fj| replace:: :func:`~dirty_cat.fuzzy_join`
 
 """
 
@@ -128,7 +131,7 @@ df1.tail(20)
 
 #################################################################
 #
-# We see that our :func:`fuzzy_join` succesfully identified the countries,
+# We see that our |fj| succesfully identified the countries,
 # even though some country names differ between tables.
 #
 # For instance, 'Czechia' is well identified as 'Czech Republic' and
@@ -347,11 +350,11 @@ print(
 # We have a satisfying first result: an R2 of 0.66!
 #
 # Data cleaning varies from dataset to dataset: there are as
-# many ways to clean a table as there are errors. :func:`fuzzy_join`
+# many ways to clean a table as there are errors. |fj|
 # method is generalizable across all datasets.
 #
 # Data transformation is also often very costly in both time and ressources.
-# :func:`fuzzy_join` is fast and easy-to-use.
+# |fj| is fast and easy-to-use.
 #
 # Now up to you, try improving our model by adding information into it and
 # beating our result!

@@ -95,15 +95,15 @@ dirty_columns = [
 ###############################################################################
 # We will use |SE| on the two dirty columns defined above.
 # One difficulty is that they have many entries, and because of that, as we'll
-# see, the :code:`SimilarityEncoder` will take a while.
+# see, the |SE| will take a while.
 X[dirty_columns].value_counts()[:20]
 
 ###############################################################################
 X[dirty_columns].nunique()
 
 ###############################################################################
-# SimilarityEncoder with default options
-# --------------------------------------
+# |SE| with default options
+# -------------------------
 #
 # Let us build our vectorizer, using a |ColumnTransformer| to combine
 # a |OHE| and a |SE|
@@ -149,7 +149,7 @@ times["Default options"] = results["fit_time"]
 # Most frequent strategy to define prototypes
 # -------------------------------------------
 #
-# The :code:`most_frequent` strategy selects the :code:`n` most frequent
+# The `most_frequent` strategy selects the `n` most frequent
 # values in a dirty categorical variable to reduce the dimensionality of the
 # problem and thus speed things up.
 # Here, we arbitrarily choose 100 as the number of prototypes we want to use.
@@ -182,7 +182,7 @@ times["Most frequent"] = results["fit_time"]
 # ------------------------------------
 #
 # The k-means strategy is also a dimensionality reduction technique.
-# The :code:`SimilarityEncoder` can apply a K-means and nearest neighbors
+# The |SE| can apply a K-means and nearest neighbors
 # algorithm to find the prototypes. Once again, the number of prototypes
 # we chose here is arbitrary.
 

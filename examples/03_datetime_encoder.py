@@ -1,16 +1,23 @@
 """
-Handling datetime features with the DatetimeEncoder
-===================================================
+Handling datetime features with the |DtE|
+=========================================
 
 We illustrate here how to handle datetime features with the
-DatetimeEncoder.
+|DtE|.
 
-The DatetimeEncoder breaks down each datetime features into several
-numerical features, by extracting relevant information from the datetime
-features, such as the month, the day of the week, the hour of the day,
-etc. Used in the SuperVectorizer, which automatically detects the
-datetime features, the DatetimeEncoder allows to handle datetime features
-easily.
+The |DtE| breaks down each datetime
+features into several numerical features, by extracting relevant
+information from the datetime features, such as the month, the day
+of the week, the hour of the day, etc.
+Used in the |SV|, which automatically detects
+the datetime features, the |DtE| allows to
+handle datetime features easily.
+
+
+.. |DtE| replace:: :class:`~dirty_cat.DatetimeEncoder`
+
+.. |SV| replace:: :class:`~dirty_cat.SuperVectorizer`
+
 """
 
 import warnings
@@ -70,9 +77,9 @@ encoder.get_feature_names_out()
 X_
 
 ###############################################################################
-# One-liner with the SuperVectorizer
-# ..................................
-# The DatetimeEncoder is used by default in the SuperVectorizer, which
+# One-liner with the |SV|
+# .......................
+# The |DtE| is used by default in the |SV|, which
 # automatically detects datetime features.
 from dirty_cat import SuperVectorizer
 from pprint import pprint
@@ -82,7 +89,7 @@ sup_vec.fit_transform(X)
 pprint(sup_vec.get_feature_names_out())
 
 ###############################################################################
-# If we want the day of the week, we can just replace SuperVectorizer's default
+# If we want the day of the week, we can just replace |SV|'s default
 sup_vec = SuperVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
@@ -90,16 +97,16 @@ sup_vec.fit_transform(X)
 sup_vec.get_feature_names_out()
 
 ###############################################################################
-# We can see that the SuperVectorizer is indeed using
-# a DatetimeEncoder for the datetime features.
+# We can see that the |SV| is indeed using
+# a |DtE| for the datetime features.
 pprint(sup_vec.transformers_)
 
 ###############################################################################
 # Predictions with date features
 # ------------------------------
-# For prediction tasks, we recommend using the SuperVectorizer inside a
+# For prediction tasks, we recommend using the |SV| inside a
 # pipeline, combined with a model that uses the features extracted by the
-# DatetimeEncoder.
+# |DtE|.
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
@@ -202,9 +209,9 @@ plt.show()
 ###############################################################################
 # Feature importances
 # -------------------
-# Using the DatetimeEncoder allows us to better understand how the date
+# Using the |DtE| allows us to better understand how the date
 # impacts the NO2 concentration. To this aim, we can compute the
-# importance of the features created by the Datetime encoder, using the
+# importance of the features created by the |DtE|, using the
 # `permutation_importance` function, which basically shuffles a feature
 # and sees how the model changes its prediction
 
@@ -216,7 +223,7 @@ sup_vec = SuperVectorizer(
 )
 
 # In this case, we don't use a pipeline, because we want to compute the
-# importance of the features created by the DatetimeEncoder
+# importance of the features created by the |DtE|
 X_ = sup_vec.fit_transform(X)
 reg = HistGradientBoostingRegressor().fit(X_, y)
 result = permutation_importance(reg, X_, y, n_repeats=10, random_state=0)

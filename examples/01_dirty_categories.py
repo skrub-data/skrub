@@ -40,6 +40,12 @@ control.
  .. |Gap| replace::
      :class:`~dirty_cat.GapEncoder`
 
+ .. |MinHash| replace::
+     :class:`~dirty_cat.MinHashEncoder`
+
+ .. |HGBR| replace::
+     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
+
  .. |SE| replace::
      :class:`~dirty_cat.SimilarityEncoder`
 
@@ -50,7 +56,7 @@ control.
 # %%
 #
 # The data
-# ========
+# --------
 #
 # We first retrieve the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
@@ -82,7 +88,7 @@ y = y[~mask]
 # %%
 #
 # Assembling a machine-learning pipeline that encodes the data
-# ============================================================
+# ------------------------------------------------------------
 #
 # The learning pipeline
 # ---------------------
@@ -102,7 +108,7 @@ one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 # %%
 # We assemble these to apply them to the relevant columns.
-# The ColumnTransformer is created by specifying a set of transformers
+# The |ColumnTransformer| is created by specifying a set of transformers
 # alongside with the column names on which each must be applied
 
 from sklearn.compose import make_column_transformer
@@ -119,16 +125,13 @@ encoder = make_column_transformer(
 # Pipelining an encoder with a learner
 # ....................................
 #
-# We will use a HistGradientBoostingRegressor, which is a good predictor
-# for data with heterogeneous columns
+# We will use a |HGBR|,
+# which is a good predictor for data with heterogeneous columns
 # (we need to require the experimental feature for scikit-learn versions
 # earlier than 1.0)
-import sklearn
-from sklearn.utils.fixes import parse_version
+from sklearn.experimental import enable_hist_gradient_boosting
 
-if parse_version(sklearn.__version__) < parse_version("1.0"):
-    from sklearn.experimental import enable_hist_gradient_boosting
-# We can now import the HGBR from ensemble
+# We can now import the |HGBR| from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
@@ -145,7 +148,7 @@ pipeline.fit(X, y)
 # Dirty-category encoding
 # -----------------------
 #
-# The one-hot encoder is actually not well suited to the 'Employee
+# The |OneHotEncoder| is actually not well suited to the 'Employee
 # Position Title' column, as this column contains 400 different entries:
 import numpy as np
 
@@ -207,11 +210,11 @@ plt.tight_layout()
 
 # %%
 # The clear trend is that encoders grasping the similarities in the category
-# (|SE|, minhash, and |Gap|) perform better than those discarding it.
+# (|SE|, |MinHash|, and |Gap|) perform better than those discarding it.
 #
 # |SE| is the best performer, but it is less scalable on big
-# data than MinHashEncoder and |Gap|. The most scalable encoder is
-# the MinHashEncoder. |Gap|, on the other hand, has the benefit that
+# data than |MinHash| and |Gap|. The most scalable encoder is
+# the |MinHash|. |Gap|, on the other hand, has the benefit that
 # it provides interpretable features
 # (see [example 2])
 #
@@ -222,7 +225,7 @@ plt.tight_layout()
 # .. _example_super_vectorizer:
 #
 # A simpler way: automatic vectorization
-# ======================================
+# --------------------------------------
 #
 # The code to assemble a column transformer is a bit tedious. We will
 # now explore a simpler, automated, way of encoding the data.
@@ -395,7 +398,7 @@ plt.show()
 # having a permanent, full-time job :)
 #
 #
-# .. topic:: The SuperVectorizer automates preprocessing
+# .. topic:: The |SV| automates preprocessing
 #
 #   As this notebook demonstrates, many preprocessing steps can be
 #   automated by the |SV|, and the resulting pipeline can still be
