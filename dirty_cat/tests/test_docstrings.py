@@ -35,7 +35,6 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit",
     "dirty_cat._similarity_encoder.SimilarityEncoder.transform",
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit_transform",
-    "dirty_cat._super_vectorizer.SuperVectorizer",
     "dirty_cat._super_vectorizer.SuperVectorizer.fit_transform",
     "dirty_cat._super_vectorizer.SuperVectorizer.transform",
     "dirty_cat._super_vectorizer.SuperVectorizer._auto_cast",

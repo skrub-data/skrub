@@ -84,7 +84,8 @@ OptionalTransformer = Optional[
 
 
 class SuperVectorizer(ColumnTransformer):
-    """
+    """Easily transform a heterogeneous array to a numerical one.
+
     Easily transforms a heterogeneous data table
     (such as a :class:`pandas.DataFrame`) to a numerical array for machine
     learning. For this it transforms each column depending on its data type.
@@ -183,7 +184,7 @@ class SuperVectorizer(ColumnTransformer):
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
 
-    sparse_threshold: float, default=0.3
+    sparse_threshold : float, optional, default=0.3
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
         lower than this value. Use sparse_threshold=0 to always return dense.
@@ -202,7 +203,7 @@ class SuperVectorizer(ColumnTransformer):
 
     verbose : bool, default=False
         If True, the time elapsed while fitting each transformer will be
-        printed as it is completed
+        printed as it is completed.
 
     Attributes
     ----------
