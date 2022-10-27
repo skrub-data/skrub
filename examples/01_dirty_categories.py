@@ -345,7 +345,7 @@ feature_names[:8]
 
 # %%
 # As we can see, it gave us interpretable columns.
-# This is because we used |Gap| on the column 'division',
+# This is because we used the |Gap| on the column 'division',
 # which was classified as a high cardinality string variable.
 # (default values, see |SV|'s docstring).
 #
