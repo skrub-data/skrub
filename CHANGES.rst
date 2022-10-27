@@ -8,9 +8,9 @@ Major changes
 
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category.
-* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be
-    used to download any indicator from the World Bank Open Data platform. It only needs the
-    indicator ID that can be found on the website.
+* Dataset fetching now contains a new function :func:`datasets.fetch_world_bank_indicator` that can be
+  used to download any indicator from the World Bank Open Data platform. It only needs the
+  indicator ID that can be found on the website.
 * Unnecessary API has been made private: everything (files, functions, classes)
   starting with an underscore shouldn't be imported in your code.
 
@@ -18,7 +18,7 @@ Minor changes
 -------------
 * Removed example `Fitting scalable, non-linear models on data with dirty categories`.
 
-* :class:`MinHashEncoder`'s `minhash` method is no longer public.
+* :class:`MinHashEncoder`'s :func:`minhash` method is no longer public.
 
 Bug fixes
 ---------
@@ -33,10 +33,11 @@ Major changes
 -------------
 
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
-    columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
-    in the :class:`SuperVectorizer` for datetime columns.
+  columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
+  in the :class:`SuperVectorizer` for datetime columns.
 
 * The :class:`SuperVectorizer` has seen some major improvements and bug fixes:
+
   - Fixes the automatic casting logic in ``transform``.
   - To avoid dimensionality explosion when a feature has two unique values,
     the default encoder (:class:`~sklearn.preprocessing.OneHotEncoder`) now drops one of the two
@@ -53,19 +54,21 @@ Major changes
 * Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required.
 
 * Bumped minimum dependencies:
+
   - scikit-learn>=0.23
   - scipy>=1.4.0
   - numpy>=1.17.3
   - pandas>=1.2.0
 
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
-    The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
+
+  - The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
     and the `similarity` parameter is deprecated. It will be removed in 0.5.
 
 Notes
 -----
 
-* The ``transformers_`` attribute of the SuperVectorizer now contains column
+* The ``transformers_`` attribute of the :class:`SuperVectorizer` now contains column
   names instead of column indices for the "remainder" columns.
 
 
@@ -75,8 +78,8 @@ Release 0.2.2
 Bug fixes
 ---------
 
-* Fixed a bug in the :class:`SuperVectorizer` causing a `FutureWarning`
-  when using the `get_feature_names_out` method.
+* Fixed a bug in the :class:`SuperVectorizer` causing a :class:`FutureWarning`
+  when using the :func:`get_feature_names_out` method.
 
 
 Release 0.2.1
@@ -87,14 +90,15 @@ Major changes
 
 * Improvements to the :class:`SuperVectorizer`
 
-    - Type detection works better: handles dates, numerics columns encoded as strings,
-     or numeric columns containing strings for missing values.
+  - Type detection works better: handles dates, numerics columns encoded as strings,
+    or numeric columns containing strings for missing values.
 
-* `get_feature_names` becomes `get_feature_names_out`, following changes in the scikit-learn API.
-    `get_feature_names` is deprecated in scikit-learn > 1.0.
+* :func:`get_feature_names` becomes :func:`get_feature_names_out`, following changes in the scikit-learn API.
+    :func:`get_feature_names` is deprecated in scikit-learn > 1.0.
 
 * Improvements to the :class:`MinHashEncoder`
-    - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`.
+
+  - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`.
     Very useful when using for instance the :func:`~sklearn.compose.make_column_transformer` method,
     on multiple columns.
 
@@ -106,7 +110,7 @@ Bug-fixes
 
 * :class:`GapEncoder`'s `get_feature_names_out` now accepts all iterators, not just lists.
 
-* Fixed `DeprecationWarning` raised by the usage of `distutils.version.LooseVersion`
+* Fixed :class:`DeprecationWarning` raised by the usage of :class:`distutils.version.LooseVersion`
 
 Notes
 -----
@@ -115,7 +119,7 @@ Notes
 
 * Fix typos and update links for website.
 
-* Documentation of the SuperVectorizer and the :class:`SimilarityEncoder` improved.
+* Documentation of the :class:`SuperVectorizer` and the :class:`SimilarityEncoder` improved.
 
 Release 0.2.0
 =============
