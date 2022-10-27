@@ -218,8 +218,8 @@ plt.tight_layout()
 #
 # |SE| is the best performer, but it is less scalable on big
 # data than the |MinHash| and |Gap|. The most scalable encoder is
-# the |MinHash|. On the other hand, |Gap| has the benefit that
-# it provides interpretable features
+# the |MinHash|. On the other hand, the |Gap| has the benefit of
+# providing interpretable features
 # (see :ref:`sphx_glr_auto_examples_02_investigating_dirty_categories.py`)
 #
 # |
