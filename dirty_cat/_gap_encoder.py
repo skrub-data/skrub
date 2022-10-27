@@ -619,7 +619,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     --------
     >>> enc = GapEncoder(n_components=2)
 
-    Let's encode the following non-normalized column:
+    Let's encode the following non-normalized data:
 
     >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['Paris, France'],
              ['london'], ['London, England'], ['London'], ['Pqris']]
@@ -627,7 +627,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     >>> enc.fit(X)
     GapEncoder(n_components=2)
 
-    The GapEncoder has found the following topics:
+    The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names()
     ['england, london, uk', 'france, paris, pqris']
