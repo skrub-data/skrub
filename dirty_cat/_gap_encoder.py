@@ -644,6 +644,12 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     The higher the value, the bigger the correspondance with the topic.
 
+    Attributes
+    ----------
+    rho_: float
+    fitted_models_: typing.List[GapEncoderColumn]
+    column_names_: typing.List[str]
+
     References
     ----------
     For a detailed description of the method, see
