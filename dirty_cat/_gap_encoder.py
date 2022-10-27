@@ -609,12 +609,46 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         values (NaN) are present during fit (default is to impute).
         In the inverse transform, the missing category will be denoted as None.
 
-
     Attributes
     ----------
     rho_: float
     fitted_models_: typing.List[GapEncoderColumn]
     column_names_: typing.List[str]
+
+    Examples
+    --------
+    >>> enc = GapEncoder(n_components=2)
+
+    Let's encode the following non-normalized column:
+
+    >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['Paris, France'],
+             ['london'], ['London, England'], ['London'], ['Pqris']]
+
+    >>> enc.fit(X)
+    GapEncoder(n_components=2)
+
+    The GapEncoder has found the following topics:
+
+    >>> enc.get_feature_names()
+    ['england, london, uk', 'france, paris, pqris']
+
+    He got it right, reccuring topics are "London" and "England" on the
+    one side and and "Paris" and "France" on the other.
+
+    As this is a continuous encoding, we can look at the level of
+    activation of each topic for each category:
+
+    >>> enc.transform(X)
+    array([[ 0.05202843, 10.54797156],
+          [ 0.05000118,  4.54999882],
+          [12.04734788,  0.05265212],
+          [ 0.05263068, 16.54736932],
+          [ 6.04999624,  0.05000376],
+          [19.546716  ,  0.053284  ],
+          [ 6.04999623,  0.05000376],
+          [ 0.05002016,  4.54997983]])
+
+    The higher the value, the bigger the correspondance with the topic.
 
     References
     ----------
