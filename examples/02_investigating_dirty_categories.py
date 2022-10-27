@@ -72,7 +72,7 @@ values.insert(0, "current_annual_salary", employee_salaries.y)
 #
 # That's where our encoders get into play.
 # In order to robustly embed dirty semantic data, the |SE|
-# creates a similarity matrix based on the n-gram representation of the data.
+# creates a similarity matrix based on an n-gram representation of the data.
 
 sorted_values = values["employee_position_title"].sort_values().unique()
 
