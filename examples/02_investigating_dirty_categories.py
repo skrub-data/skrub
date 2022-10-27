@@ -20,8 +20,6 @@ dataset.
 
 .. |SE| replace::
      :class:`~dirty_cat.SimilarityEncoder`
-
-
 """
 
 #########################################################################

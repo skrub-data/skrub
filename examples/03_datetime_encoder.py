@@ -17,7 +17,6 @@ handle datetime features easily.
 .. |DtE| replace:: :class:`~dirty_cat.DatetimeEncoder`
 
 .. |SV| replace:: :class:`~dirty_cat.SuperVectorizer`
-
 """
 
 import warnings

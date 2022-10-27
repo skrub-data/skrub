@@ -20,7 +20,6 @@ either chosen as the most frequent categories, or with kmeans clustering.
  .. |ColumnTransformer| replace:: :class:`~sklearn.compose.ColumnTransformer`
 
  .. |OHE| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
-
 """
 
 ###############################################################################

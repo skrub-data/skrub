@@ -18,7 +18,6 @@ in order to create a satisfying first prediction model.
 
 
 .. |fj| replace:: :func:`~dirty_cat.fuzzy_join`
-
 """
 
 #######################################################################
