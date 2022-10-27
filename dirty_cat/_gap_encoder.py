@@ -609,12 +609,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         values (NaN) are present during fit (default is to impute).
         In the inverse transform, the missing category will be denoted as None.
 
-    Attributes
-    ----------
-    rho_: float
-    fitted_models_: typing.List[GapEncoderColumn]
-    column_names_: typing.List[str]
-
     Examples
     --------
     >>> enc = GapEncoder(n_components=2)
