@@ -256,11 +256,13 @@ class SimilarityEncoder(OneHotEncoder):
     SimilarityEncoder()
 
     It inherits the same methods as sklearn's :class:`~sklearn.preprocessing.OneHotEncoder`:
+
     >>> enc.categories_
     [array(['Female', 'Male'], dtype=object), array([1, 2, 3], dtype=object)]
 
     But it provides a continuous encoding based on similarity
     instead of a discrete one based on exact matches:
+
     >>> enc.transform([['Female', 1], ['Male', 4]])
     array([[1., 0.42857143, 1., 0., 0.],
         [0.42857143, 1., 0. , 0. , 0.]])
