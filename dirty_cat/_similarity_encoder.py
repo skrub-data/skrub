@@ -267,8 +267,7 @@ class SimilarityEncoder(OneHotEncoder):
     array([[1., 0.42857143, 1., 0., 0.],
         [0.42857143, 1., 0. , 0. , 0.]])
 
-    >>> enc.inverse_transform([[1., 0.42857143, 1., 0., 0.],
-                               [0.42857143, 1., 0. , 0. , 0.]])
+    >>> enc.inverse_transform([[1., 0.42857143, 1., 0., 0.], [0.42857143, 1., 0. , 0. , 0.]])
     array([['Female', 1],
            ['Male', None]], dtype=object)
 
