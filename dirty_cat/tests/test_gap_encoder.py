@@ -10,7 +10,7 @@ from dirty_cat._utils import Version
 
 
 def generate_data(n_samples):
-    MAX_LIMIT = 255  # extended ASCII Character set
+    MAX_LIMIT = 255  # extended ASCII character set
     i = 0
     str_list = []
     for i in range(n_samples):
