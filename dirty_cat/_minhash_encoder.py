@@ -263,27 +263,24 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             )
 
         # Handle missing values
-        if (X == X).any():  # contains at least one missing value
+        missing_mask = (
+            ~(X == X)  # Find np.nan
+            | (X == None)  # Find None. Note: `X is None` doesn't work.
+            | (X == "")  # Find empty strings
+        )
+
+        if missing_mask.any():  # contains at least one missing value
             if self.handle_missing == "error":
                 raise ValueError(
                     "Found missing values in input data; set "
                     "handle_missing='zero_impute' to encode with missing values"
                 )
             elif self.handle_missing == "zero_impute":
-                # This will be replaced by a vector of zeroes by _compute_hash
-                # X[~(X == X)] = "NAN"
-                X[
-                    np.array(
-                        [
-                            x is None  # Replace None
-                            or isinstance(x, float)  # Replace np.nan
-                            or len(x) == 0  # Replace empty strings
-                            for x in X
-                        ]
-                    )
-                ] = "NAN"
+                # NANs will be replaced by zeroes in _compute_hash
+                X[missing_mask] = "NAN"
 
         # Compute the hashes for unique values
+        print(X, X.shape)
         unique_x, indices_x = np.unique(X, return_inverse=True)
         unique_x_trans = Parallel(n_jobs=self.n_jobs)(
             delayed(self._compute_hash)(x) for x in unique_x
