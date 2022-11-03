@@ -1,3 +1,5 @@
+import random
+
 import pytest
 
 from dirty_cat._utils import LRUDict, Version
@@ -40,3 +42,19 @@ def test_version():
     assert Version("1.1") >= Version("0.9")
     assert Version("1.1") >= Version("1.1")
     assert (Version("1.1") >= Version("1.9")) is False
+
+
+def generate_data(n_samples):
+    MAX_LIMIT = 255  # extended ASCII Character set
+    i = 0
+    str_list = []
+    for i in range(n_samples):
+        random_string = "category "
+        for _ in range(100):
+            random_integer = random.randint(0, MAX_LIMIT)
+            random_string += chr(random_integer)
+            if random_integer < 50:
+                random_string += "  "
+        i += 1
+        str_list += [random_string]
+    return str_list
