@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,23 +5,7 @@ from sklearn import __version__ as sklearn_version
 
 from dirty_cat import GapEncoder
 from dirty_cat._utils import Version
-
-
-def generate_data(n_samples):
-    MAX_LIMIT = 255  # extended ASCII character set
-    i = 0
-    str_list = []
-    for i in range(n_samples):
-        random_string = "category "
-        for _ in range(100):
-            random_integer = random.randint(0, MAX_LIMIT)
-            random_string += chr(random_integer)
-            if random_integer < 50:
-                random_string += "  "
-        i += 1
-        str_list += [random_string]
-    X = np.array(str_list).reshape(n_samples, 1)
-    return X
+from dirty_cat.tests.test_utils import generate_data
 
 
 def test_analyzer():
