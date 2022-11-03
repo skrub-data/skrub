@@ -1,5 +1,6 @@
 import random
 
+import numpy as np
 import pytest
 
 from dirty_cat._utils import LRUDict, Version
@@ -44,7 +45,7 @@ def test_version():
     assert (Version("1.1") >= Version("1.9")) is False
 
 
-def generate_data(n_samples):
+def generate_data(n_samples, as_list=False):
     MAX_LIMIT = 255  # extended ASCII Character set
     i = 0
     str_list = []
@@ -57,4 +58,8 @@ def generate_data(n_samples):
                 random_string += "  "
         i += 1
         str_list += [random_string]
-    return str_list
+    if as_list is True:
+        X = str_list
+    else:
+        X = np.array(str_list).reshape(n_samples, 1)
+    return X

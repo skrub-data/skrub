@@ -3,7 +3,7 @@ from dirty_cat.tests.test_utils import generate_data
 
 
 def test_fast_hash():
-    data = generate_data(100)
+    data = generate_data(100, as_list=True)
     a = data[0]
 
     min_hash = ngram_min_hash(a, seed=0)
