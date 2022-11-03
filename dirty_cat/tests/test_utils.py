@@ -45,7 +45,7 @@ def test_version():
     assert (Version("1.1") >= Version("1.9")) is False
 
 
-def generate_data(n_samples, list=False):
+def generate_data(n_samples, as_list=False):
     MAX_LIMIT = 255  # extended ASCII Character set
     i = 0
     str_list = []
@@ -58,7 +58,7 @@ def generate_data(n_samples, list=False):
                 random_string += "  "
         i += 1
         str_list += [random_string]
-    if list is True:
+    if as_list is True:
         X = str_list
     else:
         X = np.array(str_list).reshape(n_samples, 1)
