@@ -79,6 +79,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     """
 
+    count: int
+
     hash_dict_: LRUDict
 
     _capacity: int = 2**10
@@ -260,32 +262,26 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 f"'error' or 'zero_impute', got {self.handle_missing!r}"
             )
 
-        # Replace missing values by NAN in the string array X
-        # X[X is None] = "NAN"  # Replace None
-        X[
-            np.array(
-                [
-                    isinstance(x, float)  # Replace np.nan
-                    or len(x) == 0  # Replace empty strings
-                    or x is None  # Replace None
-                    for x in X
-                ]
-            )
-        ] = "NAN"
-
         # Handle missing values
-        if not (X == X).all():  # contains at least one missing value
+        if (X == X).any():  # contains at least one missing value
             if self.handle_missing == "error":
                 raise ValueError(
                     "Found missing values in input data; set "
                     "handle_missing='zero_impute' to encode with missing values"
                 )
             elif self.handle_missing == "zero_impute":
+                # This will be replaced by a vector of zeroes by _compute_hash
+                # X[~(X == X)] = "NAN"
                 X[
-                    ~(X == X)
-                ] = (  # this will be replaced by a vector of zeroes by _compute_hash
-                    "NAN"
-                )
+                    np.array(
+                        [
+                            x is None  # Replace None
+                            or isinstance(x, float)  # Replace np.nan
+                            or len(x) == 0  # Replace empty strings
+                            for x in X
+                        ]
+                    )
+                ] = "NAN"
 
         # Compute the hashes for unique values
         unique_x, indices_x = np.unique(X, return_inverse=True)

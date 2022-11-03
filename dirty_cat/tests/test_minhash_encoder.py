@@ -9,27 +9,13 @@ from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
 from dirty_cat import MinHashEncoder
 
-
-def generate_date():
-    MAX_LIMIT = 255  # extended ASCII Character set
-    i = 0
-    str_list = []
-    for i in range(100):
-        random_string = "aa"
-        for _ in range(100):
-            random_integer = random.randint(0, MAX_LIMIT)
-            random_string += chr(random_integer)
-            if random_integer < 50:
-                random_string += "  "
-        i += 1
-        str_list += [random_string]
-    return np.array(str_list).reshape(100, 1)
+from .utils import generate_data
 
 
 @pytest.mark.parametrize(
     "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
 )
-def test_MinHashEncoder(hashing, minmax_hash) -> None:
+def test_minhash_encoder(hashing, minmax_hash) -> None:
     X = np.array(["al ice", "b ob", "bob and alice", "alice and bob"])[:, None]
     # Test output shape
     encoder = MinHashEncoder(n_components=2, hashing=hashing)
@@ -94,7 +80,7 @@ def test_input_type() -> None:
     "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
 )
 def test_encoder_params(hashing, minmax_hash) -> None:
-    X = generate_date()
+    X = generate_data()
     enc = MinHashEncoder(
         n_components=50, hashing=hashing, minmax_hash=minmax_hash, ngram_range=(3, 3)
     )
