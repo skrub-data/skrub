@@ -1,5 +1,5 @@
 from dirty_cat._fast_hash import ngram_min_hash
-from dirty_cat.tests.test_utils import generate_data
+from dirty_cat.tests.utils import generate_data
 
 
 def test_fast_hash():
