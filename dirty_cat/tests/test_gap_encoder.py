@@ -5,7 +5,7 @@ from sklearn import __version__ as sklearn_version
 
 from dirty_cat import GapEncoder
 from dirty_cat._utils import Version
-from dirty_cat.tests.test_utils import generate_data
+from dirty_cat.tests.utils import generate_data
 
 
 def test_analyzer():
