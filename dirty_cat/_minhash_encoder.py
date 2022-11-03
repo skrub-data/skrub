@@ -15,17 +15,23 @@ With this procedure, strings that share many n-grams have greater
 probability of having same encoding values. These encodings thus capture
 morphological similarities between strings.
 """
+
 from typing import Dict, List, Literal, Tuple
+
 import numpy as np
+from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import murmurhash3_32
-from joblib import Parallel, delayed
 
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
 from ._utils import LRUDict, check_input
 
 NoneType = type(None)
+
+
+# Ignore lines too long, as links in the docstring cannot be cut.
+# flake8: noqa: E501
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
@@ -52,10 +58,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
     n_jobs : int, default=None
-        The number of jobs to run in parallel. The hash computations for all unique elements are parallelized.
-        None means 1 unless in a `joblib.parallel_backend context <https://joblib.readthedocs.io/en/latest/parallel.html>`_.
+        The number of jobs to run in parallel.
+        The hash computations for all unique elements are parallelized.
+        None means 1 unless in a
+        `joblib.parallel_backend context <https://joblib.readthedocs.io/en/latest/parallel.html>`_.
         -1 means using all processors.
-        See `Scikit-learn Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_. for more details.
+        See `Scikit-learn Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
+        for more details.
 
     Attributes
     ----------
@@ -72,7 +81,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     hash_dict_: LRUDict
 
-    _capacity: int = 2 ** 10
+    _capacity: int = 2**10
 
     def __init__(
         self,
@@ -96,9 +105,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def minhash(
-        self, string: str, n_components: int, ngram_range: Tuple[int, int]
-    ) -> np.array:
+    def _get_murmur_hash(self, string: str) -> np.array:
         """
         Encode a string using murmur hashing function.
 
@@ -106,19 +113,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         ----------
         string : str
             The string to encode.
-        n_components : int
-            The number of dimension of encoded string.
-        ngram_range : typing.Tuple[int, int]
-            The lower and upper boundaries of the range of n-values for
-            different n-grams to be extracted.
-            All values of n such that min_n <= n <= max_n.
 
         Returns
         -------
-        array, shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string.
         """
-        min_hashes = np.ones(n_components) * np.infty
+        min_hashes = np.ones(self.n_components) * np.infty
         grams = get_unique_ngrams(string, self.ngram_range)
         if len(grams) == 0:
             grams = get_unique_ngrams(" Na ", self.ngram_range)
@@ -126,13 +127,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             hash_array = np.array(
                 [
                     murmurhash3_32("".join(gram), seed=d, positive=True)
-                    for d in range(n_components)
+                    for d in range(self.n_components)
                 ]
             )
             min_hashes = np.minimum(min_hashes, hash_array)
-        return min_hashes / (2 ** 32 - 1)
+        return min_hashes / (2**32 - 1)
 
-    def get_fast_hash(self, string: str) -> np.array:
+    def _get_fast_hash(self, string: str) -> np.array:
         """
         Encode a string with fast hashing function.
         fast hashing supports both min_hash and minmax_hash encoding.
@@ -144,7 +145,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        np.array of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -162,7 +163,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 ]
             )
 
-    def compute_hash(self, x) -> np.array:
+    def _compute_hash(self, x) -> np.array:
         """
         Function called by joblib Parallel to compute the hash.
 
@@ -184,17 +185,15 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 self.hash_dict_[x] = np.zeros(self.n_components)
             else:
                 if self.hashing == "fast":
-                    self.hash_dict_[x] = self.get_fast_hash(x)
+                    self.hash_dict_[x] = self._get_fast_hash(x)
                 elif self.hashing == "murmur":
-                    self.hash_dict_[x] = self.minhash(
-                        x,
-                        n_components=self.n_components,
-                        ngram_range=self.ngram_range
-                    )
+                    self.hash_dict_[x] = self._get_murmur_hash(x)
                 else:
-                    raise ValueError("hashing function should be either 'fast' or"
-                                     "'murmur', got '{}'"
-                                     "".format(self.hashing))
+                    raise ValueError(
+                        "hashing function should be either 'fast' or"
+                        "'murmur', got '{}'"
+                        "".format(self.hashing)
+                    )
         return self.hash_dict_[x]
 
     def fit(self, X, y=None) -> "MinHashEncoder":
@@ -214,6 +213,16 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         MinHashEncoder
             The fitted MinHashEncoder instance.
         """
+        if self.hashing not in ["fast", "murmur"]:
+            raise ValueError(
+                f"Got hashing={self.hashing!r}, "
+                'but expected any of {"fast", "murmur"}. '
+            )
+        if self.handle_missing not in ["error", "zero_impute"]:
+            raise ValueError(
+                f"Got handle_missing={self.handle_missing!r}, but expected "
+                'any of {"error", "zero_impute"}. '
+            )
         self.count = 0
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
@@ -229,38 +238,63 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        array, shape (n_samples, n_components)
+        ndarray of shape (n_samples, n_components)
             Transformed input.
         """
         X = check_input(X)
         if self.minmax_hash:
             if self.n_components % 2 != 0:
-                raise ValueError("n_components should be even when using"
-                                 "minmax_hash encoding, got {}"
-                                 "".format(self.n_components))
-        if self.hashing == 'murmur':
+                raise ValueError(
+                    "n_components should be even when using"
+                    f"minmax_hash encoding, got {self.n_components}"
+                )
+        if self.hashing == "murmur":
             if self.minmax_hash:
-                raise ValueError("minmax_hash encoding is not supported"
-                                 "with murmur hashing function")
-        if self.handle_missing not in ['error', 'zero_impute']:
-            template = ("handle_missing should be either 'error' or "
-                        "'zero_impute', got %s")
-            raise ValueError(template % self.handle_missing)
+                raise ValueError(
+                    "minmax_hash encoding is not supported"
+                    "with the murmur hashing function"
+                )
+        if self.handle_missing not in ["error", "zero_impute"]:
+            raise ValueError(
+                "handle_missing should be either "
+                f"'error' or 'zero_impute', got {self.handle_missing!r}"
+            )
 
-        # Replace None by nans in the string array X
-        X[X == None] = "NAN"
+        # Replace missing values by NAN in the string array X
+        # X[X is None] = "NAN"  # Replace None
+        X[
+            np.array(
+                [
+                    isinstance(x, float)  # Replace np.nan
+                    or len(x) == 0  # Replace empty strings
+                    or x is None  # Replace None
+                    for x in X
+                ]
+            )
+        ] = "NAN"
+
         # Handle missing values
         if not (X == X).all():  # contains at least one missing value
-            if self.handle_missing == 'error':
-                raise ValueError("Found missing values in input data; set "
-                                 "handle_missing='zero_impute' to encode with missing values")
-            elif self.handle_missing == 'zero_impute':
-                X[~(X == X)] = "NAN"  # this will be replaced by a vector of zeroes by compute_hash
+            if self.handle_missing == "error":
+                raise ValueError(
+                    "Found missing values in input data; set "
+                    "handle_missing='zero_impute' to encode with missing values"
+                )
+            elif self.handle_missing == "zero_impute":
+                X[
+                    ~(X == X)
+                ] = (  # this will be replaced by a vector of zeroes by _compute_hash
+                    "NAN"
+                )
 
         # Compute the hashes for unique values
         unique_x, indices_x = np.unique(X, return_inverse=True)
-        unique_x_trans = Parallel(n_jobs=self.n_jobs)(delayed(self.compute_hash)(x) for x in unique_x)
+        unique_x_trans = Parallel(n_jobs=self.n_jobs)(
+            delayed(self._compute_hash)(x) for x in unique_x
+        )
         # Match the hashes of the unique value to the original values
-        X_out = np.stack(unique_x_trans)[indices_x].reshape(len(X), X.shape[1] * self.n_components)
+        X_out = np.stack(unique_x_trans)[indices_x].reshape(
+            len(X), X.shape[1] * self.n_components
+        )
 
         return X_out.astype(np.float64)  # The output is an int32 before conversion

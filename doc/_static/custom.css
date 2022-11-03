@@ -48,6 +48,16 @@ div.body pre {
 
 }
 
+/* Banner for warning the user */
+.warn-banner {
+  background: pink;
+  border: 1px solid red;
+  padding-left: 0.75em;
+  padding-right: 0.75em;
+  text-align: center;
+  margin-bottom: 1em;
+}
+
 /* For title page */
 
 div.flex-content {
