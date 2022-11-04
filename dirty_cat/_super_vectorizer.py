@@ -98,7 +98,7 @@ class SuperVectorizer(ColumnTransformer):
     Parameters
     ----------
 
-    cardinality_threshold : int, default=40
+    cardinality_threshold : int, optional, default=40
         Two lists of features will be created depending on this value: strictly
         under this value, the low cardinality categorical features, and above or
         equal, the high cardinality categorical features.
@@ -191,9 +191,10 @@ class SuperVectorizer(ColumnTransformer):
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
 
-    n_jobs : int, optional, default=None
+    n_jobs : int, optional
         Number of jobs to run in parallel.
-        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``None`` (the default) means 1 unless in a
+        :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
 
     transformer_weights : dict, optional
