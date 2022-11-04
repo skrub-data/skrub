@@ -154,7 +154,7 @@ class SuperVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    auto_cast : bool, default=True
+    auto_cast : bool, optional, default=True
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
