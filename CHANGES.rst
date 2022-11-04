@@ -13,6 +13,8 @@ Major changes
     indicator ID that can be found on the website.
 * Unnecessary API has been made private: everything (files, functions, classes)
   starting with an underscore shouldn't be imported in your code.
+* The MinHashEncoder now supports a `n_jobs` parameter to parallelize
+the hashes computation.
 
 Minor changes
 -------------
@@ -67,9 +69,6 @@ Notes
 
 * The ``transformers_`` attribute of the SuperVectorizer now contains column
   names instead of column indices for the "remainder" columns.
-
-* The MinHashEncoder now supports a `n_jobs` parameter to parallelize
-the hashes computation.
 
 
 Release 0.2.2

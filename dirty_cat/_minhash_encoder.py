@@ -163,7 +163,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 ]
             )
 
-    def _compute_hash(self, x) -> np.array:
+    def _compute_hash(self, string: str) -> np.ndarray:
         """
         Function called by joblib Parallel to compute the hash.
 
@@ -172,7 +172,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        x : str
+        string : str
             The string to encode.
 
         Returns
@@ -180,21 +180,21 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         np.array of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
-        if x not in self.hash_dict_:
-            if x == "NAN":  # true if x is a missing value
-                self.hash_dict_[x] = np.zeros(self.n_components)
+        if string not in self.hash_dict_:
+            if string == "NAN":  # true if x is a missing value
+                self.hash_dict_[string] = np.zeros(self.n_components)
             else:
                 if self.hashing == "fast":
-                    self.hash_dict_[x] = self._get_fast_hash(x)
+                    self.hash_dict_[string] = self._get_fast_hash(string)
                 elif self.hashing == "murmur":
-                    self.hash_dict_[x] = self._get_murmur_hash(x)
+                    self.hash_dict_[string] = self._get_murmur_hash(string)
                 else:
                     raise ValueError(
                         "hashing function should be either 'fast' or"
                         "'murmur', got '{}'"
                         "".format(self.hashing)
                     )
-        return self.hash_dict_[x]
+        return self.hash_dict_[string]
 
     def fit(self, X, y=None) -> "MinHashEncoder":
         """
