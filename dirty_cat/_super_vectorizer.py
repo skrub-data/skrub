@@ -202,7 +202,7 @@ class SuperVectorizer(ColumnTransformer):
         transformer is multiplied by these weights. Keys are transformer names,
         values the weights.
 
-    verbose : bool, default=False
+    verbose : bool, optional, default=False
         If True, the time elapsed while fitting each transformer will be
         printed as it is completed.
 
