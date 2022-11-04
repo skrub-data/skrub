@@ -35,7 +35,6 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit",
     "dirty_cat._similarity_encoder.SimilarityEncoder.transform",
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit_transform",
-    "dirty_cat._super_vectorizer.SuperVectorizer",
     "dirty_cat._super_vectorizer.SuperVectorizer.fit_transform",
     "dirty_cat._super_vectorizer.SuperVectorizer.transform",
     "dirty_cat._super_vectorizer.SuperVectorizer._auto_cast",
@@ -148,17 +147,18 @@ def filter_errors(errors, method, Estimator=None):
         #  - GL02: If there's a blank line, it should be before the
         #    first line of the Returns section, not after (it allows to have
         #    short docstrings for properties).
+        #  - SA01: See Also section not found
+        #  - EX01: No examples section found; FIXME: remove when #373 resolved
 
-        if code in ["RT02", "GL01", "GL02"]:
+        if code in ["RT02", "GL01", "GL02", "SA01", "EX01"]:
             continue
 
         # Following codes are only taken into account for the
         # top level class docstrings:
         #  - ES01: No extended summary found
-        #  - SA01: See Also section not found
         #  - EX01: No examples section found
 
-        if method is not None and code in ["EX01", "SA01", "ES01"]:
+        if method is not None and code in ["EX01", "ES01"]:
             continue
 
         yield code, message
