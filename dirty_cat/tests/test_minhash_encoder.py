@@ -1,48 +1,44 @@
 import random
-import time
 from string import ascii_lowercase
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
-import joblib
-from sklearn.datasets import fetch_20newsgroups
-from sklearn.utils._testing import skip_if_no_parallel
-from sklearn.utils._testing import assert_array_equal
+from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
 from dirty_cat import MinHashEncoder
-from dirty_cat.datasets import fetch_employee_salaries
 
-def test_MinHashEncoder(n_sample: int = 70) -> None:
-    X_txt = fetch_20newsgroups(subset="train")["data"]
-    X = np.array(X_txt[:n_sample])[:, None]
+from .utils import generate_data
 
-    for minmax_hash in [True, False]:
-        for hashing in ["fast", "murmur"]:
-            if minmax_hash and hashing == "murmur":
-                pass  # not implemented
 
-            # Test output shape
-            encoder = MinHashEncoder(n_components=50, hashing=hashing)
-            encoder.fit(X)
-            y = encoder.transform(X)
-            assert y.shape == (n_sample, 50), str(y.shape)
-            assert len(set(y[0])) == 50
+@pytest.mark.parametrize(
+    "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
+)
+def test_minhash_encoder(hashing, minmax_hash) -> None:
+    X = np.array(["al ice", "b ob", "bob and alice", "alice and bob"])[:, None]
+    # Test output shape
+    encoder = MinHashEncoder(n_components=2, hashing=hashing)
+    encoder.fit(X)
+    y = encoder.transform(X)
+    assert y.shape == (4, 2), str(y.shape)
+    assert len(set(y[0])) == 2
 
-            # Test same seed return the same output
-            encoder = MinHashEncoder(50, hashing=hashing)
-            encoder.fit(X)
-            y2 = encoder.transform(X)
-            np.testing.assert_array_equal(y, y2)
+    # Test that using the same seed returns the same output
+    encoder2 = MinHashEncoder(2, hashing=hashing)
+    encoder2.fit(X)
+    y2 = encoder2.transform(X)
+    np.testing.assert_array_equal(y, y2)
 
-            # Test min property
-            if not minmax_hash:
-                X_substring = [x[: x.find(" ")] for x in X[:, 0]]
-                X_substring = np.array(X_substring)[:, None]
-                encoder = MinHashEncoder(50, hashing=hashing)
-                encoder.fit(X_substring)
-                y_substring = encoder.transform(X_substring)
-                np.testing.assert_array_less(y - y_substring, 0.0001)
+    # Test min property
+    if not minmax_hash:
+        X_substring = [x[: x.find(" ")] for x in X[:, 0]]
+        X_substring = np.array(X_substring)[:, None]
+        encoder3 = MinHashEncoder(2, hashing=hashing)
+        encoder3.fit(X_substring)
+        y_substring = encoder3.transform(X_substring)
+        np.testing.assert_array_less(y - y_substring, 0.001)
+
 
 def test_multiple_columns() -> None:
     """
@@ -68,6 +64,7 @@ def test_multiple_columns() -> None:
         np.array([fit[:, :30], fit[:, 30:60]]), np.array([fit1, fit2])
     )
 
+
 def test_input_type() -> None:
     # Numpy array
     X = np.array(["alice", "bob"])[:, None]
@@ -79,29 +76,30 @@ def test_input_type() -> None:
     enc.fit_transform(X)
 
 
-def profile_encoder(hashing: str = "fast", minmax_hash: bool = False) -> float:
-    # not a unit test
-    employee_salaries = fetch_employee_salaries()
-    df = employee_salaries.X
-    X = df[["employee_position_title"]]
-    t0 = time.time()
-    enc = MinHashEncoder(n_components=50, hashing=hashing, minmax_hash=minmax_hash)
+@pytest.mark.parametrize(
+    "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
+)
+def test_encoder_params(hashing, minmax_hash) -> None:
+    X = generate_data()
+    enc = MinHashEncoder(
+        n_components=50, hashing=hashing, minmax_hash=minmax_hash, ngram_range=(3, 3)
+    )
     enc.fit(X)
     y = enc.transform(X)
     assert y.shape == (len(X), 50)
-    eta = time.time() - t0
-    return eta
+    X2 = np.array([["a", "", "c"]]).T
+    y2 = enc.transform(X2)
+    assert y2.shape == (len(X2), 50)
 
 
+input_types = ["numpy", "pandas"]
+missings = ["error", "zero_impute", "aaa"]
+hashings = ["fast", "murmur", "aaa"]
 
-@pytest.mark.parametrize(
-    "input_type, missing, hashing",
-    [
-        ["numpy", "error", "fast"],
-        ["pandas", "zero_impute", "murmur"],
-        ["numpy", "zero_impute", "fast"],
-    ],
-)
+
+@pytest.mark.parametrize("input_type", input_types)
+@pytest.mark.parametrize("missing", missings)
+@pytest.mark.parametrize("hashing", hashings)
 def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     X = ["Red", np.nan, "green", "blue", "green", "green", "blue", float("nan")]
     n = 3
@@ -115,32 +113,38 @@ def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     encoder = MinHashEncoder(
         n_components=n, hashing=hashing, minmax_hash=False, handle_missing=missing
     )
-    if missing == "error":
-        encoder.fit(X)
-        if input_type in ["numpy", "pandas"]:
-            with pytest.raises(ValueError, match=r"missing values in input"):
-                encoder.transform(X)
-    elif missing == "zero_impute":
-        encoder.fit(X)
-        y = encoder.transform(X)
-        if input_type == "list":
-            assert np.allclose(y[1], y[-1])
-        else:
+
+    if hashing == "aaa":
+        with pytest.raises(ValueError, match=r"Got hashing="):
+            encoder.fit_transform(X)
+    else:
+        if missing == "error":
+            if input_type in ["numpy", "pandas"]:
+                with pytest.raises(
+                    ValueError, match=r"Found missing values in input data; set"
+                ):
+                    encoder.fit_transform(X)
+        elif missing == "zero_impute":
+            y = encoder.fit_transform(X)
             assert np.array_equal(y[1], z)
             assert np.array_equal(y[-1], z)
-    else:
-        with pytest.raises(ValueError, match=r"expected any of"):
-            encoder.fit_transform(X)
+        else:
+            with pytest.raises(ValueError, match=r"Got handle_missing="):
+                encoder.fit_transform(X)
     return
 
 
 def test_missing_values_none():
     # Test that "None" is also understood as a missing value
-    a = np.array([['a', 'b', None, 'c']], dtype=object).T
+    a = np.array([["a", "b", None, "c"]], dtype=object).T
 
     enc = MinHashEncoder()
     d = enc.fit_transform(a)
     np.testing.assert_array_equal(d[2], 0)
+
+    e = np.array([["a", "b", "", "c"]], dtype=object).T
+    f = enc.fit_transform(e)
+    np.testing.assert_array_equal(f[2], 0)
 
 
 def test_cache_overflow() -> None:
@@ -159,24 +163,11 @@ def test_cache_overflow() -> None:
     assert len(y[y == -1.0]) == 0
 
 
-@pytest.mark.parametrize("idx", range(3))
-def test_min_hash_encoder_hashing_fast_minmax_hash(idx):
-    print(f"{profile_encoder(hashing='fast', minmax_hash=True):.4} seconds")
-
-
-@pytest.mark.parametrize("idx", range(3))
-def test_min_hash_encoder_hashing_fast(idx):
-    print(f"{profile_encoder(hashing='fast'):.4} seconds")
-
-
-def test_min_hash_encoder_mumur():
-    print(f"{profile_encoder(hashing='murmur'):.4} seconds")
-
 @skip_if_no_parallel
 def test_parallelism():
     # Test that parallelism works
     encoder = MinHashEncoder(n_components=3, n_jobs=1)
-    X = np.array(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])[:, None]
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
     y = encoder.fit_transform(X)
     for n_jobs in [None, 2, -1]:
         encoder = MinHashEncoder(n_components=3, n_jobs=n_jobs)
@@ -185,12 +176,15 @@ def test_parallelism():
 
     # Test with threading backend
     encoder = MinHashEncoder(n_components=3, n_jobs=2)
-    with joblib.parallel_backend('threading'):
+    with joblib.parallel_backend("threading"):
         y_threading = encoder.fit_transform(X)
     assert_array_equal(y, y_threading)
     assert encoder.n_jobs == 2
 
+
 DEFAULT_JOBLIB_BACKEND = joblib.parallel.get_active_backend()[0].__class__
+
+
 class MyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
     def __init__(self, *args, **kwargs):
         self.count = 0
@@ -200,71 +194,45 @@ class MyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
         self.count += 1
         return super().start_call()
 
+
 joblib.register_parallel_backend("testing", MyBackend)
+
+
 @skip_if_no_parallel
 def test_backend_respected():
     """
-    Test that the joblib backend is used
-    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py
+    Test that the joblib backend is used.
+    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
     """
     # Test that parallelism works
     encoder = MinHashEncoder(n_components=3, n_jobs=2)
-    X = np.array(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])[:, None]
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
 
     with joblib.parallel_backend("testing") as (ba, n_jobs):
         encoder.fit_transform(X)
 
     assert ba.count > 0
+
+
 def test_correct_arguments():
     # Test that the correct arguments are passed to the hashing function
-    X = np.array(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])[:, None]
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
     # Write an incorrect value for the `hashing` argument
-    with pytest.raises(ValueError, match=r"hashing function should be either"):
-        encoder = MinHashEncoder(n_components=3, hashing='incorrect')
+    with pytest.raises(ValueError, match=r"expected any of"):
+        encoder = MinHashEncoder(n_components=3, hashing="incorrect")
         encoder.fit_transform(X)
 
     # Write an incorrect value for the `handle_missing` argument
-    with pytest.raises(ValueError, match=r"handle_missing should be either"):
-        encoder = MinHashEncoder(n_components=3, handle_missing='incorrect')
+    with pytest.raises(ValueError, match=r"expected any of"):
+        encoder = MinHashEncoder(n_components=3, handle_missing="incorrect")
         encoder.fit_transform(X)
 
     # Use minmax_hash with murmur hashing
     with pytest.raises(ValueError, match=r"minmax_hash encoding is not supported"):
-        encoder = MinHashEncoder(n_components=2, minmax_hash=True, hashing='murmur')
+        encoder = MinHashEncoder(n_components=2, minmax_hash=True, hashing="murmur")
         encoder.fit_transform(X)
 
     # Use minmax_hash with an odd number of components
     with pytest.raises(ValueError, match=r"n_components should be even"):
         encoder = MinHashEncoder(n_components=3, minmax_hash=True)
         encoder.fit_transform(X)
-
-
-
-if __name__ == '__main__':
-    print('start test')
-    test_MinHashEncoder()
-    print('test passed')
-    
-    print('start test')
-    test_multiple_columns()
-    print('multiple columns encoding test passed')
-
-    for _ in range(3):
-        print('time profile_encoder(MinHashEncoder, hashing=fast)')
-        print("{:.4} seconds".format(
-            profile_encoder(MinHashEncoder, hashing='fast')))
-    for _ in range(3):
-        print('time profile_encoder(MinHashEncoder, hashing=fast) with minmax')
-        print("{:.4} seconds".format(profile_encoder(MinHashEncoder,
-                                     hashing='fast', minmax_hash=True)))
-    print('time profile_encoder(MinHashEncoder, hashing=murmur)')
-    print("{:.4} seconds".format(
-        profile_encoder(MinHashEncoder, hashing='murmur')))
-    print("Parallelism test")
-    test_parallelism()
-    print('joblib backend test')
-    test_backend_respected()
-    print('correct arguments test')
-    test_correct_arguments()
-
-    print('Done')
