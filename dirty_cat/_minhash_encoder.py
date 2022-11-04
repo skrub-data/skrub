@@ -79,8 +79,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     """
 
-    count: int
-
     hash_dict_: LRUDict
 
     _capacity: int = 2**10
@@ -225,7 +223,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 f"Got handle_missing={self.handle_missing!r}, but expected "
                 'any of {"error", "zero_impute"}. '
             )
-        self.count = 0
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
 
@@ -280,7 +277,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 X[missing_mask] = "NAN"
 
         # Compute the hashes for unique values
-        print(X, X.shape)
         unique_x, indices_x = np.unique(X, return_inverse=True)
         unique_x_trans = Parallel(n_jobs=self.n_jobs)(
             delayed(self._compute_hash)(x) for x in unique_x
