@@ -4,6 +4,7 @@ dirty_cat: Learning on dirty categories.
 from pathlib import Path as _Path
 
 from ._datetime_encoder import DatetimeEncoder
+from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._minhash_encoder import MinHashEncoder
 from ._similarity_encoder import SimilarityEncoder
@@ -20,4 +21,5 @@ __all__ = [
     "GapEncoder",
     "DatetimeEncoder",
     "SuperVectorizer",
+    "fuzzy_join",
 ]

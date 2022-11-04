@@ -1,5 +1,4 @@
 """
-==============================================================
 Dirty categories: machine learning with non normalized strings
 ==============================================================
 
@@ -8,13 +7,13 @@ preparation. In particular categories may appear with many morphological
 variants, when they have been manually input or assembled from diverse
 sources.
 
-Here we look at a dataset on wages [#]_ where the column *Employee
-Position Title* contains dirty categories. On such a column, standard
+Here we look at a dataset on wages [#]_ where the column 'Employee
+Position Title' contains dirty categories. On such a column, standard
 categorical encodings leads to very high dimensions and can lose
 information on which categories are similar.
 
 We investigate various encodings of this dirty column for the machine
-learning workflow, predicting the *current annual salary* with gradient
+learning workflow, predicting the 'Current Annual Salary' with gradient
 boosted trees. First we manually assemble a complex encoder for the full
 dataframe, after which we show a much simpler way, albeit with less fine
 control.
@@ -41,7 +40,14 @@ control.
  .. |Gap| replace::
      :class:`~dirty_cat.GapEncoder`
 
- .. |SE| replace:: :class:`~dirty_cat.SimilarityEncoder`
+ .. |MinHash| replace::
+     :class:`~dirty_cat.MinHashEncoder`
+
+ .. |HGBR| replace::
+     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
+
+ .. |SE| replace::
+     :class:`~dirty_cat.SimilarityEncoder`
 
  .. |permutation importances| replace::
      :func:`~sklearn.inspection.permutation_importance`
@@ -50,7 +56,7 @@ control.
 # %%
 #
 # The data
-# ========
+# --------
 #
 # We first retrieve the dataset:
 from dirty_cat.datasets import fetch_employee_salaries
@@ -63,7 +69,7 @@ X = employee_salaries.X
 X
 
 # %%
-# and y, our target column (the annual salary)
+# and y, our target column (the annual salary):
 y = employee_salaries.y
 y.name
 
@@ -71,18 +77,18 @@ y.name
 # Now, let's carry out some basic preprocessing:
 import pandas as pd
 
-X['date_first_hired'] = pd.to_datetime(X['date_first_hired'])
-X['year_first_hired'] = X['date_first_hired'].apply(lambda x: x.year)
-# Get a mask of the rows with missing values in "gender"
-mask = X.isna()['gender']
+X["date_first_hired"] = pd.to_datetime(X["date_first_hired"])
+X["year_first_hired"] = X["date_first_hired"].apply(lambda x: x.year)
+# Get a mask of the rows with missing values in 'gender'
+mask = X.isna()["gender"]
 # And remove them
-X.dropna(subset=['gender'], inplace=True)
+X.dropna(subset=["gender"], inplace=True)
 y = y[~mask]
 
 # %%
 #
 # Assembling a machine-learning pipeline that encodes the data
-# ============================================================
+# ------------------------------------------------------------
 #
 # The learning pipeline
 # ---------------------
@@ -95,56 +101,53 @@ y = y[~mask]
 # ........................
 #
 # An encoder is needed to turn a categorical column into a numerical
-# representation
+# representation:
 from sklearn.preprocessing import OneHotEncoder
 
-one_hot = OneHotEncoder(handle_unknown='ignore', sparse=False)
+one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 # %%
 # We assemble these to apply them to the relevant columns.
-# The ColumnTransformer is created by specifying a set of transformers
-# alongside with the column names on which each must be applied
+# The |ColumnTransformer| is created by specifying a set of transformers
+# alongside with the column names on which each must be applied:
 
 from sklearn.compose import make_column_transformer
 
 encoder = make_column_transformer(
-    (one_hot, ['gender', 'department_name', 'assignment_category']),
-    ('passthrough', ['year_first_hired']),
+    (one_hot, ["gender", "department_name", "assignment_category"]),
+    ("passthrough", ["year_first_hired"]),
     # Last but not least, our dirty column
-    (one_hot, ['employee_position_title']),
-    remainder='drop',
-   )
+    (one_hot, ["employee_position_title"]),
+    remainder="drop",
+)
 
 # %%
 # Pipelining an encoder with a learner
 # ....................................
 #
-# We will use a HistGradientBoostingRegressor, which is a good predictor
-# for data with heterogeneous columns
+# We will use a |HGBR|,
+# which is a good predictor for data with heterogeneous columns
 # (we need to require the experimental feature for scikit-learn versions
-# earlier than 1.0)
-import sklearn
-from sklearn.utils.fixes import parse_version
-if parse_version(sklearn.__version__) < parse_version("1.0"):
-    from sklearn.experimental import enable_hist_gradient_boosting
-# We can now import the HGBR from ensemble
+# earlier than 1.0):
+from sklearn.experimental import enable_hist_gradient_boosting
+
+# We can now import the |HGBR| from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
-
 from sklearn.pipeline import make_pipeline
 
 pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
 
 # %%
-# The pipeline can be readily applied to the dataframe for prediction
+# The pipeline can be readily applied to the dataframe for prediction:
 pipeline.fit(X, y)
 
 # %%
 # Dirty-category encoding
 # -----------------------
 #
-# The one-hot encoder is actually not well suited to the 'Employee
+# The |OneHotEncoder| is actually not well suited to the 'Employee
 # Position Title' column, as this column contains 400 different entries:
 import numpy as np
 
@@ -152,17 +155,21 @@ np.unique(y)
 
 # %%
 # We will now experiment with encoders specially made for handling
-# dirty columns
+# dirty columns:
 
-from dirty_cat import (SimilarityEncoder, TargetEncoder,
-                       MinHashEncoder, GapEncoder)
+from dirty_cat import (
+    SimilarityEncoder,
+    TargetEncoder,
+    MinHashEncoder,
+    GapEncoder,
+)
 
 encoders = {
-    'one-hot': one_hot,
-    'similarity': SimilarityEncoder(),
-    'target': TargetEncoder(handle_unknown='ignore'),
-    'minhash': MinHashEncoder(n_components=100),
-    'gap': GapEncoder(n_components=100),
+    "one-hot": one_hot,
+    "similarity": SimilarityEncoder(),
+    "target": TargetEncoder(handle_unknown="ignore"),
+    "minhash": MinHashEncoder(n_components=100),
+    "gap": GapEncoder(n_components=100),
 }
 
 # %%
@@ -176,18 +183,17 @@ all_scores = dict()
 
 for name, method in encoders.items():
     encoder = make_column_transformer(
-        (one_hot, ['gender', 'department_name', 'assignment_category']),
-        ('passthrough', ['year_first_hired']),
+        (one_hot, ["gender", "department_name", "assignment_category"]),
+        ("passthrough", ["year_first_hired"]),
         # Last but not least, our dirty column
-        (method, ['employee_position_title']),
-        remainder='drop',
+        (method, ["employee_position_title"]),
+        remainder="drop",
     )
 
     pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
     scores = cross_val_score(pipeline, X, y)
-    print(f'{name} encoding')
-    print(f'r2 score:  mean: {np.mean(scores):.3f}; '
-          f'std: {np.std(scores):.3f}\n')
+    print(f"{name} encoding")
+    print(f"r2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
     all_scores[name] = scores
 
 # %%
@@ -200,21 +206,21 @@ import seaborn
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(4, 3))
-ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient='h')
-plt.ylabel('Encoding', size=20)
-plt.xlabel('Prediction accuracy     ', size=20)
+ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient="h")
+plt.ylabel("Encoding", size=20)
+plt.xlabel("Prediction accuracy     ", size=20)
 plt.yticks(size=20)
 plt.tight_layout()
 
 # %%
-# The clear trend is that encoders grasping the similarities in the category
-# (similarity, minhash, and gap) perform better than those discarding it.
+# The clear trend is that encoders grasping similarities between categories
+# (|SE|, |MinHash|, and |Gap|) perform better than those discarding it.
 #
-# SimilarityEncoder is the best performer, but it is less scalable on big
-# data than MinHashEncoder and GapEncoder. The most scalable encoder is
-# the MinHashEncoder. GapEncoder, on the other hand, has the benefit that
-# it provides interpretable features
-# (see :ref:`sphx_glr_auto_examples_03_feature_interpretation_gap_encoder.py`)
+# |SE| is the best performer, but it is less scalable on big
+# data than the |MinHash| and |Gap|. The most scalable encoder is
+# the |MinHash|. On the other hand, the |Gap| has the benefit of
+# providing interpretable features
+# (see :ref:`sphx_glr_auto_examples_02_investigating_dirty_categories.py`)
 #
 # |
 #
@@ -223,7 +229,7 @@ plt.tight_layout()
 # .. _example_super_vectorizer:
 #
 # A simpler way: automatic vectorization
-# ======================================
+# --------------------------------------
 #
 # The code to assemble a column transformer is a bit tedious. We will
 # now explore a simpler, automated, way of encoding the data.
@@ -234,9 +240,9 @@ X = employee_salaries.X
 y = employee_salaries.y
 
 # %%
-# We'll drop the "date_first_hired" column as it's redundant with
-# "year_first_hired".
-X = X.drop(['date_first_hired'], axis=1)
+# We'll drop the 'date_first_hired' column as it's redundant with
+# 'year_first_hired'.
+X = X.drop(["date_first_hired"], axis=1)
 
 # %%
 # We still have a complex and heterogeneous dataframe:
@@ -260,20 +266,19 @@ X
 from dirty_cat import SuperVectorizer
 
 pipeline = make_pipeline(
-    SuperVectorizer(auto_cast=True),
-    HistGradientBoostingRegressor()
+    SuperVectorizer(auto_cast=True), HistGradientBoostingRegressor()
 )
 
 # %%
-# Let's perform a cross-validation to see how well this model predicts
+# Let's perform a cross-validation to see how well this model predicts:
 
 from sklearn.model_selection import cross_val_score
 
-scores = cross_val_score(pipeline, X, y, scoring='r2')
+scores = cross_val_score(pipeline, X, y, scoring="r2")
 
-print(f'scores={scores}')
-print(f'mean={np.mean(scores)}')
-print(f'std={np.std(scores)}')
+print(f"scores={scores}")
+print(f"mean={np.mean(scores)}")
+print(f"std={np.std(scores)}")
 
 # %%
 # The prediction performed here is pretty much as good as above
@@ -320,7 +325,7 @@ pprint(sup_vec.transformers_)
 # %%
 # This is what is being passed to the |ColumnTransformer| under the hood.
 # If you're familiar with how the latter works, it should be very intuitive.
-# We can notice it classified the columns "gender" and "assignment_category"
+# We can notice it classified the columns 'gender' and 'assignment_category'
 # as low cardinality string variables.
 # A |OneHotEncoder| will be applied to these columns.
 #
@@ -340,11 +345,11 @@ feature_names[:8]
 
 # %%
 # As we can see, it gave us interpretable columns.
-# This is because we used |Gap| on the column "division",
+# This is because we used the |Gap| on the column 'division',
 # which was classified as a high cardinality string variable.
 # (default values, see |SV|'s docstring).
 #
-# In total, we have reasonable number of encoded columns.
+# In total, we have a reasonable number of encoded columns:
 len(feature_names)
 
 
@@ -352,15 +357,15 @@ len(feature_names)
 # Feature importances in the statistical model
 # --------------------------------------------
 #
-# In this section, we will train a regressor, and plot the feature importances
+# In this section, we will train a regressor, and plot the feature importances.
 #
 # .. topic:: Note:
 #
-#    To minimize compute time, use the feature importances computed by the
+#    To minimize computation time, we use the feature importances computed by the
 #    |RandomForestRegressor|, but you should prefer |permutation importances|
-#    instead (which are less subject to biases)
+#    instead (which are less subject to biases).
 #
-# First, let's train the |RandomForestRegressor|,
+# First, let's train the |RandomForestRegressor|:
 
 from sklearn.ensemble import RandomForestRegressor
 
@@ -368,16 +373,10 @@ regressor = RandomForestRegressor()
 regressor.fit(X_train_enc, y_train)
 
 # %%
-# Retrieving the feature importances
+# Retrieving the feature importances:
 
 importances = regressor.feature_importances_
-std = np.std(
-    [
-        tree.feature_importances_
-        for tree in regressor.estimators_
-    ],
-    axis=0
-)
+std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
 indices = np.argsort(importances)
 # Sort from least to most
 indices = list(reversed(indices))
@@ -403,7 +402,7 @@ plt.show()
 # having a permanent, full-time job :)
 #
 #
-# .. topic:: The SuperVectorizer automates preprocessing
+# .. topic:: The |SV| automates preprocessing
 #
 #   As this notebook demonstrates, many preprocessing steps can be
 #   automated by the |SV|, and the resulting pipeline can still be

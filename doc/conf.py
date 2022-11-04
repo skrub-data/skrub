@@ -18,14 +18,15 @@
 #
 import os
 import shutil
+from datetime import datetime
 
 # -- Copy files for docs --------------------------------------------------
 #
 # We avoid duplicating the information, but we do not use symlinks to be
-# able to build the docs on windows
-shutil.copyfile('../RELEASE_PROCESS.rst', 'RELEASE_PROCESS.rst')
-shutil.copyfile('../CHANGES.rst', 'CHANGES.rst')
-shutil.copyfile('../CONTRIBUTING.rst', 'CONTRIBUTING.rst')
+# able to build the docs on Windows
+shutil.copyfile("../RELEASE_PROCESS.rst", "RELEASE_PROCESS.rst")
+shutil.copyfile("../CHANGES.rst", "CHANGES.rst")
+shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
 
 # -- General configuration ------------------------------------------------
 
@@ -70,7 +71,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "dirty_cat"
-copyright = "2018-2021, dirty_cat developers"
+copyright = f"2018-{datetime.now().year}, the dirty_cat developers"
 author = "dirty_cat developers"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -265,7 +266,7 @@ sphinx_gallery_conf = {
         "org": "dirty-cat",
         "repo": "dirty-cat.github.io",
         "binderhub_url": "https://mybinder.org",
-        "branch": "master",
+        "branch": "main",
         "dependencies": ["../requirements.txt", "binder/requirements.txt"],
         "notebooks_dir": "dev",
     },
