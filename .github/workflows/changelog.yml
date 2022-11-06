@@ -6,10 +6,10 @@ on:
       - main
 
 jobs:
-  permissions:
-    pull-requests: write
   check-and-comment:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
       - name: Check CHANGES.rst Updated
