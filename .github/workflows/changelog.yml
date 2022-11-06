@@ -6,6 +6,8 @@ on:
       - main
 
 jobs:
+  permissions:
+    pull-requests: write
   check-and-comment:
     runs-on: ubuntu-latest
     steps:
@@ -20,8 +22,6 @@ jobs:
           fi
 
       - name: Comment PR
-        permissions:
-          pull-requests: write
         if: ${{ failure() }}
         uses: thollander/actions-comment-pull-request@v1
         with:
