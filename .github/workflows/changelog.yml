@@ -20,6 +20,7 @@ jobs:
           fi
 
       - name: Thank you comment
+        permissions: write-all
         uses: thollander/actions-comment-pull-request@v1
         with:
           comment_includes: "changelog"
@@ -31,6 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment PR
+        permissions: write-all
         if: ${{ failure() }}
         uses: thollander/actions-comment-pull-request@v1
         with:
