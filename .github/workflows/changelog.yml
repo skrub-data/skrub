@@ -3,7 +3,6 @@ name: Changelog
 on:
   pull_request:
     branches:
-      - master
       - main
 
 jobs:
@@ -13,8 +12,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Check CHANGES.rst Updated
         run: |
-          git fetch origin master:master
-          updated_files=$(git diff master -- CHANGES.rst)
+          git fetch origin main:main
+          updated_files=$(git diff main -- CHANGES.rst)
           if [[ -z $updated_files ]]
           then
             exit 1
