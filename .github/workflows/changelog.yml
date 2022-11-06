@@ -1,0 +1,41 @@
+name: Changelog
+
+on:
+  pull_request:
+    branches:
+      - master
+      - main
+
+jobs:
+  check-and-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check CHANGES.rst Updated
+        run: |
+          git fetch origin master:master
+          updated_files=$(git diff master -- CHANGES.rst)
+          if [[ -z $updated_files ]]
+          then
+            exit 1
+          fi
+
+      - name: Thank you comment
+        uses: thollander/actions-comment-pull-request@v1
+        with:
+          comment_includes: "changelog"
+          message: |
+            Thank you for the pull request! :pray:
+            If CI reports any errors please address them.
+            If you believe the errors are unrelated to your PR, please state why.
+            This will make it easier for the maintainers to assess your PR :)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment PR
+        if: ${{ failure() }}
+        uses: thollander/actions-comment-pull-request@v1
+        with:
+          comment_includes: "changelog" # To avoid creating additional comments
+          message: |
+            Please include the change for this PR in the changelog (`CHANGES.rst`).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
