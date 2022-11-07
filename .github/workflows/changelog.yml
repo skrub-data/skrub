@@ -29,7 +29,6 @@ jobs:
             exit 0
           fi
           all_changelogs=$(cat ./CHANGES.rst)
-          echo "$all_changelogs"
           if [[ "$all_changelogs" =~ :pr:\`$PR_NUMBER\` ]]
           then
             echo "Changelog has been updated."
@@ -57,7 +56,7 @@ jobs:
             echo "Look at other entries in that file for inspiration and please"
             echo "reference this pull request using the ':pr:' directive and"
             echo "credit yourself (and other contributors if applicable) with"
-            echo "the ':user:' directive."
+            echo "the ':user:' directive., for instance :pr:`453` by :user:`Jo Blib <JoBlib>`."
             echo ""
             echo "If you see this error and there is already a changelog entry,"
             echo "check that the PR number is correct."
