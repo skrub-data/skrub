@@ -29,6 +29,7 @@ jobs:
             exit 0
           fi
           all_changelogs=$(cat ./CHANGES.rst)
+          echo "$all_changelogs"
           if [[ "$all_changelogs" =~ :pr:\`$PR_NUMBER\` ]]
           then
             echo "Changelog has been updated."
