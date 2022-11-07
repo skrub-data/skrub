@@ -23,35 +23,6 @@ jobs:
           commit-filter: '[skip ci];[ci skip];[skip github]'
           commit-filter-separator: ';'
 
-  min_requirements:
-    needs: check_skip
-    if: ${{ needs.check_skip.outputs.skip == 'false' }}
-    runs-on: "ubuntu-latest"
-    name: Python 3.8 with minimal requirements
-    defaults:
-      run:
-        shell: bash
-    env:
-        MIN_REQUIREMENTS: true
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-        name: 'Setup python'
-      - shell: bash -l {0}
-        run: ./build_tools/github/dependencies.sh
-        name: 'Install dependencies'
-      - shell: bash -l {0}
-        run: ./build_tools/github/install.sh
-        name: 'Install dirty-cat'
-      - shell: bash -l {0}
-        run: ./build_tools/github/test.sh
-        name: 'Run tests'
-      - uses: codecov/codecov-action@v1
-        if: success()
-        name: 'Upload coverage to CodeCov'
-
   latest:
     needs: check_skip
     if: ${{ needs.check_skip.outputs.skip == 'false' }}
@@ -61,7 +32,24 @@ jobs:
         matrix:
             os: ["ubuntu-latest", "macos-latest"]
             python-version: ["3.8", "3.9", "3.10"]
-    name: ${{ matrix.os }} with Python ${{ matrix.python-version }} and latest package versions
+            # Install the min or latest dependencies for dirty_cat
+            # as defined in setup.cfg at [options.extra_require].
+            #
+            # Installing these extra dependencies will overwrite the already
+            # installed version defined at install_requires.
+            dependencies-version-type: ["min", "latest"]
+            include:
+              - dependencies-version: "dev"
+              - dependencies-version: "dev, min-py38"
+                python-version: "3.8"
+                dependencies-version-type: "min"
+              - dependencies-version: "dev, min-py39"
+                python-version: "3.9"
+                dependencies-version-type: "min"
+              - dependencies-version: "dev, min-py310"
+                python-version: "3.10"
+                dependencies-version-type: "min"
+    name: ${{ matrix.os }} with Python ${{ matrix.python-version }} and ${{ matrix.dependencies-version-type }} package versions
     defaults:
       run:
         shell: bash
@@ -72,11 +60,10 @@ jobs:
             python-version: ${{ matrix.python-version }}
         name: 'Setup python'
       - shell: bash {0}
-        run: ./build_tools/github/dependencies.sh
-        name: 'Install dependencies'
-      - shell: bash {0}
         run: ./build_tools/github/install.sh
         name: 'Install dirty-cat'
+        env:
+          DEPS_VERSION: ${{ matrix.dependencies-version }}
       - shell: bash {0}
         run: ./build_tools/github/test.sh
         name: 'Run tests'

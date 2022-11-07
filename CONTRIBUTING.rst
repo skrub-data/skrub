@@ -158,12 +158,11 @@ it is already on most linux distributions).
 
    git clone https://github.com/dirty-cat/dirty_cat
 
-Next, install the project dependencies. Currently, they are listed in
-``requirements.txt``.
+Next, install the project dependencies. They are listed in ``setup.cfg``.
 
 .. code:: commandline
 
-   pip install -r requirements.txt
+   pip install -e .[dev]
 
 Code-formatting and linting is automatically done via
 ```pre-commit`` <https://github.com/pre-commit/pre-commit>`__. You

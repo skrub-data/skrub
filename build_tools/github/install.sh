@@ -1,4 +1,3 @@
 #!/bin/bash -e
 
-python setup.py build
-python setup.py install
+pip install --progress-bar off --upgrade ".[$DEPS_VERSION]"
