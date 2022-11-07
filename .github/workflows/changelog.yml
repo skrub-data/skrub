@@ -28,14 +28,14 @@ jobs:
           then
             exit 0
           fi
-          all_changelogs=$(cat CHANGES.rst)
+          all_changelogs=$(cat ./CHANGES.rst)
           if [[ "$all_changelogs" =~ :pr:\`$PR_NUMBER\` ]]
           then
             echo "Changelog has been updated."
             # If the pull request is milestoned check the correspondent changelog
-            if exist -f CHANGES.rst${TAGGED_MILESTONE:0:4}.rst
+            if exist -f ./CHANGES.rst${TAGGED_MILESTONE:0:4}.rst
             then
-              expected_changelog=$(cat CHANGES.rst${TAGGED_MILESTONE:0:4}.rst)
+              expected_changelog=$(cat ./CHANGES.rst${TAGGED_MILESTONE:0:4}.rst)
               if [[ "$expected_changelog" =~ :pr:\`$PR_NUMBER\` ]]
               then
                 echo "Changelog and milestone correspond."
