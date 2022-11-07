@@ -6,8 +6,8 @@ Release 0.4.0
 Major changes
 -------------
 
-This is a test
-
+* github workflow to check if changelog has been updated
+:pr:`405` by :user:`LeoGrin <LeoGrin>`.
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category.
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be
