@@ -233,7 +233,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[x]
                 counter += self.n_components
         if self.hashing == "murmur":
-            print("This is a test")
             X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
             counter = self.n_components
             for k in range(X.shape[1]):

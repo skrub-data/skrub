@@ -147,7 +147,6 @@ def test_missing_values_none():
     a = np.array([["a", "b", None, "c"]], dtype=object).T
 
     enc = MinHashEncoder()
-    print("This is a test !")
     d = enc.fit_transform(a)
     np.testing.assert_array_equal(d[2], 0)
 
