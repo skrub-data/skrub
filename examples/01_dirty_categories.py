@@ -18,14 +18,8 @@ boosted trees. First we manually assemble a complex encoder for the full
 dataframe, after which we show a much simpler way, albeit with less fine
 control.
 
-Finally, we look at the road safety dataset [##]_ to see how the
-Target Encoder can help us get better results on large datasets
-if used on cross-validated subsets of data.
-
 
 .. [#] https://www.openml.org/d/42125
-
-.. [##] https://openml.org/d/42803
 
 
  .. |SV| replace::
