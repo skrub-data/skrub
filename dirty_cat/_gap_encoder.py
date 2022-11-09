@@ -626,7 +626,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     >>> enc.get_feature_names()
     ['england, london, uk', 'france, paris, pqris']
 
-    Got it right, reccuring topics are "London" and "England" on the
+    He got it right, reccuring topics are "London" and "England" on the
     one side and and "Paris" and "France" on the other.
 
     As this is a continuous encoding, we can look at the level of
