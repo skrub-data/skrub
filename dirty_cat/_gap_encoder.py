@@ -621,7 +621,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     >>> enc.fit(X)
     GapEncoder(n_components=2)
 
-    The GapEncoder has found the following two topics:
+    The :class:`~dirty_cat.GapEncoder` has found the following two topics:
 
     >>> enc.get_feature_names()
     ['england, london, uk', 'france, paris, pqris']
