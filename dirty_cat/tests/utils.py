@@ -4,12 +4,13 @@ import numpy as np
 
 
 def generate_data(n_samples, as_list=False):
-    MAX_LIMIT = 255  # extended ASCII Character set
+    start = 48
+    stop = 122
     str_list = []
     for i in range(n_samples):
         random_string = "category "
         for _ in range(100):
-            random_integer = random.randint(0, MAX_LIMIT)
+            random_integer = random.randint(start, stop)  # From 0-z
             random_string += chr(random_integer)
             if random_integer < 50:
                 random_string += "  "
