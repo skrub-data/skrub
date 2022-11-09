@@ -95,6 +95,32 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     For more details, see Micci-Barreca, 2001: A preprocessing scheme for
     high-cardinality categorical attributes in classification and prediction
     problems.
+
+    Examples
+    --------
+    >>> enc = TargetEncoder(handle_unknown='ignore')
+    >>> X = [['male'], ['Male'], ['Female'], ['male'], ['Female']]
+    >>> y = np.array([1, 2, 3, 4, 5])
+
+    >>> enc.fit(X, y)
+    TargetEncoder(handle_unknown='ignore')
+
+    There encoder has found the following categories:
+
+    >>> enc.categories_
+    [array(['Female', 'Male', 'female', 'male'], dtype='<U6')]
+
+    We look at the encoded categories :
+
+    >>> enc.transform(X)
+    array([[3.44444444],
+        [2.11111111],
+        [3.61538462],
+        [3.44444444],
+        [3.61538462]])
+
+    As expected, they were encoded according to their influence on y.
+
     """
 
     n_features_in_: int
@@ -153,31 +179,20 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 f"Got handle_missing={self.handle_missing!r}, but expected "
                 "any of {'error', ''}. "
             )
-        if hasattr(X, "iloc") and X.isna().values.any():
+
+        mask = _object_dtype_isnan(X)
+        if mask.any():
             if self.handle_missing == "error":
                 raise ValueError(
                     "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
             else:
-                X = X.fillna(self.handle_missing)
-        elif not hasattr(X, "dtype") and isinstance(X, list):
-            X = np.asarray(X, dtype=object)
-
-        if hasattr(X, "dtype"):
-            mask = _object_dtype_isnan(X)
-            if X.dtype.kind == "O" and mask.any():
-                if self.handle_missing == "error":
-                    raise ValueError(
-                        "Found missing values in input data; set "
-                        "handle_missing='' to encode with missing values. "
-                    )
-                else:
-                    X[mask] = self.handle_missing
+                X[mask] = self.handle_missing
 
         if self.handle_unknown not in ["error", "ignore"]:
             raise ValueError(
-                f"Got handle_unknown={self.handle_unknown!r}, but expected"
+                f"Got handle_unknown={self.handle_unknown!r}, but expected "
                 'any of {"error", "ignore"}. '
             )
 
@@ -271,27 +286,15 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 "does not match the number of features "
                 f"seen during fit ({self.n_features_in_})."
             )
-        if hasattr(X, "iloc") and X.isna().values.any():
+        mask = _object_dtype_isnan(X)
+        if mask.any():
             if self.handle_missing == "error":
                 raise ValueError(
                     "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
-            if self.handle_missing != "error":
-                X = X.fillna(self.handle_missing)
-        elif not hasattr(X, "dtype") and isinstance(X, list):
-            X = np.asarray(X, dtype=object)
-
-        if hasattr(X, "dtype"):
-            mask = _object_dtype_isnan(X)
-            if X.dtype.kind == "O" and mask.any():
-                if self.handle_missing == "error":
-                    raise ValueError(
-                        "Found missing values in input data; set "
-                        "handle_missing='' to encode with missing values. "
-                    )
-                if self.handle_missing != "error":
-                    X[mask] = self.handle_missing
+            else:
+                X[mask] = self.handle_missing
 
         if self.clf_type not in ("regression", "binary-clf", "multiclass-clf"):
             raise ValueError(
@@ -321,7 +324,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                     diff = np.unique(X[~valid_mask, i])
                     raise ValueError(
                         f"Found unknown categories {diff} in column {i} "
-                        "during transform. "
+                        "during transform."
                     )
                 else:
                     # Set the problematic rows to an acceptable value and

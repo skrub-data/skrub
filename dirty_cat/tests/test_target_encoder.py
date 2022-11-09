@@ -192,7 +192,13 @@ def test_cv_target_encoder():
     assert np.array_equal(Xout, Xout2)
 
 
-def _test_missing_values(input_type, missing, cv=False):
+input_types = ["list", "numpy", "pandas"]
+missings = ["", "aaa", "error"]
+
+
+@pytest.mark.parametrize("input_type", input_types)
+@pytest.mark.parametrize("missing", missings)
+def test_missing_values(input_type, missing, cv=False):
     X = [
         ["Red", "male"],
         [np.nan, "male"],
@@ -247,7 +253,9 @@ def _test_missing_values(input_type, missing, cv=False):
         return
 
 
-def _test_missing_values_transform(input_type, missing, cv=False):
+@pytest.mark.parametrize("input_type", input_types)
+@pytest.mark.parametrize("missing", missings)
+def test_missing_values_transform(input_type, missing, cv=False):
     X = [
         ["Red", "male"],
         ["red", "male"],
@@ -286,32 +294,33 @@ def _test_missing_values_transform(input_type, missing, cv=False):
         encoder.fit_transform(X, y)
         with pytest.raises(ValueError, match=r"Found missing values in input"):
             encoder.transform(X_test)
-        return
     elif missing == "":
         encoder.fit_transform(X, y)
         encoder.transform(X_test)
 
 
-def test_missing_values():
-    input_types = ["list", "numpy", "pandas"]
-    handle_missing = ["aaa", "error", ""]
-    for input_type in input_types:
-        for missing in handle_missing:
-            _test_missing_values(input_type, missing)
-            _test_missing_values_transform(input_type, missing)
-            _test_missing_values(input_type, missing, cv=True)
-            _test_missing_values_transform(input_type, missing, cv=True)
+def test_errors():
+    """Test the different errors that may be raised during fit and transform"""
+    enc = _target_encoder.TargetEncoder(handle_unknown="blabla")
+    X = [[1], [2], [2], [3], [4]]
+    y = np.array([1, 2, 3, 4, 5])
 
+    with pytest.raises(ValueError, match="Got handle_unknown='blabla', but expected"):
+        enc.fit(X, y)
 
-if __name__ == "__main__":
-    print("start test_target_encoder")
-    test_target_encoder()
-    print("test_target_encoder passed")
+    enc2 = _target_encoder.TargetEncoder(categories=[["blabla", "aa"]])
+    with pytest.raises(ValueError, match="Unsorted categories are not yet supported. "):
+        enc2.fit(X, y)
 
-    print("start test_target_encoder with K-fold encoding")
-    test_cv_target_encoder()
-    print("test_target_encoder with K-fold encoding passed")
+    enc3 = _target_encoder.TargetEncoder(categories=[["aa", "blabla"]])
+    with pytest.raises(ValueError, match="Found unknown categories"):
+        enc3.fit(X, y)
 
-    print("start test_missing_values")
-    test_missing_values()
-    print("test_missing_values passed")
+    X2 = [[1, "a"], [2, "b"], [4, "c"]]
+    X3 = [[5], [1], [4], [2]]
+    enc4 = _target_encoder.TargetEncoder()
+    enc4.fit(X, y)
+    with pytest.raises(ValueError, match="The number of features in the input data "):
+        enc4.transform(X2)
+    with pytest.raises(ValueError, match="Found unknown categories "):
+        enc4.transform(X3)

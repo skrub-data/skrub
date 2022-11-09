@@ -26,6 +26,8 @@ from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
 from ._utils import LRUDict, check_input
 
+NoneType = type(None)
+
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """
@@ -88,9 +90,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def minhash(
-        self, string: str, n_components: int, ngram_range: Tuple[int, int]
-    ) -> np.array:
+    def _get_murmur_hash(self, string: str) -> np.array:
         """
         Encode a string using murmur hashing function.
 
@@ -107,10 +107,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        array, shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string.
         """
-        min_hashes = np.ones(n_components) * np.infty
+        min_hashes = np.ones(self.n_components) * np.infty
         grams = get_unique_ngrams(string, self.ngram_range)
         if len(grams) == 0:
             grams = get_unique_ngrams(" Na ", self.ngram_range)
@@ -118,13 +118,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             hash_array = np.array(
                 [
                     murmurhash3_32("".join(gram), seed=d, positive=True)
-                    for d in range(n_components)
+                    for d in range(self.n_components)
                 ]
             )
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
-    def get_fast_hash(self, string: str) -> np.array:
+    def _get_fast_hash(self, string: str) -> np.array:
         """
         Encode a string with fast hashing function.
         fast hashing supports both min_hash and minmax_hash encoding.
@@ -136,7 +136,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        np.array of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -171,6 +171,16 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         MinHashEncoder
             The fitted MinHashEncoder instance.
         """
+        if self.hashing not in ["fast", "murmur"]:
+            raise ValueError(
+                f"Got hashing={self.hashing!r}, "
+                'but expected any of {"fast", "murmur"}. '
+            )
+        if self.handle_missing not in ["error", "zero_impute"]:
+            raise ValueError(
+                f"Got handle_missing={self.handle_missing!r}, but expected "
+                'any of {"error", "zero_impute"}. '
+            )
         self.count = 0
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
@@ -186,7 +196,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        array, shape (n_samples, n_components)
+        ndarray of shape (n_samples, n_components)
             Transformed input.
         """
         X = check_input(X)
@@ -208,52 +218,42 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             for k in range(X.shape[1]):
                 X_in = X[:, k].reshape(-1)
                 for i, x in enumerate(X_in):
-                    if isinstance(x, float):  # true if x is a missing value
+                    if (
+                        isinstance(x, float)  # true if x is a missing value
+                        or x is None
+                    ):
+                        is_nan_idx = True
+                    elif len(x) == 0:
                         is_nan_idx = True
                     elif x not in self.hash_dict_:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[
                             x
-                        ] = self.get_fast_hash(x)
+                        ] = self._get_fast_hash(x)
                     else:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[x]
                 counter += self.n_components
-        elif self.hashing == "murmur":
+        if self.hashing == "murmur":
             X_out = np.zeros((len(X[:]), self.n_components * X.shape[1]))
             counter = self.n_components
             for k in range(X.shape[1]):
                 X_in = X[:, k].reshape(-1)
                 for i, x in enumerate(X_in):
-                    if isinstance(x, float):
+                    if isinstance(x, float) or x is None:
+                        is_nan_idx = True
+                    elif len(x) == 0:
                         is_nan_idx = True
                     elif x not in self.hash_dict_:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[
                             x
-                        ] = self.minhash(
-                            x,
-                            n_components=self.n_components,
-                            ngram_range=self.ngram_range,
-                        )
+                        ] = self._get_murmur_hash(x)
                     else:
                         X_out[i, k * self.n_components : counter] = self.hash_dict_[x]
                 counter += self.n_components
-        else:
-            raise ValueError(
-                f"Got hashing={self.hashing}, "
-                'but expected any of {"fast", "murmur"}. '
-            )
 
-        if self.handle_missing == "error":
-            if is_nan_idx:
-                raise ValueError(
-                    "Found missing values in input data; set "
-                    "handle_missing='zero_impute' "
-                    "to encode with missing values. "
-                )
-        elif self.handle_missing == "zero_impute":
-            pass
-        else:
+        if is_nan_idx and self.handle_missing == "error":
             raise ValueError(
-                f"Got handle_missing={self.handle_missing}, but expected "
-                'any of {"error", "zero_impute"}. '
+                "Found missing values in input data; set "
+                "handle_missing='zero_impute' "
+                "to encode with missing values. "
             )
         return X_out

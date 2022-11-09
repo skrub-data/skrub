@@ -40,15 +40,15 @@ discover new bugs and limitations.
 If you stumble upon one, please `check if a similar or identical issue already
 exists <https://github.com/dirty-cat/dirty_cat/issues?q=is%3Aissue>`__
 
-- If yes: 
+- If yes:
 
-  - **The issue is still open**: leave the emote :+1: on the original message, 
-    which will let us know there are several users affected by this issue 
-  - **The issue has been closed**: 
+  - **The issue is still open**: leave the emote :+1: on the original message,
+    which will let us know there are several users affected by this issue
+  - **The issue has been closed**:
 
-    - **It has been closed by a merged pull request** (1) update your dirty_cat version, 
+    - **It has been closed by a merged pull request** (1) update your dirty_cat version,
       or (2) the fix has not been released in a version yet
-    - **Otherwise**, there might be a ``wontfix`` label, and / or a reason at the bottom of the conversation 
+    - **Otherwise**, there might be a ``wontfix`` label, and / or a reason at the bottom of the conversation
 - If not, `file a new issue <https://github.com/dirty-cat/dirty_cat/issues/new>`__ (see following section)
 
 How do I submit a (good) bug report?
@@ -100,9 +100,9 @@ kind of enhancement you’re submitting.
 If the enhancement is validated
 '''''''''''''''''''''''''''''''
 
-Let maintainers know whether : 
+Let maintainers know whether :
 
-- **You will write the code and submit a PR**. 
+- **You will write the code and submit a pull request (PR)**.
   Writing the feature yourself is the fastest way to getting it
   implemented in the library, and we’ll help in that process if guidance
   is needed! To go further, refer to the section *Writing your first Pull Request*.
@@ -158,12 +158,11 @@ it is already on most linux distributions).
 
    git clone https://github.com/dirty-cat/dirty_cat
 
-Next, install the project dependencies. Currently, they are listed in
-``requirements.txt``.
+Next, install the project dependencies. They are listed in ``setup.cfg``.
 
 .. code:: commandline
 
-   pip install -r requirements.txt
+   pip install -e .[dev]
 
 Code-formatting and linting is automatically done via
 ```pre-commit`` <https://github.com/pre-commit/pre-commit>`__. You
@@ -189,7 +188,7 @@ Implementation
 While writing your implementation, there are a few specific project
 goals to keep in mind:
 
-- Pure Python code - no binary extensions, Cython, etc 
+- Pure Python code - no binary extensions, Cython, etc
 - Make production-friendly code
 
   - Try to target the broadest range of versions (Python and dependencies)
@@ -197,7 +196,7 @@ goals to keep in mind:
   - Make code as backward compatible as possible
 - Prefer performance to readability
 
-  - Optimized code might be hard to read, so 
+  - Optimized code might be hard to read, so
     `please comment it <https://stackoverflow.blog/2021/12/23/best-practices-for-writing-code-comments/>`__
 - Use explicit, borderline verbose variables / function names
 - Public functions / methods / variables / class signatures should be documented
@@ -213,9 +212,16 @@ Submitting your code
 First, you’ll want to fork dirty_cat on Github.
 
 That will enable you to push your commits to a branch *on your fork*.
+It is advised to create a new branch every time you work on a new issue,
+to avoid confusion.
+Use the following command to create a branch:
+
+.. code:: commandline
+
+   git checkout -b branch_name
 
 Next, you can use the Github “Compare & pull request” button to submit
-the PR.
+your branch code as a PR.
 
 Integration
 ^^^^^^^^^^^
