@@ -199,7 +199,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         if self.clf_type not in ("regression", "binary-clf", "multiclass-clf"):
             raise ValueError(
                 "Problem type must be either 'regression', 'binary-clf' or"
-                f" 'multiclass-clf' got {self.clf_type} instead."
+                f" 'multiclass-clf' got {self.clf_type!r} instead."
             )
 
         if self.categories != "auto":
@@ -299,7 +299,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         if self.clf_type not in ("regression", "binary-clf", "multiclass-clf"):
             raise ValueError(
                 "Problem type must be either 'regression', 'binary-clf' or"
-                f" 'multiclass-clf' got {self.clf_type} instead."
+                f" 'multiclass-clf' got {self.clf_type!r} instead."
             )
 
         X_temp = check_array(X, dtype=None)

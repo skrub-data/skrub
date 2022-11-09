@@ -1,18 +1,31 @@
 """
 Using target encoder with K-fold cross-validation
-===================================================
+=================================================
 
-Here we discuss how to apply efficiently the :class:`TargetEncoder`. If the
-dataset is large enough, it may be useful to split the data and encode
-values on a subset. That way, overfitting is avoided and we may get
-better test results. This can be done easily using the ``cross_val``
-parameter of the :class:`TargetEncoder`.
-
+If the dataset is large enough, it may be useful to split the data
+and encode values on a subset. That way, overfitting is avoided
+and we may get better test results. This can be done easily by setting
+the ``cross_val`` parameter of the :class:`dirty_cat.TargetEncoder` to `True`.
 
 It is also possible to choose the number of outer and inner folds
 into which the data will be splitted (using the ``n_folds`` and
 ``n_inner_folds`` parameters).
 
+
+ .. |OneHotEncoder| replace::
+     :class:`~sklearn.preprocessing.OneHotEncoder`
+
+ .. |TargetEncoder| replace::
+     :class:`~dirty_cat.MinHashEncoder`
+
+ .. |Pipeline| replace::
+     :class:`~sklearn.pipeline.Pipeline`
+
+ .. |ColumnTransformer| replace::
+     :class:`~sklearn.compose.ColumnTransformer`
+
+ .. |HGBC| replace::
+     :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
 """
 
 ###############################################################################
@@ -61,19 +74,19 @@ y.reset_index(drop=True, inplace=True)
 # ============================================================
 #
 # The pipeline
-# ---------------------
+# ------------
 # Remark: an encoder is used to turn a categorical column into a numerical
 # representation
 
 # We create our encoders. In this example we will
-# compare the ``OneHotEncoder`` to the ``TargetEncoder``,
-# used with or without cross-validation encoding.
+# compare the |OneHotEncoder| to the |TargetEncoder|,
+# used with and without cross-validation encoding.
 from sklearn.preprocessing import OneHotEncoder
 
 one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
 # To be noted is that the type of the problem needs to
-#  be specified to the ``TargetEncoder``.
+#  be specified to the |TargetEncoder|.
 # In this case we are in a binary classification problem,
 # so we will use ``clf_type='binary-clf'``.
 from dirty_cat import TargetEncoder
@@ -90,15 +103,15 @@ target_cv = TargetEncoder(
 encoders = {"one-hot": one_hot, "target": target, "target-cv": target_cv}
 
 # We assemble these to apply them to the relevant columns.
-# The ColumnTransformer is created by specifying a set of transformers
+# The |ColumnTransformer| is created by specifying a set of transformers
 # alongside with the column names on which each must be applied
 
 from sklearn.compose import make_column_transformer
 
-# We will use a HistGradientBoostingClassifier :
+# We will use a |HGBC|:
 from sklearn.ensemble import HistGradientBoostingClassifier
 
-# We then create a pipeline chaining our encoders to a learner
+# We then create a |Pipeline| chaining our encoders to a learner
 from sklearn.pipeline import make_pipeline
 
 # Dirty-category encoding
@@ -131,9 +144,9 @@ for name, method in encoders.items():
     )
     all_scores[name] = scores
 
-# The results show that the :class:`TargetEncoder` performs best
+# The results show that the |TargetEncoder| performs best
 # if the data are split into folds that will then determine the
-# encoded values. It outperforms also the ``OneHotEncoder``.
+# encoded values. It outperforms also the |OneHotEncoder|.
 
 ###############################################################################
 # Plot a summary figure
@@ -161,9 +174,9 @@ plt.tight_layout()
 print(test_results)
 
 # We can observe the fit times and the test scores.
-# It is clear that the ``TargetEncoder`` with cross-validation has
+# It is clear that the |TargetEncoder| with cross-validation has
 # much better, and much less variable, prediction scores. This is due
 # to the better generalization of the model, that avoids overfitting.
-# Finally, the fitting time of the ``TargetEncoder`` with K-fold splitting
+# Finally, the fitting time of the |TargetEncoder| with K-fold splitting
 # is somewhat slower than without, but much faster than
-# with the ``OneHotEncoder``.
+# with the |OneHotEncoder|.
