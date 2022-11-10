@@ -15,6 +15,7 @@ except ModuleNotFoundError:
     )
 
 from ._datetime_encoder import DatetimeEncoder
+from ._feature_augmenter import FeatureAugmenter
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._minhash_encoder import MinHashEncoder
@@ -34,4 +35,5 @@ __all__ = [
     "DatetimeEncoder",
     "SuperVectorizer",
     "fuzzy_join",
+    "FeatureAugmenter",
 ]
