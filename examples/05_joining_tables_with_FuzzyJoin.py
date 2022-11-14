@@ -350,10 +350,7 @@ cv_results_t = cross_validate(hgdb, X, y, cv=cv, scoring="r2")
 
 cv_r2_t = cv_results_t["test_score"]
 
-print(
-    f"Mean R2 score with {len(X.columns) - 2} feature columns is"
-    f" {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
-)
+print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 
 #################################################################
 # We have a satisfying first result: an R2 of 0.66!
@@ -454,12 +451,14 @@ print(grid.best_params_)
 #
 # .. topic:: Note:
 #
-#    Here, ``grid.score()`` takes directly the best model (with ``match_score=0.5``).
+#    Here, ``grid.score()`` takes directly the best model (with ``match_score=0.5``)
+#    that was found in previous iterations.
 #    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and refitting the
 #    pipeline on the data.
 #
 
-grid.score(df, y)
+print(f"Mean R2 score with pipeline is {grid.score(df, y)}")
 
 ##########################################################################
-# Great, by evaluating the correct ``match_score`` we improved our results significantly!
+# Great, by evaluating the correct ``match_score`` we improved our
+# results significantly!

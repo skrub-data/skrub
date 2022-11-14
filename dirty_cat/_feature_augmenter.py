@@ -24,7 +24,6 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         close to be accepted, and closer to 0 that a bigger matching distance
         is tolerated. Equivalent to fuzzy_join's match_score.
 
-
     Notes
     -----
     The `tables` parameter is a dictionnary. This implies
