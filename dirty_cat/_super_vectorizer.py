@@ -15,9 +15,9 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils import parse_version
 
 from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat._utils import Version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -548,9 +548,9 @@ class SuperVectorizer(ColumnTransformer):
                     for name, trans, cols in all_transformers:
                         impute: bool = False
 
-                        if isinstance(trans, OneHotEncoder) and Version(
+                        if isinstance(trans, OneHotEncoder) and parse_version(
                             sklearn_version
-                        ) < Version("0.24"):
+                        ) < parse_version("0.24"):
                             impute = True
 
                         if impute:
@@ -633,7 +633,7 @@ class SuperVectorizer(ColumnTransformer):
         typing.List[str]
             Feature names.
         """
-        if Version(sklearn_version) < Version("1.0"):
+        if parse_version(sklearn_version) < parse_version("1.0"):
             ct_feature_names = super().get_feature_names()
         else:
             ct_feature_names = super().get_feature_names_out()
@@ -651,7 +651,7 @@ class SuperVectorizer(ColumnTransformer):
             if not hasattr(trans, "get_feature_names"):
                 all_trans_feature_names.extend(cols)
             else:
-                if Version(sklearn_version) < Version("1.0"):
+                if parse_version(sklearn_version) < parse_version("1.0"):
                     trans_feature_names = trans.get_feature_names(cols)
                 else:
                     trans_feature_names = trans.get_feature_names_out(cols)
@@ -668,7 +668,7 @@ class SuperVectorizer(ColumnTransformer):
         Ensures compatibility with sklearn < 1.0.
         Use `get_feature_names_out` instead.
         """
-        if Version(sklearn_version) >= "1.0":
+        if parse_version(sklearn_version) >= "1.0":
             warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "

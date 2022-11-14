@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import __version__ as sklearn_version
+from sklearn.utils import parse_version
 
 from dirty_cat import GapEncoder
-from dirty_cat._utils import Version
 from dirty_cat.tests.utils import generate_data
 
 
@@ -132,7 +132,7 @@ def test_get_feature_names_out(n_samples=70) -> None:
     enc = GapEncoder(random_state=42)
     enc.fit(X)
     # Expect a warning if sklearn >= 1.0
-    if Version(sklearn_version) < "1.0":
+    if parse_version(sklearn_version) < parse_version("1.0"):
         feature_names_1 = enc.get_feature_names()
     else:
         with pytest.warns(DeprecationWarning):

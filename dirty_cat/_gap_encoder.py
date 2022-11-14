@@ -27,15 +27,13 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
-from sklearn.utils import check_random_state, gen_batches
+from sklearn.utils import check_random_state, gen_batches, parse_version
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
 
-from dirty_cat._utils import Version
-
 from ._utils import check_input
 
-if Version(sklearn_version) < Version("0.24"):
+if parse_version(sklearn_version) < parse_version("0.24"):
     from sklearn.cluster._kmeans import _k_init
 else:
     from sklearn.cluster import kmeans_plusplus
@@ -128,12 +126,12 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             unq_V = sparse.hstack((unq_V, unq_V2), format="csr")
 
         if not self.hashing:  # Build n-grams/word vocabulary
-            if Version(sklearn_version) < Version("1.0"):
+            if parse_version(sklearn_version) < parse_version("1.0"):
                 self.vocabulary = self.ngrams_count_.get_feature_names()
             else:
                 self.vocabulary = self.ngrams_count_.get_feature_names_out()
             if self.add_words:
-                if Version(sklearn_version) < Version("1.0"):
+                if parse_version(sklearn_version) < parse_version("1.0"):
                     self.vocabulary = np.concatenate(
                         (self.vocabulary, self.word_count_.get_feature_names())
                     )
@@ -173,7 +171,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         n-grams counts.
         """
         if self.init == "k-means++":
-            if Version(sklearn_version) < Version("0.24"):
+            if parse_version(sklearn_version) < parse_version("0.24"):
                 W = (
                     _k_init(
                         V,
@@ -212,7 +210,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_components:
-                if Version(sklearn_version) < Version("0.24"):
+                if parse_version(sklearn_version) < parse_version("0.24"):
                     W2 = (
                         _k_init(
                             V,
@@ -343,7 +341,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
-        if Version(sklearn_version) < Version("1.0"):
+        if parse_version(sklearn_version) < parse_version("1.0"):
             vocabulary = np.array(vectorizer.get_feature_names())
         else:
             vocabulary = np.array(vectorizer.get_feature_names_out())
@@ -901,7 +899,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Ensures compatibility with sklearn < 1.0.
         Use `get_feature_names_out` instead.
         """
-        if Version(sklearn_version) >= "1.0":
+        if parse_version(sklearn_version) >= "1.0":
             warnings.warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "

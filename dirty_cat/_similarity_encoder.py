@@ -25,10 +25,8 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils import check_random_state
+from sklearn.utils import check_random_state, parse_version
 from sklearn.utils.fixes import _object_dtype_isnan
-
-from dirty_cat._utils import Version
 
 from ._string_distances import get_ngram_count, preprocess
 
@@ -495,7 +493,7 @@ class SimilarityEncoder(OneHotEncoder):
             )
 
         self.drop_idx_ = self._compute_drop_idx()
-        if Version(sklearn.__version__) >= Version("1.1.0"):
+        if parse_version(sklearn.__version__) >= parse_version("1.1.0"):
             self._infrequent_enabled = False
 
         return self

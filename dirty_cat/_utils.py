@@ -1,5 +1,5 @@
 import collections
-from typing import Any, Hashable, Tuple, Union
+from typing import Any, Hashable
 
 import numpy as np
 from sklearn.utils import check_array
@@ -59,84 +59,3 @@ def check_input(X) -> np.array:
             )
 
     return X_
-
-
-class Version:
-    """
-    Replacement for `distutil.version.LooseVersion` and
-    `packaging.version.Version`.
-    Implemented to avoid `DeprecationWarning`s raised by the former,
-    and avoid adding a dependency for the latter.
-
-    It is therefore very bare-bones, so its code shouldn't be too
-    hard to understand.
-    It currently only supports major and minor versions.
-
-    Inspired from https://stackoverflow.com/a/11887825/9084059
-    Should eventually dissapear.
-
-    Examples:
-    >>> # Standard usage
-    >>> Version(sklearn.__version__) > Version('0.23')
-    >>> Version(sklearn.__version__) > '0.23'
-    >>> # In general, pass the version as numbers separated by dots.
-    >>> Version('1.5') <= Version('1.6.5')
-    >>> Version('1.5') <= '1.6.5'
-    >>> # You can also pass the separator for specific cases
-    >>> Version('1-5', separator='-') == Version('1-6-5', separator='-')
-    >>> Version('1-5', separator='-') == '1-6-5'
-    >>> Version('1-5', separator='-') == '1.6.5'  # Won't work!
-    """
-
-    def __init__(self, value: str, separator: str = "."):
-        self.separator = separator
-        self.major, self.minor = self._parse_version(value)
-
-    def __repr__(self):
-        return f"Version({self.major}.{self.minor})"
-
-    def _parse_version(self, value: str) -> Tuple[int, int]:
-        raw_parts = value.split(self.separator)
-        if len(raw_parts) == 0:
-            raise ValueError(
-                f"Could not extract version from {value!r} "
-                f"(separator: {self.separator!r})"
-            )
-        elif len(raw_parts) == 1:
-            major = int(raw_parts[0])
-            minor = 0
-        else:
-            major = int(raw_parts[0])
-            minor = int(raw_parts[1])
-            # Ditch the rest
-        return major, minor
-
-    def _cast_to_version(self, other: Union["Version", str]) -> "Version":
-        if isinstance(other, str):
-            # We pass our separator, as we expect they are the same
-            other = Version(other, self.separator)
-        return other
-
-    def __eq__(self, other: Union["Version", str]):
-        other = self._cast_to_version(other)
-        return (self.major, self.minor) == (other.major, other.minor)
-
-    def __ne__(self, other: Union["Version", str]):
-        other = self._cast_to_version(other)
-        return (self.major, self.minor) != (other.major, other.minor)
-
-    def __lt__(self, other: Union["Version", str]):
-        other = self._cast_to_version(other)
-        return (self.major, self.minor) < (other.major, other.minor)
-
-    def __le__(self, other: Union["Version", str]):
-        other = self._cast_to_version(other)
-        return (self.major, self.minor) <= (other.major, other.minor)
-
-    def __gt__(self, other: Union["Version", str]):
-        other = self._cast_to_version(other)
-        return (self.major, self.minor) > (other.major, other.minor)
-
-    def __ge__(self, other: Union["Version", str]):
-        other = self._cast_to_version(other)
-        return (self.major, self.minor) >= (other.major, other.minor)
