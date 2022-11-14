@@ -18,6 +18,8 @@ in order to create a satisfying first prediction model.
 
 
 .. |fj| replace:: :func:`~dirty_cat.fuzzy_join`
+
+.. |fa| replace:: :func:`~dirty_cat.FeatureAugmenter`
 """
 
 #######################################################################
@@ -360,3 +362,30 @@ print(
 #
 # Now up to you, try improving our model by adding information into it and
 # beating our result!
+
+#######################################################################
+# Using the |fa| to fuzzy join multiple tables
+# --------------------------------------------
+# If we are looking for a faster way to merge the different
+# tables from the World Bank to the X table we can
+# use the |fa| transformer.
+#
+# To do this, we will gather the auxilliary tables into a
+# dictionnary, with the joining column names as their key:
+#
+# The dictionnary containing auxilliary tables is:
+
+# aux_wb_tables = {"Country Name": gdppc, "Country Name": life_exp, "Country Name": legal_rights}
+
+# Instatiation of the transformer:
+# fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
+
+#################################################################
+# To get our big table we will fit and predict the |fa|
+# on our main table: df
+# df_big = fa.fit_transform(df)
+
+##########################################################################
+# And that's it! As previously, we now how our big table
+# ready for machine learning.
+# df_big

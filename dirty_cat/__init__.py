@@ -28,12 +28,12 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
-    "SimilarityEncoder",
-    "TargetEncoder",
-    "MinHashEncoder",
-    "GapEncoder",
     "DatetimeEncoder",
-    "SuperVectorizer",
-    "fuzzy_join",
     "FeatureAugmenter",
+    "fuzzy_join",
+    "GapEncoder",
+    "MinHashEncoder",
+    "SimilarityEncoder",
+    "SuperVectorizer",
+    "TargetEncoder",
 ]

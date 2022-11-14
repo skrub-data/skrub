@@ -1,6 +1,6 @@
 import pandas as pd
 
-from dirty_cat import fuzzy_join
+from dirty_cat.fuzzy_join import fuzzy_join
 
 
 class FeatureAugmenter:
@@ -90,6 +90,7 @@ class FeatureAugmenter:
                     f"Got column key {key!r}, "
                     "but column missing in the auxilliary table."
                 )
+        # What happens if the column names between two aux_tables is identical?
 
         return self
 
@@ -111,13 +112,14 @@ class FeatureAugmenter:
         for key in self.tables:
             # TODO: Add an option to fuzzy_join on multiple columns at once
             # (will be if len(inter_col)!=0)
+
             aux_table = self.tables[key]
             main_table = fuzzy_join(
                 main_table,
                 aux_table,
                 left_on=self.main_key,
                 right_on=key,
-                suffixes=("", "_r"),
+                suffixes=("", "_aux"),
             )
 
         return main_table
