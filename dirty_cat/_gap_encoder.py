@@ -899,7 +899,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Ensures compatibility with sklearn < 1.0.
         Use `get_feature_names_out` instead.
         """
-        if parse_version(sklearn_version) >= "1.0":
+        if parse_version(sklearn_version) >= parse_version("1.0"):
             warnings.warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "

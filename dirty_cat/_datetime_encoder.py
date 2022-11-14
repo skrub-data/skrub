@@ -243,7 +243,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Ensures compatibility with sklearn < 1.0, and returns the output of
         get_feature_names_out.
         """
-        if parse_version(sklearn_version) >= "1.0":
+        if parse_version(sklearn_version) >= parse_version("1.0"):
             warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "
