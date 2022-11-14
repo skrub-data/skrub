@@ -1,9 +1,17 @@
 import random
+from typing import Optional, Union
 
 import numpy as np
 
 
-def generate_data(n_samples, as_list=False):
+def generate_data(
+    n_samples,
+    as_list=False,
+    random_state: Optional[Union[int, float, str, bytes, bytearray]] = None,
+) -> np.ndarray:
+    if random_state is not None:
+        random.seed(random_state)
+
     MAX_LIMIT = 255  # extended ASCII Character set
     str_list = []
     for i in range(n_samples):
