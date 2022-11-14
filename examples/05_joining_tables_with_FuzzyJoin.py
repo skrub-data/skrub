@@ -459,7 +459,7 @@ print(grid.best_params_)
 #    pipeline on the data.
 #
 
-grid.score()
+grid.score(df, y)
 
 ##########################################################################
 # Great, by evaluating the correct ``match_score`` we improved our results significantly!
