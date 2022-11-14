@@ -398,7 +398,7 @@ from dirty_cat import FeatureAugmenter
 fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
 
 #################################################################
-# Fitting and transformer into the final table
+# Fitting and transforming into the final table
 # ............................................
 # To get our final joined table we will fit and transform the main table (df)
 # with our create instance of the |fa|:
