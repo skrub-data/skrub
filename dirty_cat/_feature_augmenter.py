@@ -85,6 +85,8 @@ class FeatureAugmenter(TransformerMixin):
         X : DataFrame, shape [n_samples, n_features]
             The main table, to be joined to the
             auxilliary ones.
+        y : array-like of shape (n_samples,...), default=None
+            Targets for supervised learning.
 
         Returns
         -------
@@ -113,6 +115,8 @@ class FeatureAugmenter(TransformerMixin):
         X : DataFrame, shape [n_samples, n_features]
             The main table, to be joined to the
             auxilliary ones.
+        y : array-like of shape (n_samples,...), default=None
+            Targets for supervised learning.
 
         Returns
         -------
@@ -144,6 +148,8 @@ class FeatureAugmenter(TransformerMixin):
         X : DataFrame, shape [n_samples, n_features]
             The main table, to be joined to the
             auxilliary ones.
+        y : array-like of shape (n_samples,...), default=None
+            Targets for supervised learning.
 
         Returns
         -------
