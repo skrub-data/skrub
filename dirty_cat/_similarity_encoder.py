@@ -248,6 +248,32 @@ class SimilarityEncoder(OneHotEncoder):
         maximum number of processes used to compute similarity matrices. Used
         only if ``fast=True`` in ``SimilarityEncoder.transform``
 
+    Examples
+    --------
+    >>> enc = SimilarityEncoder()
+    >>> X = [['Male', 1], ['Female', 3], ['Female', 2]]
+    >>> enc.fit(X)
+    SimilarityEncoder()
+
+    It inherits the same methods as sklearn's :class:`~sklearn.preprocessing.OneHotEncoder`:
+
+    >>> enc.categories_
+    [array(['Female', 'Male'], dtype=object), array([1, 2, 3], dtype=object)]
+
+    But it provides a continuous encoding based on similarity
+    instead of a discrete one based on exact matches:
+
+    >>> enc.transform([['Female', 1], ['Male', 4]])
+    array([[1., 0.42857143, 1., 0., 0.],
+           [0.42857143, 1., 0. , 0. , 0.]])
+
+    >>> enc.inverse_transform([[1., 0.42857143, 1., 0., 0.], [0.42857143, 1., 0. , 0. , 0.]])
+    array([['Female', 1],
+           ['Male', None]], dtype=object)
+
+    >>> enc.get_feature_names(['gender', 'group'])
+    array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
+
     Attributes
     ----------
     categories_ : typing.List[np.array]
