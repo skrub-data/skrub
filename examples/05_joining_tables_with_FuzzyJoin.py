@@ -390,6 +390,7 @@ aux_wb_tables = {
     "Country Name 3": legal_rights,
 }
 
+y = df["Happiness score"]
 #######################################################################
 # We have our auxilliary tables in a dictionnary!
 # Let us now create an instance of the transformer with the necessary information:
@@ -404,7 +405,32 @@ fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
 # with our create instance of the |fa|:
 df_final = fa.fit_transform(df)
 
+df_final.head(10)
+
 ##########################################################################
 # And that's it! As previously, we now have a big table
 # ready for machine learning.
-df_final.head(10)
+# Let's create our machine learning pipeline and look at the results:
+from sklearn.pipeline import make_pipeline
+from sklearn.compose import make_column_transformer
+
+encoder = make_column_transformer(
+    (
+        "passthrough",
+        ["GDP per capita (current US$)", "Life expectancy at birth, total (years)"],
+    ),
+    # Last but not least, our dirty column
+    remainder="drop",
+)
+
+pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
+# pipeline.fit(df, y)
+
+cv_results_t = cross_validate(pipeline, df, y, cv=cv, scoring="r2")
+
+cv_r2_t = cv_results_t["test_score"]
+
+print(f"Mean R2 score with is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
+
+##########################################################################
+# Great, we got exactly the same results as before!

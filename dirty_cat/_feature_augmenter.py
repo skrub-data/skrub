@@ -1,9 +1,10 @@
 import pandas as pd
+from sklearn.base import TransformerMixin
 
 from dirty_cat._fuzzy_join import fuzzy_join
 
 
-class FeatureAugmenter:
+class FeatureAugmenter(TransformerMixin):
     """Transformer that helps augment the number of features in a table.
 
     Given a dictionnary of tables and key column names,
@@ -25,8 +26,8 @@ class FeatureAugmenter:
 
     Examples
     --------
-    >>> main_table = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
-    >>> main_table
+    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
+    >>> X
     Country
     0   France
     1  Germany
@@ -57,7 +58,7 @@ class FeatureAugmenter:
 
     >>> fa = FeatureAugmenter(tables=aux_dict, main_key='Country')
 
-    >>> augmented_table = fa.fit_transform(main_table)
+    >>> augmented_table = fa.fit_transform(X)
     >>> augmented_table
         Country Country_aux  Population Country name  GDP (billion) Countries Capital
     0   France      France    68000000       France           2937    France   Paris
@@ -73,7 +74,7 @@ class FeatureAugmenter:
         self.tables = tables
         self.main_key = main_key
 
-    def fit(self, main_table) -> "FeatureAugmenter":
+    def fit(self, X, y=None) -> "FeatureAugmenter":
         """Fit the Feature Augmenter to the main table.
 
         In practice, just checks if the key columns in X,
@@ -81,7 +82,7 @@ class FeatureAugmenter:
 
         Parameters
         ----------
-        main_table : DataFrame, shape [n_samples, n_features]
+        X : DataFrame, shape [n_samples, n_features]
             The main table, to be joined to the
             auxilliary ones.
 
@@ -91,7 +92,7 @@ class FeatureAugmenter:
             Fitted FeatureAugmenter instance.
         """
 
-        if self.main_key not in main_table.columns:
+        if self.main_key not in X.columns:
             raise ValueError(
                 f"Got main_key={self.main_key!r}, but column missing in the main table."
             )
@@ -104,12 +105,12 @@ class FeatureAugmenter:
                 )
         return self
 
-    def transform(self, main_table) -> pd.DataFrame:
+    def transform(self, X, y=None) -> pd.DataFrame:
         """Transform X using the specified encoding scheme.
 
         Parameters
         ----------
-        main_table : DataFrame, shape [n_samples, n_features]
+        X : DataFrame, shape [n_samples, n_features]
             The main table, to be joined to the
             auxilliary ones.
 
@@ -124,23 +125,23 @@ class FeatureAugmenter:
             # (will be if len(inter_col)!=0)
 
             aux_table = self.tables[key]
-            main_table = fuzzy_join(
-                main_table,
+            X = fuzzy_join(
+                X,
                 aux_table,
                 left_on=self.main_key,
                 right_on=key,
                 suffixes=("", "_aux"),
             )
 
-        return main_table
+        return X
 
-    def fit_transform(self, main_table) -> pd.DataFrame:
+    def fit_transform(self, X, y=None) -> pd.DataFrame:
         """
         Fit the FeatureAugmenter to X, then transforms it.
 
         Parameters
         ----------
-        main_table : DataFrame, shape [n_samples, n_features]
+        X : DataFrame, shape [n_samples, n_features]
             The main table, to be joined to the
             auxilliary ones.
 
@@ -150,4 +151,4 @@ class FeatureAugmenter:
             The final joined table.
         """
 
-        return self.fit(main_table).transform(main_table)
+        return self.fit(X).transform(X)
