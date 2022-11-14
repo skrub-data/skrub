@@ -367,25 +367,45 @@ print(
 # Using the |fa| to fuzzy join multiple tables
 # --------------------------------------------
 # If we are looking for a faster way to merge the different
-# tables from the World Bank to the X table we can
+# tables from the World Bank to our X table we can
 # use the |fa| transformer.
 #
-# To do this, we will gather the auxilliary tables into a
+# The |fa| is a transformer that can easily chain joins of tables on
+# a main table.
+
+#######################################################################
+# Instatiating the transformer
+# ............................
+# To do this, we will first gather the auxilliary tables into a
 # dictionnary, with the joining column names as their key:
 #
-# The dictionnary containing auxilliary tables is:
+# A dictionnary can have only unique keys (unique join keys for each table)
+# We will have to rename the "Country Name" column to take this into account:
 
-# aux_wb_tables = {"Country Name": gdppc, "Country Name": life_exp, "Country Name": legal_rights}
+life_exp.rename(columns={"Country Name": "Country Name 2"}, inplace=True)
+legal_rights.rename(columns={"Country Name": "Country Name 3"}, inplace=True)
 
-# Instatiation of the transformer:
-# fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
+aux_wb_tables = {
+    "Country Name": gdppc,
+    "Country Name 2": life_exp,
+    "Country Name 3": legal_rights,
+}
+
+#######################################################################
+# We have our auxilliary tables in a dictionnary!
+# Let us create an instance of the transformer with the necessary information:
+from dirty_cat import FeatureAugmenter
+
+fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
 
 #################################################################
-# To get our big table we will fit and predict the |fa|
-# on our main table: df
-# df_big = fa.fit_transform(df)
+# Fitting and transformer into the final table
+# ............................................
+# To get our final joined table we will fit and transform the main table (df)
+# with our create instance of the |fa|:
+df_final = fa.fit_transform(df)
 
 ##########################################################################
-# And that's it! As previously, we now how our big table
+# And that's it! As previously, we now how a big table
 # ready for machine learning.
-# df_big
+df_final.head(10)
