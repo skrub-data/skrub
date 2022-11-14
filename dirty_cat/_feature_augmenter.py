@@ -26,12 +26,32 @@ class FeatureAugmenter:
     Examples
     --------
     >>> main_table = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
+        main_table
+    Country
+    0   France
+    1  Germany
+    2    Italy
 
     >>> aux_table_1 = pd.DataFrame([['Germany', 84_000_000], ['France', 68_000_000], ['Italy', 59_000_000]], columns=['Country', 'Population']) # noqa
+        aux_table_1
+       Country  Population
+    0  Germany    84000000
+    1   France    68000000
+    2    Italy    59000000
 
     >>> aux_table_2 = pd.DataFrame([['France', 2937], ['Italy', 2099], ['Germany', 4223]], columns=['Country name', 'GDP (billion)']) # noqa
+        aux_table_2
+        Country name  GDP (billion)
+    0       France           2937
+    1        Italy           2099
+    2      Germany           4223
 
     >>> aux_table_3 = pd.DataFrame([['France', 'Paris'], ['Italy', 'Rome'], ['Germany', 'Berlin']], columns=['Countries', 'Capital']) # noqa
+    >>> aux_table_3
+      Countries Capital
+    0    France   Paris
+    1     Italy    Rome
+    2   Germany  Berlin
 
     >>> aux_dict = {"Country": aux_table_1, "Country name": aux_table_2, "Countries": aux_table_3} # noqa
 
@@ -44,7 +64,6 @@ class FeatureAugmenter:
     0   France      France    68000000       France           2937    France   Paris
     1  Germany     Germany    84000000      Germany           4223   Germany  Berlin
     2    Italy       Italy    59000000        Italy           2099     Italy    Rome
-
     """
 
     def __init__(
