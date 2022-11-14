@@ -366,20 +366,19 @@ print(
 #######################################################################
 # Using the |fa| to fuzzy join multiple tables
 # --------------------------------------------
-# If we are looking for a faster way to merge the different
-# tables from the World Bank to our X table we can
-# use the |fa| transformer.
+# A faster way to merge different tables from the World Bank
+# to `X` is to use the |fa|.
 #
 # The |fa| is a transformer that can easily chain joins of tables on
 # a main table.
 
 #######################################################################
-# Instatiating the transformer
+# Instantiating the transformer
 # ............................
 # To do this, we will first gather the auxilliary tables into a
-# dictionnary, with the joining column names as their key:
+# dictionary, with the joining column names as their key:
 #
-# A dictionnary can have only unique keys (unique join keys for each table)
+# A dictionary can have only unique keys (unique join keys for each table)
 # We will have to rename the 'Country Name' column to take this into account:
 
 life_exp.rename(columns={"Country Name": "Country Name 2"}, inplace=True)
@@ -406,6 +405,6 @@ fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
 df_final = fa.fit_transform(df)
 
 ##########################################################################
-# And that's it! As previously, we now how a big table
+# And that's it! As previously, we now have a big table
 # ready for machine learning.
 df_final.head(10)

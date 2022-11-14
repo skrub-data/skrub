@@ -25,37 +25,26 @@ class FeatureAugmenter:
 
     Examples
     --------
-    >>> main_table = pd.DataFrame([
-        'France',
-        'Germany',
-        'Italy',
-    ], columns=['Country'])
+    >>> main_table = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
 
-    >>> aux_table_1 = pd.DataFrame([
-        ['Germany', 84_000_000],
-        ['France', 68_000_000],
-        ['Italy', 59_000_000],
-    ], columns=['Country', 'Population'])
+    >>> aux_table_1 = pd.DataFrame([['Germany', 84_000_000], ['France', 68_000_000], ['Italy', 59_000_000]], columns=['Country', 'Population']) # noqa
 
-    >>> aux_table_2 = pd.DataFrame([
-        ['France', 2937],
-        ['Italy', 2099],
-        ['Germany', 4223],
-    ], columns=['Country name', 'GDP (billion)'])
+    >>> aux_table_2 = pd.DataFrame([['France', 2937], ['Italy', 2099], ['Germany', 4223]], columns=['Country name', 'GDP (billion)']) # noqa
 
-    >>> aux_table_3 = pd.DataFrame([
-        ['France', 'Paris'],
-        ['Italy', 'Rome'],
-        ['Germany', 'Berlin'],
-    ], columns=['Countries', 'Capital'])
+    >>> aux_table_3 = pd.DataFrame([['France', 'Paris'], ['Italy', 'Rome'], ['Germany', 'Berlin']], columns=['Countries', 'Capital']) # noqa
 
-    >>> aux_dict = {"Country": aux_table_1,
-                    "Country name": aux_table_2,
-                    "Countries": aux_table_3}
+    >>> aux_dict = {"Country": aux_table_1, "Country name": aux_table_2, "Countries": aux_table_3} # noqa
 
     >>> fa = FeatureAugmenter(tables=aux_dict, main_key='Country')
 
-    >>> big_table = fa.fit_transform(main_table)
+    >>> augmented_table = fa.fit_transform(main_table)
+
+    >>> augmented_table
+        Country Country_aux  Population Country name  GDP (billion) Countries Capital
+    0   France      France    68000000       France           2937    France   Paris
+    1  Germany     Germany    84000000      Germany           4223   Germany  Berlin
+    2    Italy       Italy    59000000        Italy           2099     Italy    Rome
+
     """
 
     def __init__(
