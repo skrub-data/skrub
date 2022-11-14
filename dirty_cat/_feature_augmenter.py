@@ -1,6 +1,6 @@
 import pandas as pd
 
-from dirty_cat.fuzzy_join import fuzzy_join
+from dirty_cat._fuzzy_join import fuzzy_join
 
 
 class FeatureAugmenter:
