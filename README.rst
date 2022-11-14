@@ -1,5 +1,5 @@
-dirty_cat
-=========
+`dirty_cat`
+===========
 
 .. image:: https://dirty-cat.github.io/stable/_static/dirty_cat.svg
    :align: center
@@ -24,18 +24,18 @@ and `Encoding high-cardinality string categorical variables <https://hal.inria.f
 
 If you like the package, please *spread the word*, and ⭐ `the repository <https://github.com/dirty-cat/dirty_cat/>`_!
 
-What can dirty_cat do?
-----------------------
+What can `dirty_cat` do?
+------------------------
 
-dirty_cat provides tools and encoders for **morphological similarities**.
-
-We usually identify three common cases: **similarities, typos and variations**
+`dirty_cat` provides tools (``SuperVectorizer``, ``fuzzy_join``...) and
+encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
+for which we usually identify three common cases: **similarities, typos and variations**
 
 `The first example notebook <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
-goes in-depth on how to identify and deal with dirty data using the dirty_cat library.
+goes in-depth on how to identify and deal with dirty data using the `dirty_cat` library.
 
-What dirty_cat does not
-~~~~~~~~~~~~~~~~~~~~~~~
+What `dirty_cat` does not
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `Semantic similarities <https://en.wikipedia.org/wiki/Semantic_similarity>`_
 are currently not supported.
@@ -46,7 +46,7 @@ This kind of problem is tackled by
 `Natural Language Processing <https://en.wikipedia.org/wiki/Natural_language_processing>`_
 methods.
 
-dirty_cat can still help with handling typos and variations in this kind of setting.
+`dirty_cat` can still help with handling typos and variations in this kind of setting.
 
 Installation
 ------------
@@ -68,10 +68,10 @@ Are listed on the `dirty_cat's website <https://dirty-cat.github.io/stable/#rela
 Contributing
 ------------
 
-If you want to encourage development of dirty_cat,
+If you want to encourage development of `dirty_cat`,
 the best thing to do is to *spread the word*!
 
-If you encounter an issue while using dirty_cat, please
+If you encounter an issue while using `dirty_cat`, please
 `open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_ and/or
 `submit a pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.
 Don't hesitate, you're helping to make this project better for everyone!
