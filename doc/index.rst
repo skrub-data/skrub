@@ -138,6 +138,7 @@ Joining tables
    :nosignatures:
 
    fuzzy_join
+   FeatureAugmenter
 
 Data download
 -----------------------

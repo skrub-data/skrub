@@ -18,6 +18,11 @@ class FeatureAugmenter:
         The key column name in the main table on which
         the join will be performed.
 
+    Notes
+    -----
+    The `tables` parameter is a dictionnary. This implies
+    that key column names must be different.
+
     Examples
     --------
     >>> main_table = pd.DataFrame([
@@ -90,8 +95,6 @@ class FeatureAugmenter:
                     f"Got column key {key!r}, "
                     "but column missing in the auxilliary table."
                 )
-        # What happens if the column names between two aux_tables is identical?
-
         return self
 
     def transform(self, main_table) -> pd.DataFrame:

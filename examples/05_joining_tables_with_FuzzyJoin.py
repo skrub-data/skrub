@@ -380,7 +380,7 @@ print(
 # dictionnary, with the joining column names as their key:
 #
 # A dictionnary can have only unique keys (unique join keys for each table)
-# We will have to rename the "Country Name" column to take this into account:
+# We will have to rename the 'Country Name' column to take this into account:
 
 life_exp.rename(columns={"Country Name": "Country Name 2"}, inplace=True)
 legal_rights.rename(columns={"Country Name": "Country Name 3"}, inplace=True)
@@ -393,7 +393,7 @@ aux_wb_tables = {
 
 #######################################################################
 # We have our auxilliary tables in a dictionnary!
-# Let us create an instance of the transformer with the necessary information:
+# Let us now create an instance of the transformer with the necessary information:
 from dirty_cat import FeatureAugmenter
 
 fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
