@@ -1,10 +1,10 @@
 import pandas as pd
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
 
 from dirty_cat._fuzzy_join import fuzzy_join
 
 
-class FeatureAugmenter(TransformerMixin):
+class FeatureAugmenter(BaseEstimator, TransformerMixin):
     """Transformer that helps augment the number of features in a table.
 
     Given a dictionnary of tables and key column names,
@@ -70,9 +70,11 @@ class FeatureAugmenter(TransformerMixin):
         self,
         tables: dict,
         main_key: str,
+        match_score=0,
     ):
         self.tables = tables
         self.main_key = main_key
+        self.match_score = match_score
 
     def fit(self, X, y=None) -> "FeatureAugmenter":
         """Fit the Feature Augmenter to the main table.
@@ -135,6 +137,7 @@ class FeatureAugmenter(TransformerMixin):
                 left_on=self.main_key,
                 right_on=key,
                 suffixes=("", "_aux"),
+                match_score=self.match_score,
             )
 
         return X

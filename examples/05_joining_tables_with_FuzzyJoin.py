@@ -112,6 +112,11 @@ gdppc.sort_values(by="Country Name").tail(7)
 # To join them with dirty_cat, we only need to do the following:
 from dirty_cat import fuzzy_join
 
+# We will ignore the warnings:
+import warnings
+
+warnings.filterwarnings("ignore")
+
 df1 = fuzzy_join(
     df,  # our table to join
     gdppc,  # the table to join with
@@ -396,7 +401,7 @@ y = df["Happiness score"]
 # Let us now create an instance of the transformer with the necessary information:
 from dirty_cat import FeatureAugmenter
 
-fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
+fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country", match_score=0)
 
 #################################################################
 # Fitting and transforming into the final table
@@ -410,27 +415,51 @@ df_final.head(10)
 ##########################################################################
 # And that's it! As previously, we now have a big table
 # ready for machine learning.
-# Let's create our machine learning pipeline and look at the results:
+# Let's create our machine learning pipeline:
 from sklearn.pipeline import make_pipeline
 from sklearn.compose import make_column_transformer
 
+# We include only the columns that will be pertinent for our regression:
 encoder = make_column_transformer(
     (
         "passthrough",
-        ["GDP per capita (current US$)", "Life expectancy at birth, total (years)"],
+        [
+            "GDP per capita (current US$)",
+            "Life expectancy at birth, total (years)",
+            "Strength of legal rights index (0=weak to 12=strong)",
+        ],
     ),
-    # Last but not least, our dirty column
     remainder="drop",
 )
 
 pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
-# pipeline.fit(df, y)
-
-cv_results_t = cross_validate(pipeline, df, y, cv=cv, scoring="r2")
-
-cv_r2_t = cv_results_t["test_score"]
-
-print(f"Mean R2 score with is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 
 ##########################################################################
-# Great, we got exactly the same results as before!
+# And the best part is that we are now able to evaluate the paramaters of |fj|.
+# For instance, the ``match_score`` was manually picked and can now be
+# introduced into a grid search:
+
+from sklearn.model_selection import GridSearchCV
+
+# We will test four possible values of match_score:
+params = {"featureaugmenter__match_score": [0.2, 0.3, 0.4, 0.5]}
+
+grid = GridSearchCV(pipeline, param_grid=params)
+grid.fit(df, y)
+
+print(grid.best_params_)
+##########################################################################
+# The grid searching gave us the best value of 0.5 for the parameter
+# ``match_score``. Let's use this value in our regression:
+#
+# .. topic:: Note:
+#
+#    Here, ``grid.score()`` takes directly the best model (with ``match_score=0.5``).
+#    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and refitting the
+#    pipeline on the data.
+#
+
+grid.score()
+
+##########################################################################
+# Great, by evaluating the correct ``match_score`` we improved our results significantly!
