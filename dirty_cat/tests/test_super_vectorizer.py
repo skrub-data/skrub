@@ -6,10 +6,10 @@ import pytest
 import sklearn
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from dirty_cat import GapEncoder, SuperVectorizer
+from dirty_cat._utils import parse_version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):

@@ -4,11 +4,11 @@ import numpy as np
 import numpy.testing
 import pytest
 from sklearn import __version__ as sklearn_version
-from sklearn.utils import parse_version
 
 from dirty_cat import SimilarityEncoder
 from dirty_cat._similarity_encoder import get_kmeans_prototypes
 from dirty_cat._string_distances import ngram_similarity
+from dirty_cat._utils import parse_version
 
 
 def test_specifying_categories() -> None:

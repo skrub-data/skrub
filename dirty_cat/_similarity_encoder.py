@@ -25,10 +25,11 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils import check_random_state, parse_version
+from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
 from ._string_distances import get_ngram_count, preprocess
+from ._utils import parse_version
 
 
 def _ngram_similarity_one_sample_inplace(

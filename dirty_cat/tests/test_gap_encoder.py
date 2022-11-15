@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import __version__ as sklearn_version
-from sklearn.utils import parse_version
 
 from dirty_cat import GapEncoder
+from dirty_cat._utils import parse_version
 from dirty_cat.tests.utils import generate_data
 
 

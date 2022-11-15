@@ -4,6 +4,13 @@ from typing import Any, Hashable
 import numpy as np
 from sklearn.utils import check_array
 
+try:
+    # Works for sklearn >= 1.0
+    from sklearn.utils import parse_version  # noqa
+except ImportError:
+    # Works for sklearn < 1.0
+    from sklearn.utils import _parse_version as parse_version  # noqa
+
 
 class LRUDict:
     """dict with limited capacity

@@ -27,11 +27,11 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
-from sklearn.utils import check_random_state, gen_batches, parse_version
+from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
 
-from ._utils import check_input
+from ._utils import check_input, parse_version
 
 if parse_version(sklearn_version) < parse_version("0.24"):
     from sklearn.cluster._kmeans import _k_init

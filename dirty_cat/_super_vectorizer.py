@@ -15,9 +15,9 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils import parse_version
 
 from dirty_cat import DatetimeEncoder, GapEncoder
+from dirty_cat._utils import parse_version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
