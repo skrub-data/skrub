@@ -7,14 +7,14 @@ from dirty_cat._fuzzy_join import fuzzy_join
 class FeatureAugmenter(BaseEstimator, TransformerMixin):
     """Transformer that helps augment the number of features in a table.
 
-    Given a dictionnary of tables and key column names,
+    Given a list of tables and key column names,
     fuzzy join them to the main table.
 
     Parameters
     ----------
-    tables : dict
-        A dictionnary containing the key column
-        names and auxilliary tables that will be joined.
+    tables : list of tuples
+        A list of tuples containing the (key column
+        names, auxilliary tables) pairs that will be joined.
     main_key : str
         The key column name in the main table on which
         the join will be performed.
@@ -24,10 +24,6 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         close to be accepted, and closer to 0 that a bigger matching distance
         is tolerated. Equivalent to fuzzy_join's match_score.
 
-    Notes
-    -----
-    The `tables` parameter is a dictionnary. This implies
-    that key column names must be different.
 
     Examples
     --------
@@ -59,9 +55,9 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     1     Italy    Rome
     2   Germany  Berlin
 
-    >>> aux_dict = {"Country": aux_table_1, "Country name": aux_table_2, "Countries": aux_table_3} # noqa
+    >>> aux_tables = [("Country", aux_table_1), ("Country name", aux_table_2), ("Countries", aux_table_3)] # noqa
 
-    >>> fa = FeatureAugmenter(tables=aux_dict, main_key='Country')
+    >>> fa = FeatureAugmenter(tables=aux_tables, main_key='Country')
 
     >>> augmented_table = fa.fit_transform(X)
     >>> augmented_table
@@ -73,7 +69,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        tables: dict,
+        tables: list,
         main_key: str,
         match_score=0,
     ):
@@ -106,10 +102,10 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
                 f"Got main_key={self.main_key!r}, but column missing in the main table."
             )
 
-        for key in self.tables:
-            if key not in self.tables[key].columns:
+        for pairs in self.tables:
+            if pairs[0] not in pairs[1].columns:
                 raise ValueError(
-                    f"Got column key {key!r}, "
+                    f"Got column key {pairs[0]!r}, "
                     "but column missing in the auxilliary table."
                 )
         return self
@@ -131,16 +127,15 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
             The final joined table.
         """
 
-        for key in self.tables:
+        for pairs in self.tables:
             # TODO: Add an option to fuzzy_join on multiple columns at once
             # (will be if len(inter_col)!=0)
-
-            aux_table = self.tables[key]
+            aux_table = pairs[1]
             X = fuzzy_join(
                 X,
                 aux_table,
                 left_on=self.main_key,
-                right_on=key,
+                right_on=pairs[0],
                 suffixes=("", "_aux"),
                 match_score=self.match_score,
             )

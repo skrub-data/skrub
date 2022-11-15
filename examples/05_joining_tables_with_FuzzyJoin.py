@@ -378,23 +378,20 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # Instantiating the transformer
 # ............................
 # To do this, we will first gather the auxilliary tables into a
-# dictionary, with the joining column names as their key:
-#
-# A dictionary can have only unique keys (unique join keys for each table)
-# We will have to rename the 'Country Name' column to take this into account:
+# list of (keys,tables):
 
 life_exp.rename(columns={"Country Name": "Country Name 2"}, inplace=True)
 legal_rights.rename(columns={"Country Name": "Country Name 3"}, inplace=True)
 
-aux_wb_tables = {
-    "Country Name": gdppc,
-    "Country Name 2": life_exp,
-    "Country Name 3": legal_rights,
-}
+aux_wb_tables = [
+    ("Country Name", gdppc),
+    ("Country Name 2", life_exp),
+    ("Country Name 3", legal_rights),
+]
 
 y = df["Happiness score"]
 #######################################################################
-# We have our auxilliary tables in a dictionnary!
+# We have our auxilliary tables in a list!
 # Let us now create an instance of the transformer with the necessary information:
 from dirty_cat import FeatureAugmenter
 
