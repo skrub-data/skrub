@@ -1,6 +1,8 @@
 """
 Fetching functions to retrieve example datasets, using
 Scikit-Learn's ``fetch_openml()`` function.
+
+Public API functions should return either a `DatasetInfoOnly` or a `DatasetAll`.
 """
 
 # Future notes:
@@ -14,7 +16,7 @@ import urllib.request
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
@@ -104,7 +106,7 @@ class DatasetInfoOnly:
     read_csv_kwargs: Dict[str, Any]
 
 
-def fetch_openml_dataset(
+def _fetch_openml_dataset(
     dataset_id: int,
     data_directory: Path = get_data_dir(),
 ) -> Dict[str, Any]:
@@ -219,15 +221,15 @@ def _fetch_world_bank_data(
     """
     # See if file available locally :
     path = f"{data_directory}/{indicator_id}.csv"
-    csv_path = Path(path)
+    csv_path = Path(path).resolve()
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
-    if csv_path.is_file() is True:
+    if csv_path.is_file():
         df = pd.read_csv(csv_path, nrows=0)
         indicator_name = df.columns[1]
     else:
         warnings.warn(
-            f"Could not find the dataset {indicator_id} locally. "
-            "Downloading it from World Bank data; this might take a while... "
+            f"Could not find the dataset {indicator_id!r} locally. "
+            "Downloading it from the World Bank; this might take a while... "
             "If it is interrupted, some files might be invalid/incomplete: "
             "if on the following run, the fetching raises errors, you can try "
             f"fixing this issue by deleting the directory {csv_path!s}.",
@@ -243,29 +245,24 @@ def _fetch_world_bank_data(
             file = zip_file_object.open(true_file)
         except BadZipFile:
             raise FileNotFoundError(
-                f"Couldn't find csv file, the indicator id {indicator_id} seems invalid."  # noqa
+                f"Couldn't find csv file, the indicator id {indicator_id!r} seems invalid."  # noqa
             )
         except URLError:
-            raise URLError("No internet connection or the website is down.")  # noqa
+            raise URLError("No internet connection or the website is down.")
         # Read and modify csv file
-        df = pd.read_csv(file, skiprows=3)
+        df = pd.read_csv(file, skiprows=3)  # FIXME: why three rows?
         indicator_name = df.iloc[0, 2]
         df[indicator_name] = df.stack().groupby(level=0).last()
         df = df[df[indicator_name] != indicator_id]
         df = df[["Country Name", indicator_name]]
         # Save the file
-        data_directory.mkdir(exist_ok=True, parents=True)
-        csv_path = data_directory.resolve() / (indicator_id + ".csv")
         df.to_csv(csv_path, index=False)
-    description = (
-        f"This table shows the {indicator_name} World Bank indicator."
-        " It can be used as an input table for fuzzy_join."
-    )
+    description = f"This table shows the {indicator_name!r} World Bank indicator. "
     return {
         "dataset_name": indicator_name,
         "description": description,
         "source": url,
-        "path": csv_path.resolve(),
+        "path": csv_path,
     }
 
 
@@ -415,23 +412,27 @@ def _features_to_csv_format(features: Features) -> str:
     return ",".join(features.names)
 
 
-def fetch_dataset_as_dataclass(
+def _fetch_dataset_as_dataclass(
+    source: str,
     dataset_name: str,
-    dataset_id: int,
-    target: str,
-    read_csv_kwargs: dict,
+    dataset_id: Union[int, str],
+    target: Optional[str],
     load_dataframe: bool,
-    source: str = "openml",
+    read_csv_kwargs: Optional[dict] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
-    Takes a dataset identifier, a target column name,
+    Takes a dataset identifier, a target column name (if applicable),
     and some additional keyword arguments for `pd.read_csv`.
 
     If you don't need the dataset to be loaded in memory,
     pass `load_dataframe=False`.
 
-    If you are loading data from the World Bank platform,
-    you need to specify `source='world_bank'`.
+    For loading data from:
+    - the World Bank platform, specify `source="world_bank"`.
+    - OpenML, specify `source="openml"`
+
+    If the dataset doesn't have a target (unsupervised learning or inapplicable),
+    explicitly specify `target=None`.
 
     Returns
     -------
@@ -443,9 +444,18 @@ def fetch_dataset_as_dataclass(
 
     """
     if source == "openml":
-        info = fetch_openml_dataset(dataset_id)
-    if source == "world_bank":
+        info = _fetch_openml_dataset(dataset_id)
+    elif source == "world_bank":
         info = _fetch_world_bank_data(dataset_id)
+    else:
+        raise ValueError(f"Unknown source {source!r}")
+
+    if read_csv_kwargs is None:
+        read_csv_kwargs = {}
+
+    if target is None:
+        target = []
+
     if load_dataframe:
         df = pd.read_csv(info["path"], **read_csv_kwargs)
         y = df[target]
@@ -508,7 +518,8 @@ def fetch_employee_salaries(
     DatasetInfoOnly
         If `load_dataframe=False`
     """
-    dataset = fetch_dataset_as_dataclass(
+    dataset = _fetch_dataset_as_dataclass(
+        source="openml",
         dataset_name="Employee salaries",
         dataset_id=EMPLOYEE_SALARIES_ID,
         target="current_annual_salary",
@@ -550,7 +561,8 @@ def fetch_road_safety(
     DatasetInfoOnly
         If `load_dataframe=False`
     """
-    return fetch_dataset_as_dataclass(
+    return _fetch_dataset_as_dataclass(
+        source="openml",
         dataset_name="Road safety",
         dataset_id=ROAD_SAFETY_ID,
         target="Sex_of_Driver",
@@ -585,7 +597,8 @@ def fetch_medical_charge(
     DatasetInfoOnly
         If `load_dataframe=False`
     """
-    return fetch_dataset_as_dataclass(
+    return _fetch_dataset_as_dataclass(
+        source="openml",
         dataset_name="Medical charge",
         dataset_id=MEDICAL_CHARGE_ID,
         target="Average_Total_Payments",
@@ -614,7 +627,8 @@ def fetch_midwest_survey(
     DatasetInfoOnly
         If `load_dataframe=False`
     """
-    return fetch_dataset_as_dataclass(
+    return _fetch_dataset_as_dataclass(
+        source="openml",
         dataset_name="Midwest survey",
         dataset_id=MIDWEST_SURVEY_ID,
         target="Census_Region",
@@ -644,7 +658,8 @@ def fetch_open_payments(
     DatasetInfoOnly
         If `load_dataframe=False`
     """
-    return fetch_dataset_as_dataclass(
+    return _fetch_dataset_as_dataclass(
+        source="openml",
         dataset_name="Open payments",
         dataset_id=OPEN_PAYMENTS_ID,
         target="status",
@@ -677,7 +692,8 @@ def fetch_traffic_violations(
     DatasetInfoOnly
         If `load_dataframe=False`
     """
-    return fetch_dataset_as_dataclass(
+    return _fetch_dataset_as_dataclass(
+        source="openml",
         dataset_name="Traffic violations",
         dataset_id=TRAFFIC_VIOLATIONS_ID,
         target="violation_type",
@@ -708,7 +724,8 @@ def fetch_drug_directory(
     DatasetInfoOnly
         If `load_dataframe=False`
     """
-    return fetch_dataset_as_dataclass(
+    return _fetch_dataset_as_dataclass(
+        source="openml",
         dataset_name="Drug directory",
         dataset_id=DRUG_DIRECTORY_ID,
         target="PRODUCTTYPENAME",
@@ -740,11 +757,10 @@ def fetch_world_bank_indicator(
     DatasetInfoOnly
         If `load_dataframe=False`
     """
-    return fetch_dataset_as_dataclass(
-        dataset_name=f"World Bank indicator {indicator_id}",
-        dataset_id=indicator_id,
-        target=[],
-        read_csv_kwargs={},
-        load_dataframe=load_dataframe,
+    return _fetch_dataset_as_dataclass(
         source="world_bank",
+        dataset_name=f"World Bank indicator {indicator_id!r}",
+        dataset_id=indicator_id,
+        target=None,
+        load_dataframe=load_dataframe,
     )

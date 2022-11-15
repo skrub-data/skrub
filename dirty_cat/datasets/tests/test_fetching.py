@@ -22,11 +22,11 @@ from dirty_cat.datasets._fetching import (
     _download_and_write_openml_dataset,
     _export_gz_data_to_csv,
     _features_to_csv_format,
+    _fetch_openml_dataset,
     _get_details,
     _get_features,
     _read_json_from_gz,
 )
-from dirty_cat.datasets._fetching import fetch_openml_dataset as _fetch_openml_dataset
 from dirty_cat.datasets._fetching import (
     fetch_world_bank_indicator as fetch_world_bank_indicator,
 )
@@ -53,7 +53,7 @@ def get_test_data_dir() -> Path:
 
 def test_fetch_openml_dataset():
     """
-    Tests the ``fetch_openml_dataset()`` function in a real environment.
+    Tests the ``_fetch_openml_dataset()`` function in a real environment.
     Though, to avoid the test being too long,
     we will download a small dataset (<1000 entries).
 
@@ -134,7 +134,7 @@ def test_fetch_openml_dataset_mocked(
     mock_pathlib_path_isfile,
 ):
     """
-    Test function ``fetch_openml_dataset()``, but this time,
+    Test function ``_fetch_openml_dataset()``, but this time,
     we mock the functions to test its inner mechanisms.
     """
 
@@ -309,8 +309,8 @@ def test__features_to_csv_format():
     assert _features_to_csv_format(features) == expected_return_value
 
 
-@mock.patch("dirty_cat.datasets._fetching.fetch_openml_dataset")
-@mock.patch("dirty_cat.datasets._fetching.fetch_dataset_as_dataclass")
+@mock.patch("dirty_cat.datasets._fetching._fetch_openml_dataset")
+@mock.patch("dirty_cat.datasets._fetching._fetch_dataset_as_dataclass")
 def test_import_all_datasets(
     mock_fetch_dataset_as_dataclass, mock_fetch_openml_dataset
 ):
