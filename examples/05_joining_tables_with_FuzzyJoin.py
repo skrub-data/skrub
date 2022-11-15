@@ -446,16 +446,19 @@ print(grid.best_params_)
 # The grid searching gave us the best value of 0.5 for the parameter
 # ``match_score``. Let's use this value in our regression:
 #
+
+print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
+
+##########################################################################
+#
 # .. topic:: Note:
 #
-#    Here, ``grid.score()`` takes directly the best model (with ``match_score=0.5``)
+#    Here, ``grid.score()`` takes directly the best model (with ``match_score``=0.5)
 #    that was found in previous iterations.
 #    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and refitting the
 #    pipeline on the data.
 #
-
-print(f"Mean R2 score with pipeline is {grid.score(df, y)}")
-
-##########################################################################
+#
 # Great, by evaluating the correct ``match_score`` we improved our
 # results significantly!
+#
