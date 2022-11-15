@@ -219,7 +219,6 @@ def _fetch_world_bank_data(
               saved as a CSV file.
 
     """
-    # See if file available locally :
     path = f"{data_directory}/{indicator_id}.csv"
     csv_path = Path(path).resolve()
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
@@ -242,22 +241,29 @@ def _fetch_world_bank_data(
             for name in zip_file_object.namelist():
                 if "Metadata" not in name:
                     true_file = name
+                    break
+            else:
+                raise FileNotFoundError(
+                    "Could not find any non-metadata file "
+                    f"for indicator {indicator_id!r}."
+                )
             file = zip_file_object.open(true_file)
-        except BadZipFile:
+        except BadZipFile as e:
             raise FileNotFoundError(
-                f"Couldn't find csv file, the indicator id {indicator_id!r} seems invalid."  # noqa
-            )
+                "Couldn't find csv file, the indicator id "
+                f"{indicator_id!r} seems invalid."
+            ) from e
         except URLError:
             raise URLError("No internet connection or the website is down.")
-        # Read and modify csv file
+        # Read and modify the csv file
         df = pd.read_csv(file, skiprows=3)  # FIXME: why three rows?
         indicator_name = df.iloc[0, 2]
         df[indicator_name] = df.stack().groupby(level=0).last()
         df = df[df[indicator_name] != indicator_id]
         df = df[["Country Name", indicator_name]]
-        # Save the file
+
         df.to_csv(csv_path, index=False)
-    description = f"This table shows the {indicator_name!r} World Bank indicator. "
+    description = f"This table shows the {indicator_name!r} World Bank indicator."
     return {
         "dataset_name": indicator_name,
         "description": description,
