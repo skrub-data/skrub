@@ -8,7 +8,7 @@ from sklearn import __version__ as sklearn_version
 from dirty_cat import SimilarityEncoder
 from dirty_cat._similarity_encoder import get_kmeans_prototypes
 from dirty_cat._string_distances import ngram_similarity
-from dirty_cat._utils import Version
+from dirty_cat._utils import parse_version
 
 
 def test_specifying_categories() -> None:
@@ -238,7 +238,7 @@ def test_get_features() -> None:
     sim_enc = SimilarityEncoder(random_state=435)
     X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)
-    if Version(sklearn_version) < Version("1.0"):
+    if parse_version(sklearn_version) < parse_version("1.0"):
         feature_names = sim_enc.get_feature_names()
     else:
         feature_names = sim_enc.get_feature_names_out()
