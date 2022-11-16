@@ -70,7 +70,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         self,
         tables: list,
         main_key: str,
-        match_score=0,
+        match_score: float = 0.0,
     ):
         self.tables = tables
         self.main_key = main_key
