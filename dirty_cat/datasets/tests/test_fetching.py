@@ -10,7 +10,6 @@ from pathlib import Path
 from unittest import mock
 from unittest.mock import mock_open
 from urllib.error import URLError
-from zipfile import BadZipFile
 
 import pandas as pd
 import pytest
@@ -422,20 +421,7 @@ def test_fetch_world_bank_indicator():
             # Valid call
             returned_info = fetch_world_bank_indicator(indicator_id=test_dataset["id"])
 
-        except BadZipFile:
-            test_id = test_dataset["id"]
-            with pytest.raises(
-                FileNotFoundError,
-                match=f"Couldn't find.*{test_id}",
-            ):
-                fetch_world_bank_indicator(indicator_id=test_dataset["id"])
-
         except URLError:
-            with pytest.raises(
-                URLError,
-                match="No internet connection",
-            ):
-                fetch_world_bank_indicator(indicator_id=test_dataset["id"])
             warnings.warn(
                 "No internet connection or the website is down, test aborted."
             )
