@@ -8,7 +8,7 @@
 
 |py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
 
-.. |py_ver| image:: https://img.shields.io/pypi/pyversions/dirty_cat
+.. |py_ver| image:: https://img.shields.io/badge/python-3.6%20|%203.7%20|%203.8%20|%203.9%20|%203.10-blue
 .. |pypi_var| image:: https://img.shields.io/pypi/v/dirty_cat?color=informational
 .. |pypi_dl| image:: https://img.shields.io/pypi/dm/dirty_cat
 .. |codecov| image:: https://img.shields.io/codecov/c/github/dirty-cat/dirty_cat/main
