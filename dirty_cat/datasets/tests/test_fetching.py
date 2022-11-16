@@ -108,7 +108,7 @@ def test_fetch_openml_dataset():
 
         assert returned_info["path"].is_file()
 
-        dataset: pd.DataFrame = pd.read_csv(
+        dataset = pd.read_csv(
             returned_info["path"], sep=",", quotechar="'", escapechar="\\"
         )
 
@@ -117,6 +117,17 @@ def test_fetch_openml_dataset():
             test_dataset["dataset_columns_count"],
         )
 
+        # Now that we have verified the file is on disk, we want to test
+        # whether calling the function again reads it from disk (it should)
+        # or queries the network again (it shouldn't).
+        with mock.patch("sklearn.datasets.fetch_openml") as mock_fetch_openml:
+            # Same valid call as above
+            disk_loaded_info = fetch_openml_dataset(
+                dataset_id=test_dataset["id"],
+                data_directory=test_data_dir,
+            )
+            mock_fetch_openml.assert_not_called()
+            assert disk_loaded_info == returned_info
     finally:
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
 
@@ -332,11 +343,7 @@ def test_import_all_datasets(
         target="To_predict",
         path=Path("/path/to/file.csv"),
         X=pd.DataFrame([1, 2, 3, 4]),
-        y=pd.Series(
-            [
-                5,
-            ]
-        ),
+        y=pd.Series([5]),
         read_csv_kwargs={"a": "b"},
     )
 
@@ -419,16 +426,14 @@ def test_fetch_world_bank_indicator():
             test_id = test_dataset["id"]
             with pytest.raises(
                 FileNotFoundError,
-                match=(
-                    f"Couldn't find csv file, the indicator id {test_id} seems invalid."
-                ),
+                match=f"Couldn't find.*{test_id}",
             ):
                 fetch_world_bank_indicator(indicator_id=test_dataset["id"])
 
         except URLError:
             with pytest.raises(
                 URLError,
-                match="<urlopen error No internet connection or the website is down.>",
+                match="No internet connection",
             ):
                 fetch_world_bank_indicator(indicator_id=test_dataset["id"])
             warnings.warn(
@@ -444,10 +449,21 @@ def test_fetch_world_bank_indicator():
         assert returned_info.source == test_dataset["url"]
         assert returned_info.path.is_file()
 
-        dataset: pd.DataFrame = pd.read_csv(returned_info.path)
+        dataset = pd.read_csv(returned_info.path)
 
         assert dataset.columns[0] == "Country Name"
         assert dataset.shape[1] == test_dataset["dataset_columns_count"]
+
+        # Now that we have verified the file is on disk, we want to test
+        # whether calling the function again reads it from disk (it should)
+        # or queries the network again (it shouldn't).
+        with mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
+            # Same valid call as above
+            disk_loaded_info = fetch_world_bank_indicator(
+                indicator_id=test_dataset["id"]
+            )
+            mock_urlretrieve.assert_not_called()
+            assert disk_loaded_info == returned_info
 
     finally:
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
