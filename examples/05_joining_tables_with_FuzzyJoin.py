@@ -429,7 +429,7 @@ encoder = make_column_transformer(
 pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
 
 ##########################################################################
-# And the best part is that we are now able to evaluate the paramaters of |fj|.
+# And the best part is that we are now able to evaluate the paramaters of the |fj|.
 # For instance, the ``match_score`` was manually picked and can now be
 # introduced into a grid search:
 
