@@ -395,7 +395,7 @@ y = df["Happiness score"]
 # Let us now create an instance of the transformer with the necessary information:
 from dirty_cat import FeatureAugmenter
 
-fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country", match_score=0)
+fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
 
 #################################################################
 # Fitting and transforming into the final table
