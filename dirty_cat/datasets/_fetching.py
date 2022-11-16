@@ -7,6 +7,7 @@ Scikit-Learn's ``fetch_openml()`` function.
 # - Watch out for ``fetch_openml()`` API modifications:
 # as of january 2021, the function is marked as experimental.
 
+from __future__ import annotations
 
 import gzip
 import json
@@ -83,6 +84,23 @@ class DatasetAll:
     y: pd.Series
     path: Path
     read_csv_kwargs: Dict[str, Any]
+
+    def __eq__(self, other: DatasetAll) -> bool:
+        """
+        Implemented for the tests to work without bloating the code.
+        The main reason for which it's needed is that equality between
+        DataFrames (X and y) is often ambiguous and will raise an error.
+        """
+        return (
+            self.name == other.name
+            and self.description == other.description
+            and self.source == other.source
+            and self.target == other.target
+            and self.X.equals(other.X)
+            and self.y.equals(other.y)
+            and self.path == other.path
+            and self.read_csv_kwargs == other.read_csv_kwargs
+        )
 
 
 @dataclass(unsafe_hash=True)
