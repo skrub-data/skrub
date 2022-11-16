@@ -373,6 +373,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             out = np.hstack(out)
 
         if self.cross_val is True:
+            # We fix the seed to avoid having each time different inner and outer folds
             np.random.seed(1)
             kf = KFold(
                 n_splits=self.n_folds, shuffle=True, random_state=self.random_state
