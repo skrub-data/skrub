@@ -271,7 +271,7 @@ class SimilarityEncoder(OneHotEncoder):
     array([['Female', 1],
            ['Male', None]], dtype=object)
 
-    >>> enc.get_feature_names(['gender', 'group'])
+    >>> enc.get_feature_names_out(['gender', 'group'])
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
 
     Attributes
