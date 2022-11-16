@@ -18,9 +18,9 @@ def gen_data():
     - Big: 2M
     """
     data = {
-        "small": 2_000,
+        "small": 10_000,
         "medium": 100_000,
-        "big": 2_000_000,
+        "big": 1_000_000,
     }
     for name, size in data.items():
         with open(f"data_{name}.pkl", "wb") as fl:
@@ -31,12 +31,11 @@ def gen_data():
 
 
 if __name__ == "__main__":
-    mh = MinHashEncoder(n_jobs=2)
+    mh = MinHashEncoder(n_jobs=1, batch=False)
 
-    with open("../data_small.pkl", "rb") as fl:
+    # gen_data(); exit()
+
+    with open("../data_big.pkl", "rb") as fl:
         X = pickle.load(fl).reshape(-1, 1)
 
-    mh.fit(X)
-    mh.transform(X)
-
-    # gen_data()
+    mh.fit(X).transform(X)

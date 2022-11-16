@@ -16,12 +16,12 @@ probability of having same encoding values. These encodings thus capture
 morphological similarities between strings.
 """
 
-from typing import Dict, List, Literal, Tuple
+from typing import Callable, Collection, Dict, List, Literal, Tuple
 
 import numpy as np
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils import murmurhash3_32
+from sklearn.utils import gen_even_slices, murmurhash3_32
 
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
@@ -90,6 +90,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         hashing: Literal["fast", "murmur"] = "fast",
         minmax_hash: bool = False,
         handle_missing: Literal["error", "zero_impute"] = "zero_impute",
+        batch: bool = False,
         n_jobs: int = None,
     ):
         self.ngram_range = ngram_range
@@ -97,6 +98,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.hashing = hashing
         self.minmax_hash = minmax_hash
         self.handle_missing = handle_missing
+        self.batch = batch
         self.n_jobs = n_jobs
 
     def _more_tags(self) -> Dict[str, List[str]]:
@@ -163,17 +165,20 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 ]
             )
 
-    def _compute_hash(self, string: str) -> np.ndarray:
-        """
-        Function called by joblib Parallel to compute the hash.
+    def _compute_hash(
+        self, string: str, hash_func: Callable[[str], np.ndarray]
+    ) -> np.ndarray:
+        """Function called to compute the hash of a string.
 
-        Check if the string is in the hash dictionary, if not, compute the hash using
+        Check if the string is in the hash dictionary, if not, scompute the hash using
         the specified hashing function and add it to the dictionary.
 
         Parameters
         ----------
         string : str
             The string to encode.
+        hash_func : callable
+            Hashing function to use on the string.
 
         Returns
         -------
@@ -184,17 +189,38 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             if string == "NAN":  # true if x is a missing value
                 self.hash_dict_[string] = np.zeros(self.n_components)
             else:
-                if self.hashing == "fast":
-                    self.hash_dict_[string] = self._get_fast_hash(string)
-                elif self.hashing == "murmur":
-                    self.hash_dict_[string] = self._get_murmur_hash(string)
-                else:
-                    raise ValueError(
-                        "hashing function should be either 'fast' or"
-                        "'murmur', got '{}'"
-                        "".format(self.hashing)
-                    )
+                self.hash_dict_[string] = hash_func(string)
         return self.hash_dict_[string]
+
+    def _compute_hash_batched(
+        self, batch: Collection[str], hash_func: Callable[[str], np.ndarray]
+    ):
+        """Function called to compute the hashes of a batch of strings.
+
+        Check if the string is in the hash dictionary, if not, compute the hash using
+        the specified hashing function and add it to the dictionary.
+
+        Parameters
+        ----------
+        batch : iterable of str
+            The batch of strings to encode.
+        hash_func : callable
+            Hashing function to use on the string.
+
+        Returns
+        -------
+        np.array of shape (n_samples, n_components)
+            The encoded strings, using specified encoding scheme.
+        """
+        res = np.zeros((len(batch), self.n_components))
+        for i, string in enumerate(batch):
+            if string not in self.hash_dict_:
+                if string == "NAN":  # true if x is a missing value
+                    self.hash_dict_[string] = np.zeros(self.n_components)
+                else:
+                    self.hash_dict_[string] = hash_func(string)
+            res[i] = self.hash_dict_[string]
+        return res
 
     def fit(self, X, y=None) -> "MinHashEncoder":
         """
@@ -276,14 +302,39 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 # NANs will be replaced by zeroes in _compute_hash
                 X[missing_mask] = "NAN"
 
+        if self.hashing == "fast":
+            hash_func = self._get_fast_hash
+        elif self.hashing == "murmur":
+            hash_func = self._get_murmur_hash
+        else:
+            raise ValueError(
+                "Hashing function should be either 'fast' or 'murmur', "
+                f"got {self.hashing!r}"
+            )
+
         # Compute the hashes for unique values
         unique_x, indices_x = np.unique(X, return_inverse=True)
-        unique_x_trans = Parallel(n_jobs=self.n_jobs)(
-            delayed(self._compute_hash)(x) for x in unique_x
-        )
-        # Match the hashes of the unique value to the original values
-        X_out = np.stack(unique_x_trans)[indices_x].reshape(
-            len(X), X.shape[1] * self.n_components
-        )
+        n_jobs = effective_n_jobs(self.n_jobs)
+
+        if self.batch:
+            unique_x_trans = Parallel(n_jobs=n_jobs)(
+                delayed(self._compute_hash)(
+                    unique_x[idx_slice],
+                    hash_func,
+                )
+                for idx_slice in gen_even_slices(len(unique_x), n_jobs)
+            )
+            # Match the hashes of the unique value to the original values
+            X_out = np.concatenate(unique_x_trans)[indices_x].reshape(
+                len(X), X.shape[1] * self.n_components
+            )
+        else:
+            unique_x_trans = Parallel(n_jobs=n_jobs)(
+                delayed(self._compute_hash)(x, hash_func) for x in unique_x
+            )
+            # Match the hashes of the unique value to the original values
+            X_out = np.stack(unique_x_trans)[indices_x].reshape(
+                len(X), X.shape[1] * self.n_components
+            )
 
         return X_out.astype(np.float64)  # The output is an int32 before conversion
