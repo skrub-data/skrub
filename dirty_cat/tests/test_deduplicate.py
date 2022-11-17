@@ -7,10 +7,10 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
 from dirty_cat._deduplicate import (
-    compute_ngram_distance,
-    create_spelling_correction,
+    _compute_ngram_distance,
+    _create_spelling_correction,
+    _guess_clusters,
     deduplicate,
-    guess_clusters,
 )
 
 
@@ -32,7 +32,7 @@ def generate_example_data(examples, entries_per_example, prob_mistake_per_letter
             string.ascii_lowercase[i]
             for i in rng.choice(np.arange(26), len(idxes)).astype(int)
         ]
-        # introduce spelling mistakes at right examples and right char locations per example
+        # introduce spelling mistakes at right examples and char locations per example
         str_as_list[idxes // len_ex, idxes % len_ex] = replacements
         # go back to 1d array of strings
         data.append(np.ascontiguousarray(str_as_list).view(f"U{len_ex}").ravel())
@@ -80,9 +80,9 @@ def test_deduplicate(
     assert np.isin(unique_other_analyzer, recovered_categories).all()
 
 
-def test_compute_ngram_distance() -> None:
+def test__compute_ngram_distance() -> None:
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
-    distance = compute_ngram_distance(words)
+    distance = _compute_ngram_distance(words)
     distance = squareform(distance)
     assert distance.shape[0] == words.shape[0]
     assert np.allclose(np.diag(distance), 0)
@@ -90,25 +90,25 @@ def test_compute_ngram_distance() -> None:
         assert np.allclose(distance[words == un_word][:, words == un_word], 0)
 
 
-def test_guess_clusters() -> None:
+def test__guess_clusters() -> None:
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
-    distance = compute_ngram_distance(words)
+    distance = _compute_ngram_distance(words)
     Z = linkage(distance, method="average")
-    n_clusters = guess_clusters(Z, distance)
+    n_clusters = _guess_clusters(Z, distance)
     assert n_clusters == len(np.unique(words))
 
 
-def test_create_spelling_correction(seed: int = 123) -> None:
+def test__create_spelling_correction(seed: int = 123) -> None:
     rng = np.random.RandomState(seed)
     n_clusters = 3
     samples_per_cluster = 10
     counts = np.concatenate(
-        [rng.random_integers(0, 100, samples_per_cluster) for _ in range(n_clusters)]
+        [rng.randint(0, 100, samples_per_cluster) for _ in range(n_clusters)]
     )
     clusters = (
         np.repeat(np.arange(n_clusters), samples_per_cluster).astype("int").tolist()
     )
-    spelling_correction = create_spelling_correction(
+    spelling_correction = _create_spelling_correction(
         counts.astype("str"),
         counts,
         clusters,

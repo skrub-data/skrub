@@ -9,11 +9,11 @@ import numpy as np
 import pandas as pd
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist, squareform
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
 
 
-def compute_ngram_distance(
+def _compute_ngram_distance(
     unique_words: Union[Sequence[str], np.ndarray],
     ngram_range: Tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
@@ -26,83 +26,25 @@ def compute_ngram_distance(
     ----------
     unique_words : Union[Sequence[str], np.ndarray]
         Sequence or array of unique words from the original data.
-    ngram_range : Tuple[int, int], optional
-        The n-gram range to compute the distance in, by default (2, 4)
-    analyzer : str, optional
-        Analyzer to extract n-grams, by default "char_wb"
+    ngram_range : Tuple[int, int], optional, default=(2,4)
+        The n-gram range to compute the distance in.
+    analyzer : str, optional, default=`char_wb`
+        Analyzer to extract n-grams
 
     Returns
     -------
     np.ndarray
         An n-times-(n-1)/2 matrix of n-gram TfIdf distances between `unique_words`.
     """
-    enc = CountVectorizer(ngram_range=ngram_range, analyzer=analyzer)
-    encoded = TfidfTransformer().fit_transform(enc.fit_transform(unique_words))
+    encoded = TfidfVectorizer(ngram_range=ngram_range, analyzer=analyzer).fit_transform(
+        unique_words
+    )
 
     distance_mat = pdist(encoded.todense(), metric="euclidean")
     return distance_mat
 
 
-def deduplicate(
-    data: Sequence[str],
-    n_clusters: Optional[int] = None,
-    ngram_range: Tuple[int, int] = (2, 4),
-    analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    method: Literal[
-        "single", "complete", "average", "centroid", "median", "ward"
-    ] = "average",
-    return_translation_table: bool = False,
-) -> Union[List[str], Tuple[List[str], pd.Series]]:
-    """Deduplicates data by computing the n-gram distance between unique
-    categories in data, performing hierarchical clustering on this distance
-    matrix, and choosing the most frequent element in each cluster as the
-    'correct' spelling. This method works best if the true number of
-    categories is significantly smaller than the number of observed spellings.
-
-    Parameters
-    ----------
-    data : Sequence[str]
-        The data to be deduplicated.
-    n_clusters : Optional[int], optional
-        number of clusters to use for hierarchical clustering, if None use the
-        number of clusters that lead to the lowest silhouette score,
-        by default None
-    ngram_range : Tuple[int, int], optional
-        range to use for computing n-gram distance, by default (2, 4)
-    analyzer : str, optional
-        `CountVectorizer` analyzer for computing n-grams, by default "char_wb"
-    method : str, optional
-        linkage method to use for merging clusters, by default "average"
-    return_translation_table : bool, optional
-        Whether to return a translation table with original words as indices
-        and deduplicated words as values, by default False
-
-    Returns
-    -------
-    Union[List[str], Tuple[List[str], pd.Series]]
-       Either the deduplicated data (if return_translation_table=False) or a
-       tuple of the deduplicated data and a translation table that maps
-       original data to deduplicated data (if return_translation_table=True).
-    """
-    unique_words, counts = np.unique(data, return_counts=True)
-    distance_mat = compute_ngram_distance(
-        unique_words, ngram_range=ngram_range, analyzer=analyzer
-    )
-
-    Z = linkage(distance_mat, method=method, optimal_ordering=True)
-    if n_clusters is None:
-        n_clusters = guess_clusters(Z, distance_mat)
-    clusters = fcluster(Z, n_clusters, criterion="maxclust")
-
-    translation_table = create_spelling_correction(unique_words, counts, clusters)
-    unrolled_corrections = translation_table[data]
-    if return_translation_table:
-        return unrolled_corrections, translation_table
-    else:
-        return unrolled_corrections
-
-
-def guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
+def _guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
     """Finds the number of clusters that maximize the silhouette score
     when clustering `distance_mat`.
 
@@ -130,7 +72,7 @@ def guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
     return n_clusters[np.argmax(silhouette_scores)]
 
 
-def create_spelling_correction(
+def _create_spelling_correction(
     unique_words: Union[Sequence[str], np.ndarray],
     counts: Union[Sequence[int], np.ndarray],
     clusters: Sequence[int],
@@ -146,9 +88,6 @@ def create_spelling_correction(
     counts : Union[Sequence[int], np.ndarray]
         A sequence or array of counts of how often each unique word appears in
         the original data.
-    count_series : pd.Series
-        A series with unique words (in the original data) as indices and number
-        of occurrences of each word in the original data as values.
     clusters : Sequence[int]
         A sequence of ints, indicating cluster membership of each unique word
         in `count_series`.
@@ -173,3 +112,71 @@ def create_spelling_correction(
         corrected_spelling.extend(sorted_spellings[:1] * len(sorted_spellings))
     pd_spell_correct = pd.Series(corrected_spelling, index=original_spelling)
     return pd_spell_correct
+
+
+def deduplicate(
+    data: Sequence[str],
+    n_clusters: Optional[int] = None,
+    ngram_range: Tuple[int, int] = (2, 4),
+    analyzer: Literal["word", "char", "char_wb"] = "char_wb",
+    method: Literal[
+        "single", "complete", "average", "centroid", "median", "ward"
+    ] = "average",
+    return_translation_table: bool = False,
+) -> Union[List[str], Tuple[List[str], pd.Series]]:
+    """Deduplicates data by computing the n-gram distance between unique
+    categories in data, performing hierarchical clustering on this distance
+    matrix, and choosing the most frequent element in each cluster as the
+    'correct' spelling. This method works best if the true number of
+    categories is significantly smaller than the number of observed spellings.
+
+    Parameters
+    ----------
+    data : Sequence[str]
+        The data to be deduplicated.
+    n_clusters : Optional[int], optional, default=None
+        number of clusters to use for hierarchical clustering, if None use the
+        number of clusters that lead to the lowest silhouette score.
+    ngram_range : Tuple[int, int], optional, default=(2, 4)
+        range to use for computing n-gram distance.
+    analyzer : typing.Literal["word", "char", "char_wb"], optional, default=`char_wb`
+        Analyzer parameter for the CountVectorizer used for the string
+        similarities.
+        Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
+        to factorize should be made of word counts or character n-gram counts.
+        Option `char_wb` creates character n-grams only from text inside word
+        boundaries; n-grams at the edges of words are padded with space.
+    method : str, optional, default=`average`
+        Linkage method parameter to use for merging clusters via scipy's
+        `linkage` method.
+        Options: {`single`, `complete`, `average`, `centroid`, `median`, `ward`},
+        describing different methods to calculate the distance between two clusters.
+        Option `average` calculates the distance between two clusters as the average
+        distance between data points in the first and second cluster.
+    return_translation_table : boolean, optional, default=False
+        Whether to return a translation table with original words as indices
+        and deduplicated words as values.
+
+    Returns
+    -------
+    Union[List[str], Tuple[List[str], pd.Series]]
+       Either the deduplicated data (if return_translation_table=False) or a
+       tuple of the deduplicated data and a translation table that maps
+       original data to deduplicated data (if return_translation_table=True).
+    """
+    unique_words, counts = np.unique(data, return_counts=True)
+    distance_mat = _compute_ngram_distance(
+        unique_words, ngram_range=ngram_range, analyzer=analyzer
+    )
+
+    Z = linkage(distance_mat, method=method, optimal_ordering=True)
+    if n_clusters is None:
+        n_clusters = _guess_clusters(Z, distance_mat)
+    clusters = fcluster(Z, n_clusters, criterion="maxclust")
+
+    translation_table = _create_spelling_correction(unique_words, counts, clusters)
+    unrolled_corrections = translation_table[data]
+    if return_translation_table:
+        return unrolled_corrections, translation_table
+    else:
+        return unrolled_corrections
