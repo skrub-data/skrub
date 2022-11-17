@@ -318,7 +318,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         if self.batch:
             unique_x_trans = Parallel(n_jobs=n_jobs)(
-                delayed(self._compute_hash)(
+                delayed(self._compute_hash_batched)(
                     unique_x[idx_slice],
                     hash_func,
                 )
