@@ -316,6 +316,10 @@ def test_errors():
     with pytest.raises(ValueError, match="Found unknown categories"):
         enc3.fit(X, y)
 
+    enc4 = _target_encoder.TargetEncoder(clf_type="raiseerror")
+    with pytest.raises(ValueError, match="Problem type must be either"):
+        enc4.fit(X, y)
+
     X2 = [[1, "a"], [2, "b"], [4, "c"]]
     X3 = [[5], [1], [4], [2]]
     enc4 = _target_encoder.TargetEncoder()

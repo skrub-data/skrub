@@ -296,12 +296,6 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             else:
                 X[mask] = self.handle_missing
 
-        if self.clf_type not in ("regression", "binary-clf", "multiclass-clf"):
-            raise ValueError(
-                "Problem type must be either 'regression', 'binary-clf' or"
-                f" 'multiclass-clf' got {self.clf_type!r} instead."
-            )
-
         X_temp = check_array(X, dtype=None)
         y_temp = check_array(self.y, dtype=None, ensure_2d=False)
         if not hasattr(X, "dtype") and np.issubdtype(X_temp.dtype, np.str_):
