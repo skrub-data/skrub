@@ -69,7 +69,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     >>> enc.fit(X)
     MinHashEncoder()
 
-    The encoded values with 5 components are:
+    The encoded data with 5 components are:
 
     >>> enc.transform(X)
     array([[-1.78337518e+09, -1.58827021e+09, -1.66359234e+09,
