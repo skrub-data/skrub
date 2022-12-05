@@ -7,7 +7,10 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat._utils import Version, check_input
+from dirty_cat._utils import check_input, parse_version
+
+# Required for ignoring lines too long in the docstrings
+# flake8: noqa: E501
 
 WORD_TO_ALIAS: Dict[str, str] = {
     "year": "Y",
@@ -239,7 +242,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Ensures compatibility with sklearn < 1.0, and returns the output of
         get_feature_names_out.
         """
-        if Version(sklearn_version) >= "1.0":
+        if parse_version(sklearn_version) >= parse_version("1.0"):
             warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "

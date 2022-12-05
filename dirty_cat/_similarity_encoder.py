@@ -28,9 +28,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
-from dirty_cat._utils import Version
-
 from ._string_distances import get_ngram_count, preprocess
+from ._utils import parse_version
 
 
 def _ngram_similarity_one_sample_inplace(
@@ -247,6 +246,32 @@ class SimilarityEncoder(OneHotEncoder):
     n_jobs : int, optional
         maximum number of processes used to compute similarity matrices. Used
         only if ``fast=True`` in ``SimilarityEncoder.transform``
+
+    Examples
+    --------
+    >>> enc = SimilarityEncoder()
+    >>> X = [['Male', 1], ['Female', 3], ['Female', 2]]
+    >>> enc.fit(X)
+    SimilarityEncoder()
+
+    It inherits the same methods as sklearn's :class:`~sklearn.preprocessing.OneHotEncoder`:
+
+    >>> enc.categories_
+    [array(['Female', 'Male'], dtype=object), array([1, 2, 3], dtype=object)]
+
+    But it provides a continuous encoding based on similarity
+    instead of a discrete one based on exact matches:
+
+    >>> enc.transform([['Female', 1], ['Male', 4]])
+    array([[1., 0.42857143, 1., 0., 0.],
+           [0.42857143, 1., 0. , 0. , 0.]])
+
+    >>> enc.inverse_transform([[1., 0.42857143, 1., 0., 0.], [0.42857143, 1., 0. , 0. , 0.]])
+    array([['Female', 1],
+           ['Male', None]], dtype=object)
+
+    >>> enc.get_feature_names_out(['gender', 'group'])
+    array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
 
     Attributes
     ----------
@@ -469,7 +494,7 @@ class SimilarityEncoder(OneHotEncoder):
             )
 
         self.drop_idx_ = self._compute_drop_idx()
-        if Version(sklearn.__version__) >= Version("1.1.0"):
+        if parse_version(sklearn.__version__) >= parse_version("1.1.0"):
             self._infrequent_enabled = False
 
         return self

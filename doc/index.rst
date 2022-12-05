@@ -12,6 +12,8 @@ dirty_cat: machine learning on dirty categories
 
     `dirty_cat` facilitates machine-learning on non-curated categories:
     **robust to morphological variants**, such as typos.
+    See `the first example notebook <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
+    for a more in-depth look into the problem and the library's capabilities.
 
 |
 
@@ -77,7 +79,7 @@ pipeline you can tweak.
 
 
 Usage examples
-===============
+==============
 
 .. container:: larger-container
 
@@ -97,7 +99,7 @@ API documentation
 =================
 
 Vectorizing a dataframe
-------------------------
+-----------------------
 
 .. autosummary::
    :toctree: generated/
@@ -120,7 +122,7 @@ Dirty Category encoders
    TargetEncoder
 
 Other encoders
------------------------
+--------------
 
 .. autosummary::
    :toctree: generated/
@@ -130,7 +132,7 @@ Other encoders
    DatetimeEncoder
 
 Joining tables
----------------
+--------------
 
 .. autosummary::
    :toctree: generated/
@@ -141,7 +143,7 @@ Joining tables
    FeatureAugmenter
 
 Data download
------------------------
+-------------
 
 .. autosummary::
    :toctree: generated/
@@ -159,7 +161,7 @@ Data download
    datasets.get_data_dir
 
 About
-=========
+=====
 
 dirty_cat is for now a repository for ideas coming out of a research
 project: there is still little known about the problems of dirty
@@ -173,10 +175,16 @@ dirty-cat received funding from `project DirtyData
 .. [2] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
 
 
-.. seealso::
+Related projects
+================
 
-   Many classic categorical encoding schemes are available here:
-   https://contrib.scikit-learn.org/category_encoders/
-
-   Similarity encoding in also available in Spark ML:
-   https://github.com/rakutentech/spark-dirty-cat
+- `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_
+  - a very popular machine learning library; dirty_cat inherits its API
+- `categorical-encoding <https://contrib.scikit-learn.org/category_encoders/>`_
+  - scikit-learn compatible classic categorical encoding schemes
+- `spark-dirty-cat <https://github.com/rakutentech/spark-dirty-cat>`_
+  - a Scala implementation of dirty_cat for Spark ML
+- `CleverCSV <https://github.com/alan-turing-institute/CleverCSV>`_
+  - a package for dealing with dirty csv files
+- `GAMA <https://github.com/openml-labs/gama>`_
+  - a modular AutoML assistant that uses dirty_cat as part of its search space
