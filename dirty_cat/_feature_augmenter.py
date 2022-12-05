@@ -13,8 +13,14 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     Parameters
     ----------
     tables : list of tuples
-        A list of tuples containing the (key column
-        names, auxilliary tables) pairs that will be joined.
+        List of (table, column name) tuples
+        specyfying the transformer objects to be applied.
+        
+        table: str
+            Name of the table to be joined.
+        column name: str,
+            Name of table column to join on.
+
     main_key : str
         The key column name in the main table on which
         the join will be performed.
@@ -54,7 +60,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     1     Italy    Rome
     2   Germany  Berlin
 
-    >>> aux_tables = [("Country", aux_table_1), ("Country name", aux_table_2), ("Countries", aux_table_3)] # noqa
+    >>> aux_tables = [(aux_table_1, "Country"), (aux_table_2, "Country name"), (aux_table_3, "Countries")] # noqa
 
     >>> fa = FeatureAugmenter(tables=aux_tables, main_key='Country')
 
@@ -102,9 +108,9 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
             )
 
         for pairs in self.tables:
-            if pairs[0] not in pairs[1].columns:
+            if pairs[1] not in pairs[0].columns:
                 raise ValueError(
-                    f"Got column key {pairs[0]!r}, "
+                    f"Got column key {pairs[1]!r}, "
                     "but column missing in the auxilliary table."
                 )
         return self
@@ -129,12 +135,12 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         for pairs in self.tables:
             # TODO: Add an option to fuzzy_join on multiple columns at once
             # (will be if len(inter_col)!=0)
-            aux_table = pairs[1]
+            aux_table = pairs[0]
             X = fuzzy_join(
                 X,
                 aux_table,
                 left_on=self.main_key,
-                right_on=pairs[0],
+                right_on=pairs[1],
                 suffixes=("", "_aux"),
                 match_score=self.match_score,
             )

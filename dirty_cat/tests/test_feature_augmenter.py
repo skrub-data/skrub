@@ -42,9 +42,9 @@ def test_feature_augmenter():
     )
 
     aux_tables = [
-        ("Country", aux_table_1),
-        ("Country name", aux_table_2),
-        ("Countries", aux_table_3),
+        (aux_table_1, "Country"),
+        (aux_table_2, "Country name"),
+        (aux_table_3, "Countries"),
     ]
 
     fa = FeatureAugmenter(tables=aux_tables, main_key="Country")
@@ -78,9 +78,9 @@ def test_feature_augmenter():
         false_fa.fit(main_table)
 
     false_aux_tables = [
-        ("Countrys", aux_table_1),
-        ("Country name", aux_table_2),
-        ("Countries", aux_table_3),
+        (aux_table_1, "Countrys"),
+        (aux_table_2, "Country name"),
+        (aux_table_3, "Countries"),
     ]
 
     false_fa2 = FeatureAugmenter(tables=false_aux_tables, main_key="Country")
