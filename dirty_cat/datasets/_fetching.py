@@ -238,6 +238,7 @@ def _fetch_world_bank_data(
 
     """
     path = f"{data_directory}/{indicator_id}.csv"
+    Path(data_directory).mkdir(parents=True, exist_ok=True)
     csv_path = Path(path).resolve()
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
     if csv_path.is_file():
