@@ -384,9 +384,9 @@ life_exp.rename(columns={"Country Name": "Country Name 2"}, inplace=True)
 legal_rights.rename(columns={"Country Name": "Country Name 3"}, inplace=True)
 
 aux_wb_tables = [
-    ("Country Name", gdppc),
-    ("Country Name 2", life_exp),
-    ("Country Name 3", legal_rights),
+    (gdppc, "Country Name"),
+    (life_exp, "Country Name 2"),
+    (legal_rights, "Country Name 3"),
 ]
 
 y = df["Happiness score"]
