@@ -15,7 +15,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     tables : list of tuples
         List of (table, column name) tuples
         specyfying the transformer objects to be applied.
-        
+
         table: str
             Name of the table to be joined.
         column name: str,
@@ -144,7 +144,6 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
                 suffixes=("", "_aux"),
                 match_score=self.match_score,
             )
-
         return X
 
     def fit_transform(self, X, y=None) -> pd.DataFrame:
@@ -164,5 +163,4 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         DataFrame
             The final joined table.
         """
-
         return self.fit(X).transform(X)
