@@ -1,8 +1,9 @@
 """
 Fuzzy joining tables using string columns.
 The principle is as follows:
-  1. We embed and transform the key string columns using CountVectorizer
-  and TfifdTransformer.
+  1. We embed and transform the key string columns using CountVectorizer/
+  HashingVectorizer and TfifdTransformer. HashingVectorizer is used if more than
+  1_000_000 categories are found.
   2. For each category, we use the nearest neighbor method to find its closest
   neighbor and establish a match.
   3. We match the tables using the previous information.
@@ -65,8 +66,8 @@ def fuzzy_join(
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
-        Analyzer parameter for the CountVectorizer used for the string
-        similarities.
+        Analyzer parameter for the CountVectorizer/HashingVectorizer used for
+        the string similarities.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
