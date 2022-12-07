@@ -17,7 +17,11 @@ from typing import Literal, Tuple, Union
 import numpy as np
 import pandas as pd
 from scipy.sparse import vstack
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import (
+    CountVectorizer,
+    HashingVectorizer,
+    TfidfTransformer,
+)
 from sklearn.neighbors import NearestNeighbors
 
 
@@ -208,9 +212,12 @@ def fuzzy_join(
     main_col_clean = main_table[main_col].astype(str)
     aux_col_clean = aux_table[aux_col].astype(str)
 
-    enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
+
+    if len(all_cats) < 1_000_000:
+        enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    else:
+        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
     enc_cv = enc.fit(all_cats)
     main_enc = enc_cv.transform(main_col_clean)
