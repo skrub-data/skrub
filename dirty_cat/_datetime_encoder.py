@@ -39,8 +39,8 @@ AcceptedTimeValues = Literal[
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
     """
-    This encoder transforms each datetime column into several numeric columns
-    corresponding to temporal features, e.g year, month, day...
+    Transforms each datetime column into several numeric columns for temporal features (e.g year, month, day...).
+
     Constant extracted features are dropped; for instance, if the year is
     always the same in a feature, the extracted "year" column won't be added.
     If the dates are timezone aware, all the features extracted will correspond
@@ -54,7 +54,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         which contains the time to epoch (in seconds).
         For instance, if you specify "day", only "year", "month", "day" and
         "total_time" features will be created.
-    add_day_of_the_week: bool, default=False
+    add_day_of_the_week : bool, default=False
         Add day of the week feature (if day is extracted).
         This is a numerical feature from 0 (Monday) to 6 (Sunday).
 
