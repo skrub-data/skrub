@@ -2,6 +2,7 @@ import string
 from typing import List
 
 import numpy as np
+import pandas as pd
 import pytest
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
@@ -68,9 +69,11 @@ def test_deduplicate(
     recovered_categories = np.unique(deduplicated_data)
     assert recovered_categories.shape[0] == n_clusters
     assert np.isin(clean_categories, recovered_categories).all()
-    deduplicated_data, translation_table = deduplicate(
-        data, n_clusters=n_clusters, return_translation_table=True
-    )
+    deduplicated_data = deduplicate(data, n_clusters=n_clusters)
+    translation_table = pd.Series(deduplicated_data, index=data)
+    translation_table = translation_table[
+        ~translation_table.index.duplicated(keep="first")
+    ]
     assert np.isin(np.unique(deduplicated_data), recovered_categories).all()
     assert np.alltrue(translation_table[data] == np.array(deduplicated_data))
     deduplicated_other_analyzer = np.array(

@@ -122,8 +122,7 @@ def deduplicate(
     method: Literal[
         "single", "complete", "average", "centroid", "median", "ward"
     ] = "average",
-    return_translation_table: bool = False,
-) -> Union[List[str], Tuple[List[str], pd.Series]]:
+) -> List[str]:
     """Deduplicates data by computing the n-gram distance between unique
     categories in data, performing hierarchical clustering on this distance
     matrix, and choosing the most frequent element in each cluster as the
@@ -153,16 +152,11 @@ def deduplicate(
         describing different methods to calculate the distance between two clusters.
         Option `average` calculates the distance between two clusters as the average
         distance between data points in the first and second cluster.
-    return_translation_table : boolean, optional, default=False
-        Whether to return a translation table with original words as indices
-        and deduplicated words as values.
 
     Returns
     -------
-    Union[List[str], Tuple[List[str], pd.Series]]
-       Either the deduplicated data (if return_translation_table=False) or a
-       tuple of the deduplicated data and a translation table that maps
-       original data to deduplicated data (if return_translation_table=True).
+    List[str]
+       The deduplicated data.
     """
     unique_words, counts = np.unique(data, return_counts=True)
     distance_mat = _compute_ngram_distance(
@@ -176,7 +170,4 @@ def deduplicate(
 
     translation_table = _create_spelling_correction(unique_words, counts, clusters)
     unrolled_corrections = translation_table[data]
-    if return_translation_table:
-        return unrolled_corrections, translation_table
-    else:
-        return unrolled_corrections
+    return unrolled_corrections

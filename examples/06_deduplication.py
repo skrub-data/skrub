@@ -131,7 +131,7 @@ sns.heatmap(
 # via the `silhouette score <https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.
 
 
-deduplicated_data, translation_table = deduplicate(data, return_translation_table=True)
+deduplicated_data = deduplicate(data)
 
 ###############################################################################
 # We can visualize the distribution of categories in the deduplicated data:
@@ -150,11 +150,16 @@ _ = plt.ylabel("Counts")
 # of clusters as determined by the silhouette score.
 #
 # However, often the translation/deduplication won't be perfect and will require some tweaks.
-# In this case, adapting the translation table returned by `deduplicate` can be helpful.
+# In this case, we can construct and update a translation table based on the data
+# returned by `deduplicate`.
 # It consists of the (potentially) misspelled category names as indices and the
 # (potentially) correct categories as values.
 
-translation_table.head()
+# create a table that maps original -> corrected categories
+translation_table = pd.Series(deduplicated_data, index=data)
+
+# remove duplicates in the original data
+translation_table = translation_table[~translation_table.index.duplicated(keep="first")]
 
 ###############################################################################
 # Since the number of correct spellings will likely be much smaller than the
