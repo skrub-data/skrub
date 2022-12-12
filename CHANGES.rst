@@ -225,11 +225,13 @@ Major changes
   :class:`GapEncoder` class. This method discovers latent categories formed
   via combinations of substrings, and encodes string data as combinations of
   these categories. To be used if interpretability is important.
+  :pr:`153` by :user:`Alexis Cvetkov <alexis-cvetkov>`
 
 Bug-fixes
 ---------
 
 * Multiprocessing exception in notebook (#154)
+  :pr:`154` by :user:`Lilian Boulard <LilianBoulard>`
 
 
 Release 0.0.7
