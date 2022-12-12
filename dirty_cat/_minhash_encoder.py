@@ -70,6 +70,29 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ----------
     hash_dict_ : LRUDict
         Computed hashes.
+    
+    Examples
+    --------
+    >>> enc = MinHashEncoder(n_components=5)
+
+    Let's encode the following non-normalized data:
+
+    >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['London']]
+
+    >>> enc.fit(X)
+    MinHashEncoder()
+
+    The encoded data with 5 components are:
+
+    >>> enc.transform(X)
+    array([[-1.78337518e+09, -1.58827021e+09, -1.66359234e+09,
+            -1.81988679e+09, -1.96259387e+09],
+           [-8.48046971e+08, -1.76657887e+09, -1.55891205e+09,
+            -1.48574446e+09, -1.68729890e+09],
+           [-1.97582893e+09, -2.09500033e+09, -1.59652117e+09,
+            -1.81759383e+09, -2.09569333e+09],
+           [-1.97582893e+09, -2.09500033e+09, -1.53072052e+09,
+            -1.45918266e+09, -1.58098831e+09]])
 
     References
     ----------

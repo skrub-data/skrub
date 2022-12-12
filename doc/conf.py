@@ -267,7 +267,7 @@ sphinx_gallery_conf = {
         "repo": "dirty-cat.github.io",
         "binderhub_url": "https://mybinder.org",
         "branch": "main",
-        "dependencies": ["../requirements.txt", "binder/requirements.txt"],
+        "dependencies": ["./binder/requirements.txt"],
         "notebooks_dir": "dev",
     },
 }
