@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from dirty_cat import MinHashEncoder
 from sklearn.neighbors import NearestNeighbors
 
 
@@ -28,7 +29,9 @@ def fuzzy_join(
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
+    encoder: Literal["count", "minhash"] = "count",
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
+    n_components: int = 30,
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
     match_score: float = 0,
@@ -208,10 +211,15 @@ def fuzzy_join(
     main_col_clean = main_table[main_col].astype(str)
     aux_col_clean = aux_table[aux_col].astype(str)
 
-    enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    if encoder == "count":
+        enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    elif encoder == "minhash":
+        enc = MinHashEncoder(n_components=n_components, ngram_range=ngram_range)
 
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
+    print(all_cats)
+    print(enc)
     enc_cv = enc.fit(all_cats)
     main_enc = enc_cv.transform(main_col_clean)
     aux_enc = enc_cv.transform(aux_col_clean)
