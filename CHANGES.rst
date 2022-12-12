@@ -57,8 +57,7 @@ Major changes
   - scikit-learn>=0.23
   - scipy>=1.4.0
   - numpy>=1.17.3
-  - pandas>=1.2.0
-:pr:`299` and `300` by :user:`Lilian Boulard <LilianBoulard>`
+  - pandas>=1.2.0 :pr:`299` and :pr:`300` by :user:`Lilian Boulard <LilianBoulard>`
 
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
     The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
