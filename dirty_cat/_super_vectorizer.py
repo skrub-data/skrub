@@ -648,18 +648,15 @@ class SuperVectorizer(ColumnTransformer):
                         cols = [self.columns_[i] for i in cols]
                     all_trans_feature_names.extend(cols)
                 continue
-            if not hasattr(trans, "get_feature_names"):
-                all_trans_feature_names.extend(cols)
+            if parse_version(sklearn_version) < parse_version("1.0"):
+                trans_feature_names = trans.get_feature_names(cols)
             else:
-                if parse_version(sklearn_version) < parse_version("1.0"):
-                    trans_feature_names = trans.get_feature_names(cols)
-                else:
-                    trans_feature_names = trans.get_feature_names_out(cols)
-                all_trans_feature_names.extend(trans_feature_names)
+                trans_feature_names = trans.get_feature_names_out(cols)
+            all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
             warn("Could not extract clean feature names; returning defaults. ")
-            return ct_feature_names
+            return list(ct_feature_names)
 
         return all_trans_feature_names
 
