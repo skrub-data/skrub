@@ -8,9 +8,7 @@ Major changes
 
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
-* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be
-    used to download any indicator from the World Bank Open Data platform. It only needs the
-    indicator ID that can be found on the website. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download any indicator from the World Bank Open Data platform. It only needs the indicator ID that can be found on the website. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 * Unnecessary API has been made private: everything (files, functions, classes)
   starting with an underscore shouldn't be imported in your code. :pr:`331` by :user:`Lilian Boulard <LilianBoulard>`
 
@@ -32,19 +30,15 @@ Release 0.3.0
 Major changes
 -------------
 
-* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical
-    columns (year, month, day, hour, minute, second, ...). It is now the default transformer used
-    in the :class:`SuperVectorizer` for datetime columns. :pr:`239` by :user:`Leo Grinsztajn <LeoGrin>`
+* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical columns (year, month, day, hour, minute, second, ...). It is now the default transformer used in the :class:`SuperVectorizer` for datetime columns. :pr:`239` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * The :class:`SuperVectorizer` has seen some major improvements and bug fixes:
+
   - Fixes the automatic casting logic in ``transform``.
-  - To avoid dimensionality explosion when a feature has two unique values,
-    the default encoder (:class:`~sklearn.preprocessing.OneHotEncoder`) now drops one of the two
-    vectors (see parameter `drop="if_binary"`).
-  - ``fit_transform`` and ``transform`` can now return unencoded features,
-    like the :class:`~sklearn.compose.ColumnTransformer`'s behavior.
-    Previously, a ``RuntimeError`` was raised.
-:pr:`300` by :user:`Lilian Boulard <LilianBoulard>`
+  - To avoid dimensionality explosion when a feature has two unique values, the default encoder (:class:`~sklearn.preprocessing.OneHotEncoder`) now drops one of the two vectors (see parameter `drop="if_binary"`).
+  - ``fit_transform`` and ``transform`` can now return unencoded features, like the :class:`~sklearn.compose.ColumnTransformer`'s behavior. Previously, a ``RuntimeError`` was raised.
+
+  :pr:`300` by :user:`Lilian Boulard <LilianBoulard>`
 
 * **Backward-incompatible change in the SuperVectorizer**:
   To apply ``remainder`` to features (with the ``*_transformer`` parameters),
@@ -87,17 +81,15 @@ Major changes
 -------------
 
 * Improvements to the :class:`SuperVectorizer`
-    - Type detection works better: handles dates, numerics columns encoded as strings,
-     or numeric columns containing strings for missing values.
+    - Type detection works better: handles dates, numerics columns encoded as strings, or numeric columns containing strings for missing values.
+
   :pr:`238` by :user:`Leo Grinsztajn <LeoGrin>`
 
-* `get_feature_names` becomes `get_feature_names_out`, following changes in the scikit-learn API.
-    `get_feature_names` is deprecated in scikit-learn > 1.0. :pr:`241` by :user:`Gael Varoquaux <GaelVaroquaux>`
+* `get_feature_names` becomes `get_feature_names_out`, following changes in the scikit-learn API. `get_feature_names` is deprecated in scikit-learn > 1.0. :pr:`241` by :user:`Gael Varoquaux <GaelVaroquaux>`
 
 * Improvements to the :class:`MinHashEncoder`
-    - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`.
-    Very useful when using for instance the :func:`~sklearn.compose.make_column_transformer` method,
-    on multiple columns.
+    - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`. Very useful when using for instance the :func:`~sklearn.compose.make_column_transformer` method, on multiple columns.
+  
   :pr:`243` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 
@@ -141,16 +133,17 @@ Major changes
     but their return values were modified in favor of a more Pythonic interface.
     Refer to the docstrings of functions `dirty_cat.datasets.fetch_*`
     for more information.
-  - The example notebooks were updated to reflect these changes.
-  :pr:`155` by :user:`Lilian Boulard <LilianBoulard>`
+  - The example notebooks were updated to reflect these changes. :pr:`155` by :user:`Lilian Boulard <LilianBoulard>`
 
 * **Backward incompatible change to** :class:`MinHashEncoder`: The :class:`MinHashEncoder` now
   only supports two dimensional inputs of shape (N_samples, 1).
   :pr:`185` by :user:`Lilian Boulard <LilianBoulard>` and :user:`Alexis Cvetkov <alexis-cvetkov>`.
 
 * Update `handle_missing` parameters:
+
   - :class:`GapEncoder`: the default value "zero_impute" becomes "empty_impute" (see doc).
   - :class:`MinHashEncoder`: the default value "" becomes "zero_impute" (see doc).
+  
   :pr:`210` by :user:`Alexis Cvetkov <alexis-cvetkov>`.
 
 * Add a method "get_feature_names_out" for the :class:`GapEncoder` and the :class:`SuperVectorizer`,
@@ -167,6 +160,7 @@ Notes
   - Missing values are not systematically imputed anymore
   - Type casting and per-column imputation are now learnt during fitting
   - Several bugfixes
+
   :pr:`201` by :user:`Lilian Boulard <LilianBoulard>`
 
 Release 0.2.0a1
