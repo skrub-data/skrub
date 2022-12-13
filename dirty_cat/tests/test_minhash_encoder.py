@@ -80,7 +80,7 @@ def test_input_type() -> None:
     "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
 )
 def test_encoder_params(hashing, minmax_hash) -> None:
-    X = generate_data()
+    X = generate_data(n_samples=20)
     enc = MinHashEncoder(
         n_components=50, hashing=hashing, minmax_hash=minmax_hash, ngram_range=(3, 3)
     )
