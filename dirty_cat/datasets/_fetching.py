@@ -70,9 +70,12 @@ class DatasetAll:
     (``X`` and ``y``).
     Additional information such as `path` and `read_csv_kwargs` are provided
     in case the dataframe has to be read from disk, as such:
+
     .. code:: python
+
         ds = fetch_employee_salaries(load_dataframe=False)
         df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+
     """
 
     name: str
@@ -91,9 +94,12 @@ class DatasetInfoOnly:
     Represents a dataset and its information.
     With this state, the dataset is NOT loaded in memory, but can be read
     with ``path`` and ``read_csv_kwargs``, as such:
+
     .. code:: python
+
         ds = fetch_employee_salaries(load_dataframe=False)
         df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+
     """
 
     name: str
@@ -725,12 +731,12 @@ def fetch_world_bank_indicator(
     load_dataframe: bool = True,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches a dataset of an indicator from the World Bank
-       open data platform.
+    open data platform.
 
     Description of the dataset:
-    > The dataset contains two columns: the indicator value and the
-      country names. A list of all available indicators can be found
-      at https://data.worldbank.org/indicator.
+    The dataset contains two columns: the indicator value and the
+    country names. A list of all available indicators can be found
+    at https://data.worldbank.org/indicator.
 
     Returns
     -------
