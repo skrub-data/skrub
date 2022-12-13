@@ -18,7 +18,7 @@ def generate_data(
     for i in range(n_samples):
         random_string = "category "
         for _ in range(sample_length):
-            random_integer = random.randint(0, MAX_LIMIT)
+            random_integer = random.randint(1, MAX_LIMIT)
             random_string += chr(random_integer)
             if random_integer < 50:
                 random_string += "  "
