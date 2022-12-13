@@ -1,6 +1,7 @@
 `dirty_cat`
 ===========
 
+
 .. image:: https://dirty-cat.github.io/stable/_static/dirty_cat.svg
    :align: center
    :alt: dirty_cat logo
@@ -50,6 +51,8 @@ methods.
 
 Installation
 ------------
+
+this is a test
 
 dirty_cat can be easily installed via `pip`::
 
