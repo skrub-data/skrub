@@ -62,7 +62,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         (in order corresponding with output of ``transform``).
 
     References
-    -----------
+    ----------
     For more details, see Micci-Barreca, 2001: A preprocessing scheme for
     high-cardinality categorical attributes in classification and prediction
     problems.
