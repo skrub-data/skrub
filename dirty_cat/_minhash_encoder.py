@@ -114,6 +114,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         minmax_hash: bool = False,
         handle_missing: Literal["error", "zero_impute"] = "zero_impute",
         batch: bool = False,
+        batch_per_job: int = 1,
         n_jobs: int = None,
     ):
         self.ngram_range = ngram_range
@@ -122,6 +123,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.minmax_hash = minmax_hash
         self.handle_missing = handle_missing
         self.batch = batch
+        self.batch_per_job = batch_per_job
         self.n_jobs = n_jobs
 
     def _more_tags(self) -> Dict[str, List[str]]:
@@ -345,7 +347,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     unique_x[idx_slice],
                     hash_func,
                 )
-                for idx_slice in gen_even_slices(len(unique_x), n_jobs)
+                for idx_slice in gen_even_slices(len(unique_x), 
+                n_jobs * self.batch_per_job)
             )
             # Match the hashes of the unique value to the original values
             X_out = np.concatenate(unique_x_trans)[indices_x].reshape(
