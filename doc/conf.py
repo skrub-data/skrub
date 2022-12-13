@@ -19,6 +19,13 @@
 import os
 import shutil
 from datetime import datetime
+import sys
+# If extensions (or modules to document with autodoc) are in another
+# directory, add these directories to sys.path here. If the directory
+# is relative to the documentation root, use os.path.abspath to make it
+# absolute, like shown here.
+sys.path.insert(0, os.path.abspath("sphinxext"))
+
 
 # -- Copy files for docs --------------------------------------------------
 #
@@ -46,6 +53,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     "numpydoc",
+    "sphinx_issues",
     "sphinx.ext.autodoc.typehints",
     "sphinx_gallery.gen_gallery",
 ]
@@ -294,3 +302,8 @@ autodoc_typehints = "none"
 
 # -- The javascript to highlight the toc as we scroll ----------------------
 html_js_files = ["scrolltoc.js"]
+
+# -- github links --------------------------------------
+
+# we use the issues path for PRs since the issues URL will forward
+issues_github_path = "dirty-cat/dirty_cat"
