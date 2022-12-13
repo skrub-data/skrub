@@ -21,6 +21,7 @@ benchmark_name = "minhash_batch_comparison"
         "dataset_size": ["medium"],
         "batched": [True, False],
         "n_jobs": [1, 4, 8, 16, 32, 64],
+        "batch_per_job": [1, 2, 4],
     },
     save_as=benchmark_name,
     repeat=10,
@@ -29,9 +30,11 @@ def benchmark(
     dataset_size: str,
     batched: bool,
     n_jobs: int,
+    batch_per_job: int,
 ) -> None:
     X = data[dataset_size]
-    MinHashEncoder(batch=batched, n_jobs=n_jobs).fit(X).transform(X)
+    MinHashEncoder(batch=batched, n_jobs=n_jobs, 
+    batch_per_job=batch_per_job).fit(X).transform(X)
 
 
 def plot(res: pd.DataFrame):
