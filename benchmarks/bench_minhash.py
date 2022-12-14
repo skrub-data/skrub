@@ -42,15 +42,26 @@ def plot(res: pd.DataFrame):
 
     rows = []
     for i, ser in res.iterrows():
-        times = eval(ser["time"])
-        memories = eval(ser["memory"])
+        times = eval(str(ser["time"]))
+        memories = eval(str(ser["memory"]))
         _, _, kwargs = parse_func_repr(ser["call"])
         for time, memory in zip(times, memories):
-            rows.append((kwargs["batched"], kwargs["n_jobs"], time, memory))
+            rows.append((kwargs["batched"], kwargs["batch_per_job"], 
+            kwargs["n_jobs"], time, memory))
 
-    df = pd.DataFrame(rows, columns=["batched", "n_jobs", "time", "memory"])
+    df = pd.DataFrame(rows, columns=["batched", "batch_per_job", 
+    "n_jobs", "time", "memory"])
 
-    sns.boxplot(x="n_jobs", y="time", hue="batched", palette=["m", "g"], data=df)
+    # Create a new columns merging batched and batch_per_job
+    # If batch is False, ignore batch_per_job
+    df["config"] = df.apply(
+        lambda row: f"batched={row['batched']}, batch_per_job={row['batch_per_job']}"
+        if row["batched"] == 'True'
+        else "batched=False",
+        axis=1,
+    )
+
+    sns.boxplot(x="n_jobs", y="time", hue="config", data=df)
     plt.show()
 
 
