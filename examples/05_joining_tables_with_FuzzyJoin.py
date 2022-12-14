@@ -278,10 +278,6 @@ plt.show()
 #################################################
 # 3. Joining legal rights strength table
 # ......................................
-# .. topic:: Note:
-#
-#    Here, we use the `keep='left'` option to keep only the left key matching
-#    column, so as not to have unnecessary overlaping column with country names.
 #
 # And the table with a measure of legal rights strength in the country:
 df3 = fuzzy_join(
