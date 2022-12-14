@@ -105,10 +105,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     >>> enc.fit(X, y)
     TargetEncoder(handle_unknown='ignore')
 
-    There encoder has found the following categories:
+    The encoder has found the following categories:
 
     >>> enc.categories_
-    [array(['Female', 'Male', 'female', 'male'], dtype='<U6')]
+    [array(['Female', 'Male', 'male'], dtype='<U6')]
 
     We look at the encoded categories :
 
