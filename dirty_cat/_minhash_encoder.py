@@ -113,7 +113,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         hashing: Literal["fast", "murmur"] = "fast",
         minmax_hash: bool = False,
         handle_missing: Literal["error", "zero_impute"] = "zero_impute",
-        batch: bool = False,
+        batch: bool = True,
         batch_per_job: int = 1,
         n_jobs: int = None,
     ):
