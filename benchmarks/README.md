@@ -41,4 +41,4 @@ pip install -e .[benchmarks]
 The results of the benchmarks ran by maintainers are pushed in the `results/` folder.
 
 As mentioned earlier, benchmarks implement a ``--plot`` parameter used
-to display the results visually.
+to display the results visually. Using ``--plot`` without ``--run`` allows you to plot the results without re-running the benchmark.
