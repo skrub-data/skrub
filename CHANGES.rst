@@ -8,7 +8,7 @@ Major changes
 
 * New experimental feature: :class:`FeatureAugmenter`, a transformer
   that augments with :func:`fuzzy_join` the number of features in a main table
-  by using information from auxilliary tables.
+  by using information from auxilliary tables. :pr:`409` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Release 0.4.0
 ==============
