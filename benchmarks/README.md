@@ -36,6 +36,8 @@ setup, thus can be installed with
 pip install -e .[benchmarks]
 ```
 
+It has been reported that Python >=3.9 is required.
+
 ### Analyzing results
 
 The results of the benchmarks ran by maintainers are pushed in the `results/` folder.
