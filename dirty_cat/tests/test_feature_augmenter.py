@@ -17,8 +17,8 @@ def test_feature_augmenter():
     aux_table_1 = pd.DataFrame(
         [
             ["Germany", 84_000_000],
-            ["France", 68_000_000],
-            ["Italy", 59_000_000],
+            ["French Republic", 68_000_000],
+            ["Italia", 59_000_000],
         ],
         columns=["Country", "Population"],
     )
@@ -28,13 +28,14 @@ def test_feature_augmenter():
             ["France", 2937],
             ["Italy", 2099],
             ["Germany", 4223],
+            ["UK", 3186],
         ],
         columns=["Country name", "GDP (billion)"],
     )
 
     aux_table_3 = pd.DataFrame(
         [
-            ["France", "Paris"],
+            ["La France", "Paris"],
             ["Italy", "Rome"],
             ["Germany", "Berlin"],
         ],

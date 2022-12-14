@@ -76,9 +76,9 @@ def fuzzy_join(
         nearest matched categories.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
-        In a [0, 1] interval. Closer to 1 means the matches need to be very
-        close to be accepted, and closer to 0 that a bigger matching distance
-        is tolerated.
+        In a [0, 1] interval. 1 means that only a perfect match will be
+        accepted, and zero means that the closest match will be accepted,
+        no matter how distant.
     drop_unmatched : boolean, default=False
         Remove categories for which a match was not found in the two tables.
     sort : boolean, default=False

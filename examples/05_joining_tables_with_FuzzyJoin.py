@@ -380,13 +380,10 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # To do this, we will first gather the auxilliary tables into a
 # list of (keys,tables):
 
-life_exp.rename(columns={"Country Name": "Country Name 2"}, inplace=True)
-legal_rights.rename(columns={"Country Name": "Country Name 3"}, inplace=True)
-
 aux_wb_tables = [
     (gdppc, "Country Name"),
-    (life_exp, "Country Name 2"),
-    (legal_rights, "Country Name 3"),
+    (life_exp, "Country Name"),
+    (legal_rights, "Country Name"),
 ]
 
 y = df["Happiness score"]

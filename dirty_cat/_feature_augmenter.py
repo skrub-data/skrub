@@ -26,9 +26,9 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         the join will be performed.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
-        In a [0, 1] interval. Closer to 1 means the matches need to be very
-        close to be accepted, and closer to 0 that a bigger matching distance
-        is tolerated. Equivalent to fuzzy_join's match_score.
+        In a [0, 1] interval. 1 means that only a perfect match will be
+        accepted, and zero means that the closest match will be accepted,
+        no matter how distant.
 
     Examples
     --------
@@ -46,18 +46,19 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     1   France    68000000
     2    Italy    59000000
 
-    >>> aux_table_2 = pd.DataFrame([['France', 2937], ['Italy', 2099], ['Germany', 4223]], columns=['Country name', 'GDP (billion)']) # noqa
+    >>> aux_table_2 = pd.DataFrame([['French Republic', 2937], ['Italy', 2099], ['Germany', 4223], ['UK', 3186]], columns=['Country name', 'GDP (billion)']) # noqa
     >>> aux_table_2
         Country name  GDP (billion)
-    0       France           2937
+    0   French Republic      2937
     1        Italy           2099
     2      Germany           4223
+    3           UK           3186
 
-    >>> aux_table_3 = pd.DataFrame([['France', 'Paris'], ['Italy', 'Rome'], ['Germany', 'Berlin']], columns=['Countries', 'Capital']) # noqa
+    >>> aux_table_3 = pd.DataFrame([['France', 'Paris'], ['Italia', 'Rome'], ['Germany', 'Berlin']], columns=['Countries', 'Capital']) # noqa
     >>> aux_table_3
       Countries Capital
     0    France   Paris
-    1     Italy    Rome
+    1     Italia   Rome
     2   Germany  Berlin
 
     >>> aux_tables = [(aux_table_1, "Country"), (aux_table_2, "Country name"), (aux_table_3, "Countries")] # noqa
@@ -67,9 +68,9 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     >>> augmented_table = fa.fit_transform(X)
     >>> augmented_table
         Country Country_aux  Population Country name  GDP (billion) Countries Capital
-    0   France      France    68000000       France           2937    France   Paris
+    0   France      France    68000000  French Republic       2937    France   Paris
     1  Germany     Germany    84000000      Germany           4223   Germany  Berlin
-    2    Italy       Italy    59000000        Italy           2099     Italy    Rome
+    2    Italy       Italy    59000000        Italy           2099    Italia    Rome
     """
 
     def __init__(
