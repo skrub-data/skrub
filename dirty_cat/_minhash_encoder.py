@@ -195,7 +195,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ) -> np.ndarray:
         """Function called to compute the hash of a string.
 
-        Check if the string is in the hash dictionary, if not, scompute the hash using
+        Check if the string is in the hash dictionary, if not, compute the hash using
         the specified hashing function and add it to the dictionary.
 
         Parameters
