@@ -14,7 +14,7 @@ Major changes
 
 * :class:`TargetEncoder` can now perform cross-validation loops to encode categories, thus avoiding
   overfitting. This is done using the `cross_val` parameter, and the number of splits of the
-  dataset are set with the `n_folds` and `n_inner_folds` parameters.
+  dataset are set with the `n_folds` and `n_inner_folds` parameters. :pr:`283` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Minor changes
 -------------
@@ -27,6 +27,8 @@ Bug fixes
 
 * :class:`MinHashEncoder` now considers `None` and empty strings as missing values, rather
   than raising an error. :pr:`378` by :user:`Gael Varoquaux <GaelVaroquaux>`
+
+* A new section in the examples has been added to illustrate the new features of the :class:`TargetEncoder`. :pr:`283` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Release 0.3.0
 =============
@@ -66,9 +68,6 @@ Notes
 
 * The ``transformers_`` attribute of the SuperVectorizer now contains column
   names instead of column indices for the "remainder" columns. :pr:`266` by :user:`Leo Grinsztajn <LeoGrin>`
-
-* Two new examples have been added to illustrate the majors changes: the new
-:class"`DatetimeEncoder` and the new features of the :class:`TargetEncoder`.
 
 
 Release 0.2.2
