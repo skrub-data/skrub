@@ -2,6 +2,8 @@
 # The MinHashEncoder version used for the benchmark
 # On the main branch, we only kept the best version of the MinHashEncoder
 # which is the batched version
+# with batch_per_job=1
+# (the batch_per_job parameter has no effect on the results)
 #################
 
 from typing import Callable, Collection, Dict, List, Literal, Tuple
