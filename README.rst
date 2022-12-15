@@ -58,7 +58,7 @@ dirty_cat can be easily installed via `pip`::
 Dependencies
 ~~~~~~~~~~~~
 
-Dependencies and minimal versions are listed in the file `min-requirements.txt <https://github.com/dirty-cat/dirty_cat/blob/main/requirements-min.txt>`_
+Dependencies and minimal versions are listed in the `setup <https://github.com/dirty-cat/dirty_cat/blob/main/setup.cfg#L26>`_ file.
 
 Related projects
 ----------------
