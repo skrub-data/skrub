@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import __version__ as sklearn_version
-from sklearn.datasets import fetch_20newsgroups
 
 from dirty_cat import GapEncoder
-from dirty_cat._utils import Version
+from dirty_cat._utils import parse_version
+from dirty_cat.tests.utils import generate_data
 
 
 def test_analyzer():
@@ -15,8 +15,7 @@ def test_analyzer():
     """
     add_words = False
     n_samples = 70
-    X_txt = fetch_20newsgroups(subset="train")["data"][:n_samples]
-    X = np.array([X_txt, X_txt]).T
+    X = generate_data(n_samples, random_state=0)
     n_components = 10
     # Test first analyzer output:
     encoder = GapEncoder(
@@ -56,8 +55,7 @@ def test_analyzer():
 def test_gap_encoder(
     hashing: bool, init: str, analyzer: str, add_words: bool, n_samples: int = 70
 ) -> None:
-    X_txt = fetch_20newsgroups(subset="train")["data"][:n_samples]
-    X = np.array([X_txt, X_txt]).T
+    X = generate_data(n_samples, random_state=0)
     n_components = 10
     # Test output shape
     encoder = GapEncoder(
@@ -117,8 +115,7 @@ def test_input_type() -> None:
 
 
 def test_partial_fit(n_samples=70) -> None:
-    X_txt = fetch_20newsgroups(subset="train")["data"][:n_samples]
-    X = np.array([X_txt, X_txt]).T
+    X = generate_data(n_samples, random_state=0)
     # Gap encoder with fit on one batch
     enc = GapEncoder(random_state=42, batch_size=n_samples, max_iter=1)
     X_enc = enc.fit_transform(X)
@@ -131,12 +128,11 @@ def test_partial_fit(n_samples=70) -> None:
 
 
 def test_get_feature_names_out(n_samples=70) -> None:
-    X_txt = fetch_20newsgroups(subset="train")["data"][:n_samples]
-    X = np.array([X_txt, X_txt]).T
+    X = generate_data(n_samples, random_state=0)
     enc = GapEncoder(random_state=42)
     enc.fit(X)
     # Expect a warning if sklearn >= 1.0
-    if Version(sklearn_version) < "1.0":
+    if parse_version(sklearn_version) < parse_version("1.0"):
         feature_names_1 = enc.get_feature_names()
     else:
         with pytest.warns(DeprecationWarning):
@@ -164,8 +160,7 @@ def test_overflow_error() -> None:
 
 
 def test_score(n_samples: int = 70) -> None:
-    X_txt = fetch_20newsgroups(subset="train")["data"][:n_samples]
-    X1 = np.array(X_txt)[:, None]
+    X1 = generate_data(n_samples, random_state=0)
     X2 = np.hstack([X1, X1])
     enc = GapEncoder(random_state=42)
     enc.fit(X1)

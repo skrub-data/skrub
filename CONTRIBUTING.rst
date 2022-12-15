@@ -147,7 +147,7 @@ So, first step: create your environment.
 
 For this example, we’ll use conda:
 
-.. code:: bash
+.. code:: console
 
    conda create python=3.10 --name dirty_cat
    conda activate dirty_cat
@@ -155,22 +155,21 @@ For this example, we’ll use conda:
 Secondly, clone the repository (you’ll need to have ``git`` installed -
 it is already on most linux distributions).
 
-.. code:: bash
+.. code:: console
 
    git clone https://github.com/dirty-cat/dirty_cat
 
-Next, install the project dependencies. Currently, they are listed in
-``requirements.txt``.
+Next, install the project dependencies. They are listed in ``setup.cfg``.
 
-.. code:: bash
+.. code:: console
 
-   pip install -r requirements.txt
+   pip install -e .[dev]
 
 Code-formatting and linting is automatically done via
 ```pre-commit`` <https://github.com/pre-commit/pre-commit>`__. You
 install this setup using:
 
-.. code:: bash
+.. code:: console
 
    pip install pre-commit
    pre-commit install
@@ -180,7 +179,7 @@ ignored by ``git blame`` and IDE integrations. The revisions to be
 ignored are listed in ``.git-blame-ignore-revs``, which can be set in
 your local repository with:
 
-.. code:: bash
+.. code:: console
 
    git config blame.ignoreRevsFile .git-blame-ignore-revs
 
@@ -218,7 +217,7 @@ It is advised to create a new branch every time you work on a new issue,
 to avoid confusion.
 Use the following command to create a branch:
 
-.. code:: bash
+.. code:: console
 
    git checkout -b branch_name
 

@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from dirty_cat import GapEncoder, SuperVectorizer
-from dirty_cat._utils import Version
+from dirty_cat._utils import parse_version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):
@@ -338,7 +338,7 @@ def test_get_feature_names_out() -> None:
         "int",
         "float",
     ]
-    if Version(sklearn.__version__) < Version("1.0"):
+    if parse_version(sklearn.__version__) < parse_version("1.0"):
         assert vec_w_pass.get_feature_names() == expected_feature_names_pass
     else:
         assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
@@ -361,7 +361,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    if Version(sklearn.__version__) < Version("1.0"):
+    if parse_version(sklearn.__version__) < parse_version("1.0"):
         assert vec_w_drop.get_feature_names() == expected_feature_names_drop
     else:
         assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop

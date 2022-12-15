@@ -4,7 +4,6 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 
-
 from typing import Dict, List, Literal, Optional, Tuple, Union
 from warnings import warn
 
@@ -18,7 +17,10 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat._utils import Version
+from dirty_cat._utils import parse_version
+
+# Required for ignoring lines too long in the docstrings
+# flake8: noqa: E501
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -82,19 +84,21 @@ OptionalTransformer = Optional[
 
 
 class SuperVectorizer(ColumnTransformer):
-    """
-    Easily transforms a heterogeneous data table (such as a dataframe) to
-    a numerical array for machine learning. For this it transforms each
-    column depending on its data type.
-    It provides a simplified interface for the :class:`sklearn.compose.ColumnTransformer` ;
-    more documentation of attributes and functions are available in its doc.
+    """Easily transform a heterogeneous array to a numerical one.
+
+    Easily transforms a heterogeneous data table
+    (such as a :class:`pandas.DataFrame`) to a numerical array for machine
+    learning. For this it transforms each column depending on its data type.
+    It provides a simplified interface for the
+    :class:`sklearn.compose.ColumnTransformer`; more documentation of
+    attributes and functions are available in its doc.
 
     .. versionadded:: 0.2.0
 
     Parameters
     ----------
 
-    cardinality_threshold : int, default=40
+    cardinality_threshold : int, optional, default=40
         Two lists of features will be created depending on this value: strictly
         under this value, the low cardinality categorical features, and above or
         equal, the high cardinality categorical features.
@@ -104,19 +108,19 @@ class SuperVectorizer(ColumnTransformer):
         Note: currently, missing values are counted as a single unique value
         (so they count in the cardinality).
 
-    low_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
+    low_card_cat_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance (e.g. `OneHotEncoder(drop="if_binary")`),
+        Can either be a transformer object instance (e.g. `OneHotEncoder()`),
         a `Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (`OneHotEncoder()`).
+        or None to use the default transformer (`OneHotEncoder(drop="if_binary")`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    high_card_cat_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
+    high_card_cat_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. `GapEncoder()`),
@@ -128,7 +132,7 @@ class SuperVectorizer(ColumnTransformer):
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    numerical_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None  # noqa
+    numerical_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. `StandardScaler()`),
         a `Pipeline` containing the preprocessing steps,
@@ -139,7 +143,7 @@ class SuperVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    datetime_transformer : typing.Optional[typing.Union[sklearn.base.TransformerMixin, typing.Literal["drop", "remainder", "passthrough"]]], default=None
+    datetime_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on datetime features.
         Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
         a `Pipeline` containing the preprocessing steps,
@@ -150,11 +154,11 @@ class SuperVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    auto_cast : bool, default=True
+    auto_cast : bool, optional, default=True
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
-    impute_missing : str, default='auto'
+    impute_missing : {"auto", "force", "skip"}, optional, default='auto'
         When to impute missing values in categorical (textual) columns.
         'auto' will impute missing values if it is considered appropriate
         (we are using an encoder that does not support missing values and/or
@@ -166,7 +170,7 @@ class SuperVectorizer(ColumnTransformer):
         it is left to the user to manage.
         See also attribute `imputed_columns_`.
 
-    remainder : typing.Union[typing.Literal["drop", "passthrough"], sklearn.base.TransformerMixin], default='drop'  # noqa
+    remainder : {"drop", "passthrough"} or Transformer, optional, default='drop'
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
         columns are dropped. (default ``'drop'``).
@@ -180,31 +184,32 @@ class SuperVectorizer(ColumnTransformer):
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
 
-    sparse_threshold: float, default=0.3
+    sparse_threshold : float, optional, default=0.3
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
         lower than this value. Use sparse_threshold=0 to always return dense.
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
 
-    n_jobs : int, default=None
+    n_jobs : int, optional
         Number of jobs to run in parallel.
-        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+        ``None`` (the default) means 1 unless in a
+        :obj:`joblib.parallel_backend` context.
         ``-1`` means using all processors.
 
-    transformer_weights : dict, default=None
+    transformer_weights : dict, optional
         Multiplicative weights for features per transformer. The output of the
         transformer is multiplied by these weights. Keys are transformer names,
         values the weights.
 
-    verbose : bool, default=False
+    verbose : bool, optional, default=False
         If True, the time elapsed while fitting each transformer will be
-        printed as it is completed
+        printed as it is completed.
 
     Attributes
     ----------
 
-    transformers_: typing.List[typing.Tuple[str, typing.Union[str, sklearn.base.TransformerMixin], typing.List[str]]]  # noqa
+    transformers_: list of 3-tuples (str, Transformer or str, list of str)
         The collection of fitted transformers as tuples of
         (name, fitted_transformer, column). `fitted_transformer` can be an
         estimator, 'drop', or 'passthrough'. In case there were no columns
@@ -220,24 +225,27 @@ class SuperVectorizer(ColumnTransformer):
         The fitted array's columns. They are applied to the data passed
         to the `transform` method.
 
-    types_: typing.Dict[str, type]
+    types_: dict mapping str to type
         A mapping of inferred types per column.
         Key is the column name, value is the inferred dtype.
         Exists only if `auto_cast=True`.
 
-    imputed_columns_: typing.List[str]
+    imputed_columns_: list of str
         The list of columns in which we imputed the missing values.
 
     Notes
     -----
     The column order of the input data is not guaranteed to be the same
-    as the output data (returned by `transform`).
-    This is a due to the way the ColumnTransformer works.
+    as the output data (returned by :func:`SuperVectorizer.transform`).
+    This is a due to the way the :class:`sklearn.compose.ColumnTransformer`
+    works.
     However, the output column order will always be the same for different
-    calls to `transform` on a same fitted SuperVectorizer instance.
-    For example, if input data has columns ['name', 'job', 'year], then output
+    calls to :func:`SuperVectorizer.transform` on a same fitted
+    :class:`SuperVectorizer` instance.
+    For example, if input data has columns ['name', 'job', 'year'], then output
     columns might be shuffled, e.g., ['job', 'year', 'name'], but every call
-    to `transform` will return this order.
+    to :func:`SuperVectorizer.transform` on this instance will return this
+    order.
     """
 
     transformers_: List[Tuple[str, Union[str, TransformerMixin], List[str]]]
@@ -257,7 +265,7 @@ class SuperVectorizer(ColumnTransformer):
         numerical_transformer: OptionalTransformer = None,
         datetime_transformer: OptionalTransformer = None,
         auto_cast: bool = True,
-        impute_missing: str = "auto",
+        impute_missing: Literal["auto", "force", "skip"] = "auto",
         # The next parameters are inherited from ColumnTransformer
         remainder: Union[
             Literal["drop", "passthrough"], TransformerMixin
@@ -540,9 +548,9 @@ class SuperVectorizer(ColumnTransformer):
                     for name, trans, cols in all_transformers:
                         impute: bool = False
 
-                        if isinstance(trans, OneHotEncoder) and Version(
+                        if isinstance(trans, OneHotEncoder) and parse_version(
                             sklearn_version
-                        ) < Version("0.24"):
+                        ) < parse_version("0.24"):
                             impute = True
 
                         if impute:
@@ -625,7 +633,7 @@ class SuperVectorizer(ColumnTransformer):
         typing.List[str]
             Feature names.
         """
-        if Version(sklearn_version) < Version("1.0"):
+        if parse_version(sklearn_version) < parse_version("1.0"):
             ct_feature_names = super().get_feature_names()
         else:
             ct_feature_names = super().get_feature_names_out()
@@ -640,18 +648,15 @@ class SuperVectorizer(ColumnTransformer):
                         cols = [self.columns_[i] for i in cols]
                     all_trans_feature_names.extend(cols)
                 continue
-            if not hasattr(trans, "get_feature_names"):
-                all_trans_feature_names.extend(cols)
+            if parse_version(sklearn_version) < parse_version("1.0"):
+                trans_feature_names = trans.get_feature_names(cols)
             else:
-                if Version(sklearn_version) < Version("1.0"):
-                    trans_feature_names = trans.get_feature_names(cols)
-                else:
-                    trans_feature_names = trans.get_feature_names_out(cols)
-                all_trans_feature_names.extend(trans_feature_names)
+                trans_feature_names = trans.get_feature_names_out(cols)
+            all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
             warn("Could not extract clean feature names; returning defaults. ")
-            return ct_feature_names
+            return list(ct_feature_names)
 
         return all_trans_feature_names
 
@@ -660,7 +665,7 @@ class SuperVectorizer(ColumnTransformer):
         Ensures compatibility with sklearn < 1.0.
         Use `get_feature_names_out` instead.
         """
-        if Version(sklearn_version) >= "1.0":
+        if parse_version(sklearn_version) >= parse_version("1.0"):
             warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "

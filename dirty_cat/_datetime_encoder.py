@@ -7,7 +7,10 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat._utils import Version, check_input
+from dirty_cat._utils import check_input, parse_version
+
+# Required for ignoring lines too long in the docstrings
+# flake8: noqa: E501
 
 WORD_TO_ALIAS: Dict[str, str] = {
     "year": "Y",
@@ -36,8 +39,8 @@ AcceptedTimeValues = Literal[
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
     """
-    This encoder transforms each datetime column into several numeric columns
-    corresponding to temporal features, e.g year, month, day...
+    Transforms each datetime column into several numeric columns for temporal features (e.g year, month, day...).
+
     Constant extracted features are dropped; for instance, if the year is
     always the same in a feature, the extracted "year" column won't be added.
     If the dates are timezone aware, all the features extracted will correspond
@@ -51,7 +54,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         which contains the time to epoch (in seconds).
         For instance, if you specify "day", only "year", "month", "day" and
         "total_time" features will be created.
-    add_day_of_the_week: bool, default=False
+    add_day_of_the_week : bool, default=False
         Add day of the week feature (if day is extracted).
         This is a numerical feature from 0 (Monday) to 6 (Sunday).
 
@@ -239,7 +242,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Ensures compatibility with sklearn < 1.0, and returns the output of
         get_feature_names_out.
         """
-        if Version(sklearn_version) >= "1.0":
+        if parse_version(sklearn_version) >= parse_version("1.0"):
             warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "

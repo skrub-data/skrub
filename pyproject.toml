@@ -1,3 +1,11 @@
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = [
+    "setuptools",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
 [tool.black]
 line-length = 88
 target_version = ['py38', 'py39', 'py310']
