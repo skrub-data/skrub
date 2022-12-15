@@ -17,7 +17,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 
 from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat._utils import Version
+from dirty_cat._utils import parse_version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -548,9 +548,9 @@ class SuperVectorizer(ColumnTransformer):
                     for name, trans, cols in all_transformers:
                         impute: bool = False
 
-                        if isinstance(trans, OneHotEncoder) and Version(
+                        if isinstance(trans, OneHotEncoder) and parse_version(
                             sklearn_version
-                        ) < Version("0.24"):
+                        ) < parse_version("0.24"):
                             impute = True
 
                         if impute:
@@ -633,7 +633,7 @@ class SuperVectorizer(ColumnTransformer):
         typing.List[str]
             Feature names.
         """
-        if Version(sklearn_version) < Version("1.0"):
+        if parse_version(sklearn_version) < parse_version("1.0"):
             ct_feature_names = super().get_feature_names()
         else:
             ct_feature_names = super().get_feature_names_out()
@@ -648,18 +648,15 @@ class SuperVectorizer(ColumnTransformer):
                         cols = [self.columns_[i] for i in cols]
                     all_trans_feature_names.extend(cols)
                 continue
-            if not hasattr(trans, "get_feature_names"):
-                all_trans_feature_names.extend(cols)
+            if parse_version(sklearn_version) < parse_version("1.0"):
+                trans_feature_names = trans.get_feature_names(cols)
             else:
-                if Version(sklearn_version) < Version("1.0"):
-                    trans_feature_names = trans.get_feature_names(cols)
-                else:
-                    trans_feature_names = trans.get_feature_names_out(cols)
-                all_trans_feature_names.extend(trans_feature_names)
+                trans_feature_names = trans.get_feature_names_out(cols)
+            all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
             warn("Could not extract clean feature names; returning defaults. ")
-            return ct_feature_names
+            return list(ct_feature_names)
 
         return all_trans_feature_names
 
@@ -668,7 +665,7 @@ class SuperVectorizer(ColumnTransformer):
         Ensures compatibility with sklearn < 1.0.
         Use `get_feature_names_out` instead.
         """
-        if Version(sklearn_version) >= "1.0":
+        if parse_version(sklearn_version) >= parse_version("1.0"):
             warn(
                 "Following the changes in scikit-learn 1.0, "
                 "get_feature_names is deprecated. "
