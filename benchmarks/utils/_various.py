@@ -44,12 +44,11 @@ def choose_file(results: List[Path]) -> Path:
             else:
                 repeat = 1
 
-            bench_name, date, commit = file.stem.split("-")
+            bench_name, date = file.stem.split("-")
             print(
                 f"{i + 1}) "
                 f"{date[:4]}-{date[4:6]}-{date[6:]} - "
                 f"{df.shape[0]}x{repeat} experiments "
-                f"(git {commit[:8]})"
             )
         choice = input("Choose the result to display: ")
         if not choice.isnumeric() or (int(choice) - 1) not in range(len(results)):

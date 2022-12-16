@@ -8,7 +8,6 @@ from collections import defaultdict
 from datetime import datetime
 from warnings import warn
 from pathlib import Path
-from git import Repo
 
 
 def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
@@ -202,8 +201,7 @@ def monitor(
                 save_dir = Path(__file__).parent.parent / "results"
                 save_dir.mkdir(exist_ok=True)
                 now = datetime.now()
-                commit = Repo(Path(__file__).parent.parent.parent).active_branch.commit
-                file = f"{save_as}-{now.year}{now.month}{now.day}-{commit}.csv"
+                file = f"{save_as}-{now.year}{now.month}{now.day}.csv"
                 df.to_csv(save_dir / file, index_label="call")
 
             return df
