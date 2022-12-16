@@ -2,4 +2,4 @@
 
 ## Format
 
-Results are saved with the format ``<name>-<YYYYMMDD>-<commit>.csv``.
+Results are saved with the format ``<name>-<YYYYMMDD>.csv``.
