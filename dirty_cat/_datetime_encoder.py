@@ -64,10 +64,10 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Number of features in the data seen during fit.
     n_features_out_: int
         Number of features of the transformed data.
-    features_per_column_: typing.Dict[int, typing.List[str]]
+    features_per_column_: mapping of int to list of str
         Dictionary mapping the index of the original columns
         to the list of features extracted for each column.
-    col_names_: typing.Optional[typing.List[str]]
+    col_names_: None or list of str
         List of the names of the features of the input data,
         if input data was a pandas DataFrame, otherwise None.
     """
@@ -134,7 +134,9 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 ) // pd.Timedelta("1s")
 
     def fit(self, X, y=None) -> "DatetimeEncoder":
-        """Fit the DatetimeEncoder to X. In practice, just stores which extracted features are not constant.
+        """Fit the instance to X.
+
+        In practice, just stores which extracted features are not constant.
 
         Parameters
         ----------
@@ -145,8 +147,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        DatetimeEncoder
-            Fitted DatetimeEncoder instance.
+        :class:`~dirty_cat.DatetimeEncoder`
+            Fitted :class:`~dirty_cat.DatetimeEncoder` instance (self).
         """
         self._validate_keywords()
         # Columns to extract for each column,
@@ -198,7 +200,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        np.ndarray, shape (n_samples, n_features_out_)
+        :obj:`~numpy.ndarray`, shape (n_samples, n_features_out_)
             Transformed input.
         """
         check_is_fitted(

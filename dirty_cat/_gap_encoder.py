@@ -752,7 +752,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None) -> "GapEncoder":
         """
-        Fit the GapEncoder on batches of X.
+        Fit the instance on batches of X.
 
         Parameters
         ----------
@@ -763,8 +763,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        GapEncoder
-            Fitted GapEncoder instance.
+        :class:`~dirty_cat.GapEncoder`
+            Fitted :class:`~dirty_cat.GapEncoder` instance (self).
         """
 
         # Copy parameter rho

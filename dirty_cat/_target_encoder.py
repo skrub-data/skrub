@@ -119,7 +119,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y) -> "TargetEncoder":
         """
-        Fit the TargetEncoder to X.
+        Fit the instance to X.
 
         Parameters
         ----------
@@ -130,8 +130,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        TargetEncoder
-            Fitted TargetEncoder instance.
+        :class:`~dirty_cat.TargetEncoder`
+            Fitted :class:`~dirty_cat.TargetEncoder` instance (self).
         """
         X = check_input(X)
         self.n_features_in_ = X.shape[1]
@@ -222,7 +222,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        2-d np.ndarray
+        2-d :class:`~numpy.ndarray`
             Transformed input.
         """
         check_is_fitted(self, attributes=["n_features_in_"])
