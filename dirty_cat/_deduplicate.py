@@ -36,8 +36,9 @@ def _compute_ngram_distance(
     np.ndarray
         An n-times-(n-1)/2 matrix of n-gram TfIdf distances between `unique_words`.
     """
-    encoded = TfidfVectorizer(ngram_range=ngram_range, analyzer=analyzer).fit_transform(
-        unique_words
+    encoded = (
+        TfidfVectorizer(ngram_range=ngram_range, analyzer=analyzer)
+        .fit_transform(unique_words)
     )
 
     distance_mat = pdist(encoded.todense(), metric="euclidean")
