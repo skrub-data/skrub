@@ -7,41 +7,72 @@ from dirty_cat import GapEncoder
 from dirty_cat._utils import parse_version
 from dirty_cat.tests.utils import generate_data
 
+# Importing: 37, 130, 135, 175, 213-235, 331,
+#
+# 734->737,
+# 868, 888->896, 1038->1040
 
-def test_analyzer():
+#        with pytest.raises(
+#            ValueError,
+#            match=r"get_feature_names is deprecated"):
+
+
+@pytest.mark.parametrize(
+    "hashing, init, rescale_W, rescale_rho, add_words",
+    [
+        (False, "k-means++", True, False, True),
+        (True, "random", False, True, False),
+        (True, "k-means", True, True, False),
+    ],
+)
+def test_analyzer(
+    hashing: bool,
+    init: str,
+    rescale_W: bool,
+    add_words: bool,
+    rescale_rho: bool,
+    n_samples: int = 70,
+):
     """
     Test if the output is different when the analyzer is 'word' or 'char'.
     If it is, no error ir raised.
     """
-    add_words = False
     n_samples = 70
     X = generate_data(n_samples, random_state=0)
     n_components = 10
     # Test first analyzer output:
     encoder = GapEncoder(
         n_components=n_components,
-        init="k-means++",
+        hashing=hashing,
+        init=init,
         analyzer="char",
         add_words=add_words,
         random_state=42,
-        rescale_W=True,
+        rescale_W=rescale_W,
+        rescale_rho=rescale_rho,
     )
     encoder.fit(X)
-    y = encoder.transform(X)
+    y1 = encoder.transform(X)
+    s1 = encoder.score(X)
 
     # Test the other analyzer output:
     encoder = GapEncoder(
         n_components=n_components,
-        init="k-means++",
+        hashing=hashing,
+        init=init,
         analyzer="word",
         add_words=add_words,
         random_state=42,
+        rescale_W=rescale_W,
+        rescale_rho=rescale_rho,
     )
     encoder.fit(X)
     y2 = encoder.transform(X)
+    s2 = encoder.score(X)
 
     # Test inequality between the word and char analyzers output:
-    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, y, y2)
+    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, y1, y2)
+    np.testing.assert_raises(AssertionError, np.testing.assert_array_equal, s1, s2)
 
 
 @pytest.mark.parametrize(
@@ -114,17 +145,27 @@ def test_input_type() -> None:
     np.testing.assert_array_equal(X_enc_array, X_enc_df)
 
 
-def test_partial_fit(n_samples=70) -> None:
+@pytest.mark.parametrize("add_words", [True, False])
+def test_partial_fit(add_words: bool, n_samples: int = 70) -> None:
     X = generate_data(n_samples, random_state=0)
+    X2 = pd.DataFrame(generate_data(n_samples - 10, random_state=1))
+    X3 = generate_data(n_samples - 10, random_state=2)
     # Gap encoder with fit on one batch
-    enc = GapEncoder(random_state=42, batch_size=n_samples, max_iter=1)
+    enc = GapEncoder(
+        random_state=42, batch_size=n_samples, max_iter=1, add_words=add_words
+    )
     X_enc = enc.fit_transform(X)
     # Gap encoder with partial fit
-    enc = GapEncoder(random_state=42)
+    enc = GapEncoder(random_state=42, add_words=add_words)
     enc.partial_fit(X)
     X_enc_partial = enc.transform(X)
     # Check if the encoded vectors are the same
     np.testing.assert_almost_equal(X_enc, X_enc_partial)
+    enc.partial_fit(X2)
+    X_enc_partial2 = enc.transform(X3)
+    np.testing.assert_raises(
+        AssertionError, np.testing.assert_array_equal, X_enc, X_enc_partial2
+    )
 
 
 def test_get_feature_names_out(n_samples=70) -> None:

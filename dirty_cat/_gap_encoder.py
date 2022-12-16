@@ -303,20 +303,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def get_feature_names(self, n_labels=3, prefix=""):
-        """
-        Ensures compatibility with sklearn < 1.0.
-        Use `get_feature_names_out` instead.
-        """
-        warnings.warn(
-            "Following the changes in scikit-learn 1.0, "
-            "get_feature_names is deprecated. "
-            "Use get_feature_names_out instead. ",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.get_feature_names_out(n_labels=n_labels, prefix=prefix)
-
     def get_feature_names_out(
         self,
         n_labels: int = 3,
@@ -621,7 +607,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     The :class:`~dirty_cat.GapEncoder` has found the following two topics:
 
-    >>> enc.get_feature_names()
+    >>> enc.get_feature_names_out()
     ['england, london, uk', 'france, paris, pqris']
 
     He got it right, reccuring topics are "London" and "England" on the
