@@ -64,6 +64,7 @@ def generate_example_data(examples, entries_per_example, prob_mistake_per_letter
     return np.concatenate(data)
 
 
+# set seed for reproducibility
 np.random.seed(123)
 
 # our three medication names
