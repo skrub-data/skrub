@@ -46,7 +46,7 @@ class TemporaryDirectory(_TemporaryDirectory):
     """
 
     def __enter__(self) -> Path:
-        return Path(self.name).absolute()
+        return Path(self.name).resolve()
 
 
 @wraps(_fetch_openml_dataset)
@@ -116,7 +116,7 @@ def test_fetch_openml_dataset():
 
         assert returned_info["description"].startswith(test_dataset["desc_start"])
         assert returned_info["source"] == test_dataset["url"]
-        assert returned_info["path"] == temp_dir / test_dataset["csv_name"]
+        assert returned_info["path"] == (temp_dir / test_dataset["csv_name"])
 
         assert returned_info["path"].is_file()
 
