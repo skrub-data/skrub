@@ -40,6 +40,9 @@ else:
 
 from sklearn.decomposition._nmf import _beta_divergence
 
+# Ignore lines too long, as some things in the docstring cannot be cut.
+# flake8: noqa: E501
+
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
@@ -544,68 +547,85 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     categories estimated from the data. The latent categories are built by
     capturing combinations of substrings that frequently co-occur.
 
-    The GapEncoder supports online learning on batches of data for
-    scalability through the partial_fit method.
+    The :class:`~dirty_cat.GapEncoder` supports online learning on batches of
+    data for scalability through the :func:`~dirty_cat.GapEncoder.partial_fit`
+    method.
 
     Parameters
     ----------
-    n_components : int, default=10
+    n_components : int, optional, default=10
         Number of latent categories used to model string data.
-    batch_size : int, default=128
+    batch_size : int, optional, default=128
         Number of samples per batch.
-    gamma_shape_prior : float, default=1.1
+    gamma_shape_prior : float, optional, default=1.1
         Shape parameter for the Gamma prior distribution.
-    gamma_scale_prior : float, default=1.0
+    gamma_scale_prior : float, optional, default=1.0
         Scale parameter for the Gamma prior distribution.
-    rho : float, default=0.95
-        Weight parameter for the update of the W matrix.
-    rescale_rho : bool, default=False
-        If true, use rho ** (batch_size / len(X)) instead of rho to obtain an
+    rho : float, optional, default=0.95
+        Weight parameter for the update of the *W* matrix.
+    rescale_rho : bool, optional, default=False
+        If true, use ``rho ** (batch_size / len(X))`` instead of rho to obtain an
         update rate per iteration that is independent of the batch size.
-    hashing : bool, default=False
-        If true, HashingVectorizer is used instead of CountVectorizer.
-        It has the advantage of being very low memory scalable to large
+    hashing : bool, optional, default=False
+        If true, :class:`~sklearn.feature_extraction.text.HashingVectorizer`
+        is used instead of :class:`~sklearn.feature_extraction.text.CountVectorizer`.
+        It has the advantage of being very low memory, scalable to large
         datasets as there is no need to store a vocabulary dictionary in
         memory.
-    hashing_n_features : int, default=2**12
-        Number of features for the HashingVectorizer. Only relevant if
-        hashing=True.
-    init : typing.Literal["k-means++", "random", "k-means"], default='k-means++'
+    hashing_n_features : int, optional, default=2**12
+        Number of features for the `HashingVectorizer`.
+        Only relevant if `hashing=True`.
+    init : {"k-means++", "random", "k-means"}, optional, default='k-means++'
         Initialization method of the W matrix.
-        Options: {'k-means++', 'random', 'k-means'}.
-        If init='k-means++', we use the init method of sklearn.cluster.KMeans.
-        If init='random', topics are initialized with a Gamma distribution.
-        If init='k-means', topics are initialized with a KMeans on the n-grams
+        If `init='k-means++'`, we use the init method of :class:`~sklearn.cluster.KMeans`.
+        If `init='random'`, topics are initialized with a Gamma distribution.
+        If `init='k-means'`, topics are initialized with a KMeans on the n-grams
         counts. This usually makes convergence faster but is a bit slower.
     tol : float, default=1e-4
-        Tolerance for the convergence of the matrix W.
-    min_iter : int, default=2
+        Tolerance for the convergence of the matrix *W*.
+    min_iter : int, optional, default=2
         Minimum number of iterations on the input data.
-    max_iter : int, default=5
+    max_iter : int, optional, default=5
         Maximum number of iterations on the input data.
-    ngram_range : typing.Tuple[int, int], default=(2, 4)
+    ngram_range : int 2-tuple, optional, default=(2, 4)
         The range of ngram length that will be used to build the
         bag-of-n-grams representation of the input data.
-    analyzer : typing.Literal["word", "char", "char_wb"], default='char'.
-        Analyzer parameter for the CountVectorizer/HashingVectorizer.
-        Options: {‘word’, ‘char’, ‘char_wb’}, describing whether the matrix V
-        to factorize should be made of word counts or character n-gram counts.
+    analyzer : {"word", "char", "char_wb"}, optional, default='char'
+        Analyzer parameter for the :class:`~sklearn.feature_extraction.text.HashingVectorizer`
+        / :class:`~sklearn.feature_extraction.text.CountVectorizer`.
+        Describes whether the matrix *V* to factorize should be made of word counts
+        or character n-gram counts.
         Option ‘char_wb’ creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    add_words : bool, default=False
+    add_words : bool, optional, default=False
         If true, add the words counts to the bag-of-n-grams representation
         of the input data.
-    random_state : typing.Optional[Union[int, RandomState]], default=None
-        Pass an int for reproducible output across multiple function calls.
-    rescale_W : bool, default=True
-        If true, the weight matrix W is rescaled at each iteration
+    random_state : int, :class:`~numpy.random.RandomState` or None, optional, default=None
+        RNG seed for reproducible output across multiple function calls.
+    rescale_W : bool, optional, default=True
+        If true, the weight matrix *W* is rescaled at each iteration
         to have a l1 norm equal to 1 for each row.
     max_iter_e_step : int, default=20
         Maximum number of iterations to adjust the activations h at each step.
-    handle_missing : typing.Literal["error", "empty_impute"], default=empty_impute
-        Whether to raise an error or impute with empty string '' if missing
+    handle_missing : {"error", "empty_impute"}, optional, default='empty_impute'
+        Whether to raise an error or impute with empty string ``''`` if missing
         values (NaN) are present during fit (default is to impute).
         In the inverse transform, the missing category will be denoted as None.
+
+    Attributes
+    ----------
+    rho_: float
+        Effective update rate for the W matrix
+    fitted_models_: list of GapEncoderColumn
+        Column-wise fitted GapEncoders
+    column_names_: list of str
+        Column names of the data the Gap was fitted on
+
+    References
+    ----------
+    For a detailed description of the method, see
+    `Encoding high-cardinality string categorical variables
+    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
 
     Examples
     --------
@@ -624,8 +644,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     >>> enc.get_feature_names()
     ['england, london, uk', 'france, paris, pqris']
 
-    He got it right, reccuring topics are "London" and "England" on the
-    one side and and "Paris" and "France" on the other.
+    It got it right, reccuring topics are "London" and "England" on the
+    one side and "Paris" and "France" on the other.
 
     As this is a continuous encoding, we can look at the level of
     activation of each topic for each category:
@@ -641,19 +661,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
           [ 0.05002016,  4.54997983]])
 
     The higher the value, the bigger the correspondance with the topic.
-
-    Attributes
-    ----------
-    rho_: float
-    fitted_models_: typing.List[GapEncoderColumn]
-    column_names_: typing.List[str]
-
-    References
-    ----------
-    For a detailed description of the method, see
-    `Encoding high-cardinality string categorical variables
-    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
-
     """
 
     rho_: float
