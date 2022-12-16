@@ -11,13 +11,12 @@ def generate_data(
 ) -> np.ndarray:
     if random_state is not None:
         random.seed(random_state)
-
     MAX_LIMIT = 255  # extended ASCII Character set
     str_list = []
     for i in range(n_samples):
         random_string = "category "
         for _ in range(100):
-            random_integer = random.randint(0, MAX_LIMIT)
+            random_integer = random.randint(1, MAX_LIMIT)
             random_string += chr(random_integer)
             if random_integer < 50:
                 random_string += "  "
