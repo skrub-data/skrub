@@ -35,7 +35,10 @@ from dirty_cat.datasets._utils import get_data_dir as _get_data_dir
 class TemporaryDirectory(_TemporaryDirectory):
     """
     Simple wrapper for `tempfile.TemporaryDirectory`, with the only difference
-    being that it returns a `pathlib.Path` instead of a string when using
+    being that it returns an absolute `pathlib.Path` instead of a string
+
+    Usage
+    -----
     ```
     with TemporaryDirectory() as temp_dir:
         ...
@@ -43,7 +46,7 @@ class TemporaryDirectory(_TemporaryDirectory):
     """
 
     def __enter__(self) -> Path:
-        return Path(self.name)
+        return Path(self.name).absolute()
 
 
 @wraps(_fetch_openml_dataset)
