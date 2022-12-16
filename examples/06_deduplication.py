@@ -143,8 +143,8 @@ deduplicated_unique_examples, deduplicated_counts = np.unique(
 deduplicated_series = pd.Series(deduplicated_counts, index=deduplicated_unique_examples)
 
 deduplicated_series.plot.barh(figsize=(10, 15))
-_ = plt.xlabel("Medication name")
-_ = plt.ylabel("Counts")
+plt.xlabel("Medication name")
+plt.ylabel("Counts")
 
 ###############################################################################
 # In this example we can correct all spelling mistakes by using the ideal number
