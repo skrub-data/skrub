@@ -7,15 +7,6 @@ from dirty_cat import GapEncoder
 from dirty_cat._utils import parse_version
 from dirty_cat.tests.utils import generate_data
 
-# Importing: 37, 130, 135, 175, 213-235, 331,
-#
-# 734->737,
-# 868, 888->896, 1038->1040
-
-#        with pytest.raises(
-#            ValueError,
-#            match=r"get_feature_names is deprecated"):
-
 
 @pytest.mark.parametrize(
     "hashing, init, rescale_W, rescale_rho, add_words",
