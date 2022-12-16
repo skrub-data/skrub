@@ -175,7 +175,7 @@ html_static_path = ["_static"]
 
 
 # Modify the title to get good social-media links
-html_title = "— Dirty cat"
+html_title = "Dirty cat"
 
 # -- Options for HTMLHelp output ------------------------------------------
 
