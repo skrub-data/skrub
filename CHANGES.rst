@@ -9,8 +9,8 @@ Major changes
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download any indicator from the World Bank Open Data platform. It only needs the indicator ID that can be found on the website. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
-* Unnecessary API has been made private: everything (files, functions, classes)
-  starting with an underscore shouldn't be imported in your code. :pr:`331` by :user:`Lilian Boulard <LilianBoulard>`
+* Unnecessary API has been made private: everything (files, functions, classes) starting with an underscore shouldn't be imported in your code. :pr:`331` by :user:`Lilian Boulard <LilianBoulard>`
+* The MinHashEncoder now supports a `n_jobs` parameter to parallelize the hashes computation. :pr:`267` by `Leo Grinsztajn <LeoGrin>` and `Lilian Boulard <LilianBoulard>`.
 
 Minor changes
 -------------

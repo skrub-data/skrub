@@ -1,17 +1,21 @@
 import random
 from string import ascii_lowercase
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
 from dirty_cat import MinHashEncoder
+
+from .utils import generate_data
 
 
 @pytest.mark.parametrize(
     "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
 )
-def test_MinHashEncoder(hashing, minmax_hash) -> None:
+def test_minhash_encoder(hashing, minmax_hash) -> None:
     X = np.array(["al ice", "b ob", "bob and alice", "alice and bob"])[:, None]
     # Test output shape
     encoder = MinHashEncoder(n_components=2, hashing=hashing)
@@ -76,19 +80,7 @@ def test_input_type() -> None:
     "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
 )
 def test_encoder_params(hashing, minmax_hash) -> None:
-    MAX_LIMIT = 255  # extended ASCII Character set
-    i = 0
-    str_list = []
-    for i in range(100):
-        random_string = "aa"
-        for _ in range(100):
-            random_integer = random.randint(0, MAX_LIMIT)
-            random_string += chr(random_integer)
-            if random_integer < 50:
-                random_string += "  "
-        i += 1
-        str_list += [random_string]
-    X = np.array(str_list).reshape(100, 1)
+    X = generate_data(n_samples=20)
     enc = MinHashEncoder(
         n_components=50, hashing=hashing, minmax_hash=minmax_hash, ngram_range=(3, 3)
     )
@@ -169,3 +161,84 @@ def test_cache_overflow() -> None:
     y = encoder.fit_transform(raw_data)
 
     assert len(y[y == -1.0]) == 0
+
+
+@skip_if_no_parallel
+def test_parallelism():
+    # Test that parallelism works
+    encoder = MinHashEncoder(n_components=3, n_jobs=1)
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    y = encoder.fit_transform(X)
+    for n_jobs in [None, 2, -1]:
+        encoder = MinHashEncoder(n_components=3, n_jobs=n_jobs)
+        y_parallel = encoder.fit_transform(X)
+        assert_array_equal(y, y_parallel)
+
+    # Test with threading backend
+    encoder = MinHashEncoder(n_components=3, n_jobs=2)
+    with joblib.parallel_backend("threading"):
+        y_threading = encoder.fit_transform(X)
+    assert_array_equal(y, y_threading)
+    assert encoder.n_jobs == 2
+
+
+DEFAULT_JOBLIB_BACKEND = joblib.parallel.get_active_backend()[0].__class__
+
+
+class DummyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
+    """
+    A dummy backend used to check that specifying a backend works
+    in MinHashEncoder.
+    The `count` attribute is used to check that the backend is used.
+    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    """
+    def __init__(self, *args, **kwargs):
+        self.count = 0
+        super().__init__(*args, **kwargs)
+
+    def start_call(self):
+        self.count += 1
+        return super().start_call()
+
+
+joblib.register_parallel_backend("testing", DummyBackend)
+
+
+@skip_if_no_parallel
+def test_backend_respected():
+    """
+    Test that the joblib backend is used.
+    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    """
+    # Test that parallelism works
+    encoder = MinHashEncoder(n_components=3, n_jobs=2)
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+
+    with joblib.parallel_backend("testing") as (ba, n_jobs):
+        encoder.fit_transform(X)
+        
+    assert ba.count > 0
+
+
+def test_correct_arguments():
+    # Test that the correct arguments are passed to the hashing function
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    # Write an incorrect value for the `hashing` argument
+    with pytest.raises(ValueError, match=r"expected any of"):
+        encoder = MinHashEncoder(n_components=3, hashing="incorrect")
+        encoder.fit_transform(X)
+
+    # Write an incorrect value for the `handle_missing` argument
+    with pytest.raises(ValueError, match=r"expected any of"):
+        encoder = MinHashEncoder(n_components=3, handle_missing="incorrect")
+        encoder.fit_transform(X)
+
+    # Use minmax_hash with murmur hashing
+    with pytest.raises(ValueError, match=r"minmax_hash encoding is not supported"):
+        encoder = MinHashEncoder(n_components=2, minmax_hash=True, hashing="murmur")
+        encoder.fit_transform(X)
+
+    # Use minmax_hash with an odd number of components
+    with pytest.raises(ValueError, match=r"n_components should be even"):
+        encoder = MinHashEncoder(n_components=3, minmax_hash=True)
+        encoder.fit_transform(X)
