@@ -87,8 +87,8 @@ ex_series = pd.Series(counts, index=unique_examples)
 # ------------------
 
 ex_series.plot.barh(figsize=(10, 15))
-_ = plt.xlabel("Medication name")
-_ = plt.ylabel("Counts")
+plt.xlabel("Medication name")
+plt.ylabel("Counts")
 
 ###############################################################################
 # We can now see clearly the structure of the data: The three original medications
