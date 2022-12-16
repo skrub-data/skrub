@@ -77,7 +77,7 @@ def _get_dirty_dataframe() -> pd.DataFrame:
     )
 
 
-def _get_numpy_array() -> np.array:
+def _get_numpy_array() -> np.ndarray:
     return np.array(
         [
             ["15", "56", pd.NA, "12", ""],
