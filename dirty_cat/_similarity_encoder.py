@@ -80,7 +80,7 @@ def _ngram_similarity_one_sample_inplace(
     se_dict[unq_X[i]] = similarity.reshape(-1)
 
 
-def ngram_similarity(
+def ngram_similarity_matrix(
     X,
     cats: List[str],
     ngram_range: Tuple[int, int],
@@ -560,7 +560,7 @@ class SimilarityEncoder(OneHotEncoder):
             if fast:
                 encoded_Xj = self._ngram_similarity_fast(Xlist[j], j)
             else:
-                encoded_Xj = ngram_similarity(
+                encoded_Xj = ngram_similarity_matrix(
                     Xlist[j],
                     categories,
                     ngram_range=(min_n, max_n),
