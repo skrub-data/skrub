@@ -67,6 +67,11 @@ def _test_missing_values(input_type, missing):
         pd = pytest.importorskip("pandas")
         observations = pd.DataFrame(observations)
 
+    if missing not in ["error", ""]:
+        with pytest.raises(ValueError, match=r"expected any of"):
+            SimilarityEncoder(handle_missing=missing)
+        return
+
     sim_enc = SimilarityEncoder(handle_missing=missing)
     if missing == "error":
         with pytest.raises(ValueError, match=r"Found missing values in input"):
@@ -74,10 +79,7 @@ def _test_missing_values(input_type, missing):
     elif missing == "":
         ans = sim_enc.fit_transform(observations)
         assert np.allclose(encoded, ans)
-    else:
-        with pytest.raises(ValueError, match=r"expected any of"):
-            sim_enc.fit_transform(observations)
-        return
+    return
 
 
 def _test_missing_values_transform(input_type: str, missing: str) -> None:
@@ -104,6 +106,11 @@ def _test_missing_values_transform(input_type: str, missing: str) -> None:
     elif input_type == "pandas":
         pd = pytest.importorskip("pandas")
         test_observations = pd.DataFrame(test_observations)
+
+    if missing not in ["error", ""]:
+        with pytest.raises(ValueError, match=r"expected any of"):
+            SimilarityEncoder(handle_missing=missing)
+        return
 
     sim_enc = SimilarityEncoder(handle_missing=missing)
     if missing == "error":

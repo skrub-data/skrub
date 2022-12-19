@@ -352,17 +352,20 @@ class SimilarityEncoder(OneHotEncoder):
                 f"Got handle_unknown={self.handle_unknown!r}, but expected "
                 "any of {'error', 'ignore'}. "
             )
-
         if (self.hashing_dim is not None) and (not isinstance(self.hashing_dim, int)):
             raise ValueError(
                 f"Got hashing_dim={self.hashing_dim!r}, which has an invalid "
                 f"type ({type(self.hashing_dim)}), expected None or int. "
             )
-
         if self.categories not in ["auto", "most_frequent", "k-means"]:
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet supported. ")
+        if self.handle_missing not in ["error", ""]:
+            raise ValueError(
+                f"Got handle_missing={self.handle_missing}, but expected "
+                "any of {'error', ''}. "
+            )
 
     def get_most_frequent(self, prototypes: List[str]) -> np.array:
         """
@@ -398,11 +401,6 @@ class SimilarityEncoder(OneHotEncoder):
             The fitted SimilarityEncoder instance.
         """
 
-        if self.handle_missing not in ["error", ""]:
-            raise ValueError(
-                f"Got handle_missing={self.handle_missing}, but expected "
-                "any of {'error', ''}. "
-            )
         if hasattr(X, "iloc") and X.isna().values.any():
             if self.handle_missing == "error":
                 raise ValueError(
