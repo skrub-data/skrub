@@ -10,7 +10,7 @@ from dirty_cat._similarity_encoder import get_kmeans_prototypes, ngram_similarit
 from dirty_cat._string_distances import ngram_similarity
 from dirty_cat._utils import parse_version
 
-# 415, 421, 429, 452-455, 498, 525->530, 549-550, 662
+# 351, 357, 365, 452-455, 498, 525->530, 549-550, 662
 
 
 def test_specifying_categories() -> None:
@@ -49,6 +49,15 @@ def test_fast_ngram_similarity() -> None:
     feature_matrix_fast = sim_enc.transform(observations, fast=True)
 
     assert np.allclose(feature_matrix, feature_matrix_fast)
+
+
+def test_parameters():
+    with pytest.raises(ValueError, match=r"Got handle_unknown="):
+        SimilarityEncoder(handle_unknown="blabla")
+    with pytest.raises(ValueError, match=r"Got hashing_dim="):
+        SimilarityEncoder(hashing_dim="blabla")
+    with pytest.raises(ValueError, match=r"Unsorted categories are not yet supported"):
+        SimilarityEncoder(categories="blabla")
 
 
 def _test_missing_values(input_type, missing):
