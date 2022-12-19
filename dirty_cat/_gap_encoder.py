@@ -542,7 +542,8 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
 
 class GapEncoder(BaseEstimator, TransformerMixin):
-    """
+    """Constructs latent topics with continuous encoding.
+
     This encoder can be understood as a continuous encoding on a set of latent
     categories estimated from the data. The latent categories are built by
     capturing combinations of substrings that frequently co-occur.
@@ -573,7 +574,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         datasets as there is no need to store a vocabulary dictionary in
         memory.
     hashing_n_features : int, optional, default=2**12
-        Number of features for the `HashingVectorizer`.
+        Number of features for the :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
         Only relevant if `hashing=True`.
     init : {"k-means++", "random", "k-means"}, optional, default='k-means++'
         Initialization method of the W matrix.
@@ -600,7 +601,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     add_words : bool, optional, default=False
         If true, add the words counts to the bag-of-n-grams representation
         of the input data.
-    random_state : int, :class:`~numpy.random.RandomState` or None, optional, default=None
+    random_state : int, :class:`numpy.random.RandomState` or None, optional, default=None
         RNG seed for reproducible output across multiple function calls.
     rescale_W : bool, optional, default=True
         If true, the weight matrix *W* is rescaled at each iteration
