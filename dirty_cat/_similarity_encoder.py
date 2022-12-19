@@ -364,6 +364,12 @@ class SimilarityEncoder(OneHotEncoder):
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet supported. ")
 
+        if self.handle_missing not in ["error", ""]:
+            raise ValueError(
+                f"Got handle_missing={self.handle_missing}, but expected "
+                "any of {'error', ''}. "
+            )
+
     def get_most_frequent(self, prototypes: List[str]) -> np.array:
         """
         Get the most frequent category prototypes.
@@ -398,11 +404,6 @@ class SimilarityEncoder(OneHotEncoder):
             The fitted SimilarityEncoder instance.
         """
 
-        if self.handle_missing not in ["error", ""]:
-            raise ValueError(
-                f"Got handle_missing={self.handle_missing}, but expected "
-                "any of {'error', ''}. "
-            )
         if hasattr(X, "iloc") and X.isna().values.any():
             if self.handle_missing == "error":
                 raise ValueError(
