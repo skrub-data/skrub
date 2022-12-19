@@ -6,9 +6,11 @@ import pytest
 from sklearn import __version__ as sklearn_version
 
 from dirty_cat import SimilarityEncoder
-from dirty_cat._similarity_encoder import get_kmeans_prototypes
+from dirty_cat._similarity_encoder import get_kmeans_prototypes, ngram_similarity_matrix
 from dirty_cat._string_distances import ngram_similarity
 from dirty_cat._utils import parse_version
+
+# 415, 421, 429, 452-455, 498, 525->530, 549-550, 662
 
 
 def test_specifying_categories() -> None:
@@ -146,6 +148,12 @@ def _test_similarity(
         ).reshape(-1, 1)
         X_test = np.array([["Aa", "aAa", "aaa", "aaab", " aaa  c"]]).reshape(-1, 1)
 
+        if categories == "auto":
+            with pytest.warns(UserWarning, match=r"n_prototypes parameter ignored"):
+                SimilarityEncoder(
+                    categories=categories,
+                    n_prototypes=n_prototypes,
+                )
         try:
             model = SimilarityEncoder(
                 hashing_dim=hashing_dim,
@@ -157,7 +165,7 @@ def _test_similarity(
         except ValueError as e:
             assert (
                 e.__str__()
-                == "n_prototypes expected None or a positive non null integer"
+                == "n_prototypes expected None or a positive non null integer. "
             )
             return
 
@@ -193,8 +201,9 @@ def test_similarity_encoder() -> None:
                 hashing_dim=2**16,
                 categories=category,
             )
+            _test_similarity(ngram_similarity, categories=category, n_prototypes=4)
         else:
-            for i in range(1, 4):
+            for i in range(0, 4):
                 _test_similarity(
                     ngram_similarity,
                     categories=category,
@@ -217,8 +226,18 @@ def test_similarity_encoder() -> None:
 
 def test_kmeans_protoypes() -> None:
     X_test = np.array(["cbbba", "baaac", "accc"])
-    proto = get_kmeans_prototypes(X_test, 3)
+    proto = get_kmeans_prototypes(X_test, 3, sparse=True)
     assert np.array_equal(np.sort(proto), np.sort(X_test))
+    X_test_2 = np.array(["aa", "bb", "cc", "bbb"])
+    with pytest.warns(UserWarning, match=r"number of unique prototypes is lower "):
+        get_kmeans_prototypes(X_test_2, 4)
+
+
+def test_ngram_similarity_matrix() -> None:
+    X1 = np.array(["cat1", "cat2", "cat3"])
+    X2 = np.array(["cata1", "caat2", "ccat3"])
+    sim = ngram_similarity_matrix(X1, X2, ngram_range=(2, 2), hashing_dim=5)
+    assert sim.shape == (len(X1), len(X2))
 
 
 def test_reproducibility() -> None:
