@@ -46,7 +46,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
     """See GapEncoder's docstring."""
 
     rho_: float
-    H_dict_: Dict[np.array, np.array]
+    H_dict_: Dict[np.ndarray, np.ndarray]
 
     def __init__(
         self,
@@ -88,7 +88,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
-    def _init_vars(self, X) -> Tuple[np.array, np.array, np.array]:
+    def _init_vars(self, X) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Build the bag-of-n-grams representation V of X and initialize
         the topics W.

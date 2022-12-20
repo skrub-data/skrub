@@ -70,6 +70,26 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     col_names_: typing.Optional[typing.List[str]]
         List of the names of the features of the input data,
         if input data was a pandas DataFrame, otherwise None.
+
+    Examples
+    --------
+    >>> enc = DatetimeEncoder()
+
+    Let's encode the following dates:
+
+    >>> X = [['2022-10-15'], ['2021-12-25'], ['2020-05-18'], ['2019-10-15 12:00:00']]
+
+    >>> enc.fit(X)
+    DatetimeEncoder()
+
+    The encoder will output a transformed array
+    with four columns (year, month, day and hour):
+
+    >>> enc.transform(X)
+    array([[2022.,   10.,   15.,    0.],
+           [2021.,   12.,   25.,    0.],
+           [2020.,    5.,   18.,    0.],
+           [2019.,   10.,   15.,   12.]])
     """
 
     n_features_in_: int
@@ -186,7 +206,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X, y=None) -> np.array:
+    def transform(self, X, y=None) -> np.ndarray:
         """Transform X by replacing each datetime column with corresponding numerical features.
 
         Parameters
@@ -198,7 +218,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        np.array, shape (n_samples, n_features_out\_)
+        np.ndarray, shape (n_samples, n_features_out_)
             Transformed input.
         """
         check_is_fitted(
