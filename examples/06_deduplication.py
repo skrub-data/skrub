@@ -172,8 +172,8 @@ def print_corrections(spell_correct):
     correct = np.unique(spell_correct.values)
     for c in correct:
         print(
-            f"Guessed correct spelling: {c} for"
-            f" {spell_correct[spell_correct==c].index.values}"
+            f"Guessed correct spelling: {c!r} for "
+            f"{spell_correct[spell_correct==c].index.values}"
         )
 
 
