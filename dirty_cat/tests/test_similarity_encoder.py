@@ -56,6 +56,8 @@ def test_parameters():
         SimilarityEncoder(handle_unknown="blabla")
     with pytest.raises(ValueError, match=r"Got hashing_dim="):
         SimilarityEncoder(hashing_dim="blabla")
+    # with pytest.raises(ValueError, match=r"categories are not yet supported"):
+    # SimilarityEncoder(categories="blabla")
 
 
 def _test_missing_values(input_type, missing):
