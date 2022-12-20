@@ -29,7 +29,7 @@ from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
 from ._string_distances import get_ngram_count, preprocess
-from ._utils import parse_version
+from ._utils import StrOptions, parse_version
 
 
 def _ngram_similarity_one_sample_inplace(
@@ -235,10 +235,11 @@ class SimilarityEncoder(OneHotEncoder):
         during fit_transform, the resulting encoded columns for this feature
         will be all zeros. In the inverse transform, the missing category
         will be denoted as None.
-    hashing_dim : int type or None.
+    hashing_dim : int, default=None
         If None, the base vectorizer is CountVectorizer, else it's set to
         HashingVectorizer with a number of features equal to `hashing_dim`.
-    n_prototypes : number of prototype we want to use.
+    n_prototypes : int, default=None
+        Number of prototype we want to use.
         Useful when `most_frequent` or `k-means` is used.
         Must be a positive non-null integer.
     random_state : either an int used as a seed, a RandomState instance or None.
@@ -299,6 +300,21 @@ class SimilarityEncoder(OneHotEncoder):
     vocabulary_count_matrices_: List[np.array]
     vocabulary_ngram_counts_: List[List[int]]
     _infrequent_enabled: bool
+
+    _parameter_constraints: dict = {
+        "similarity": [StrOptions({"ngram"})],
+        "ngram_range": [tuple],
+        "categories": [
+            StrOptions({"auto", "k-means", "most_frequent"}),
+            List[List[str]],
+        ],
+        "dtype": "no_validation",  # delegate to numpy
+        "handle_unknown": [StrOptions({"error", "ignore"})],
+        "handle_missing": [StrOptions({"error", ""})],
+        "hashing_dim": [int, None],
+        "n_prototypes": [int, None],
+        "n_jobs": [int, None],
+    }
 
     def __init__(
         self,
@@ -400,6 +416,8 @@ class SimilarityEncoder(OneHotEncoder):
         SimilarityEncoder
             The fitted SimilarityEncoder instance.
         """
+
+        self._validate_params()
 
         if hasattr(X, "iloc") and X.isna().values.any():
             if self.handle_missing == "error":
