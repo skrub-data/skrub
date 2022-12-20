@@ -218,7 +218,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        np.ndarray, shape (n_samples, n_features_out_)
+        np.ndarray, shape (n_samples, n_features_out\\_)
             Transformed input.
         """
         check_is_fitted(
