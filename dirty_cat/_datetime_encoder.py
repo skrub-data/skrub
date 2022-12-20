@@ -83,7 +83,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     DatetimeEncoder()
 
     The encoder will output a transformed array
-    with four columns (years, months, days and hours):
+    with four columns (year, month, day and hour):
 
     >>> enc.transform(X)
     array([[2022.,   10.,   15.,    0.],
