@@ -10,8 +10,6 @@ from dirty_cat._similarity_encoder import get_kmeans_prototypes, ngram_similarit
 from dirty_cat._string_distances import ngram_similarity
 from dirty_cat._utils import parse_version
 
-# 365, 452-455, 498, 525->530, 549-550, 662
-
 
 def test_specifying_categories() -> None:
     # When creating a new SimilarityEncoder:
@@ -52,13 +50,22 @@ def test_fast_ngram_similarity() -> None:
 
 
 def test_parameters():
-    X = [["a", "b", "c"]]
+    X = [["foo"], ["baz"]]
+    X2 = [["foo"], ["bar"]]
     with pytest.raises(ValueError, match=r"Got handle_unknown="):
-        SimilarityEncoder(handle_unknown="blabla").fit(X)
+        SimilarityEncoder(handle_unknown="bb").fit(X)
     with pytest.raises(ValueError, match=r"Got hashing_dim="):
-        SimilarityEncoder(hashing_dim="blabla").fit(X)
-    # with pytest.raises(ValueError, match=r"categories are not yet supported"):
-    # SimilarityEncoder(categories="blabla")
+        SimilarityEncoder(hashing_dim="bb").fit(X)
+    with pytest.raises(ValueError, match=r"Got categories="):
+        SimilarityEncoder(categories="bb")
+    with pytest.raises(ValueError, match=r"Unsorted categories "):
+        SimilarityEncoder(categories=[["cat2", "cat1"], ["cat3", "cat4"]]).fit(X)
+    with pytest.raises(ValueError, match=r"Found unknown categories "):
+        SimilarityEncoder(categories=[["fooo", "loo"]], handle_unknown="error").fit(X)
+    with pytest.raises(ValueError, match=r"Found unknown categories "):
+        sim = SimilarityEncoder(categories=[["baz", "foo"]], handle_unknown="error")
+        sim.fit(X)
+        sim.transform(X2)
 
 
 def _test_missing_values(input_type, missing):
@@ -90,7 +97,6 @@ def _test_missing_values(input_type, missing):
         with pytest.raises(ValueError, match=r"expected any of"):
             sim_enc.fit_transform(observations)
         return
-    return
 
 
 def _test_missing_values_transform(input_type: str, missing: str) -> None:
@@ -261,6 +267,16 @@ def test_reproducibility() -> None:
     prototypes = sim_enc.fit(X).categories_[0]
     for i in range(10):
         assert np.array_equal(prototypes, sim_enc.fit(X).categories_[0])
+
+
+def test_fit_transform():
+    X = [["foo"], ["baz"]]
+    y = ["foo", "bar"]
+    tr1 = SimilarityEncoder().fit_transform(X, y)
+    sim = SimilarityEncoder()
+    sim.fit(X, y)
+    tr2 = sim.transform(X, y)
+    assert np.array_equal(tr1, tr2)
 
 
 def test_get_features() -> None:
