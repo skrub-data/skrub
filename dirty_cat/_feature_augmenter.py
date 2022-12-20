@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -12,7 +14,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    tables : list of tuples
+    tables : list of 2-tuples of (:class:`~pandas.DataFrame`, str)
         List of (table, column name) tuples
         specyfying the transformer objects to be applied.
 
@@ -75,7 +77,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        tables: list,
+        tables: List[Tuple[pd.DataFrame, str]],
         main_key: str,
         match_score: float = 0.0,
     ):

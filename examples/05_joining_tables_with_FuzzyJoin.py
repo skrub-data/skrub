@@ -374,7 +374,7 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # Instantiating the transformer
 # ............................
 # To do this, we will first gather the auxilliary tables into a
-# list of (keys,tables):
+# list of (tables, keys):
 
 aux_wb_tables = [
     (gdppc, "Country Name"),
@@ -446,10 +446,10 @@ print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
 #
 # .. topic:: Note:
 #
-#    Here, ``grid.score()`` takes directly the best model (with ``match_score``=0.5)
-#    that was found in previous iterations.
-#    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and refitting the
-#    pipeline on the data.
+#    Here, ``grid.score()`` takes directly the best model
+#    (with ``match_score``=0.5) that was found in previous iterations.
+#    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
+#    refitting the pipeline on the data.
 #
 #
 # Great, by evaluating the correct ``match_score`` we improved our
