@@ -165,7 +165,10 @@ def monitor(
                     if time:
                         t0 = perf_counter()
 
-                    func(*args, **kwargs)
+                    res_dic = func(*args, **kwargs)
+
+                    if not res_dic is None:
+                        _monitored.update(res_dic)
 
                     # Collect and store loop monitored values
                     if time:

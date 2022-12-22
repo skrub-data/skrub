@@ -182,51 +182,52 @@ def best_precision_recall(pr_list, re_list, n_bins=13):
     return res_pr, res_re
 
 
-left_1, right_1, gt_1 = fetch_data("Country")
+if __name__ == "__main__":
+    left_1, right_1, gt_1 = fetch_data("Country")
 
-pr_list = []
-re_list = []
-for analyzer, max_n_gram in product(["char", "char_wb"], [3, 4, 5]):
-    if analyzer == "word" and max_n_gram > 2:
-        continue
-    precision, recall, f1 = fuzzy_join_precision_recall(
-        left=left_1,
-        right=right_1,
-        gt=gt_1,
-        left_col="title",
-        right_col="title",
-        analyzer=analyzer,
-        ngram_range=(2, max_n_gram),
+    pr_list = []
+    re_list = []
+    for analyzer, max_n_gram in product(["char", "char_wb"], [3, 4, 5]):
+        if analyzer == "word" and max_n_gram > 2:
+            continue
+        precision, recall, f1 = fuzzy_join_precision_recall(
+            left=left_1,
+            right=right_1,
+            gt=gt_1,
+            left_col="title",
+            right_col="title",
+            analyzer=analyzer,
+            ngram_range=(2, max_n_gram),
+        )
+        pr_list.extend(precision)
+        re_list.extend(recall)
+        # plt.plot(recall, precision,
+        #         label=f"fuzzy_join_{analyzer}_{max_n_gram}_{similarity}")
+
+    pr_list, re_list = best_precision_recall(np.array(pr_list), np.array(re_list))
+    plt.plot(re_list, pr_list, label="fuzzy_join")
+
+    pr_list_fw = []
+    re_list_fw = []
+    for scorer in partial_ratio, ratio, WRatio:
+        precision_fw, recall_fw, f1_fw = thefuzz_precision_recall(
+            left_1, right_1, gt_1, "title", "title", scorer=scorer
+        )
+        pr_list_fw.extend(precision_fw)
+        re_list_fw.extend(recall_fw)
+
+    pr_list_fw, re_list_fw = best_precision_recall(
+        np.array(pr_list_fw), np.array(re_list_fw)
     )
-    pr_list.extend(precision)
-    re_list.extend(recall)
-    # plt.plot(recall, precision,
-    #         label=f"fuzzy_join_{analyzer}_{max_n_gram}_{similarity}")
+    plt.plot(re_list_fw, pr_list_fw, label="thefuzz")
+    # plt.plot(recall_fw, precision_fw, label=f'thefuzz_{scorer.__name__}')
 
-pr_list, re_list = best_precision_recall(np.array(pr_list), np.array(re_list))
-plt.plot(re_list, pr_list, label="fuzzy_join")
+    precision_fj, recall_fj, f1_fj = autofj_precision_recall(left_1, right_1, gt_1)
+    plt.plot(recall_fj, precision_fj, label="autofj")
 
-pr_list_fw = []
-re_list_fw = []
-for scorer in partial_ratio, ratio, WRatio:
-    precision_fw, recall_fw, f1_fw = thefuzz_precision_recall(
-        left_1, right_1, gt_1, "title", "title", scorer=scorer
-    )
-    pr_list_fw.extend(precision_fw)
-    re_list_fw.extend(recall_fw)
-
-pr_list_fw, re_list_fw = best_precision_recall(
-    np.array(pr_list_fw), np.array(re_list_fw)
-)
-plt.plot(re_list_fw, pr_list_fw, label="thefuzz")
-# plt.plot(recall_fw, precision_fw, label=f'thefuzz_{scorer.__name__}')
-
-precision_fj, recall_fj, f1_fj = autofj_precision_recall(left_1, right_1, gt_1)
-plt.plot(recall_fj, precision_fj, label="autofj")
-
-plt.xlabel("Recall")
-plt.ylabel("Precision")
-plt.legend()
-plt.title("Best Precision / recall on Country")
-plt.savefig("precision_recall.png")
-# plt.show()
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.legend()
+    plt.title("Best Precision / recall on Country")
+    plt.savefig("precision_recall.png")
+    # plt.show()
