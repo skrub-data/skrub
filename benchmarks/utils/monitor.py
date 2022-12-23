@@ -37,6 +37,10 @@ def parse_func_repr(representation: str) -> Tuple[str, tuple, dict]:
     arg_list = args_repr.split(", ")
     # Extract the keyword arguments from the positional arguments
     for index in range(len(arg_list)):
+        # Check that the "," is not inside a parenthesis
+        # (this would mean that it is part of a string)
+        # If it is, then we merge the current string with the next one
+        # Until we find a string that is not inside a parenthesis
         if arg_list[index].count("(") != arg_list[index].count(")"):
             arg_list[index + 1] = arg_list[index] + ", " + arg_list[index + 1]
         else:
