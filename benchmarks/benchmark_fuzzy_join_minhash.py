@@ -376,18 +376,33 @@ def plot(res: pd.DataFrame):
         memories = eval(str(ser["memory"]))
         precisions = eval(str(ser["precision"]))
         recalls = eval(str(ser["recall"]))
-        f1 = eval(str(ser("f1")))
+        f1s = eval(str(ser["f1"]))
+        time_fjs = eval(str(ser["time_fj"]))
+
         _, _, kwargs = parse_func_repr(ser["call"])
-        for time, memory in zip(times, memories, precisions, recalls, f1):
+        for time, memory, precision, recall, f1, time_fj in zip(times, memories, precisions, recalls, f1s, time_fjs):
             rows.append((kwargs["encoder"], kwargs["analyser"], 
-            kwargs["n_gram_range"], kwargs["dataset"],
-             time, memory, precisions, recalls, f1))
+            kwargs["ngram_range"], kwargs["dataset_name"],
+             time, memory, precision, recall, f1, time_fj))
 
     df = pd.DataFrame(rows, columns=["encoder", "analyser", 
-    "n_gram_range", "time", "memory", "precision", "recall", "f1"])
+    "ngram_range", "dataset_name", "time", "memory", "precision", "recall", "f1", "time_fj"])
 
-    sns.boxplot(x="dataset", y="time", hue="encoder", data=df)
-    sns.boxplot(x="dataset", y="f1", hue="encoder", data=df)
+    #df["default_params"] = (df["ngram_range"] == "(2, 4)") & (df["analyser"] == "char_wb")
+    #df["alpha"] = 0.5 + df["default_params"] * 0.5
+    #df["size"] = 1 + df["default_params"] * 3
+    f, axes = plt.subplots(3, 1 + len(np.unique(df["dataset_name"])) // 3, figsize=(20, 5))
+    #sns.scatterplot(x="time_fj", y="f1", hue="dataset_name", style="encoder", size="default_params",size_order = [True, False], alpha=0.8, data=df)
+    for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
+        sns.scatterplot(x="time_fj", y="f1", hue="encoder", style="ngram_range", size="analyser", alpha=0.8, data=df[df["dataset_name"] == dataset_name], ax=axes[i % 3, i // 3])
+        axes[i % 3, i // 3].set_title(dataset_name)
+        # remove legend
+        axes[i % 3, i // 3].get_legend().remove()
+    # Put a legend to the right side
+    f.legend(loc='center right')
+    #sns.scatterplot(x="time_fj", y="f1", hue="encoder", style="ngram_range", size="analyser", alpha=0.8, data=df)
+    #plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+    #sns.boxplot(x="dataset_name", y="f1", hue="encoder", data=df)
     plt.show()
 
 

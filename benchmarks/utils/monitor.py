@@ -34,13 +34,19 @@ def parse_func_repr(representation: str) -> Tuple[str, tuple, dict]:
     func_name, args_repr = representation[:-1].split("(", 1)
     args = []
     kwargs = {}
-    for arg in args_repr.split(", "):
-        if "=" in arg:
-            keyword, argument = arg.split("=", 1)
-            if keyword.isidentifier():
-                kwargs.update({keyword: argument})
-                continue
-        args.append(arg)
+    arg_list = args_repr.split(", ")
+    # Extract the keyword arguments from the positional arguments
+    for index in range(len(arg_list)):
+        if arg_list[index].count("(") != arg_list[index].count(")"):
+            arg_list[index + 1] = arg_list[index] + ", " + arg_list[index + 1]
+        else:
+            if "=" in arg_list[index]:
+                keyword, argument = arg_list[index].split("=", 1)
+                if keyword.isidentifier():
+                    kwargs.update({keyword: argument})
+                    continue
+            args.append(arg_list[index])
+
     return func_name, tuple(args), kwargs
 
 
