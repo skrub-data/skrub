@@ -168,7 +168,8 @@ def monitor(
                     res_dic = func(*args, **kwargs)
 
                     if not res_dic is None:
-                        _monitored.update(res_dic)
+                        for key, value in res_dic.items():
+                            _monitored[key].append(value)
 
                     # Collect and store loop monitored values
                     if time:
