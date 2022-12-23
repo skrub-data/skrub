@@ -154,7 +154,7 @@ def fuzzy_join(
     2  nana  3   NaN  NaN  0.532717
 
     As expected, the category "nana" has no exact match (`match_score=1`).
-    
+
     """
 
     warnings.warn("This feature is still experimental.")
