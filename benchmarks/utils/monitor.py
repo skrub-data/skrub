@@ -59,8 +59,8 @@ def monitor(
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
     """Decorator used to monitor the execution of a function.
 
-    The decorated function should return nothing (even if it does, nothing will
-    be passed through by this decorator).
+    The decorated function should return either None, or a dictionary, 
+    which will be added to the results.
     Executions are sequential, so it's usually pretty long to run!
 
     Parameters
