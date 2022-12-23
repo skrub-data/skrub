@@ -374,24 +374,20 @@ def plot(res: pd.DataFrame):
     for i, ser in res.iterrows():
         times = eval(str(ser["time"]))
         memories = eval(str(ser["memory"]))
+        precisions = eval(str(ser["precision"]))
+        recalls = eval(str(ser["recall"]))
+        f1 = eval(str(ser("f1")))
         _, _, kwargs = parse_func_repr(ser["call"])
-        for time, memory in zip(times, memories):
-            rows.append((kwargs["batched"], kwargs["batch_per_job"], 
-            kwargs["n_jobs"], time, memory))
+        for time, memory in zip(times, memories, precisions, recalls, f1):
+            rows.append((kwargs["encoder"], kwargs["analyser"], 
+            kwargs["n_gram_range"], kwargs["dataset"],
+             time, memory, precisions, recalls, f1))
 
-    df = pd.DataFrame(rows, columns=["batched", "batch_per_job", 
-    "n_jobs", "time", "memory"])
+    df = pd.DataFrame(rows, columns=["encoder", "analyser", 
+    "n_gram_range", "time", "memory", "precision", "recall", "f1"])
 
-    # Create a new columns merging batched and batch_per_job
-    # If batch is False, ignore batch_per_job
-    df["config"] = df.apply(
-        lambda row: f"batched={row['batched']}, batch_per_job={row['batch_per_job']}"
-        if row["batched"] == 'True'
-        else "batched=False",
-        axis=1,
-    )
-
-    sns.boxplot(x="n_jobs", y="time", hue="config", data=df)
+    sns.boxplot(x="dataset", y="time", hue="encoder", data=df)
+    sns.boxplot(x="dataset", y="f1", hue="encoder", data=df)
     plt.show()
 
 
