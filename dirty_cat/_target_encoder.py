@@ -55,7 +55,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     ----------
     n_features_in_: int
         Number of features in the data seen during fit.
-    categories_ : typing.List[np.array]
+    categories_ : typing.List[np.ndarray]
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
 
@@ -69,7 +69,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     --------
     >>> enc = TargetEncoder(handle_unknown='ignore')
     >>> X = [['male'], ['Male'], ['Female'], ['male'], ['Female']]
-    >>> y = np.array([1, 2, 3, 4, 5])
+    >>> y = np.ndarray([1, 2, 3, 4, 5])
 
     >>> enc.fit(X, y)
     TargetEncoder(handle_unknown='ignore')
@@ -94,12 +94,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     n_features_in_: int
     _label_encoders_: List[LabelEncoder]
-    categories_: List[np.array]
+    categories_: List[np.ndarray]
     n_: int
 
     def __init__(
         self,
-        categories: Union[Literal["auto"], List[Union[List[str], np.array]]] = "auto",
+        categories: Union[Literal["auto"], List[Union[List[str], np.ndarray]]] = "auto",
         clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = "binary-clf",
         dtype: type = np.float64,
         handle_unknown: Literal["error", "ignore"] = "error",
@@ -211,7 +211,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
-    def transform(self, X) -> np.array:
+    def transform(self, X) -> np.ndarray:
         """
         Transform X using the specified encoding scheme.
 
@@ -222,7 +222,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        2-d np.array
+        2-d np.ndarray
             Transformed input.
         """
         check_is_fitted(self, attributes=["n_features_in_"])
