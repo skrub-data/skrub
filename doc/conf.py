@@ -177,6 +177,7 @@ html_static_path = ["_static"]
 # Modify the title to get good social-media links
 html_title = "— dirty_cat"
 
+
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
