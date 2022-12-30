@@ -20,6 +20,7 @@ import os
 import shutil
 from datetime import datetime
 import sys
+
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -175,7 +176,8 @@ html_static_path = ["_static"]
 
 
 # Modify the title to get good social-media links
-html_title = "&mdash; Dirty cat"
+html_title = "— dirty_cat"
+
 
 # -- Options for HTMLHelp output ------------------------------------------
 
