@@ -1,7 +1,7 @@
 """
 This benchmark compares the performance of using the HashingVectorizer
 or the CountVectorizer for the fuzzy join.
-The results seems to indicate that the HashingVectorizer is almost always
+The results seem to indicate that the HashingVectorizer is almost always
 faster than the CountVectorizer, without any significant loss in accuracy.
 This leads to the conclusion that the HashingVectorizer should be used
 by default for the fuzzy join, with the option to use the CountVectorizer if
@@ -72,7 +72,7 @@ def fuzzy_join(
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
     return_score : boolean, default=True
-        Whether to return matching score based on the distance between
+        Whether to return matching score based on the distance between the
         nearest matched categories.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
@@ -105,7 +105,7 @@ def fuzzy_join(
     supported.
 
     When return_score=True, the returned DataFrame gives
-    the distances between closest matches in a [0, 1] interval.
+    the distances between the closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.
 
