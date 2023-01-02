@@ -205,6 +205,7 @@ def test_score(n_samples: int = 70) -> None:
 
 @pytest.mark.parametrize("missing", ["zero_impute", "error", "aaa"])
 def test_missing_values(missing: str) -> None:
+    """Test what happens when missing values are in the data"""
     observations = [
         ["alice", "bob"],
         ["bob", "alice"],
