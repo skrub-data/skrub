@@ -1,7 +1,7 @@
 """
 Fuzzy joining tables using string columns.
 The principle is as follows:
-  1. We embed and transform the key string columns using CountVectorizer
+  1. We embed and transform the key string columns using HashingVectorizer / CountVectorizer
   and TfifdTransformer.
   2. For each category, we use the nearest neighbor method to find its closest
   neighbor and establish a match.
@@ -17,7 +17,7 @@ from typing import Literal, Tuple, Union
 import numpy as np
 import pandas as pd
 from scipy.sparse import vstack
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer,HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 
 
@@ -28,6 +28,7 @@ def fuzzy_join(
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
+    vectorizer: Literal["count", "hashing"] = "hashing",
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
@@ -60,8 +61,14 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
+    vectorizer : typing.Literal["count", "hashing"], default=`hashing`
+        Vectorizer used to convert the string columns into numerical
+        vectors. `count` uses sklearn's `CountVectorizer`, while `hashing` uses
+        sklearn's HashingVectorizer. Using `hashing` is faster, and does not
+        seem to affect the results in most cases, but you should try using 
+        `count` if you get unexpected results.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
-        Analyzer parameter for the CountVectorizer used for the string
+        Analyzer parameter for the vectorizer used for the string
         similarities.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
@@ -208,8 +215,14 @@ def fuzzy_join(
     main_col_clean = main_table[main_col].astype(str)
     aux_col_clean = aux_table[aux_col].astype(str)
 
-    enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-
+    if vectorizer == "count":
+        enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    elif vectorizer == "hashing":
+        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    else:
+        raise ValueError(
+            f"vectorizer should be either 'count' or 'hashing', got {vectorizer!r}",
+        )
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
     enc_cv = enc.fit(all_cats)
