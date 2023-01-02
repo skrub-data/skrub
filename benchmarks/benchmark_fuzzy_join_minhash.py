@@ -14,7 +14,11 @@ from typing import Literal, Tuple, Union
 import numpy as np
 import pandas as pd
 from scipy.sparse import vstack
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, HashingVectorizer
+from sklearn.feature_extraction.text import (
+    CountVectorizer,
+    TfidfTransformer,
+    HashingVectorizer,
+)
 
 from sklearn.neighbors import NearestNeighbors
 from time import perf_counter
@@ -29,7 +33,7 @@ def fuzzy_join(
     on: Union[str, None] = None,
     encoder: Literal["count", "hash"] = "count",
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    #n_components: int = 30,
+    # n_components: int = 30,
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
     match_score: float = 0,
@@ -273,6 +277,7 @@ def fuzzy_join(
 
     return df_joined
 
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -305,21 +310,20 @@ benchmark_name = "fuzzy_join_encoder_benchmark"
     parametrize={
         "encoder": ["hash", "count"],
         "dataset_name": [
-                            "Country",
-                            "BasketballTeam",
-                            "Drug",
-                            "Device",
-                            "ArtificialSatellite",
-                            "Amphibian",
-                            "Song",
-                            "HistoricBuilding",
-                            "Wrestler",
-                            "EthnicGroup",
-                        ],
+            "Country",
+            "BasketballTeam",
+            "Drug",
+            "Device",
+            "ArtificialSatellite",
+            "Amphibian",
+            "Song",
+            "HistoricBuilding",
+            "Wrestler",
+            "EthnicGroup",
+        ],
         "analyser": ["char_wb", "char", "word"],
         "ngram_range": [(2, 4), (2, 3), (2, 2)],
-        #"n_components": [100, 200, 300],
-
+        # "n_components": [100, 200, 300],
     },
     save_as=benchmark_name,
     repeat=10,
@@ -329,7 +333,7 @@ def benchmark(
     dataset_name: str,
     analyser: str,
     ngram_range: tuple,
-    #n_components: int,
+    # n_components: int,
 ):
     left_table, right_table, gt = fetch_data(dataset_name)
 
@@ -343,7 +347,7 @@ def benchmark(
         encoder=encoder,
         analyzer=analyser,
         ngram_range=ngram_range,
-        #n_components=n_components,
+        # n_components=n_components,
     )
     end_time = perf_counter()
 
@@ -351,7 +355,7 @@ def benchmark(
         list(zip(joined_fj["title_x"], joined_fj["title_y"])),
         list(zip(gt["title_l"], gt["title_r"])),
     )
-    
+
     res_dic = {
         "precision": pr,
         "recall": re,
@@ -360,7 +364,6 @@ def benchmark(
     }
 
     return res_dic
-
 
 
 def plot(res: pd.DataFrame):
@@ -376,29 +379,66 @@ def plot(res: pd.DataFrame):
         time_fjs = eval(str(ser["time_fj"]))
 
         _, _, kwargs = parse_func_repr(ser["call"])
-        for time, memory, precision, recall, f1, time_fj in zip(times, memories, precisions, recalls, f1s, time_fjs):
-            rows.append((kwargs["encoder"], kwargs["analyser"], 
-            kwargs["ngram_range"], kwargs["dataset_name"],
-             time, memory, precision, recall, f1, time_fj))
+        for time, memory, precision, recall, f1, time_fj in zip(
+            times, memories, precisions, recalls, f1s, time_fjs
+        ):
+            rows.append(
+                (
+                    kwargs["encoder"],
+                    kwargs["analyser"],
+                    kwargs["ngram_range"],
+                    kwargs["dataset_name"],
+                    time,
+                    memory,
+                    precision,
+                    recall,
+                    f1,
+                    time_fj,
+                )
+            )
 
-    df = pd.DataFrame(rows, columns=["encoder", "analyser", 
-    "ngram_range", "dataset_name", "time", "memory", "precision", "recall", "f1", "time_fj"])
+    df = pd.DataFrame(
+        rows,
+        columns=[
+            "encoder",
+            "analyser",
+            "ngram_range",
+            "dataset_name",
+            "time",
+            "memory",
+            "precision",
+            "recall",
+            "f1",
+            "time_fj",
+        ],
+    )
 
-    #df["default_params"] = (df["ngram_range"] == "(2, 4)") & (df["analyser"] == "char_wb")
-    #df["alpha"] = 0.5 + df["default_params"] * 0.5
-    #df["size"] = 1 + df["default_params"] * 3
-    f, axes = plt.subplots(3, 1 + len(np.unique(df["dataset_name"])) // 3, figsize=(20, 5))
-    #sns.scatterplot(x="time_fj", y="f1", hue="dataset_name", style="encoder", size="default_params",size_order = [True, False], alpha=0.8, data=df)
+    # df["default_params"] = (df["ngram_range"] == "(2, 4)") & (df["analyser"] == "char_wb")
+    # df["alpha"] = 0.5 + df["default_params"] * 0.5
+    # df["size"] = 1 + df["default_params"] * 3
+    f, axes = plt.subplots(
+        3, 1 + len(np.unique(df["dataset_name"])) // 3, figsize=(20, 5)
+    )
+    # sns.scatterplot(x="time_fj", y="f1", hue="dataset_name", style="encoder", size="default_params",size_order = [True, False], alpha=0.8, data=df)
     for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
-        sns.scatterplot(x="time_fj", y="f1", hue="encoder", style="ngram_range", size="analyser", alpha=0.8, data=df[df["dataset_name"] == dataset_name], ax=axes[i % 3, i // 3])
+        sns.scatterplot(
+            x="time_fj",
+            y="f1",
+            hue="encoder",
+            style="ngram_range",
+            size="analyser",
+            alpha=0.8,
+            data=df[df["dataset_name"] == dataset_name],
+            ax=axes[i % 3, i // 3],
+        )
         axes[i % 3, i // 3].set_title(dataset_name)
         # remove legend
         axes[i % 3, i // 3].get_legend().remove()
     # Put a legend to the right side
-    f.legend(loc='center right')
-    #sns.scatterplot(x="time_fj", y="f1", hue="encoder", style="ngram_range", size="analyser", alpha=0.8, data=df)
-    #plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
-    #sns.boxplot(x="dataset_name", y="f1", hue="encoder", data=df)
+    f.legend(loc="center right")
+    # sns.scatterplot(x="time_fj", y="f1", hue="encoder", style="ngram_range", size="analyser", alpha=0.8, data=df)
+    # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0)
+    # sns.boxplot(x="dataset_name", y="f1", hue="encoder", data=df)
     plt.show()
 
 
