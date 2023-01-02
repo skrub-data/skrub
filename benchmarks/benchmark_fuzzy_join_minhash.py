@@ -1,14 +1,11 @@
 """
-Fuzzy joining tables using string columns.
-The principle is as follows:
-  1. We embed and transform the key string columns using CountVectorizer
-  and TfifdTransformer.
-  2. For each category, we use the nearest neighbor method to find its closest
-  neighbor and establish a match.
-  3. We match the tables using the previous information.
-Categories from the two tables that share many sub-strings (n-grams)
-have greater probability of beeing matched together. The join is based on
-morphological similarities between strings.
+This benchmark compares the performance of using the HashingVectorizer
+or the CountVectorizer for the fuzzy join.
+The results seems to indicate that the HashingVectorizer is almost always
+faster than the CountVectorizer, without any significant loss in accuracy.
+This leads to the conclusion that the HashingVectorizer should be used
+by default for the fuzzy join, with the option to use the CountVectorizer if
+results are unexpected (e.g hash collisions).
 """
 
 import warnings
@@ -19,7 +16,6 @@ import pandas as pd
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, HashingVectorizer
 
-from dirty_cat import MinHashEncoder
 from sklearn.neighbors import NearestNeighbors
 from time import perf_counter
 
