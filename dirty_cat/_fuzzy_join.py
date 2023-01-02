@@ -221,7 +221,7 @@ def fuzzy_join(
         enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     else:
         raise ValueError(
-            f"vectorizer should be either 'count' or 'hashing', got {vectorizer!r}",
+            f"vectorizer should be either 'hashing' or 'count', got {vectorizer!r}",
         )
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 

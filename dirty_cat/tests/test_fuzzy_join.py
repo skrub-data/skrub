@@ -12,7 +12,7 @@ def test_fuzzy_join(analyzer, vectorizer):
 
     df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
     df2 = pd.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]})
-
+    
     df_joined = fuzzy_join(
         left=df1,
         right=df2,
@@ -85,10 +85,10 @@ def test_fuzzy_join_dtypes():
 
 
 @pytest.mark.parametrize(
-    "analyzer, on, how",
-    [("a_blabla", ["a"], "left"), (1, 3, "right")],
+    "vectorizer, analyzer, on, how",
+    [("blabla", "a_blabla", ["a"], "left"), (1, 1, 3, "right")],
 )
-def test_parameters_error(analyzer, on, how):
+def test_parameters_error(vectorizer, analyzer, on, how):
     """Testing if correct errors are raised when wrong parameter values are given."""
     df1 = pd.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
     df2 = pd.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
@@ -104,6 +104,16 @@ def test_parameters_error(analyzer, on, how):
         match=r"invalid type",
     ):
         fuzzy_join(df1, df2, on=on, how=how)
+    # check for vectorizer
+    with pytest.raises(
+        ValueError,
+        match=(
+            f"vectorizer should be either 'hashing' or 'count', got {vectorizer!r}"
+        ),
+    ):
+        fuzzy_join(df1, df2, on="a", vectorizer=vectorizer, how=how)
+
+
 
 
 def test_missing_keys():
