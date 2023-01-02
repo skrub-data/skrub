@@ -6,7 +6,8 @@ from dirty_cat import fuzzy_join
 
 
 @pytest.mark.parametrize("analyzer", ["char", "char_wb", "word"])
-def test_fuzzy_join(analyzer):
+@pytest.mark.parametrize("vectorizer", ["hashing", "count"])
+def test_fuzzy_join(analyzer, vectorizer):
     """Testing if fuzzy_join results are as expected."""
 
     df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
@@ -19,6 +20,7 @@ def test_fuzzy_join(analyzer):
         right_on="a2",
         match_score=0.45,
         return_score=True,
+        vectorizer=vectorizer,
         analyzer=analyzer,
     )
 
