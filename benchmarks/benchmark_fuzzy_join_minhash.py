@@ -8,18 +8,14 @@ by default for the fuzzy join, with the option to use the CountVectorizer if
 results are unexpected (e.g hash collisions).
 """
 
-import warnings
-from typing import Literal, Tuple, Union
-
-import numpy as np
 import pandas as pd
+from typing import Literal, Tuple, Union
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
     CountVectorizer,
     TfidfTransformer,
     HashingVectorizer,
 )
-
 from sklearn.neighbors import NearestNeighbors
 from time import perf_counter
 
@@ -281,23 +277,13 @@ def fuzzy_join(
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from itertools import product
-
-from fuzzy_join_benchmark import (
-    fetch_data,
-    fuzzy_join_precision_recall,
-    evaluate,
-)
 
 import seaborn as sns
 from argparse import ArgumentParser
 
-from pathlib import Path
-
+from fuzzy_join_benchmark import fetch_data, evaluate
 from utils import monitor, parse_func_repr, find_result, default_parser
-from dirty_cat.tests.utils import generate_data
 
-import pickle
 
 # Benchmarking accuracy and speed on actual datasets
 
