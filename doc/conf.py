@@ -176,7 +176,7 @@ html_static_path = ["_static"]
 
 
 # Modify the title to get good social-media links
-html_title = "— dirty_cat"
+html_title = "dirty_cat"
 
 
 # -- Options for HTMLHelp output ------------------------------------------
@@ -314,7 +314,5 @@ issues_github_path = "dirty-cat/dirty_cat"
 # The following is used by sphinx.ext.linkcode to provide links to github
 linkcode_resolve = make_linkcode_resolve(
     "dirty_cat",
-    "https://github.com/dirty-cat/"
-    "dirty-cat/blob/{revision}/"
-    "{package}/{path}#L{lineno}",
+    "https://github.com/dirty-cat/dirty-cat/blob/{revision}/{package}/{path}#L{lineno}",
 )
