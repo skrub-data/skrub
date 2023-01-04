@@ -450,7 +450,7 @@ print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
 # .. topic:: Note:
 #
 #    Here, ``grid.score()`` takes directly the best model
-#    (with ``match_score``=0.5) that was found in previous iterations.
+#    (with ``match_score=0.5``) that was found in previous iterations.
 #    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
 #    refitting the pipeline on the data.
 #
