@@ -18,6 +18,10 @@ Minor changes
 
 * :class:`MinHashEncoder`'s `minhash` method is no longer public. :pr:`379` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+* Fetching functions now have an additional argument ``directory``,
+  which can be used to specify where to save and load from datasets.
+  :pr:`432` by :user:`Lilian Boulard <LilianBoulard>`
+
 Bug fixes
 ---------
 
@@ -89,7 +93,7 @@ Major changes
 
 * Improvements to the :class:`MinHashEncoder`
     - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`. Very useful when using for instance the :func:`~sklearn.compose.make_column_transformer` method, on multiple columns.
-  
+
   :pr:`243` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 
@@ -143,7 +147,7 @@ Major changes
 
   - :class:`GapEncoder`: the default value "zero_impute" becomes "empty_impute" (see doc).
   - :class:`MinHashEncoder`: the default value "" becomes "zero_impute" (see doc).
-  
+
   :pr:`210` by :user:`Alexis Cvetkov <alexis-cvetkov>`.
 
 * Add a method "get_feature_names_out" for the :class:`GapEncoder` and the :class:`SuperVectorizer`,
