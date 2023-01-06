@@ -70,7 +70,7 @@ def test_fetch_openml_dataset():
     }
 
     with TemporaryDirectory() as temp_dir:
-        temp_dir = Path(temp_dir)
+        temp_dir = Path(temp_dir).resolve()
         try:
             # First, we want to purposefully test ValueError exceptions.
             with pytest.raises(ValueError):
@@ -149,7 +149,7 @@ def test_fetch_openml_dataset_mocked(
     )
 
     with TemporaryDirectory() as temp_dir:
-        temp_dir = Path(temp_dir)
+        temp_dir = Path(temp_dir).resolve()
 
         # We test the function to see if it behaves correctly when files exist
         mock_pathlib_path_isfile.return_value = True
@@ -183,7 +183,7 @@ def test__download_and_write_openml_dataset(mock_fetch_openml):
     dataset_id = 2
 
     with TemporaryDirectory() as temp_dir:
-        _download_and_write_openml_dataset(dataset_id, Path(temp_dir))
+        _download_and_write_openml_dataset(dataset_id, Path(temp_dir).resolve())
 
         mock_fetch_openml.assert_called_once_with(
             data_id=dataset_id, data_home=str(temp_dir), as_frame=True
