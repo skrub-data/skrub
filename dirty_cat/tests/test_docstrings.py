@@ -33,6 +33,7 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit",
     "dirty_cat._similarity_encoder.SimilarityEncoder.transform",
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit_transform",
+    "dirty_cat._similarity_encoder.SimilarityEncoder.get_params",
     "dirty_cat._super_vectorizer.SuperVectorizer.fit_transform",
     "dirty_cat._super_vectorizer.SuperVectorizer.transform",
     "dirty_cat._super_vectorizer.SuperVectorizer._auto_cast",
@@ -42,15 +43,15 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._target_encoder.TargetEncoder",
     "dirty_cat._target_encoder.TargetEncoder.fit",
     "dirty_cat._target_encoder.TargetEncoder.transform",
+    "dirty_cat._base.BaseEstimator._get_param_names",
+    "dirty_cat._base.BaseEstimator.get_params",
+    "dirty_cat._base.BaseEstimator.set_params",
+    "dirty_cat._base.BaseEstimator._validate_params",
     # The following are not documented in dirty_cat (and thus are out of scope)
     # They are usually inherited from other libraries.
     "dirty_cat._super_vectorizer.SuperVectorizer.fit",
     "dirty_cat._super_vectorizer.SuperVectorizer.set_params",
     "dirty_cat._super_vectorizer.SuperVectorizer.named_transformers_",
-    "dirty_cat._base.BaseEstimator._get_param_names",
-    "dirty_cat._base.BaseEstimator.get_params",
-    "dirty_cat._base.BaseEstimator.set_params",
-    "dirty_cat._base.BaseEstimator._validate_params",
 }
 
 

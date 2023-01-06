@@ -50,7 +50,7 @@ class BaseEstimator:
 
         Parameters
         ----------
-        deep: bool, default=True
+        deep : bool, optional, default=True
             If True, will return the parameters for this estimator and
             contained subobjects that are estimators.
 
