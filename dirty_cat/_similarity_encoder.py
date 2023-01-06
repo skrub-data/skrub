@@ -33,12 +33,12 @@ from ._utils import parse_version
 
 
 def _ngram_similarity_one_sample_inplace(
-    x_count_vector: np.array,
-    vocabulary_count_matrix: np.array,
+    x_count_vector: np.ndarray,
+    vocabulary_count_matrix: np.ndarray,
     str_x: str,
-    vocabulary_ngram_counts: np.array,
+    vocabulary_ngram_counts: np.ndarray,
     se_dict: dict,
-    unq_X: np.array,
+    unq_X: np.ndarray,
     i: int,
     ngram_range: Tuple[int, int],
 ) -> None:
@@ -47,17 +47,17 @@ def _ngram_similarity_one_sample_inplace(
 
     Parameters
     ----------
-    x_count_vector : np.array
+    x_count_vector : np.ndarray
         Count vector of the sample based on the ngrams of the vocabulary
-    vocabulary_count_matrix : np.array
+    vocabulary_count_matrix : np.ndarray
         Count vector of the vocabulary based on its ngrams
     str_x: str
         The actual sample string
-    vocabulary_ngram_counts : np.array
+    vocabulary_ngram_counts : np.ndarray
         Number of ngrams for each unique element of the vocabulary
     se_dict : dict
         Dictionary containing the similarities for each x in unq_X
-    unq_X : np.array
+    unq_X : np.ndarray
         The arrays of all unique samples
     i : str
         The index of x_count_vector in the csr count matrix
@@ -80,13 +80,13 @@ def _ngram_similarity_one_sample_inplace(
     se_dict[unq_X[i]] = similarity.reshape(-1)
 
 
-def ngram_similarity(
+def ngram_similarity_matrix(
     X,
     cats: List[str],
     ngram_range: Tuple[int, int],
     hashing_dim: int,
     dtype: type = np.float64,
-) -> np.array:
+) -> np.ndarray:
     """
     Similarity encoding for dirty categorical variables:
     Given two arrays of strings, returns the similarity encoding matrix
@@ -139,7 +139,7 @@ def ngram_similarity(
     return np.nan_to_num(out, copy=False)
 
 
-def get_prototype_frequencies(prototypes: np.array) -> np.array:
+def get_prototype_frequencies(prototypes: np.ndarray) -> np.array:
     """
     Computes the frequencies of the values contained in prototypes
     Reverse sorts the array by the frequency
@@ -337,7 +337,11 @@ class SimilarityEncoder(OneHotEncoder):
         self.similarity = None
 
         if not isinstance(categories, list):
-            assert categories in [None, "auto", "k-means", "most_frequent"]
+            if categories not in ["auto", "k-means", "most_frequent"]:
+                raise ValueError(
+                    f"Got categories={self.categories}, but expected "
+                    "any of {'auto', 'k-means', 'most_frequent'}. "
+                )
         if categories in ["k-means", "most_frequent"] and (
             n_prototypes is None or n_prototypes == 0
         ):
@@ -522,7 +526,7 @@ class SimilarityEncoder(OneHotEncoder):
                     "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
-            if self.handle_missing != "error":
+            else:
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)
@@ -560,7 +564,7 @@ class SimilarityEncoder(OneHotEncoder):
             if fast:
                 encoded_Xj = self._ngram_similarity_fast(Xlist[j], j)
             else:
-                encoded_Xj = ngram_similarity(
+                encoded_Xj = ngram_similarity_matrix(
                     Xlist[j],
                     categories,
                     ngram_range=(min_n, max_n),
