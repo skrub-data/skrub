@@ -18,7 +18,6 @@ from numpydoc.validate import validate
 DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._datetime_encoder.DatetimeEncoder.get_feature_names",
     "dirty_cat._datetime_encoder.DatetimeEncoder.get_feature_names_out",
-    "dirty_cat._gap_encoder.GapEncoder",
     "dirty_cat._gap_encoder.GapEncoder.fit",
     "dirty_cat._gap_encoder.GapEncoder.get_feature_names",
     "dirty_cat._gap_encoder.GapEncoder.get_feature_names_out",

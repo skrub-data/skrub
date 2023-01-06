@@ -339,7 +339,11 @@ class SimilarityEncoder(OneHotEncoder):
         self.similarity = None
 
         if not isinstance(categories, list):
-            assert categories in [None, "auto", "k-means", "most_frequent"]
+            if categories not in ["auto", "k-means", "most_frequent"]:
+                raise ValueError(
+                    f"Got categories={self.categories}, but expected "
+                    "any of {'auto', 'k-means', 'most_frequent'}. "
+                )
         if categories in ["k-means", "most_frequent"] and (
             n_prototypes is None or n_prototypes == 0
         ):
@@ -524,7 +528,7 @@ class SimilarityEncoder(OneHotEncoder):
                     "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
-            if self.handle_missing != "error":
+            else:
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)
