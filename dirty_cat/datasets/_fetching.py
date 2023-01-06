@@ -17,7 +17,7 @@ import urllib.request
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, TextIO, Union
 from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
@@ -425,6 +425,7 @@ def _export_gz_data_to_csv(
     atdata_found = False
     with destination_file.open(mode="w", encoding="utf8") as csv:
         with gzip.open(compressed_dir_path, mode="rt", encoding="utf8") as gz:
+            gz: TextIO  # Clarify for IDEs
             csv.write(_features_to_csv_format(features))
             csv.write("\n")
             # We will look at each line of the file until we find
@@ -447,7 +448,7 @@ def _fetch_dataset_as_dataclass(
     dataset_id: Union[int, str],
     target: Optional[str],
     load_dataframe: bool,
-    data_directory: Optional[Path] = None,
+    data_directory: Optional[Union[Path, str]] = None,
     read_csv_kwargs: Optional[dict] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
@@ -477,6 +478,9 @@ def _fetch_dataset_as_dataclass(
         If `load_dataframe=False`
 
     """
+    if isinstance(data_directory, str):
+        data_directory = Path(data_directory)
+
     if source == "openml":
         info = _fetch_openml_dataset(dataset_id, data_directory)
     elif source == "world_bank":
@@ -525,6 +529,7 @@ def fetch_employee_salaries(
     load_dataframe: bool = True,
     drop_linked: bool = True,
     drop_irrelevant: bool = True,
+    directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the employee_salaries dataset (regression), available at
     https://openml.org/d/42125
@@ -563,6 +568,7 @@ def fetch_employee_salaries(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
     if load_dataframe:
         if drop_linked:
@@ -577,7 +583,7 @@ def fetch_employee_salaries(
 
 def fetch_road_safety(
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
+    directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the road safety dataset (classification), available at
     https://openml.org/d/42803
@@ -611,7 +617,7 @@ def fetch_road_safety(
 
 def fetch_medical_charge(
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
+    directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the medical charge dataset (regression), available at
     https://openml.org/d/42720
@@ -650,7 +656,7 @@ def fetch_medical_charge(
 
 def fetch_midwest_survey(
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
+    directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the midwest survey dataset (classification), available at
     https://openml.org/d/42805
@@ -682,7 +688,7 @@ def fetch_midwest_survey(
 
 def fetch_open_payments(
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
+    directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the open payments dataset (classification), available at
     https://openml.org/d/42738
@@ -716,7 +722,7 @@ def fetch_open_payments(
 
 def fetch_traffic_violations(
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
+    directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the traffic violations dataset (classification), available at
     https://openml.org/d/42132
@@ -752,7 +758,7 @@ def fetch_traffic_violations(
 
 def fetch_drug_directory(
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
+    directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the drug directory dataset (classification), available at
     https://openml.org/d/43044
@@ -786,7 +792,7 @@ def fetch_drug_directory(
 def fetch_world_bank_indicator(
     indicator_id: str,
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
+    directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches a dataset of an indicator from the World Bank
     open data platform.
