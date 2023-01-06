@@ -28,8 +28,10 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
+from ._base import BaseEstimator
+from ._param_validation import StrOptions
 from ._string_distances import get_ngram_count, preprocess
-from ._utils import StrOptions, parse_version
+from ._utils import parse_version
 
 
 def _ngram_similarity_one_sample_inplace(
@@ -189,7 +191,7 @@ def get_kmeans_prototypes(
     return np.sort(X[indexes_prototypes])
 
 
-class SimilarityEncoder(OneHotEncoder):
+class SimilarityEncoder(BaseEstimator, OneHotEncoder):
     """
     Encode string categorical features as a numeric array.
 
@@ -302,17 +304,15 @@ class SimilarityEncoder(OneHotEncoder):
     _infrequent_enabled: bool
 
     _parameter_constraints: dict = {
-        "similarity": [StrOptions({"ngram"})],
+        "similarity": [StrOptions({"ngram"}), None],
         "ngram_range": [tuple],
-        "categories": [
-            StrOptions({"auto", "k-means", "most_frequent"}),
-            List[List[str]],
-        ],
+        "categories": [list, StrOptions({"auto", "k-means", "most_frequent"})],
         "dtype": "no_validation",  # delegate to numpy
         "handle_unknown": [StrOptions({"error", "ignore"})],
         "handle_missing": [StrOptions({"error", ""})],
         "hashing_dim": [int, None],
         "n_prototypes": [int, None],
+        "random_state": ["random_state"],
         "n_jobs": [int, None],
     }
 
@@ -351,37 +351,13 @@ class SimilarityEncoder(OneHotEncoder):
                 stacklevel=2,
             )
         self.similarity = None
-
-        if not isinstance(categories, list):
-            assert categories in [None, "auto", "k-means", "most_frequent"]
-        if categories in ["k-means", "most_frequent"] and (
-            n_prototypes is None or n_prototypes == 0
-        ):
-            raise ValueError(
-                "n_prototypes expected None or a positive non null integer. "
-            )
         if categories == "auto" and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type "auto". ')
 
-        if self.handle_unknown not in ["error", "ignore"]:
-            raise ValueError(
-                f"Got handle_unknown={self.handle_unknown!r}, but expected "
-                "any of {'error', 'ignore'}. "
-            )
-        if (self.hashing_dim is not None) and (not isinstance(self.hashing_dim, int)):
-            raise ValueError(
-                f"Got hashing_dim={self.hashing_dim!r}, which has an invalid "
-                f"type ({type(self.hashing_dim)}), expected None or int. "
-            )
         if self.categories not in ["auto", "most_frequent", "k-means"]:
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet supported. ")
-        if self.handle_missing not in ["error", ""]:
-            raise ValueError(
-                f"Got handle_missing={self.handle_missing}, but expected "
-                "any of {'error', ''}. "
-            )
 
     def get_most_frequent(self, prototypes: List[str]) -> np.array:
         """
