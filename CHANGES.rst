@@ -29,7 +29,7 @@ Minor changes
 
 * Fetching functions now have an additional argument ``directory``,
   which can be used to specify where to save and load from datasets.
-  :pr:`432` by :user:`Lilian Boulard <LilianBoulard>`
+  :pr:`432` and :pr:`453` by :user:`Lilian Boulard <LilianBoulard>`
 
 Bug fixes
 ---------
