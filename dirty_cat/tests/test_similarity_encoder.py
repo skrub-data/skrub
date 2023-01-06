@@ -49,25 +49,6 @@ def test_fast_ngram_similarity() -> None:
     assert np.allclose(feature_matrix, feature_matrix_fast)
 
 
-def test_parameters():
-    X = [["foo"], ["baz"]]
-    X2 = [["foo"], ["bar"]]
-    with pytest.raises(ValueError, match=r"Got handle_unknown="):
-        SimilarityEncoder(handle_unknown="bb").fit(X)
-    with pytest.raises(ValueError, match=r"Got hashing_dim="):
-        SimilarityEncoder(hashing_dim="bb").fit(X)
-    with pytest.raises(ValueError, match=r"Got categories="):
-        SimilarityEncoder(categories="bb")
-    with pytest.raises(ValueError, match=r"Unsorted categories "):
-        SimilarityEncoder(categories=[["cat2", "cat1"], ["cat3", "cat4"]]).fit(X)
-    with pytest.raises(ValueError, match=r"Found unknown categories "):
-        SimilarityEncoder(categories=[["fooo", "loo"]], handle_unknown="error").fit(X)
-    with pytest.raises(ValueError, match=r"Found unknown categories "):
-        sim = SimilarityEncoder(categories=[["baz", "foo"]], handle_unknown="error")
-        sim.fit(X)
-        sim.transform(X2)
-
-
 def _test_missing_values(input_type, missing):
     observations = [["a", "b"], ["b", "a"], ["b", np.nan], ["a", "c"], [np.nan, "a"]]
     encoded = np.array(

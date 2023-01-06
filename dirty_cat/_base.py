@@ -46,13 +46,14 @@ class BaseEstimator:
         return sorted([p.name for p in parameters])
 
     def get_params(self, deep=True):
-        """
-        Get parameters for this estimator.
+        """Get parameters for this estimator.
+
         Parameters
         ----------
-        deep : bool, default=True
+        deep: bool, default=True
             If True, will return the parameters for this estimator and
             contained subobjects that are estimators.
+
         Returns
         -------
         params : dict
