@@ -351,6 +351,13 @@ class SimilarityEncoder(BaseEstimator, OneHotEncoder):
                 stacklevel=2,
             )
         self.similarity = None
+
+        if categories in ["k-means", "most_frequent"] and (
+            n_prototypes is None or n_prototypes == 0
+        ):
+            raise ValueError(
+                "n_prototypes expected None or a positive non null integer. "
+            )
         if categories == "auto" and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type "auto". ')
 
@@ -514,7 +521,7 @@ class SimilarityEncoder(BaseEstimator, OneHotEncoder):
                     "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
-            if self.handle_missing != "error":
+            else:
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)

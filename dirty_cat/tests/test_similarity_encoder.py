@@ -6,7 +6,7 @@ import pytest
 from sklearn import __version__ as sklearn_version
 
 from dirty_cat import SimilarityEncoder
-from dirty_cat._similarity_encoder import get_kmeans_prototypes
+from dirty_cat._similarity_encoder import get_kmeans_prototypes, ngram_similarity_matrix
 from dirty_cat._string_distances import ngram_similarity
 from dirty_cat._utils import parse_version
 
@@ -47,6 +47,25 @@ def test_fast_ngram_similarity() -> None:
     feature_matrix_fast = sim_enc.transform(observations, fast=True)
 
     assert np.allclose(feature_matrix, feature_matrix_fast)
+
+
+def test_parameters():
+    X = [["foo"], ["baz"]]
+    X2 = [["foo"], ["bar"]]
+    with pytest.raises(ValueError, match=r"Got handle_unknown="):
+        SimilarityEncoder(handle_unknown="bb").fit(X)
+    with pytest.raises(ValueError, match=r"Got hashing_dim="):
+        SimilarityEncoder(hashing_dim="bb").fit(X)
+    with pytest.raises(ValueError, match=r"Got categories="):
+        SimilarityEncoder(categories="bb")
+    with pytest.raises(ValueError, match=r"Unsorted categories "):
+        SimilarityEncoder(categories=[["cat2", "cat1"], ["cat3", "cat4"]]).fit(X)
+    with pytest.raises(ValueError, match=r"Found unknown categories "):
+        SimilarityEncoder(categories=[["fooo", "loo"]], handle_unknown="error").fit(X)
+    with pytest.raises(ValueError, match=r"Found unknown categories "):
+        sim = SimilarityEncoder(categories=[["baz", "foo"]], handle_unknown="error")
+        sim.fit(X)
+        sim.transform(X2)
 
 
 def _test_missing_values(input_type, missing):
@@ -143,6 +162,12 @@ def _test_similarity(
         ).reshape(-1, 1)
         X_test = np.array([["Aa", "aAa", "aaa", "aaab", " aaa  c"]]).reshape(-1, 1)
 
+        if categories == "auto":
+            with pytest.warns(UserWarning, match=r"n_prototypes parameter ignored"):
+                SimilarityEncoder(
+                    categories=categories,
+                    n_prototypes=n_prototypes,
+                )
         try:
             model = SimilarityEncoder(
                 hashing_dim=hashing_dim,
@@ -154,7 +179,7 @@ def _test_similarity(
         except ValueError as e:
             assert (
                 e.__str__()
-                == "n_prototypes expected None or a positive non null integer"
+                == "n_prototypes expected None or a positive non null integer. "
             )
             return
 
@@ -190,8 +215,9 @@ def test_similarity_encoder() -> None:
                 hashing_dim=2**16,
                 categories=category,
             )
+            _test_similarity(ngram_similarity, categories=category, n_prototypes=4)
         else:
-            for i in range(1, 4):
+            for i in range(0, 4):
                 _test_similarity(
                     ngram_similarity,
                     categories=category,
@@ -214,8 +240,18 @@ def test_similarity_encoder() -> None:
 
 def test_kmeans_protoypes() -> None:
     X_test = np.array(["cbbba", "baaac", "accc"])
-    proto = get_kmeans_prototypes(X_test, 3)
+    proto = get_kmeans_prototypes(X_test, 3, sparse=True)
     assert np.array_equal(np.sort(proto), np.sort(X_test))
+    X_test_2 = np.array(["aa", "bb", "cc", "bbb"])
+    with pytest.warns(UserWarning, match=r"number of unique prototypes is lower "):
+        get_kmeans_prototypes(X_test_2, 4)
+
+
+def test_ngram_similarity_matrix() -> None:
+    X1 = np.array(["cat1", "cat2", "cat3"])
+    X2 = np.array(["cata1", "caat2", "ccat3"])
+    sim = ngram_similarity_matrix(X1, X2, ngram_range=(2, 2), hashing_dim=5)
+    assert sim.shape == (len(X1), len(X2))
 
 
 def test_reproducibility() -> None:
@@ -228,6 +264,16 @@ def test_reproducibility() -> None:
     prototypes = sim_enc.fit(X).categories_[0]
     for i in range(10):
         assert np.array_equal(prototypes, sim_enc.fit(X).categories_[0])
+
+
+def test_fit_transform():
+    X = [["foo"], ["baz"]]
+    y = ["foo", "bar"]
+    tr1 = SimilarityEncoder().fit_transform(X, y)
+    sim = SimilarityEncoder()
+    sim.fit(X, y)
+    tr2 = sim.transform(X, y)
+    assert np.array_equal(tr1, tr2)
 
 
 def test_get_features() -> None:
