@@ -47,6 +47,10 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._super_vectorizer.SuperVectorizer.fit",
     "dirty_cat._super_vectorizer.SuperVectorizer.set_params",
     "dirty_cat._super_vectorizer.SuperVectorizer.named_transformers_",
+    "dirty_cat._super_vectorizer._base.BaseEstimator._get_param_names",
+    "dirty_cat._super_vectorizer._base.BaseEstimator.get_params",
+    "dirty_cat._super_vectorizer._base.BaseEstimator.set_params",
+    "dirty_cat._super_vectorizer._base.BaseEstimator._validate_params",
 }
 
 
