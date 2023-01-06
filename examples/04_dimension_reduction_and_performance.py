@@ -67,7 +67,6 @@ open_payments.description
 
 ###############################################################################
 # We'll perform some cleaning:
-from functools import reduce
 
 # Remove the missing lines in X
 na_mask: pd.DataFrame = X.isna()
