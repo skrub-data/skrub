@@ -89,8 +89,8 @@ def fuzzy_join(
         A list of strings indicating the suffix to add when overlaping
         column names.
 
-    Returns:
-    --------
+    Returns
+    -------
     df_joined: pandas.DataFrame
         The joined table returned as a DataFrame. If `return_score` is True,
         another column will be added to the DataFrame containing the

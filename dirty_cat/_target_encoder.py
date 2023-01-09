@@ -29,10 +29,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     ----------
     categories : typing.Union[typing.Literal["auto"], typing.List[typing.List[typing.Union[str, int]]]  # noqa
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
-        - list : ``categories[i]`` holds the categories expected in the i-th
-          column. The passed categories must be sorted and should not mix
+        - list : ``categories[i]`` holds the categories expected in the i-th 
+          column. The passed categories must be sorted and should not mix 
           strings and numeric values.
+
         The categories used can be found in the ``categories_`` attribute.
     clf_type : typing.Literal["regression", "binary-clf", "multiclass-clf"]
         The type of classification/regression problem.
@@ -60,7 +62,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         (in order corresponding with output of ``transform``).
 
     References
-    -----------
+    ----------
     For more details, see Micci-Barreca, 2001: A preprocessing scheme for
     high-cardinality categorical attributes in classification and prediction
     problems.
