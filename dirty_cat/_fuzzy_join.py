@@ -46,7 +46,7 @@ def fuzzy_join(
         A table to merge.
     right : :class:`~pandas.DataFrame`
         A table used to merge with.
-    how: {"left", "right"}, optional, default=`left`
+    how : {"left", "right"}, optional, default=`left`
         Type of merge to be performed. Note that unlike pandas' merge,
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
