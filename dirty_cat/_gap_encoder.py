@@ -870,8 +870,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             The column names to be added as prefixes before the labels.
             If col_names == None, no prefixes are used.
             If col_names == 'auto', column names are automatically defined:
+
                 - if the input data was a dataframe, its column names are used,
                 - otherwise, 'col1', ..., 'colN' are used as prefixes.
+                
             Prefixes can be manually set by passing a list for col_names.
         n_labels : int, default=3
             The number of labels used to describe each topic.

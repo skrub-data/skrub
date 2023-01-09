@@ -10,7 +10,7 @@ The following is a set of guidelines for contributing to
 
 .. contents::
    :local:
-   
+
 |
 
 I don’t want to read the whole thing I just have a question

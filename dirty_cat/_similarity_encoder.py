@@ -210,6 +210,7 @@ class SimilarityEncoder(OneHotEncoder):
         The range of values for the n_gram similarity.
     categories : typing.Union[typing.Literal["auto", "k-means", "most_frequent"], typing.List[typing.List[str]]]  # noqa
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
@@ -218,6 +219,7 @@ class SimilarityEncoder(OneHotEncoder):
            categorical variable
         - 'k-means' : Computes the K nearest neighbors of K-mean centroids
            in order to choose the prototype categories
+           
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.
