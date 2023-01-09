@@ -375,7 +375,7 @@ class SuperVectorizer(ColumnTransformer):
                 # Some numerical dtypes like Int64 or Float64 only support
                 # pd.NA, so they must be converted to np.float64 before.
                 if pd.api.types.is_numeric_dtype(X[col]):
-                    X.loc[:, col] = X[col].astype(np.float64)
+                    X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
         # Convert to the best possible data type
@@ -384,12 +384,12 @@ class SuperVectorizer(ColumnTransformer):
             if not pd.api.types.is_datetime64_any_dtype(X[col]):
                 # we don't want to cast datetime64
                 try:
-                    X.loc[:, col] = pd.to_numeric(X[col], errors="raise")
+                    X[col] = pd.to_numeric(X[col], errors="raise")
                 except (ValueError, TypeError):
                     # Only try to convert to datetime
                     # if the variable isn't numeric.
                     try:
-                        X.loc[:, col] = pd.to_datetime(
+                        X[col] = pd.to_datetime(
                             X[col], errors="raise", infer_datetime_format=True
                         )
                     except (ValueError, TypeError):
@@ -398,7 +398,7 @@ class SuperVectorizer(ColumnTransformer):
             # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
                 try:
-                    X.loc[:, col] = X[col].astype(X[col].dtype.type, errors="ignore")
+                    X[col] = X[col].astype(X[col].dtype.type, errors="ignore")
                 except (TypeError, ValueError):
                     pass
             self.types_.update({col: X[col].dtype})
@@ -412,15 +412,15 @@ class SuperVectorizer(ColumnTransformer):
         Does the same thing as `_auto_cast`, but applies learnt info.
         """
         for col in X.columns:
-            X.loc[:, col] = _replace_false_missing(X[col])
+            X[col] = _replace_false_missing(X[col])
             if _has_missing_values(X[col]):
                 if pd.api.types.is_numeric_dtype(X[col]):
-                    X.loc[:, col] = X[col].astype(np.float64)
+                    X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
-            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+            X[col] = _replace_missing_in_cat_col(X[col])
         for col, dtype in self.types_.items():
-            X.loc[:, col] = X[col].astype(dtype)
+            X[col] = X[col].astype(dtype)
         return X
 
     def fit_transform(self, X, y=None):
@@ -541,7 +541,7 @@ class SuperVectorizer(ColumnTransformer):
                     for col in X.columns:
                         # Only impute categorical columns
                         if col in categorical_columns:
-                            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+                            X[col] = _replace_missing_in_cat_col(X[col])
                             self.imputed_columns_.append(col)
 
                 elif self.impute_missing == "auto":
@@ -557,7 +557,7 @@ class SuperVectorizer(ColumnTransformer):
                             for col in cols:
                                 # Only impute categorical columns
                                 if col in categorical_columns:
-                                    X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+                                    X[col] = _replace_missing_in_cat_col(X[col])
                                     self.imputed_columns_.append(col)
 
         # If there was missing values imputation, we cast the DataFrame again,
