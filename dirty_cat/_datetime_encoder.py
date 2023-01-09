@@ -67,7 +67,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     features_per_column_ : mapping of int to list of str
         Dictionary mapping the index of the original columns
         to the list of features extracted for each column.
-    col_names_: None or list of str
+    col_names_ : None or list of str
         List of the names of the features of the input data,
         if input data was a pandas DataFrame, otherwise None.
 
