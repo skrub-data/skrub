@@ -64,7 +64,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Number of features in the data seen during fit.
     n_features_out_ : int
         Number of features of the transformed data.
-    features_per_column_: mapping of int to list of str
+    features_per_column_ : mapping of int to list of str
         Dictionary mapping the index of the original columns
         to the list of features extracted for each column.
     col_names_: None or list of str
