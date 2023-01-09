@@ -91,7 +91,7 @@ def fuzzy_join(
 
     Returns
     -------
-    df_joined: pandas.DataFrame
+    df_joined : :class:`~pandas.DataFrame`
         The joined table returned as a DataFrame. If `return_score` is True,
         another column will be added to the DataFrame containing the
         matching scores.
