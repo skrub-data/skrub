@@ -16,7 +16,7 @@ from dirty_cat._fuzzy_join import fuzzy_join
 
 
 class FeatureAugmenter(BaseEstimator, TransformerMixin):
-    """Transformer augmenting the number of features in a table by joining other tables.
+    """Transformer augmenting the number of features in a table by joining multiple tables.
 
     Given a list of tables and key column names,
     fuzzy join them to the main table.
