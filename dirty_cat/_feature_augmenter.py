@@ -4,6 +4,9 @@ The principle is as follows:
   1. The main table and the key column name are provided at initialisation.
   2. The auxilliary tables are provided for fitting, and will be joined sequentially
   when the transform is called.
+It is advised to use hyper-parameter tuning tools to determine
+the best `match_score` parameter, as this can significantly improve your results.
+(see example 'Fuzzy joining dirty tables with the FeatureAugmenter' for an illustration.
 For more information on how the join is performed, see fuzzy_join's documentation.
 """
 

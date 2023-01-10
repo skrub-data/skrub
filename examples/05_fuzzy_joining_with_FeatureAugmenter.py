@@ -17,7 +17,7 @@ Moreover, the |fa| makes fuzzy joining of multiple tables with
 
 To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
 with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
-in order to create a satisfying first prediction model.
+in order to create a first prediction model.
 
 
 .. |fj| replace:: :func:`~dirty_cat.fuzzy_join`
@@ -374,22 +374,22 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 #######################################################################
 # Instantiating the transformer
 # ............................
-# To do this, we will first gather the auxilliary tables into a
-# list of (tables, keys):
-
-aux_wb_tables = [
-    (gdppc, "Country Name"),
-    (life_exp, "Country Name"),
-    (legal_rights, "Country Name"),
-]
 
 y = df["Happiness score"]
 #######################################################################
-# We have our auxilliary tables in a list!
-# Let us now create an instance of the transformer with the necessary information:
+# We gather the auxilliary tables into a
+# list of (tables, keys) for the `tables` parameter.
+# An instance of the transformer with the necessary information is:
 from dirty_cat import FeatureAugmenter
 
-fa = FeatureAugmenter(tables=aux_wb_tables, main_key="Country")
+fa = FeatureAugmenter(
+    tables=[
+        (gdppc, "Country Name"),
+        (life_exp, "Country Name"),
+        (legal_rights, "Country Name"),
+    ],
+    main_key="Country",
+)
 
 #################################################################
 # Fitting and transforming into the final table
@@ -448,7 +448,7 @@ print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
 # .. topic:: Note:
 #
 #    Here, ``grid.score()`` takes directly the best model
-#    (with ``match_score=0.5``) that was found in previous iterations.
+#    (with ``match_score=0.5``) that was found during the grid search.
 #    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
 #    refitting the pipeline on the data.
 #
