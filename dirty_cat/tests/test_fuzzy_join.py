@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.feature_extraction.text import HashingVectorizer
 
 from dirty_cat import fuzzy_join
-from dirty_cat.tests.utils import generate_data
 
 
 @pytest.mark.parametrize("analyzer", ["char", "char_wb", "word"])
@@ -205,19 +205,49 @@ def test_fuzzy_join_pandas_comparison():
 
 
 def test_correct_encoder():
-    """Test that the encoder is working as intended."""
+    """Test that the encoder error checking is working as intended."""
 
-    samples_left = generate_data(50_000, sample_length=10, as_list=True)
-    samples_right = generate_data(50_000, sample_length=10, as_list=True)
+    class TestVectorizer(HashingVectorizer):
+        """Implements a custom vectorizer to check if the `encoder`
+        parameter uses the passed instance as expected.
+        Raises an error when `fit` is called.
 
-    left = pd.DataFrame({"key": np.arange(50_000), "A": samples_left})
+        Args:
+            HashingVectorizer (_type_): _description_
+        """
 
-    right = pd.DataFrame({"key": np.arange(50_000), "A": samples_right})
+        def __init__(self):
+            HashingVectorizer.__init__(self)
 
-    result = pd.merge(left, right, on="key", how="left")
-    result_fj = fuzzy_join(left, right, on="key", how="left")
+        def fit(self, X):
+            raise AssertionError("Custom vectorizer was called as intended.")
 
-    result_fj.drop(columns=["key_y"], inplace=True)
-    result_fj.rename(columns={"key_x": "key"}, inplace=True)
+    left = pd.DataFrame(
+        {
+            "key": ["K0", "K1", "K2", "K3"],
+            "A": ["A0", "A1", "A2", "A3"],
+            "B": ["B0", "B1", "B2", "B3"],
+        }
+    )
 
-    pd.testing.assert_frame_equal(result, result_fj)
+    right = pd.DataFrame(
+        {
+            "key": ["K0", "K1", "K2", "K3"],
+            "C": ["C0", "C1", "C2", "C3"],
+            "D": ["D0", "D1", "D2", "D3"],
+        }
+    )
+
+    enc = TestVectorizer()
+
+    with pytest.raises(
+        AssertionError, match=r"Custom vectorizer was called as intended."
+    ):
+        fuzzy_join(left, right, on="key", how="left", encoder=enc)
+
+    with pytest.raises(
+        ValueError,
+        match=r"encoder should be either 'hashing', 'count', or"
+        r" a vectorizer object",
+    ):
+        fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")

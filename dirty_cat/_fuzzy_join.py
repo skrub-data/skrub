@@ -22,6 +22,7 @@ from sklearn.feature_extraction.text import (
     CountVectorizer,
     HashingVectorizer,
     TfidfTransformer,
+    _VectorizerMixin,
 )
 from sklearn.neighbors import NearestNeighbors
 
@@ -33,10 +34,10 @@ def fuzzy_join(
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
+    encoder: Union[Literal["hashing", "count"], _VectorizerMixin] = "hashing",
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
-    encoder: Literal["hashing", "count"] = "hashing",
     match_score: float = 0,
     drop_unmatched: bool = False,
     sort: bool = False,
@@ -66,9 +67,15 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
+    encoder : Union[Literal["hashing", "count"], _VectorizerMixin], default=`hashing`
+        Encoder parameter for the Vectorizer.
+        Options: {`hashing`, `count`, `_VectorizerMixin`}. If `hashing`, the
+        encoder will use the `HashingVectorizer`, if `count`, the encoder will
+        use the `CountVectorizer`. It is possible to pass a `_VectorizerMixin`
+        custom object to tweak the parameters of the encoder.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
-        Analyzer parameter for the CountVectorizer/HashingVectorizer used for
-        the string similarities.
+        Analyzer parameter for the CountVectorizer/HashingVectorizer passed to
+        the encoder and used for the string similarities.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
@@ -80,7 +87,6 @@ def fuzzy_join(
     return_score : boolean, default=True
         Whether to return matching score based on the distance between
         nearest matched categories.
-    encoder :
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. Closer to 1 means the matches need to be very
@@ -172,11 +178,11 @@ def fuzzy_join(
         )
 
     if encoder not in ["hashing", "count"]:
-        # TODO: implement check for generic vectorizer
-        raise ValueError(
-            "encoder should be either 'hashing', 'count', or a vectorizer object, got"
-            f" {encoder!r}"
-        )
+        if not issubclass(encoder.__class__, _VectorizerMixin):
+            raise ValueError(
+                "encoder should be either 'hashing', 'count', or a vectorizer object,"
+                f" got {encoder!r}"
+            )
 
     if how not in ["left", "right"]:
         raise ValueError(
@@ -228,9 +234,13 @@ def fuzzy_join(
         enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     elif encoder == "count":
         enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    elif issubclass(encoder.__class__, _VectorizerMixin):
+        enc = encoder
     else:
-        # TODO: implement check for custom vectorizer
-        raise NotImplementedError
+        raise ValueError(
+            "encoder should be either 'hashing', 'count', or a vectorizer"
+            f" object, got {encoder!r}"
+        )
 
     enc_cv = enc.fit(all_cats)
     main_enc = enc_cv.transform(main_col_clean)
