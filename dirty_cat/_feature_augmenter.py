@@ -1,3 +1,12 @@
+"""
+Transformer that allows multiple fuzzy joins to be performed on a table.
+The principle is as follows:
+  1. The main table and the key column name are provided at initialisation.
+  2. The auxilliary tables are provided for fitting, and will be joined sequentially
+  when the transform is called.
+For more information on how the join is performed, see fuzzy_join's documentation.
+"""
+
 from typing import List, Tuple
 
 import pandas as pd
@@ -7,7 +16,7 @@ from dirty_cat._fuzzy_join import fuzzy_join
 
 
 class FeatureAugmenter(BaseEstimator, TransformerMixin):
-    """Transformer that helps augment the number of features in a table.
+    """Transformer augmenting the number of features in a table by joining other tables.
 
     Given a list of tables and key column names,
     fuzzy join them to the main table.
@@ -31,6 +40,10 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         In a [0, 1] interval. 1 means that only a perfect match will be
         accepted, and zero means that the closest match will be accepted,
         no matter how distant.
+
+    Notes
+    -----
+    For individual joins, you can use :func:`~dirty_cat.fuzzy_join`.
 
     Examples
     --------
@@ -107,14 +120,14 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
         if self.main_key not in X.columns:
             raise ValueError(
-                f"Got main_key={self.main_key!r}, but column missing in the main table."
+                f"Got main_key={self.main_key!r}, but column not in {list(X.columns)}."
             )
 
         for pairs in self.tables:
             if pairs[1] not in pairs[0].columns:
                 raise ValueError(
                     f"Got column key {pairs[1]!r}, "
-                    "but column missing in the auxilliary table."
+                    f"but column not in {pairs[0].columns}."
                 )
         return self
 

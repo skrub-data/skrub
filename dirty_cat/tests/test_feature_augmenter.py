@@ -74,7 +74,7 @@ def test_feature_augmenter():
 
     with pytest.raises(
         ValueError,
-        match=r"column missing in the main",
+        match=r"Got main_key",
     ):
         false_fa.fit(main_table)
 
@@ -87,6 +87,6 @@ def test_feature_augmenter():
     false_fa2 = FeatureAugmenter(tables=false_aux_tables, main_key="Country")
     with pytest.raises(
         ValueError,
-        match=r"column missing in the auxilliary",
+        match=r"Got column key",
     ):
         false_fa2.fit(main_table)
