@@ -36,6 +36,7 @@ def fuzzy_join(
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
+    encoder: Literal["hashing", "count"] = "hashing",
     match_score: float = 0,
     drop_unmatched: bool = False,
     sort: bool = False,
@@ -79,6 +80,7 @@ def fuzzy_join(
     return_score : boolean, default=True
         Whether to return matching score based on the distance between
         nearest matched categories.
+    encoder :
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. Closer to 1 means the matches need to be very
@@ -169,6 +171,13 @@ def fuzzy_join(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
 
+    if encoder not in ["hashing", "count"]:
+        # TODO: implement check for generic vectorizer
+        raise ValueError(
+            "encoder should be either 'hashing', 'count', or a vectorizer object, got"
+            f" {encoder!r}"
+        )
+
     if how not in ["left", "right"]:
         raise ValueError(
             f"how should be either 'left' or 'right', got {how!r}",
@@ -215,10 +224,13 @@ def fuzzy_join(
 
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
-    if len(all_cats) < 1_000_000:
+    if encoder == "hashing":
+        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    elif encoder == "count":
         enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     else:
-        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+        # TODO: implement check for custom vectorizer
+        raise NotImplementedError
 
     enc_cv = enc.fit(all_cats)
     main_enc = enc_cv.transform(main_col_clean)

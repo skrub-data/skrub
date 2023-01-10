@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from dirty_cat import fuzzy_join
+from dirty_cat.tests.utils import generate_data
 
 
 @pytest.mark.parametrize("analyzer", ["char", "char_wb", "word"])
@@ -201,3 +202,22 @@ def test_fuzzy_join_pandas_comparison():
     result_s_fj.rename(columns={"key_x": "key"}, inplace=True)
 
     pd.testing.assert_frame_equal(result_s, result_s_fj)
+
+
+def test_correct_encoder():
+    """Test that the encoder is working as intended."""
+
+    samples_left = generate_data(50_000, sample_length=10, as_list=True)
+    samples_right = generate_data(50_000, sample_length=10, as_list=True)
+
+    left = pd.DataFrame({"key": np.arange(50_000), "A": samples_left})
+
+    right = pd.DataFrame({"key": np.arange(50_000), "A": samples_right})
+
+    result = pd.merge(left, right, on="key", how="left")
+    result_fj = fuzzy_join(left, right, on="key", how="left")
+
+    result_fj.drop(columns=["key_y"], inplace=True)
+    result_fj.rename(columns={"key_x": "key"}, inplace=True)
+
+    pd.testing.assert_frame_equal(result, result_fj)
