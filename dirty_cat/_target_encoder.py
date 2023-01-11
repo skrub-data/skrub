@@ -31,8 +31,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
-        - list : ``categories[i]`` holds the categories expected in the i-th 
-          column. The passed categories must be sorted and should not mix 
+        - list : ``categories[i]`` holds the categories expected in the i-th
+          column. The passed categories must be sorted and should not mix
           strings and numeric values.
 
         The categories used can be found in the ``categories_`` attribute.
@@ -71,7 +71,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     --------
     >>> enc = TargetEncoder(handle_unknown='ignore')
     >>> X = [['male'], ['Male'], ['Female'], ['male'], ['Female']]
-    >>> y = np.ndarray([1, 2, 3, 4, 5])
+    >>> y = np.array([1, 2, 3, 4, 5])
 
     >>> enc.fit(X, y)
     TargetEncoder(handle_unknown='ignore')
