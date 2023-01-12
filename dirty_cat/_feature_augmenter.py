@@ -11,7 +11,7 @@ significantly improve your results.
 For more information on how the join is performed, see fuzzy_join's documentation.
 """
 
-from typing import List, Tuple
+from typing import List, Literal, Tuple
 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -30,12 +30,10 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     tables : list of 2-tuples of (:class:`~pandas.DataFrame`, str)
         List of (table, column name) tuples
         specyfying the transformer objects to be applied.
-
         table: str
             Name of the table to be joined.
         column name: str,
             Name of table column to join on.
-
     main_key : str
         The key column name in the main table on which
         the join will be performed.
@@ -44,10 +42,17 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         In a [0, 1] interval. 1 means that only a perfect match will be
         accepted, and zero means that the closest match will be accepted,
         no matter how distant.
-
-    Notes
-    -----
-    For individual joins, you can use :func:`~dirty_cat.fuzzy_join`.
+    analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
+        Analyzer parameter for the CountVectorizer used for the string
+        similarities.
+        Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
+        to factorize should be made of word counts or character n-gram counts.
+        Option `char_wb` creates character n-grams only from text inside word
+        boundaries; n-grams at the edges of words are padded with space.
+    ngram_range : tuple (min_n, max_n), default=(2, 4)
+        The lower and upper boundary of the range of n-values for different
+        n-grams used in the string similarity. All values of n such
+        that min_n <= n <= max_n will be used.
 
     Examples
     --------
@@ -97,10 +102,14 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         tables: List[Tuple[pd.DataFrame, str]],
         main_key: str,
         match_score: float = 0.0,
+        analyzer: Literal["word", "char", "char_wb"] = "char_wb",
+        ngram_range: Tuple[int, int] = (2, 4),
     ):
         self.tables = tables
         self.main_key = main_key
         self.match_score = match_score
+        self.analyzer = analyzer
+        self.ngram_range = ngram_range
 
     def fit(self, X, y=None) -> "FeatureAugmenter":
         """Fit the Feature Augmenter to the main table.
@@ -161,8 +170,10 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
                 aux_table,
                 left_on=self.main_key,
                 right_on=pairs[1],
-                suffixes=("", "_aux"),
                 match_score=self.match_score,
+                analyzer=self.analyzer,
+                ngram_range=self.ngram_range,
+                suffixes=("", "_aux"),
             )
         return X
 
