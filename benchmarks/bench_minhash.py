@@ -1,20 +1,10 @@
-"""
-Minhash encoding of string arrays.
-The principle is as follows:
-  1. A string is viewed as a succession of numbers (the ASCII or UTF8
-     representation of its elements).
-  2. The string is then decomposed into a set of n-grams, i.e.
-     n-dimensional vectors of integers.
-  3. A hashing function is used to assign an integer to each n-gram.
-     The minimum of the hashes over all n-grams is used in the encoding.
-  4. This process is repeated with N hashing functions are used to
-     form N-dimensional encodings.
-Maxhash encodings can be computed similarly by taking the hashes maximum
-instead.
-With this procedure, strings that share many n-grams have greater
-probability of having same encoding values. These encodings thus capture
-morphological similarities between strings.
-"""
+#################
+# The MinHashEncoder version used for the benchmark
+# On the main branch, we only kept the best version of the MinHashEncoder
+# which is the batched version
+# with batch_per_job=1
+# (the batch_per_job parameter has no effect on the results)
+#################
 
 from typing import Callable, Collection, Dict, List, Literal, Tuple
 
@@ -23,9 +13,9 @@ from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
 
-from ._fast_hash import ngram_min_hash
-from ._string_distances import get_unique_ngrams
-from ._utils import LRUDict, check_input
+from dirty_cat._fast_hash import ngram_min_hash
+from dirty_cat._string_distances import get_unique_ngrams
+from dirty_cat._utils import LRUDict, check_input
 
 NoneType = type(None)
 
@@ -57,6 +47,12 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     handle_missing : typing.Literal["error", "zero_impute"], default=zero_impute
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
+    batch: bool, default=False
+        If False, parallelize the computation of the hash of each unique
+        element. If True, parallelize the computation of the hash of each
+        batch of elements.
+    batch_per_job: int, default=1
+        Number of batches to be processed in each job.
     n_jobs : int, default=None
         The number of jobs to run in parallel.
         The hash computations for all unique elements are parallelized.
@@ -70,7 +66,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ----------
     hash_dict_ : LRUDict
         Computed hashes.
-
+    
     Examples
     --------
     >>> enc = MinHashEncoder(n_components=5)
@@ -113,6 +109,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         hashing: Literal["fast", "murmur"] = "fast",
         minmax_hash: bool = False,
         handle_missing: Literal["error", "zero_impute"] = "zero_impute",
+        batch: bool = False,
+        batch_per_job: int = 1,
         n_jobs: int = None,
     ):
         self.ngram_range = ngram_range
@@ -120,6 +118,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.hashing = hashing
         self.minmax_hash = minmax_hash
         self.handle_missing = handle_missing
+        self.batch = batch
+        self.batch_per_job = batch_per_job
         self.n_jobs = n_jobs
 
     def _more_tags(self) -> Dict[str, List[str]]:
@@ -139,7 +139,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string.
         """
         min_hashes = np.ones(self.n_components) * np.infty
@@ -168,7 +168,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -186,25 +186,51 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 ]
             )
 
-    def _compute_hash_batched(
-        self, batch: Collection[str], hash_func: Callable[[str], np.ndarray]
-    ):
-        """
-        Function called to compute the hashes of a batch of strings.
+    def _compute_hash(
+        self, string: str, hash_func: Callable[[str], np.ndarray]
+    ) -> np.ndarray:
+        """Function called to compute the hash of a string.
 
-        Check if the string is in the hash dictionary, if not, compute the hash
-        using the specified hashing function and add it to the dictionary.
+        Check if the string is in the hash dictionary, if not, scompute the hash using
+        the specified hashing function and add it to the dictionary.
 
         Parameters
         ----------
-        batch : collection of str
+        string : str
+            The string to encode.
+        hash_func : callable
+            Hashing function to use on the string.
+
+        Returns
+        -------
+        np.array of shape (n_components, )
+            The encoded string, using specified encoding scheme.
+        """
+        if string not in self.hash_dict_:
+            if string == "NAN":  # true if x is a missing value
+                self.hash_dict_[string] = np.zeros(self.n_components)
+            else:
+                self.hash_dict_[string] = hash_func(string)
+        return self.hash_dict_[string]
+
+    def _compute_hash_batched(
+        self, batch: Collection[str], hash_func: Callable[[str], np.ndarray]
+    ):
+        """Function called to compute the hashes of a batch of strings.
+
+        Check if the string is in the hash dictionary, if not, compute the hash using
+        the specified hashing function and add it to the dictionary.
+
+        Parameters
+        ----------
+        batch : iterable of str
             The batch of strings to encode.
         hash_func : callable
             Hashing function to use on the string.
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
+        np.array of shape (n_samples, n_components)
             The encoded strings, using specified encoding scheme.
         """
         res = np.zeros((len(batch), self.n_components))
@@ -258,7 +284,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
+        ndarray of shape (n_samples, n_components)
             Transformed input.
         """
         X = check_input(X)
@@ -311,18 +337,124 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         unique_x, indices_x = np.unique(X, return_inverse=True)
         n_jobs = effective_n_jobs(self.n_jobs)
 
-        # Compute the hashes in parallel on n_jobs batches
-        unique_x_trans = Parallel(n_jobs=n_jobs)(
-            delayed(self._compute_hash_batched)(
-                unique_x[idx_slice],
-                hash_func,
+        if self.batch:
+            unique_x_trans = Parallel(n_jobs=n_jobs)(
+                delayed(self._compute_hash_batched)(
+                    unique_x[idx_slice],
+                    hash_func,
+                )
+                for idx_slice in gen_even_slices(len(unique_x), 
+                n_jobs * self.batch_per_job)
             )
-            for idx_slice in gen_even_slices(len(unique_x), n_jobs)
-        )
-
-        # Match the hashes of the unique value to the original values
-        X_out = np.concatenate(unique_x_trans)[indices_x].reshape(
-            len(X), X.shape[1] * self.n_components
-        )
+            # Match the hashes of the unique value to the original values
+            X_out = np.concatenate(unique_x_trans)[indices_x].reshape(
+                len(X), X.shape[1] * self.n_components
+            )
+        else:
+            unique_x_trans = Parallel(n_jobs=n_jobs)(
+                delayed(self._compute_hash)(x, hash_func) for x in unique_x
+            )
+            # Match the hashes of the unique value to the original values
+            X_out = np.stack(unique_x_trans)[indices_x].reshape(
+                len(X), X.shape[1] * self.n_components
+            )
 
         return X_out.astype(np.float64)  # The output is an int32 before conversion
+
+
+import pickle
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from argparse import ArgumentParser
+
+from pathlib import Path
+
+from utils import monitor, parse_func_repr, find_result, default_parser
+from dirty_cat.tests.utils import generate_data
+
+benchmark_name = "minhash_batch_comparison"
+
+
+@monitor(
+    memory=True,
+    time=True,
+    parametrize={
+        "dataset_size": ["medium"],
+        "batched": [True, False],
+        "n_jobs": [1, 4, 8, 16, 32, 64],
+        "batch_per_job": [1, 2, 4],
+    },
+    save_as=benchmark_name,
+    repeat=10,
+)
+def benchmark(
+    dataset_size: str,
+    batched: bool,
+    n_jobs: int,
+    batch_per_job: int,
+) -> None:
+    X = data[dataset_size]
+    MinHashEncoder(batch=batched, n_jobs=n_jobs, 
+    batch_per_job=batch_per_job).fit(X).transform(X)
+
+
+def plot(res: pd.DataFrame):
+    sns.set_theme(style="ticks", palette="pastel")
+
+    rows = []
+    for i, ser in res.iterrows():
+        times = eval(str(ser["time"]))
+        memories = eval(str(ser["memory"]))
+        _, _, kwargs = parse_func_repr(ser["call"])
+        for time, memory in zip(times, memories):
+            rows.append((kwargs["batched"], kwargs["batch_per_job"], 
+            kwargs["n_jobs"], time, memory))
+
+    df = pd.DataFrame(rows, columns=["batched", "batch_per_job", 
+    "n_jobs", "time", "memory"])
+
+    # Create a new columns merging batched and batch_per_job
+    # If batch is False, ignore batch_per_job
+    df["config"] = df.apply(
+        lambda row: f"batched={row['batched']}, batch_per_job={row['batch_per_job']}"
+        if row["batched"] == 'True'
+        else "batched=False",
+        axis=1,
+    )
+
+    sns.boxplot(x="n_jobs", y="time", hue="config", data=df)
+    plt.show()
+
+
+if __name__ == "__main__":
+    _args = ArgumentParser(
+        description="Benchmark for the batch feature of the MinHashEncoder.",
+        parents=[default_parser],
+    ).parse_args()
+
+    # Generate the data if not already on disk, and keep them in memory.
+    data = {}  # Will hold the datasets in memory.
+    _data_info = {
+        "small": 10_000,
+        "medium": 100_000,
+    }
+    for name, size in _data_info.items():
+        data_file = Path(f"data_{name}.pkl")
+        if data_file.is_file():
+            with data_file.open("rb") as fl:
+                data.update({name: pickle.load(fl)})
+        else:
+            with data_file.open("wb") as fl:
+                _gen = generate_data(size).reshape(-1, 1)
+                pickle.dump(_gen, fl)
+                data.update({name: _gen})
+
+    if _args.run:
+        df = benchmark()
+    else:
+        result_file = find_result(benchmark_name)
+        df = pd.read_csv(result_file)
+
+    if _args.plot:
+        plot(df)

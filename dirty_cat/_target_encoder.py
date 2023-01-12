@@ -29,10 +29,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     ----------
     categories : typing.Union[typing.Literal["auto"], typing.List[typing.List[typing.Union[str, int]]]  # noqa
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
+
         The categories used can be found in the ``categories_`` attribute.
     clf_type : typing.Literal["regression", "binary-clf", "multiclass-clf"]
         The type of classification/regression problem.
@@ -55,12 +57,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     ----------
     n_features_in_: int
         Number of features in the data seen during fit.
-    categories_ : typing.List[np.array]
+    categories_ : typing.List[np.ndarray]
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
 
     References
-    -----------
+    ----------
     For more details, see Micci-Barreca, 2001: A preprocessing scheme for
     high-cardinality categorical attributes in classification and prediction
     problems.
@@ -94,12 +96,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     n_features_in_: int
     _label_encoders_: List[LabelEncoder]
-    categories_: List[np.array]
+    categories_: List[np.ndarray]
     n_: int
 
     def __init__(
         self,
-        categories: Union[Literal["auto"], List[Union[List[str], np.array]]] = "auto",
+        categories: Union[Literal["auto"], List[Union[List[str], np.ndarray]]] = "auto",
         clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = "binary-clf",
         dtype: type = np.float64,
         handle_unknown: Literal["error", "ignore"] = "error",
@@ -119,7 +121,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y) -> "TargetEncoder":
         """
-        Fit the TargetEncoder to X.
+        Fit the instance to X.
 
         Parameters
         ----------
@@ -130,8 +132,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        TargetEncoder
-            Fitted TargetEncoder instance.
+        :class:`~dirty_cat.TargetEncoder`
+            Fitted :class:`~dirty_cat.TargetEncoder` instance (self).
         """
         X = check_input(X)
         self.n_features_in_ = X.shape[1]
@@ -211,7 +213,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
-    def transform(self, X) -> np.array:
+    def transform(self, X) -> np.ndarray:
         """
         Transform X using the specified encoding scheme.
 
@@ -222,7 +224,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        2-d np.array
+        2-d :class:`~numpy.ndarray`
             Transformed input.
         """
         check_is_fitted(self, attributes=["n_features_in_"])

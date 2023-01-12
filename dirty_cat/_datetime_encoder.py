@@ -39,8 +39,8 @@ AcceptedTimeValues = Literal[
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
     """
-    This encoder transforms each datetime column into several numeric columns
-    corresponding to temporal features, e.g year, month, day...
+    Transforms each datetime column into several numeric columns for temporal features (e.g year, month, day...).
+
     Constant extracted features are dropped; for instance, if the year is
     always the same in a feature, the extracted "year" column won't be added.
     If the dates are timezone aware, all the features extracted will correspond
@@ -54,7 +54,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         which contains the time to epoch (in seconds).
         For instance, if you specify "day", only "year", "month", "day" and
         "total_time" features will be created.
-    add_day_of_the_week: bool, default=False
+    add_day_of_the_week : bool, default=False
         Add day of the week feature (if day is extracted).
         This is a numerical feature from 0 (Monday) to 6 (Sunday).
 
@@ -62,14 +62,34 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     ----------
     n_features_in_: int
         Number of features in the data seen during fit.
-    n_features_out_: int
+    n_features_out_ : int
         Number of features of the transformed data.
-    features_per_column_: typing.Dict[int, typing.List[str]]
+    features_per_column_ : mapping of int to list of str
         Dictionary mapping the index of the original columns
         to the list of features extracted for each column.
-    col_names_: typing.Optional[typing.List[str]]
+    col_names_ : None or list of str
         List of the names of the features of the input data,
         if input data was a pandas DataFrame, otherwise None.
+
+    Examples
+    --------
+    >>> enc = DatetimeEncoder()
+
+    Let's encode the following dates:
+
+    >>> X = [['2022-10-15'], ['2021-12-25'], ['2020-05-18'], ['2019-10-15 12:00:00']]
+
+    >>> enc.fit(X)
+    DatetimeEncoder()
+
+    The encoder will output a transformed array
+    with four columns (year, month, day and hour):
+
+    >>> enc.transform(X)
+    array([[2022.,   10.,   15.,    0.],
+           [2021.,   12.,   25.,    0.],
+           [2020.,    5.,   18.,    0.],
+           [2019.,   10.,   15.,   12.]])
     """
 
     n_features_in_: int
@@ -134,7 +154,9 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 ) // pd.Timedelta("1s")
 
     def fit(self, X, y=None) -> "DatetimeEncoder":
-        """Fit the DatetimeEncoder to X. In practice, just stores which extracted features are not constant.
+        """Fit the instance to X.
+
+        In practice, just stores which extracted features are not constant.
 
         Parameters
         ----------
@@ -145,8 +167,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        DatetimeEncoder
-            Fitted DatetimeEncoder instance.
+        :class:`~dirty_cat.DatetimeEncoder`
+            Fitted :class:`~dirty_cat.DatetimeEncoder` instance (self).
         """
         self._validate_keywords()
         # Columns to extract for each column,
@@ -186,7 +208,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X, y=None) -> np.array:
+    def transform(self, X, y=None) -> np.ndarray:
         """Transform X by replacing each datetime column with corresponding numerical features.
 
         Parameters
@@ -198,7 +220,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        np.array, shape (n_samples, n_features_out_)
+        :obj:`~numpy.ndarray`, shape (n_samples, n_features_out_)
             Transformed input.
         """
         check_is_fitted(

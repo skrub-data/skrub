@@ -87,10 +87,10 @@ class SuperVectorizer(ColumnTransformer):
     """Easily transform a heterogeneous array to a numerical one.
 
     Easily transforms a heterogeneous data table
-    (such as a :class:`pandas.DataFrame`) to a numerical array for machine
+    (such as a :class:`~pandas.DataFrame`) to a numerical array for machine
     learning. For this it transforms each column depending on its data type.
     It provides a simplified interface for the
-    :class:`sklearn.compose.ColumnTransformer`; more documentation of
+    :class:`~sklearn.compose.ColumnTransformer`; more documentation of
     attributes and functions are available in its doc.
 
     .. versionadded:: 0.2.0
@@ -111,46 +111,52 @@ class SuperVectorizer(ColumnTransformer):
     low_card_cat_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance (e.g. `OneHotEncoder()`),
-        a `Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance
+        (e.g. :class:`~sklearn.preprocessing.OneHotEncoder`),
+        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (`OneHotEncoder(drop="if_binary")`).
+        or `None` to use the default transformer
+        (:class:`~sklearn.preprocessing.OneHotEncoder(drop="if_binary")`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
     high_card_cat_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance (e.g. `GapEncoder()`),
-        a `Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance
+        (e.g. :class:`~dirty_cat.GapEncoder`),
+        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (`GapEncoder(n_components=30)`).
+        or `None` to use the default transformer
+        (:class:`~dirty_cat.GapEncoder(n_components=30)`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
     numerical_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on numerical features.
-        Can either be a transformer object instance (e.g. `StandardScaler()`),
-        a `Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance
+        (e.g. :class:`~sklearn.preprocessing.StandardScaler`),
+        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (here nothing, so 'passthrough').
+        or `None` to use the default transformer (here nothing, so 'passthrough').
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
     datetime_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on datetime features.
-        Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
-        a `Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance
+        (e.g. :class:`~dirty_cat.DatetimeEncoder`),
+        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (`DatetimeEncoder()`).
+        or `None` to use the default transformer (:class:`~dirty_cat.DatetimeEncoder()`).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -168,18 +174,18 @@ class SuperVectorizer(ColumnTransformer):
         When imputed, missing values are replaced by the string 'missing'.
         As imputation logic for numerical features can be quite intricate,
         it is left to the user to manage.
-        See also attribute `imputed_columns_`.
+        See also attribute :attr:`~dirty_cat.SuperVectorizer.imputed_columns_`.
 
     remainder : {"drop", "passthrough"} or Transformer, optional, default='drop'
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
-        columns are dropped. (default ``'drop'``).
-        By specifying ``remainder='passthrough'``, all remaining columns that
+        columns are dropped. (default 'drop').
+        By specifying `remainder='passthrough'`, all remaining columns that
         were not specified in `transformers` will be automatically passed
         through. This subset of columns is concatenated with the output of
         the transformers.
-        By setting ``remainder`` to be an estimator, the remaining
-        non-specified columns will use the ``remainder`` estimator. The
+        By setting `remainder` to be an estimator, the remaining
+        non-specified columns will use the `remainder` estimator. The
         estimator must support :term:`fit` and :term:`transform`.
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
@@ -187,7 +193,7 @@ class SuperVectorizer(ColumnTransformer):
     sparse_threshold : float, optional, default=0.3
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
-        lower than this value. Use sparse_threshold=0 to always return dense.
+        lower than this value. Use `sparse_threshold=0` to always return dense.
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
 
@@ -217,7 +223,7 @@ class SuperVectorizer(ColumnTransformer):
         If there are remaining columns, the final element is a tuple of the
         form:
         ('remainder', transformer, remaining_columns) corresponding to the
-        ``remainder`` parameter. If there are remaining columns, then
+        `remainder` parameter. If there are remaining columns, then
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
@@ -648,18 +654,15 @@ class SuperVectorizer(ColumnTransformer):
                         cols = [self.columns_[i] for i in cols]
                     all_trans_feature_names.extend(cols)
                 continue
-            if not hasattr(trans, "get_feature_names"):
-                all_trans_feature_names.extend(cols)
+            if parse_version(sklearn_version) < parse_version("1.0"):
+                trans_feature_names = trans.get_feature_names(cols)
             else:
-                if parse_version(sklearn_version) < parse_version("1.0"):
-                    trans_feature_names = trans.get_feature_names(cols)
-                else:
-                    trans_feature_names = trans.get_feature_names_out(cols)
-                all_trans_feature_names.extend(trans_feature_names)
+                trans_feature_names = trans.get_feature_names_out(cols)
+            all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
             warn("Could not extract clean feature names; returning defaults. ")
-            return ct_feature_names
+            return list(ct_feature_names)
 
         return all_trans_feature_names
 

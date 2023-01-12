@@ -12,7 +12,6 @@ def generate_data(
 ) -> np.ndarray:
     if random_state is not None:
         random.seed(random_state)
-
     MAX_LIMIT = 255  # extended ASCII Character set
     str_list = []
     for i in range(n_samples):

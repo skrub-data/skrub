@@ -33,12 +33,12 @@ from ._utils import parse_version
 
 
 def _ngram_similarity_one_sample_inplace(
-    x_count_vector: np.array,
-    vocabulary_count_matrix: np.array,
+    x_count_vector: np.ndarray,
+    vocabulary_count_matrix: np.ndarray,
     str_x: str,
-    vocabulary_ngram_counts: np.array,
+    vocabulary_ngram_counts: np.ndarray,
     se_dict: dict,
-    unq_X: np.array,
+    unq_X: np.ndarray,
     i: int,
     ngram_range: Tuple[int, int],
 ) -> None:
@@ -47,22 +47,22 @@ def _ngram_similarity_one_sample_inplace(
 
     Parameters
     ----------
-    x_count_vector : np.array
+    x_count_vector : np.ndarray
         Count vector of the sample based on the ngrams of the vocabulary
-    vocabulary_count_matrix : np.array
+    vocabulary_count_matrix : np.ndarray
         Count vector of the vocabulary based on its ngrams
     str_x: str
         The actual sample string
-    vocabulary_ngram_counts : np.array
+    vocabulary_ngram_counts : np.ndarray
         Number of ngrams for each unique element of the vocabulary
     se_dict : dict
         Dictionary containing the similarities for each x in unq_X
-    unq_X : np.array
+    unq_X : np.ndarray
         The arrays of all unique samples
     i : str
         The index of x_count_vector in the csr count matrix
     ngram_range : tuple
-        n-grams to use for the decomposition, where `n_min <= n <= n_max`.
+        n-grams to use for the decomposition, where ``n_min <= n <= n_max``.
     """
     nonzero_idx = x_count_vector.indices
     nonzero_vals = x_count_vector.data
@@ -80,13 +80,13 @@ def _ngram_similarity_one_sample_inplace(
     se_dict[unq_X[i]] = similarity.reshape(-1)
 
 
-def ngram_similarity(
+def ngram_similarity_matrix(
     X,
     cats: List[str],
     ngram_range: Tuple[int, int],
     hashing_dim: int,
     dtype: type = np.float64,
-) -> np.array:
+) -> np.ndarray:
     """
     Similarity encoding for dirty categorical variables:
     Given two arrays of strings, returns the similarity encoding matrix
@@ -139,7 +139,7 @@ def ngram_similarity(
     return np.nan_to_num(out, copy=False)
 
 
-def get_prototype_frequencies(prototypes: np.array) -> np.array:
+def get_prototype_frequencies(prototypes: np.ndarray) -> np.array:
     """
     Computes the frequencies of the values contained in prototypes
     Reverse sorts the array by the frequency
@@ -210,6 +210,7 @@ class SimilarityEncoder(OneHotEncoder):
         The range of values for the n_gram similarity.
     categories : typing.Union[typing.Literal["auto", "k-means", "most_frequent"], typing.List[typing.List[str]]]  # noqa
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
@@ -218,6 +219,7 @@ class SimilarityEncoder(OneHotEncoder):
            categorical variable
         - 'k-means' : Computes the K nearest neighbors of K-mean centroids
            in order to choose the prototype categories
+           
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.
@@ -337,7 +339,11 @@ class SimilarityEncoder(OneHotEncoder):
         self.similarity = None
 
         if not isinstance(categories, list):
-            assert categories in [None, "auto", "k-means", "most_frequent"]
+            if categories not in ["auto", "k-means", "most_frequent"]:
+                raise ValueError(
+                    f"Got categories={self.categories}, but expected "
+                    "any of {'auto', 'k-means', 'most_frequent'}. "
+                )
         if categories in ["k-means", "most_frequent"] and (
             n_prototypes is None or n_prototypes == 0
         ):
@@ -353,7 +359,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         Parameters
         ----------
-        prototypes : typing.List[str]
+        prototypes : list of str
             The list of values for a category variable.
 
         Returns
@@ -366,7 +372,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     def fit(self, X, y=None) -> "SimilarityEncoder":
         """
-        Fit the SimilarityEncoder to X.
+        Fit the instance to X.
 
         Parameters
         ----------
@@ -377,8 +383,8 @@ class SimilarityEncoder(OneHotEncoder):
 
         Returns
         -------
-        SimilarityEncoder
-            The fitted SimilarityEncoder instance.
+        :class:`~dirty_cat.SimilarityEncoder`
+            The fitted :class:`~dirty_cat.SimilarityEncoder` instance (self).
         """
 
         if self.handle_missing not in ["error", ""]:
@@ -522,7 +528,7 @@ class SimilarityEncoder(OneHotEncoder):
                     "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
-            if self.handle_missing != "error":
+            else:
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)
@@ -560,7 +566,7 @@ class SimilarityEncoder(OneHotEncoder):
             if fast:
                 encoded_Xj = self._ngram_similarity_fast(Xlist[j], j)
             else:
-                encoded_Xj = ngram_similarity(
+                encoded_Xj = ngram_similarity_matrix(
                     Xlist[j],
                     categories,
                     ngram_range=(min_n, max_n),
@@ -580,18 +586,19 @@ class SimilarityEncoder(OneHotEncoder):
         """
         Fast computation of ngram similarity.
 
-        SimilarityEncoder.transform uses the count vectors of the vocabulary in
-        its computations. In ngram_similarity, these count vectors have to be
+        :func:`~dirty_cat.SimilarityEncoder.transform` uses the count vectors
+        of the vocabulary in its computations.
+        In `ngram_similarity`, these count vectors have to be
         re-computed each time, which can slow down the execution. In this
-        method, the count vectors are recovered from the
-        ``vocabulary_count_matrices`` attribute of the SimilarityEncoder,
+        method, the count vectors are recovered from
+        :attr:`~dirty_cat.SimilarityEncoder.vocabulary_count_matrices`,
         speeding up the execution.
 
         Parameters
         ----------
-        X: typing.Union[list, np.array]
+        X : list or :obj:`numpy.ndarray`
             Observations being transformed.
-        col_idx: int
+        col_idx : int
             The column index of X in the original feature matrix.
         """
         vectorizer = self.vectorizers_[col_idx]

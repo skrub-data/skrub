@@ -19,6 +19,15 @@
 import os
 import shutil
 from datetime import datetime
+import sys
+
+# If extensions (or modules to document with autodoc) are in another
+# directory, add these directories to sys.path here. If the directory
+# is relative to the documentation root, use os.path.abspath to make it
+# absolute, like shown here.
+sys.path.insert(0, os.path.abspath("sphinxext"))
+from github_link import make_linkcode_resolve
+
 
 # -- Copy files for docs --------------------------------------------------
 #
@@ -43,9 +52,10 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
-    "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     "numpydoc",
+    "sphinx_issues",
+    "sphinx.ext.linkcode",
     "sphinx.ext.autodoc.typehints",
     "sphinx_gallery.gen_gallery",
 ]
@@ -166,7 +176,8 @@ html_static_path = ["_static"]
 
 
 # Modify the title to get good social-media links
-html_title = "&mdash; Dirty cat"
+html_title = "dirty_cat"
+
 
 # -- Options for HTMLHelp output ------------------------------------------
 
@@ -294,3 +305,14 @@ autodoc_typehints = "none"
 
 # -- The javascript to highlight the toc as we scroll ----------------------
 html_js_files = ["scrolltoc.js"]
+
+# -- github links --------------------------------------
+
+# we use the issues path for PRs since the issues URL will forward
+issues_github_path = "dirty-cat/dirty_cat"
+
+# The following is used by sphinx.ext.linkcode to provide links to github
+linkcode_resolve = make_linkcode_resolve(
+    "dirty_cat",
+    "https://github.com/dirty-cat/dirty-cat/blob/{revision}/{package}/{path}#L{lineno}",
+)
