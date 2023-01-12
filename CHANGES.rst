@@ -1,3 +1,5 @@
+:orphan:
+
 .. currentmodule:: dirty_cat
 
 Release 0.5.0

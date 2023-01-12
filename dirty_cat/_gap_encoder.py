@@ -760,7 +760,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None) -> "GapEncoder":
         """
-        Fit the GapEncoder on batches of X.
+        Fit the instance on batches of X.
 
         Parameters
         ----------
@@ -771,8 +771,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        GapEncoder
-            Fitted GapEncoder instance.
+        :class:`~dirty_cat.GapEncoder`
+            Fitted :class:`~dirty_cat.GapEncoder` instance (self).
         """
 
         # Copy parameter rho
@@ -870,8 +870,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             The column names to be added as prefixes before the labels.
             If col_names == None, no prefixes are used.
             If col_names == 'auto', column names are automatically defined:
+
                 - if the input data was a dataframe, its column names are used,
                 - otherwise, 'col1', ..., 'colN' are used as prefixes.
+                
             Prefixes can be manually set by passing a list for col_names.
         n_labels : int, default=3
             The number of labels used to describe each topic.

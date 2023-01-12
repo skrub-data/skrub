@@ -29,10 +29,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     ----------
     categories : typing.Union[typing.Literal["auto"], typing.List[typing.List[typing.Union[str, int]]]  # noqa
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
+
         The categories used can be found in the ``categories_`` attribute.
     clf_type : typing.Literal["regression", "binary-clf", "multiclass-clf"]
         The type of classification/regression problem.
@@ -60,7 +62,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         (in order corresponding with output of ``transform``).
 
     References
-    -----------
+    ----------
     For more details, see Micci-Barreca, 2001: A preprocessing scheme for
     high-cardinality categorical attributes in classification and prediction
     problems.
@@ -69,7 +71,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     --------
     >>> enc = TargetEncoder(handle_unknown='ignore')
     >>> X = [['male'], ['Male'], ['Female'], ['male'], ['Female']]
-    >>> y = np.ndarray([1, 2, 3, 4, 5])
+    >>> y = np.array([1, 2, 3, 4, 5])
 
     >>> enc.fit(X, y)
     TargetEncoder(handle_unknown='ignore')
@@ -119,7 +121,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y) -> "TargetEncoder":
         """
-        Fit the TargetEncoder to X.
+        Fit the instance to X.
 
         Parameters
         ----------
@@ -130,8 +132,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        TargetEncoder
-            Fitted TargetEncoder instance.
+        :class:`~dirty_cat.TargetEncoder`
+            Fitted :class:`~dirty_cat.TargetEncoder` instance (self).
         """
         X = check_input(X)
         self.n_features_in_ = X.shape[1]
@@ -222,7 +224,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        2-d np.ndarray
+        2-d :class:`~numpy.ndarray`
             Transformed input.
         """
         check_is_fitted(self, attributes=["n_features_in_"])
