@@ -44,8 +44,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         Whether to raise an error or ignore if a unknown categorical feature is
         present during transform (default is to raise). When this parameter
         is set to 'ignore' and an unknown category is encountered during
-        transform, the resulting one-hot encoded columns for this feature
-        will be all zeros.
+        transform, the encoded columns for this feature
+        will be assigned the prior mean of the target variable.
     handle_missing : typing.Literal["error", ""], default=""
         Whether to raise an error or impute with blank string '' if missing
         values (NaN) are present during fit (default is to impute).
@@ -81,16 +81,19 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     >>> enc.categories_
     [array(['Female', 'Male', 'male'], dtype='<U6')]
 
-    We look at the encoded categories :
+    We will encode the following categories, of which the first two are unknown :
 
-    >>> enc.transform(X)
-    array([[3.44444444],
-        [2.11111111],
-        [3.61538462],
-        [3.44444444],
-        [3.61538462]])
+    >>> X2 = [['MALE'], ['FEMALE'], ['Female'], ['male'], ['Female']]
+
+    >>> enc.transform(X2)
+    array([[3.        ],
+        [3.        ],
+        [3.54545455],
+        [2.72727273],
+        [3.54545455]])
 
     As expected, they were encoded according to their influence on y.
+    The unknown categories were assigned the mean of the target variable.
 
     """
 
