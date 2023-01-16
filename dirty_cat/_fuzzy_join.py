@@ -1,9 +1,8 @@
 """
 Fuzzy joining tables using string columns.
 The principle is as follows:
-  1. We embed and transform the key string columns using CountVectorizer/
-  HashingVectorizer and TfifdTransformer. HashingVectorizer is used if more than
-  1_000_000 categories are found.
+  1. We embed and transform the key string columns using
+  HashingVectorizer and TfifdTransformer.
   2. For each category, we use the nearest neighbor method to find its closest
   neighbor and establish a match.
   3. We match the tables using the previous information.
@@ -19,7 +18,6 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
-    CountVectorizer,
     HashingVectorizer,
     TfidfTransformer,
     _VectorizerMixin,
@@ -34,7 +32,7 @@ def fuzzy_join(
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
-    encoder: Union[Literal["hashing", "count"], _VectorizerMixin] = "hashing",
+    encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
@@ -67,12 +65,11 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    encoder : Union[Literal["hashing", "count"], _VectorizerMixin], default=`hashing`
+    encoder: Union[Literal["hashing"], _VectorizerMixin], default=None,
         Encoder parameter for the Vectorizer.
-        Options: {`hashing`, `count`, `_VectorizerMixin`}. If `hashing`, the
-        encoder will use the `HashingVectorizer`, if `count`, the encoder will
-        use the `CountVectorizer`. It is possible to pass a `_VectorizerMixin`
-        custom object to tweak the parameters of the encoder.
+        Options: {None, `_VectorizerMixin`}. If None, the
+        encoder will use the `HashingVectorizer`. It is possible to pass a
+        `_VectorizerMixin` custom object to tweak the parameters of the encoder.
     analyzer : {"word", "char", "char_wb"}, optional, default=`char_wb`
         Analyzer parameter for the CountVectorizer/HashingVectorizer passed to
         the encoder and used for the string similarities.
@@ -175,12 +172,9 @@ def fuzzy_join(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
 
-    if encoder not in ["hashing", "count"]:
+    if encoder is not None:
         if not issubclass(encoder.__class__, _VectorizerMixin):
-            raise ValueError(
-                "encoder should be either 'hashing', 'count', or a vectorizer object,"
-                f" got {encoder!r}"
-            )
+            raise ValueError(f"encoder should be a vectorizer object, got {encoder!r}")
 
     if how not in ["left", "right"]:
         raise ValueError(
@@ -228,17 +222,10 @@ def fuzzy_join(
 
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
-    if encoder == "hashing":
+    if encoder is None:
         enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-    elif encoder == "count":
-        enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-    elif issubclass(encoder.__class__, _VectorizerMixin):
-        enc = encoder
     else:
-        raise ValueError(
-            "encoder should be either 'hashing', 'count', or a vectorizer"
-            f" object, got {encoder!r}"
-        )
+        enc = encoder
 
     enc_cv = enc.fit(all_cats)
     main_enc = enc_cv.transform(main_col_clean)

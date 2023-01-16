@@ -211,13 +211,7 @@ def test_correct_encoder():
         """Implements a custom vectorizer to check if the `encoder`
         parameter uses the passed instance as expected.
         Raises an error when `fit` is called.
-
-        Args:
-            HashingVectorizer (_type_): _description_
         """
-
-        def __init__(self):
-            HashingVectorizer.__init__(self)
 
         def fit(self, X):
             raise AssertionError("Custom vectorizer was called as intended.")
@@ -245,9 +239,5 @@ def test_correct_encoder():
     ):
         fuzzy_join(left, right, on="key", how="left", encoder=enc)
 
-    with pytest.raises(
-        ValueError,
-        match=r"encoder should be either 'hashing', 'count', or"
-        r" a vectorizer object",
-    ):
+    with pytest.raises(ValueError, match=r"encoder should be a vectorizer object"):
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
