@@ -2,8 +2,8 @@
 
 .. currentmodule:: dirty_cat
 
-Release 0.4.0 (upcoming)
-=========================
+Release 0.4.0 (beta)
+====================
 
 Major changes
 -------------
