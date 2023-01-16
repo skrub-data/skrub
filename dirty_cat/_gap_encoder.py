@@ -30,6 +30,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
+from sklearn.utils.validation import check_is_fitted
 
 from ._utils import check_input, parse_version
 
@@ -512,6 +513,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         H : 2-d array, shape (n_samples, n_topics)
             Transformed input.
         """
+        check_is_fitted(self, "H_dict_")
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "Input data is not string. "
         unq_X = np.unique(X)

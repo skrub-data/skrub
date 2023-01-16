@@ -15,6 +15,7 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.validation import check_is_fitted
 
 from dirty_cat import DatetimeEncoder, GapEncoder
 from dirty_cat._utils import parse_version
@@ -607,6 +608,7 @@ class SuperVectorizer(ColumnTransformer):
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
         """
+        check_is_fitted(self, attributes=["columns_"])
         if X.shape[1] != len(self.columns_):
             raise ValueError(
                 "Passed array does not match column count of "
