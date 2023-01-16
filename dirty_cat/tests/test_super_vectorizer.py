@@ -7,6 +7,7 @@ import sklearn
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
+from sklearn.exceptions import NotFittedError
 
 from dirty_cat import GapEncoder, SuperVectorizer
 from dirty_cat._utils import parse_version
@@ -445,3 +446,15 @@ def test_passthrough():
     dirty_flat_trans_df = X_enc_dirty.to_numpy().ravel().tolist()
     assert all(map(_is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
     assert (X_clean.to_numpy() == X_enc_clean.to_numpy()).all()
+
+def test_check_fitted_super_vectorizer():
+    """Test that calling transform before fit raises an error"""
+    X = _get_clean_dataframe()
+    sv = SuperVectorizer()
+    with pytest.raises(NotFittedError):
+        sv.transform(X)
+    
+    # Test that calling transform after fit works
+    sv.fit(X)
+    sv.transform(X)
+

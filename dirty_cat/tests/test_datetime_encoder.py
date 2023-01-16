@@ -1,5 +1,7 @@
+import pytest
 import numpy as np
 import pandas as pd
+from sklearn.exceptions import NotFittedError
 
 from dirty_cat._datetime_encoder import DatetimeEncoder
 
@@ -340,3 +342,14 @@ def test_transform():
     X = get_constant_date_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
     assert enc.fit_transform(X).shape[1] == 0
+
+def test_check_fitted_datetime_encoder():
+    """Test that calling transform before fit raises an error"""
+    X = get_datetime_array()[:, 0].reshape(-1, 1)
+    enc = DatetimeEncoder(add_day_of_the_week=True)
+    with pytest.raises(NotFittedError):
+        enc.transform(X)
+    
+    # Check that it works after fit
+    enc.fit(X)
+    enc.transform(X)
