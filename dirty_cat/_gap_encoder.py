@@ -812,7 +812,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         H : 2-d array, shape (n_samples, n_topics * n_features)
             Transformed input.
         """
-
+        check_is_fitted(self, "fitted_models_")
         # Check input data shape
         X = check_input(X)
         X = self._handle_missing(X)
