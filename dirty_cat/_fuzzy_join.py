@@ -71,7 +71,7 @@ def fuzzy_join(
         encoder will use the `HashingVectorizer`. It is possible to pass a
         `_VectorizerMixin` custom object to tweak the parameters of the encoder.
     analyzer : {"word", "char", "char_wb"}, optional, default=`char_wb`
-        Analyzer parameter for the CountVectorizer/HashingVectorizer passed to
+        Analyzer parameter for the HashingVectorizer passed to
         the encoder and used for the string similarities.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
