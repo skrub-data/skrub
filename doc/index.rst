@@ -14,7 +14,7 @@ dirty_cat: machine learning with dirty categories
     **robust to morphological variants**, such as typos. See
     :ref:`examples <usage_examples>`, such as `the first one
     <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_,
-    for a introduction to problems of dirty categories or misspelled
+    for an introduction to problems of dirty categories or misspelled
     entities.
 
 |
