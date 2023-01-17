@@ -177,7 +177,7 @@ def monitor(
 
                     res_dic = func(*args, **kwargs)
 
-                    if not res_dic is None:
+                    if res_dic is not None:
                         for key, value in res_dic.items():
                             _monitored[key].append(value)
 
