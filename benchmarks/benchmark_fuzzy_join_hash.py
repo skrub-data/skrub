@@ -8,18 +8,27 @@ by default for the fuzzy join, with the option to use the CountVectorizer if
 results are unexpected (e.g hash collisions).
 """
 
-import pandas as pd
+import math
+from argparse import ArgumentParser
+from time import perf_counter
 from typing import Literal, Tuple, Union
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from fuzzy_join_benchmark import evaluate, fetch_data
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
     CountVectorizer,
-    TfidfTransformer,
     HashingVectorizer,
+    TfidfTransformer,
 )
 from sklearn.neighbors import NearestNeighbors
-from time import perf_counter
+from utils import default_parser, find_result, monitor
 
 
+# Function kept for reference
 def fuzzy_join(
     left: pd.DataFrame,
     right: pd.DataFrame,
@@ -273,18 +282,9 @@ def fuzzy_join(
     return df_joined
 
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
-import seaborn as sns
-from argparse import ArgumentParser
-
-from fuzzy_join_benchmark import fetch_data, evaluate
-from utils import monitor, parse_func_repr, find_result, default_parser
-
-
+#########################################################
 # Benchmarking accuracy and speed on actual datasets
+#########################################################
 
 benchmark_name = "fuzzy_join_encoder_benchmark"
 
@@ -348,56 +348,18 @@ def benchmark(
     return res_dic
 
 
-def plot(res: pd.DataFrame):
+def plot(df: pd.DataFrame):
     sns.set_theme(style="ticks", palette="pastel")
 
-    rows = []
-    for i, ser in res.iterrows():
-        times = eval(str(ser["time"]))
-        memories = eval(str(ser["memory"]))
-        precisions = eval(str(ser["precision"]))
-        recalls = eval(str(ser["recall"]))
-        f1s = eval(str(ser["f1"]))
-        time_fjs = eval(str(ser["time_fj"]))
-
-        _, _, kwargs = parse_func_repr(ser["call"])
-        for time, memory, precision, recall, f1, time_fj in zip(
-            times, memories, precisions, recalls, f1s, time_fjs
-        ):
-            rows.append(
-                (
-                    kwargs["encoder"],
-                    kwargs["analyser"],
-                    kwargs["ngram_range"],
-                    kwargs["dataset_name"],
-                    time,
-                    memory,
-                    precision,
-                    recall,
-                    f1,
-                    time_fj,
-                )
-            )
-
-    df = pd.DataFrame(
-        rows,
-        columns=[
-            "encoder",
-            "analyser",
-            "ngram_range",
-            "dataset_name",
-            "time",
-            "memory",
-            "precision",
-            "recall",
-            "f1",
-            "time_fj",
-        ],
-    )
-
+    n_datasets = len(np.unique(df["dataset_name"]))
+    n_rows = min(n_datasets, 3)
     f, axes = plt.subplots(
-        3, 1 + len(np.unique(df["dataset_name"])) // 3, figsize=(20, 5)
+        n_rows,
+        math.ceil(n_datasets / n_rows),
+        squeeze=False,
+        figsize=(20, 5),
     )
+    # Create the subplots but indexed by 1 value
     for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
         sns.scatterplot(
             x="time_fj",
@@ -407,13 +369,14 @@ def plot(res: pd.DataFrame):
             size="analyser",
             alpha=0.8,
             data=df[df["dataset_name"] == dataset_name],
-            ax=axes[i % 3, i // 3],
+            ax=axes[i % n_rows, i // n_rows],
         )
-        axes[i % 3, i // 3].set_title(dataset_name)
+        axes[i % n_rows, i // n_rows].set_title(dataset_name)
         # remove legend
-        axes[i % 3, i // 3].get_legend().remove()
-    # Put a legend to the right side
-    f.legend(loc="center right")
+        axes[i % n_rows, i // n_rows].get_legend().remove()
+        # Put a legend to the right side if last row
+        if i == n_datasets - 1:
+            axes[i % n_rows, i // n_rows].legend(loc="center right")
     plt.show()
 
 
