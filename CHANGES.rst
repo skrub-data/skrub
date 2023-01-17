@@ -1,27 +1,47 @@
+:orphan:
+
 .. currentmodule:: dirty_cat
 
-Release 0.4.0
+Release 0.5.0
 ==============
+
+Release 0.4.0 (upcoming)
+=========================
 
 Major changes
 -------------
 
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
-  on string similarities and the nearest neighbors matches are found for each category. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
-* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download any indicator from the World Bank Open Data platform. It only needs the indicator ID that can be found on the website. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
-* Unnecessary API has been made private: everything (files, functions, classes) starting with an underscore shouldn't be imported in your code. :pr:`331` by :user:`Lilian Boulard <LilianBoulard>`
-* The MinHashEncoder now supports a `n_jobs` parameter to parallelize the hashes computation. :pr:`267` by :user:`Leo Grinsztajn <LeoGrin>` and :user:`Lilian Boulard <LilianBoulard>`.
+  on string similarities and the nearest neighbors matches are found for each category.
+:pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
+* New experimental feature: :class:`FeatureAugmenter`, a transformer
+  that augments with :func:`fuzzy_join` the number of features in a main table
+  by using information from auxilliary tables. :pr:`409` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator`
+  that can be used to download any indicator from the World Bank Open Data platform.
+  It only needs the indicator ID that can be found on the website. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+* Unnecessary API has been made private: everything (files, functions, classes)
+  starting with an underscore shouldn't be imported in your code. :pr:`331` by :user:`Lilian Boulard <LilianBoulard>`
+* The :class:`MinHashEncoder` now supports a `n_jobs` parameter to parallelize
+  the hashes computation. :pr:`267` by :user:`Leo Grinsztajn <LeoGrin>` and :user:`Lilian Boulard <LilianBoulard>`.
+* New experimental feature: deduplicating misspelled categories using :func:`deduplicate` by clustering string distances.
+  This function works best when there are significantly more duplicates than underlying categories.
+  :pr:`339` by :user:`Moritz Boos <mjboos>`.
 
 Minor changes
 -------------
 * Removed example `Fitting scalable, non-linear models on data with dirty categories`. :pr:`386` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* :class:`MinHashEncoder`'s `minhash` method is no longer public. :pr:`379` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+* :class:`MinHashEncoder`'s :func:`minhash` method is no longer public. :pr:`379` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* Fetching functions now have an additional argument ``directory``,
+  which can be used to specify where to save and load from datasets.
+  :pr:`432` by :user:`Lilian Boulard <LilianBoulard>`
 
 Bug fixes
 ---------
 
-* :class:`MinHashEncoder` now considers `None` and empty strings as missing values, rather
+* The :class:`MinHashEncoder` now considers `None` and empty strings as missing values, rather
   than raising an error. :pr:`378` by :user:`Gael Varoquaux <GaelVaroquaux>`
 
 Release 0.3.0
@@ -30,7 +50,9 @@ Release 0.3.0
 Major changes
 -------------
 
-* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical columns (year, month, day, hour, minute, second, ...). It is now the default transformer used in the :class:`SuperVectorizer` for datetime columns. :pr:`239` by :user:`Leo Grinsztajn <LeoGrin>`
+* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical columns
+  (year, month, day, hour, minute, second, ...). It is now the default transformer used
+  in the :class:`SuperVectorizer` for datetime columns. :pr:`239` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * The :class:`SuperVectorizer` has seen some major improvements and bug fixes:
 
@@ -48,19 +70,21 @@ Major changes
 * Support for Python 3.6 and 3.7 has been dropped. Python >= 3.8 is now required. :pr:`289` by :user:`Lilian Boulard <LilianBoulard>`
 
 * Bumped minimum dependencies:
+
   - scikit-learn>=0.23
   - scipy>=1.4.0
   - numpy>=1.17.3
   - pandas>=1.2.0 :pr:`299` and :pr:`300` by :user:`Lilian Boulard <LilianBoulard>`
 
 * Dropped support for Jaro, Jaro-Winkler and Levenshtein distances.
-    The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
+
+  - The :class:`SimilarityEncoder` now exclusively uses ``ngram`` for similarities,
     and the `similarity` parameter is deprecated. It will be removed in 0.5. :pr:`282` by :user:`Lilian Boulard <LilianBoulard>`
 
 Notes
 -----
 
-* The ``transformers_`` attribute of the SuperVectorizer now contains column
+* The ``transformers_`` attribute of the :class:`SuperVectorizer` now contains column
   names instead of column indices for the "remainder" columns. :pr:`266` by :user:`Leo Grinsztajn <LeoGrin>`
 
 
@@ -70,8 +94,8 @@ Release 0.2.2
 Bug fixes
 ---------
 
-* Fixed a bug in the :class:`SuperVectorizer` causing a `FutureWarning`
-  when using the `get_feature_names_out` method. :pr:`262` by :user:`Lilian Boulard <LilianBoulard>`
+* Fixed a bug in the :class:`SuperVectorizer` causing a :class:`FutureWarning`
+  when using the :func:`get_feature_names_out` method. :pr:`262` by :user:`Lilian Boulard <LilianBoulard>`
 
 
 Release 0.2.1
@@ -81,15 +105,19 @@ Major changes
 -------------
 
 * Improvements to the :class:`SuperVectorizer`
+
     - Type detection works better: handles dates, numerics columns encoded as strings, or numeric columns containing strings for missing values.
 
   :pr:`238` by :user:`Leo Grinsztajn <LeoGrin>`
 
-* `get_feature_names` becomes `get_feature_names_out`, following changes in the scikit-learn API. `get_feature_names` is deprecated in scikit-learn > 1.0. :pr:`241` by :user:`Gael Varoquaux <GaelVaroquaux>`
+* :func:`get_feature_names` becomes :func:`get_feature_names_out`, following changes in the scikit-learn API.
+  :func:`get_feature_names` is deprecated in scikit-learn > 1.0. :pr:`241` by :user:`Gael Varoquaux <GaelVaroquaux>`
 
 * Improvements to the :class:`MinHashEncoder`
-    - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`. Very useful when using for instance the :func:`~sklearn.compose.make_column_transformer` method, on multiple columns.
-  
+    - It is now possible to fit multiple columns simultaneously with the :class:`MinHashEncoder`.
+      Very useful when using for instance the :func:`~sklearn.compose.make_column_transformer` function,
+      on multiple columns.
+
   :pr:`243` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 
@@ -100,7 +128,7 @@ Bug-fixes
 
 * :class:`GapEncoder`'s `get_feature_names_out` now accepts all iterators, not just lists. :pr:`255` by :user:`Lilian Boulard <LilianBoulard>`
 
-* Fixed `DeprecationWarning` raised by the usage of `distutils.version.LooseVersion`. :pr:`261` by :user:`Lilian Boulard <LilianBoulard>`
+* Fixed :class:`DeprecationWarning` raised by the usage of `distutils.version.LooseVersion`. :pr:`261` by :user:`Lilian Boulard <LilianBoulard>`
 
 Notes
 -----
@@ -109,7 +137,7 @@ Notes
 
 * Fix typos and update links for website.
 
-* Documentation of the SuperVectorizer and the :class:`SimilarityEncoder` improved.
+* Documentation of the :class:`SuperVectorizer` and the :class:`SimilarityEncoder` improved.
 
 Release 0.2.0
 =============
@@ -143,7 +171,7 @@ Major changes
 
   - :class:`GapEncoder`: the default value "zero_impute" becomes "empty_impute" (see doc).
   - :class:`MinHashEncoder`: the default value "" becomes "zero_impute" (see doc).
-  
+
   :pr:`210` by :user:`Alexis Cvetkov <alexis-cvetkov>`.
 
 * Add a method "get_feature_names_out" for the :class:`GapEncoder` and the :class:`SuperVectorizer`,

@@ -1,8 +1,8 @@
 """
 Fuzzy joining tables using string columns.
 The principle is as follows:
-  1. We embed and transform the key string columns using CountVectorizer
-  and TfifdTransformer.
+  1. We embed and transform the key string columns using
+  HashingVectorizer and TfifdTransformer.
   2. For each category, we use the nearest neighbor method to find its closest
   neighbor and establish a match.
   3. We match the tables using the previous information.
@@ -17,7 +17,11 @@ from typing import Literal, Tuple, Union
 import numpy as np
 import pandas as pd
 from scipy.sparse import vstack
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.feature_extraction.text import (
+    HashingVectorizer,
+    TfidfTransformer,
+    _VectorizerMixin,
+)
 from sklearn.neighbors import NearestNeighbors
 
 
@@ -28,6 +32,7 @@ def fuzzy_join(
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
+    encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
@@ -42,56 +47,61 @@ def fuzzy_join(
 
     Parameters
     ----------
-    left : pandas.DataFrame
+    left : :class:`~pandas.DataFrame`
         A table to merge.
-    right : pandas.DataFrame
+    right : :class:`~pandas.DataFrame`
         A table used to merge with.
     how: typing.Literal["left", "right"], default=`left`
-        Type of merge to be performed. Note that unlike pandas' merge,
+        Type of merge to be performed. Note that unlike :func:`~pandas.merge`,
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
-    left_on : typing.Union[str, None]
+    left_on : str, optional, default=None
         Name of left table column to join.
-    right_on : typing.Union[str, None]
+    right_on : str, optional, default=None
         Name of right table key column to join
         with left table key column.
-    on : typing.Union[str, None]
+    on : str, optional, default=None
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
-        Analyzer parameter for the CountVectorizer used for the string
-        similarities.
+    encoder: Union[Literal["hashing"], _VectorizerMixin], default=None,
+        Encoder parameter for the Vectorizer.
+        Options: {None, `_VectorizerMixin`}. If None, the
+        encoder will use the `HashingVectorizer`. It is possible to pass a
+        `_VectorizerMixin` custom object to tweak the parameters of the encoder.
+    analyzer : {"word", "char", "char_wb"}, optional, default=`char_wb`
+        Analyzer parameter for the HashingVectorizer passed to
+        the encoder and used for the string similarities.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    ngram_range : tuple (min_n, max_n), default=(2, 4)
+    ngram_range : int 2-tuple, optional, default=(2, 4)
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
     return_score : boolean, default=True
         Whether to return matching score based on the distance between
-        nearest matched categories.
-    match_score : float, default=0
+        the nearest matched categories.
+    match_score : float, default=0.0
         Distance score between the closest matches that will be accepted.
-        In a [0, 1] interval. Closer to 1 means the matches need to be very
-        close to be accepted, and closer to 0 that a bigger matching distance
-        is tolerated.
+        In a [0, 1] interval. 1 means that only a perfect match will be
+        accepted, and zero means that the closest match will be accepted,
+        no matter how distant.
     drop_unmatched : boolean, default=False
         Remove categories for which a match was not found in the two tables.
     sort : boolean, default=False
         Sort the join keys lexicographically in the result DataFrame.
         If False, the order of the join keys depends on the join type
         (`how` keyword).
-    suffixes : typing.Tuple[str, str], default=('_x', '_y')
+    suffixes : str 2-tuple, default=('_x', '_y')
         A list of strings indicating the suffix to add when overlaping
         column names.
 
-    Returns:
-    --------
-    df_joined: pandas.DataFrame
+    Returns
+    -------
+    df_joined : :class:`~pandas.DataFrame`
         The joined table returned as a DataFrame. If `return_score` is True,
         another column will be added to the DataFrame containing the
         matching scores.
@@ -99,13 +109,12 @@ def fuzzy_join(
     Notes
     -----
     For regular joins, the output of fuzzy_join is identical
-    to pandas.merge, except that both key columns are returned.
+    to :func:`~pandas.merge`, except that both key columns are returned.
 
-    Joining on indexes and multiple columns is not
-    supported.
+    Joining on indexes and multiple columns is not supported.
 
-    When return_score=True, the returned DataFrame gives
-    the distances between closest matches in a [0, 1] interval.
+    When `return_score=True`, the returned :class:`~pandas.DataFrame` gives
+    the distances between the closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.
 
@@ -154,7 +163,6 @@ def fuzzy_join(
     2  nana  3   NaN  NaN  0.532717
 
     As expected, the category "nana" has no exact match (`match_score=1`).
-
     """
 
     warnings.warn("This feature is still experimental.")
@@ -163,6 +171,10 @@ def fuzzy_join(
         raise ValueError(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
+
+    if encoder is not None:
+        if not issubclass(encoder.__class__, _VectorizerMixin):
+            raise ValueError(f"encoder should be a vectorizer object, got {encoder!r}")
 
     if how not in ["left", "right"]:
         raise ValueError(
@@ -208,9 +220,12 @@ def fuzzy_join(
     main_col_clean = main_table[main_col].astype(str)
     aux_col_clean = aux_table[aux_col].astype(str)
 
-    enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
+
+    if encoder is None:
+        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    else:
+        enc = encoder
 
     enc_cv = enc.fit(all_cats)
     main_enc = enc_cv.transform(main_col_clean)

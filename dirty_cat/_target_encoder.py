@@ -29,10 +29,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     ----------
     categories : typing.Union[typing.Literal["auto"], typing.List[typing.List[typing.Union[str, int]]]  # noqa
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
+
         The categories used can be found in the ``categories_`` attribute.
     clf_type : typing.Literal["regression", "binary-clf", "multiclass-clf"]
         The type of classification/regression problem.
@@ -42,8 +44,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         Whether to raise an error or ignore if a unknown categorical feature is
         present during transform (default is to raise). When this parameter
         is set to 'ignore' and an unknown category is encountered during
-        transform, the resulting one-hot encoded columns for this feature
-        will be all zeros.
+        transform, the encoded columns for this feature
+        will be assigned the prior mean of the target variable.
     handle_missing : typing.Literal["error", ""], default=""
         Whether to raise an error or impute with blank string '' if missing
         values (NaN) are present during fit (default is to impute).
@@ -60,7 +62,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         (in order corresponding with output of ``transform``).
 
     References
-    -----------
+    ----------
     For more details, see Micci-Barreca, 2001: A preprocessing scheme for
     high-cardinality categorical attributes in classification and prediction
     problems.
@@ -69,7 +71,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     --------
     >>> enc = TargetEncoder(handle_unknown='ignore')
     >>> X = [['male'], ['Male'], ['Female'], ['male'], ['Female']]
-    >>> y = np.ndarray([1, 2, 3, 4, 5])
+    >>> y = np.array([1, 2, 3, 4, 5])
 
     >>> enc.fit(X, y)
     TargetEncoder(handle_unknown='ignore')
@@ -79,16 +81,19 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     >>> enc.categories_
     [array(['Female', 'Male', 'male'], dtype='<U6')]
 
-    We look at the encoded categories :
+    We will encode the following categories, of which the first two are unknown :
 
-    >>> enc.transform(X)
-    array([[3.44444444],
-        [2.11111111],
-        [3.61538462],
-        [3.44444444],
-        [3.61538462]])
+    >>> X2 = [['MALE'], ['FEMALE'], ['Female'], ['male'], ['Female']]
+
+    >>> enc.transform(X2)
+    array([[3.        ],
+        [3.        ],
+        [3.54545455],
+        [2.72727273],
+        [3.54545455]])
 
     As expected, they were encoded according to their influence on y.
+    The unknown categories were assigned the mean of the target variable.
 
     """
 
@@ -119,7 +124,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y) -> "TargetEncoder":
         """
-        Fit the TargetEncoder to X.
+        Fit the instance to X.
 
         Parameters
         ----------
@@ -130,8 +135,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        TargetEncoder
-            Fitted TargetEncoder instance.
+        :class:`~dirty_cat.TargetEncoder`
+            Fitted :class:`~dirty_cat.TargetEncoder` instance (self).
         """
         X = check_input(X)
         self.n_features_in_ = X.shape[1]
@@ -222,7 +227,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        2-d np.ndarray
+        2-d :class:`~numpy.ndarray`
             Transformed input.
         """
         check_is_fitted(self, attributes=["n_features_in_"])

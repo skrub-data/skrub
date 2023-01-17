@@ -10,6 +10,7 @@ from ._fetching import (
     fetch_traffic_violations,
     fetch_world_bank_indicator,
     get_data_dir,
+    make_deduplication_data,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "fetch_traffic_violations",
     "fetch_world_bank_indicator",
     "get_data_dir",
+    "make_deduplication_data",
 ]

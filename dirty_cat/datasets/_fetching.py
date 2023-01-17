@@ -73,9 +73,12 @@ class DatasetAll:
     (``X`` and ``y``).
     Additional information such as `path` and `read_csv_kwargs` are provided
     in case the dataframe has to be read from disk, as such:
+
     .. code:: python
+
         ds = fetch_employee_salaries(load_dataframe=False)
         df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+
     """
 
     name: str
@@ -111,9 +114,12 @@ class DatasetInfoOnly:
     Represents a dataset and its information.
     With this state, the dataset is NOT loaded in memory, but can be read
     with ``path`` and ``read_csv_kwargs``, as such:
+
     .. code:: python
+
         ds = fetch_employee_salaries(load_dataframe=False)
         df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+
     """
 
     name: str
@@ -126,7 +132,7 @@ class DatasetInfoOnly:
 
 def _fetch_openml_dataset(
     dataset_id: int,
-    data_directory: Path = get_data_dir(),
+    data_directory: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Gets a dataset from OpenML (https://www.openml.org),
@@ -136,8 +142,8 @@ def _fetch_openml_dataset(
     ----------
     dataset_id: int
         The ID of the dataset to fetch.
-    data_directory: Path
-        Optional. A directory to save the data to.
+    data_directory: Path, optional
+        A directory to save the data to.
         By default, the dirty_cat data directory.
 
     Returns
@@ -154,8 +160,12 @@ def _fetch_openml_dataset(
               saved as a CSV file.
 
     """
+    if data_directory is None:
+        data_directory = get_data_dir()
+
     # Make path absolute
     data_directory = data_directory.resolve()
+    data_directory.mkdir(parents=True, exist_ok=True)
 
     # Construct the path to the gzip file containing the details on a dataset.
     details_gz_path = data_directory / DETAILS_DIRECTORY / f"{dataset_id}.gz"
@@ -165,7 +175,7 @@ def _fetch_openml_dataset(
         # If the details file or the features file don't exist,
         # download the dataset.
         warnings.warn(
-            f"Could not find the dataset {dataset_id} locally. "
+            f"Could not find the dataset {dataset_id!r} locally. "
             "Downloading it from OpenML; this might take a while... "
             "If it is interrupted, some files might be invalid/incomplete: "
             "if on the following run, the fetching raises errors, you can try "
@@ -209,7 +219,7 @@ def _fetch_openml_dataset(
 
 def _fetch_world_bank_data(
     indicator_id: str,
-    data_directory: Path = get_data_dir(),
+    data_directory: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
     Gets a dataset from World Bank open data platform
@@ -219,8 +229,8 @@ def _fetch_world_bank_data(
     ----------
     indicator_id: str
         The ID of the indicator's dataset to fetch.
-    data_directory: Path
-        Optional. A directory to save the data to.
+    data_directory: Path, optional
+        A directory to save the data to.
         By default, the dirty_cat data directory.
 
     Returns
@@ -237,6 +247,9 @@ def _fetch_world_bank_data(
               saved as a CSV file.
 
     """
+    if data_directory is None:
+        data_directory = get_data_dir()
+
     csv_path = (data_directory / f"{indicator_id}.csv").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
@@ -290,9 +303,7 @@ def _fetch_world_bank_data(
     }
 
 
-def _download_and_write_openml_dataset(
-    dataset_id: int, data_directory: Path
-) -> None:  # noqa
+def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
     """
     Downloads a dataset from OpenML,
     taking care of creating the directories.
@@ -442,6 +453,7 @@ def _fetch_dataset_as_dataclass(
     dataset_id: Union[int, str],
     target: Optional[str],
     load_dataframe: bool,
+    data_directory: Optional[Path] = None,
     read_csv_kwargs: Optional[dict] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """
@@ -450,6 +462,10 @@ def _fetch_dataset_as_dataclass(
 
     If you don't need the dataset to be loaded in memory,
     pass `load_dataframe=False`.
+
+    To save/load the dataset to/from a specific directory,
+    pass `data_directory`. If left default (None), uses the default dirty_cat
+    data directory.
 
     For loading data from:
     - the World Bank platform, specify `source="world_bank"`.
@@ -468,9 +484,9 @@ def _fetch_dataset_as_dataclass(
 
     """
     if source == "openml":
-        info = _fetch_openml_dataset(dataset_id)
+        info = _fetch_openml_dataset(dataset_id, data_directory)
     elif source == "world_bank":
-        info = _fetch_world_bank_data(dataset_id)
+        info = _fetch_world_bank_data(dataset_id, data_directory)
     else:
         raise ValueError(f"Unknown source {source!r}")
 
@@ -567,6 +583,7 @@ def fetch_employee_salaries(
 
 def fetch_road_safety(
     load_dataframe: bool = True,
+    directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the road safety dataset (classification), available at
     https://openml.org/d/42803
@@ -594,11 +611,13 @@ def fetch_road_safety(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
 
 
 def fetch_medical_charge(
     load_dataframe: bool = True,
+    directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the medical charge dataset (regression), available at
     https://openml.org/d/42720
@@ -631,11 +650,13 @@ def fetch_medical_charge(
             "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
 
 
 def fetch_midwest_survey(
     load_dataframe: bool = True,
+    directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the midwest survey dataset (classification), available at
     https://openml.org/d/42805
@@ -661,11 +682,13 @@ def fetch_midwest_survey(
             "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
 
 
 def fetch_open_payments(
     load_dataframe: bool = True,
+    directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the open payments dataset (classification), available at
     https://openml.org/d/42738
@@ -693,11 +716,13 @@ def fetch_open_payments(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
 
 
 def fetch_traffic_violations(
     load_dataframe: bool = True,
+    directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the traffic violations dataset (classification), available at
     https://openml.org/d/42132
@@ -727,11 +752,13 @@ def fetch_traffic_violations(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
 
 
 def fetch_drug_directory(
     load_dataframe: bool = True,
+    directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the drug directory dataset (classification), available at
     https://openml.org/d/43044
@@ -758,28 +785,30 @@ def fetch_drug_directory(
             "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
 
 
 def fetch_world_bank_indicator(
     indicator_id: str,
     load_dataframe: bool = True,
+    directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches a dataset of an indicator from the World Bank
-       open data platform.
+    open data platform.
 
-    Description of the dataset:
-    > The dataset contains two columns: the indicator value and the
-      country names. A list of all available indicators can be found
-      at https://data.worldbank.org/indicator.
+     Description of the dataset:
+     > The dataset contains two columns: the indicator value and the
+       country names. A list of all available indicators can be found
+       at https://data.worldbank.org/indicator.
 
-    Returns
-    -------
-    DatasetAll
-        If `load_dataframe=True`
+     Returns
+     -------
+     DatasetAll
+         If `load_dataframe=True`
 
-    DatasetInfoOnly
-        If `load_dataframe=False`
+     DatasetInfoOnly
+         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
         source="world_bank",
@@ -787,4 +816,51 @@ def fetch_world_bank_indicator(
         dataset_id=indicator_id,
         target=None,
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
+
+
+def make_deduplication_data(
+    examples: List[str], entries_per_example: List[int], prob_mistake_per_letter: float
+) -> List[str]:
+    """Duplicates examples with spelling mistakes.
+    Characters are misspelled with probability `prob_mistake_per_letter`.
+
+    Parameters
+    ----------
+    examples : List[str]
+        examples to duplicate
+    entries_per_example : List[int]
+        number of duplications per example
+    prob_mistake_per_letter : float in [0, 1]
+        probability of misspelling a character in duplications
+
+    Returns
+    -------
+    List[str]
+        list of duplicated examples with spelling mistakes
+    """
+
+    import string
+
+    import numpy as np
+
+    data = []
+    for example, n_ex in zip(examples, entries_per_example):
+        len_ex = len(example)
+        # generate a 2D array of chars of size (n_ex, len_ex)
+        str_as_list = np.array([list(example)] * n_ex)
+        # randomly choose which characters are misspelled
+        idxes = np.where(
+            np.random.random(len(example[0]) * n_ex) < prob_mistake_per_letter
+        )[0]
+        # and randomly pick with which character to replace
+        replacements = [
+            string.ascii_lowercase[i]
+            for i in np.random.choice(np.arange(26), len(idxes)).astype(int)
+        ]
+        # introduce spelling mistakes at right examples and char locations per example
+        str_as_list[idxes // len_ex, idxes % len_ex] = replacements
+        # go back to 1d array of strings
+        data.append(np.ascontiguousarray(str_as_list).view(f"U{len_ex}").ravel())
+    return np.concatenate(data).tolist()

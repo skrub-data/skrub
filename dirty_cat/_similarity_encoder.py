@@ -62,7 +62,7 @@ def _ngram_similarity_one_sample_inplace(
     i : str
         The index of x_count_vector in the csr count matrix
     ngram_range : tuple
-        n-grams to use for the decomposition, where `n_min <= n <= n_max`.
+        n-grams to use for the decomposition, where ``n_min <= n <= n_max``.
     """
     nonzero_idx = x_count_vector.indices
     nonzero_vals = x_count_vector.data
@@ -210,6 +210,7 @@ class SimilarityEncoder(OneHotEncoder):
         The range of values for the n_gram similarity.
     categories : typing.Union[typing.Literal["auto", "k-means", "most_frequent"], typing.List[typing.List[str]]]  # noqa
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
@@ -218,6 +219,7 @@ class SimilarityEncoder(OneHotEncoder):
            categorical variable
         - 'k-means' : Computes the K nearest neighbors of K-mean centroids
            in order to choose the prototype categories
+           
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.
@@ -337,7 +339,11 @@ class SimilarityEncoder(OneHotEncoder):
         self.similarity = None
 
         if not isinstance(categories, list):
-            assert categories in [None, "auto", "k-means", "most_frequent"]
+            if categories not in ["auto", "k-means", "most_frequent"]:
+                raise ValueError(
+                    f"Got categories={self.categories}, but expected "
+                    "any of {'auto', 'k-means', 'most_frequent'}. "
+                )
         if categories in ["k-means", "most_frequent"] and (
             n_prototypes is None or n_prototypes == 0
         ):
@@ -353,7 +359,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         Parameters
         ----------
-        prototypes : typing.List[str]
+        prototypes : list of str
             The list of values for a category variable.
 
         Returns
@@ -366,7 +372,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     def fit(self, X, y=None) -> "SimilarityEncoder":
         """
-        Fit the SimilarityEncoder to X.
+        Fit the instance to X.
 
         Parameters
         ----------
@@ -377,8 +383,8 @@ class SimilarityEncoder(OneHotEncoder):
 
         Returns
         -------
-        SimilarityEncoder
-            The fitted SimilarityEncoder instance.
+        :class:`~dirty_cat.SimilarityEncoder`
+            The fitted :class:`~dirty_cat.SimilarityEncoder` instance (self).
         """
 
         if self.handle_missing not in ["error", ""]:
@@ -522,7 +528,7 @@ class SimilarityEncoder(OneHotEncoder):
                     "Found missing values in input data; set "
                     "handle_missing='' to encode with missing values. "
                 )
-            if self.handle_missing != "error":
+            else:
                 X = X.fillna(self.handle_missing)
         elif not hasattr(X, "dtype") and isinstance(X, list):
             X = np.asarray(X, dtype=object)
@@ -580,18 +586,19 @@ class SimilarityEncoder(OneHotEncoder):
         """
         Fast computation of ngram similarity.
 
-        SimilarityEncoder.transform uses the count vectors of the vocabulary in
-        its computations. In ngram_similarity, these count vectors have to be
+        :func:`~dirty_cat.SimilarityEncoder.transform` uses the count vectors
+        of the vocabulary in its computations.
+        In `ngram_similarity`, these count vectors have to be
         re-computed each time, which can slow down the execution. In this
-        method, the count vectors are recovered from the
-        ``vocabulary_count_matrices`` attribute of the SimilarityEncoder,
+        method, the count vectors are recovered from
+        :attr:`~dirty_cat.SimilarityEncoder.vocabulary_count_matrices`,
         speeding up the execution.
 
         Parameters
         ----------
-        X: typing.Union[list, np.array]
+        X : list or :obj:`numpy.ndarray`
             Observations being transformed.
-        col_idx: int
+        col_idx : int
             The column index of X in the original feature matrix.
         """
         vectorizer = self.vectorizers_[col_idx]

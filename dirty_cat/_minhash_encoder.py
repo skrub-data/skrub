@@ -70,7 +70,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ----------
     hash_dict_ : LRUDict
         Computed hashes.
-    
+
     Examples
     --------
     >>> enc = MinHashEncoder(n_components=5)
@@ -139,7 +139,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        ndarray of shape (n_components, )
+        :obj:`~numpy.ndarray` of shape (n_components, )
             The encoded string.
         """
         min_hashes = np.ones(self.n_components) * np.infty
@@ -168,7 +168,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        ndarray of shape (n_components, )
+        :obj:`~numpy.ndarray` of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -189,21 +189,22 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def _compute_hash_batched(
         self, batch: Collection[str], hash_func: Callable[[str], np.ndarray]
     ):
-        """Function called to compute the hashes of a batch of strings.
+        """
+        Function called to compute the hashes of a batch of strings.
 
-        Check if the string is in the hash dictionary, if not, compute the hash using
-        the specified hashing function and add it to the dictionary.
+        Check if the string is in the hash dictionary, if not, compute the hash
+        using the specified hashing function and add it to the dictionary.
 
         Parameters
         ----------
-        batch : iterable of str
+        batch : collection of str
             The batch of strings to encode.
         hash_func : callable
             Hashing function to use on the string.
 
         Returns
         -------
-        np.array of shape (n_samples, n_components)
+        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
             The encoded strings, using specified encoding scheme.
         """
         res = np.zeros((len(batch), self.n_components))
@@ -257,7 +258,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        ndarray of shape (n_samples, n_components)
+        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
             Transformed input.
         """
         X = check_input(X)
@@ -316,8 +317,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 unique_x[idx_slice],
                 hash_func,
             )
-            for idx_slice in gen_even_slices(len(unique_x), 
-            n_jobs)
+            for idx_slice in gen_even_slices(len(unique_x), n_jobs)
         )
 
         # Match the hashes of the unique value to the original values

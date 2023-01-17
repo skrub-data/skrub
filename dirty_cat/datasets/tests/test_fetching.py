@@ -29,6 +29,7 @@ from dirty_cat.datasets._fetching import (
 from dirty_cat.datasets._fetching import (
     fetch_world_bank_indicator as fetch_world_bank_indicator,
 )
+from dirty_cat.datasets._fetching import make_deduplication_data
 from dirty_cat.datasets._utils import get_data_dir as _get_data_dir
 
 
@@ -453,3 +454,25 @@ def test_fetch_world_bank_indicator():
 
     finally:
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
+
+
+def test_make_deduplication_data():
+    import numpy as np
+
+    np.random.seed(123)
+    assert make_deduplication_data(["abc", "cba", "test1"], [3, 2, 1], 0.3) == [
+        "agr",
+        "abc",
+        "abc",
+        "cba",
+        "cba",
+        "test1",
+    ]
+    assert make_deduplication_data(["abc", "cba", "test1"], [1, 2, 3], 0.8) == [
+        "pbc",
+        "pza",
+        "cba",
+        "erxt1",
+        "test1",
+        "test1",
+    ]

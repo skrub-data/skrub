@@ -84,7 +84,7 @@ Usage examples
 .. container:: larger-container
 
   .. include:: auto_examples/index.rst
-    :start-line: 2
+    :start-line: 5
     :end-before: .. rst-class:: sphx-glr-signature
 
 |
@@ -140,6 +140,7 @@ Joining tables
    :nosignatures:
 
    fuzzy_join
+   FeatureAugmenter
 
 Data download
 -------------

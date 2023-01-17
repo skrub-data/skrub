@@ -1,6 +1,6 @@
 """
-Merging dirty tables: fuzzy join
-================================
+Fuzzy joining dirty tables with the FeatureAugmenter
+=====================================================
 
 Here we show how to combine data from different sources,
 with a vocabulary not well normalized.
@@ -12,15 +12,20 @@ In this example, the |fj| function allows us to join
 tables without cleaning the data by taking into account the
 label variations.
 
+Moreover, the |fa| makes fuzzy joining of multiple tables with
+|fj| easy and adjustable with the introduction of a pipeline.
+
 To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
 with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
-in order to create a satisfying first prediction model.
+in order to create a first prediction model.
 
 
 .. |fj| replace:: :func:`~dirty_cat.fuzzy_join`
+
+.. |fa| replace:: :func:`~dirty_cat.FeatureAugmenter`
 """
 
-#######################################################################
+###############################################################################
 # Data Importing and preprocessing
 # --------------------------------
 #
@@ -33,22 +38,22 @@ df = pd.read_csv(
 )
 df.drop(df.tail(1).index, inplace=True)
 
-#######################################################################
+###############################################################################
 # Let's look at the table:
 df.head(3)
 
-##############################################################################
+###############################################################################
 # This is a table that contains the happiness index of a country along with
 # some of the possible explanatory factors: GDP per capita, Social support,
 # Generosity etc.
 #
 
-#######################################################################
+###############################################################################
 # For the sake of this example, we only keep the country names and our
 # variable of interest: the 'Happiness score'.
 df = df[["Country", "Happiness score"]]
 
-#############################################################################
+###############################################################################
 # Additional tables from other sources
 # ------------------------------------
 #
@@ -60,22 +65,22 @@ df = df[["Country", "Happiness score"]]
 # function:
 from dirty_cat.datasets import fetch_world_bank_indicator
 
-#################################################################
+###############################################################################
 # We extract the table containing GDP per capita by country:
 gdppc = fetch_world_bank_indicator(indicator_id="NY.GDP.PCAP.CD").X
 gdppc.head(3)
 
-#################################################################
+###############################################################################
 # Then another table, with life expectancy by country:
 life_exp = fetch_world_bank_indicator("SP.DYN.LE00.IN", "life_exp").X
 life_exp.head(3)
 
-#################################################################
+###############################################################################
 # And a table with legal rights strength by country:
 legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
 legal_rights.head(3)
 
-#######################################################################
+###############################################################################
 # A correspondance problem
 # ------------------------
 #
@@ -85,17 +90,17 @@ legal_rights.head(3)
 
 df.sort_values(by="Country").tail(7)
 
-#######################################################################
+###############################################################################
 gdppc.sort_values(by="Country Name").tail(7)
 
-#######################################################################
+###############################################################################
 # We can see that Yemen is written "Yemen*" on one side, and
 # "Yemen, Rep." on the other.
 #
 # We also have entries that probably do not have correspondances: "World"
 # on one side, whereas the other table only has country-level data.
 
-#######################################################################
+###############################################################################
 # Joining tables with imperfect correspondance
 # --------------------------------------------
 #
@@ -103,12 +108,17 @@ gdppc.sort_values(by="Country Name").tail(7)
 # we have extracted.
 #
 
-#################################################
+###############################################################################
 # 1. Joining GDP per capita table
-# ................................
+# ...............................
 #
 # To join them with dirty_cat, we only need to do the following:
 from dirty_cat import fuzzy_join
+
+# We will ignore the warnings:
+import warnings
+
+warnings.filterwarnings("ignore")
 
 df1 = fuzzy_join(
     df,  # our table to join
@@ -121,13 +131,13 @@ df1 = fuzzy_join(
 df1.tail(20)
 # We merged the first WB table to our initial one.
 
-#################################################################
+###############################################################################
 # .. topic:: Note:
 #
 #    We fix the ``return_score`` parameter to `True` so as to keep the matching
 #    score, that we will use later to show what are the worst matches.
 
-#################################################################
+###############################################################################
 #
 # We see that our |fj| succesfully identified the countries,
 # even though some country names differ between tables.
@@ -146,7 +156,7 @@ df1.tail(20)
 #
 # Let's do some more inspection of the merging done.
 
-#################################################################
+###############################################################################
 # The best way to inspect the matches is to use the following function:
 import numpy as np
 
@@ -163,19 +173,18 @@ def print_worst_matches(joined_table, n=5):
     return worst_matches
 
 
-#################################################################
+###############################################################################
 # Let's print the four worst matches, which will give
 # us an overview of the situation:
 
 print_worst_matches(df1, n=4)
 
-#################################################################
+###############################################################################
 # We see that some matches were unsuccesful
 # (e.g "Palestinian Territories*" and "Palau"),
 # because there is simply no match in the two tables.
 
-#################################################################
-#
+###############################################################################
 # In this case, it is better to use the threshold parameter
 # so as to include only precise-enough matches:
 #
@@ -189,7 +198,7 @@ df1 = fuzzy_join(
 )
 print_worst_matches(df1, n=4)
 
-#################################################################
+###############################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
 # We will remove them using the drop_unmatched parameter:
 
@@ -204,9 +213,8 @@ df1 = fuzzy_join(
 
 df1.drop(columns=["Country Name"], inplace=True)
 
-#################################################################
-#
-# We can finally plot and look at the link between GDP per capita
+###############################################################################
+# We can finally plot and look at the link between GDP per capital
 # and happiness:
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -225,13 +233,13 @@ ax.set_title("Is a higher GDP per capita linked to happiness?")
 plt.tight_layout()
 plt.show()
 
-#################################################
+###############################################################################
 # It seems that the happiest countries are those
 # having a high GDP per capita.
 # However, unhappy countries do not have only low levels
 # of GDP per capita. We have to search for other patterns.
 
-#################################################
+###############################################################################
 # 2. Joining life expectancy table
 # ................................
 #
@@ -249,7 +257,7 @@ df2.drop(columns=["Country Name"], inplace=True)
 
 df2.head(3)
 
-#################################################
+###############################################################################
 # Let's plot this relation:
 plt.figure(figsize=(4, 3))
 fig = sns.regplot(
@@ -263,18 +271,14 @@ fig.set_title("Is a higher life expectancy linked to happiness?")
 plt.tight_layout()
 plt.show()
 
-#################################################
+###############################################################################
 # It seems the answer is yes!
 # Countries with higher life expectancy are also happier.
 
 
-#################################################
+###############################################################################
 # 3. Joining legal rights strength table
 # ......................................
-# .. topic:: Note:
-#
-#    Here, we use the `keep='left'` option to keep only the left key matching
-#    column, so as not to have unnecessary overlaping column with country names.
 #
 # And the table with a measure of legal rights strength in the country:
 df3 = fuzzy_join(
@@ -289,7 +293,7 @@ df3.drop(columns=["Country Name"], inplace=True)
 
 df3.head(3)
 
-#################################################
+###############################################################################
 # Let's take a look at their correspondance in a figure:
 plt.figure(figsize=(4, 3))
 fig = sns.regplot(
@@ -303,15 +307,15 @@ fig.set_title("Does a country's legal rights strength lead to happiness?")
 plt.tight_layout()
 plt.show()
 
-#################################################################
+###############################################################################
 # From this plot, it is not clear that this measure of legal strength
 # is linked to happiness.
 
-#################################################################
-# Great! Our joined table has became bigger and full of useful informations.
+###############################################################################
+# Great! Our joined table has become bigger and full of useful information.
 # And now we are ready to apply a first machine learning model to it!
 
-###################################################################
+###############################################################################
 # Prediction model
 # ----------------
 #
@@ -343,10 +347,7 @@ cv_results_t = cross_validate(hgdb, X, y, cv=cv, scoring="r2")
 
 cv_r2_t = cv_results_t["test_score"]
 
-print(
-    f"Mean R2 score with {len(X.columns) - 2} feature columns is"
-    f" {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
-)
+print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 
 #################################################################
 # We have a satisfying first result: an R2 of 0.66!
@@ -360,3 +361,98 @@ print(
 #
 # Now up to you, try improving our model by adding information into it and
 # beating our result!
+
+#######################################################################
+# Using the |fa| to fuzzy join multiple tables
+# --------------------------------------------
+# A faster way to merge different tables from the World Bank
+# to `X` is to use the |fa|.
+#
+# The |fa| is a transformer that can easily chain joins of tables on
+# a main table.
+
+#######################################################################
+# Instantiating the transformer
+# ............................
+
+y = df["Happiness score"]
+#######################################################################
+# We gather the auxilliary tables into a
+# list of (tables, keys) for the `tables` parameter.
+# An instance of the transformer with the necessary information is:
+from dirty_cat import FeatureAugmenter
+
+fa = FeatureAugmenter(
+    tables=[
+        (gdppc, "Country Name"),
+        (life_exp, "Country Name"),
+        (legal_rights, "Country Name"),
+    ],
+    main_key="Country",
+)
+
+#################################################################
+# Fitting and transforming into the final table
+# ............................................
+# To get our final joined table we will fit and transform the main table (df)
+# with our create instance of the |fa|:
+df_final = fa.fit_transform(df)
+
+df_final.head(10)
+
+##########################################################################
+# And that's it! As previously, we now have a big table
+# ready for machine learning.
+# Let's create our machine learning pipeline:
+from sklearn.pipeline import make_pipeline
+from sklearn.compose import make_column_transformer
+
+# We include only the columns that will be pertinent for our regression:
+encoder = make_column_transformer(
+    (
+        "passthrough",
+        [
+            "GDP per capita (current US$)",
+            "Life expectancy at birth, total (years)",
+            "Strength of legal rights index (0=weak to 12=strong)",
+        ],
+    ),
+    remainder="drop",
+)
+
+pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
+
+##########################################################################
+# And the best part is that we are now able to evaluate the paramaters of the |fj|.
+# For instance, the ``match_score`` was manually picked and can now be
+# introduced into a grid search:
+
+from sklearn.model_selection import GridSearchCV
+
+# We will test four possible values of match_score:
+params = {"featureaugmenter__match_score": [0.2, 0.3, 0.4, 0.5]}
+
+grid = GridSearchCV(pipeline, param_grid=params)
+grid.fit(df, y)
+
+print(grid.best_params_)
+##########################################################################
+# The grid searching gave us the best value of 0.5 for the parameter
+# ``match_score``. Let's use this value in our regression:
+#
+
+print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
+
+##########################################################################
+#
+# .. topic:: Note:
+#
+#    Here, ``grid.score()`` takes directly the best model
+#    (with ``match_score=0.5``) that was found during the grid search.
+#    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
+#    refitting the pipeline on the data.
+#
+#
+# Great, by evaluating the correct ``match_score`` we improved our
+# results significantly!
+#
