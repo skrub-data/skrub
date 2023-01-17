@@ -2,6 +2,9 @@
 
 .. currentmodule:: dirty_cat
 
+Release 0.5.0
+==============
+
 Release 0.4.0 (upcoming)
 =========================
 
@@ -11,6 +14,9 @@ Major changes
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category.
 :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
+* New experimental feature: :class:`FeatureAugmenter`, a transformer
+  that augments with :func:`fuzzy_join` the number of features in a main table
+  by using information from auxilliary tables. :pr:`409` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator`
   that can be used to download any indicator from the World Bank Open Data platform.
   It only needs the indicator ID that can be found on the website. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
