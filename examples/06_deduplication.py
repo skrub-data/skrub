@@ -111,7 +111,7 @@ square_distances = squareform(ngram_distances)
 # We can visualize the pair-wise distance between all medication names
 # --------------------------------------------------------------------
 #
-# Below I use a heatmap to visualize the pairwise-distance between medication names.
+# Below we use a heatmap to visualize the pairwise-distance between medication names.
 # A darker color means that two medication names are closer together (i.e. more similar),
 # a lighter color means a larger distance. We can see that we are dealing with three
 # clusters - the original medication names and their misspellings that cluster around them.
