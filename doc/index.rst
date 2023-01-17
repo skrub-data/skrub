@@ -63,6 +63,17 @@ pipeline you can tweak.
 
 
 
+Usage examples
+==============
+
+.. container:: larger-container
+
+  .. include:: auto_examples/index.rst
+    :start-line: 5
+    :end-before: .. rst-class:: sphx-glr-signature
+
+|
+
 .. raw:: html
 
     <div class="video" style="border: 0px;">
@@ -77,17 +88,6 @@ pipeline you can tweak.
 
     </div>
 
-
-Usage examples
-==============
-
-.. container:: larger-container
-
-  .. include:: auto_examples/index.rst
-    :start-line: 5
-    :end-before: .. rst-class:: sphx-glr-signature
-
-|
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
