@@ -142,10 +142,27 @@ Joining tables
    :nosignatures:
 
    fuzzy_join
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
    FeatureAugmenter
 
-Data download
--------------
+Deduplication: merging variants of the same entry
+---------------------------------------------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+
+   deduplicate
+
+
+Data download and generation
+----------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -161,6 +178,7 @@ Data download
    datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
    datasets.get_data_dir
+   datasets.make_deduplication_data
 
 About
 =====
