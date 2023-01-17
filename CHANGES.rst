@@ -18,6 +18,9 @@ Major changes
   starting with an underscore shouldn't be imported in your code. :pr:`331` by :user:`Lilian Boulard <LilianBoulard>`
 * The :class:`MinHashEncoder` now supports a `n_jobs` parameter to parallelize
   the hashes computation. :pr:`267` by :user:`Leo Grinsztajn <LeoGrin>` and :user:`Lilian Boulard <LilianBoulard>`.
+* New experimental feature: deduplicating misspelled categories using :func:`deduplicate` by clustering string distances.
+  This function works best when there are significantly more duplicates than underlying categories.
+  :pr:`339` by :user:`Moritz Boos <mjboos>`.
 
 Minor changes
 -------------
