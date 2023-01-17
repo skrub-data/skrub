@@ -15,7 +15,7 @@ def make_deduplication_data(
     examples: List[str],
     entries_per_example: List[int],
     prob_mistake_per_letter: float,
-    random_state: Optional[Union[int, np.random.RandomState]],
+    random_state: Optional[Union[int, np.random.RandomState]] = None,
 ) -> List[str]:
     """Duplicates examples with spelling mistakes.
     Characters are misspelled with probability `prob_mistake_per_letter`.
