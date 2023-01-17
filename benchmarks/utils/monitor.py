@@ -1,13 +1,13 @@
 import tracemalloc
-import pandas as pd
-
-from typing import Callable, Collection, Any, Optional, Tuple, Dict, List, Union
-from time import perf_counter
-from itertools import product as _product
 from collections import defaultdict
 from datetime import datetime
-from warnings import warn
+from itertools import product as _product
 from pathlib import Path
+from time import perf_counter
+from typing import Any, Callable, Collection, Dict, List, Optional, Union
+from warnings import warn
+
+import pandas as pd
 
 
 def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
@@ -24,36 +24,6 @@ def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
     return f"{f.__name__}({', '.join(st for st in [str_args, str_kwargs] if st)})"
 
 
-def parse_func_repr(representation: str) -> Tuple[str, tuple, dict]:
-    """
-    Takes the representation of a function and its arguments created by
-    `repr_func`, and returns the function name,
-    the positional arguments as a tuple,
-    and the keyword arguments as a dictionary.
-    """
-    func_name, args_repr = representation[:-1].split("(", 1)
-    args = []
-    kwargs = {}
-    arg_list = args_repr.split(", ")
-    # Extract the keyword arguments from the positional arguments
-    for index, value in enumerate(arg_list):
-        # Check that the "," is not inside a parenthesis
-        # (this would mean that it is part of a string)
-        # If it is, then we merge the current string with the next one
-        # Until we find a string that is not inside a parenthesis
-        if value.count("(") != value.count(")"):
-            arg_list[index + 1] = value + ", " + arg_list[index + 1]
-        else:
-            if "=" in value:
-                keyword, argument = value.split("=", 1)
-                if keyword.isidentifier():
-                    kwargs.update({keyword: argument})
-                    continue
-            args.append(value)
-
-    return func_name, tuple(args), kwargs
-
-
 def monitor(
     memory: bool,
     time: bool,
@@ -63,7 +33,7 @@ def monitor(
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
     """Decorator used to monitor the execution of a function.
 
-    The decorated function should return either None, or a dictionary, 
+    The decorated function should return either None, or a dictionary,
     which will be added to the results.
     Executions are sequential, so it's usually pretty long to run!
 
@@ -169,6 +139,7 @@ def monitor(
                     tracemalloc.start()
 
                 for n in range(repeat):
+                    _monitored["iter"].append(n)
                     # Initialize loop monitored values
                     if memory:
                         tracemalloc.reset_peak()
@@ -191,32 +162,28 @@ def monitor(
                 # Global cleanup of monitored values
                 if memory:
                     tracemalloc.stop()
+                return _monitored
 
-                return dict(_monitored)
-
-            def to_df(
-                results: Dict[str, Dict[str, List[float]]],
-            ) -> pd.DataFrame:
-                """
-                Converts the result of the benchmark to a pandas DataFrame.
-                """
-                index = list(results.keys())
-                columns = results[index[0]].keys()  # Use the first one as sample
-                data = [[results[idx][col] for col in columns] for idx in index]
-                return pd.DataFrame(data, index=index, columns=columns)
-
-            results = {
-                repr_func(func, args, kwargs): exec_func(*args, **kwargs)
-                for args, kwargs in product(parametrize)
-            }
-            df = to_df(results)
-
+            df = pd.DataFrame()
+            for args, kwargs in product(parametrize):
+                call_string = repr_func(func, args, kwargs)
+                res_dic = exec_func(*args, **kwargs)
+                # Add arguments to the results in wide format
+                for index, arg in enumerate(args):
+                    res_dic[f"arg{index}"] = arg
+                for key, value in kwargs.items():
+                    if not isinstance(value, (int, float)):
+                        value = str(value)  # prevent creating new lines for
+                        # tuple or list parameters
+                    res_dic[key] = value
+                res_dic["call"] = call_string
+                df = pd.concat((df, pd.DataFrame(res_dic)), ignore_index=True)
             if save_as is not None:
                 save_dir = Path(__file__).parent.parent / "results"
                 save_dir.mkdir(exist_ok=True)
                 now = datetime.now()
                 file = f"{save_as}-{now.year}{now.month}{now.day}.csv"
-                df.to_csv(save_dir / file, index_label="call")
+                df.to_csv(save_dir / file)
 
             return df
 
