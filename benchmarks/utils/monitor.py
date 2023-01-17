@@ -36,20 +36,20 @@ def parse_func_repr(representation: str) -> Tuple[str, tuple, dict]:
     kwargs = {}
     arg_list = args_repr.split(", ")
     # Extract the keyword arguments from the positional arguments
-    for index in range(len(arg_list)):
+    for index, value in enumerate(arg_list):
         # Check that the "," is not inside a parenthesis
         # (this would mean that it is part of a string)
         # If it is, then we merge the current string with the next one
         # Until we find a string that is not inside a parenthesis
-        if arg_list[index].count("(") != arg_list[index].count(")"):
-            arg_list[index + 1] = arg_list[index] + ", " + arg_list[index + 1]
+        if value.count("(") != value.count(")"):
+            arg_list[index + 1] = value + ", " + arg_list[index + 1]
         else:
-            if "=" in arg_list[index]:
-                keyword, argument = arg_list[index].split("=", 1)
+            if "=" in value:
+                keyword, argument = value.split("=", 1)
                 if keyword.isidentifier():
                     kwargs.update({keyword: argument})
                     continue
-            args.append(arg_list[index])
+            args.append(value)
 
     return func_name, tuple(args), kwargs
 
