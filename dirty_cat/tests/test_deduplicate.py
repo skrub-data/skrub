@@ -8,9 +8,9 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
 from dirty_cat._deduplicate import (
-    _compute_ngram_distance,
     _create_spelling_correction,
     _guess_clusters,
+    compute_ngram_distance,
     deduplicate,
 )
 
@@ -83,9 +83,9 @@ def test_deduplicate(
     assert np.isin(unique_other_analyzer, recovered_categories).all()
 
 
-def test__compute_ngram_distance() -> None:
+def test_compute_ngram_distance() -> None:
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
-    distance = _compute_ngram_distance(words)
+    distance = compute_ngram_distance(words)
     distance = squareform(distance)
     assert distance.shape[0] == words.shape[0]
     assert np.allclose(np.diag(distance), 0)
@@ -95,7 +95,7 @@ def test__compute_ngram_distance() -> None:
 
 def test__guess_clusters() -> None:
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
-    distance = _compute_ngram_distance(words)
+    distance = compute_ngram_distance(words)
     Z = linkage(distance, method="average")
     n_clusters = _guess_clusters(Z, distance)
     assert n_clusters == len(np.unique(words))

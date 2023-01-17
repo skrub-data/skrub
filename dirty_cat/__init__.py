@@ -15,7 +15,7 @@ except ModuleNotFoundError:
     )
 
 from ._datetime_encoder import DatetimeEncoder
-from ._deduplicate import deduplicate
+from ._deduplicate import compute_ngram_distance, deduplicate
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._minhash_encoder import MinHashEncoder
@@ -36,4 +36,5 @@ __all__ = [
     "SuperVectorizer",
     "fuzzy_join",
     "deduplicate",
+    "compute_ngram_distance",
 ]

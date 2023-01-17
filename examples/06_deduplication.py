@@ -36,33 +36,7 @@ in an unsupervised manner.
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-
-def generate_example_data(examples, entries_per_example, prob_mistake_per_letter):
-    """Helper function to generate data consisting of multiple entries per example.
-    Characters are misspelled with probability `prob_mistake_per_letter`"""
-    import string
-
-    data = []
-    for example, n_ex in zip(examples, entries_per_example):
-        len_ex = len(example)
-        # generate a 2D array of chars of size (n_ex, len_ex)
-        str_as_list = np.array([list(example)] * n_ex)
-        # randomly choose which characters are misspelled
-        idxes = np.where(
-            np.random.random(len(example[0]) * n_ex) < prob_mistake_per_letter
-        )[0]
-        # and randomly pick with which character to replace
-        replacements = [
-            string.ascii_lowercase[i]
-            for i in np.random.choice(np.arange(26), len(idxes)).astype(int)
-        ]
-        # introduce spelling mistakes at right examples and right char locations per example
-        str_as_list[idxes // len_ex, idxes % len_ex] = replacements
-        # go back to 1d array of strings
-        data.append(np.ascontiguousarray(str_as_list).view(f"U{len_ex}").ravel())
-    return np.concatenate(data)
-
+from dirty_cat.datasets import make_deduplication_data
 
 # set seed for reproducibility
 np.random.seed(123)
@@ -74,7 +48,7 @@ entries_per_medications = [500, 100, 1500]
 # 5% probability of a typo per letter
 prob_mistake_per_letter = 0.05
 
-data = generate_example_data(
+data = make_deduplication_data(
     medications, entries_per_medications, prob_mistake_per_letter
 )
 # we extract the unique medication names in the data & how often they appear
