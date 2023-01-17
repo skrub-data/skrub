@@ -15,6 +15,7 @@ except ModuleNotFoundError:
     )
 
 from ._datetime_encoder import DatetimeEncoder
+from ._deduplicate import compute_ngram_distance, deduplicate
 from ._feature_augmenter import FeatureAugmenter
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
@@ -36,4 +37,6 @@ __all__ = [
     "SimilarityEncoder",
     "SuperVectorizer",
     "TargetEncoder",
+    "deduplicate",
+    "compute_ngram_distance",
 ]
