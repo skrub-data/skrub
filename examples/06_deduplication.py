@@ -101,10 +101,10 @@ plt.ylabel("Counts")
 
 
 from dirty_cat import deduplicate
-from dirty_cat._deduplicate import _compute_ngram_distance
+from dirty_cat._deduplicate import compute_ngram_distance
 from scipy.spatial.distance import squareform
 
-ngram_distances = _compute_ngram_distance(unique_examples)
+ngram_distances = compute_ngram_distance(unique_examples)
 square_distances = squareform(ngram_distances)
 
 ###############################################################################
