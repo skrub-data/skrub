@@ -1,7 +1,7 @@
 
-===============================================
-dirty_cat: machine learning on dirty categories
-===============================================
+=================================================
+dirty_cat: machine learning with dirty categories
+=================================================
 
 .. toctree::
    :maxdepth: 2
@@ -10,10 +10,11 @@ dirty_cat: machine learning on dirty categories
 
 .. container:: larger-container
 
-    `dirty_cat` facilitates machine-learning on non-curated categories:
+    `dirty_cat` facilitates machine-learning with non-curated categories:
     **robust to morphological variants**, such as typos.
-    See `the first example notebook <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
-    for a more in-depth look into the problem and the library's capabilities.
+    See example, such as `the first one <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
+    for a introduction to problems of dirty categories or misspelled
+    entities.
 
 |
 
