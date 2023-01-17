@@ -18,9 +18,7 @@ def compute_ngram_distance(
     ngram_range: Tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
 ) -> np.ndarray:
-    """Computes the condensed n-gram distance matrix between words in
-    `unique_words`, using the
-    term frequency-inverse document frequency (tf-idf).
+    """Compute the condensed pair-wise n-gram distance between `unique_words`.
 
     Parameters
     ----------
@@ -29,12 +27,19 @@ def compute_ngram_distance(
     ngram_range : Tuple[int, int], optional, default=(2,4)
         The n-gram range to compute the distance in.
     analyzer : str, optional, default=`char_wb`
-        Analyzer to extract n-grams
+        Analyzer to extract n-grams.
 
     Returns
     -------
     np.ndarray
-        An n-times-(n-1)/2 matrix of n-gram TfIdf distances between `unique_words`.
+        An n-times-(n-1)/2 array of n-gram tf-idf distances between `unique_words`.
+
+    Notes
+    -----
+    Extracts n-grams of all elements in `unique_words`, calculates the
+    term frequency-inverse document frequency (tf-idf) for each n-gram, then
+    computes the pair-wise euclidean distance between elements based on their n-gram
+    tf-idf representation.
     """
     encoded = TfidfVectorizer(ngram_range=ngram_range, analyzer=analyzer).fit_transform(
         unique_words
@@ -123,21 +128,17 @@ def deduplicate(
         "single", "complete", "average", "centroid", "median", "ward"
     ] = "average",
 ) -> List[str]:
-    """Deduplicates data by computing the n-gram distance between unique
-    categories in data, performing hierarchical clustering on this distance
-    matrix, and choosing the most frequent element in each cluster as the
-    'correct' spelling. This method works best if the true number of
-    categories is significantly smaller than the number of observed spellings.
+    """Deduplicate data by hierarchically clustering similar strings.
 
     Parameters
     ----------
     data : Sequence[str]
         The data to be deduplicated.
     n_clusters : Optional[int], optional, default=None
-        number of clusters to use for hierarchical clustering, if None use the
+        Number of clusters to use for hierarchical clustering, if None use the
         number of clusters that lead to the lowest silhouette score.
     ngram_range : Tuple[int, int], optional, default=(2, 4)
-        range to use for computing n-gram distance.
+        Range to use for computing n-gram distance.
     analyzer : typing.Literal["word", "char", "char_wb"], optional, default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
         similarities.
@@ -157,6 +158,14 @@ def deduplicate(
     -------
     List[str]
        The deduplicated data.
+
+    Notes
+    -----
+    Deduplication is done by first computing the n-gram distance between unique
+    categories in data, then performing hierarchical clustering on this distance
+    matrix, and choosing the most frequent element in each cluster as the
+    'correct' spelling. This method works best if the true number of
+    categories is significantly smaller than the number of observed spellings.
     """
     unique_words, counts = np.unique(data, return_counts=True)
     distance_mat = compute_ngram_distance(
