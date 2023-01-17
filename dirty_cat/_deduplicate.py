@@ -13,7 +13,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
 
 
-def _compute_ngram_distance(
+def compute_ngram_distance(
     unique_words: Union[Sequence[str], np.ndarray],
     ngram_range: Tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
