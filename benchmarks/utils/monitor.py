@@ -8,6 +8,7 @@ from typing import Any, Callable, Collection, Dict, List, Optional, Union
 from warnings import warn
 
 import pandas as pd
+from tqdm import tqdm
 
 
 def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
@@ -165,7 +166,8 @@ def monitor(
                 return _monitored
 
             df = pd.DataFrame()
-            for args, kwargs in product(parametrize):
+            args_list = list(product(parametrize))  # convert to list to know the length
+            for args, kwargs in tqdm(args_list):
                 call_string = repr_func(func, args, kwargs)
                 res_dic = exec_func(*args, **kwargs)
                 # Add arguments to the results in wide format
