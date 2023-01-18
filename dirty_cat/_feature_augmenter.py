@@ -32,7 +32,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         specyfying the transformer objects to be applied.
         table: str
             Name of the table to be joined.
-        column name: str,
+        column name: str
             Name of table column to join on.
     main_key : str
         The key column name in the main table on which
