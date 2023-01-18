@@ -453,3 +453,5 @@ def test_fetch_world_bank_indicator():
 
     finally:
         shutil.rmtree(path=str(test_data_dir), ignore_errors=True)
+
+
