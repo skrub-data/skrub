@@ -85,7 +85,7 @@ plt.ylabel("Counts")
 # a lighter color means a larger distance. We can see that we are dealing with three
 # clusters - the original medication names and their misspellings that cluster around them.
 
-from dirty_cat._deduplicate import compute_ngram_distance
+from dirty_cat import compute_ngram_distance
 from scipy.spatial.distance import squareform
 
 ngram_distances = compute_ngram_distance(unique_examples)
