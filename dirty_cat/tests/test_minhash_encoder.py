@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
+from sklearn.exceptions import NotFittedError
 
 from dirty_cat import MinHashEncoder
 
@@ -242,3 +243,15 @@ def test_correct_arguments():
     with pytest.raises(ValueError, match=r"n_components should be even"):
         encoder = MinHashEncoder(n_components=3, minmax_hash=True)
         encoder.fit_transform(X)
+
+def test_check_fitted_minhash_encoder():
+    """Test that calling transform before fit raises an error"""
+    encoder = MinHashEncoder(n_components=3)
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    with pytest.raises(NotFittedError):
+        encoder.transform(X)
+    
+    # Check that it works after fitting
+    encoder.fit(X)
+    encoder.transform(X)
+

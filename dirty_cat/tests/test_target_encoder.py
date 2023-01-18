@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from sklearn.exceptions import NotFittedError
 
 from dirty_cat import _target_encoder
 
@@ -275,3 +276,15 @@ def test_errors():
         enc4.transform(X2)
     with pytest.raises(ValueError, match="Found unknown categories "):
         enc4.transform(X3)
+
+def test_check_fitted_target_encoder():
+    """Test that calling transform before fit raises an error"""
+    enc = _target_encoder.TargetEncoder()
+    X = [[1], [2], [2], [3], [4]]
+    y = np.array([1, 2, 3, 4, 5])
+
+    with pytest.raises(NotFittedError, match="This TargetEncoder instance is not"):
+        enc.transform(X)
+    
+    enc.fit(X, y)
+    enc.transform(X)

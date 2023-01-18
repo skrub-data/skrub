@@ -27,6 +27,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
+from sklearn.utils.validation import check_is_fitted
 
 from ._string_distances import get_ngram_count, preprocess
 from ._utils import parse_version
@@ -521,7 +522,7 @@ class SimilarityEncoder(OneHotEncoder):
         X_new : 2-d array, shape [n_samples, n_features_new]
             Transformed input.
         """
-
+        check_is_fitted(self, "categories_")
         if hasattr(X, "iloc") and X.isna().values.any():
             if self.handle_missing == "error":
                 raise ValueError(
