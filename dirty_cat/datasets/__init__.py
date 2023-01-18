@@ -10,8 +10,13 @@ from ._fetching import (
     fetch_traffic_violations,
     fetch_world_bank_indicator,
     get_data_dir,
+)
+
+
+from ._generating import (
     make_deduplication_data,
 )
+
 
 __all__ = [
     "DatasetAll",
