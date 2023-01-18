@@ -66,7 +66,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ----------
     hash_dict_ : LRUDict
         Computed hashes.
-    
+
     Examples
     --------
     >>> enc = MinHashEncoder(n_components=5)
@@ -343,8 +343,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     unique_x[idx_slice],
                     hash_func,
                 )
-                for idx_slice in gen_even_slices(len(unique_x), 
-                n_jobs * self.batch_per_job)
+                for idx_slice in gen_even_slices(
+                    len(unique_x), n_jobs * self.batch_per_job
+                )
             )
             # Match the hashes of the unique value to the original values
             X_out = np.concatenate(unique_x_trans)[indices_x].reshape(
@@ -370,7 +371,7 @@ from argparse import ArgumentParser
 
 from pathlib import Path
 
-from utils import monitor, parse_func_repr, find_result, default_parser
+from utils import monitor, find_result, default_parser
 from dirty_cat.tests.utils import generate_data
 
 benchmark_name = "minhash_batch_comparison"
@@ -395,35 +396,29 @@ def benchmark(
     batch_per_job: int,
 ) -> None:
     X = data[dataset_size]
-    MinHashEncoder(batch=batched, n_jobs=n_jobs, 
-    batch_per_job=batch_per_job).fit(X).transform(X)
+    MinHashEncoder(batch=batched, n_jobs=n_jobs, batch_per_job=batch_per_job).fit(
+        X
+    ).transform(X)
 
 
-def plot(res: pd.DataFrame):
+def plot(df: pd.DataFrame):
     sns.set_theme(style="ticks", palette="pastel")
 
-    rows = []
-    for i, ser in res.iterrows():
-        times = eval(str(ser["time"]))
-        memories = eval(str(ser["memory"]))
-        _, _, kwargs = parse_func_repr(ser["call"])
-        for time, memory in zip(times, memories):
-            rows.append((kwargs["batched"], kwargs["batch_per_job"], 
-            kwargs["n_jobs"], time, memory))
-
-    df = pd.DataFrame(rows, columns=["batched", "batch_per_job", 
-    "n_jobs", "time", "memory"])
+    print(df)
 
     # Create a new columns merging batched and batch_per_job
     # If batch is False, ignore batch_per_job
     df["config"] = df.apply(
         lambda row: f"batched={row['batched']}, batch_per_job={row['batch_per_job']}"
-        if row["batched"] == 'True'
+        if row["batched"]
         else "batched=False",
         axis=1,
     )
+    print(df["config"])
 
     sns.boxplot(x="n_jobs", y="time", hue="config", data=df)
+    # Log scale for the y axis
+    plt.yscale("log")
     plt.show()
 
 
