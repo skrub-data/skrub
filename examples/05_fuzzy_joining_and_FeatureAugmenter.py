@@ -1,5 +1,5 @@
 """
-Fuzzy joining dirty tables with the FeatureAugmenter
+Fuzzy joining dirty tables and the FeatureAugmenter
 =====================================================
 
 Here we show how to combine data from different sources,
@@ -8,16 +8,17 @@ with a vocabulary not well normalized.
 Joining is difficult: one entry on one side does not have
 an exact match on the other side.
 
-In this example, the |fj| function allows us to join
-tables without cleaning the data by taking into account the
-label variations.
-
-Moreover, the |fa| makes fuzzy joining of multiple tables with
-|fj| easy and adjustable with the introduction of a pipeline.
+The |fj| function enables to join tables without cleaning the data by
+accounting for the label variations.
 
 To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
 with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
 in order to create a first prediction model.
+
+Moreover, the |fa| is a scikit-learn Transformer that makes it easy to
+use such fuzzy joining multiple tables to bring in information in a
+machine-learning pipeline. In particular, it enables tuning parameters of
+|fj| to find the matches that maximize prediction accuracy.
 
 
 .. |fj| replace:: :func:`~dirty_cat.fuzzy_join`
