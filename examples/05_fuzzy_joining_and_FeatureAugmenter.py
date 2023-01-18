@@ -374,7 +374,7 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 
 #######################################################################
 # Instantiating the transformer
-# ............................
+# .............................
 
 y = df["Happiness score"]
 #######################################################################
@@ -394,7 +394,7 @@ fa = FeatureAugmenter(
 
 #################################################################
 # Fitting and transforming into the final table
-# ............................................
+# .............................................
 # To get our final joined table we will fit and transform the main table (df)
 # with our create instance of the |fa|:
 df_final = fa.fit_transform(df)
