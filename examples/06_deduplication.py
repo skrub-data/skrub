@@ -2,25 +2,26 @@
 Deduplicating misspelled categories with deduplicate
 ====================================================
 
-A common step in data analyses is grouping or analyzing data conditional on a
-categorical variable. In real world datasets, there often will be slight
-misspellings in the category names: This happens when, for example, data input
-*should* use a drop down menu, but users are forced to input the category name
-by hand. Misspellings happen and analyzing the resulting data using a simple
-`GROUP BY` is not possible anymore.
+Real world datasets often come with slight misspellings in the category
+names, for instance if the category is manually input. Such misspellings
+break many data-analyses steps that require exact matching, such as a
+'GROUP BY'.
 
-This problem is however the perfect use case of *unsupervised learning*, a
-category of various statical methods that find structure in data without
-providing explicit labels/categories of the data a-priori. Specifically
-clustering of the distance between strings can be used to find clusters
-of strings that are similar to each other (e.g. differ only by a misspelling)
-and hence gives us an easy tool to flag potentially misspelled category names
-in an unsupervised manner.
+Merging the multiple variants of the same category or entity is known as
+*deduplication*. It is performed by the :func:`~dirty_cat.deduplicate`
+function.
+
+Deduplication relies on *unsupervised learning*, to find structure in
+data without providing explicit labels/categories of the data a-priori.
+Specifically clustering of the distance between strings can be used to
+find clusters of strings that are similar to each other (e.g. differ only
+by a misspelling) and hence gives us an easy tool to flag potentially
+misspelled category names in an unsupervised manner.
 """
 
 ###############################################################################
-# An example
-# ----------
+# An example dataset
+# -------------------
 #
 # Imagine the following example:
 # As a data scientist, our job is to analyze the data from a hospital ward.
@@ -34,12 +35,7 @@ in an unsupervised manner.
 
 
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 from dirty_cat.datasets import make_deduplication_data
-
-# set seed for reproducibility
-np.random.seed(123)
 
 # our three medication names
 medications = ["Contrivan", "Genericon", "Zipholan"]
@@ -48,17 +44,24 @@ entries_per_medications = [500, 100, 1500]
 # 5% probability of a typo per letter
 prob_mistake_per_letter = 0.05
 
-data = make_deduplication_data(
-    medications, entries_per_medications, prob_mistake_per_letter
+duplicated_names = make_deduplication_data(
+    medications, entries_per_medications, prob_mistake_per_letter,
+    random_state=42, # set seed for reproducibility
 )
 # we extract the unique medication names in the data & how often they appear
-unique_examples, counts = np.unique(data, return_counts=True)
+unique_examples, counts = np.unique(duplicated_names, return_counts=True)
 # and build a series out of them
+import pandas as pd
 ex_series = pd.Series(counts, index=unique_examples)
+
+# This is our data:
+ex_series.head()
 
 ###############################################################################
 # Visualize the data
 # ------------------
+
+import matplotlib.pyplot as plt
 
 ex_series.plot.barh(figsize=(10, 15))
 plt.xlabel("Medication name")
@@ -73,14 +76,6 @@ plt.ylabel("Counts")
 # name will be closest to either the correctly or incorrectly spelled orginal
 # medication name - and therefore form clusters.
 
-
-from dirty_cat import deduplicate
-from dirty_cat._deduplicate import compute_ngram_distance
-from scipy.spatial.distance import squareform
-
-ngram_distances = compute_ngram_distance(unique_examples)
-square_distances = squareform(ngram_distances)
-
 ###############################################################################
 # We can visualize the pair-wise distance between all medication names
 # --------------------------------------------------------------------
@@ -90,6 +85,12 @@ square_distances = squareform(ngram_distances)
 # a lighter color means a larger distance. We can see that we are dealing with three
 # clusters - the original medication names and their misspellings that cluster around them.
 
+from dirty_cat import compute_ngram_distance
+from scipy.spatial.distance import squareform
+
+ngram_distances = compute_ngram_distance(unique_examples)
+square_distances = squareform(ngram_distances)
+
 import seaborn as sns
 
 fig, axes = plt.subplots(1, 1, figsize=(12, 12))
@@ -98,15 +99,19 @@ sns.heatmap(
 )
 
 ###############################################################################
-# Clustering to suggest corrections of misspelled names
+# Deduplication: suggest corrections of misspelled names
 # -----------------------------------------------------
+#
+# The :func:`~dirty_cat.deduplicate` function uses clustering based on
+# string similarities to group duplicated names
 #
 # The number of clusters will need some adjustment depending on the data you have.
 # If no fixed number of clusters is given, `deduplicate` tries to set it automatically
 # via the `silhouette score <https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.
 
+from dirty_cat import deduplicate
 
-deduplicated_data = deduplicate(data)
+deduplicated_data = deduplicate(duplicated_names)
 
 ###############################################################################
 # We can visualize the distribution of categories in the deduplicated data:
@@ -131,7 +136,7 @@ plt.ylabel("Counts")
 # (potentially) correct categories as values.
 
 # create a table that maps original -> corrected categories
-translation_table = pd.Series(deduplicated_data, index=data)
+translation_table = pd.Series(deduplicated_data, index=duplicated_names)
 
 # remove duplicates in the original data
 translation_table = translation_table[~translation_table.index.duplicated(keep="first")]
@@ -154,8 +159,10 @@ def print_corrections(spell_correct):
 print_corrections(translation_table)
 
 ###############################################################################
-# In case we want to adapt the translation table post-hoc we can easily do so:
+# In case we want to adapt the translation table post-hoc we can easily
+# modified it manually and apply it, for instance modifying the
+# correspondance for the last entry as such:
 
-translation_table["Gszericon"] = "Completely new category"
-new_deduplicated_data = translation_table[data]
-assert (new_deduplicated_data == "Completely new category").sum() > 0
+translation_table.iloc[-1] = "Completely new category"
+new_deduplicated_names = translation_table[duplicated_names]
+assert (new_deduplicated_names == "Completely new category").sum() > 0
