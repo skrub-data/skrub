@@ -41,3 +41,4 @@ $(function() {
         updateSideBarPosition(sections)
     });
 });
+
