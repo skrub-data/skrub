@@ -120,7 +120,7 @@ class TableVectorizer(ColumnTransformer):
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or `None` to use the default transformer
-        (:class:`~sklearn.preprocessing.OneHotEncoder(drop="if_binary", handle_unknown="ignore")`).
+        (:class:`~sklearn.preprocessing.OneHotEncoder(handle_unknown="ignore")`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -328,8 +328,8 @@ class TableVectorizer(ColumnTransformer):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
             self.low_card_cat_transformer_ = OneHotEncoder(
-                drop="if_binary", handle_unknown="ignore"
-            )  # TODO: change to "infrequent_if_exist" if we bump sklearn minimum version to 1.1
+                handle_unknown="ignore"
+            )  # TODO: change to "infrequent_if_exist" and change `drop` if we bump sklearn minimum version to 1.1
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
         else:
