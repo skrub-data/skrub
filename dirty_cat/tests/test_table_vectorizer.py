@@ -474,6 +474,8 @@ def test_handle_unknown():
     # Test with low cardinality and a StandardScaler for the numeric columns
     sup_vec = SuperVectorizer(
         cardinality_threshold=4,
+        # we must have n_samples = 5 >= n_components
+        high_card_cat_transformer=GapEncoder(n_components=2),
     )
     sup_vec.fit(X)
     s_unknown = [
