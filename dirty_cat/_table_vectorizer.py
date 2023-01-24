@@ -439,7 +439,20 @@ class TableVectorizer(ColumnTransformer):
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
         for col, dtype in self.types_.items():
+<<<<<<< HEAD:dirty_cat/_table_vectorizer.py
             X[col] = X[col].astype(dtype)
+=======
+            # if categorical, add the new categories to prevent
+            # them to be encoded as nan
+            if pd.api.types.is_categorical_dtype(dtype):
+                knwon_categories = dtype.categories
+                new_categories = pd.unique(X[col])
+                dtype = pd.CategoricalDtype(
+                    categories=knwon_categories.union(new_categories)
+                )
+                self.types_[col] = dtype
+            X.loc[:, col] = X[col].astype(dtype)
+>>>>>>> da1dac4 (Fix bug for new categories for categorical columns):dirty_cat/_super_vectorizer.py
         return X
 
     def fit_transform(self, X, y=None):

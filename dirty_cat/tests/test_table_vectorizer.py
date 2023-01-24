@@ -459,7 +459,39 @@ def test_check_fitted_table_vectorizer():
     tv.transform(X)
 
 
+<<<<<<< HEAD:dirty_cat/tests/test_table_vectorizer.py
 def test_check_name_change():
     """Test that using SuperVectorizer raises a deprecation warning"""
     with pytest.warns(FutureWarning):
         SuperVectorizer()
+=======
+def test_handle_unknown():
+    """
+    Test that new categories encountered in the test set
+    are handled correctly.
+    """
+    X = _get_clean_dataframe()
+    # Test with low cardinality and a StandardScaler for the numeric columns
+    sup_vec = SuperVectorizer(
+        cardinality_threshold=4,
+    )
+    sup_vec.fit(X)
+    s_unknown = [
+        [3, 2.1, "semi-private", "researcher", "maybe", "70K+"],  # all unknown
+        [1, 4.3, "public", "chef", "yes", "30K+"],
+    ]
+    s_known = [
+        [1, 4.3, "public", "chef", "yes", "30K+"],
+        [4, 3.3, "private", "chef", "no", "20K+"],
+    ]
+    x_unknown = np.array(s_unknown).reshape(2, -1)
+    x_known = np.array(s_known).reshape(2, -1)
+    x_trans_unknown = sup_vec.transform(x_unknown)
+    x_trans_known = sup_vec.transform(x_known)
+
+    assert x_trans_unknown.shape == x_trans_known.shape
+    # Default behavior is "handle_unknown='ignore'",
+    # so unknown categories are encoded as all zeros
+    assert np.allclose(x_trans_unknown[0, :4], np.zeros_like(x_trans_unknown[0, :4]))
+    assert x_trans_unknown[0, 4] != 0
+>>>>>>> da1dac4 (Fix bug for new categories for categorical columns):dirty_cat/tests/test_super_vectorizer.py
