@@ -220,7 +220,7 @@ class SimilarityEncoder(OneHotEncoder):
            categorical variable
         - 'k-means' : Computes the K nearest neighbors of K-mean centroids
            in order to choose the prototype categories
-           
+
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.

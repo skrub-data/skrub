@@ -3,12 +3,16 @@ repos:
     rev: v4.3.0
     hooks:
     -   id: check-yaml
+        exclude: doc/
     -   id: end-of-file-fixer
+        exclude: doc/
     -   id: trailing-whitespace
+        exclude: doc/
 -   repo: https://github.com/psf/black
     rev: 22.8.0
     hooks:
     -   id: black
+        exclude: doc/
 -   repo: https://github.com/pycqa/flake8
     rev: 5.0.4
     hooks:
