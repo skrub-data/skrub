@@ -197,13 +197,22 @@ def test_missing_values(missing: str) -> None:
         ):
             enc.fit_transform(observations)
 
+
 def test_check_fitted_gap_encoder():
     """Test that calling transform before fit raises an error"""
     X = np.array([["alice"], ["bob"]])
     enc = GapEncoder(n_components=2, random_state=42)
     with pytest.raises(NotFittedError):
         enc.transform(X)
-    
+
     # Check that it works after fit
     enc.fit(X)
     enc.transform(X)
+
+
+def test_small_sample():
+    """Test that having n_samples < n_components raises an error"""
+    X = np.array([["alice"], ["bob"]])
+    enc = GapEncoder(n_components=3, random_state=42)
+    with pytest.raises(ValueError, match="should be >= n_components"):
+        enc.fit_transform(X)

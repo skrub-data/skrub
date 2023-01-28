@@ -777,6 +777,11 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             Fitted :class:`~dirty_cat.GapEncoder` instance (self).
         """
 
+        # Check that n_samples >= n_components
+        if len(X) < self.n_components:
+            raise ValueError(
+                f"n_samples={len(X)} should be >= n_components={self.n_components}. "
+            )
         # Copy parameter rho
         self.rho_ = self.rho
         # If X is a dataframe, store its column names
