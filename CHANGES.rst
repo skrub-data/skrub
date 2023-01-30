@@ -40,8 +40,9 @@ Minor changes
   which can be used to specify where to save and load from datasets.
   :pr:`432` by :user:`Lilian Boulard <LilianBoulard>`
 
-* The :class:`SuperVectorizer`'s default `OneHotEncoder` for low cardinality categorical variables now defaults to `handle_unknown="ignore"` and `drop=None` instead of `handle_unknown="error"` and `drop=if_binary`. This means
-  that categories seen only at test time will be encoded by a vector of zeroes instead of raising an error, and that no category will be dropped. :pr:`473` by :user:`Leo Grinsztajn <LeoGrin>`
+* The :class:`SuperVectorizer`'s default `OneHotEncoder` for low cardinality categorical variables now defaults
+  to `handle_unknown="ignore"` instead of `handle_unknown="error"` (for sklearn >= 0.24.2).
+  This means that categories seen only at test time will be encoded by a vector of zeroes instead of raising an error. :pr:`473` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Bug fixes
 ---------

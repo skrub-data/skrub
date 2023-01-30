@@ -120,7 +120,7 @@ class TableVectorizer(ColumnTransformer):
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or `None` to use the default transformer
-        (:class:`~sklearn.preprocessing.OneHotEncoder(handle_unknown="ignore")`).
+        (:class:`~sklearn.preprocessing.OneHotEncoder(handle_unknown="ignore", drop="if_binary")`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -327,9 +327,25 @@ class TableVectorizer(ColumnTransformer):
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
-            self.low_card_cat_transformer_ = OneHotEncoder(
-                handle_unknown="ignore"
-            )  # TODO: change to "infrequent_if_exist" and change `drop` if we bump sklearn minimum version to 1.1
+            if parse_version(sklearn_version) >= parse_version("0.24.2"):
+                # sklearn is lenient and let us use both handle_unknown="ignore"
+                # and drop="if_binary" at the same time
+                self.low_card_cat_transformer_ = OneHotEncoder(
+                    drop="if_binary", handle_unknown="ignore"
+                )  # TODO maybe change to "infrequent_if_exists" if we bump sklearn min version to 1.1
+            else:
+                # sklearn is not lenient, and does not let us use both handle_unknown="ignore"
+                # and drop="if_binary" at the same time
+                # so we use handle_unknown="error" instead
+                self.low_card_cat_transformer_ = OneHotEncoder(
+                    drop="if_binary", handle_unknown="error"
+                )
+                warn(
+                    "You are using an old version of scikit-learn. "
+                    "Using handle_unknown='error' in default low_card_cat_transformer. "
+                    "Please upgrade to scikit-learn 0.24.2 or higher to "
+                    "use handle_unknown='ignore' by default."
+                )
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
         else:
