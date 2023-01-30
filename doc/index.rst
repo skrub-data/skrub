@@ -60,7 +60,9 @@ pipeline you can tweak.
 
 .. rst-class:: centered
 
-    :ref:`Example <https://dirty-cat.github.io/dev/auto_examples/05_fuzzy_joining_and_FeatureAugmenter.html#sphx-glr-auto-examples-05-fuzzy-joining-and-featureaugmenter-py>`_
+    :ref:`An example <example_fuzzy_join>`
+
+    :ref:`An example <example_feature_augmenter>`
 
 .. raw:: html
 
@@ -69,6 +71,10 @@ pipeline you can tweak.
     <span class="container-title">Deduplicating dirty categories</span>
 
 * :func:`deduplicate`, approximate matching using morphological similarity.
+
+.. rst-class:: centered
+
+    :ref:`An example <example_deduplication>`
 
 .. raw:: html
 

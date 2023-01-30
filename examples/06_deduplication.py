@@ -45,13 +45,16 @@ entries_per_medications = [500, 100, 1500]
 prob_mistake_per_letter = 0.05
 
 duplicated_names = make_deduplication_data(
-    medications, entries_per_medications, prob_mistake_per_letter,
-    random_state=42, # set seed for reproducibility
+    medications,
+    entries_per_medications,
+    prob_mistake_per_letter,
+    random_state=42,  # set seed for reproducibility
 )
 # we extract the unique medication names in the data & how often they appear
 unique_examples, counts = np.unique(duplicated_names, return_counts=True)
 # and build a series out of them
 import pandas as pd
+
 ex_series = pd.Series(counts, index=unique_examples)
 
 # This is our data:
@@ -99,6 +102,8 @@ sns.heatmap(
 )
 
 ###############################################################################
+# .. _example_deduplication:
+#
 # Deduplication: suggest corrections of misspelled names
 # -----------------------------------------------------
 #

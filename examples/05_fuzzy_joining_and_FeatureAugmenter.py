@@ -110,6 +110,8 @@ gdppc.sort_values(by="Country Name").tail(7)
 #
 
 ###############################################################################
+# .. _example_fuzzy_join:
+#
 # 1. Joining GDP per capita table
 # ...............................
 #
@@ -373,6 +375,8 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # a main table.
 
 #######################################################################
+# .. _example_feature_augmenter:
+#
 # Instantiating the transformer
 # ............................
 
