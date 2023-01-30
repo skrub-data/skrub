@@ -70,7 +70,7 @@ pipeline you can tweak.
     <div class="flex-content">
     <span class="container-title">Deduplicating dirty categories</span>
 
-* :func:`deduplicate`, approximate matching using morphological similarity.
+* :func:`deduplicate`, hierarchical clustering of similar categories using morphological similarity.
 
 .. rst-class:: centered
 
