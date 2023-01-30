@@ -58,6 +58,20 @@ pipeline you can tweak.
 
 * :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
 
+.. rst-class:: centered
+
+    :ref:`Example <https://dirty-cat.github.io/dev/auto_examples/05_fuzzy_joining_and_FeatureAugmenter.html#sphx-glr-auto-examples-05-fuzzy-joining-and-featureaugmenter-py>`_
+
+.. raw:: html
+
+    </div>
+    <div class="flex-content">
+    <span class="container-title">Deduplicating dirty categories</span>
+
+* :func:`deduplicate`, approximate matching using morphological similarity.
+
+.. raw:: html
+
     </div>
     </div>
 
