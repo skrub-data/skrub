@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
+from sklearn.exceptions import NotFittedError
 
 from dirty_cat import MinHashEncoder
 
@@ -192,6 +193,7 @@ class DummyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
     The `count` attribute is used to check that the backend is used.
     Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
     """
+
     def __init__(self, *args, **kwargs):
         self.count = 0
         super().__init__(*args, **kwargs)
@@ -216,7 +218,7 @@ def test_backend_respected():
 
     with joblib.parallel_backend("testing") as (ba, n_jobs):
         encoder.fit_transform(X)
-        
+
     assert ba.count > 0
 
 
@@ -242,3 +244,15 @@ def test_correct_arguments():
     with pytest.raises(ValueError, match=r"n_components should be even"):
         encoder = MinHashEncoder(n_components=3, minmax_hash=True)
         encoder.fit_transform(X)
+
+def test_check_fitted_minhash_encoder():
+    """Test that calling transform before fit raises an error"""
+    encoder = MinHashEncoder(n_components=3)
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    with pytest.raises(NotFittedError):
+        encoder.transform(X)
+    
+    # Check that it works after fitting
+    encoder.fit(X)
+    encoder.transform(X)
+

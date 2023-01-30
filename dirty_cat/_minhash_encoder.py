@@ -22,6 +22,7 @@ import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
+from sklearn.utils.validation import check_is_fitted
 
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
@@ -261,6 +262,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         :obj:`~numpy.ndarray` of shape (n_samples, n_components)
             Transformed input.
         """
+        check_is_fitted(self, "hash_dict_")
         X = check_input(X)
         if self.minmax_hash:
             if self.n_components % 2 != 0:
