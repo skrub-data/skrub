@@ -51,6 +51,14 @@ pipeline you can tweak.
 .. raw:: html
 
     </div>
+    <div class="flex-content">
+    <span class="container-title">Joining tables on non-normalized categories</span>
+
+* :func:`fuzzy_join`, approximate matching using morphological similarity.
+
+* :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
+
+    </div>
     </div>
 
 .. container:: right-align
