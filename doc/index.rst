@@ -53,10 +53,10 @@ pipeline you can tweak.
     <span class="container-title">Joining tables on non-normalized categories</span>
 
 * :func:`fuzzy_join`, approximate matching using morphological similarity.
-    :ref:`An example <example_fuzzy_join>`
+  :ref:`An example <example_fuzzy_join>`
 
 * :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
-    :ref:`An example <example_feature_augmenter>`
+  :ref:`An example <example_feature_augmenter>`
 
 .. raw:: html
 
@@ -65,7 +65,7 @@ pipeline you can tweak.
     <span class="container-title">Deduplicating dirty categories</span>
 
 * :func:`deduplicate`, merging categories of similar morphology (spelling).
-    :ref:`An example <example_deduplication>`
+  :ref:`An example <example_deduplication>`
 
 .. raw:: html
 
