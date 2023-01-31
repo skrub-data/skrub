@@ -72,6 +72,10 @@ div.flex-content p {
     margin-right: 1ex;
 }
 
+div.flex-content ul a {
+    float: right
+   }
+
 span.container-title {
     font-weight: bold;
     color: black;

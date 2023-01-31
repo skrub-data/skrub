@@ -58,13 +58,13 @@ pipeline you can tweak.
 
 .. rst-class:: centered
 
-    :ref:`An example of fuzzy_join <example_fuzzy_join>`
+    :ref:`An example <example_fuzzy_join>`
 
 * :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
 
 .. rst-class:: centered
 
-    :ref:`An example of FeatureAugmenter <example_feature_augmenter>`
+    :ref:`An example <example_feature_augmenter>`
 
 .. raw:: html
 
@@ -76,7 +76,7 @@ pipeline you can tweak.
 
 .. rst-class:: centered
 
-    :ref:`An example of deduplication <example_deduplication>`
+    :ref:`An example <example_deduplication>`
 
 .. raw:: html
 
