@@ -195,7 +195,7 @@ def deduplicate(
     white    white
     dtype: object
 
-    We extract the correct category names from the translation table above:
+    The translation table above is actually a series, giving the deduplicated values, and indexed by the original values. A deduplicated version of the initial list can easily be created:
 
     >>> deduplicated = list(deduplicate_correspondence)
     >>> deduplicated
