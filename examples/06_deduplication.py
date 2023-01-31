@@ -104,6 +104,8 @@ sns.heatmap(
 )
 
 ###############################################################################
+# .. _example_deduplication:
+#
 # Deduplication: suggest corrections of misspelled names
 # ------------------------------------------------------
 #
