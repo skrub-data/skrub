@@ -76,6 +76,10 @@ div.flex-content ul a span.std {
     float: right;
    }
 
+div.flex-content ul li {
+    clear: both;
+  }
+
 span.container-title {
     font-weight: bold;
     color: black;
