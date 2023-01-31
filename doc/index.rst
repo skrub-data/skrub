@@ -64,8 +64,8 @@ pipeline you can tweak.
     <div class="flex-content">
     <span class="container-title">Deduplicating dirty categories</span>
 
-* :func:`deduplicate`, merging categories of similar morphology (spelling).
-  :ref:`An example <example_deduplication>`
+:func:`deduplicate`, merging categories of similar morphology (spelling).
+:ref:`An example <example_deduplication>`
 
 .. raw:: html
 
