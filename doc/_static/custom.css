@@ -67,6 +67,13 @@ div.flex-content {
     border-radius: 1ex 1ex 0ex 0ex;
 }
 
+@media screen and (max-width: 1400px) {
+    div.flex-content {
+	margin: 3ex auto;
+    }
+}
+
+
 div.flex-content p {
     margin-left: 1ex;
     margin-right: 1ex;
@@ -81,10 +88,6 @@ div.flex-content ul p {
 @media screen and (max-width: 870px) {
     div.flex-content ul {
 	margin-left: 23px;
-    }
-
-    div.flex-content {
-	margin: 3ex auto;
     }
 }
 
@@ -153,7 +156,7 @@ div.install-instructions {
 
     div.larger-container {
 	width: 1080px;
-	left: -140px;
+	left: -200px;
 	position: relative;
     }
 
