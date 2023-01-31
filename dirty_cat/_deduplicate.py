@@ -182,6 +182,7 @@ def deduplicate(
     To deduplicate the data, we can build a correspondance matrix:
 
     >>> deduplicate_correspondence = deduplicate(duplicated)
+    >>> deduplicate_correspondence
     blacn    black
     black    black
     black    black
@@ -193,6 +194,13 @@ def deduplicate(
     white    white
     white    white
     dtype: object
+
+    We extract the correct category names from the translation table above:
+
+    >>> deduplicated = list(deduplicate_correspondence)
+    >>> deduplicated
+    ['black', 'black', 'black', 'black', 'black',
+    'white', 'white', 'white', 'white', 'white']
 
     We have our dirty categories deduplicated.
     """
