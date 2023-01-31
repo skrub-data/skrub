@@ -31,7 +31,7 @@ pipeline you can tweak.
 
 .. rst-class:: centered
 
-    :ref:`An example <example_super_vectorizer>`
+    :ref:`Example <example_super_vectorizer>`
 
 .. raw:: html
 
@@ -42,14 +42,14 @@ pipeline you can tweak.
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
   dimension corresponds to a topic that summarizes substrings captured.
-  :ref:`An example <example_gap_encoder>`
+  :ref:`Example <example_gap_encoder>`
 
 * :class:`SimilarityEncoder`, a simple modification of one-hot encoding
   to capture the strings.
-  :ref:`An example <example_similarity_encoder>`
+  :ref:`Example <example_similarity_encoder>`
 
 * :class:`MinHashEncoder`, very scalable.
-  :ref:`An example <example_minhash_encoder>`
+  :ref:`Example <example_minhash_encoder>`
 
 .. raw:: html
 
@@ -58,10 +58,10 @@ pipeline you can tweak.
     <span class="container-title">Joining tables on non-normalized categories</span>
 
 * :func:`fuzzy_join`, approximate matching using morphological similarity.
-  :ref:`An example <example_fuzzy_join>`
+  :ref:`Example <example_fuzzy_join>`
 
 * :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
-  :ref:`An example <example_feature_augmenter>`
+  :ref:`Example <example_feature_augmenter>`
 
 .. raw:: html
 
@@ -73,7 +73,7 @@ pipeline you can tweak.
 
 .. rst-class:: centered
 
-     :ref:`An example <example_deduplication>`
+     :ref:`Example <example_deduplication>`
 
 .. raw:: html
 
