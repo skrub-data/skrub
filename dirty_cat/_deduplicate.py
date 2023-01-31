@@ -181,7 +181,7 @@ def deduplicate(
 
     To deduplicate the data, we can build a correspondance matrix:
 
-    >>> deduplicated = deduplicate(duplicated)
+    >>> deduplicate_correspondence = deduplicate(duplicated)
     blacn    black
     black    black
     black    black
