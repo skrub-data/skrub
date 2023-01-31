@@ -42,9 +42,14 @@ pipeline you can tweak.
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
   dimension corresponds to a topic that summarizes substrings captured.
+  :ref:`An example <example_gap_encoder>`
+
 * :class:`SimilarityEncoder`, a simple modification of one-hot encoding
   to capture the strings.
+  :ref:`An example <example_similarity_encoder>`
+
 * :class:`MinHashEncoder`, very scalable.
+  :ref:`An example <example_minhash_encoder>`
 
 .. raw:: html
 
