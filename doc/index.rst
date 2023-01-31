@@ -65,7 +65,10 @@ pipeline you can tweak.
     <span class="container-title">Deduplicating dirty categories</span>
 
 :func:`deduplicate`, merging categories of similar morphology (spelling).
-:ref:`An example <example_deduplication>`
+
+.. rst-class:: centered
+
+     :ref:`An example <example_deduplication>`
 
 .. raw:: html
 
