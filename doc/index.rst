@@ -31,7 +31,7 @@ pipeline you can tweak.
 
 .. rst-class:: centered
 
-    :ref:`Example <example_super_vectorizer>`
+    :ref:`An example <example_super_vectorizer>`
 
 .. raw:: html
 
@@ -73,7 +73,7 @@ pipeline you can tweak.
 
 .. rst-class:: centered
 
-     :ref:`Example <example_deduplication>`
+     :ref:`An example <example_deduplication>`
 
 .. raw:: html
 
