@@ -72,12 +72,30 @@ div.flex-content p {
     margin-right: 1ex;
 }
 
+div.flex-content ul p {
+    margin-left: 0ex;
+}
+
+/* Override a alabaster behavior which does not work well on the front
+ * page */
+@media screen and (max-width: 870px)
+div.flex-content ul {
+  margin-left: 23px;
+}
+
 div.flex-content ul a span.std {
     float: right;
    }
 
 /* Avoid an overlap of the float with the line below, eg on narrow screens */
 div.flex-content ul li {
+    clear: both;
+}
+
+/* Make sure that floats don't extend out of the div */
+div.flex-content:after {
+    content: '';
+    display: block;
     clear: both;
 }
 
