@@ -133,8 +133,8 @@ div.install-instructions {
 /* Wide screens: use better the full width */
 @media only screen and (min-width: 1400px) {
     div.body section:first-of-type h1 {
-	width: 1080px;
-	left: -200px;
+	width: 980px;
+	left: -150px;
 	position: relative;
 	margin-top: 1ex;
 	margin-bottom: 2ex;
@@ -155,14 +155,25 @@ div.install-instructions {
     }
 
     div.larger-container {
-	width: 1080px;
-	left: -200px;
+	width: 880px;
+	left: -100px;
 	position: relative;
     }
-
 }
 
 @media only screen and (min-width: 1500px) {
+    div.body section:first-of-type h1 {
+	width: 1080px;
+	left: -200px;
+    }
+
+    div.larger-container {
+	width: 1080px;
+	left: -200px;
+    }
+}
+
+@media only screen and (min-width: 1600px) {
     div.body section:first-of-type h1 {
 	width: 1280px;
 	left: -300px;
