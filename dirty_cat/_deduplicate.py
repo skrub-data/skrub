@@ -179,7 +179,7 @@ def deduplicate(
     ['blacn', 'black', 'black', 'black', 'black',
      'hvite', 'white', 'white', 'white', 'white']
 
-    To deduplicate the data:
+    To deduplicate the data, we can build a correspondance matrix:
 
     >>> deduplicated = deduplicate(duplicated)
     blacn    black
