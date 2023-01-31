@@ -78,9 +78,10 @@ div.flex-content ul p {
 
 /* Override a alabaster behavior which does not work well on the front
  * page */
-@media screen and (max-width: 870px)
-div.flex-content ul {
-  margin-left: 23px;
+@media screen and (max-width: 870px) {
+    div.flex-content ul {
+	margin-left: 23px;
+    }
 }
 
 div.flex-content ul a span.std {
@@ -93,7 +94,7 @@ div.flex-content ul li {
 }
 
 /* Make sure that floats don't extend out of the div */
-div.flex-content:after {
+div.flex-content::after {
     content: '';
     display: block;
     clear: both;
