@@ -76,6 +76,7 @@ div.flex-content ul a span.std {
     float: right;
    }
 
+/* Avoid an overlap of the float with the line below, eg on narrow screens */
 div.flex-content ul li {
     clear: both;
 }
