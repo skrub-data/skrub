@@ -72,8 +72,8 @@ div.flex-content p {
     margin-right: 1ex;
 }
 
-div.flex-content ul a {
-    float: right
+div.flex-content ul a span.std {
+    float: right;
    }
 
 span.container-title {

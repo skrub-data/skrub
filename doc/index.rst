@@ -44,7 +44,7 @@ pipeline you can tweak.
   dimension corresponds to a topic that summarizes substrings captured.
 * :class:`SimilarityEncoder`, a simple modification of one-hot encoding
   to capture the strings.
-* :class:`MinHashEncoder`, very scalable
+* :class:`MinHashEncoder`, very scalable.
 
 .. raw:: html
 
