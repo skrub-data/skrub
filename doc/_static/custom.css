@@ -82,6 +82,10 @@ div.flex-content ul p {
     div.flex-content ul {
 	margin-left: 23px;
     }
+
+    div.flex-content {
+	margin: 3ex auto;
+    }
 }
 
 div.flex-content ul a span.std {
