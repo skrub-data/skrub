@@ -166,6 +166,43 @@ def deduplicate(
     matrix, and choosing the most frequent element in each cluster as the
     'correct' spelling. This method works best if the true number of
     categories is significantly smaller than the number of observed spellings.
+
+    Examples
+    --------
+    >>> from dirty_cat.datasets import make_deduplication_data
+    >>> duplicated = make_deduplication_data(examples=['black', 'white'],
+                                             entries_per_example=[5, 5],
+                                             prob_mistake_per_letter=0.3,
+                                             random_state=42)
+
+    >>> duplicated
+    ['blacn', 'black', 'black', 'black', 'black',
+     'hvite', 'white', 'white', 'white', 'white']
+
+    To deduplicate the data, we can build a correspondance matrix:
+
+    >>> deduplicate_correspondence = deduplicate(duplicated)
+    >>> deduplicate_correspondence
+    blacn    black
+    black    black
+    black    black
+    black    black
+    black    black
+    hvite    white
+    white    white
+    white    white
+    white    white
+    white    white
+    dtype: object
+
+    The translation table above is actually a series, giving the deduplicated values, and indexed by the original values. A deduplicated version of the initial list can easily be created:
+
+    >>> deduplicated = list(deduplicate_correspondence)
+    >>> deduplicated
+    ['black', 'black', 'black', 'black', 'black',
+    'white', 'white', 'white', 'white', 'white']
+
+    We have our dirty categories deduplicated.
     """
     unique_words, counts = np.unique(data, return_counts=True)
     distance_mat = compute_ngram_distance(
