@@ -56,13 +56,9 @@ pipeline you can tweak.
 
 * :func:`fuzzy_join`, approximate matching using morphological similarity.
 
-.. rst-class:: centered
-
     :ref:`An example <example_fuzzy_join>`
 
 * :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
-
-.. rst-class:: centered
 
     :ref:`An example <example_feature_augmenter>`
 
