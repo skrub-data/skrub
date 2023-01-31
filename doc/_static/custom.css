@@ -474,7 +474,7 @@ div.sphinxsidebarwrapper h1.logo-name {
     }
 }
 
-@media screen and (min-width: 1500px) {
+@media screen and (min-width: 1600px) {
     div.document div.sphinxsidebar {
 	left: 10%;
     }
