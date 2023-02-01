@@ -1,5 +1,5 @@
 """
-Gets the results output by `table_vectorizer_tuning.py`
+Gets the results output by `tablevectorizer_tuning.py`
 and shows some graphs.
 """
 
