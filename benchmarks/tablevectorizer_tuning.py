@@ -90,7 +90,7 @@ def main():
     logging.debug("Creating pipelines")
     regression_pipeline = Pipeline(
         [
-            ("sv", TableVectorizer()),
+            ("tv", TableVectorizer()),
             ("estimator", RandomForestRegressor()),
         ]
     )
