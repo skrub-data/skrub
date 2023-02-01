@@ -31,6 +31,11 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names",
     "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names_out",
     "dirty_cat._table_vectorizer.TableVectorizer.transform",
+    # TODO: remove when SuperVectorizer name is removed
+    "dirty_cat._table_vectorizer.SuperVectorizer.fit_transform",
+    "dirty_cat._table_vectorizer.SuperVectorizer.get_feature_names",
+    "dirty_cat._table_vectorizer.SuperVectorizer.get_feature_names_out",
+    "dirty_cat._table_vectorizer.SuperVectorizer.transform",
     "dirty_cat._target_encoder.TargetEncoder",
     "dirty_cat._fuzzy_join.fuzzy_join",
     # The following are not documented in dirty_cat (and thus are out of scope)
@@ -38,6 +43,9 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._table_vectorizer.TableVectorizer.fit",
     "dirty_cat._table_vectorizer.TableVectorizer.set_params",
     "dirty_cat._table_vectorizer.TableVectorizer.named_transformers_",
+    "dirty_cat._table_vectorizer.SuperVectorizer.fit",
+    "dirty_cat._table_vectorizer.SuperVectorizer.set_params",
+    "dirty_cat._table_vectorizer.SuperVectorizer.named_transformers_",
     # The following are internal functions
     "dirty_cat._check_dependencies.check_dependencies",
 }
