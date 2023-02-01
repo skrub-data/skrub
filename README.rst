@@ -27,7 +27,7 @@ If you like the package, please *spread the word*, and ⭐ `the repository <http
 What can `dirty_cat` do?
 ------------------------
 
-`dirty_cat` provides tools (``SuperVectorizer``, ``fuzzy_join``...) and
+`dirty_cat` provides tools (``TableVectorizer``, ``fuzzy_join``...) and
 encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
 for which we usually identify three common cases: **similarities, typos and variations**
 

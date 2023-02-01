@@ -22,8 +22,8 @@ control.
 .. [#] https://www.openml.org/d/42125
 
 
- .. |SV| replace::
-     :class:`~dirty_cat.SuperVectorizer`
+ .. |TV| replace::
+     :class:`~dirty_cat.TableVectorizer`
 
  .. |Pipeline| replace::
      :class:`~sklearn.pipeline.Pipeline`
@@ -227,7 +227,7 @@ plt.tight_layout()
 #
 
 ###############################################################################
-# .. _example_super_vectorizer:
+# .. _example_table_vectorizer:
 #
 # A simpler way: automatic vectorization
 # --------------------------------------
@@ -250,24 +250,24 @@ X = X.drop(["date_first_hired"], axis=1)
 X
 
 # %%
-# The |SV| can to turn this dataframe into a form suited for
+# The |TV| can to turn this dataframe into a form suited for
 # machine learning.
 
 ###############################################################################
-# Using the SuperVectorizer in a supervised-learning pipeline
+# Using the TableVectorizer in a supervised-learning pipeline
 # -----------------------------------------------------------
 #
-# Assembling the |SV| in a |Pipeline| with a powerful learner,
+# Assembling the |TV| in a |Pipeline| with a powerful learner,
 # such as gradient boosted trees, gives **a machine-learning method that
 # can be readily applied to the dataframe**.
 #
-# The |SV| requires at least dirty_cat 0.2.0.
+# The |TV| requires at least dirty_cat 0.2.0.
 #
 
-from dirty_cat import SuperVectorizer
+from dirty_cat import TableVectorizer
 
 pipeline = make_pipeline(
-    SuperVectorizer(auto_cast=True), HistGradientBoostingRegressor()
+    TableVectorizer(auto_cast=True), HistGradientBoostingRegressor()
 )
 
 ###############################################################################
@@ -291,8 +291,8 @@ print(f"std={np.std(scores)}")
 # ------------------------------
 #
 # Let us perform the same workflow, but without the |Pipeline|, so we can
-# analyze the SuperVectorizer's mechanisms along the way.
-sup_vec = SuperVectorizer(auto_cast=True)
+# analyze the TableVectorizer's mechanisms along the way.
+sup_vec = TableVectorizer(auto_cast=True)
 
 # %%
 # We split the data between train and test, and transform them:
@@ -317,7 +317,7 @@ X_train.shape, X_train_enc.shape
 # Inspecting the features created
 # ...............................
 #
-# The |SV| assigns a transformer for each column. We can inspect this
+# The |TV| assigns a transformer for each column. We can inspect this
 # choice:
 from pprint import pprint
 
@@ -348,7 +348,7 @@ feature_names[:8]
 # As we can see, it gave us interpretable columns.
 # This is because we used the |Gap| on the column 'division',
 # which was classified as a high cardinality string variable.
-# (default values, see |SV|'s docstring).
+# (default values, see |TV|'s docstring).
 #
 # In total, we have a reasonable number of encoded columns:
 len(feature_names)
@@ -403,9 +403,9 @@ plt.show()
 # having a permanent, full-time job :)
 #
 #
-# .. topic:: The |SV| automates preprocessing
+# .. topic:: The |TV| automates preprocessing
 #
 #   As this notebook demonstrates, many preprocessing steps can be
-#   automated by the |SV|, and the resulting pipeline can still be
+#   automated by the |TV|, and the resulting pipeline can still be
 #   inspected, even with non-normalized entries.
 #

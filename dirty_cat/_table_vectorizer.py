@@ -1,5 +1,5 @@
 """
-Implements the SuperVectorizer: a preprocessor to automatically apply
+Implements the TableVectorizer: a preprocessor to automatically apply
 transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
@@ -15,6 +15,7 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from dirty_cat import DatetimeEncoder, GapEncoder
@@ -84,7 +85,7 @@ OptionalTransformer = Optional[
 ]
 
 
-class SuperVectorizer(ColumnTransformer):
+class TableVectorizer(ColumnTransformer):
     """Easily transform a heterogeneous array to a numerical one.
 
     Easily transforms a heterogeneous data table
@@ -175,7 +176,7 @@ class SuperVectorizer(ColumnTransformer):
         When imputed, missing values are replaced by the string 'missing'.
         As imputation logic for numerical features can be quite intricate,
         it is left to the user to manage.
-        See also attribute :attr:`~dirty_cat.SuperVectorizer.imputed_columns_`.
+        See also attribute :attr:`~dirty_cat.TableVectorizer.imputed_columns_`.
 
     remainder : {"drop", "passthrough"} or Transformer, optional, default='drop'
         By default, only the specified columns in `transformers` are
@@ -243,15 +244,15 @@ class SuperVectorizer(ColumnTransformer):
     Notes
     -----
     The column order of the input data is not guaranteed to be the same
-    as the output data (returned by :func:`SuperVectorizer.transform`).
+    as the output data (returned by :func:`TableVectorizer.transform`).
     This is a due to the way the :class:`sklearn.compose.ColumnTransformer`
     works.
     However, the output column order will always be the same for different
-    calls to :func:`SuperVectorizer.transform` on a same fitted
-    :class:`SuperVectorizer` instance.
+    calls to :func:`TableVectorizer.transform` on a same fitted
+    :class:`TableVectorizer` instance.
     For example, if input data has columns ['name', 'job', 'year'], then output
     columns might be shuffled, e.g., ['job', 'year', 'name'], but every call
-    to :func:`SuperVectorizer.transform` on this instance will return this
+    to :func:`TableVectorizer.transform` on this instance will return this
     order.
     """
 
@@ -574,7 +575,7 @@ class SuperVectorizer(ColumnTransformer):
             X = self._auto_cast(X)
 
         if self.verbose:
-            print(f"[SuperVectorizer] Assigned transformers: {self.transformers}")
+            print(f"[TableVectorizer] Assigned transformers: {self.transformers}")
 
         X_enc = super().fit_transform(X, y)
 
@@ -682,3 +683,10 @@ class SuperVectorizer(ColumnTransformer):
                 stacklevel=2,
             )
         return self.get_feature_names_out(input_features)
+
+
+@deprecated("use TableVectorizer instead.")
+class SuperVectorizer(TableVectorizer):
+    """Deprecated name of TableVectorizer."""
+
+    pass

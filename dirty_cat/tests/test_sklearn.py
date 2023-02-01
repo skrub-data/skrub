@@ -25,8 +25,8 @@ def test_sklearn_compatible_SimilarityEncoder():
     check_estimator(SimilarityEncoder())
 
 
-# def test_sklearn_compatible_SuperVectorizer():
-#    check_estimator(SuperVectorizer())
+# def test_sklearn_compatible_TableVectorizer():
+#    check_estimator(TableVectorizer())
 
 
 def test_sklearn_compatible_TargetEncoder():
