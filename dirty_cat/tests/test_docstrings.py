@@ -27,17 +27,17 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._minhash_encoder.MinHashEncoder.fit",
     "dirty_cat._similarity_encoder.SimilarityEncoder",
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit_transform",
-    "dirty_cat._super_vectorizer.TableVectorizer.fit_transform",
-    "dirty_cat._super_vectorizer.TableVectorizer.get_feature_names",
-    "dirty_cat._super_vectorizer.TableVectorizer.get_feature_names_out",
-    "dirty_cat._super_vectorizer.TableVectorizer.transform",
+    "dirty_cat._table_vectorizer.TableVectorizer.fit_transform",
+    "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names",
+    "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names_out",
+    "dirty_cat._table_vectorizer.TableVectorizer.transform",
     "dirty_cat._target_encoder.TargetEncoder",
     "dirty_cat._fuzzy_join.fuzzy_join",
     # The following are not documented in dirty_cat (and thus are out of scope)
     # They are usually inherited from other libraries.
-    "dirty_cat._super_vectorizer.TableVectorizer.fit",
-    "dirty_cat._super_vectorizer.TableVectorizer.set_params",
-    "dirty_cat._super_vectorizer.TableVectorizer.named_transformers_",
+    "dirty_cat._table_vectorizer.TableVectorizer.fit",
+    "dirty_cat._table_vectorizer.TableVectorizer.set_params",
+    "dirty_cat._table_vectorizer.TableVectorizer.named_transformers_",
     # The following are internal functions
     "dirty_cat._check_dependencies.check_dependencies",
 }
