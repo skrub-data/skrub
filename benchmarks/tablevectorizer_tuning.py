@@ -96,7 +96,7 @@ def main():
     )
     classification_pipeline = Pipeline(
         [
-            ("sv", TableVectorizer()),
+            ("tv", TableVectorizer()),
             ("estimator", RandomForestClassifier()),
         ]
     )
