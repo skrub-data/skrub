@@ -437,7 +437,7 @@ def test_passthrough():
     X_enc_clean = pd.DataFrame(
         tv.fit_transform(X_clean), columns=tv.get_feature_names_out()
     )
-    # Reorder encoded arrays' columns (see tv's doc "Notes" section as to why)
+    # Reorder encoded arrays' columns (see TableVectorizer's doc "Notes" section as to why)
     X_enc_dirty = X_enc_dirty[X_dirty.columns]
     X_enc_clean = X_enc_clean[X_clean.columns]
 
