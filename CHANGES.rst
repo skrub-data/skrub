@@ -11,6 +11,8 @@ Release 0.4.0 (beta)
 Major changes
 -------------
 
+* `SuperVectorizer` is renamed as :class:`TableVectorizer`, a warning is raised when using the old name.
+:pr:`484` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category.
 :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
