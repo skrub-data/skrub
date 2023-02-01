@@ -687,4 +687,6 @@ class TableVectorizer(ColumnTransformer):
 
 @deprecated("use TableVectorizer instead.")
 class SuperVectorizer(TableVectorizer):
+    """Deprecated name of TableVectorizer."""
+
     pass

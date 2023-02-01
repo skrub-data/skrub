@@ -32,6 +32,7 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names_out",
     "dirty_cat._table_vectorizer.TableVectorizer.transform",
     # TODO: remove when SuperVectorizer name is removed
+    "dirty_cat._table_vectorizer.SuperVectorizer",
     "dirty_cat._table_vectorizer.SuperVectorizer.fit_transform",
     "dirty_cat._table_vectorizer.SuperVectorizer.get_feature_names",
     "dirty_cat._table_vectorizer.SuperVectorizer.get_feature_names_out",
