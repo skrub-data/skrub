@@ -42,11 +42,38 @@ pipeline you can tweak.
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
   dimension corresponds to a topic that summarizes substrings captured.
+  :ref:`Example <example_gap_encoder>`
 
 * :class:`SimilarityEncoder`, a simple modification of one-hot encoding
   to capture the strings.
+  :ref:`Example <example_similarity_encoder>`
 
-* :class:`MinHashEncoder`, very scalable
+* :class:`MinHashEncoder`, very scalable.
+  :ref:`Example <example_minhash_encoder>`
+
+.. raw:: html
+
+    </div>
+    <div class="flex-content">
+    <span class="container-title">Joining tables on non-normalized categories</span>
+
+* :func:`fuzzy_join`, approximate matching using morphological similarity.
+  :ref:`Example <example_fuzzy_join>`
+
+* :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
+  :ref:`Example <example_feature_augmenter>`
+
+.. raw:: html
+
+    </div>
+    <div class="flex-content">
+    <span class="container-title">Deduplicating dirty categories</span>
+
+:func:`deduplicate`, merging categories of similar morphology (spelling).
+
+.. rst-class:: centered
+
+     :ref:`An example <example_deduplication>`
 
 .. raw:: html
 

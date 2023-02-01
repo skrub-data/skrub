@@ -8,8 +8,7 @@ break many data-analyses steps that require exact matching, such as a
 'GROUP BY'.
 
 Merging the multiple variants of the same category or entity is known as
-*deduplication*. It is performed by the :func:`~dirty_cat.deduplicate`
-function.
+*deduplication*. It is performed by the |dd| function.
 
 Deduplication relies on *unsupervised learning*, to find structure in
 data without providing explicit labels/categories of the data a-priori.
@@ -17,6 +16,9 @@ Specifically clustering of the distance between strings can be used to
 find clusters of strings that are similar to each other (e.g. differ only
 by a misspelling) and hence gives us an easy tool to flag potentially
 misspelled category names in an unsupervised manner.
+
+
+.. |dd| replace:: :func:`~dirty_cat.deduplicate`
 """
 
 ###############################################################################
@@ -45,13 +47,16 @@ entries_per_medications = [500, 100, 1500]
 prob_mistake_per_letter = 0.05
 
 duplicated_names = make_deduplication_data(
-    medications, entries_per_medications, prob_mistake_per_letter,
-    random_state=42, # set seed for reproducibility
+    medications,
+    entries_per_medications,
+    prob_mistake_per_letter,
+    random_state=42,  # set seed for reproducibility
 )
 # we extract the unique medication names in the data & how often they appear
 unique_examples, counts = np.unique(duplicated_names, return_counts=True)
 # and build a series out of them
 import pandas as pd
+
 ex_series = pd.Series(counts, index=unique_examples)
 
 # This is our data:
@@ -99,14 +104,16 @@ sns.heatmap(
 )
 
 ###############################################################################
-# Deduplication: suggest corrections of misspelled names
-# -----------------------------------------------------
+# .. _example_deduplication:
 #
-# The :func:`~dirty_cat.deduplicate` function uses clustering based on
+# Deduplication: suggest corrections of misspelled names
+# ------------------------------------------------------
+#
+# The |dd| function uses clustering based on
 # string similarities to group duplicated names
 #
 # The number of clusters will need some adjustment depending on the data you have.
-# If no fixed number of clusters is given, `deduplicate` tries to set it automatically
+# If no fixed number of clusters is given, |dd| tries to set it automatically
 # via the `silhouette score <https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.
 
 from dirty_cat import deduplicate
@@ -131,7 +138,7 @@ plt.ylabel("Counts")
 #
 # However, often the translation/deduplication won't be perfect and will require some tweaks.
 # In this case, we can construct and update a translation table based on the data
-# returned by `deduplicate`.
+# returned by |dd|.
 # It consists of the (potentially) misspelled category names as indices and the
 # (potentially) correct categories as values.
 

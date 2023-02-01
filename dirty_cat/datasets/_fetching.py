@@ -818,5 +818,3 @@ def fetch_world_bank_indicator(
         load_dataframe=load_dataframe,
         data_directory=directory,
     )
-
-

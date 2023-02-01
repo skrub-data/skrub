@@ -153,6 +153,8 @@ import numpy as np
 np.unique(y)
 
 ###############################################################################
+# .. _example_minhash_encoder:
+#
 # We will now experiment with encoders specially made for handling
 # dirty columns:
 
