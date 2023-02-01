@@ -80,7 +80,7 @@ def monitor(
     save_as : str, optional
         Can be specified as a benchmark name for the results to be automatically
         saved on disk.
-        E.g. "supervectorizer_tuning"
+        E.g. "table_vectorizer_tuning"
         If None (the default), results are not saved on disk, only returned.
 
     Returns

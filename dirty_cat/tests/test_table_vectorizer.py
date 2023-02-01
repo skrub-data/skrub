@@ -7,9 +7,8 @@ import sklearn
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
-from sklearn.exceptions import NotFittedError
 
-from dirty_cat import GapEncoder, SuperVectorizer
+from dirty_cat import GapEncoder, SuperVectorizer, TableVectorizer
 from dirty_cat._utils import parse_version
 
 
@@ -23,7 +22,7 @@ def type_equality(expected_type, actual_type):
     """
     Checks that the expected type is equal to the actual type,
     assuming object and str types are equivalent
-    (considered as categorical by the SuperVectorizer).
+    (considered as categorical by the TableVectorizer).
     """
     if (isinstance(expected_type, object) or isinstance(expected_type, str)) and (
         isinstance(actual_type, object) or isinstance(actual_type, str)
@@ -148,12 +147,12 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
 
 def _test_possibilities(X):
     """
-    Do a bunch of tests with the SuperVectorizer.
+    Do a bunch of tests with the TableVectorizer.
     We take some expected transformers results as argument. They're usually
     lists or dictionaries.
     """
     # Test with low cardinality and a StandardScaler for the numeric columns
-    vectorizer_base = SuperVectorizer(
+    vectorizer_base = TableVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
         high_card_cat_transformer=GapEncoder(n_components=2),
@@ -172,7 +171,7 @@ def _test_possibilities(X):
     expected_transformers_2 = {
         "low_card_cat": ["str1", "str2", "cat1", "cat2"],
     }
-    vectorizer_default = SuperVectorizer()  # Using default values
+    vectorizer_default = TableVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
     check_same_transformers(expected_transformers_2, vectorizer_default.transformers)
 
@@ -197,7 +196,7 @@ def _test_possibilities(X):
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
 
     # Test casting values
-    vectorizer_cast = SuperVectorizer(
+    vectorizer_cast = TableVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
         high_card_cat_transformer=GapEncoder(n_components=2),
@@ -240,9 +239,9 @@ def test_with_dirty_data() -> None:
 
 def test_auto_cast() -> None:
     """
-    Tests that the SuperVectorizer automatic type detection works as expected.
+    Tests that the TableVectorizer automatic type detection works as expected.
     """
-    vectorizer = SuperVectorizer()
+    vectorizer = TableVectorizer()
 
     # Test datetime detection
     X = _get_datetimes_dataframe()
@@ -292,7 +291,7 @@ def test_auto_cast() -> None:
 
 def test_with_arrays():
     """
-    Check that the SuperVectorizer works if we input
+    Check that the TableVectorizer works if we input
     a list of lists or a numpy array.
     """
     expected_transformers = {
@@ -300,7 +299,7 @@ def test_with_arrays():
         "low_card_cat": [2, 4],
         "high_card_cat": [3, 5],
     }
-    vectorizer = SuperVectorizer(
+    vectorizer = TableVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
         high_card_cat_transformer=GapEncoder(n_components=2),
@@ -319,7 +318,7 @@ def test_with_arrays():
 def test_get_feature_names_out() -> None:
     X = _get_clean_dataframe()
 
-    vec_w_pass = SuperVectorizer(remainder="passthrough")
+    vec_w_pass = TableVectorizer(remainder="passthrough")
     vec_w_pass.fit(X)
 
     # In this test, order matters. If it doesn't, convert to set.
@@ -344,7 +343,7 @@ def test_get_feature_names_out() -> None:
     else:
         assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
 
-    vec_w_drop = SuperVectorizer(remainder="drop")
+    vec_w_drop = TableVectorizer(remainder="drop")
     vec_w_drop.fit(X)
 
     # In this test, order matters. If it doesn't, convert to set.
@@ -370,16 +369,16 @@ def test_get_feature_names_out() -> None:
 
 def test_fit() -> None:
     # Simply checks sklearn's `check_is_fitted` function raises an error if
-    # the SuperVectorizer is instantiated but not fitted.
+    # the TableVectorizer is instantiated but not fitted.
     # See GH#193
-    sup_vec = SuperVectorizer()
+    sup_vec = TableVectorizer()
     with pytest.raises(NotFittedError):
         assert check_is_fitted(sup_vec)
 
 
 def test_transform() -> None:
     X = _get_clean_dataframe()
-    sup_vec = SuperVectorizer()
+    sup_vec = TableVectorizer()
     sup_vec.fit(X)
     s = [34, 5.5, "private", "manager", "yes", "60K+"]
     x = np.array(s).reshape(1, -1)
@@ -400,8 +399,8 @@ def test_fit_transform_equiv() -> None:
         _get_clean_dataframe(),
         _get_dirty_dataframe(),
     ]:
-        enc1_x1 = SuperVectorizer().fit_transform(X)
-        enc2_x1 = SuperVectorizer().fit(X).transform(X)
+        enc1_x1 = TableVectorizer().fit_transform(X)
+        enc2_x1 = TableVectorizer().fit(X).transform(X)
 
         assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
@@ -416,14 +415,14 @@ def _is_equal(elements: Tuple[Any, Any]) -> bool:
 
 def test_passthrough():
     """
-    Tests that when passed no encoders, the SuperVectorizer
+    Tests that when passed no encoders, the TableVectorizer
     returns the dataset as-is.
     """
 
     X_dirty = _get_dirty_dataframe()
     X_clean = _get_clean_dataframe()
 
-    sv = SuperVectorizer(
+    tv = TableVectorizer(
         low_card_cat_transformer="passthrough",
         high_card_cat_transformer="passthrough",
         datetime_transformer="passthrough",
@@ -433,12 +432,12 @@ def test_passthrough():
     )
 
     X_enc_dirty = pd.DataFrame(
-        sv.fit_transform(X_dirty), columns=sv.get_feature_names_out()
+        tv.fit_transform(X_dirty), columns=tv.get_feature_names_out()
     )
     X_enc_clean = pd.DataFrame(
-        sv.fit_transform(X_clean), columns=sv.get_feature_names_out()
+        tv.fit_transform(X_clean), columns=tv.get_feature_names_out()
     )
-    # Reorder encoded arrays' columns (see SV's doc "Notes" section as to why)
+    # Reorder encoded arrays' columns (see tv's doc "Notes" section as to why)
     X_enc_dirty = X_enc_dirty[X_dirty.columns]
     X_enc_clean = X_enc_clean[X_clean.columns]
 
@@ -447,14 +446,20 @@ def test_passthrough():
     assert all(map(_is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
     assert (X_clean.to_numpy() == X_enc_clean.to_numpy()).all()
 
-def test_check_fitted_super_vectorizer():
+
+def test_check_fitted_table_vectorizer():
     """Test that calling transform before fit raises an error"""
     X = _get_clean_dataframe()
-    sv = SuperVectorizer()
+    tv = TableVectorizer()
     with pytest.raises(NotFittedError):
-        sv.transform(X)
-    
-    # Test that calling transform after fit works
-    sv.fit(X)
-    sv.transform(X)
+        tv.transform(X)
 
+    # Test that calling transform after fit works
+    tv.fit(X)
+    tv.transform(X)
+
+
+def test_check_name_change():
+    """Test that using SuperVectorizer raises a deprecation warning"""
+    with pytest.warns(FutureWarning):
+        SuperVectorizer()

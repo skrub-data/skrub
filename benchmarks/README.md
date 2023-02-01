@@ -26,7 +26,7 @@ Each one implements a standard command-line interface with the two commands
 For instance, for running a benchmark, we'll usually use
 
 ```bash
-python supervectorizer_tuning.py --run
+python table_vectorizer_tuning.py --run
 ```
 
 Package requirements required to launch benchmarks are listed in the project's

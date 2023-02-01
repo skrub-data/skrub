@@ -1,5 +1,5 @@
 """
-Performs a GridSearch to find the best parameters for the SuperVectorizer
+Performs a GridSearch to find the best parameters for the TableVectorizer
 among a selection.
 """
 
@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
-from dirty_cat import SuperVectorizer
+from dirty_cat import TableVectorizer
 from dirty_cat.datasets import (
     fetch_open_payments,
     fetch_drug_directory,
@@ -90,13 +90,13 @@ def main():
     logging.debug("Creating pipelines")
     regression_pipeline = Pipeline(
         [
-            ("sv", SuperVectorizer()),
+            ("sv", TableVectorizer()),
             ("estimator", RandomForestRegressor()),
         ]
     )
     classification_pipeline = Pipeline(
         [
-            ("sv", SuperVectorizer()),
+            ("sv", TableVectorizer()),
             ("estimator", RandomForestClassifier()),
         ]
     )

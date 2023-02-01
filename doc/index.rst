@@ -25,13 +25,13 @@ dirty_cat: machine learning with dirty categories
     <div class="flex-content">
     <span class="container-title">Automatic features from heterogeneous dataframes</span>
 
-:class:`SuperVectorizer`: a transformer **automatically turning a pandas
+:class:`TableVectorizer`: a transformer **automatically turning a pandas
 dataframe into a numpy array** for machine learning -- a default encoding
 pipeline you can tweak.
 
 .. rst-class:: centered
 
-    :ref:`An example <example_super_vectorizer>`
+    :ref:`An example <example_table_vectorizer>`
 
 .. raw:: html
 
@@ -108,7 +108,7 @@ Vectorizing a dataframe
    :template: class.rst
    :nosignatures:
 
-   SuperVectorizer
+   TableVectorizer
 
 Dirty Category encoders
 -----------------------

@@ -1,5 +1,5 @@
 """
-Gets the results output by `supervectorizer_tuning.py`
+Gets the results output by `table_vectorizer_tuning.py`
 and shows some graphs.
 """
 
