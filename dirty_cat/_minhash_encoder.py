@@ -72,12 +72,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     hash_dict_ : LRUDict
         Computed hashes.
 
-    References
-    ----------
-    For a detailed description of the method, see
-    `Encoding high-cardinality string categorical variables
-    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
-
     See Also
     --------
     :class:`~dirty_cat.GapEncoder` :
@@ -86,6 +80,12 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         Encode string columns as a numeric array with n-gram string similarity.
     :class:`~dirty_cat.deduplicate` :
         Deduplicate data by hierarchically clustering similar strings.
+
+    References
+    ----------
+    For a detailed description of the method, see
+    `Encoding high-cardinality string categorical variables
+    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
 
     Examples
     --------

@@ -61,12 +61,6 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
 
-    References
-    ----------
-    For more details, see Micci-Barreca, 2001: A preprocessing scheme for
-    high-cardinality categorical attributes in classification and prediction
-    problems.
-
     See Also
     --------
     :class:`~dirty_cat.GapEncoder` :
@@ -75,6 +69,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         Encode string columns as a numeric array with the minhash method.
     :class:`~dirty_cat.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
+
+    References
+    ----------
+    For more details, see Micci-Barreca, 2001: A preprocessing scheme for
+    high-cardinality categorical attributes in classification and prediction
+    problems.
 
     Examples
     --------

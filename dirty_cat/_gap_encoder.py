@@ -624,12 +624,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     column_names_: list of str
         Column names of the data the Gap was fitted on
 
-    References
-    ----------
-    For a detailed description of the method, see
-    `Encoding high-cardinality string categorical variables
-    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
-
     See Also
     --------
     :class:`~dirty_cat.MinHashEncoder` :
@@ -638,6 +632,12 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Encode string columns as a numeric array with n-gram string similarity.
     :class:`~dirty_cat.deduplicate` :
         Deduplicate data by hierarchically clustering similar strings.
+
+    References
+    ----------
+    For a detailed description of the method, see
+    `Encoding high-cardinality string categorical variables
+    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
 
     Examples
     --------

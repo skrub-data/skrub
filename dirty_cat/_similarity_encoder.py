@@ -258,14 +258,6 @@ class SimilarityEncoder(OneHotEncoder):
     _infrequent_enabled : bool, default=False
         Avoid taking into account the existence of infrequent categories.
 
-    References
-    ----------
-
-    For a detailed description of the method, see
-    `Similarity encoding for learning with dirty categorical variables
-    <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kegl. 2018
-    (accepted for publication at: Machine Learning journal, Springer).
-
     See Also
     --------
     :class:`~dirty_cat.MinHashEncoder` :
@@ -274,6 +266,14 @@ class SimilarityEncoder(OneHotEncoder):
         Constructs latent topics with continuous encoding.
     :class:`~dirty_cat.deduplicate` :
         Deduplicate data by hierarchically clustering similar strings.
+
+    References
+    ----------
+
+    For a detailed description of the method, see
+    `Similarity encoding for learning with dirty categorical variables
+    <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kegl. 2018
+    (accepted for publication at: Machine Learning journal, Springer).
 
     Examples
     --------
