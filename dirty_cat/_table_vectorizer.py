@@ -241,6 +241,15 @@ class TableVectorizer(ColumnTransformer):
     imputed_columns_: list of str
         The list of columns in which we imputed the missing values.
 
+    See Also
+    --------
+    :class:`~dirty_cat.GapEncoder` :
+        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+    :class:`~dirty_cat.MinHashEncoder` :
+        Encode string columns as a numeric array with the minhash method.
+    :class:`~dirty_cat.SimilarityEncoder` :
+        Encode string columns as a numeric array with n-gram string similarity.
+
     Notes
     -----
     The column order of the input data is not guaranteed to be the same

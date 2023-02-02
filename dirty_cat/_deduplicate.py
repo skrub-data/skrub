@@ -159,6 +159,15 @@ def deduplicate(
     List[str]
        The deduplicated data.
 
+    See Also
+    --------
+    :class:`~dirty_cat.GapEncoder` :
+        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+    :class:`~dirty_cat.MinHashEncoder` :
+        Encode string columns as a numeric array with the minhash method.
+    :class:`~dirty_cat.SimilarityEncoder` :
+        Encode string columns as a numeric array with n-gram string similarity.
+
     Notes
     -----
     Deduplication is done by first computing the n-gram distance between unique
@@ -195,7 +204,9 @@ def deduplicate(
     white    white
     dtype: object
 
-    The translation table above is actually a series, giving the deduplicated values, and indexed by the original values. A deduplicated version of the initial list can easily be created:
+    The translation table above is actually a series, giving the deduplicated values,
+    and indexed by the original values.
+    A deduplicated version of the initial list can easily be created:
 
     >>> deduplicated = list(deduplicate_correspondence)
     >>> deduplicated

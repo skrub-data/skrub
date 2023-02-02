@@ -61,6 +61,15 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
 
+    See Also
+    --------
+    :class:`~dirty_cat.GapEncoder` :
+        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+    :class:`~dirty_cat.MinHashEncoder` :
+        Encode string columns as a numeric array with the minhash method.
+    :class:`~dirty_cat.SimilarityEncoder` :
+        Encode string columns as a numeric array with n-gram string similarity.
+
     References
     ----------
     For more details, see Micci-Barreca, 2001: A preprocessing scheme for

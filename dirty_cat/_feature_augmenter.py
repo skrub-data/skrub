@@ -20,7 +20,7 @@ from dirty_cat._fuzzy_join import fuzzy_join
 
 
 class FeatureAugmenter(BaseEstimator, TransformerMixin):
-    """Transformer augmenting the number of features in a table by joining multiple tables.
+    """Transformer augmenting number of features in a table by joining multiple tables.
 
     Given a list of tables and key column names,
     fuzzy join them to the main table.
@@ -54,23 +54,36 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
 
+    See Also
+    --------
+    :class:`~dirty_cat.fuzzy_join` :
+        Join two tables (dataframes) based on approximate column matching.
+
     Examples
     --------
-    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
+    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'],
+                         columns=['Country'])
     >>> X
     Country
     0   France
     1  Germany
     2    Italy
 
-    >>> aux_table_1 = pd.DataFrame([['Germany', 84_000_000], ['France', 68_000_000], ['Italy', 59_000_000]], columns=['Country', 'Population']) # noqa
+    >>> aux_table_1 = pd.DataFrame([['Germany', 84_000_000],
+                                    ['France', 68_000_000],
+                                    ['Italy', 59_000_000]],
+                                    columns=['Country', 'Population'])
     >>> aux_table_1
        Country  Population
     0  Germany    84000000
     1   France    68000000
     2    Italy    59000000
 
-    >>> aux_table_2 = pd.DataFrame([['French Republic', 2937], ['Italy', 2099], ['Germany', 4223], ['UK', 3186]], columns=['Country name', 'GDP (billion)']) # noqa
+    >>> aux_table_2 = pd.DataFrame([['French Republic', 2937],
+                                    ['Italy', 2099],
+                                    ['Germany', 4223],
+                                    ['UK', 3186]],
+                                    columns=['Country name', 'GDP (billion)'])
     >>> aux_table_2
         Country name  GDP (billion)
     0   French Republic      2937
@@ -78,14 +91,19 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     2      Germany           4223
     3           UK           3186
 
-    >>> aux_table_3 = pd.DataFrame([['France', 'Paris'], ['Italia', 'Rome'], ['Germany', 'Berlin']], columns=['Countries', 'Capital']) # noqa
+    >>> aux_table_3 = pd.DataFrame([['France', 'Paris'],
+                                    ['Italia', 'Rome'],
+                                    ['Germany', 'Berlin']],
+                                    columns=['Countries', 'Capital'])
     >>> aux_table_3
       Countries Capital
     0    France   Paris
     1     Italia   Rome
     2   Germany  Berlin
 
-    >>> aux_tables = [(aux_table_1, "Country"), (aux_table_2, "Country name"), (aux_table_3, "Countries")] # noqa
+    >>> aux_tables = [(aux_table_1, "Country"),
+                      (aux_table_2, "Country name"),
+                      (aux_table_3, "Countries")]
 
     >>> fa = FeatureAugmenter(tables=aux_tables, main_key='Country')
 

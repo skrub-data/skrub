@@ -624,6 +624,15 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     column_names_: list of str
         Column names of the data the Gap was fitted on
 
+    See Also
+    --------
+    :class:`~dirty_cat.MinHashEncoder` :
+        Encode string columns as a numeric array with the minhash method.
+    :class:`~dirty_cat.SimilarityEncoder` :
+        Encode string columns as a numeric array with n-gram string similarity.
+    :class:`~dirty_cat.deduplicate` :
+        Deduplicate data by hierarchically clustering similar strings.
+
     References
     ----------
     For a detailed description of the method, see
