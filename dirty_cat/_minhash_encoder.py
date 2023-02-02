@@ -75,7 +75,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     See Also
     --------
     :class:`~dirty_cat.GapEncoder` :
-        Constructs latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
     :class:`~dirty_cat.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
     :class:`~dirty_cat.deduplicate` :
