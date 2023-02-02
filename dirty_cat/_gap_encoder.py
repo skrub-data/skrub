@@ -630,6 +630,14 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     `Encoding high-cardinality string categorical variables
     <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
 
+    See Also
+    --------
+    :class:`~dirty_cat.MinHashEncoder` : Encode string categorical features as a numeric array
+    with the minhash method.
+    :class:`~dirty_cat.SimilarityEncoder` : Encode string categorical features as a numeric array
+    with n-gram string similarity.
+    :class:`~dirty_cat.deduplicate` : Deduplicate data by hierarchically clustering similar strings.
+
     Examples
     --------
     >>> enc = GapEncoder(n_components=2)

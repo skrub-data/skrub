@@ -106,6 +106,11 @@ def fuzzy_join(
         another column will be added to the DataFrame containing the
         matching scores.
 
+    See Also
+    --------
+    :class:`~dirty_cat.FeatureAugmenter` : Transformer that allows
+    multiple fuzzy joins to be performed on a table.
+
     Notes
     -----
     For regular joins, the output of fuzzy_join is identical

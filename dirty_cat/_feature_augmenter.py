@@ -54,6 +54,11 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
 
+    See Also
+    --------
+    :class:`~dirty_cat.fuzzy_join` : Join two tables based on approximate
+    column matching using morphological similarity.
+
     Examples
     --------
     >>> X = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])

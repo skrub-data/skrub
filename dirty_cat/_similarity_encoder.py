@@ -250,6 +250,29 @@ class SimilarityEncoder(OneHotEncoder):
         maximum number of processes used to compute similarity matrices. Used
         only if ``fast=True`` in ``SimilarityEncoder.transform``
 
+    Attributes
+    ----------
+    categories_ : typing.List[np.array]
+        The categories of each feature determined during fitting
+        (in order corresponding with output of ``transform``).
+    _infrequent_enabled : bool, default=False
+        Avoid taking into account the existence of infrequent categories.
+
+    References
+    ----------
+
+    For a detailed description of the method, see
+    `Similarity encoding for learning with dirty categorical variables
+    <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kegl. 2018
+    (accepted for publication at: Machine Learning journal, Springer).
+
+    See Also
+    --------
+    :class:`~dirty_cat.MinHashEncoder` : Encode string categorical features as a numeric array
+    with the minhash method.
+    :class:`~dirty_cat.GapEncoder` : Constructs latent topics with continuous encoding.
+    :class:`~dirty_cat.deduplicate` : Deduplicate data by hierarchically clustering similar strings.
+
     Examples
     --------
     >>> enc = SimilarityEncoder()
@@ -275,23 +298,6 @@ class SimilarityEncoder(OneHotEncoder):
 
     >>> enc.get_feature_names_out(['gender', 'group'])
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
-
-    Attributes
-    ----------
-    categories_ : typing.List[np.array]
-        The categories of each feature determined during fitting
-        (in order corresponding with output of ``transform``).
-    _infrequent_enabled : bool, default=False
-        Avoid taking into account the existence of infrequent categories.
-
-    References
-    ----------
-
-    For a detailed description of the method, see
-    `Similarity encoding for learning with dirty categorical variables
-    <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kegl. 2018
-    (accepted for publication at: Machine Learning journal, Springer).
-
     """
 
     categories_: List[np.array]

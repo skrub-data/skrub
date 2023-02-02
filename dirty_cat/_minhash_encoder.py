@@ -72,6 +72,19 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     hash_dict_ : LRUDict
         Computed hashes.
 
+    References
+    ----------
+    For a detailed description of the method, see
+    `Encoding high-cardinality string categorical variables
+    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
+
+    See Also
+    --------
+    :class:`~dirty_cat.GapEncoder` : Constructs latent topics with continuous encoding.
+    :class:`~dirty_cat.SimilarityEncoder` : Encode string categorical features as a numeric array
+    with n-gram string similarity.
+    :class:`~dirty_cat.deduplicate` : Deduplicate data by hierarchically clustering similar strings.
+
     Examples
     --------
     >>> enc = MinHashEncoder(n_components=5)
@@ -94,13 +107,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             -1.81759383e+09, -2.09569333e+09],
            [-1.97582893e+09, -2.09500033e+09, -1.53072052e+09,
             -1.45918266e+09, -1.58098831e+09]])
-
-    References
-    ----------
-    For a detailed description of the method, see
-    `Encoding high-cardinality string categorical variables
-    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
-
     """
 
     hash_dict_: LRUDict
