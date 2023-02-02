@@ -255,8 +255,6 @@ class SimilarityEncoder(OneHotEncoder):
     categories_ : typing.List[np.array]
         The categories of each feature determined during fitting
         (in order corresponding with output of ``transform``).
-    _infrequent_enabled : bool, default=False
-        Avoid taking into account the existence of infrequent categories.
 
     See Also
     --------
