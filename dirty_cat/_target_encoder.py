@@ -67,6 +67,15 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     high-cardinality categorical attributes in classification and prediction
     problems.
 
+    See Also
+    --------
+    :class:`~dirty_cat.GapEncoder` :
+        Constructs latent topics with continuous encoding.
+    :class:`~dirty_cat.MinHashEncoder` :
+        Encode string columns as a numeric array with the minhash method.
+    :class:`~dirty_cat.SimilarityEncoder` :
+        Encode string columns as a numeric array with n-gram string similarity.
+
     Examples
     --------
     >>> enc = TargetEncoder(handle_unknown='ignore')

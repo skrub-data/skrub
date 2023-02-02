@@ -108,8 +108,8 @@ def fuzzy_join(
 
     See Also
     --------
-    :class:`~dirty_cat.FeatureAugmenter` : Transformer that allows
-    multiple fuzzy joins to be performed on a table.
+    :class:`~dirty_cat.FeatureAugmenter` :
+        Transformer for multiple fuzzy joins to be performed on a table.
 
     Notes
     -----

@@ -56,7 +56,8 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`~dirty_cat.fuzzy_join` : Join two tables based on approximate column matching.
+    :class:`~dirty_cat.fuzzy_join` :
+        Join two tables based on approximate column matching.
 
     Examples
     --------
