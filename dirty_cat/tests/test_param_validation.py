@@ -27,6 +27,8 @@ class GenericThing:
         literal_arg: typing.Literal["yes", "no"],
         optional_arg: typing.Optional[str],
         union_arg: typing.Union[str, int],
+        nested_arg1: typing.Union[typing.Literal[1, 0, "yes", "no"], bool],
+        nester_arg2: typing.Optional[typing.Union[typing.Union[int, float]]],
     ):
         self.bool_arg = bool_arg
         self.str_arg = str_arg
@@ -36,6 +38,8 @@ class GenericThing:
         self.literal_arg = literal_arg
         self.optional_arg = optional_arg
         self.union_arg = union_arg
+        self.nested_arg1 = nested_arg1
+        self.nester_arg2 = nester_arg2
 
     @validate_types
     def exec_correct(self, arg1: str, arg2: typing.Optional[int]) -> str:
@@ -47,8 +51,8 @@ class GenericThing:
 
 
 valid_confs = [
-    (False, "wool", 17, 0.52, Path("./"), "yes", "lab", "culture"),
-    (False, "Romeo", 190, 0.1, Path("lib/"), "no", None, 44),
+    (False, "wool", 17, 0.52, Path("./"), "yes", "lab", "culture", 1, None),
+    (False, "Romeo", 190, 0.1, Path("lib/"), "no", None, 44, True, 0.5),
 ]
 
 
