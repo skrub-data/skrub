@@ -4,6 +4,7 @@ import numpy as np
 import numpy.testing
 import pytest
 from sklearn import __version__ as sklearn_version
+from sklearn.exceptions import NotFittedError
 
 from dirty_cat import SimilarityEncoder
 from dirty_cat._similarity_encoder import get_kmeans_prototypes, ngram_similarity_matrix
@@ -363,3 +364,13 @@ def test_get_features() -> None:
         "x0_}",
         "x0_~",
     ]
+
+
+def test_check_fitted_super_vectorizer():
+    """Test that calling transform before fit raises an error"""
+    sim_enc = SimilarityEncoder()
+    X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
+    with pytest.raises(NotFittedError):
+        sim_enc.transform(X)
+    sim_enc.fit(X)
+    sim_enc.transform(X)

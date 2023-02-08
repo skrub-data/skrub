@@ -22,6 +22,7 @@ import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
+from sklearn.utils.validation import check_is_fitted
 
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
@@ -70,7 +71,22 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ----------
     hash_dict_ : LRUDict
         Computed hashes.
-    
+
+    See Also
+    --------
+    :class:`~dirty_cat.GapEncoder` :
+        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+    :class:`~dirty_cat.SimilarityEncoder` :
+        Encode string columns as a numeric array with n-gram string similarity.
+    :class:`~dirty_cat.deduplicate` :
+        Deduplicate data by hierarchically clustering similar strings.
+
+    References
+    ----------
+    For a detailed description of the method, see
+    `Encoding high-cardinality string categorical variables
+    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
+
     Examples
     --------
     >>> enc = MinHashEncoder(n_components=5)
@@ -93,13 +109,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             -1.81759383e+09, -2.09569333e+09],
            [-1.97582893e+09, -2.09500033e+09, -1.53072052e+09,
             -1.45918266e+09, -1.58098831e+09]])
-
-    References
-    ----------
-    For a detailed description of the method, see
-    `Encoding high-cardinality string categorical variables
-    <https://hal.inria.fr/hal-02171256v4>`_ by Cerda, Varoquaux (2019).
-
     """
 
     hash_dict_: LRUDict
@@ -139,7 +148,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        ndarray of shape (n_components, )
+        :obj:`~numpy.ndarray` of shape (n_components, )
             The encoded string.
         """
         min_hashes = np.ones(self.n_components) * np.infty
@@ -168,7 +177,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        ndarray of shape (n_components, )
+        :obj:`~numpy.ndarray` of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -189,21 +198,22 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def _compute_hash_batched(
         self, batch: Collection[str], hash_func: Callable[[str], np.ndarray]
     ):
-        """Function called to compute the hashes of a batch of strings.
+        """
+        Function called to compute the hashes of a batch of strings.
 
-        Check if the string is in the hash dictionary, if not, compute the hash using
-        the specified hashing function and add it to the dictionary.
+        Check if the string is in the hash dictionary, if not, compute the hash
+        using the specified hashing function and add it to the dictionary.
 
         Parameters
         ----------
-        batch : iterable of str
+        batch : collection of str
             The batch of strings to encode.
         hash_func : callable
             Hashing function to use on the string.
 
         Returns
         -------
-        np.array of shape (n_samples, n_components)
+        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
             The encoded strings, using specified encoding scheme.
         """
         res = np.zeros((len(batch), self.n_components))
@@ -257,9 +267,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        ndarray of shape (n_samples, n_components)
+        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
             Transformed input.
         """
+        check_is_fitted(self, "hash_dict_")
         X = check_input(X)
         if self.minmax_hash:
             if self.n_components % 2 != 0:
@@ -316,8 +327,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 unique_x[idx_slice],
                 hash_func,
             )
-            for idx_slice in gen_even_slices(len(unique_x), 
-            n_jobs)
+            for idx_slice in gen_even_slices(len(unique_x), n_jobs)
         )
 
         # Match the hashes of the unique value to the original values

@@ -10,7 +10,7 @@ should also remove their corresponding references from the list.
 import inspect
 import re
 from importlib import import_module
-from typing import Optional
+from typing import Callable, Optional
 
 import pytest
 from numpydoc.validate import validate
@@ -18,7 +18,6 @@ from numpydoc.validate import validate
 DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._datetime_encoder.DatetimeEncoder.get_feature_names",
     "dirty_cat._datetime_encoder.DatetimeEncoder.get_feature_names_out",
-    "dirty_cat._gap_encoder.GapEncoder.fit",
     "dirty_cat._gap_encoder.GapEncoder.get_feature_names",
     "dirty_cat._gap_encoder.GapEncoder.get_feature_names_out",
     "dirty_cat._gap_encoder.GapEncoder.partial_fit",
@@ -26,20 +25,18 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._gap_encoder.GapEncoder.transform",
     "dirty_cat._minhash_encoder.MinHashEncoder",
     "dirty_cat._minhash_encoder.MinHashEncoder.fit",
-    "dirty_cat._minhash_encoder.MinHashEncoder._get_fast_hash",
-    "dirty_cat._minhash_encoder.MinHashEncoder._get_murmur_hash",
-    "dirty_cat._minhash_encoder.MinHashEncoder.transform",
     "dirty_cat._similarity_encoder.SimilarityEncoder",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.fit",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.transform",
     "dirty_cat._similarity_encoder.SimilarityEncoder.fit_transform",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.get_params",
-    "dirty_cat._super_vectorizer.SuperVectorizer.fit_transform",
-    "dirty_cat._super_vectorizer.SuperVectorizer.transform",
-    "dirty_cat._super_vectorizer.SuperVectorizer._auto_cast",
-    "dirty_cat._super_vectorizer.SuperVectorizer._apply_cast",
-    "dirty_cat._super_vectorizer.SuperVectorizer.get_feature_names",
-    "dirty_cat._super_vectorizer.SuperVectorizer.get_feature_names_out",
+    "dirty_cat._table_vectorizer.TableVectorizer.fit_transform",
+    "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names",
+    "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names_out",
+    "dirty_cat._table_vectorizer.TableVectorizer.transform",
+    # TODO: remove when SuperVectorizer name is removed
+    "dirty_cat._table_vectorizer.SuperVectorizer",
+    "dirty_cat._table_vectorizer.SuperVectorizer.fit_transform",
+    "dirty_cat._table_vectorizer.SuperVectorizer.get_feature_names",
+    "dirty_cat._table_vectorizer.SuperVectorizer.get_feature_names_out",
+    "dirty_cat._table_vectorizer.SuperVectorizer.transform",
     "dirty_cat._target_encoder.TargetEncoder",
     "dirty_cat._target_encoder.TargetEncoder.fit",
     "dirty_cat._target_encoder.TargetEncoder.transform",
@@ -47,27 +44,37 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "dirty_cat._base.BaseEstimator.get_params",
     "dirty_cat._base.BaseEstimator.set_params",
     "dirty_cat._base.BaseEstimator._validate_params",
+    "dirty_cat._fuzzy_join.fuzzy_join",
     # The following are not documented in dirty_cat (and thus are out of scope)
     # They are usually inherited from other libraries.
-    "dirty_cat._super_vectorizer.SuperVectorizer.fit",
-    "dirty_cat._super_vectorizer.SuperVectorizer.set_params",
-    "dirty_cat._super_vectorizer.SuperVectorizer.named_transformers_",
+    "dirty_cat._table_vectorizer.TableVectorizer.fit",
+    "dirty_cat._table_vectorizer.TableVectorizer.set_params",
+    "dirty_cat._table_vectorizer.TableVectorizer.named_transformers_",
+    "dirty_cat._table_vectorizer.SuperVectorizer.fit",
+    "dirty_cat._table_vectorizer.SuperVectorizer.set_params",
+    "dirty_cat._table_vectorizer.SuperVectorizer.named_transformers_",
+    # The following are internal functions
+    "dirty_cat._check_dependencies.check_dependencies",
 }
 
 
-def all_estimators():
+def get_public_classes():
     module = import_module("dirty_cat")
     classes = inspect.getmembers(module, inspect.isclass)
-    classes = [(name, est_cls) for name, est_cls in classes if not name.startswith("_")]
+    classes = [(name, cls) for name, cls in classes if not name.startswith("_")]
     return sorted(classes, key=lambda x: x[0])
 
 
-def get_all_methods():
-    estimators = all_estimators()
+def get_public_functions():
+    module = import_module("dirty_cat")
+    funcs = inspect.getmembers(module, inspect.isfunction)
+    funcs = [(name, func) for name, func in funcs if not name.startswith("_")]
+    return sorted(funcs, key=lambda x: x[0])
+
+
+def get_methods_to_validate():
+    estimators = get_public_classes()
     for name, Estimator in estimators:
-        if name.startswith("_"):
-            # skip private classes
-            continue
         methods = []
         for name in dir(Estimator):
             if name.startswith("_"):
@@ -81,8 +88,16 @@ def get_all_methods():
             yield Estimator, method
 
 
+def get_functions_to_validate():
+    functions = get_public_functions()
+    for name, func in functions:
+        yield func, name
+
+
 def repr_errors(res, estimator=None, method: Optional[str] = None) -> str:
-    """Pretty print original docstring and the obtained errors
+    """
+    Pretty print original docstring and the obtained errors
+
     Parameters
     ----------
     res : dict
@@ -91,6 +106,7 @@ def repr_errors(res, estimator=None, method: Optional[str] = None) -> str:
         estimator object or None
     method : str
         if estimator is not None, either the method name or None.
+
     Returns
     -------
     str
@@ -109,7 +125,7 @@ def repr_errors(res, estimator=None, method: Optional[str] = None) -> str:
         try:
             obj_signature = str(inspect.signature(obj))
         except TypeError:
-            # In particular we can't parse the signature of properties
+            # In particular, we can't parse the signature of properties
             obj_signature = (
                 "\nParsing of the method signature failed, "
                 "possibly because this is a property."
@@ -167,8 +183,8 @@ def filter_errors(errors, method, Estimator=None):
         yield code, message
 
 
-@pytest.mark.parametrize("Estimator, method", get_all_methods())
-def test_docstring(Estimator, method, request):
+@pytest.mark.parametrize("Estimator, method", get_methods_to_validate())
+def test_estimator_docstrings(Estimator: object, method: str, request):
     base_import_path = Estimator.__module__
     import_path = [base_import_path, Estimator.__name__]
     if method is not None:
@@ -186,9 +202,25 @@ def test_docstring(Estimator, method, request):
     res["errors"] = list(filter_errors(res["errors"], method, Estimator=Estimator))
 
     if res["errors"]:
-        msg = repr_errors(res, Estimator, method)
+        raise ValueError(repr_errors(res, Estimator, method))
 
-        raise ValueError(msg)
+
+@pytest.mark.parametrize("func, name", get_functions_to_validate())
+def test_function_docstrings(func: Callable, name: str, request):
+    import_path = ".".join([func.__module__, name])
+    print(import_path)
+
+    if import_path in DOCSTRING_TEMP_IGNORE_SET:
+        request.applymarker(
+            pytest.mark.xfail(run=False, reason="TODO pass numpydoc validation")
+        )
+
+    res = validate(import_path)
+
+    res["errors"] = list(filter_errors(res["errors"], name))
+
+    if res["errors"]:
+        raise ValueError(repr_errors(res, method=name))
 
 
 if __name__ == "__main__":

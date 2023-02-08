@@ -22,8 +22,8 @@ control.
 .. [#] https://www.openml.org/d/42125
 
 
- .. |SV| replace::
-     :class:`~dirty_cat.SuperVectorizer`
+ .. |TV| replace::
+     :class:`~dirty_cat.TableVectorizer`
 
  .. |Pipeline| replace::
      :class:`~sklearn.pipeline.Pipeline`
@@ -85,8 +85,7 @@ mask = X.isna()["gender"]
 X.dropna(subset=["gender"], inplace=True)
 y = y[~mask]
 
-# %%
-#
+# #############################################################################
 # Assembling a machine-learning pipeline that encodes the data
 # ------------------------------------------------------------
 #
@@ -96,7 +95,7 @@ y = y[~mask]
 # To build a learning pipeline, we need to assemble encoders for each
 # column, and apply a supervised learning model on top.
 
-# %%
+###############################################################################
 # The categorical encoders
 # ........................
 #
@@ -106,7 +105,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
 
-# %%
+###############################################################################
 # We assemble these to apply them to the relevant columns.
 # The |ColumnTransformer| is created by specifying a set of transformers
 # alongside with the column names on which each must be applied:
@@ -121,7 +120,7 @@ encoder = make_column_transformer(
     remainder="drop",
 )
 
-# %%
+###############################################################################
 # Pipelining an encoder with a learner
 # ....................................
 #
@@ -139,11 +138,11 @@ from sklearn.pipeline import make_pipeline
 
 pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
 
-# %%
+###############################################################################
 # The pipeline can be readily applied to the dataframe for prediction:
 pipeline.fit(X, y)
 
-# %%
+###############################################################################
 # Dirty-category encoding
 # -----------------------
 #
@@ -153,7 +152,9 @@ import numpy as np
 
 np.unique(y)
 
-# %%
+###############################################################################
+# .. _example_minhash_encoder:
+#
 # We will now experiment with encoders specially made for handling
 # dirty columns:
 
@@ -172,7 +173,7 @@ encoders = {
     "gap": GapEncoder(n_components=100),
 }
 
-# %%
+###############################################################################
 # We now loop over the different encoding methods,
 # instantiate a new |Pipeline| each time, fit it
 # and store the returned cross-validation score:
@@ -196,7 +197,7 @@ for name, method in encoders.items():
     print(f"r2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
     all_scores[name] = scores
 
-# %%
+###############################################################################
 # Plotting the results
 # ....................
 #
@@ -212,7 +213,7 @@ plt.xlabel("Prediction accuracy     ", size=20)
 plt.yticks(size=20)
 plt.tight_layout()
 
-# %%
+###############################################################################
 # The clear trend is that encoders grasping similarities between categories
 # (|SE|, |MinHash|, and |Gap|) perform better than those discarding it.
 #
@@ -225,8 +226,8 @@ plt.tight_layout()
 # |
 #
 
-# %%
-# .. _example_super_vectorizer:
+###############################################################################
+# .. _example_table_vectorizer:
 #
 # A simpler way: automatic vectorization
 # --------------------------------------
@@ -239,37 +240,37 @@ employee_salaries = fetch_employee_salaries()
 X = employee_salaries.X
 y = employee_salaries.y
 
-# %%
+###############################################################################
 # We'll drop the 'date_first_hired' column as it's redundant with
 # 'year_first_hired'.
 X = X.drop(["date_first_hired"], axis=1)
 
-# %%
+###############################################################################
 # We still have a complex and heterogeneous dataframe:
 X
 
 # %%
-# The |SV| can to turn this dataframe into a form suited for
+# The |TV| can to turn this dataframe into a form suited for
 # machine learning.
 
-# %%
-# Using the SuperVectorizer in a supervised-learning pipeline
+###############################################################################
+# Using the TableVectorizer in a supervised-learning pipeline
 # -----------------------------------------------------------
 #
-# Assembling the |SV| in a |Pipeline| with a powerful learner,
+# Assembling the |TV| in a |Pipeline| with a powerful learner,
 # such as gradient boosted trees, gives **a machine-learning method that
 # can be readily applied to the dataframe**.
 #
-# The |SV| requires at least dirty_cat 0.2.0.
+# The |TV| requires at least dirty_cat 0.2.0.
 #
 
-from dirty_cat import SuperVectorizer
+from dirty_cat import TableVectorizer
 
 pipeline = make_pipeline(
-    SuperVectorizer(auto_cast=True), HistGradientBoostingRegressor()
+    TableVectorizer(auto_cast=True), HistGradientBoostingRegressor()
 )
 
-# %%
+###############################################################################
 # Let's perform a cross-validation to see how well this model predicts:
 
 from sklearn.model_selection import cross_val_score
@@ -280,18 +281,18 @@ print(f"scores={scores}")
 print(f"mean={np.mean(scores)}")
 print(f"std={np.std(scores)}")
 
-# %%
+###############################################################################
 # The prediction performed here is pretty much as good as above
 # but the code here is much simpler as it does not involve specifying
 # columns manually.
 
-# %%
+###############################################################################
 # Analyzing the features created
 # ------------------------------
 #
 # Let us perform the same workflow, but without the |Pipeline|, so we can
-# analyze the SuperVectorizer's mechanisms along the way.
-sup_vec = SuperVectorizer(auto_cast=True)
+# analyze the TableVectorizer's mechanisms along the way.
+sup_vec = TableVectorizer(auto_cast=True)
 
 # %%
 # We split the data between train and test, and transform them:
@@ -304,7 +305,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 X_train_enc = sup_vec.fit_transform(X_train, y_train)
 X_test_enc = sup_vec.transform(X_test)
 
-# %%
+###############################################################################
 # The encoded data, X_train_enc and X_test_enc are numerical arrays:
 X_train_enc
 
@@ -312,17 +313,17 @@ X_train_enc
 # They have more columns than the original dataframe, but not much more:
 X_train.shape, X_train_enc.shape
 
-# %%
+###############################################################################
 # Inspecting the features created
 # ...............................
 #
-# The |SV| assigns a transformer for each column. We can inspect this
+# The |TV| assigns a transformer for each column. We can inspect this
 # choice:
 from pprint import pprint
 
 pprint(sup_vec.transformers_)
 
-# %%
+###############################################################################
 # This is what is being passed to the |ColumnTransformer| under the hood.
 # If you're familiar with how the latter works, it should be very intuitive.
 # We can notice it classified the columns 'gender' and 'assignment_category'
@@ -338,22 +339,22 @@ pprint(sup_vec.transformers_)
 # Before encoding:
 X.columns.to_list()
 
-# %%
+###############################################################################
 # After encoding (we only plot the first 8 feature names):
 feature_names = sup_vec.get_feature_names_out()
 feature_names[:8]
 
-# %%
+###############################################################################
 # As we can see, it gave us interpretable columns.
 # This is because we used the |Gap| on the column 'division',
 # which was classified as a high cardinality string variable.
-# (default values, see |SV|'s docstring).
+# (default values, see |TV|'s docstring).
 #
 # In total, we have a reasonable number of encoded columns:
 len(feature_names)
 
 
-# %%
+###############################################################################
 # Feature importances in the statistical model
 # --------------------------------------------
 #
@@ -372,7 +373,7 @@ from sklearn.ensemble import RandomForestRegressor
 regressor = RandomForestRegressor()
 regressor.fit(X_train_enc, y_train)
 
-# %%
+###############################################################################
 # Retrieving the feature importances:
 
 importances = regressor.feature_importances_
@@ -381,7 +382,7 @@ indices = np.argsort(importances)
 # Sort from least to most
 indices = list(reversed(indices))
 
-# %%
+###############################################################################
 # Plotting the results:
 
 import matplotlib.pyplot as plt
@@ -396,15 +397,15 @@ plt.yticks(range(n), labels, size=15)
 plt.tight_layout(pad=1)
 plt.show()
 
-# %%
+###############################################################################
 # We can deduce from this data that the three factors that define the
 # most the salary are: being hired for a long time, being a manager, and
 # having a permanent, full-time job :)
 #
 #
-# .. topic:: The |SV| automates preprocessing
+# .. topic:: The |TV| automates preprocessing
 #
 #   As this notebook demonstrates, many preprocessing steps can be
-#   automated by the |SV|, and the resulting pipeline can still be
+#   automated by the |TV|, and the resulting pipeline can still be
 #   inspected, even with non-normalized entries.
 #

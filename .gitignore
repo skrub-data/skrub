@@ -64,4 +64,3 @@ doc/CONTRIBUTING.rst
 
 # Pkl files for benchmarks
 benchmarks/*.pkl
-

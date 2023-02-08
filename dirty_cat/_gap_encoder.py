@@ -30,6 +30,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
+from sklearn.utils.validation import check_is_fitted
 
 from ._utils import check_input, parse_version
 
@@ -512,6 +513,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         H : 2-d array, shape (n_samples, n_topics)
             Transformed input.
         """
+        check_is_fitted(self, "H_dict_")
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "Input data is not string. "
         unq_X = np.unique(X)
@@ -621,6 +623,15 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Column-wise fitted GapEncoders
     column_names_: list of str
         Column names of the data the Gap was fitted on
+
+    See Also
+    --------
+    :class:`~dirty_cat.MinHashEncoder` :
+        Encode string columns as a numeric array with the minhash method.
+    :class:`~dirty_cat.SimilarityEncoder` :
+        Encode string columns as a numeric array with n-gram string similarity.
+    :class:`~dirty_cat.deduplicate` :
+        Deduplicate data by hierarchically clustering similar strings.
 
     References
     ----------
@@ -760,7 +771,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y=None) -> "GapEncoder":
         """
-        Fit the GapEncoder on batches of X.
+        Fit the instance on batches of X.
 
         Parameters
         ----------
@@ -771,10 +782,15 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        GapEncoder
-            Fitted GapEncoder instance.
+        :class:`~dirty_cat.GapEncoder`
+            Fitted :class:`~dirty_cat.GapEncoder` instance (self).
         """
 
+        # Check that n_samples >= n_components
+        if len(X) < self.n_components:
+            raise ValueError(
+                f"n_samples={len(X)} should be >= n_components={self.n_components}. "
+            )
         # Copy parameter rho
         self.rho_ = self.rho
         # If X is a dataframe, store its column names
@@ -810,7 +826,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         H : 2-d array, shape (n_samples, n_topics * n_features)
             Transformed input.
         """
-
+        check_is_fitted(self, "fitted_models_")
         # Check input data shape
         X = check_input(X)
         X = self._handle_missing(X)
@@ -870,8 +886,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             The column names to be added as prefixes before the labels.
             If col_names == None, no prefixes are used.
             If col_names == 'auto', column names are automatically defined:
+
                 - if the input data was a dataframe, its column names are used,
                 - otherwise, 'col1', ..., 'colN' are used as prefixes.
+
             Prefixes can be manually set by passing a list for col_names.
         n_labels : int, default=3
             The number of labels used to describe each topic.

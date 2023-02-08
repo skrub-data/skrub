@@ -9,14 +9,14 @@ The |DtE| breaks down each datetime
 features into several numerical features, by extracting relevant
 information from the datetime features, such as the month, the day
 of the week, the hour of the day, etc.
-Used in the |SV|, which automatically detects
+Used in the |TV|, which automatically detects
 the datetime features, the |DtE| allows to
 handle datetime features easily.
 
 
 .. |DtE| replace:: :class:`~dirty_cat.DatetimeEncoder`
 
-.. |SV| replace:: :class:`~dirty_cat.SuperVectorizer`
+.. |TV| replace:: :class:`~dirty_cat.TableVectorizer`
 """
 
 import warnings
@@ -79,41 +79,41 @@ encoder.get_feature_names_out()
 X_
 
 ###############################################################################
-# One-liner with the |SV|
+# One-liner with the |TV|
 # .......................
-# The |DtE| is used by default in the |SV|, which
+# The |DtE| is used by default in the |TV|, which
 # automatically detects datetime features.
-from dirty_cat import SuperVectorizer
+from dirty_cat import TableVectorizer
 from pprint import pprint
 
-sup_vec = SuperVectorizer()
+sup_vec = TableVectorizer()
 sup_vec.fit_transform(X)
 pprint(sup_vec.get_feature_names_out())
 
 ###############################################################################
-# If we want the day of the week, we can just replace |SV|'s default parameter:
-sup_vec = SuperVectorizer(
+# If we want the day of the week, we can just replace |TV|'s default parameter:
+sup_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
 sup_vec.fit_transform(X)
 sup_vec.get_feature_names_out()
 
 ###############################################################################
-# We can see that the |SV| is indeed using
+# We can see that the |TV| is indeed using
 # a |DtE| for the datetime features.
 pprint(sup_vec.transformers_)
 
 ###############################################################################
 # Predictions with date features
 # ------------------------------
-# For prediction tasks, we recommend using the |SV| inside a
+# For prediction tasks, we recommend using the |TV| inside a
 # pipeline, combined with a model that uses the features extracted by the
 # |DtE|.
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
-sup_vec = SuperVectorizer(
+sup_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
 reg = HistGradientBoostingRegressor()
@@ -226,7 +226,7 @@ plt.show()
 ###############################################################################
 from sklearn.inspection import permutation_importance
 
-sup_vec = SuperVectorizer(
+sup_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
 

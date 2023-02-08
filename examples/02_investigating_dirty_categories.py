@@ -22,7 +22,7 @@ dataset.
      :class:`~dirty_cat.SimilarityEncoder`
 """
 
-#########################################################################
+###############################################################################
 # What do we mean by dirty categories?
 # ------------------------------------
 #
@@ -38,11 +38,11 @@ print(data.head(n=5))
 # Here is the number of unique entries per column:
 print(data.nunique())
 
-#########################################################################
+###############################################################################
 # As we can see, some entries have many unique values:
 print(data["employee_position_title"].value_counts().sort_index())
 
-#########################################################################
+###############################################################################
 # These different entries are often variations of the same entity.
 # For example, there are 3 kinds of "Accountant/Auditor".
 #
@@ -66,7 +66,9 @@ print(data["employee_position_title"].value_counts().sort_index())
 values = data[["employee_position_title", "gender"]]
 values.insert(0, "current_annual_salary", employee_salaries.y)
 
-#########################################################################
+###############################################################################
+# .. _example_similarity_encoder:
+#
 # String similarity between entries
 # ---------------------------------
 #
@@ -81,7 +83,7 @@ from dirty_cat import SimilarityEncoder
 similarity_encoder = SimilarityEncoder()
 transformed_values = similarity_encoder.fit_transform(sorted_values.reshape(-1, 1))
 
-#########################################################################
+###############################################################################
 # Plotting the new representation using multi-dimensional scaling
 # ................................................................
 #
@@ -97,7 +99,7 @@ two_dim_data = mds.fit_transform(1 - transformed_values)
 print(two_dim_data.shape)
 print(sorted_values.shape)
 
-#########################################################################
+###############################################################################
 # We first quickly fit a KNN so that the plots does not get too busy:
 
 import numpy as np
@@ -113,7 +115,7 @@ nn = NearestNeighbors(n_neighbors=2).fit(transformed_values)
 _, indices_ = nn.kneighbors(transformed_values[random_points])
 indices = np.unique(indices_.squeeze())
 
-#########################################################################
+###############################################################################
 # Then we plot it, adding the categories in the scatter plot:
 
 import matplotlib.pyplot as plt
@@ -130,7 +132,7 @@ for x in indices:
     )
 ax.set_title("multi-dimensional-scaling representation using a 3gram similarity matrix")
 
-#########################################################################
+###############################################################################
 # Heatmap of the similarity matrix
 # ................................
 #
@@ -147,7 +149,7 @@ ax2.set_title("Similarities across categories")
 f2.colorbar(cax2)
 f2.tight_layout()
 
-########################################################################
+###############################################################################
 # As shown in the previous plot, we see that the nearest neighbor of
 # "Communication Equipment Technician"
 # is "Telecommunication Technician", although it is also
@@ -174,6 +176,8 @@ print(X_dirty.head(), end="\n\n")
 print(f"Number of dirty entries = {len(X_dirty)}")
 
 ###############################################################################
+# .. _example_gap_encoder:
+#
 # Encoding dirty job titles
 # .........................
 #

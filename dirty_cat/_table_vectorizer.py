@@ -1,5 +1,5 @@
 """
-Implements the SuperVectorizer: a preprocessor to automatically apply
+Implements the TableVectorizer: a preprocessor to automatically apply
 transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
@@ -15,6 +15,8 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.deprecation import deprecated
+from sklearn.utils.validation import check_is_fitted
 
 from dirty_cat import DatetimeEncoder, GapEncoder
 from dirty_cat._utils import parse_version
@@ -83,14 +85,14 @@ OptionalTransformer = Optional[
 ]
 
 
-class SuperVectorizer(ColumnTransformer):
+class TableVectorizer(ColumnTransformer):
     """Easily transform a heterogeneous array to a numerical one.
 
     Easily transforms a heterogeneous data table
-    (such as a :class:`pandas.DataFrame`) to a numerical array for machine
+    (such as a :class:`~pandas.DataFrame`) to a numerical array for machine
     learning. For this it transforms each column depending on its data type.
     It provides a simplified interface for the
-    :class:`sklearn.compose.ColumnTransformer`; more documentation of
+    :class:`~sklearn.compose.ColumnTransformer`; more documentation of
     attributes and functions are available in its doc.
 
     .. versionadded:: 0.2.0
@@ -111,46 +113,52 @@ class SuperVectorizer(ColumnTransformer):
     low_card_cat_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance (e.g. `OneHotEncoder()`),
-        a `Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance
+        (e.g. :class:`~sklearn.preprocessing.OneHotEncoder`),
+        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (`OneHotEncoder(drop="if_binary")`).
+        or `None` to use the default transformer
+        (:class:`~sklearn.preprocessing.OneHotEncoder(drop="if_binary")`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
     high_card_cat_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance (e.g. `GapEncoder()`),
-        a `Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance
+        (e.g. :class:`~dirty_cat.GapEncoder`),
+        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (`GapEncoder(n_components=30)`).
+        or `None` to use the default transformer
+        (:class:`~dirty_cat.GapEncoder(n_components=30)`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
     numerical_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on numerical features.
-        Can either be a transformer object instance (e.g. `StandardScaler()`),
-        a `Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance
+        (e.g. :class:`~sklearn.preprocessing.StandardScaler`),
+        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (here nothing, so 'passthrough').
+        or `None` to use the default transformer (here nothing, so 'passthrough').
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
     datetime_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
         Transformer used on datetime features.
-        Can either be a transformer object instance (e.g. `DatetimeEncoder()`),
-        a `Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance
+        (e.g. :class:`~dirty_cat.DatetimeEncoder`),
+        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or None to use the default transformer (`DatetimeEncoder()`).
+        or `None` to use the default transformer (:class:`~dirty_cat.DatetimeEncoder()`).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -168,18 +176,18 @@ class SuperVectorizer(ColumnTransformer):
         When imputed, missing values are replaced by the string 'missing'.
         As imputation logic for numerical features can be quite intricate,
         it is left to the user to manage.
-        See also attribute `imputed_columns_`.
+        See also attribute :attr:`~dirty_cat.TableVectorizer.imputed_columns_`.
 
     remainder : {"drop", "passthrough"} or Transformer, optional, default='drop'
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
-        columns are dropped. (default ``'drop'``).
-        By specifying ``remainder='passthrough'``, all remaining columns that
+        columns are dropped. (default 'drop').
+        By specifying `remainder='passthrough'`, all remaining columns that
         were not specified in `transformers` will be automatically passed
         through. This subset of columns is concatenated with the output of
         the transformers.
-        By setting ``remainder`` to be an estimator, the remaining
-        non-specified columns will use the ``remainder`` estimator. The
+        By setting `remainder` to be an estimator, the remaining
+        non-specified columns will use the `remainder` estimator. The
         estimator must support :term:`fit` and :term:`transform`.
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
@@ -187,7 +195,7 @@ class SuperVectorizer(ColumnTransformer):
     sparse_threshold : float, optional, default=0.3
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
-        lower than this value. Use sparse_threshold=0 to always return dense.
+        lower than this value. Use `sparse_threshold=0` to always return dense.
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
 
@@ -217,7 +225,7 @@ class SuperVectorizer(ColumnTransformer):
         If there are remaining columns, the final element is a tuple of the
         form:
         ('remainder', transformer, remaining_columns) corresponding to the
-        ``remainder`` parameter. If there are remaining columns, then
+        `remainder` parameter. If there are remaining columns, then
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
@@ -233,18 +241,27 @@ class SuperVectorizer(ColumnTransformer):
     imputed_columns_: list of str
         The list of columns in which we imputed the missing values.
 
+    See Also
+    --------
+    :class:`~dirty_cat.GapEncoder` :
+        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+    :class:`~dirty_cat.MinHashEncoder` :
+        Encode string columns as a numeric array with the minhash method.
+    :class:`~dirty_cat.SimilarityEncoder` :
+        Encode string columns as a numeric array with n-gram string similarity.
+
     Notes
     -----
     The column order of the input data is not guaranteed to be the same
-    as the output data (returned by :func:`SuperVectorizer.transform`).
+    as the output data (returned by :func:`TableVectorizer.transform`).
     This is a due to the way the :class:`sklearn.compose.ColumnTransformer`
     works.
     However, the output column order will always be the same for different
-    calls to :func:`SuperVectorizer.transform` on a same fitted
-    :class:`SuperVectorizer` instance.
+    calls to :func:`TableVectorizer.transform` on a same fitted
+    :class:`TableVectorizer` instance.
     For example, if input data has columns ['name', 'job', 'year'], then output
     columns might be shuffled, e.g., ['job', 'year', 'name'], but every call
-    to :func:`SuperVectorizer.transform` on this instance will return this
+    to :func:`TableVectorizer.transform` on this instance will return this
     order.
     """
 
@@ -375,7 +392,7 @@ class SuperVectorizer(ColumnTransformer):
                 # Some numerical dtypes like Int64 or Float64 only support
                 # pd.NA, so they must be converted to np.float64 before.
                 if pd.api.types.is_numeric_dtype(X[col]):
-                    X.loc[:, col] = X[col].astype(np.float64)
+                    X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
         # Convert to the best possible data type
@@ -384,12 +401,12 @@ class SuperVectorizer(ColumnTransformer):
             if not pd.api.types.is_datetime64_any_dtype(X[col]):
                 # we don't want to cast datetime64
                 try:
-                    X.loc[:, col] = pd.to_numeric(X[col], errors="raise")
+                    X[col] = pd.to_numeric(X[col], errors="raise")
                 except (ValueError, TypeError):
                     # Only try to convert to datetime
                     # if the variable isn't numeric.
                     try:
-                        X.loc[:, col] = pd.to_datetime(
+                        X[col] = pd.to_datetime(
                             X[col], errors="raise", infer_datetime_format=True
                         )
                     except (ValueError, TypeError):
@@ -398,7 +415,7 @@ class SuperVectorizer(ColumnTransformer):
             # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
                 try:
-                    X.loc[:, col] = X[col].astype(X[col].dtype.type, errors="ignore")
+                    X[col] = X[col].astype(X[col].dtype.type, errors="ignore")
                 except (TypeError, ValueError):
                     pass
             self.types_.update({col: X[col].dtype})
@@ -412,15 +429,15 @@ class SuperVectorizer(ColumnTransformer):
         Does the same thing as `_auto_cast`, but applies learnt info.
         """
         for col in X.columns:
-            X.loc[:, col] = _replace_false_missing(X[col])
+            X[col] = _replace_false_missing(X[col])
             if _has_missing_values(X[col]):
                 if pd.api.types.is_numeric_dtype(X[col]):
-                    X.loc[:, col] = X[col].astype(np.float64)
+                    X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
-            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+            X[col] = _replace_missing_in_cat_col(X[col])
         for col, dtype in self.types_.items():
-            X.loc[:, col] = X[col].astype(dtype)
+            X[col] = X[col].astype(dtype)
         return X
 
     def fit_transform(self, X, y=None):
@@ -541,7 +558,7 @@ class SuperVectorizer(ColumnTransformer):
                     for col in X.columns:
                         # Only impute categorical columns
                         if col in categorical_columns:
-                            X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+                            X[col] = _replace_missing_in_cat_col(X[col])
                             self.imputed_columns_.append(col)
 
                 elif self.impute_missing == "auto":
@@ -557,7 +574,7 @@ class SuperVectorizer(ColumnTransformer):
                             for col in cols:
                                 # Only impute categorical columns
                                 if col in categorical_columns:
-                                    X.loc[:, col] = _replace_missing_in_cat_col(X[col])
+                                    X[col] = _replace_missing_in_cat_col(X[col])
                                     self.imputed_columns_.append(col)
 
         # If there was missing values imputation, we cast the DataFrame again,
@@ -567,7 +584,7 @@ class SuperVectorizer(ColumnTransformer):
             X = self._auto_cast(X)
 
         if self.verbose:
-            print(f"[SuperVectorizer] Assigned transformers: {self.transformers}")
+            print(f"[TableVectorizer] Assigned transformers: {self.transformers}")
 
         X_enc = super().fit_transform(X, y)
 
@@ -601,6 +618,7 @@ class SuperVectorizer(ColumnTransformer):
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
         """
+        check_is_fitted(self, attributes=["columns_"])
         if X.shape[1] != len(self.columns_):
             raise ValueError(
                 "Passed array does not match column count of "
@@ -674,3 +692,10 @@ class SuperVectorizer(ColumnTransformer):
                 stacklevel=2,
             )
         return self.get_feature_names_out(input_features)
+
+
+@deprecated("use TableVectorizer instead.")
+class SuperVectorizer(TableVectorizer):
+    """Deprecated name of TableVectorizer."""
+
+    pass

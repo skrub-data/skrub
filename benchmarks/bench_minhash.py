@@ -66,7 +66,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ----------
     hash_dict_ : LRUDict
         Computed hashes.
-    
+
     Examples
     --------
     >>> enc = MinHashEncoder(n_components=5)
@@ -343,8 +343,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                     unique_x[idx_slice],
                     hash_func,
                 )
-                for idx_slice in gen_even_slices(len(unique_x), 
-                n_jobs * self.batch_per_job)
+                for idx_slice in gen_even_slices(
+                    len(unique_x), n_jobs * self.batch_per_job
+                )
             )
             # Match the hashes of the unique value to the original values
             X_out = np.concatenate(unique_x_trans)[indices_x].reshape(
@@ -395,8 +396,9 @@ def benchmark(
     batch_per_job: int,
 ) -> None:
     X = data[dataset_size]
-    MinHashEncoder(batch=batched, n_jobs=n_jobs, 
-    batch_per_job=batch_per_job).fit(X).transform(X)
+    MinHashEncoder(batch=batched, n_jobs=n_jobs, batch_per_job=batch_per_job).fit(
+        X
+    ).transform(X)
 
 
 def plot(res: pd.DataFrame):
@@ -408,17 +410,25 @@ def plot(res: pd.DataFrame):
         memories = eval(str(ser["memory"]))
         _, _, kwargs = parse_func_repr(ser["call"])
         for time, memory in zip(times, memories):
-            rows.append((kwargs["batched"], kwargs["batch_per_job"], 
-            kwargs["n_jobs"], time, memory))
+            rows.append(
+                (
+                    kwargs["batched"],
+                    kwargs["batch_per_job"],
+                    kwargs["n_jobs"],
+                    time,
+                    memory,
+                )
+            )
 
-    df = pd.DataFrame(rows, columns=["batched", "batch_per_job", 
-    "n_jobs", "time", "memory"])
+    df = pd.DataFrame(
+        rows, columns=["batched", "batch_per_job", "n_jobs", "time", "memory"]
+    )
 
     # Create a new columns merging batched and batch_per_job
     # If batch is False, ignore batch_per_job
     df["config"] = df.apply(
         lambda row: f"batched={row['batched']}, batch_per_job={row['batch_per_job']}"
-        if row["batched"] == 'True'
+        if row["batched"] == "True"
         else "batched=False",
         axis=1,
     )

@@ -8,6 +8,7 @@ def generate_data(
     n_samples,
     as_list=False,
     random_state: Optional[Union[int, float, str, bytes, bytearray]] = None,
+    sample_length: int = 100,
 ) -> np.ndarray:
     if random_state is not None:
         random.seed(random_state)
@@ -15,7 +16,7 @@ def generate_data(
     str_list = []
     for i in range(n_samples):
         random_string = "category "
-        for _ in range(100):
+        for _ in range(sample_length):
             random_integer = random.randint(1, MAX_LIMIT)
             random_string += chr(random_integer)
             if random_integer < 50:
