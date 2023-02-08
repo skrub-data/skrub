@@ -29,7 +29,6 @@ from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 
 from ._base import BaseEstimator
-from ._param_validation import StrOptions
 from ._string_distances import get_ngram_count, preprocess
 from ._utils import parse_version
 
@@ -303,19 +302,6 @@ class SimilarityEncoder(BaseEstimator, OneHotEncoder):
     vocabulary_ngram_counts_: List[List[int]]
     _infrequent_enabled: bool
 
-    _parameter_constraints: dict = {
-        "similarity": [StrOptions({"ngram"}), None],
-        "ngram_range": [tuple],
-        "categories": [list, StrOptions({"auto", "k-means", "most_frequent"})],
-        "dtype": "no_validation",  # delegate to numpy
-        "handle_unknown": [StrOptions({"error", "ignore"})],
-        "handle_missing": [StrOptions({"error", ""})],
-        "hashing_dim": [int, None],
-        "n_prototypes": [int, None],
-        "random_state": ["random_state"],
-        "n_jobs": [int, None],
-    }
-
     def __init__(
         self,
         similarity: str = "ngram",
@@ -399,8 +385,6 @@ class SimilarityEncoder(BaseEstimator, OneHotEncoder):
         SimilarityEncoder
             The fitted SimilarityEncoder instance.
         """
-
-        self._validate_params()
 
         if hasattr(X, "iloc") and X.isna().values.any():
             if self.handle_missing == "error":
