@@ -338,7 +338,10 @@ def validate_types(
     returned: bool = True,
 ):
     """
-    Decorator that can be used around any function.
+    Decorator that can be used around any function to check the types of
+    - the class attributes
+    - the function's arguments
+    - the function's return value
 
     If used as part of a class, `class_parameters` is relevant:
     we assume the arguments taken in `__init__` are set as instance attributes
@@ -356,7 +359,13 @@ def validate_types(
     Then, an instance method can be decorated, and the options tweaked.
 
     The decorator also works on standalone functions and static/class methods,
-    in which case `class_parameters` is set to False automatically.
+    in which case `class_parameters` is set to False automatically:
+    >>> @validate_types()
+    >>> def my_function(identifier: int, connections: typing.List[int]) -> bool:
+    >>>     ...
+    Notice the decorator is called: it's required when decorating a
+    standalone function, but not for a class function (regardless if it's a
+    static/class/instance method).
 
     Uses the type hints to check the values passed are correct.
     If an inconsistency is found, a clean error is raised.
@@ -391,6 +400,7 @@ def validate_types(
 
     >>> from typing import Optional
     >>>
+
     >>> class Encoder:
     >>>
     >>>     @validate_types
