@@ -170,9 +170,10 @@ def _validate_value(
             # Size matters
             if len(value) != len(contained_types):
                 raise InvalidParameterError(
-                    f"Expected {name!r} to be of type {annotation}, "
-                    f"got {value!r}, which contains an invalid type."
-                )  # FIXME
+                    f"Expected {name!r} to be a tuple of length "
+                    f"{len(contained_types)} (annotated {annotation}) but "
+                    f"got {value!r} (length {len(value)})."
+                )
             # Order matters
             for element, contained_type in zip(value, contained_types):
                 if not _validate_value_with_signal(
