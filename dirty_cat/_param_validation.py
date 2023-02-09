@@ -13,6 +13,7 @@ Improvement ideas are welcome.
 """
 
 import inspect
+import sys
 import typing
 from functools import wraps
 from typing import Any, Callable
@@ -65,6 +66,16 @@ def _validate_value(
         See section "Raises" for more information
 
     """
+
+    def get_typing_alias_name(alias) -> str:
+        """
+        Helper function to get the name of a typing alias.
+        """
+        if sys.version_info[1] <= 9:
+            return repr(alias).split(".")[-1]
+        else:
+            return alias.__name__
+
     # Special case for bool
     if annotation is bool:
         if not (value is True or value is False):
@@ -94,8 +105,9 @@ def _validate_value(
         # Get the type(s) contained in the brackets
         # (e.g. `(int, float)` in `Union[int, float]`).
         contained_types = annotation.__args__
+        annotation_name = get_typing_alias_name(annotation)
 
-        if annotation.__name__ == "Literal":
+        if annotation_name == "Literal":
             # Literal should not contain nested types, so we won't recurse.
             # For the comparisons to make sense,
             # we'll divide the values in 2 categories:
@@ -117,7 +129,7 @@ def _validate_value(
                     f"got {value!r} instead."
                 )
 
-        elif annotation.__name__ in ["Union", "Optional"]:
+        elif annotation_name in ["Union", "Optional"]:
             # Can contain nested types, we will recurse.
             if not any(
                 _validate_value_with_signal(
@@ -131,7 +143,7 @@ def _validate_value(
                     f"but got {value!r} (type {type(value)}) instead."
                 )
 
-        elif annotation.__name__ in ["List", "Set"]:
+        elif annotation_name in ["List", "Set"]:
             # Unordered, we only want each item to be of the specified type
             # (there can only be one in the type definition).
             # E.g. `List[str]` is valid, `List[float, int]` isn't.
@@ -141,7 +153,7 @@ def _validate_value(
                 "List": list,
                 "Set": set,
             }
-            expected_type = expected_type_map[annotation.__name__]
+            expected_type = expected_type_map[annotation_name]
             if not isinstance(value, expected_type):
                 raise InvalidParameterError(
                     f"Expected {name!r} to be an instance of {expected_type!r} "
@@ -160,7 +172,7 @@ def _validate_value(
                         f"{element!r} (type {type(element)})."
                     )
 
-        elif annotation.__name__ == "Tuple":
+        elif annotation_name == "Tuple":
             # Check that the value is actually a tuple.
             if not isinstance(value, tuple):
                 raise InvalidParameterError(
@@ -186,7 +198,7 @@ def _validate_value(
                         f"{type(element)}) does not match {contained_type}."
                     )
 
-        elif annotation.__name__ == "Dict":
+        elif annotation_name == "Dict":
             # Check that it's actually a dictionary
             if not isinstance(value, dict):
                 raise InvalidParameterError(
@@ -217,7 +229,7 @@ def _validate_value(
                         f"{dict_value!r} (type {type(dict_value)})."
                     )
 
-        elif annotation.__name__ == "Any":
+        elif annotation_name == "Any":
             pass
 
 
