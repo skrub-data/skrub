@@ -3,7 +3,14 @@
 .. currentmodule:: dirty_cat
 
 Release 0.5.0
-==============
+=============
+
+Major changes
+-------------
+
+- Added a dynamic type checker for all encoders. Passing invalid arguments will
+  now result in an :class:`InvalidParameterError`.
+  :pr:`486` by :user:`Lilian Boulard <LilianBoulard>` and :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Release 0.4.0 (beta 2)
 ======================
