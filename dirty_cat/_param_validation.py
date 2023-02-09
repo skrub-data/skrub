@@ -99,7 +99,7 @@ def _validate_value(
                 f"got {value!r} (type {type(annotation)}) instead."
             )
 
-    elif issubclass(type(annotation), typing._GenericAlias):
+    elif issubclass(type(annotation), (typing._GenericAlias, typing._SpecialForm)):
         # Types from the `typing` module
 
         # Get the type(s) contained in the brackets
