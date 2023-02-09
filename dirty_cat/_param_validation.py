@@ -3,13 +3,13 @@ Provides the main decorator `validate_types` for validating the input/returned
 types, as well as class attributes.
 
 Another decorator `validate_types_with_inspect` is available if
-inspection is required feature. Only use if necessary.
+inspection is a required feature. Only use if necessary.
 Eventually, this feature should be implemented in the main decorator.
 
 This is private API dedicated to the dirty_cat developers.
 It may be used by other projects, without guarantees - we implement only
 what we need in dirty_cat.
-Improvements ideas are welcome.
+Improvement ideas are welcome.
 """
 
 import inspect
@@ -28,7 +28,7 @@ class InvalidParameterError(ValueError, TypeError):
 
 class InvalidDefaultWarning(UserWarning):
     """
-    Custom warning raised when the default value of a signature does not
+    Custom warning raised when the default value of a parameter does not
     match the annotation.
     """
 
@@ -38,11 +38,10 @@ def _validate_value(
     name: typing.Optional[str] = None,
     value: Any,
     annotation: Any,
-    action: typing.Literal["raise", "signal"] = "raise",
-) -> typing.Optional[bool]:
+) -> None:
     """
-    Takes a value and its annotation, and validates they match.
-    Works recursively if typings are nested.
+    Takes a value and its annotation, and validate they match.
+    Works recursively if types are nested.
 
     Parameters
     ----------
@@ -53,61 +52,47 @@ def _validate_value(
         Value to check the annotation against.
     annotation : Any
         Annotation to check the value against.
-        May contain typings from the `typing` module, classes, built-in types.
-    action : {"raise", "signal"}, optional
-        Mode of operation.
-        `signal` is mainly used internally by the function for the recursion.
-        External calls should use `raise`.
-        See section "Returns" for more information.
+        May contain types from the `typing` module, classes and built-in types.
 
     Raises
     ------
     InvalidParameterError
-        If the annotation and the value do not match and `action="raise"`.
+        If the annotation and the value do not match.
 
     Returns
     -------
-    bool
-        If `action="signal"`. True means that the annotation matches,
-        False that it doesn't.
     None
-        If `action="raise"`.
         See section "Raises" for more information
 
     """
     # Special case for bool
     if annotation is bool:
         if not (value is True or value is False):
-            if action == "raise":
-                raise InvalidParameterError(
-                    f"Expected {name!r} to be an instance of {annotation}, "
-                    f"got {value!r} (type {type(annotation)}) instead."
-                )
-            elif action == "signal":
-                return False
+            raise InvalidParameterError(
+                f"Expected {name!r} to be an instance of {annotation}, "
+                f"got {value!r} (type {type(annotation)}) instead."
+            )
 
     # Special case for None
     if isinstance(annotation, type(None)):
         if not (value is None or isinstance(value, type(None))):
-            if action == "raise":
-                raise InvalidParameterError(
-                    f"Expected {name!r} to be None, "
-                    f"got {value!r} (type {type(annotation)}) instead."
-                )
-            elif action == "signal":
-                return False
+            raise InvalidParameterError(
+                f"Expected {name!r} to be None, "
+                f"got {value!r} (type {type(annotation)}) instead."
+            )
 
     elif type(annotation) is type:
         if not isinstance(value, annotation):
-            if action == "raise":
-                raise InvalidParameterError(
-                    f"Expected {name!r} to be an instance of {annotation}, "
-                    f"got {value!r} (type {type(annotation)}) instead."
-                )
-            elif action == "signal":
-                return False
+            raise InvalidParameterError(
+                f"Expected {name!r} to be an instance of {annotation}, "
+                f"got {value!r} (type {type(annotation)}) instead."
+            )
 
     elif issubclass(type(annotation), typing._GenericAlias):
+        # Types from the `typing` module
+
+        # Get the type(s) contained in the brackets
+        # (e.g. `(int, float)` in `Union[int, float]`).
         contained_types = annotation.__args__
 
         if annotation.__name__ == "Literal":
@@ -127,35 +112,131 @@ def _validate_value(
             if not any([value is cls for cls in classes]) and not any(
                 [value == val for val in inst_objs]
             ):
-                if action == "raise":
-                    raise InvalidParameterError(
-                        f"Expected {name!r} to be any of {contained_types}, "
-                        f"got {value!r} instead."
-                    )
-                elif action == "signal":
-                    return False
+                raise InvalidParameterError(
+                    f"Expected {name!r} to be any of {contained_types} but "
+                    f"got {value!r} instead."
+                )
 
         elif annotation.__name__ in ["Union", "Optional"]:
             # Can contain nested types, we will recurse.
             if not any(
-                [
-                    _validate_value(
-                        value=value,
-                        annotation=contained_type,
-                        action="signal",
-                    )
-                    for contained_type in contained_types
-                ]
+                _validate_value_with_signal(
+                    value=value,
+                    annotation=contained_type,
+                )
+                for contained_type in contained_types
             ):
-                if action == "raise":
-                    raise InvalidParameterError(
-                        f"Expected {name!r} to be an instance of "
-                        f"{contained_types}, got {value!r} instead."
-                    )
-                elif action == "signal":
-                    return False
+                raise InvalidParameterError(
+                    f"Expected {name!r} to be any of {contained_types} "
+                    f"but got {value!r} (type {type(value)}) instead."
+                )
 
-    if action == "signal":
+        elif annotation.__name__ in ["List", "Set"]:
+            # Unordered, we only want each item to be of the specified type
+            # (there can only be one in the type definition).
+            # E.g. `List[str]` is valid, `List[float, int]` isn't.
+            inner_annotation = contained_types[0]
+            # Just a cleaner if-else alternative for the type selection
+            expected_type_map: typing.Dict[str, type] = {
+                "List": list,
+                "Set": set,
+            }
+            expected_type = expected_type_map[annotation.__name__]
+            if not isinstance(value, expected_type):
+                raise InvalidParameterError(
+                    f"Expected {name!r} to be an instance of {expected_type!r} "
+                    f"but got {value!r} (type {type(value)}) instead."
+                )
+            # Check that all values in the iterable are of the expected type
+            # (recursive).
+            for element in value:
+                if not _validate_value_with_signal(
+                    value=element,
+                    annotation=inner_annotation,
+                ):
+                    raise InvalidParameterError(
+                        f"Expected {name!r} to be of type {annotation} but "
+                        f"got {value!r}, which contains the invalid element "
+                        f"{element!r} (type {type(element)})."
+                    )
+
+        elif annotation.__name__ == "Tuple":
+            # Check that the value is actually a tuple.
+            if not isinstance(value, tuple):
+                raise InvalidParameterError(
+                    f"Expected {name!r} to be of type {tuple} but "
+                    f"got {value!r} (type {type(value)}) instead."
+                )
+            # Size matters
+            if len(value) != len(contained_types):
+                raise InvalidParameterError(
+                    f"Expected {name!r} to be of type {annotation}, "
+                    f"got {value!r}, which contains an invalid type."
+                )  # FIXME
+            # Order matters
+            for element, contained_type in zip(value, contained_types):
+                if not _validate_value_with_signal(
+                    value=element,
+                    annotation=contained_type,
+                ):
+                    raise InvalidParameterError(
+                        f"Expected {name!r} to be a tuple containing "
+                        f"{contained_types}, but element {element!r} (type "
+                        f"{type(element)}) does not match {contained_type}."
+                    )
+
+        elif annotation.__name__ == "Dict":
+            # Check that it's actually a dictionary
+            if not isinstance(value, dict):
+                raise InvalidParameterError(
+                    f"Expected {name!r} to be of type {annotation} but "
+                    f"got {value!r} (type {type(value)}) instead."
+                )
+            keys_type, values_type = contained_types
+            # Validate keys
+            for key in value.keys():
+                if not _validate_value_with_signal(
+                    value=key,
+                    annotation=keys_type,
+                ):
+                    raise InvalidParameterError(
+                        f"Expected {name!r} to be of type {annotation} but "
+                        f"got {value!r}, which contains the invalid key "
+                        f"{key!r} (type {type(key)})."
+                    )
+            # Validate values
+            for dict_value in value.values():
+                if not _validate_value_with_signal(
+                    value=dict_value,
+                    annotation=values_type,
+                ):
+                    raise InvalidParameterError(
+                        f"Expected {name!r} to be of type {annotation} but "
+                        f"got {value!r}, which contains the invalid value "
+                        f"{dict_value!r} (type {type(dict_value)})."
+                    )
+
+        elif annotation.__name__ == "Any":
+            pass
+
+
+def _validate_value_with_signal(**kwargs) -> bool:
+    """
+    Wrapper for `_validate_value`, which, instead of raising an error,
+    returns a boolean value to indicate whether the type matches.
+    DO NOT use directly, it's an internal function used as part of the recursion.
+
+    Returns
+    -------
+    bool
+        True if the value and the annotation match, False if they don't.
+
+    """
+    try:
+        _validate_value(**kwargs)
+    except InvalidParameterError:
+        return False
+    else:
         return True
 
 
@@ -177,7 +258,7 @@ def _validate_class_parameters(instance):
         annotation = sig.parameters[name].annotation
         if annotation is not inspect.Parameter.empty:
             _validate_value(
-                name=name,
+                name=f"{instance.__class__.__name__}.{name}",
                 value=value,
                 annotation=annotation,
             )
@@ -227,7 +308,7 @@ def _validate_return(func: Callable, returned_value: Any):
     sig = inspect.signature(func)
     if sig.return_annotation is not inspect.Parameter.empty:
         _validate_value(
-            name="returned",
+            name="returned value",
             value=returned_value,
             annotation=sig.return_annotation,
         )
@@ -237,7 +318,8 @@ def validate_types_with_inspect(func):
     """
     Special validation decorator only used when there is a need for
     inspecting the decorated function's signature.
-    The only drawback is the
+    The only drawback is that the parameters cannot be set,
+    and are enforced as True.
     """
 
     @wraps(func)
@@ -327,6 +409,7 @@ def validate_types(
         nonlocal returned
 
         # Modify some parameters depending on the context
+
         if "." not in func.__qualname__:
             # Function is standalone
             class_parameters = False
