@@ -13,6 +13,7 @@ Improvement ideas are welcome.
 """
 
 import inspect
+import re
 import sys
 import typing
 from functools import wraps
@@ -72,7 +73,11 @@ def _validate_value(
         Helper function to get the name of a typing alias.
         """
         if sys.version_info[1] <= 9:
-            return repr(alias).split(".")[-1]
+            # Quirk of this regex: it assumes it always ends with brackets.
+            # `Literal` would not be caught in `typing.Literal`,
+            # but would be with `typing.Literal[...]`
+            # (even empty brackets work).
+            return re.findall(r"^typing\.([^\[]+)\[.*$", repr(alias))[0]
         else:
             return alias.__name__
 
@@ -106,6 +111,7 @@ def _validate_value(
         # (e.g. `(int, float)` in `Union[int, float]`).
         contained_types = annotation.__args__
         annotation_name = get_typing_alias_name(annotation)
+        print(f"Found typing annotation: {annotation} with name {annotation_name}")
 
         if annotation_name == "Literal":
             # Literal should not contain nested types, so we won't recurse.
