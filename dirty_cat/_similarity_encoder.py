@@ -27,6 +27,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
+from sklearn.utils.validation import check_is_fitted
 
 from ._string_distances import get_ngram_count, preprocess
 from ._utils import parse_version
@@ -62,7 +63,7 @@ def _ngram_similarity_one_sample_inplace(
     i : str
         The index of x_count_vector in the csr count matrix
     ngram_range : tuple
-        n-grams to use for the decomposition, where `n_min <= n <= n_max`.
+        n-grams to use for the decomposition, where ``n_min <= n <= n_max``.
     """
     nonzero_idx = x_count_vector.indices
     nonzero_vals = x_count_vector.data
@@ -210,6 +211,7 @@ class SimilarityEncoder(OneHotEncoder):
         The range of values for the n_gram similarity.
     categories : typing.Union[typing.Literal["auto", "k-means", "most_frequent"], typing.List[typing.List[str]]]  # noqa
         Categories (unique values) per feature:
+
         - 'auto' : Determine categories automatically from the training data.
         - list : ``categories[i]`` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
@@ -218,6 +220,7 @@ class SimilarityEncoder(OneHotEncoder):
            categorical variable
         - 'k-means' : Computes the K nearest neighbors of K-mean centroids
            in order to choose the prototype categories
+
         The categories used can be found in the ``categories_`` attribute.
     dtype : number type, default np.float64
         Desired dtype of output.
@@ -247,6 +250,29 @@ class SimilarityEncoder(OneHotEncoder):
         maximum number of processes used to compute similarity matrices. Used
         only if ``fast=True`` in ``SimilarityEncoder.transform``
 
+    Attributes
+    ----------
+    categories_ : typing.List[np.array]
+        The categories of each feature determined during fitting
+        (in order corresponding with output of ``transform``).
+
+    See Also
+    --------
+    :class:`~dirty_cat.MinHashEncoder` :
+        Encode string columns as a numeric array with the minhash method.
+    :class:`~dirty_cat.GapEncoder` :
+        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+    :class:`~dirty_cat.deduplicate` :
+        Deduplicate data by hierarchically clustering similar strings.
+
+    References
+    ----------
+
+    For a detailed description of the method, see
+    `Similarity encoding for learning with dirty categorical variables
+    <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kegl. 2018
+    (accepted for publication at: Machine Learning journal, Springer).
+
     Examples
     --------
     >>> enc = SimilarityEncoder()
@@ -272,23 +298,6 @@ class SimilarityEncoder(OneHotEncoder):
 
     >>> enc.get_feature_names_out(['gender', 'group'])
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
-
-    Attributes
-    ----------
-    categories_ : typing.List[np.array]
-        The categories of each feature determined during fitting
-        (in order corresponding with output of ``transform``).
-    _infrequent_enabled : bool, default=False
-        Avoid taking into account the existence of infrequent categories.
-
-    References
-    ----------
-
-    For a detailed description of the method, see
-    `Similarity encoding for learning with dirty categorical variables
-    <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kegl. 2018
-    (accepted for publication at: Machine Learning journal, Springer).
-
     """
 
     categories_: List[np.array]
@@ -357,7 +366,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         Parameters
         ----------
-        prototypes : typing.List[str]
+        prototypes : list of str
             The list of values for a category variable.
 
         Returns
@@ -370,7 +379,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     def fit(self, X, y=None) -> "SimilarityEncoder":
         """
-        Fit the SimilarityEncoder to X.
+        Fit the instance to X.
 
         Parameters
         ----------
@@ -381,8 +390,8 @@ class SimilarityEncoder(OneHotEncoder):
 
         Returns
         -------
-        SimilarityEncoder
-            The fitted SimilarityEncoder instance.
+        :class:`~dirty_cat.SimilarityEncoder`
+            The fitted :class:`~dirty_cat.SimilarityEncoder` instance (self).
         """
 
         if self.handle_missing not in ["error", ""]:
@@ -519,7 +528,7 @@ class SimilarityEncoder(OneHotEncoder):
         X_new : 2-d array, shape [n_samples, n_features_new]
             Transformed input.
         """
-
+        check_is_fitted(self, "categories_")
         if hasattr(X, "iloc") and X.isna().values.any():
             if self.handle_missing == "error":
                 raise ValueError(
@@ -584,18 +593,19 @@ class SimilarityEncoder(OneHotEncoder):
         """
         Fast computation of ngram similarity.
 
-        SimilarityEncoder.transform uses the count vectors of the vocabulary in
-        its computations. In ngram_similarity, these count vectors have to be
+        :func:`~dirty_cat.SimilarityEncoder.transform` uses the count vectors
+        of the vocabulary in its computations.
+        In `ngram_similarity`, these count vectors have to be
         re-computed each time, which can slow down the execution. In this
-        method, the count vectors are recovered from the
-        ``vocabulary_count_matrices`` attribute of the SimilarityEncoder,
+        method, the count vectors are recovered from
+        :attr:`~dirty_cat.SimilarityEncoder.vocabulary_count_matrices`,
         speeding up the execution.
 
         Parameters
         ----------
-        X: typing.Union[list, np.array]
+        X : list or :obj:`numpy.ndarray`
             Observations being transformed.
-        col_idx: int
+        col_idx : int
             The column index of X in the original feature matrix.
         """
         vectorizer = self.vectorizers_[col_idx]

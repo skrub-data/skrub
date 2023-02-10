@@ -1,6 +1,6 @@
 """
-Merging dirty tables: fuzzy join
-================================
+Fuzzy joining dirty tables and the FeatureAugmenter
+=====================================================
 
 Here we show how to combine data from different sources,
 with a vocabulary not well normalized.
@@ -8,16 +8,22 @@ with a vocabulary not well normalized.
 Joining is difficult: one entry on one side does not have
 an exact match on the other side.
 
-In this example, the |fj| function allows us to join
-tables without cleaning the data by taking into account the
-label variations.
+The |fj| function enables to join tables without cleaning the data by
+accounting for the label variations.
 
 To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
 with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
-in order to create a satisfying first prediction model.
+in order to create a first prediction model.
+
+Moreover, the |fa| is a scikit-learn Transformer that makes it easy to
+use such fuzzy joining multiple tables to bring in information in a
+machine-learning pipeline. In particular, it enables tuning parameters of
+|fj| to find the matches that maximize prediction accuracy.
 
 
 .. |fj| replace:: :func:`~dirty_cat.fuzzy_join`
+
+.. |fa| replace:: :func:`~dirty_cat.FeatureAugmenter`
 """
 
 ###############################################################################
@@ -104,11 +110,18 @@ gdppc.sort_values(by="Country Name").tail(7)
 #
 
 ###############################################################################
+# .. _example_fuzzy_join:
+#
 # 1. Joining GDP per capita table
 # ...............................
 #
 # To join them with dirty_cat, we only need to do the following:
 from dirty_cat import fuzzy_join
+
+# We will ignore the warnings:
+import warnings
+
+warnings.filterwarnings("ignore")
 
 df1 = fuzzy_join(
     df,  # our table to join
@@ -269,10 +282,6 @@ plt.show()
 ###############################################################################
 # 3. Joining legal rights strength table
 # ......................................
-# .. topic:: Note:
-#
-#    Here, we use the `keep='left'` option to keep only the left key matching
-#    column, so as not to have unnecessary overlaping column with country names.
 #
 # And the table with a measure of legal rights strength in the country:
 df3 = fuzzy_join(
@@ -341,10 +350,7 @@ cv_results_t = cross_validate(hgdb, X, y, cv=cv, scoring="r2")
 
 cv_r2_t = cv_results_t["test_score"]
 
-print(
-    f"Mean R2 score with {len(X.columns) - 2} feature columns is"
-    f" {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}"
-)
+print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 
 #################################################################
 # We have a satisfying first result: an R2 of 0.66!
@@ -358,3 +364,100 @@ print(
 #
 # Now up to you, try improving our model by adding information into it and
 # beating our result!
+
+#######################################################################
+# Using the |fa| to fuzzy join multiple tables
+# --------------------------------------------
+# A faster way to merge different tables from the World Bank
+# to `X` is to use the |fa|.
+#
+# The |fa| is a transformer that can easily chain joins of tables on
+# a main table.
+
+#######################################################################
+# .. _example_feature_augmenter:
+#
+# Instantiating the transformer
+# .............................
+
+y = df["Happiness score"]
+#######################################################################
+# We gather the auxilliary tables into a
+# list of (tables, keys) for the `tables` parameter.
+# An instance of the transformer with the necessary information is:
+from dirty_cat import FeatureAugmenter
+
+fa = FeatureAugmenter(
+    tables=[
+        (gdppc, "Country Name"),
+        (life_exp, "Country Name"),
+        (legal_rights, "Country Name"),
+    ],
+    main_key="Country",
+)
+
+#################################################################
+# Fitting and transforming into the final table
+# .............................................
+# To get our final joined table we will fit and transform the main table (df)
+# with our create instance of the |fa|:
+df_final = fa.fit_transform(df)
+
+df_final.head(10)
+
+##########################################################################
+# And that's it! As previously, we now have a big table
+# ready for machine learning.
+# Let's create our machine learning pipeline:
+from sklearn.pipeline import make_pipeline
+from sklearn.compose import make_column_transformer
+
+# We include only the columns that will be pertinent for our regression:
+encoder = make_column_transformer(
+    (
+        "passthrough",
+        [
+            "GDP per capita (current US$)",
+            "Life expectancy at birth, total (years)",
+            "Strength of legal rights index (0=weak to 12=strong)",
+        ],
+    ),
+    remainder="drop",
+)
+
+pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
+
+##########################################################################
+# And the best part is that we are now able to evaluate the paramaters of the |fj|.
+# For instance, the ``match_score`` was manually picked and can now be
+# introduced into a grid search:
+
+from sklearn.model_selection import GridSearchCV
+
+# We will test four possible values of match_score:
+params = {"featureaugmenter__match_score": [0.2, 0.3, 0.4, 0.5]}
+
+grid = GridSearchCV(pipeline, param_grid=params)
+grid.fit(df, y)
+
+print(grid.best_params_)
+##########################################################################
+# The grid searching gave us the best value of 0.5 for the parameter
+# ``match_score``. Let's use this value in our regression:
+#
+
+print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
+
+##########################################################################
+#
+# .. topic:: Note:
+#
+#    Here, ``grid.score()`` takes directly the best model
+#    (with ``match_score=0.5``) that was found during the grid search.
+#    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
+#    refitting the pipeline on the data.
+#
+#
+# Great, by evaluating the correct ``match_score`` we improved our
+# results significantly!
+#

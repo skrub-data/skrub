@@ -1,7 +1,7 @@
 
-===============================================
-dirty_cat: machine learning on dirty categories
-===============================================
+=================================================
+dirty_cat: machine learning with dirty categories
+=================================================
 
 .. toctree::
    :maxdepth: 2
@@ -10,10 +10,12 @@ dirty_cat: machine learning on dirty categories
 
 .. container:: larger-container
 
-    `dirty_cat` facilitates machine-learning on non-curated categories:
-    **robust to morphological variants**, such as typos.
-    See `the first example notebook <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
-    for a more in-depth look into the problem and the library's capabilities.
+    `dirty_cat` facilitates machine-learning with non-curated categories:
+    **robust to morphological variants**, such as typos. See
+    :ref:`examples <usage_examples>`, such as `the first one
+    <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_,
+    for an introduction to problems of dirty categories or misspelled
+    entities.
 
 |
 
@@ -23,13 +25,13 @@ dirty_cat: machine learning on dirty categories
     <div class="flex-content">
     <span class="container-title">Automatic features from heterogeneous dataframes</span>
 
-:class:`SuperVectorizer`: a transformer **automatically turning a pandas
+:class:`TableVectorizer`: a transformer **automatically turning a pandas
 dataframe into a numpy array** for machine learning -- a default encoding
 pipeline you can tweak.
 
 .. rst-class:: centered
 
-    :ref:`An example <example_super_vectorizer>`
+    :ref:`An example <example_table_vectorizer>`
 
 .. raw:: html
 
@@ -40,11 +42,38 @@ pipeline you can tweak.
 
 * :class:`GapEncoder`, scalable and interpretable, where each encoding
   dimension corresponds to a topic that summarizes substrings captured.
+  :ref:`Example <example_gap_encoder>`
 
 * :class:`SimilarityEncoder`, a simple modification of one-hot encoding
   to capture the strings.
+  :ref:`Example <example_similarity_encoder>`
 
-* :class:`MinHashEncoder`, very scalable
+* :class:`MinHashEncoder`, very scalable.
+  :ref:`Example <example_minhash_encoder>`
+
+.. raw:: html
+
+    </div>
+    <div class="flex-content">
+    <span class="container-title">Joining tables on non-normalized categories</span>
+
+* :func:`fuzzy_join`, approximate matching using morphological similarity.
+  :ref:`Example <example_fuzzy_join>`
+
+* :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
+  :ref:`Example <example_feature_augmenter>`
+
+.. raw:: html
+
+    </div>
+    <div class="flex-content">
+    <span class="container-title">Deduplicating dirty categories</span>
+
+:func:`deduplicate`, merging categories of similar morphology (spelling).
+
+.. rst-class:: centered
+
+     :ref:`An example <example_deduplication>`
 
 .. raw:: html
 
@@ -61,7 +90,18 @@ pipeline you can tweak.
 
     :Installing: ``$ pip install --user --upgrade dirty_cat``
 
+.. _usage_examples:
 
+Usage examples
+==============
+
+.. container:: larger-container
+
+  .. include:: auto_examples/index.rst
+    :start-line: 5
+    :end-before: .. rst-class:: sphx-glr-signature
+
+|
 
 .. raw:: html
 
@@ -77,17 +117,6 @@ pipeline you can tweak.
 
     </div>
 
-
-Usage examples
-==============
-
-.. container:: larger-container
-
-  .. include:: auto_examples/index.rst
-    :start-line: 2
-    :end-before: .. rst-class:: sphx-glr-signature
-
-|
 
 For a detailed description of the problem of encoding dirty categorical data,
 see `Similarity encoding for learning with dirty categorical variables
@@ -106,7 +135,7 @@ Vectorizing a dataframe
    :template: class.rst
    :nosignatures:
 
-   SuperVectorizer
+   TableVectorizer
 
 Dirty Category encoders
 -----------------------
@@ -141,8 +170,26 @@ Joining tables
 
    fuzzy_join
 
-Data download
--------------
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
+   FeatureAugmenter
+
+Deduplication: merging variants of the same entry
+---------------------------------------------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+
+   deduplicate
+
+
+Data download and generation
+----------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -158,6 +205,7 @@ Data download
    datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
    datasets.get_data_dir
+   datasets.make_deduplication_data
 
 About
 =====

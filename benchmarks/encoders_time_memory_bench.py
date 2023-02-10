@@ -1,6 +1,6 @@
 # Inspired from :
 # https://github.com/scikit-learn/scikit-learn/blob/main/benchmarks/bench_text_vectorizers.py
-# plot run time and memory usage of the different encoders using the SuperVectorizer method
+# plot run time and memory usage of the different encoders using the TableVectorizer method
 # test if auto_cast=True plays an important role
 
 """
@@ -22,7 +22,7 @@ from memory_profiler import memory_usage
 from dirty_cat.datasets import fetch_traffic_violations
 
 from dirty_cat import SimilarityEncoder, GapEncoder, MinHashEncoder
-from dirty_cat import SuperVectorizer
+from dirty_cat import TableVectorizer
 
 n_repeat = 3
 
@@ -47,7 +47,7 @@ print("This benchmarks runs in ~1 min ...")
 res = []
 
 for Encoder, (auto_cast, high_card_cat_transformer) in itertools.product(
-    [SuperVectorizer],
+    [TableVectorizer],
     [
         (True, SimilarityEncoder()),
         (True, GapEncoder()),

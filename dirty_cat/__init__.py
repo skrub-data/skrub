@@ -15,11 +15,13 @@ except ModuleNotFoundError:
     )
 
 from ._datetime_encoder import DatetimeEncoder
+from ._deduplicate import compute_ngram_distance, deduplicate
+from ._feature_augmenter import FeatureAugmenter
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._minhash_encoder import MinHashEncoder
 from ._similarity_encoder import SimilarityEncoder
-from ._super_vectorizer import SuperVectorizer
+from ._table_vectorizer import SuperVectorizer, TableVectorizer
 from ._target_encoder import TargetEncoder
 
 with open(_Path(__file__).parent / "VERSION.txt") as _fh:
@@ -27,11 +29,15 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
-    "SimilarityEncoder",
-    "TargetEncoder",
-    "MinHashEncoder",
-    "GapEncoder",
     "DatetimeEncoder",
-    "SuperVectorizer",
+    "FeatureAugmenter",
     "fuzzy_join",
+    "GapEncoder",
+    "MinHashEncoder",
+    "SimilarityEncoder",
+    "SuperVectorizer",
+    "TableVectorizer",
+    "TargetEncoder",
+    "deduplicate",
+    "compute_ngram_distance",
 ]

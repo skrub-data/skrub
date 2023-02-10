@@ -1,21 +1,34 @@
+:orphan:
+
 .. currentmodule:: dirty_cat
 
-Release 0.4.0 (upcoming)
-=========================
+Release 0.5.0
+==============
+
+Release 0.4.0 (beta 2)
+======================
 
 Major changes
 -------------
 
+* `SuperVectorizer` is renamed as :class:`TableVectorizer`, a warning is raised when using the old name.
+:pr:`484` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category.
-:pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
-* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator`
-  that can be used to download any indicator from the World Bank Open Data platform.
-  It only needs the indicator ID that can be found on the website. :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+  :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
+* New experimental feature: :class:`FeatureAugmenter`, a transformer
+  that augments with :func:`fuzzy_join` the number of features in a main table by using information from auxilliary tables.
+  :pr:`409` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download any indicator
+  from the World Bank Open Data platform, the indicator ID that can be found there.
+  :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 * Unnecessary API has been made private: everything (files, functions, classes)
   starting with an underscore shouldn't be imported in your code. :pr:`331` by :user:`Lilian Boulard <LilianBoulard>`
 * The :class:`MinHashEncoder` now supports a `n_jobs` parameter to parallelize
   the hashes computation. :pr:`267` by :user:`Leo Grinsztajn <LeoGrin>` and :user:`Lilian Boulard <LilianBoulard>`.
+* New experimental feature: deduplicating misspelled categories using :func:`deduplicate` by clustering string distances.
+  This function works best when there are significantly more duplicates than underlying categories.
+  :pr:`339` by :user:`Moritz Boos <mjboos>`.
 
 Minor changes
 -------------
@@ -45,9 +58,9 @@ Major changes
 
 * New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical columns
   (year, month, day, hour, minute, second, ...). It is now the default transformer used
-  in the :class:`SuperVectorizer` for datetime columns. :pr:`239` by :user:`Leo Grinsztajn <LeoGrin>`
+  in the :class:`TableVectorizer` for datetime columns. :pr:`239` by :user:`Leo Grinsztajn <LeoGrin>`
 
-* The :class:`SuperVectorizer` has seen some major improvements and bug fixes:
+* The :class:`TableVectorizer` has seen some major improvements and bug fixes:
 
   - Fixes the automatic casting logic in ``transform``.
   - To avoid dimensionality explosion when a feature has two unique values, the default encoder (:class:`~sklearn.preprocessing.OneHotEncoder`) now drops one of the two vectors (see parameter `drop="if_binary"`).
@@ -55,7 +68,7 @@ Major changes
 
   :pr:`300` by :user:`Lilian Boulard <LilianBoulard>`
 
-* **Backward-incompatible change in the SuperVectorizer**:
+* **Backward-incompatible change in the TableVectorizer**:
   To apply ``remainder`` to features (with the ``*_transformer`` parameters),
   the value ``'remainder'`` must be passed, instead of ``None`` in previous versions.
   ``None`` now indicates that we want to use the default transformer. :pr:`303` by :user:`Lilian Boulard <LilianBoulard>`
@@ -77,7 +90,7 @@ Major changes
 Notes
 -----
 
-* The ``transformers_`` attribute of the :class:`SuperVectorizer` now contains column
+* The ``transformers_`` attribute of the :class:`TableVectorizer` now contains column
   names instead of column indices for the "remainder" columns. :pr:`266` by :user:`Leo Grinsztajn <LeoGrin>`
 
 
@@ -87,7 +100,7 @@ Release 0.2.2
 Bug fixes
 ---------
 
-* Fixed a bug in the :class:`SuperVectorizer` causing a :class:`FutureWarning`
+* Fixed a bug in the :class:`TableVectorizer` causing a :class:`FutureWarning`
   when using the :func:`get_feature_names_out` method. :pr:`262` by :user:`Lilian Boulard <LilianBoulard>`
 
 
@@ -97,7 +110,7 @@ Release 0.2.1
 Major changes
 -------------
 
-* Improvements to the :class:`SuperVectorizer`
+* Improvements to the :class:`TableVectorizer`
 
     - Type detection works better: handles dates, numerics columns encoded as strings, or numeric columns containing strings for missing values.
 
@@ -130,7 +143,7 @@ Notes
 
 * Fix typos and update links for website.
 
-* Documentation of the :class:`SuperVectorizer` and the :class:`SimilarityEncoder` improved.
+* Documentation of the :class:`TableVectorizer` and the :class:`SimilarityEncoder` improved.
 
 Release 0.2.0
 =============
@@ -167,7 +180,7 @@ Major changes
 
   :pr:`210` by :user:`Alexis Cvetkov <alexis-cvetkov>`.
 
-* Add a method "get_feature_names_out" for the :class:`GapEncoder` and the :class:`SuperVectorizer`,
+* Add a method "get_feature_names_out" for the :class:`GapEncoder` and the :class:`TableVectorizer`,
   since `get_feature_names` will be depreciated in scikit-learn 1.2. :pr:`216` by :user:`Alexis Cvetkov <alexis-cvetkov>`
 
 Notes
@@ -176,7 +189,7 @@ Notes
 * Removed hard-coded CSV file `dirty_cat/data/FiveThirtyEight_Midwest_Survey.csv`.
 
 
-* Improvements to the :class:`SuperVectorizer`
+* Improvements to the :class:`TableVectorizer`
 
   - Missing values are not systematically imputed anymore
   - Type casting and per-column imputation are now learnt during fitting
@@ -206,8 +219,8 @@ Major changes
   - SciPy (>= 1.2)
   - scikit-learn (>= 0.20.0)
 
-* :class:`SuperVectorizer`: Added automatic transform through the
-  :class:`SuperVectorizer` class. It transforms
+* :class:`TableVectorizer`: Added automatic transform through the
+  :class:`TableVectorizer` class. It transforms
   columns automatically based on their type. It provides a replacement
   for scikit-learn's :class:`~sklearn.compose.ColumnTransformer` simpler to use on heterogeneous
   pandas DataFrame. :pr:`167` by :user:`Lilian Boulard <LilianBoulard>`

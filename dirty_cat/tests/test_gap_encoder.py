@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn import __version__ as sklearn_version
+from sklearn.exceptions import NotFittedError
 
 from dirty_cat import GapEncoder
 from dirty_cat._utils import parse_version
@@ -195,3 +196,23 @@ def test_missing_values(missing: str) -> None:
             r"'error' or 'zero_impute', got 'aaa'",
         ):
             enc.fit_transform(observations)
+
+
+def test_check_fitted_gap_encoder():
+    """Test that calling transform before fit raises an error"""
+    X = np.array([["alice"], ["bob"]])
+    enc = GapEncoder(n_components=2, random_state=42)
+    with pytest.raises(NotFittedError):
+        enc.transform(X)
+
+    # Check that it works after fit
+    enc.fit(X)
+    enc.transform(X)
+
+
+def test_small_sample():
+    """Test that having n_samples < n_components raises an error"""
+    X = np.array([["alice"], ["bob"]])
+    enc = GapEncoder(n_components=3, random_state=42)
+    with pytest.raises(ValueError, match="should be >= n_components"):
+        enc.fit_transform(X)

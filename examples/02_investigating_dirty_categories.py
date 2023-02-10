@@ -67,6 +67,8 @@ values = data[["employee_position_title", "gender"]]
 values.insert(0, "current_annual_salary", employee_salaries.y)
 
 ###############################################################################
+# .. _example_similarity_encoder:
+#
 # String similarity between entries
 # ---------------------------------
 #
@@ -174,6 +176,8 @@ print(X_dirty.head(), end="\n\n")
 print(f"Number of dirty entries = {len(X_dirty)}")
 
 ###############################################################################
+# .. _example_gap_encoder:
+#
 # Encoding dirty job titles
 # .........................
 #
