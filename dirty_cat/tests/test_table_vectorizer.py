@@ -437,7 +437,8 @@ def test_passthrough():
     X_enc_clean = pd.DataFrame(
         tv.fit_transform(X_clean), columns=tv.get_feature_names_out()
     )
-    # Reorder encoded arrays' columns (see TableVectorizer's doc "Notes" section as to why)
+    # Reorder encoded arrays' columns
+    # (see TableVectorizer's doc "Notes" section as to why)
     X_enc_dirty = X_enc_dirty[X_dirty.columns]
     X_enc_clean = X_enc_clean[X_clean.columns]
 
@@ -459,12 +460,12 @@ def test_check_fitted_table_vectorizer():
     tv.transform(X)
 
 
-<<<<<<< HEAD:dirty_cat/tests/test_table_vectorizer.py
 def test_check_name_change():
     """Test that using SuperVectorizer raises a deprecation warning"""
     with pytest.warns(FutureWarning):
         SuperVectorizer()
-=======
+
+
 def test_handle_unknown():
     """
     Test that new categories encountered in the test set
@@ -473,27 +474,50 @@ def test_handle_unknown():
     X = _get_clean_dataframe()
     # Test with low cardinality and a StandardScaler for the numeric columns
     sup_vec = SuperVectorizer(
-        cardinality_threshold=4,
-        # we must have n_samples = 5 >= n_components
-        high_card_cat_transformer=GapEncoder(n_components=2),
+        cardinality_threshold=6,  # treat all columns as low cardinality
     )
     sup_vec.fit(X)
-    s_unknown = [
-        [3, 2.1, "semi-private", "researcher", "maybe", "70K+"],  # all unknown
-        [1, 4.3, "public", "chef", "yes", "30K+"],
-    ]
-    s_known = [
-        [1, 4.3, "public", "chef", "yes", "30K+"],
-        [4, 3.3, "private", "chef", "no", "20K+"],
-    ]
-    x_unknown = np.array(s_unknown).reshape(2, -1)
-    x_known = np.array(s_known).reshape(2, -1)
-    x_trans_unknown = sup_vec.transform(x_unknown)
-    x_trans_known = sup_vec.transform(x_known)
+    x_unknown = pd.DataFrame(
+        {
+            "int": pd.Series([3, 1], dtype="int"),
+            "float": pd.Series([2.1, 4.3], dtype="float"),
+            "str1": pd.Series(["semi-private", "public"], dtype="string"),
+            "str2": pd.Series(["researcher", "chef"], dtype="string"),
+            "cat1": pd.Series(["maybe", "yes"], dtype="category"),
+            "cat2": pd.Series(["70K+", "20K+"], dtype="category"),
+        }
+    )
+    x_known = pd.DataFrame(
+        {
+            "int": pd.Series([1, 4], dtype="int"),
+            "float": pd.Series([4.3, 3.3], dtype="float"),
+            "str1": pd.Series(["public", "private"], dtype="string"),
+            "str2": pd.Series(["chef", "chef"], dtype="string"),
+            "cat1": pd.Series(["yes", "no"], dtype="category"),
+            "cat2": pd.Series(["30K+", "20K+"], dtype="category"),
+        }
+    )
+    if parse_version(sklearn.__version__) >= parse_version("0.24.2"):
+        # Default behavior is "handle_unknown='ignore'",
+        # so unknown categories are encoded as all zeros
+        x_trans_unknown = sup_vec.transform(x_unknown)
+        x_trans_known = sup_vec.transform(x_known)
 
-    assert x_trans_unknown.shape == x_trans_known.shape
-    # Default behavior is "handle_unknown='ignore'",
-    # so unknown categories are encoded as all zeros
-    assert np.allclose(x_trans_unknown[0, :4], np.zeros_like(x_trans_unknown[0, :4]))
-    assert x_trans_unknown[0, 4] != 0
->>>>>>> da1dac4 (Fix bug for new categories for categorical columns):dirty_cat/tests/test_super_vectorizer.py
+        assert x_trans_unknown.shape == x_trans_known.shape
+        n_zeroes = (
+            X["str2"].nunique() + X["cat2"].nunique() + 2
+        )  # 2 for binary columns which get one
+        # cateogry dropped
+        assert np.allclose(
+            x_trans_unknown[0, :n_zeroes], np.zeros_like(x_trans_unknown[0, :n_zeroes])
+        )
+        assert x_trans_unknown[0, n_zeroes] != 0
+        assert not np.allclose(
+            x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
+        )
+    else:
+        # Default behavior is "handle_unknown='error'",
+        # so unknown categories raise an error
+        with pytest.raises(ValueError, match="Found unknown categories"):
+            sup_vec.transform(x_unknown)
+        sup_vec.transform(x_known)
