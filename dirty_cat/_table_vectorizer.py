@@ -327,7 +327,7 @@ class TableVectorizer(ColumnTransformer):
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
-            if parse_version(sklearn_version) >= parse_version("0.24.2"):
+            if parse_version(sklearn_version) >= parse_version("1.0.0"):
                 # sklearn is lenient and let us use both handle_unknown="ignore"
                 # and drop="if_binary" at the same time
                 self.low_card_cat_transformer_ = OneHotEncoder(
@@ -342,9 +342,9 @@ class TableVectorizer(ColumnTransformer):
                 )
                 warn(
                     "You are using an old version of scikit-learn. "
-                    "Using handle_unknown='error' in default low_card_cat_transformer. "
-                    "Please upgrade to scikit-learn 0.24.2 or higher to "
-                    "use handle_unknown='ignore' by default."
+                    "Using handle_unknown='error' in low_card_cat_transformer. "
+                    "Please upgrade to scikit-learn 1.0.0 or higher to "
+                    "use handle_unknown='ignore', or change the drop parameter to None."
                 )
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder

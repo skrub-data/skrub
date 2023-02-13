@@ -497,7 +497,7 @@ def test_handle_unknown():
             "cat2": pd.Series(["30K+", "20K+"], dtype="category"),
         }
     )
-    if parse_version(sklearn.__version__) >= parse_version("0.24.2"):
+    if parse_version(sklearn.__version__) >= parse_version("1.0.0"):
         # Default behavior is "handle_unknown='ignore'",
         # so unknown categories are encoded as all zeros
         x_trans_unknown = sup_vec.transform(x_unknown)
