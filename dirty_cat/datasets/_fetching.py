@@ -818,3 +818,63 @@ def fetch_world_bank_indicator(
         load_dataframe=load_dataframe,
         data_directory=directory,
     )
+
+
+def fetch_embeddings(
+    indicator_id: str,
+    data_directory: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """
+    Gets a dataset from fighsare.
+
+    Parameters
+    ----------
+    indicator_id: str
+        The ID of the dataset to fetch.
+    data_directory: Path, optional
+        A directory to save the data to.
+        By default, the dirty_cat data directory.
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary containing:
+          - ``description``: str
+              The description of the dataset.
+          - ``source``: str
+              The dataset's URL.
+          - ``path``: pathlib.Path
+              The local path leading to the dataset,
+              saved as a CSV file.
+
+    """
+    if data_directory is None:
+        data_directory = get_data_dir()
+    parquet_path = (data_directory / f"{indicator_id}.parquet").resolve()
+    data_directory.mkdir(parents=True, exist_ok=True)
+    url = f"https://figshare.com/ndownloader/files/{indicator_id}"
+    if parquet_path.is_file():
+        pass
+    else:
+        warnings.warn(
+            f"Could not find the dataset {indicator_id!r} locally. "
+            "Downloading it from figshare; this might take a while... "
+            "If it is interrupted, some files might be invalid/incomplete: "
+            "if on the following run, the fetching raises errors, you can try "
+            f"fixing this issue by deleting the directory {parquet_path!s}.",
+            UserWarning,
+            stacklevel=2,
+        )
+        try:
+            filehandle, _ = urllib.request.urlretrieve(url)
+            df = pd.read_parquet(filehandle)
+        except URLError:
+            raise URLError("No internet connection or the website is down.")
+        df.to_parquet(parquet_path, index=False)
+    description = f"This table shows the {indicator_id!r} figshare file."
+    return {
+        "dataset_name": indicator_id,
+        "description": description,
+        "source": url,
+        "path": parquet_path,
+    }
