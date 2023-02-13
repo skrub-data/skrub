@@ -2,14 +2,14 @@
 Provides the main decorator `validate_types` for validating the input/returned
 types, as well as class attributes.
 
-Another decorator `validate_types_with_inspect` is available if
-inspection is a required feature. Only use if necessary.
-Eventually, this feature should be implemented in the main decorator.
-
 This is private API dedicated to the dirty_cat developers.
 It may be used by other projects, without guarantees - we implement only
 what we need in dirty_cat.
 Improvement ideas are welcome.
+
+TODO:
+ - If mypy is in use, disable the feature
+ - Proceed by elimination to find whether the function is a class or static function
 """
 
 import inspect
@@ -111,7 +111,6 @@ def _validate_value(
         # (e.g. `(int, float)` in `Union[int, float]`).
         contained_types = annotation.__args__
         annotation_name = get_typing_alias_name(annotation)
-        print(f"Found typing annotation: {annotation} with name {annotation_name}")
 
         if annotation_name == "Literal":
             # Literal should not contain nested types, so we won't recurse.
@@ -333,23 +332,6 @@ def _validate_return(func: Callable, returned_value: Any):
         )
 
 
-def validate_types_with_inspect(func):
-    """
-    Special validation decorator only used when there is a need for
-    inspecting the decorated function's signature.
-    The only drawback is that the parameters cannot be set,
-    and are enforced as True.
-    """
-
-    @wraps(func)
-    def decorator(*args, **kwargs):
-        validate_types(class_parameters=True, parameters=True, returned=True,)(
-            func
-        )(*args, **kwargs)
-
-    return decorator
-
-
 def validate_types(
     class_parameters: bool = True,
     parameters: bool = True,
@@ -360,6 +342,9 @@ def validate_types(
     - the class attributes
     - the function's arguments
     - the function's return value
+
+    Uses the type hints to check the values passed are correct.
+    If an inconsistency is found, a clean error is raised.
 
     If used as part of a class, `class_parameters` is relevant:
     we assume the arguments taken in `__init__` are set as instance attributes
@@ -381,12 +366,7 @@ def validate_types(
     >>> @validate_types()
     >>> def my_function(identifier: int, connections: typing.List[int]) -> bool:
     >>>     ...
-    Notice the decorator is called: it's required when decorating a
-    standalone function, but not for a class function (regardless if it's a
-    static/class/instance method).
-
-    Uses the type hints to check the values passed are correct.
-    If an inconsistency is found, a clean error is raised.
+    Notice the decorator is called!
 
     Parameters
     ----------
@@ -410,6 +390,7 @@ def validate_types(
     >>> l: Optional[List[str]]  # Python >=3.7
     >>> l: Optional[list[str]]  # Python >=3.9
     >>> l: list[str] | None  # >=Python 3.10
+    We support the oldest typing of Python that dirty_cat requires.
 
     Examples
     --------
@@ -421,13 +402,13 @@ def validate_types(
 
     >>> class Encoder:
     >>>
-    >>>     @validate_types
+    >>>     @validate_types()
     >>>     def __init__(self, handle_error: Literal["raise", "ignore"],
     >>>                  n_jobs: Optional[int]):
     >>>         self.handle_error = handle_error
     >>>         self.n_jobs = n_jobs
     >>>
-    >>>     @validate_types
+    >>>     @validate_types()
     >>>     def fit(self, X: pd.DataFrame) -> np.ndarray:
     >>>         ...
     """
@@ -444,12 +425,12 @@ def validate_types(
             class_parameters = False
         else:
             # Function is part of a class
-            if isinstance(
-                inspect.getattr_static(func.__class__, func.__name__),
-                (staticmethod, classmethod),
-            ):
-                # Function is a static/class method
-                class_parameters = False
+            # if isinstance(
+            #    parent_class,  # I'm blocked here, we need to get the class
+            #    (staticmethod, classmethod),
+            # ):
+            #    # Function is a static/class method
+            #    class_parameters = False
             if func.__name__ == "__init__":
                 # Function is the constructor
                 class_parameters = False

@@ -4,11 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from dirty_cat._param_validation import (
-    InvalidParameterError,
-    validate_types,
-    validate_types_with_inspect,
-)
+from dirty_cat._param_validation import InvalidParameterError, validate_types
 
 
 class GenericThing:
@@ -16,7 +12,7 @@ class GenericThing:
     Example class used to test the parameters validation system.
     """
 
-    @validate_types_with_inspect
+    @validate_types()
     def __init__(
         self,
         bool_arg: bool,
@@ -49,11 +45,11 @@ class GenericThing:
         self.set_arg = set_arg
         self.dict_arg = dict_arg
 
-    @validate_types
+    @validate_types()
     def exec_correct(self, _: str, __: typing.Optional[int]) -> str:
         return "Works!"
 
-    @validate_types
+    @validate_types()
     def exec_incorrect(self, _: str, __: typing.Optional[int]) -> int:
         pass
 
