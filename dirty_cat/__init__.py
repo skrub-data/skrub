@@ -19,6 +19,7 @@ from ._deduplicate import compute_ngram_distance, deduplicate
 from ._feature_augmenter import FeatureAugmenter
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
+from ._ken_embeddings import get_ken_embeddings
 from ._minhash_encoder import MinHashEncoder
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import SuperVectorizer, TableVectorizer
@@ -40,4 +41,5 @@ __all__ = [
     "TargetEncoder",
     "deduplicate",
     "compute_ngram_distance",
+    "get_ken_embeddings",
 ]
