@@ -531,6 +531,7 @@ def fetch_employee_salaries(
     load_dataframe: bool = True,
     drop_linked: bool = True,
     drop_irrelevant: bool = True,
+    directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
     """Fetches the employee_salaries dataset (regression), available at
     https://openml.org/d/42125
@@ -569,6 +570,7 @@ def fetch_employee_salaries(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
+        data_directory=directory,
     )
     if load_dataframe:
         if drop_linked:
