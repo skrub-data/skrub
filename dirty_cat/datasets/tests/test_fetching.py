@@ -103,7 +103,7 @@ def test_openml_fetching(fetching_function: Callable):
                 .replace("_", " ")
                 .capitalize()
             )
-            assert dataset.source.startswith("https://openml.org/")
+            assert dataset.source.startswith("https://www.openml.org/")
 
 
 def test_fetch_world_bank_indicator():
