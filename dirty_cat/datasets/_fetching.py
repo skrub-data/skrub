@@ -865,17 +865,17 @@ def fetch_figshare(
     ]
     if len(filePaths) > 0:
         if len(filePaths) == 1:
-            parquet_paths = filePaths[0].resolve()
+            parquet_paths = [str(filePaths[0].resolve())]
         else:
             parquet_paths = []
             for path in filePaths:
-                parquet_path = path.resolve()
+                parquet_path = str(path.resolve())
                 parquet_paths += [parquet_path]
         return {
             "dataset_name": figshare_id,
             "description": description,
             "source": url,
-            "path": filePaths,
+            "path": parquet_paths,
         }
     else:
         warnings.warn(
@@ -906,6 +906,15 @@ def fetch_figshare(
                     "description": description,
                     "source": url,
                     "path": parquet_paths,
+                }
+            else:
+                df = pd.read_parquet(filehandle)
+                df.to_parquet(parquet_path, index=False)
+                return {
+                    "dataset_name": figshare_id,
+                    "description": description,
+                    "source": url,
+                    "path": [parquet_path],
                 }
         except URLError:
             raise URLError("No internet connection or the website is down.")
