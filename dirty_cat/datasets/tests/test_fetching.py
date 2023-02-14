@@ -2,6 +2,7 @@ import warnings
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Callable
+from unittest import mock
 from urllib.error import URLError
 
 import pandas as pd
@@ -156,7 +157,7 @@ def test_fetch_world_bank_indicator():
         # Now that we have verified the file is on disk, we want to test
         # whether calling the function again reads it from disk (it should)
         # or queries the network again (it shouldn't).
-        with pytest.mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
+        with mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
             # Same valid call as above
             disk_loaded_info = _fetching.fetch_world_bank_indicator(
                 indicator_id=test_dataset["id"]
