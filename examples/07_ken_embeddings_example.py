@@ -100,12 +100,16 @@ from dirty_cat.datasets import get_ken_embeddings
 
 # We include all embeddings with the type name "game"
 # and exclude those with type name "companies"
-embedding_games = get_ken_embeddings(types="game", exclude="companies")
+embedding_games = get_ken_embeddings(
+    types="game", emb_id="39254360", exclude="companies"
+)
 
 # We include all embeddings containing the type name
 # "game_development_companies", "game_companies" or "game_publish":
 embedding_publisher = get_ken_embeddings(
-    "game_development_companies|game_companies|game_publish", suffix="_aux"
+    "game_development_companies|game_companies|game_publish",
+    emb_id="39253949",
+    suffix="_aux",
 )
 
 # We keep the 200 embeddings column names in a list (for the |Pipeline|):
