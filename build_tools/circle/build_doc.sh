@@ -108,8 +108,8 @@ fi
 # Install dependencies with miniconda
 wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
    -O miniconda.sh
-chmod +x miniconda.sh && bash ./miniconda.sh -b -p $MINICONDA_PATH
-export PATH="$MINICONDA_PATH/bin:$PATH"
+chmod +x miniconda.sh && bash ./miniconda.sh -b -p "miniconda"
+export PATH="miniconda/bin:$PATH"
 conda update --yes --quiet conda
 
 # Configure the conda environment and put it in the path using the
