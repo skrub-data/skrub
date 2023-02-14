@@ -16,6 +16,7 @@ import json
 import urllib.request
 import warnings
 from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from urllib.error import URLError
@@ -858,8 +859,24 @@ def fetch_figshare(
     parquet_path = (data_directory / f"{figshare_id}.parquet").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
     url = f"https://figshare.com/ndownloader/files/{figshare_id}"
-    if parquet_path.is_file():
-        pass
+    description = f"This table shows the {figshare_id!r} figshare file."
+    filePaths = [
+        file for file in data_directory.iterdir() if file.name.startswith(figshare_id)
+    ]
+    if len(filePaths) > 0:
+        if len(filePaths) == 1:
+            parquet_paths = filePaths[0].resolve()
+        else:
+            parquet_paths = []
+            for path in filePaths:
+                parquet_path = path.resolve()
+                parquet_paths += [parquet_path]
+        return {
+            "dataset_name": figshare_id,
+            "description": description,
+            "source": url,
+            "path": filePaths,
+        }
     else:
         warnings.warn(
             f"Could not find the dataset {figshare_id!r} locally. "
@@ -872,14 +889,23 @@ def fetch_figshare(
         )
         try:
             filehandle, _ = urllib.request.urlretrieve(url)
-            df = pd.read_parquet(filehandle)
+            if Path(filehandle).stat().st_size > 1_000_000_000:
+                df = pd.read_parquet(filehandle)
+                idx = []
+                for _, x in enumerate(chain(range(0, len(df), 1_000_000), [len(df)])):
+                    idx += [x]
+                parquet_paths = []
+                for i in range(1, len(idx)):
+                    parquet_path = (
+                        data_directory / f"{figshare_id}_{idx[i]}.parquet"
+                    ).resolve()
+                    df.iloc[idx[i - 1] : idx[i]].to_parquet(parquet_path, index=False)
+                    parquet_paths += [parquet_path]
+                return {
+                    "dataset_name": figshare_id,
+                    "description": description,
+                    "source": url,
+                    "path": parquet_paths,
+                }
         except URLError:
             raise URLError("No internet connection or the website is down.")
-        df.to_parquet(parquet_path, index=False)
-    description = f"This table shows the {figshare_id!r} figshare file."
-    return {
-        "dataset_name": figshare_id,
-        "description": description,
-        "source": url,
-        "path": parquet_path,
-    }

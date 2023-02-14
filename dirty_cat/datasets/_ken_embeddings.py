@@ -65,36 +65,32 @@ def get_ken_embeddings(
     # Get all embeddings:
     emb_full = fetch_figshare(emb_id)
     emb_type = fetch_figshare(emb_type_id)
-    emb_full = pd.read_parquet(emb_full["path"])
     emb_type = pd.read_parquet(emb_type["path"])
     # All in lower case for easier matching
     emb_type["Type"] = emb_type["Type"].str.lower()
-    emb_type = emb_type[emb_type["Type"].str.contains(types)].drop_duplicates(
-        subset=["Entity"]
-    )
+    emb_type = emb_type[emb_type["Type"].str.contains(types)]
+    emb_type.drop_duplicates(subset=["Entity"], inplace=True)
     if exclude is not None:
         emb_type = emb_type[~emb_type["Type"].str.contains(exclude)]
-    emb_extracts = emb_type.join(emb_full.set_index("Entity"), on="Entity")
-    del emb_full, emb_type
-    emb_extracts["Entity"] = (
-        emb_extracts["Entity"]
-        .str.replace("<", "")
-        .str.replace(">", "")
-        .str.replace("_", " ")
-    )
-    emb_extracts.reset_index(drop=True, inplace=True)
-    if pca_components is not None:
-        pca_i = PCA(n_components=pca_components, random_state=0)
-        emb_columns = []
-        for j in range(pca_components):
-            name = "X" + str(j) + suffix
-            emb_columns.append(name)
-        pca_embeddings = pca_i.fit_transform(
-            emb_extracts.drop(columns=["Entity", "Type"])
-        )
-        pca_embeddings = pd.DataFrame(pca_embeddings, columns=emb_columns)
-        emb_pca = pd.concat([emb_extracts[["Entity", "Type"]], pca_embeddings], axis=1)
-        del pca_embeddings
-        return emb_pca
-    else:
-        return emb_extracts
+    emb_final = pd.DataFrame()
+    for path in emb_full["path"]:
+        emb_extracts = pd.read_parquet(path)
+        emb_extracts = pd.merge(emb_type, emb_extracts, on="Entity")
+        emb_extracts.reset_index(drop=True, inplace=True)
+        if pca_components is not None:
+            pca_i = PCA(n_components=pca_components, random_state=0)
+            emb_columns = []
+            for j in range(pca_components):
+                name = "X" + str(j) + suffix
+                emb_columns.append(name)
+            pca_embeddings = pca_i.fit_transform(
+                emb_extracts.drop(columns=["Entity", "Type"])
+            )
+            pca_embeddings = pd.DataFrame(pca_embeddings, columns=emb_columns)
+            emb_pca = pd.concat(
+                [emb_extracts[["Entity", "Type"]], pca_embeddings], axis=1
+            )
+            emb_final = pd.concat([emb_final, emb_pca])
+        else:
+            emb_final = pd.concat([emb_final, emb_extracts])
+    return emb_final
