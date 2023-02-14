@@ -820,16 +820,16 @@ def fetch_world_bank_indicator(
     )
 
 
-def fetch_embeddings(
-    indicator_id: str,
+def fetch_figshare(
+    figshare_id: str,
     data_directory: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
-    Gets a dataset from fighsare.
+    Fetch a dataset from fighsare using the download ID number.
 
     Parameters
     ----------
-    indicator_id: str
+    figshare_id: str
         The ID of the dataset to fetch.
     data_directory: Path, optional
         A directory to save the data to.
@@ -845,19 +845,24 @@ def fetch_embeddings(
               The dataset's URL.
           - ``path``: pathlib.Path
               The local path leading to the dataset,
-              saved as a CSV file.
+              saved as a parquet file.
+
+    Notes
+    -----
+    The files are read and returned in parquet format, this function needs
+    pyarrow installed to run correctly.
 
     """
     if data_directory is None:
         data_directory = get_data_dir()
-    parquet_path = (data_directory / f"{indicator_id}.parquet").resolve()
+    parquet_path = (data_directory / f"{figshare_id}.parquet").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
-    url = f"https://figshare.com/ndownloader/files/{indicator_id}"
+    url = f"https://figshare.com/ndownloader/files/{figshare_id}"
     if parquet_path.is_file():
         pass
     else:
         warnings.warn(
-            f"Could not find the dataset {indicator_id!r} locally. "
+            f"Could not find the dataset {figshare_id!r} locally. "
             "Downloading it from figshare; this might take a while... "
             "If it is interrupted, some files might be invalid/incomplete: "
             "if on the following run, the fetching raises errors, you can try "
@@ -871,9 +876,9 @@ def fetch_embeddings(
         except URLError:
             raise URLError("No internet connection or the website is down.")
         df.to_parquet(parquet_path, index=False)
-    description = f"This table shows the {indicator_id!r} figshare file."
+    description = f"This table shows the {figshare_id!r} figshare file."
     return {
-        "dataset_name": indicator_id,
+        "dataset_name": figshare_id,
         "description": description,
         "source": url,
         "path": parquet_path,

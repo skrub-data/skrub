@@ -96,9 +96,10 @@ y = y[~mask2]
 # ----------------------------
 # We will use the get_ken_embeddings function to extract the embeddings
 # of entities we need:
-from dirty_cat import get_ken_embeddings
+from dirty_cat.datasets import get_ken_embeddings
 
-# We include all embeddings with the type name "game" and exclude those with type name "companies"
+# We include all embeddings with the type name "game"
+# and exclude those with type name "companies"
 embedding_games = get_ken_embeddings(types="game", exclude="companies")
 
 # We include all embeddings containing the type name
