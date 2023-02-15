@@ -2,19 +2,20 @@
 Machine learning with entity embeddings
 =======================================
 
-In data science, we often work with data composed of common entities,
-such as cities, companies or famous people.
+In data science, working with data composed of common entities (cities,
+companies or famous people) is often the case.
+Augmenting the data with information assembled from external
+sources may be the key to improving the analysis.
 
 Embeddings, or vectorial representations of entities, are a conveniant way to
 capture and summarize the information on an entity.
 Recent work on relational data embeddings from Cvetkov et al.,
-has provided us embeddings of all common entities from Wikipedia.
-These will be called 'KEN Embeddings' in the following example. [#]_
+has provided us embeddings of all common entities from Wikipedia. [#]_
+These will be called `KEN Embeddings` in the following example.
 
-Augmenting the data with information assembled from external
-sources may be key to improving the analysis.
-This is exactly the type of data we need: with embeddings of common entities,
-we will be able to significantly improve our results.
+This is exactly the data we need: with embeddings
+of common entities, we will be able to significantly
+improve our results.
 
 .. [#] https://soda-inria.github.io/ken_embeddings/
 
@@ -30,6 +31,9 @@ we will be able to significantly improve our results.
 
  .. |MinHash| replace::
      :class:`~dirty_cat.MinHashEncoder`
+
+ .. |KEN| replace::
+     :class:`~dirty_cat.datasets.get_ken_embeddings`
 
  .. |HGBR| replace::
      :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
@@ -78,7 +82,7 @@ plt.show()
 ###############################################################################
 # Now, let's carry out some basic preprocessing:
 
-# Get a mask of the rows with missing values in 'gender'
+# Get a mask of the rows with missing values in "Publisher" and "Global_Sales"
 mask1 = X.isna()["Publisher"]
 mask2 = X.isna()["Global_Sales"]
 # And remove them
@@ -89,20 +93,26 @@ y = y[~mask2]
 ###############################################################################
 # Extracting entity embeddings
 # ----------------------------
-# We will use the `get_ken_embeddings` function to extract the embeddings
+# We will use the |KEN| function to extract the embeddings
 # of entities we need:
 from dirty_cat.datasets import get_ken_embeddings
 
-# We include all embeddings with the type name "game"
-# and exclude those with type name "companies"
+###############################################################################
+# KEN Embeddings are classified by types. The |KEN| function
+# allows us to specify the types to be included and/or excluded
+# so as not to load all Wikipedia entity embeddings in a table.
+#
+# In a first table, we include all embeddings with the type name "game"
+# and exclude those with type name "companies" or "developer".
 embedding_games = get_ken_embeddings(
     types="game",
     emb_id="39254360",
     emb_type_id="38879442",
-    exclude="companies|publish|develop",
+    exclude="companies|developer",
 )
 
-# We include all embeddings containing the type name
+###############################################################################
+# In a second table, we include all embeddings containing the type name
 # "game_development_companies", "game_companies" or "game_publish":
 embedding_publisher = get_ken_embeddings(
     "game_development_companies|game_companies|game_publish",
@@ -128,11 +138,12 @@ for j in range(n_dim):
 # Merging the entities
 # ....................
 #
-# We will now merge the entities from Wikipedia with their equivalent
+# We will now merge the entities from Wikipedia with their equivalent match
 # in our video game sales table:
 #
-# The entities from the 'embedding_games' table will be merged along the column "Name"
-# and the ones from 'embedding_publisher' table with the column "Publisher"
+# The entities from the 'embedding_games' table will be merged along the
+# column "Name" and the ones from 'embedding_publisher' table with the
+# column "Publisher"
 from dirty_cat import FeatureAugmenter
 
 fa1 = FeatureAugmenter(tables=[(embedding_games, "Entity")], main_key="Name")
@@ -204,7 +215,7 @@ print(
 # Prediction with KEN Embeddings
 # ------------------------------
 #
-# We will now build the learning |Pipeline| using only the KEN embeddings
+# We will now build a second learning pipeline using only the KEN embeddings
 # from Wikipedia.
 
 ###############################################################################
@@ -232,6 +243,10 @@ print(
     f" {all_r2_scores['KEN'].std():.2f} and the RMSE is"
     f" {all_rmse_scores['KEN'].mean():.2f} +- {all_rmse_scores['KEN'].std():.2f}"
 )
+
+###############################################################################
+# It seems including the embeddings is very relevant for the prediction task
+# at hand!
 
 ###############################################################################
 # Prediction with KEN Embeddings and regular features
@@ -287,5 +302,11 @@ plt.tight_layout()
 
 ###############################################################################
 # There is a clear improvement when including the KEN embeddings among the
-# input variables.
+# explanatory variables.
+#
+# In this case, the embeddings from Wikipedia introduced
+# additional background information on the game and the publisher of the
+# game that would otherwise be missed.
+#
+# It helped significantly improve the prediction score.
 #
