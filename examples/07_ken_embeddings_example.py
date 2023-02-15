@@ -121,10 +121,7 @@ embedding_publisher = get_ken_embeddings(
 # We keep the 200 embeddings column names in a list (for the |Pipeline|):
 n_dim = 200
 
-emb_columns = []
-for j in range(n_dim):
-    name = "X" + str(j)
-    emb_columns.append(name)
+emb_columns = [f"X{j}" for j in range(n_dim)]
 
     emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
 
