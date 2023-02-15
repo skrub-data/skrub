@@ -15,7 +15,7 @@ def get_ken_embeddings(
     emb_type_id="39266300",
     suffix="",
 ):
-    """Extract Wikipedia embeddings by type.
+    """Download Wikipedia embeddings by type.
 
     More details on the embeddings can be found on
     https://soda-inria.github.io/ken_embeddings/.
