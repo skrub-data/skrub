@@ -371,23 +371,23 @@ def test_fit() -> None:
     # Simply checks sklearn's `check_is_fitted` function raises an error if
     # the TableVectorizer is instantiated but not fitted.
     # See GH#193
-    sup_vec = TableVectorizer()
+    table_vec = TableVectorizer()
     with pytest.raises(NotFittedError):
-        assert check_is_fitted(sup_vec)
+        assert check_is_fitted(table_vec)
 
 
 def test_transform() -> None:
     X = _get_clean_dataframe()
-    sup_vec = TableVectorizer()
-    sup_vec.fit(X)
+    table_vec = TableVectorizer()
+    table_vec.fit(X)
     s = [34, 5.5, "private", "manager", "yes", "60K+"]
     x = np.array(s).reshape(1, -1)
-    x_trans = sup_vec.transform(x)
+    x_trans = table_vec.transform(x)
     assert x_trans.tolist() == [
         [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 34.0, 5.5]
     ]
     # To understand the list above:
-    # print(dict(zip(sup_vec.get_feature_names_out(), x_trans.tolist()[0])))
+    # print(dict(zip(table_vec.get_feature_names_out(), x_trans.tolist()[0])))
 
 
 def test_fit_transform_equiv() -> None:
@@ -473,10 +473,10 @@ def test_handle_unknown():
     """
     X = _get_clean_dataframe()
     # Test with low cardinality and a StandardScaler for the numeric columns
-    sup_vec = TableVectorizer(
+    table_vec = TableVectorizer(
         cardinality_threshold=6,  # treat all columns as low cardinality
     )
-    sup_vec.fit(X)
+    table_vec.fit(X)
     x_unknown = pd.DataFrame(
         {
             "int": pd.Series([3, 1], dtype="int"),
@@ -500,8 +500,8 @@ def test_handle_unknown():
     if parse_version(sklearn.__version__) >= parse_version("1.0.0"):
         # Default behavior is "handle_unknown='ignore'",
         # so unknown categories are encoded as all zeros
-        x_trans_unknown = sup_vec.transform(x_unknown)
-        x_trans_known = sup_vec.transform(x_known)
+        x_trans_unknown = table_vec.transform(x_unknown)
+        x_trans_known = table_vec.transform(x_known)
 
         assert x_trans_unknown.shape == x_trans_known.shape
         n_zeroes = (
@@ -519,5 +519,5 @@ def test_handle_unknown():
         # Default behavior is "handle_unknown='error'",
         # so unknown categories raise an error
         with pytest.raises(ValueError, match="Found unknown categories"):
-            sup_vec.transform(x_unknown)
-        sup_vec.transform(x_known)
+            table_vec.transform(x_unknown)
+        table_vec.transform(x_known)
