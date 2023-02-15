@@ -8,8 +8,7 @@ sources may be the key to improving the analysis.
 
 Embeddings, or vectorial representations of entities, are a conveniant way to
 capture and summarize the information on an entity.
-Recent work on relational data embeddings from Cvetkov et al.,
-has provided us embeddings of all common entities from Wikipedia. [#]_
+Relational data embeddings capture all common entities from Wikipedia. [#]_
 These will be called `KEN Embeddings` in the following example.
 
 We will see that these embeddings of common entities significantly
