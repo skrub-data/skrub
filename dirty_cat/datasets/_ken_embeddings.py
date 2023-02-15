@@ -24,6 +24,8 @@ def get_ken_embeddings(
     ----------
     types : str
         Types of embeddings to include. Write in lowercase.
+        For the full list of accepted types, see the `entity_detailed_types`
+        table on https://soda-inria.github.io/ken_embeddings/.
     exclude : str, default=None
         Type of embeddings to exclude from the types search.
     pca_components : int, default=None
@@ -63,8 +65,7 @@ def get_ken_embeddings(
 
     """
     # Get all embeddings:
-    emb_type = fetch_figshare(emb_type_id)
-    emb_type = pd.read_parquet(emb_type["path"])
+    emb_type = fetch_figshare(emb_type_id).X
     emb_type = emb_type[emb_type["Type"].str.contains(types)]
     emb_type.drop_duplicates(subset=["Entity"], inplace=True)
     if exclude is not None:
@@ -72,7 +73,7 @@ def get_ken_embeddings(
     emb_final = []
     emb_df = pd.DataFrame()
     emb_full = fetch_figshare(emb_id)
-    for path in emb_full["path"]:
+    for path in emb_full.path:
         emb_extracts = pd.read_parquet(path)
         emb_extracts = pd.merge(emb_type, emb_extracts, on="Entity")
         emb_extracts.reset_index(drop=True, inplace=True)
