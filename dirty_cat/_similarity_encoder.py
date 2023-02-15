@@ -311,7 +311,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     def __init__(
         self,
-        similarity: str = "ngram",
+        similarity: str = None,
         ngram_range: Tuple[int, int] = (2, 4),
         categories: Union[
             Literal["auto", "k-means", "most_frequent"], List[List[str]]
