@@ -11,8 +11,8 @@ def get_ken_embeddings(
     types,
     exclude=None,
     pca_components=None,
-    emb_id="39254360",
-    emb_type_id="39143012",
+    emb_id="39142985",
+    emb_type_id="39266300",
     suffix="",
 ):
     """Extract Wikipedia embeddings by type.
@@ -65,8 +65,6 @@ def get_ken_embeddings(
     # Get all embeddings:
     emb_type = fetch_figshare(emb_type_id)
     emb_type = pd.read_parquet(emb_type["path"])
-    # All in lower case for easier matching
-    emb_type["Type"] = emb_type["Type"].str.lower()
     emb_type = emb_type[emb_type["Type"].str.contains(types)]
     emb_type.drop_duplicates(subset=["Entity"], inplace=True)
     if exclude is not None:
