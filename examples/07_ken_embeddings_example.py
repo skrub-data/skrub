@@ -2,9 +2,8 @@
 Wikipedia embeddings to enrich the data
 =======================================
 
-In data science, working with data composed of common entities (cities,
-companies or famous people) is often the case.
-Augmenting the data with information assembled from external
+When the data comprises common entities (cities,
+companies or famous people), bringing new information assembled from external
 sources may be the key to improving the analysis.
 
 Embeddings, or vectorial representations of entities, are a conveniant way to
