@@ -11,6 +11,17 @@ import pytest
 from dirty_cat.datasets import _fetching
 
 
+def fetch_employee_salaries(**kwargs):
+    """
+    Wrapper for `fetching.fetch_employee_salaries`, that sets the
+    optional parameters to False, so that the dataframe loaded in memory
+    and the dataframe on disk (which we will read) correspond.
+    """
+    return _fetching.fetch_employee_salaries(
+        drop_irrelevant=False, drop_linked=False, **kwargs
+    )
+
+
 @pytest.mark.parametrize(
     ("fetching_function",),
     [
@@ -20,7 +31,7 @@ from dirty_cat.datasets import _fetching
         (_fetching.fetch_open_payments,),
         (_fetching.fetch_traffic_violations,),
         (_fetching.fetch_drug_directory,),
-        (_fetching.fetch_employee_salaries,),
+        (fetch_employee_salaries,),
     ],
 )
 def test_openml_fetching(fetching_function: Callable):
@@ -127,12 +138,14 @@ def test_fetch_world_bank_indicator():
                     indicator_id=0, directory=temp_dir
                 )
                 assert _fetching.fetch_world_bank_indicator(
-                    indicator_id=2**32, directory=temp_dir
+                    indicator_id=2**32,
+                    directory=temp_dir,
                 )
 
             # Valid call
             returned_info = _fetching.fetch_world_bank_indicator(
-                indicator_id=test_dataset["id"], directory=temp_dir
+                indicator_id=test_dataset["id"],
+                directory=temp_dir,
             )
 
         except (ConnectionError, URLError):
@@ -160,7 +173,8 @@ def test_fetch_world_bank_indicator():
         with mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
             # Same valid call as above
             disk_loaded_info = _fetching.fetch_world_bank_indicator(
-                indicator_id=test_dataset["id"]
+                indicator_id=test_dataset["id"],
+                directory=temp_dir,
             )
             mock_urlretrieve.assert_not_called()
             assert disk_loaded_info == returned_info
