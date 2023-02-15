@@ -310,7 +310,7 @@ def _fetch_figshare(
     data_directory: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """
-    Fetch a dataset from fighsare using the download ID number.
+    Fetch a dataset from figshare using the download ID number.
 
     Parameters
     ----------
