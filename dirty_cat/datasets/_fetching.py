@@ -23,6 +23,7 @@ from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
+from pyarrow.parquet import ParquetFile
 from sklearn.datasets import fetch_openml
 
 from dirty_cat.datasets._utils import get_data_dir
@@ -891,16 +892,22 @@ def fetch_figshare(
         )
         try:
             filehandle, _ = urllib.request.urlretrieve(url)
-            df = pd.read_parquet(filehandle)
+            df = ParquetFile(filehandle)
+            record = df.iter_batches(
+                batch_size=1_000_000,
+            )
             idx = []
-            for _, x in enumerate(chain(range(0, len(df), 1_000_000), [len(df)])):
+            for _, x in enumerate(
+                chain(range(0, df.metadata.num_rows, 1_000_000), [df.metadata.num_rows])
+            ):
                 idx += [x]
             parquet_paths = []
             for i in range(1, len(idx)):
                 parquet_path = (
                     data_directory / f"figshare_{figshare_id}_{idx[i]}.parquet"
                 ).resolve()
-                df.iloc[idx[i - 1] : idx[i]].to_parquet(parquet_path, index=False)
+                batch = next(record).to_pandas()
+                batch.to_parquet(parquet_path, index=False)
                 parquet_paths += [parquet_path]
             return {
                 "dataset_name": figshare_id,
