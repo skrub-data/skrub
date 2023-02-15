@@ -35,7 +35,7 @@ we will be able to significantly improve our results.
      :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 """
 
-########################################################
+###############################################################################
 # The data
 # --------
 #
@@ -52,35 +52,30 @@ X = pd.read_csv(
 X = X.sample(frac=1, random_state=11, ignore_index=True)
 X.head(3)
 
-########################################################
-# Let's take a closer look at the numerical variables:
+###############################################################################
+# Our goal will be to predict y, our target column (the sales amount):
+y = X["Global_Sales"]
+y
+
+###############################################################################
+# Let's take a look at the distribution of our target variable:
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 sns.set_theme(style="ticks")
 
-sns.pairplot(X.drop("Rank", axis=1))
-plt.show()
-
-########################################################
-# Our goal will be to predict y, our target column (the sales amount):
-y = X["Global_Sales"]
-y
-
-########################################################
-# Let's take a look at the distribution of our target variable:
 sns.histplot(y)
 plt.show()
 
-########################################################
-# It seems better to take the log of sales than the sales amount itself:
+###############################################################################
+# It seems better to take the log of sales rather than the sales amount itself:
 import numpy as np
 
 y = np.log(y)
 sns.histplot(y)
 plt.show()
 
-#########################################################################
+###############################################################################
 # Now, let's carry out some basic preprocessing:
 
 # Get a mask of the rows with missing values in 'gender'
@@ -91,10 +86,10 @@ X.dropna(subset=["Publisher", "Global_Sales"], inplace=True)
 y = y[~mask1]
 y = y[~mask2]
 
-# #############################################################################
+###############################################################################
 # Extracting entity embeddings
 # ----------------------------
-# We will use the get_ken_embeddings function to extract the embeddings
+# We will use the `get_ken_embeddings` function to extract the embeddings
 # of entities we need:
 from dirty_cat.datasets import get_ken_embeddings
 
@@ -108,7 +103,7 @@ embedding_games = get_ken_embeddings(
 # "game_development_companies", "game_companies" or "game_publish":
 embedding_publisher = get_ken_embeddings(
     "game_development_companies|game_companies|game_publish",
-    emb_id="39253949",
+    emb_id="39254360",
     suffix="_aux",
 )
 
@@ -132,8 +127,8 @@ for j in range(n_dim):
 # We will now merge the entities from Wikipedia with their equivalent
 # in our video game sales table:
 #
-# The entities from the embedding_games table will be merged along the column "Name"
-# and the ones from embedding_publisher table with the column "Publisher"
+# The entities from the 'embedding_games' table will be merged along the column "Name"
+# and the ones from 'embedding_publisher' table with the column "Publisher"
 from dirty_cat import FeatureAugmenter
 
 fa1 = FeatureAugmenter(tables=[(embedding_games, "Entity")], main_key="Name")
@@ -147,7 +142,7 @@ X_full = fa2.fit_transform(X_full)
 # --------------------------------
 #
 # We will forget for now the KEN Embeddings and build a typical learning
-# |Pipeline|, where will we try to predict the amount of sales only using
+# pipeline, where will we try to predict the amount of sales only using
 # the regular features contained in the initial table.
 
 ###############################################################################

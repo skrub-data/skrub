@@ -856,19 +856,19 @@ def fetch_figshare(
     """
     if data_directory is None:
         data_directory = get_data_dir()
-    parquet_path = (data_directory / f"{figshare_id}.parquet").resolve()
+    parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
     url = f"https://figshare.com/ndownloader/files/{figshare_id}"
     description = f"This table shows the {figshare_id!r} figshare file."
-    filePaths = [
+    file_paths = [
         file for file in data_directory.iterdir() if file.name.startswith(figshare_id)
     ]
-    if len(filePaths) > 0:
-        if len(filePaths) == 1:
-            parquet_paths = [str(filePaths[0].resolve())]
+    if len(file_paths) > 0:
+        if len(file_paths) == 1:
+            parquet_paths = [str(file_paths[0].resolve())]
         else:
             parquet_paths = []
-            for path in filePaths:
+            for path in file_paths:
                 parquet_path = str(path.resolve())
                 parquet_paths += [parquet_path]
         return {

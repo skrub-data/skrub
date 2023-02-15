@@ -72,7 +72,8 @@ def get_ken_embeddings(
     emb_type.drop_duplicates(subset=["Entity"], inplace=True)
     if exclude is not None:
         emb_type = emb_type[~emb_type["Type"].str.contains(exclude)]
-    emb_final = pd.DataFrame()
+    emb_final = []
+    emb_df = pd.DataFrame()
     for path in emb_full["path"]:
         emb_extracts = pd.read_parquet(path)
         emb_extracts = pd.merge(emb_type, emb_extracts, on="Entity")
@@ -90,7 +91,9 @@ def get_ken_embeddings(
             emb_pca = pd.concat(
                 [emb_extracts[["Entity", "Type"]], pca_embeddings], axis=1
             )
-            emb_final = pd.concat([emb_final, emb_pca])
+            emb_final.append(emb_pca)
+            emb_df = pd.concat(emb_final)
         else:
-            emb_final = pd.concat([emb_final, emb_extracts])
-    return emb_final
+            emb_final.append(emb_extracts)
+            emb_df = pd.concat(emb_final)
+    return emb_df
