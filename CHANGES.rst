@@ -21,10 +21,6 @@ Major changes
   that augments with :func:`fuzzy_join` the number of features in a main table by using information from auxilliary tables.
   :pr:`409` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download any indicator
-  from the World Bank Open Data platform, the indicator ID that can be found there.
-  :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
-
 * Unnecessary API has been made private: everything (files, functions, classes)
   starting with an underscore shouldn't be imported in your code. :pr:`331` by :user:`Lilian Boulard <LilianBoulard>`
 
@@ -37,7 +33,14 @@ Major changes
 
 Minor changes
 -------------
-* Add example `Machine learning with entity embeddings`. :pr:`487` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+* Add example `Wikipedia embeddings to enrich the data`. :pr:`487` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* * **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
+  embeddings and filter them by type.
+
+* **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download indicators
+  from the World Bank Open Data platform.
+  :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * Removed example `Fitting scalable, non-linear models on data with dirty categories`. :pr:`386` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 

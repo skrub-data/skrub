@@ -123,7 +123,7 @@ n_dim = 200
 
 emb_columns = [f"X{j}" for j in range(n_dim)]
 
-    emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
+emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
 
 ###############################################################################
 # Merging the entities
@@ -285,6 +285,7 @@ print(
 #
 # Finally, we plot the scores on a boxplot:
 plt.figure(figsize=(5, 3))
+# sphinx_gallery_thumbnail_number = -1
 ax = sns.boxplot(data=pd.DataFrame(all_r2_scores), orient="h")
 plt.ylabel("Variables", size=15)
 plt.xlabel("Prediction accuracy     ", size=15)
