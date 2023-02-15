@@ -11,7 +11,7 @@ def get_ken_embeddings(
     types,
     exclude=None,
     pca_components=None,
-    emb_id="39142985",
+    emb_id="39254360",
     emb_type_id="39143012",
     suffix="",
 ):
@@ -63,7 +63,6 @@ def get_ken_embeddings(
 
     """
     # Get all embeddings:
-    emb_full = fetch_figshare(emb_id)
     emb_type = fetch_figshare(emb_type_id)
     emb_type = pd.read_parquet(emb_type["path"])
     # All in lower case for easier matching
@@ -74,6 +73,7 @@ def get_ken_embeddings(
         emb_type = emb_type[~emb_type["Type"].str.contains(exclude)]
     emb_final = []
     emb_df = pd.DataFrame()
+    emb_full = fetch_figshare(emb_id)
     for path in emb_full["path"]:
         emb_extracts = pd.read_parquet(path)
         emb_extracts = pd.merge(emb_type, emb_extracts, on="Entity")

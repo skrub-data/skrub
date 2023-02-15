@@ -861,7 +861,9 @@ def fetch_figshare(
     url = f"https://figshare.com/ndownloader/files/{figshare_id}"
     description = f"This table shows the {figshare_id!r} figshare file."
     file_paths = [
-        file for file in data_directory.iterdir() if file.name.startswith(figshare_id)
+        file
+        for file in data_directory.iterdir()
+        if file.name.startswith(f"figshare_{figshare_id}")
     ]
     if len(file_paths) > 0:
         if len(file_paths) == 1:
@@ -889,32 +891,22 @@ def fetch_figshare(
         )
         try:
             filehandle, _ = urllib.request.urlretrieve(url)
-            if Path(filehandle).stat().st_size > 1_000_000_000:
-                df = pd.read_parquet(filehandle)
-                idx = []
-                for _, x in enumerate(chain(range(0, len(df), 1_000_000), [len(df)])):
-                    idx += [x]
-                parquet_paths = []
-                for i in range(1, len(idx)):
-                    parquet_path = (
-                        data_directory / f"{figshare_id}_{idx[i]}.parquet"
-                    ).resolve()
-                    df.iloc[idx[i - 1] : idx[i]].to_parquet(parquet_path, index=False)
-                    parquet_paths += [parquet_path]
-                return {
-                    "dataset_name": figshare_id,
-                    "description": description,
-                    "source": url,
-                    "path": parquet_paths,
-                }
-            else:
-                df = pd.read_parquet(filehandle)
-                df.to_parquet(parquet_path, index=False)
-                return {
-                    "dataset_name": figshare_id,
-                    "description": description,
-                    "source": url,
-                    "path": [parquet_path],
-                }
+            df = pd.read_parquet(filehandle)
+            idx = []
+            for _, x in enumerate(chain(range(0, len(df), 1_000_000), [len(df)])):
+                idx += [x]
+            parquet_paths = []
+            for i in range(1, len(idx)):
+                parquet_path = (
+                    data_directory / f"figshare_{figshare_id}_{idx[i]}.parquet"
+                ).resolve()
+                df.iloc[idx[i - 1] : idx[i]].to_parquet(parquet_path, index=False)
+                parquet_paths += [parquet_path]
+            return {
+                "dataset_name": figshare_id,
+                "description": description,
+                "source": url,
+                "path": parquet_paths,
+            }
         except URLError:
             raise URLError("No internet connection or the website is down.")
