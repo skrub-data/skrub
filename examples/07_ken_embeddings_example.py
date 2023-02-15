@@ -12,8 +12,7 @@ Recent work on relational data embeddings from Cvetkov et al.,
 has provided us embeddings of all common entities from Wikipedia. [#]_
 These will be called `KEN Embeddings` in the following example.
 
-This is exactly the data we need: with embeddings
-of common entities, we will be able to significantly
+We will see that these embeddings of common entities significantly
 improve our results.
 
 .. [#] https://soda-inria.github.io/ken_embeddings/
