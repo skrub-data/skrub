@@ -144,12 +144,12 @@ X_full = fa1.fit_transform(X)
 X_full = fa2.fit_transform(X_full)
 
 ###############################################################################
-# Prediction with regular features
+# Prediction with base features
 # --------------------------------
 #
 # We will forget for now the KEN Embeddings and build a typical learning
 # pipeline, where will we try to predict the amount of sales only using
-# the regular features contained in the initial table.
+# the base features contained in the initial table.
 
 ###############################################################################
 # We first use scikit-learn's |ColumnTransformer| to define the columns
@@ -191,15 +191,15 @@ cv_results = cross_validate(
     pipeline, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
 )
 
-all_r2_scores["Regular"] = cv_results["test_r2"]
-all_rmse_scores["Regular"] = -cv_results["test_neg_root_mean_squared_error"]
+all_r2_scores["Base features"] = cv_results["test_r2"]
+all_rmse_scores["Base features"] = -cv_results["test_neg_root_mean_squared_error"]
 
-print("With regular features:")
+print("With base features:")
 print(
-    f"Mean R2 is {all_r2_scores['Regular'].mean():.2f} +-"
-    f" {all_r2_scores['Regular'].std():.2f} and the RMSE is"
-    f" {all_rmse_scores['Regular'].mean():.2f} +-"
-    f" {all_rmse_scores['Regular'].std():.2f}"
+    f"Mean R2 is {all_r2_scores['Base features'].mean():.2f} +-"
+    f" {all_r2_scores['Base features'].std():.2f} and the RMSE is"
+    f" {all_rmse_scores['Base features'].mean():.2f} +-"
+    f" {all_rmse_scores['Base features'].std():.2f}"
 )
 
 ###############################################################################
@@ -225,14 +225,15 @@ cv_results = cross_validate(
     pipeline2, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
 )
 
-all_r2_scores["KEN"] = cv_results["test_r2"]
-all_rmse_scores["KEN"] = -cv_results["test_neg_root_mean_squared_error"]
+all_r2_scores["KEN features"] = cv_results["test_r2"]
+all_rmse_scores["KEN features"] = -cv_results["test_neg_root_mean_squared_error"]
 
 print("With KEN Embeddings:")
 print(
-    f"Mean R2 is {all_r2_scores['KEN'].mean():.2f} +-"
-    f" {all_r2_scores['KEN'].std():.2f} and the RMSE is"
-    f" {all_rmse_scores['KEN'].mean():.2f} +- {all_rmse_scores['KEN'].std():.2f}"
+    f"Mean R2 is {all_r2_scores['KEN features'].mean():.2f} +-"
+    f" {all_r2_scores['KEN features'].std():.2f} and the RMSE is"
+    f" {all_rmse_scores['KEN features'].mean():.2f} +-"
+    f" {all_rmse_scores['KEN features'].std():.2f}"
 )
 
 ###############################################################################
@@ -240,15 +241,15 @@ print(
 # at hand!
 
 ###############################################################################
-# Prediction with KEN Embeddings and regular features
-# ---------------------------------------------------
+# Prediction with KEN Embeddings and base features
+# ------------------------------------------------
 #
 # As we have seen the predictions scores in the case when embeddings are
 # only present and when they are missing, we will do a final prediction
 # with all variables included.
 
 ###############################################################################
-# We include both the embeddings and the regular features:
+# We include both the embeddings and the base features:
 encoder3 = make_column_transformer(
     ("passthrough", emb_columns),
     ("passthrough", emb_columns2),
@@ -268,15 +269,15 @@ cv_results = cross_validate(
     pipeline3, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
 )
 
-all_r2_scores["Regular + KEN"] = cv_results["test_r2"]
-all_rmse_scores["Regular + KEN"] = -cv_results["test_neg_root_mean_squared_error"]
+all_r2_scores["Base + KEN features"] = cv_results["test_r2"]
+all_rmse_scores["Base + KEN features"] = -cv_results["test_neg_root_mean_squared_error"]
 
-print("With KEN Embeddings and regular features:")
+print("With KEN Embeddings and base features:")
 print(
-    f"Mean R2 is {all_r2_scores['Regular + KEN'].mean():.2f} +-"
-    f" {all_r2_scores['Regular + KEN'].std():.2f} and the RMSE is"
-    f" {all_rmse_scores['Regular + KEN'].mean():.2f} +-"
-    f" {all_rmse_scores['Regular + KEN'].std():.2f}"
+    f"Mean R2 is {all_r2_scores['Base + KEN features'].mean():.2f} +-"
+    f" {all_r2_scores['Base + KEN features'].std():.2f} and the RMSE is"
+    f" {all_rmse_scores['Base + KEN features'].mean():.2f} +-"
+    f" {all_rmse_scores['Base + KEN features'].std():.2f}"
 )
 
 ###############################################################################
@@ -287,7 +288,6 @@ print(
 plt.figure(figsize=(5, 3))
 # sphinx_gallery_thumbnail_number = -1
 ax = sns.boxplot(data=pd.DataFrame(all_r2_scores), orient="h")
-plt.ylabel("Variables", size=15)
 plt.xlabel("Prediction accuracy     ", size=15)
 plt.yticks(size=15)
 plt.tight_layout()
