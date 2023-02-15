@@ -344,7 +344,9 @@ class TableVectorizer(ColumnTransformer):
                     "You are using an old version of scikit-learn. "
                     "Using handle_unknown='error' in low_card_cat_transformer. "
                     "Please upgrade to scikit-learn 1.0.0 or higher to "
-                    "use handle_unknown='ignore', or change the drop parameter to None."
+                    "use handle_unknown='ignore', or change the drop parameter to"
+                    " None.",
+                    stacklevel=2,  # display the warning at the level of the user's code (fit_transform method)
                 )
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder

@@ -473,7 +473,7 @@ def test_handle_unknown():
     """
     X = _get_clean_dataframe()
     # Test with low cardinality and a StandardScaler for the numeric columns
-    sup_vec = SuperVectorizer(
+    sup_vec = TableVectorizer(
         cardinality_threshold=6,  # treat all columns as low cardinality
     )
     sup_vec.fit(X)
