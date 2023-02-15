@@ -126,10 +126,7 @@ for j in range(n_dim):
     name = "X" + str(j)
     emb_columns.append(name)
 
-emb_columns2 = []
-for j in range(n_dim):
-    name = "X" + str(j) + "_aux"
-    emb_columns2.append(name)
+    emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
 
 ###############################################################################
 # Merging the entities
