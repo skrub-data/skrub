@@ -1,3 +1,3 @@
 #!/bin/bash -e
 
-pip install --progress-bar off --upgrade ".[$DEPS_VERSION]"
+pip install --progress-bar off --upgrade ".[$DEPS_VERSION]" --use-pep517
