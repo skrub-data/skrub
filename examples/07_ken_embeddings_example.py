@@ -1,5 +1,5 @@
 """
-Machine learning with entity embeddings
+Wikipedia embeddings to enrich the data
 =======================================
 
 In data science, working with data composed of common entities (cities,
