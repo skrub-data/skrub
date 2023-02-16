@@ -1,7 +1,6 @@
-import warnings
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Callable
+from typing import Callable, Tuple
 from unittest import mock
 from urllib.error import URLError
 
@@ -23,18 +22,21 @@ def fetch_employee_salaries(**kwargs):
 
 
 @pytest.mark.parametrize(
-    ("fetching_function",),
+    ("fetching_function", "shape"),
     [
-        (_fetching.fetch_road_safety,),
-        (_fetching.fetch_medical_charge,),
-        (_fetching.fetch_midwest_survey,),
-        (_fetching.fetch_open_payments,),
-        (_fetching.fetch_traffic_violations,),
-        (_fetching.fetch_drug_directory,),
-        (fetch_employee_salaries,),
+        (_fetching.fetch_road_safety, (363243, 66)),
+        (_fetching.fetch_medical_charge, (163065, 11)),
+        (_fetching.fetch_midwest_survey, (2494, 28)),
+        (_fetching.fetch_open_payments, (73558, 5)),
+        (_fetching.fetch_traffic_violations, (1578154, 42)),
+        (_fetching.fetch_drug_directory, (120215, 20)),
+        (fetch_employee_salaries, (9228, 12)),
     ],
 )
-def test_openml_fetching(fetching_function: Callable):
+def test_openml_fetching(
+    fetching_function: Callable,
+    shape: Tuple[int, int],
+):
     """
     Test a function that loads data from OpenML.
     """
@@ -48,7 +50,7 @@ def test_openml_fetching(fetching_function: Callable):
             dataset_wo_load: _fetching.DatasetInfoOnly = fetching_function(
                 load_dataframe=False, directory=temp_dir_1
             )
-        except (ConnectionError,) as e:
+        except (ConnectionError, URLError) as e:
             pytest.skip(f"Got a network error ({e}), skipping.")
             return
         else:
@@ -80,23 +82,18 @@ def test_openml_fetching(fetching_function: Callable):
         )
 
         # Fetch and load into memory
-        try:
-            dataset_w_load: _fetching.DatasetAll = fetching_function(
-                directory=temp_dir_2
-            )
-        except (ConnectionError,) as e:
-            pytest.skip(f"Got a network error ({e}), skipping.")
-            return
-        else:
-            assert isinstance(dataset_w_load, _fetching.DatasetAll)
-            from_disk_df = pd.read_csv(
-                dataset_w_load.path,
-                **dataset_w_load.read_csv_kwargs,
-            )
-            y = from_disk_df[dataset_w_load.target]
-            X = from_disk_df.drop(dataset_w_load.target, axis="columns")
-            pd.testing.assert_frame_equal(X, dataset_w_load.X)
-            pd.testing.assert_series_equal(y, dataset_w_load.y)
+        # We don't try-except because it should already have been downloaded
+        # by the previous call.
+        dataset_w_load: _fetching.DatasetAll = fetching_function(directory=temp_dir_2)
+        assert isinstance(dataset_w_load, _fetching.DatasetAll)
+        from_disk_df = pd.read_csv(
+            dataset_w_load.path,
+            **dataset_w_load.read_csv_kwargs,
+        )
+        y = from_disk_df[dataset_w_load.target]
+        X = from_disk_df.drop(dataset_w_load.target, axis="columns")
+        pd.testing.assert_frame_equal(X, dataset_w_load.X)
+        pd.testing.assert_series_equal(y, dataset_w_load.y)
 
         # Execute standard checks for both type of gathered datasets
         for dataset in (dataset_w_load, dataset_wo_load_loaded):
@@ -104,9 +101,8 @@ def test_openml_fetching(fetching_function: Callable):
 
             assert dataset.path.exists()
             # Expect at least a few lines and columns
-            assert dataset.X.shape > (5, 5)
-            assert dataset.y.shape > (5,)
-            assert dataset.X.shape[0] == dataset.y.shape[0]
+            assert dataset.X.shape == shape
+            assert dataset.y.shape == (shape[0],)
 
             # Less important checks, but might help finding errors
             assert dataset.name == (
@@ -149,9 +145,6 @@ def test_fetch_world_bank_indicator():
             )
 
         except (ConnectionError, URLError):
-            warnings.warn(
-                "No internet connection or the website is down, test aborted."
-            )
             pytest.skip(
                 "Exception: Skipping this test because we encountered an "
                 "issue probably related to an Internet connection problem. "
