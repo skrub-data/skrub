@@ -59,6 +59,10 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     :class:`~dirty_cat.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
 
+    :func:`~dirty_cat.datasets.get_ken_embeddings` :
+        Download vector embeddings for many common entities (cities,
+        places, people...)
+
     Examples
     --------
     >>> X = pd.DataFrame(['France', 'Germany', 'Italy'],
