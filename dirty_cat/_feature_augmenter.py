@@ -61,7 +61,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     :func:`~dirty_cat.datasets.get_ken_embeddings` :
         Download vector embeddings for many common entities (cities,
-        places, people...)
+        places, people...).
 
     Examples
     --------
