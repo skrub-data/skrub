@@ -103,18 +103,16 @@ from dirty_cat.datasets import get_ken_embeddings
 # and exclude those with type name "companies" or "developer".
 embedding_games = get_ken_embeddings(
     types="game",
-    emb_id="39254360",
-    emb_type_id="38879442",
     exclude="companies|developer",
+    embedding_table_id="games",
 )
 
 ###############################################################################
 # In a second table, we include all embeddings containing the type name
 # "game_development_companies", "game_companies" or "game_publish":
 embedding_publisher = get_ken_embeddings(
-    "game_development_companies|game_companies|game_publish",
-    emb_id="39254360",
-    emb_type_id="38879442",
+    types="game_development_companies|game_companies|game_publish",
+    embedding_table_id="games",
     suffix="_aux",
 )
 

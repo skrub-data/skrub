@@ -8,11 +8,11 @@ from dirty_cat.datasets import fetch_figshare
 
 
 def get_ken_embeddings(
-    types,
+    types=None,
     exclude=None,
+    embedding_table_id="all_entities",
+    embedding_type_id=None,
     pca_components=None,
-    emb_id="39142985",
-    emb_type_id="39266300",
     suffix="",
 ):
     """Download Wikipedia embeddings by type.
@@ -22,21 +22,26 @@ def get_ken_embeddings(
 
     Parameters
     ----------
-    types : str
-        Types of embeddings to include. Write in lowercase.
-        For the full list of accepted types, see the `entity_detailed_types`
-        table on https://soda-inria.github.io/ken_embeddings/.
-    exclude : str, default=None
+    types : str, optional, default=None
+        Substring pattern that filters the types of entities.
+        Will keep all entity types containing the substring.
+        Write in lowercase. If None, all types will be passed.
+    exclude : str, optional, default=None
         Type of embeddings to exclude from the types search.
-    pca_components : int, default=None
+    embedding_table_id : {"all_entities", "albums", "companies", "movies", "games", "school"} or str, optional, default='all_entities' # noqa
+        Table of embedded entities from which to extract the embeddings.
+        See correspondence table
+        (https://github.com/dirty-cat/datasets/blob/master/data/ken_correspondence.csv)
+        for the figshare ID's of the tables.
+        It is also possible to introduce a custom figshare ID.
+    embedding_type_id : str, optional, default=None
+        Figshare ID of the file containing the type of embeddings. Ignored
+        unless a custom `embedding_table_id` is provided.
+    pca_components : int, optional, default=None
         Size of the dimensional space on which the embeddings will be projected
         by a principal component analysis.
         If None, the default dimension (200) of the embeddins will be kept.
-    emb_id : str
-        Figshare ID of the file containing all embeddings.
-    emb_type_id : str
-        Figshare ID of the file containing the type of embeddings.
-    suffix : str
+    suffix : str, optional, default=""
         Suffix to add to the column names of the embeddings.
 
     Returns
@@ -49,8 +54,8 @@ def get_ken_embeddings(
     :class:`~dirty_cat.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
     :class:`~dirty_cat.FeatureAugmenter` :
-        Transformer to enrich a given table via one or more fuzzy joins to external
-        resources.
+        Transformer to enrich a given table via one or more fuzzy joins to
+        external resources.
 
     References
     ----------
@@ -63,16 +68,45 @@ def get_ken_embeddings(
     The files are read and returned in parquet format, this function needs
     pyarrow installed to run correctly.
 
+    The `types` parameter is there to filter the types by the input string
+    pattern.
+    In case the input is "music", all types with this string will be included
+    (e.g. "wikicat_musician_from_france", "wikicat_music_label" etc.).
+    Going directly for the exact type name (e.g. "wikicat_rock_music_bands")
+    is possible but may not be complete (as some relevant bands may be
+    in other similar types).
+    For the full list of accepted types, see the `entity_detailed_types`
+    table on https://soda-inria.github.io/ken_embeddings/.
+
     """
-    # Get all embeddings:
-    emb_type = fetch_figshare(emb_type_id).X
-    emb_type = emb_type[emb_type["Type"].str.contains(types)]
-    emb_type.drop_duplicates(subset=["Entity"], inplace=True)
+    if embedding_table_id in [
+        "all_entities",
+        "albums",
+        "companies",
+        "movies",
+        "games",
+        "school",
+    ]:
+        correspondence = pd.read_csv(
+            "https://raw.githubusercontent.com/dirty-cat/datasets/master/data/ken_correspondence.csv"  # noqa
+        )
+        embeddings_id = correspondence[correspondence["table"] == embedding_table_id][
+            "entities_figshare_id"
+        ].values[0]
+        embedding_type_id = correspondence[
+            correspondence["table"] == embedding_table_id
+        ]["type_figshare_id"].values[0]
+    else:
+        embeddings_id = embedding_table_id
+    emb_type = fetch_figshare(embedding_type_id).X
+    if types is not None:
+        emb_type = emb_type[emb_type["Type"].str.contains(types)]
     if exclude is not None:
         emb_type = emb_type[~emb_type["Type"].str.contains(exclude)]
+    emb_type.drop_duplicates(subset=["Entity"], inplace=True)
     emb_final = []
     emb_df = pd.DataFrame()
-    emb_full = fetch_figshare(emb_id)
+    emb_full = fetch_figshare(embeddings_id)
     for path in emb_full.path:
         emb_extracts = pd.read_parquet(path)
         emb_extracts = pd.merge(emb_type, emb_extracts, on="Entity")
@@ -91,8 +125,7 @@ def get_ken_embeddings(
                 [emb_extracts[["Entity", "Type"]], pca_embeddings], axis=1
             )
             emb_final.append(emb_pca)
-            emb_df = pd.concat(emb_final)
         else:
             emb_final.append(emb_extracts)
-            emb_df = pd.concat(emb_final)
+    emb_df = pd.concat(emb_final)
     return emb_df
