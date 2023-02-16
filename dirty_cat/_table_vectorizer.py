@@ -120,7 +120,7 @@ class TableVectorizer(ColumnTransformer):
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or `None` to use the default transformer
-        (:class:`~sklearn.preprocessing.OneHotEncoder(drop="if_binary")`).
+        (:class:`~sklearn.preprocessing.OneHotEncoder(handle_unknown="ignore", drop="if_binary")`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -327,7 +327,27 @@ class TableVectorizer(ColumnTransformer):
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
-            self.low_card_cat_transformer_ = OneHotEncoder(drop="if_binary")
+            if parse_version(sklearn_version) >= parse_version("1.0.0"):
+                # sklearn is lenient and let us use both handle_unknown="ignore"
+                # and drop="if_binary" at the same time
+                self.low_card_cat_transformer_ = OneHotEncoder(
+                    drop="if_binary", handle_unknown="ignore"
+                )  # TODO maybe change to "infrequent_if_exists" if we bump sklearn min version to 1.1
+            else:
+                # sklearn is not lenient, and does not let us use both handle_unknown="ignore"
+                # and drop="if_binary" at the same time
+                # so we use handle_unknown="error" instead
+                self.low_card_cat_transformer_ = OneHotEncoder(
+                    drop="if_binary", handle_unknown="error"
+                )
+                warn(
+                    "You are using an old version of scikit-learn. "
+                    "Using handle_unknown='error' in low_card_cat_transformer. "
+                    "Please upgrade to scikit-learn 1.0.0 or higher to "
+                    "use handle_unknown='ignore', or change the drop parameter to"
+                    " None.",
+                    stacklevel=2,  # display the warning at the level of the user's code (fit_transform method)
+                )
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
         else:
@@ -437,7 +457,16 @@ class TableVectorizer(ColumnTransformer):
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
         for col, dtype in self.types_.items():
-            X[col] = X[col].astype(dtype)
+            # if categorical, add the new categories to prevent
+            # them to be encoded as nan
+            if pd.api.types.is_categorical_dtype(dtype):
+                known_categories = dtype.categories
+                new_categories = pd.unique(X[col])
+                dtype = pd.CategoricalDtype(
+                    categories=known_categories.union(new_categories)
+                )
+                self.types_[col] = dtype
+            X.loc[:, col] = X[col].astype(dtype)
         return X
 
     def fit_transform(self, X, y=None):

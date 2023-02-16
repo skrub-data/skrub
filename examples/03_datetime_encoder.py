@@ -86,22 +86,22 @@ X_
 from dirty_cat import TableVectorizer
 from pprint import pprint
 
-sup_vec = TableVectorizer()
-sup_vec.fit_transform(X)
-pprint(sup_vec.get_feature_names_out())
+table_vec = TableVectorizer()
+table_vec.fit_transform(X)
+pprint(table_vec.get_feature_names_out())
 
 ###############################################################################
 # If we want the day of the week, we can just replace |TV|'s default parameter:
-sup_vec = TableVectorizer(
+table_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
-sup_vec.fit_transform(X)
-sup_vec.get_feature_names_out()
+table_vec.fit_transform(X)
+table_vec.get_feature_names_out()
 
 ###############################################################################
 # We can see that the |TV| is indeed using
 # a |DtE| for the datetime features.
-pprint(sup_vec.transformers_)
+pprint(table_vec.transformers_)
 
 ###############################################################################
 # Predictions with date features
@@ -113,11 +113,11 @@ import numpy as np
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
-sup_vec = TableVectorizer(
+table_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
 reg = HistGradientBoostingRegressor()
-pipeline = make_pipeline(sup_vec, reg)
+pipeline = make_pipeline(table_vec, reg)
 
 ###############################################################################
 # Evaluating the model
@@ -226,13 +226,13 @@ plt.show()
 ###############################################################################
 from sklearn.inspection import permutation_importance
 
-sup_vec = TableVectorizer(
+table_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
 
 # In this case, we don't use a pipeline, because we want to compute the
 # importance of the features created by the DatetimeEncoder
-X_ = sup_vec.fit_transform(X)
+X_ = table_vec.fit_transform(X)
 reg = HistGradientBoostingRegressor().fit(X_, y)
 result = permutation_importance(reg, X_, y, n_repeats=10, random_state=0)
 std = result.importances_std
@@ -244,7 +244,7 @@ indices = list(reversed(indices))
 plt.figure(figsize=(12, 9))
 plt.title("Feature importances")
 n = len(indices)
-labels = np.array(sup_vec.get_feature_names_out())[indices]
+labels = np.array(table_vec.get_feature_names_out())[indices]
 plt.barh(range(n), importances[indices], color="b", yerr=std[indices])
 plt.yticks(range(n), labels, size=15)
 plt.tight_layout(pad=1)
