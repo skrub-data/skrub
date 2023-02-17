@@ -50,10 +50,6 @@ Minor changes
   which can be used to specify where to save and load from datasets.
   :pr:`432` by :user:`Lilian Boulard <LilianBoulard>`
 
-* Fetching functions now have an additional argument ``directory``,
-  which can be used to specify where to save and load from datasets.
-  :pr:`432` and :pr:`453` by :user:`Lilian Boulard <LilianBoulard>`
-
 * The :class:`TableVectorizer`'s default `OneHotEncoder` for low cardinality categorical variables now defaults
   to `handle_unknown="ignore"` instead of `handle_unknown="error"` (for sklearn >= 1.0.0).
   This means that categories seen only at test time will be encoded by a vector of zeroes instead of raising an error. :pr:`473` by :user:`Leo Grinsztajn <LeoGrin>`
