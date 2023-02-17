@@ -5,8 +5,8 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from sklearn.exceptions import NotFittedError
+from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
 from dirty_cat import MinHashEncoder
 
@@ -93,14 +93,9 @@ def test_encoder_params(hashing, minmax_hash) -> None:
     assert y2.shape == (len(X2), 50)
 
 
-input_types = ["numpy", "pandas"]
-missings = ["error", "zero_impute", "aaa"]
-hashings = ["fast", "murmur", "aaa"]
-
-
-@pytest.mark.parametrize("input_type", input_types)
-@pytest.mark.parametrize("missing", missings)
-@pytest.mark.parametrize("hashing", hashings)
+@pytest.mark.parametrize("input_type", ["numpy", "pandas"])
+@pytest.mark.parametrize("missing", ["error", "zero_impute", "aaa"])
+@pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
 def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     X = ["Red", np.nan, "green", "blue", "green", "green", "blue", float("nan")]
     n = 3
@@ -245,14 +240,14 @@ def test_correct_arguments():
         encoder = MinHashEncoder(n_components=3, minmax_hash=True)
         encoder.fit_transform(X)
 
+
 def test_check_fitted_minhash_encoder():
     """Test that calling transform before fit raises an error"""
     encoder = MinHashEncoder(n_components=3)
     X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
     with pytest.raises(NotFittedError):
         encoder.transform(X)
-    
+
     # Check that it works after fitting
     encoder.fit(X)
     encoder.transform(X)
-
