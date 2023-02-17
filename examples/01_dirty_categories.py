@@ -292,7 +292,7 @@ print(f"std={np.std(scores)}")
 #
 # Let us perform the same workflow, but without the |Pipeline|, so we can
 # analyze the TableVectorizer's mechanisms along the way.
-sup_vec = TableVectorizer(auto_cast=True)
+table_vec = TableVectorizer(auto_cast=True)
 
 # %%
 # We split the data between train and test, and transform them:
@@ -302,8 +302,8 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.15, random_state=42
 )
 
-X_train_enc = sup_vec.fit_transform(X_train, y_train)
-X_test_enc = sup_vec.transform(X_test)
+X_train_enc = table_vec.fit_transform(X_train, y_train)
+X_test_enc = table_vec.transform(X_test)
 
 ###############################################################################
 # The encoded data, X_train_enc and X_test_enc are numerical arrays:
@@ -321,7 +321,7 @@ X_train.shape, X_train_enc.shape
 # choice:
 from pprint import pprint
 
-pprint(sup_vec.transformers_)
+pprint(table_vec.transformers_)
 
 ###############################################################################
 # This is what is being passed to the |ColumnTransformer| under the hood.
@@ -341,7 +341,7 @@ X.columns.to_list()
 
 ###############################################################################
 # After encoding (we only plot the first 8 feature names):
-feature_names = sup_vec.get_feature_names_out()
+feature_names = table_vec.get_feature_names_out()
 feature_names[:8]
 
 ###############################################################################

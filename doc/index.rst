@@ -204,6 +204,7 @@ Data download and generation
    datasets.fetch_traffic_violations
    datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
+   datasets.get_ken_embeddings
    datasets.get_data_dir
    datasets.make_deduplication_data
 

@@ -3,6 +3,7 @@ from ._fetching import (
     DatasetInfoOnly,
     fetch_drug_directory,
     fetch_employee_salaries,
+    fetch_figshare,
     fetch_medical_charge,
     fetch_midwest_survey,
     fetch_open_payments,
@@ -11,12 +12,8 @@ from ._fetching import (
     fetch_world_bank_indicator,
     get_data_dir,
 )
-
-
-from ._generating import (
-    make_deduplication_data,
-)
-
+from ._generating import make_deduplication_data
+from ._ken_embeddings import get_ken_embeddings
 
 __all__ = [
     "DatasetAll",
@@ -29,6 +26,8 @@ __all__ = [
     "fetch_road_safety",
     "fetch_traffic_violations",
     "fetch_world_bank_indicator",
+    "fetch_figshare",
     "get_data_dir",
     "make_deduplication_data",
+    "get_ken_embeddings",
 ]

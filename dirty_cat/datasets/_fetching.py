@@ -16,12 +16,14 @@ import json
 import urllib.request
 import warnings
 from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path
 from typing import Any, Dict, List, Optional, TextIO, Union
 from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
+from pyarrow.parquet import ParquetFile
 from sklearn.datasets import fetch_openml
 
 from dirty_cat.datasets._utils import get_data_dir
@@ -303,6 +305,103 @@ def _fetch_world_bank_data(
     }
 
 
+def _fetch_figshare(
+    figshare_id: str,
+    data_directory: Optional[Path] = None,
+) -> Dict[str, Any]:
+    """
+    Fetch a dataset from figshare using the download ID number.
+
+    Parameters
+    ----------
+    figshare_id: str
+        The ID of the dataset to fetch.
+    data_directory: Path, optional
+        A directory to save the data to.
+        By default, the dirty_cat data directory.
+
+    Returns
+    -------
+    Dict[str, Any]
+        A dictionary containing:
+          - ``description``: str
+              The description of the dataset.
+          - ``source``: str
+              The dataset's URL.
+          - ``path``: pathlib.Path
+              The local path leading to the dataset,
+              saved as a parquet file.
+
+    Notes
+    -----
+    The files are read and returned in parquet format, this function needs
+    pyarrow installed to run correctly.
+
+    """
+    if data_directory is None:
+        data_directory = get_data_dir()
+    parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
+    data_directory.mkdir(parents=True, exist_ok=True)
+    url = f"https://figshare.com/ndownloader/files/{figshare_id}"
+    description = f"This table shows the {figshare_id!r} figshare file."
+    file_paths = [
+        file
+        for file in data_directory.iterdir()
+        if file.name.startswith(f"figshare_{figshare_id}")
+    ]
+    if len(file_paths) > 0:
+        if len(file_paths) == 1:
+            parquet_paths = [str(file_paths[0].resolve())]
+        else:
+            parquet_paths = []
+            for path in file_paths:
+                parquet_path = str(path.resolve())
+                parquet_paths += [parquet_path]
+        return {
+            "dataset_name": figshare_id,
+            "description": description,
+            "source": url,
+            "path": parquet_paths,
+        }
+    else:
+        warnings.warn(
+            f"Could not find the dataset {figshare_id!r} locally. "
+            "Downloading it from figshare; this might take a while... "
+            "If it is interrupted, some files might be invalid/incomplete: "
+            "if on the following run, the fetching raises errors, you can try "
+            f"fixing this issue by deleting the directory {parquet_path!s}.",
+            UserWarning,
+            stacklevel=2,
+        )
+        try:
+            filehandle, _ = urllib.request.urlretrieve(url)
+            df = ParquetFile(filehandle)
+            record = df.iter_batches(
+                batch_size=1_000_000,
+            )
+            idx = []
+            for _, x in enumerate(
+                chain(range(0, df.metadata.num_rows, 1_000_000), [df.metadata.num_rows])
+            ):
+                idx += [x]
+            parquet_paths = []
+            for i in range(1, len(idx)):
+                parquet_path = (
+                    data_directory / f"figshare_{figshare_id}_{idx[i]}.parquet"
+                ).resolve()
+                batch = next(record).to_pandas()
+                batch.to_parquet(parquet_path, index=False)
+                parquet_paths += [parquet_path]
+            return {
+                "dataset_name": figshare_id,
+                "description": description,
+                "source": url,
+                "path": parquet_paths,
+            }
+        except URLError:
+            raise URLError("No internet connection or the website is down.")
+
+
 def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
     """
     Downloads a dataset from OpenML,
@@ -491,6 +590,8 @@ def _fetch_dataset_as_dataclass(
         info = _fetch_openml_dataset(dataset_id, data_directory)
     elif source == "world_bank":
         info = _fetch_world_bank_data(dataset_id, data_directory)
+    elif source == "figshare":
+        info = _fetch_figshare(dataset_id, data_directory)
     else:
         raise ValueError(f"Unknown source {source!r}")
 
@@ -501,7 +602,10 @@ def _fetch_dataset_as_dataclass(
         target = []
 
     if load_dataframe:
-        df = pd.read_csv(info["path"], **read_csv_kwargs)
+        if source == "figshare":
+            df = pd.read_parquet(info["path"])
+        else:
+            df = pd.read_csv(info["path"], **read_csv_kwargs)
         y = df[target]
         X = df.drop(target, axis="columns")
         dataset = DatasetAll(
@@ -820,6 +924,31 @@ def fetch_world_bank_indicator(
         source="world_bank",
         dataset_name=f"World Bank indicator {indicator_id!r}",
         dataset_id=indicator_id,
+        target=None,
+        load_dataframe=load_dataframe,
+        data_directory=directory,
+    )
+
+
+def fetch_figshare(
+    figshare_id: str,
+    load_dataframe: bool = True,
+    directory: Optional[Path] = None,
+) -> Union[DatasetAll, DatasetInfoOnly]:
+    """Fetches a table of from figshare.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
+    """
+    return _fetch_dataset_as_dataclass(
+        source="figshare",
+        dataset_name=f"figshare_{figshare_id!r}",
+        dataset_id=figshare_id,
         target=None,
         load_dataframe=load_dataframe,
         data_directory=directory,
