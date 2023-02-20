@@ -37,7 +37,7 @@ jobs:
             #
             # Installing these extra dependencies will overwrite the already
             # installed version defined at install_requires.
-            dependencies-version-type: ["min", "latest"]
+            dependencies-version-type: ["minimal", "latest"]
             include:
               - dependencies-version: "dev"
               - dependencies-version: "dev, min-py38"
