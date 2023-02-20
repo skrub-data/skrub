@@ -63,8 +63,8 @@ the main steps and appropriate resources:
     such as conda might use a cached version.
 15. To finish the procedure, create a new release on the GitHub repository.
 
-For the bug fix release (e.g. 0.1.0 -> 0.1.1), the process is similar. You don't need
-to create the branch ``0.1.X`` because it exists already. You need to cherry-pick the
+For the bug fix release (e.g. 0.2.0 -> 0.2.1), the process is similar. You don't need
+to create the branch ``0.2.X`` because it exists already. You need to cherry-pick the
 commits from ``master`` into this branch and then follow the same steps as above:
 bumping the version, update the setup, commit and push the changes and finally create
 and update the wheel.
