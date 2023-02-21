@@ -247,7 +247,7 @@ class SimilarityEncoder(OneHotEncoder):
     n_prototypes : int, optional
         Useful when `most_frequent` or `k-means` is used.
         Must be a positive non-null integer.
-    random_state : either an int used as a seed, a RandomState instance or None.
+    random_state : int, RandomState or None, optional
         Useful when `k-means` strategy is used.
     n_jobs : int, optional
         Maximum number of processes used to compute similarity matrices. Used
@@ -273,7 +273,7 @@ class SimilarityEncoder(OneHotEncoder):
     -----
     The functionality of :class:`~SimilarityEncoder` is easy to explain
     and understand, but it is not scalable.
-    Instead, the :class:`~dirty_cat.GapEncoder` is usually recommended over this one.
+    Instead, the :class:`~dirty_cat.GapEncoder` is usually recommended over it.
 
     References
     ----------
