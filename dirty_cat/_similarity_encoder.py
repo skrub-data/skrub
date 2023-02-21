@@ -140,7 +140,7 @@ def ngram_similarity_matrix(
     return np.nan_to_num(out, copy=False)
 
 
-def get_prototype_frequencies(prototypes: np.ndarray) -> np.array:
+def get_prototype_frequencies(prototypes: np.ndarray) -> np.ndarray:
     """
     Computes the frequencies of the values contained in prototypes
     Reverse sorts the array by the frequency
@@ -159,7 +159,7 @@ def get_kmeans_prototypes(
     sparse: bool = False,
     sample_weight=None,
     random_state: Optional[Union[int, RandomState]] = None,
-) -> np.array:
+) -> np.ndarray:
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
@@ -290,7 +290,7 @@ class SimilarityEncoder(OneHotEncoder):
     >>> enc.fit(X)
     SimilarityEncoder()
 
-    It inherits the same methods as sklearn's
+    It inherits the same methods as the
     :class:`~sklearn.preprocessing.OneHotEncoder`:
 
     >>> enc.categories_
@@ -313,12 +313,12 @@ class SimilarityEncoder(OneHotEncoder):
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
     """
 
-    categories_: List[np.array]
+    categories_: List[np.ndarray]
     n_features_in_: int
     random_state_: Union[int, RandomState]
-    drop_idx_: np.array
+    drop_idx_: np.ndarray
     vectorizers_: List[CountVectorizer]
-    vocabulary_count_matrices_: List[np.array]
+    vocabulary_count_matrices_: List[np.ndarray]
     vocabulary_ngram_counts_: List[List[int]]
     _infrequent_enabled: bool
 
@@ -373,7 +373,7 @@ class SimilarityEncoder(OneHotEncoder):
         if categories == "auto" and n_prototypes is not None:
             warnings.warn('n_prototypes parameter ignored with category type "auto". ')
 
-    def get_most_frequent(self, prototypes: List[str]) -> np.array:
+    def get_most_frequent(self, prototypes: List[str]) -> np.ndarray:
         """
         Get the most frequent category prototypes.
 
@@ -384,7 +384,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         Returns
         -------
-        np.array
+        :obj:`~numpy.ndarray`
             The n_prototypes most frequent values for a category variable.
         """
         values, _ = get_prototype_frequencies(prototypes)
@@ -525,7 +525,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         return self
 
-    def transform(self, X, fast: bool = True) -> np.array:
+    def transform(self, X, fast: bool = True) -> np.ndarray:
         """
         Transform X using specified encoding scheme.
 
@@ -600,9 +600,9 @@ class SimilarityEncoder(OneHotEncoder):
 
     def _ngram_similarity_fast(
         self,
-        X: Union[list, np.array],
+        X: Union[list, np.ndarray],
         col_idx: int,
-    ) -> np.array:
+    ) -> np.ndarray:
         """
         Fast computation of ngram similarity.
 
@@ -660,7 +660,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         return np.nan_to_num(out, copy=False)
 
-    def fit_transform(self, X, y=None, **fit_params) -> np.array:
+    def fit_transform(self, X, y=None, **fit_params) -> np.ndarray:
         """
         Fit SimilarityEncoder to data, then transform it.
         Fits transformer to `X` and `y` with optional parameters
