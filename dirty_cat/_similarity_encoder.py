@@ -194,12 +194,11 @@ class SimilarityEncoder(OneHotEncoder):
     """
     Encode string categorical features as a numeric array.
 
-    The input to this transformer should be an array-like of
-    strings.
+    The input to this transformer should be an array-like of strings.
     The method is based on calculating the morphological similarities
     between the categories.
-    This encoding is an alternative to OneHotEncoder in the case of
-    dirty categorical variables.
+    This encoding is an alternative to
+    :class:`~sklearn.preprocessing.OneHotEncoder` for dirty categorical variables.
 
     Parameters
     ----------
@@ -207,9 +206,9 @@ class SimilarityEncoder(OneHotEncoder):
         Deprecated in dirty_cat 0.3, will be removed in 0.5.
         Was used to specify the type of pairwise string similarity to use.
         Since 0.3, only the ngram similarity is supported.
-    ngram_range : tuple (min_n, max_n), default=(2, 4)
+    ngram_range : int 2-tuple (min_n, max_n), default=(2, 4)
         The range of values for the n_gram similarity.
-    categories : typing.Union[typing.Literal["auto", "k-means", "most_frequent"], typing.List[typing.List[str]]]  # noqa
+    categories : {"auto", "k-means", "most_frequent"} or list of list of str
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
@@ -221,49 +220,60 @@ class SimilarityEncoder(OneHotEncoder):
         - 'k-means' : Computes the K nearest neighbors of K-mean centroids
            in order to choose the prototype categories
 
-        The categories used can be found in the ``categories_`` attribute.
-    dtype : number type, default np.float64
+        The categories used can be found in the
+        :attr:`~SimilarityEncoder.categories_` attribute.
+    dtype : number type, default :obj:`~numpy.float64`, optional
         Desired dtype of output.
-    handle_unknown : 'error' or 'ignore' (default)
+    handle_unknown : 'error' or 'ignore', default='', optional
         Whether to raise an error or ignore if an unknown categorical feature
         is present during transform (default is to ignore). When this parameter
         is set to 'ignore' and an unknown category is encountered during
         transform, the resulting encoded columns for this feature
         will be all zeros. In the inverse transform, an unknown category
         will be denoted as None.
-    handle_missing : 'error' or '' (default)
+    handle_missing : 'error' or '', default='', optional
         Whether to raise an error or impute with blank string '' if missing
         values (NaN) are present during fit (default is to impute).
         When this parameter is set to '', and a missing value is encountered
         during fit_transform, the resulting encoded columns for this feature
         will be all zeros. In the inverse transform, the missing category
         will be denoted as None.
-    hashing_dim : int type or None.
-        If None, the base vectorizer is CountVectorizer, else it's set to
-        HashingVectorizer with a number of features equal to `hashing_dim`.
-    n_prototypes : number of prototype we want to use.
+    hashing_dim : int or None, optional
+        If None, the base vectorizer is
+        :class:`~sklearn.feature_extraction.text.CountVectorizer`,
+        else it's set to
+        :class:`~sklearn.feature_extraction.text.HashingVectorizer`
+        with a number of features equal to `hashing_dim`.
+    n_prototypes : int, optional
         Useful when `most_frequent` or `k-means` is used.
         Must be a positive non-null integer.
     random_state : either an int used as a seed, a RandomState instance or None.
         Useful when `k-means` strategy is used.
     n_jobs : int, optional
-        maximum number of processes used to compute similarity matrices. Used
-        only if ``fast=True`` in ``SimilarityEncoder.transform``
+        Maximum number of processes used to compute similarity matrices. Used
+        only if `fast=True` in :func:`~SimilarityEncoder.transform`.
 
     Attributes
     ----------
-    categories_ : typing.List[np.array]
+    categories_ : list of :obj:`~numpy.ndarray`
         The categories of each feature determined during fitting
-        (in order corresponding with output of ``transform``).
+        (in the same order as the output of :func:`~SimilarityEncoder.transform`).
 
     See Also
     --------
     :class:`~dirty_cat.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
     :class:`~dirty_cat.GapEncoder` :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics
+        with continuous encoding.
     :class:`~dirty_cat.deduplicate` :
         Deduplicate data by hierarchically clustering similar strings.
+
+    Notes
+    -----
+    The functionality of :class:`~SimilarityEncoder` is easy to explain
+    and understand, but it is not scalable.
+    Instead, the :class:`~dirty_cat.GapEncoder` is usually recommended over this one.
 
     References
     ----------
@@ -271,7 +281,7 @@ class SimilarityEncoder(OneHotEncoder):
     For a detailed description of the method, see
     `Similarity encoding for learning with dirty categorical variables
     <https://hal.inria.fr/hal-01806175>`_ by Cerda, Varoquaux, Kegl. 2018
-    (accepted for publication at: Machine Learning journal, Springer).
+    (Machine Learning journal, Springer).
 
     Examples
     --------
@@ -280,7 +290,8 @@ class SimilarityEncoder(OneHotEncoder):
     >>> enc.fit(X)
     SimilarityEncoder()
 
-    It inherits the same methods as sklearn's :class:`~sklearn.preprocessing.OneHotEncoder`:
+    It inherits the same methods as sklearn's
+    :class:`~sklearn.preprocessing.OneHotEncoder`:
 
     >>> enc.categories_
     [array(['Female', 'Male'], dtype=object), array([1, 2, 3], dtype=object)]
@@ -292,7 +303,9 @@ class SimilarityEncoder(OneHotEncoder):
     array([[1., 0.42857143, 1., 0., 0.],
            [0.42857143, 1., 0. , 0. , 0.]])
 
-    >>> enc.inverse_transform([[1., 0.42857143, 1., 0., 0.], [0.42857143, 1., 0. , 0. , 0.]])
+    >>> enc.inverse_transform(
+    >>>     [[1., 0.42857143, 1., 0., 0.], [0.42857143, 1., 0. , 0. , 0.]]
+    >>> )
     array([['Female', 1],
            ['Male', None]], dtype=object)
 
