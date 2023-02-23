@@ -279,7 +279,7 @@ sphinx_gallery_conf = {
         "binderhub_url": "https://mybinder.org",
         "branch": "main",
         "dependencies": ["./binder/requirements.txt"],
-        "notebooks_dir": "dev",
+        "notebooks_dir": "dev/dev",
     },
 }
 
