@@ -273,7 +273,7 @@ class SimilarityEncoder(OneHotEncoder):
     -----
     The functionality of :class:`~SimilarityEncoder` is easy to explain
     and understand, but it is not scalable.
-    Instead, the :class:`~dirty_cat.GapEncoder` is usually recommended over it.
+    Instead, the :class:`~dirty_cat.GapEncoder` is usually recommended.
 
     References
     ----------
