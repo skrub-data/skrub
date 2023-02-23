@@ -259,6 +259,11 @@ intersphinx_mapping = {
 # -- sphinx-gallery configuration -----------------------------------------
 from sphinx_gallery.sorting import FileNameSortKey  # noqa
 
+if 'dev' in release:
+    binder_branch = 'main'
+else:
+    binder_branch = release
+
 sphinx_gallery_conf = {
     "doc_module": "dirty_cat",
     "filename_pattern": "",
@@ -275,10 +280,10 @@ sphinx_gallery_conf = {
     "download_all_examples": False,
     "binder": {
         "org": "dirty-cat",
-        "repo": "dirty-cat.github.io",
+        "repo": "dirty-cat",
         "binderhub_url": "https://mybinder.org",
-        "branch": "main",
-        "dependencies": ["./binder/requirements.txt"],
+        "branch": binder_branch,
+        "dependencies": "./binder/requirements.txt",
     },
 }
 

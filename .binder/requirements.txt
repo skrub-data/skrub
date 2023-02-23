@@ -1,0 +1,5 @@
+sphinx-gallery
+sphinxext-opengraph
+matplotlib
+seaborn
+statsmodels
