@@ -284,6 +284,7 @@ sphinx_gallery_conf = {
         "binderhub_url": "https://mybinder.org",
         "branch": binder_branch,
         "dependencies": "./binder/requirements.txt",
+        "use_jupyter_lab": True,
     },
 }
 
