@@ -54,18 +54,12 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.githubpages",
     "numpydoc",
+    "sphinxext.opengraph",
     "sphinx_issues",
     "sphinx.ext.linkcode",
     "sphinx.ext.autodoc.typehints",
     "sphinx_gallery.gen_gallery",
 ]
-
-try:
-    import sphinxext.opengraph  # noqa
-
-    extensions.append("sphinxext.opengraph")
-except ImportError:
-    print("ERROR: sphinxext.opengraph import failed")
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -266,7 +260,6 @@ else:
 
 sphinx_gallery_conf = {
     "doc_module": "dirty_cat",
-    "filename_pattern": "",
     "backreferences_dir": os.path.join("generated"),
     "reference_url": {
         # The module we locally document (so, dirty_cat) uses None
@@ -274,10 +267,9 @@ sphinx_gallery_conf = {
         # We don't specify the other modules as we use the intershpinx ext.
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
-    "examples_dirs": "../examples",
-    "gallery_dirs": "auto_examples",
+    "examples_dirs": ["../examples"],
+    "gallery_dirs": ["auto_examples"],
     "within_subsection_order": FileNameSortKey,
-    "download_all_examples": False,
     "binder": {
         "org": "dirty-cat",
         "repo": "dirty-cat",
