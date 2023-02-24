@@ -1,4 +1,5 @@
 sphinx-gallery
+dirty-cat
 sphinxext-opengraph
 matplotlib
 seaborn
