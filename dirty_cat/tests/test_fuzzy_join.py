@@ -113,6 +113,12 @@ def test_missing_keys():
         match=r"Required parameter missing",
     ):
         fuzzy_join(a, b, left_on="col1")
+    left = pd.DataFrame({"a": ["aa", np.NaN, "bb"], "b": [1, 2, np.NaN]})
+    right = pd.DataFrame(
+        {"a": ["aa", "bb", np.NaN, "cc", "dd"], "c": [5, 6, 7, 8, np.NaN]}
+    )
+    output = fuzzy_join(left, right, on="a")
+    assert output.shape == (2, 4)
 
 
 def test_drop_unmatched():
