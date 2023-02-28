@@ -18,7 +18,6 @@ def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
     For example, with ``f=do_smth``, ``args=(10, 5)`` and
     ``kwargs={"keyboard": "qwerty"}``,
     returns "do_smth(10, 5, keyboard=qwerty)".
-    Can be parsed with the function `parse_func_repr` below.
     """
     str_args = ", ".join(args)
     str_kwargs = ", ".join(f"{k}={v}" for k, v in kwargs.items())
@@ -26,9 +25,10 @@ def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
 
 
 def monitor(
-    memory: bool,
-    time: bool,
-    parametrize: Union[Collection[Collection[Any]], Dict[str, Collection[Any]]],
+    *,
+    parametrize: Union[Collection[Collection[Any]], Dict[str, Collection[Any]]] = None,
+    memory: bool = True,
+    time: bool = True,
     repeat: int = 1,
     save_as: Optional[str] = None,
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
@@ -40,22 +40,21 @@ def monitor(
 
     Parameters
     ----------
-
-    memory : bool
-        Whether the RAM usage should be monitored throughout the function execution.
-        Note: monitored in the main thread.
-    time : bool
-        Whether the time the function took to execute should be measured.
-        Note: if `memory` is also set, consider that as the memory profiler runs
-        in the main thread, the timings will be different from an execution
-        without the memory monitoring.
-    parametrize : a collection of a collection of parameters
+    parametrize : a collection of collections of parameters, optional
         Specifies the parameter matrix to be used on the function.
         These can either be passed as positional arguments (e.g., list of list
         of parameters), or as keyword arguments (e.g., dictionary of list of
         parameters).
         Note: when specified, ignores the parameters passed to the function.
-    repeat : int
+    memory : bool, optional, default=True
+        Whether the RAM usage should be monitored throughout the function execution.
+        Note: monitored in the main thread.
+    time : bool, optional, default=True
+        Whether the time the function took to execute should be measured.
+        Note: if `memory` is also set, consider that as the memory profiler runs
+        in the main thread, the timings will be different from an execution
+        without the memory monitoring.
+    repeat : int, optional, default=1
         How many times we want to repeat the execution of the function for more
         representative time and memory extracts.
     save_as : str, optional
@@ -66,34 +65,52 @@ def monitor(
 
     Returns
     -------
-
     Callable[..., Callable[..., pd.DataFrame]]
         A double-nested callable that returns a DataFrame of the results.
 
+    Examples
+    --------
+    When `parametrize` is not passed, the values the function is called with
+    are used.
+    >>> @monitor()
+    >>> def function(choice: typing.Literal["yes", "no", number: int):
+    >>>     ...
+    >>> function("yes", 15)
+
+    For more complex combinations, the `parametrize` parameter can be used:
+    >>> @monitor(
+    >>>     parametrize={
+    >>>         "choice": ["yes", "no"],
+    >>>         "number": [10, 66, 0],
+    >>>     },
+    >>> )
+    >>> def function(choice: typing.Literal["yes", "no"], number: int):
+    >>>     ...
+    >>> function()  # Called without any parameter
+
+    For benchmarking specific combinations, they can be passed as a list:
+    >>> @monitor(
+    >>>     parametrize=[
+    >>>         ("yes", 10),
+    >>>         ("no", 20),
+    >>>     ],
+    >>> )
+    >>> def function(choice: typing.Literal["yes", "no"], number: int):
+    >>>     ...
+    >>> function()  # Called without any parameter
     """
-    if not memory and not time:
-        warn(
-            "Parameters 'memory' and 'time' are both set to False ; "
-            "there is therefore nothing to monitor for, returning empty. ",
-            stacklevel=2,
-        )
-        return lambda *_, **__: lambda *_, **__: pd.DataFrame()
 
     def decorator(func: Callable[[Any], None]):
         """Only catches the decorated function."""
 
-        def wrapper(*_, **__) -> pd.DataFrame:
+        def wrapper(*call_args, **call_kwargs) -> pd.DataFrame:
             """
             Parameters
             ----------
-
-            *_ : Tuple[Any]
-                Arguments passed by the function call. Ignored.
-                Use `parametrize` instead.
-            **__ : Dict[str, Any]
-                Keyword arguments passed by the function call. Ignored.
-                Use `parametrize` instead.
-
+            call_args : Tuple[Any]
+                Arguments passed by the function call.
+            call_kwargs : Dict[str, Any]
+                Keyword arguments passed by the function call.
             """
 
             def product(
@@ -116,7 +133,6 @@ def monitor(
                 """
                 Parameters
                 ----------
-
                 *args : Tuple[Any]
                     Arguments to pass to the function.
                 **kwargs : Dict[str, Any]
@@ -131,7 +147,6 @@ def monitor(
                     - "memory": The number of MB of memory used.
                       Only present if ``memory=True``.
                     The size of these lists is equal to `repeat`.
-
                 """
                 _monitored = defaultdict(lambda: [])
 
@@ -165,10 +180,26 @@ def monitor(
                     tracemalloc.stop()
                 return _monitored
 
+            if parametrize is None:
+                # Use the parameters passed by the call
+                parametrization = (call_args, call_kwargs)
+            elif isinstance(parametrize, dict):
+                parametrization = (parametrize, ())
+            else:
+                parametrization = list(product(parametrize))
+
             df = pd.DataFrame()
-            for args, kwargs in tqdm(list(product(parametrize))):
+            for args, kwargs in tqdm(parametrization):
                 call_repr = repr_func(func, args, kwargs)
                 res_dic = exec_func(*args, **kwargs)
+                if not res_dic:  # Dict is empty
+                    warn(
+                        "Nothing was returned during the execution, "
+                        "there is therefore nothing to monitor for. ",
+                        stacklevel=2,
+                    )
+                    return df
+
                 # Add arguments to the results in wide format
                 for index, arg in enumerate(args):
                     res_dic[f"arg{index}"] = arg
