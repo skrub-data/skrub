@@ -538,7 +538,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         Returns
         -------
-        X_new : 2-d array, shape [n_samples, n_features_new]
+        2-d :obj:`~numpy.ndarray`, shape [n_samples, n_features_new]
             Transformed input.
         """
         check_is_fitted(self, "categories_")
