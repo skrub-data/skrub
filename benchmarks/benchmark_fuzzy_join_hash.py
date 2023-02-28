@@ -98,8 +98,8 @@ def fuzzy_join(
         A list of strings indicating the suffix to add when overlaping
         column names.
 
-    Returns:
-    --------
+    Returns
+    -------
     df_joined: pandas.DataFrame
         The joined table returned as a DataFrame. If `return_score` is True,
         another column will be added to the DataFrame containing the
@@ -313,9 +313,9 @@ benchmark_name = "fuzzy_join_encoder_benchmark"
     repeat=10,
 )
 def benchmark(
-    encoder: str,
+    encoder: Literal["hash", "count"],
     dataset_name: str,
-    analyser: str,
+    analyser: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
 ):
     left_table, right_table, gt = fetch_data(dataset_name)
@@ -324,9 +324,9 @@ def benchmark(
     joined_fj = fuzzy_join(
         left_table,
         right_table,
-        "left",
-        "title",
-        "title",
+        how="left",
+        left_on="title",
+        right_on="title",
         encoder=encoder,
         analyzer=analyser,
         ngram_range=ngram_range,

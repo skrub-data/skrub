@@ -166,20 +166,20 @@ def monitor(
                 return _monitored
 
             df = pd.DataFrame()
-            args_list = list(product(parametrize))  # convert to list to know the length
-            for args, kwargs in tqdm(args_list):
-                call_string = repr_func(func, args, kwargs)
+            for args, kwargs in tqdm(list(product(parametrize))):
+                call_repr = repr_func(func, args, kwargs)
                 res_dic = exec_func(*args, **kwargs)
                 # Add arguments to the results in wide format
                 for index, arg in enumerate(args):
                     res_dic[f"arg{index}"] = arg
                 for key, value in kwargs.items():
-                    if not isinstance(value, (int, float)):
-                        value = str(value)  # prevent creating new lines for
-                        # tuple or list parameters
+                    if isinstance(value, (list, set, tuple, dict)):
+                        # Prevent creating new lines
+                        value = str(value)
                     res_dic[key] = value
-                res_dic["call"] = call_string
+                res_dic["call"] = call_repr
                 df = pd.concat((df, pd.DataFrame(res_dic)), ignore_index=True)
+
             if save_as is not None:
                 save_dir = Path(__file__).parent.parent / "results"
                 save_dir.mkdir(exist_ok=True)

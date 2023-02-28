@@ -1,10 +1,9 @@
-#################
-# The MinHashEncoder version used for the benchmark
-# On the main branch, we only kept the best version of the MinHashEncoder
-# which is the batched version
-# with batch_per_job=1
-# (the batch_per_job parameter has no effect on the results)
-#################
+"""
+The MinHashEncoder version used for the benchmark.
+On the main branch, we only kept the best version of the MinHashEncoder
+which is the batched version with batch_per_job=1
+(the batch_per_job parameter has no effect on the results)
+"""
 
 from typing import Callable, Collection, Dict, List, Literal, Tuple
 
@@ -404,8 +403,6 @@ def benchmark(
 def plot(df: pd.DataFrame):
     sns.set_theme(style="ticks", palette="pastel")
 
-    print(df)
-
     # Create a new columns merging batched and batch_per_job
     # If batch is False, ignore batch_per_job
     df["config"] = df.apply(
@@ -414,10 +411,9 @@ def plot(df: pd.DataFrame):
         else "batched=False",
         axis=1,
     )
-    print(df["config"])
 
     sns.boxplot(x="n_jobs", y="time", hue="config", data=df)
-    # Log scale for the y axis
+    # Log scale for the y-axis
     plt.yscale("log")
     plt.show()
 
