@@ -1,7 +1,7 @@
-import pandas as pd
-
-from typing import List
 from pathlib import Path
+from typing import List
+
+import pandas as pd
 
 
 def find_result(bench_name: str) -> Path:
@@ -36,13 +36,11 @@ def choose_file(results: List[Path]) -> Path:
         for i, file in enumerate(results):
             # Read the result file to get its dimensions
             df = pd.read_csv(file)
-            # Try and get the number of repeats.
-            if "time" in df.columns:
-                repeat = len(eval(df["time"].iloc[0]))
-            elif "memory" in df.columns:
-                repeat = len(eval(df["memory"].iloc[0]))
-            else:
-                repeat = 1
+            if "iter" not in df.columns:
+                print(f"Invalid file {file.name!r}, skipping.")
+                continue
+            n_iter_per_xp = df["iter"].max() + 1
+            repeat = df.shape[0] // n_iter_per_xp
 
             bench_name, date = file.stem.split("-")
             print(
