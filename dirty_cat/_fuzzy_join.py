@@ -229,7 +229,9 @@ def fuzzy_join(
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
     if encoder is None:
-        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+        enc = HashingVectorizer(
+            analyzer=analyzer, ngram_range=ngram_range, n_features=2**17
+        )
     else:
         enc = encoder
 
