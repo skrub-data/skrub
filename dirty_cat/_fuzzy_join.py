@@ -230,7 +230,7 @@ def fuzzy_join(
 
     if encoder is None:
         enc = HashingVectorizer(
-            analyzer=analyzer, ngram_range=ngram_range, n_features=2**17
+            analyzer=analyzer, ngram_range=ngram_range, n_features=2**16
         )
     else:
         enc = encoder
