@@ -1,10 +1,9 @@
-#################
-# The MinHashEncoder version used for the benchmark
-# On the main branch, we only kept the best version of the MinHashEncoder
-# which is the batched version
-# with batch_per_job=1
-# (the batch_per_job parameter has no effect on the results)
-#################
+"""
+The MinHashEncoder version used for the benchmark.
+On the main branch, we only kept the best version of the MinHashEncoder
+which is the batched version with batch_per_job=1
+(the batch_per_job parameter has no effect on the results)
+"""
 
 from typing import Callable, Collection, Dict, List, Literal, Tuple
 
@@ -371,7 +370,7 @@ from argparse import ArgumentParser
 
 from pathlib import Path
 
-from utils import monitor, parse_func_repr, find_result, default_parser
+from utils import monitor, find_result, default_parser
 from dirty_cat.tests.utils import generate_data
 
 benchmark_name = "minhash_batch_comparison"
@@ -401,39 +400,21 @@ def benchmark(
     ).transform(X)
 
 
-def plot(res: pd.DataFrame):
+def plot(df: pd.DataFrame):
     sns.set_theme(style="ticks", palette="pastel")
-
-    rows = []
-    for i, ser in res.iterrows():
-        times = eval(str(ser["time"]))
-        memories = eval(str(ser["memory"]))
-        _, _, kwargs = parse_func_repr(ser["call"])
-        for time, memory in zip(times, memories):
-            rows.append(
-                (
-                    kwargs["batched"],
-                    kwargs["batch_per_job"],
-                    kwargs["n_jobs"],
-                    time,
-                    memory,
-                )
-            )
-
-    df = pd.DataFrame(
-        rows, columns=["batched", "batch_per_job", "n_jobs", "time", "memory"]
-    )
 
     # Create a new columns merging batched and batch_per_job
     # If batch is False, ignore batch_per_job
     df["config"] = df.apply(
         lambda row: f"batched={row['batched']}, batch_per_job={row['batch_per_job']}"
-        if row["batched"] == "True"
+        if row["batched"]
         else "batched=False",
         axis=1,
     )
 
     sns.boxplot(x="n_jobs", y="time", hue="config", data=df)
+    # Log scale for the y-axis
+    plt.yscale("log")
     plt.show()
 
 

@@ -1,4 +1,3 @@
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Callable, Tuple
 from unittest import mock
@@ -41,10 +40,6 @@ def test_openml_fetching(
     Test a function that loads data from OpenML.
     """
     with TemporaryDirectory() as temp_dir_1, TemporaryDirectory() as temp_dir_2:
-        # Convert to path objects
-        temp_dir_1 = Path(temp_dir_1).absolute()
-        temp_dir_2 = Path(temp_dir_2).absolute()
-
         # Fetch without loading into memory
         try:
             dataset_wo_load: _fetching.DatasetInfoOnly = fetching_function(
@@ -126,7 +121,6 @@ def test_fetch_world_bank_indicator():
     }
 
     with TemporaryDirectory() as temp_dir:
-        temp_dir = Path(temp_dir).absolute()
         try:
             # First, we want to purposefully test FileNotFoundError exceptions.
             with pytest.raises(FileNotFoundError):

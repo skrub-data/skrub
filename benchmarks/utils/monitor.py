@@ -1,13 +1,14 @@
 import tracemalloc
-import pandas as pd
-
-from typing import Callable, Collection, Any, Optional, Tuple, Dict, List, Union
-from time import perf_counter
-from itertools import product as _product
 from collections import defaultdict
 from datetime import datetime
-from warnings import warn
+from itertools import product as _product
 from pathlib import Path
+from time import perf_counter
+from typing import Any, Callable, Collection, Dict, List, Optional, Union
+from warnings import warn
+
+import pandas as pd
+from tqdm import tqdm
 
 
 def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
@@ -17,64 +18,43 @@ def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
     For example, with ``f=do_smth``, ``args=(10, 5)`` and
     ``kwargs={"keyboard": "qwerty"}``,
     returns "do_smth(10, 5, keyboard=qwerty)".
-    Can be parsed with the function `parse_func_repr` below.
     """
     str_args = ", ".join(args)
     str_kwargs = ", ".join(f"{k}={v}" for k, v in kwargs.items())
     return f"{f.__name__}({', '.join(st for st in [str_args, str_kwargs] if st)})"
 
 
-def parse_func_repr(representation: str) -> Tuple[str, tuple, dict]:
-    """
-    Takes the representation of a function and its arguments created by
-    `repr_func`, and returns the function name,
-    the positional arguments as a tuple,
-    and the keyword arguments as a dictionary.
-    """
-    func_name, args_repr = representation[:-1].split("(", 1)
-    args = []
-    kwargs = {}
-    for arg in args_repr.split(", "):
-        if "=" in arg:
-            keyword, argument = arg.split("=", 1)
-            if keyword.isidentifier():
-                kwargs.update({keyword: argument})
-                continue
-        args.append(arg)
-    return func_name, tuple(args), kwargs
-
-
 def monitor(
-    memory: bool,
-    time: bool,
-    parametrize: Union[Collection[Collection[Any]], Dict[str, Collection[Any]]],
+    *,
+    parametrize: Union[Collection[Collection[Any]], Dict[str, Collection[Any]]] = None,
+    memory: bool = True,
+    time: bool = True,
     repeat: int = 1,
     save_as: Optional[str] = None,
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
     """Decorator used to monitor the execution of a function.
 
-    The decorated function should return nothing (even if it does, nothing will
-    be passed through by this decorator).
+    The decorated function should return either None, or a dictionary,
+    which will be added to the results.
     Executions are sequential, so it's usually pretty long to run!
 
     Parameters
     ----------
-
-    memory : bool
-        Whether the RAM usage should be monitored throughout the function execution.
-        Note: monitored in the main thread.
-    time : bool
-        Whether the time the function took to execute should be measured.
-        Note: if `memory` is also set, consider that as the memory profiler runs
-        in the main thread, the timings will be different from an execution
-        without the memory monitoring.
-    parametrize : a collection of a collection of parameters
+    parametrize : a collection of collections of parameters, optional
         Specifies the parameter matrix to be used on the function.
         These can either be passed as positional arguments (e.g., list of list
         of parameters), or as keyword arguments (e.g., dictionary of list of
         parameters).
         Note: when specified, ignores the parameters passed to the function.
-    repeat : int
+    memory : bool, optional, default=True
+        Whether the RAM usage should be monitored throughout the function execution.
+        Note: monitored in the main thread.
+    time : bool, optional, default=True
+        Whether the time the function took to execute should be measured.
+        Note: if `memory` is also set, consider that as the memory profiler runs
+        in the main thread, the timings will be different from an execution
+        without the memory monitoring.
+    repeat : int, optional, default=1
         How many times we want to repeat the execution of the function for more
         representative time and memory extracts.
     save_as : str, optional
@@ -85,34 +65,52 @@ def monitor(
 
     Returns
     -------
-
     Callable[..., Callable[..., pd.DataFrame]]
         A double-nested callable that returns a DataFrame of the results.
 
+    Examples
+    --------
+    When `parametrize` is not passed, the values the function is called with
+    are used.
+    >>> @monitor()
+    >>> def function(choice: typing.Literal["yes", "no", number: int):
+    >>>     ...
+    >>> function("yes", 15)
+
+    For more complex combinations, the `parametrize` parameter can be used:
+    >>> @monitor(
+    >>>     parametrize={
+    >>>         "choice": ["yes", "no"],
+    >>>         "number": [10, 66, 0],
+    >>>     },
+    >>> )
+    >>> def function(choice: typing.Literal["yes", "no"], number: int):
+    >>>     ...
+    >>> function()  # Called without any parameter
+
+    For benchmarking specific combinations, they can be passed as a list:
+    >>> @monitor(
+    >>>     parametrize=[
+    >>>         ("yes", 10),
+    >>>         ("no", 20),
+    >>>     ],
+    >>> )
+    >>> def function(choice: typing.Literal["yes", "no"], number: int):
+    >>>     ...
+    >>> function()  # Called without any parameter
     """
-    if not memory and not time:
-        warn(
-            "Parameters 'memory' and 'time' are both set to False ; "
-            "there is therefore nothing to monitor for, returning empty. ",
-            stacklevel=2,
-        )
-        return lambda *_, **__: lambda *_, **__: pd.DataFrame()
 
     def decorator(func: Callable[[Any], None]):
         """Only catches the decorated function."""
 
-        def wrapper(*_, **__) -> pd.DataFrame:
+        def wrapper(*call_args, **call_kwargs) -> pd.DataFrame:
             """
             Parameters
             ----------
-
-            *_ : Tuple[Any]
-                Arguments passed by the function call. Ignored.
-                Use `parametrize` instead.
-            **__ : Dict[str, Any]
-                Keyword arguments passed by the function call. Ignored.
-                Use `parametrize` instead.
-
+            call_args : Tuple[Any]
+                Arguments passed by the function call.
+            call_kwargs : Dict[str, Any]
+                Keyword arguments passed by the function call.
             """
 
             def product(
@@ -135,7 +133,6 @@ def monitor(
                 """
                 Parameters
                 ----------
-
                 *args : Tuple[Any]
                     Arguments to pass to the function.
                 **kwargs : Dict[str, Any]
@@ -150,7 +147,6 @@ def monitor(
                     - "memory": The number of MB of memory used.
                       Only present if ``memory=True``.
                     The size of these lists is equal to `repeat`.
-
                 """
                 _monitored = defaultdict(lambda: [])
 
@@ -159,13 +155,18 @@ def monitor(
                     tracemalloc.start()
 
                 for n in range(repeat):
+                    _monitored["iter"].append(n)
                     # Initialize loop monitored values
                     if memory:
                         tracemalloc.reset_peak()
                     if time:
                         t0 = perf_counter()
 
-                    func(*args, **kwargs)
+                    res_dic = func(*args, **kwargs)
+
+                    if res_dic is not None:
+                        for key, value in res_dic.items():
+                            _monitored[key].append(value)
 
                     # Collect and store loop monitored values
                     if time:
@@ -177,32 +178,45 @@ def monitor(
                 # Global cleanup of monitored values
                 if memory:
                     tracemalloc.stop()
+                return _monitored
 
-                return dict(_monitored)
+            if parametrize is None:
+                # Use the parameters passed by the call
+                parametrization = (call_args, call_kwargs)
+            elif isinstance(parametrize, dict):
+                parametrization = (parametrize, ())
+            else:
+                parametrization = list(product(parametrize))
 
-            def to_df(
-                results: Dict[str, Dict[str, List[float]]],
-            ) -> pd.DataFrame:
-                """
-                Converts the result of the benchmark to a pandas DataFrame.
-                """
-                index = list(results.keys())
-                columns = results[index[0]].keys()  # Use the first one as sample
-                data = [[results[idx][col] for col in columns] for idx in index]
-                return pd.DataFrame(data, index=index, columns=columns)
+            df = pd.DataFrame()
+            for args, kwargs in tqdm(parametrization):
+                call_repr = repr_func(func, args, kwargs)
+                res_dic = exec_func(*args, **kwargs)
+                if not res_dic:  # Dict is empty
+                    warn(
+                        "Nothing was returned during the execution, "
+                        "there is therefore nothing to monitor for. ",
+                        stacklevel=2,
+                    )
+                    return df
 
-            results = {
-                repr_func(func, args, kwargs): exec_func(*args, **kwargs)
-                for args, kwargs in product(parametrize)
-            }
-            df = to_df(results)
+                # Add arguments to the results in wide format
+                for index, arg in enumerate(args):
+                    res_dic[f"arg{index}"] = arg
+                for key, value in kwargs.items():
+                    if isinstance(value, (list, set, tuple, dict)):
+                        # Prevent creating new lines
+                        value = str(value)
+                    res_dic[key] = value
+                res_dic["call"] = call_repr
+                df = pd.concat((df, pd.DataFrame(res_dic)), ignore_index=True)
 
             if save_as is not None:
                 save_dir = Path(__file__).parent.parent / "results"
                 save_dir.mkdir(exist_ok=True)
                 now = datetime.now()
                 file = f"{save_as}-{now.year}{now.month}{now.day}.csv"
-                df.to_csv(save_dir / file, index_label="call")
+                df.to_csv(save_dir / file)
 
             return df
 

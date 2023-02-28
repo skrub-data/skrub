@@ -1,30 +1,34 @@
 """
-Fuzzy joining tables using string columns.
-The principle is as follows:
-  1. We embed and transform the key string columns using
-  HashingVectorizer and TfifdTransformer.
-  2. For each category, we use the nearest neighbor method to find its closest
-  neighbor and establish a match.
-  3. We match the tables using the previous information.
-Categories from the two tables that share many sub-strings (n-grams)
-have greater probability of beeing matched together. The join is based on
-morphological similarities between strings.
+This benchmark compares the performance of using the HashingVectorizer
+or the CountVectorizer for the fuzzy join.
+The results seem to indicate that the HashingVectorizer is almost always
+faster than the CountVectorizer, without any significant loss in accuracy.
+This leads to the conclusion that the HashingVectorizer should be used
+by default for the fuzzy join, with the option to use the CountVectorizer if
+results are unexpected (e.g hash collisions).
 """
 
-import warnings
+import math
+from argparse import ArgumentParser
+from time import perf_counter
 from typing import Literal, Tuple, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from fuzzy_join_benchmark import evaluate, fetch_data
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
+    CountVectorizer,
     HashingVectorizer,
     TfidfTransformer,
-    _VectorizerMixin,
 )
 from sklearn.neighbors import NearestNeighbors
+from utils import default_parser, find_result, monitor
 
 
+# Function kept for reference
 def fuzzy_join(
     left: pd.DataFrame,
     right: pd.DataFrame,
@@ -32,7 +36,7 @@ def fuzzy_join(
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
-    encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
+    encoder: Literal["count", "hash"] = "count",
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
@@ -47,79 +51,69 @@ def fuzzy_join(
 
     Parameters
     ----------
-    left : :class:`~pandas.DataFrame`
+    left : pandas.DataFrame
         A table to merge.
-    right : :class:`~pandas.DataFrame`
+    right : pandas.DataFrame
         A table used to merge with.
     how: typing.Literal["left", "right"], default=`left`
-        Type of merge to be performed. Note that unlike :func:`~pandas.merge`,
+        Type of merge to be performed. Note that unlike pandas' merge,
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
-    left_on : str, optional, default=None
+    left_on : typing.Union[str, None]
         Name of left table column to join.
-    right_on : str, optional, default=None
+    right_on : typing.Union[str, None]
         Name of right table key column to join
         with left table key column.
-    on : str, optional, default=None
+    on : typing.Union[str, None]
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    encoder: Union[Literal["hashing"], _VectorizerMixin], default=None,
-        Encoder parameter for the Vectorizer.
-        Options: {None, `_VectorizerMixin`}. If None, the
-        encoder will use the `HashingVectorizer`. It is possible to pass a
-        `_VectorizerMixin` custom object to tweak the parameters of the encoder.
-    analyzer : {"word", "char", "char_wb"}, optional, default=`char_wb`
-        Analyzer parameter for the HashingVectorizer passed to
-        the encoder and used for the string similarities.
+    analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
+        Analyzer parameter for the CountVectorizer used for the string
+        similarities.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    ngram_range : int 2-tuple, optional, default=(2, 4)
+    ngram_range : tuple (min_n, max_n), default=(2, 4)
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
     return_score : boolean, default=True
-        Whether to return matching score based on the distance between
-        the nearest matched categories.
-    match_score : float, default=0.0
+        Whether to return matching score based on the distance between the
+        nearest matched categories.
+    match_score : float, default=0
         Distance score between the closest matches that will be accepted.
-        In a [0, 1] interval. 1 means that only a perfect match will be
-        accepted, and zero means that the closest match will be accepted,
-        no matter how distant.
+        In a [0, 1] interval. Closer to 1 means the matches need to be very
+        close to be accepted, and closer to 0 that a bigger matching distance
+        is tolerated.
     drop_unmatched : boolean, default=False
         Remove categories for which a match was not found in the two tables.
     sort : boolean, default=False
         Sort the join keys lexicographically in the result DataFrame.
         If False, the order of the join keys depends on the join type
         (`how` keyword).
-    suffixes : str 2-tuple, default=('_x', '_y')
+    suffixes : typing.Tuple[str, str], default=('_x', '_y')
         A list of strings indicating the suffix to add when overlaping
         column names.
 
     Returns
     -------
-    df_joined : :class:`~pandas.DataFrame`
+    df_joined: pandas.DataFrame
         The joined table returned as a DataFrame. If `return_score` is True,
         another column will be added to the DataFrame containing the
         matching scores.
 
-    See Also
-    --------
-    :class:`~dirty_cat.FeatureAugmenter` :
-        Transformer to enrich a given table via one or more fuzzy joins to
-        external resources.
-
     Notes
     -----
     For regular joins, the output of fuzzy_join is identical
-    to :func:`~pandas.merge`, except that both key columns are returned.
+    to pandas.merge, except that both key columns are returned.
 
-    Joining on indexes and multiple columns is not supported.
+    Joining on indexes and multiple columns is not
+    supported.
 
-    When `return_score=True`, the returned :class:`~pandas.DataFrame` gives
+    When return_score=True, the returned DataFrame gives
     the distances between the closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.
@@ -169,18 +163,13 @@ def fuzzy_join(
     2  nana  3   NaN  NaN  0.532717
 
     As expected, the category "nana" has no exact match (`match_score=1`).
-    """
 
-    warnings.warn("This feature is still experimental.")
+    """
 
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
-
-    if encoder is not None:
-        if not issubclass(encoder.__class__, _VectorizerMixin):
-            raise ValueError(f"encoder should be a vectorizer object, got {encoder!r}")
 
     if how not in ["left", "right"]:
         raise ValueError(
@@ -226,12 +215,16 @@ def fuzzy_join(
     main_col_clean = main_table[main_col].astype(str)
     aux_col_clean = aux_table[aux_col].astype(str)
 
-    all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
-
-    if encoder is None:
+    if encoder == "count":
+        enc = CountVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    elif encoder == "hash":
         enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     else:
-        enc = encoder
+        raise ValueError(
+            f"encoder should be either 'count' or 'hash', got {encoder!r}",
+        )
+
+    all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
     enc_cv = enc.fit(all_cats)
     main_enc = enc_cv.transform(main_col_clean)
@@ -247,7 +240,7 @@ def fuzzy_join(
     neigh = NearestNeighbors(n_neighbors=1)
 
     neigh.fit(aux_enc)
-    distance, neighbors = neigh.kneighbors(main_enc.toarray(), return_distance=True)
+    distance, neighbors = neigh.kneighbors(main_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
     main_table["fj_idx"] = idx_closest
@@ -287,3 +280,117 @@ def fuzzy_join(
         )
 
     return df_joined
+
+
+#########################################################
+# Benchmarking accuracy and speed on actual datasets
+#########################################################
+
+benchmark_name = "fuzzy_join_encoder_benchmark"
+
+
+@monitor(
+    memory=True,
+    time=True,
+    parametrize={
+        "encoder": ["hash", "count"],
+        "dataset_name": [
+            "Country",
+            "BasketballTeam",
+            "Drug",
+            "Device",
+            "ArtificialSatellite",
+            "Amphibian",
+            "Song",
+            "HistoricBuilding",
+            "Wrestler",
+            "EthnicGroup",
+        ],
+        "analyser": ["char_wb", "char", "word"],
+        "ngram_range": [(2, 4), (2, 3), (2, 2)],
+    },
+    save_as=benchmark_name,
+    repeat=10,
+)
+def benchmark(
+    encoder: Literal["hash", "count"],
+    dataset_name: str,
+    analyser: Literal["char_wb", "char", "word"],
+    ngram_range: tuple,
+):
+    left_table, right_table, gt = fetch_data(dataset_name)
+
+    start_time = perf_counter()
+    joined_fj = fuzzy_join(
+        left_table,
+        right_table,
+        how="left",
+        left_on="title",
+        right_on="title",
+        encoder=encoder,
+        analyzer=analyser,
+        ngram_range=ngram_range,
+    )
+    end_time = perf_counter()
+
+    pr, re, f1 = evaluate(
+        list(zip(joined_fj["title_x"], joined_fj["title_y"])),
+        list(zip(gt["title_l"], gt["title_r"])),
+    )
+
+    res_dic = {
+        "precision": pr,
+        "recall": re,
+        "f1": f1,
+        "time_fj": end_time - start_time,
+    }
+
+    return res_dic
+
+
+def plot(df: pd.DataFrame):
+    sns.set_theme(style="ticks", palette="pastel")
+
+    n_datasets = len(np.unique(df["dataset_name"]))
+    n_rows = min(n_datasets, 3)
+    f, axes = plt.subplots(
+        n_rows,
+        math.ceil(n_datasets / n_rows),
+        squeeze=False,
+        figsize=(20, 5),
+    )
+    # Create the subplots but indexed by 1 value
+    for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
+        sns.scatterplot(
+            x="time_fj",
+            y="f1",
+            hue="encoder",
+            style="ngram_range",
+            size="analyser",
+            alpha=0.8,
+            data=df[df["dataset_name"] == dataset_name],
+            ax=axes[i % n_rows, i // n_rows],
+        )
+        axes[i % n_rows, i // n_rows].set_title(dataset_name)
+        # remove legend
+        axes[i % n_rows, i // n_rows].get_legend().remove()
+        # Put a legend to the right side if last row
+        if i == n_datasets - 1:
+            axes[i % n_rows, i // n_rows].legend(loc="center right")
+    plt.show()
+
+
+if __name__ == "__main__":
+    _args = ArgumentParser(
+        description="Benchmark for the batch feature of the MinHashEncoder.",
+        parents=[default_parser],
+    ).parse_args()
+
+    if _args.run:
+        df = benchmark()
+    else:
+        result_file = find_result(benchmark_name)
+        df = pd.read_csv(result_file)
+
+    if _args.plot:
+        plot(df)

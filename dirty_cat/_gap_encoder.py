@@ -653,7 +653,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     The :class:`~dirty_cat.GapEncoder` has found the following two topics:
 
-    >>> enc.get_feature_names()
+    >>> enc.get_feature_names_out()
     ['england, london, uk', 'france, paris, pqris']
 
     It got it right, reccuring topics are "London" and "England" on the
