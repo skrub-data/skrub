@@ -38,18 +38,18 @@ jobs:
             #
             # Installing these extra dependencies will overwrite the already
             # installed version defined at install_requires.
-            dependencies-version-type: ["min", "latest"]
+            dependencies-version-type: ["minimal", "latest"]
             include:
               - dependencies-version: "dev"
               - dependencies-version: "dev, min-py38"
                 python-version: "3.8"
-                dependencies-version-type: "min"
+                dependencies-version-type: "minimal"
               - dependencies-version: "dev, min-py39"
                 python-version: "3.9"
-                dependencies-version-type: "min"
+                dependencies-version-type: "minimal"
               - dependencies-version: "dev, min-py310"
                 python-version: "3.10"
-                dependencies-version-type: "min"
+                dependencies-version-type: "minimal"
     name: ${{ matrix.os-type }} with Python ${{ matrix.python-version }} and ${{ matrix.dependencies-version-type }} package versions
     defaults:
       run:
