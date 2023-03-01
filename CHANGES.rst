@@ -2,6 +2,17 @@
 
 .. currentmodule:: dirty_cat
 
+Release 0.5.0
+=============
+
+Major changes
+-------------
+
+* The signatures of all encoders and functions have been revised to enforce
+  cleaner calls. This means that some arguments that could previously be passed
+  positionally now have to be passed as keywords.
+  :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
+
 Release 0.4.0
 =============
 
