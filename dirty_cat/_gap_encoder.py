@@ -681,6 +681,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
+        *,
         n_components: int = 10,
         batch_size: int = 128,
         gamma_shape_prior: float = 1.1,

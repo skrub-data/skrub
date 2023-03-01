@@ -117,6 +117,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
+        *,
         n_components: int = 30,
         ngram_range: Tuple[int, int] = (2, 4),
         hashing: Literal["fast", "murmur"] = "fast",

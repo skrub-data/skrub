@@ -113,6 +113,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
+        *,
         categories: Union[Literal["auto"], List[Union[List[str], np.ndarray]]] = "auto",
         clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = "binary-clf",
         dtype: type = np.float64,

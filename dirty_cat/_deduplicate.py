@@ -121,6 +121,7 @@ def _create_spelling_correction(
 
 def deduplicate(
     data: Sequence[str],
+    *,
     n_clusters: Optional[int] = None,
     ngram_range: Tuple[int, int] = (2, 4),
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
@@ -162,7 +163,8 @@ def deduplicate(
     See Also
     --------
     :class:`~dirty_cat.GapEncoder` :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics
+        with continuous encoding.
     :class:`~dirty_cat.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
     :class:`~dirty_cat.SimilarityEncoder` :
