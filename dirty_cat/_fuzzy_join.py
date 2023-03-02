@@ -229,9 +229,7 @@ def fuzzy_join(
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
     if encoder is None:
-        enc = HashingVectorizer(
-            analyzer=analyzer, ngram_range=ngram_range, n_features=2**16
-        )
+        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
     else:
         enc = encoder
 
@@ -249,7 +247,7 @@ def fuzzy_join(
     neigh = NearestNeighbors(n_neighbors=1)
 
     neigh.fit(aux_enc)
-    distance, neighbors = neigh.kneighbors(main_enc.toarray(), return_distance=True)
+    distance, neighbors = neigh.kneighbors(main_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
     main_table["fj_idx"] = idx_closest
