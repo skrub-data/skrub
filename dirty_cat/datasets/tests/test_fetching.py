@@ -1,111 +1,105 @@
 from tempfile import TemporaryDirectory
-from typing import Callable, Tuple
 from unittest import mock
 from urllib.error import URLError
 
 import pandas as pd
 import pytest
+from openml.datasets import check_datasets_active
 
 from dirty_cat.datasets import _fetching
 
 
-def fetch_employee_salaries(**kwargs):
+def _has_data_id(call, data_id: int) -> bool:
+    # Unpacking copied from `mock._Call.__eq__`
+    if len(call) == 2:
+        args, kwargs = call
+    else:
+        name, args, kwargs = call
+    return kwargs["data_id"] == data_id
+
+
+@mock.patch(
+    "dirty_cat.datasets._fetching.fetch_openml",
+    side_effect=_fetching.fetch_openml,
+)
+def test_openml_fetching(fetch_openml_mock: mock.Mock):
+    with TemporaryDirectory() as temp_dir:
+        # Download the smallest dataset we suppy (midwest survey)
+        # just to check the internals work.
+        # We don't download them all because it would take too long.
+
+        # Download the dataset without loading it in memory.
+        dataset = _fetching.fetch_midwest_survey(
+            directory=temp_dir,
+            load_dataframe=False,
+        )
+        fetch_openml_mock.assert_called_once()
+        assert _has_data_id(fetch_openml_mock.call_args, _fetching.MIDWEST_SURVEY_ID)
+        fetch_openml_mock.reset_mock()
+        assert isinstance(dataset, _fetching.DatasetInfoOnly)
+        # Briefly load the dataframe in memory, to test that reading
+        # from disk works.
+        assert pd.read_csv(dataset.path, **dataset.read_csv_kwargs).shape == (2494, 29)
+        assert dataset.name == (
+            _fetching.fetch_midwest_survey.__name__[len("fetch_") :]
+            .replace("_", " ")
+            .capitalize()
+        )
+        assert dataset.source.startswith("https://www.openml.org/")
+        assert str(_fetching.MIDWEST_SURVEY_ID) in dataset.source
+        # Now, load it into memory, and expect `fetch_openml`
+        # to not be called because the dataset is already on disk.
+        dataset = _fetching.fetch_midwest_survey(directory=temp_dir)
+        fetch_openml_mock.assert_not_called()
+        fetch_openml_mock.reset_mock()
+        # We test against the shape of the smallest dataset:
+        # it's hard-coded as we don't expect it to change.
+        assert dataset.X.shape == (2494, 28)
+        assert dataset.y.shape == (2494,)
+
+
+def test_openml_datasets_exist():
     """
-    Wrapper for `fetching.fetch_employee_salaries`, that sets the
-    optional parameters to False, so that the dataframe loaded in memory
-    and the dataframe on disk (which we will read) correspond.
+    Queries OpenML to see if the datasets are still available on the website.
     """
-    return _fetching.fetch_employee_salaries(
-        drop_irrelevant=False, drop_linked=False, **kwargs
+    check_datasets_active(
+        dataset_ids=[
+            _fetching.ROAD_SAFETY_ID,
+            _fetching.OPEN_PAYMENTS_ID,
+            _fetching.MIDWEST_SURVEY_ID,
+            _fetching.MEDICAL_CHARGE_ID,
+            _fetching.EMPLOYEE_SALARIES_ID,
+            _fetching.TRAFFIC_VIOLATIONS_ID,
+            _fetching.DRUG_DIRECTORY_ID,
+        ],
+        raise_error_if_not_exist=True,
     )
 
 
-@pytest.mark.parametrize(
-    ("fetching_function", "shape"),
-    [
-        (_fetching.fetch_road_safety, (363243, 66)),
-        (_fetching.fetch_medical_charge, (163065, 11)),
-        (_fetching.fetch_midwest_survey, (2494, 28)),
-        (_fetching.fetch_open_payments, (73558, 5)),
-        (_fetching.fetch_traffic_violations, (1578154, 42)),
-        (_fetching.fetch_drug_directory, (120215, 20)),
-        (fetch_employee_salaries, (9228, 12)),
-    ],
-)
-def test_openml_fetching(
-    fetching_function: Callable,
-    shape: Tuple[int, int],
-):
+@mock.patch("dirty_cat.datasets._fetching.fetch_openml")
+def test_openml_datasets_calls(fetch_openml_mock: mock.Mock):
     """
-    Test a function that loads data from OpenML.
+    Checks that calling the fetching functions actually calls
+    `sklearn.datasets.fetch_openml`.
+    Complementary to `test_openml_fetching`
     """
-    with TemporaryDirectory() as temp_dir_1, TemporaryDirectory() as temp_dir_2:
-        # Fetch without loading into memory
-        try:
-            dataset_wo_load: _fetching.DatasetInfoOnly = fetching_function(
-                load_dataframe=False, directory=temp_dir_1
-            )
-        except (ConnectionError, URLError) as e:
-            pytest.skip(f"Got a network error ({e}), skipping.")
-            return
-        else:
-            assert isinstance(dataset_wo_load, _fetching.DatasetInfoOnly)
-
-        # FIXME: An more elegant way of testing whether the dataset is loaded
-        #  in memory would be to monitor it and expect it to stay quite low.
-        assert not hasattr(dataset_wo_load, "X")
-        assert not hasattr(dataset_wo_load, "y")
-
-        # Now that we've made the checks specific to the unloaded dataset,
-        # we'll load it from disk and store it for later.
-        from_disk_df = pd.read_csv(
-            dataset_wo_load.path,
-            **dataset_wo_load.read_csv_kwargs,
-        )
-        y = from_disk_df[dataset_wo_load.target]
-        X = from_disk_df.drop(dataset_wo_load.target, axis="columns")
-        # Essentially convert the DatasetInfoOnly to DatasetAll
-        dataset_wo_load_loaded = _fetching.DatasetAll(
-            name=dataset_wo_load.name,
-            description=dataset_wo_load.description,
-            source=dataset_wo_load.source,
-            target=dataset_wo_load.target,
-            X=X,
-            y=y,
-            path=dataset_wo_load.path,
-            read_csv_kwargs=dataset_wo_load.read_csv_kwargs,
-        )
-
-        # Fetch and load into memory
-        # We don't try-except because it should already have been downloaded
-        # by the previous call.
-        dataset_w_load: _fetching.DatasetAll = fetching_function(directory=temp_dir_2)
-        assert isinstance(dataset_w_load, _fetching.DatasetAll)
-        from_disk_df = pd.read_csv(
-            dataset_w_load.path,
-            **dataset_w_load.read_csv_kwargs,
-        )
-        y = from_disk_df[dataset_w_load.target]
-        X = from_disk_df.drop(dataset_w_load.target, axis="columns")
-        pd.testing.assert_frame_equal(X, dataset_w_load.X)
-        pd.testing.assert_series_equal(y, dataset_w_load.y)
-
-        # Execute standard checks for both type of gathered datasets
-        for dataset in (dataset_w_load, dataset_wo_load_loaded):
-            dataset: _fetching.DatasetAll
-
-            assert dataset.path.exists()
-            # Expect at least a few lines and columns
-            assert dataset.X.shape == shape
-            assert dataset.y.shape == (shape[0],)
-
-            # Less important checks, but might help finding errors
-            assert dataset.name == (
-                fetching_function.__name__[len("fetch_") :]
-                .replace("_", " ")
-                .capitalize()
-            )
-            assert dataset.source.startswith("https://www.openml.org/")
+    with TemporaryDirectory() as temp_dir:
+        for fetching_function, identifier in [
+            (_fetching.fetch_road_safety, _fetching.ROAD_SAFETY_ID),
+            (_fetching.fetch_open_payments, _fetching.OPEN_PAYMENTS_ID),
+            (_fetching.fetch_midwest_survey, _fetching.MIDWEST_SURVEY_ID),
+            (_fetching.fetch_medical_charge, _fetching.MEDICAL_CHARGE_ID),
+            (_fetching.fetch_employee_salaries, _fetching.EMPLOYEE_SALARIES_ID),
+            (_fetching.fetch_traffic_violations, _fetching.TRAFFIC_VIOLATIONS_ID),
+            (_fetching.fetch_drug_directory, _fetching.DRUG_DIRECTORY_ID),
+        ]:
+            try:
+                fetching_function(directory=temp_dir)
+            except FileNotFoundError:
+                pass
+            fetch_openml_mock.assert_called_once()
+            assert _has_data_id(fetch_openml_mock.call_args, identifier)
+            fetch_openml_mock.reset_mock()
 
 
 def test_fetch_world_bank_indicator():
