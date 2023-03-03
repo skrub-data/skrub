@@ -23,11 +23,14 @@ def _has_data_id(call, data_id: int) -> bool:
     side_effect=_fetching.fetch_openml,
 )
 def test_openml_fetching(fetch_openml_mock: mock.Mock):
-    with TemporaryDirectory() as temp_dir:
-        # Download the smallest dataset we suppy (midwest survey)
-        # just to check the internals work.
-        # We don't download them all because it would take too long.
+    """
+    Downloads a small dataset (midwest survey) and performs a bunch of tests
+    that asserts the fetching function works correctly.
 
+    We don't download all datasets as it would take way too long:
+    see https://github.com/dirty-cat/dirty_cat/issues/523
+    """
+    with TemporaryDirectory() as temp_dir:
         # Download the dataset without loading it in memory.
         dataset = _fetching.fetch_midwest_survey(
             directory=temp_dir,
@@ -52,8 +55,6 @@ def test_openml_fetching(fetch_openml_mock: mock.Mock):
         dataset = _fetching.fetch_midwest_survey(directory=temp_dir)
         fetch_openml_mock.assert_not_called()
         fetch_openml_mock.reset_mock()
-        # We test against the shape of the smallest dataset:
-        # it's hard-coded as we don't expect it to change.
         assert dataset.X.shape == (2494, 28)
         assert dataset.y.shape == (2494,)
 
