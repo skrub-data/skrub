@@ -24,8 +24,10 @@ from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
 from pyarrow.parquet import ParquetFile
+from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 
+from dirty_cat._utils import parse_version
 from dirty_cat.datasets._utils import get_data_dir
 
 # Directory where the ``.gz`` files containing the
@@ -426,12 +428,20 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) ->
     # which behaves just like a ``namedtuple``.
     # However, we do not want to save this data into memory:
     # we will read it from the disk later.
-    fetch_openml(
-        data_id=dataset_id,
-        data_home=str(data_directory),
-        as_frame=True,
-        parser="auto",
-    )
+    if parse_version(sklearn_version) >= parse_version("1.2"):
+        fetch_openml(
+            data_id=dataset_id,
+            data_home=str(data_directory),
+            as_frame=True,
+            parser="auto",
+        )
+    else:
+        fetch_openml(
+            data_id=dataset_id,
+            data_home=str(data_directory),
+            as_frame=True,
+            parser="auto",
+        )
 
 
 def _read_json_from_gz(compressed_dir_path: Path) -> dict:
