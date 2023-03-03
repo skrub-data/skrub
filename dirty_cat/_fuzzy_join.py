@@ -247,7 +247,7 @@ def fuzzy_join(
     neigh = NearestNeighbors(n_neighbors=1)
 
     neigh.fit(aux_enc)
-    distance, neighbors = neigh.kneighbors(main_enc.toarray(), return_distance=True)
+    distance, neighbors = neigh.kneighbors(main_enc, return_distance=True)
     idx_closest = np.ravel(neighbors)
 
     main_table["fj_idx"] = idx_closest
