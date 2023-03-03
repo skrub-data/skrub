@@ -53,10 +53,6 @@ def test_fuzzy_join(analyzer):
     assert df_joined2.isin(df_joined3).all().all()
 
     df1["a2"] = 1
-
-    df_on = fuzzy_join(df_joined, df1, on="a1", analyzer=analyzer, suffixes=("1", "2"))
-    assert ("a11" and "a12") in df_on.columns
-
     df2["a1"] = 1
 
     df = fuzzy_join(
@@ -115,7 +111,7 @@ def test_missing_keys():
         fuzzy_join(a, b, left_on="col1")
     left = pd.DataFrame({"a": ["aa", np.NaN, "bb"], "b": [1, 2, np.NaN]})
     right = pd.DataFrame(
-        {"a": ["aa", "bb", np.NaN, "cc", "dd"], "c": [5, 6, 7, 8, np.NaN]}
+        {"a": ["aa", "bbb", np.NaN, "cc", "dd"], "c": [5, 6, 7, 8, np.NaN]}
     )
     output = fuzzy_join(left, right, on="a")
     assert output.shape == (2, 4)
@@ -186,16 +182,16 @@ def test_fuzzy_join_pandas_comparison():
     result = pd.merge(left, right, on="key", how="left")
     result_fj = fuzzy_join(left, right, on="key", how="left")
 
-    result_fj.drop(columns=["key_y"], inplace=True)
-    result_fj.rename(columns={"key_x": "key"}, inplace=True)
+    # result_fj.drop(columns=["key_y"], inplace=True)
+    # result_fj.rename(columns={"key_x": "key"}, inplace=True)
 
     pd.testing.assert_frame_equal(result, result_fj)
 
     result_r = pd.merge(left, right, on="key", how="right")
     result_r_fj = fuzzy_join(left, right, on="key", how="right")
 
-    result_r_fj.drop(columns=["key_y"], inplace=True)
-    result_r_fj.rename(columns={"key_x": "key"}, inplace=True)
+    # result_r_fj.drop(columns=["key_y"], inplace=True)
+    # result_r_fj.rename(columns={"key_x": "key"}, inplace=True)
 
     pd.testing.assert_frame_equal(result_r, result_r_fj)
 
@@ -204,8 +200,8 @@ def test_fuzzy_join_pandas_comparison():
     result_s = pd.merge(left, right, on="key", how="left", sort=True)
     result_s_fj = fuzzy_join(left, right, on="key", how="left", sort=True)
 
-    result_s_fj.drop(columns=["key_y"], inplace=True)
-    result_s_fj.rename(columns={"key_x": "key"}, inplace=True)
+    # result_s_fj.drop(columns=["key_y"], inplace=True)
+    # result_s_fj.rename(columns={"key_x": "key"}, inplace=True)
 
     pd.testing.assert_frame_equal(result_s, result_s_fj)
 

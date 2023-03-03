@@ -281,6 +281,13 @@ def fuzzy_join(
             df_joined.iloc[idx, df_joined.columns.get_loc("fj_idx") :] = np.NaN
         df_joined.drop(columns=["fj_idx", "fj_nan"], inplace=True)
 
+    if left_col == right_col:
+        left_col_suff = left_col + suffixes[0]
+        right_col_suff = right_col + suffixes[1]
+        if df_joined[left_col_suff].equals(df_joined[right_col_suff]):
+            df_joined = df_joined.drop(right_col_suff, axis=1)
+            df_joined.rename(columns={left_col_suff: left_col}, inplace=True)
+
     if return_score:
         df_joined = pd.concat(
             [df_joined, pd.DataFrame(norm_distance, columns=["matching_score"])], axis=1
