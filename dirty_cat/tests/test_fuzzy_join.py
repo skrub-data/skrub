@@ -25,7 +25,7 @@ def test_fuzzy_join(analyzer):
 
     n_cols = df1.shape[1] + df2.shape[1] + 1
 
-    assert df_joined.shape == (len(df1.dropna()), n_cols)
+    assert df_joined.shape == (len(df1), n_cols)
 
     df_joined2 = fuzzy_join(
         df2,
@@ -38,7 +38,7 @@ def test_fuzzy_join(analyzer):
         analyzer=analyzer,
     )
     # Joining is always done on the left table and thus takes it shape:
-    assert df_joined2.shape == (len(df2.dropna()), n_cols)
+    assert df_joined2.shape == (len(df2), n_cols)
 
     df_joined3 = fuzzy_join(
         df1,
@@ -50,7 +50,8 @@ def test_fuzzy_join(analyzer):
         return_score=True,
         analyzer=analyzer,
     )
-    assert df_joined2.isin(df_joined3).all().all()
+    # We sort the index as the column order is not important here
+    assert df_joined2.sort_index(axis=1).equals(df_joined3.sort_index(axis=1))
 
     df1["a2"] = 1
 
@@ -118,7 +119,7 @@ def test_missing_keys():
         {"a": ["aa", "bb", np.NaN, "cc", "dd"], "c": [5, 6, 7, 8, np.NaN]}
     )
     output = fuzzy_join(left, right, on="a")
-    assert output.shape == (2, 4)
+    assert output.shape == (3, 4)
 
 
 def test_drop_unmatched():

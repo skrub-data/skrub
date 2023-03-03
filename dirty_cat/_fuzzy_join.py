@@ -218,10 +218,6 @@ def fuzzy_join(
         main_col = right_col
         aux_col = left_col
 
-    # Drop missing values in key columns
-    main_table.dropna(subset=[main_col], inplace=True)
-    aux_table.dropna(subset=[aux_col], inplace=True)
-
     # Make sure that the column types are string and categorical:
     main_col_clean = main_table[main_col].astype(str)
     aux_col_clean = aux_table[aux_col].astype(str)
