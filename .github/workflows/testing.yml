@@ -39,6 +39,10 @@ jobs:
             # installed version defined at install_requires.
             dependencies-version-type: ["minimal", "latest"]
             include:
+              - os: "ubuntu-latest"
+                name: "Ubuntu"
+              - os: "macos-latest"
+                name: "MacOS"
               - dependencies-version: "dev"
               - dependencies-version: "dev, min-py38"
                 python-version: "3.8"
@@ -49,7 +53,7 @@ jobs:
               - dependencies-version: "dev, min-py310"
                 python-version: "3.10"
                 dependencies-version-type: "minimal"
-    name: ${{ matrix.os }} with Python ${{ matrix.python-version }} and ${{ matrix.dependencies-version-type }} dependencies
+    name: ${{ matrix.os.name }} with Python ${{ matrix.python-version }} and ${{ matrix.dependencies-version-type }} dependencies
     defaults:
       run:
         shell: bash
