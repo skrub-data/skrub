@@ -182,16 +182,10 @@ def test_fuzzy_join_pandas_comparison():
     result = pd.merge(left, right, on="key", how="left")
     result_fj = fuzzy_join(left, right, on="key", how="left")
 
-    # result_fj.drop(columns=["key_y"], inplace=True)
-    # result_fj.rename(columns={"key_x": "key"}, inplace=True)
-
     pd.testing.assert_frame_equal(result, result_fj)
 
     result_r = pd.merge(left, right, on="key", how="right")
     result_r_fj = fuzzy_join(left, right, on="key", how="right")
-
-    # result_r_fj.drop(columns=["key_y"], inplace=True)
-    # result_r_fj.rename(columns={"key_x": "key"}, inplace=True)
 
     pd.testing.assert_frame_equal(result_r, result_r_fj)
 
@@ -199,9 +193,6 @@ def test_fuzzy_join_pandas_comparison():
     right = right.sample(frac=1, random_state=0)
     result_s = pd.merge(left, right, on="key", how="left", sort=True)
     result_s_fj = fuzzy_join(left, right, on="key", how="left", sort=True)
-
-    # result_s_fj.drop(columns=["key_y"], inplace=True)
-    # result_s_fj.rename(columns={"key_x": "key"}, inplace=True)
 
     pd.testing.assert_frame_equal(result_s, result_s_fj)
 

@@ -2,6 +2,14 @@
 
 .. currentmodule:: dirty_cat
 
+Release 0.4.1
+=============
+
+Major changes
+-------------
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` are now fully equivalent with `pandas.merge` for exact matching.
+:pr:`520` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 Release 0.4.0
 =============
 
