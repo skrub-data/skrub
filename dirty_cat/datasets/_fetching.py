@@ -440,7 +440,6 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) ->
             data_id=dataset_id,
             data_home=str(data_directory),
             as_frame=True,
-            parser="auto",
         )
 
 
