@@ -4,7 +4,6 @@ from urllib.error import URLError
 
 import pandas as pd
 import pytest
-from openml.datasets import check_datasets_active
 
 from dirty_cat.datasets import _fetching
 
@@ -63,7 +62,8 @@ def test_openml_datasets_exist():
     """
     Queries OpenML to see if the datasets are still available on the website.
     """
-    check_datasets_active(
+    openml = pytest.importorskip("openml")
+    openml.datasets.check_datasets_active(
         dataset_ids=[
             _fetching.ROAD_SAFETY_ID,
             _fetching.OPEN_PAYMENTS_ID,
