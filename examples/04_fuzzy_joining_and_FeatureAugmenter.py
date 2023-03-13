@@ -128,7 +128,7 @@ df1 = fuzzy_join(
     gdppc,  # the table to join with
     left_on="Country",  # the first join key column
     right_on="Country Name",  # the second join key column
-    return_score=True,
+    return_distance=True,
 )
 
 df1.tail(20)
@@ -137,8 +137,8 @@ df1.tail(20)
 ###############################################################################
 # .. topic:: Note:
 #
-#    We fix the ``return_score`` parameter to `True` so as to keep the matching
-#    score, that we will use later to show what are the worst matches.
+#    We fix the ``return_distance`` parameter to `True` so as to keep the matching
+#    distance, that we will use later to show what are the worst matches.
 
 ###############################################################################
 #
@@ -166,9 +166,9 @@ import numpy as np
 
 def print_worst_matches(joined_table, n=5):
     """Prints n worst matches for inspection."""
-    max_ind = np.argsort(joined_table["matching_score"], axis=0)[:n]
+    max_ind = np.argsort(joined_table["matching_distance"], axis=0)[:n]
     max_dist = pd.Series(
-        joined_table["matching_score"][max_ind.ravel()].ravel(),
+        joined_table["matching_distance"][max_ind.ravel()].ravel(),
         index=max_ind.ravel(),
     )
     worst_matches = joined_table.iloc[list(max_ind.ravel())]
@@ -196,8 +196,8 @@ df1 = fuzzy_join(
     gdppc,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.35,
-    return_score=True,
+    match_distance=0.35,
+    return_distance=True,
 )
 print_worst_matches(df1, n=4)
 
@@ -210,7 +210,7 @@ df1 = fuzzy_join(
     gdppc,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.35,
+    match_distance=0.35,
     drop_unmatched=True,
 )
 
@@ -253,7 +253,7 @@ df2 = fuzzy_join(
     life_exp,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
+    match_distance=0.45,
 )
 
 df2.drop(columns=["Country Name"], inplace=True)
@@ -289,7 +289,7 @@ df3 = fuzzy_join(
     legal_rights,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
+    match_distance=0.45,
 )
 
 df3.drop(columns=["Country Name"], inplace=True)
@@ -429,13 +429,13 @@ pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the paramaters of the |fj|.
-# For instance, the ``match_score`` was manually picked and can now be
+# For instance, the ``match_distance`` was manually picked and can now be
 # introduced into a grid search:
 
 from sklearn.model_selection import GridSearchCV
 
-# We will test four possible values of match_score:
-params = {"featureaugmenter__match_score": [0.2, 0.3, 0.4, 0.5]}
+# We will test four possible values of match_distance:
+params = {"featureaugmenter__match_distance": [0.2, 0.3, 0.4, 0.5]}
 
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)
@@ -443,7 +443,7 @@ grid.fit(df, y)
 print(grid.best_params_)
 ##########################################################################
 # The grid searching gave us the best value of 0.5 for the parameter
-# ``match_score``. Let's use this value in our regression:
+# ``match_distance``. Let's use this value in our regression:
 #
 
 print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
@@ -453,11 +453,11 @@ print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
 # .. topic:: Note:
 #
 #    Here, ``grid.score()`` takes directly the best model
-#    (with ``match_score=0.5``) that was found during the grid search.
-#    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
+#    (with ``match_distance=0.5``) that was found during the grid search.
+#    Thus, it is equivalent to fixing the ``match_distance`` to 0.5 and
 #    refitting the pipeline on the data.
 #
 #
-# Great, by evaluating the correct ``match_score`` we improved our
+# Great, by evaluating the correct ``match_distance`` we improved our
 # results significantly!
 #

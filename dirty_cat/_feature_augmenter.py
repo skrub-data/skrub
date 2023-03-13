@@ -5,7 +5,7 @@ The principle is as follows:
   2. The auxilliary tables are provided for fitting, and will be joined sequentially
   when the transform is called.
 It is advised to use hyper-parameter tuning tools such as scikit-learn's
-GridSearchCV to determine the best `match_score` parameter, as this can
+GridSearchCV to determine the best `match_distance` parameter, as this can
 significantly improve your results.
 (see example 'Fuzzy joining dirty tables with the FeatureAugmenter' for an illustration)
 For more information on how the join is performed, see fuzzy_join's documentation.
@@ -37,11 +37,13 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     main_key : str
         The key column name in the main table on which
         the join will be performed.
-    match_score : float, default=0
+    match_distance : float, default=0.0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. 1 means that only a perfect match will be
         accepted, and zero means that the closest match will be accepted,
         no matter how distant.
+        For numerical joins, this defines the maximum euclidian distance
+        between the matches.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
         similarities.
@@ -123,13 +125,13 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         self,
         tables: List[Tuple[pd.DataFrame, str]],
         main_key: str,
-        match_score: float = 0.0,
+        match_distance: float = 0.0,
         analyzer: Literal["word", "char", "char_wb"] = "char_wb",
         ngram_range: Tuple[int, int] = (2, 4),
     ):
         self.tables = tables
         self.main_key = main_key
-        self.match_score = match_score
+        self.match_distance = match_distance
         self.analyzer = analyzer
         self.ngram_range = ngram_range
 
@@ -192,7 +194,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
                 aux_table,
                 left_on=self.main_key,
                 right_on=pairs[1],
-                match_score=self.match_score,
+                match_distance=self.match_distance,
                 analyzer=self.analyzer,
                 ngram_range=self.ngram_range,
                 suffixes=("", "_aux"),

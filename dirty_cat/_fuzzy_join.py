@@ -9,6 +9,7 @@ The principle is as follows:
 Categories from the two tables that share many sub-strings (n-grams)
 have greater probability of beeing matched together. The join is based on
 morphological similarities between strings.
+Joining on numerical columns is also possible based on the euclidean distance.
 """
 
 import warnings
@@ -16,6 +17,7 @@ from typing import Literal, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -32,11 +34,12 @@ def fuzzy_join(
     left_on: Union[str, None] = None,
     right_on: Union[str, None] = None,
     on: Union[str, None] = None,
+    numerical: Literal["string", "number", "error"] = "string",
     encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
-    return_score: bool = False,
-    match_score: float = 0,
+    return_distance: bool = False,
+    match_distance: float = 0,
     drop_unmatched: bool = False,
     sort: bool = False,
     suffixes: Tuple[str, str] = ("_x", "_y"),
@@ -65,7 +68,11 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    encoder: Union[Literal["hashing"], _VectorizerMixin], default=None,
+    numerical: {`string`, `number`, `error`}, optional, default='string'
+        When the column is of numerical type, use either the euclidean distance
+        ("number"), or raise an error ("error"). If "string", uses the
+        default n-gram string similarity.
+    encoder: Union[Literal["hashing"], _VectorizerMixin], optional, default=None,
         Encoder parameter for the Vectorizer.
         Options: {None, `_VectorizerMixin`}. If None, the
         encoder will use the `HashingVectorizer`. It is possible to pass a
@@ -81,14 +88,16 @@ def fuzzy_join(
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
-    return_score : boolean, default=True
-        Whether to return matching score based on the distance between
+    return_distance : boolean, default=True
+        Whether to return matching distance between
         the nearest matched categories.
-    match_score : float, default=0.0
+    match_distance : float, default=0.0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. 1 means that only a perfect match will be
         accepted, and zero means that the closest match will be accepted,
         no matter how distant.
+        For numerical joins, this defines the maximum euclidean distance
+        between the matches.
     drop_unmatched : boolean, default=False
         Remove categories for which a match was not found in the two tables.
     sort : boolean, default=False
@@ -102,9 +111,9 @@ def fuzzy_join(
     Returns
     -------
     df_joined : :class:`~pandas.DataFrame`
-        The joined table returned as a DataFrame. If `return_score` is True,
+        The joined table returned as a DataFrame. If `return_distance` is True,
         another column will be added to the DataFrame containing the
-        matching scores.
+        matching distances.
 
     See Also
     --------
@@ -119,18 +128,18 @@ def fuzzy_join(
 
     Joining on indexes and multiple columns is not supported.
 
-    When `return_score=True`, the returned :class:`~pandas.DataFrame` gives
+    When `return_distance=True`, the returned :class:`~pandas.DataFrame` gives
     the distances between the closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.
 
-    When we use `match_score=0`, the function will be forced to impute the
+    When we use `match_distance=0`, the function will be forced to impute the
     nearest match (of the left table category) across all possible matching
     options in the right table column.
 
-    When the neighbors are distant, we may use the `match_score` parameter
+    When the neighbors are distant, we may use the `match_distance` parameter
     with a value bigger than 0 to define the minimal level of matching
-    score tolerated. If it is not reached, matches will be
+    distance tolerated. If it is not reached, matches will be
     considered as not found and NaN values will be imputed.
 
     Examples
@@ -160,15 +169,15 @@ def fuzzy_join(
     2  nana  3  nnana   8
 
     When we want to accept only a certain match precision,
-    we can use the `match_score` argument:
+    we can use the `match_distance` argument:
 
-    >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
-        a_x  b   a_y    c  matching_score
+    >>> fuzzy_join(df1, df2, on='a', match_distance=1, return_distance=True)
+        a_x  b   a_y    c  matching_distance
     0   ana  1   ana  7.0  1.000000
     1  lala  2  lala  6.0  1.000000
     2  nana  3   NaN  NaN  0.532717
 
-    As expected, the category "nana" has no exact match (`match_score=1`).
+    As expected, the category "nana" has no exact match (`match_distance=1`).
     """
 
     warnings.warn("This feature is still experimental.")
@@ -185,6 +194,12 @@ def fuzzy_join(
     if how not in ["left", "right"]:
         raise ValueError(
             f"how should be either 'left' or 'right', got {how!r}",
+        )
+
+    if numerical not in ["string", "number", "error"]:
+        raise ValueError(
+            "numerical should be either 'string', 'number', or 'error',"
+            f" got {numerical!r}",
         )
 
     for param in [on, left_on, right_on]:
@@ -218,47 +233,73 @@ def fuzzy_join(
         main_col = right_col
         aux_col = left_col
 
-    # Drop missing values in key columns
-    main_table.dropna(subset=[main_col], inplace=True)
-    aux_table.dropna(subset=[aux_col], inplace=True)
-
-    # Make sure that the column types are string and categorical:
-    main_col_clean = main_table[main_col].astype(str)
-    aux_col_clean = aux_table[aux_col].astype(str)
-
-    all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
-
-    if encoder is None:
-        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    if is_numeric_dtype(main_table[main_col]) and is_numeric_dtype(aux_table[aux_col]):
+        is_numeric = True
+    if numerical in ["number"] and is_numeric:
+        neigh = NearestNeighbors(n_neighbors=1)
+        aux_array = aux_table[aux_col].to_numpy().reshape(-1, 1)
+        main_array = main_table[main_col].to_numpy().reshape(-1, 1)
+        neigh.fit(aux_array)
+        distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
+        idx_closest = np.ravel(neighbors)
+    elif numerical in ["error"] and is_numeric:
+        raise ValueError(
+            "The columns you are trying to merge on are of numerical type."
+            " Specify numerical as 'string',"
+            " 'number' or 'error'."
+        )
     else:
-        enc = encoder
+        # Drop missing values in key columns
+        main_table.dropna(subset=[main_col], inplace=True)
+        aux_table.dropna(subset=[aux_col], inplace=True)
 
-    enc_cv = enc.fit(all_cats)
-    main_enc = enc_cv.transform(main_col_clean)
-    aux_enc = enc_cv.transform(aux_col_clean)
+        # Make sure that the column types are string and categorical:
+        main_col_clean = main_table[main_col].astype(str)
+        aux_col_clean = aux_table[aux_col].astype(str)
 
-    all_enc = vstack((main_enc, aux_enc))
+        all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
-    tfidf = TfidfTransformer().fit(all_enc)
-    main_enc = tfidf.transform(main_enc)
-    aux_enc = tfidf.transform(aux_enc)
+        if encoder is None:
+            enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+        else:
+            enc = encoder
 
-    # Find nearest neighbor using KNN :
-    neigh = NearestNeighbors(n_neighbors=1)
+        enc_cv = enc.fit(all_cats)
+        main_enc = enc_cv.transform(main_col_clean)
+        aux_enc = enc_cv.transform(aux_col_clean)
 
-    neigh.fit(aux_enc)
-    distance, neighbors = neigh.kneighbors(main_enc, return_distance=True)
-    idx_closest = np.ravel(neighbors)
+        all_enc = vstack((main_enc, aux_enc))
+
+        tfidf = TfidfTransformer().fit(all_enc)
+        main_enc = tfidf.transform(main_enc)
+        aux_enc = tfidf.transform(aux_enc)
+
+        # Find nearest neighbor using KNN :
+        neigh = NearestNeighbors(n_neighbors=1)
+
+        neigh.fit(aux_enc)
+        distance, neighbors = neigh.kneighbors(main_enc, return_distance=True)
+        idx_closest = np.ravel(neighbors)
+        # Normalizing distance between 0 and 1:
+        distance = 1 - (distance / 2)
 
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index
 
-    norm_distance = 1 - (distance / 2)
-    if drop_unmatched:
-        main_table = main_table[match_score <= norm_distance]
-        norm_distance = norm_distance[match_score <= norm_distance]
+    if drop_unmatched and numerical in ["string"]:
+        main_table = main_table[match_distance <= distance]
+        distance = distance[match_distance <= distance]
+    elif drop_unmatched and numerical in ["number"] and is_numeric:
+        main_table = main_table[match_distance >= distance]
+        distance = distance[match_distance >= distance]
+    elif not drop_unmatched and numerical in ["number"] and is_numeric:
+        # Ignore the match_distance value if default value:
+        if match_distance == 0:
+            main_table.loc[np.ravel(match_distance > distance), "fj_nan"] = 1
+        else:
+            main_table.loc[np.ravel(match_distance < distance), "fj_nan"] = 1
     else:
-        main_table.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
+        main_table.loc[np.ravel(match_distance > distance), "fj_nan"] = 1
 
     if sort:
         main_table.sort_values(by=[main_col], inplace=True)
@@ -281,9 +322,9 @@ def fuzzy_join(
             df_joined.iloc[idx, df_joined.columns.get_loc("fj_idx") :] = np.NaN
         df_joined.drop(columns=["fj_idx", "fj_nan"], inplace=True)
 
-    if return_score:
+    if return_distance:
         df_joined = pd.concat(
-            [df_joined, pd.DataFrame(norm_distance, columns=["matching_score"])], axis=1
+            [df_joined, pd.DataFrame(distance, columns=["matching_distance"])], axis=1
         )
 
     return df_joined

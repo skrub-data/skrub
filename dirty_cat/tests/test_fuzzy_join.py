@@ -18,8 +18,8 @@ def test_fuzzy_join(analyzer):
         right=df2,
         left_on="a1",
         right_on="a2",
-        match_score=0.45,
-        return_score=True,
+        match_distance=0.45,
+        return_distance=True,
         analyzer=analyzer,
     )
 
@@ -33,8 +33,8 @@ def test_fuzzy_join(analyzer):
         how="left",
         left_on="a2",
         right_on="a1",
-        match_score=0.35,
-        return_score=True,
+        match_distance=0.35,
+        return_distance=True,
         analyzer=analyzer,
     )
     # Joining is always done on the left table and thus takes it shape:
@@ -46,8 +46,8 @@ def test_fuzzy_join(analyzer):
         how="right",
         right_on="a2",
         left_on="a1",
-        match_score=0.35,
-        return_score=True,
+        match_distance=0.35,
+        return_distance=True,
         analyzer=analyzer,
     )
     assert df_joined2.isin(df_joined3).all().all()
@@ -65,7 +65,7 @@ def test_fuzzy_join(analyzer):
         left_on="a1",
         right_on="a2",
         analyzer=analyzer,
-        return_score=True,
+        return_distance=True,
         suffixes=("l", "r"),
     )
     assert ("a1l" and "a1r") in df.columns
@@ -125,16 +125,18 @@ def test_drop_unmatched():
     a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
 
-    c1 = fuzzy_join(a, b, on="col1", match_score=0.5, drop_unmatched=True)
+    c1 = fuzzy_join(a, b, on="col1", match_distance=0.5, drop_unmatched=True)
     assert c1.shape == (2, 4)
 
-    c2 = fuzzy_join(a, b, on="col1", match_score=0.5)
+    c2 = fuzzy_join(a, b, on="col1", match_distance=0.5)
     assert sum(c2["col3"].isna()) > 0
 
-    c3 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5)
+    c3 = fuzzy_join(a, b, on="col1", how="right", match_distance=0.5)
     assert sum(c3["col3"].isna()) > 0
 
-    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5, drop_unmatched=True)
+    c4 = fuzzy_join(
+        a, b, on="col1", how="right", match_distance=0.5, drop_unmatched=True
+    )
     assert c4.shape == (2, 4)
 
 
@@ -247,3 +249,26 @@ def test_correct_encoder():
 
     with pytest.raises(ValueError, match=r"encoder should be a vectorizer object"):
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
+
+
+def test_fj_numerical():
+    """Testing if fuzzy_join results are as expected."""
+
+    left = pd.DataFrame({"str1": ["aa", "a", "bb"], "int": [10, 2, 5]})
+    right = pd.DataFrame(
+        {"str2": ["aa", "bb", "a", "cc", "dd"], "int": [55, 6, 2, 15, 6]}
+    )
+
+    fj_num = fuzzy_join(left, right, on="int", numerical="number")
+    n_cols = left.shape[1] + right.shape[1]
+
+    assert fj_num.shape == (len(left), n_cols)
+
+    fj_num2 = fuzzy_join(
+        left, right, on="int", numerical="number", return_distance=True
+    )
+    assert fj_num2.shape == (len(left), n_cols + 1)
+    # assert fj_num2["return_distance"]
+
+    # fj_num3 = fuzzy_join(left, right, on="int", numerical="number", match_distance=3)
+    # assert fj_num
