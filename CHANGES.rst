@@ -8,7 +8,7 @@ Release 0.4.1
 Major changes
 -------------
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` now perform joins on missing values as in `pandas.merge`
-but raises a warning. :pr:`522` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+but raises a warning. :pr:`522` and :pr:`529` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Release 0.4.0
 =============
