@@ -428,28 +428,27 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) ->
     # which behaves just like a ``namedtuple``.
     # However, we do not want to save this data into memory:
     # we will read it from the disk later.
-    if parse_version(sklearn_version) < parse_version("1.2"):
-        fetch_openml(
-            data_id=dataset_id,
-            data_home=str(data_directory),
-            as_frame=True,
-        )
-    elif parse_version(sklearn_version) < parse_version("1.2.2"):
+    kwargs = {}
+    if parse_version(sklearn_version) < parse_version("1.2.2"):
         # Avoid the warning, but don't use auto yet because of
         # https://github.com/scikit-learn/scikit-learn/issues/25478
-        fetch_openml(
-            data_id=dataset_id,
-            data_home=str(data_directory),
-            as_frame=True,
-            parser="liac-arff",
+        kwargs.update(
+            {
+                "parser": "liac-arff",
+            }
         )
-    if parse_version(sklearn_version) >= parse_version("1.2.2"):
-        fetch_openml(
-            data_id=dataset_id,
-            data_home=str(data_directory),
-            as_frame=True,
-            parser="auto",
+    elif parse_version(sklearn_version) >= parse_version("1.2.2"):
+        kwargs.update(
+            {
+                "parser": "auto",
+            }
         )
+    fetch_openml(
+        data_id=dataset_id,
+        data_home=str(data_directory),
+        as_frame=True,
+        **kwargs,
+    )
 
 
 def _read_json_from_gz(compressed_dir_path: Path) -> dict:
