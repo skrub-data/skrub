@@ -429,7 +429,7 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) ->
     # However, we do not want to save this data into memory:
     # we will read it from the disk later.
     kwargs = {}
-    if parse_version(sklearn_version) < parse_version("1.2.2"):
+    if parse_version("1.2") <= parse_version(sklearn_version) < parse_version("1.2.2"):
         # Avoid the warning, but don't use auto yet because of
         # https://github.com/scikit-learn/scikit-learn/issues/25478
         kwargs.update(
