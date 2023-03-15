@@ -86,7 +86,7 @@ def test_fuzzy_join_dtypes():
 
 @pytest.mark.parametrize(
     "analyzer, on, how",
-    [("a_blabla", ["a"], "left"), (1, 3, "right")],
+    [("a_blabla", {"a"}, "left"), (1, 3, "right")],
 )
 def test_parameters_error(analyzer, on, how):
     """Testing if correct errors are raised when wrong parameter values are given."""
@@ -255,9 +255,15 @@ def test_correct_encoder():
 def test_fj_numerical():
     """Testing if fuzzy_join results are as expected."""
 
-    left = pd.DataFrame({"str1": ["aa", "a", "bb"], "int": [10, 2, 5]})
+    left = pd.DataFrame(
+        {"str1": ["aa", "a", "bb"], "int": [10, 2, 5], "int2": [103, 314, 532]}
+    )
     right = pd.DataFrame(
-        {"str2": ["aa", "bb", "a", "cc", "dd"], "int": [55, 6, 2, 15, 6]}
+        {
+            "str2": ["aa", "bb", "a", "cc", "dd"],
+            "int": [55, 6, 2, 15, 6],
+            "int2": [554, 146, 32, 215, 612],
+        }
     )
 
     fj_num = fuzzy_join(left, right, on="int", numerical="number")
@@ -271,5 +277,7 @@ def test_fj_numerical():
     assert fj_num2.shape == (len(left), n_cols + 1)
     # assert fj_num2["return_distance"]
 
-    # fj_num3 = fuzzy_join(left, right, on="int", numerical="number", match_distance=3)
+    # fj_num3 = fuzzy_join(
+    # left, right, on=["int", "int2"], numerical="number", match_distance=3
+    # )
     # assert fj_num

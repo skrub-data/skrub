@@ -13,11 +13,10 @@ Joining on numerical columns is also possible based on the euclidean distance.
 """
 
 import warnings
-from typing import Literal, Tuple, Union
+from typing import List, Literal, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_numeric_dtype
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -31,9 +30,9 @@ def fuzzy_join(
     left: pd.DataFrame,
     right: pd.DataFrame,
     how: Literal["left", "right"] = "left",
-    left_on: Union[str, None] = None,
-    right_on: Union[str, None] = None,
-    on: Union[str, None] = None,
+    left_on: Union[str, List, None] = None,
+    right_on: Union[str, List, None] = None,
+    on: Union[str, List, None] = None,
     numerical: Literal["string", "number", "error"] = "string",
     encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
@@ -59,17 +58,17 @@ def fuzzy_join(
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
-    left_on : str, optional, default=None
-        Name of left table column to join.
-    right_on : str, optional, default=None
-        Name of right table key column to join
-        with left table key column.
-    on : str, optional, default=None
+    left_on : str or list, optional, default=None
+        Name of left table column(s) to join.
+    right_on : str or list, optional, default=None
+        Name of right table key column(s) to join
+        with left table key column(s).
+    on : str or list, optional, default=None
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
     numerical: {`string`, `number`, `error`}, optional, default='string'
-        When the column is of numerical type, use either the euclidean distance
+        For numerical columns, match with either the euclidean distance
         ("number"), or raise an error ("error"). If "string", uses the
         default n-gram string similarity.
     encoder: Union[Literal["hashing"], _VectorizerMixin], optional, default=None,
@@ -203,23 +202,33 @@ def fuzzy_join(
         )
 
     for param in [on, left_on, right_on]:
-        if param is not None and not isinstance(param, str):
+        if param is not None and not (
+            isinstance(param, str) or isinstance(param, list)
+        ):
             raise KeyError(
                 "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
-                " string"
+                " string or list of column names"
             )
 
-    # TODO: enable joining on multiple keys as in pandas.merge
-    if on is not None:
+    if isinstance(on, list):
         left_col = on
         right_col = on
-    elif left_on is not None and right_on is not None:
+    elif isinstance(left_on, list) and isinstance(right_on, list):
         left_col = left_on
         right_col = right_on
+    elif isinstance(on, str) or (
+        isinstance(left_on, str) and isinstance(right_on, str)
+    ):
+        if on is not None:
+            left_col = [on]
+            right_col = [on]
+        elif left_on is not None and right_on is not None:
+            left_col = [left_on]
+            right_col = [right_on]
     else:
         raise KeyError(
             "Required parameter missing: either parameter"
-            "'on' or the pair 'left_on', 'right_on' should be specified."
+            " 'on' or the pair 'left_on', 'right_on' should be specified."
         )
 
     if how == "left":
@@ -233,12 +242,24 @@ def fuzzy_join(
         main_col = right_col
         aux_col = left_col
 
-    if is_numeric_dtype(main_table[main_col]) and is_numeric_dtype(aux_table[aux_col]):
+    # Check if all included columns are numeric:
+    if (
+        main_table.select_dtypes(include="number")
+        .columns.isin(list(main_table[main_col].columns))
+        .any()
+    ):
         is_numeric = True
+    else:
+        is_numeric = False
+
+    if len(main_col) == 1 and len(aux_col) == 1:
+        main_col = main_col[0]
+        aux_col = aux_col[0]
+
     if numerical in ["number"] and is_numeric:
         neigh = NearestNeighbors(n_neighbors=1)
-        aux_array = aux_table[aux_col].to_numpy().reshape(-1, 1)
-        main_array = main_table[main_col].to_numpy().reshape(-1, 1)
+        aux_array = aux_table[aux_col].to_numpy()
+        main_array = main_table[main_col].to_numpy()
         neigh.fit(aux_array)
         distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
         idx_closest = np.ravel(neighbors)
@@ -249,10 +270,6 @@ def fuzzy_join(
             " 'number' or 'error'."
         )
     else:
-        # Drop missing values in key columns
-        main_table.dropna(subset=[main_col], inplace=True)
-        aux_table.dropna(subset=[aux_col], inplace=True)
-
         # Make sure that the column types are string and categorical:
         main_col_clean = main_table[main_col].astype(str)
         aux_col_clean = aux_table[aux_col].astype(str)
