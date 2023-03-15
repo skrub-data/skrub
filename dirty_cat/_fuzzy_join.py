@@ -310,7 +310,7 @@ def fuzzy_join(
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index
 
-    if drop_unmatched and numerical in ["string"]:
+    if drop_unmatched and is_numeric is False:
         main_table = main_table[match_distance <= distance]
         distance = distance[match_distance <= distance]
     elif drop_unmatched and numerical in ["number"] and is_numeric:
