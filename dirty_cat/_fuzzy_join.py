@@ -33,7 +33,7 @@ def fuzzy_join(
     left_on: Union[str, List, None] = None,
     right_on: Union[str, List, None] = None,
     on: Union[str, List, None] = None,
-    numerical: Literal["string", "number", "error"] = "string",
+    numerical: Literal["string", "number", "error"] = "number",
     encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
