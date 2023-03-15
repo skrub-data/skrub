@@ -255,14 +255,11 @@ def test_correct_encoder():
 def test_fj_numerical():
     """Testing if fuzzy_join results are as expected."""
 
-    left = pd.DataFrame(
-        {"str1": ["aa", "a", "bb"], "int": [10, 2, 5], "int2": [103, 314, 532]}
-    )
+    left = pd.DataFrame({"str1": ["aa", "a", "bb"], "int": [10, 2, 5]})
     right = pd.DataFrame(
         {
             "str2": ["aa", "bb", "a", "cc", "dd"],
             "int": [55, 6, 2, 15, 6],
-            "int2": [554, 146, 32, 215, 612],
         }
     )
 
@@ -277,7 +274,33 @@ def test_fj_numerical():
     assert fj_num2.shape == (len(left), n_cols + 1)
     # assert fj_num2["return_distance"]
 
-    # fj_num3 = fuzzy_join(
-    # left, right, on=["int", "int2"], numerical="number", match_distance=3
-    # )
-    # assert fj_num
+
+def test_fj_multiple_keys():
+    """Test fuzzy joining on multiple keys"""
+
+    left = pd.DataFrame(
+        {
+            "str1": ["Paris", "Paris", "Paris"],
+            "str2": ["Texas", "France", "Greek God"],
+            "int1": [10, 2, 5],
+            "int2": [103, 314, 532],
+        }
+    )
+    right = pd.DataFrame(
+        {
+            "str_1": ["Paris", "Paris", "Paris", "cc", "dd"],
+            "str_2": ["TX", "FR", "GR Mytho", "cc", "dd"],
+            "int1": [55, 6, 2, 15, 6],
+            "int2": [554, 146, 32, 215, 612],
+        }
+    )
+
+    # On multiple numeric keys
+    fj_num = fuzzy_join(left, right, on=["int1", "int2"], numerical="number")
+    assert fj_num.shape == (3, 8)
+
+    # On multiple string keys
+    fj_str = fuzzy_join(
+        left, right, left_on=["str1", "str2"], right_on=["str_1", "str_2"]
+    )
+    assert fj_str.shape == (3, 8)

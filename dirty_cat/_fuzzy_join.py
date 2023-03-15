@@ -252,7 +252,7 @@ def fuzzy_join(
     else:
         is_numeric = False
 
-    if len(main_col) == 1 and len(aux_col) == 1:
+    if len(main_col) == 1 and len(aux_col) == 1 and is_numeric is False:
         main_col = main_col[0]
         aux_col = aux_col[0]
 
@@ -274,6 +274,13 @@ def fuzzy_join(
         main_col_clean = main_table[main_col].astype(str)
         aux_col_clean = aux_table[aux_col].astype(str)
 
+        if isinstance(main_col, list) and isinstance(aux_col, list):
+            main_col_clean = main_col_clean[main_col].apply(
+                lambda row: "  ".join(row.values.astype(str)), axis=1
+            )
+            aux_col_clean = aux_col_clean[aux_col].apply(
+                lambda row: "  ".join(row.values.astype(str)), axis=1
+            )
         all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
         if encoder is None:
