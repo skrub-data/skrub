@@ -18,8 +18,8 @@ def test_fuzzy_join(analyzer):
         right=df2,
         left_on="a1",
         right_on="a2",
-        match_distance=0.45,
-        return_distance=True,
+        match_score=0.45,
+        return_score=True,
         analyzer=analyzer,
     )
 
@@ -33,8 +33,8 @@ def test_fuzzy_join(analyzer):
         how="left",
         left_on="a2",
         right_on="a1",
-        match_distance=0.35,
-        return_distance=True,
+        match_score=0.35,
+        return_score=True,
         analyzer=analyzer,
     )
     # Joining is always done on the left table and thus takes it shape:
@@ -46,8 +46,8 @@ def test_fuzzy_join(analyzer):
         how="right",
         right_on="a2",
         left_on="a1",
-        match_distance=0.35,
-        return_distance=True,
+        match_score=0.35,
+        return_score=True,
         analyzer=analyzer,
     )
     # We sort the index as the column order is not important here
@@ -66,7 +66,7 @@ def test_fuzzy_join(analyzer):
         left_on="a1",
         right_on="a2",
         analyzer=analyzer,
-        return_distance=True,
+        return_score=True,
         suffixes=("l", "r"),
     )
     assert ("a1l" and "a1r") in df.columns
@@ -126,18 +126,16 @@ def test_drop_unmatched():
     a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
 
-    c1 = fuzzy_join(a, b, on="col1", match_distance=0.5, drop_unmatched=True)
+    c1 = fuzzy_join(a, b, on="col1", match_score=0.5, drop_unmatched=True)
     assert c1.shape == (2, 4)
 
-    c2 = fuzzy_join(a, b, on="col1", match_distance=0.5)
+    c2 = fuzzy_join(a, b, on="col1", match_score=0.5)
     assert sum(c2["col3"].isna()) > 0
 
-    c3 = fuzzy_join(a, b, on="col1", how="right", match_distance=0.5)
+    c3 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5)
     assert sum(c3["col3"].isna()) > 0
 
-    c4 = fuzzy_join(
-        a, b, on="col1", how="right", match_distance=0.5, drop_unmatched=True
-    )
+    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5, drop_unmatched=True)
     assert c4.shape == (2, 4)
 
 
@@ -268,11 +266,8 @@ def test_fj_numerical():
 
     assert fj_num.shape == (len(left), n_cols)
 
-    fj_num2 = fuzzy_join(
-        left, right, on="int", numerical="number", return_distance=True
-    )
+    fj_num2 = fuzzy_join(left, right, on="int", numerical="number", return_score=True)
     assert fj_num2.shape == (len(left), n_cols + 1)
-    # assert fj_num2["return_distance"]
 
 
 def test_fj_multiple_keys():
