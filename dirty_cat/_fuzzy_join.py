@@ -206,10 +206,13 @@ def fuzzy_join(
         if param is not None and not (
             isinstance(param, str) or isinstance(param, list)
         ):
-            raise KeyError(
+            raise TypeError(
                 "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
                 " string or list of column names"
             )
+
+    if not isinstance(match_score, (int, float)):
+        raise TypeError("match_score has invalid type, expected integer or float")
 
     if isinstance(on, list):
         left_col = on
