@@ -253,3 +253,19 @@ def test_correct_encoder():
 
     with pytest.raises(ValueError, match=r"encoder should be a vectorizer object"):
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
+
+
+def test_missing_values():
+    """
+    Test fuzzy joining on missing values.
+    """
+    a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
+    b = pd.DataFrame({"col3": [np.NaN, "bbb", "ddd dd"], "col4": [1, 2, 3]})
+
+    with pytest.warns(UserWarning, match=r"merging on missing values"):
+        c = fuzzy_join(a, b, left_on="col1", right_on="col3", how="right")
+    assert c.shape[0] == len(b)
+
+    with pytest.warns(UserWarning, match=r"merging on missing values"):
+        c = fuzzy_join(b, a, left_on="col3", right_on="col1", return_score=True)
+    assert c.shape[0] == len(b)

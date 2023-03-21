@@ -225,6 +225,15 @@ def fuzzy_join(
     main_col_clean = main_table[main_col].astype(str)
     aux_col_clean = aux_table[aux_col].astype(str)
 
+    # Warn if presence of missing values
+    if main_table[main_col].isna().any():
+        warnings.warn(
+            "You are merging on missing values."
+            " The output correspondence will be random or missing."
+            " To avoid unexpected errors you can drop them.",
+            UserWarning,
+        )
+
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
     if encoder is None:
