@@ -100,10 +100,15 @@ def test_parameters_error(analyzer, on, how):
     ):
         fuzzy_join(df1, df2, on="a", analyzer=analyzer, how=how)
     with pytest.raises(
-        KeyError,
+        TypeError,
         match=r"invalid type",
     ):
         fuzzy_join(df1, df2, on=on, how=how)
+    with pytest.raises(
+        TypeError,
+        match=r"invalid type",
+    ):
+        fuzzy_join(df1, df2, on="a", match_score="blabla")
 
 
 def test_missing_keys():

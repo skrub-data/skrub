@@ -187,9 +187,12 @@ def fuzzy_join(
             f"how should be either 'left' or 'right', got {how!r}",
         )
 
+    if not isinstance(match_score, (int, float)):
+        raise TypeError("match_score has invalid type, expected integer or float")
+
     for param in [on, left_on, right_on]:
         if param is not None and not isinstance(param, str):
-            raise KeyError(
+            raise TypeError(
                 "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
                 " string"
             )
