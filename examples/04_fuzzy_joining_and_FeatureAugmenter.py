@@ -138,7 +138,7 @@ df1.tail(20)
 # .. topic:: Note:
 #
 #    We fix the ``return_score`` parameter to `True` so as to keep the matching
-#    distance, that we will use later to show what are the worst matches.
+#    score, that we will use later to show what are the worst matches.
 
 ###############################################################################
 #
@@ -166,9 +166,9 @@ import numpy as np
 
 def print_worst_matches(joined_table, n=5):
     """Prints n worst matches for inspection."""
-    max_ind = np.argsort(joined_table["matching_distance"], axis=0)[:n]
+    max_ind = np.argsort(joined_table["matching_score"], axis=0)[:n]
     max_dist = pd.Series(
-        joined_table["matching_distance"][max_ind.ravel()].ravel(),
+        joined_table["matching_score"][max_ind.ravel()].ravel(),
         index=max_ind.ravel(),
     )
     worst_matches = joined_table.iloc[list(max_ind.ravel())]

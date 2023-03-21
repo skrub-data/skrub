@@ -261,12 +261,14 @@ def test_fj_numerical():
         }
     )
 
-    fj_num = fuzzy_join(left, right, on="int", metric="number")
+    fj_num = fuzzy_join(left, right, on="int", numerical_match="number")
     n_cols = left.shape[1] + right.shape[1]
 
     assert fj_num.shape == (len(left), n_cols)
 
-    fj_num2 = fuzzy_join(left, right, on="int", metric="number", return_score=True)
+    fj_num2 = fuzzy_join(
+        left, right, on="int", numerical_match="number", return_score=True
+    )
     assert fj_num2.shape == (len(left), n_cols + 1)
 
 
@@ -291,7 +293,7 @@ def test_fj_multiple_keys():
     )
 
     # On multiple numeric keys
-    fj_num = fuzzy_join(left, right, on=["int1", "int2"], metric="number")
+    fj_num = fuzzy_join(left, right, on=["int1", "int2"], numerical_match="number")
     assert fj_num.shape == (3, 8)
 
     # On multiple string keys

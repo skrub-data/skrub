@@ -34,7 +34,7 @@ def fuzzy_join(
     left_on: Union[str, List, None] = None,
     right_on: Union[str, List, None] = None,
     on: Union[str, List, None] = None,
-    metric: Literal["string", "number", "error"] = "number",
+    numerical_match: Literal["string", "number", "error"] = "number",
     encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
@@ -68,10 +68,10 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    metric: {`string`, `number`, `error`}, optional, default='string'
+    numerical_match: {`string`, `number`, `error`}, optional, default='string'
         For numerical columns, match with either the euclidean distance
         ("number"), or raise an error ("error"). If "string", uses the
-        default n-gram string similarity.
+        default n-gram string similarity on the string representation.
     encoder: Union[Literal["hashing"], _VectorizerMixin], optional, default=None,
         Encoder parameter for the Vectorizer.
         Options: {None, `_VectorizerMixin`}. If None, the
@@ -139,7 +139,7 @@ def fuzzy_join(
 
     When the neighbors are distant, we may use the `match_score` parameter
     with a value bigger than 0 to define the minimal level of matching
-    distance tolerated. If it is not reached, matches will be
+    score tolerated. If it is not reached, matches will be
     considered as not found and NaN values will be imputed.
 
     Examples
@@ -172,7 +172,7 @@ def fuzzy_join(
     we can use the `match_score` argument:
 
     >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
-        a_x  b   a_y    c  matching_distance
+        a_x  b   a_y    c  matching_score
     0   ana  1   ana  7.0  1.000000
     1  lala  2  lala  6.0  1.000000
     2  nana  3   NaN  NaN  0.532717
@@ -196,9 +196,10 @@ def fuzzy_join(
             f"how should be either 'left' or 'right', got {how!r}",
         )
 
-    if metric not in ["string", "number", "error"]:
+    if numerical_match not in ["string", "number", "error"]:
         raise ValueError(
-            f"metric should be either 'string', 'number', or 'error', got {metric!r}",
+            "numerical_match should be either 'string', 'number', or 'error', got"
+            f" {numerical_match!r}",
         )
 
     for param in [on, left_on, right_on]:
@@ -256,7 +257,7 @@ def fuzzy_join(
         main_col = main_col[0]
         aux_col = aux_col[0]
 
-    if metric in ["number"] and is_numeric:
+    if numerical_match in ["number"] and is_numeric:
         neigh = NearestNeighbors(n_neighbors=1)
         aux_array = aux_table[aux_col].to_numpy()
         main_array = main_table[main_col].to_numpy()
@@ -268,10 +269,10 @@ def fuzzy_join(
         idx_closest = np.ravel(neighbors)
         # Normalizing distance between 0 and 1:
         distance = 1 - (distance / 2)
-    elif metric in ["error"] and is_numeric:
+    elif numerical_match in ["error"] and is_numeric:
         raise ValueError(
             "The columns you are trying to merge on are of numerical type."
-            " Specify metric as 'string',"
+            " Specify numerical_match as 'string',"
             " 'number' or 'error'."
         )
     else:
@@ -318,10 +319,10 @@ def fuzzy_join(
     if drop_unmatched and is_numeric is False:
         main_table = main_table[match_score <= distance]
         distance = distance[match_score <= distance]
-    elif drop_unmatched and metric in ["number"] and is_numeric:
+    elif drop_unmatched and numerical_match in ["number"] and is_numeric:
         main_table = main_table[match_score >= distance]
         distance = distance[match_score >= distance]
-    elif not drop_unmatched and metric in ["number"] and is_numeric:
+    elif not drop_unmatched and numerical_match in ["number"] and is_numeric:
         # Ignore the match_score value if default value:
         if match_score == 0:
             main_table.loc[np.ravel(match_score > distance), "fj_nan"] = 1
@@ -353,7 +354,7 @@ def fuzzy_join(
 
     if return_score:
         df_joined = pd.concat(
-            [df_joined, pd.DataFrame(distance, columns=["matching_distance"])], axis=1
+            [df_joined, pd.DataFrame(distance, columns=["matching_score"])], axis=1
         )
 
     return df_joined
