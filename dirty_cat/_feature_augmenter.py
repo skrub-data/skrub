@@ -37,7 +37,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     main_key : str
         The key column name in the main table on which
         the join will be performed.
-    match_score : float, default=0.0
+    match_score : float, default=0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. 1 means that only a perfect match will be
         accepted, and zero means that the closest match will be accepted,

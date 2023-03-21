@@ -90,7 +90,7 @@ def fuzzy_join(
         n-grams used in the string similarity. All values of n such
         that min_n <= n <= max_n will be used.
     return_score : boolean, default=True
-        Whether to return matching distance between
+        Whether to return matching score based on the distance between
         the nearest matched categories.
     match_score : float, default=0.0
         Distance score between the closest matches that will be accepted.
@@ -114,7 +114,7 @@ def fuzzy_join(
     df_joined : :class:`~pandas.DataFrame`
         The joined table returned as a DataFrame. If `return_score` is True,
         another column will be added to the DataFrame containing the
-        matching distances.
+        matching scores.
 
     See Also
     --------
@@ -263,7 +263,7 @@ def fuzzy_join(
         distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
         idx_closest = np.ravel(neighbors)
         # Normalizing distance between 0 and 1:
-        distance = 1 - (distance / 2)
+        norm_distance = 1 - (distance / 2)
     elif numerical_match in ["error"] and any_numeric:
         raise ValueError(
             "The columns you are trying to merge on are of numerical type."
@@ -306,25 +306,16 @@ def fuzzy_join(
         distance, neighbors = neigh.kneighbors(main_enc, return_distance=True)
         idx_closest = np.ravel(neighbors)
         # Normalizing distance between 0 and 1:
-        distance = 1 - (distance / 2)
+        norm_distance = 1 - (distance / 2)
 
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index
 
-    if drop_unmatched and any_numeric is False:
-        main_table = main_table[match_score <= distance]
-        distance = distance[match_score <= distance]
-    elif drop_unmatched and numerical_match in ["number"] and any_numeric:
-        main_table = main_table[match_score >= distance]
-        distance = distance[match_score >= distance]
-    elif not drop_unmatched and numerical_match in ["number"] and any_numeric:
-        # Ignore the match_score value if default value:
-        if match_score == 0:
-            main_table.loc[np.ravel(match_score > distance), "fj_nan"] = 1
-        else:
-            main_table.loc[np.ravel(match_score < distance), "fj_nan"] = 1
+    if drop_unmatched:
+        main_table = main_table[match_score <= norm_distance]
+        norm_distance = norm_distance[match_score <= norm_distance]
     else:
-        main_table.loc[np.ravel(match_score > distance), "fj_nan"] = 1
+        main_table.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
 
     if sort:
         main_table.sort_values(by=[main_col], inplace=True)
@@ -349,7 +340,7 @@ def fuzzy_join(
 
     if return_score:
         df_joined = pd.concat(
-            [df_joined, pd.DataFrame(distance, columns=["matching_score"])], axis=1
+            [df_joined, pd.DataFrame(norm_distance, columns=["matching_score"])], axis=1
         )
 
     return df_joined

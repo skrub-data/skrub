@@ -109,6 +109,11 @@ def test_parameters_error(analyzer, on, how):
         match=r"invalid type",
     ):
         fuzzy_join(df1, df2, on="a", match_score="blabla")
+    with pytest.raises(
+        ValueError,
+        match=r"numerical_match should be either",
+    ):
+        fuzzy_join(df1, df2, on="a", numerical_match="wrong_name")
 
 
 def test_missing_keys():
@@ -275,6 +280,22 @@ def test_fj_numerical():
         left, right, on="int", numerical_match="number", return_score=True
     )
     assert fj_num2.shape == (len(left), n_cols + 1)
+
+    fj_num3 = fuzzy_join(
+        left,
+        right,
+        on="int",
+        numerical_match="number",
+        match_score=0.9,
+        drop_unmatched=True,
+    )
+    assert fj_num3.shape == (2, n_cols)
+
+    with pytest.raises(
+        ValueError,
+        match=r"The columns you are trying ",
+    ):
+        fuzzy_join(left, right, on="int", numerical_match="error")
 
 
 def test_fj_multiple_keys():
