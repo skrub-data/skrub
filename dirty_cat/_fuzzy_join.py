@@ -13,6 +13,7 @@ Joining on numerical columns is also possible based on the euclidean distance.
 """
 
 import warnings
+from collections.abc import Iterable
 from typing import List, Literal, Tuple, Union
 
 import numpy as np
@@ -203,9 +204,7 @@ def fuzzy_join(
         )
 
     for param in [on, left_on, right_on]:
-        if param is not None and not (
-            isinstance(param, str) or isinstance(param, list)
-        ):
+        if param is not None and not (isinstance(param, Iterable)):
             raise TypeError(
                 "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
                 " string or list of column names"
@@ -214,21 +213,19 @@ def fuzzy_join(
     if not isinstance(match_score, (int, float)):
         raise TypeError("match_score has invalid type, expected integer or float")
 
-    if isinstance(on, list):
-        left_col = on
-        right_col = on
-    elif isinstance(left_on, list) and isinstance(right_on, list):
-        left_col = left_on
-        right_col = right_on
-    elif isinstance(on, str) or (
-        isinstance(left_on, str) and isinstance(right_on, str)
-    ):
+    if isinstance(on, str) or (isinstance(left_on, str) and isinstance(right_on, str)):
         if on is not None:
             left_col = [on]
             right_col = [on]
         elif left_on is not None and right_on is not None:
             left_col = [left_on]
             right_col = [right_on]
+    elif isinstance(on, Iterable):
+        left_col = list(on)
+        right_col = list(on)
+    elif isinstance(left_on, Iterable) and isinstance(right_on, Iterable):
+        left_col = list(left_on)
+        right_col = list(right_on)
     else:
         raise KeyError(
             "Required parameter missing: either parameter"
@@ -247,20 +244,13 @@ def fuzzy_join(
         aux_col = left_col
 
     # Check if all included columns are numeric:
-    if (
-        main_table.select_dtypes(include="number")
-        .columns.isin(list(main_table[main_col].columns))
-        .any()
-    ):
-        is_numeric = True
-    else:
-        is_numeric = False
+    any_numeric = not main_table[main_col].select_dtypes(include="number").empty
 
-    if len(main_col) == 1 and len(aux_col) == 1 and is_numeric is False:
+    if len(main_col) == 1 and len(aux_col) == 1 and any_numeric is False:
         main_col = main_col[0]
         aux_col = aux_col[0]
 
-    if numerical_match in ["number"] and is_numeric:
+    if numerical_match in ["number"] and any_numeric:
         neigh = NearestNeighbors(n_neighbors=1)
         aux_array = aux_table[aux_col].to_numpy()
         main_array = main_table[main_col].to_numpy()
@@ -274,7 +264,7 @@ def fuzzy_join(
         idx_closest = np.ravel(neighbors)
         # Normalizing distance between 0 and 1:
         distance = 1 - (distance / 2)
-    elif numerical_match in ["error"] and is_numeric:
+    elif numerical_match in ["error"] and any_numeric:
         raise ValueError(
             "The columns you are trying to merge on are of numerical type."
             " Specify numerical_match as 'string',"
@@ -321,13 +311,13 @@ def fuzzy_join(
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index
 
-    if drop_unmatched and is_numeric is False:
+    if drop_unmatched and any_numeric is False:
         main_table = main_table[match_score <= distance]
         distance = distance[match_score <= distance]
-    elif drop_unmatched and numerical_match in ["number"] and is_numeric:
+    elif drop_unmatched and numerical_match in ["number"] and any_numeric:
         main_table = main_table[match_score >= distance]
         distance = distance[match_score >= distance]
-    elif not drop_unmatched and numerical_match in ["number"] and is_numeric:
+    elif not drop_unmatched and numerical_match in ["number"] and any_numeric:
         # Ignore the match_score value if default value:
         if match_score == 0:
             main_table.loc[np.ravel(match_score > distance), "fj_nan"] = 1

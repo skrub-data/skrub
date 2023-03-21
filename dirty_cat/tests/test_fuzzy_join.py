@@ -86,7 +86,7 @@ def test_fuzzy_join_dtypes():
 
 @pytest.mark.parametrize(
     "analyzer, on, how",
-    [("a_blabla", {"a"}, "left"), (1, 3, "right")],
+    [("a_blabla", True, "left"), (1, 3, "right")],
 )
 def test_parameters_error(analyzer, on, how):
     """Testing if correct errors are raised when wrong parameter values are given."""
@@ -306,3 +306,23 @@ def test_fj_multiple_keys():
         left, right, left_on=["str1", "str2"], right_on=["str_1", "str_2"]
     )
     assert fj_str.shape == (3, 8)
+
+
+def test_iterable_input():
+    """Test if iterable input: list, set, dictionnary or tuple works"""
+    df1 = pd.DataFrame(
+        {"a": ["ana", "lala", "nana"], "str2": ["Texas", "France", "Greek God"]}
+    )
+    df2 = pd.DataFrame(
+        {"a": ["anna", "lala", "ana", "nnana"], "str_2": ["TX", "FR", "GR Mytho", "dd"]}
+    )
+    assert fuzzy_join(df1, df2, on=["a"]).shape == (3, 4)
+    assert fuzzy_join(df1, df2, on={"a"}).shape == (3, 4)
+    assert fuzzy_join(df1, df2, on="a").shape == (3, 4)
+
+    assert fuzzy_join(
+        df1, df2, left_on=["a", "str2"], right_on={"a", "str_2"}
+    ).shape == (3, 4)
+    assert fuzzy_join(
+        df1, df2, left_on=("a", "str2"), right_on={"a", "str_2"}
+    ).shape == (3, 4)
