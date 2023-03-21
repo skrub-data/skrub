@@ -24,7 +24,7 @@ from sklearn.feature_extraction.text import (
     _VectorizerMixin,
 )
 from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import minmax_scale
+from sklearn.preprocessing import StandardScaler
 
 
 def fuzzy_join(
@@ -265,8 +265,10 @@ def fuzzy_join(
         aux_array = aux_table[aux_col].to_numpy()
         main_array = main_table[main_col].to_numpy()
         # Reweighting to avoid measure specificity
-        aux_array = minmax_scale(aux_array)
-        main_array = minmax_scale(main_array)
+        scaler = StandardScaler()
+        scaler.fit(np.concatenate((aux_array, main_array)))
+        aux_array = scaler.transform(aux_array)
+        main_array = scaler.transform(main_array)
         neigh.fit(aux_array)
         distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
         idx_closest = np.ravel(neighbors)
