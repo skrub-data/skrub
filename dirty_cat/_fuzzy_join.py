@@ -364,7 +364,7 @@ def fuzzy_join(
         aux_cols = left_col
 
     # Warn if presence of missing values
-    if main_table[[main_cols]].isna().any().any():
+    if main_table[main_cols].isna().any().any():
         warnings.warn(
             "You are merging on missing values."
             " The output correspondence will be random or missing."

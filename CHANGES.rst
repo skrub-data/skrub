@@ -7,19 +7,14 @@ Release 0.4.1
 
 Major changes
 -------------
-<<<<<<< HEAD
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can join on numerical columns based on the euclidean distance.
 :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can perform many-to-many joins: on lists of numerical or string key columns.
 :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* :func:`fuzzy_join` and :class:`FeatureAugmenter` now perform joins on missing values as in `pandas.merge`.
-:pr:`522` by :user:`Jovan Stojanovic <jovan-stojanovic>`
-=======
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` now perform joins on missing values as in `pandas.merge`
 but raises a warning. :pr:`522` and :pr:`529` by :user:`Jovan Stojanovic <jovan-stojanovic>`
->>>>>>> main
 
 Release 0.4.0
 =============
