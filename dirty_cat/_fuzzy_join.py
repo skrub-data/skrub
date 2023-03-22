@@ -29,7 +29,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 def _numeric_encoding(main, main_cols, aux, aux_cols):
-    """Encoding numerical columns and finding closest matches.
+    """Encoding numerical columns.
 
     Parameters
     ----------
@@ -60,7 +60,7 @@ def _numeric_encoding(main, main_cols, aux, aux_cols):
 
 
 def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_range):
-    """Encoding string columns and finding closest matches.
+    """Encoding string columns.
 
     Parameters
     ----------
@@ -122,7 +122,7 @@ def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_ra
 
 
 def _nearest_matches(main_array, aux_array):
-    """Encoding string columns and finding closest matches.
+    """Finding closest matches using nearest neighbors method.
 
     Parameters
     ----------
