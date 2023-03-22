@@ -45,9 +45,9 @@ def _numeric_encoding(main, main_cols, aux, aux_cols):
     Returns
     -------
     main_array : array-like
-        Am array of the encoded columns of the main table.
+        An array of the encoded columns of the main table.
     aux_array : array-like
-        Am array of the encoded columns of the aux table.
+        An array of the encoded columns of the aux table.
     """
     aux_array = aux[aux_cols].to_numpy()
     main_array = main[main_cols].to_numpy()
@@ -87,9 +87,9 @@ def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_ra
     Returns
     -------
     main_array : array-like
-        Am array of the encoded columns of the main table.
+        An array of the encoded columns of the main table.
     aux_array : array-like
-        Am array of the encoded columns of the aux table.
+        An array of the encoded columns of the aux table.
     """
     # Make sure that the column types are string and categorical:
     main_cols_clean = main[main_cols].astype(str)
@@ -127,9 +127,9 @@ def _nearest_matches(main_array, aux_array):
     Parameters
     ----------
     main_array : array-like
-        Am array of the encoded columns of the main table.
+        An array of the encoded columns of the main table.
     aux_array : array-like
-        Am array of the encoded columns of the aux table.
+        An array of the encoded columns of the aux table.
 
     Returns
     -------
