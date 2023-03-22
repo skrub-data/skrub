@@ -18,7 +18,7 @@ from typing import List, Literal, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from scipy.sparse import vstack
+from scipy.sparse import hstack, vstack
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
     TfidfTransformer,
@@ -26,6 +26,126 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
+
+
+def _numeric_encoding(main, main_cols, aux, aux_cols):
+    """Encoding numerical columns and finding closest matches.
+
+    Parameters
+    ----------
+    main : pd.DataFrame
+        A table with numerical columns.
+    main_cols : str or list
+        The columns of the main table.
+    aux : pd.DataFrame
+        Another table with numerical columns.
+    aux_cols : str or list
+        The columns of the aux table.
+
+    Returns
+    -------
+    main_array : array-like
+        Am array of the encoded columns of the main table.
+    aux_array : array-like
+        Am array of the encoded columns of the aux table.
+    """
+    aux_array = aux[aux_cols].to_numpy()
+    main_array = main[main_cols].to_numpy()
+    # Reweighting to avoid measure specificity
+    scaler = StandardScaler()
+    scaler.fit(np.concatenate((aux_array, main_array)))
+    aux_array = scaler.transform(aux_array)
+    main_array = scaler.transform(main_array)
+    return main_array, aux_array
+
+
+def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_range):
+    """Encoding string columns and finding closest matches.
+
+    Parameters
+    ----------
+    main : pd.DataFrame
+        A table with string columns.
+    main_cols : str or list
+        The columns of the main table.
+    aux : pd.DataFrame
+        Another table with string columns.
+    aux_cols : str or list
+        The columns of the aux table.
+    encoder: Union[Literal["hashing"], _VectorizerMixin]
+        Encoder parameter for the Vectorizer.
+        See fuzzy_join's docstring for more information.
+    analyzer : {"word", "char", "char_wb"}
+        Analyzer parameter for the HashingVectorizer passed to
+        the encoder and used for the string similarities.
+        See fuzzy_join's docstring for more information.
+    ngram_range : int 2-tuple, optional, default=(2, 4)
+        The lower and upper boundary of the range of n-values for different
+        n-grams used in the string similarity.
+        See fuzzy_join's docstring for more information.
+
+    Returns
+    -------
+    main_array : array-like
+        Am array of the encoded columns of the main table.
+    aux_array : array-like
+        Am array of the encoded columns of the aux table.
+    """
+    # Make sure that the column types are string and categorical:
+    main_cols_clean = main[main_cols].astype(str)
+    aux_cols_clean = aux[aux_cols].astype(str)
+
+    if isinstance(main_cols, list) and isinstance(aux_cols, list):
+        main_cols_clean = main_cols_clean[main_cols].apply(
+            lambda row: "  ".join(row.values.astype(str)), axis=1
+        )
+        aux_cols_clean = aux_cols_clean[aux_cols].apply(
+            lambda row: "  ".join(row.values.astype(str)), axis=1
+        )
+    all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
+
+    if encoder is None:
+        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    else:
+        enc = encoder
+
+    enc_cv = enc.fit(all_cats)
+    main_enc = enc_cv.transform(main_cols_clean)
+    aux_enc = enc_cv.transform(aux_cols_clean)
+
+    all_enc = vstack((main_enc, aux_enc))
+
+    tfidf = TfidfTransformer().fit(all_enc)
+    main_enc = tfidf.transform(main_enc)
+    aux_enc = tfidf.transform(aux_enc)
+    return main_enc, aux_enc
+
+
+def _nearest_matches(main_array, aux_array):
+    """Encoding string columns and finding closest matches.
+
+    Parameters
+    ----------
+    main_array : array-like
+        Am array of the encoded columns of the main table.
+    aux_array : array-like
+        Am array of the encoded columns of the aux table.
+
+    Returns
+    -------
+    idx_closest
+        Index of the closest matches of the main table in the aux table.
+    norm_distance
+        Distance between the closest matches, on a scale between 0 and 1.
+    """
+    # Find nearest neighbor using KNN :
+    neigh = NearestNeighbors(n_neighbors=1)
+    neigh.fit(aux_array)
+    distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
+    idx_closest = np.ravel(neighbors)
+    # Normalizing distance between 0 and 1:
+    norm_distance = 1 - (distance / 2)
+    return idx_closest, norm_distance
 
 
 def fuzzy_join(
@@ -235,78 +355,66 @@ def fuzzy_join(
     if how == "left":
         main_table = left.reset_index(drop=True).copy()
         aux_table = right.reset_index(drop=True).copy()
-        main_col = left_col
-        aux_col = right_col
+        main_cols = left_col
+        aux_cols = right_col
     else:
         main_table = right.reset_index(drop=True).copy()
         aux_table = left.reset_index(drop=True).copy()
-        main_col = right_col
-        aux_col = left_col
+        main_cols = right_col
+        aux_cols = left_col
 
-    # Check if all included columns are numeric:
-    any_numeric = not main_table[main_col].select_dtypes(include="number").empty
+    main_num_cols = main_table[main_cols].select_dtypes(include="number").columns
+    aux_num_cols = aux_table[aux_cols].select_dtypes(include="number").columns
 
-    if len(main_col) == 1 and len(aux_col) == 1 and any_numeric is False:
-        main_col = main_col[0]
-        aux_col = aux_col[0]
+    # Check if included columns are numeric:
+    any_numeric = len(main_num_cols) != 0
+    # Check if included columns have mixed types:
+    mixed_types = len(main_cols) > len(main_num_cols)
 
-    if numerical_match in ["number"] and any_numeric:
-        neigh = NearestNeighbors(n_neighbors=1)
-        aux_array = aux_table[aux_col].to_numpy()
-        main_array = main_table[main_col].to_numpy()
-        # Reweighting to avoid measure specificity
-        scaler = StandardScaler()
-        scaler.fit(np.concatenate((aux_array, main_array)))
-        aux_array = scaler.transform(aux_array)
-        main_array = scaler.transform(main_array)
-        neigh.fit(aux_array)
-        distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
-        idx_closest = np.ravel(neighbors)
-        # Normalizing distance between 0 and 1:
-        norm_distance = 1 - (distance / 2)
-    elif numerical_match in ["error"] and any_numeric:
+    if len(main_cols) == 1 and len(aux_cols) == 1 and any_numeric is False:
+        main_cols = main_cols[0]
+        aux_cols = aux_cols[0]
+
+    if numerical_match in ["error"] and any_numeric:
         raise ValueError(
             "The columns you are trying to merge on are of numerical type."
             " Specify numerical_match as 'string',"
             " 'number' or 'error'."
         )
+    elif numerical_match in ["number"] and any_numeric and not mixed_types:
+        main_enc, aux_enc = _numeric_encoding(
+            main_table, main_num_cols, aux_table, aux_num_cols
+        )
+        idx_closest, norm_distance = _nearest_matches(main_enc, aux_enc)
+    elif numerical_match in ["number"] and any_numeric and mixed_types:
+        main_num_enc, aux_num_enc = _numeric_encoding(
+            main_table, main_num_cols, aux_table, aux_num_cols
+        )
+        main_str_cols = list(set(main_cols) - set(main_num_cols))
+        aux_str_cols = list(set(aux_cols) - set(aux_num_cols))
+        main_str_enc, aux_str_enc = _string_encoding(
+            main_table,
+            main_str_cols,
+            aux_table,
+            aux_str_cols,
+            encoder=encoder,
+            analyzer=analyzer,
+            ngram_range=ngram_range,
+        )
+        main_enc = hstack((main_num_enc, main_str_enc), format="csr")
+        aux_enc = hstack((aux_num_enc, aux_str_enc), format="csr")
+        idx_closest, norm_distance = _nearest_matches(main_enc, aux_enc)
     else:
-        # Make sure that the column types are string and categorical:
-        main_col_clean = main_table[main_col].astype(str)
-        aux_col_clean = aux_table[aux_col].astype(str)
-
-        if isinstance(main_col, list) and isinstance(aux_col, list):
-            main_col_clean = main_col_clean[main_col].apply(
-                lambda row: "  ".join(row.values.astype(str)), axis=1
-            )
-            aux_col_clean = aux_col_clean[aux_col].apply(
-                lambda row: "  ".join(row.values.astype(str)), axis=1
-            )
-        all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
-
-        if encoder is None:
-            enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-        else:
-            enc = encoder
-
-        enc_cv = enc.fit(all_cats)
-        main_enc = enc_cv.transform(main_col_clean)
-        aux_enc = enc_cv.transform(aux_col_clean)
-
-        all_enc = vstack((main_enc, aux_enc))
-
-        tfidf = TfidfTransformer().fit(all_enc)
-        main_enc = tfidf.transform(main_enc)
-        aux_enc = tfidf.transform(aux_enc)
-
-        # Find nearest neighbor using KNN :
-        neigh = NearestNeighbors(n_neighbors=1)
-
-        neigh.fit(aux_enc)
-        distance, neighbors = neigh.kneighbors(main_enc, return_distance=True)
-        idx_closest = np.ravel(neighbors)
-        # Normalizing distance between 0 and 1:
-        norm_distance = 1 - (distance / 2)
+        main_enc, aux_enc = _string_encoding(
+            main_table,
+            main_cols,
+            aux_table,
+            aux_cols,
+            encoder=encoder,
+            analyzer=analyzer,
+            ngram_range=ngram_range,
+        )
+        idx_closest, norm_distance = _nearest_matches(main_enc, aux_enc)
 
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index
@@ -318,7 +426,7 @@ def fuzzy_join(
         main_table.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
 
     if sort:
-        main_table.sort_values(by=[main_col], inplace=True)
+        main_table.sort_values(by=[main_cols], inplace=True)
 
     # To keep order of columns as in pandas.merge (always left table first)
     if how == "left":

@@ -299,14 +299,14 @@ def test_fj_numerical():
 
 
 def test_fj_multiple_keys():
-    """Test fuzzy joining on multiple keys"""
+    """Test fuzzy joining on multiple keys, unique or mixed types"""
 
     left = pd.DataFrame(
         {
             "str1": ["Paris", "Paris", "Paris"],
             "str2": ["Texas", "France", "Greek God"],
             "int1": [10, 2, 5],
-            "int2": [103, 314, 532],
+            "int2": [103, 250, 532],
         }
     )
     right = pd.DataFrame(
@@ -327,6 +327,16 @@ def test_fj_multiple_keys():
         left, right, left_on=["str1", "str2"], right_on=["str_1", "str_2"]
     )
     assert fj_str.shape == (3, 8)
+
+    # On mixed, numeric and string keys
+    fj_mixed = fuzzy_join(
+        left,
+        right,
+        left_on=["str1", "str2", "int2"],
+        right_on=["str_1", "str_2", "int2"],
+        numerical_match="number",
+    )
+    assert fj_mixed.shape == (3, 8)
 
 
 def test_iterable_input():
