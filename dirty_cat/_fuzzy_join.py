@@ -363,6 +363,15 @@ def fuzzy_join(
         main_cols = right_col
         aux_cols = left_col
 
+    # Warn if presence of missing values
+    if main_table[[main_cols]].isna().any().any():
+        warnings.warn(
+            "You are merging on missing values."
+            " The output correspondence will be random or missing."
+            " To avoid unexpected errors you can drop them.",
+            UserWarning,
+        )
+
     main_num_cols = main_table[main_cols].select_dtypes(include="number").columns
     aux_num_cols = aux_table[aux_cols].select_dtypes(include="number").columns
 
