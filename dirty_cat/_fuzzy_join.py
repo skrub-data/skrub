@@ -387,8 +387,8 @@ def fuzzy_join(
     if numerical_match in ["error"] and any_numeric:
         raise ValueError(
             "The columns you are trying to merge on are of numerical type."
-            " Specify numerical_match as 'string',"
-            " 'number' or 'error'."
+            " Specify numerical_match as 'string'"
+            " or 'number'."
         )
     elif numerical_match in ["number"] and any_numeric and not mixed_types:
         main_enc, aux_enc = _numeric_encoding(
