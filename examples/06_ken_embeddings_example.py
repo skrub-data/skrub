@@ -143,7 +143,7 @@ X_full = fa2.fit_transform(X_full)
 
 ###############################################################################
 # Prediction with base features
-# --------------------------------
+# -----------------------------
 #
 # We will forget for now the KEN Embeddings and build a typical learning
 # pipeline, where will we try to predict the amount of sales only using

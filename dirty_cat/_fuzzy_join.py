@@ -187,9 +187,12 @@ def fuzzy_join(
             f"how should be either 'left' or 'right', got {how!r}",
         )
 
+    if not isinstance(match_score, (int, float)):
+        raise TypeError("match_score has invalid type, expected integer or float")
+
     for param in [on, left_on, right_on]:
         if param is not None and not isinstance(param, str):
-            raise KeyError(
+            raise TypeError(
                 "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
                 " string"
             )
@@ -218,13 +221,18 @@ def fuzzy_join(
         main_col = right_col
         aux_col = left_col
 
-    # Drop missing values in key columns
-    main_table.dropna(subset=[main_col], inplace=True)
-    aux_table.dropna(subset=[aux_col], inplace=True)
-
     # Make sure that the column types are string and categorical:
     main_col_clean = main_table[main_col].astype(str)
     aux_col_clean = aux_table[aux_col].astype(str)
+
+    # Warn if presence of missing values
+    if main_table[main_col].isna().any():
+        warnings.warn(
+            "You are merging on missing values."
+            " The output correspondence will be random or missing."
+            " To avoid unexpected errors you can drop them.",
+            UserWarning,
+        )
 
     all_cats = pd.concat([main_col_clean, aux_col_clean], axis=0).unique()
 
