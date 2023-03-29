@@ -29,7 +29,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     ----------
     tables : list of 2-tuples of (:class:`~pandas.DataFrame`, str)
         List of (table, column name) tuples
-        specyfying the transformer objects to be applied.
+        specifying the transformer objects to be applied.
         table: str
             Name of the table to be joined.
         column: str
