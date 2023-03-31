@@ -273,6 +273,7 @@ sphinx_gallery_conf = {
         # We don't specify the other modules as we use the intershpinx ext.
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
+    "filename_pattern": ".*",
     "examples_dirs": "../examples",
     "gallery_dirs": "auto_examples",
     "within_subsection_order": FileNameSortKey,
