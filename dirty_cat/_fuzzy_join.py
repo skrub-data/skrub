@@ -7,14 +7,14 @@ The principle is as follows:
   neighbor and establish a match.
   3. We match the tables using the previous information.
 Categories from the two tables that share many sub-strings (n-grams)
-have greater probability of beeing matched together. The join is based on
+have greater probability of being matched together. The join is based on
 morphological similarities between strings.
-Joining on numerical columns is also possible based on the euclidean distance.
+Joining on numerical columns is also possible based on the Euclidean distance.
 """
 
 import warnings
 from collections.abc import Iterable
-from typing import List, Literal, Tuple, Union
+from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -51,7 +51,7 @@ def _numeric_encoding(main, main_cols, aux, aux_cols):
     """
     aux_array = aux[aux_cols].to_numpy()
     main_array = main[main_cols].to_numpy()
-    # Reweighting to avoid measure specificity
+    # Re-weighting to avoid measure specificity
     scaler = StandardScaler()
     scaler.fit(np.concatenate((aux_array, main_array)))
     aux_array = scaler.transform(aux_array)
@@ -122,7 +122,7 @@ def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_ra
 
 
 def _nearest_matches(main_array, aux_array):
-    """Finding closest matches using nearest neighbors method.
+    """Find the closest matches using the nearest neighbors method.
 
     Parameters
     ----------
@@ -152,9 +152,9 @@ def fuzzy_join(
     left: pd.DataFrame,
     right: pd.DataFrame,
     how: Literal["left", "right"] = "left",
-    left_on: Union[str, List, None] = None,
-    right_on: Union[str, List, None] = None,
-    on: Union[str, List, None] = None,
+    left_on: Optional[Union[str, List[str], List[int]]] = None,
+    right_on: Optional[Union[str, List[str], List[int]]] = None,
+    on: Union[str, List[str], List[int], None] = None,
     numerical_match: Literal["string", "number", "error"] = "number",
     encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
@@ -180,20 +180,20 @@ def fuzzy_join(
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
-    left_on : str or list, optional, default=None
+    left_on : str or list of str, optional
         Name of left table column(s) to join.
-    right_on : str or list, optional, default=None
+    right_on : str or list of str, optional
         Name of right table key column(s) to join
         with left table key column(s).
-    on : str or list, optional, default=None
+    on : str or list of str or int, optional, default=None
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
     numerical_match: {`string`, `number`, `error`}, optional, default='string'
-        For numerical columns, match with either the euclidean distance
+        For numerical columns, match with either the Euclidean distance
         ("number"), or raise an error ("error"). If "string", uses the
         default n-gram string similarity on the string representation.
-    encoder: Union[Literal["hashing"], _VectorizerMixin], optional, default=None,
+    encoder: Union[Literal["hashing"], _VectorizerMixin], optional,
         Encoder parameter for the Vectorizer.
         Options: {None, `_VectorizerMixin`}. If None, the
         encoder will use the `HashingVectorizer`. It is possible to pass a
@@ -217,7 +217,7 @@ def fuzzy_join(
         In a [0, 1] interval. 1 means that only a perfect match will be
         accepted, and zero means that the closest match will be accepted,
         no matter how distant.
-        For numerical joins, this defines the maximum euclidean distance
+        For numerical joins, this defines the maximum Euclidean distance
         between the matches.
     drop_unmatched : boolean, default=False
         Remove categories for which a match was not found in the two tables.
@@ -319,15 +319,15 @@ def fuzzy_join(
 
     if numerical_match not in ["string", "number", "error"]:
         raise ValueError(
-            "numerical_match should be either 'string', 'number', or 'error', got"
-            f" {numerical_match!r}",
+            "numerical_match should be either 'string', 'number', or 'error', "
+            f"got {numerical_match!r}",
         )
 
     for param in [on, left_on, right_on]:
         if param is not None and not (isinstance(param, Iterable)):
             raise TypeError(
-                "Parameter 'left_on', 'right_on' or 'on' has invalid type, expected"
-                " string or list of column names"
+                "Parameter 'left_on', 'right_on' or 'on' has invalid type,"
+                "expected string or list of column names"
             )
 
     if not isinstance(match_score, (int, float)):
@@ -348,8 +348,8 @@ def fuzzy_join(
         right_col = list(right_on)
     else:
         raise KeyError(
-            "Required parameter missing: either parameter"
-            " 'on' or the pair 'left_on', 'right_on' should be specified."
+            "Required parameter missing: either parameter "
+            "'on' or the pair 'left_on', 'right_on' should be specified."
         )
 
     if how == "left":
@@ -366,9 +366,9 @@ def fuzzy_join(
     # Warn if presence of missing values
     if main_table[main_cols].isna().any().any():
         warnings.warn(
-            "You are merging on missing values."
-            " The output correspondence will be random or missing."
-            " To avoid unexpected errors you can drop them.",
+            "You are merging on missing values. "
+            "The output correspondence will be random or missing. "
+            "To avoid unexpected errors you can drop them. ",
             UserWarning,
         )
 
@@ -386,9 +386,9 @@ def fuzzy_join(
 
     if numerical_match in ["error"] and any_numeric:
         raise ValueError(
-            "The columns you are trying to merge on are of numerical type."
-            " Specify numerical_match as 'string'"
-            " or 'number'."
+            "The columns you are trying to merge on are of numerical type. "
+            "Specify numerical_match as 'string' "
+            "or 'number'. "
         )
     elif numerical_match in ["number"] and any_numeric and not mixed_types:
         main_enc, aux_enc = _numeric_encoding(

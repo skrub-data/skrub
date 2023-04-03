@@ -1,3 +1,5 @@
+from typing import Literal
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,8 +9,10 @@ from dirty_cat import fuzzy_join
 
 
 @pytest.mark.parametrize("analyzer", ["char", "char_wb", "word"])
-def test_fuzzy_join(analyzer):
-    """Testing if fuzzy_join results are as expected."""
+def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]):
+    """
+    Testing if fuzzy_join results are as expected.
+    """
 
     df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
     df2 = pd.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]})
@@ -85,11 +89,13 @@ def test_fuzzy_join_dtypes():
 
 
 @pytest.mark.parametrize(
-    "analyzer, on, how",
+    ["analyzer", "on", "how"],
     [("a_blabla", True, "left"), (1, 3, "right")],
 )
 def test_parameters_error(analyzer, on, how):
-    """Testing if correct errors are raised when wrong parameter values are given."""
+    """
+    Testing if correct errors are raised when wrong parameter values are given.
+    """
     df1 = pd.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
     df2 = pd.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
     with pytest.raises(
@@ -176,8 +182,10 @@ def test_how_param():
 
 
 def test_fuzzy_join_pandas_comparison():
-    """Tests if fuzzy_join's output is as similar as
-    possible with pandas.merge"""
+    """
+    Tests if fuzzy_join's output is as similar as
+    possible with `pandas.merge`.
+    """
     left = pd.DataFrame(
         {
             "key": ["K0", "K1", "K2", "K3"],
@@ -222,10 +230,13 @@ def test_fuzzy_join_pandas_comparison():
 
 
 def test_correct_encoder():
-    """Test that the encoder error checking is working as intended."""
+    """
+    Test that the encoder error checking is working as intended.
+    """
 
     class TestVectorizer(HashingVectorizer):
-        """Implements a custom vectorizer to check if the `encoder`
+        """
+        Implements a custom vectorizer to check if the `encoder`
         parameter uses the passed instance as expected.
         Raises an error when `fit` is called.
         """
@@ -260,8 +271,10 @@ def test_correct_encoder():
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
 
 
-def test_fj_numerical():
-    """Testing if fuzzy_join results are as expected."""
+def test_numerical_column():
+    """
+    Testing that fuzzy_join works with numerical columns.
+    """
 
     left = pd.DataFrame({"str1": ["aa", "a", "bb"], "int": [10, 2, 5]})
     right = pd.DataFrame(
@@ -298,8 +311,10 @@ def test_fj_numerical():
         fuzzy_join(left, right, on="int", numerical_match="error")
 
 
-def test_fj_multiple_keys():
-    """Test fuzzy joining on multiple keys, unique or mixed types"""
+def test_multiple_keys():
+    """
+    Test fuzzy joining on multiple keys with possibly mixed types.
+    """
 
     left = pd.DataFrame(
         {
@@ -340,7 +355,9 @@ def test_fj_multiple_keys():
 
 
 def test_iterable_input():
-    """Test if iterable input: list, set, dictionnary or tuple works"""
+    """
+    Test if iterable input: list, set, dictionary or tuple works.
+    """
     df1 = pd.DataFrame(
         {"a": ["ana", "lala", "nana"], "str2": ["Texas", "France", "Greek God"]}
     )
