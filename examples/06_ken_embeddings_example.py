@@ -9,7 +9,7 @@ sources may be the key to improving the analysis.
 Embeddings, or vectorial representations of entities, are a conveniant way to
 capture and summarize the information on an entity.
 Relational data embeddings capture all common entities from Wikipedia. [#]_
-These will be called `KEN Embeddings` in the following example.
+These will be called `KEN embeddings` in the following example.
 
 We will see that these embeddings of common entities significantly
 improve our results.
@@ -29,9 +29,6 @@ improve our results.
  .. |MinHash| replace::
      :class:`~dirty_cat.MinHashEncoder`
 
- .. |KEN| replace::
-     :class:`~dirty_cat.datasets.get_ken_embeddings`
-
  .. |HGBR| replace::
      :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 """
@@ -40,8 +37,8 @@ improve our results.
 # The data
 # --------
 #
-# We will take a look at the Video Game sales dataset.
-# We first retrieve the dataset:
+# We will take a look at the video game sales dataset.
+# Let's retrieve the dataset:
 import pandas as pd
 
 X = pd.read_csv(
@@ -49,12 +46,12 @@ X = pd.read_csv(
     sep=";",
     on_bad_lines="skip",
 )
-# We shuffle the data
+# Shuffle the data
 X = X.sample(frac=1, random_state=11, ignore_index=True)
 X.head(3)
 
 ###############################################################################
-# Our goal will be to predict y, our target column (the sales amount):
+# Our goal will be to predict the sales amount (y, our target column):
 y = X["Global_Sales"]
 y
 
@@ -69,7 +66,7 @@ sns.histplot(y)
 plt.show()
 
 ###############################################################################
-# It seems better to take the log of sales rather than the sales amount itself:
+# It seems better to take the log of sales rather than the absolute values:
 import numpy as np
 
 y = np.log(y)
@@ -77,25 +74,42 @@ sns.histplot(y)
 plt.show()
 
 ###############################################################################
-# Now, let's carry out some basic preprocessing:
+# Before moving further, let's carry out some basic preprocessing:
 
 # Get a mask of the rows with missing values in "Publisher" and "Global_Sales"
-mask1 = X.isna()["Publisher"]
-mask2 = X.isna()["Global_Sales"]
+mask = X.isna()["Publisher"] & X.isna()["Global_Sales"]
 # And remove them
 X.dropna(subset=["Publisher", "Global_Sales"], inplace=True)
-y = y[~mask1]
-y = y[~mask2]
+y = y[~mask]
 
 ###############################################################################
 # Extracting entity embeddings
 # ----------------------------
-# We will use the |KEN| function to extract the embeddings
-# of entities we need:
+# We will use KEN embeddings to enrich our data.
+# First off, we'll check out the available tables with
+# :class:`~dirty_cat.datasets.get_ken_table_aliases`:
+from dirty_cat.datasets import get_ken_table_aliases
+
+get_ken_table_aliases()
+
+###############################################################################
+# The *games* table should be the most interesting in our case.
+# Let's see what kind of types we can find in it with the function
+# :class:`~dirty_cat.datasets.get_ken_types`:
+from dirty_cat.datasets import get_ken_types
+
+get_ken_types(embedding_table_id="games")
+
+###############################################################################
+# Interesting, we have a broad range of topics!
+#
+# Next up: we will use :class:`~dirty_cat.datasets.get_ken_embeddings`
+# to extract the embeddings of entities we need:
 from dirty_cat.datasets import get_ken_embeddings
 
 ###############################################################################
-# KEN Embeddings are classified by types. The |KEN| function
+# KEN Embeddings are classified by types.
+# The :class:`~dirty_cat.datasets.get_ken_embeddings` function
 # allows us to specify the types to be included and/or excluded
 # so as not to load all Wikipedia entity embeddings in a table.
 #
