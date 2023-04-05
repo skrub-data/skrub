@@ -306,7 +306,7 @@ def test_numerical_column():
 
     with pytest.raises(
         ValueError,
-        match=r"The columns you are trying ",
+        match=r"The columns you are trying to merge on are of numerical type.",
     ):
         fuzzy_join(left, right, on="int", numerical_match="error")
 
