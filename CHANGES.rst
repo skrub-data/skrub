@@ -10,6 +10,12 @@ Major changes
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` now perform joins on missing values as in `pandas.merge`
 but raises a warning. :pr:`522` and :pr:`529` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+Minor changes
+-------------
+* Improvement of date column detection and date format inference in :class:`TableVectorizer`. The
+format inference now finds a format which works for all non-missing values of the column, instead
+of relying on pandas behavior. If no such format exists, the column is not casted to a date column.
+
 Release 0.4.0
 =============
 

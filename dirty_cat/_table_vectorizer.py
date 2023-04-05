@@ -19,7 +19,7 @@ from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat._utils import parse_version
+from dirty_cat._utils import _infer_date_format, parse_version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -425,12 +425,9 @@ class TableVectorizer(ColumnTransformer):
                 except (ValueError, TypeError):
                     # Only try to convert to datetime
                     # if the variable isn't numeric.
-                    try:
-                        X[col] = pd.to_datetime(
-                            X[col], errors="raise", infer_datetime_format=True
-                        )
-                    except (ValueError, TypeError):
-                        pass
+                    format = _infer_date_format(X[col])
+                    if format is not None:
+                        X[col] = pd.to_datetime(X[col], errors="raise", format=format)
             # Cast pandas dtypes to numpy dtypes
             # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
