@@ -1,7 +1,7 @@
 """
 Get the Wikipedia embeddings for feature augmentation.
 """
-from typing import Literal, Optional, Set, Union
+from typing import Optional, Set
 
 import pandas as pd
 from sklearn.decomposition import PCA
