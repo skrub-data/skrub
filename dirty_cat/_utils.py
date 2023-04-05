@@ -81,6 +81,12 @@ def _infer_date_format(date_column, n_trials=100) -> str:
         A column of dates, as strings.
     n_trials : int, default=100
         Number of rows to use to infer the date format.
+
+    Returns
+    -------
+    date_format : str
+        The date format inferred from the column.
+        If no format could be inferred, returns None.
     """
     # shuffle the column to avoid bias
     date_column_shuffled = date_column.sample(frac=1, random_state=42)
@@ -88,7 +94,6 @@ def _infer_date_format(date_column, n_trials=100) -> str:
     date_column_shuffled = date_column_shuffled.dropna()
     # TODO for speed, we could filter for rows which have an
     # higher chance of resolving ambiguity (with number greater than 12)
-    # try to infer the date format
     # select the first n_trials rows
     date_column_sample = date_column_shuffled.iloc[:n_trials]
     # try to infer the date format
