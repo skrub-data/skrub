@@ -273,6 +273,7 @@ sphinx_gallery_conf = {
         # We don't specify the other modules as we use the intershpinx ext.
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
+    "filename_pattern": ".*",
     "examples_dirs": "../examples",
     "gallery_dirs": "auto_examples",
     "within_subsection_order": FileNameSortKey,
@@ -308,7 +309,7 @@ numpydoc_class_members_toctree = False
 autodoc_typehints = "none"
 
 # -- The javascript to highlight the toc as we scroll ----------------------
-html_js_files = ["scrolltoc.js"]
+html_js_files = ["scrolltoc.js", "stable_doc_redirect.js"]
 
 # -- github links --------------------------------------
 
