@@ -21,7 +21,7 @@ _correspondence_table_url = (
 def get_ken_table_aliases() -> Set[str]:
     """Get the supported aliases of embedded entities tables.
 
-    These aliases can be using in subsequent functions (see section *See Also*)
+    These aliases can be using in subsequent functions (see section *See Also*).
 
     Returns
     -------
@@ -30,9 +30,9 @@ def get_ken_table_aliases() -> Set[str]:
 
     See Also
     --------
-    :class:`~dirty_cat.datasets.get_ken_types`
+    :func:`get_ken_types`
         Helper function to search for entity types.
-    :class:`~dirty_cat.datasets.get_ken_embeddings`
+    :func:`get_ken_embeddings`
         Download Wikipedia embeddings by type.
     """
     correspondence = pd.read_csv(_correspondence_table_url)
@@ -42,9 +42,7 @@ def get_ken_table_aliases() -> Set[str]:
 def get_ken_types(
     search: str = None,
     *,
-    embedding_table_id: Literal[
-        "all_entities", "albums", "companies", "movies", "games", "school"
-    ] = "all_entities",
+    embedding_table_id: str = "all_entities",
 ):
     """Helper function to search for entity types.
 
@@ -52,21 +50,19 @@ def get_ken_types(
     ----------
     search : str, optional
         Substring pattern that filters the types of entities.
-    embedding_table_id : {"all_entities", "albums", "companies", "movies", "games", "school"}, optional, default='all_entities'
+    embedding_table_id : str, optional, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
-        See correspondence table
-        (https://github.com/dirty-cat/datasets/blob/master/data/ken_correspondence.csv)
-        for the figshare ID's of the tables.
+        Get the supported tables with :func:`get_ken_table_aliases`.
         It is NOT possible to pass a custom figshare ID.
 
     Returns
     -------
-    types: class:`~pandas.DataFrame`
+    :class:`~pandas.DataFrame`
         The types of entities containing the substring.
 
     See Also
     --------
-    :class:`~dirty_cat.datasets.get_ken_embeddings
+    :func:`get_ken_embeddings`
         Download Wikipedia embeddings by type.
 
     References
@@ -77,8 +73,7 @@ def get_ken_types(
 
     Notes
     -----
-    Best used in conjunction with
-    :class:`~dirty_cat.datasets.get_ken_embeddings`.
+    Best used in conjunction with :func:`get_ken_embeddings`.
 
     """
     correspondence = pd.read_csv(_correspondence_table_url)
@@ -99,9 +94,7 @@ def get_ken_types(
 def get_ken_embeddings(
     types: Optional[str] = None,
     exclude: Optional[str] = None,
-    embedding_table_id: Union[
-        Literal["all_entities", "albums", "companies", "movies", "games", "school"], str
-    ] = "all_entities",  # noqa
+    embedding_table_id: str = "all_entities",
     embedding_type_id: Optional[str] = None,
     pca_components: Optional[int] = None,
     suffix: str = "",
@@ -119,11 +112,9 @@ def get_ken_embeddings(
         Write in lowercase. If None, all types will be passed.
     exclude : str, optional
         Type of embeddings to exclude from the types search.
-    embedding_table_id : {"all_entities", "albums", "companies", "movies", "games", "school"} or str, optional, default='all_entities'
+    embedding_table_id : str, optional, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
-        See correspondence table
-        (https://github.com/dirty-cat/datasets/blob/master/data/ken_correspondence.csv)
-        for the figshare ID's of the tables.
+        Get the supported tables with :func:`get_ken_table_aliases`.
         It is also possible to pass a custom figshare ID.
     embedding_type_id : str, optional
         Figshare ID of the file containing the type of embeddings. Ignored
@@ -137,12 +128,12 @@ def get_ken_embeddings(
 
     Returns
     -------
-    embeddings: class:`~pandas.DataFrame`
+    :class:`~pandas.DataFrame`
         The embeddings of entities and the specified type from Wikipedia.
 
     See Also
     --------
-    :class:`~dirty_cat.fuzzy_join` :
+    :func:`~dirty_cat.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
     :class:`~dirty_cat.FeatureAugmenter` :
         Transformer to enrich a given table via one or more fuzzy joins to
