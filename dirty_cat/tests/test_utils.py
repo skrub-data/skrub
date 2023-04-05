@@ -90,7 +90,7 @@ def test__infer_date_format():
     assert _infer_date_format(date_column) is None
 
     # Test with an empty column
-    date_column = pd.Series([])
+    date_column = pd.Series([], dtype="object")
     assert _infer_date_format(date_column) is None
 
     # Test with a column containing only NaN values

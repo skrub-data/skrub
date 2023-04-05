@@ -3,7 +3,6 @@ import warnings
 from typing import Any, Hashable
 
 import numpy as np
-import pandas as pd
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from sklearn.utils import check_array
 
@@ -88,70 +87,46 @@ def _infer_date_format(date_column, n_trials=100) -> str:
         The date format inferred from the column.
         If no format could be inferred, returns None.
     """
-    # shuffle the column to avoid bias
-    date_column_shuffled = date_column.sample(frac=1, random_state=42)
-    # remove nan values
-    date_column_shuffled = date_column_shuffled.dropna()
-    # TODO for speed, we could filter for rows which have an
-    # higher chance of resolving ambiguity (with number greater than 12)
-    # select the first n_trials rows
-    date_column_sample = date_column_shuffled.iloc[:n_trials]
-    # try to infer the date format
-    date_format = date_column_sample.apply(lambda x: guess_datetime_format(x))
-    # if one format is None, return None
-    if date_format.isnull().any() or not len(date_format):
+    if len(date_column) == 0:
         return None
-    elif date_format.nunique() == 1:
-        # one format works for all the rows
-        # check if another format works for all the rows
-        # if so, raise a warning
+    date_column_sample = date_column.dropna().sample(
+        frac=min(n_trials / len(date_column), 1), random_state=42
+    )
+    # try to infer the date format
+    # see if either dayfirst or monthfirst works for all the rows
+    with warnings.catch_warnings():
+        # pandas warns when dayfirst is not strictly applied
+        warnings.simplefilter("ignore")
+        date_format_monthfirst = date_column_sample.apply(
+            lambda x: guess_datetime_format(x)
+        )
         date_format_dayfirst = date_column_sample.apply(
             lambda x: guess_datetime_format(x, dayfirst=True),
         )
-        # if it worked for all the rows, date_format.nunique() == 1
-        if date_format.nunique() == 1:
+    # if one row could not be parsed, return None
+    if date_format_monthfirst.isnull().any() or date_format_dayfirst.isnull().any():
+        return None
+    # even with dayfirst=True, monthfirst format can be inferred
+    # so we need to check if the format is the same for all the rows
+    elif date_format_monthfirst.nunique() == 1:
+        # one monthfirst format works for all the rows
+        # check if another format works for all the rows
+        # if so, raise a warning
+        if date_format_dayfirst.nunique() == 1:
             warnings.warn(
                 f"""
-                Both {date_format[0]} and {date_format_dayfirst[0]} are valid
+                Both {date_format_monthfirst[0]} and {date_format_dayfirst[0]} are valid
                 formats for the dates in column {date_column.name}.
-                Format {date_format[0]} will be used.
+                Format {date_format_monthfirst[0]} will be used.
                 """,
                 UserWarning,
                 stacklevel=2,
             )
-        return date_format[0]
-    elif date_format.nunique() > 2:
-        return None  # TODO: handle this case?
-    # otherwise, find if one of the two
-    # format works for all the rows
+        return date_format_monthfirst[0]
+    elif date_format_dayfirst.nunique() == 1:
+        # only this format works for all the rows
+        return date_format_dayfirst[0]
     else:
-        date_format = date_format.dropna().unique()
-        first_format_works = False
-        second_format_works = False
-        try:
-            pd.to_datetime(date_column_sample, format=date_format[0], errors="raise")
-            first_format_works = True
-        except ValueError:
-            pass
-        try:
-            pd.to_datetime(date_column_sample, format=date_format[1], errors="raise")
-            second_format_works = True
-        except ValueError:
-            pass
-        if first_format_works and second_format_works:
-            warnings.warn(
-                f"""
-                Both {date_format[0]} and {date_format[1]} are valid
-                formats for the dates in column {date_column.name}.
-                Format {date_format[0]} will be used.
-                """,
-                UserWarning,
-                stacklevel=2,
-            )
-            return date_format[0]
-        elif first_format_works:
-            return date_format[0]
-        elif second_format_works:
-            return date_format[1]
-        else:
-            return None
+        # more than two different formats were found
+        # TODO: maybe we could deal with this case
+        return None
