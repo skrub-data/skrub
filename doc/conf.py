@@ -309,7 +309,7 @@ numpydoc_class_members_toctree = False
 autodoc_typehints = "none"
 
 # -- The javascript to highlight the toc as we scroll ----------------------
-html_js_files = ["scrolltoc.js"]
+html_js_files = ["scrolltoc.js", "stable_doc_redirect.js"]
 
 # -- github links --------------------------------------
 
