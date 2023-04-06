@@ -3,6 +3,7 @@ import warnings
 from typing import Any, Hashable, Optional
 
 import numpy as np
+import pandas as pd
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from sklearn.utils import check_array
 
