@@ -43,7 +43,6 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[
         The date format inferred from the column.
         If no format could be inferred, returns None.
     """
-
     if len(date_column) == 0:
         return
     date_column_sample = date_column.dropna().sample(
