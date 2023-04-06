@@ -1,6 +1,6 @@
 import collections
 import warnings
-from typing import Any, Hashable
+from typing import Any, Hashable, Optional
 
 import numpy as np
 from pandas._libs.tslibs.parsing import guess_datetime_format
@@ -70,25 +70,25 @@ def check_input(X) -> np.ndarray:
     return X_
 
 
-def _infer_date_format(date_column, n_trials=100) -> str:
+def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[str]:
     """Infer the date format of a date column,
     by finding a format which should work for all dates in the column.
 
     Parameters
     ----------
-    date_column : pandas.Series
+    date_column : :class:`~pandas.Series`
         A column of dates, as strings.
     n_trials : int, default=100
         Number of rows to use to infer the date format.
 
     Returns
     -------
-    date_format : str
+    Optional[str]
         The date format inferred from the column.
         If no format could be inferred, returns None.
     """
     if len(date_column) == 0:
-        return None
+        return
     date_column_sample = date_column.dropna().sample(
         frac=min(n_trials / len(date_column), 1), random_state=42
     )
@@ -105,7 +105,7 @@ def _infer_date_format(date_column, n_trials=100) -> str:
         )
     # if one row could not be parsed, return None
     if date_format_monthfirst.isnull().any() or date_format_dayfirst.isnull().any():
-        return None
+        return
     # even with dayfirst=True, monthfirst format can be inferred
     # so we need to check if the format is the same for all the rows
     elif date_format_monthfirst.nunique() == 1:
@@ -129,4 +129,4 @@ def _infer_date_format(date_column, n_trials=100) -> str:
     else:
         # more than two different formats were found
         # TODO: maybe we could deal with this case
-        return None
+        return
