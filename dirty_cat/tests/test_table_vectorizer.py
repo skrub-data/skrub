@@ -246,6 +246,8 @@ def test_auto_cast() -> None:
 
     # Test datetime detection
     X = _get_datetimes_dataframe()
+    # Add weird index to test that it's not used
+    X.index = [10, 3, 4, 2, 5]
 
     expected_types_datetimes = {
         "pd_datetime": "datetime64[ns]",
