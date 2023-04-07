@@ -70,20 +70,20 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[
         # if so, raise a warning
         if date_format_dayfirst.nunique() == 1:
             # check if monthfirst and dayfirst haven't found the same format
-            if date_format_monthfirst[0] != date_format_dayfirst[0]:
+            if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
                 warnings.warn(
                     f"""
-                    Both {date_format_monthfirst[0]} and {date_format_dayfirst[0]} are valid
+                    Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
                     formats for the dates in column {date_column.name}.
-                    Format {date_format_monthfirst[0]} will be used.
+                    Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
                     stacklevel=2,
                 )
-        return date_format_monthfirst[0]
+        return date_format_monthfirst.iloc[0]
     elif date_format_dayfirst.nunique() == 1:
         # only this format works for all the rows
-        return date_format_dayfirst[0]
+        return date_format_dayfirst.iloc[0]
     else:
         # more than two different formats were found
         # TODO: maybe we could deal with this case
