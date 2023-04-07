@@ -12,6 +12,13 @@ Major changes
 * Added :func:`get_ken_table_aliases` and :func:`get_ken_types` for exploring
   KEN embeddings. :pr:`539` by :user:`Lilian Boulard`.
 
+Minor changes
+-------------
+* Improvement of date column detection and date format inference in :class:`TableVectorizer`. The
+format inference now finds a format which works for all non-missing values of the column, instead
+of relying on pandas behavior. If no such format exists, the column is not casted to a date column.
+:pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
+
 Release 0.4.0
 =============
 

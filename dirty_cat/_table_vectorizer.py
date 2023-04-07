@@ -3,13 +3,14 @@ Implements the TableVectorizer: a preprocessor to automatically apply
 transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
-
+import warnings
 from typing import Dict, List, Literal, Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
 import pandas as pd
 import sklearn
+from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
 from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
@@ -23,6 +24,70 @@ from dirty_cat._utils import parse_version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
+
+
+def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[str]:
+    """Infer the date format of a date column,
+    by finding a format which should work for all dates in the column.
+
+    Parameters
+    ----------
+    date_column : :class:`~pandas.Series`
+        A column of dates, as strings.
+    n_trials : int, default=100
+        Number of rows to use to infer the date format.
+
+    Returns
+    -------
+    Optional[str]
+        The date format inferred from the column.
+        If no format could be inferred, returns None.
+    """
+    if len(date_column) == 0:
+        return
+    date_column_sample = date_column.dropna().sample(
+        frac=min(n_trials / len(date_column), 1), random_state=42
+    )
+    # try to infer the date format
+    # see if either dayfirst or monthfirst works for all the rows
+    with warnings.catch_warnings():
+        # pandas warns when dayfirst is not strictly applied
+        warnings.simplefilter("ignore")
+        date_format_monthfirst = date_column_sample.apply(
+            lambda x: guess_datetime_format(x)
+        )
+        date_format_dayfirst = date_column_sample.apply(
+            lambda x: guess_datetime_format(x, dayfirst=True),
+        )
+    # if one row could not be parsed, return None
+    if date_format_monthfirst.isnull().any() or date_format_dayfirst.isnull().any():
+        return
+    # even with dayfirst=True, monthfirst format can be inferred
+    # so we need to check if the format is the same for all the rows
+    elif date_format_monthfirst.nunique() == 1:
+        # one monthfirst format works for all the rows
+        # check if another format works for all the rows
+        # if so, raise a warning
+        if date_format_dayfirst.nunique() == 1:
+            # check if monthfirst and dayfirst haven't found the same format
+            if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
+                warnings.warn(
+                    f"""
+                    Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
+                    formats for the dates in column {date_column.name}.
+                    Format {date_format_monthfirst.iloc[0]} will be used.
+                    """,
+                    UserWarning,
+                    stacklevel=2,
+                )
+        return date_format_monthfirst.iloc[0]
+    elif date_format_dayfirst.nunique() == 1:
+        # only this format works for all the rows
+        return date_format_dayfirst.iloc[0]
+    else:
+        # more than two different formats were found
+        # TODO: maybe we could deal with this case
+        return
 
 
 def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
@@ -425,12 +490,9 @@ class TableVectorizer(ColumnTransformer):
                 except (ValueError, TypeError):
                     # Only try to convert to datetime
                     # if the variable isn't numeric.
-                    try:
-                        X[col] = pd.to_datetime(
-                            X[col], errors="raise", infer_datetime_format=True
-                        )
-                    except (ValueError, TypeError):
-                        pass
+                    format = _infer_date_format(X[col])
+                    if format is not None:
+                        X[col] = pd.to_datetime(X[col], errors="raise", format=format)
             # Cast pandas dtypes to numpy dtypes
             # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):

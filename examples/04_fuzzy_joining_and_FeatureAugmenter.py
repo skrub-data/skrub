@@ -160,27 +160,10 @@ df1.tail(20)
 # Let's do some more inspection of the merging done.
 
 ###############################################################################
-# The best way to inspect the matches is to use the following function:
-import numpy as np
-
-
-def print_worst_matches(joined_table, n=5):
-    """Prints n worst matches for inspection."""
-    max_ind = np.argsort(joined_table["matching_score"], axis=0)[:n]
-    max_dist = pd.Series(
-        joined_table["matching_score"][max_ind.ravel()].ravel(),
-        index=max_ind.ravel(),
-    )
-    worst_matches = joined_table.iloc[list(max_ind.ravel())]
-    worst_matches = worst_matches.assign(matching_score=max_dist)
-    return worst_matches
-
-
-###############################################################################
 # Let's print the four worst matches, which will give
 # us an overview of the situation:
 
-print_worst_matches(df1, n=4)
+df1.sort_values("matching_score").head(4)
 
 ###############################################################################
 # We see that some matches were unsuccesful
@@ -199,7 +182,7 @@ df1 = fuzzy_join(
     match_score=0.35,
     return_score=True,
 )
-print_worst_matches(df1, n=4)
+df1.sort_values("matching_score").head(4)
 
 ###############################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
@@ -428,7 +411,7 @@ encoder = make_column_transformer(
 pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
 
 ##########################################################################
-# And the best part is that we are now able to evaluate the paramaters of the |fj|.
+# And the best part is that we are now able to evaluate the parameters of the |fj|.
 # For instance, the ``match_score`` was manually picked and can now be
 # introduced into a grid search:
 

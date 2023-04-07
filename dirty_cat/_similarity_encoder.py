@@ -521,7 +521,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         if parse_version(sklearn.__version__) >= parse_version("1.1.0"):
             self._infrequent_enabled = False
-        if parse_version(sklearn.__version__) >= parse_version("1.2.0"):
+        if parse_version(sklearn.__version__) >= parse_version("1.2.2"):
             self.drop_idx_ = self._set_drop_idx()
         else:
             self.drop_idx_ = self._compute_drop_idx()
