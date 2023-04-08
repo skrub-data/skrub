@@ -24,8 +24,10 @@ from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
 from pyarrow.parquet import ParquetFile
+from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 
+from dirty_cat._utils import parse_version
 from dirty_cat.datasets._utils import get_data_dir
 
 # Directory where the ``.gz`` files containing the
@@ -426,10 +428,26 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) ->
     # which behaves just like a ``namedtuple``.
     # However, we do not want to save this data into memory:
     # we will read it from the disk later.
+    kwargs = {}
+    if parse_version("1.2") <= parse_version(sklearn_version) < parse_version("1.2.2"):
+        # Avoid the warning, but don't use auto yet because of
+        # https://github.com/scikit-learn/scikit-learn/issues/25478
+        kwargs.update(
+            {
+                "parser": "liac-arff",
+            }
+        )
+    elif parse_version(sklearn_version) >= parse_version("1.2.2"):
+        kwargs.update(
+            {
+                "parser": "auto",
+            }
+        )
     fetch_openml(
         data_id=dataset_id,
         data_home=str(data_directory),
         as_frame=True,
+        **kwargs,
     )
 
 
