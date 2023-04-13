@@ -34,6 +34,10 @@ def get_ken_table_aliases() -> Set[str]:
         Helper function to search for entity types.
     :func:`get_ken_embeddings`
         Download Wikipedia embeddings by type.
+
+    Notes
+    -----
+    Requires and Internet connection to work.
     """
     correspondence = pd.read_csv(_correspondence_table_url)
     return set(["all_entities"] + list(correspondence["table"].values))
@@ -42,14 +46,19 @@ def get_ken_table_aliases() -> Set[str]:
 def get_ken_types(
     search: str = None,
     *,
+    exclude: Optional[str] = None,
     embedding_table_id: str = "all_entities",
 ):
     """Helper function to search for entity types.
+
+    The result can then be used with :func:`get_ken_embeddings`.
 
     Parameters
     ----------
     search : str, optional
         Substring pattern that filters the types of entities.
+    exclude : str, optional
+        Substring pattern to exclude from the search.
     embedding_table_id : str, optional, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
         Get the supported tables with :func:`get_ken_table_aliases`.
@@ -86,13 +95,17 @@ def get_ken_types(
     ]["unique_types_figshare_id"].values[0]
     unique_types = fetch_figshare(unique_types_figshare_id)
     if search is None:
-        return unique_types.X
+        search_result = unique_types.X
     else:
-        return unique_types.X[unique_types.X["Type"].str.contains(search)]
+        search_result = unique_types.X[unique_types.X["Type"].str.contains(search)]
+    if exclude is not None:
+        search_result = search_result[~search_result["Type"].str.contains(exclude)]
+    return search_result
 
 
 def get_ken_embeddings(
     types: Optional[str] = None,
+    *,
     exclude: Optional[str] = None,
     embedding_table_id: str = "all_entities",
     embedding_type_id: Optional[str] = None,
@@ -117,8 +130,9 @@ def get_ken_embeddings(
         Get the supported tables with :func:`get_ken_table_aliases`.
         It is also possible to pass a custom figshare ID.
     embedding_type_id : str, optional
-        Figshare ID of the file containing the type of embeddings. Ignored
-        unless a custom `embedding_table_id` is provided.
+        Figshare ID of the file containing the type of embeddings.
+        Get the supported tables with :func:`get_ken_types`.
+        Ignored unless a custom `embedding_table_id` is provided.
     pca_components : int, optional
         Size of the dimensional space on which the embeddings will be projected
         by a principal component analysis.
@@ -133,6 +147,10 @@ def get_ken_embeddings(
 
     See Also
     --------
+    :func:`get_ken_table_aliases`
+        Get the supported aliases of embedded entities tables.
+    :func:`get_ken_types`
+        Helper function to search for entity types.
     :func:`~dirty_cat.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
     :class:`~dirty_cat.FeatureAugmenter` :
