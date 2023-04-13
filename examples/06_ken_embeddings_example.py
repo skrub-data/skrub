@@ -77,7 +77,7 @@ plt.show()
 # Before moving further, let's carry out some basic preprocessing:
 
 # Get a mask of the rows with missing values in "Publisher" and "Global_Sales"
-mask = X.isna()["Publisher"] & X.isna()["Global_Sales"]
+mask = X.isna()["Publisher"] | X.isna()["Global_Sales"]
 # And remove them
 X.dropna(subset=["Publisher", "Global_Sales"], inplace=True)
 y = y[~mask]
@@ -85,15 +85,17 @@ y = y[~mask]
 ###############################################################################
 # Extracting entity embeddings
 # ----------------------------
+#
 # We will use KEN embeddings to enrich our data.
-# First off, we'll check out the available tables with
+#
+# We will start by checking out the available tables with
 # :class:`~dirty_cat.datasets.get_ken_table_aliases`:
 from dirty_cat.datasets import get_ken_table_aliases
 
 get_ken_table_aliases()
 
 ###############################################################################
-# The *games* table should be the most interesting in our case.
+# The *games* table is the most relevant to our case.
 # Let's see what kind of types we can find in it with the function
 # :class:`~dirty_cat.datasets.get_ken_types`:
 from dirty_cat.datasets import get_ken_types
@@ -103,7 +105,7 @@ get_ken_types(embedding_table_id="games")
 ###############################################################################
 # Interesting, we have a broad range of topics!
 #
-# Next up: we will use :class:`~dirty_cat.datasets.get_ken_embeddings`
+# Next, we'll use :class:`~dirty_cat.datasets.get_ken_embeddings`
 # to extract the embeddings of entities we need:
 from dirty_cat.datasets import get_ken_embeddings
 
