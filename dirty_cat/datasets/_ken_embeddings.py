@@ -1,20 +1,117 @@
 """
 Get the Wikipedia embeddings for feature augmentation.
 """
+from typing import Optional, Set
+
 import pandas as pd
 from sklearn.decomposition import PCA
 
 from dirty_cat.datasets import fetch_figshare
 
+# Required for ignoring lines too long in the docstrings
+# flake8: noqa: E501
+
+
+_correspondence_table_url = (
+    "https://raw.githubusercontent.com/dirty-cat/datasets"
+    "/master/data/ken_correspondence.csv"
+)
+
+
+def get_ken_table_aliases() -> Set[str]:
+    """Get the supported aliases of embedded entities tables.
+
+    These aliases can be using in subsequent functions (see section *See Also*).
+
+    Returns
+    -------
+    aliases: set of str
+        The aliases of the embedded entities tables.
+
+    See Also
+    --------
+    :func:`get_ken_types`
+        Helper function to search for entity types.
+    :func:`get_ken_embeddings`
+        Download Wikipedia embeddings by type.
+
+    Notes
+    -----
+    Requires an Internet connection to work.
+    """
+    correspondence = pd.read_csv(_correspondence_table_url)
+    return set(["all_entities"] + list(correspondence["table"].values))
+
+
+def get_ken_types(
+    search: str = None,
+    *,
+    exclude: Optional[str] = None,
+    embedding_table_id: str = "all_entities",
+):
+    """Helper function to search for entity types.
+
+    The result can then be used with :func:`get_ken_embeddings`.
+
+    Parameters
+    ----------
+    search : str, optional
+        Substring pattern that filters the types of entities.
+    exclude : str, optional
+        Substring pattern to exclude from the search.
+    embedding_table_id : str, optional, default='all_entities'
+        Table of embedded entities from which to extract the embeddings.
+        Get the supported tables with :func:`get_ken_table_aliases`.
+        It is NOT possible to pass a custom figshare ID.
+
+    Returns
+    -------
+    :class:`~pandas.DataFrame`
+        The types of entities containing the substring.
+
+    See Also
+    --------
+    :func:`get_ken_embeddings`
+        Download Wikipedia embeddings by type.
+
+    References
+    ----------
+    For more details, see Cvetkov-Iliev, A., Allauzen, A. & Varoquaux, G.:
+    `Relational data embeddings for feature enrichment
+    with background information. <https://doi.org/10.1007/s10994-022-06277-7>`_
+
+    Notes
+    -----
+    Best used in conjunction with :func:`get_ken_embeddings`.
+
+    """
+    correspondence = pd.read_csv(_correspondence_table_url)
+    if embedding_table_id not in get_ken_table_aliases():
+        raise ValueError(
+            f"The embedding_table_id must be one of {correspondence['table'].unique()}."
+        )
+    unique_types_figshare_id = correspondence[
+        correspondence["table"] == embedding_table_id
+    ]["unique_types_figshare_id"].values[0]
+    unique_types = fetch_figshare(unique_types_figshare_id)
+    if search is None:
+        search_result = unique_types.X
+    else:
+        search_result = unique_types.X[unique_types.X["Type"].str.contains(search)]
+    if exclude is not None:
+        search_result = search_result[~search_result["Type"].str.contains(exclude)]
+    return search_result
+
 
 def get_ken_embeddings(
-    types=None,
-    exclude=None,
-    embedding_table_id="all_entities",
-    embedding_type_id=None,
-    pca_components=None,
-    suffix="",
-):
+    types: Optional[str] = None,
+    *,
+    exclude: Optional[str] = None,
+    embedding_table_id: str = "all_entities",
+    embedding_type_id: Optional[str] = None,
+    pca_components: Optional[int] = None,
+    suffix: str = "",
+) -> pd.DataFrame:
     """Download Wikipedia embeddings by type.
 
     More details on the embeddings can be found on
@@ -22,36 +119,39 @@ def get_ken_embeddings(
 
     Parameters
     ----------
-    types : str, optional, default=None
+    types : str, optional
         Substring pattern that filters the types of entities.
         Will keep all entity types containing the substring.
         Write in lowercase. If None, all types will be passed.
-    exclude : str, optional, default=None
+    exclude : str, optional
         Type of embeddings to exclude from the types search.
-    embedding_table_id : {"all_entities", "albums", "companies", "movies", "games", "school"} or str, optional, default='all_entities' # noqa
+    embedding_table_id : str, optional, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
-        See correspondence table
-        (https://github.com/dirty-cat/datasets/blob/master/data/ken_correspondence.csv)
-        for the figshare ID's of the tables.
-        It is also possible to introduce a custom figshare ID.
-    embedding_type_id : str, optional, default=None
-        Figshare ID of the file containing the type of embeddings. Ignored
-        unless a custom `embedding_table_id` is provided.
-    pca_components : int, optional, default=None
+        Get the supported tables with :func:`get_ken_table_aliases`.
+        It is also possible to pass a custom figshare ID.
+    embedding_type_id : str, optional
+        Figshare ID of the file containing the type of embeddings.
+        Get the supported tables with :func:`get_ken_types`.
+        Ignored unless a custom `embedding_table_id` is provided.
+    pca_components : int, optional
         Size of the dimensional space on which the embeddings will be projected
         by a principal component analysis.
-        If None, the default dimension (200) of the embeddins will be kept.
+        If None, the default dimension (200) of the embeddings will be kept.
     suffix : str, optional, default=""
         Suffix to add to the column names of the embeddings.
 
     Returns
     -------
-    embeddings: class:`~pandas.DataFrame`
+    :class:`~pandas.DataFrame`
         The embeddings of entities and the specified type from Wikipedia.
 
     See Also
     --------
-    :class:`~dirty_cat.fuzzy_join` :
+    :func:`get_ken_table_aliases`
+        Get the supported aliases of embedded entities tables.
+    :func:`get_ken_types`
+        Helper function to search for entity types.
+    :func:`~dirty_cat.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
     :class:`~dirty_cat.FeatureAugmenter` :
         Transformer to enrich a given table via one or more fuzzy joins to
@@ -75,21 +175,12 @@ def get_ken_embeddings(
     Going directly for the exact type name (e.g. "wikicat_rock_music_bands")
     is possible but may not be complete (as some relevant bands may be
     in other similar types).
-    For the full list of accepted types, see the `entity_detailed_types`
-    table on https://soda-inria.github.io/ken_embeddings/.
+    For searching the types, the :class:`~dirty_cat.datasets.get_ken_types`
+    function can be used.
 
     """
-    if embedding_table_id in [
-        "all_entities",
-        "albums",
-        "companies",
-        "movies",
-        "games",
-        "school",
-    ]:
-        correspondence = pd.read_csv(
-            "https://raw.githubusercontent.com/dirty-cat/datasets/master/data/ken_correspondence.csv"  # noqa
-        )
+    if embedding_table_id in get_ken_table_aliases():
+        correspondence = pd.read_csv(_correspondence_table_url)
         embeddings_id = correspondence[correspondence["table"] == embedding_table_id][
             "entities_figshare_id"
         ].values[0]
@@ -105,7 +196,6 @@ def get_ken_embeddings(
         emb_type = emb_type[~emb_type["Type"].str.contains(exclude)]
     emb_type.drop_duplicates(subset=["Entity"], inplace=True)
     emb_final = []
-    emb_df = pd.DataFrame()
     emb_full = fetch_figshare(embeddings_id)
     for path in emb_full.path:
         emb_extracts = pd.read_parquet(path)
