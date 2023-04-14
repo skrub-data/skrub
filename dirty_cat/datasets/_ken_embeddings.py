@@ -37,7 +37,7 @@ def get_ken_table_aliases() -> Set[str]:
 
     Notes
     -----
-    Requires and Internet connection to work.
+    Requires an Internet connection to work.
     """
     correspondence = pd.read_csv(_correspondence_table_url)
     return set(["all_entities"] + list(correspondence["table"].values))
