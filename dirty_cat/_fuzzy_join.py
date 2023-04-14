@@ -26,7 +26,7 @@ from sklearn.feature_extraction.text import (
     _VectorizerMixin,
 )
 from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
 def _numeric_encoding(main, main_cols, aux, aux_cols):
@@ -57,6 +57,11 @@ def _numeric_encoding(main, main_cols, aux, aux_cols):
     scaler.fit(np.vstack((aux_array, main_array)))
     aux_array = scaler.transform(aux_array)
     main_array = scaler.transform(main_array)
+    # Scale in the [0, 2] range, equivalent to string encodings:
+    mm_scaler = MinMaxScaler(feature_range=(0, 2))
+    mm_scaler.fit(np.vstack((aux_array, main_array)))
+    aux_array = mm_scaler.transform(aux_array)
+    main_array = mm_scaler.transform(main_array)
     return main_array, aux_array
 
 
