@@ -299,7 +299,7 @@ def test_numerical_column():
         right,
         on="int",
         numerical_match="number",
-        match_score=0.9,
+        match_score=0.95,
         drop_unmatched=True,
     )
     assert fj_num3.shape == (2, n_cols)
