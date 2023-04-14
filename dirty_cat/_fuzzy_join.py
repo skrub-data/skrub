@@ -12,6 +12,7 @@ morphological similarities between strings.
 Joining on numerical columns is also possible based on the Euclidean distance.
 """
 
+import numbers
 import warnings
 from collections.abc import Iterable
 from typing import List, Literal, Optional, Tuple, Union
@@ -53,7 +54,7 @@ def _numeric_encoding(main, main_cols, aux, aux_cols):
     main_array = main[main_cols].to_numpy()
     # Re-weighting to avoid measure specificity
     scaler = StandardScaler()
-    scaler.fit(np.concatenate((aux_array, main_array)))
+    scaler.fit(np.vstack((aux_array, main_array)))
     aux_array = scaler.transform(aux_array)
     main_array = scaler.transform(main_array)
     return main_array, aux_array
@@ -96,22 +97,22 @@ def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_ra
     aux_cols_clean = aux[aux_cols].astype(str)
 
     if isinstance(main_cols, list) and isinstance(aux_cols, list):
-        main_cols_clean = main_cols_clean[main_cols].apply(
-            lambda row: "  ".join(row.values.astype(str)), axis=1
+        first_col, other_cols = main_cols[0], main_cols[1:]
+        main_cols_clean = main_cols_clean[first_col].str.cat(
+            main_cols_clean[other_cols], sep="  "
         )
-        aux_cols_clean = aux_cols_clean[aux_cols].apply(
-            lambda row: "  ".join(row.values.astype(str)), axis=1
+        first_col_aux, other_cols_aux = aux_cols[0], aux_cols[1:]
+        aux_cols_clean = aux_cols_clean[first_col_aux].str.cat(
+            aux_cols_clean[other_cols_aux], sep="  "
         )
     all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
 
     if encoder is None:
-        enc = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-    else:
-        enc = encoder
+        encoder = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
-    enc_cv = enc.fit(all_cats)
-    main_enc = enc_cv.transform(main_cols_clean)
-    aux_enc = enc_cv.transform(aux_cols_clean)
+    encoder = encoder.fit(all_cats)
+    main_enc = encoder.transform(main_cols_clean)
+    aux_enc = encoder.transform(aux_cols_clean)
 
     all_enc = vstack((main_enc, aux_enc))
 
@@ -135,7 +136,7 @@ def _nearest_matches(main_array, aux_array):
     -------
     idx_closest
         Index of the closest matches of the main table in the aux table.
-    norm_distance
+    matching_score
         Distance between the closest matches, on a scale between 0 and 1.
     """
     # Find nearest neighbor using KNN :
@@ -144,8 +145,8 @@ def _nearest_matches(main_array, aux_array):
     distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
     idx_closest = np.ravel(neighbors)
     # Normalizing distance between 0 and 1:
-    norm_distance = 1 - (distance / 2)
-    return idx_closest, norm_distance
+    matching_score = 1 - (distance / 2)
+    return idx_closest, matching_score
 
 
 def fuzzy_join(
@@ -330,16 +331,13 @@ def fuzzy_join(
                 "expected string or list of column names"
             )
 
-    if not isinstance(match_score, (int, float)):
+    if not isinstance(match_score, numbers.Number):
         raise TypeError("match_score has invalid type, expected integer or float")
 
-    if isinstance(on, str) or (isinstance(left_on, str) and isinstance(right_on, str)):
-        if on is not None:
-            left_col = [on]
-            right_col = [on]
-        elif left_on is not None and right_on is not None:
-            left_col = [left_on]
-            right_col = [right_on]
+    if isinstance(on, str):
+        left_col, right_col = [on], [on]
+    elif isinstance(left_on, str) and isinstance(right_on, str):
+        left_col, right_col = [left_on], [right_on]
     elif isinstance(on, Iterable):
         left_col = list(on)
         right_col = list(on)
@@ -353,8 +351,8 @@ def fuzzy_join(
         )
 
     if how == "left":
-        main_table = left.reset_index(drop=True).copy()
-        aux_table = right.reset_index(drop=True).copy()
+        main_table = left.reset_index(drop=True)
+        aux_table = right.reset_index(drop=True)
         main_cols = left_col
         aux_cols = right_col
     else:
@@ -394,7 +392,7 @@ def fuzzy_join(
         main_enc, aux_enc = _numeric_encoding(
             main_table, main_num_cols, aux_table, aux_num_cols
         )
-        idx_closest, norm_distance = _nearest_matches(main_enc, aux_enc)
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
     elif numerical_match in ["number"] and any_numeric and mixed_types:
         main_num_enc, aux_num_enc = _numeric_encoding(
             main_table, main_num_cols, aux_table, aux_num_cols
@@ -412,7 +410,7 @@ def fuzzy_join(
         )
         main_enc = hstack((main_num_enc, main_str_enc), format="csr")
         aux_enc = hstack((aux_num_enc, aux_str_enc), format="csr")
-        idx_closest, norm_distance = _nearest_matches(main_enc, aux_enc)
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
     else:
         main_enc, aux_enc = _string_encoding(
             main_table,
@@ -423,16 +421,16 @@ def fuzzy_join(
             analyzer=analyzer,
             ngram_range=ngram_range,
         )
-        idx_closest, norm_distance = _nearest_matches(main_enc, aux_enc)
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
 
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index
 
     if drop_unmatched:
-        main_table = main_table[match_score <= norm_distance]
-        norm_distance = norm_distance[match_score <= norm_distance]
+        main_table = main_table[match_score <= matching_score]
+        matching_score = matching_score[match_score <= matching_score]
     else:
-        main_table.loc[np.ravel(match_score > norm_distance), "fj_nan"] = 1
+        main_table.loc[np.ravel(match_score > matching_score), "fj_nan"] = 1
 
     if sort:
         main_table.sort_values(by=[main_cols], inplace=True)
@@ -456,8 +454,6 @@ def fuzzy_join(
         df_joined.drop(columns=["fj_idx", "fj_nan"], inplace=True)
 
     if return_score:
-        df_joined = pd.concat(
-            [df_joined, pd.DataFrame(norm_distance, columns=["matching_score"])], axis=1
-        )
+        df_joined["matching_score"] = matching_score
 
     return df_joined
