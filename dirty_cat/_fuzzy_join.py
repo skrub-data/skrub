@@ -144,6 +144,7 @@ def _nearest_matches(main_array, aux_array):
     neigh.fit(aux_array)
     distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
     idx_closest = np.ravel(neighbors)
+    distance = np.ravel(distance)
     # Normalizing distance between 0 and 1:
     matching_score = 1 - (distance / 2)
     return idx_closest, matching_score
