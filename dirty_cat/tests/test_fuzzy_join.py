@@ -90,7 +90,10 @@ def test_fuzzy_join_dtypes():
 
 @pytest.mark.parametrize(
     ["analyzer", "on", "how"],
-    [("a_blabla", True, "left"), (1, 3, "right")],
+    [
+        ("a_blabla", True, "left"),
+        (1, 3, "right"),
+    ],
 )
 def test_parameters_error(analyzer, on, how):
     """

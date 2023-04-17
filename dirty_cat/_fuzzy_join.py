@@ -29,25 +29,30 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 
-def _numeric_encoding(main, main_cols, aux, aux_cols):
+def _numeric_encoding(
+    main: pd.DataFrame,
+    main_cols: Union[list, str],
+    aux: pd.DataFrame,
+    aux_cols: Union[list, str],
+) -> tuple:
     """Encoding numerical columns.
 
     Parameters
     ----------
-    main : pd.DataFrame
+    main : :class:`~pandas.DataFrame`
         A table with numerical columns.
     main_cols : str or list
         The columns of the main table.
-    aux : pd.DataFrame
+    aux : :class:`~pandas.DataFrame`
         Another table with numerical columns.
     aux_cols : str or list
         The columns of the aux table.
 
     Returns
     -------
-    main_array : array-like
+    array-like
         An array of the encoded columns of the main table.
-    aux_array : array-like
+    array-like
         An array of the encoded columns of the aux table.
     """
     aux_array = aux[aux_cols].to_numpy()
@@ -60,22 +65,27 @@ def _numeric_encoding(main, main_cols, aux, aux_cols):
     return main_array, aux_array
 
 
-def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_range):
+def _string_encoding(
+    main: pd.DataFrame,
+    main_cols: Union[list, str],
+    aux: pd.DataFrame,
+    aux_cols: Union[list, str],
+    analyzer: Literal["word", "char", "char_wb"],
+    ngram_range: Tuple[int, int],
+    encoder: Union[Literal["hashing"], _VectorizerMixin] = "hashing",
+) -> tuple:
     """Encoding string columns.
 
     Parameters
     ----------
-    main : pd.DataFrame
+    main : :class:`~pandas.DataFrame`
         A table with string columns.
     main_cols : str or list
         The columns of the main table.
-    aux : pd.DataFrame
+    aux : :class:`~pandas.DataFrame`
         Another table with string columns.
     aux_cols : str or list
         The columns of the aux table.
-    encoder: Union[Literal["hashing"], _VectorizerMixin]
-        Encoder parameter for the Vectorizer.
-        See fuzzy_join's docstring for more information.
     analyzer : {"word", "char", "char_wb"}
         Analyzer parameter for the HashingVectorizer passed to
         the encoder and used for the string similarities.
@@ -84,12 +94,15 @@ def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_ra
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity.
         See fuzzy_join's docstring for more information.
+    encoder: "hashing" or vectorizer instance, default="hashing"
+        Encoder parameter for the Vectorizer.
+        See fuzzy_join's docstring for more information.
 
     Returns
     -------
-    main_array : array-like
+    array-like
         An array of the encoded columns of the main table.
-    aux_array : array-like
+    array-like
         An array of the encoded columns of the aux table.
     """
     # Make sure that the column types are string and categorical:
@@ -107,7 +120,7 @@ def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_ra
         )
     all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
 
-    if encoder is None:
+    if isinstance(encoder, str) and encoder == "hashing":
         encoder = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
     encoder = encoder.fit(all_cats)
@@ -122,7 +135,7 @@ def _string_encoding(main, main_cols, aux, aux_cols, encoder, analyzer, ngram_ra
     return main_enc, aux_enc
 
 
-def _nearest_matches(main_array, aux_array):
+def _nearest_matches(main_array, aux_array) -> Tuple[np.ndarray, np.ndarray]:
     """Find the closest matches using the nearest neighbors method.
 
     Parameters
@@ -134,9 +147,9 @@ def _nearest_matches(main_array, aux_array):
 
     Returns
     -------
-    idx_closest
+    np.ndarray
         Index of the closest matches of the main table in the aux table.
-    matching_score
+    np.ndarray
         Distance between the closest matches, on a scale between 0 and 1.
     """
     # Find nearest neighbor using KNN :
@@ -158,7 +171,7 @@ def fuzzy_join(
     right_on: Optional[Union[str, List[str], List[int]]] = None,
     on: Union[str, List[str], List[int], None] = None,
     numerical_match: Literal["string", "number"] = "number",
-    encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
+    encoder: Union[Literal["hashing"], _VectorizerMixin] = "hashing",
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
@@ -195,11 +208,12 @@ def fuzzy_join(
         For numerical columns, match using the Euclidean distance
         ("number"). If "string", uses the default n-gram string
         similarity on the string representation.
-    encoder: Union[Literal["hashing"], _VectorizerMixin], optional,
+    encoder: Union[Literal["hashing"], _VectorizerMixin], default="hashing"
         Encoder parameter for the Vectorizer.
-        Options: {None, `_VectorizerMixin`}. If None, the
-        encoder will use the `HashingVectorizer`. It is possible to pass a
-        `_VectorizerMixin` custom object to tweak the parameters of the encoder.
+        By default, uses a :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        It is possible to pass a vectorizer instance inheriting
+        :class:`~sklearn.feature_extraction.text._VectorizerMixin`
+        to tweak the parameters of the encoder.
     analyzer : {"word", "char", "char_wb"}, optional, default=`char_wb`
         Analyzer parameter for the HashingVectorizer passed to
         the encoder and used for the string similarities.
@@ -310,30 +324,35 @@ def fuzzy_join(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
 
-    if encoder is not None:
+    if encoder != "hashing":
         if not issubclass(encoder.__class__, _VectorizerMixin):
-            raise ValueError(f"encoder should be a vectorizer object, got {encoder!r}")
+            raise ValueError(
+                "Parameter 'encoder' should be a vectorizer instance or "
+                f"'hashing', got {encoder!r}. "
+            )
 
     if how not in ["left", "right"]:
         raise ValueError(
-            f"how should be either 'left' or 'right', got {how!r}",
+            f"Parameter 'how' should be either 'left' or 'right', got {how!r}. "
         )
 
     if numerical_match not in ["string", "number"]:
         raise ValueError(
-            "numerical_match should be either 'string' or 'number', "
-            f"got {numerical_match!r}",
+            "Parameter 'numerical_match' should be either 'string' or 'number', "
+            f"got {numerical_match!r}. ",
         )
 
     for param in [on, left_on, right_on]:
-        if param is not None and not (isinstance(param, Iterable)):
+        if param is not None and not isinstance(param, Iterable):
             raise TypeError(
                 "Parameter 'left_on', 'right_on' or 'on' has invalid type,"
-                "expected string or list of column names"
+                "expected string or list of column names. "
             )
 
     if not isinstance(match_score, numbers.Number):
-        raise TypeError("match_score has invalid type, expected integer or float")
+        raise TypeError(
+            "Parameter 'match_score' has invalid type, expected int or float. "
+        )
 
     if isinstance(on, str):
         left_col, right_col = [on], [on]
@@ -346,9 +365,9 @@ def fuzzy_join(
         left_col = list(left_on)
         right_col = list(right_on)
     else:
-        raise KeyError(
+        raise TypeError(
             "Required parameter missing: either parameter "
-            "'on' or the pair 'left_on', 'right_on' should be specified."
+            "'on' or 'left_on' & 'right_on' should be specified."
         )
 
     if how == "left":
@@ -356,7 +375,7 @@ def fuzzy_join(
         aux_table = right.reset_index(drop=True)
         main_cols = left_col
         aux_cols = right_col
-    else:
+    elif how == "right":
         main_table = right.reset_index(drop=True)
         aux_table = left.reset_index(drop=True)
         main_cols = right_col
@@ -369,6 +388,7 @@ def fuzzy_join(
             "The output correspondence will be random or missing. "
             "To avoid unexpected errors you can drop them. ",
             UserWarning,
+            stacklevel=2,
         )
 
     main_num_cols = main_table[main_cols].select_dtypes(include="number").columns
@@ -437,7 +457,7 @@ def fuzzy_join(
         df_joined = pd.merge(
             main_table, aux_table, on="fj_idx", suffixes=suffixes, how=how
         )
-    else:
+    elif how == "right":
         df_joined = pd.merge(
             aux_table, main_table, on="fj_idx", suffixes=suffixes, how=how
         )
