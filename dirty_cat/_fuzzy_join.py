@@ -162,7 +162,7 @@ def fuzzy_join(
     left_on: Optional[Union[str, List[str], List[int]]] = None,
     right_on: Optional[Union[str, List[str], List[int]]] = None,
     on: Union[str, List[str], List[int], None] = None,
-    numerical_match: Literal["string", "number", "error"] = "number",
+    numerical_match: Literal["string", "number"] = "number",
     encoder: Union[Literal["hashing"], _VectorizerMixin] = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
@@ -196,10 +196,10 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    numerical_match: {`string`, `number`, `error`}, optional, default='string'
-        For numerical columns, match with either the Euclidean distance
-        ("number"), or raise an error ("error"). If "string", uses the
-        default n-gram string similarity on the string representation.
+    numerical_match: {`string`, `number`}, optional, default='string'
+        For numerical columns, match using the Euclidean distance
+        ("number"). If "string", uses the default n-gram string
+        similarity on the string representation.
     encoder: Union[Literal["hashing"], _VectorizerMixin], optional,
         Encoder parameter for the Vectorizer.
         Options: {None, `_VectorizerMixin`}. If None, the
@@ -324,9 +324,9 @@ def fuzzy_join(
             f"how should be either 'left' or 'right', got {how!r}",
         )
 
-    if numerical_match not in ["string", "number", "error"]:
+    if numerical_match not in ["string", "number"]:
         raise ValueError(
-            "numerical_match should be either 'string', 'number', or 'error', "
+            "numerical_match should be either 'string' or 'number', "
             f"got {numerical_match!r}",
         )
 
@@ -388,12 +388,6 @@ def fuzzy_join(
         main_cols = main_cols[0]
         aux_cols = aux_cols[0]
 
-    if numerical_match in ["error"] and any_numeric:
-        raise ValueError(
-            "The columns you are trying to merge on are of numerical type. "
-            "Specify numerical_match as 'string' "
-            "or 'number'. "
-        )
     elif numerical_match in ["number"] and any_numeric and not mixed_types:
         main_enc, aux_enc = _numeric_encoding(
             main_table, main_num_cols, aux_table, aux_num_cols
