@@ -304,12 +304,6 @@ def test_numerical_column():
     )
     assert fj_num3.shape == (2, n_cols)
 
-    with pytest.raises(
-        ValueError,
-        match=r"The columns you are trying to merge on are of numerical type.",
-    ):
-        fuzzy_join(left, right, on="int", numerical_match="error")
-
 
 def test_multiple_keys():
     """

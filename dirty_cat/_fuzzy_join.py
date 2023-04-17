@@ -362,8 +362,8 @@ def fuzzy_join(
         main_cols = left_col
         aux_cols = right_col
     else:
-        main_table = right.reset_index(drop=True).copy()
-        aux_table = left.reset_index(drop=True).copy()
+        main_table = right.reset_index(drop=True)
+        aux_table = left.reset_index(drop=True)
         main_cols = right_col
         aux_cols = left_col
 
@@ -388,7 +388,7 @@ def fuzzy_join(
         main_cols = main_cols[0]
         aux_cols = aux_cols[0]
 
-    elif numerical_match in ["number"] and any_numeric and not mixed_types:
+    if numerical_match in ["number"] and any_numeric and not mixed_types:
         main_enc, aux_enc = _numeric_encoding(
             main_table, main_num_cols, aux_table, aux_num_cols
         )
