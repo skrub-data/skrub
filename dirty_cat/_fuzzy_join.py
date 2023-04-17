@@ -57,11 +57,6 @@ def _numeric_encoding(main, main_cols, aux, aux_cols):
     scaler.fit(np.vstack((aux_array, main_array)))
     aux_array = scaler.transform(aux_array)
     main_array = scaler.transform(main_array)
-    # Scale in the [0, 2] range, equivalent to string encodings:
-    mm_scaler = MinMaxScaler(feature_range=(0, 2))
-    mm_scaler.fit(np.vstack((aux_array, main_array)))
-    aux_array = mm_scaler.transform(aux_array)
-    main_array = mm_scaler.transform(main_array)
     return main_array, aux_array
 
 
@@ -411,6 +406,8 @@ def fuzzy_join(
         main_enc = hstack((main_num_enc, main_str_enc), format="csr")
         aux_enc = hstack((aux_num_enc, aux_str_enc), format="csr")
         idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
+        mm_scaler = MinMaxScaler(feature_range=(0, 1))
+        matching_score = mm_scaler.fit_transform(matching_score)
     else:
         main_enc, aux_enc = _string_encoding(
             main_table,
