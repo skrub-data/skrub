@@ -94,7 +94,7 @@ def _string_encoding(
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity.
         See fuzzy_join's docstring for more information.
-    encoder: None or vectorizer instance, default=None
+    encoder: vectorizer instance, optional
         Encoder parameter for the Vectorizer.
         See fuzzy_join's docstring for more information.
 

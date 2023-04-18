@@ -8,10 +8,10 @@ Release 0.4.1
 Major changes
 -------------
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on numerical columns based on the euclidean distance.
-:pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+  :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can perform many-to-many joins on lists of numerical or string key columns.
-:pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+  :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * :func:`GapEncoder.transform` will not continue fitting of the instance anymore.
   It makes functions that depend on it (:func:`~GapEncoder.get_feature_names_out`,
