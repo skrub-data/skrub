@@ -157,7 +157,6 @@ def _nearest_matches(main_array, aux_array) -> Tuple[np.ndarray, np.ndarray]:
     neigh.fit(aux_array)
     distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
     idx_closest = np.ravel(neighbors)
-    distance = np.ravel(distance)
     # Normalizing distance between 0 and 1:
     matching_score = 1 - (distance / 2)
     return idx_closest, matching_score
@@ -365,7 +364,7 @@ def fuzzy_join(
         left_col = list(left_on)
         right_col = list(right_on)
     else:
-        raise TypeError(
+        raise KeyError(
             "Required parameter missing: either parameter "
             "'on' or 'left_on' & 'right_on' should be specified."
         )

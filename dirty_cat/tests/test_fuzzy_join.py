@@ -120,7 +120,7 @@ def test_parameters_error(analyzer, on, how):
         fuzzy_join(df1, df2, on="a", match_score="blabla")
     with pytest.raises(
         ValueError,
-        match=r"numerical_match should be either",
+        match=r"'numerical_match' should be either",
     ):
         fuzzy_join(df1, df2, on="a", numerical_match="wrong_name")
 
@@ -179,7 +179,7 @@ def test_how_param():
 
     with pytest.raises(
         ValueError,
-        match=r"how should be either 'left' or 'right', got",
+        match=r"Parameter 'how' should be either ",
     ):
         c = fuzzy_join(a, b, how="inner")
 
@@ -270,7 +270,9 @@ def test_correct_encoder():
     ):
         fuzzy_join(left, right, on="key", how="left", encoder=enc)
 
-    with pytest.raises(ValueError, match=r"encoder should be a vectorizer object"):
+    with pytest.raises(
+        ValueError, match=r"Parameter 'encoder' should be a vectorizer "
+    ):
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
 
 
