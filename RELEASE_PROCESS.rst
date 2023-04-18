@@ -27,7 +27,7 @@ the main steps and appropriate resources:
     (e.g. ``0.2.X``).
 3.  Update ``dirty_cat/dirty_cat/VERSION.txt`` with the new version
     number (e.g. ``0.2.0``).
-4.  Update ``dirty_cat/setup.py`` (e.g. Python version supported and dependencies).
+4.  Update ``dirty_cat/setup.cfg`` (e.g. Python version supported and dependencies).
 5.  Commit the changes with a new tag: the version you're going to push,
     with the commands ``git commit -m "Bump to version 0.2.0"``.
     Push the branch to the ``dirty_cat`` repository.
@@ -65,7 +65,7 @@ the main steps and appropriate resources:
 
 For the bug fix release (e.g. 0.2.0 -> 0.2.1), the process is similar. You don't need
 to create the branch ``0.2.X`` because it exists already. You need to cherry-pick the
-commits from ``master`` into this branch and then follow the same steps as above:
+commits from ``main`` into this branch and then follow the same steps as above:
 bumping the version, update the setup, commit and push the changes and finally create
 and update the wheel.
 
