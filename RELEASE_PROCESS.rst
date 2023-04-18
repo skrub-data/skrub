@@ -29,14 +29,15 @@ the main steps and appropriate resources:
     number (e.g. ``0.2.0``).
 4.  Update ``dirty_cat/setup.cfg`` (e.g. Python version supported and dependencies).
 5.  Commit the changes with a new tag: the version you're going to push,
-    with the commands ``git commit -m "Bump to version 0.2.0"``.
+    with the commands ``git commit -m "Bump to version 0.2.0"`` and
+    ``git push origin 0.2.0``.
     Push the branch to the ``dirty_cat`` repository.
     The CI will automatically create an associated folder in the documentation repo.
 6.  In the documentation repository (e.g. ``https://github.com/dirty-cat/dirty-cat.github.io``),
     update the ``stable`` symlink to the latest stable version: first, unlink ``stable``
     (i.e. ``unlink stable``); then, create a new symlink (i.e. ``ln -s 0.2 stable``);
     finally, commit and push the changes into the repository.
-7.  Create a new release and tag via GitHub: ``https://github.com/dirty-cat/dirty_cat/releases/new``.
+7.  Create a new release via GitHub: ``https://github.com/dirty-cat/dirty_cat/releases/new``.
     Provide the tag using the current version, e.g. ``0.2.0`` and make sure to select
     the target branch created earlier (e.g. ``0.2.X``).
 8.  Next, you will need to install the ``twine`` and ``setuptools`` packages with
@@ -61,7 +62,7 @@ the main steps and appropriate resources:
     Be sure to install it with the command ``pip install dirty_cat==<version>``
     (e.g. ``pip install dirty_cat==0.2.0``), otherwise some package/env managers
     such as conda might use a cached version.
-15. To finish the procedure, create a new release on the GitHub repository.
+15. Set package version to ``<next_version>.dev0``, commit and push.
 
 For the bug fix release (e.g. 0.2.0 -> 0.2.1), the process is similar. You don't need
 to create the branch ``0.2.X`` because it exists already. You need to cherry-pick the
