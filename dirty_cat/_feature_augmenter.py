@@ -42,7 +42,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         In a [0, 1] interval. 1 means that only a perfect match will be
         accepted, and zero means that the closest match will be accepted,
         no matter how distant.
-        For numerical joins, this defines the maximum euclidian distance
+        For numerical joins, this defines the maximum Euclidean distance
         between the matches.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
