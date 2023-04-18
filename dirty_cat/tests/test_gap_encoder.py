@@ -3,9 +3,11 @@ import pandas as pd
 import pytest
 from sklearn import __version__ as sklearn_version
 from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import train_test_split
 
 from dirty_cat import GapEncoder
 from dirty_cat._utils import parse_version
+from dirty_cat.datasets import fetch_midwest_survey
 from dirty_cat.tests.utils import generate_data
 
 
@@ -249,3 +251,18 @@ def test_small_sample():
     enc = GapEncoder(n_components=3, random_state=42)
     with pytest.raises(ValueError, match="should be >= n_components"):
         enc.fit_transform(X)
+
+
+def test_transform_deterministic():
+    """Non-regression test for #188"""
+    dataset = fetch_midwest_survey()
+    X_train, X_test = train_test_split(
+        dataset.X[["What_would_you_call_the_part_of_the_country_you_live_in_now"]],
+        random_state=0,
+    )
+    enc = GapEncoder(n_components=2, random_state=2)
+    enc.fit_transform(X_train)
+    topics1 = enc.get_feature_names_out()
+    enc.transform(X_test)
+    topics2 = enc.get_feature_names_out()
+    assert topics1 == topics2
