@@ -16,6 +16,7 @@ The principle is as follows:
 """
 
 import warnings
+from copy import deepcopy
 from typing import Dict, Generator, List, Literal, Optional, Tuple, Union
 
 import numpy as np
@@ -501,7 +502,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
     def transform(self, X) -> np.array:
         """
         Return the encoded vectors (activations) H of input strings in X.
-        Given the learnt topics W, the activations H are tuned to fit V = HW.
 
         Parameters
         ----------
@@ -510,11 +510,13 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        H : 2-d array, shape (n_samples, n_topics)
+        2-d array, shape (n_samples, n_topics)
             Transformed input.
         """
         check_is_fitted(self, "H_dict_")
-        # Check if first item has str or np.str_ type
+        # Copy the state of H before continuing fitting it
+        pre_trans_H_dict_ = deepcopy(self.H_dict_)
+        # Check if the first item has str or np.str_ type
         assert isinstance(X[0], str), "Input data is not string. "
         unq_X = np.unique(X)
         # Build the n-grams counts matrix V for the string data to encode
@@ -540,7 +542,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             )
         # Store and return the encoded vectors of X
         self.H_dict_.update(zip(unq_X, unq_H))
-        return self._get_H(X)
+        feature_names_out = self._get_H(X)
+        # Restore H
+        self.H_dict_ = pre_trans_H_dict_
+        return feature_names_out
 
 
 class GapEncoder(BaseEstimator, TransformerMixin):
@@ -882,7 +887,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        col_names : typing.Optional[typing.Union[typing.Literal["auto"], typing.List[str]]], default=None  # noqa
+        col_names : "auto" or list of strings, optional
             The column names to be added as prefixes before the labels.
             If col_names == None, no prefixes are used.
             If col_names == 'auto', column names are automatically defined:
@@ -896,12 +901,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        topic_labels : list of strings
+        list of strings
             The labels that best describe each topic.
         """
-        assert hasattr(
-            self, "fitted_models_"
-        ), "ERROR: GapEncoder must be fitted first."
+        check_is_fitted(self, "fitted_models_")
         # Generate prefixes
         if isinstance(col_names, str) and col_names == "auto":
             if hasattr(self, "column_names_"):  # Use column names
