@@ -145,16 +145,16 @@ def test_drop_unmatched():
     a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
 
-    c1 = fuzzy_join(a, b, on="col1", match_score=0.5, drop_unmatched=True)
+    c1 = fuzzy_join(a, b, on="col1", match_score=0.6, drop_unmatched=True)
     assert c1.shape == (2, 4)
 
-    c2 = fuzzy_join(a, b, on="col1", match_score=0.5)
+    c2 = fuzzy_join(a, b, on="col1", match_score=0.6)
     assert sum(c2["col3"].isna()) > 0
 
-    c3 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5)
+    c3 = fuzzy_join(a, b, on="col1", how="right", match_score=0.6)
     assert sum(c3["col3"].isna()) > 0
 
-    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5, drop_unmatched=True)
+    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.6, drop_unmatched=True)
     assert c4.shape == (2, 4)
 
 
@@ -304,7 +304,7 @@ def test_numerical_column():
         right,
         on="int",
         numerical_match="number",
-        match_score=0.95,
+        match_score=0.8,
         drop_unmatched=True,
     )
     assert fj_num3.shape == (2, n_cols)
