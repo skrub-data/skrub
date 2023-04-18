@@ -72,7 +72,7 @@ def _string_encoding(
     aux_cols: Union[list, str],
     analyzer: Literal["word", "char", "char_wb"],
     ngram_range: Tuple[int, int],
-    encoder: Union[Literal["hashing"], _VectorizerMixin] = "hashing",
+    encoder: _VectorizerMixin = None,
 ) -> tuple:
     """Encoding string columns.
 
@@ -94,7 +94,7 @@ def _string_encoding(
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity.
         See fuzzy_join's docstring for more information.
-    encoder: "hashing" or vectorizer instance, default="hashing"
+    encoder: None or vectorizer instance, default=None
         Encoder parameter for the Vectorizer.
         See fuzzy_join's docstring for more information.
 
@@ -120,7 +120,7 @@ def _string_encoding(
         )
     all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
 
-    if isinstance(encoder, str) and encoder == "hashing":
+    if encoder is None:
         encoder = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
     encoder = encoder.fit(all_cats)
@@ -170,7 +170,7 @@ def fuzzy_join(
     right_on: Optional[Union[str, List[str], List[int]]] = None,
     on: Union[str, List[str], List[int], None] = None,
     numerical_match: Literal["string", "number"] = "number",
-    encoder: Union[Literal["hashing"], _VectorizerMixin] = "hashing",
+    encoder: _VectorizerMixin = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
     return_score: bool = False,
@@ -207,7 +207,7 @@ def fuzzy_join(
         For numerical columns, match using the Euclidean distance
         ("number"). If "string", uses the default n-gram string
         similarity on the string representation.
-    encoder: Union[Literal["hashing"], _VectorizerMixin], default="hashing"
+    encoder: _VectorizerMixin, default=None
         Encoder parameter for the Vectorizer.
         By default, uses a :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
         It is possible to pass a vectorizer instance inheriting
@@ -323,7 +323,7 @@ def fuzzy_join(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
         )
 
-    if encoder != "hashing":
+    if encoder is not None:
         if not issubclass(encoder.__class__, _VectorizerMixin):
             raise ValueError(
                 "Parameter 'encoder' should be a vectorizer instance or "
