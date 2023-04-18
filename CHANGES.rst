@@ -28,9 +28,9 @@ Major changes
 Minor changes
 -------------
 * Improvement of date column detection and date format inference in :class:`TableVectorizer`. The
-format inference now finds a format which works for all non-missing values of the column, instead
-of relying on pandas behavior. If no such format exists, the column is not casted to a date column.
-:pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
+  format inference now finds a format which works for all non-missing values of the column, instead
+  of relying on pandas behavior. If no such format exists, the column is not casted to a date column.
+  :pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Release 0.4.0
 =============
@@ -38,7 +38,7 @@ Release 0.4.0
 Major changes
 -------------
 * `SuperVectorizer` is renamed as :class:`TableVectorizer`, a warning is raised when using the old name.
-:pr:`484` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+  :pr:`484` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category.
