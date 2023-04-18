@@ -7,14 +7,23 @@ Release 0.4.1
 
 Major changes
 -------------
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on numerical columns based on the euclidean distance.
+  :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can perform many-to-many joins on lists of numerical or string key columns.
+  :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 * :func:`GapEncoder.transform` will not continue fitting of the instance anymore.
   It makes functions that depend on it (:func:`~GapEncoder.get_feature_names_out`,
   :func:`~GapEncoder.score`, etc.) deterministic once fitted.
   :pr:`548` by :user:`Lilian Boulard <LilianBoulard>`
+
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` now perform joins on missing values as in `pandas.merge`
   but raises a warning. :pr:`522` and :pr:`529` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 * Added :func:`get_ken_table_aliases` and :func:`get_ken_types` for exploring
   KEN embeddings. :pr:`539` by :user:`Lilian Boulard <LilianBoulard>`.
+
 
 Minor changes
 -------------
