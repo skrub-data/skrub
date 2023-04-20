@@ -1,6 +1,6 @@
 from sklearn.utils.estimator_checks import check_estimator
 
-from dirty_cat import (
+from dirty_cat import (  # TableVectorizer,
     DatetimeEncoder,
     GapEncoder,
     MinHashEncoder,
@@ -26,7 +26,7 @@ def test_sklearn_compatible_SimilarityEncoder():
 
 
 # def test_sklearn_compatible_TableVectorizer():
-#    check_estimator(TableVectorizer())
+#     check_estimator(TableVectorizer())
 
 
 def test_sklearn_compatible_TargetEncoder():

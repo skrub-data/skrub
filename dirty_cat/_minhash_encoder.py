@@ -36,29 +36,28 @@ NoneType = type(None)
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
-    """
-    Encode string categorical features as a numeric array, minhash method
-    applied to ngram decomposition of strings based on ngram decomposition
-    of the string.
+    """Encode string categorical features as a numeric array.
+
+    Uses the minhash method applied to ngram decomposition of strings.
 
     Parameters
     ----------
     n_components : int, default=30
         The number of dimension of encoded strings. Numbers around 300 tend to
         lead to good prediction performance, but with more computational cost.
-    ngram_range : typing.Tuple[int, int], default=(2, 4)
+    ngram_range : 2-tuple of int, default=(2, 4)
         The lower and upper boundary of the range of n-values for different
-        n-grams to be extracted. All values of n such that min_n <= n <= max_n.
+        n-grams to be extracted. All values of n such that `min_n <= n <= max_n`.
         will be used.
-    hashing : typing.Literal["fast", "murmur"], default=fast
+    hashing : {'fast', 'murmur'}, default='fast'
         Hashing function. fast is faster but
         might have some concern with its entropy.
     minmax_hash : bool, default=False
-        if True, return min hash and max hash concatenated.
-    handle_missing : typing.Literal["error", "zero_impute"], default=zero_impute
+        If True, returns the min and max hashes concatenated.
+    handle_missing : {'error', 'zero_impute'}, default='zero_impute'
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
-    n_jobs : int, default=None
+    n_jobs : int, optional
         The number of jobs to run in parallel.
         The hash computations for all unique elements are parallelized.
         None means 1 unless in a
@@ -74,11 +73,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`~dirty_cat.GapEncoder` :
+    :class:`dirty_cat.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`~dirty_cat.SimilarityEncoder` :
+    :class:`dirty_cat.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
-    :class:`~dirty_cat.deduplicate` :
+    :class:`dirty_cat.deduplicate` :
         Deduplicate data by hierarchically clustering similar strings.
 
     References
@@ -137,7 +136,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def _get_murmur_hash(self, string: str) -> np.array:
+    def _get_murmur_hash(self, string: str) -> np.ndarray:
         """
         Encode a string using murmur hashing function.
 
@@ -165,7 +164,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
-    def _get_fast_hash(self, string: str) -> np.array:
+    def _get_fast_hash(self, string: str) -> np.ndarray:
         """
         Encode a string with fast hashing function.
         fast hashing supports both min_hash and minmax_hash encoding.
@@ -227,8 +226,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return res
 
     def fit(self, X, y=None) -> "MinHashEncoder":
-        """
-        Fit the MinHashEncoder to X. In practice, just initializes a dictionary
+        """Fit the MinHashEncoder to X.
+
+        In practice, just initializes a dictionary
         to store encodings to speed up computation.
 
         Parameters
@@ -240,23 +240,23 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        MinHashEncoder
-            The fitted MinHashEncoder instance.
+        :obj:`MinHashEncoder`
+            The fitted :obj:`MinHashEncoder` instance (self).
         """
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
                 f"Got hashing={self.hashing!r}, "
-                'but expected any of {"fast", "murmur"}. '
+                "but expected any of {'fast', 'murmur'}. "
             )
         if self.handle_missing not in ["error", "zero_impute"]:
             raise ValueError(
                 f"Got handle_missing={self.handle_missing!r}, but expected "
-                'any of {"error", "zero_impute"}. '
+                "any of {'error', 'zero_impute'}. "
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
 
-    def transform(self, X) -> np.array:
+    def transform(self, X) -> np.ndarray:
         """
         Transform X using specified encoding scheme.
 

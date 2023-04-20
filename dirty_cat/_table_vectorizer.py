@@ -39,7 +39,7 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[
 
     Returns
     -------
-    Optional[str]
+    str or None
         The date format inferred from the column.
         If no format could be inferred, returns None.
     """
@@ -164,8 +164,7 @@ class TableVectorizer(ColumnTransformer):
 
     Parameters
     ----------
-
-    cardinality_threshold : int, optional, default=40
+    cardinality_threshold : int, default=40
         Two lists of features will be created depending on this value: strictly
         under this value, the low cardinality categorical features, and above or
         equal, the high cardinality categorical features.
@@ -175,7 +174,7 @@ class TableVectorizer(ColumnTransformer):
         Note: currently, missing values are counted as a single unique value
         (so they count in the cardinality).
 
-    low_card_cat_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
+    low_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
@@ -189,7 +188,7 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    high_card_cat_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
+    high_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
@@ -203,7 +202,7 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    numerical_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
+    numerical_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on numerical features.
         Can either be a transformer object instance
         (e.g. :class:`~sklearn.preprocessing.StandardScaler`),
@@ -215,7 +214,7 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    datetime_transformer : {"drop", "remainder", "passthrough"} or Transformer, optional
+    datetime_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on datetime features.
         Can either be a transformer object instance
         (e.g. :class:`~dirty_cat.DatetimeEncoder`),
@@ -231,7 +230,7 @@ class TableVectorizer(ColumnTransformer):
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
-    impute_missing : {"auto", "force", "skip"}, optional, default='auto'
+    impute_missing : {'auto', 'force', 'skip'}, default='auto'
         When to impute missing values in categorical (textual) columns.
         'auto' will impute missing values if it is considered appropriate
         (we are using an encoder that does not support missing values and/or
@@ -243,7 +242,7 @@ class TableVectorizer(ColumnTransformer):
         it is left to the user to manage.
         See also attribute :attr:`~dirty_cat.TableVectorizer.imputed_columns_`.
 
-    remainder : {"drop", "passthrough"} or Transformer, optional, default='drop'
+    remainder : {'drop', 'passthrough'} or Transformer, default='drop'
         By default, only the specified columns in `transformers` are
         transformed and combined in the output, and the non-specified
         columns are dropped. (default 'drop').
@@ -257,7 +256,7 @@ class TableVectorizer(ColumnTransformer):
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
 
-    sparse_threshold : float, optional, default=0.3
+    sparse_threshold : float, default=0.3
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
         lower than this value. Use `sparse_threshold=0` to always return dense.
@@ -275,13 +274,12 @@ class TableVectorizer(ColumnTransformer):
         transformer is multiplied by these weights. Keys are transformer names,
         values the weights.
 
-    verbose : bool, optional, default=False
+    verbose : bool, default=False
         If True, the time elapsed while fitting each transformer will be
         printed as it is completed.
 
     Attributes
     ----------
-
     transformers_: list of 3-tuples (str, Transformer or str, list of str)
         The collection of fitted transformers as tuples of
         (name, fitted_transformer, column). `fitted_transformer` can be an
@@ -294,11 +292,11 @@ class TableVectorizer(ColumnTransformer):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    columns_: pandas.Index
+    columns_: :obj:`~pandas.Index`
         The fitted array's columns. They are applied to the data passed
         to the `transform` method.
 
-    types_: dict mapping str to type
+    types_: dict mapping of str to type
         A mapping of inferred types per column.
         Key is the column name, value is the inferred dtype.
         Exists only if `auto_cast=True`.
@@ -308,11 +306,11 @@ class TableVectorizer(ColumnTransformer):
 
     See Also
     --------
-    :class:`~dirty_cat.GapEncoder` :
+    :class:`dirty_cat.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`~dirty_cat.MinHashEncoder` :
+    :class:`dirty_cat.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
-    :class:`~dirty_cat.SimilarityEncoder` :
+    :class:`dirty_cat.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Notes
@@ -454,12 +452,12 @@ class TableVectorizer(ColumnTransformer):
 
         Parameters
         ----------
-        X : pandas.DataFrame of shape (n_samples, n_features)
+        X : :obj:`~pandas.DataFrame` of shape (n_samples, n_features)
             The data to be transformed.
 
         Returns
         -------
-        pandas.DataFrame
+        :obj:`~pandas.DataFrame`
             The same pandas DataFrame, with its columns cast to the best
             possible data type.
         """
@@ -532,8 +530,8 @@ class TableVectorizer(ColumnTransformer):
         return X
 
     def fit_transform(self, X, y=None):
-        """
-        Fit all transformers, transform the data, and concatenate the results.
+        """Fit all transformers, transform the data, and concatenate the results.
+
         In practice, it (1) converts features to their best possible types
         if `auto_cast=True`, (2) classify columns based on their data type,
         (3) replaces "false missing" (see function `_replace_false_missing`),
@@ -542,16 +540,16 @@ class TableVectorizer(ColumnTransformer):
 
         Parameters
         ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
+        X : array-like of shape (n_samples, n_features)
             Input data, of which specified subsets are used to fit the
             transformers.
-        y : array-like of shape (n_samples,), default=None
+        y : array-like of shape (n_samples,), optional
             Targets for supervised learning.
 
         Returns
         -------
         {array-like, sparse matrix} of shape (n_samples, sum_n_components)
-            hstack of results of transformers. sum_n_components is the
+            Hstack of results of transformers. sum_n_components is the
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
@@ -692,19 +690,17 @@ class TableVectorizer(ColumnTransformer):
         return X_enc
 
     def transform(self, X) -> np.ndarray:
-        """
-        Transform X by applying fitted transformers on each column,
-        and concatenate the results.
+        """Transform X by applying the fitted transformers on the columns.
 
         Parameters
         ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
+        X : array-like of shape (n_samples, n_features)
             The data to be transformed.
 
         Returns
         -------
         {array-like, sparse matrix} of shape (n_samples, sum_n_components)
-            hstack of results of transformers. sum_n_components is the
+            Hstack of results of transformers. sum_n_components is the
             sum of n_components (output dimension) over transformers. If
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
@@ -732,14 +728,20 @@ class TableVectorizer(ColumnTransformer):
         return super().transform(X)
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
-        """
-        Returns clean feature names with format
+        """Return clean feature names.
+
+        Feature names are formatted like:
         "<column_name>_<value>" if encoded by OneHotEncoder or alike,
-        e.g. "job_title_Police officer", or "<column_name>" otherwise.
+        (e.g. "job_title_Police officer"), or "<column_name>" otherwise.
+
+        Parameters
+        ----------
+        input_features : None
+            Unused, only here for compatibility.
 
         Returns
         -------
-        typing.List[str]
+        list of str
             Feature names.
         """
         if parse_version(sklearn_version) < parse_version("1.0"):
@@ -770,9 +772,17 @@ class TableVectorizer(ColumnTransformer):
         return all_trans_feature_names
 
     def get_feature_names(self, input_features=None) -> List[str]:
-        """
-        Ensures compatibility with sklearn < 1.0.
-        Use `get_feature_names_out` instead.
+        """Ensure compatibility with sklearn < 1.0. Use ``get_feature_names_out`` instead.
+
+        Parameters
+        ----------
+        input_features : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        list of str
+            Feature names.
         """
         if parse_version(sklearn_version) >= parse_version("1.0"):
             warn(
@@ -785,7 +795,7 @@ class TableVectorizer(ColumnTransformer):
         return self.get_feature_names_out(input_features)
 
 
-@deprecated("use TableVectorizer instead.")
+@deprecated("Use TableVectorizer instead.")
 class SuperVectorizer(TableVectorizer):
     """Deprecated name of TableVectorizer."""
 

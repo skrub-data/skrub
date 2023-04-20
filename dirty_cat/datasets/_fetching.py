@@ -594,12 +594,11 @@ def _fetch_dataset_as_dataclass(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
-
     """
     if isinstance(data_directory, str):
         data_directory = Path(data_directory)
@@ -679,10 +678,10 @@ def fetch_employee_salaries(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
     dataset = _fetch_dataset_as_dataclass(
@@ -724,10 +723,10 @@ def fetch_road_safety(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -762,10 +761,10 @@ def fetch_medical_charge(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -794,10 +793,10 @@ def fetch_midwest_survey(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -827,10 +826,10 @@ def fetch_open_payments(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -863,10 +862,10 @@ def fetch_traffic_violations(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -897,10 +896,10 @@ def fetch_drug_directory(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -932,11 +931,11 @@ def fetch_world_bank_indicator(
 
      Returns
      -------
-     DatasetAll
-         If `load_dataframe=True`
+    :class:`DatasetAll`
+        If `load_dataframe=True`
 
-     DatasetInfoOnly
-         If `load_dataframe=False`
+    :class:`DatasetInfoOnly`
+        If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
         source="world_bank",
@@ -957,10 +956,10 @@ def fetch_figshare(
 
     Returns
     -------
-    DatasetAll
+    :class:`DatasetAll`
         If `load_dataframe=True`
 
-    DatasetInfoOnly
+    :class:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(

@@ -25,7 +25,7 @@ def get_ken_table_aliases() -> Set[str]:
 
     Returns
     -------
-    aliases: set of str
+    set of str
         The aliases of the embedded entities tables.
 
     See Also
@@ -48,7 +48,7 @@ def get_ken_types(
     *,
     exclude: Optional[str] = None,
     embedding_table_id: str = "all_entities",
-):
+) -> pd.DataFrame:
     """Helper function to search for entity types.
 
     The result can then be used with :func:`get_ken_embeddings`.
@@ -83,7 +83,6 @@ def get_ken_types(
     Notes
     -----
     Best used in conjunction with :func:`get_ken_embeddings`.
-
     """
     correspondence = pd.read_csv(_correspondence_table_url)
     if embedding_table_id not in get_ken_table_aliases():
@@ -137,7 +136,7 @@ def get_ken_embeddings(
         Size of the dimensional space on which the embeddings will be projected
         by a principal component analysis.
         If None, the default dimension (200) of the embeddings will be kept.
-    suffix : str, optional, default=""
+    suffix : str, optional, default=''
         Suffix to add to the column names of the embeddings.
 
     Returns

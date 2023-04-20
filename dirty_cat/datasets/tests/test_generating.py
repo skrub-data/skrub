@@ -7,9 +7,7 @@ import numpy as np
 from dirty_cat.datasets._generating import make_deduplication_data
 
 
-
 def test_make_deduplication_data():
-
     np.random.seed(123)
     assert make_deduplication_data(["abc", "cba", "test1"], [3, 2, 1], 0.3) == [
         "agr",

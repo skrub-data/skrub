@@ -50,7 +50,7 @@ def test_fast_ngram_similarity() -> None:
     assert np.allclose(feature_matrix, feature_matrix_fast)
 
 
-def test_parameters():
+def test_parameters() -> None:
     X = [["foo"], ["baz"]]
     X2 = [["foo"], ["bar"]]
     with pytest.raises(ValueError, match=r"Got handle_unknown="):
@@ -69,7 +69,7 @@ def test_parameters():
         sim.transform(X2)
 
 
-def _test_missing_values(input_type, missing):
+def _test_missing_values(input_type: str, missing: str) -> None:
     observations = [["a", "b"], ["b", "a"], ["b", np.nan], ["a", "c"], [np.nan, "a"]]
     encoded = np.array(
         [
@@ -153,13 +153,13 @@ def _test_similarity(
             ngram_range=(3, 3),
         )
 
-        encoder = model.fit(X).transform(X_test)
+        X_test_enc = model.fit(X).transform(X_test)
 
         ans = np.zeros((len(X_test), len(X)))
         for i, x_t in enumerate(X_test.reshape(-1)):
             for j, x in enumerate(X.reshape(-1)):
                 ans[i, j] = similarity_f(x_t, x, 3)
-        numpy.testing.assert_almost_equal(encoder, ans)
+        numpy.testing.assert_almost_equal(X_test_enc, ans)
     else:
         X = np.array(
             ["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"]
@@ -187,7 +187,7 @@ def _test_similarity(
             )
             return
 
-        encoder = model.fit(X).transform(X_test)
+        X_test_enc = model.fit(X).transform(X_test)
         if n_prototypes == 1:
             assert model.categories_ == ["aaa"]
         elif n_prototypes == 2:
@@ -202,7 +202,7 @@ def _test_similarity(
             for j, x in enumerate(np.array(model.categories_).reshape(-1)):
                 ans[i, j] = similarity_f(x_t, x, 3)
 
-        numpy.testing.assert_almost_equal(encoder, ans)
+        numpy.testing.assert_almost_equal(X_test_enc, ans)
 
 
 def test_similarity_encoder() -> None:
@@ -270,7 +270,7 @@ def test_reproducibility() -> None:
         assert np.array_equal(prototypes, sim_enc.fit(X).categories_[0])
 
 
-def test_fit_transform():
+def test_fit_transform() -> None:
     X = [["foo"], ["baz"]]
     y = ["foo", "bar"]
     tr1 = SimilarityEncoder().fit_transform(X, y)
@@ -387,7 +387,8 @@ def test_get_features() -> None:
         "x0_~",
     ]
 
-def test_check_fitted_super_vectorizer():
+
+def test_check_fitted_super_vectorizer() -> None:
     """Test that calling transform before fit raises an error"""
     sim_enc = SimilarityEncoder()
     X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))

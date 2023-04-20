@@ -15,6 +15,7 @@ The principle is as follows:
 """
 
 import functools
+from typing import Tuple
 
 import numpy as np
 
@@ -47,7 +48,12 @@ def gen_atom(atom_len, seed=0):
     return atom
 
 
-def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
+def ngram_min_hash(
+    string: str,
+    ngram_range: Tuple[int, int] = (2, 4),
+    seed: int = 0,
+    return_minmax=False,
+):
     """
     Compute the min/max hash of the ngrams of the string.
 
@@ -55,7 +61,7 @@ def ngram_min_hash(string, ngram_range=(2, 4), seed=0, return_minmax=False):
     ----------
     string : str
         String to encode.
-    ngram_range : tuple (min_n, max_n), default=(2, 4)
+    ngram_range : 2-tuple of int, default=(2, 4)
         The lower and upper boundary of the range of n-values
         for different n-grams to be extracted.
     seed : int, default=0

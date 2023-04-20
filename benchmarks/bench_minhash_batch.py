@@ -262,12 +262,12 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
                 f"Got hashing={self.hashing!r}, "
-                'but expected any of {"fast", "murmur"}. '
+                "but expected any of {'fast', 'murmur'}. "
             )
         if self.handle_missing not in ["error", "zero_impute"]:
             raise ValueError(
                 f"Got handle_missing={self.handle_missing!r}, but expected "
-                'any of {"error", "zero_impute"}. '
+                "any of {'error', 'zero_impute'}. "
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self

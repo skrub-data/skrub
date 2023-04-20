@@ -5,7 +5,7 @@ from sklearn.exceptions import NotFittedError
 from dirty_cat import _target_encoder
 
 
-def test_target_encoder():
+def test_target_encoder() -> None:
     lambda_ = _target_encoder.lambda_
     X1 = np.array(
         ["Red", "red", "green", "blue", "green", "green", "blue", "red"]
@@ -139,13 +139,9 @@ def test_target_encoder():
     assert np.array_equal(Xout, ans)
 
 
-input_types = ["list", "numpy", "pandas"]
-missings = ["", "aaa", "error"]
-
-
-@pytest.mark.parametrize("input_type", input_types)
-@pytest.mark.parametrize("missing", missings)
-def test_missing_values(input_type, missing):
+@pytest.mark.parametrize("input_type", ["list", "numpy", "pandas"])
+@pytest.mark.parametrize("missing", ["", "aaa", "error"])
+def test_missing_values(input_type, missing) -> None:
     X = [
         ["Red", "male"],
         [np.nan, "male"],
@@ -200,9 +196,9 @@ def test_missing_values(input_type, missing):
         return
 
 
-@pytest.mark.parametrize("input_type", input_types)
-@pytest.mark.parametrize("missing", missings)
-def test_missing_values_transform(input_type, missing):
+@pytest.mark.parametrize("input_type", ["list", "numpy", "pandas"])
+@pytest.mark.parametrize("missing", ["", "aaa", "error"])
+def test_missing_values_transform(input_type, missing) -> None:
     X = [
         ["Red", "male"],
         ["red", "male"],
@@ -251,7 +247,7 @@ def test_missing_values_transform(input_type, missing):
         assert np.allclose(ans[-1, 0], Ey_)
 
 
-def test_errors():
+def test_errors() -> None:
     """Test the different errors that may be raised during fit and transform"""
     enc = _target_encoder.TargetEncoder(handle_unknown="blabla")
     X = [[1], [2], [2], [3], [4]]
@@ -277,14 +273,15 @@ def test_errors():
     with pytest.raises(ValueError, match="Found unknown categories "):
         enc4.transform(X3)
 
-def test_check_fitted_target_encoder():
+
+def test_check_fitted_target_encoder() -> None:
     """Test that calling transform before fit raises an error"""
     enc = _target_encoder.TargetEncoder()
     X = [[1], [2], [2], [3], [4]]
     y = np.array([1, 2, 3, 4, 5])
 
-    with pytest.raises(NotFittedError, match="This TargetEncoder instance is not"):
+    with pytest.raises(NotFittedError, match="not fitted"):
         enc.transform(X)
-    
+
     enc.fit(X, y)
     enc.transform(X)

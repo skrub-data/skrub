@@ -1,4 +1,3 @@
-import string
 from typing import List
 
 import numpy as np
@@ -13,35 +12,11 @@ from dirty_cat._deduplicate import (
     compute_ngram_distance,
     deduplicate,
 )
-
-
-def generate_example_data(examples, entries_per_example, prob_mistake_per_letter, rng):
-    """Helper function to generate data consisting of multiple entries per example.
-    Characters are misspelled with probability `prob_mistake_per_letter`"""
-
-    data = []
-    for example, n_ex in zip(examples, entries_per_example):
-        len_ex = len(example)
-        # generate a 2D array of chars of size (n_ex, len_ex)
-        str_as_list = np.array([list(example)] * n_ex)
-        # randomly choose which characters are misspelled
-        idxes = np.where(
-            rng.random_sample(len(example[0]) * n_ex) < prob_mistake_per_letter
-        )[0]
-        # and randomly pick with which character to replace
-        replacements = [
-            string.ascii_lowercase[i]
-            for i in rng.choice(np.arange(26), len(idxes)).astype(int)
-        ]
-        # introduce spelling mistakes at right examples and char locations per example
-        str_as_list[idxes // len_ex, idxes % len_ex] = replacements
-        # go back to 1d array of strings
-        data.append(np.ascontiguousarray(str_as_list).view(f"U{len_ex}").ravel())
-    return np.concatenate(data)
+from dirty_cat.datasets import make_deduplication_data
 
 
 @pytest.mark.parametrize(
-    "entries_per_category, prob_mistake_per_letter",
+    ["entries_per_category", "prob_mistake_per_letter"],
     [[[500, 100, 1500], 0.05], [[100, 100], 0.02], [[200, 50, 30, 200, 800], 0.01]],
 )
 def test_deduplicate(
@@ -61,11 +36,11 @@ def test_deduplicate(
     ]
     n_clusters = len(entries_per_category)
     clean_categories = clean_categories[:n_clusters]
-    data = generate_example_data(
+    data = make_deduplication_data(
         clean_categories, entries_per_category, prob_mistake_per_letter, rng
     )
     deduplicated_data = np.array(deduplicate(data, n_clusters=None))
-    assert deduplicated_data.shape[0] == data.shape[0]
+    assert deduplicated_data.shape[0] == len(data)
     recovered_categories = np.unique(deduplicated_data)
     assert recovered_categories.shape[0] == n_clusters
     assert np.isin(clean_categories, recovered_categories).all()
@@ -116,7 +91,7 @@ def test__create_spelling_correction(seed: int = 123) -> None:
         counts,
         clusters,
     )
-    # check that the most common sample per cluster is chosen as the 'correct' spelling
+    # Check that the most common sample per cluster is chosen as the 'correct' spelling
     for n in np.arange(n_clusters):
         assert (
             spelling_correction.values[clusters == n].astype("int")

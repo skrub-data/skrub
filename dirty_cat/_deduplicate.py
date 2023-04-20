@@ -22,24 +22,24 @@ def compute_ngram_distance(
 
     Parameters
     ----------
-    unique_words : Union[Sequence[str], np.ndarray]
+    unique_words : sequence of str
         Sequence or array of unique words from the original data.
-    ngram_range : Tuple[int, int], optional, default=(2,4)
+    ngram_range : 2-tuple of int, default=(2,4)
         The n-gram range to compute the distance in.
-    analyzer : str, optional, default=`char_wb`
+    analyzer : str, default='char_wb'
         Analyzer to extract n-grams.
 
     Returns
     -------
-    np.ndarray
+    :obj:`~numpy.ndarray`
         An n-times-(n-1)/2 array of n-gram tf-idf distances between `unique_words`.
 
     Notes
     -----
     Extracts n-grams of all elements in `unique_words`, calculates the
-    term frequency-inverse document frequency (tf-idf) for each n-gram, then
-    computes the pair-wise euclidean distance between elements based on their n-gram
-    tf-idf representation.
+    term frequency-inverse document frequency (TF-IDF) for each n-gram, then
+    computes the pair-wise Euclidean distance between elements based on their
+    n-gram TF-IDF representation.
     """
     encoded = TfidfVectorizer(ngram_range=ngram_range, analyzer=analyzer).fit_transform(
         unique_words
@@ -82,18 +82,19 @@ def _create_spelling_correction(
     counts: Union[Sequence[int], np.ndarray],
     clusters: Sequence[int],
 ) -> pd.Series:
-    """Creates a pandas Series that map each cluster member to the most
+    """
+    Creates a pandas Series that map each cluster member to the most
     frequent cluster member. The assumption is that the most common spelling
     is the correct one.
 
     Parameters
     ----------
-    unique_words : Union[Sequence[str], np.ndarray]
+    unique_words : sequence of str
         A sequence or array of unique words in the original data.
-    counts : Union[Sequence[int], np.ndarray]
+    counts : sequence of int
         A sequence or array of counts of how often each unique word appears in
         the original data.
-    clusters : Sequence[int]
+    clusters : sequence of int
         A sequence of ints, indicating cluster membership of each unique word
         in `count_series`.
 
@@ -132,21 +133,21 @@ def deduplicate(
 
     Parameters
     ----------
-    data : Sequence[str]
+    data : sequence of str
         The data to be deduplicated.
-    n_clusters : Optional[int], optional, default=None
+    n_clusters : int, optional
         Number of clusters to use for hierarchical clustering, if None use the
         number of clusters that lead to the lowest silhouette score.
-    ngram_range : Tuple[int, int], optional, default=(2, 4)
+    ngram_range : 2-tuple of int, default=(2, 4)
         Range to use for computing n-gram distance.
-    analyzer : typing.Literal["word", "char", "char_wb"], optional, default=`char_wb`
+    analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
         similarities.
         Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
         to factorize should be made of word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    method : str, optional, default=`average`
+    method : str, default=`average`
         Linkage method parameter to use for merging clusters via scipy's
         `linkage` method.
         Options: {`single`, `complete`, `average`, `centroid`, `median`, `ward`},
@@ -156,13 +157,14 @@ def deduplicate(
 
     Returns
     -------
-    List[str]
+    list of str
        The deduplicated data.
 
     See Also
     --------
     :class:`~dirty_cat.GapEncoder` :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics with
+        continuous encoding.
     :class:`~dirty_cat.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
     :class:`~dirty_cat.SimilarityEncoder` :

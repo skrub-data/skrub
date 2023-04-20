@@ -12,6 +12,7 @@ from dirty_cat._utils import check_input, parse_version
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
 
+
 WORD_TO_ALIAS: Dict[str, str] = {
     "year": "Y",
     "month": "M",
@@ -38,8 +39,7 @@ AcceptedTimeValues = Literal[
 
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
-    """
-    Transforms each datetime column into several numeric columns for temporal features (e.g year, month, day...).
+    """Transforms each datetime column into several numeric columns for temporal features (e.g year, month, day...).
 
     Constant extracted features are dropped; for instance, if the year is
     always the same in a feature, the extracted "year" column won't be added.
@@ -48,12 +48,12 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    extract_until : AcceptedTimeValues, default="hour"
+    extract_until : AcceptedTimeValues, default='hour'
         Extract up to this granularity.
-        If all features have not been extracted, add the "total_time" feature,
+        If all features have not been extracted, add the 'total_time' feature,
         which contains the time to epoch (in seconds).
-        For instance, if you specify "day", only "year", "month", "day" and
-        "total_time" features will be created.
+        For instance, if you specify 'day', only 'year', 'month', 'day' and
+        'total_time' features will be created.
     add_day_of_the_week : bool, default=False
         Add day of the week feature (if day is extracted).
         This is a numerical feature from 0 (Monday) to 6 (Sunday).
@@ -254,12 +254,23 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return X_
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
-        """
-        Returns clean feature names with format "<column_name>_<new_feature>"
+        """Return clean feature names.
+
+        Feature names are formatted like: "<column_name>_<new_feature>"
         if the original data has column names, otherwise with format
         "<column_index>_<new_feature>" where `<new_feature>` is one of
         ["year", "month", "day", "hour", "minute", "second", "millisecond",
         "microsecond", "nanosecond", "dayofweek"].
+
+        Parameters
+        ----------
+        input_features : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        list of str
+            List of feature names.
         """
         feature_names = []
         for i in self.features_per_column_.keys():
@@ -269,9 +280,17 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return feature_names
 
     def get_feature_names(self, input_features=None) -> List[str]:
-        """
-        Ensures compatibility with sklearn < 1.0, and returns the output of
-        get_feature_names_out.
+        """Ensure compatibility with sklearn < 1.0. Use ``get_feature_names_out`` instead.
+
+        Parameters
+        ----------
+        input_features : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        list of str
+            List of feature names.
         """
         if parse_version(sklearn_version) >= parse_version("1.0"):
             warn(
