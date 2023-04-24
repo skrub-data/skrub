@@ -310,6 +310,47 @@ def test_numerical_column():
     assert fj_num3.shape == (2, n_cols)
 
 
+def test_datetime_column():
+    """
+    Testing that fuzzy_join works with datetime columns.
+    """
+
+    left = pd.DataFrame(
+        {
+            "str1": ["aa", "a", "bb"],
+            "date": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
+        }
+    )
+    right = pd.DataFrame(
+        {
+            "str2": ["aa", "bb", "a", "cc", "dd"],
+            "date": pd.to_datetime(
+                ["09/10/2022", "12/24/2021", "09/25/2010", "11/05/2025", "02/21/2000"]
+            ),
+        }
+    )
+
+    fj_time = fuzzy_join(left, right, on="date", numerical_match="time")
+    n_cols = left.shape[1] + right.shape[1]
+
+    assert fj_time.shape == (len(left), n_cols)
+
+    fj_time2 = fuzzy_join(
+        left, right, on="date", numerical_match="time", return_score=True
+    )
+    assert fj_time2.shape == (len(left), n_cols + 1)
+
+    fj_time3 = fuzzy_join(
+        left,
+        right,
+        on="date",
+        numerical_match="time",
+        match_score=0.51,
+        drop_unmatched=True,
+    )
+    assert fj_time3.shape == (2, n_cols)
+
+
 def test_multiple_keys():
     """
     Test fuzzy joining on multiple keys with possibly mixed types.

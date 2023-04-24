@@ -65,6 +65,32 @@ def _numeric_encoding(
     return main_array, aux_array
 
 
+def _time_encoding(main, main_cols, aux, aux_cols):
+    """Encoding datetime columns and finding closest matches.
+
+    Parameters
+    ----------
+    main : pd.DataFrame
+        A table with datetime columns.
+    main_cols : str or list
+        The datetime columns of the main table.
+    aux : pd.DataFrame
+        Another table with datetime columns.
+    aux_cols : str or list
+        The datetime columns of the aux table.
+
+    Returns
+    -------
+    main_array : array-like
+        An array of the encoded columns of the main table.
+    aux_array : array-like
+        An array of the encoded columns of the aux table.
+    """
+    aux_array = aux[aux_cols].to_numpy()
+    main_array = main[main_cols].to_numpy()
+    return main_array, aux_array
+
+
 def _string_encoding(
     main: pd.DataFrame,
     main_cols: Union[list, str],
@@ -336,9 +362,9 @@ def fuzzy_join(
             f"Parameter 'how' should be either 'left' or 'right', got {how!r}. "
         )
 
-    if numerical_match not in ["string", "number"]:
+    if numerical_match not in ["string", "number", "time"]:
         raise ValueError(
-            "Parameter 'numerical_match' should be either 'string' or 'number', "
+            "Parameter 'numerical_match' should be either 'string', 'time or 'number', "
             f"got {numerical_match!r}. ",
         )
 
@@ -394,10 +420,15 @@ def fuzzy_join(
     main_num_cols = main_table[main_cols].select_dtypes(include="number").columns
     aux_num_cols = aux_table[aux_cols].select_dtypes(include="number").columns
 
+    main_time_cols = main_table[main_cols].select_dtypes(include="datetime").columns
+    aux_time_cols = aux_table[aux_cols].select_dtypes(include="datetime").columns
+
     # Check if included columns are numeric:
     any_numeric = len(main_num_cols) != 0
     # Check if included columns have mixed types:
     mixed_types = len(main_cols) > len(main_num_cols)
+    # Check if included columns are datetime:
+    any_time = len(main_time_cols) != 0
 
     if len(main_cols) == 1 and len(aux_cols) == 1 and any_numeric is False:
         main_cols = main_cols[0]
@@ -408,7 +439,12 @@ def fuzzy_join(
             main_table, main_num_cols, aux_table, aux_num_cols
         )
         idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
-    elif numerical_match in ["number"] and any_numeric and mixed_types:
+    elif numerical_match in ["time"] and any_time and not mixed_types:
+        main_enc, aux_enc = _time_encoding(
+            main_table, main_time_cols, aux_table, aux_time_cols
+        )
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
+    elif numerical_match in ["number", "time"] and any_numeric and mixed_types:
         main_num_enc, aux_num_enc = _numeric_encoding(
             main_table, main_num_cols, aux_table, aux_num_cols
         )

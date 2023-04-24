@@ -2,6 +2,16 @@
 
 .. currentmodule:: dirty_cat
 
+Release 0.4.2
+=============
+
+Major changes
+-------------
+
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
+  :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+
 Release 0.4.1
 =============
 
