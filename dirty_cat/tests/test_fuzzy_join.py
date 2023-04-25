@@ -291,13 +291,14 @@ def test_numerical_column():
 
     fj_num = fuzzy_join(left, right, on="int", numerical_match="number")
     n_cols = left.shape[1] + right.shape[1]
+    n_samples = len(left)
 
-    assert fj_num.shape == (len(left), n_cols)
+    assert fj_num.shape == (n_samples, n_cols)
 
     fj_num2 = fuzzy_join(
         left, right, on="int", numerical_match="number", return_score=True
     )
-    assert fj_num2.shape == (len(left), n_cols + 1)
+    assert fj_num2.shape == (n_samples, n_cols + 1)
 
     fj_num3 = fuzzy_join(
         left,
@@ -332,13 +333,14 @@ def test_datetime_column():
 
     fj_time = fuzzy_join(left, right, on="date", numerical_match="time")
     n_cols = left.shape[1] + right.shape[1]
+    n_samples = len(left)
 
-    assert fj_time.shape == (len(left), n_cols)
+    assert fj_time.shape == (n_samples, n_cols)
 
     fj_time2 = fuzzy_join(
         left, right, on="date", numerical_match="time", return_score=True
     )
-    assert fj_time2.shape == (len(left), n_cols + 1)
+    assert fj_time2.shape == (n_samples, n_cols + 1)
 
     fj_time3 = fuzzy_join(
         left,
