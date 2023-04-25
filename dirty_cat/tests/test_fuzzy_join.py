@@ -351,9 +351,9 @@ def test_datetime_column():
     assert fj_time3.shape == (2, n_cols)
 
 
-def test_multiple_keys():
+def test_mixed_joins():
     """
-    Test fuzzy joining on multiple keys with possibly mixed types.
+    Test fuzzy joining on mixed column types.
     """
 
     left = pd.DataFrame(
@@ -362,6 +362,7 @@ def test_multiple_keys():
             "str2": ["Texas", "France", "Greek God"],
             "int1": [10, 2, 5],
             "int2": [103, 250, 532],
+            "date": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
         }
     )
     right = pd.DataFrame(
@@ -370,18 +371,21 @@ def test_multiple_keys():
             "str_2": ["TX", "FR", "GR Mytho", "cc", "dd"],
             "int1": [55, 6, 2, 15, 6],
             "int2": [554, 146, 32, 215, 612],
+            "date": pd.to_datetime(
+                ["09/10/2022", "12/24/2021", "09/25/2010", "11/05/2025", "02/21/2000"]
+            ),
         }
     )
 
     # On multiple numeric keys
     fj_num = fuzzy_join(left, right, on=["int1", "int2"], numerical_match="number")
-    assert fj_num.shape == (3, 8)
+    assert fj_num.shape == (3, 10)
 
     # On multiple string keys
     fj_str = fuzzy_join(
         left, right, left_on=["str1", "str2"], right_on=["str_1", "str_2"]
     )
-    assert fj_str.shape == (3, 8)
+    assert fj_str.shape == (3, 10)
 
     # On mixed, numeric and string keys
     fj_mixed = fuzzy_join(
@@ -391,7 +395,27 @@ def test_multiple_keys():
         right_on=["str_1", "str_2", "int2"],
         numerical_match="number",
     )
-    assert fj_mixed.shape == (3, 8)
+    assert fj_mixed.shape == (3, 10)
+
+    # On mixed time and string keys
+    fj_mixed2 = fuzzy_join(
+        left,
+        right,
+        left_on=["str1", "date"],
+        right_on=["str_1", "date"],
+        numerical_match="number",
+    )
+    assert fj_mixed2.shape == (3, 10)
+
+    # On mixed time and numbers keys
+    fj_mixed3 = fuzzy_join(
+        left,
+        right,
+        left_on=["int1", "date"],
+        right_on=["int1", "date"],
+        numerical_match="number",
+    )
+    assert fj_mixed3.shape == (3, 10)
 
 
 def test_iterable_input():

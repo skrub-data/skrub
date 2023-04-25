@@ -19,7 +19,7 @@ from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from scipy.sparse import hstack, vstack
+from scipy.sparse import csr_matrix, hstack, vstack
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
     TfidfTransformer,
@@ -62,10 +62,15 @@ def _numeric_encoding(
     scaler.fit(np.vstack((aux_array, main_array)))
     aux_array = scaler.transform(aux_array)
     main_array = scaler.transform(main_array)
-    return main_array, aux_array
+    return csr_matrix(main_array), csr_matrix(aux_array)
 
 
-def _time_encoding(main, main_cols, aux, aux_cols):
+def _time_encoding(
+    main: pd.DataFrame,
+    main_cols: Union[list, str],
+    aux: pd.DataFrame,
+    aux_cols: Union[list, str],
+) -> tuple:
     """Encoding datetime columns and finding closest matches.
 
     Parameters
@@ -86,9 +91,15 @@ def _time_encoding(main, main_cols, aux, aux_cols):
     aux_array : array-like
         An array of the encoded columns of the aux table.
     """
-    aux_array = aux[aux_cols].to_numpy()
-    main_array = main[main_cols].to_numpy()
-    return main_array, aux_array
+    # datetime representation in nanoseconds
+    aux_array = aux[aux_cols].to_numpy(dtype="datetime64[s]")
+    main_array = main[main_cols].to_numpy(dtype="datetime64[s]")
+    # Re-weighting to avoid measure specificity
+    scaler = StandardScaler()
+    scaler.fit(np.vstack((aux_array, main_array)))
+    aux_array = scaler.transform(aux_array)
+    main_array = scaler.transform(main_array)
+    return csr_matrix(main_array), csr_matrix(aux_array)
 
 
 def _string_encoding(
@@ -196,7 +207,7 @@ def fuzzy_join(
     left_on: Optional[Union[str, List[str], List[int]]] = None,
     right_on: Optional[Union[str, List[str], List[int]]] = None,
     on: Union[str, List[str], List[int], None] = None,
-    numerical_match: Literal["string", "number"] = "number",
+    numerical_match: Literal["auto", "string", "number", "time"] = "auto",
     encoder: _VectorizerMixin = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
@@ -230,10 +241,14 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    numerical_match: {`string`, `number`}, optional, default='string'
-        For numerical columns, match using the Euclidean distance
-        ("number"). If "string", uses the default n-gram string
-        similarity on the string representation.
+    numerical_match: {`auto`, `string`, `number`, `time`}, optional, default='auto'
+        Possible values:
+         - "number" is for numerical columns, matching using the Euclidean distance.
+         - "string" uses the default n-gram string similarity on the
+           string representation.
+         - "time" uses the distance in nanoseconds between two datetime values.
+         - "auto" will attempt to decide the most appropriate encoding based
+           on the column type.
     encoder: _VectorizerMixin, default=None
         Encoder parameter for the Vectorizer.
         By default, uses a :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
@@ -362,10 +377,10 @@ def fuzzy_join(
             f"Parameter 'how' should be either 'left' or 'right', got {how!r}. "
         )
 
-    if numerical_match not in ["string", "number", "time"]:
+    if numerical_match not in ["auto", "string", "number", "time"]:
         raise ValueError(
-            "Parameter 'numerical_match' should be either 'string', 'time or 'number', "
-            f"got {numerical_match!r}. ",
+            "Parameter 'numerical_match' should be either 'auto', 'string', 'time or"
+            f" 'number', got {numerical_match!r}. ",
         )
 
     for param in [on, left_on, right_on]:
@@ -423,44 +438,52 @@ def fuzzy_join(
     main_time_cols = main_table[main_cols].select_dtypes(include="datetime").columns
     aux_time_cols = aux_table[aux_cols].select_dtypes(include="datetime").columns
 
+    main_str_cols = list(set(main_cols) - set(main_num_cols) - set(main_time_cols))
+    aux_str_cols = list(set(aux_cols) - set(aux_num_cols) - set(main_time_cols))
+
     # Check if included columns are numeric:
     any_numeric = len(main_num_cols) != 0
-    # Check if included columns have mixed types:
-    mixed_types = len(main_cols) > len(main_num_cols)
     # Check if included columns are datetime:
     any_time = len(main_time_cols) != 0
+    # Check if included columns are datetime:
+    any_str = len(main_str_cols) != 0
+    # Check if included columns have mixed types:
+    # mixed_types = len(main_cols) > (len(main_num_cols) + len(main_time_cols))
 
     if len(main_cols) == 1 and len(aux_cols) == 1 and any_numeric is False:
         main_cols = main_cols[0]
         aux_cols = aux_cols[0]
 
-    if numerical_match in ["number"] and any_numeric and not mixed_types:
-        main_enc, aux_enc = _numeric_encoding(
-            main_table, main_num_cols, aux_table, aux_num_cols
-        )
-        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
-    elif numerical_match in ["time"] and any_time and not mixed_types:
-        main_enc, aux_enc = _time_encoding(
-            main_table, main_time_cols, aux_table, aux_time_cols
-        )
-        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
-    elif numerical_match in ["number", "time"] and any_numeric and mixed_types:
-        main_num_enc, aux_num_enc = _numeric_encoding(
-            main_table, main_num_cols, aux_table, aux_num_cols
-        )
-        main_str_cols = list(set(main_cols) - set(main_num_cols))
-        aux_str_cols = list(set(aux_cols) - set(aux_num_cols))
-        main_str_enc, aux_str_enc = _string_encoding(
-            main_table,
-            main_str_cols,
-            aux_table,
-            aux_str_cols,
-            encoder=encoder,
-            analyzer=analyzer,
-            ngram_range=ngram_range,
-        )
-        main_enc = hstack((main_num_enc, main_str_enc), format="csr")
-        aux_enc = hstack((aux_num_enc, aux_str_enc), format="csr")
+    if numerical_match in ["auto", "number", "time"]:
+        main_enc = np.zeros((len(main_table.index), 1))
+        aux_enc = np.zeros((len(aux_table.index), 1))
+        if any_numeric:
+            main_num_enc, aux_num_enc = _numeric_encoding(
+                main_table, main_num_cols, aux_table, aux_num_cols
+            )
+            main_enc = hstack((main_enc, main_num_enc), format="csr")
+            aux_enc = hstack((aux_enc, aux_num_enc), format="csr")
+        if any_time:
+            main_time_enc, aux_time_enc = _time_encoding(
+                main_table, main_time_cols, aux_table, aux_time_cols
+            )
+            main_enc = hstack((main_enc, main_time_enc), format="csr")
+            aux_enc = hstack((aux_enc, aux_time_enc), format="csr")
+        if any_str:
+            main_str_enc, aux_str_enc = _string_encoding(
+                main_table,
+                main_str_cols,
+                aux_table,
+                aux_str_cols,
+                encoder=encoder,
+                analyzer=analyzer,
+                ngram_range=ngram_range,
+            )
+            main_enc = hstack((main_enc, main_str_enc), format="csr")
+            aux_enc = hstack((aux_enc, aux_str_enc), format="csr")
+        # remove initialisation column
+        main_enc = main_enc[:, 1:]
+        aux_enc = aux_enc[:, 1:]
         idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
     else:
         main_enc, aux_enc = _string_encoding(
