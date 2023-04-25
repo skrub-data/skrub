@@ -71,7 +71,7 @@ def _time_encoding(
     aux: pd.DataFrame,
     aux_cols: Union[list, str],
 ) -> tuple:
-    """Encoding datetime columns and finding closest matches.
+    """Encoding datetime columns.
 
     Parameters
     ----------
@@ -379,7 +379,7 @@ def fuzzy_join(
 
     if numerical_match not in ["auto", "string", "number", "time"]:
         raise ValueError(
-            "Parameter 'numerical_match' should be either 'auto', 'string', 'time or"
+            "Parameter 'numerical_match' should be either 'auto', 'string', 'time' or"
             f" 'number', got {numerical_match!r}. ",
         )
 
