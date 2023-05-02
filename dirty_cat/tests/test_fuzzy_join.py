@@ -48,8 +48,8 @@ def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]):
         df1,
         df2,
         how="right",
-        right_on="a2",
-        left_on="a1",
+        right_on=["a2"],
+        left_on=["a1"],
         match_score=0.35,
         return_score=True,
         analyzer=analyzer,
@@ -385,7 +385,11 @@ def test_mixed_joins():
 
     # On multiple string keys
     fj_str = fuzzy_join(
-        left, right, left_on=["str1", "str2"], right_on=["str_1", "str_2"]
+        left,
+        right,
+        left_on=["str1", "str2"],
+        right_on=["str_1", "str_2"],
+        numerical_match="string",
     )
     assert fj_str.shape == (3, 10)
 

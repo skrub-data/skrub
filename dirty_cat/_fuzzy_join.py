@@ -146,15 +146,14 @@ def _string_encoding(
     main_cols_clean = main[main_cols].astype(str)
     aux_cols_clean = aux[aux_cols].astype(str)
 
-    if isinstance(main_cols, list) and isinstance(aux_cols, list):
-        first_col, other_cols = main_cols[0], main_cols[1:]
-        main_cols_clean = main_cols_clean[first_col].str.cat(
-            main_cols_clean[other_cols], sep="  "
-        )
-        first_col_aux, other_cols_aux = aux_cols[0], aux_cols[1:]
-        aux_cols_clean = aux_cols_clean[first_col_aux].str.cat(
-            aux_cols_clean[other_cols_aux], sep="  "
-        )
+    first_col, other_cols = main_cols[0], main_cols[1:]
+    main_cols_clean = main_cols_clean[first_col].str.cat(
+        main_cols_clean[other_cols], sep="  "
+    )
+    first_col_aux, other_cols_aux = aux_cols[0], aux_cols[1:]
+    aux_cols_clean = aux_cols_clean[first_col_aux].str.cat(
+        aux_cols_clean[other_cols_aux], sep="  "
+    )
     all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
 
     if encoder is None:
@@ -244,9 +243,9 @@ def fuzzy_join(
     numerical_match: {`auto`, `string`, `number`, `time`}, optional, default='auto'
         Possible values:
          - "number" is for numerical columns, matching using the Euclidean distance.
-         - "string" uses the default n-gram string similarity on the
-           string representation.
-         - "time" uses the distance in nanoseconds between two datetime values.
+         - "string" forces the default n-gram string similarity on the
+           string representation of columns.
+         - "time" uses the distance in seconds between two datetime values.
          - "auto" will attempt to decide the most appropriate encoding based
            on the column type.
     encoder: _VectorizerMixin, default=None
@@ -485,7 +484,7 @@ def fuzzy_join(
         main_enc = main_enc[:, 1:]
         aux_enc = aux_enc[:, 1:]
         idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
-    else:
+    elif numerical_match == "string":
         main_enc, aux_enc = _string_encoding(
             main_table,
             main_cols,
