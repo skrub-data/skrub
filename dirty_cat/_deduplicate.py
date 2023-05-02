@@ -12,7 +12,7 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
 
-# Ignore lines too long, as docstring types be cut.
+# Ignore lines too long
 # flake8: noqa: E501
 
 

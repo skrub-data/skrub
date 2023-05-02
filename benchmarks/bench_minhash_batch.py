@@ -19,7 +19,7 @@ from dirty_cat._utils import LRUDict, check_input
 NoneType = type(None)
 
 
-# Ignore lines too long, as links in the docstring cannot be cut.
+# Ignore lines too long
 # flake8: noqa: E501
 
 

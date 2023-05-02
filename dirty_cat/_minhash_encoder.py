@@ -31,14 +31,12 @@ from ._utils import LRUDict, check_input
 NoneType = type(None)
 
 
-# Ignore lines too long, as links in the docstring cannot be cut.
+# Ignore lines too long
 # flake8: noqa: E501
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
-    """Encode string categorical features as a numeric array.
-
-    Uses the minhash method applied to ngram decomposition of strings.
+    """Encode string categorical features by applying the MinHash method to n-gram decompositions of strings.
 
     Parameters
     ----------

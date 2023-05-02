@@ -280,7 +280,9 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return feature_names
 
     def get_feature_names(self, input_features=None) -> List[str]:
-        """Ensure compatibility with sklearn < 1.0. Use ``get_feature_names_out`` instead.
+        """Return clean feature names. Compatibility method for sklearn < 1.0.
+
+        Use :func:`~DatetimeEncoder.get_feature_names_out` instead.
 
         Parameters
         ----------

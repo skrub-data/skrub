@@ -31,7 +31,7 @@ from sklearn.datasets import fetch_openml
 from dirty_cat._utils import parse_version
 from dirty_cat.datasets._utils import get_data_dir
 
-# Ignore lines too long, as docstrings' first line cannot be cut.
+# Ignore lines too long
 # flake8: noqa: E501
 
 
@@ -639,7 +639,7 @@ def fetch_employee_salaries(
     drop_irrelevant: bool = True,
     directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
-    """Fetches the employee_salaries dataset (regression), available at https://openml.org/d/42125
+    """Fetches the employee salaries dataset (regression), available at https://openml.org/d/42125
 
     Description of the dataset:
         Annual salary information including gross pay and overtime pay for all

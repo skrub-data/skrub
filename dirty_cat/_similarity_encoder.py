@@ -191,8 +191,7 @@ def get_kmeans_prototypes(
 
 
 class SimilarityEncoder(OneHotEncoder):
-    """
-    Encode string categorical features as a numeric array.
+    """Encode string categorical features to a similarity matrix.
 
     The input to this transformer should be an array-like of strings.
     The method is based on calculating the morphological similarities
@@ -239,10 +238,10 @@ class SimilarityEncoder(OneHotEncoder):
         will be all zeros. In the inverse transform, the missing category
         will be denoted as None.
     hashing_dim : int, optional
-        If `None`, the base vectorizer is
-        :class:`~sklearn.feature_extraction.text.CountVectorizer`,
-        otherwise it is set to
-        :class:`~sklearn.feature_extraction.text.HashingVectorizer`
+        If `None`, the base vectorizer is a
+        :obj:`~sklearn.feature_extraction.text.CountVectorizer`,
+        otherwise it is a
+        :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
         with a number of features equal to `hashing_dim`.
     n_prototypes : int, optional
         Useful when `most_frequent` or `k-means` is used.

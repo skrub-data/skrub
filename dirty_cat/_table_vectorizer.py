@@ -32,7 +32,7 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[
 
     Parameters
     ----------
-    date_column : :class:`~pandas.Series`
+    date_column : :obj:`~pandas.Series`
         A column of dates, as strings.
     n_trials : int, default=100
         Number of rows to use to infer the date format.
@@ -154,7 +154,7 @@ class TableVectorizer(ColumnTransformer):
     """Easily transform a heterogeneous array to a numerical one.
 
     Easily transforms a heterogeneous data table
-    (such as a :class:`~pandas.DataFrame`) to a numerical array for machine
+    (such as a :obj:`~pandas.DataFrame`) to a numerical array for machine
     learning. For this it transforms each column depending on its data type.
     It provides a simplified interface for the
     :class:`~sklearn.compose.ColumnTransformer`; more documentation of
@@ -280,7 +280,7 @@ class TableVectorizer(ColumnTransformer):
 
     Attributes
     ----------
-    transformers_: list of 3-tuples (str, Transformer or str, list of str)
+    transformers_ : list of 3-tuples (str, Transformer or str, list of str)
         The collection of fitted transformers as tuples of
         (name, fitted_transformer, column). `fitted_transformer` can be an
         estimator, 'drop', or 'passthrough'. In case there were no columns
@@ -292,16 +292,16 @@ class TableVectorizer(ColumnTransformer):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    columns_: :obj:`~pandas.Index`
+    columns_ : :obj:`~pandas.Index`
         The fitted array's columns. They are applied to the data passed
         to the `transform` method.
 
-    types_: dict mapping of str to type
+    types_ : dict mapping of str to type
         A mapping of inferred types per column.
         Key is the column name, value is the inferred dtype.
         Exists only if `auto_cast=True`.
 
-    imputed_columns_: list of str
+    imputed_columns_ : list of str
         The list of columns in which we imputed the missing values.
 
     See Also
@@ -316,15 +316,15 @@ class TableVectorizer(ColumnTransformer):
     Notes
     -----
     The column order of the input data is not guaranteed to be the same
-    as the output data (returned by :func:`TableVectorizer.transform`).
-    This is a due to the way the :class:`sklearn.compose.ColumnTransformer`
+    as the output data (returned by :func:`~TableVectorizer.transform`).
+    This is a due to the way the :class:`~sklearn.compose.ColumnTransformer`
     works.
     However, the output column order will always be the same for different
-    calls to :func:`TableVectorizer.transform` on a same fitted
+    calls to :func:`~TableVectorizer.transform` on a same fitted
     :class:`TableVectorizer` instance.
     For example, if input data has columns ['name', 'job', 'year'], then output
     columns might be shuffled, e.g., ['job', 'year', 'name'], but every call
-    to :func:`TableVectorizer.transform` on this instance will return this
+    to :func:`~TableVectorizer.transform` on this instance will return this
     order.
     """
 
@@ -390,26 +390,28 @@ class TableVectorizer(ColumnTransformer):
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
-            if parse_version(sklearn_version) >= parse_version("1.0.0"):
-                # sklearn is lenient and let us use both handle_unknown="ignore"
-                # and drop="if_binary" at the same time
+            if parse_version(sklearn_version) >= parse_version("1.0"):
+                # sklearn is lenient and lets us use both
+                # `handle_unknown="ignore"` and `drop="if_binary"`
+                # at the same time
                 self.low_card_cat_transformer_ = OneHotEncoder(
                     drop="if_binary", handle_unknown="ignore"
-                )  # TODO maybe change to "infrequent_if_exists" if we bump sklearn min version to 1.1
+                )  # TODO change to "infrequent_if_exists" when we bump sklearn min version to 1.1
             else:
-                # sklearn is not lenient, and does not let us use both handle_unknown="ignore"
-                # and drop="if_binary" at the same time
-                # so we use handle_unknown="error" instead
+                # sklearn is not lenient, and does not let us use both
+                # `handle_unknown="ignore"` and `drop="if_binary"`
+                # at the same time, so we use `handle_unknown="error"` instead
                 self.low_card_cat_transformer_ = OneHotEncoder(
                     drop="if_binary", handle_unknown="error"
                 )
                 warn(
-                    "You are using an old version of scikit-learn. "
-                    "Using handle_unknown='error' in low_card_cat_transformer. "
-                    "Please upgrade to scikit-learn 1.0.0 or higher to "
-                    "use handle_unknown='ignore', or change the drop parameter to"
-                    " None.",
-                    stacklevel=2,  # display the warning at the level of the user's code (fit_transform method)
+                    f"You are using scikit-learn={sklearn_version}. "
+                    "Upgrade to scikit-learn>=1.0 to use "
+                    "handle_unknown='ignore'. "
+                    "Otherwise, pass a OneHotEncoder with drop=None as "
+                    "low_card_cat_transformer. "
+                    "Using handle_unknown='error' in low_card_cat_transformer.",
+                    stacklevel=2,
                 )
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
@@ -530,9 +532,9 @@ class TableVectorizer(ColumnTransformer):
 
         In practice, it (1) converts features to their best possible types
         if `auto_cast=True`, (2) classify columns based on their data type,
-        (3) replaces "false missing" (see function `_replace_false_missing`),
+        (3) replaces "false missing" (see :func:`_replace_false_missing`),
         and imputes categorical columns depending on `impute_missing`, and
-        finally, transforms X.
+        finally, transforms `X`.
 
         Parameters
         ----------
@@ -727,9 +729,9 @@ class TableVectorizer(ColumnTransformer):
         """Return clean feature names.
 
         Feature names are formatted like:
-        "<column_name>_<value>" if encoded by :class:`~sklearn.preprocessing.OneHotEncoder`
-        or alike, (e.g. "job_title_Police officer"),
-        or "<column_name>" otherwise.
+        "<column_name>_<value>" if encoded by
+        :class:`~sklearn.preprocessing.OneHotEncoder` or alike,
+        (e.g. "job_title_Police officer"), or "<column_name>" otherwise.
 
         Parameters
         ----------
@@ -769,7 +771,9 @@ class TableVectorizer(ColumnTransformer):
         return all_trans_feature_names
 
     def get_feature_names(self, input_features=None) -> List[str]:
-        """Ensure compatibility with sklearn < 1.0. Use ``get_feature_names_out`` instead.
+        """Return clean feature names. Compatibility method for sklearn < 1.0.
+
+        Use :func:`~TableVectorizer.get_feature_names_out` instead.
 
         Parameters
         ----------

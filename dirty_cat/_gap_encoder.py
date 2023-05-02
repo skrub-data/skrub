@@ -42,13 +42,21 @@ else:
 
 from sklearn.decomposition._nmf import _beta_divergence
 
-# Ignore lines too long, as some things in the docstring cannot be cut.
+# Ignore lines too long
 # flake8: noqa: E501
 
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
-    """See GapEncoder's docstring."""
+    """GapEncoder for encoding a single column.
+
+    Do not use directly, this is an internal object.
+
+    See Also
+    --------
+    :class:`~dirty_cat.GapEncoder`
+        For more information.
+    """
 
     rho_: float
     H_dict_: Dict[np.ndarray, np.ndarray]
@@ -256,8 +264,8 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        GapEncoderColumn
-            The fitted GapEncoderColumn instance (self).
+        :obj:`GapEncoderColumn`
+            The fitted :class:`GapEncoderColumn` instance (self).
         """
         # Copy parameter rho
         self.rho_ = self.rho
@@ -309,7 +317,9 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return self
 
     def get_feature_names(self, n_labels=3, prefix=""):
-        """Ensure compatibility with sklearn < 1.0. Use ``get_feature_names_out`` instead.
+        """Return clean feature names. Compatibility method for sklearn < 1.0.
+
+        Use :func:`~GapEncoderColumn.get_feature_names_out` instead.
 
         Parameters
         ----------
@@ -611,8 +621,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     analyzer : {'word', 'char', 'char_wb'}, default='char'
         Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
         / :obj:`~sklearn.feature_extraction.text.CountVectorizer`.
-        Describes whether the matrix `V` to factorize should be made of word counts
-        or character n-gram counts.
+        Describes whether the matrix `V` to factorize should be made of
+        word counts or character-level n-gram counts.
         Option ‘char_wb’ creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
     add_words : bool, default=False
@@ -628,14 +638,16 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Maximum number of iterations to adjust the activations h at each step.
     handle_missing : {'error', 'empty_impute'}, default='empty_impute'
         Whether to raise an error or impute with empty string ('') if missing
-        values (NaN) are present during :func:`~GapEncoder.fit` (default is to impute).
-        In the inverse transform, the missing category will be denoted as `None`.
+        values (NaN) are present during :func:`~GapEncoder.fit`
+        (default is to impute).
+        In :func:`~GapEncoder.inverse_transform`, the missing categories will
+        be denoted as `None`.
 
     Attributes
     ----------
     rho_ : float
         Effective update rate for the `W` matrix.
-    fitted_models_ : list of GapEncoderColumn
+    fitted_models_ : list of :obj:`GapEncoderColumn`
         Column-wise fitted GapEncoders.
     column_names_ : list of str
         Column names of the data the Gap was fitted on.
@@ -946,7 +958,9 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         n_labels: int = 3,
         input_features=None,
     ) -> List[str]:
-        """Ensure compatibility with sklearn < 1.0. Use ``get_feature_names_out`` instead.
+        """Return clean feature names. Compatibility method for sklearn < 1.0.
+
+        Use :func:`~GapEncoder.get_feature_names_out` instead.
 
         For each topic, labels with the highest activations are selected.
 

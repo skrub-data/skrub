@@ -183,7 +183,7 @@ def fuzzy_join(
     sort: bool = False,
     suffixes: Tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
-    """Join two tables categorical string columns based on approximate matching of morphological similarity.
+    """Join two tables with categorical columns based on approximate matching of morphological similarity.
 
     Parameters
     ----------

@@ -19,7 +19,7 @@ _correspondence_table_url = (
 
 
 def get_ken_table_aliases() -> Set[str]:
-    """Get the supported aliases of embedded entities tables.
+    """Get the supported aliases of embedded KEN entities tables.
 
     These aliases can be using in subsequent functions (see section *See Also*).
 
@@ -49,7 +49,7 @@ def get_ken_types(
     exclude: Optional[str] = None,
     embedding_table_id: str = "all_entities",
 ) -> pd.DataFrame:
-    """Helper function to search for entity types.
+    """Helper function to search for KEN entity types.
 
     The result can then be used with :func:`get_ken_embeddings`.
 
@@ -66,7 +66,7 @@ def get_ken_types(
 
     Returns
     -------
-    :class:`~pandas.DataFrame`
+    :obj:`~pandas.DataFrame`
         The types of entities containing the substring.
 
     See Also
@@ -141,7 +141,7 @@ def get_ken_embeddings(
 
     Returns
     -------
-    :class:`~pandas.DataFrame`
+    :obj:`~pandas.DataFrame`
         The embeddings of entities and the specified type from Wikipedia.
 
     See Also
@@ -174,7 +174,7 @@ def get_ken_embeddings(
     Going directly for the exact type name (e.g. "wikicat_rock_music_bands")
     is possible but may not be complete (as some relevant bands may be
     in other similar types).
-    For searching the types, the :class:`~dirty_cat.datasets.get_ken_types`
+    For searching the types, the :func:`~dirty_cat.datasets.get_ken_types`
     function can be used.
 
     """

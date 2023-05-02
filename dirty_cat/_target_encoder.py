@@ -140,7 +140,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to determine the categories of each feature.
-        y : :class:`~numpy.ndarray`
+        y : :obj:`~numpy.ndarray`
             The associated target vector.
 
         Returns
