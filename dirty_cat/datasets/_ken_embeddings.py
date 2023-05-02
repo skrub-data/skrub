@@ -59,7 +59,7 @@ def get_ken_types(
         Substring pattern that filters the types of entities.
     exclude : str, optional
         Substring pattern to exclude from the search.
-    embedding_table_id : str, optional, default='all_entities'
+    embedding_table_id : str, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
         Get the supported tables with :func:`get_ken_table_aliases`.
         It is NOT possible to pass a custom figshare ID.
@@ -121,10 +121,10 @@ def get_ken_embeddings(
     types : str, optional
         Substring pattern that filters the types of entities.
         Will keep all entity types containing the substring.
-        Write in lowercase. If None, all types will be passed.
+        Write in lowercase. If `None`, all types will be passed.
     exclude : str, optional
         Type of embeddings to exclude from the types search.
-    embedding_table_id : str, optional, default='all_entities'
+    embedding_table_id : str, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
         Get the supported tables with :func:`get_ken_table_aliases`.
         It is also possible to pass a custom figshare ID.
@@ -150,9 +150,9 @@ def get_ken_embeddings(
         Get the supported aliases of embedded entities tables.
     :func:`get_ken_types`
         Helper function to search for entity types.
-    :func:`~dirty_cat.fuzzy_join` :
+    :func:`dirty_cat.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
-    :class:`~dirty_cat.FeatureAugmenter` :
+    :class:`dirty_cat.FeatureAugmenter` :
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 

@@ -385,7 +385,7 @@ class TableVectorizer(ColumnTransformer):
         We clone the instances to avoid altering them.
         See the clone function docstring.
         Note: typos are not detected here, they are left in and are detected
-        down the line in `ColumnTransformer.fit_transform`.
+        down the line in :func:`~sklearn.compose.ColumnTransformer.fit_transform`.
         """
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
@@ -446,9 +446,7 @@ class TableVectorizer(ColumnTransformer):
         # TODO: check that the provided transformers are valid
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        Used during fit: takes a dataframe and tries to convert
-        its columns to their best possible data type.
+        """Takes a dataframe and tries to convert its columns to their best possible data type.
 
         Parameters
         ----------
@@ -458,8 +456,8 @@ class TableVectorizer(ColumnTransformer):
         Returns
         -------
         :obj:`~pandas.DataFrame`
-            The same pandas DataFrame, with its columns cast to the best
-            possible data type.
+            The same :obj:`~pandas.DataFrame`, with its columns cast to their
+            best possible data type.
         """
         # We replace in all columns regardless of their type,
         # as we might have some false missing
@@ -502,9 +500,7 @@ class TableVectorizer(ColumnTransformer):
         return X
 
     def _apply_cast(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        Used during transform: takes a pandas dataframe,
-        and applies the best data types learnt during fitting.
+        """Takes a dataframe, and applies the best data types learnt during fitting.
 
         Does the same thing as `_auto_cast`, but applies learnt info.
         """
@@ -690,7 +686,7 @@ class TableVectorizer(ColumnTransformer):
         return X_enc
 
     def transform(self, X) -> np.ndarray:
-        """Transform X by applying the fitted transformers on the columns.
+        """Transform `X` by applying the fitted transformers on the columns.
 
         Parameters
         ----------
@@ -731,8 +727,9 @@ class TableVectorizer(ColumnTransformer):
         """Return clean feature names.
 
         Feature names are formatted like:
-        "<column_name>_<value>" if encoded by OneHotEncoder or alike,
-        (e.g. "job_title_Police officer"), or "<column_name>" otherwise.
+        "<column_name>_<value>" if encoded by :class:`~sklearn.preprocessing.OneHotEncoder`
+        or alike, (e.g. "job_title_Police officer"),
+        or "<column_name>" otherwise.
 
         Parameters
         ----------

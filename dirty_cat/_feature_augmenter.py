@@ -27,7 +27,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    tables : list of 2-tuples of (:class:`~pandas.DataFrame`, str)
+    tables : list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
         List of (table, column name) tuples, the tables to join.
     main_key : str
         The key column name in the main table (passed during fit) on which
@@ -40,16 +40,17 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         For numerical joins, this defines the maximum Euclidean distance
         between the matches.
     analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
-        Analyzer parameter for the CountVectorizer used for the string
-        similarities.
-        Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
-        to factorize should be made of word counts or character n-gram counts.
+        Analyzer parameter for the
+        :obj:`~sklearn.feature_extraction.text.CountVectorizer` used for
+        the string similarities.
+        Describes whether the matrix `V` to factorize should be made of
+        word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
     ngram_range : 2-tuple of int, default=(2, 4)
         The lower and upper boundary of the range of n-values for different
         n-grams used in the string similarity. All values of n such
-        that `min_n <= n <= max_n` will be used.
+        that ``min_n <= n <= max_n`` will be used.
 
     See Also
     --------
@@ -138,16 +139,15 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : DataFrame, shape [n_samples, n_features]
-            The main table, to be joined to the
-            auxiliary ones.
+        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
+            The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
 
         Returns
         -------
         :obj:`FeatureAugmenter`
-            Fitted :obj:`FeatureAugmenter` instance (self).
+            Fitted :class:`FeatureAugmenter` instance (self).
         """
 
         if self.main_key not in X.columns:
@@ -164,13 +164,12 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
-        """Transform X using the specified encoding scheme.
+        """Transform `X` using the specified encoding scheme.
 
         Parameters
         ----------
-        X : DataFrame, shape [n_samples, n_features]
-            The main table, to be joined to the
-            auxiliary ones.
+        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
+            The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
 

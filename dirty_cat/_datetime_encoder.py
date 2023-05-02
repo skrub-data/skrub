@@ -48,7 +48,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    extract_until : AcceptedTimeValues, default='hour'
+    extract_until : {'year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'}, default='hour'
         Extract up to this granularity.
         If all features have not been extracted, add the 'total_time' feature,
         which contains the time to epoch (in seconds).
@@ -60,7 +60,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Attributes
     ----------
-    n_features_in_: int
+    n_features_in_ : int
         Number of features in the data seen during fit.
     n_features_out_ : int
         Number of features of the transformed data.
@@ -73,11 +73,11 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`~dirty_cat.GapEncoder` :
+    :class:`dirty_cat.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`~dirty_cat.MinHashEncoder` :
+    :class:`dirty_cat.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
-    :class:`~dirty_cat.SimilarityEncoder` :
+    :class:`dirty_cat.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Examples
@@ -176,8 +176,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :class:`~dirty_cat.DatetimeEncoder`
-            Fitted :class:`~dirty_cat.DatetimeEncoder` instance (self).
+        :obj:`DatetimeEncoder`
+            Fitted :class:`DatetimeEncoder` instance (self).
         """
         self._validate_keywords()
         # Columns to extract for each column,
@@ -218,7 +218,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None) -> np.ndarray:
-        """Transform X by replacing each datetime column with corresponding numerical features.
+        """Transform `X` by replacing each datetime column with corresponding numerical features.
 
         Parameters
         ----------
@@ -259,8 +259,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Feature names are formatted like: "<column_name>_<new_feature>"
         if the original data has column names, otherwise with format
         "<column_index>_<new_feature>" where `<new_feature>` is one of
-        ["year", "month", "day", "hour", "minute", "second", "millisecond",
-        "microsecond", "nanosecond", "dayofweek"].
+        {"year", "month", "day", "hour", "minute", "second", "millisecond",
+        "microsecond", "nanosecond", "dayofweek"}.
 
         Parameters
         ----------

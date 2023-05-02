@@ -18,24 +18,25 @@ def make_deduplication_data(
     random_state: Optional[Union[int, np.random.RandomState]] = None,
 ) -> List[str]:
     """Duplicates examples with spelling mistakes.
+
     Characters are misspelled with probability `prob_mistake_per_letter`.
 
     Parameters
     ----------
     examples : list of str
-        examples to duplicate
+        Examples to duplicate
     entries_per_example : list of int
-        number of duplications per example
+        Number of duplications per example
     prob_mistake_per_letter : float in [0, 1]
-        probability of misspelling a character in duplications
-    random_state : int, RandomState instance or None, optional
+        Probability of misspelling a character in duplications
+    random_state : int, :obj:`~numpy.random.RandomState` instance, optional
         Determines random number generation for dataset noise. Pass an int
         for reproducible output across multiple function calls.
 
     Returns
     -------
     list of str
-        list of duplicated examples with spelling mistakes
+        List of duplicated examples with spelling mistakes
     """
     rng = check_random_state(random_state)
 

@@ -12,6 +12,9 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
 
+# Ignore lines too long, as docstring types be cut.
+# flake8: noqa: E501
+
 
 def compute_ngram_distance(
     unique_words: Union[Sequence[str], np.ndarray],
@@ -136,24 +139,22 @@ def deduplicate(
     data : sequence of str
         The data to be deduplicated.
     n_clusters : int, optional
-        Number of clusters to use for hierarchical clustering, if None use the
+        Number of clusters to use for hierarchical clustering, if `None` use the
         number of clusters that lead to the lowest silhouette score.
     ngram_range : 2-tuple of int, default=(2, 4)
         Range to use for computing n-gram distance.
     analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
-        Analyzer parameter for the CountVectorizer used for the string
-        similarities.
-        Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
-        to factorize should be made of word counts or character n-gram counts.
+        Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.CountVectorizer`
+        used for the string similarities.
+        Describes whether the matrix `V` to factorize should be made of
+        word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    method : str, default=`average`
-        Linkage method parameter to use for merging clusters via scipy's
-        `linkage` method.
-        Options: {`single`, `complete`, `average`, `centroid`, `median`, `ward`},
-        describing different methods to calculate the distance between two clusters.
-        Option `average` calculates the distance between two clusters as the average
-        distance between data points in the first and second cluster.
+    method : {`single`, `complete`, `average`, `centroid`, `median`, `ward`}, default=`average`
+        Linkage method parameter to use for merging clusters via
+        :func:`scipy.cluster.hierarchy.linkage`.
+        Option `average` calculates the distance between two clusters as the
+        average distance between data points in the first and second cluster.
 
     Returns
     -------
@@ -162,12 +163,12 @@ def deduplicate(
 
     See Also
     --------
-    :class:`~dirty_cat.GapEncoder` :
+    :class:`dirty_cat.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics with
         continuous encoding.
-    :class:`~dirty_cat.MinHashEncoder` :
+    :class:`dirty_cat.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
-    :class:`~dirty_cat.SimilarityEncoder` :
+    :class:`dirty_cat.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Notes

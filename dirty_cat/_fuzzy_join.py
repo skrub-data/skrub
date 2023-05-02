@@ -192,7 +192,7 @@ def fuzzy_join(
     right : :obj:`~pandas.DataFrame`
         A table used to merge with.
     how : {'left', 'right'}, default='left'
-        Type of merge to be performed. Note that unlike :func:`~pandas.merge`,
+        Type of merge to be performed. Note that unlike :func:`pandas.merge`,
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
@@ -211,21 +211,21 @@ def fuzzy_join(
         similarity on the string representation.
     encoder : vectorizer instance, optional
         Encoder parameter for the Vectorizer.
-        By default, uses a :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        By default, uses a :obj:`~sklearn.feature_extraction.text.HashingVectorizer`.
         It is possible to pass a vectorizer instance inheriting
         :class:`~sklearn.feature_extraction.text._VectorizerMixin`
         to tweak the parameters of the encoder.
     analyzer : {'word', 'char', 'char_wb'}, default='char_wb'
-        Analyzer parameter for the HashingVectorizer passed to
-        the encoder and used for the string similarities.
-        Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
-        to factorize should be made of word counts or character n-gram counts.
+        Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
+        passed to the encoder and used for the string similarities.
+        Describes whether the matrix `V` to factorize should be made of
+        word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
     ngram_range : 2-tuple of int, default=(2, 4)
         The lower and upper boundary of the range of n-values for different
-        n-grams used in the string similarity. All values of n such
-        that min_n <= n <= max_n will be used.
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
     return_score : bool, default=True
         Whether to return matching score based on the distance between
         the nearest matched categories.
@@ -239,7 +239,7 @@ def fuzzy_join(
     drop_unmatched : bool, default=False
         Remove categories for which a match was not found in the two tables.
     sort : bool, default=False
-        Sort the join keys lexicographically in the result DataFrame.
+        Sort the join keys lexicographically in the resulting :obj:`~pandas.DataFrame`.
         If False, the order of the join keys depends on the join type
         (`how` keyword).
     suffixes : 2-tuple of str, default=('_x', '_y')
@@ -249,9 +249,9 @@ def fuzzy_join(
     Returns
     -------
     df_joined : :obj:`~pandas.DataFrame`
-        The joined table returned as a DataFrame. If `return_score` is True,
-        another column will be added to the DataFrame containing the
-        matching scores.
+        The joined table returned as a :obj:`~pandas.DataFrame`.
+        If `return_score=True`, another column will be added
+        to the DataFrame containing the matching scores.
 
     See Also
     --------
@@ -262,11 +262,11 @@ def fuzzy_join(
     Notes
     -----
     For regular joins, the output of fuzzy_join is identical
-    to :func:`~pandas.merge`, except that both key columns are returned.
+    to :func:`pandas.merge`, except that both key columns are returned.
 
     Joining on indexes and multiple columns is not supported.
 
-    When `return_score=True`, the returned :class:`~pandas.DataFrame` gives
+    When `return_score=True`, the returned :obj:`~pandas.DataFrame` gives
     the distances between the closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.

@@ -30,7 +30,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
-        - list : ``categories[i]`` holds the categories expected in the `i`-th
+        - list : `categories[i]` holds the categories expected in the `i`-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
 
@@ -47,18 +47,19 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         will be assigned the prior mean of the target variable.
     handle_missing : {'error', ''}, default=''
         Whether to raise an error or impute with blank string '' if missing
-        values (NaN) are present during fit (default is to impute).
+        values (NaN) are present during :func:`~TargetEncoder.fit`
+        (default is to impute).
         When this parameter is set to '', and a missing value is encountered
-        during fit_transform, the resulting encoded columns for this feature
-        will be all zeros.
+        during :func:`~TargetEncoder.fit_transform`, the resulting encoded
+        columns for this feature will be all zeros.
 
     Attributes
     ----------
-    n_features_in_: int
-        Number of features in the data seen during fit.
+    n_features_in_ : int
+        Number of features in the data seen during :func:`~TargetEncoder.fit`.
     categories_ : list of :obj:`~numpy.ndarray`
-        The categories of each feature determined during fitting
-        (in order corresponding with output of ``transform``).
+        The categories of each feature determined during :func:`~TargetEncoder.fit`
+        (in order corresponding with output of :func:`~TargetEncoder.transform`).
     n_ : int
         Length of :term:`y`
 
@@ -133,8 +134,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         return {"X_types": ["categorical"]}
 
     def fit(self, X, y) -> "TargetEncoder":
-        """
-        Fit the instance to X.
+        """Fit the instance to `X`.
 
         Parameters
         ----------
@@ -145,7 +145,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :class:`~dirty_cat.TargetEncoder`
+        :obj:`~dirty_cat.TargetEncoder`
             Fitted :class:`~dirty_cat.TargetEncoder` instance (self).
         """
         X = check_input(X)
@@ -227,8 +227,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X) -> np.ndarray:
-        """
-        Transform X using the specified encoding scheme.
+        """Transform `X` using the specified encoding scheme.
 
         Parameters
         ----------

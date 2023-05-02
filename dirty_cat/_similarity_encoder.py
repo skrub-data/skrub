@@ -212,7 +212,7 @@ class SimilarityEncoder(OneHotEncoder):
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
-        - list : ``categories[i]`` holds the categories expected in the i-th
+        - list : `categories[i]` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
         - 'most_frequent' : Computes the most frequent values for every
@@ -222,7 +222,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         The categories used can be found in the
         :attr:`~SimilarityEncoder.categories_` attribute.
-    dtype : number type, default :obj:`~numpy.float64`
+    dtype : number type, default :class:`~numpy.float64`
         Desired dtype of output.
     handle_unknown : 'error' or 'ignore', default=''
         Whether to raise an error or ignore if an unknown categorical feature
@@ -239,14 +239,14 @@ class SimilarityEncoder(OneHotEncoder):
         will be all zeros. In the inverse transform, the missing category
         will be denoted as None.
     hashing_dim : int, optional
-        If None, the base vectorizer is
+        If `None`, the base vectorizer is
         :class:`~sklearn.feature_extraction.text.CountVectorizer`,
         otherwise it is set to
         :class:`~sklearn.feature_extraction.text.HashingVectorizer`
         with a number of features equal to `hashing_dim`.
     n_prototypes : int, optional
         Useful when `most_frequent` or `k-means` is used.
-        Must be a positive non-null integer.
+        Must be a positive integer.
     random_state : int or RandomState, optional
         Useful when `k-means` strategy is used.
     n_jobs : int, optional
@@ -373,8 +373,7 @@ class SimilarityEncoder(OneHotEncoder):
             warnings.warn('n_prototypes parameter ignored with category type "auto". ')
 
     def get_most_frequent(self, prototypes: List[str]) -> np.ndarray:
-        """
-        Get the most frequent category prototypes.
+        """Get the most frequent category prototypes.
 
         Parameters
         ----------
@@ -390,8 +389,7 @@ class SimilarityEncoder(OneHotEncoder):
         return values[: self.n_prototypes]
 
     def fit(self, X, y=None) -> "SimilarityEncoder":
-        """
-        Fit the instance to X.
+        """Fit the instance to `X`.
 
         Parameters
         ----------
@@ -402,7 +400,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         Returns
         -------
-        :class:`SimilarityEncoder`
+        :obj:`SimilarityEncoder`
             The fitted :class:`SimilarityEncoder` instance (self).
         """
 
@@ -528,8 +526,7 @@ class SimilarityEncoder(OneHotEncoder):
         return self
 
     def transform(self, X, fast: bool = True) -> np.ndarray:
-        """
-        Transform X using specified encoding scheme.
+        """Transform `X` using specified encoding scheme.
 
         Parameters
         ----------

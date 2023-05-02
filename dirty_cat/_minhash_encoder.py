@@ -7,7 +7,7 @@ The principle is as follows:
      n-dimensional vectors of integers.
   3. A hashing function is used to assign an integer to each n-gram.
      The minimum of the hashes over all n-grams is used in the encoding.
-  4. This process is repeated with N hashing functions are used to
+  4. This process is repeated with `N` hashing functions are used to
      form N-dimensional encodings.
 Maxhash encodings can be computed similarly by taking the hashes maximum
 instead.
@@ -47,24 +47,22 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         lead to good prediction performance, but with more computational cost.
     ngram_range : 2-tuple of int, default=(2, 4)
         The lower and upper boundary of the range of n-values for different
-        n-grams to be extracted. All values of n such that `min_n <= n <= max_n`.
-        will be used.
+        n-grams to be extracted. All values of `n` such that
+        ``min_n <= n <= max_n`` will be used.
     hashing : {'fast', 'murmur'}, default='fast'
-        Hashing function. fast is faster but
+        Hashing function. `fast` is faster than `murmur` but
         might have some concern with its entropy.
     minmax_hash : bool, default=False
-        If True, returns the min and max hashes concatenated.
+        If `True`, returns the min and max hashes concatenated.
     handle_missing : {'error', 'zero_impute'}, default='zero_impute'
         Whether to raise an error or encode missing values (NaN) with
         vectors filled with zeros.
     n_jobs : int, optional
         The number of jobs to run in parallel.
         The hash computations for all unique elements are parallelized.
-        None means 1 unless in a
-        `joblib.parallel_backend context <https://joblib.readthedocs.io/en/latest/parallel.html>`_.
+        `None` means 1 unless in a :class:`joblib.parallel_backend`.
         -1 means using all processors.
-        See `Scikit-learn Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
-        for more details.
+        See :term:`n_jobs` for more details.
 
     Attributes
     ----------
@@ -73,11 +71,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`dirty_cat.GapEncoder` :
+    :class:`dirty_cat.GapEncoder`
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`dirty_cat.SimilarityEncoder` :
+    :class:`dirty_cat.SimilarityEncoder`
         Encode string columns as a numeric array with n-gram string similarity.
-    :class:`dirty_cat.deduplicate` :
+    :class:`dirty_cat.deduplicate`
         Deduplicate data by hierarchically clustering similar strings.
 
     References
@@ -165,9 +163,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return min_hashes / (2**32 - 1)
 
     def _get_fast_hash(self, string: str) -> np.ndarray:
-        """
-        Encode a string with fast hashing function.
-        fast hashing supports both min_hash and minmax_hash encoding.
+        """Encode a string with fast hashing function.
+
+        Fast hashing supports both min_hash and minmax_hash encoding.
 
         Parameters
         ----------
@@ -197,8 +195,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def _compute_hash_batched(
         self, batch: Collection[str], hash_func: Callable[[str], np.ndarray]
     ):
-        """
-        Function called to compute the hashes of a batch of strings.
+        """Function called to compute the hashes of a batch of strings.
 
         Check if the string is in the hash dictionary, if not, compute the hash
         using the specified hashing function and add it to the dictionary.
@@ -226,7 +223,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return res
 
     def fit(self, X, y=None) -> "MinHashEncoder":
-        """Fit the MinHashEncoder to X.
+        """Fit the MinHashEncoder to `X`.
 
         In practice, just initializes a dictionary
         to store encodings to speed up computation.
@@ -241,7 +238,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         Returns
         -------
         :obj:`MinHashEncoder`
-            The fitted :obj:`MinHashEncoder` instance (self).
+            The fitted :class:`MinHashEncoder` instance (self).
         """
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
@@ -258,7 +255,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def transform(self, X) -> np.ndarray:
         """
-        Transform X using specified encoding scheme.
+        Transform `X` using specified encoding scheme.
 
         Parameters
         ----------
