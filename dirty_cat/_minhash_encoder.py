@@ -1,19 +1,6 @@
 """
-Minhash encoding of string arrays.
-The principle is as follows:
-  1. A string is viewed as a succession of numbers (the ASCII or UTF8
-     representation of its elements).
-  2. The string is then decomposed into a set of n-grams, i.e.
-     n-dimensional vectors of integers.
-  3. A hashing function is used to assign an integer to each n-gram.
-     The minimum of the hashes over all n-grams is used in the encoding.
-  4. This process is repeated with `N` hashing functions are used to
-     form N-dimensional encodings.
-Maxhash encodings can be computed similarly by taking the hashes maximum
-instead.
-With this procedure, strings that share many n-grams have greater
-probability of having same encoding values. These encodings thus capture
-morphological similarities between strings.
+Implements the MinHashEncoder, which encodes string categorical features by
+applying the MinHash method to n-gram decompositions of strings.
 """
 
 from typing import Callable, Collection, Dict, List, Literal, Tuple
@@ -37,6 +24,23 @@ NoneType = type(None)
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """Encode string categorical features by applying the MinHash method to n-gram decompositions of strings.
+
+    The principle is as follows:
+
+    1. A string is viewed as a succession of numbers (the ASCII or UTF8
+       representation of its elements).
+    2. The string is then decomposed into a set of n-grams, i.e.
+       n-dimensional vectors of integers.
+    3. A hashing function is used to assign an integer to each n-gram.
+       The minimum of the hashes over all n-grams is used in the encoding.
+    4. This process is repeated with `N` hashing functions to form
+       N-dimensional encodings.
+
+    Maxhash encodings can be computed similarly by taking the maximum hash
+    instead.
+    With this procedure, strings that share many n-grams have a greater
+    probability of having the same encoding value. These encodings thus capture
+    morphological similarities between strings.
 
     Parameters
     ----------

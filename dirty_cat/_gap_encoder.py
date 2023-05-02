@@ -1,18 +1,5 @@
 """
-Online Gamma-Poisson factorization of string arrays.
-The principle is as follows:
-    1. Given an input string array `X`, we build its bag-of-n-grams
-       representation `V` (n_samples, vocab_size).
-    2. Instead of using the n-grams counts as encodings, we look for low-
-       dimensional representations by modeling n-grams counts as linear
-       combinations of topics ``V = HW``, with `W` (n_topics, vocab_size) the topics
-       and `H` (n_samples, n_topics) the associated activations.
-    3. Assuming that n-grams counts follow a Poisson law, we fit `H` and `W` to
-       maximize the likelihood of the data, with a Gamma prior for the
-       activations `H` to induce sparsity.
-    4. In practice, this is equivalent to a non-negative matrix factorization
-       with the Kullback-Leibler divergence as loss, and a Gamma prior on `H`.
-       We thus optimize `H` and W with the multiplicative update method.
+Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 
 import warnings
@@ -578,6 +565,21 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     The :class:`~dirty_cat.GapEncoder` supports online learning on batches of
     data for scalability through the :func:`~dirty_cat.GapEncoder.partial_fit`
     method.
+
+    The principle is as follows:
+
+    1. Given an input string array `X`, we build its bag-of-n-grams
+       representation `V` (`n_samples`, `vocab_size`).
+    2. Instead of using the n-grams counts as encodings, we look for low-
+       dimensional representations by modeling n-grams counts as linear
+       combinations of topics ``V = HW``, with `W` (`n_topics`, `vocab_size`)
+       the topics and `H` (`n_samples`, `n_topics`) the associated activations.
+    3. Assuming that n-grams counts follow a Poisson law, we fit `H` and `W` to
+       maximize the likelihood of the data, with a Gamma prior for the
+       activations `H` to induce sparsity.
+    4. In practice, this is equivalent to a non-negative matrix factorization
+       with the Kullback-Leibler divergence as loss, and a Gamma prior on `H`.
+       We thus optimize `H` and `W` with the multiplicative update method.
 
     Parameters
     ----------

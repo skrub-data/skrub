@@ -1,16 +1,6 @@
 """
-Similarity encoding of string arrays.
-The principle is as follows:
-    1. Given an input string array X = [x1, ..., xn] with k unique categories
-       [c1, ..., ck] and a similarity measure sim(s1, s2) between strings,
-       we define the encoded vector of xi as [sim(xi, c1), ... , sim(xi, ck)].
-       Similarity encoding of X results in a matrix with shape (n, k) that
-       captures morphological similarities between string entries.
-    2. To avoid dealing with high-dimensional encodings when k is high, we can
-       use d << k prototypes [p1, ..., pd] with which similarities will be
-       computed:  xi -> [sim(xi, p1), ..., sim(xi, pd)]. These prototypes can
-       be automatically sampled from the input data (most frequent categories,
-       KMeans) or provided by the user.
+Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
+which encodes similarity instead of equality of values.
 """
 
 import warnings
@@ -198,6 +188,20 @@ class SimilarityEncoder(OneHotEncoder):
     between the categories.
     This encoding is an alternative to
     :class:`~sklearn.preprocessing.OneHotEncoder` for dirty categorical variables.
+
+    The principle of this encoder is as follows:
+
+    1. Given an input string array ``X = [x1, ..., xn]`` with `k` unique
+       categories ``[c1, ..., ck]`` and a similarity measure ``sim(s1, s2)``
+       between strings, we define the encoded vector of `xi` as
+       ``[sim(xi, c1), ... , sim(xi, ck)]``.
+       Similarity encoding of `X` results in a matrix with shape (`n`, `k`)
+       that captures morphological similarities between string entries.
+    2. To avoid dealing with high-dimensional encodings when `k` is high,
+       we can use ``d << k`` prototypes ``[p1, ..., pd]`` with which
+       similarities will be computed:  ``xi -> [sim(xi, p1), ..., sim(xi, pd)]``.
+       These prototypes can be automatically sampled from the input data
+       (most frequent categories, KMeans) or provided by the user.
 
     Parameters
     ----------
