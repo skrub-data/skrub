@@ -1,6 +1,7 @@
 """
 This benchmark compares the performance of using the HashingVectorizer
 or the CountVectorizer for the fuzzy join.
+
 The results seem to indicate that the HashingVectorizer is almost always
 faster than the CountVectorizer, without any significant loss in accuracy.
 This leads to the conclusion that the HashingVectorizer should be used
@@ -17,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from fuzzy_join_benchmark import evaluate, fetch_data
+from dirty_cat.benchmarks.fuzzy_join_mini import evaluate, fetch_data
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
     CountVectorizer,

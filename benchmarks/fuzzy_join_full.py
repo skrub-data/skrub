@@ -1,3 +1,8 @@
+"""
+This benchmark compares the performance of dirty-cat's fuzzy_join compared
+to other fuzzy joining functions available on a set of toy datasets.
+"""
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,7 +11,7 @@ from itertools import product
 from thefuzz import process
 from autofj import AutoFJ
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
-from fuzzy_join_benchmark import (
+from dirty_cat.benchmarks.fuzzy_join_mini import (
     fetch_data,
     fuzzy_join_precision_recall,
     thefuzz_precision_recall,

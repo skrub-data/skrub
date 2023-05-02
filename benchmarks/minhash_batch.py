@@ -1,5 +1,5 @@
 """
-The MinHashEncoder version used for the benchmark.
+Testing the performance of the MinHashEncoder based on the number of batches used.
 On the main branch, we only kept the best version of the MinHashEncoder
 which is the batched version with batch_per_job=1
 (the batch_per_job parameter has no effect on the results)

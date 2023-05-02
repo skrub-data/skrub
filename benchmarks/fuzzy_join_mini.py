@@ -1,3 +1,9 @@
+"""
+This benchmark compares the performance of dirty-cat's fuzzy_join compared
+to other fuzzy joining functions available on a small toy dataset
+of country names.
+"""
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
