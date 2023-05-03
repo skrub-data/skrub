@@ -327,6 +327,27 @@ class TableVectorizer(ColumnTransformer):
     columns might be shuffled, e.g., ['job', 'year', 'name'], but every call
     to :func:`~TableVectorizer.transform` on this instance will return this
     order.
+
+    Examples
+    --------
+    Fit a :class:`TableVectorizer` on an example dataset:
+
+    >>> from dirty_cat.datasets import fetch_employee_salaries
+    >>> ds = fetch_employee_salaries()
+    >>> tv = TableVectorizer()
+    >>> tv.fit(ds.X)
+
+    Now, we can inspect the transformers assigned to each column:
+
+    >>> tv.transformers_
+    [
+        ('datetime', DatetimeEncoder(), ['date_first_hired']),
+        ('low_card_cat', OneHotEncoder(drop='if_binary', handle_unknown='ignore'),
+         ['gender', 'department', 'department_name', 'assignment_category']),
+        ('high_card_cat', GapEncoder(n_components=30),
+         ['division', 'employee_position_title', 'underfilled_job_title']),
+        ('remainder', 'passthrough', ['year_first_hired'])
+    ]
     """
 
     transformers_: List[Tuple[str, Union[str, TransformerMixin], List[str]]]
