@@ -334,6 +334,12 @@ class TableVectorizer(ColumnTransformer):
 
     >>> from dirty_cat.datasets import fetch_employee_salaries
     >>> ds = fetch_employee_salaries()
+    >>> ds.X.head(3)
+      gender department                          department_name                                           division assignment_category      employee_position_title underfilled_job_title date_first_hired  year_first_hired
+    0      F        POL                     Department of Police  MSB Information Mgmt and Tech Division Records...    Fulltime-Regular  Office Services Coordinator                   NaN       09/22/1986              1986
+    1      M        POL                     Department of Police         ISB Major Crimes Division Fugitive Section    Fulltime-Regular        Master Police Officer                   NaN       09/12/1988              1988
+    2      F        HHS  Department of Health and Human Services      Adult Protective and Case Management Services    Fulltime-Regular             Social Worker IV                   NaN       11/19/1989              1989
+
     >>> tv = TableVectorizer()
     >>> tv.fit(ds.X)
 

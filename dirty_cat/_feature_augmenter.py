@@ -1,14 +1,6 @@
 """
-Transformer that allows multiple fuzzy joins to be performed on a table.
-The principle is as follows:
-  1. The main table and the key column name are provided at initialisation.
-  2. The auxiliary tables are provided for fitting, and will be joined
-  sequentially when `transform` is called.
-It is advised to use hyperparameter tuning tools such as scikit-learn's
-GridSearchCV to determine the best `match_score` parameter, as this can
-significantly improve your results.
-(see example 'Fuzzy joining dirty tables with the FeatureAugmenter' for an illustration)
-For more information on how the join is performed, see fuzzy_join's documentation.
+Implements the FeatureAugmenter, a that allows chaining multiple fuzzy joins
+on a table.
 """
 
 from typing import List, Literal, Tuple
@@ -24,6 +16,18 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     Given a list of tables and key column names,
     fuzzy join them to the main table.
+
+    The principle is as follows:
+
+    1. The main table and the key column name are provided at initialisation.
+    2. The auxiliary tables are provided for fitting, and will be joined
+       sequentially when :func:`~FeatureAugmenter.transform` is called.
+
+    It is advised to use hyperparameter tuning tools such as
+    :class:`~sklearn.model_selection.GridSearchCV` to determine the best
+    `match_score` parameter, as this can significantly improve your results.
+    (see example 'Fuzzy joining dirty tables with the FeatureAugmenter'
+    for an illustration)
 
     Parameters
     ----------
