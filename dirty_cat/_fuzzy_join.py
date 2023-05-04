@@ -1,15 +1,5 @@
 """
-Fuzzy joining tables using string columns.
-The principle is as follows:
-  1. We embed and transform the key string columns using
-  HashingVectorizer and TfifdTransformer.
-  2. For each category, we use the nearest neighbor method to find its closest
-  neighbor and establish a match.
-  3. We match the tables using the previous information.
-Categories from the two tables that share many sub-strings (n-grams)
-have greater probability of being matched together. The join is based on
-morphological similarities between strings.
-Joining on numerical columns is also possible based on the Euclidean distance.
+Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 """
 
 import numbers
@@ -184,6 +174,21 @@ def fuzzy_join(
     suffixes: Tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
     """Join two tables with categorical columns based on approximate matching of morphological similarity.
+
+    The principle is as follows:
+
+      1. We embed and transform the key string columns using
+      HashingVectorizer and TfifdTransformer,
+      2. For each category, we use the nearest neighbor method to find its
+      closest neighbor and establish a match,
+      3. We match the tables using the previous information.
+
+    Categories from the two tables that share many sub-strings (n-grams)
+    have greater probability of being matched together. The join is based on
+    morphological similarities between strings.
+
+    Joining on numerical columns is also possible based on
+    the Euclidean distance.
 
     Parameters
     ----------
