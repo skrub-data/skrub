@@ -1,8 +1,7 @@
 """
 Implements deduplication based on clustering string distance matrices.
-This works best if there is a number of underlying categories that
-sometimes appear in the data with small variations and/or misspellings.
 """
+
 from typing import List, Literal, Optional, Sequence, Tuple, Union
 
 import numpy as np
@@ -133,6 +132,9 @@ def deduplicate(
     ] = "average",
 ) -> List[str]:
     """Deduplicate data by hierarchically clustering similar strings.
+
+    This works best if there is a number of underlying categories that
+    sometimes appear in the data with small variations and/or misspellings.
 
     Parameters
     ----------
