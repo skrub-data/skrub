@@ -324,7 +324,7 @@ class TableVectorizer(ColumnTransformer):
     calls to :func:`~TableVectorizer.transform` on a same fitted
     :class:`TableVectorizer` instance.
     For example, if input data has columns ['name', 'job', 'year'], then output
-    columns might be shuffled, e.g., ['job', 'year', 'name'], but every call
+    columns might be shuffled, e.g. ['job', 'year', 'name'], but every call
     to :func:`~TableVectorizer.transform` on this instance will return this
     order.
 
