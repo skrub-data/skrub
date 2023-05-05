@@ -12,7 +12,7 @@ from dirty_cat._fuzzy_join import fuzzy_join
 
 
 class FeatureAugmenter(BaseEstimator, TransformerMixin):
-    """Join multiple tables automatically.
+    """Augment a main table by automatically joining multiple auxiliary tables on it.
 
     Given a list of tables and key column names,
     fuzzy join them to the main table.
