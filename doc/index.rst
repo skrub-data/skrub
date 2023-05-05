@@ -25,9 +25,9 @@ dirty_cat: machine learning with dirty categories
     <div class="flex-content">
     <span class="container-title">Automatic features from heterogeneous dataframes</span>
 
-:class:`TableVectorizer`: a transformer **automatically turning a pandas
-dataframe into a numpy array** for machine learning -- a default encoding
-pipeline you can tweak.
+:class:`TableVectorizer`: a transformer to **easily turn a pandas
+dataframe into a numpy array** suitable for machine learning -- a default
+encoding pipeline you can tweak.
 
 .. rst-class:: centered
 
@@ -44,11 +44,11 @@ pipeline you can tweak.
   dimension corresponds to a topic that summarizes substrings captured.
   :ref:`Example <example_gap_encoder>`
 
-* :class:`SimilarityEncoder`, a simple modification of one-hot encoding
-  to capture the strings.
+* :class:`SimilarityEncoder`, an enhanced one-hot encoder
+  able to capture the string similarities in the data.
   :ref:`Example <example_similarity_encoder>`
 
-* :class:`MinHashEncoder`, very scalable.
+* :class:`MinHashEncoder`, very scalable, suitable for big data.
   :ref:`Example <example_minhash_encoder>`
 
 .. raw:: html
@@ -60,7 +60,7 @@ pipeline you can tweak.
 * :func:`fuzzy_join`, approximate matching using morphological similarity.
   :ref:`Example <example_fuzzy_join>`
 
-* :class:`FeatureAugmenter`, a scikit-learn transformer for joining multiple tables.
+* :class:`FeatureAugmenter`, a transformer for joining multiple tables together.
   :ref:`Example <example_feature_augmenter>`
 
 .. raw:: html
@@ -178,7 +178,7 @@ Joining tables
    FeatureAugmenter
 
 Deduplication: merging variants of the same entry
----------------------------------------------------
+-------------------------------------------------
 
 .. autosummary::
    :toctree: generated/
@@ -213,10 +213,10 @@ Data download and generation
 About
 =====
 
-dirty_cat is for now a repository for ideas coming out of a research
+dirty_cat is currently a repository for ideas coming out of a research
 project: there is still little known about the problems of dirty
 categories. Tradeoffs will emerge in the long run. We really need people
-giving feedback on success and failures with the different techniques and
+giving feedback on successes and failures with the different techniques and
 pointing us to open datasets on which we can do more empirical work.
 dirty-cat received funding from `project DirtyData
 <https://project.inria.fr/dirtydata/>`_ (ANR-17-CE23-0018).
@@ -229,7 +229,7 @@ Related projects
 ================
 
 - `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_
-  - a very popular machine learning library; dirty_cat inherits its API
+  - a very popular machine learning library; *dirty_cat* inherits its API
 - `categorical-encoding <https://contrib.scikit-learn.org/category_encoders/>`_
   - scikit-learn compatible classic categorical encoding schemes
 - `spark-dirty-cat <https://github.com/rakutentech/spark-dirty-cat>`_
@@ -237,4 +237,4 @@ Related projects
 - `CleverCSV <https://github.com/alan-turing-institute/CleverCSV>`_
   - a package for dealing with dirty csv files
 - `GAMA <https://github.com/openml-labs/gama>`_
-  - a modular AutoML assistant that uses dirty_cat as part of its search space
+  - a modular AutoML assistant that uses *dirty_cat* as part of its search space
