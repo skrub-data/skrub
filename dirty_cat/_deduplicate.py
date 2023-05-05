@@ -131,7 +131,7 @@ def deduplicate(
         "single", "complete", "average", "centroid", "median", "ward"
     ] = "average",
 ) -> List[str]:
-    """Deduplicate data by hierarchically clustering similar strings.
+    """Deduplicate categorical data by hierarchically clustering similar strings.
 
     This works best if there is a number of underlying categories that
     sometimes appear in the data with small variations and/or misspellings.
