@@ -213,11 +213,10 @@ Data download and generation
 About
 =====
 
-dirty_cat is currently a repository for ideas coming out of a research
-project: there is still little known about the problems of dirty
-categories. Tradeoffs will emerge in the long run. We really need people
-giving feedback on successes and failures with the different techniques and
-pointing us to open datasets on which we can do more empirical work.
+dirty_cat is a young project born from research. We really need people
+giving feedback on successes and failures with the different techniques on real
+world data, and pointing us to open datasets on which we can do more
+empirical work.
 dirty-cat received funding from `project DirtyData
 <https://project.inria.fr/dirtydata/>`_ (ANR-17-CE23-0018).
 
