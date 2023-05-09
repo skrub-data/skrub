@@ -152,7 +152,7 @@ OptionalTransformer = Optional[
 
 
 class TableVectorizer(ColumnTransformer):
-    """Automatically transform a heterogeneous dataset to a numerical array.
+    """Automatically transform a heterogeneous dataframe to a numerical array.
 
     Easily transforms a heterogeneous data table
     (such as a :obj:`~pandas.DataFrame`) to a numerical array for machine
