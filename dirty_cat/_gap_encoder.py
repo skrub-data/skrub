@@ -29,9 +29,6 @@ else:
 
 from sklearn.decomposition._nmf import _beta_divergence
 
-# Ignore lines too long
-# flake8: noqa: E501
-
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
@@ -603,14 +600,16 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         datasets as there is no need to store a vocabulary dictionary in
         memory.
     hashing_n_features : int, default=2**12
-        Number of features for the :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        Number of features for the
+        :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
         Only relevant if `hashing=True`.
     init : {'k-means++', 'random', 'k-means'}, default='k-means++'
         Initialization method of the `W` matrix.
-        If `init='k-means++'`, we use the init method of :class:`~sklearn.cluster.KMeans`.
+        If `init='k-means++'`, we use the init method of
+        :class:`~sklearn.cluster.KMeans`.
         If `init='random'`, topics are initialized with a Gamma distribution.
-        If `init='k-means'`, topics are initialized with a :class:`~sklearn.cluster.KMeans` on the n-grams
-        counts.
+        If `init='k-means'`, topics are initialized with a
+        :class:`~sklearn.cluster.KMeans` on the n-grams counts.
     tol : float, default=1e-4
         Tolerance for the convergence of the matrix `W`.
     min_iter : int, default=2
@@ -622,7 +621,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default='char'
-        Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
+        Analyzer parameter for the
+        :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
         / :obj:`~sklearn.feature_extraction.text.CountVectorizer`.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character-level n-gram counts.

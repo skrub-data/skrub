@@ -31,7 +31,7 @@ from sklearn.datasets import fetch_openml
 from dirty_cat._utils import parse_version
 from dirty_cat.datasets._utils import get_data_dir
 
-# Ignore lines too long
+# Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
 
 
@@ -254,7 +254,7 @@ def _fetch_world_bank_data(
 
     csv_path = (data_directory / f"{indicator_id}.csv").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
-    url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"  # noqa
+    url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"
     if csv_path.is_file():
         df = pd.read_csv(csv_path, nrows=0)
         indicator_name = df.columns[1]

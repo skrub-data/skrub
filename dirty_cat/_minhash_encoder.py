@@ -18,7 +18,7 @@ from ._utils import LRUDict, check_input
 NoneType = type(None)
 
 
-# Ignore lines too long
+# Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
 
 
