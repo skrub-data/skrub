@@ -618,8 +618,9 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     max_iter : int, default=5
         Maximum number of iterations on the input data.
     ngram_range : int 2-tuple, default=(2, 4)
-        The range of ngram length that will be used to build the
-        bag-of-n-grams representation of the input data.
+       The lower and upper boundaries of the range of n-values for different
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default='char'
         Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
         / :obj:`~sklearn.feature_extraction.text.CountVectorizer`.

@@ -52,9 +52,9 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
     ngram_range : 2-tuple of int, default=(2, 4)
-        The lower and upper boundary of the range of n-values for different
-        n-grams used in the string similarity. All values of n such
-        that ``min_n <= n <= max_n`` will be used.
+        The lower and upper boundaries of the range of n-values for different
+         n-grams used in the string similarity. All values of `n` such
+         that ``min_n <= n <= max_n`` will be used.
 
     See Also
     --------

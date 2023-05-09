@@ -48,9 +48,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         The number of dimension of encoded strings. Numbers around 300 tend to
         lead to good prediction performance, but with more computational cost.
     ngram_range : 2-tuple of int, default=(2, 4)
-        The lower and upper boundary of the range of n-values for different
-        n-grams to be extracted. All values of `n` such that
-        ``min_n <= n <= max_n`` will be used.
+        The lower and upper boundaries of the range of n-values for different
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
     hashing : {'fast', 'murmur'}, default='fast'
         Hashing function. `fast` is faster than `murmur` but
         might have some concern with its entropy.

@@ -84,9 +84,9 @@ def _string_encoding(
         the encoder and used for the string similarities.
         See fuzzy_join's docstring for more information.
     ngram_range : int 2-tuple, default=(2, 4)
-        The lower and upper boundary of the range of n-values for different
-        n-grams used in the string similarity.
-        See fuzzy_join's docstring for more information.
+        The lower and upper boundaries of the range of n-values for different
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
     encoder: vectorizer instance, optional
         Encoder parameter for the Vectorizer.
         See fuzzy_join's docstring for more information.
@@ -228,7 +228,7 @@ def fuzzy_join(
          Option `char_wb` creates character n-grams only from text inside word
          boundaries; n-grams at the edges of words are padded with space.
      ngram_range : 2-tuple of int, default=(2, 4)
-         The lower and upper boundary of the range of n-values for different
+         The lower and upper boundaries of the range of n-values for different
          n-grams used in the string similarity. All values of `n` such
          that ``min_n <= n <= max_n`` will be used.
      return_score : bool, default=True

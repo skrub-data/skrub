@@ -53,7 +53,9 @@ def _ngram_similarity_one_sample_inplace(
     i : str
         The index of x_count_vector in the csr count matrix
     ngram_range : 2-tuple of int
-        n-grams to use for the decomposition, where ``n_min <= n <= n_max``.
+        The lower and upper boundaries of the range of n-values for different
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
     """
     nonzero_idx = x_count_vector.indices
     nonzero_vals = x_count_vector.data
@@ -210,7 +212,9 @@ class SimilarityEncoder(OneHotEncoder):
         Was used to specify the type of pairwise string similarity to use.
         Since 0.3, only the ngram similarity is supported.
     ngram_range : int 2-tuple (min_n, max_n), default=(2, 4)
-        The range of values for the n_gram similarity.
+        The lower and upper boundaries of the range of n-values for different
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
     categories : {'auto', 'k-means', 'most_frequent'} or list of list of str
         Categories (unique values) per feature:
 

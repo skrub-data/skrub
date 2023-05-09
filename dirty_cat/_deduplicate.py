@@ -27,7 +27,9 @@ def compute_ngram_distance(
     unique_words : sequence of str
         Sequence or array of unique words from the original data.
     ngram_range : 2-tuple of int, default=(2,4)
-        The n-gram range to compute the distance in.
+        The lower and upper boundaries of the range of n-values for different
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
     analyzer : str, default='char_wb'
         Analyzer to extract n-grams.
 
@@ -144,7 +146,9 @@ def deduplicate(
         Number of clusters to use for hierarchical clustering, if `None` use the
         number of clusters that lead to the lowest silhouette score.
     ngram_range : 2-tuple of int, default=(2, 4)
-        Range to use for computing n-gram distance.
+        The lower and upper boundaries of the range of n-values for different
+        n-grams used in the string similarity. All values of `n` such
+        that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
         Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.CountVectorizer`
         used for the string similarities.
