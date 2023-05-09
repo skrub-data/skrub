@@ -77,7 +77,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
     :class:`dirty_cat.SimilarityEncoder`
         Encode string columns as a numeric array with n-gram string similarity.
-    :class:`dirty_cat.deduplicate`
+    :func:`dirty_cat.deduplicate`
         Deduplicate data by hierarchically clustering similar strings.
 
     References
