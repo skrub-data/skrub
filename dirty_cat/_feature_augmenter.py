@@ -2,9 +2,9 @@
 Transformer that allows multiple fuzzy joins to be performed on a table.
 The principle is as follows:
   1. The main table and the key column name are provided at initialisation.
-  2. The auxilliary tables are provided for fitting, and will be joined sequentially
-  when the transform is called.
-It is advised to use hyper-parameter tuning tools such as scikit-learn's
+  2. The auxiliary tables are provided for fitting, and will be joined
+  sequentially when `transform` is called.
+It is advised to use hyperparameter tuning tools such as scikit-learn's
 GridSearchCV to determine the best `match_score` parameter, as this can
 significantly improve your results.
 (see example 'Fuzzy joining dirty tables with the FeatureAugmenter' for an illustration)
@@ -29,7 +29,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
     ----------
     tables : list of 2-tuples of (:class:`~pandas.DataFrame`, str)
         List of (table, column name) tuples
-        specyfying the transformer objects to be applied.
+        specifying the transformer objects to be applied.
         table: str
             Name of the table to be joined.
         column: str
@@ -42,6 +42,8 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         In a [0, 1] interval. 1 means that only a perfect match will be
         accepted, and zero means that the closest match will be accepted,
         no matter how distant.
+        For numerical joins, this defines the maximum Euclidean distance
+        between the matches.
     analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
         Analyzer parameter for the CountVectorizer used for the string
         similarities.

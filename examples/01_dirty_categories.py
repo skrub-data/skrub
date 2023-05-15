@@ -53,8 +53,7 @@ control.
      :func:`~sklearn.inspection.permutation_importance`
 """
 
-# %%
-#
+###############################################################################
 # The data
 # --------
 #
@@ -63,17 +62,17 @@ from dirty_cat.datasets import fetch_employee_salaries
 
 employee_salaries = fetch_employee_salaries()
 
-# %%
+###############################################################################
 # X, the input data (descriptions of employees):
 X = employee_salaries.X
 X
 
-# %%
+###############################################################################
 # and y, our target column (the annual salary):
 y = employee_salaries.y
 y.name
 
-# %%
+###############################################################################
 # Now, let's carry out some basic preprocessing:
 import pandas as pd
 
@@ -85,12 +84,9 @@ mask = X.isna()["gender"]
 X.dropna(subset=["gender"], inplace=True)
 y = y[~mask]
 
-# #############################################################################
+###############################################################################
 # Assembling a machine-learning pipeline that encodes the data
 # ------------------------------------------------------------
-#
-# The learning pipeline
-# ---------------------
 #
 # To build a learning pipeline, we need to assemble encoders for each
 # column, and apply a supervised learning model on top.
@@ -249,7 +245,7 @@ X = X.drop(["date_first_hired"], axis=1)
 # We still have a complex and heterogeneous dataframe:
 X
 
-# %%
+###############################################################################
 # The |TV| can to turn this dataframe into a form suited for
 # machine learning.
 
@@ -309,7 +305,7 @@ X_test_enc = table_vec.transform(X_test)
 # The encoded data, X_train_enc and X_test_enc are numerical arrays:
 X_train_enc
 
-# %%
+###############################################################################
 # They have more columns than the original dataframe, but not much more:
 X_train.shape, X_train_enc.shape
 

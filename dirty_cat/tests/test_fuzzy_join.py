@@ -1,3 +1,5 @@
+from typing import Literal
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -7,8 +9,10 @@ from dirty_cat import fuzzy_join
 
 
 @pytest.mark.parametrize("analyzer", ["char", "char_wb", "word"])
-def test_fuzzy_join(analyzer):
-    """Testing if fuzzy_join results are as expected."""
+def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]):
+    """
+    Testing if fuzzy_join results are as expected.
+    """
 
     df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
     df2 = pd.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]})
@@ -25,7 +29,7 @@ def test_fuzzy_join(analyzer):
 
     n_cols = df1.shape[1] + df2.shape[1] + 1
 
-    assert df_joined.shape == (len(df1.dropna()), n_cols)
+    assert df_joined.shape == (len(df1), n_cols)
 
     df_joined2 = fuzzy_join(
         df2,
@@ -38,7 +42,7 @@ def test_fuzzy_join(analyzer):
         analyzer=analyzer,
     )
     # Joining is always done on the left table and thus takes it shape:
-    assert df_joined2.shape == (len(df2.dropna()), n_cols)
+    assert df_joined2.shape == (len(df2), n_cols)
 
     df_joined3 = fuzzy_join(
         df1,
@@ -50,7 +54,8 @@ def test_fuzzy_join(analyzer):
         return_score=True,
         analyzer=analyzer,
     )
-    assert df_joined2.isin(df_joined3).all().all()
+    # We sort the index as the column order is not important here
+    assert df_joined2.sort_index(axis=1).equals(df_joined3.sort_index(axis=1))
 
     df1["a2"] = 1
 
@@ -84,11 +89,16 @@ def test_fuzzy_join_dtypes():
 
 
 @pytest.mark.parametrize(
-    "analyzer, on, how",
-    [("a_blabla", ["a"], "left"), (1, 3, "right")],
+    ["analyzer", "on", "how"],
+    [
+        ("a_blabla", True, "left"),
+        (1, 3, "right"),
+    ],
 )
 def test_parameters_error(analyzer, on, how):
-    """Testing if correct errors are raised when wrong parameter values are given."""
+    """
+    Testing if correct errors are raised when wrong parameter values are given.
+    """
     df1 = pd.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
     df2 = pd.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
     with pytest.raises(
@@ -99,10 +109,20 @@ def test_parameters_error(analyzer, on, how):
     ):
         fuzzy_join(df1, df2, on="a", analyzer=analyzer, how=how)
     with pytest.raises(
-        KeyError,
+        TypeError,
         match=r"invalid type",
     ):
         fuzzy_join(df1, df2, on=on, how=how)
+    with pytest.raises(
+        TypeError,
+        match=r"invalid type",
+    ):
+        fuzzy_join(df1, df2, on="a", match_score="blabla")
+    with pytest.raises(
+        ValueError,
+        match=r"'numerical_match' should be either",
+    ):
+        fuzzy_join(df1, df2, on="a", numerical_match="wrong_name")
 
 
 def test_missing_keys():
@@ -118,23 +138,23 @@ def test_missing_keys():
         {"a": ["aa", "bb", np.NaN, "cc", "dd"], "c": [5, 6, 7, 8, np.NaN]}
     )
     output = fuzzy_join(left, right, on="a")
-    assert output.shape == (2, 4)
+    assert output.shape == (3, 4)
 
 
 def test_drop_unmatched():
     a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
 
-    c1 = fuzzy_join(a, b, on="col1", match_score=0.5, drop_unmatched=True)
+    c1 = fuzzy_join(a, b, on="col1", match_score=0.6, drop_unmatched=True)
     assert c1.shape == (2, 4)
 
-    c2 = fuzzy_join(a, b, on="col1", match_score=0.5)
+    c2 = fuzzy_join(a, b, on="col1", match_score=0.6)
     assert sum(c2["col3"].isna()) > 0
 
-    c3 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5)
+    c3 = fuzzy_join(a, b, on="col1", how="right", match_score=0.6)
     assert sum(c3["col3"].isna()) > 0
 
-    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.5, drop_unmatched=True)
+    c4 = fuzzy_join(a, b, on="col1", how="right", match_score=0.6, drop_unmatched=True)
     assert c4.shape == (2, 4)
 
 
@@ -159,14 +179,16 @@ def test_how_param():
 
     with pytest.raises(
         ValueError,
-        match=r"how should be either 'left' or 'right', got",
+        match=r"Parameter 'how' should be either ",
     ):
         c = fuzzy_join(a, b, how="inner")
 
 
 def test_fuzzy_join_pandas_comparison():
-    """Tests if fuzzy_join's output is as similar as
-    possible with pandas.merge"""
+    """
+    Tests if fuzzy_join's output is as similar as
+    possible with `pandas.merge`.
+    """
     left = pd.DataFrame(
         {
             "key": ["K0", "K1", "K2", "K3"],
@@ -211,10 +233,13 @@ def test_fuzzy_join_pandas_comparison():
 
 
 def test_correct_encoder():
-    """Test that the encoder error checking is working as intended."""
+    """
+    Test that the encoder error checking is working as intended.
+    """
 
     class TestVectorizer(HashingVectorizer):
-        """Implements a custom vectorizer to check if the `encoder`
+        """
+        Implements a custom vectorizer to check if the `encoder`
         parameter uses the passed instance as expected.
         Raises an error when `fit` is called.
         """
@@ -245,5 +270,122 @@ def test_correct_encoder():
     ):
         fuzzy_join(left, right, on="key", how="left", encoder=enc)
 
-    with pytest.raises(ValueError, match=r"encoder should be a vectorizer object"):
+    with pytest.raises(
+        ValueError, match=r"Parameter 'encoder' should be a vectorizer "
+    ):
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
+
+
+def test_numerical_column():
+    """
+    Testing that fuzzy_join works with numerical columns.
+    """
+
+    left = pd.DataFrame({"str1": ["aa", "a", "bb"], "int": [10, 2, 5]})
+    right = pd.DataFrame(
+        {
+            "str2": ["aa", "bb", "a", "cc", "dd"],
+            "int": [55, 6, 2, 15, 6],
+        }
+    )
+
+    fj_num = fuzzy_join(left, right, on="int", numerical_match="number")
+    n_cols = left.shape[1] + right.shape[1]
+
+    assert fj_num.shape == (len(left), n_cols)
+
+    fj_num2 = fuzzy_join(
+        left, right, on="int", numerical_match="number", return_score=True
+    )
+    assert fj_num2.shape == (len(left), n_cols + 1)
+
+    fj_num3 = fuzzy_join(
+        left,
+        right,
+        on="int",
+        numerical_match="number",
+        match_score=0.8,
+        drop_unmatched=True,
+    )
+    assert fj_num3.shape == (2, n_cols)
+
+
+def test_multiple_keys():
+    """
+    Test fuzzy joining on multiple keys with possibly mixed types.
+    """
+
+    left = pd.DataFrame(
+        {
+            "str1": ["Paris", "Paris", "Paris"],
+            "str2": ["Texas", "France", "Greek God"],
+            "int1": [10, 2, 5],
+            "int2": [103, 250, 532],
+        }
+    )
+    right = pd.DataFrame(
+        {
+            "str_1": ["Paris", "Paris", "Paris", "cc", "dd"],
+            "str_2": ["TX", "FR", "GR Mytho", "cc", "dd"],
+            "int1": [55, 6, 2, 15, 6],
+            "int2": [554, 146, 32, 215, 612],
+        }
+    )
+
+    # On multiple numeric keys
+    fj_num = fuzzy_join(left, right, on=["int1", "int2"], numerical_match="number")
+    assert fj_num.shape == (3, 8)
+
+    # On multiple string keys
+    fj_str = fuzzy_join(
+        left, right, left_on=["str1", "str2"], right_on=["str_1", "str_2"]
+    )
+    assert fj_str.shape == (3, 8)
+
+    # On mixed, numeric and string keys
+    fj_mixed = fuzzy_join(
+        left,
+        right,
+        left_on=["str1", "str2", "int2"],
+        right_on=["str_1", "str_2", "int2"],
+        numerical_match="number",
+    )
+    assert fj_mixed.shape == (3, 8)
+
+
+def test_iterable_input():
+    """
+    Test if iterable input: list, set, dictionary or tuple works.
+    """
+    df1 = pd.DataFrame(
+        {"a": ["ana", "lala", "nana"], "str2": ["Texas", "France", "Greek God"]}
+    )
+    df2 = pd.DataFrame(
+        {"a": ["anna", "lala", "ana", "nnana"], "str_2": ["TX", "FR", "GR Mytho", "dd"]}
+    )
+    assert fuzzy_join(df1, df2, on=["a"]).shape == (3, 4)
+    assert fuzzy_join(df1, df2, on={"a"}).shape == (3, 4)
+    assert fuzzy_join(df1, df2, on="a").shape == (3, 4)
+
+    assert fuzzy_join(
+        df1, df2, left_on=["a", "str2"], right_on={"a", "str_2"}
+    ).shape == (3, 4)
+    assert fuzzy_join(
+        df1, df2, left_on=("a", "str2"), right_on={"a", "str_2"}
+    ).shape == (3, 4)
+
+
+def test_missing_values():
+    """
+    Test fuzzy joining on missing values.
+    """
+    a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
+    b = pd.DataFrame({"col3": [np.NaN, "bbb", "ddd dd"], "col4": [1, 2, 3]})
+
+    with pytest.warns(UserWarning, match=r"merging on missing values"):
+        c = fuzzy_join(a, b, left_on="col1", right_on="col3", how="right")
+    assert c.shape[0] == len(b)
+
+    with pytest.warns(UserWarning, match=r"merging on missing values"):
+        c = fuzzy_join(b, a, left_on="col3", right_on="col1", return_score=True)
+    assert c.shape[0] == len(b)
