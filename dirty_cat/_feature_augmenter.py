@@ -1,14 +1,6 @@
 """
-Transformer that allows multiple fuzzy joins to be performed on a table.
-The principle is as follows:
-  1. The main table and the key column name are provided at initialisation.
-  2. The auxiliary tables are provided for fitting, and will be joined
-  sequentially when `transform` is called.
-It is advised to use hyperparameter tuning tools such as scikit-learn's
-GridSearchCV to determine the best `match_score` parameter, as this can
-significantly improve your results.
-(see example 'Fuzzy joining dirty tables with the FeatureAugmenter' for an illustration)
-For more information on how the join is performed, see fuzzy_join's documentation.
+Implements the FeatureAugmenter, a that allows chaining multiple fuzzy joins
+on a table.
 """
 
 from typing import List, Literal, Tuple
@@ -20,22 +12,29 @@ from dirty_cat._fuzzy_join import fuzzy_join
 
 
 class FeatureAugmenter(BaseEstimator, TransformerMixin):
-    """Transformer augmenting number of features in a table by joining multiple tables.
+    """Augment a main table by automatically joining multiple auxiliary tables on it.
 
     Given a list of tables and key column names,
     fuzzy join them to the main table.
 
+    The principle is as follows:
+
+    1. The main table and the key column name are provided at initialisation.
+    2. The auxiliary tables are provided for fitting, and will be joined
+       sequentially when :func:`~FeatureAugmenter.transform` is called.
+
+    It is advised to use hyperparameter tuning tools such as
+    :class:`~sklearn.model_selection.GridSearchCV` to determine the best
+    `match_score` parameter, as this can significantly improve your results.
+    (see example 'Fuzzy joining dirty tables with the FeatureAugmenter'
+    for an illustration)
+
     Parameters
     ----------
-    tables : list of 2-tuples of (:class:`~pandas.DataFrame`, str)
-        List of (table, column name) tuples
-        specifying the transformer objects to be applied.
-        table: str
-            Name of the table to be joined.
-        column: str
-            Name of table column to join on.
+    tables : list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
+        List of (table, column name) tuples, the tables to join.
     main_key : str
-        The key column name in the main table on which
+        The key column name in the main table (passed during fit) on which
         the join will be performed.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
@@ -44,24 +43,25 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         no matter how distant.
         For numerical joins, this defines the maximum Euclidean distance
         between the matches.
-    analyzer : typing.Literal["word", "char", "char_wb"], default=`char_wb`
-        Analyzer parameter for the CountVectorizer used for the string
-        similarities.
-        Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
-        to factorize should be made of word counts or character n-gram counts.
+    analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
+        Analyzer parameter for the
+        :obj:`~sklearn.feature_extraction.text.CountVectorizer` used for
+        the string similarities.
+        Describes whether the matrix `V` to factorize should be made of
+        word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    ngram_range : tuple (min_n, max_n), default=(2, 4)
-        The lower and upper boundary of the range of n-values for different
-        n-grams used in the string similarity. All values of n such
-        that min_n <= n <= max_n will be used.
+    ngram_range : 2-tuple of int, default=(2, 4)
+        The lower and upper boundaries of the range of n-values for different
+         n-grams used in the string similarity. All values of `n` such
+         that ``min_n <= n <= max_n`` will be used.
 
     See Also
     --------
-    :class:`~dirty_cat.fuzzy_join` :
+    :func:`dirty_cat.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
 
-    :func:`~dirty_cat.datasets.get_ken_embeddings` :
+    :func:`dirty_cat.datasets.get_ken_embeddings` :
         Download vector embeddings for many common entities (cities,
         places, people...).
 
@@ -136,24 +136,23 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         self.analyzer = analyzer
         self.ngram_range = ngram_range
 
-    def fit(self, X, y=None) -> "FeatureAugmenter":
-        """Fit the Feature Augmenter to the main table.
+    def fit(self, X: pd.DataFrame, y=None) -> "FeatureAugmenter":
+        """Fit the instance to the main table.
 
         In practice, just checks if the key columns in X,
-        the main table, and in the auxilliary tables exist.
+        the main table, and in the auxiliary tables exist.
 
         Parameters
         ----------
-        X : DataFrame, shape [n_samples, n_features]
-            The main table, to be joined to the
-            auxilliary ones.
-        y : array-like of shape (n_samples,...), default=None
-            Targets for supervised learning.
+        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
+            The main table, to be joined to the auxiliary ones.
+        y : None
+            Unused, only here for compatibility.
 
         Returns
         -------
-        FeatureAugmenter
-            Fitted FeatureAugmenter instance.
+        :obj:`FeatureAugmenter`
+            Fitted :class:`FeatureAugmenter` instance (self).
         """
 
         if self.main_key not in X.columns:
@@ -169,20 +168,19 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
                 )
         return self
 
-    def transform(self, X, y=None) -> pd.DataFrame:
-        """Transform X using the specified encoding scheme.
+    def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
+        """Transform `X` using the specified encoding scheme.
 
         Parameters
         ----------
-        X : DataFrame, shape [n_samples, n_features]
-            The main table, to be joined to the
-            auxilliary ones.
-        y : array-like of shape (n_samples,...), default=None
-            Targets for supervised learning.
+        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
+            The main table, to be joined to the auxiliary ones.
+        y : None
+            Unused, only here for compatibility.
 
         Returns
         -------
-        DataFrame
+        :obj:`~pandas.DataFrame`
             The final joined table.
         """
 
@@ -201,22 +199,3 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
                 suffixes=("", "_aux"),
             )
         return X
-
-    def fit_transform(self, X, y=None) -> pd.DataFrame:
-        """
-        Fit the FeatureAugmenter to X, then transforms it.
-
-        Parameters
-        ----------
-        X : DataFrame, shape [n_samples, n_features]
-            The main table, to be joined to the
-            auxilliary ones.
-        y : array-like of shape (n_samples,...), default=None
-            Targets for supervised learning.
-
-        Returns
-        -------
-        DataFrame
-            The final joined table.
-        """
-        return self.fit(X).transform(X)

@@ -12,7 +12,7 @@ from dirty_cat.tests.utils import generate_data
 
 
 @pytest.mark.parametrize(
-    "hashing, init, rescale_W, rescale_rho, add_words",
+    ["hashing", "init", "rescale_W", "rescale_rho", "add_words"],
     [
         (False, "k-means++", True, False, True),
         (True, "random", False, True, False),
@@ -26,12 +26,11 @@ def test_analyzer(
     add_words: bool,
     rescale_rho: bool,
     n_samples: int = 70,
-):
+) -> None:
     """
     Test if the output is different when the analyzer is 'word' or 'char'.
     If it is, no error ir raised.
     """
-    n_samples = 70
     X = generate_data(n_samples, random_state=0)
     n_components = 10
     # Test first analyzer output:
@@ -70,7 +69,7 @@ def test_analyzer(
 
 
 @pytest.mark.parametrize(
-    "hashing, init, analyzer, add_words",
+    ["hashing", "init", "analyzer", "add_words"],
     [
         (False, "k-means++", "word", True),
         (True, "random", "char", False),
@@ -139,7 +138,10 @@ def test_input_type() -> None:
     np.testing.assert_array_equal(X_enc_array, X_enc_df)
 
 
-@pytest.mark.parametrize("add_words", [True, False])
+@pytest.mark.parametrize(
+    "add_words",
+    [True, False],
+)
 def test_partial_fit(add_words: bool, n_samples: int = 70) -> None:
     X = generate_data(n_samples, random_state=0)
     X2 = pd.DataFrame(generate_data(n_samples - 10, random_state=1))
@@ -206,7 +208,10 @@ def test_score(n_samples: int = 70) -> None:
     assert score_X1 * 2 == score_X2
 
 
-@pytest.mark.parametrize("missing", ["zero_impute", "error", "aaa"])
+@pytest.mark.parametrize(
+    "missing",
+    ["zero_impute", "error", "aaa"],
+)
 def test_missing_values(missing: str) -> None:
     """Test what happens when missing values are in the data"""
     observations = [
@@ -233,7 +238,7 @@ def test_missing_values(missing: str) -> None:
             enc.fit_transform(observations)
 
 
-def test_check_fitted_gap_encoder():
+def test_check_fitted_gap_encoder() -> None:
     """Test that calling transform before fit raises an error"""
     X = np.array([["alice"], ["bob"]])
     enc = GapEncoder(n_components=2, random_state=42)
@@ -245,7 +250,7 @@ def test_check_fitted_gap_encoder():
     enc.transform(X)
 
 
-def test_small_sample():
+def test_small_sample() -> None:
     """Test that having n_samples < n_components raises an error"""
     X = np.array([["alice"], ["bob"]])
     enc = GapEncoder(n_components=3, random_state=42)
@@ -253,7 +258,7 @@ def test_small_sample():
         enc.fit_transform(X)
 
 
-def test_transform_deterministic():
+def test_transform_deterministic() -> None:
     """Non-regression test for #188"""
     dataset = fetch_midwest_survey()
     X_train, X_test = train_test_split(

@@ -19,55 +19,58 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     """Encode categorical features as a numeric array given a target vector.
 
     Each category is encoded given the effect that it has in the
-    target variable y. The method considers that categorical
+    target variable :term:`y`. The method considers that categorical
     variables can present rare categories. It represents each category by the
-    probability of y conditional on this category.
+    probability of :term:`y` conditional on this category.
     In addition, it takes an empirical Bayes approach to shrink the estimate.
-
 
     Parameters
     ----------
-    categories : typing.Union[typing.Literal["auto"], typing.List[typing.List[typing.Union[str, int]]]  # noqa
+    categories : 'auto' or list of list of int or str
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
-        - list : ``categories[i]`` holds the categories expected in the i-th
+        - list : `categories[i]` holds the categories expected in the `i`-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
 
         The categories used can be found in the ``categories_`` attribute.
-    clf_type : typing.Literal["regression", "binary-clf", "multiclass-clf"]
+    clf_type : {'regression', 'binary-clf', 'multiclass-clf'}, default='binary-clf'
         The type of classification/regression problem.
-    dtype : type, default=np.float64
+    dtype : number type, default=np.float64
         Desired dtype of output.
-    handle_unknown : typing.Literal["error", "ignore"], default="error"
-        Whether to raise an error or ignore if a unknown categorical feature is
+    handle_unknown : {'error', 'ignore'}, default='error'
+        Whether to raise an error or ignore if an unknown categorical feature is
         present during transform (default is to raise). When this parameter
         is set to 'ignore' and an unknown category is encountered during
         transform, the encoded columns for this feature
         will be assigned the prior mean of the target variable.
-    handle_missing : typing.Literal["error", ""], default=""
+    handle_missing : {'error', ''}, default=''
         Whether to raise an error or impute with blank string '' if missing
-        values (NaN) are present during fit (default is to impute).
+        values (NaN) are present during :func:`~TargetEncoder.fit`
+        (default is to impute).
         When this parameter is set to '', and a missing value is encountered
-        during fit_transform, the resulting encoded columns for this feature
-        will be all zeros.
+        during :func:`~TargetEncoder.fit_transform`, the resulting encoded
+        columns for this feature will be all zeros.
 
     Attributes
     ----------
-    n_features_in_: int
-        Number of features in the data seen during fit.
-    categories_ : typing.List[np.ndarray]
-        The categories of each feature determined during fitting
-        (in order corresponding with output of ``transform``).
+    n_features_in_ : int
+        Number of features in the data seen during :func:`~TargetEncoder.fit`.
+    categories_ : list of :obj:`~numpy.ndarray`
+        The categories of each feature determined during :func:`~TargetEncoder.fit`
+        (in order corresponding with output of :func:`~TargetEncoder.transform`).
+    n_ : int
+        Length of :term:`y`
 
     See Also
     --------
-    :class:`~dirty_cat.GapEncoder` :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`~dirty_cat.MinHashEncoder` :
+    :class:`dirty_cat.GapEncoder`
+        Encodes dirty categories (strings) by constructing latent topics with
+        continuous encoding.
+    :class:`dirty_cat.MinHashEncoder`
         Encode string columns as a numeric array with the minhash method.
-    :class:`~dirty_cat.SimilarityEncoder` :
+    :class:`dirty_cat.SimilarityEncoder`
         Encode string columns as a numeric array with n-gram string similarity.
 
     References
@@ -103,7 +106,6 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     As expected, they were encoded according to their influence on y.
     The unknown categories were assigned the mean of the target variable.
-
     """
 
     n_features_in_: int
@@ -133,19 +135,18 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         return {"X_types": ["categorical"]}
 
     def fit(self, X, y) -> "TargetEncoder":
-        """
-        Fit the instance to X.
+        """Fit the instance to `X`.
 
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to determine the categories of each feature.
-        y : array
+        y : :obj:`~numpy.ndarray`
             The associated target vector.
 
         Returns
         -------
-        :class:`~dirty_cat.TargetEncoder`
+        :obj:`~dirty_cat.TargetEncoder`
             Fitted :class:`~dirty_cat.TargetEncoder` instance (self).
         """
         X = check_input(X)
@@ -169,7 +170,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         if self.handle_unknown not in ["error", "ignore"]:
             raise ValueError(
                 f"Got handle_unknown={self.handle_unknown!r}, but expected "
-                'any of {"error", "ignore"}. '
+                "any of {'error', 'ignore'}. "
             )
 
         if self.categories != "auto":
@@ -227,8 +228,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X) -> np.ndarray:
-        """
-        Transform X using the specified encoding scheme.
+        """Transform `X` using the specified encoding scheme.
 
         Parameters
         ----------

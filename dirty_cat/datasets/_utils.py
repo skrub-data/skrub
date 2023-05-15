@@ -1,13 +1,19 @@
 import os
 from pathlib import Path
+from typing import Optional
 
 
-def get_data_dir(name: str = None) -> Path:
+def get_data_dir(name: Optional[str] = None) -> Path:
     """
     Returns the directory in which dirty_cat looks for data.
 
     This is typically useful for the end-user to check
     where the data is downloaded and stored.
+
+    Parameters
+    ----------
+    name: str, optional
+        Subdirectory name. If omitted, the root data directory is returned.
     """
     # Note: we stick to os.path instead of pathlib.Path because
     # it's easier to test, and the functionality is the same.

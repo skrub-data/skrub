@@ -2,7 +2,7 @@ from dirty_cat._fast_hash import ngram_min_hash
 from dirty_cat.tests.utils import generate_data
 
 
-def test_fast_hash():
+def test_fast_hash() -> None:
     data = generate_data(100, as_list=True)
     a = data[0]
 

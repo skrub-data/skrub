@@ -8,8 +8,11 @@ from sklearn.feature_extraction.text import HashingVectorizer
 from dirty_cat import fuzzy_join
 
 
-@pytest.mark.parametrize("analyzer", ["char", "char_wb", "word"])
-def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]):
+@pytest.mark.parametrize(
+    "analyzer",
+    ["char", "char_wb", "word"],
+)
+def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]) -> None:
     """
     Testing if fuzzy_join results are as expected.
     """
@@ -76,7 +79,7 @@ def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]):
     assert ("a1l" and "a1r") in df.columns
 
 
-def test_fuzzy_join_dtypes():
+def test_fuzzy_join_dtypes() -> None:
     """
     Test that the dtypes of dataframes are maintained after join
     """
@@ -95,7 +98,7 @@ def test_fuzzy_join_dtypes():
         (1, 3, "right"),
     ],
 )
-def test_parameters_error(analyzer, on, how):
+def test_parameters_error(analyzer, on, how) -> None:
     """
     Testing if correct errors are raised when wrong parameter values are given.
     """
@@ -125,7 +128,7 @@ def test_parameters_error(analyzer, on, how):
         fuzzy_join(df1, df2, on="a", numerical_match="wrong_name")
 
 
-def test_missing_keys():
+def test_missing_keys() -> None:
     a = pd.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
     with pytest.raises(
@@ -141,7 +144,7 @@ def test_missing_keys():
     assert output.shape == (3, 4)
 
 
-def test_drop_unmatched():
+def test_drop_unmatched() -> None:
     a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
 
@@ -158,7 +161,7 @@ def test_drop_unmatched():
     assert c4.shape == (2, 4)
 
 
-def test_how_param():
+def test_how_param() -> None:
     """
     Test correct shape of left and right joins.
     Also test if an error is raised when an incorrect parameter value is passed.
@@ -184,7 +187,7 @@ def test_how_param():
         c = fuzzy_join(a, b, how="inner")
 
 
-def test_fuzzy_join_pandas_comparison():
+def test_fuzzy_join_pandas_comparison() -> None:
     """
     Tests if fuzzy_join's output is as similar as
     possible with `pandas.merge`.
@@ -232,7 +235,7 @@ def test_fuzzy_join_pandas_comparison():
     pd.testing.assert_frame_equal(result_s, result_s_fj)
 
 
-def test_correct_encoder():
+def test_correct_encoder() -> None:
     """
     Test that the encoder error checking is working as intended.
     """
@@ -276,7 +279,7 @@ def test_correct_encoder():
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
 
 
-def test_numerical_column():
+def test_numerical_column() -> None:
     """
     Testing that fuzzy_join works with numerical columns.
     """
@@ -310,7 +313,7 @@ def test_numerical_column():
     assert fj_num3.shape == (2, n_cols)
 
 
-def test_multiple_keys():
+def test_multiple_keys() -> None:
     """
     Test fuzzy joining on multiple keys with possibly mixed types.
     """
@@ -353,7 +356,7 @@ def test_multiple_keys():
     assert fj_mixed.shape == (3, 8)
 
 
-def test_iterable_input():
+def test_iterable_input() -> None:
     """
     Test if iterable input: list, set, dictionary or tuple works.
     """
@@ -375,7 +378,7 @@ def test_iterable_input():
     ).shape == (3, 4)
 
 
-def test_missing_values():
+def test_missing_values() -> None:
     """
     Test fuzzy joining on missing values.
     """

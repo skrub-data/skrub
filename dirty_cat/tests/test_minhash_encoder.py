@@ -14,7 +14,12 @@ from .utils import generate_data
 
 
 @pytest.mark.parametrize(
-    "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
+    ["hashing", "minmax_hash"],
+    [
+        ("fast", True),
+        ("fast", False),
+        ("murmur", False),
+    ],
 )
 def test_minhash_encoder(hashing, minmax_hash) -> None:
     X = np.array(["al ice", "b ob", "bob and alice", "alice and bob"])[:, None]
@@ -78,7 +83,12 @@ def test_input_type() -> None:
 
 
 @pytest.mark.parametrize(
-    "hashing, minmax_hash", [("fast", True), ("fast", False), ("murmur", False)]
+    ["hashing", "minmax_hash"],
+    [
+        ("fast", True),
+        ("fast", False),
+        ("murmur", False),
+    ],
 )
 def test_encoder_params(hashing, minmax_hash) -> None:
     X = generate_data(n_samples=20)
@@ -130,7 +140,7 @@ def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     return
 
 
-def test_missing_values_none():
+def test_missing_values_none() -> None:
     # Test that "None" is also understood as a missing value
     a = np.array([["a", "b", None, "c"]], dtype=object).T
 
@@ -160,7 +170,7 @@ def test_cache_overflow() -> None:
 
 
 @skip_if_no_parallel
-def test_parallelism():
+def test_parallelism() -> None:
     # Test that parallelism works
     encoder = MinHashEncoder(n_components=3, n_jobs=1)
     X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
@@ -202,7 +212,7 @@ joblib.register_parallel_backend("testing", DummyBackend)
 
 
 @skip_if_no_parallel
-def test_backend_respected():
+def test_backend_respected() -> None:
     """
     Test that the joblib backend is used.
     Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
@@ -217,7 +227,7 @@ def test_backend_respected():
     assert ba.count > 0
 
 
-def test_correct_arguments():
+def test_correct_arguments() -> None:
     # Test that the correct arguments are passed to the hashing function
     X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
     # Write an incorrect value for the `hashing` argument
@@ -241,7 +251,7 @@ def test_correct_arguments():
         encoder.fit_transform(X)
 
 
-def test_check_fitted_minhash_encoder():
+def test_check_fitted_minhash_encoder() -> None:
     """Test that calling transform before fit raises an error"""
     encoder = MinHashEncoder(n_components=3)
     X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
