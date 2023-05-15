@@ -7,6 +7,7 @@ not fail.
 Therefore, developers having formatted methods to numpydoc
 should also remove their corresponding references from the list.
 """
+
 import inspect
 import re
 from importlib import import_module
@@ -16,30 +17,7 @@ import pytest
 from numpydoc.validate import validate
 
 DOCSTRING_TEMP_IGNORE_SET = {
-    "dirty_cat._ken_embeddings.get_ken_embeddings",
-    "dirty_cat._datetime_encoder.DatetimeEncoder.get_feature_names",
-    "dirty_cat._datetime_encoder.DatetimeEncoder.get_feature_names_out",
-    "dirty_cat._gap_encoder.GapEncoder.get_feature_names",
-    "dirty_cat._gap_encoder.GapEncoder.get_feature_names_out",
-    "dirty_cat._gap_encoder.GapEncoder.partial_fit",
-    "dirty_cat._gap_encoder.GapEncoder.score",
-    "dirty_cat._gap_encoder.GapEncoder.transform",
-    "dirty_cat._minhash_encoder.MinHashEncoder",
-    "dirty_cat._minhash_encoder.MinHashEncoder.fit",
-    "dirty_cat._similarity_encoder.SimilarityEncoder",
-    "dirty_cat._similarity_encoder.SimilarityEncoder.fit_transform",
-    "dirty_cat._table_vectorizer.TableVectorizer.fit_transform",
-    "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names",
-    "dirty_cat._table_vectorizer.TableVectorizer.get_feature_names_out",
-    "dirty_cat._table_vectorizer.TableVectorizer.transform",
-    # TODO: remove when SuperVectorizer name is removed
     "dirty_cat._table_vectorizer.SuperVectorizer",
-    "dirty_cat._table_vectorizer.SuperVectorizer.fit_transform",
-    "dirty_cat._table_vectorizer.SuperVectorizer.get_feature_names",
-    "dirty_cat._table_vectorizer.SuperVectorizer.get_feature_names_out",
-    "dirty_cat._table_vectorizer.SuperVectorizer.transform",
-    "dirty_cat._target_encoder.TargetEncoder",
-    "dirty_cat._fuzzy_join.fuzzy_join",
     # The following are not documented in dirty_cat (and thus are out of scope)
     # They are usually inherited from other libraries.
     "dirty_cat._table_vectorizer.TableVectorizer.fit",
@@ -89,18 +67,23 @@ def get_functions_to_validate():
         yield func, name
 
 
-def repr_errors(res, estimator=None, method: Optional[str] = None) -> str:
+def repr_errors(
+    res: dict,
+    estimator: Optional[type] = None,
+    method: Optional[str] = None,
+) -> str:
     """
     Pretty print original docstring and the obtained errors
 
     Parameters
     ----------
     res : dict
-        result of numpydoc.validate.validate
-    estimator : {estimator, None}
-        estimator object or None
-    method : str
-        if estimator is not None, either the method name or None.
+        Result of :func:`numpydoc.validate.validate`.
+    estimator : Estimator, optional
+        Estimator class or None.
+    method : str, optional
+        The method name or None.
+        Only used if 'estimator' is provided.
 
     Returns
     -------
@@ -111,7 +94,7 @@ def repr_errors(res, estimator=None, method: Optional[str] = None) -> str:
         if hasattr(estimator, "__init__"):
             method = "__init__"
         elif estimator is None:
-            raise ValueError("At least one of estimator, method should be provided")
+            raise ValueError("Either 'estimator' or 'method' should be provided. ")
         else:
             raise NotImplementedError
 
@@ -137,15 +120,13 @@ def repr_errors(res, estimator=None, method: Optional[str] = None) -> str:
             obj_name + obj_signature,
             res["docstring"],
             "# Errors",
-            "\n".join(
-                " - {}: {}".format(code, message) for code, message in res["errors"]
-            ),
+            "\n".join(f" - {code}: {message}" for code, message in res["errors"]),
         ]
     )
     return msg
 
 
-def filter_errors(errors, method, Estimator=None):
+def filter_errors(errors, method: Callable, estimator_cls: Optional[type] = None):
     """
     Ignore some errors based on the method type.
     """
@@ -178,10 +159,13 @@ def filter_errors(errors, method, Estimator=None):
         yield code, message
 
 
-@pytest.mark.parametrize("Estimator, method", get_methods_to_validate())
-def test_estimator_docstrings(Estimator: object, method: str, request):
-    base_import_path = Estimator.__module__
-    import_path = [base_import_path, Estimator.__name__]
+@pytest.mark.parametrize(
+    ["estimator_cls", "method"],
+    get_methods_to_validate(),
+)
+def test_estimator_docstrings(estimator_cls: type, method: str, request):
+    base_import_path = estimator_cls.__module__
+    import_path = [base_import_path, estimator_cls.__name__]
     if method is not None:
         import_path.append(method)
 
@@ -194,13 +178,18 @@ def test_estimator_docstrings(Estimator: object, method: str, request):
 
     res = validate(import_path)
 
-    res["errors"] = list(filter_errors(res["errors"], method, Estimator=Estimator))
+    res["errors"] = list(
+        filter_errors(res["errors"], method, estimator_cls=estimator_cls)
+    )
 
     if res["errors"]:
-        raise ValueError(repr_errors(res, Estimator, method))
+        raise ValueError(repr_errors(res, estimator_cls, method))
 
 
-@pytest.mark.parametrize("func, name", get_functions_to_validate())
+@pytest.mark.parametrize(
+    ["func", "name"],
+    get_functions_to_validate(),
+)
 def test_function_docstrings(func: Callable, name: str, request):
     import_path = ".".join([func.__module__, name])
     print(import_path)

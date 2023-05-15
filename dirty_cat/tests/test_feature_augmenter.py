@@ -4,7 +4,7 @@ import pytest
 from dirty_cat import FeatureAugmenter
 
 
-def test_feature_augmenter():
+def test_feature_augmenter() -> None:
     main_table = pd.DataFrame(
         [
             "France",

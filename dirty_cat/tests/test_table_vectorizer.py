@@ -19,7 +19,7 @@ def check_same_transformers(expected_transformers: dict, actual_transformers: li
     assert actual_transformers_dict == expected_transformers
 
 
-def type_equality(expected_type, actual_type):
+def type_equality(expected_type, actual_type) -> bool:
     """
     Checks that the expected type is equal to the actual type,
     assuming object and str types are equivalent
@@ -146,7 +146,7 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
     )
 
 
-def _test_possibilities(X):
+def _test_possibilities(X) -> None:
     """
     Do a bunch of tests with the TableVectorizer.
     We take some expected transformers results as argument. They're usually
@@ -222,7 +222,7 @@ def _test_possibilities(X):
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
 
 
-def test_with_clean_data():
+def test_with_clean_data() -> None:
     """
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a clean dataset.
@@ -292,7 +292,7 @@ def test_auto_cast() -> None:
         assert type_equality(expected_types_dirty_dataframe[col], X_trans[col].dtype)
 
 
-def test_with_arrays():
+def test_with_arrays() -> None:
     """
     Check that the TableVectorizer works if we input
     a list of lists or a numpy array.
@@ -416,7 +416,7 @@ def _is_equal(elements: Tuple[Any, Any]) -> bool:
     return pd.isna(elem1) and pd.isna(elem2) or elem1 == elem2
 
 
-def test_passthrough():
+def test_passthrough() -> None:
     """
     Tests that when passed no encoders, the TableVectorizer
     returns the dataset as-is.
@@ -451,7 +451,7 @@ def test_passthrough():
     assert (X_clean.to_numpy() == X_enc_clean.to_numpy()).all()
 
 
-def test_check_fitted_table_vectorizer():
+def test_check_fitted_table_vectorizer() -> None:
     """Test that calling transform before fit raises an error"""
     X = _get_clean_dataframe()
     tv = TableVectorizer()
@@ -463,13 +463,13 @@ def test_check_fitted_table_vectorizer():
     tv.transform(X)
 
 
-def test_check_name_change():
+def test_check_name_change() -> None:
     """Test that using SuperVectorizer raises a deprecation warning"""
     with pytest.warns(FutureWarning):
         SuperVectorizer()
 
 
-def test_handle_unknown():
+def test_handle_unknown() -> None:
     """
     Test that new categories encountered in the test set
     are handled correctly.
@@ -526,7 +526,7 @@ def test_handle_unknown():
         table_vec.transform(x_known)
 
 
-def test__infer_date_format():
+def test__infer_date_format() -> None:
     # Test with an ambiguous date format
     # but with a single format that works for all rows
     date_column = pd.Series(["01-01-2022", "13-01-2022", "01-03-2022"])
