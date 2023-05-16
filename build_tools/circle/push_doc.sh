@@ -8,7 +8,7 @@ set -e
 
 USERNAME="dirty-cat-ci";
 
-DOC_REPO="dirty-cat.github.io"
+DOC_REPO="skrub-data.github.io"
 GENERATED_DOC_DIR=$1
 
 if [[ -z "$GENERATED_DOC_DIR" ]]; then

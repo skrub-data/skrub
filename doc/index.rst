@@ -13,7 +13,7 @@ dirty_cat: machine learning with dirty categories
     `dirty_cat` facilitates machine-learning with non-curated categories:
     **robust to morphological variants**, such as typos. See
     :ref:`examples <usage_examples>`, such as `the first one
-    <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_,
+    <https://skrub-data.github.io/stable/auto_examples/01_dirty_categories.html>`_,
     for an introduction to problems of dirty categories or misspelled
     entities.
 

@@ -289,8 +289,8 @@ sphinx_gallery_conf = {
 }
 
 # -- sphinxext.opengraph configuration -------------------------------------
-ogp_site_url = "https://dirty-cat.github.io/stable/"
-ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
+ogp_site_url = "https://skrub-data.github.io/stable/"
+ogp_image = "https://skrub-data.github.io/stable/_static/dirty_cat.svg"
 ogp_use_first_image = True
 ogp_site_name = "dirty_cat"
 
