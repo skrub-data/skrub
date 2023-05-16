@@ -19,6 +19,6 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           api-token: ${{ secrets.CIRCLE_TOKEN }}
-          artifact-path: 0/doc/_changed.html
+          artifact-path: 0/doc/index.html
           circleci-jobs: doc
           job-title: Check the rendered docs here!
