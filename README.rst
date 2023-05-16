@@ -1,7 +1,7 @@
 `dirty_cat`
 ===========
 
-.. image:: https://dirty-cat.github.io/stable/_static/dirty_cat.svg
+.. image:: https://skrub-data.github.io/stable/_static/dirty_cat.svg
    :align: center
    :alt: dirty_cat logo
 
@@ -15,7 +15,7 @@
 .. |circleci| image:: https://img.shields.io/circleci/build/github/dirty-cat/dirty_cat/main?label=CircleCI
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
-`dirty_cat <https://dirty-cat.github.io/>`_ is a Python library
+`dirty_cat <https://skrub-data.github.io/>`_ is a Python library
 that facilitates machine-learning on dirty categorical variables.
 
 For a detailed description of the problem of encoding dirty categorical data, see
@@ -31,7 +31,7 @@ What can `dirty_cat` do?
 encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
 for which we usually identify three common cases: **similarities, typos and variations**
 
-`The first example notebook <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
+`The first example notebook <https://skrub-data.github.io/stable/auto_examples/01_dirty_categories.html>`_
 goes in-depth on how to identify and deal with dirty data using the `dirty_cat` library.
 
 What `dirty_cat` does not
@@ -63,7 +63,7 @@ Dependencies and minimal versions are listed in the `setup <https://github.com/d
 Related projects
 ----------------
 
-Are listed on the `dirty_cat's website <https://dirty-cat.github.io/stable/#related-projects>`_
+Are listed on the `dirty_cat's website <https://skrub-data.github.io/stable/#related-projects>`_
 
 Contributing
 ------------
