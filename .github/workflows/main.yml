@@ -16,7 +16,7 @@ jobs:
               uses: larsoner/circleci-artifacts-redirector-action@master
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN  }}
-                  api-token: ${{ secrets.CIRCLECI_TOKEN }}
+                  api-token: ${{ secrets.CIRCLE_TOKEN }}
                   artifact-path: 0/doc/index.html
                   circleci-jobs: python3
                   job-title: Check the rendered docs here!
