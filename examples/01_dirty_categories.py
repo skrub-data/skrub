@@ -139,7 +139,7 @@ pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
 pipeline.fit(X, y)
 
 ###############################################################################
-# Dirty-category encoding
+# Dirty category encoding
 # -----------------------
 #
 # The |OneHotEncoder| is actually not well suited to the 'Employee

@@ -217,7 +217,7 @@ skrub is a young project born from research. We really need people
 giving feedback on successes and failures with the different techniques on real
 world data, and pointing us to open datasets on which we can do more
 empirical work.
-dirty-cat received funding from `project DirtyData
+skrub received funding from `project DirtyData
 <https://project.inria.fr/dirtydata/>`_ (ANR-17-CE23-0018).
 
 .. [1] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.

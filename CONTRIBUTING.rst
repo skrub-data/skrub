@@ -4,7 +4,7 @@ Contributing to skrub
 First off, thanks for taking the time to contribute!
 
 The following is a set of guidelines for contributing to
-`skrub <https://github.com/dirty-cat/skrub>`__.
+`skrub <https://github.com/skrub-data/skrub>`__.
 
 |
 
@@ -17,7 +17,7 @@ I don’t want to read the whole thing I just have a question
 ------------------------------------------------------------
 
 We use GitHub Discussions for general chat and Q&As. `Check it
-out! <https://github.com/dirty-cat/skrub/discussions>`__
+out! <https://github.com/skrub-data/skrub/discussions>`__
 
 What should I know before I get started?
 ----------------------------------------
@@ -39,7 +39,7 @@ Even if we unit-test our code, using the library is the best way to
 discover new bugs and limitations.
 
 If you stumble upon one, please `check if a similar or identical issue already
-exists <https://github.com/dirty-cat/skrub/issues?q=is%3Aissue>`__
+exists <https://github.com/skrub-data/skrub/issues?q=is%3Aissue>`__
 
 - If yes:
 
@@ -50,7 +50,7 @@ exists <https://github.com/dirty-cat/skrub/issues?q=is%3Aissue>`__
     - **It has been closed by a merged pull request** (1) update your skrub version,
       or (2) the fix has not been released in a version yet
     - **Otherwise**, there might be a ``wontfix`` label, and / or a reason at the bottom of the conversation
-- If not, `file a new issue <https://github.com/dirty-cat/skrub/issues/new>`__ (see following section)
+- If not, `file a new issue <https://github.com/skrub-data/skrub/issues/new>`__ (see following section)
 
 How do I submit a (good) bug report?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -79,11 +79,11 @@ This section will guide you through submitting a new enhancement for
 skrub, whether it is a small fix or a new feature.
 
 First, you should `check if the feature has not already been proposed or
-implemented <https://github.com/dirty-cat/skrub/pulls?q=is%3Apr>`__.
+implemented <https://github.com/skrub-data/skrub/pulls?q=is%3Apr>`__.
 
 If not, the next thing you should do, before writing any code, is to
 `submit a new
-issue <https://github.com/dirty-cat/skrub/issues/new>`__ proposing
+issue <https://github.com/skrub-data/skrub/issues/new>`__ proposing
 the change.
 
 How do I submit a (good) enhancement proposal?
@@ -157,7 +157,7 @@ it is already on most linux distributions).
 
 .. code:: console
 
-   git clone https://github.com/dirty-cat/skrub
+   git clone https://github.com/skrub-data/skrub
 
 Next, install the project dependencies. They are listed in ``setup.cfg``.
 
