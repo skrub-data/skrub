@@ -8,7 +8,7 @@ import pytest
 from sklearn.exceptions import NotFittedError
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
-from dirty_cat import MinHashEncoder
+from skrub import MinHashEncoder
 
 from .utils import generate_data
 

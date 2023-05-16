@@ -152,7 +152,7 @@ html_sidebars = {
 # documentation.
 #
 html_theme_options = {
-    "logo": "dirty_cat.svg",
+    "logo": "skrub.svg",
     "github_user": "skrub-data",
     "github_repo": "skrub",
     "github_button": "true",
@@ -290,7 +290,7 @@ sphinx_gallery_conf = {
 
 # -- sphinxext.opengraph configuration -------------------------------------
 ogp_site_url = "https://skrub-data.github.io/stable/"
-ogp_image = "https://skrub-data.github.io/stable/_static/dirty_cat.svg"
+ogp_image = "https://skrub-data.github.io/stable/_static/skrub.svg"
 ogp_use_first_image = True
 ogp_site_name = "skrub"
 

@@ -8,9 +8,9 @@ from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat import GapEncoder, SuperVectorizer, TableVectorizer
-from dirty_cat._table_vectorizer import _infer_date_format
-from dirty_cat._utils import parse_version
+from skrub import GapEncoder, SuperVectorizer, TableVectorizer
+from skrub._table_vectorizer import _infer_date_format
+from skrub._utils import parse_version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):

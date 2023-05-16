@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
 
-from dirty_cat import _target_encoder
+from skrub import _target_encoder
 
 
 def test_target_encoder() -> None:

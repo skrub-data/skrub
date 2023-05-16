@@ -6,13 +6,13 @@ import pytest
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 
-from dirty_cat._deduplicate import (
+from skrub._deduplicate import (
     _create_spelling_correction,
     _guess_clusters,
     compute_ngram_distance,
     deduplicate,
 )
-from dirty_cat.datasets import make_deduplication_data
+from skrub.datasets import make_deduplication_data
 
 
 @pytest.mark.parametrize(

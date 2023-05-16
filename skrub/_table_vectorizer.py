@@ -20,8 +20,8 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat import DatetimeEncoder, GapEncoder
-from dirty_cat._utils import parse_version
+from skrub import DatetimeEncoder, GapEncoder
+from skrub._utils import parse_version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -193,13 +193,13 @@ class TableVectorizer(ColumnTransformer):
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
-        (e.g. :class:`~dirty_cat.GapEncoder`),
+        (e.g. :class:`~skrub.GapEncoder`),
         a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or `None` to use the default transformer
-        (:class:`~dirty_cat.GapEncoder(n_components=30)`).
+        (:class:`~skrub.GapEncoder(n_components=30)`).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -218,12 +218,12 @@ class TableVectorizer(ColumnTransformer):
     datetime_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on datetime features.
         Can either be a transformer object instance
-        (e.g. :class:`~dirty_cat.DatetimeEncoder`),
+        (e.g. :class:`~skrub.DatetimeEncoder`),
         a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (:class:`~dirty_cat.DatetimeEncoder()`).
+        or `None` to use the default transformer (:class:`~skrub.DatetimeEncoder()`).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -241,7 +241,7 @@ class TableVectorizer(ColumnTransformer):
         When imputed, missing values are replaced by the string 'missing'.
         As imputation logic for numerical features can be quite intricate,
         it is left to the user to manage.
-        See also attribute :attr:`~dirty_cat.TableVectorizer.imputed_columns_`.
+        See also attribute :attr:`~skrub.TableVectorizer.imputed_columns_`.
 
     remainder : {'drop', 'passthrough'} or Transformer, default='drop'
         By default, only the specified columns in `transformers` are
@@ -307,11 +307,11 @@ class TableVectorizer(ColumnTransformer):
 
     See Also
     --------
-    :class:`dirty_cat.GapEncoder` :
+    :class:`skrub.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`dirty_cat.MinHashEncoder` :
+    :class:`skrub.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
-    :class:`dirty_cat.SimilarityEncoder` :
+    :class:`skrub.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Notes
@@ -332,7 +332,7 @@ class TableVectorizer(ColumnTransformer):
     --------
     Fit a :class:`TableVectorizer` on an example dataset:
 
-    >>> from dirty_cat.datasets import fetch_employee_salaries
+    >>> from skrub.datasets import fetch_employee_salaries
     >>> ds = fetch_employee_salaries()
     >>> ds.X.head(3)
       gender department                          department_name                                           division assignment_category      employee_position_title underfilled_job_title date_first_hired  year_first_hired

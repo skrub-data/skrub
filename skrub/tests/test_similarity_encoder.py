@@ -6,10 +6,10 @@ import pytest
 from sklearn import __version__ as sklearn_version
 from sklearn.exceptions import NotFittedError
 
-from dirty_cat import SimilarityEncoder
-from dirty_cat._similarity_encoder import get_kmeans_prototypes, ngram_similarity_matrix
-from dirty_cat._string_distances import ngram_similarity
-from dirty_cat._utils import parse_version
+from skrub import SimilarityEncoder
+from skrub._similarity_encoder import get_kmeans_prototypes, ngram_similarity_matrix
+from skrub._string_distances import ngram_similarity
+from skrub._utils import parse_version
 
 
 def test_specifying_categories() -> None:
@@ -281,7 +281,7 @@ def test_fit_transform() -> None:
 
 
 def test_get_features() -> None:
-    # See https://github.com/dirty-cat/dirty_cat/issues/168
+    # See https://github.com/dirty-cat/skrub/issues/168
     sim_enc = SimilarityEncoder(random_state=435)
     X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)

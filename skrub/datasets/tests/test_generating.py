@@ -4,7 +4,7 @@ Tests generating.py (synthetic dataset generation).
 
 import numpy as np
 
-from dirty_cat.datasets._generating import make_deduplication_data
+from skrub.datasets._generating import make_deduplication_data
 
 
 def test_make_deduplication_data():

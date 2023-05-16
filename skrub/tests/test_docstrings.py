@@ -1,6 +1,6 @@
 """
 This test suite ensures the docstrings of class methods in
-dirty_cat are formatted according to numpydoc specifications.
+skrub are formatted according to numpydoc specifications.
 `DOCSTRING_TEMP_IGNORE_SET` defines a set of class methods
 to skip while running the validation tests, so that CI will
 not fail.
@@ -17,29 +17,29 @@ import pytest
 from numpydoc.validate import validate
 
 DOCSTRING_TEMP_IGNORE_SET = {
-    "dirty_cat._table_vectorizer.SuperVectorizer",
-    # The following are not documented in dirty_cat (and thus are out of scope)
+    "skrub._table_vectorizer.SuperVectorizer",
+    # The following are not documented in skrub (and thus are out of scope)
     # They are usually inherited from other libraries.
-    "dirty_cat._table_vectorizer.TableVectorizer.fit",
-    "dirty_cat._table_vectorizer.TableVectorizer.set_params",
-    "dirty_cat._table_vectorizer.TableVectorizer.named_transformers_",
-    "dirty_cat._table_vectorizer.SuperVectorizer.fit",
-    "dirty_cat._table_vectorizer.SuperVectorizer.set_params",
-    "dirty_cat._table_vectorizer.SuperVectorizer.named_transformers_",
+    "skrub._table_vectorizer.TableVectorizer.fit",
+    "skrub._table_vectorizer.TableVectorizer.set_params",
+    "skrub._table_vectorizer.TableVectorizer.named_transformers_",
+    "skrub._table_vectorizer.SuperVectorizer.fit",
+    "skrub._table_vectorizer.SuperVectorizer.set_params",
+    "skrub._table_vectorizer.SuperVectorizer.named_transformers_",
     # The following are internal functions
-    "dirty_cat._check_dependencies.check_dependencies",
+    "skrub._check_dependencies.check_dependencies",
 }
 
 
 def get_public_classes():
-    module = import_module("dirty_cat")
+    module = import_module("skrub")
     classes = inspect.getmembers(module, inspect.isclass)
     classes = [(name, cls) for name, cls in classes if not name.startswith("_")]
     return sorted(classes, key=lambda x: x[0])
 
 
 def get_public_functions():
-    module = import_module("dirty_cat")
+    module = import_module("skrub")
     funcs = inspect.getmembers(module, inspect.isfunction)
     funcs = [(name, func) for name, func in funcs if not name.startswith("_")]
     return sorted(funcs, key=lambda x: x[0])
