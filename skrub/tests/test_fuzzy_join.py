@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from sklearn.feature_extraction.text import HashingVectorizer
 
-from dirty_cat import fuzzy_join
+from skrub import fuzzy_join
 
 
 @pytest.mark.parametrize(

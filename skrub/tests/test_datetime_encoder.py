@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 from sklearn.exceptions import NotFittedError
 
-from dirty_cat._datetime_encoder import DatetimeEncoder
+from skrub._datetime_encoder import DatetimeEncoder
 
 
 def get_date_array() -> np.array:

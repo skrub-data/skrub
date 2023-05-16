@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from dirty_cat import FeatureAugmenter
+from skrub import FeatureAugmenter
 
 
 def test_feature_augmenter() -> None:
