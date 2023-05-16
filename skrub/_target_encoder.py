@@ -8,7 +8,7 @@ from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat._utils import check_input
+from skrub._utils import check_input
 
 
 def lambda_(x, n):
@@ -65,12 +65,12 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`dirty_cat.GapEncoder`
+    :class:`skrub.GapEncoder`
         Encodes dirty categories (strings) by constructing latent topics with
         continuous encoding.
-    :class:`dirty_cat.MinHashEncoder`
+    :class:`skrub.MinHashEncoder`
         Encode string columns as a numeric array with the minhash method.
-    :class:`dirty_cat.SimilarityEncoder`
+    :class:`skrub.SimilarityEncoder`
         Encode string columns as a numeric array with n-gram string similarity.
 
     References
@@ -145,8 +145,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~dirty_cat.TargetEncoder`
-            Fitted :class:`~dirty_cat.TargetEncoder` instance (self).
+        :obj:`~skrub.TargetEncoder`
+            Fitted :class:`~skrub.TargetEncoder` instance (self).
         """
         X = check_input(X)
         self.n_features_in_ = X.shape[1]

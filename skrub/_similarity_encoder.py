@@ -208,7 +208,7 @@ class SimilarityEncoder(OneHotEncoder):
     Parameters
     ----------
     similarity : None
-        Deprecated in dirty_cat 0.3, will be removed in 0.5.
+        Deprecated in skrub 0.3, will be removed in 0.5.
         Was used to specify the type of pairwise string similarity to use.
         Since 0.3, only the ngram similarity is supported.
     ngram_range : int 2-tuple (min_n, max_n), default=(2, 4)
@@ -268,19 +268,19 @@ class SimilarityEncoder(OneHotEncoder):
 
     See Also
     --------
-    :class:`dirty_cat.MinHashEncoder` :
+    :class:`skrub.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
-    :class:`dirty_cat.GapEncoder` :
+    :class:`skrub.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics
         with continuous encoding.
-    :class:`dirty_cat.deduplicate` :
+    :class:`skrub.deduplicate` :
         Deduplicate data by hierarchically clustering similar strings.
 
     Notes
     -----
     The functionality of :class:`SimilarityEncoder` is easy to explain
     and understand, but it is not scalable.
-    Instead, the :class:`~dirty_cat.GapEncoder` is usually recommended.
+    Instead, the :class:`~skrub.GapEncoder` is usually recommended.
 
     References
     ----------
@@ -356,7 +356,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         if similarity is not None:
             warnings.warn(
-                'The "similarity" argument is deprecated since dirty_cat 0.3, '
+                'The "similarity" argument is deprecated since skrub 0.3, '
                 "and will be removed in 0.5."
                 "The n-gram similarity is the only one currently supported. ",
                 category=UserWarning,
@@ -612,12 +612,12 @@ class SimilarityEncoder(OneHotEncoder):
         """
         Fast computation of ngram similarity.
 
-        :func:`~dirty_cat.SimilarityEncoder.transform` uses the count vectors
+        :func:`~skrub.SimilarityEncoder.transform` uses the count vectors
         of the vocabulary in its computations.
         In `ngram_similarity`, these count vectors have to be
         re-computed each time, which can slow down the execution. In this
         method, the count vectors are recovered from
-        :attr:`~dirty_cat.SimilarityEncoder.vocabulary_count_matrices`,
+        :attr:`~skrub.SimilarityEncoder.vocabulary_count_matrices`,
         speeding up the execution.
 
         Parameters

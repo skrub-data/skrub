@@ -12,9 +12,9 @@ from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
 
-from dirty_cat._fast_hash import ngram_min_hash
-from dirty_cat._string_distances import get_unique_ngrams
-from dirty_cat._utils import LRUDict, check_input
+from skrub._fast_hash import ngram_min_hash
+from skrub._string_distances import get_unique_ngrams
+from skrub._utils import LRUDict, check_input
 
 NoneType = type(None)
 
@@ -371,7 +371,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from utils import monitor, find_result, default_parser
-from dirty_cat.tests.utils import generate_data
+from skrub.tests.utils import generate_data
 
 benchmark_name = "minhash_batch_comparison"
 

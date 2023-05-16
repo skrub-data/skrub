@@ -1,6 +1,6 @@
 :orphan:
 
-.. currentmodule:: dirty_cat
+.. currentmodule:: skrub
 
 Release 0.4.1
 =============

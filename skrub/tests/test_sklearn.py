@@ -1,6 +1,6 @@
 from sklearn.utils.estimator_checks import check_estimator
 
-from dirty_cat import (  # TableVectorizer,
+from skrub import (  # TableVectorizer,
     DatetimeEncoder,
     GapEncoder,
     MinHashEncoder,

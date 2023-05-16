@@ -5,7 +5,7 @@ from urllib.error import URLError
 import pandas as pd
 import pytest
 
-from dirty_cat.datasets import _fetching
+from skrub.datasets import _fetching
 
 
 def _has_data_id(call, data_id: int) -> bool:
@@ -18,7 +18,7 @@ def _has_data_id(call, data_id: int) -> bool:
 
 
 @mock.patch(
-    "dirty_cat.datasets._fetching.fetch_openml",
+    "skrub.datasets._fetching.fetch_openml",
     side_effect=_fetching.fetch_openml,
 )
 def test_openml_fetching(fetch_openml_mock: mock.Mock):
@@ -27,7 +27,7 @@ def test_openml_fetching(fetch_openml_mock: mock.Mock):
     that asserts the fetching function works correctly.
 
     We don't download all datasets as it would take way too long:
-    see https://github.com/dirty-cat/dirty_cat/issues/523
+    see https://github.com/dirty-cat/skrub/issues/523
     """
     with TemporaryDirectory() as temp_dir:
         # Download the dataset without loading it in memory.
@@ -77,7 +77,7 @@ def test_openml_datasets_exist():
     )
 
 
-@mock.patch("dirty_cat.datasets._fetching.fetch_openml")
+@mock.patch("skrub.datasets._fetching.fetch_openml")
 def test_openml_datasets_calls(fetch_openml_mock: mock.Mock):
     """
     Checks that calling the fetching functions actually calls

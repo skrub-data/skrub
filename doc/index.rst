@@ -1,16 +1,16 @@
 
 =================================================
-dirty_cat: machine learning with dirty categories
+skrub: Prepping tables for machine learning 
 =================================================
 
 .. toctree::
    :maxdepth: 2
 
-.. currentmodule:: dirty_cat
+.. currentmodule:: skrub
 
 .. container:: larger-container
 
-    `dirty_cat` facilitates machine-learning with non-curated categories:
+    `skrub` facilitates machine-learning with non-curated categories:
     **robust to morphological variants**, such as typos. See
     :ref:`examples <usage_examples>`, such as `the first one
     <https://skrub-data.github.io/stable/auto_examples/01_dirty_categories.html>`_,
@@ -88,7 +88,7 @@ encoding pipeline you can tweak.
 
 .. container:: install_instructions
 
-    :Installing: ``$ pip install --user --upgrade dirty_cat``
+    :Installing: ``$ pip install --user --upgrade skrub``
 
 .. _usage_examples:
 
@@ -213,7 +213,7 @@ Data download and generation
 About
 =====
 
-dirty_cat is a young project born from research. We really need people
+skrub is a young project born from research. We really need people
 giving feedback on successes and failures with the different techniques on real
 world data, and pointing us to open datasets on which we can do more
 empirical work.
@@ -228,12 +228,12 @@ Related projects
 ================
 
 - `scikit-learn <https://github.com/scikit-learn/scikit-learn>`_
-  - a very popular machine learning library; *dirty_cat* inherits its API
+  - a very popular machine learning library; *skrub* inherits its API
 - `categorical-encoding <https://contrib.scikit-learn.org/category_encoders/>`_
   - scikit-learn compatible classic categorical encoding schemes
 - `spark-dirty-cat <https://github.com/rakutentech/spark-dirty-cat>`_
-  - a Scala implementation of dirty_cat for Spark ML
+  - a Scala implementation of skrub for Spark ML
 - `CleverCSV <https://github.com/alan-turing-institute/CleverCSV>`_
   - a package for dealing with dirty csv files
 - `GAMA <https://github.com/openml-labs/gama>`_
-  - a modular AutoML assistant that uses *dirty_cat* as part of its search space
+  - a modular AutoML assistant that uses *skrub* as part of its search space

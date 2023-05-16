@@ -5,10 +5,10 @@ from sklearn import __version__ as sklearn_version
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
-from dirty_cat import GapEncoder
-from dirty_cat._utils import parse_version
-from dirty_cat.datasets import fetch_midwest_survey
-from dirty_cat.tests.utils import generate_data
+from skrub import GapEncoder
+from skrub._utils import parse_version
+from skrub.datasets import fetch_midwest_survey
+from skrub.tests.utils import generate_data
 
 
 @pytest.mark.parametrize(

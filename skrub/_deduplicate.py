@@ -169,12 +169,12 @@ def deduplicate(
 
     See Also
     --------
-    :class:`dirty_cat.GapEncoder` :
+    :class:`skrub.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics with
         continuous encoding.
-    :class:`dirty_cat.MinHashEncoder` :
+    :class:`skrub.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
-    :class:`dirty_cat.SimilarityEncoder` :
+    :class:`skrub.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Notes
@@ -187,7 +187,7 @@ def deduplicate(
 
     Examples
     --------
-    >>> from dirty_cat.datasets import make_deduplication_data
+    >>> from skrub.datasets import make_deduplication_data
     >>> duplicated = make_deduplication_data(examples=['black', 'white'],
                                              entries_per_example=[5, 5],
                                              prob_mistake_per_letter=0.3,

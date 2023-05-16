@@ -1,5 +1,5 @@
 """
-dirty_cat: Learning on dirty categories.
+skrub: Prepping tables for machine learning.
 """
 from pathlib import Path as _Path
 

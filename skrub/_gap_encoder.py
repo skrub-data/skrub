@@ -38,7 +38,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`~dirty_cat.GapEncoder`
+    :class:`~skrub.GapEncoder`
         For more information.
     """
 
@@ -559,8 +559,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     categories estimated from the data. The latent categories are built by
     capturing combinations of substrings that frequently co-occur.
 
-    The :class:`~dirty_cat.GapEncoder` supports online learning on batches of
-    data for scalability through the :func:`~dirty_cat.GapEncoder.partial_fit`
+    The :class:`~skrub.GapEncoder` supports online learning on batches of
+    data for scalability through the :func:`~skrub.GapEncoder.partial_fit`
     method.
 
     The principle is as follows:
@@ -657,11 +657,11 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`dirty_cat.MinHashEncoder`
+    :class:`skrub.MinHashEncoder`
         Encode string columns as a numeric array with the minhash method.
-    :class:`dirty_cat.SimilarityEncoder`
+    :class:`skrub.SimilarityEncoder`
         Encode string columns as a numeric array with n-gram string similarity.
-    :class:`dirty_cat.deduplicate`
+    :class:`skrub.deduplicate`
         Deduplicate data by hierarchically clustering similar strings.
 
     References
@@ -682,7 +682,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     >>> enc.fit(X)
     GapEncoder(n_components=2)
 
-    The :class:`~dirty_cat.GapEncoder` has found the following two topics:
+    The :class:`~skrub.GapEncoder` has found the following two topics:
 
     >>> enc.get_feature_names_out()
     ['england, london, uk', 'france, paris, pqris']
@@ -814,8 +814,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~dirty_cat.GapEncoder`
-            The fitted :class:`~dirty_cat.GapEncoder` instance (self).
+        :obj:`~skrub.GapEncoder`
+            The fitted :class:`~skrub.GapEncoder` instance (self).
         """
 
         # Check that n_samples >= n_components
@@ -883,8 +883,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~dirty_cat.GapEncoder`
-            The fitted :class:`~dirty_cat.GapEncoder` instance (self).
+        :obj:`~skrub.GapEncoder`
+            The fitted :class:`~skrub.GapEncoder` instance (self).
         """
 
         # If X is a dataframe, store its column names

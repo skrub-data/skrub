@@ -8,7 +8,7 @@ from typing import List, Literal, Tuple
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from dirty_cat._fuzzy_join import fuzzy_join
+from skrub._fuzzy_join import fuzzy_join
 
 
 class FeatureAugmenter(BaseEstimator, TransformerMixin):
@@ -58,10 +58,10 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :func:`dirty_cat.fuzzy_join` :
+    :func:`skrub.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
 
-    :func:`dirty_cat.datasets.get_ken_embeddings` :
+    :func:`skrub.datasets.get_ken_embeddings` :
         Download vector embeddings for many common entities (cities,
         places, people...).
 

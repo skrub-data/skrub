@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 import numpy as np
 
-from dirty_cat import _string_distances
+from skrub import _string_distances
 
 
 def test_get_unique_ngrams() -> None:

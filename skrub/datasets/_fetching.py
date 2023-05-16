@@ -28,8 +28,8 @@ from pyarrow.parquet import ParquetFile
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 
-from dirty_cat._utils import parse_version
-from dirty_cat.datasets._utils import get_data_dir
+from skrub._utils import parse_version
+from skrub.datasets._utils import get_data_dir
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
@@ -40,7 +40,7 @@ from dirty_cat.datasets._utils import get_data_dir
 # Note: the tree structure is created by ``fetch_openml()``.
 # As of october 2020, this function is annotated as
 # ``Experimental`` so the structure might change in future releases.
-# This path will be concatenated to the dirty_cat data directory,
+# This path will be concatenated to the skrub data directory,
 # available via the function ``get_data_dir()``.
 DETAILS_DIRECTORY: str = "openml/openml.org/api/v1/json/data/"
 
@@ -150,7 +150,7 @@ def _fetch_openml_dataset(
         The ID of the dataset to fetch.
     data_directory : Path, optional
         A directory to save the data to.
-        By default, the dirty_cat data directory.
+        By default, the skrub data directory.
 
     Returns
     -------
@@ -234,7 +234,7 @@ def _fetch_world_bank_data(
         The ID of the indicator's dataset to fetch.
     data_directory : Path, optional
         A directory to save the data to.
-        By default, the dirty_cat data directory.
+        By default, the skrub data directory.
 
     Returns
     -------
@@ -317,7 +317,7 @@ def _fetch_figshare(
         The ID of the dataset to fetch.
     data_directory : :obj:`~pathlib.Path`, optional
         A directory to save the data to.
-        By default, the dirty_cat data directory.
+        By default, the skrub data directory.
 
     Returns
     -------
@@ -567,7 +567,7 @@ def _fetch_dataset_as_dataclass(
     pass `load_dataframe=False`.
 
     To save/load the dataset to/from a specific directory,
-    pass `data_directory`. If `None`, uses the default dirty_cat
+    pass `data_directory`. If `None`, uses the default skrub
     data directory.
 
     If the dataset doesn't have a target (unsupervised learning or inapplicable),

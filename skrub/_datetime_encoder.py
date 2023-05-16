@@ -7,7 +7,7 @@ from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from dirty_cat._utils import check_input, parse_version
+from skrub._utils import check_input, parse_version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -73,11 +73,11 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`dirty_cat.GapEncoder` :
+    :class:`skrub.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`dirty_cat.MinHashEncoder` :
+    :class:`skrub.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
-    :class:`dirty_cat.SimilarityEncoder` :
+    :class:`skrub.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Examples

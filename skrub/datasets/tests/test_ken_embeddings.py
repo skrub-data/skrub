@@ -1,4 +1,4 @@
-from dirty_cat.datasets import get_ken_embeddings, get_ken_table_aliases, get_ken_types
+from skrub.datasets import get_ken_embeddings, get_ken_table_aliases, get_ken_types
 
 
 def test_get_ken_table_aliases():

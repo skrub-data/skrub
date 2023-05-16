@@ -6,7 +6,7 @@ from typing import Optional, Set
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from dirty_cat.datasets import fetch_figshare
+from skrub.datasets import fetch_figshare
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -150,9 +150,9 @@ def get_ken_embeddings(
         Get the supported aliases of embedded entities tables.
     :func:`get_ken_types`
         Helper function to search for entity types.
-    :func:`dirty_cat.fuzzy_join` :
+    :func:`skrub.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
-    :class:`dirty_cat.FeatureAugmenter` :
+    :class:`skrub.FeatureAugmenter` :
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 
@@ -174,7 +174,7 @@ def get_ken_embeddings(
     Going directly for the exact type name (e.g. "wikicat_rock_music_bands")
     is possible but may not be complete (as some relevant bands may be
     in other similar types).
-    For searching the types, the :func:`~dirty_cat.datasets.get_ken_types`
+    For searching the types, the :func:`~skrub.datasets.get_ken_types`
     function can be used.
 
     """
