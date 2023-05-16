@@ -33,7 +33,7 @@ the main steps and appropriate resources:
     ``git push origin 0.2.0``.
     Push the branch to the ``dirty_cat`` repository.
     The CI will automatically create an associated folder in the documentation repo.
-6.  In the documentation repository (e.g. ``https://github.com/dirty-cat/skrub-data.github.io``),
+6.  In the documentation repository (e.g. ``https://github.com/skrub-data/skrub-data.github.io``),
     update the ``stable`` symlink to the latest stable version: first, unlink ``stable``
     (i.e. ``unlink stable``); then, create a new symlink (i.e. ``ln -s 0.2 stable``);
     finally, commit and push the changes into the repository.
