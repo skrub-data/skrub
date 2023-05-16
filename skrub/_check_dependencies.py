@@ -2,7 +2,7 @@ import pkg_resources
 
 
 def check_dependencies():
-    package_name = "dirty-cat"
+    package_name = "skrub"
     env = pkg_resources.Environment()
     package = env[package_name][0]
     requirements = package.requires()
