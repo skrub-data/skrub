@@ -183,8 +183,6 @@ def monitor(
             if parametrize is None:
                 # Use the parameters passed by the call
                 parametrization = (call_args, call_kwargs)
-            elif isinstance(parametrize, dict):
-                parametrization = (parametrize, ())
             else:
                 parametrization = list(product(parametrize))
 

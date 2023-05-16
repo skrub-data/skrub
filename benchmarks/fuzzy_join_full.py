@@ -11,8 +11,8 @@ from itertools import product
 from thefuzz import process
 from autofj import AutoFJ
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
+from utils import fetch_data
 from dirty_cat.benchmarks.fuzzy_join_mini import (
-    fetch_data,
     fuzzy_join_precision_recall,
     thefuzz_precision_recall,
     autofj_precision_recall,

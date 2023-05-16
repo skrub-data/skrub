@@ -7,7 +7,7 @@ is faster to search through than sparse arrays.
 """
 
 import math
-from utils import default_parser, find_result, monitor
+from utils import default_parser, find_result, monitor, evaluate, fetch_data
 from argparse import ArgumentParser
 import numbers
 from time import perf_counter
@@ -20,7 +20,6 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.sparse import hstack, vstack
-from dirty_cat.benchmarks.fuzzy_join_mini import evaluate, fetch_data
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
     TfidfTransformer,
@@ -74,6 +73,7 @@ def _string_encoding(
     analyzer: Literal["word", "char", "char_wb"],
     ngram_range: Tuple[int, int],
     encoder: _VectorizerMixin = None,
+    sparse: bool = True,
 ) -> tuple:
     """Encoding string columns.
 
@@ -121,8 +121,12 @@ def _string_encoding(
         )
     all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
 
-    if encoder is None:
+    if encoder is None and sparse is True:
         encoder = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
+    elif sparse is False:
+        encoder = HashingVectorizer(
+            n_features=2**17, analyzer=analyzer, ngram_range=ngram_range
+        )
 
     encoder = encoder.fit(all_cats)
     main_enc = encoder.transform(main_cols_clean)
@@ -133,10 +137,15 @@ def _string_encoding(
     tfidf = TfidfTransformer().fit(all_enc)
     main_enc = tfidf.transform(main_enc)
     aux_enc = tfidf.transform(aux_enc)
-    return main_enc, aux_enc
+    if sparse is True:
+        return main_enc, aux_enc
+    else:
+        return main_enc.todense(), aux_enc.todense()
 
 
-def _nearest_matches(main_array, aux_array) -> Tuple[np.ndarray, np.ndarray]:
+def _nearest_matches(
+    main_array, aux_array, sparse=True
+) -> Tuple[np.ndarray, np.ndarray]:
     """Find the closest matches using the nearest neighbors method.
 
     Parameters
@@ -155,8 +164,14 @@ def _nearest_matches(main_array, aux_array) -> Tuple[np.ndarray, np.ndarray]:
     """
     # Find nearest neighbor using KNN :
     neigh = NearestNeighbors(n_neighbors=1)
-    neigh.fit(aux_array)
-    distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
+    if sparse is True:
+        neigh.fit(aux_array)
+        distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
+    else:
+        neigh.fit(np.asarray(aux_array))
+        distance, neighbors = neigh.kneighbors(
+            np.asarray(main_array), return_distance=True
+        )
     idx_closest = np.ravel(neighbors)
     distance = distance / np.max(distance)
     # Normalizing distance between 0 and 1:
@@ -180,6 +195,7 @@ def fuzzy_join(
     drop_unmatched: bool = False,
     sort: bool = False,
     suffixes: Tuple[str, str] = ("_x", "_y"),
+    sparse: bool = True,
 ) -> pd.DataFrame:
     """
     Join two tables categorical string columns based on approximate
@@ -245,6 +261,8 @@ def fuzzy_join(
     suffixes : str 2-tuple, default=('_x', '_y')
         A list of strings indicating the suffix to add when overlaping
         column names.
+    sparse : boolean, default=True
+        Use sparse or dense arrays for nearest neighbor search.
 
     Returns
     -------
@@ -317,9 +335,6 @@ def fuzzy_join(
 
     As expected, the category "nana" has no exact match (`match_score=1`).
     """
-
-    warnings.warn("This feature is still experimental.")
-
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
@@ -408,7 +423,7 @@ def fuzzy_join(
         main_enc, aux_enc = _numeric_encoding(
             main_table, main_num_cols, aux_table, aux_num_cols
         )
-        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc, sparse=sparse)
     elif numerical_match in ["number"] and any_numeric and mixed_types:
         main_num_enc, aux_num_enc = _numeric_encoding(
             main_table, main_num_cols, aux_table, aux_num_cols
@@ -423,10 +438,15 @@ def fuzzy_join(
             encoder=encoder,
             analyzer=analyzer,
             ngram_range=ngram_range,
+            sparse=sparse,
         )
-        main_enc = hstack((main_num_enc, main_str_enc), format="csr")
-        aux_enc = hstack((aux_num_enc, aux_str_enc), format="csr")
-        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
+        if sparse is True:
+            main_enc = hstack((main_num_enc, main_str_enc), format="csr")
+            aux_enc = hstack((aux_num_enc, aux_str_enc), format="csr")
+        else:
+            main_enc = np.hstack((main_num_enc, main_str_enc))
+            aux_enc = np.hstack((aux_num_enc, aux_str_enc))
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc, sparse=sparse)
     else:
         main_enc, aux_enc = _string_encoding(
             main_table,
@@ -436,8 +456,9 @@ def fuzzy_join(
             encoder=encoder,
             analyzer=analyzer,
             ngram_range=ngram_range,
+            sparse=sparse,
         )
-        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc, sparse=sparse)
 
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index
@@ -483,8 +504,6 @@ benchmark_name = "fuzzy_join_sparse_vs_dense"
 
 
 @monitor(
-    memory=True,
-    time=True,
     parametrize={
         "sparse": [True, False],
         "dataset_name": [
@@ -499,13 +518,16 @@ benchmark_name = "fuzzy_join_sparse_vs_dense"
             "Wrestler",
             "EthnicGroup",
         ],
-        "analyser": ["char_wb", "char", "word"],
+        "analyzer": ["char_wb", "char", "word"],
         "ngram_range": [(2, 4), (2, 3), (2, 2)],
     },
+    memory=True,
+    time=True,
+    repeat=5,
     save_as=benchmark_name,
-    repeat=10,
 )
 def benchmark(
+    sparse: bool,
     dataset_name: str,
     analyzer: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
@@ -521,6 +543,7 @@ def benchmark(
         right_on="title",
         analyzer=analyzer,
         ngram_range=ngram_range,
+        sparse=sparse,
     )
     end_time = perf_counter()
 
@@ -555,9 +578,9 @@ def plot(df: pd.DataFrame):
         sns.scatterplot(
             x="time_fj",
             y="f1",
-            hue="encoder",
+            hue="sparse",
             style="ngram_range",
-            size="analyser",
+            size="analyzer",
             alpha=0.8,
             data=df[df["dataset_name"] == dataset_name],
             ax=axes[i % n_rows, i // n_rows],
@@ -573,7 +596,10 @@ def plot(df: pd.DataFrame):
 
 if __name__ == "__main__":
     _args = ArgumentParser(
-        description="Benchmark for the batch feature of the MinHashEncoder.",
+        description=(
+            "Benchmark for the evaluating the fuzzy_join performance of sparse vs dense"
+            " arrays."
+        ),
         parents=[default_parser],
     ).parse_args()
 
