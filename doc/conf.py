@@ -58,7 +58,6 @@ extensions = [
     "sphinx.ext.linkcode",
     "sphinx.ext.autodoc.typehints",
     "sphinx_gallery.gen_gallery",
-    "sphinx_favicon",
 ]
 
 try:
