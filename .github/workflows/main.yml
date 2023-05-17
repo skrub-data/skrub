@@ -11,7 +11,7 @@ jobs:
   circleci_artifacts_redirector_job:
     runs-on: ubuntu-latest
     # For testing this action on a fork, remove the "github.repository =="" condition.
-    if: "github.repository == 'skrub-data/skrub' && github.event.context == 'ci/circleci: doc'"
+    if: "github.repository == 'skrub-data/skrub' && github.event.context == 'ci/circleci: python3'"
     name: Run CircleCI artifacts redirector
     steps:
       - name: GitHub Action step
