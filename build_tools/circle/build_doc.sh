@@ -121,10 +121,8 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
 #removed scikit learn from conda since it is installed from main after
 
 source activate testenv
-pip install sphinx-gallery
-pip install sphinxext-opengraph
-pip install pydata-sphinx-theme
-pip install numpydoc
+
+pip install -e .[doc]
 
 pip install scikit-learn
 
