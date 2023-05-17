@@ -4,3 +4,4 @@ sphinxext-opengraph
 matplotlib
 seaborn
 statsmodels
+pydata_sphinx_theme

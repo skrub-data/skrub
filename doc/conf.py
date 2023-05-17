@@ -128,6 +128,7 @@ autodoc_default_flags = ["members", "inherited-members"]
 # The theme to use for HTML and HTML Help pages. See the documentation for
 # a list of builtin themes.
 #
+import pydata_sphinx_theme
 html_theme = "pydata_sphinx_theme"
 
 # html_sidebars = {
