@@ -1,7 +1,7 @@
 `skrub`
 ===========
 
-.. image:: https://github.com/skrub-data/skrub/blob/main/doc/skrub.svg
+.. image:: https://skrub-data.github.io/stable/_static/skrub.svg
    :align: center
    :alt: skrub logo
 
