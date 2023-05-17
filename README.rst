@@ -1,7 +1,7 @@
 `skrub`
 ===========
 
-.. image:: https://skrub-data.github.io/stable/_static/skrub.svg
+.. image:: https://github.com/skrub-data/skrub/blob/main/doc/skrub.svg
    :align: center
    :alt: skrub logo
 
@@ -16,7 +16,7 @@
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
 `skrub <https://skrub-data.github.io/>`_ is a Python library
-that facilitates machine-learning on dirty categorical variables.
+that facilitates prepping your tables for machine learning.
 
 For a detailed description of the problem of encoding dirty categorical data, see
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
@@ -48,10 +48,10 @@ methods.
 
 `skrub` can still help with handling typos and variations in this kind of setting.
 
-Installation
-------------
+Installation (WIP)
+------------------
 
-skrub can be easily installed via `pip`::
+Once the first release is done, skrub can be easily installed via `pip`::
 
     pip install skrub
 
