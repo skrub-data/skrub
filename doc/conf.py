@@ -235,7 +235,7 @@ texinfo_documents = [
         "skrub Documentation",
         author,
         "skrub",
-        "Learning on non-curated categorical data.",
+        "Prepping tables for machine learning.",
         "Data Science",
     ),
 ]
