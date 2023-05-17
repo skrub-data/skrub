@@ -10,12 +10,9 @@ skrub: Prepping tables for machine learning
 
 .. container:: larger-container
 
-    `skrub` facilitates machine-learning with non-curated categories:
-    **robust to morphological variants**, such as typos. See
-    :ref:`examples <usage_examples>`, such as `the first one
-    <https://skrub-data.github.io/stable/auto_examples/01_dirty_categories.html>`_,
-    for an introduction to problems of dirty categories or misspelled
-    entities.
+    - Built for scikit-learn.
+    - Robust to dirty data.
+    - Easy learning on pandas dataframes.
 
 |
 
