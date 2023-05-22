@@ -4,6 +4,9 @@ API
 
 This page lists all the functions and classes of skrub:
 
+.. currentmodule:: skrub
+
+
 Vectorizing a dataframe
 -----------------------
 
