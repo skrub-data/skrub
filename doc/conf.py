@@ -169,7 +169,8 @@ html_theme_options = {
     "use_edit_page_button": True,
     "show_toc_level": 1,
     "navbar_align": "left",  # [left, content, right] For testing that the navbar items align properly
-    "navbar_center": ["version-switcher", "navbar-nav"],
+    #"navbar_center": ["version-switcher", "navbar-nav"],
+    "navbar_center": ["navbar-nav"],
     "announcement": "https://raw.githubusercontent.com/skrub_data/skrub/main/docs/announcement.html",
     # "show_nav_level": 2,
     # "navbar_start": ["navbar-logo"],
