@@ -1,2 +1,2 @@
-Using skrub
+Examples
 ===========

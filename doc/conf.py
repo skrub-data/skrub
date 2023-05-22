@@ -185,7 +185,6 @@ html_theme_options = {
     #    "json_url": json_url,
     #    "version_match": version_match,
     #},
-    # "search_bar_position": "navbar",  # TODO: Deprecated - remove in future version
 }
 
 
