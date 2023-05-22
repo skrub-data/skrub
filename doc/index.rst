@@ -20,42 +20,11 @@ skrub: Prepping tables for machine learning
 
     <div class="flex-container">
     <div class="flex-content">
-    <span class="container-title">Automatic features from heterogeneous dataframes</span>
+    <span class="container-title">Assembling
+    </span>
 
-:class:`TableVectorizer`: a transformer to **easily turn a pandas
-dataframe into a numpy array** suitable for machine learning -- a default
-encoding pipeline you can tweak.
-
-.. rst-class:: centered
-
-    :ref:`An example <example_table_vectorizer>`
-
-.. raw:: html
-
-    </div>
-    <div class="flex-content">
-    <span class="container-title">OneHotEncoder but for non-normalized categories</span>
-
-
-* :class:`GapEncoder`, scalable and interpretable, where each encoding
-  dimension corresponds to a topic that summarizes substrings captured.
-  :ref:`Example <example_gap_encoder>`
-
-* :class:`SimilarityEncoder`, an enhanced one-hot encoder
-  able to capture the string similarities in the data.
-  :ref:`Example <example_similarity_encoder>`
-
-* :class:`MinHashEncoder`, very scalable, suitable for big data.
-  :ref:`Example <example_minhash_encoder>`
-
-.. raw:: html
-
-    </div>
-    <div class="flex-content">
-    <span class="container-title">Joining tables on non-normalized categories</span>
-
-* :func:`fuzzy_join`, approximate matching using morphological similarity.
-  :ref:`Example <example_fuzzy_join>`
+* :func:`fuzzy_join`, Joining tables on non-normalized categories with
+  approximate matching. :ref:`Example <example_fuzzy_join>`
 
 * :class:`FeatureAugmenter`, a transformer for joining multiple tables together.
   :ref:`Example <example_feature_augmenter>`
@@ -64,9 +33,27 @@ encoding pipeline you can tweak.
 
     </div>
     <div class="flex-content">
-    <span class="container-title">Deduplicating dirty categories</span>
+    <span class="container-title">Encoding</span>
 
-:func:`deduplicate`, merging categories of similar morphology (spelling).
+Feature matrices from dataframes:
+
+* :class:`TableVectorizer`: **easily turn a pandas
+  dataframe into a numpy array** suitable for machine learning
+  :ref:`An example <example_table_vectorizer>`
+
+* :class:`GapEncoder`, OneHotEncoder but robust to typos or
+   non-normalized categories
+
+  :ref:`Example <example_gap_encoder>`
+
+.. raw:: html
+
+    </div>
+    <div class="flex-content">
+    <span class="container-title">Cleaning</span>
+
+Deduplication :func:`deduplicate`, merging categories of similar
+morphology (spelling).
 
 .. rst-class:: centered
 
