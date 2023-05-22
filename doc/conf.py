@@ -139,6 +139,52 @@ html_theme_options = {
         "image_light": "_static/skrub.svg",
         "image_dark": "_static/skrub.svg",
     },
+    #"external_links": [
+    #    {
+    #        "url": "https://pydata.org",
+    #        "name": "PyData",
+    #    },
+    #],
+    "header_links_before_dropdown": 4,
+    "icon_links": [
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/skrub_data",
+            "icon": "fa-brands fa-twitter",
+        },
+        {
+            "name": "GitHub",
+            "url": "https://github.com/skrub-data/skrub/",
+            "icon": "fa-brands fa-github",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/skrub",
+            "icon": "fa-custom fa-pypi",
+        },
+    ],
+    # alternative way to set twitter and github header icons
+    # "github_url": "https://github.com/pydata/pydata-sphinx-theme",
+    # "twitter_url": "https://twitter.com/PyData",
+    "use_edit_page_button": True,
+    "show_toc_level": 1,
+    "navbar_align": "left",  # [left, content, right] For testing that the navbar items align properly
+    "navbar_center": ["version-switcher", "navbar-nav"],
+    "announcement": "https://raw.githubusercontent.com/skrub_data/skrub/main/docs/announcement.html",
+    # "show_nav_level": 2,
+    # "navbar_start": ["navbar-logo"],
+    # "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    # "navbar_persistent": ["search-button"],
+    # "primary_sidebar_end": ["custom-template.html", "sidebar-ethical-ads.html"],
+    # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
+    # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
+    # "footer_start": ["test.html", "test.html"],
+    # "secondary_sidebar_items": ["page-toc.html"],  # Remove the source buttons
+    #"switcher": {
+    #    "json_url": json_url,
+    #    "version_match": version_match,
+    #},
+    # "search_bar_position": "navbar",  # TODO: Deprecated - remove in future version
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
