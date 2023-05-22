@@ -23,7 +23,7 @@ skrub: Prepping tables for machine learning
     <div class="col-lg-4">
     <div class="sd-card sd-shadow-sm">
     <div class="card-body">
-    <h5 class="card-title">Assembling</h5>
+    <h4 class="card-title">Assembling</h4>
 
 * :func:`fuzzy_join`, Joining tables on non-normalized categories with
   approximate matching. :ref:`Example <example_fuzzy_join>`
@@ -39,12 +39,10 @@ skrub: Prepping tables for machine learning
     <div class="col-lg-4">
     <div class="sd-card sd-shadow-sm">
     <div class="card-body">
-    <h5 class="card-title">Encoding</h5>
+    <h4 class="card-title">Encoding</h4>
 
-Feature matrices from dataframes:
-
-* :class:`TableVectorizer`: **easily turn a pandas
-  dataframe into a numpy array** suitable for machine learning
+* :class:`TableVectorizer`: **turn a pandas
+  dataframe into a numerical array** for machine learning
   :ref:`An example <example_table_vectorizer>`
 
 * :class:`GapEncoder`, OneHotEncoder but robust to typos or
@@ -58,7 +56,7 @@ Feature matrices from dataframes:
     <div class="col-lg-4">
     <div class="sd-card sd-shadow-sm">
     <div class="card-body">
-    <h5 class="card-title">Cleaning</h5>
+    <h4 class="card-title">Cleaning</h4>
 
 Deduplication: merge categories of similar
 morphology (spelling) with :func:`deduplicate`.
