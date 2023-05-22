@@ -171,7 +171,7 @@ html_theme_options = {
     "navbar_align": "left",  # [left, content, right] For testing that the navbar items align properly
     #"navbar_center": ["version-switcher", "navbar-nav"],
     "navbar_center": ["navbar-nav"],
-    "announcement": "https://raw.githubusercontent.com/skrub_data/skrub/main/docs/announcement.html",
+    "announcement": "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html",
     # "show_nav_level": 2,
     # "navbar_start": ["navbar-logo"],
     # "navbar_end": ["theme-switcher", "navbar-icon-links"],
