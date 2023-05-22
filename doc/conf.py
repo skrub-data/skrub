@@ -188,6 +188,16 @@ html_theme_options = {
     # "search_bar_position": "navbar",  # TODO: Deprecated - remove in future version
 }
 
+
+# Needed for the edit button
+html_context = {
+    # "github_url": "https://github.com", # or your GitHub Enterprise site
+    "github_user": "skrub_data",
+    "github_repo": "skrub",
+    "github_version": "main",
+    "doc_path": "docs",
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
