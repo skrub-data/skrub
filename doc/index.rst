@@ -18,10 +18,12 @@ skrub: Prepping tables for machine learning
 
 .. raw:: html
 
-    <div class="flex-container">
-    <div class="flex-content">
-    <span class="container-title">Assembling
-    </span>
+    <div class="container-fluid">
+    <div class="row">
+    <div class="col-lg-4">
+    <div class="sd-card sd-shadow-sm">
+    <div class="card-body">
+    <h4 class="card-title">Assembling</h4>
 
 * :func:`fuzzy_join`, Joining tables on non-normalized categories with
   approximate matching. :ref:`Example <example_fuzzy_join>`
@@ -32,28 +34,32 @@ skrub: Prepping tables for machine learning
 .. raw:: html
 
     </div>
-    <div class="flex-content">
-    <span class="container-title">Encoding</span>
+    </div>
+    </div>
+    <div class="col-lg-4">
+    <div class="sd-card sd-shadow-sm">
+    <div class="card-body">
+    <h4 class="card-title">Encoding</h4>
 
-Feature matrices from dataframes:
-
-* :class:`TableVectorizer`: **easily turn a pandas
-  dataframe into a numpy array** suitable for machine learning
+* :class:`TableVectorizer`: **turn a pandas
+  dataframe into a numerical array** for machine learning
   :ref:`An example <example_table_vectorizer>`
 
 * :class:`GapEncoder`, OneHotEncoder but robust to typos or
-   non-normalized categories
-
-  :ref:`Example <example_gap_encoder>`
+  non-normalized categories :ref:`An example <example_gap_encoder>`
 
 .. raw:: html
 
     </div>
-    <div class="flex-content">
-    <span class="container-title">Cleaning</span>
+    </div>
+    </div>
+    <div class="col-lg-4">
+    <div class="sd-card sd-shadow-sm">
+    <div class="card-body">
+    <h4 class="card-title">Cleaning</h4>
 
-Deduplication :func:`deduplicate`, merging categories of similar
-morphology (spelling).
+Deduplication: merge categories of similar
+morphology (spelling) with :func:`deduplicate`.
 
 .. rst-class:: centered
 
@@ -63,16 +69,15 @@ morphology (spelling).
 
     </div>
     </div>
+    </div>
+    </div>
+    </div>
 
 .. container:: right-align
 
    `Recent changes <CHANGES.html>`_
 
    `Contributing <development.html>`_
-
-.. container:: install_instructions
-
-    :Installing: ``$ pip install --user --upgrade skrub``
 
 .. toctree::
    :hidden:
