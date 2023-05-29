@@ -77,7 +77,7 @@ morphology (spelling) with :func:`deduplicate`.
 
    `Recent changes <CHANGES.html>`_
 
-   `Contributing <development.html>`_
+   `Contributing <CONTRIBUTING.html>`_
 
 .. toctree::
    :hidden:
