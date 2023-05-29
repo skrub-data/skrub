@@ -1,0 +1,17 @@
+/** Styling **************************************************************/
+
+.bd-main .bd-content {
+    display: flex;
+    height: 100%;
+    justify-content: flex-end;
+    gap: 60px;
+    /* margin: 0 20px; */
+}
+
+.card-body {
+    padding-left: 32px;
+}
+
+.card-title {
+    margin-bottom: 1.0rem;
+}

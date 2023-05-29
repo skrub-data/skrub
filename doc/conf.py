@@ -202,6 +202,8 @@ html_context = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+html_css_files = ["css/custom.css"]
+
 # Project logo, to place at the top of the sidebar.
 html_logo = "_static/skrub.svg"
 
