@@ -8,11 +8,14 @@ skrub: Prepping tables for machine learning
 
 .. currentmodule:: skrub
 
-.. container:: larger-container
 
-    - Built for scikit-learn.
-    - Robust to dirty data.
-    - Easy learning on pandas dataframes.
+- Built for scikit-learn.
+- Robust to dirty data.
+- Easy learning on pandas dataframes.
+
+|
+
+.. image:: _static/skrub-cover.svg
 
 |
 
@@ -64,6 +67,9 @@ morphology (spelling) with :func:`deduplicate`. :ref:`Example <example_deduplica
     </div>
     </div>
 
+
+|
+
 .. container:: right-align
 
    `Recent changes <CHANGES.html>`_
@@ -76,5 +82,3 @@ morphology (spelling) with :func:`deduplicate`. :ref:`Example <example_deduplica
    documentation
    api
    auto_examples/index
-
-
