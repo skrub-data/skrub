@@ -1,20 +1,16 @@
+:html_theme.sidebar_secondary.remove:
 
-============================================
-skrub: Prepping tables for machine learning 
-============================================
+.. title:: skrub
 
 .. toctree::
    :maxdepth: 2
 
 .. currentmodule:: skrub
 
-.. container:: larger-container
+.. rst-class:: h4 text-center font-weight-light my-4
 
-    - Built for scikit-learn.
-    - Robust to dirty data.
-    - Easy learning on pandas dataframes.
-
-|
+   Skrub: an open-source Python package for prepping tables for machine learning,
+   from typing, relating, aggregating, fixing errors, and more.
 
 .. raw:: html
 
@@ -64,20 +60,6 @@ morphology (spelling) with :func:`deduplicate`.
 .. rst-class:: centered
 
      :ref:`An example <example_deduplication>`
-
-.. raw:: html
-
-    </div>
-    </div>
-    </div>
-    </div>
-    </div>
-
-.. container:: right-align
-
-   `Recent changes <CHANGES.html>`_
-
-   `Contributing <development.html>`_
 
 .. toctree::
    :hidden:
