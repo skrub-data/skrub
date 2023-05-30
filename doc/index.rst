@@ -15,7 +15,7 @@ skrub: Prepping tables for machine learning
 
 |
 
-.. image:: _static/schematic.svg
+.. image:: _static/skrub_pipeline.svg
 
 |
 
