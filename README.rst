@@ -3,10 +3,11 @@
 
 .. image:: https://skrub-data.github.io/stable/_static/skrub.svg
    :align: center
+   :width: 50 %
    :alt: skrub logo
 
-
-|py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
+.. class:: center
+    |py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
 
 .. |py_ver| image:: https://img.shields.io/pypi/pyversions/skrub
 .. |pypi_var| image:: https://img.shields.io/pypi/v/skrub?color=informational
@@ -15,8 +16,9 @@
 .. |circleci| image:: https://img.shields.io/circleci/build/github/skrub-data/skrub/main?label=CircleCI
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
-`skrub <https://skrub-data.github.io/>`_ is a Python library
-that facilitates prepping your tables for machine learning.
+
+`skrub <https://skrub-data.github.io/>`_ - formerly *dirty_cat* - is a Python
+library that facilitates prepping your tables for machine learning.
 
 For a detailed description of the problem of encoding dirty categorical data, see
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
