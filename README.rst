@@ -1,5 +1,5 @@
 `skrub`
-===========
+=======
 
 .. image:: https://skrub-data.github.io/stable/_static/skrub.svg
    :align: center
@@ -27,7 +27,7 @@ and `Encoding high-cardinality string categorical variables <https://hal.inria.f
 If you like the package, please *spread the word*, and ⭐ `the repository <https://github.com/skrub-data/skrub/>`_!
 
 What can `skrub` do?
-------------------------
+--------------------
 
 `skrub` provides tools (``TableVectorizer``, ``fuzzy_join``...) and
 encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
@@ -36,8 +36,8 @@ for which we usually identify three common cases: **similarities, typos and vari
 `The first example notebook <https://skrub-data.github.io/stable/auto_examples/01_dirtycategories.html>`_
 goes in-depth on how to identify and deal with dirty data using the `skrub` library.
 
-What `skrub` does not
-~~~~~~~~~~~~~~~~~~~~~~~~~
+What `skrub` cannot do
+~~~~~~~~~~~~~~~~~~~~~~
 
 `Semantic similarities <https://en.wikipedia.org/wiki/Semantic_similarity>`_
 are currently not supported.
@@ -53,9 +53,10 @@ methods.
 Installation (WIP)
 ------------------
 
-Once the first release is done, skrub can be easily installed via `pip`::
+There are currently no PiPy releases.
+You can still install the package from the GitHub repository with:
 
-    pip install skrub
+    pip install git+https://github.com/skrub-data/skrub.git
 
 Dependencies
 ~~~~~~~~~~~~
