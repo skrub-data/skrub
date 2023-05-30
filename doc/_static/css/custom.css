@@ -12,6 +12,10 @@
     /* margin: 0 20px; */
 }
 
+#skrub-prepping-tables-for-machine-learning > img {
+    background: rgba(0,0,0,0)
+}
+
 .card-body {
     padding-left: 16px;
     padding-right: 16px;
