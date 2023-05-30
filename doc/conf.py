@@ -47,16 +47,19 @@ shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    # builtin
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.githubpages",
-    "numpydoc",
-    "sphinx_issues",
     "sphinx.ext.linkcode",
     "sphinx.ext.autodoc.typehints",
+    # contrib
+    "numpydoc",
+    "sphinx_issues",
+    "sphinx_copybutton",
     "sphinx_gallery.gen_gallery",
 ]
 
@@ -335,6 +338,29 @@ numpydoc_use_plots = True
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_class_members_toctree = False
 
+numpydoc_xref_param_type = True
+numpydoc_xref_aliases = {
+    # Python
+    "file-like": ":term:`file-like <python:file object>`",
+    "iterator": ":term:`iterator <python:iterator>`",
+    "path-like": ":term:`path-like`",
+    "Path": ":class:`python:pathlib.Path`",
+    "bool": ":class:`python:bool`",
+    # Matplotlib
+    "colormap": ":doc:`colormap <matplotlib:tutorials/colors/colormaps>`",
+    "color": ":doc:`color <matplotlib:api/colors_api>`",
+    "Axes": "matplotlib.axes.Axes",
+    "Figure": "matplotlib.figure.Figure",
+    "Axes3D": "mpl_toolkits.mplot3d.axes3d.Axes3D",
+    "ColorbarBase": "matplotlib.colorbar.ColorbarBase",
+    # sklearn
+    "LeaveOneOut": "sklearn.model_selection.LeaveOneOut",
+    "Transformer": "sklearn.base.TransformerMixin",
+    # joblib
+    "joblib.Parallel": "joblib.Parallel",
+    "joblib.delayed": "joblib.delayed",
+}
+
 # -- sphinx.ext.autodoc configuration -----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 autodoc_typehints = "none"
@@ -352,3 +378,7 @@ linkcode_resolve = make_linkcode_resolve(
     "skrub",
     "https://github.com/skrub-data/skrub/blob/{revision}/{package}/{path}#L{lineno}",
 )
+
+# -- Sphinx-Copybutton configuration -----------------------------------------
+copybutton_prompt_text = r">>> |\.\.\. |\$ "
+copybutton_prompt_is_regexp = True
