@@ -84,8 +84,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "skrub"
-copyright = f"2018-{datetime.now().year}, the skrub developers"
-author = "skrub developers"
+copyright = f"2018-2023, the dirty_cat developers, 2023-{datetime.now().year}, the skrub developers"
+author = "skrub contributors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
