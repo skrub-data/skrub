@@ -56,8 +56,7 @@ skrub: Prepping tables for machine learning
     <div class="card-body">
     <h4 class="card-title">Cleaning</h4>
 
-Deduplication: merge categories of similar
-morphology (spelling) with :func:`deduplicate`. :ref:`Example <example_deduplication>`
+:func:`deduplicate`: merge categories of similar morphology (spelling). :ref:`Example <example_deduplication>`
 
 .. raw:: html
 

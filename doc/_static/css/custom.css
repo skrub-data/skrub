@@ -1,5 +1,9 @@
 /** Styling **************************************************************/
 
+.bd-article {
+    padding-left: 0px !important;
+}
+
 .bd-main .bd-content {
     display: flex;
     height: 100%;
@@ -9,9 +13,15 @@
 }
 
 .card-body {
-    padding-left: 32px;
+    padding-left: 16px;
+    padding-right: 16px;
 }
 
 .card-title {
     margin-bottom: 1.0rem;
+    text-align: center;
+}
+
+.card-body p {
+    text-align: justify;
 }
