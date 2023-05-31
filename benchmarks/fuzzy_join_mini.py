@@ -15,9 +15,8 @@ import math
 from thefuzz.fuzz import partial_ratio
 from thefuzz import process
 from autofj import AutoFJ
-from dirty_cat._fuzzy_join import fuzzy_join
+from ..skrub import _fuzzy_join
 from utils import evaluate, fetch_data, default_parser, find_result, monitor
-
 
 left_table, right_table, gt = fetch_data("Country")
 
