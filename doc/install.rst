@@ -1,0 +1,43 @@
+==========
+Installing
+==========
+
+.. raw:: html
+   <script>
+   var groups = [
+       { id: "os", title: "Operating system", options: [
+           { id: "mac", title: "macOS / OSX" },
+           { id: "windows", title: "Windows", checked: true },
+           { id: "linux", title: "Linux" }]
+       },
+       { id: "package", title: "Package manager", options: [
+           { id: "pip", title: "pip", "checked": true },
+           { id: "conda", title: "conda" },
+           { id: "source", title: "from source" }]
+       },
+       { id: "config", title: "Configuration", multiple: true, options: [
+           { id: "venv", title: "virtualenv" }]
+       },
+   ];
+   var qs = new Quickstart('#quickstart', groups);
+   </script>
+
+.. Quickstart installation from
+   https://github.com/ines/quickstart
+
+.. raw:: html
+
+  <div id="quickstart" style="display: none">
+    <span data-qs-config="venv">python -m pip install -U venv</span>
+    <span data-qs-config="venv">venv .env</span>
+    <span data-qs-config="venv" data-qs-os="mac">source .env/bin/activate</span>
+    <span data-qs-config="venv" data-qs-os="linux">source .env/bin/activate</span>
+    <span data-qs-config="venv" data-qs-os="windows">.env\Scripts\activate</span>
+    <span data-qs-package="pip">pip install -U skrub</span>
+    <span data-qs-package="conda">conda config --add channels conda-forge</span>
+    <span data-qs-package="conda">conda install skrub</span>
+    <span data-qs-package="source">git clone https://github.com/skrub-data/skrub</span>
+    <span data-qs-package="source">cd skrub</span>
+    <span data-qs-package="source">pip install -r requirements.txt</span>
+    <span data-qs-package="source">pip install -e .</span>
+  </div>
