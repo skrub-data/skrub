@@ -1,10 +1,26 @@
-
 API
-=================
+===
 
-This page lists all the functions and classes of skrub:
+This page lists all available functions and classes of skrub
 
 .. currentmodule:: skrub
+
+Joining tables
+--------------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+
+   fuzzy_join
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
+   FeatureAugmenter
 
 
 Vectorizing a dataframe
@@ -39,23 +55,6 @@ Other encoders
    :nosignatures:
 
    DatetimeEncoder
-
-Joining tables
---------------
-
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-   :nosignatures:
-
-   fuzzy_join
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-   :nosignatures:
-
-   FeatureAugmenter
 
 Deduplication: merging variants of the same entry
 -------------------------------------------------
