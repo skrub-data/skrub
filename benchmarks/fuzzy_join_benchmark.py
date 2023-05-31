@@ -6,7 +6,7 @@ from itertools import product
 from thefuzz.fuzz import partial_ratio, WRatio, ratio
 from thefuzz import process
 from autofj import AutoFJ
-from dirty_cat._fuzzy_join import fuzzy_join
+from skrub._fuzzy_join import fuzzy_join
 
 
 def fetch_data(dataset_name):

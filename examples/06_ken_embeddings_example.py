@@ -27,7 +27,7 @@ improve our results.
      :class:`~sklearn.compose.ColumnTransformer`
 
  .. |MinHash| replace::
-     :class:`~dirty_cat.MinHashEncoder`
+     :class:`~skrub.MinHashEncoder`
 
  .. |HGBR| replace::
      :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
@@ -89,29 +89,29 @@ y = y[~mask]
 # We will use KEN embeddings to enrich our data.
 #
 # We will start by checking out the available tables with
-# :class:`~dirty_cat.datasets.get_ken_table_aliases`:
-from dirty_cat.datasets import get_ken_table_aliases
+# :class:`~skrub.datasets.get_ken_table_aliases`:
+from skrub.datasets import get_ken_table_aliases
 
 get_ken_table_aliases()
 
 ###############################################################################
 # The *games* table is the most relevant to our case.
 # Let's see what kind of types we can find in it with the function
-# :class:`~dirty_cat.datasets.get_ken_types`:
-from dirty_cat.datasets import get_ken_types
+# :class:`~skrub.datasets.get_ken_types`:
+from skrub.datasets import get_ken_types
 
 get_ken_types(embedding_table_id="games")
 
 ###############################################################################
 # Interesting, we have a broad range of topics!
 #
-# Next, we'll use :class:`~dirty_cat.datasets.get_ken_embeddings`
+# Next, we'll use :class:`~skrub.datasets.get_ken_embeddings`
 # to extract the embeddings of entities we need:
-from dirty_cat.datasets import get_ken_embeddings
+from skrub.datasets import get_ken_embeddings
 
 ###############################################################################
 # KEN Embeddings are classified by types.
-# The :class:`~dirty_cat.datasets.get_ken_embeddings` function
+# The :class:`~skrub.datasets.get_ken_embeddings` function
 # allows us to specify the types to be included and/or excluded
 # so as not to load all Wikipedia entity embeddings in a table.
 #
@@ -149,7 +149,7 @@ emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
 # The entities from the 'embedding_games' table will be merged along the
 # column "Name" and the ones from 'embedding_publisher' table with the
 # column "Publisher"
-from dirty_cat import FeatureAugmenter
+from skrub import FeatureAugmenter
 
 fa1 = FeatureAugmenter(tables=[(embedding_games, "Entity")], main_key="Name")
 fa2 = FeatureAugmenter(tables=[(embedding_publisher, "Entity")], main_key="Publisher")
@@ -172,7 +172,7 @@ X_full = fa2.fit_transform(X_full)
 from sklearn.compose import make_column_transformer
 
 from sklearn.preprocessing import OneHotEncoder
-from dirty_cat import MinHashEncoder
+from skrub import MinHashEncoder
 
 min_hash = MinHashEncoder(n_components=100)
 ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)

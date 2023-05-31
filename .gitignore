@@ -51,7 +51,7 @@ coverage.xml
 .vscode
 
 # Ignore fetched datasets
-dirty_cat/datasets/data/*
+skrub/datasets/data/*
 
 # Generated files for doc
 doc/_build

@@ -1,13 +1,13 @@
-# dirty_cat benchmarks
+# skrub benchmarks
 
 ## Objectives
 
-This folder contains benchmarks used by the dirty_cat maintainers to:
+This folder contains benchmarks used by the skrub maintainers to:
 - Experiment on new algorithms
 - Validate decisions based on empirical evidence
 - Fine-tune (hyper)parameters in the library
 
-These benchmarks do not aim at replacing the tests within dirty_cat.
+These benchmarks do not aim at replacing the tests within skrub.
 
 ## Implementing a benchmark
 

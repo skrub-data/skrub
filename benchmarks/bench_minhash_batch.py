@@ -12,14 +12,14 @@ from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
 
-from dirty_cat._fast_hash import ngram_min_hash
-from dirty_cat._string_distances import get_unique_ngrams
-from dirty_cat._utils import LRUDict, check_input
+from skrub._fast_hash import ngram_min_hash
+from skrub._string_distances import get_unique_ngrams
+from skrub._utils import LRUDict, check_input
 
 NoneType = type(None)
 
 
-# Ignore lines too long, as links in the docstring cannot be cut.
+# Ignore lines too long, as links can't be cut
 # flake8: noqa: E501
 
 
@@ -262,12 +262,12 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
                 f"Got hashing={self.hashing!r}, "
-                'but expected any of {"fast", "murmur"}. '
+                "but expected any of {'fast', 'murmur'}. "
             )
         if self.handle_missing not in ["error", "zero_impute"]:
             raise ValueError(
                 f"Got handle_missing={self.handle_missing!r}, but expected "
-                'any of {"error", "zero_impute"}. '
+                "any of {'error', 'zero_impute'}. "
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
@@ -371,7 +371,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from utils import monitor, find_result, default_parser
-from dirty_cat.tests.utils import generate_data
+from skrub.tests.utils import generate_data
 
 benchmark_name = "minhash_batch_comparison"
 

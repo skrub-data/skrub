@@ -18,7 +18,7 @@ by a misspelling) and hence gives us an easy tool to flag potentially
 misspelled category names in an unsupervised manner.
 
 
-.. |dd| replace:: :func:`~dirty_cat.deduplicate`
+.. |dd| replace:: :func:`~skrub.deduplicate`
 """
 
 ###############################################################################
@@ -37,7 +37,7 @@ misspelled category names in an unsupervised manner.
 
 
 import numpy as np
-from dirty_cat.datasets import make_deduplication_data
+from skrub.datasets import make_deduplication_data
 
 # our three medication names
 medications = ["Contrivan", "Genericon", "Zipholan"]
@@ -90,7 +90,7 @@ plt.ylabel("Counts")
 # a lighter color means a larger distance. We can see that we are dealing with three
 # clusters - the original medication names and their misspellings that cluster around them.
 
-from dirty_cat import compute_ngram_distance
+from skrub import compute_ngram_distance
 from scipy.spatial.distance import squareform
 
 ngram_distances = compute_ngram_distance(unique_examples)
@@ -116,7 +116,7 @@ sns.heatmap(
 # If no fixed number of clusters is given, |dd| tries to set it automatically
 # via the `silhouette score <https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.
 
-from dirty_cat import deduplicate
+from skrub import deduplicate
 
 deduplicated_data = deduplicate(duplicated_names)
 
