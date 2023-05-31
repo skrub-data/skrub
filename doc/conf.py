@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# dirty_cat documentation build configuration file, created by
+# skrub documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar 13 14:34:47 2018.
 #
 # This file is execfile()d with the current directory set to its
@@ -80,16 +80,16 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "dirty_cat"
-copyright = f"2018-{datetime.now().year}, the dirty_cat developers"
-author = "dirty_cat developers"
+project = "skrub"
+copyright = f"2018-{datetime.now().year}, the skrub developers"
+author = "skrub developers"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version_file = os.path.join("..", "dirty_cat", "VERSION.txt")
+version_file = os.path.join("..", "skrub", "VERSION.txt")
 with open(version_file) as fh:
     version = fh.read().strip()
 # The full version, including alpha/beta/rc tags.
@@ -108,12 +108,12 @@ language = "en"
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "sphinx"
+# pygments_style = "sphinx"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-# -- Options for autodoc / autosummary ------------------------------------
+# -- Options for autodoc / autosummary ----------------------------------------
 # generate autosummary even if no references
 autosummary_generate = True
 
@@ -123,50 +123,78 @@ autosummary_generate = True
 autodoc_default_flags = ["members", "inherited-members"]
 
 
-# -- Options for HTML output ----------------------------------------------
+# -- Options for HTML output --------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
+# The theme to use for HTML and HTML Help pages. See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
-# Doc: https://alabaster.readthedocs.io/en/latest/customization.html
-
-html_sidebars = {
-    "**": [
-        "about.html",
-        "globallinks.html",
-        "localtoc.html",
-        "relations.html",
-        # 'searchbox.html',
-    ],
-    "index": [
-        "about.html",
-        "globallinks.html",
-        "relations.html",
-        # 'searchbox.html',
-    ],
-}
+html_theme = "pydata_sphinx_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#
 html_theme_options = {
-    "logo": "dirty_cat.svg",
-    "github_user": "dirty-cat",
-    "github_repo": "dirty_cat",
-    "github_button": "true",
-    "github_type": "star",
-    "github_count": "true",
-    "show_powered_by": "false",
-    "logo_name": "true",
-    "gray_1": "#030",
-    "gray_2": "#F1FFF1",
-    "link": "#076B00",
-    #    'gray_3': "#090",
-    "fixed_sidebar": "true",
-    "note_bg": "rgb(246, 248, 250);",
-    "topic_bg": "rgb(246, 248, 250);",
+    "logo": {
+        "image_relative": "_static/skrub.svg",
+        "image_light": "_static/skrub.svg",
+        "image_dark": "_static/skrub.svg",
+    },
+    #"external_links": [
+    #    {
+    #        "url": "https://pydata.org",
+    #        "name": "PyData",
+    #    },
+    #],
+    "header_links_before_dropdown": 4,
+    "icon_links": [
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/skrub_data",
+            "icon": "fa-brands fa-twitter",
+        },
+        {
+            "name": "GitHub",
+            "url": "https://github.com/skrub-data/skrub/",
+            "icon": "fa-brands fa-github",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/skrub",
+            "icon": "fa-custom fa-pypi",
+        },
+    ],
+    # alternative way to set twitter and github header icons
+    # "github_url": "https://github.com/pydata/pydata-sphinx-theme",
+    # "twitter_url": "https://twitter.com/PyData",
+    "use_edit_page_button": True,
+    "show_toc_level": 1,
+    "navbar_align": "left",  # [left, content, right] For testing that the navbar items align properly
+    #"navbar_center": ["version-switcher", "navbar-nav"],
+    "navbar_center": ["navbar-nav"],
+    "announcement": "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html",
+    # "show_nav_level": 2,
+    # "navbar_start": ["navbar-logo"],
+    # "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    # "navbar_persistent": ["search-button"],
+    # "primary_sidebar_end": ["custom-template.html", "sidebar-ethical-ads.html"],
+    # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
+    # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
+    # "footer_start": ["test.html", "test.html"],
+    # "secondary_sidebar_items": ["page-toc.html"],  # Remove the source buttons
+    #"switcher": {
+    #    "json_url": json_url,
+    #    "version_match": version_match,
+    #},
+}
+
+
+# Needed for the edit button
+html_context = {
+    # "github_url": "https://github.com", # or your GitHub Enterprise site
+    "github_user": "skrub_data",
+    "github_repo": "skrub",
+    "github_version": "main",
+    "doc_path": "docs",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -174,18 +202,23 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+html_css_files = ["css/custom.css"]
+
+# Project logo, to place at the top of the sidebar.
+html_logo = "_static/skrub.svg"
+
 
 # Modify the title to get good social-media links
-html_title = "dirty_cat"
+html_title = "skrub"
 
 
-# -- Options for HTMLHelp output ------------------------------------------
+# -- Options for HTMLHelp output ----------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "dirty_catdoc"
+htmlhelp_basename = "skrubdoc"
 
 
-# -- Options for LaTeX output ---------------------------------------------
+# -- Options for LaTeX output -------------------------------------------------
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -208,22 +241,22 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "dirty_cat.tex",
-        "dirty\\_cat Documentation",
-        "dirty\\_cat developers",
+        "skrub.tex",
+        "skrub Documentation",
+        "skrub developers",
         "manual",
     ),
 ]
 
 
-# -- Options for manual page output ---------------------------------------
+# -- Options for manual page output -------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "dirty_cat", "dirty_cat Documentation", [author], 1)]
+man_pages = [(master_doc, "skrub", "skrub Documentation", [author], 1)]
 
 
-# -- Options for Texinfo output -------------------------------------------
+# -- Options for Texinfo output -----------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
@@ -231,11 +264,11 @@ man_pages = [(master_doc, "dirty_cat", "dirty_cat Documentation", [author], 1)]
 texinfo_documents = [
     (
         master_doc,
-        "dirty_cat",
-        "dirty_cat Documentation",
+        "skrub",
+        "skrub Documentation",
         author,
-        "dirty_cat",
-        "Learning on non-curated categorical data.",
+        "skrub",
+        "Prepping tables for machine learning.",
         "Data Science",
     ),
 ]
@@ -256,7 +289,7 @@ intersphinx_mapping = {
 }
 
 
-# -- sphinx-gallery configuration -----------------------------------------
+# -- sphinx-gallery configuration ---------------------------------------------
 from sphinx_gallery.sorting import FileNameSortKey  # noqa
 
 if 'dev' in release:
@@ -265,11 +298,11 @@ else:
     binder_branch = release
 
 sphinx_gallery_conf = {
-    "doc_module": "dirty_cat",
+    "doc_module": "skrub",
     "backreferences_dir": os.path.join("generated"),
     "reference_url": {
-        # The module we locally document (so, dirty_cat) uses None
-        "dirty_cat": None,
+        # The module we locally document (so, skrub) uses None
+        "skrub": None,
         # We don't specify the other modules as we use the intershpinx ext.
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
@@ -279,8 +312,8 @@ sphinx_gallery_conf = {
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,
     "binder": {
-        "org": "dirty-cat",
-        "repo": "dirty-cat",
+        "org": "skrub-data",
+        "repo": "skrub",
         "binderhub_url": "https://mybinder.org",
         "branch": binder_branch,
         "dependencies": "./binder/requirements.txt",
@@ -288,13 +321,13 @@ sphinx_gallery_conf = {
     },
 }
 
-# -- sphinxext.opengraph configuration -------------------------------------
-ogp_site_url = "https://dirty-cat.github.io/stable/"
-ogp_image = "https://dirty-cat.github.io/stable/_static/dirty_cat.svg"
+# -- sphinx.ext.opengraph configuration ---------------------------------------
+ogp_site_url = "https://skrub-data.github.io/stable/"
+ogp_image = "https://skrub-data.github.io/stable/_static/skrub.svg"
 ogp_use_first_image = True
-ogp_site_name = "dirty_cat"
+ogp_site_name = "skrub"
 
-# -- numpydoc configuration --------------------------------------
+# -- numpydoc configuration ---------------------------------------------------
 
 # Produce `plot::` directives for examples that contain `import matplotlib` or
 # `from matplotlib import`.
@@ -304,20 +337,20 @@ numpydoc_use_plots = True
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_class_members_toctree = False
 
-# -- sphinxext.autodoc configuration ---------------------------------------
+# -- sphinx.ext.autodoc configuration -----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 autodoc_typehints = "none"
 
-# -- The javascript to highlight the toc as we scroll ----------------------
-html_js_files = ["scrolltoc.js", "stable_doc_redirect.js"]
+# -- sphinx_favicon configuration ---------------------------------------------
+favicons = {"rel": "icon", "href": "_static/skrub.svg", "type": "image/svg+xml"}
 
-# -- github links --------------------------------------
+# -- github links -------------------------------------------------------------
 
 # we use the issues path for PRs since the issues URL will forward
-issues_github_path = "dirty-cat/dirty_cat"
+issues_github_path = "skrub-data/skrub"
 
-# The following is used by sphinx.ext.linkcode to provide links to github
+# The following is used by sphinx.ext.linkcode to provide links to GitHub
 linkcode_resolve = make_linkcode_resolve(
-    "dirty_cat",
-    "https://github.com/dirty-cat/dirty-cat/blob/{revision}/{package}/{path}#L{lineno}",
+    "skrub",
+    "https://github.com/skrub-data/skrub/blob/{revision}/{package}/{path}#L{lineno}",
 )

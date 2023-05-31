@@ -1,40 +1,40 @@
-`dirty_cat`
+`skrub`
 ===========
 
-.. image:: https://dirty-cat.github.io/stable/_static/dirty_cat.svg
+.. image:: https://skrub-data.github.io/stable/_static/skrub.svg
    :align: center
-   :alt: dirty_cat logo
+   :alt: skrub logo
 
 
 |py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
 
-.. |py_ver| image:: https://img.shields.io/pypi/pyversions/dirty_cat
-.. |pypi_var| image:: https://img.shields.io/pypi/v/dirty_cat?color=informational
-.. |pypi_dl| image:: https://img.shields.io/pypi/dm/dirty_cat
-.. |codecov| image:: https://img.shields.io/codecov/c/github/dirty-cat/dirty_cat/main
-.. |circleci| image:: https://img.shields.io/circleci/build/github/dirty-cat/dirty_cat/main?label=CircleCI
+.. |py_ver| image:: https://img.shields.io/pypi/pyversions/skrub
+.. |pypi_var| image:: https://img.shields.io/pypi/v/skrub?color=informational
+.. |pypi_dl| image:: https://img.shields.io/pypi/dm/skrub
+.. |codecov| image:: https://img.shields.io/codecov/c/github/skrub-data/skrub/main
+.. |circleci| image:: https://img.shields.io/circleci/build/github/skrub-data/skrub/main?label=CircleCI
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
-`dirty_cat <https://dirty-cat.github.io/>`_ is a Python library
-that facilitates machine-learning on dirty categorical variables.
+`skrub <https://skrub-data.github.io/>`_ is a Python library
+that facilitates prepping your tables for machine learning.
 
 For a detailed description of the problem of encoding dirty categorical data, see
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
 and `Encoding high-cardinality string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
-If you like the package, please *spread the word*, and ⭐ `the repository <https://github.com/dirty-cat/dirty_cat/>`_!
+If you like the package, please *spread the word*, and ⭐ `the repository <https://github.com/skrub-data/skrub/>`_!
 
-What can `dirty_cat` do?
+What can `skrub` do?
 ------------------------
 
-`dirty_cat` provides tools (``TableVectorizer``, ``fuzzy_join``...) and
+`skrub` provides tools (``TableVectorizer``, ``fuzzy_join``...) and
 encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
 for which we usually identify three common cases: **similarities, typos and variations**
 
-`The first example notebook <https://dirty-cat.github.io/stable/auto_examples/01_dirty_categories.html>`_
-goes in-depth on how to identify and deal with dirty data using the `dirty_cat` library.
+`The first example notebook <https://skrub-data.github.io/stable/auto_examples/01_dirtycategories.html>`_
+goes in-depth on how to identify and deal with dirty data using the `skrub` library.
 
-What `dirty_cat` does not
+What `skrub` does not
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `Semantic similarities <https://en.wikipedia.org/wiki/Semantic_similarity>`_
@@ -46,32 +46,32 @@ This kind of problem is tackled by
 `Natural Language Processing <https://en.wikipedia.org/wiki/Natural_language_processing>`_
 methods.
 
-`dirty_cat` can still help with handling typos and variations in this kind of setting.
+`skrub` can still help with handling typos and variations in this kind of setting.
 
-Installation
-------------
+Installation (WIP)
+------------------
 
-dirty_cat can be easily installed via `pip`::
+Once the first release is done, skrub can be easily installed via `pip`::
 
-    pip install dirty_cat
+    pip install skrub
 
 Dependencies
 ~~~~~~~~~~~~
 
-Dependencies and minimal versions are listed in the `setup <https://github.com/dirty-cat/dirty_cat/blob/main/setup.cfg#L26>`_ file.
+Dependencies and minimal versions are listed in the `setup <https://github.com/skrub-data/skrub/blob/main/setup.cfg#L26>`_ file.
 
 Related projects
 ----------------
 
-Are listed on the `dirty_cat's website <https://dirty-cat.github.io/stable/#related-projects>`_
+Are listed on the `skrub's website <https://skrub-data.github.io/stable/#related-projects>`_
 
 Contributing
 ------------
 
-If you want to encourage development of `dirty_cat`,
+If you want to encourage development of `skrub`,
 the best thing to do is to *spread the word*!
 
-If you encounter an issue while using `dirty_cat`, please
+If you encounter an issue while using `skrub`, please
 `open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_ and/or
 `submit a pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.
 Don't hesitate, you're helping to make this project better for everyone!

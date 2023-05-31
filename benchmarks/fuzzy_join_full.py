@@ -17,7 +17,7 @@ from dirty_cat.benchmarks.fuzzy_join_mini import (
     thefuzz_precision_recall,
     autofj_precision_recall,
 )
-from dirty_cat._fuzzy_join import fuzzy_join
+from skrub._fuzzy_join import fuzzy_join
 
 
 datasets = [

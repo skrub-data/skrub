@@ -23,7 +23,7 @@ control.
 
 
  .. |TV| replace::
-     :class:`~dirty_cat.TableVectorizer`
+     :class:`~skrub.TableVectorizer`
 
  .. |Pipeline| replace::
      :class:`~sklearn.pipeline.Pipeline`
@@ -38,16 +38,16 @@ control.
      :class:`~sklearn.ensemble.RandomForestRegressor`
 
  .. |Gap| replace::
-     :class:`~dirty_cat.GapEncoder`
+     :class:`~skrub.GapEncoder`
 
  .. |MinHash| replace::
-     :class:`~dirty_cat.MinHashEncoder`
+     :class:`~skrub.MinHashEncoder`
 
  .. |HGBR| replace::
      :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 
  .. |SE| replace::
-     :class:`~dirty_cat.SimilarityEncoder`
+     :class:`~skrub.SimilarityEncoder`
 
  .. |permutation importances| replace::
      :func:`~sklearn.inspection.permutation_importance`
@@ -58,7 +58,7 @@ control.
 # --------
 #
 # We first retrieve the dataset:
-from dirty_cat.datasets import fetch_employee_salaries
+from skrub.datasets import fetch_employee_salaries
 
 employee_salaries = fetch_employee_salaries()
 
@@ -139,7 +139,7 @@ pipeline = make_pipeline(encoder, HistGradientBoostingRegressor())
 pipeline.fit(X, y)
 
 ###############################################################################
-# Dirty-category encoding
+# Dirty category encoding
 # -----------------------
 #
 # The |OneHotEncoder| is actually not well suited to the 'Employee
@@ -154,7 +154,7 @@ np.unique(y)
 # We will now experiment with encoders specially made for handling
 # dirty columns:
 
-from dirty_cat import (
+from skrub import (
     SimilarityEncoder,
     TargetEncoder,
     MinHashEncoder,
@@ -217,7 +217,7 @@ plt.tight_layout()
 # data than the |MinHash| and |Gap|. The most scalable encoder is
 # the |MinHash|. On the other hand, the |Gap| has the benefit of
 # providing interpretable features
-# (see :ref:`sphx_glr_auto_examples_02_investigating_dirty_categories.py`)
+# (see :ref:`sphx_glr_auto_examples_02_investigating_skrubegories.py`)
 #
 # |
 #
@@ -257,10 +257,10 @@ X
 # such as gradient boosted trees, gives **a machine-learning method that
 # can be readily applied to the dataframe**.
 #
-# The |TV| requires at least dirty_cat 0.2.0.
+# The |TV| requires at least skrub 0.2.0.
 #
 
-from dirty_cat import TableVectorizer
+from skrub import TableVectorizer
 
 pipeline = make_pipeline(
     TableVectorizer(auto_cast=True), HistGradientBoostingRegressor()
