@@ -1,0 +1,4 @@
+06/01/2023 10:29:52 - [INFO] Launching !
+06/01/2023 10:29:52 - [DEBUG] Creating pipelines
+06/01/2023 10:29:52 - [DEBUG] With cardinality possibilities: [20, 30, 40, 50] and n_components possibilities: [10, 30, 50]
+06/01/2023 10:29:59 - [DEBUG] Running search on traffic_violations

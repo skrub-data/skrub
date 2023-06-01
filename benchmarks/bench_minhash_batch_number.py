@@ -373,7 +373,7 @@ from pathlib import Path
 from utils import monitor, find_result, default_parser
 from skrub.tests.utils import generate_data
 
-benchmark_name = "minhash_batch_comparison"
+benchmark_name = "bench_minhash_batch_number"
 
 
 @monitor(

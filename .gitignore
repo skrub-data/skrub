@@ -62,5 +62,6 @@ doc/RELEASE_PROCESS.rst
 doc/CONTRIBUTING.rst
 .DS_Store
 
-# Pkl files for benchmarks
+# Pkl and csv files for benchmarks
 benchmarks/*.pkl
+benchmarks/results/*.csv

@@ -287,7 +287,7 @@ def fuzzy_join(
 # Benchmarking accuracy and speed on actual datasets
 #########################################################
 
-benchmark_name = "fuzzy_join_encoder_benchmark"
+benchmark_name = "bench_fuzzy_join_count_vs_hash"
 
 
 @monitor(

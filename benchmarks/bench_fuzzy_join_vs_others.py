@@ -1,7 +1,6 @@
 """
 This benchmark compares the performance of dirty-cat's fuzzy_join compared
-to other fuzzy joining functions available on a small toy dataset
-of country names.
+to other fuzzy joining functions available on small toy datasets.
 """
 
 import numpy as np
@@ -15,10 +14,8 @@ import math
 from thefuzz.fuzz import partial_ratio
 from thefuzz import process
 from autofj import AutoFJ
-from ..skrub import _fuzzy_join
+from dirty_cat import fuzzy_join
 from utils import evaluate, fetch_data, default_parser, find_result, monitor
-
-left_table, right_table, gt = fetch_data("Country")
 
 
 def thefuzz_merge(
@@ -61,7 +58,7 @@ def autofj_merge(left, right, target=0.9):
 # Benchmarking accuracy and speed on actual datasets
 #########################################################
 
-benchmark_name = "fuzzy_join_full"
+benchmark_name = "bench_fuzzy_join_vs_others"
 
 
 @monitor(
@@ -70,15 +67,15 @@ benchmark_name = "fuzzy_join_full"
     parametrize={
         "dataset_name": [
             "Country",
-            # "BasketballTeam",
-            # "Drug",
-            # "Device",
-            # "ArtificialSatellite",
-            # "Amphibian",
-            # "Song",
-            # "HistoricBuilding",
-            # "Wrestler",
-            # "EthnicGroup",
+            "BasketballTeam",
+            "Drug",
+            "Device",
+            "ArtificialSatellite",
+            "Amphibian",
+            "Song",
+            "HistoricBuilding",
+            "Wrestler",
+            "EthnicGroup",
         ],
         "join": [
             "fuzzy_join",
@@ -103,10 +100,11 @@ def benchmark(
             how="left",
             left_on="title",
             right_on="title",
+            suffixes=('_l', '_r')
         )
         end_time = perf_counter()
         pr, re, f1 = evaluate(
-            list(zip(joined_fj["title_x"], joined_fj["title_y"])),
+            list(zip(joined_fj["title_l"], joined_fj["title_r"])),
             list(zip(gt["title_l"], gt["title_r"])),
         )
     elif join == "autofj":
@@ -121,14 +119,20 @@ def benchmark(
             list(zip(gt["title_l"], gt["title_r"])),
         )
     elif join == "thefuzz":
+        left_table.rename(columns={'title': 'title_l'}, inplace=True)
+        right_table.rename(columns={'title': 'title_r'}, inplace=True)
         start_time = perf_counter()
         joined_fj = thefuzz_merge(
-            left_table,
-            right_table,
-            left_on="title",
-            right_on="title",
+            df_1=left_table,
+            df_2=right_table,
+            left_on="title_l",
+            right_on="title_r",
         )
         end_time = perf_counter()
+        pr, re, f1 = evaluate(
+            list(zip(joined_fj["title_l"], joined_fj["matches"])),
+            list(zip(gt["title_l"], gt["title_r"])),
+        )
 
     res_dic = {
         "precision": pr,
