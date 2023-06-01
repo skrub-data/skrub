@@ -33,10 +33,10 @@ from utils import default_parser, find_result, monitor
 def get_classification_datasets() -> List[Tuple[dict, str]]:
     return [
         (fetch_open_payments(), "open_payments"),
-        # (fetch_drug_directory(), 'drug_directory),
-        # (fetch_road_safety(), "road_safety"),
+        (fetch_drug_directory(), 'drug_directory'),
+        (fetch_road_safety(), "road_safety"),
         (fetch_midwest_survey(), "midwest_survey"),
-        # (fetch_traffic_violations(), "traffic_violations"),
+        (fetch_traffic_violations(), "traffic_violations"),
     ]
 
 
@@ -64,25 +64,25 @@ benchmark_name = "bench_tablevectorizer_tuning"
     memory=True,
     time=True,
     parametrize={
-        "card": [20, 30, 40, 50],
-        "n_comp": [10, 30, 50],
+        "tv_cardinality_threshold": [20, 30, 40, 50],
+        "minhash_n_components": [10, 30, 50],
     },
     save_as=benchmark_name,
     repeat=5,
 )
 def benchmark(
-    card: int,
-    n_comp: int,
+    tv_cardinality_threshold: int,
+    minhash_n_components: int,
 ):
     regression_pipeline = Pipeline(
         [
-            ("tv", TableVectorizer(cardinality_threshold=card, high_card_cat_transformer=MinHashEncoder(n_components=n_comp))),
+            ("tv", TableVectorizer(cardinality_threshold=tv_cardinality_threshold, high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components))),
             ("estimator", HistGradientBoostingRegressor()),
         ]
     )
     classification_pipeline = Pipeline(
         [
-            ("tv", TableVectorizer(cardinality_threshold=card, high_card_cat_transformer=MinHashEncoder(n_components=n_comp))),
+            ("tv", TableVectorizer(cardinality_threshold=tv_cardinality_threshold, high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components))),
             ("estimator", HistGradientBoostingClassifier()),
         ]
     )
@@ -125,10 +125,9 @@ def plot(df: pd.DataFrame):
     for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
         sns.scatterplot(
             x="time_fj",
-            y="f1",
-            hue="sparse",
-            style="ngram_range",
-            size="analyzer",
+            y="grid_search_results",
+            hue="tv_cardinality_threshold",
+            size="minhash_n_components",
             alpha=0.8,
             data=df[df["dataset_name"] == dataset_name],
             ax=axes[i % n_rows, i // n_rows],

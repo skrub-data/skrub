@@ -19,6 +19,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+*.pkl
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -62,6 +63,8 @@ doc/RELEASE_PROCESS.rst
 doc/CONTRIBUTING.rst
 .DS_Store
 
-# Pkl and csv files for benchmarks
+# Result files for benchmarks
 benchmarks/*.pkl
+benchmarks/*.log
 benchmarks/results/*.csv
+benchmarks/results/*.log
