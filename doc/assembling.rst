@@ -18,7 +18,7 @@ Joining two dataframes can be hard as the corresponding keys may be different.
 The :func:`fuzzy_join` uses similarities in entries to join tables on one or more
 related columns. Furthermore, it choose the type of fuzzy matching used
 based on the column type (string, numerical or datetime).
-Using the similarity score, bad matches are easily singled out and can be
+It also outputs a similarity score, to single out bad matches, so that they can be
 dropped or replaced.
 
 In sum, equivalent to pandas.merge, the :func:`fuzzy_join` 
