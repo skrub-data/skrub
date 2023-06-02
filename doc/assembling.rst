@@ -27,6 +27,7 @@ has no need for pre-cleaning.
 
 Feature augmentation for machine learning
 -----------------------------------------
+
 Joining is pretty straigthforward for two tables: you only need to identify
 the common key.
 However, for more complex analysis, merging multiple tables is necessary.
@@ -41,3 +42,17 @@ easily introduced into machine learning pipelines.
 Going further: embeddings for better analytics
 ----------------------------------------------
 
+Data collection comes before joining, but is also an
+essential process of table assembling.
+Although many datasets are available on the internet, it is not
+always easy to find the right one for your analysis.
+
+skrub has some very helpful methods that gives you easy
+access to embeddings, or vectorial representations of an entity,
+of all common entities from Wikipedia. 
+You can use :func:`datasets.get_ken_embeddings` to search for the right
+embeddings and download them.
+
+Other methods, such as :func:`datasets.fetch_world_bank_indicator` to
+fetch data of a World Bank indicator can also help you retrieve
+useful data that will be joined to another table.
