@@ -21,7 +21,7 @@ based on the column type (string, numerical or datetime).
 It also outputs a similarity score, to single out bad matches, so that they can be
 dropped or replaced.
 
-In sum, equivalent to pandas.merge, the :func:`fuzzy_join` 
+In sum, equivalent to :func:`pandas.merge`, the :func:`fuzzy_join` 
 has no need for pre-cleaning.
 
 
