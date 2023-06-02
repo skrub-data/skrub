@@ -13,7 +13,7 @@ skrub allows you to join tables on keys of different types
 Fuzzy joining tables
 ---------------------
 
-Joining two dataframes is hard as the corresponding keys are often different.
+Joining two dataframes can be hard as the corresponding keys may be different.
 
 The :func:`fuzzy_join` uses similarity scores to join tables on one or more
 related columns. Furthermore, it adapts the fuzzy matching based on the
