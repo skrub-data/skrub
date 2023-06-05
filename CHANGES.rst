@@ -2,6 +2,17 @@
 
 .. currentmodule:: skrub
 
+Release 0.5.0
+=============
+
+Major changes
+-------------
+
+* The signatures of all encoders and functions have been revised to enforce
+  cleaner calls. This means that some arguments that could previously be passed
+  positionally now have to be passed as keywords.
+  :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
+
 Release 0.4.1
 =============
 
@@ -31,17 +42,6 @@ Minor changes
   format inference now finds a format which works for all non-missing values of the column, instead
   of relying on pandas behavior. If no such format exists, the column is not casted to a date column.
   :pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
-
-Release 0.5.0
-=============
-
-Major changes
--------------
-
-* The signatures of all encoders and functions have been revised to enforce
-  cleaner calls. This means that some arguments that could previously be passed
-  positionally now have to be passed as keywords.
-  :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
 
 Release 0.4.0
 =============
