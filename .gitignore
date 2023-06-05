@@ -67,4 +67,3 @@ doc/CONTRIBUTING.rst
 benchmarks/*.pkl
 benchmarks/*.log
 benchmarks/results/*.csv
-benchmarks/results/*.log

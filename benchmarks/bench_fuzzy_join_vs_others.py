@@ -1,6 +1,7 @@
 """
 This benchmark compares the performance of dirty-cat's fuzzy_join compared
 to other fuzzy joining functions available on small toy datasets.
+Date: September 2022
 """
 
 import numpy as np

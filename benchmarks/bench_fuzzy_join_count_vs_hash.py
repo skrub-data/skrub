@@ -7,6 +7,7 @@ faster than the CountVectorizer, without any significant loss in accuracy.
 This leads to the conclusion that the HashingVectorizer should be used
 by default for the fuzzy join, with the option to use the CountVectorizer if
 results are unexpected (e.g hash collisions).
+Date: December 2022
 """
 
 import math

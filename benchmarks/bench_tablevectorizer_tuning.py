@@ -1,6 +1,7 @@
 """
 Performs a grid search to find the best parameters for the TableVectorizer
 among a selection.
+Date: September 2021
 """
 
 import seaborn as sns

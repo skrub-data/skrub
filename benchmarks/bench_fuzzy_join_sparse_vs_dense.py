@@ -4,6 +4,7 @@ for a neareast neighbor search in the fuzzy_join.
 
 The results seem to indicate that using dense arrays, with the current state,
 is faster to search through than sparse arrays.
+Date: June 2023
 """
 
 import math
@@ -27,6 +28,7 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
+from sklearn import random_projection
 
 
 def _numeric_encoding(
@@ -121,12 +123,8 @@ def _string_encoding(
         )
     all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
 
-    if encoder is None and sparse is True:
+    if encoder is None:
         encoder = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
-    elif sparse is False:
-        encoder = HashingVectorizer(
-            n_features=2**17, analyzer=analyzer, ngram_range=ngram_range
-        )
 
     encoder = encoder.fit(all_cats)
     main_enc = encoder.transform(main_cols_clean)
@@ -140,7 +138,10 @@ def _string_encoding(
     if sparse is True:
         return main_enc, aux_enc
     else:
-        return main_enc.todense(), aux_enc.todense()
+        transformer = random_projection.GaussianRandomProjection(eps=0.4)
+        main_enc_d = transformer.fit_transform(main_enc)
+        aux_enc_d = transformer.fit_transform(main_enc)
+        return main_enc_d, aux_enc_d
 
 
 def _nearest_matches(
@@ -518,8 +519,8 @@ benchmark_name = "bench_fuzzy_join_sparse_vs_dense"
             "Wrestler",
             "EthnicGroup",
         ],
-        "analyzer": ["char_wb", "char", "word"],
-        "ngram_range": [(2, 4), (2, 3), (2, 2)],
+        "analyzer": ["char_wb"], #, "char", "word"],
+        "ngram_range": [(2, 4)], #, (2, 3), (2, 2)],
     },
     memory=True,
     time=True,
