@@ -64,8 +64,11 @@ benchmark_name = "bench_tablevectorizer_tuning"
     memory=True,
     time=True,
     parametrize={
-        "tv_cardinality_threshold": [20, 30, 40, 50],
+        "tv_cardinality_threshold": [20, 40, 60],
         "minhash_n_components": [10, 30, 50],
+        "dataset_name": ["open_payments", "drug_directory", "road_safety",
+                         "midwest_survey", "traffic_violations", "medical_charge",
+                         "employee_salaries"]
     },
     save_as=benchmark_name,
     repeat=5,
@@ -73,16 +76,19 @@ benchmark_name = "bench_tablevectorizer_tuning"
 def benchmark(
     tv_cardinality_threshold: int,
     minhash_n_components: int,
+    dataset_name: str,
 ):
+    tv = TableVectorizer(cardinality_threshold=tv_cardinality_threshold,
+                         high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components))
     regression_pipeline = Pipeline(
         [
-            ("tv", TableVectorizer(cardinality_threshold=tv_cardinality_threshold, high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components))),
+            ("tv", tv),
             ("estimator", HistGradientBoostingRegressor()),
         ]
     )
     classification_pipeline = Pipeline(
         [
-            ("tv", TableVectorizer(cardinality_threshold=tv_cardinality_threshold, high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components))),
+            ("tv", tv),
             ("estimator", HistGradientBoostingClassifier()),
         ]
     )
@@ -97,12 +103,11 @@ def benchmark(
         ],
     ):
         for info, name in datasets:
-            X, y = get_dataset(info)
-            pipeline.fit(X, y)
-            scores = cross_val_score(pipeline, X, y)
-            score = np.mean(scores)
-            dataset_name = name
-
+            if name == dataset_name:
+                X, y = get_dataset(info)
+                pipeline.fit(X, y)
+                scores = cross_val_score(pipeline, X, y)
+                score = np.mean(scores)
     res_dic = {
             "grid_search_results": score,
             "dataset_name": dataset_name
