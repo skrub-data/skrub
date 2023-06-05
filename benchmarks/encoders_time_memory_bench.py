@@ -7,7 +7,7 @@
 
 To run this benchmark, you will need,
 
- * dirty_cat
+ * skrub
  * pandas
  * memory_profiler
 
@@ -19,10 +19,10 @@ import numpy as np
 import pandas as pd
 from memory_profiler import memory_usage
 
-from dirty_cat.datasets import fetch_traffic_violations
+from skrub.datasets import fetch_traffic_violations
 
-from dirty_cat import SimilarityEncoder, GapEncoder, MinHashEncoder
-from dirty_cat import TableVectorizer
+from skrub import SimilarityEncoder, GapEncoder, MinHashEncoder
+from skrub import TableVectorizer
 
 n_repeat = 3
 
@@ -40,7 +40,7 @@ data = fetch_traffic_violations()
 X = data[1][:5000]
 y = data[2][:5000]
 
-print("=" * 80 + "\n#" + "    Dirty_cat encoders benchmark" + "\n" + "=" * 80 + "\n")
+print("=" * 80 + "\n#" + "    skrub encoders benchmark" + "\n" + "=" * 80 + "\n")
 print(f"Using a subset of the traffic violations dataset ({len(X)} observations).")
 print("This benchmarks runs in ~1 min ...")
 

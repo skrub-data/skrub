@@ -17,11 +17,11 @@ repos:
     rev: 5.0.4
     hooks:
     -   id: flake8
-        files: dirty_cat/
+        files: skrub/
         types: [file, python]
 -   repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
     -   id: isort
-        files: dirty_cat/
+        files: skrub/
         args: ["--profile", "black", "--filter-files"]

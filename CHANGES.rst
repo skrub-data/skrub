@@ -1,6 +1,36 @@
 :orphan:
 
-.. currentmodule:: dirty_cat
+.. currentmodule:: skrub
+
+Release 0.4.1
+=============
+
+Major changes
+-------------
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on numerical columns based on the euclidean distance.
+  :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can perform many-to-many joins on lists of numerical or string key columns.
+  :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* :func:`GapEncoder.transform` will not continue fitting of the instance anymore.
+  It makes functions that depend on it (:func:`~GapEncoder.get_feature_names_out`,
+  :func:`~GapEncoder.score`, etc.) deterministic once fitted.
+  :pr:`548` by :user:`Lilian Boulard <LilianBoulard>`
+
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` now perform joins on missing values as in `pandas.merge`
+  but raises a warning. :pr:`522` and :pr:`529` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* Added :func:`get_ken_table_aliases` and :func:`get_ken_types` for exploring
+  KEN embeddings. :pr:`539` by :user:`Lilian Boulard <LilianBoulard>`.
+
+
+Minor changes
+-------------
+* Improvement of date column detection and date format inference in :class:`TableVectorizer`. The
+  format inference now finds a format which works for all non-missing values of the column, instead
+  of relying on pandas behavior. If no such format exists, the column is not casted to a date column.
+  :pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Release 0.5.0
 =============
@@ -19,7 +49,7 @@ Release 0.4.0
 Major changes
 -------------
 * `SuperVectorizer` is renamed as :class:`TableVectorizer`, a warning is raised when using the old name.
-:pr:`484` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+  :pr:`484` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * New experimental feature: joining tables using :func:`fuzzy_join` by approximate key matching. Matches are based
   on string similarities and the nearest neighbors matches are found for each category.

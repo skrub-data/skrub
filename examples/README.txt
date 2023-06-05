@@ -1,2 +1,2 @@
-Using dirty_cat
-===============
+Examples
+===========
