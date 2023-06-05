@@ -170,10 +170,10 @@ def deduplicate(
 
     See Also
     --------
-    :class:`~skrub.GapEncoder` :
+    :class:`skrub.GapEncoder` :
         Encodes dirty categories (strings) by constructing latent topics with
         continuous encoding.
-    :class:`~skrub.MinHashEncoder` :
+    :class:`skrub.MinHashEncoder` :
         Encode string columns as a numeric array with the minhash method.
     :class:`skrub.SimilarityEncoder` :
         Encode string columns as a numeric array with n-gram string similarity.
