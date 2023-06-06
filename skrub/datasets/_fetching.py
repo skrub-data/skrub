@@ -634,6 +634,7 @@ def _fetch_dataset_as_dataclass(
 
 
 def fetch_employee_salaries(
+    *,
     load_dataframe: bool = True,
     drop_linked: bool = True,
     drop_irrelevant: bool = True,
@@ -689,6 +690,7 @@ def fetch_employee_salaries(
 
 
 def fetch_road_safety(
+    *,
     load_dataframe: bool = True,
     directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
@@ -722,6 +724,7 @@ def fetch_road_safety(
 
 
 def fetch_medical_charge(
+    *,
     load_dataframe: bool = True,
     directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
@@ -760,6 +763,7 @@ def fetch_medical_charge(
 
 
 def fetch_midwest_survey(
+    *,
     load_dataframe: bool = True,
     directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
@@ -791,6 +795,7 @@ def fetch_midwest_survey(
 
 
 def fetch_open_payments(
+    *,
     load_dataframe: bool = True,
     directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
@@ -824,6 +829,7 @@ def fetch_open_payments(
 
 
 def fetch_traffic_violations(
+    *,
     load_dataframe: bool = True,
     directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
@@ -859,6 +865,7 @@ def fetch_traffic_violations(
 
 
 def fetch_drug_directory(
+    *,
     load_dataframe: bool = True,
     directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
@@ -892,6 +899,7 @@ def fetch_drug_directory(
 
 def fetch_world_bank_indicator(
     indicator_id: str,
+    *,
     load_dataframe: bool = True,
     directory: Optional[Union[Path, str]] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
@@ -922,6 +930,7 @@ def fetch_world_bank_indicator(
 
 def fetch_figshare(
     figshare_id: str,
+    *,
     load_dataframe: bool = True,
     directory: Optional[Path] = None,
 ) -> Union[DatasetAll, DatasetInfoOnly]:
