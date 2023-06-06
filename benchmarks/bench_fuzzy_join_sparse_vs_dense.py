@@ -4,11 +4,13 @@ for a neareast neighbor search in the fuzzy_join.
 
 The results seem to indicate that using dense arrays, with the current state,
 is faster to search through than sparse arrays.
+
 Date: June 2023
 """
 
 import math
-from utils import default_parser, find_result, monitor, evaluate, fetch_data
+from utils import default_parser, find_result, monitor
+from utils.join import evaluate, fetch_data
 from argparse import ArgumentParser
 import numbers
 from time import perf_counter
@@ -508,19 +510,14 @@ benchmark_name = "bench_fuzzy_join_sparse_vs_dense"
     parametrize={
         "sparse": [True, False],
         "dataset_name": [
-            "Country",
-            "BasketballTeam",
-            "Drug",
-            "Device",
-            "ArtificialSatellite",
-            "Amphibian",
-            "Song",
-            "HistoricBuilding",
-            "Wrestler",
-            "EthnicGroup",
+            "vegetables",
+            "beatles songs",
+            "california govs 1",
+            "chinese provinces",
+            "christmas songs 1",
         ],
-        "analyzer": ["char_wb"], #, "char", "word"],
-        "ngram_range": [(2, 4)], #, (2, 3), (2, 2)],
+        "analyzer": ["char_wb", "char"],
+        "ngram_range": [(2, 4), (3, 4)],
     },
     memory=True,
     time=True,
@@ -548,12 +545,15 @@ def benchmark(
     )
     end_time = perf_counter()
 
+    n_obs = len(joined_fj.index)
+
     pr, re, f1 = evaluate(
         list(zip(joined_fj["title_x"], joined_fj["title_y"])),
         list(zip(gt["title_l"], gt["title_r"])),
     )
 
     res_dic = {
+        "n_obs": n_obs,
         "precision": pr,
         "recall": re,
         "f1": f1,

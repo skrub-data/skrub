@@ -1,6 +1,7 @@
 """
 Performs a grid search to find the best parameters for the TableVectorizer
 among a selection.
+
 Date: September 2021
 """
 
@@ -16,42 +17,10 @@ from sklearn.model_selection import cross_val_score
 
 
 from dirty_cat import TableVectorizer, MinHashEncoder
-from dirty_cat.datasets import (
-    fetch_open_payments,
-    fetch_drug_directory,
-    fetch_road_safety,
-    fetch_midwest_survey,
-    fetch_medical_charge,
-    fetch_employee_salaries,
-    fetch_traffic_violations,
-)
 
 from typing import List, Tuple
 from argparse import ArgumentParser
-from utils import default_parser, find_result, monitor
-
-
-def get_classification_datasets() -> List[Tuple[dict, str]]:
-    return [
-        (fetch_open_payments(), "open_payments"),
-        (fetch_drug_directory(), 'drug_directory'),
-        (fetch_road_safety(), "road_safety"),
-        (fetch_midwest_survey(), "midwest_survey"),
-        (fetch_traffic_violations(), "traffic_violations"),
-    ]
-
-
-def get_regression_datasets() -> List[Tuple[dict, str]]:
-    return [
-        (fetch_medical_charge(), "medical_charge"),
-        (fetch_employee_salaries(), "employee_salaries"),
-    ]
-
-
-def get_dataset(info) -> Tuple[pd.DataFrame, pd.Series]:
-    y = info.y
-    X = info.X
-    return X, y
+from utils import default_parser, find_result, monitor, get_dataset, get_classification_datasets, get_regression_datasets
 
 
 ###############################################

@@ -7,6 +7,7 @@ faster than the CountVectorizer, without any significant loss in accuracy.
 This leads to the conclusion that the HashingVectorizer should be used
 by default for the fuzzy join, with the option to use the CountVectorizer if
 results are unexpected (e.g hash collisions).
+
 Date: December 2022
 """
 
@@ -19,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from utils import evaluate, fetch_data
+from autofj.datasets import load_data
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
     CountVectorizer,
@@ -320,7 +321,7 @@ def benchmark(
     analyzer: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
 ):
-    left_table, right_table, gt = fetch_data(dataset_name)
+    left_table, right_table, gt = load_data(dataset_name)
 
     start_time = perf_counter()
     joined_fj = fuzzy_join(

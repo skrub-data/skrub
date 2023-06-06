@@ -1,5 +1,15 @@
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
+
+from dirty_cat.datasets import (
+    fetch_open_payments,
+    fetch_drug_directory,
+    fetch_road_safety,
+    fetch_midwest_survey,
+    fetch_medical_charge,
+    fetch_employee_salaries,
+    fetch_traffic_violations,
+)
 
 import pandas as pd
 
@@ -53,3 +63,26 @@ def choose_file(results: List[Path]) -> Path:
             print(f"Invalid choice {choice!r}, exiting.")
             exit()
         return results[int(choice) - 1]
+
+
+def get_classification_datasets() -> List[Tuple[dict, str]]:
+    return [
+        (fetch_open_payments(), "open_payments"),
+        (fetch_drug_directory(), 'drug_directory'),
+        (fetch_road_safety(), "road_safety"),
+        (fetch_midwest_survey(), "midwest_survey"),
+        (fetch_traffic_violations(), "traffic_violations"),
+    ]
+
+
+def get_regression_datasets() -> List[Tuple[dict, str]]:
+    return [
+        (fetch_medical_charge(), "medical_charge"),
+        (fetch_employee_salaries(), "employee_salaries"),
+    ]
+
+
+def get_dataset(info) -> Tuple[pd.DataFrame, pd.Series]:
+    y = info.y
+    X = info.X
+    return X, y
