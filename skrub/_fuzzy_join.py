@@ -89,7 +89,8 @@ def _time_encoding(
     main_array = main[main_cols].to_numpy(dtype="datetime64[s]")
     # Re-weighting to avoid measure specificity
     scaler = StandardScaler()
-    scaler.fit(np.vstack((aux_array, main_array)))
+    X = np.vstack([aux_array, main_array])
+    scaler.fit(X)
     aux_array = scaler.transform(aux_array)
     main_array = scaler.transform(main_array)
     return csr_matrix(main_array), csr_matrix(aux_array)
@@ -136,25 +137,25 @@ def _string_encoding(
         An array of the encoded columns of the aux table.
     """
     # Make sure that the column types are string and categorical:
-    main_cols_clean = main[main_cols].astype(str)
-    aux_cols_clean = aux[aux_cols].astype(str)
+    main = main[main_cols].astype(str)
+    aux = aux[aux_cols].astype(str)
 
     first_col, other_cols = main_cols[0], main_cols[1:]
-    main_cols_clean = main_cols_clean[first_col].str.cat(
-        main_cols_clean[other_cols], sep="  "
+    main = main[first_col].str.cat(
+        main[other_cols], sep="  "
     )
     first_col_aux, other_cols_aux = aux_cols[0], aux_cols[1:]
-    aux_cols_clean = aux_cols_clean[first_col_aux].str.cat(
-        aux_cols_clean[other_cols_aux], sep="  "
+    aux = aux[first_col_aux].str.cat(
+        aux[other_cols_aux], sep="  "
     )
-    all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
+    all_cats = pd.concat([main, aux], axis=0).unique()
 
     if encoder is None:
         encoder = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
     encoder = encoder.fit(all_cats)
-    main_enc = encoder.transform(main_cols_clean)
-    aux_enc = encoder.transform(aux_cols_clean)
+    main_enc = encoder.transform(main)
+    aux_enc = encoder.transform(aux)
 
     all_enc = vstack((main_enc, aux_enc))
 
@@ -448,28 +449,31 @@ def fuzzy_join(
     any_time = len(main_time_cols) != 0
     # Check if included columns are datetime:
     any_str = len(main_str_cols) != 0
-    # Check if included columns have mixed types:
-    # mixed_types = len(main_cols) > (len(main_num_cols) + len(main_time_cols))
 
     if len(main_cols) == 1 and len(aux_cols) == 1 and any_numeric is False:
         main_cols = main_cols[0]
         aux_cols = aux_cols[0]
 
     if numerical_match in ["auto", "number", "time"]:
-        main_enc = np.zeros((len(main_table.index), 1))
-        aux_enc = np.zeros((len(aux_table.index), 1))
+        main_enc, aux_enc = [], []
+        # main_enc = np.zeros((len(main_table.index), 1))
+        # aux_enc = np.zeros((len(aux_table.index), 1))
         if any_numeric:
             main_num_enc, aux_num_enc = _numeric_encoding(
                 main_table, main_num_cols, aux_table, aux_num_cols
             )
-            main_enc = hstack((main_enc, main_num_enc), format="csr")
-            aux_enc = hstack((aux_enc, aux_num_enc), format="csr")
+            main_enc.append(main_num_enc)
+            aux_enc.append(aux_num_enc)
+            # main_enc = hstack((main_enc, main_num_enc), format="csr")
+            # aux_enc = hstack((aux_enc, aux_num_enc), format="csr")
         if any_time:
             main_time_enc, aux_time_enc = _time_encoding(
                 main_table, main_time_cols, aux_table, aux_time_cols
             )
-            main_enc = hstack((main_enc, main_time_enc), format="csr")
-            aux_enc = hstack((aux_enc, aux_time_enc), format="csr")
+            main_enc.append(main_time_enc)
+            aux_enc.append(aux_time_enc)
+            # main_enc = hstack((main_enc, main_time_enc), format="csr")
+            # aux_enc = hstack((aux_enc, aux_time_enc), format="csr")
         if any_str:
             main_str_enc, aux_str_enc = _string_encoding(
                 main_table,
@@ -480,11 +484,15 @@ def fuzzy_join(
                 analyzer=analyzer,
                 ngram_range=ngram_range,
             )
-            main_enc = hstack((main_enc, main_str_enc), format="csr")
-            aux_enc = hstack((aux_enc, aux_str_enc), format="csr")
+            main_enc.append(main_str_enc)
+            aux_enc.append(aux_str_enc)
+            # main_enc = hstack((main_enc, main_str_enc), format="csr")
+            # aux_enc = hstack((aux_enc, aux_str_enc), format="csr")
         # remove initialisation column
-        main_enc = main_enc[:, 1:]
-        aux_enc = aux_enc[:, 1:]
+        # main_enc = main_enc[:, 1:]
+        # aux_enc = aux_enc[:, 1:]
+        main_enc = hstack(main_enc, format="csr")
+        aux_enc = hstack(aux_enc, format="csr")
         idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
     elif numerical_match == "string":
         main_enc, aux_enc = _string_encoding(
