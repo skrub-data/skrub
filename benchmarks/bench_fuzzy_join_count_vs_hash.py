@@ -29,6 +29,7 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from utils import default_parser, find_result, monitor
+from utils.join import evaluate
 
 
 # Function kept for reference
@@ -393,7 +394,7 @@ if __name__ == "__main__":
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
-        df = pd.read_csv(result_file)
+        df = pd.read_parquet(result_file)
 
     if _args.plot:
         plot(df)

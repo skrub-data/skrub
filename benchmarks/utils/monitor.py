@@ -213,8 +213,8 @@ def monitor(
                 save_dir = Path(__file__).parent.parent / "results"
                 save_dir.mkdir(exist_ok=True)
                 now = datetime.now()
-                file = f"{save_as}-{now.year}{now.month}{now.day}.csv"
-                df.to_csv(save_dir / file)
+                file = f"{save_as}-{now.year}{now.month}{now.day}.parquet"
+                df.to_parquet(save_dir / file)
 
             return df
 

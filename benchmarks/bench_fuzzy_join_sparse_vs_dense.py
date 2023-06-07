@@ -513,6 +513,7 @@ benchmark_name = "bench_fuzzy_join_sparse_vs_dense"
             "vegetables",
             "beatles songs",
             "california govs 1",
+            "california govs 2",
             "chinese provinces",
             "christmas songs 1",
         ],
@@ -537,8 +538,8 @@ def benchmark(
         left_table,
         right_table,
         how="left",
-        left_on="title",
-        right_on="title",
+        left_on=left_table.columns[0],
+        right_on=right_table.columns[0],
         analyzer=analyzer,
         ngram_range=ngram_range,
         sparse=sparse,
@@ -547,16 +548,16 @@ def benchmark(
 
     n_obs = len(joined_fj.index)
 
-    pr, re, f1 = evaluate(
-        list(zip(joined_fj["title_x"], joined_fj["title_y"])),
-        list(zip(gt["title_l"], gt["title_r"])),
-    )
+    # pr, re, f1 = evaluate(
+        # list(zip(joined_fj["title_x"], joined_fj["title_y"])),
+        # list(zip(gt["title_l"], gt["title_r"])),
+    # )
 
     res_dic = {
         "n_obs": n_obs,
-        "precision": pr,
-        "recall": re,
-        "f1": f1,
+        # "precision": pr,
+        # "recall": re,
+        # "f1": f1,
         "time_fj": end_time - start_time,
     }
 
@@ -608,7 +609,7 @@ if __name__ == "__main__":
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
-        df = pd.read_csv(result_file)
+        df = pd.read_parquet(result_file)
 
     if _args.plot:
         plot(df)

@@ -66,4 +66,3 @@ doc/CONTRIBUTING.rst
 # Result files for benchmarks
 benchmarks/*.pkl
 benchmarks/*.log
-benchmarks/results/*.csv
