@@ -200,7 +200,6 @@ def fuzzy_join(
     left_on: Optional[Union[str, List[str], List[int]]] = None,
     right_on: Optional[Union[str, List[str], List[int]]] = None,
     on: Union[str, List[str], List[int], None] = None,
-    numerical_match: Literal["auto", "string", "number", "time"] = "auto",
     encoder: _VectorizerMixin = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: Tuple[int, int] = (2, 4),
@@ -210,22 +209,24 @@ def fuzzy_join(
     sort: bool = False,
     suffixes: Tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
-    """Join two tables with categorical columns based on approximate matching of morphological similarity.
+    """Join two tables with categorical columns based on approximate matching using the appropriate
+    similarity metric.
 
      The principle is as follows:
 
-    1. We embed and transform the key string columns using
-       HashingVectorizer and TfifdTransformer,
+    1. We embed and transform the key string, numerical or datetime columns.
     2. For each category, we use the nearest neighbor method to find its
-       closest neighbor and establish a match,
+       closest neighbor and establish a match.
     3. We match the tables using the previous information.
 
-     Categories from the two tables that share many sub-strings (n-grams)
+     For string columns, categories from the two tables that share many sub-strings (n-grams)
      have greater probability of being matched together. The join is based on
      morphological similarities between strings.
 
      Joining on numerical columns is also possible based on
      the Euclidean distance.
+     
+     Joining on datetime columns is based on the time difference.
 
      Parameters
      ----------
@@ -247,10 +248,6 @@ def fuzzy_join(
          Name of common left and right table join key columns.
          Must be found in both DataFrames. Use only if `left_on`
          and `right_on` parameters are not specified.
-     numerical_match : {`string`, `number`}, default='string'
-         For numerical columns, match using the Euclidean distance
-         ("number"). If "string", uses the default n-gram string
-         similarity on the string representation.
      encoder : vectorizer instance, optional
          Encoder parameter for the Vectorizer.
          By default, uses a :obj:`~sklearn.feature_extraction.text.HashingVectorizer`.
@@ -379,12 +376,6 @@ def fuzzy_join(
             f"Parameter 'how' should be either 'left' or 'right', got {how!r}. "
         )
 
-    if numerical_match not in ["auto", "string", "number", "time"]:
-        raise ValueError(
-            "Parameter 'numerical_match' should be either 'auto', 'string', 'time' or"
-            f" 'number', got {numerical_match!r}. ",
-        )
-
     for param in [on, left_on, right_on]:
         if param is not None and not isinstance(param, Iterable):
             raise TypeError(
@@ -454,46 +445,34 @@ def fuzzy_join(
         main_cols = main_cols[0]
         aux_cols = aux_cols[0]
 
-    if numerical_match in ["auto", "number", "time"]:
-        main_enc, aux_enc = [], []
-        if any_numeric:
-            main_num_enc, aux_num_enc = _numeric_encoding(
-                main_table, main_num_cols, aux_table, aux_num_cols
-            )
-            main_enc.append(main_num_enc)
-            aux_enc.append(aux_num_enc)
-        if any_time:
-            main_time_enc, aux_time_enc = _time_encoding(
-                main_table, main_time_cols, aux_table, aux_time_cols
-            )
-            main_enc.append(main_time_enc)
-            aux_enc.append(aux_time_enc)
-        if any_str:
-            main_str_enc, aux_str_enc = _string_encoding(
-                main_table,
-                main_str_cols,
-                aux_table,
-                aux_str_cols,
-                encoder=encoder,
-                analyzer=analyzer,
-                ngram_range=ngram_range,
-            )
-            main_enc.append(main_str_enc)
-            aux_enc.append(aux_str_enc)
-        main_enc = hstack(main_enc, format="csr")
-        aux_enc = hstack(aux_enc, format="csr")
-        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
-    elif numerical_match == "string":
-        main_enc, aux_enc = _string_encoding(
+    main_enc, aux_enc = [], []
+    if any_numeric:
+        main_num_enc, aux_num_enc = _numeric_encoding(
+            main_table, main_num_cols, aux_table, aux_num_cols
+        )
+        main_enc.append(main_num_enc)
+        aux_enc.append(aux_num_enc)
+    if any_time:
+        main_time_enc, aux_time_enc = _time_encoding(
+            main_table, main_time_cols, aux_table, aux_time_cols
+        )
+        main_enc.append(main_time_enc)
+        aux_enc.append(aux_time_enc)
+    if any_str:
+        main_str_enc, aux_str_enc = _string_encoding(
             main_table,
-            main_cols,
+            main_str_cols,
             aux_table,
-            aux_cols,
+            aux_str_cols,
             encoder=encoder,
             analyzer=analyzer,
             ngram_range=ngram_range,
         )
-        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
+        main_enc.append(main_str_enc)
+        aux_enc.append(aux_str_enc)
+    main_enc = hstack(main_enc, format="csr")
+    aux_enc = hstack(aux_enc, format="csr")
+    idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
 
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index

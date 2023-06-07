@@ -122,11 +122,6 @@ def test_parameters_error(analyzer, on, how) -> None:
         match=r"invalid type",
     ):
         fuzzy_join(df1, df2, on="a", match_score="blabla")
-    with pytest.raises(
-        ValueError,
-        match=r"'numerical_match' should be either",
-    ):
-        fuzzy_join(df1, df2, on="a", numerical_match="wrong_name")
 
 
 def test_missing_keys() -> None:
@@ -293,14 +288,14 @@ def test_numerical_column() -> None:
         }
     )
 
-    fj_num = fuzzy_join(left, right, on="int", numerical_match="number")
+    fj_num = fuzzy_join(left, right, on="int")
     n_cols = left.shape[1] + right.shape[1]
     n_samples = len(left)
 
     assert fj_num.shape == (n_samples, n_cols)
 
     fj_num2 = fuzzy_join(
-        left, right, on="int", numerical_match="number", return_score=True
+        left, right, on="int", return_score=True
     )
     assert fj_num2.shape == (n_samples, n_cols + 1)
 
@@ -308,7 +303,6 @@ def test_numerical_column() -> None:
         left,
         right,
         on="int",
-        numerical_match="number",
         match_score=0.8,
         drop_unmatched=True,
     )
@@ -335,7 +329,7 @@ def test_datetime_column():
         }
     )
 
-    fj_time = fuzzy_join(left, right, on="date", numerical_match="time")
+    fj_time = fuzzy_join(left, right, on="date")
 
     fj_time_expected = pd.DataFrame(
         {
@@ -355,7 +349,7 @@ def test_datetime_column():
     assert fj_time.shape == (n_samples, n_cols)
 
     fj_time2 = fuzzy_join(
-        left, right, on="date", numerical_match="time", return_score=True
+        left, right, on="date", return_score=True
     )
     assert fj_time2.shape == (n_samples, n_cols + 1)
 
@@ -363,7 +357,6 @@ def test_datetime_column():
         left,
         right,
         on="date",
-        numerical_match="time",
         match_score=0.51,
         drop_unmatched=True,
     )
@@ -397,7 +390,7 @@ def test_mixed_joins():
     )
 
     # On multiple numeric keys
-    fj_num = fuzzy_join(left, right, on=["int1", "int2"], numerical_match="number")
+    fj_num = fuzzy_join(left, right, on=["int1", "int2"])
 
     expected_fj_num = pd.DataFrame(
             {
@@ -424,7 +417,6 @@ def test_mixed_joins():
         right,
         left_on=["str1", "str2"],
         right_on=["str_1", "str_2"],
-        numerical_match="string",
     )
 
     expected_fj_str = pd.DataFrame({
@@ -448,7 +440,6 @@ def test_mixed_joins():
         right,
         left_on=["str1", "str2", "int2"],
         right_on=["str_1", "str_2", "int2"],
-        numerical_match="number",
     )
     expected_fj_mixed = pd.DataFrame({
         "str1": ["Paris", "Paris", "Paris"],
@@ -471,7 +462,6 @@ def test_mixed_joins():
         right,
         left_on=["str1", "date"],
         right_on=["str_1", "date"],
-        numerical_match="number",
     )
     expected_fj_mixed2 = pd.DataFrame({
         "str1": ["Paris", "Paris", "Paris"],
@@ -494,7 +484,6 @@ def test_mixed_joins():
         right,
         left_on=["int1", "date"],
         right_on=["int1", "date"],
-        numerical_match="number",
     )
     expected_fj_mixed3 = pd.DataFrame({
         "str1": ["Paris", "Paris", "Paris"],
