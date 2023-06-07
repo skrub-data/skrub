@@ -456,24 +456,18 @@ def fuzzy_join(
 
     if numerical_match in ["auto", "number", "time"]:
         main_enc, aux_enc = [], []
-        # main_enc = np.zeros((len(main_table.index), 1))
-        # aux_enc = np.zeros((len(aux_table.index), 1))
         if any_numeric:
             main_num_enc, aux_num_enc = _numeric_encoding(
                 main_table, main_num_cols, aux_table, aux_num_cols
             )
             main_enc.append(main_num_enc)
             aux_enc.append(aux_num_enc)
-            # main_enc = hstack((main_enc, main_num_enc), format="csr")
-            # aux_enc = hstack((aux_enc, aux_num_enc), format="csr")
         if any_time:
             main_time_enc, aux_time_enc = _time_encoding(
                 main_table, main_time_cols, aux_table, aux_time_cols
             )
             main_enc.append(main_time_enc)
             aux_enc.append(aux_time_enc)
-            # main_enc = hstack((main_enc, main_time_enc), format="csr")
-            # aux_enc = hstack((aux_enc, aux_time_enc), format="csr")
         if any_str:
             main_str_enc, aux_str_enc = _string_encoding(
                 main_table,
@@ -486,11 +480,6 @@ def fuzzy_join(
             )
             main_enc.append(main_str_enc)
             aux_enc.append(aux_str_enc)
-            # main_enc = hstack((main_enc, main_str_enc), format="csr")
-            # aux_enc = hstack((aux_enc, aux_str_enc), format="csr")
-        # remove initialisation column
-        # main_enc = main_enc[:, 1:]
-        # aux_enc = aux_enc[:, 1:]
         main_enc = hstack(main_enc, format="csr")
         aux_enc = hstack(aux_enc, format="csr")
         idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
