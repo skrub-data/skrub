@@ -209,8 +209,7 @@ def fuzzy_join(
     sort: bool = False,
     suffixes: Tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
-    """Join two tables with categorical columns based on approximate matching using the appropriate
-    similarity metric.
+    """Join two tables based on approximate matching using the appropriate similarity metric.
 
      The principle is as follows:
 
