@@ -243,14 +243,13 @@ class TableVectorizer(ColumnTransformer):
         it is left to the user to manage.
         See also attribute :attr:`~skrub.TableVectorizer.imputed_columns_`.
 
-    remainder : {'drop', 'passthrough'} or Transformer, default='drop'
-        By default, only the specified columns in `transformers` are
-        transformed and combined in the output, and the non-specified
-        columns are dropped. (default 'drop').
-        By specifying `remainder='passthrough'`, all remaining columns that
-        were not specified in `transformers` will be automatically passed
-        through. This subset of columns is concatenated with the output of
-        the transformers.
+    remainder : {'drop', 'passthrough'} or Transformer, default='passthrough'
+        By default, all remaining columns that were not specified in `transformers` 
+        will be automatically passed through. This subset of columns is concatenated 
+        with the output of the transformers. (default 'passthrough').
+        By specifying `remainder='drop'`, only the specified columns 
+        in `transformers` are transformed and combined in the output, and the 
+        non-specified columns are dropped.
         By setting `remainder` to be an estimator, the remaining
         non-specified columns will use the `remainder` estimator. The
         estimator must support :term:`fit` and :term:`transform`.
