@@ -10,7 +10,7 @@ Date: June 2023
 
 import math
 from utils import default_parser, find_result, monitor
-from utils.join import evaluate, fetch_data
+from utils.join import evaluate, fetch_big_data
 from argparse import ArgumentParser
 import numbers
 from time import perf_counter
@@ -510,14 +510,12 @@ benchmark_name = "bench_fuzzy_join_sparse_vs_dense"
     parametrize={
         "sparse": [True, False],
         "dataset_name": [
-            "vegetables",
-            "beatles songs",
-            "california govs 1",
-            "california govs 2",
-            "chinese provinces",
-            "christmas songs 1",
+            "iTunes-Amazon",
+            "DBLP-ACM",
+            "DBLP-GoogleScholar",
+            "Walmart-Amazon",
         ],
-        "analyzer": ["char_wb", "char"],
+        "analyzer": ["char_wb", "char", "word"],
         "ngram_range": [(2, 4), (3, 4)],
     },
     memory=True,
@@ -528,10 +526,10 @@ benchmark_name = "bench_fuzzy_join_sparse_vs_dense"
 def benchmark(
     sparse: bool,
     dataset_name: str,
-    analyzer: Literal["char_wb", "char", "word"],
+    analyzer: Literal["char_wb", "char"],
     ngram_range: tuple,
 ):
-    left_table, right_table, gt = fetch_data(dataset_name)
+    left_table, right_table, gt = fetch_big_data(dataset_name)
 
     start_time = perf_counter()
     joined_fj = fuzzy_join(
@@ -548,17 +546,21 @@ def benchmark(
 
     n_obs = len(joined_fj.index)
 
-    # pr, re, f1 = evaluate(
-        # list(zip(joined_fj["title_x"], joined_fj["title_y"])),
-        # list(zip(gt["title_l"], gt["title_r"])),
-    # )
+    avg_word = np.round(np.mean([joined_fj['title_x'].str.split().map(len).mean(),
+                        joined_fj['title_y'].str.split().map(len).mean()]))
+
+    pr, re, f1 = evaluate(
+        list(zip(joined_fj["title_x"], joined_fj["title_y"])),
+        list(zip(gt["title_l"], gt["title_r"])),
+    )
 
     res_dic = {
         "n_obs": n_obs,
-        # "precision": pr,
-        # "recall": re,
-        # "f1": f1,
+        "precision": pr,
+        "recall": re,
+        "f1": f1,
         "time_fj": end_time - start_time,
+        "avg_count": avg_word,
     }
 
     return res_dic
@@ -575,8 +577,10 @@ def plot(df: pd.DataFrame):
         squeeze=False,
         figsize=(20, 5),
     )
+    plt.tight_layout()
     # Create the subplots but indexed by 1 value
     for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
+        current_df = df[df["dataset_name"] == dataset_name].reset_index()
         sns.scatterplot(
             x="time_fj",
             y="f1",
@@ -584,10 +588,12 @@ def plot(df: pd.DataFrame):
             style="ngram_range",
             size="analyzer",
             alpha=0.8,
-            data=df[df["dataset_name"] == dataset_name],
+            data=current_df,
             ax=axes[i % n_rows, i // n_rows],
         )
-        axes[i % n_rows, i // n_rows].set_title(dataset_name)
+        axes[i % n_rows, i // n_rows].set_title(dataset_name
+                                                + '   Obs=' + str(current_df["n_obs"][0])
+                                                + '  Avg_word_length:' + str(current_df["avg_count"][0]))
         # remove legend
         axes[i % n_rows, i // n_rows].get_legend().remove()
         # Put a legend to the right side if last row

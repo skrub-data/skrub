@@ -26,7 +26,7 @@ def find_results(bench_name: str) -> List[Path]:
     return [
         file
         for file in results_dir.iterdir()
-        if file.stem.startswith(bench_name) and file.suffix == ".csv"
+        if file.stem.startswith(bench_name) and file.suffix == ".parquet"
     ]
 
 
@@ -45,7 +45,7 @@ def choose_file(results: List[Path]) -> Path:
     else:
         for i, file in enumerate(results):
             # Read the result file to get its dimensions
-            df = pd.read_csv(file)
+            df = pd.read_parquet(file)
             if "iter" not in df.columns:
                 print(f"Invalid file {file.name!r}, skipping.")
                 continue

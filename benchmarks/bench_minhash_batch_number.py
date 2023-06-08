@@ -413,10 +413,10 @@ def plot(df: pd.DataFrame):
         else "batched=False",
         axis=1,
     )
-
     sns.boxplot(x="n_jobs", y="time", hue="config", data=df)
     # Log scale for the y-axis
     plt.yscale("log")
+    plt.tight_layout()
     plt.show()
 
 

@@ -96,6 +96,7 @@ def plot(df: pd.DataFrame):
         squeeze=False,
         figsize=(20, 5),
     )
+    plt.tight_layout()
     # Create the subplots but indexed by 1 value
     for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
         sns.scatterplot(
