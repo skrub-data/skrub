@@ -82,7 +82,7 @@ def get_regression_datasets() -> List[Tuple[dict, str]]:
     ]
 
 
-def get_dataset(info) -> Tuple[pd.DataFrame, pd.Series]:
+def get_dataset(info: Tuple[dict, str]) -> Tuple[pd.DataFrame, pd.Series]:
     y = info.y
     X = info.X
     return X, y

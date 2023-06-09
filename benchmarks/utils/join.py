@@ -1,25 +1,31 @@
 import pandas as pd
-import os
-from pathlib import Path
+from typing import Tuple
+from dirty_cat.datasets._utils import get_data_dir
 
 
-def get_local_data(dataset_name):
+def get_local_data(dataset_name: str, data_directory: str = None):
     """ Get the path to the local datasets. """
-    module_path = Path(os.path.dirname(__file__)).resolve()
-    data_dir = module_path / "data"
-    left_path = str(data_dir) + f"/left_{dataset_name}.parquet"
-    right_path = str(data_dir) + f"/right_{dataset_name}.parquet"
-    gt_path = str(data_dir) + f"/gt_{dataset_name}.parquet"
-    data_dir.mkdir(parents=True, exist_ok=True)
+    if data_directory is None:
+        data_directory = get_data_dir("benchmarks_data")
+    # module_path = Path(os.path.dirname(__file__)).resolve()
+    # data_dir = module_path / "data"
+    left_path = str(data_directory) + f"/left_{dataset_name}.parquet"
+    right_path = str(data_directory) + f"/right_{dataset_name}.parquet"
+    gt_path = str(data_directory) + f"/gt_{dataset_name}.parquet"
+    data_directory.mkdir(parents=True, exist_ok=True)
     file_paths = [
         file
-        for file in data_dir.iterdir()
+        for file in data_directory.iterdir()
         if file.name.endswith(f"{dataset_name}.parquet")
     ]
+    print(file_paths)
     return left_path, right_path, gt_path, file_paths
 
 
-def fetch_data(dataset_name, save=True):
+def fetch_data(
+    dataset_name: str,
+    save: bool = True
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Fetch datasets from https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark
 
     Parameters
@@ -52,9 +58,10 @@ def fetch_data(dataset_name, save=True):
         left = pd.read_csv(f"{base_url}/source.csv")
         right = pd.read_csv(f"{base_url}/target.csv")
         gt = pd.read_csv(f"{base_url}/ground%20truth.csv")
-        left.to_parquet(left_path)
-        right.to_parquet(right_path)
-        gt.to_parquet(gt_path)
+        if save is True:
+            left.to_parquet(left_path)
+            right.to_parquet(right_path)
+            gt.to_parquet(gt_path)
     else:
         left = pd.read_parquet(left_path)
         right = pd.read_parquet(right_path)
@@ -62,7 +69,11 @@ def fetch_data(dataset_name, save=True):
     return left, right, gt
 
 
-def fetch_big_data(dataset_name, data_type='Dirty', save=True):
+def fetch_big_data(
+    dataset_name: str,
+    data_type : str = 'Dirty',
+    save: bool = True,
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Fetch datasets from https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md
 
     Parameters
@@ -91,10 +102,10 @@ def fetch_big_data(dataset_name, data_type='Dirty', save=True):
     link = "https://pages.cs.wisc.edu/~anhai/data1/deepmatcher_data/"
     left_path, right_path, gt_path, file_paths = get_local_data(dataset_name)
     if len(file_paths) == 0:
-        idx1 = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/test.csv")
-        idx2 = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/train.csv")
-        idx3 = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/valid.csv")
-        idx = pd.concat([idx1, idx2, idx3], ignore_index=True)
+        test_idx = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/test.csv")
+        train_idx = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/train.csv")
+        valid_idx = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/valid.csv")
+        idx = pd.concat([test_idx, train_idx, valid_idx], ignore_index=True)
         idx = idx[idx["label"] == 1].reset_index()
 
         left = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/tableA.csv").iloc[idx["ltable_id"], 1]
