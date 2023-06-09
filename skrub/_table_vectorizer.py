@@ -146,8 +146,9 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
-OptionalTransformer = Optional[
-    Union[TransformerMixin, Literal["drop", "remainder", "passthrough"]]
+Transformer = Union[
+    TransformerMixin,
+    Literal["drop", "remainder", "passthrough"],
 ]
 
 
@@ -227,7 +228,17 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    auto_cast : bool, optional, default=True
+    column_specific_transformers: list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str), optional
+        On top of the default column type classification (see parameters above),
+        this parameter allows you to manually specify transformers for
+        specific columns.
+        This is equivalent to using a :class:`~sklearn.compose.ColumnTransformer`
+        for assigning the column-specific transformers,
+        and passing the ``TableVectorizer`` as the ``remainder``.
+        This parameter takes a list of 2-tuples (transformer, column names or
+        indices).
+
+    auto_cast : bool, default=True
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
@@ -368,10 +379,13 @@ class TableVectorizer(ColumnTransformer):
         self,
         *,
         cardinality_threshold: int = 40,
-        low_card_cat_transformer: OptionalTransformer = None,
-        high_card_cat_transformer: OptionalTransformer = None,
-        numerical_transformer: OptionalTransformer = None,
-        datetime_transformer: OptionalTransformer = None,
+        low_card_cat_transformer: Optional[Transformer] = None,
+        high_card_cat_transformer: Optional[Transformer] = None,
+        numerical_transformer: Optional[Transformer] = None,
+        datetime_transformer: Optional[Transformer] = None,
+        column_specific_transformers: Optional[
+            List[Tuple[Transformer, List[Union[str, int]]]]
+        ] = None,
         auto_cast: bool = True,
         impute_missing: Literal["auto", "force", "skip"] = "auto",
         # The next parameters are inherited from ColumnTransformer
@@ -390,6 +404,7 @@ class TableVectorizer(ColumnTransformer):
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
         self.datetime_transformer = datetime_transformer
+        self.column_specific_transformers = column_specific_transformers
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
 
@@ -472,6 +487,9 @@ class TableVectorizer(ColumnTransformer):
             self.datetime_transformer_ = self.remainder
         else:
             self.datetime_transformer_ = self.datetime_transformer
+
+        if self.column_specific_transformers is None:
+            self.column_specific_transformers_ = {}
 
         # TODO: check that the provided transformers are valid
 
@@ -645,7 +663,7 @@ class TableVectorizer(ColumnTransformer):
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers: List[Tuple[str, OptionalTransformer, List[str]]] = [
+        all_transformers: List[Tuple[str, Optional[Transformer], List[str]]] = [
             ("numeric", self.numerical_transformer, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
             ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
