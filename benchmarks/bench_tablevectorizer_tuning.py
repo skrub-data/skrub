@@ -36,12 +36,12 @@ benchmark_name = "bench_tablevectorizer_tuning"
     parametrize={
         "tv_cardinality_threshold": [20, 40, 60],
         "minhash_n_components": [10, 30, 50],
-        "dataset_name": ["open_payments", "drug_directory", "road_safety",
-                         "midwest_survey", "traffic_violations", "medical_charge",
+        "dataset_name": ["medical_charge", "open_payments",
+                         "midwest_survey", "medical_charge",
                          "employee_salaries"]
     },
     save_as=benchmark_name,
-    repeat=5,
+    repeat=3,
 )
 def benchmark(
     tv_cardinality_threshold: int,
@@ -76,7 +76,7 @@ def benchmark(
             if name == dataset_name:
                 X, y = get_dataset(info)
                 pipeline.fit(X, y)
-                scores = cross_val_score(pipeline, X, y)
+                scores = cross_val_score(pipeline, X, y, cv=3)
                 score = np.mean(scores)
     res_dic = {
             "grid_search_results": score,
