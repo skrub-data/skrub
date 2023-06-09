@@ -8,6 +8,7 @@ from typing import Dict, Generator, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from numpy.random import RandomState
 from scipy import sparse
 from sklearn import __version__ as sklearn_version
@@ -645,6 +646,14 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         (default is to impute).
         In :func:`~GapEncoder.inverse_transform`, the missing categories will
         be denoted as `None`.
+    n_jobs : int, optional
+        The number of jobs to run in parallel.
+        The Gamma-Poisson factorization cannot be parallelized as it is an
+        iterative process, instead, the process is parallelized column-wise,
+        meaning each column is fitted in parallel. Thus, having
+        `n_jobs` > X.shape[1] will not speed up the computation.
+    verbose : int, default=0
+        Verbosity level. The higher, the more granular the logging.
 
     Attributes
     ----------
@@ -732,6 +741,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
         handle_missing: Literal["error", "empty_impute"] = "zero_impute",
+        n_jobs: Optional[int] = None,
+        verbose: int = 0,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -752,6 +763,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
         self.handle_missing = handle_missing
+        self.n_jobs = n_jobs
+        self.verbose = verbose
 
     def _more_tags(self) -> Dict[str, List[str]]:
         """
@@ -832,10 +845,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         # Check input data shape
         X = check_input(X)
         X = self._handle_missing(X)
-        self.fitted_models_ = []
-        for k in range(X.shape[1]):
-            col_enc = self._create_column_gap_encoder()
-            self.fitted_models_.append(col_enc.fit(X[:, k]))
+        self.fitted_models_ = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+            delayed(self._create_column_gap_encoder().fit)(X[:, k])
+            for k in range(X.shape[1])
+        )
         return self
 
     def transform(self, X) -> np.ndarray:
