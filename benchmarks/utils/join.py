@@ -7,8 +7,6 @@ def get_local_data(dataset_name: str, data_directory: str = None):
     """ Get the path to the local datasets. """
     if data_directory is None:
         data_directory = get_data_dir("benchmarks_data")
-    # module_path = Path(os.path.dirname(__file__)).resolve()
-    # data_dir = module_path / "data"
     left_path = str(data_directory) + f"/left_{dataset_name}.parquet"
     right_path = str(data_directory) + f"/right_{dataset_name}.parquet"
     gt_path = str(data_directory) + f"/gt_{dataset_name}.parquet"
