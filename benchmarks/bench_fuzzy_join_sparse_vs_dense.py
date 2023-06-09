@@ -591,9 +591,11 @@ def plot(df: pd.DataFrame):
             data=current_df,
             ax=axes[i % n_rows, i // n_rows],
         )
-        axes[i % n_rows, i // n_rows].set_title(dataset_name
-                                                + '   Obs=' + str(current_df["n_obs"][0])
-                                                + '  Avg_word_length:' + str(current_df["avg_count"][0]))
+        axes[i % n_rows, i // n_rows].set_title(
+            f"{dataset_name} "
+            f"Obs={current_df["n_obs"][0]} "
+            f"Avg_word_length={current_df["avg_count"][0]} "
+        )
         # remove legend
         axes[i % n_rows, i // n_rows].get_legend().remove()
         # Put a legend to the right side if last row
