@@ -13,6 +13,10 @@ Major changes
   positionally now have to be passed as keywords.
   :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
 
+* You can now pass column-specific transformers to :class:`TableVectorizer`
+  using the `column_specific_transformers` argument.
+  :pr:`583` by :user:`Lilian Boulard <LilianBoulard>`.
+
 Release 0.4.1
 =============
 
