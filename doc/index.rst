@@ -1,17 +1,30 @@
 
-============================================
-skrub: Prepping tables for machine learning 
-============================================
+.. raw:: html
+
+    <div class="container-fluid sk-landing-bg">
+      <div class="container sk-landing-container">
+        <div class="row">
+          <div class="col-md-6 mb-3 mb-md-0">
+            <h1 class="sk-landing-header text-white text-monospace">skrub</h1>
+            <h4 class="sk-landing-subheader text-white font-italic mb-3">Prepping tables for machine learning</h4>
+          </div>
+          <div class="col-md-6 d-flex">
+            <ul class="sk-landing-header-body">
+              <li>Built for scikit-learn</li>
+              <li>Robust to dirty data</li>
+              <li>Easy learning on pandas dataframes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
 .. toctree::
    :maxdepth: 2
 
 .. currentmodule:: skrub
 
-
-- Built for scikit-learn.
-- Robust to dirty data.
-- Easy learning on pandas dataframes.
 
 |
 

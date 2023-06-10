@@ -29,3 +29,45 @@
 .card-body p {
     text-align: justify;
 }
+
+/* Landing header */
+
+div.sk-landing-container {
+    max-width: 1400px;
+  }
+
+div.sk-landing-container .text-white {
+    text-shadow: 0px 0px 8px rgb(42, 98, 128);
+}
+
+ul.sk-landing-header-body {
+    margin-top: auto;
+    margin-bottom: auto;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+div.sk-landing-bg-more-info dd {
+    padding-left: 0;
+}
+
+div.sk-landing-bg-more-info dd {
+    padding-left: 0;
+}
+
+div.sk-landing-bg {
+    background-image: linear-gradient(160deg, rgba(42,98,128,1) 0%, rgba(52,153,205,1) 17%, rgba(255,243,211,1) 59%, rgba(255,178,96,1) 100%);
+}
+
+div.sk-landing-bg-more-info {
+    background-color: #f8f8f8;
+    font-size: 0.96rem;
+  }
+
+.sk-landing-header {
+    font-size: 3.2rem;
+}
+  
+.sk-landing-subheader {
+    letter-spacing: 0.17rem;
+  }
