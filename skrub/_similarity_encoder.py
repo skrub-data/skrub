@@ -330,6 +330,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     def __init__(
         self,
+        *,
         similarity: str = None,
         ngram_range: Tuple[int, int] = (2, 4),
         categories: Union[

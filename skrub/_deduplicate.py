@@ -126,6 +126,7 @@ def _create_spelling_correction(
 
 def deduplicate(
     data: Sequence[str],
+    *,
     n_clusters: Optional[int] = None,
     ngram_range: Tuple[int, int] = (2, 4),
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",

@@ -125,6 +125,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         self,
         tables: List[Tuple[pd.DataFrame, str]],
         main_key: str,
+        *,
         match_score: float = 0.0,
         analyzer: Literal["word", "char", "char_wb"] = "char_wb",
         ngram_range: Tuple[int, int] = (2, 4),
