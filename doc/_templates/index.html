@@ -1,24 +1,30 @@
 {% extends "layout.html" %}
 
-{% block docs_main %}
-<div class="container-fluid sk-landing-bg">
-  <div class="container sk-landing-container">
-    <div class="row">
-      <div class="col-md-6 mb-3 mb-md-0">
-        <h1 class="sk-landing-header text-white text-monospace" style="margin-top:20px">skrub</h1>
-        <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
-      </div>
-      <div class="col-md-6 d-flex">
-        <ul class="sk-landing-header-body">
-          <li>Built for scikit-learn</li>
-          <li>Robust to dirty data</li>
-          <li>Easy learning on pandas dataframes</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
+{% block docs_navbar %}
+    {{ super() }}
 
+    {# We add the full-width banner below the navbar, as the div there is
+still full-width (unlike the article) #}
+    <div class="container-fluid sk-landing-bg">
+    <div class="container sk-landing-container">
+	<div class="row">
+	<div class="col-md-6 mb-3 mb-md-0">
+	    <h1 class="sk-landing-header text-white text-monospace" style="margin-top:20px">skrub</h1>
+	    <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
+	</div>
+	<div class="col-md-6 d-flex">
+	    <ul class="sk-landing-header-body">
+	    <li>Built for scikit-learn</li>
+	    <li>Robust to dirty data</li>
+	    <li>Easy learning on pandas dataframes</li>
+	    </ul>
+	</div>
+	</div>
+    </div>
+    </div>
+{% endblock docs_navbar %}
+
+{% block docs_main %}
 <article class="bd-article" role="main">
 
 <div class="container-fluid schema-container">
