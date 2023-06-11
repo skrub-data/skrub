@@ -85,7 +85,7 @@ div.sk-landing-bg-more-info dd {
 }
 
 div.sk-landing-bg {
-    background-image: linear-gradient(160deg, rgba(42,98,128,1) 0%, rgba(52,153,205,1) 17%, rgba(255,243,211,1) 59%, rgba(255,178,96,1) 100%);
+    background-image: linear-gradient(160deg, rgba(0,48,70,.75) 0%, rgba(0,118,179,.75) 17%, rgba(255,239,193,.75) 59%, rgba(255,149,40,.75) 100%);
     margin-top: -18px !important;
 }
 
