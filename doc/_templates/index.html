@@ -1,5 +1,11 @@
 {% extends "layout.html" %}
 
+
+{%- block extrahead %}
+    {{ super() }}
+    {# Add here landing-page specific stuff that goes in the header (eg css) #}
+{%- endblock extrahead %}
+
 {% block docs_navbar %}
     {{ super() }}
 
