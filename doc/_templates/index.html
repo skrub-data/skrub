@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block docs_main %}
+<div class="container-fluid sk-landing-bg">
+  <div class="container sk-landing-container">
+    <div class="row">
+      <div class="col-md-6 mb-3 mb-md-0">
+        <h1 class="sk-landing-header text-white text-monospace" style="margin-top:20px">skrub</h1>
+        <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
+      </div>
+      <div class="col-md-6 d-flex">
+        <ul class="sk-landing-header-body">
+          <li>Built for scikit-learn</li>
+          <li>Robust to dirty data</li>
+          <li>Easy learning on pandas dataframes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<article class="bd-article" role="main">
+
+<div class="container-fluid schema-container">
+    <img src="_static/skrub_pipeline.svg" style="max-width:70%">
+</div><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="container-fluid">
+  <div class="row justify-content-md-center">
+    <div class="col-lg-4">
+      <div class="sd-card sd-shadow-sm">
+        <div class="card-body">
+          <h4 class="card-title">Assembling</h4>
+    <p><a class="reference internal" href="generated/skrub.fuzzy_join.html"
+title="skrub.fuzzy_join"><code class="xref py py-func docutils literal
+notranslate"><span class="pre">fuzzy_join()</span></code></a>, Joining
+tables on non-normalized categories with approximate matching. <a
+class="reference internal" href="{{ pathto('example_fuzzy_join') }}"><span class="std std-ref">Example</span></a></p>
+<p><a class="reference internal"
+href="generated/skrub.FeatureAugmenter.html"
+title="skrub.FeatureAugmenter"><code class="xref py py-class docutils
+literal notranslate"><span class="pre">FeatureAugmenter</span></code></a>, a transformer for joining
+multiple tables together. <a class="reference internal" href="{{ pathto('example_feature_augmenter') }}"><span class="std std-ref">Example</span></a></p>
+    </div>
+  </div>
+</div>
+<div class="col-lg-4">
+  <div class="sd-card sd-shadow-sm">
+    <div class="card-body">
+      <h4 class="card-title">Encoding</h4><p><a class="reference
+internal"
+href="generated/skrub.TableVectorizer.html#skrub.TableVectorizer"
+title="skrub.TableVectorizer"><code class="xref py py-class docutils
+literal notranslate"><span class="pre">TableVectorizer</span></code></a>:
+<strong>turn a pandas dataframe into a numerical array</strong> for
+machine learning. <a class="reference internal" href="{{ pathto('example-table-vectorizer') }}"><span class="std std-ref">Example</span></a></p>
+<p><a class="reference internal"
+href="generated/skrub.GapEncoder.html#skrub.GapEncoder"
+title="skrub.GapEncoder"><code class="xref py py-class docutils literal
+notranslate"><span class="pre">GapEncoder</span></code></a>,
+OneHotEncoder but robust to typos or non-normalized categories. <a
+class="reference internal" href="{{pathto('example_gap_encoder') }}"><span class="std std-ref">Example</span></a></p>
+    </div>
+  </div>
+</div>
+<div class="col-lg-4">
+  <div class="sd-card sd-shadow-sm">
+    <div class="card-body">
+      <h4 class="card-title">Cleaning</h4><p><a class="reference
+internal" href="generated/skrub.deduplicate.html#skrub.deduplicate"
+title="skrub.deduplicate"><code class="xref py py-func docutils literal
+notranslate"><span class="pre">deduplicate()</span></code></a>: merge
+categories of similar morphology (spelling). <a class="reference internal" href="{{ pathto('example_deduplication')}}"><span class="std std-ref">Example</span></a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="right-align docutils container">
+<p><a class="reference external" href="CHANGES.html">Recent changes</a></p>
+<p><a class="reference external" href="CONTRIBUTING.html">Contributing</a></p>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+
+</article>
+{# So far, no footer. Maybe this is brutal #}              
+              
+{% endblock docs_main %}
+
