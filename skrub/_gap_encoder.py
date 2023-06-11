@@ -648,8 +648,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         be denoted as `None`.
     n_jobs : int, optional
         The number of jobs to run in parallel.
-        The Gamma-Poisson factorization cannot be parallelized as it is an
-        iterative process, instead, the process is parallelized column-wise,
+        The process is parallelized column-wise,
         meaning each column is fitted in parallel. Thus, having
         `n_jobs` > X.shape[1] will not speed up the computation.
     verbose : int, default=0
