@@ -64,6 +64,7 @@
 
 div.sk-landing-container {
     max-width: 1400px;
+    margin-top: 35px;
   }
 
 div.sk-landing-container .text-white {
@@ -71,7 +72,7 @@ div.sk-landing-container .text-white {
 }
 
 ul.sk-landing-header-body {
-    margin-top: 34px;
+    margin-top: auto;
     margin-bottom: auto;
     font-size: 1.2rem;
     font-weight: 500;
@@ -99,7 +100,6 @@ div.sk-landing-bg-more-info {
 
 .sk-landing-header {
     font-size: 3.2rem;
-    margin-top: 35px;
     margin-bottom: 5px;
 }
   
