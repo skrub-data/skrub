@@ -13,6 +13,9 @@ Major changes
   positionally now have to be passed as keywords.
   :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
 
+* Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
+  added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
+
 Release 0.4.1
 =============
 
