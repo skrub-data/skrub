@@ -11,10 +11,14 @@ The goal of skrub is to facilitate building and deploying
 machine-learning models on tables: `pandas <https://pandas.pydata.org>`__
 dataframe, SQL databases...
 
+|
+
 Skrub is high-level, with a philosophy and an API matching that of
 `scikit-learn <http://scikit-learn.org>`_. It strives to bridge the world
 of databases to that of machine-learning, **enabling imperfect assembly and
-representations of the data when it is noisy**.
+representations of the data when it is noisy**, using the downstream
+target to predict to guide assembly when possible (supervised learing for
+data assembly).
 
 In the long term, as skrub is built on higher-level APIs, it will make it
 easier for data-scientist to use efficient database patterns and
@@ -25,6 +29,10 @@ construction restrictive compared to directly manipulating dataframes.
 This is by design, as skrub does not aim to replace tools such as `pandas
 <https://pandas.pydata.org>`__, `Ibis <https://ibis-project.org>`__,
 `duckdb <https://duckdb.org/>`_.
+
+To make things simpler, skrub uses default that are chosen empirically to
+give good machine learning, even though these are sometimes heuristic, as
+in the :class:`TableVectorizer`.
 
 
 Roadmap
