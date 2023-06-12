@@ -47,10 +47,18 @@
 .schema-container {
     display: flex;
     justify-content: center;
-    max-width: 70em;
+    max-width: 60em;
     /* Vertical spacing as a function of the viewport height, to use better the page on very big displays */
     margin-top: calc(10px + 1vh);
     margin-bottom: calc(10px + 2vh);
+}
+
+/* Tall screens: add vertical spacing */
+@media screen and (min-height: 80ex) {
+    .schema-container {
+	margin-bottom: calc(10px + 3vh);
+	margin-top: calc(10px + 2vh);
+    }
 }
 
 .row justify-content-md-center {
