@@ -111,3 +111,11 @@ div.sk-landing-bg-more-info {
     letter-spacing: 0.17rem;
     margin-top: 5px;
 }
+
+/** Landing footer *******************************/
+div.sk-landing-footer {
+    margin-top: 30px;
+    background-color: #e7f5fd;
+    padding-top: 10px;
+    padding-bottom: 20px;
+}

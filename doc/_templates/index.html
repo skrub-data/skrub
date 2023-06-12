@@ -89,20 +89,23 @@ categories of similar morphology (spelling). <a class="reference internal" href=
       </div>
     </div>
   </div>
-<br />
 </div>
-<div class="right-align docutils container">
-<p><a class="reference external" href="CHANGES.html">Recent changes</a></p>
-<p><a class="reference external" href="CONTRIBUTING.html">Contributing</a></p>
-</div>
-<div class="toctree-wrapper compound">
-</div>
-
 </article>
-{# So far, no footer. Maybe this is brutal #}              
 
+{# So far, no article footer. Maybe this is brutal #}              
 </div>
 </div>
-              
 {% endblock docs_main %}
 
+{%- block footer %}
+<div class="container-fluid sk-landing-footer">
+  <div class="row justify-content-md-center">
+    <div class="col-lg-4">
+	<p><a href="{{ pathto('changes') }}">Recent changes</a></p>
+    </div>
+    <div class="col-lg-4">
+	<p><a href="{{ pathto('contributing') }}">Contributing</a></p>
+    </div>
+  </div>
+</div>
+{%- endblock footer %}
