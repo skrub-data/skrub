@@ -5,6 +5,7 @@ manually categorize them beforehand, or construct complex Pipelines.
 """
 
 import warnings
+from itertools import chain
 from typing import Dict, List, Literal, Optional, Tuple, Union
 from warnings import warn
 
@@ -16,15 +17,38 @@ from pandas.core.dtypes.base import ExtensionDtype
 from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
+from sklearn.utils._set_output import _get_output_config
 from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import DatetimeEncoder, GapEncoder
+from skrub import DatetimeEncoder, GapEncoder, MinHashEncoder
 from skrub._utils import parse_version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
+
+# transformers which can be applied column-wise
+# TODO: add SimilarityEncoder? It was slower on a quick test
+UNIVARIATE_TRANSFORMERS = (GapEncoder, MinHashEncoder)
+
+
+def _is_empty_column_selection(column):
+    """
+    Return True if the column selection is empty (empty list or all-False
+    boolean array).
+
+    """
+    if hasattr(column, "dtype") and np.issubdtype(column.dtype, np.bool_):
+        return not column.any()
+    elif hasattr(column, "__len__"):
+        return (
+            len(column) == 0
+            or all(isinstance(col, bool) for col in column)
+            and not any(column)
+        )
+    else:
+        return False
 
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[str]:
@@ -399,6 +423,79 @@ class TableVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
+    # override _iter to parallelize on the columns instead of the transformers
+    # when possible
+    def _iter(self, fitted=False, replace_strings=False, column_as_strings=False):
+        """
+        Generate (name, trans, column, weight) tuples.
+
+        If fitted=True, use the fitted transformers, else use the
+        user specified transformers updated with converted column names
+        and potentially appended with transformer for remainder.
+
+        """
+        if fitted:
+            if replace_strings:
+                # Replace "passthrough" with the fitted version in
+                # _name_to_fitted_passthrough
+                def replace_passthrough(name, trans, columns):
+                    if name not in self._name_to_fitted_passthrough:
+                        return name, trans, columns
+                    return name, self._name_to_fitted_passthrough[name], columns
+
+                transformers = [
+                    replace_passthrough(*trans) for trans in self.transformers_
+                ]
+            else:
+                transformers = self.transformers_
+        else:
+            # interleave the validated column specifiers
+            transformers = [
+                (name, trans, column)
+                for (name, trans, _), column in zip(self.transformers, self._columns)
+            ]
+            # add transformer tuple for remainder
+            if self._remainder[2]:
+                transformers = chain(transformers, [self._remainder])
+        get_weight = (self.transformer_weights or {}).get
+
+        output_config = _get_output_config("transform", self)
+        for name, trans, columns in transformers:
+            ########################################
+            # This is where we deviate from the original implementation
+            if isinstance(trans, UNIVARIATE_TRANSFORMERS):
+                columns_ = [[col] for col in columns]
+            else:
+                columns_ = [columns]
+            ########################################
+            for cols in columns_:
+                if replace_strings:
+                    # replace 'passthrough' with identity transformer and
+                    # skip in case of 'drop'
+                    if trans == "passthrough":
+                        trans = FunctionTransformer(
+                            accept_sparse=True,
+                            check_inverse=False,
+                            feature_names_out="one-to-one",
+                        ).set_output(transform=output_config["dense"])
+                    elif trans == "drop":
+                        continue
+                    elif _is_empty_column_selection(cols):
+                        continue
+
+                if column_as_strings:
+                    # Convert all columns to using their string labels
+                    columns_is_scalar = np.isscalar(cols)
+
+                    indices = self._transformer_to_input_indices[name]
+                    columns = self.feature_names_in_[indices]
+
+                    if columns_is_scalar:
+                        # selection is done with one dimension
+                        cols = cols[0]
+
+                yield (name, trans, cols, get_weight(name))
+
     def _more_tags(self):
         """
         Used internally by sklearn to ease the estimator checks.
@@ -725,6 +822,16 @@ class TableVectorizer(ColumnTransformer):
             print(f"[TableVectorizer] Assigned transformers: {self.transformers}")
 
         X_enc = super().fit_transform(X, y)
+
+        # if the same transformer is used on several columns, merge the columns in self.transformers_
+        # this is needed because we override the _iter method of ColumnTransformer
+        transformers_merged = {}
+        for name, enc, cols in self.transformers_:
+            if name in transformers_merged:
+                transformers_merged[name][2].extend(cols)
+            else:
+                transformers_merged[name] = (name, enc, cols)
+        self.transformers_ = list(transformers_merged.values())
 
         # For the "remainder" columns, the `ColumnTransformer` `transformers_`
         # attribute contains the index instead of the column name,
