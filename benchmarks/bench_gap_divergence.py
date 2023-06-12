@@ -9,6 +9,7 @@ The logic is as follows:
   - Set `max_iter_e_step` to values from 1 to 20
 - Before the end of each loop, save the following:
   - `W_change`
+  - `score`, from ``self.score(X)``
   - `W_`
   - `A_`
   - `B_`
