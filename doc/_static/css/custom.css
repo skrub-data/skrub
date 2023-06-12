@@ -131,12 +131,13 @@ div.sk-landing-footer {
 }
 
 /** Tweak for very large screens ********************/
-@media (min-width: 1200px) {
-    .bd-page-width {
-	max-width: 120rem;
-    }
+@media (min-width: 1300px) {
+    .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
+	width: 90vw;
+}
 
-    div.sk-landing-container, div.sk-landing-footer div.row {
+@media (min-width: 1200px) {
+    .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
 	max-width: 120rem;
     }
 
