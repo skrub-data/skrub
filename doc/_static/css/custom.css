@@ -2,6 +2,20 @@
 
 .bd-article {
     padding-left: 0px !important;
+    padding-top: 0px !important;
+}
+
+.bd-content {
+    justify-content: center;
+}
+
+.bd-article-container {
+    padding-top: 0%;
+}
+
+.bd-main .bd-content .bd-article-container {
+    max-width: 100%;
+    /*padding-top: 0%;*/
 }
 
 .bd-main .bd-content {
@@ -17,15 +31,83 @@
 }
 
 .card-body {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 32px;
+    padding-right: 32px;
 }
 
 .card-title {
     margin-bottom: 1.0rem;
-    text-align: center;
+    text-align: left;
 }
 
 .card-body p {
-    text-align: justify;
+    text-align: left;
+}
+
+.schema-container {
+    display: flex;
+    justify-content: center;
+    max-width: 70em;
+    /* Vertical spacing as a function of the viewport height, to use better the page on very big displays */
+    margin-top: calc(10px + 1vh);
+    margin-bottom: calc(10px + 2vh);
+}
+
+.row justify-content-md-center {
+    gap: 30px;
+}
+
+.sk-landing-header text-white text-monospace {
+    margin-top: -20px;
+}
+
+
+/** Landing header *******************************/
+
+
+div.sk-landing-container {
+    max-width: 1400px;
+    margin-top: 35px;
+    min-height: 130px;
+  }
+
+div.sk-landing-container .text-white {
+    text-shadow: 0px 0px 8px rgb(42, 98, 128);
+}
+
+ul.sk-landing-header-body {
+    margin-top: auto;
+    margin-bottom: auto;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: black;
+}
+
+div.sk-landing-bg-more-info dd {
+    padding-left: 0;
+}
+
+div.sk-landing-bg-more-info dd {
+    padding-left: 0;
+}
+
+div.sk-landing-bg {
+    background-image: linear-gradient(160deg, rgba(0,48,70,.75) 0%, rgba(0,118,179,.75) 17%, rgba(255,239,193,.75) 59%, rgba(255,149,40,.75) 100%);
+    margin-top: -18px !important;
+    margin-bottom: 45px;
+}
+
+div.sk-landing-bg-more-info {
+    background-color: #f8f8f8;
+    font-size: 0.96rem;
+  }
+
+.sk-landing-header {
+    font-size: 3.2rem;
+    margin-bottom: 5px;
+}
+  
+.sk-landing-subheader {
+    letter-spacing: 0.17rem;
+    margin-top: 5px;
 }
