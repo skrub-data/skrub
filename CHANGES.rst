@@ -47,7 +47,7 @@ Minor changes
   :pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
   :pr:`587` by :user:`Leo Grinsztajn <LeoGrin>`
 
-* When possible, parallelism in done at the column level rather than the transformer level in :class:`TableVectorizer`.
+* When possible, parallelism is done at the column level rather than the transformer level in :class:`TableVectorizer`.
   This is the case for :class:`MinHashEncoder` and :class:`GapEncoder`. :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Release 0.4.0
