@@ -47,6 +47,10 @@
 .schema-container {
     display: flex;
     justify-content: center;
+    max-width: 70em;
+    /* Vertical spacing as a function of the viewport height, to use better the page on very big displays */
+    margin-top: calc(10px + 1vh);
+    margin-bottom: calc(10px + 2vh);
 }
 
 .row justify-content-md-center {
@@ -63,6 +67,8 @@
 
 div.sk-landing-container {
     max-width: 1400px;
+    margin-top: 35px;
+    min-height: 130px;
   }
 
 div.sk-landing-container .text-white {
@@ -74,6 +80,7 @@ ul.sk-landing-header-body {
     margin-bottom: auto;
     font-size: 1.2rem;
     font-weight: 500;
+    color: black;
 }
 
 div.sk-landing-bg-more-info dd {
@@ -85,8 +92,9 @@ div.sk-landing-bg-more-info dd {
 }
 
 div.sk-landing-bg {
-    background-image: linear-gradient(160deg, rgba(42,98,128,1) 0%, rgba(52,153,205,1) 17%, rgba(255,243,211,1) 59%, rgba(255,178,96,1) 100%);
+    background-image: linear-gradient(160deg, rgba(0,48,70,.75) 0%, rgba(0,118,179,.75) 17%, rgba(255,239,193,.75) 59%, rgba(255,149,40,.75) 100%);
     margin-top: -18px !important;
+    margin-bottom: 45px;
 }
 
 div.sk-landing-bg-more-info {
@@ -96,8 +104,10 @@ div.sk-landing-bg-more-info {
 
 .sk-landing-header {
     font-size: 3.2rem;
+    margin-bottom: 5px;
 }
   
 .sk-landing-subheader {
     letter-spacing: 0.17rem;
-  }
+    margin-top: 5px;
+}
