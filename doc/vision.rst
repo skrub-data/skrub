@@ -38,7 +38,7 @@ in the :class:`TableVectorizer`.
 Roadmap
 =========
 
-In an open-source project, roadmaps can be whishfull thinking: things
+In an open-source project, roadmaps can be whishful thinking: things
 happen in an iterative way, often guided by the community.
 
 We however decided to communicate on what we would like to do in the next
