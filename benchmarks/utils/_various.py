@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Tuple
 
-from dirty_cat.datasets import (
+from skrub.datasets import (
     fetch_open_payments,
     fetch_drug_directory,
     fetch_road_safety,
@@ -10,6 +10,8 @@ from dirty_cat.datasets import (
     fetch_employee_salaries,
     fetch_traffic_violations,
 )
+
+from skrub.datasets._fetching import DatasetAll
 
 import pandas as pd
 
@@ -65,7 +67,7 @@ def choose_file(results: List[Path]) -> Path:
         return results[int(choice) - 1]
 
 
-def get_classification_datasets() -> List[Tuple[dict, str]]:
+def get_classification_datasets() -> List[Tuple[DatasetAll, str]]:
     return [
         (fetch_open_payments(), "open_payments"),
         (fetch_drug_directory(), 'drug_directory'),
@@ -75,7 +77,7 @@ def get_classification_datasets() -> List[Tuple[dict, str]]:
     ]
 
 
-def get_regression_datasets() -> List[Tuple[dict, str]]:
+def get_regression_datasets() -> List[Tuple[DatasetAll, str]]:
     return [
         (fetch_medical_charge(), "medical_charge"),
         (fetch_employee_salaries(), "employee_salaries"),

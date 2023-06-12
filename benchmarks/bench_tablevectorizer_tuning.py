@@ -16,7 +16,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_val_score
 
 
-from dirty_cat import TableVectorizer, MinHashEncoder
+from skrub import TableVectorizer, MinHashEncoder
 
 from typing import List, Tuple
 from argparse import ArgumentParser

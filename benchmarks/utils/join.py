@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Tuple
-from dirty_cat.datasets._utils import get_data_dir
+from skrub.datasets._utils import get_data_dir
 
 
 def get_local_data(dataset_name: str, data_directory: str = None):

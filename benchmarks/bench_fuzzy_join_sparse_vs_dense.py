@@ -276,7 +276,7 @@ def fuzzy_join(
 
     See Also
     --------
-    :class:`~dirty_cat.FeatureAugmenter` :
+    :class:`~skrub.FeatureAugmenter` :
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 

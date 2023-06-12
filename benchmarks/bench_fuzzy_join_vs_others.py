@@ -19,7 +19,7 @@ from thefuzz.fuzz import partial_ratio
 from thefuzz import process
 from autofj import AutoFJ
 from autofj.datasets import load_data
-from dirty_cat import fuzzy_join
+from skrub import fuzzy_join
 from utils import default_parser, find_result, monitor
 from utils.join import evaluate
 
