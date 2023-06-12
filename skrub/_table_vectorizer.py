@@ -29,7 +29,8 @@ from skrub._utils import parse_version
 # flake8: noqa: E501
 
 # transformers which can be applied column-wise
-# TODO: add SimilarityEncoder? It was slower on a quick test
+# and which are slow enough to be worth parallelizing over columns
+# TODO: add SimilarityEncoder? It was slower on a quick test.
 UNIVARIATE_TRANSFORMERS = (GapEncoder, MinHashEncoder)
 
 

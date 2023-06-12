@@ -1,11 +1,13 @@
 from typing import Any, Tuple
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
 import sklearn
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, SuperVectorizer, TableVectorizer
@@ -608,3 +610,59 @@ def test__infer_date_format() -> None:
     # Test with a column containing more than two date formats
     date_column = pd.Series(["2022-01-01", "01/02/2022", "20220103", "2022-Jan-04"])
     assert _infer_date_format(date_column) is None
+
+
+@skip_if_no_parallel
+def test_parallelism() -> None:
+    # Test that parallelism works
+    X = _get_clean_dataframe()
+    # the gap encoder should be parallelized on all columns
+    # the one hot encoder should not be parallelized
+    for high_card_cat_transformer in [
+        lambda: GapEncoder(n_components=2, random_state=0),
+        OneHotEncoder,
+    ]:
+        table_vec_no_parallel = TableVectorizer(
+            high_card_cat_transformer=high_card_cat_transformer(),
+            cardinality_threshold=4,
+        )
+        X_trans = table_vec_no_parallel.fit_transform(X)
+        for joblib_backend in ["loky", "threading", "multiprocessing"]:
+            with joblib.parallel_backend(joblib_backend):
+                for n_jobs in [None, 2, -1]:
+                    table_vec = TableVectorizer(
+                        n_jobs=n_jobs,
+                        high_card_cat_transformer=high_card_cat_transformer(),
+                        cardinality_threshold=4,
+                    )
+                    X_trans_parallel = table_vec.fit_transform(X)
+                    # print(table_vec.transform(X))
+                    assert_array_equal(X_trans, X_trans_parallel)
+                    assert table_vec.n_jobs == n_jobs
+                    # assert that all attributes are equal except for
+                    # the n_jobs attribute
+                    for attr in [
+                        "transformers_",
+                        "columns_",
+                        "types_",
+                        "imputed_columns_",
+                    ]:
+                        assert str(getattr(table_vec, attr)) == str(
+                            getattr(table_vec_no_parallel, attr)
+                        )
+                    # assert that get_feature_names_out gives the same result
+                    assert_array_equal(
+                        table_vec.get_feature_names_out(),
+                        table_vec_no_parallel.get_feature_names_out(),
+                    )
+                    # assert that get_params gives the same result expect for n_jobs
+                    # remove n_jobs from the dict
+                    params = table_vec.get_params()
+                    params.pop("n_jobs")
+                    params_no_parallel = table_vec_no_parallel.get_params()
+                    params_no_parallel.pop("n_jobs")
+                    assert str(params) == str(params_no_parallel)
+                    # assert that transform gives the same result
+                    assert_array_equal(
+                        table_vec.transform(X), table_vec_no_parallel.transform(X)
+                    )
