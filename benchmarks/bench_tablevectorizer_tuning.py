@@ -100,7 +100,7 @@ def plot(df: pd.DataFrame):
     # Create the subplots but indexed by 1 value
     for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
         sns.scatterplot(
-            x="time_fj",
+            x="time",
             y="grid_search_results",
             hue="tv_cardinality_threshold",
             size="minhash_n_components",
@@ -113,7 +113,7 @@ def plot(df: pd.DataFrame):
         axes[i % n_rows, i // n_rows].get_legend().remove()
         # Put a legend to the right side if last row
         if i == n_datasets - 1:
-            axes[i % n_rows, i // n_rows].legend(loc="center right")
+            axes[i % n_rows, i // n_rows].legend(loc="lower right")
     plt.show()
 
 
