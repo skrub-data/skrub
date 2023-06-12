@@ -1,3 +1,6 @@
+
+.. _assembling:
+
 ====================================
 Assembling: joining multiple tables
 ====================================
