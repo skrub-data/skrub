@@ -28,7 +28,7 @@ Skrub seeks tradeoffs in terms of flexibility: its high-level APIs are by
 construction restrictive compared to directly manipulating dataframes.
 This is by design, as skrub does not aim to replace tools such as `Pandas
 <https://pandas.pydata.org>`__, `Ibis <https://ibis-project.org>`__,
-`duckdb <https://duckdb.org/>`_.
+`DuckDB <https://duckdb.org/>`_.
 
 To make things simpler, skrub uses default that are chosen empirically to
 give good machine learning, even though these are sometimes heuristic, as
