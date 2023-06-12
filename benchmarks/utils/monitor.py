@@ -183,11 +183,14 @@ def monitor(
             if parametrize is None:
                 # Use the parameters passed by the call
                 parametrization = (call_args, call_kwargs)
+            elif isinstance(parametrize, list):
+                parametrization = (parametrize, ())
             else:
                 parametrization = list(product(parametrize))
 
             df = pd.DataFrame()
             for args, kwargs in tqdm(parametrization):
+
                 call_repr = repr_func(func, args, kwargs)
                 res_dic = exec_func(*args, **kwargs)
                 if not res_dic:  # Dict is empty
