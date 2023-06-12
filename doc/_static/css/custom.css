@@ -158,7 +158,7 @@ div.sk-landing-footer {
 	margin-left: calc(min(max(3%, 3vw), 7rem));
     }
 
-    div.bd-article-container {
+    .bd-main .bd-content div.bd-article-container {
 	max-width: 60rem;
     }
 }
