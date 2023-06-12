@@ -30,16 +30,16 @@
        $('main .toctree-l2').hover(
            function () {
                if ($(this).children('ul').length > 0) {
-                   $(this).css('background-color', '#e5e5e5').children('ul').css('background-color', '#F0F0F0');
+                   $(this).css('background-color', '#88888855').children('ul').css('background-color', '#88888833');
                    $(this).attr('data-content',
                        (!$(this).children('ul').is(':hidden')) ? '\u25bc' : '\u25ba');
                }
                else {
-                   $(this).css('background-color', '#F9F9F9');
+                   $(this).css('background-color', '#88888855');
                }
            },
            function () {
-               $(this).css('background-color', 'white').children('ul').css('background-color', 'white');
+               $(this).css('background-color', '#88888800').children('ul').css('background-color', '#88888800');
                if ($(this).children('ul').length > 0) {
                    $(this).attr('data-content',
                        (!$(this).children('ul').is(':hidden')) ? '\u25bc' : '\u25ba');
