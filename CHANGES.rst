@@ -16,6 +16,9 @@ Major changes
   positionally now have to be passed as keywords.
   :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
 
+* Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
+  added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
+
 Release 0.4.1
 =============
 
@@ -42,9 +45,10 @@ Major changes
 Minor changes
 -------------
 * Improvement of date column detection and date format inference in :class:`TableVectorizer`. The
-  format inference now finds a format which works for all non-missing values of the column, instead
-  of relying on pandas behavior. If no such format exists, the column is not casted to a date column.
+  format inference now tries to find a format which works for all non-missing values of the column, and only
+  tries pandas default inference if it fails.
   :pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
+  :pr:`587` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Release 0.4.0
 =============

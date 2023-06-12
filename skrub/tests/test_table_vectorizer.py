@@ -142,6 +142,10 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
                 "2015/12/31 01:31:34",
                 "2014/01/31 00:32:45",
             ],
+            # this date format is not found by pandas guess_datetime_format
+            # so shoulnd't be found by our _infer_datetime_format
+            # but pandas.to_datetime can still parse it
+            "mm/dd/yy": ["12/1/22", "2/3/05", "2/1/20", "10/7/99", "1/23/04"],
         }
     )
 
@@ -255,6 +259,7 @@ def test_auto_cast() -> None:
         "dmy-": "datetime64[ns]",
         "ymd/": "datetime64[ns]",
         "ymd/_hms:": "datetime64[ns]",
+        "mm/dd/yy": "datetime64[ns]",
     }
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:

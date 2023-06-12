@@ -75,7 +75,7 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[
                 warnings.warn(
                     f"""
                     Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
-                    formats for the dates in column {date_column.name}.
+                    formats for the dates in column '{date_column.name}'.
                     Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
@@ -516,9 +516,32 @@ class TableVectorizer(ColumnTransformer):
                 except (ValueError, TypeError):
                     # Only try to convert to datetime
                     # if the variable isn't numeric.
+                    # try to find the best format
                     format = _infer_date_format(X[col])
-                    if format is not None:
-                        X[col] = pd.to_datetime(X[col], errors="raise", format=format)
+                    # if a format is found, try to apply to the whole column
+                    # if no format is found, pandas will try to parse each row
+                    # with a different engine, which can understand weirder formats
+                    try:
+                        # catch the warnings raised by pandas
+                        # in case the conversion fails
+                        with warnings.catch_warnings(record=True) as w:
+                            X[col] = pd.to_datetime(
+                                X[col], errors="raise", format=format
+                            )
+                        # if the conversion worked, raise pandas warnings
+                        for warning in w:
+                            with warnings.catch_warnings():
+                                # otherwise the warning is considered a duplicate
+                                warnings.simplefilter("always")
+                                warnings.warn(
+                                    "Warning raised by pandas when converting column"
+                                    f" '{col}' to datetime: "
+                                    + str(warning.message),
+                                    UserWarning,
+                                    stacklevel=2,
+                                )
+                    except (ValueError, TypeError):
+                        pass
             # Cast pandas dtypes to numpy dtypes
             # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
