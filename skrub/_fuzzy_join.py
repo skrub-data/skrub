@@ -24,9 +24,9 @@ from sklearn.preprocessing import StandardScaler
 
 def _numeric_encoding(
     main: pd.DataFrame,
-    main_cols: Union[list, str],
+    main_cols: Union[str, List[str]],
     aux: pd.DataFrame,
-    aux_cols: Union[list, str],
+    aux_cols: Union[str, List[str]],
 ) -> tuple:
     """Encoding numerical columns.
 
@@ -60,9 +60,9 @@ def _numeric_encoding(
 
 def _time_encoding(
     main: pd.DataFrame,
-    main_cols: Union[list, str],
+    main_cols: Union[str, List[str]],
     aux: pd.DataFrame,
-    aux_cols: Union[list, str],
+    aux_cols: Union[str, List[str]],
 ) -> tuple:
     """Encoding datetime columns.
 
@@ -84,7 +84,7 @@ def _time_encoding(
     aux_array : array-like
         An array of the encoded columns of the aux table.
     """
-    # datetime representation in nanoseconds
+    # datetime representation in seconds
     aux_array = aux[aux_cols].to_numpy(dtype="datetime64[s]")
     main_array = main[main_cols].to_numpy(dtype="datetime64[s]")
     # Re-weighting to avoid measure specificity
@@ -98,9 +98,9 @@ def _time_encoding(
 
 def _string_encoding(
     main: pd.DataFrame,
-    main_cols: Union[list, str],
+    main_cols: Union[str, List[str]],
     aux: pd.DataFrame,
-    aux_cols: Union[list, str],
+    aux_cols: Union[str, List[str]],
     analyzer: Literal["word", "char", "char_wb"],
     ngram_range: Tuple[int, int],
     encoder: _VectorizerMixin = None,
