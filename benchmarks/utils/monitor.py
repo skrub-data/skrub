@@ -5,23 +5,9 @@ from itertools import product as _product
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Callable, Collection, Dict, List, Optional, Union
-from warnings import warn
 
 import pandas as pd
 from tqdm import tqdm
-
-
-def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
-    """
-    Takes a function (f) and its arguments (args, kwargs), and
-    returns it represented as "f(*args, **kwargs)".
-    For example, with ``f=do_smth``, ``args=(10, 5)`` and
-    ``kwargs={"keyboard": "qwerty"}``,
-    returns "do_smth(10, 5, keyboard=qwerty)".
-    """
-    str_args = ", ".join(args)
-    str_kwargs = ", ".join(f"{k}={v}" for k, v in kwargs.items())
-    return f"{f.__name__}({', '.join(st for st in [str_args, str_kwargs] if st)})"
 
 
 def monitor(
@@ -34,8 +20,24 @@ def monitor(
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
     """Decorator used to monitor the execution of a function.
 
-    The decorated function should return either None, or a dictionary,
-    which will be added to the results.
+    The decorated function should return either:
+    - ``None``, when the goal is only to monitor time of exection and/or memory
+      (parameters ``time`` and/or ``memory`` should be ``True`` (the default));
+    - a dictionary, which will be added to the results. The keys are going
+      to be the columns of the resulting pandas DataFrame.
+    - a list of dictionaries, especially useful when there is an interative
+      process within the function, and we want to monitor the results at each
+      step. There is however a caveat with this method: the time and memory
+      results are representative of the whole process.
+      If you wanted step-by-step results, you should implement the time and/or
+      memory monitoring within your function (and disable global monitoring
+      i.e. ``@monitor(time=False, memory=False)`` if relevant).
+
+    The result of the call of the decorated function is a pandas DataFrame,
+    containing the results of the function for each parameter combination.
+    The columns are the keys of the dictionar(y/ies) returned by the function,
+    and the optional columns ``iter``, ``time`` and ``memory``.
+
     Executions are sequential, so it's usually pretty long to run!
 
     Parameters
@@ -58,8 +60,8 @@ def monitor(
         How many times we want to repeat the execution of the function for more
         representative time and memory extracts.
     save_as : str, optional
-        Can be specified as a benchmark name for the results to be automatically
-        saved on disk.
+        Can be specified as a benchmark name for the results to be
+        automatically saved on disk (directory `benchmarks/results/`).
         E.g. "table_vectorizer_tuning"
         If None (the default), results are not saved on disk, only returned.
 
@@ -88,7 +90,7 @@ def monitor(
     >>>     ...
     >>> function()  # Called without any parameter
 
-    For benchmarking specific combinations, they can be passed as a list:
+    For benchmarking specific combinations, they can be passed as a list of tuples:
     >>> @monitor(
     >>>     parametrize=[
     >>>         ("yes", 10),
@@ -100,16 +102,29 @@ def monitor(
     >>> function()  # Called without any parameter
     """
 
-    def decorator(func: Callable[[Any], None]):
-        """Only catches the decorated function."""
+    reserved_column_names = {"iter", "time", "memory"}
+
+    def decorator(
+        func: Callable[[Any], Union[None, Dict[str, Any], List[Dict[str, Any]]]]
+    ):
+        """
+        Catches the decorated function.
+
+        Parameters
+        ----------
+        func : callable returning none, a dictionary or a list of dictionary
+            The decorated function callable object.
+        """
 
         def wrapper(*call_args, **call_kwargs) -> pd.DataFrame:
             """
+            Catches the decorated function's call arguments.
+
             Parameters
             ----------
-            call_args : Tuple[Any]
+            call_args : tuple of any values
                 Arguments passed by the function call.
-            call_kwargs : Dict[str, Any]
+            call_kwargs : mapping of str to any
                 Keyword arguments passed by the function call.
             """
 
@@ -118,10 +133,7 @@ def monitor(
                     Collection[Collection[Any]], Dict[str, Collection[Any]]
                 ],
             ):
-                """
-                Wrapper for ``itertools.product`` in order to better
-                handle dictionaries.
-                """
+                """``itertools.product`` with better dictionary support."""
                 if isinstance(iterables, dict):
                     for pair in _product(*iterables.values()):
                         yield (), dict(zip(iterables.keys(), pair))
@@ -129,8 +141,11 @@ def monitor(
                     for params in _product(*iterables):
                         return params, {}
 
-            def exec_func(*args, **kwargs) -> Dict[str, List[float]]:
+            def exec_func(*args, **kwargs) -> pd.DataFrame:
                 """
+                Wraps the decorated function call with a single set of
+                parameters, and pre-process the returned values.
+
                 Parameters
                 ----------
                 *args : Tuple[Any]
@@ -140,45 +155,75 @@ def monitor(
 
                 Returns
                 -------
-                Dict[str, List[float]]
-                    a mapping of monitored resource name to a list of values:
-                    - "time": how long the execution took, in seconds.
-                      Only present if ``time=True``.
-                    - "memory": The number of MB of memory used.
-                      Only present if ``memory=True``.
-                    The size of these lists is equal to `repeat`.
+                pd.DataFrame
+                    A DataFrame containing for each column one or more
+                    (depending on the number of repeats and number of
+                    dictionaries returned by the function).
+                    The columns names are the monitored values, and
+                    the optional ``iter``, ``time`` and ``memory``.
                 """
-                _monitored = defaultdict(lambda: [])
+                results = defaultdict(lambda: [])
 
                 # Global initialization of monitored values
                 if memory:
                     tracemalloc.start()
 
                 for n in range(repeat):
-                    _monitored["iter"].append(n)
                     # Initialize loop monitored values
                     if memory:
                         tracemalloc.reset_peak()
                     if time:
                         t0 = perf_counter()
 
-                    res_dic = func(*args, **kwargs)
+                    result = func(*args, **kwargs)
 
-                    if res_dic is not None:
-                        for key, value in res_dic.items():
-                            _monitored[key].append(value)
+                    # To avoid repeating code, we move the result
+                    # dictionar(y/ies) to a list.
+                    result_dictionaries = []
+                    if result is None:
+                        pass
+                    elif isinstance(result, dict):
+                        result_dictionaries = [result]
+                    elif isinstance(result, list):
+                        result_dictionaries = result
 
-                    # Collect and store loop monitored values
-                    if time:
-                        _monitored["time"].append(perf_counter() - t0)
-                    if memory:
-                        _, peak = tracemalloc.get_traced_memory()
-                        _monitored["memory"].append(peak / (1024**2))
+                    # and iterate over that list, saving monitored values,
+                    # as well as results returned by the function call.
+                    for result_dict in result_dictionaries:
+                        results["iter"].append(n)
+                        if time:
+                            results["time"].append(perf_counter() - t0)
+                        if memory:
+                            _, peak = tracemalloc.get_traced_memory()
+                            results["memory"].append(peak / (1024**2))
+                        for key, value in result_dict.items():
+                            results[key].append(value)
 
                 # Global cleanup of monitored values
                 if memory:
                     tracemalloc.stop()
-                return _monitored
+
+                from pprint import pprint
+
+                pprint(results)
+
+                # Now that all the loops have been done, cast some values that
+                # should be the same for all instances.
+                # To simplify this process, we'll convert the results to
+                # a DataFrame
+                df_results = pd.DataFrame(results)
+                # Add arguments to the results in wide format
+                for index, arg in enumerate(args):
+                    df_results[f"arg{index}"] = arg
+                for key, value in kwargs.items():
+                    if isinstance(value, (list, set, tuple, dict)):
+                        # Prevent creating new lines
+                        value = str(value)
+                    df_results[key] = value
+
+                print(df_results)
+
+                return df_results
 
             if parametrize is None:
                 # Use the parameters passed by the call
@@ -190,27 +235,8 @@ def monitor(
 
             df = pd.DataFrame()
             for args, kwargs in tqdm(parametrization):
-
-                call_repr = repr_func(func, args, kwargs)
-                res_dic = exec_func(*args, **kwargs)
-                if not res_dic:  # Dict is empty
-                    warn(
-                        "Nothing was returned during the execution, "
-                        "there is therefore nothing to monitor for. ",
-                        stacklevel=2,
-                    )
-                    return df
-
-                # Add arguments to the results in wide format
-                for index, arg in enumerate(args):
-                    res_dic[f"arg{index}"] = arg
-                for key, value in kwargs.items():
-                    if isinstance(value, (list, set, tuple, dict)):
-                        # Prevent creating new lines
-                        value = str(value)
-                    res_dic[key] = value
-                res_dic["call"] = call_repr
-                df = pd.concat((df, pd.DataFrame(res_dic)), ignore_index=True)
+                res_df = exec_func(*args, **kwargs)
+                df = pd.concat((df, res_df), ignore_index=True)
 
             if save_as is not None:
                 save_dir = Path(__file__).parent.parent / "results"

@@ -60,6 +60,7 @@ def choose_file(results: List[Path]) -> Path:
                 f"{date[:4]}-{date[4:6]}-{date[6:]} - "
                 f"{df.shape[0]}x{repeat} experiments "
             )
+        del df
         choice = input("Choose the result to display: ")
         if not choice.isnumeric() or (int(choice) - 1) not in range(len(results)):
             print(f"Invalid choice {choice!r}, exiting.")
@@ -70,7 +71,7 @@ def choose_file(results: List[Path]) -> Path:
 def get_classification_datasets() -> List[Tuple[DatasetAll, str]]:
     return [
         (fetch_open_payments(), "open_payments"),
-        (fetch_drug_directory(), 'drug_directory'),
+        (fetch_drug_directory(), "drug_directory"),
         (fetch_road_safety(), "road_safety"),
         (fetch_midwest_survey(), "midwest_survey"),
         (fetch_traffic_violations(), "traffic_violations"),
