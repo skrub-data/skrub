@@ -190,6 +190,7 @@ html_theme_options = {
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 html_additional_pages = {"index": "index.html"}
+root_doc = "documentation"
 
 # Needed for the edit button
 html_context = {
