@@ -73,7 +73,7 @@ gdppc.head(3)
 
 ###############################################################################
 # Then another table, with life expectancy by country:
-life_exp = fetch_world_bank_indicator("SP.DYN.LE00.IN", "life_exp").X
+life_exp = fetch_world_bank_indicator("SP.DYN.LE00.IN").X
 life_exp.head(3)
 
 ###############################################################################
