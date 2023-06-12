@@ -26,7 +26,7 @@ backends.
 
 Skrub seeks tradeoffs in terms of flexibility: its high-level APIs are by
 construction restrictive compared to directly manipulating dataframes.
-This is by design, as skrub does not aim to replace tools such as `pandas
+This is by design, as skrub does not aim to replace tools such as `Pandas
 <https://pandas.pydata.org>`__, `Ibis <https://ibis-project.org>`__,
 `duckdb <https://duckdb.org/>`_.
 
