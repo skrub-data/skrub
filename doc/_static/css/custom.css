@@ -115,7 +115,8 @@ div.sk-landing-bg-more-info {
 /** Landing footer *******************************/
 div.sk-landing-footer {
     margin-top: 30px;
-    background-color: var(--pst-color-info);
+    border-top: 1px solid var(--pst-color-shadow);
+    background-color: var(--sg-code-background-color);
     padding-top: 10px;
     padding-bottom: 20px;
 }

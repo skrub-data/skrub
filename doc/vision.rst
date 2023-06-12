@@ -58,7 +58,8 @@ From shorter term to longer term:
 
 - Support time series (eg in the aggregations)
 
-- Interpolator join to be able
+- Interpolator join to join across multiple columns without exact
+  correspondances in the keys
 
 - Release (yes we are not planning to release very soon)
 
