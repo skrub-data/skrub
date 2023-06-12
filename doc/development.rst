@@ -9,6 +9,7 @@ facilitate learning on databases.
 
 .. toctree::
 
+    vision
     about
     CONTRIBUTING.rst
     CHANGES.rst
