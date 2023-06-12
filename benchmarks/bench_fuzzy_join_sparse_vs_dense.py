@@ -526,7 +526,7 @@ benchmark_name = "bench_fuzzy_join_sparse_vs_dense"
 def benchmark(
     sparse: bool,
     dataset_name: str,
-    analyzer: Literal["char_wb", "char"],
+    analyzer: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
 ):
     left_table, right_table, gt = fetch_big_data(dataset_name)
