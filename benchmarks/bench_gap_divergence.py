@@ -142,7 +142,7 @@ benchmark_name = "gap_divergence"
 
 @monitor(
     parametrize={
-        "max_iter_e_step": range(1, 2),
+        "max_iter_e_step": range(1, 21),
     },
     save_as=benchmark_name,
 )
@@ -151,8 +151,8 @@ def benchmark(max_iter_e_step: int):
     Fit a modified `GapEncoder` instance to a single high cardinality column.
     """
     gap = ModifiedGapEncoder(
-        min_iter=2,
-        max_iter=2,
+        min_iter=5,
+        max_iter=5,
         max_iter_e_step=max_iter_e_step,
         random_state=0,
     )
