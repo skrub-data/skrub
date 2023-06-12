@@ -9,13 +9,9 @@
     justify-content: center;
 }
 
-.bd-article-container {
+.landing-container {
     padding-top: 0%;
-}
-
-.bd-main .bd-content .bd-article-container {
     max-width: 100%;
-    /*padding-top: 0%;*/
 }
 
 .bd-main .bd-content {
