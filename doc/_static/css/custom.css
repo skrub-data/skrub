@@ -131,9 +131,11 @@ div.sk-landing-footer {
 }
 
 /** Tweak for very large screens ********************/
-@media (min-width: 1300px) {
+/* At 1200px, we switch from width = 100% to width = 90vw, we do an
+ * affine formula to have a continuous function during the switch */
+@media (min-width: 1200px) {
     .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
-	width: 90vw;
+	width: calc(min(100vw, 90vw + 120px));
 }
 
 @media (min-width: 1200px) {
