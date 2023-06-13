@@ -30,7 +30,7 @@ This is by design, as skrub does not aim to replace tools such as `Pandas
 <https://pandas.pydata.org>`__, `Ibis <https://ibis-project.org>`__,
 `DuckDB <https://duckdb.org/>`_.
 
-To make things simpler, skrub uses default that are chosen empirically to
+To make things simpler, skrub uses defaults that are chosen empirically to
 give good machine learning, even though these are sometimes heuristic, as
 in the :class:`TableVectorizer`.
 
