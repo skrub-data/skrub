@@ -207,7 +207,7 @@ def test_fit_transform() -> None:
 
 
 def test_get_features() -> None:
-    # See https://github.com/dirty-cat/skrub/issues/168
+    # See https://github.com/skrub-data/skrub/issues/168
     sim_enc = SimilarityEncoder()
     X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)

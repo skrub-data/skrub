@@ -215,9 +215,11 @@ class SimilarityEncoder(OneHotEncoder):
 
     Notes
     -----
-    The functionality of :class:`SimilarityEncoder` is easy to explain
-    and understand, but it is not scalable.
-    Instead, the :class:`~skrub.GapEncoder` is usually recommended.
+    The functionality of :class:SimilarityEncoder is easy to explain and understand,
+    but it is not scalable. It is useful only to capture links across a few categories
+    (eg eg: “west”, “north”, “north-west”), but not when there are many categories,
+    as with open-ended entries.
+    Instead, the :class:~skrub.GapEncoder is usually recommended.
 
     References
     ----------
