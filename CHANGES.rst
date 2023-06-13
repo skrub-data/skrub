@@ -26,9 +26,17 @@ Major changes
 Minor changes
 -------------
 
+
 * Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`. These strategy were
   used for scalability reasons, but we recommend using the :class:`MinHashEncoder` or the :class:`GapEncoder` instead.
   :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Some bug fixes for :class:`TableVectorizer` ( :pr:`579`):
+
+  - `check_is_fitted` now looks at `"transformers_"` rather than `"columns_"`
+  - the default of the `remainder` parameter in the docstring is now `"passthrough"`
+    instead of `"drop"` to match the implementation.
+  - uint8 and int8 dtypes are now considered as numerical columns.
 
 
 Before skrub: dirty_cat
