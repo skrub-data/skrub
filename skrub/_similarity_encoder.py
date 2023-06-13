@@ -128,8 +128,7 @@ def ngram_similarity_matrix(
 
 
 class SimilarityEncoder(OneHotEncoder):
-    """Encode string categorical features to a similarity matrix,
-    useful to capture fuzziness across a small number of categories.
+    """Encode string categorical features to a similarity matrix, useful to capture fuzziness across a small number of categories.
 
     The input to this transformer should be an array-like of strings.
     The method is based on calculating the morphological similarities
