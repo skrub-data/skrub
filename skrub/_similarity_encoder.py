@@ -129,7 +129,7 @@ def ngram_similarity_matrix(
 
 
 class SimilarityEncoder(OneHotEncoder):
-    """Encode string categorical features to a similarity matrix.
+    """Encode string categorical features to a similarity matrix, useful to capture fuzziness across a small number of categories.
 
     The input to this transformer should be an array-like of strings.
     The method is based on calculating the morphological similarities
@@ -149,7 +149,7 @@ class SimilarityEncoder(OneHotEncoder):
        we can use ``d << k`` prototypes ``[p1, ..., pd]`` with which
        similarities will be computed:  ``xi -> [sim(xi, p1), ..., sim(xi, pd)]``.
        These prototypes can be provided by the user. Otherwise, we recommend
-       using skrub's MinHashEncoder or GapEncoder in these situations.
+       using the MinHashEncoder or GapEncoder when taking all unique entries leads to too many prototypes.
 
     Parameters
     ----------
@@ -299,7 +299,7 @@ class SimilarityEncoder(OneHotEncoder):
             if categories not in ["auto"]:
                 raise ValueError(
                     f"Got categories={self.categories}, but expected "
-                    "any of {'auto'}. "
+                    "'auto' or a list of prototypes. "
                 )
 
     def fit(self, X, y=None) -> "SimilarityEncoder":
