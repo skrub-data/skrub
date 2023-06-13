@@ -152,7 +152,7 @@ class SimilarityEncoder(OneHotEncoder):
        leads to too many prototypes.
 
     The similarity measure is based on the proportion of common n-grams between
-    two strings, but other string similarity measures could eventually be used.
+    two strings.
 
     Parameters
     ----------
