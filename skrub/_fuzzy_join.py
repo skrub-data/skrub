@@ -430,8 +430,8 @@ def fuzzy_join(
     main_time_cols = main_table[main_cols].select_dtypes(include="datetime").columns
     aux_time_cols = aux_table[aux_cols].select_dtypes(include="datetime").columns
 
-    main_str_cols = list(set(main_cols) - set(main_num_cols) - set(main_time_cols))
-    aux_str_cols = list(set(aux_cols) - set(aux_num_cols) - set(main_time_cols))
+    main_str_cols = main_table[main_cols].select_dtypes(include="object").columns
+    aux_str_cols = aux_table[aux_cols].select_dtypes(include="object").columns
 
     # Check if included columns are numeric:
     any_numeric = len(main_num_cols) != 0
