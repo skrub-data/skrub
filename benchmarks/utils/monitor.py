@@ -1,10 +1,11 @@
 import tracemalloc
+import random
 from collections import defaultdict
 from datetime import datetime
 from itertools import product as _product
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Callable, Collection, Dict, List, Optional, Union
+from typing import Any, Callable, Collection, Dict, List, Optional, Union, Literal
 from warnings import warn
 
 import pandas as pd
@@ -19,7 +20,7 @@ def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
     ``kwargs={"keyboard": "qwerty"}``,
     returns "do_smth(10, 5, keyboard=qwerty)".
     """
-    str_args = ", ".join(args)
+    str_args = ", ".join(map(str, args))
     str_kwargs = ", ".join(f"{k}={v}" for k, v in kwargs.items())
     return f"{f.__name__}({', '.join(st for st in [str_args, str_kwargs] if st)})"
 
@@ -30,6 +31,7 @@ def monitor(
     memory: bool = True,
     time: bool = True,
     repeat: int = 1,
+    n_random_search: Optional[int] = None,
     save_as: Optional[str] = None,
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
     """Decorator used to monitor the execution of a function.
@@ -57,6 +59,10 @@ def monitor(
     repeat : int, optional, default=1
         How many times we want to repeat the execution of the function for more
         representative time and memory extracts.
+    n_random_search : int, optional, default=None
+        If specified, will perform a random search of the parameters, using
+        `n_random_search` random combinations of parameters, instead of
+        the default grid search.
     save_as : str, optional
         Can be specified as a benchmark name for the results to be automatically
         saved on disk.
@@ -184,13 +190,19 @@ def monitor(
                 # Use the parameters passed by the call
                 parametrization = (call_args, call_kwargs)
             elif isinstance(parametrize, list):
-                parametrization = (parametrize, ())
+                parametrization = (
+                    parametrize
+                    if n_random_search is None
+                    else random.sample(parametrize, n_random_search),
+                    (),
+                )
             else:
                 parametrization = list(product(parametrize))
+                if not (n_random_search is None):
+                    parametrization = random.sample(parametrization, n_random_search)
 
             df = pd.DataFrame()
             for args, kwargs in tqdm(parametrization):
-
                 call_repr = repr_func(func, args, kwargs)
                 res_dic = exec_func(*args, **kwargs)
                 if not res_dic:  # Dict is empty
