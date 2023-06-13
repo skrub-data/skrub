@@ -9,13 +9,9 @@ from typing import List, Literal, Optional, Tuple, Union
 import numpy as np
 import sklearn
 from joblib import Parallel, delayed
-from numpy.random import RandomState
 from scipy import sparse
-from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
-from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils import check_random_state
 from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
@@ -132,56 +128,6 @@ def ngram_similarity_matrix(
     return np.nan_to_num(out, copy=False)
 
 
-def get_prototype_frequencies(prototypes: np.ndarray) -> np.ndarray:
-    """
-    Computes the frequencies of the values contained in prototypes
-    Reverse sorts the array by the frequency
-    Returns a numpy array of the values without their frequencies
-    """
-    uniques, counts = np.unique(prototypes, return_counts=True)
-    sorted_indexes = np.argsort(counts)[::-1]
-    return uniques[sorted_indexes], counts[sorted_indexes]
-
-
-def get_kmeans_prototypes(
-    X,
-    n_prototypes: int,
-    hashing_dim: int = 128,
-    ngram_range: Tuple[int, int] = (3, 3),
-    sparse: bool = False,
-    sample_weight=None,
-    random_state: Optional[Union[int, RandomState]] = None,
-) -> np.ndarray:
-    """
-    Computes prototypes based on:
-      - dimensionality reduction (via hashing n-grams)
-      - k-means clustering
-      - nearest neighbor
-    """
-    vectorizer = HashingVectorizer(
-        analyzer="char",
-        norm=None,
-        alternate_sign=False,
-        ngram_range=ngram_range,
-        n_features=hashing_dim,
-    )
-    projected = vectorizer.transform(X)
-    if not sparse:
-        projected = projected.toarray()
-    kmeans = KMeans(n_clusters=n_prototypes, random_state=random_state)
-    kmeans.fit(projected, sample_weight=sample_weight)
-    centers = kmeans.cluster_centers_
-    neighbors = NearestNeighbors()
-    neighbors.fit(projected)
-    indexes_prototypes = np.unique(neighbors.kneighbors(centers, 1)[-1])
-    if indexes_prototypes.shape[0] < n_prototypes:
-        warnings.warn(
-            "Final number of unique prototypes is lower than "
-            + "n_prototypes (expected). "
-        )
-    return np.sort(X[indexes_prototypes])
-
-
 class SimilarityEncoder(OneHotEncoder):
     """Encode string categorical features to a similarity matrix.
 
@@ -202,8 +148,8 @@ class SimilarityEncoder(OneHotEncoder):
     2. To avoid dealing with high-dimensional encodings when `k` is high,
        we can use ``d << k`` prototypes ``[p1, ..., pd]`` with which
        similarities will be computed:  ``xi -> [sim(xi, p1), ..., sim(xi, pd)]``.
-       These prototypes can be automatically sampled from the input data
-       (most frequent categories, KMeans) or provided by the user.
+       These prototypes can be provided by the user. Otherwise, we recommend
+       using skrub's MinHashEncoder or GapEncoder in these situations.
 
     Parameters
     ----------
@@ -215,17 +161,13 @@ class SimilarityEncoder(OneHotEncoder):
         The lower and upper boundaries of the range of n-values for different
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
-    categories : {'auto', 'k-means', 'most_frequent'} or list of list of str
+    categories : {'auto'} or list of list of str
         Categories (unique values) per feature:
 
         - 'auto' : Determine categories automatically from the training data.
         - list : `categories[i]` holds the categories expected in the i-th
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
-        - 'most_frequent' : Computes the most frequent values for every
-           categorical variable
-        - 'k-means' : Computes the K nearest neighbors of K-mean centroids
-           in order to choose the prototype categories
 
         The categories used can be found in the
         :attr:`~SimilarityEncoder.categories_` attribute.
@@ -251,11 +193,6 @@ class SimilarityEncoder(OneHotEncoder):
         otherwise it is a
         :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
         with a number of features equal to `hashing_dim`.
-    n_prototypes : int, optional
-        Useful when `most_frequent` or `k-means` is used.
-        Must be a positive integer.
-    random_state : int or RandomState, optional
-        Useful when `k-means` strategy is used.
     n_jobs : int, optional
         Maximum number of processes used to compute similarity matrices. Used
         only if `fast=True` in :func:`~SimilarityEncoder.transform`.
@@ -321,7 +258,6 @@ class SimilarityEncoder(OneHotEncoder):
 
     categories_: List[np.ndarray]
     n_features_in_: int
-    random_state_: Union[int, RandomState]
     drop_idx_: np.ndarray
     vectorizers_: List[CountVectorizer]
     vocabulary_count_matrices_: List[np.ndarray]
@@ -333,15 +269,11 @@ class SimilarityEncoder(OneHotEncoder):
         *,
         similarity: str = None,
         ngram_range: Tuple[int, int] = (2, 4),
-        categories: Union[
-            Literal["auto", "k-means", "most_frequent"], List[List[str]]
-        ] = "auto",
+        categories: Union[Literal["auto"], List[List[str]]] = "auto",
         dtype: type = np.float64,
         handle_unknown: Literal["error", "ignore"] = "ignore",
         handle_missing: Literal["error", ""] = "",
         hashing_dim: Optional[int] = None,
-        n_prototypes: Optional[int] = None,
-        random_state: Optional[Union[int, RandomState]] = None,
         n_jobs: Optional[int] = None,
     ):
         super().__init__()
@@ -351,8 +283,6 @@ class SimilarityEncoder(OneHotEncoder):
         self.handle_missing = handle_missing
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
-        self.n_prototypes = n_prototypes
-        self.random_state = random_state
         self.n_jobs = n_jobs
 
         if similarity is not None:
@@ -366,35 +296,11 @@ class SimilarityEncoder(OneHotEncoder):
         self.similarity = None
 
         if not isinstance(categories, list):
-            if categories not in ["auto", "k-means", "most_frequent"]:
+            if categories not in ["auto"]:
                 raise ValueError(
                     f"Got categories={self.categories}, but expected "
-                    "any of {'auto', 'k-means', 'most_frequent'}. "
+                    "any of {'auto'}. "
                 )
-        if categories in ["k-means", "most_frequent"] and (
-            n_prototypes is None or n_prototypes == 0
-        ):
-            raise ValueError(
-                "n_prototypes expected None or a positive non null integer. "
-            )
-        if categories == "auto" and n_prototypes is not None:
-            warnings.warn('n_prototypes parameter ignored with category type "auto". ')
-
-    def get_most_frequent(self, prototypes: List[str]) -> np.ndarray:
-        """Get the most frequent category prototypes.
-
-        Parameters
-        ----------
-        prototypes : list of str
-            The list of values for a category variable.
-
-        Returns
-        -------
-        :obj:`~numpy.ndarray`
-            The n_prototypes most frequent values for a category variable.
-        """
-        values, _ = get_prototype_frequencies(prototypes)
-        return values[: self.n_prototypes]
 
     def fit(self, X, y=None) -> "SimilarityEncoder":
         """Fit the instance to `X`.
@@ -454,30 +360,17 @@ class SimilarityEncoder(OneHotEncoder):
                 f"type ({type(self.hashing_dim)}), expected None or int. "
             )
 
-        if self.categories not in ["auto", "most_frequent", "k-means"]:
+        if self.categories not in ["auto"]:
             for cats in self.categories:
                 if not np.all(np.sort(cats) == np.array(cats)):
                     raise ValueError("Unsorted categories are not yet supported. ")
 
         self.categories_ = list()
-        self.random_state_ = check_random_state(self.random_state)
 
         for i in range(n_features):
             Xi = Xlist[i]
             if self.categories == "auto":
                 self.categories_.append(np.unique(Xi))
-            elif self.categories == "most_frequent":
-                self.categories_.append(self.get_most_frequent(Xi))
-            elif self.categories == "k-means":
-                uniques, count = np.unique(Xi, return_counts=True)
-                self.categories_.append(
-                    get_kmeans_prototypes(
-                        uniques,
-                        self.n_prototypes,
-                        sample_weight=count,
-                        random_state=self.random_state_,
-                    )
-                )
             else:
                 if self.handle_unknown == "error":
                     valid_mask = np.in1d(Xi, self.categories[i])
