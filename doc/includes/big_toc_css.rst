@@ -67,7 +67,11 @@
         }
 
     main li.toctree-l1 > a {
-        margin-left: 0.75rem;
+        margin-left: 0px;
+    }
+
+    main li.toctree-l1 ul {
+        padding-inline-start: 0em;
     }
 
     main li.toctree-l2 {
@@ -79,7 +83,7 @@
     }
 
     main li.toctree-l2 ul {
-        padding-left: 40px ;
+        padding-left: 30px ;
     }
 
     main li.toctree-l2:before {
@@ -88,6 +92,7 @@
         color: #777;
         display: inline-block;
         width: 1.5rem;
+        margin-left: -1.5rem;
     }
 
     main li.toctree-l3 {
@@ -121,13 +126,7 @@
         font-size: 100% ;
         margin-bottom: 0;
     }
-  </style>
 
-
-
-.. raw:: html
-
-  <style type="text/css">
     min li {
         list-style-type: none;
     }
@@ -145,19 +144,19 @@
     main li.toctree-l2 {
         font-size: 70%;
         font-weight: normal;
-        margin-left: 40px;
+        margin-left: 30px;
     }
 
     main li.toctree-l3 {
         font-size: 85%;
         font-weight: normal;
-        margin-left: 40px;
+        margin-left: 30px;
     }
 
     main li.toctree-l4 {
-        margin-left: 40px;
+        margin-left: 30px;
     }
- 
+
   </style>
 
 
