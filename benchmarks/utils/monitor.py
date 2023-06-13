@@ -7,6 +7,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any, Callable, Collection, Dict, List, Optional, Union, Literal
 from warnings import warn
+from joblib import Parallel, delayed
 
 import pandas as pd
 from tqdm import tqdm
@@ -32,6 +33,7 @@ def monitor(
     time: bool = True,
     repeat: int = 1,
     n_random_search: Optional[int] = None,
+    n_jobs: Optional[int] = None,
     save_as: Optional[str] = None,
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
     """Decorator used to monitor the execution of a function.
@@ -63,6 +65,13 @@ def monitor(
         If specified, will perform a random search of the parameters, using
         `n_random_search` random combinations of parameters, instead of
         the default grid search.
+    n_jobs : int, optional, default=None
+        If specified, will run the function in parallel, using `n_jobs` threads.
+        Note: if `memory` is also set, consider that as the memory profiler runs
+        in the main thread, the timings might be different from an execution
+        without the memory monitoring. #TODO check this
+        For measuring the time, be careful about setting the number of threads
+        to a value higher than the number of cores available on your machine.
     save_as : str, optional
         Can be specified as a benchmark name for the results to be automatically
         saved on disk.
@@ -201,8 +210,7 @@ def monitor(
                 if not (n_random_search is None):
                     parametrization = random.sample(parametrization, n_random_search)
 
-            df = pd.DataFrame()
-            for args, kwargs in tqdm(parametrization):
+            def process(args, kwargs):
                 call_repr = repr_func(func, args, kwargs)
                 res_dic = exec_func(*args, **kwargs)
                 if not res_dic:  # Dict is empty
@@ -211,7 +219,7 @@ def monitor(
                         "there is therefore nothing to monitor for. ",
                         stacklevel=2,
                     )
-                    return df
+                    return None
 
                 # Add arguments to the results in wide format
                 for index, arg in enumerate(args):
@@ -222,7 +230,15 @@ def monitor(
                         value = str(value)
                     res_dic[key] = value
                 res_dic["call"] = call_repr
-                df = pd.concat((df, pd.DataFrame(res_dic)), ignore_index=True)
+                return pd.DataFrame(res_dic)
+
+            # Set n_jobs to the number of cores you want to use
+            result_list = Parallel(n_jobs=n_jobs)(
+                delayed(process)(args, kwargs) for args, kwargs in tqdm(parametrization)
+            )
+
+            # Concatenate all resulting dataframes
+            df = pd.concat(result_list, ignore_index=True)
 
             if save_as is not None:
                 save_dir = Path(__file__).parent.parent / "results"

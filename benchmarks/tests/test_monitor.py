@@ -1,5 +1,7 @@
 import pytest
 from benchmarks.utils import monitor, repr_func  # replace with the actual import path
+from sklearn.utils._testing import skip_if_no_parallel
+import time
 
 
 def test_repr_func():
@@ -58,3 +60,36 @@ def test_monitor_random_search():
     df = test_func()
     assert len(df) == 4  # only 4 random parameters
     assert df["call"][0] != df["call"][1] != df["call"][2] != df["call"][3]
+
+
+@skip_if_no_parallel
+def test_parallelism():
+    @monitor(parametrize={"a": [1, 2, 3, 4]}, n_jobs=2)
+    def test_func(a):
+        return {"output": a}
+
+    df = test_func()
+    assert len(df) == 4
+    # check that the calls are different
+    assert df["call"][0] != df["call"][1] != df["call"][2] != df["call"][3]
+
+    # check that the time measured is similar to the sequential version
+    @monitor(parametrize={"a": [1, 2, 3, 4]}, n_jobs=2)
+    def test_func(a):
+        time.sleep(3)
+        return {"output": a}
+
+    df = test_func()
+
+    @monitor(parametrize={"a": [1, 2, 3, 4]}, n_jobs=1)
+    def test_func(a):
+        time.sleep(3)
+        return {"output": a}
+
+    df2 = test_func()
+
+    assert df["time"].mean() < df2["time"].mean() * 1.2
+    assert df["time"].mean() > df2["time"].mean() * 0.8
+
+    # TODO: check that the memory measured is similar to the sequential version
+    # if we can find a way to do it
