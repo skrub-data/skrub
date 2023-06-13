@@ -3,7 +3,6 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
-import warnings
 from typing import List, Literal, Optional, Tuple, Union
 
 import numpy as np
@@ -129,7 +128,8 @@ def ngram_similarity_matrix(
 
 
 class SimilarityEncoder(OneHotEncoder):
-    """Encode string categorical features to a similarity matrix, useful to capture fuzziness across a small number of categories.
+    """Encode string categorical features to a similarity matrix,
+    useful to capture fuzziness across a small number of categories.
 
     The input to this transformer should be an array-like of strings.
     The method is based on calculating the morphological similarities
@@ -149,14 +149,14 @@ class SimilarityEncoder(OneHotEncoder):
        we can use ``d << k`` prototypes ``[p1, ..., pd]`` with which
        similarities will be computed:  ``xi -> [sim(xi, p1), ..., sim(xi, pd)]``.
        These prototypes can be provided by the user. Otherwise, we recommend
-       using the MinHashEncoder or GapEncoder when taking all unique entries leads to too many prototypes.
+       using the MinHashEncoder or GapEncoder when taking all unique entries
+       leads to too many prototypes.
+
+    The similarity measure is based on the proportion of common n-grams between
+    two strings, but other string similarity measures could eventually be used.
 
     Parameters
     ----------
-    similarity : None
-        Deprecated in skrub 0.3, will be removed in 0.5.
-        Was used to specify the type of pairwise string similarity to use.
-        Since 0.3, only the ngram similarity is supported.
     ngram_range : int 2-tuple (min_n, max_n), default=(2, 4)
         The lower and upper boundaries of the range of n-values for different
         n-grams used in the string similarity. All values of `n` such
@@ -269,7 +269,6 @@ class SimilarityEncoder(OneHotEncoder):
     def __init__(
         self,
         *,
-        similarity: str = None,
         ngram_range: Tuple[int, int] = (2, 4),
         categories: Union[Literal["auto"], List[List[str]]] = "auto",
         dtype: type = np.float64,
@@ -286,16 +285,6 @@ class SimilarityEncoder(OneHotEncoder):
         self.ngram_range = ngram_range
         self.hashing_dim = hashing_dim
         self.n_jobs = n_jobs
-
-        if similarity is not None:
-            warnings.warn(
-                'The "similarity" argument is deprecated since skrub 0.3, '
-                "and will be removed in 0.5."
-                "The n-gram similarity is the only one currently supported. ",
-                category=UserWarning,
-                stacklevel=2,
-            )
-        self.similarity = None
 
         if not isinstance(categories, list):
             if categories not in ["auto"]:
