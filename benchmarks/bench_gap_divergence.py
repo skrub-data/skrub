@@ -89,8 +89,6 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
                     # Compute the norm of the update of W in the last batch
                     W_change = np.linalg.norm(self.W_ - W_last) / np.linalg.norm(W_last)
 
-            print(self.W_.shape, self.A_.shape, self.B_.shape)
-
             self.benchmark_results_.append(
                 {
                     "score": score,
@@ -159,7 +157,7 @@ def benchmark(max_iter_e_step: int):
     )
     gap.fit(fetch_employee_salaries().X[["employee_position_title"]])
 
-    results: List[Dict[str, Union[float, ...]]] = []
+    results = []
     for i, result in enumerate(gap.benchmark_results_):
         loop_results = {
             "gap_iter": i + 1,
@@ -187,7 +185,7 @@ def plot(df: pd.DataFrame):
 
 if __name__ == "__main__":
     _args = ArgumentParser(
-        description="Benchmark for the batch feature of the MinHashEncoder.",
+        description="Benchmark for the GapEncoder divergence",
         parents=[default_parser],
     ).parse_args()
 
