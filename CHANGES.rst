@@ -23,6 +23,17 @@ Major changes
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
+Minor changes
+-------------
+
+* Some bug fixes for :class:`TableVectorizer` ( :pr:`579`):
+
+  - `check_is_fitted` now looks at `"transformers_"` rather than `"columns_"`
+  - the default of the `remainder` parameter in the docstring is now `"passthrough"`
+    instead of `"drop"` to match the implementation.
+  - uint8 and int8 dtypes are now considered as numerical columns.
+
+
 Before skrub: dirty_cat
 ========================
 

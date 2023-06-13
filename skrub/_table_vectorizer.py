@@ -243,14 +243,13 @@ class TableVectorizer(ColumnTransformer):
         it is left to the user to manage.
         See also attribute :attr:`~skrub.TableVectorizer.imputed_columns_`.
 
-    remainder : {'drop', 'passthrough'} or Transformer, default='drop'
-        By default, only the specified columns in `transformers` are
-        transformed and combined in the output, and the non-specified
-        columns are dropped. (default 'drop').
-        By specifying `remainder='passthrough'`, all remaining columns that
-        were not specified in `transformers` will be automatically passed
-        through. This subset of columns is concatenated with the output of
-        the transformers.
+    remainder : {'drop', 'passthrough'} or Transformer, default='passthrough'
+        By default, all remaining columns that were not specified in `transformers` 
+        will be automatically passed through. This subset of columns is concatenated 
+        with the output of the transformers. (default 'passthrough').
+        By specifying `remainder='drop'`, only the specified columns 
+        in `transformers` are transformed and combined in the output, and the 
+        non-specified columns are dropped.
         By setting `remainder` to be an estimator, the remaining
         non-specified columns will use the `remainder` estimator. The
         estimator must support :term:`fit` and :term:`transform`.
@@ -489,11 +488,6 @@ class TableVectorizer(ColumnTransformer):
             The same :obj:`~pandas.DataFrame`, with its columns cast to their
             best possible data type.
         """
-        # We replace in all columns regardless of their type,
-        # as we might have some false missing
-        # in numerical columns for instance.
-        X = _replace_false_missing(X)
-
         # Handle missing values
         for col in X.columns:
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
@@ -549,7 +543,7 @@ class TableVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(X[col].dtype.type, errors="ignore")
                 except (TypeError, ValueError):
                     pass
-            self.types_.update({col: X[col].dtype})
+            self.types_[col] = X[col].dtype
         return X
 
     def _apply_cast(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -620,6 +614,12 @@ class TableVectorizer(ColumnTransformer):
             X = X.copy()
 
         self.columns_ = X.columns
+
+        # We replace in all columns regardless of their type,
+        # as we might have some false missing
+        # in numerical columns for instance.
+        X = _replace_false_missing(X)
+
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
         # We'll keep the results in order to apply the types in `transform`.
@@ -628,19 +628,7 @@ class TableVectorizer(ColumnTransformer):
 
         # Select columns by dtype
         numeric_columns = X.select_dtypes(
-            include=[
-                "int",
-                "float",
-                np.float64,
-                np.float32,
-                np.float16,
-                np.int64,
-                np.int32,
-                np.int16,
-                np.uint64,
-                np.uint32,
-                np.uint16,
-            ]
+            include="number"
         ).columns.to_list()
         categorical_columns = X.select_dtypes(
             include=["string", "object", "category"]
@@ -650,26 +638,17 @@ class TableVectorizer(ColumnTransformer):
         ).columns.to_list()
 
         # Classify categorical columns by cardinality
-        _nunique_values = {  # Cache results
-            col: X[col].nunique() for col in categorical_columns
-        }
-        low_card_cat_columns = [
-            col
-            for col in categorical_columns
-            if _nunique_values[col] < self.cardinality_threshold
-        ]
-        high_card_cat_columns = [
-            col
-            for col in categorical_columns
-            if _nunique_values[col] >= self.cardinality_threshold
-        ]
-        # Clear cache
-        del _nunique_values
+        low_card_cat_columns, high_card_cat_columns = [], []
+        for col in categorical_columns:
+            if X[col].nunique() < self.cardinality_threshold:
+                low_card_cat_columns.append(col)    
+            else:
+                high_card_cat_columns.append(col)
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
         all_transformers: List[Tuple[str, OptionalTransformer, List[str]]] = [
-            ("numeric", self.numerical_transformer, numeric_columns),
+            ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
             ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
             ("high_card_cat", self.high_card_cat_transformer_, high_card_cat_columns),
@@ -685,35 +664,24 @@ class TableVectorizer(ColumnTransformer):
 
         self.imputed_columns_ = []
         if self.impute_missing != "skip":
-            # First, replace false missing
-            # This is technically redundant with the call made in `_auto_cast`,
-            # but we do it again anyway.
-            X = _replace_false_missing(X)
-
-            # Then, impute if suiting
+            # Impute if suiting
             if _has_missing_values(X):
                 if self.impute_missing == "force":
-                    for col in X.columns:
-                        # Only impute categorical columns
-                        if col in categorical_columns:
-                            X[col] = _replace_missing_in_cat_col(X[col])
-                            self.imputed_columns_.append(col)
+                    # Only impute categorical columns
+                    for col in categorical_columns:
+                        X[col] = _replace_missing_in_cat_col(X[col])
+                        self.imputed_columns_.append(col)
 
                 elif self.impute_missing == "auto":
                     for name, trans, cols in all_transformers:
-                        impute: bool = False
-
-                        if isinstance(trans, OneHotEncoder) and parse_version(
-                            sklearn_version
-                        ) < parse_version("0.24"):
-                            impute = True
-
-                        if impute:
-                            for col in cols:
-                                # Only impute categorical columns
-                                if col in categorical_columns:
-                                    X[col] = _replace_missing_in_cat_col(X[col])
-                                    self.imputed_columns_.append(col)
+                        if (
+                            isinstance(trans, OneHotEncoder)
+                            and parse_version(sklearn_version) < parse_version("0.24")
+                        ):
+                            # Only impute categorical columns
+                            for col in categorical_columns:
+                                X[col] = _replace_missing_in_cat_col(X[col])
+                                self.imputed_columns_.append(col)
 
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas gives different types depending on whether a column has
@@ -754,7 +722,7 @@ class TableVectorizer(ColumnTransformer):
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
         """
-        check_is_fitted(self, attributes=["columns_"])
+        check_is_fitted(self, attributes=["transformers_"])
         if X.shape[1] != len(self.columns_):
             raise ValueError(
                 "Passed array does not match column count of "
