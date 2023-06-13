@@ -16,6 +16,13 @@ Major changes
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
+Minor changes
+-------------
+
+* Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`. These strategy were
+  used for scalability reasons, but we recommend using the :class:`MinHashEncoder` or the :class:`GapEncoder` instead.
+  :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+
 Release 0.4.1
 =============
 
