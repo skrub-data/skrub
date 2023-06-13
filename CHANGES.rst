@@ -19,7 +19,7 @@ Major changes
 Minor changes
 -------------
 
-* Some bug fixes for :class:`TableVectorizer`:
+* Some bug fixes for :class:`TableVectorizer` ( :pr:`579`):
 
   - `check_is_fitted` now looks at `"transformers_"` rather than `"columns_"`
   - the default of the `remainder` parameter in the docstring is now `"passthrough"`
