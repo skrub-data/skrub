@@ -1,11 +1,14 @@
 """
 This benchmark compares the performance of using the HashingVectorizer
 or the CountVectorizer for the fuzzy join.
+
 The results seem to indicate that the HashingVectorizer is almost always
 faster than the CountVectorizer, without any significant loss in accuracy.
 This leads to the conclusion that the HashingVectorizer should be used
 by default for the fuzzy join, with the option to use the CountVectorizer if
 results are unexpected (e.g hash collisions).
+
+Date: December 2022
 """
 
 import math
@@ -17,7 +20,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from fuzzy_join_benchmark import evaluate, fetch_data
+from autofj.datasets import load_data
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import (
     CountVectorizer,
@@ -26,6 +29,7 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from utils import default_parser, find_result, monitor
+from utils.join import evaluate
 
 
 # Function kept for reference
@@ -286,7 +290,7 @@ def fuzzy_join(
 # Benchmarking accuracy and speed on actual datasets
 #########################################################
 
-benchmark_name = "fuzzy_join_encoder_benchmark"
+benchmark_name = "bench_fuzzy_join_count_vs_hash"
 
 
 @monitor(
@@ -306,7 +310,7 @@ benchmark_name = "fuzzy_join_encoder_benchmark"
             "Wrestler",
             "EthnicGroup",
         ],
-        "analyser": ["char_wb", "char", "word"],
+        "analyzer": ["char_wb", "char", "word"],
         "ngram_range": [(2, 4), (2, 3), (2, 2)],
     },
     save_as=benchmark_name,
@@ -315,10 +319,10 @@ benchmark_name = "fuzzy_join_encoder_benchmark"
 def benchmark(
     encoder: Literal["hash", "count"],
     dataset_name: str,
-    analyser: Literal["char_wb", "char", "word"],
+    analyzer: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
 ):
-    left_table, right_table, gt = fetch_data(dataset_name)
+    left_table, right_table, gt = load_data(dataset_name)
 
     start_time = perf_counter()
     joined_fj = fuzzy_join(
@@ -328,7 +332,7 @@ def benchmark(
         left_on="title",
         right_on="title",
         encoder=encoder,
-        analyzer=analyser,
+        analyzer=analyzer,
         ngram_range=ngram_range,
     )
     end_time = perf_counter()
@@ -359,6 +363,7 @@ def plot(df: pd.DataFrame):
         squeeze=False,
         figsize=(20, 5),
     )
+    plt.tight_layout()
     # Create the subplots but indexed by 1 value
     for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
         sns.scatterplot(
@@ -366,7 +371,7 @@ def plot(df: pd.DataFrame):
             y="f1",
             hue="encoder",
             style="ngram_range",
-            size="analyser",
+            size="analyzer",
             alpha=0.8,
             data=df[df["dataset_name"] == dataset_name],
             ax=axes[i % n_rows, i // n_rows],
@@ -390,7 +395,7 @@ if __name__ == "__main__":
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
-        df = pd.read_csv(result_file)
+        df = pd.read_parquet(result_file)
 
     if _args.plot:
         plot(df)

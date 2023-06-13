@@ -183,13 +183,14 @@ def monitor(
             if parametrize is None:
                 # Use the parameters passed by the call
                 parametrization = (call_args, call_kwargs)
-            elif isinstance(parametrize, dict):
+            elif isinstance(parametrize, list):
                 parametrization = (parametrize, ())
             else:
                 parametrization = list(product(parametrize))
 
             df = pd.DataFrame()
             for args, kwargs in tqdm(parametrization):
+
                 call_repr = repr_func(func, args, kwargs)
                 res_dic = exec_func(*args, **kwargs)
                 if not res_dic:  # Dict is empty
@@ -215,8 +216,8 @@ def monitor(
                 save_dir = Path(__file__).parent.parent / "results"
                 save_dir.mkdir(exist_ok=True)
                 now = datetime.now()
-                file = f"{save_as}-{now.year}{now.month}{now.day}.csv"
-                df.to_csv(save_dir / file)
+                file = f"{save_as}-{now.year}{now.month}{now.day}.parquet"
+                df.to_parquet(save_dir / file)
 
             return df
 

@@ -1,5 +1,17 @@
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
+
+from skrub.datasets import (
+    fetch_open_payments,
+    fetch_drug_directory,
+    fetch_road_safety,
+    fetch_midwest_survey,
+    fetch_medical_charge,
+    fetch_employee_salaries,
+    fetch_traffic_violations,
+)
+
+from skrub.datasets._fetching import DatasetAll
 
 import pandas as pd
 
@@ -16,7 +28,7 @@ def find_results(bench_name: str) -> List[Path]:
     return [
         file
         for file in results_dir.iterdir()
-        if file.stem.startswith(bench_name) and file.suffix == ".csv"
+        if file.stem.startswith(bench_name) and file.suffix == ".parquet"
     ]
 
 
@@ -35,7 +47,7 @@ def choose_file(results: List[Path]) -> Path:
     else:
         for i, file in enumerate(results):
             # Read the result file to get its dimensions
-            df = pd.read_csv(file)
+            df = pd.read_parquet(file)
             if "iter" not in df.columns:
                 print(f"Invalid file {file.name!r}, skipping.")
                 continue
@@ -53,3 +65,26 @@ def choose_file(results: List[Path]) -> Path:
             print(f"Invalid choice {choice!r}, exiting.")
             exit()
         return results[int(choice) - 1]
+
+
+def get_classification_datasets() -> List[Tuple[DatasetAll, str]]:
+    return [
+        (fetch_open_payments(), "open_payments"),
+        (fetch_drug_directory(), 'drug_directory'),
+        (fetch_road_safety(), "road_safety"),
+        (fetch_midwest_survey(), "midwest_survey"),
+        (fetch_traffic_violations(), "traffic_violations"),
+    ]
+
+
+def get_regression_datasets() -> List[Tuple[DatasetAll, str]]:
+    return [
+        (fetch_medical_charge(), "medical_charge"),
+        (fetch_employee_salaries(), "employee_salaries"),
+    ]
+
+
+def get_dataset(info: Tuple[DatasetAll, str]) -> Tuple[pd.DataFrame, pd.Series]:
+    y = info.y
+    X = info.X
+    return X, y
