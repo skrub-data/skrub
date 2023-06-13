@@ -4,6 +4,7 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 
+import copy
 import warnings
 from itertools import chain
 from typing import Dict, List, Literal, Optional, Tuple, Union
@@ -495,7 +496,7 @@ class TableVectorizer(ColumnTransformer):
                         # selection is done with one dimension
                         cols = cols[0]
 
-                yield (name, trans, cols, get_weight(name))
+                yield (name, copy.deepcopy(trans), cols, get_weight(name))
 
     def _more_tags(self):
         """
