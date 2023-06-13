@@ -4,7 +4,6 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 
-import copy
 import warnings
 from itertools import chain
 from typing import Dict, List, Literal, Optional, Tuple, Union
@@ -464,7 +463,7 @@ class TableVectorizer(ColumnTransformer):
         output_config = _get_output_config("transform", self)
         for name, trans, columns in transformers:
             ########################################
-            # This is where we deviate from the original implementation
+            # We deviate from the original implementation
             if isinstance(trans, UNIVARIATE_TRANSFORMERS):
                 columns_ = [[col] for col in columns]
             else:
@@ -495,8 +494,13 @@ class TableVectorizer(ColumnTransformer):
                     if columns_is_scalar:
                         # selection is done with one dimension
                         cols = cols[0]
-
-                yield (name, copy.deepcopy(trans), cols, get_weight(name))
+                # Another deviation from the original implementation
+                if isinstance(trans, UNIVARIATE_TRANSFORMERS) and len(columns_) > 1:
+                    # this should only happen before fitting
+                    assert not fitted
+                    yield (name, clone(trans), cols, get_weight(name))
+                else:
+                    yield (name, trans, cols, get_weight(name))
 
     def _more_tags(self):
         """
@@ -824,16 +828,6 @@ class TableVectorizer(ColumnTransformer):
             print(f"[TableVectorizer] Assigned transformers: {self.transformers}")
 
         X_enc = super().fit_transform(X, y)
-
-        # if the same transformer is used on several columns, merge the columns in self.transformers_
-        # this is needed because we override the _iter method of ColumnTransformer
-        transformers_merged = {}
-        for name, enc, cols in self.transformers_:
-            if name in transformers_merged:
-                transformers_merged[name][2].extend(cols)
-            else:
-                transformers_merged[name] = (name, enc, cols)
-        self.transformers_ = list(transformers_merged.values())
 
         # For the "remainder" columns, the `ColumnTransformer` `transformers_`
         # attribute contains the index instead of the column name,

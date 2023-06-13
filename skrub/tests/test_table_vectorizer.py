@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import sklearn
+from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
@@ -612,6 +613,26 @@ def test__infer_date_format() -> None:
     assert _infer_date_format(date_column) is None
 
 
+def test_column_by_column():
+    X = _get_clean_dataframe()
+    table_vec_all_cols = TableVectorizer(
+        high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
+        cardinality_threshold=4,
+    )
+    table_vec_all_cols.fit(X)
+    for col in X.columns:
+        table_vec_one_col = TableVectorizer(
+            high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
+            cardinality_threshold=4,
+        )
+        table_vec_one_col.fit(X[[col]])
+        assert table_vec_one_col.get_feature_names_out() == [
+            feat
+            for feat in table_vec_all_cols.get_feature_names_out()
+            if feat.startswith(col)
+        ]
+
+
 @skip_if_no_parallel
 def test_parallelism() -> None:
     # Test that parallelism works
@@ -666,3 +687,48 @@ def test_parallelism() -> None:
                     assert_array_equal(
                         table_vec.transform(X), table_vec_no_parallel.transform(X)
                     )
+
+
+def test_original_iter() -> None:
+    # Test if the behavior changed when we overrided the _ iter
+    # method from the ColumnTransformer
+    # only the transformers_ attribute should be different
+
+    X = _get_clean_dataframe()
+    table_vec_old_iter = TableVectorizer(
+        high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
+        cardinality_threshold=4,
+    )
+    table_vec_old_iter._iter = lambda *args, **kwargs: ColumnTransformer._iter(
+        table_vec_old_iter, *args, **kwargs
+    )
+    table_vec_new_iter = TableVectorizer(
+        high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
+        cardinality_threshold=4,
+    )
+    assert_array_equal(
+        table_vec_old_iter.fit_transform(X), table_vec_new_iter.fit_transform(X)
+    )
+    # assert that all attributes are equal except for
+    # the transformers_ attribute
+    for attr in [
+        "n_jobs",
+        "columns_",
+        "types_",
+        "imputed_columns_",
+    ]:
+        assert str(getattr(table_vec_old_iter, attr)) == str(
+            getattr(table_vec_new_iter, attr)
+        )
+    # assert that get_feature_names_out gives the same result
+    assert_array_equal(
+        table_vec_old_iter.get_feature_names_out(),
+        table_vec_new_iter.get_feature_names_out(),
+    )
+    # assert that get_params gives the same result expect for n_jobs
+    # remove n_jobs from the dict
+    params_old_iter = table_vec_old_iter.get_params()
+    params_new_iter = table_vec_new_iter.get_params()
+    assert str(params_old_iter) == str(params_new_iter)
+    # assert that transform gives the same result
+    assert_array_equal(table_vec_old_iter.transform(X), table_vec_new_iter.transform(X))
