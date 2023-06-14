@@ -116,6 +116,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
+        *,
         n_components: int = 30,
         ngram_range: Tuple[int, int] = (2, 4),
         hashing: Literal["fast", "murmur"] = "fast",
@@ -232,7 +233,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, ) or (n_samples, 1)
+        X : array-like, shape (n_samples, ) or (n_samples, n_columns)
             The string data to encode. Only here for compatibility.
         y : None
             Unused, only here for compatibility.
@@ -261,12 +262,12 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, ) or (n_samples, 1)
+        X : array-like, shape (n_samples, ) or (n_samples, n_columns)
             The string data to encode.
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
+        :obj:`~numpy.ndarray` of shape (n_samples, n_columns * n_components)
             Transformed input.
         """
         check_is_fitted(self, "hash_dict_")

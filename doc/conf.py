@@ -183,12 +183,16 @@ html_theme_options = {
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "footer_start": ["test.html", "test.html"],
-    # "secondary_sidebar_items": ["page-toc.html"],  # Remove the source buttons
+    #"secondary_sidebar_items": ["index.html"],  # Remove the source buttons
     #"switcher": {
     #    "json_url": json_url,
     #    "version_match": version_match,
     #},
 }
+
+# Additional templates that should be rendered to pages, maps page names to
+# template names.
+html_additional_pages = {"index": "index.html"}
 
 # Needed for the edit button
 html_context = {

@@ -142,6 +142,10 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
                 "2015/12/31 01:31:34",
                 "2014/01/31 00:32:45",
             ],
+            # this date format is not found by pandas guess_datetime_format
+            # so shoulnd't be found by our _infer_datetime_format
+            # but pandas.to_datetime can still parse it
+            "mm/dd/yy": ["12/1/22", "2/3/05", "2/1/20", "10/7/99", "1/23/04"],
         }
     )
 
@@ -171,6 +175,7 @@ def _test_possibilities(X) -> None:
     # Test with higher cardinality threshold and no numeric transformer
     expected_transformers_2 = {
         "low_card_cat": ["str1", "str2", "cat1", "cat2"],
+        "numeric": ["int", "float"],
     }
     vectorizer_default = TableVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
@@ -255,6 +260,7 @@ def test_auto_cast() -> None:
         "dmy-": "datetime64[ns]",
         "ymd/": "datetime64[ns]",
         "ymd/_hms:": "datetime64[ns]",
+        "mm/dd/yy": "datetime64[ns]",
     }
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:
@@ -326,6 +332,8 @@ def test_get_feature_names_out() -> None:
 
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_pass = [
+        "int",
+        "float",
         "str1_public",
         "str2_chef",
         "str2_lawyer",
@@ -338,8 +346,6 @@ def test_get_feature_names_out() -> None:
         "cat2_40K+",
         "cat2_50K+",
         "cat2_60K+",
-        "int",
-        "float",
     ]
     if parse_version(sklearn.__version__) < parse_version("1.0"):
         assert vec_w_pass.get_feature_names() == expected_feature_names_pass
@@ -351,6 +357,8 @@ def test_get_feature_names_out() -> None:
 
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_drop = [
+        "int",
+        "float",
         "str1_public",
         "str2_chef",
         "str2_lawyer",
@@ -387,7 +395,7 @@ def test_transform() -> None:
     x = np.array(s).reshape(1, -1)
     x_trans = table_vec.transform(x)
     assert x_trans.tolist() == [
-        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 34.0, 5.5]
+        [34.0, 5.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     ]
     # To understand the list above:
     # print(dict(zip(table_vec.get_feature_names_out(), x_trans.tolist()[0])))
@@ -512,9 +520,9 @@ def test_handle_unknown() -> None:
         )  # 2 for binary columns which get one
         # cateogry dropped
         assert np.allclose(
-            x_trans_unknown[0, :n_zeroes], np.zeros_like(x_trans_unknown[0, :n_zeroes])
+            x_trans_unknown[0, 2:n_zeroes], np.zeros_like(x_trans_unknown[0, 2:n_zeroes])
         )
-        assert x_trans_unknown[0, n_zeroes] != 0
+        assert x_trans_unknown[0, 0] != 0
         assert not np.allclose(
             x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
         )

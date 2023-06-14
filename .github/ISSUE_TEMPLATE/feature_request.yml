@@ -1,0 +1,50 @@
+name: Feature Request
+description: Suggest an improvement for skrub
+labels: ["enhancement"]
+
+body:
+  - type: markdown
+    attributes:
+      value: >
+        #### Before submitting a feature request, please make sure it hasn't been already
+        addressed by searching through [the past issues](https://github.com/skrub-data/skrub/issues)
+        and the [pull requests](https://github.com/skrub-data/skrub/pulls).
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem Description
+      description: >
+        Please describe what problem the feature would solve.
+      placeholder: >
+        I wish I could use skrub to ...
+    validations:
+      required: true
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature Description
+      description: >
+        Please describe how the new feature would be implemented, using pseudocode if relevant.
+      placeholder: >
+        Describe the feature extensively ...
+    validations:
+      required: true
+  - type: textarea
+    id: alternative
+    attributes:
+      label: Alternative Solutions
+      description: >
+        Please describe any alternative solution (existing functionality, 3rd party package, etc.)
+        that are current workarounds.
+      placeholder: >
+        e.g.
+        - The package `x` implements a partial solution ...
+        - I wrote this function, which does it partially: ...
+        - I'm able to use `class.method` to do that, but it would be better to have this implementation ...
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: >
+        Please provide any relevant GitHub issues, code examples or references that help describe and support
+        the feature request.

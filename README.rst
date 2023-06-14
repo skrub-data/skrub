@@ -1,12 +1,13 @@
 `skrub`
-===========
+=======
 
 .. image:: https://skrub-data.github.io/stable/_static/skrub.svg
    :align: center
+   :width: 50 %
    :alt: skrub logo
 
-
-|py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
+.. class:: center
+    |py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
 
 .. |py_ver| image:: https://img.shields.io/pypi/pyversions/skrub
 .. |pypi_var| image:: https://img.shields.io/pypi/v/skrub?color=informational
@@ -15,8 +16,9 @@
 .. |circleci| image:: https://img.shields.io/circleci/build/github/skrub-data/skrub/main?label=CircleCI
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
-`skrub <https://skrub-data.github.io/>`_ is a Python library
-that facilitates prepping your tables for machine learning.
+
+`skrub <https://skrub-data.github.io/>`_ - formerly *dirty_cat* - is a Python
+library that facilitates prepping your tables for machine learning.
 
 For a detailed description of the problem of encoding dirty categorical data, see
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
@@ -25,7 +27,7 @@ and `Encoding high-cardinality string categorical variables <https://hal.inria.f
 If you like the package, please *spread the word*, and ⭐ `the repository <https://github.com/skrub-data/skrub/>`_!
 
 What can `skrub` do?
-------------------------
+--------------------
 
 `skrub` provides tools (``TableVectorizer``, ``fuzzy_join``...) and
 encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
@@ -34,8 +36,8 @@ for which we usually identify three common cases: **similarities, typos and vari
 `The first example notebook <https://skrub-data.github.io/stable/auto_examples/01_dirtycategories.html>`_
 goes in-depth on how to identify and deal with dirty data using the `skrub` library.
 
-What `skrub` does not
-~~~~~~~~~~~~~~~~~~~~~~~~~
+What `skrub` cannot do
+~~~~~~~~~~~~~~~~~~~~~~
 
 `Semantic similarities <https://en.wikipedia.org/wiki/Semantic_similarity>`_
 are currently not supported.
@@ -51,9 +53,10 @@ methods.
 Installation (WIP)
 ------------------
 
-Once the first release is done, skrub can be easily installed via `pip`::
+There are currently no PiPy releases.
+You can still install the package from the GitHub repository with:
 
-    pip install skrub
+    pip install git+https://github.com/skrub-data/skrub.git
 
 Dependencies
 ~~~~~~~~~~~~

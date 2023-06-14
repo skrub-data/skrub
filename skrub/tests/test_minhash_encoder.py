@@ -31,7 +31,7 @@ def test_minhash_encoder(hashing, minmax_hash) -> None:
     assert len(set(y[0])) == 2
 
     # Test that using the same seed returns the same output
-    encoder2 = MinHashEncoder(2, hashing=hashing)
+    encoder2 = MinHashEncoder(n_components=2, hashing=hashing)
     encoder2.fit(X)
     y2 = encoder2.transform(X)
     np.testing.assert_array_equal(y, y2)
@@ -40,7 +40,7 @@ def test_minhash_encoder(hashing, minmax_hash) -> None:
     if not minmax_hash:
         X_substring = [x[: x.find(" ")] for x in X[:, 0]]
         X_substring = np.array(X_substring)[:, None]
-        encoder3 = MinHashEncoder(2, hashing=hashing)
+        encoder3 = MinHashEncoder(n_components=2, hashing=hashing)
         encoder3.fit(X_substring)
         y_substring = encoder3.transform(X_substring)
         np.testing.assert_array_less(y - y_substring, 0.001)

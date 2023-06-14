@@ -108,6 +108,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
+        *,
         extract_until: AcceptedTimeValues = "hour",
         add_day_of_the_week: bool = False,
     ):
