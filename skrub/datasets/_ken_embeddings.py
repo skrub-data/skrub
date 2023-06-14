@@ -177,6 +177,32 @@ def get_ken_embeddings(
     For searching the types, the :func:`~skrub.datasets.get_ken_types`
     function can be used.
 
+    Examples
+    --------
+    :func:`get_ken_embeddings` allows you to extract embeddings
+    you are interested in. For instance, if we are interested in
+    video games:
+
+    >>> games_embedding = get_ken_embeddings(types="video_games")
+    >>> games_embedding.head()
+            Entity                                               Type                       ...    
+    0  1965_NFL_Championship_Game  wikicat_national_football_league_championship...      ...
+    1               Ikada_Stadium              wikicat_asian_games_football_venues      ...
+    2  1958_NFL_Championship_Game  wikicat_national_football_league_championship...      ...
+    3           Pakansari_Stadium              wikicat_asian_games_football_venues      ...
+    4  1956_NFL_Championship_Game  wikicat_national_football_league_championship...      ...
+
+    Extracts all embeddings with the "games" type. 
+    For the list of existing types see :func:`get_ken_types`.
+
+    Some tables are available pre-filtered for us using the 
+    `embedding_table_id` parameter:
+
+    >>> games_embedding = get_ken_embeddings(embedding_table_id="games")
+
+    It takes less time to load the wanted output.
+    For a list of pre-filtered tables,
+    see func:`get_ken_table_aliases`    
     """
     if embedding_table_id in get_ken_table_aliases():
         correspondence = pd.read_csv(_correspondence_table_url)
