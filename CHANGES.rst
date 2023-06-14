@@ -15,6 +15,9 @@ development and backward compatability is not ensured.
 Major changes
 -------------
 
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
+  :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 * The signatures of all encoders and functions have been revised to enforce
   cleaner calls. This means that some arguments that could previously be passed
   positionally now have to be passed as keywords.
