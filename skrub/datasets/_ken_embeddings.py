@@ -219,4 +219,5 @@ def get_ken_embeddings(
             emb_final.append(emb_extracts)
     emb_df = pd.concat(emb_final)
     emb_df["Entity"] = emb_df["Entity"].str.replace("<", "").str.replace(">", "")
+    emb_df["Type"] = emb_df["Type"].str.replace("<", "").str.replace(">", "")
     return emb_df
