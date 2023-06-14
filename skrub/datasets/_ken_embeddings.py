@@ -186,12 +186,12 @@ def get_ken_embeddings(
 
     >>> games_embedding = get_ken_embeddings(types="video_games")
     >>> games_embedding.head()
-                        Entity                                       Type  ...      X198      X199
-0       <The_Mysterious_Island>  <wikicat_novels_adapted_into_video_games>  ... -0.072814 -0.156973
-0    <Storyteller_(video_game)>             <wikicat_upcoming_video_games>  ...  0.059816  0.021077
-1  <Skull_&_Bones_(video_game)>        <wikicat_video_games_about_pirates>  ... -0.141682  0.024204
-2               <Ethan_Winters>   <wikicat_male_characters_in_video_games>  ... -0.107913 -0.089531
-3                     <Cruis'n>               <wikicat_racing_video_games>  ... -0.260757  0.060700
+                            Entity                                       Type  ...      X198      X199
+    0       <The_Mysterious_Island>  <wikicat_novels_adapted_into_video_games>  ... -0.072814 -0.156973
+    1    <Storyteller_(video_game)>             <wikicat_upcoming_video_games>  ...  0.059816  0.021077
+    2  <Skull_&_Bones_(video_game)>        <wikicat_video_games_about_pirates>  ... -0.141682  0.024204
+    3               <Ethan_Winters>   <wikicat_male_characters_in_video_games>  ... -0.107913 -0.089531
+    4                     <Cruis'n>               <wikicat_racing_video_games>  ... -0.260757  0.060700
 
     Extracts all embeddings with the "games" type. 
     For the list of existing types see :func:`get_ken_types`.
@@ -199,11 +199,18 @@ def get_ken_embeddings(
     Some tables are available pre-filtered for us using the 
     `embedding_table_id` parameter:
 
-    >>> games_embedding = get_ken_embeddings(embedding_table_id="games")
+    >>> games_embedding_fast = get_ken_embeddings(embedding_table_id="games")
+    >>> games_embedding_fast.head()
+                        Entity                                               Type  ...      X198      X199
+    0              R-Type_Delta                                 wikicat_irem_games  ... -0.125806  0.040006
+    1  Just_Add_Water_(company)  wikicat_video_game_companies_of_the_united_kin...  ...  0.067210 -0.025676
+    2                 Li_Xiayan          wikicat_asian_games_medalists_in_swimming  ... -0.104818  0.003485
+    3             Vampire_Night                        wikicat_vampire_video_games  ... -0.118209 -0.145383
+    4               Shatterhand                             wikicat_platform_games  ... -0.138462  0.197820
 
-    It takes less time to load the wanted output.
-    For a list of pre-filtered tables,
-    see func:`get_ken_table_aliases`    
+    It takes less time to load the wanted output, and is more precise as the
+    types have been carefully filtered out.
+    For a list of pre-filtered tables, see func:`get_ken_table_aliases`    
     """
     if embedding_table_id in get_ken_table_aliases():
         correspondence = pd.read_csv(_correspondence_table_url)
