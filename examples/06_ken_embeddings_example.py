@@ -111,9 +111,13 @@ from skrub.datasets import get_ken_embeddings
 
 ###############################################################################
 # KEN Embeddings are classified by types.
+# See the example on :class:`~skrub.datasets.get_ken_embeddings`
+# to understand how you can filter types you are interested in.
+#
 # The :class:`~skrub.datasets.get_ken_embeddings` function
 # allows us to specify the types to be included and/or excluded
 # so as not to load all Wikipedia entity embeddings in a table.
+#
 #
 # In a first table, we include all embeddings with the type name "game"
 # and exclude those with type name "companies" or "developer".
