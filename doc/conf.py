@@ -200,29 +200,6 @@ html_context = {
     "github_repo": "skrub",
     "github_version": "main",
     "doc_path": "docs",
-    "carousel": [
-        dict(
-            title="Assembling",
-            text="Joining multiple tables on non-normalized columns.",  # noqa E501
-            url="auto_examples/01_dirty_categories.html",
-            img="",
-            alt="",
-        ),
-        dict(
-            title="Encoding",
-            text="Fast and scalable methods for encoding \"dirty\" categorical variables to numerical arrays suitable for machine learning.",  # noqa E501
-            url="auto_examples/01_dirty_categories.html",
-            img="",
-            alt="",
-        ),
-        dict(
-            title="Cleaning",
-            text="Altering the data directly by cleaning dirty instances with techniques such as deduplication.",  # noqa E501
-            url="auto_examples/01_dirty_categories.html",
-            img="",
-            alt="",
-        ),
-    ]
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
