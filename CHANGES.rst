@@ -27,11 +27,11 @@ Minor changes
 -------------
 
 
-* Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`. These strategy were
-  used for scalability reasons, but we recommend using the :class:`MinHashEncoder` or the :class:`GapEncoder` instead.
-  Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor, as we only support the
-  ngram similarity.
-  :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+* Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`. 
+  These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`
+  or the :class:`GapEncoder` instead. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+* Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor, 
+  as we only support the ngram similarity. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * Some bug fixes for :class:`TableVectorizer` ( :pr:`579`):
 
