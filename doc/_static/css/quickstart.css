@@ -12,7 +12,7 @@
 }
 
 .qs-input {
-    /* Hide inputs while keeping them focussable */
+    /* Hide inputs while keeping them focusable */
     opacity: 0;
     width: 0;
     height: 0;
