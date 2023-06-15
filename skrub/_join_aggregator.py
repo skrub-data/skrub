@@ -12,9 +12,13 @@ except ImportError:
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-NUM_OPS = ["mean", "std", "max", "min"]
+NUM_OPS = ["sum", "mean", "std", "max", "min"]
 CATEG_OPS = ["mode"]
 ALL_OPS = NUM_OPS + CATEG_OPS
+
+PANDAS_OPS_MAPPING = {
+    "mode": pd.Series.mode
+}
 
 
 def split_num_categ_ops(agg_ops):
@@ -44,55 +48,53 @@ def split_num_categ_ops(agg_ops):
     return num_ops, categ_ops
 
 
+def dispatch_assembling_engine(tables):
+    """Returns the AssemblingEngine implementation for given tables
+    module.
+
+    Parameters
+    ----------
+    tables : List of Tuple of (table, cols_to_join, cols_to_agg)
+        We only use table to detect the module used.
+    
+    Returns
+    -------
+    assembling_engine : AssemblingEngine
+        The suited AssemblingEngine implementation.
+    """
+
+    use_pandas = all(
+        [isinstance(table, pd.DataFrame) for table, _, _ in tables]
+    )
+    use_polars = False
+    if POLARS_SETUP:
+        # we don't mix DataFrame and LazyFrame
+        use_polars = (
+            all(
+                [isinstance(table, pl.DataFrame) for table, _, _ in tables]
+            )
+            or all(
+                [isinstance(table, pl.LazyFrame) for table, _, _ in tables]
+            )
+        )
+    if use_pandas:
+        return PandasAssemblingEngine()
+    elif use_polars:
+        return PolarsAssemblingEngine()
+    else:
+        raise NotImplementedError(
+            "Only Pandas or Polars DataFrame are currently supported."
+        )
+
+
 class AssemblingEngine:
     """Helper class to perform the join and aggregate operations.
 
     This is an abstract base class that is specialized depending
     on the module of the dataframe used (Pandas or Polars).
-
-    This helper class is in charge of mapping strings to aggregation
-    operators of the respective module.
     """
-    @classmethod
-    def get_for(cls, tables):
-        """Returns the AssemblingEngine implementation for given tables
-        module.
-
-        Parameters
-        ----------
-        tables : List of Tuple of (table, cols_to_join, cols_to_agg)
-            We only use table to detect the module used.
-        
-        Returns
-        -------
-        assembling_engine : AssemblingEngine
-            The suited AssemblingEngine implementation.
-        """
-        use_pandas = all(
-            [isinstance(table, pd.DataFrame) for table, _, _ in tables]
-        )
-        use_polars = False
-        if POLARS_SETUP:
-            # we don't mix DataFrame and LazyFrame
-            use_polars = (
-                all(
-                    [isinstance(table, pl.DataFrame) for table, _, _ in tables]
-                )
-                or all(
-                    [isinstance(table, pl.LazyFrame) for table, _, _ in tables]
-                )
-            )
-        if use_pandas:
-            return PandasAssemblingEngine()
-        elif use_polars:
-            return PolarsAssemblingEngine()
-        else:
-            raise NotImplementedError(
-                "Only Pandas or Polars DataFrame are currently supported."
-            )
-
     @abstractmethod
-    def agg(self, table, cols_to_join, cols_to_agg, ops):
+    def agg(self, table, cols_to_join, cols_to_agg, agg_ops, suffix):
         pass
 
     @abstractmethod
@@ -100,38 +102,38 @@ class AssemblingEngine:
         pass
 
 
-def pandas_split_num_categ_cols(table):
-    num_cols = table.select_dtypes("number").columns
-    categ_cols = table.select_dtypes(
-        ["object", "string", "category"]
-    ).columns
-    return num_cols, categ_cols
-    
-
-def pandas_get_agg_ops(cols, agg_ops):
-    pandas_ops_mapping = {
-        "mode": pd.Series.mode
-    }
-    stats = {}
-    for col, op_name in product(cols, agg_ops):
-        op = pandas_ops_mapping.get(op_name, op_name)
-        stats[f"{col}_{op_name}"] = pd.NamedAgg(col, op)
-    return stats
-
-
 class PandasAssemblingEngine(AssemblingEngine):
 
-    def agg(self, table, cols_to_join, cols_to_agg, agg_ops):
-        
-        num_cols, categ_cols = pandas_split_num_categ_cols(
+    def agg(self, table, cols_to_join, cols_to_agg, agg_ops, suffix):
+
+        def get_agg_ops(cols, agg_ops):
+            stats = {}
+            for col, op_name in product(cols, agg_ops):
+                op = PANDAS_OPS_MAPPING.get(op_name, op_name)
+                stats[f"{col}_{op_name}"] = pd.NamedAgg(col, op)
+            return stats
+
+        def split_num_categ_cols(table):
+            num_cols = table.select_dtypes("number").columns
+            categ_cols = table.select_dtypes(
+                ["object", "string", "category"]
+            ).columns
+            return num_cols, categ_cols
+            
+        num_cols, categ_cols = split_num_categ_cols(
             table[cols_to_agg]
         )
         num_ops, categ_ops = split_num_categ_ops(agg_ops)
 
-        num_stats = pandas_get_agg_ops(num_cols, num_ops)
-        categ_stats = pandas_get_agg_ops(categ_cols, categ_ops)
+        num_stats = get_agg_ops(num_cols, num_ops)
+        categ_stats = get_agg_ops(categ_cols, categ_ops)
                     
-        return table.groupby(cols_to_join).agg(**num_stats, **categ_stats)
+        table = table.groupby(cols_to_join).agg(**num_stats, **categ_stats)
+        table.columns = [
+            f"{col}{suffix}" if col not in cols_to_join else col for col in table.columns
+        ]
+        
+        return table
 
     def join(self, left, right, left_on, right_on):
         
@@ -143,58 +145,58 @@ class PandasAssemblingEngine(AssemblingEngine):
         )
 
 
-def polars_split_num_categ_cols(table):
-    
-    num_cols = table.select(
-        pl.col(pl.NUMERIC_DTYPES)
-    ).columns
-    
-    categ_cols = table.select(
-        pl.col(pl.Utf8)
-    ).columns
-    
-    return num_cols, categ_cols
-
-
-def polars_get_agg_ops(cols, agg_ops):
-    stats, mode_cols = [], []
-    for col, op_name in product(cols, agg_ops):
-        op_dict = {
-            "mean": pl.col(col).mean().alias(f"{col}_{op_name}"),
-            "std": pl.col(col).std().alias(f"{col}_{op_name}"),
-            "min": pl.col(col).min().alias(f"{col}_{op_name}"),
-            "max": pl.col(col).max().alias(f"{col}_{op_name}"),
-            "mode": pl.col(col).mode().alias(f"{col}_{op_name}"),
-        }
-        op = op_dict.get(op_name, None)
-        if op is None:
-            raise ValueError(
-                f"Polars operation '{op}' is not supported. "
-                f"Available: {list(op_dict)}"
-            )
-        stats.append(op)
-
-        # mode() output needs a flattening post-processing
-        if op_name == "mode":
-            mode_cols.append(f"{col}_mode")
-            
-    return stats, mode_cols
-
-
 class PolarsAssemblingEngine(AssemblingEngine):
 
-    def agg(self, table, cols_to_join, cols_to_agg, agg_ops):
+    def agg(self, table, cols_to_join, cols_to_agg, agg_ops, suffix):
 
-        num_cols, categ_cols = polars_split_num_categ_cols(
+        def split_num_categ_cols(table):
+            
+            num_cols = table.select(
+                pl.col(pl.NUMERIC_DTYPES)
+            ).columns
+            
+            categ_cols = table.select(
+                pl.col(pl.Utf8)
+            ).columns
+            
+            return num_cols, categ_cols
+
+        def get_agg_ops(cols, agg_ops):
+            stats, mode_cols = [], []
+            for col, op_name in product(cols, agg_ops):
+                op_dict = {
+                    "mean": pl.col(col).mean().alias(f"{col}_{op_name}"),
+                    "std": pl.col(col).std().alias(f"{col}_{op_name}"),
+                    "sum": pl.col(col).sum().alias(f"{col}_{op_name}"),
+                    "min": pl.col(col).min().alias(f"{col}_{op_name}"),
+                    "max": pl.col(col).max().alias(f"{col}_{op_name}"),
+                    "mode": pl.col(col).mode().alias(f"{col}_{op_name}"),
+                }
+                op = op_dict.get(op_name, None)
+                if op is None:
+                    raise ValueError(
+                        f"Polars operation '{op}' is not supported. "
+                        f"Available: {list(op_dict)}"
+                    )
+                stats.append(op)
+
+                # mode() output needs a flattening post-processing
+                if op_name == "mode":
+                    mode_cols.append(f"{col}_mode")
+                    
+            return stats, mode_cols
+
+        num_cols, categ_cols = split_num_categ_cols(
             table.select(cols_to_agg)
         )
+        
         num_ops, categ_ops = split_num_categ_ops(agg_ops)
 
-        num_ops, num_mode_cols = polars_get_agg_ops(num_cols, num_ops)
-        categ_ops, categ_mode_cols = polars_get_agg_ops(categ_cols, categ_ops)
+        num_ops, num_mode_cols = get_agg_ops(num_cols, num_ops)
+        categ_ops, categ_mode_cols = get_agg_ops(categ_cols, categ_ops)
 
         all_ops = [*num_ops, *categ_ops]
-        agg_table = table.groupby(cols_to_join).agg(all_ops)
+        table = table.groupby(cols_to_join).agg(all_ops)
 
         # flattening post-processing of mode() cols
         flatten_ops = []
@@ -202,8 +204,15 @@ class PolarsAssemblingEngine(AssemblingEngine):
             flatten_ops.append(
                 pl.col(col).list[0].alias(col)
             )
-        return agg_table.with_columns(flatten_ops)
-          
+        table = table.with_columns(flatten_ops)
+        
+        cols_renaming = {
+            col: f"{col}{suffix}"
+            for col in table.columns if col not in cols_to_join
+        }
+        table = table.rename(cols_renaming)
+        
+        return table
 
     def join(self, left, right, left_on, right_on):
         
@@ -213,25 +222,6 @@ class PolarsAssemblingEngine(AssemblingEngine):
             left_on=left_on,
             right_on=right_on,
         )
-    
-
-def check_cols(tables):
-    """Check that all columns to join and columns to aggregate 
-    belong to their respective dataframes.
-    """
-    for idx, (table, cols_to_join, cols_to_agg) in enumerate(tables, start=1):
-
-        cols_to_join = np.atleast_1d(cols_to_join).tolist()
-        cols_to_agg = np.atleast_1d(cols_to_agg).tolist()
-
-        table_cols = set(table.columns)
-        input_cols = set([*cols_to_join, *cols_to_agg])
-
-        missing_cols = input_cols - table_cols
-        if len(missing_cols) > 0:
-            raise ValueError(f"{missing_cols} are missing in table {idx}")
-
-    return
     
 
 class JoinAggregator(BaseEstimator, TransformerMixin):
@@ -275,11 +265,11 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
         ['mean', 'mode'] will be used.
     """
 
-    def __init__(self, tables, main_key, agg_ops=None):
+    def __init__(self, tables, main_key, agg_ops=None, suffixes=None):
         self.tables = tables
         self.main_key = main_key
         self.agg_ops = agg_ops
-        self.assembly_engine = AssemblingEngine.get_for(tables)
+        self.suffixes = suffixes
 
     def fit(self, X, y=None):
         """Fit the instance to the auxiliary tables by aggregating them
@@ -300,26 +290,24 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
         :obj:`JoinAggregator`
             Fitted :class:`JoinAggregator` instance (self).
         """
-        if self.main_key not in X.columns:
-            raise ValueError(
-                f"Got main_key={self.main_key!r}, but column not in {list(X.columns)}."
-            )
-
-        check_cols(self.tables)
+        self.check_cols(X)
 
         if self.agg_ops is None:
             agg_ops = ["mean", "mode"]
         else:
             agg_ops = np.atleast_1d(self.agg_ops).tolist()
+
+        self.assembly_engine = dispatch_assembling_engine(self.tables)
         
         self.agg_tables_ = []
-        for table, cols_to_join, cols_to_agg in self.tables:
+        for (table, cols_to_join, cols_to_agg), suffix in zip(self.tables, self.suffixes_):
 
             agg_table = self.assembly_engine.agg(
                 table,
                 cols_to_join,
                 cols_to_agg,
                 agg_ops,
+                suffix,
             )
             agg_table = self._screen(agg_table, y)
 
@@ -339,11 +327,11 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
 
         check_is_fitted(self, "agg_tables_")
 
-        for aux, aux_key in self.agg_tables_:
+        for main_key, (aux, aux_key) in zip(self.main_keys_, self.agg_tables_):
             X = self.assembly_engine.join(
                 left=X,
                 right=aux,
-                left_on=self.main_key,
+                left_on=main_key,
                 right_on=aux_key,
             )
 
@@ -352,3 +340,60 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
     def _screen(self, agg_table, y):
         # TODO: Add logic
         return agg_table
+    
+    def check_cols(self, X):
+        """Check that all columns to join and columns to aggregate 
+        belong to their respective dataframes.
+        """
+        # Check main_keys
+        main_keys = np.atleast_1d(self.main_key).tolist()
+        missing_cols = set(main_keys) - set(X.columns)
+        if len(missing_cols) > 0:
+            raise ValueError(
+                f"Got main_key={self.main_key!r}, but column not in {list(X.columns)}."
+            )
+            
+        n_main_keys, n_tables = len(main_keys), len(self.tables)
+        if (n_main_keys != 1) and (n_main_keys != n_tables):
+            raise ValueError(
+                "The number of main keys must be either 1 or "
+                "match the number of tables"
+            )
+        
+        # Ensure n_main_keys == n_tables
+        if n_main_keys == 1:
+            main_keys = main_keys * n_tables
+        
+        self.main_keys_ = main_keys
+        
+        # Check agg and join columns
+        for idx, (table, cols_to_join, cols_to_agg) in enumerate(self.tables, start=1):
+
+            cols_to_join = np.atleast_1d(cols_to_join).tolist()
+            cols_to_agg = np.atleast_1d(cols_to_agg).tolist()
+
+            table_cols = set(table.columns)
+            input_cols = set([*cols_to_join, *cols_to_agg])
+
+            missing_cols = input_cols - table_cols
+            if len(missing_cols) > 0:
+                raise ValueError(f"{missing_cols} are missing in table {idx}")
+
+        # Check suffixes
+        if self.suffixes is None:
+            if n_tables == 1:
+                suffixes = [""]
+            else:
+                suffixes = [f"_{idx}" for idx in range(len(self.tables))]
+        elif hasattr(self.suffixes, "__len__"):
+            suffixes = np.atleast_1d(self.suffixes).tolist()
+            if len(suffixes) != n_tables:
+                raise ValueError("Suffixes must be None or match the number of tables.")
+        else:
+            raise ValueError(
+                "Suffixes must be a list of string matching the number of tables."
+            )
+        
+        self.suffixes_ = suffixes
+        
+        return
