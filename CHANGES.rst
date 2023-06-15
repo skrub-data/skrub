@@ -36,6 +36,9 @@ Minor changes
     instead of `"drop"` to match the implementation.
   - uint8 and int8 dtypes are now considered as numerical columns.
 
+* Removed the leading "<" and trailing ">" symbols from KEN entities
+  and types.
+  :pr:`601` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Before skrub: dirty_cat
 ========================
