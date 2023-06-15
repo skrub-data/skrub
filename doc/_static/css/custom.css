@@ -70,11 +70,11 @@
 
 /* Make the footer a bit less visible */
 .bd-footer {
-    border-top: 1px solid var(--pst-color-muted-highlight);
+    border-top: 1px solid var(--pst-color-text-muted);
 }
 
 .bd-footer p {
-    color: var(--pst-color-muted-highlight);
+    color: var(--pst-color-text-muted);
 }
 
 .bd-footer a {
