@@ -73,6 +73,17 @@
     --bs-nav-link-hover-color: var(--pst-color-link-hover);
 }
 
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+    background-color:var(--pst-color-primary);
+}
+
+.nav-link {
+    color:var(--pst-color-primary);
+}
+
+.nav-link:focus, .nav-link:hover {
+  color: var(--pst-color-link-hover);
+}
 /** Landing header *******************************/
 
 
