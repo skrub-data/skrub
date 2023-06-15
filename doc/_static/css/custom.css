@@ -65,6 +65,13 @@
     margin-top: -20px;
 }
 
+/** Adapt boostrap colors ************************/
+:root {
+    /* Change colors on boostrap elements to use the theme's colors */
+    --bs-nav-pills-link-active-bg: var(--pst-color-primary);
+    --bs-nav-link-color:  var(--pst-color-primary);
+    --bs-nav-link-hover-color: var(--pst-color-link-hover);
+}
 
 /** Landing header *******************************/
 
