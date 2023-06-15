@@ -99,7 +99,7 @@ def get_ken_types(
         search_result = unique_types.X[unique_types.X["Type"].str.contains(search)]
     if exclude is not None:
         search_result = search_result[~search_result["Type"].str.contains(exclude)]
-    search_result["Type"] = search_result["Type"].str.replace("<", "").str.replace(">", "")
+    search_result["Type"] = search_result["Type"].str[1:-1]
     return search_result
 
 
@@ -218,6 +218,6 @@ def get_ken_embeddings(
         else:
             emb_final.append(emb_extracts)
     emb_df = pd.concat(emb_final)
-    emb_df["Entity"] = emb_df["Entity"].str.replace("<", "").str.replace(">", "")
-    emb_df["Type"] = emb_df["Type"].str.replace("<", "").str.replace(">", "")
+    emb_df["Entity"] = emb_df["Entity"].str[1:-1]
+    emb_df["Type"] = emb_df["Type"].str[1:-1]
     return emb_df
