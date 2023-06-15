@@ -51,7 +51,7 @@ jobs:
             echo ""
             echo "Please add an entry to the changelog at 'CHANGES.rst'"
             echo "to document your change assuming that the PR will be merged"
-            echo "in time for the next release of dirty-cat."
+            echo "in time for the next release of skrub."
             echo ""
             echo "Look at other entries in that file for inspiration and please"
             echo "reference this pull request using the ':pr:' directive and"
