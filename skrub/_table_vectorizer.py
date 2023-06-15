@@ -416,10 +416,10 @@ class TableVectorizer(ColumnTransformer):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
             # sklearn is lenient and lets us use both
-            # `handle_unknown="infrequent_if_exists"` and `drop="if_binary"`
+            # `handle_unknown="infrequent_if_exist"` and `drop="if_binary"`
             # at the same time
             self.low_card_cat_transformer_ = OneHotEncoder(
-                drop="if_binary", handle_unknown="infrequent_if_exists"
+                drop="if_binary", handle_unknown="infrequent_if_exist"
             )
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
