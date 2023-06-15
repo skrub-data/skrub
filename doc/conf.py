@@ -209,13 +209,8 @@ html_static_path = ["_static"]
 
 html_css_files = [
     "css/custom.css",
-    "css/quickstart.css",
-    "https://scikit-learn.org/stable/_static/css/theme.css",
 ]
-
-html_js_files = [
-    'js/quickstart.min.js',
-]
+html_js_files = []
 
 
 # Project logo, to place at the top of the sidebar.
