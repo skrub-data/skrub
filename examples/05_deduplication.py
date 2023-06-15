@@ -23,15 +23,15 @@ misspelled category names in an unsupervised manner.
 
 ###############################################################################
 # An example dataset
-# -------------------
+# ------------------
 #
 # Imagine the following example:
 # As a data scientist, our job is to analyze the data from a hospital ward.
-# We notice that most of the cases involve the prescription of one of three different medications:
-#  "Contrivan", "Genericon", or "Zipholan".
-# However, data entry is manual and - either because the prescribing doctor's handwriting
-# was hard to decipher, or due to mistakes during data input - there are multiple
-# spelling mistakes for these three medications.
+# We notice that most of the cases involve the prescription of one of three different
+# medications: "Contrivan", "Genericon", or "Zipholan".
+# However, data entry is manual and - either because the prescribing doctor's
+# handwriting was hard to decipher, or due to mistakes during data input - there are
+# multiple spelling mistakes for these three medications.
 #
 # Let's generate some example data that demonstrate this.
 
