@@ -137,51 +137,8 @@ enhancement proposal?* for more information.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Using a dedicated Python environment is highly recommended!
-
-Different solutions are available, the most common being
-`conda <https://docs.conda.io/projects/conda/en/latest/index.html>`__
-and `pyenv <https://github.com/pyenv/pyenv>`__.
-
-So, first step: create your environment.
-
-For this example, we’ll use conda:
-
-.. code:: console
-
-   conda create python=3.10 --name skrub
-   conda activate skrub
-
-Secondly, clone the repository (you’ll need to have ``git`` installed -
-it is already on most linux distributions).
-
-.. code:: console
-
-   git clone https://github.com/skrub-data/skrub
-
-Next, install the project dependencies. They are listed in ``setup.cfg``.
-
-.. code:: console
-
-   pip install -e .[dev]
-
-Code-formatting and linting is automatically done via
-```pre-commit`` <https://github.com/pre-commit/pre-commit>`__. You
-install this setup using:
-
-.. code:: console
-
-   pip install pre-commit
-   pre-commit install
-
-A few revisions (formatting the whole code-base for instance) better be
-ignored by ``git blame`` and IDE integrations. The revisions to be
-ignored are listed in ``.git-blame-ignore-revs``, which can be set in
-your local repository with:
-
-.. code:: console
-
-   git config blame.ignoreRevsFile .git-blame-ignore-revs
+For this process, please refer to the [installation process](https://skrub-data.org/stable/install.html#advanced-usage-for-contributors),
+section *Advanced usage, for contributors*.
 
 Implementation
 ^^^^^^^^^^^^^^
@@ -210,7 +167,7 @@ goals to keep in mind:
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
 
-First, you’ll want to fork skrub on Github.
+First, you’ll want to [fork skrub on Github](https://github.com/skrub-data/skrub/fork).
 
 That will enable you to push your commits to a branch *on your fork*.
 It is advised to create a new branch every time you work on a new issue,
