@@ -115,7 +115,6 @@ from skrub.datasets import get_ken_embeddings
 # allows us to specify the types to be included and/or excluded
 # so as not to load all Wikipedia entity embeddings in a table.
 #
-#
 # In a first table, we include all embeddings with the type name "game"
 # and exclude those with type name "companies" or "developer".
 embedding_games = get_ken_embeddings(
