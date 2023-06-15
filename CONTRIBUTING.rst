@@ -21,7 +21,7 @@ out! <https://github.com/skrub-data/skrub/discussions>`__
 What should I know before I get started?
 ----------------------------------------
 
-If you want to truly understand the incentives behind skrub,
+If you want to understand in more depth the incentives behind skrub,
 read our `vision statement! <https://skrub-data.org/stable/vision.html>`__ 
 If scientific literature doesn’t scare you, we greatly
 encourage you to read the two following papers:
