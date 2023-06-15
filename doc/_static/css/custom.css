@@ -70,7 +70,8 @@
 
 /* Make the footer a bit less visible */
 .bd-footer {
-    border-top: 1px solid var(--pst-color-text-muted);
+    border-top: 1px solid var(--pst-color-on-surface);
+    opacity: .7;
 }
 
 .bd-footer p {
