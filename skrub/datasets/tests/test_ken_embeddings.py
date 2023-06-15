@@ -31,14 +31,14 @@ def test_small_ken_embeddings():
     Test if small sized embeddings were fetched correctly
     """
     emb = get_ken_embeddings(
-        search="game_designers",
+        types="game_designers",
         embedding_table_id="games",
     )
     assert emb.shape[1] == 202
 
     # With custom figshare ID's:
     emb2 = get_ken_embeddings(
-        search="game_designers",
+        types="game_designers",
         embedding_table_id="39254360",
         embedding_type_id="39266678",
         pca_components=5,
@@ -52,7 +52,7 @@ def test_big_ken_embeddings():
     """
     # With custom figshare ID's:
     emb3 = get_ken_embeddings(
-        search="rock",
+        types="rock",
         exclude="metal",
         embedding_table_id="39149066",
         embedding_type_id="39266300",
@@ -60,7 +60,7 @@ def test_big_ken_embeddings():
     assert emb3.shape[1] == 202
 
     emb4 = get_ken_embeddings(
-        search="pop",
+        types="pop",
         exclude="jazz",
         embedding_table_id="albums",
         pca_components=10,

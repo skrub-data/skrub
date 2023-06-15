@@ -135,7 +135,7 @@ def get_ken_types(
 
 
 def get_ken_embeddings(
-    search: Optional[str] = None,
+    types: Optional[str] = None,
     *,
     exclude: Optional[str] = None,
     embedding_table_id: str = "all_entities",
@@ -150,7 +150,7 @@ def get_ken_embeddings(
 
     Parameters
     ----------
-    search : str, optional
+    types : str, optional
         Substring pattern that filters the types of entities.
         Will keep all entity types containing the substring.
         Write in lowercase. If `None`, all types will be passed.
@@ -254,7 +254,7 @@ def get_ken_embeddings(
     else:
         embeddings_id = embedding_table_id
     emb_type = fetch_figshare(embedding_type_id).X
-    if search is not None:
+    if types is not None:
         emb_type = emb_type[emb_type["Type"].str.contains(types)]
     if exclude is not None:
         emb_type = emb_type[~emb_type["Type"].str.contains(exclude)]
