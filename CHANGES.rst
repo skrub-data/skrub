@@ -26,6 +26,9 @@ Major changes
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Bump minimal required Python version to 3.10. :pr:`606` by
+  :user:`Gael Varoquaux <GaelVaroquaux>`
+
 Minor changes
 -------------
 
