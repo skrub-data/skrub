@@ -136,7 +136,7 @@ See in the sections above for the right way to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For this process, please refer to the [installation process](https://skrub-data.org/stable/install.html#advanced-usage-for-contributors),
+For this process, please refer to the `installation process <https://skrub-data.org/stable/install.html#advanced-usage-for-contributors>`__,
 section *Advanced usage, for contributors*.
 
 Implementation
@@ -165,12 +165,7 @@ There are a few specific project goals to keep in mind:
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
 
-<<<<<<< HEAD
-First, `fork <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`__
-the skrub repo on Github.
-=======
-First, you’ll want to [fork skrub on Github](https://github.com/skrub-data/skrub/fork).
->>>>>>> main
+First, you’ll want to `fork skrub on Github <https://github.com/skrub-data/skrub/fork>`__.
 
 That will enable you to push your commits to a branch *on your fork*.
 It is advised to create a new branch every time you work on a new issue,
