@@ -1,28 +1,28 @@
-from skrub.datasets import fetch_ken_embeddings, fetch_ken_table_aliases, fetch_ken_types
+from skrub.datasets import get_ken_embeddings, get_ken_table_aliases, get_ken_types
 
 
-def test_fetch_ken_table_aliases():
+def test_get_ken_table_aliases():
     """
     Test if the aliases of the tables are correctly fetched
     """
-    aliases = fetch_ken_table_aliases()
+    aliases = get_ken_table_aliases()
     assert "all_entities" in aliases
     assert "games" in aliases
     assert "albums" in aliases
 
 
-def test_fetch_ken_types():
+def test_get_ken_types():
     """
     Test if the types of entities are correctly fetched
     """
     # Tests the full result returns alright
-    types = fetch_ken_types()
+    types = get_ken_types()
     assert types.shape[0] == 114509
     # Tests the additive filter works
-    types2 = fetch_ken_types(search="game")
+    types2 = get_ken_types(search="game")
     assert types2.shape[0] == 2540
     # Tests the negative filter works
-    types3 = fetch_ken_types(search="game", exclude="card")
+    types3 = get_ken_types(search="game", exclude="card")
     assert types3.shape[0] == 2532
 
 
@@ -30,14 +30,14 @@ def test_small_ken_embeddings():
     """
     Test if small sized embeddings were fetched correctly
     """
-    emb = fetch_ken_embeddings(
+    emb = get_ken_embeddings(
         search_types="game_designers",
         embedding_table_id="games",
     )
     assert emb.shape[1] == 202
 
     # With custom figshare ID's:
-    emb2 = fetch_ken_embeddings(
+    emb2 = get_ken_embeddings(
         search_types="game_designers",
         embedding_table_id="39254360",
         embedding_type_id="39266678",
@@ -51,7 +51,7 @@ def test_big_ken_embeddings():
     Test if bigger sized embeddings were fetched correctly
     """
     # With custom figshare ID's:
-    emb3 = fetch_ken_embeddings(
+    emb3 = get_ken_embeddings(
         search_types="rock",
         exclude="metal",
         embedding_table_id="39149066",
@@ -59,7 +59,7 @@ def test_big_ken_embeddings():
     )
     assert emb3.shape[1] == 202
 
-    emb4 = fetch_ken_embeddings(
+    emb4 = get_ken_embeddings(
         search_types="pop",
         exclude="jazz",
         embedding_table_id="albums",

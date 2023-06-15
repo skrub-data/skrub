@@ -89,10 +89,10 @@ y = y[~mask]
 # We will use KEN embeddings to enrich our data.
 #
 # We will start by checking out the available tables with
-# :class:`~skrub.datasets.fetch_ken_table_aliases`:
-from skrub.datasets import fetch_ken_table_aliases
+# :class:`~skrub.datasets.get_ken_table_aliases`:
+from skrub.datasets import get_ken_table_aliases
 
-fetch_ken_table_aliases()
+get_ken_table_aliases()
 
 ###############################################################################
 # The *games* table is the most relevant to our case.

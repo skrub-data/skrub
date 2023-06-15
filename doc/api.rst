@@ -83,7 +83,7 @@ Data download and generation
    datasets.fetch_traffic_violations
    datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
-   datasets.fetch_ken_table_aliases
+   datasets.get_ken_table_aliases
    datasets.get_ken_types
    datasets.get_ken_embeddings
    datasets.get_data_dir
