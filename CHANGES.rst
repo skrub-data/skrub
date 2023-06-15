@@ -30,8 +30,16 @@ Major changes
   and :func:`fetch_ken_types` have been renamed.
   :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* Bump minimal required Python version to 3.10. :pr:`606` by
+* Bumped minimal required Python version to 3.10. :pr:`606` by
   :user:`Gael Varoquaux <GaelVaroquaux>`
+
+* Bumped minimal required versions for the dependencies:
+  - numpy >= 1.23.5
+  - scipy >= 1.9.3
+  - scikit-learn >= 1.2.1
+  - pandas >= 1.5.3 :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
+
+* Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
 Minor changes
 -------------

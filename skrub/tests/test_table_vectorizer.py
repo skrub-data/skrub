@@ -3,14 +3,12 @@ from typing import Any, Tuple
 import numpy as np
 import pandas as pd
 import pytest
-import sklearn
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
-from skrub._utils import parse_version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):
@@ -347,10 +345,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    if parse_version(sklearn.__version__) < parse_version("1.0"):
-        assert vec_w_pass.get_feature_names() == expected_feature_names_pass
-    else:
-        assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
+    assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
 
     vec_w_drop = TableVectorizer(remainder="drop")
     vec_w_drop.fit(X)
@@ -372,10 +367,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    if parse_version(sklearn.__version__) < parse_version("1.0"):
-        assert vec_w_drop.get_feature_names() == expected_feature_names_drop
-    else:
-        assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
+    assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
 
 
 def test_fit() -> None:
@@ -508,30 +500,24 @@ def test_handle_unknown() -> None:
             "cat2": pd.Series(["30K+", "20K+"], dtype="category"),
         }
     )
-    if parse_version(sklearn.__version__) >= parse_version("1.0.0"):
-        # Default behavior is "handle_unknown='ignore'",
-        # so unknown categories are encoded as all zeros
-        x_trans_unknown = table_vec.transform(x_unknown)
-        x_trans_known = table_vec.transform(x_known)
 
-        assert x_trans_unknown.shape == x_trans_known.shape
-        n_zeroes = (
-            X["str2"].nunique() + X["cat2"].nunique() + 2
-        )  # 2 for binary columns which get one
-        # cateogry dropped
-        assert np.allclose(
-            x_trans_unknown[0, 2:n_zeroes], np.zeros_like(x_trans_unknown[0, 2:n_zeroes])
-        )
-        assert x_trans_unknown[0, 0] != 0
-        assert not np.allclose(
-            x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
-        )
-    else:
-        # Default behavior is "handle_unknown='error'",
-        # so unknown categories raise an error
-        with pytest.raises(ValueError, match="Found unknown categories"):
-            table_vec.transform(x_unknown)
-        table_vec.transform(x_known)
+    # Default behavior is "handle_unknown='ignore'",
+    # so unknown categories are encoded as all zeros
+    x_trans_unknown = table_vec.transform(x_unknown)
+    x_trans_known = table_vec.transform(x_known)
+
+    assert x_trans_unknown.shape == x_trans_known.shape
+    n_zeroes = (
+        X["str2"].nunique() + X["cat2"].nunique() + 2
+    )  # 2 for binary columns which get one
+    # cateogry dropped
+    assert np.allclose(
+        x_trans_unknown[0, 2:n_zeroes], np.zeros_like(x_trans_unknown[0, 2:n_zeroes])
+    )
+    assert x_trans_unknown[0, 0] != 0
+    assert not np.allclose(
+        x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
+    )
 
 
 def test__infer_date_format() -> None:
