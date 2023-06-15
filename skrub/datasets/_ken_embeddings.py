@@ -18,7 +18,7 @@ _correspondence_table_url = (
 )
 
 
-def fetch_ken_table_aliases() -> Set[str]:
+def get_ken_table_aliases() -> Set[str]:
     """Get the supported aliases of embedded KEN entities tables.
 
     These aliases can be using in subsequent functions (see section *See Also*).
@@ -50,7 +50,7 @@ def fetch_ken_table_aliases() -> Set[str]:
     return set(["all_entities"] + list(correspondence["table"].values))
 
 
-def fetch_ken_types(
+def get_ken_types(
     search: str = None,
     *,
     exclude: Optional[str] = None,
@@ -134,7 +134,7 @@ def fetch_ken_types(
     return search_result.reset_index(drop=True)
 
 
-def fetch_ken_embeddings(
+def get_ken_embeddings(
     search_types: Optional[str] = None,
     *,
     exclude: Optional[str] = None,
