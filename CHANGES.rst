@@ -26,6 +26,9 @@ Major changes
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`
+  and :func:`fetch_ken_types` have been renamed.
+
 Minor changes
 -------------
 
