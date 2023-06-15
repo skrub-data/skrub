@@ -38,6 +38,13 @@ def get_ken_table_aliases() -> Set[str]:
     Notes
     -----
     Requires an Internet connection to work.
+
+    Examples
+    --------
+    Let's see what are the current KEN subtables available
+    for download:
+    >>> get_ken_table_aliases()
+    {'games', 'companies', 'schools', 'albums', 'all_entities', 'movies'}
     """
     correspondence = pd.read_csv(_correspondence_table_url)
     return set(["all_entities"] + list(correspondence["table"].values))
@@ -83,6 +90,30 @@ def get_ken_types(
     Notes
     -----
     Best used in conjunction with :func:`get_ken_embeddings`.
+    
+    Examples
+    --------
+    To get all the existing KEN types of entities:
+
+    >>> embedding_types = get_ken_types()
+    >>> embedding_types.head()
+                                Type
+    0                 wikicat_italian_male_screenwriters
+    1  wikicat_21st-century_roman_catholic_archbishop...
+    2                 wikicat_2000s_romantic_drama_films
+    3                  wikicat_music_festivals_in_france
+    4        wikicat_20th-century_american_women_artists
+
+    Let's search for all KEN types with the strings "dance" or "music":
+
+    >>> embedding_filtered_types = get_ken_types(search="dance|music")
+    >>> embedding_filtered_types.head()
+                                    Type
+    0                    wikicat_music_festivals_in_france
+    1  wikicat_films_scored_by_bharadwaj_(music_direc...
+    2                  wikicat_english_music_journalists
+    3       wikicat_20th-century_american_male_musicians
+    4  wikicat_alumni_of_the_london_academy_of_music_...
     """
     correspondence = pd.read_csv(_correspondence_table_url)
     if embedding_table_id not in get_ken_table_aliases():
@@ -100,11 +131,11 @@ def get_ken_types(
     if exclude is not None:
         search_result = search_result[~search_result["Type"].str.contains(exclude)]
     search_result["Type"] = search_result["Type"].str.replace("<", "").str.replace(">", "")
-    return search_result
+    return search_result.reset_index(drop=True)
 
 
 def get_ken_embeddings(
-    types: Optional[str] = None,
+    search: Optional[str] = None,
     *,
     exclude: Optional[str] = None,
     embedding_table_id: str = "all_entities",
@@ -119,7 +150,7 @@ def get_ken_embeddings(
 
     Parameters
     ----------
-    types : str, optional
+    search : str, optional
         Substring pattern that filters the types of entities.
         Will keep all entity types containing the substring.
         Write in lowercase. If `None`, all types will be passed.
@@ -186,12 +217,12 @@ def get_ken_embeddings(
 
     >>> games_embedding = get_ken_embeddings(types="video_games")
     >>> games_embedding.head()
-                            Entity                                       Type  ...      X198      X199
-    0       <The_Mysterious_Island>  <wikicat_novels_adapted_into_video_games>  ... -0.072814 -0.156973
-    1    <Storyteller_(video_game)>             <wikicat_upcoming_video_games>  ...  0.059816  0.021077
-    2  <Skull_&_Bones_(video_game)>        <wikicat_video_games_about_pirates>  ... -0.141682  0.024204
-    3               <Ethan_Winters>   <wikicat_male_characters_in_video_games>  ... -0.107913 -0.089531
-    4                     <Cruis'n>               <wikicat_racing_video_games>  ... -0.260757  0.060700
+                    Entity                       Type                       ...      X198      X199
+    0       The_Mysterious_Island  wikicat_novels_adapted_into_video_games  ... -0.072814 -0.156973
+    1    Storyteller_(video_game)             wikicat_upcoming_video_games  ...  0.059816  0.021077
+    2  Skull_&_Bones_(video_game)        wikicat_video_games_about_pirates  ... -0.141682  0.024204
+    3               Ethan_Winters   wikicat_male_characters_in_video_games  ... -0.107913 -0.089531
+    4                     Cruis'n               wikicat_racing_video_games  ... -0.260757  0.060700
 
     Extracts all embeddings with the "games" type. 
     For the list of existing types see :func:`get_ken_types`.
@@ -201,7 +232,7 @@ def get_ken_embeddings(
 
     >>> games_embedding_fast = get_ken_embeddings(embedding_table_id="games")
     >>> games_embedding_fast.head()
-                        Entity                                               Type  ...      X198      X199
+                     Entity                               Type                      ...      X198      X199
     0              R-Type_Delta                                 wikicat_irem_games  ... -0.125806  0.040006
     1  Just_Add_Water_(company)  wikicat_video_game_companies_of_the_united_kin...  ...  0.067210 -0.025676
     2                 Li_Xiayan          wikicat_asian_games_medalists_in_swimming  ... -0.104818  0.003485
@@ -210,7 +241,7 @@ def get_ken_embeddings(
 
     It takes less time to load the wanted output, and is more precise as the
     types have been carefully filtered out.
-    For a list of pre-filtered tables, see func:`get_ken_table_aliases`    
+    For a list of pre-filtered tables, see func:`get_ken_table_aliases`.
     """
     if embedding_table_id in get_ken_table_aliases():
         correspondence = pd.read_csv(_correspondence_table_url)
@@ -253,4 +284,4 @@ def get_ken_embeddings(
     emb_df = pd.concat(emb_final)
     emb_df["Entity"] = emb_df["Entity"].str.replace("<", "").str.replace(">", "")
     emb_df["Type"] = emb_df["Type"].str.replace("<", "").str.replace(">", "")
-    return emb_df
+    return emb_df.reset_index(drop=True)
