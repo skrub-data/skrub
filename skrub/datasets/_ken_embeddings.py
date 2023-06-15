@@ -206,7 +206,7 @@ def get_ken_embeddings(
     Going directly for the exact type name (e.g. "wikicat_rock_music_bands")
     is possible but may not be complete (as some relevant bands may be
     in other similar types).
-    For searching the types, the :func:`~skrub.datasets.get_ken_types`
+    For exploring available types, the :func:`~skrub.datasets.get_ken_types`
     function can be used.
 
     Examples
