@@ -113,7 +113,7 @@ export PATH="miniconda/bin:$PATH"
 
 # Configure the conda environment and put it in the path using the
 # provided versions
-mamba create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
+mamba create -n $CONDA_ENV_NAME --yes python="${PYTHON_VERSION:-*}" \
   numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
   pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx \
   seaborn statsmodels pillow cython joblib pandas="${PANDAS_VERSION:-*}"
