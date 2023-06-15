@@ -106,15 +106,14 @@ if [[ `type -t deactivate` ]]; then
 fi
 
 # Install dependencies with miniconda
-wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh \
    -O miniconda.sh
 chmod +x miniconda.sh && bash ./miniconda.sh -b -p "miniconda"
 export PATH="miniconda/bin:$PATH"
-conda update --yes --quiet conda
 
 # Configure the conda environment and put it in the path using the
 # provided versions
-conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
+mamba create -n $CONDA_ENV_NAME --yes python="${PYTHON_VERSION:-*}" \
   numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
   pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx \
   seaborn statsmodels pillow cython joblib pandas="${PANDAS_VERSION:-*}"

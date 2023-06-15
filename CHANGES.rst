@@ -30,8 +30,18 @@ Major changes
   and :func:`fetch_ken_types` have been renamed.
   :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+* Bump minimal required Python version to 3.10. :pr:`606` by
+  :user:`Gael Varoquaux <GaelVaroquaux>`
+
 Minor changes
 -------------
+
+
+* Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`.
+  These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`
+  or the :class:`GapEncoder` instead. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+* Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor,
+  as we only support the ngram similarity. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * Some bug fixes for :class:`TableVectorizer` ( :pr:`579`):
 
@@ -108,7 +118,7 @@ Minor changes
 -------------
 * Add example `Wikipedia embeddings to enrich the data`. :pr:`487` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* * **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
+* **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
   embeddings and filter them by type.
 
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download indicators

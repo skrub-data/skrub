@@ -217,7 +217,7 @@ plt.tight_layout()
 # data than the |MinHash| and |Gap|. The most scalable encoder is
 # the |MinHash|. On the other hand, the |Gap| has the benefit of
 # providing interpretable features
-# (see :ref:`sphx_glr_auto_examples_02_investigating_skrubegories.py`)
+# (see :ref:`sphx_glr_auto_examples_02_investigating_dirty_categories.py`)
 #
 # |
 #
