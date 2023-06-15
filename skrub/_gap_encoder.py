@@ -2,7 +2,6 @@
 Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 
-import warnings
 from copy import deepcopy
 from typing import Dict, Generator, List, Literal, Optional, Tuple, Union
 
@@ -11,9 +10,9 @@ import pandas as pd
 from joblib import Parallel, delayed
 from numpy.random import RandomState
 from scipy import sparse
-from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, kmeans_plusplus
+from sklearn.decomposition._nmf import _beta_divergence
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state, gen_batches
@@ -21,14 +20,7 @@ from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
-from ._utils import check_input, parse_version
-
-if parse_version(sklearn_version) < parse_version("0.24"):
-    from sklearn.cluster._kmeans import _k_init
-else:
-    from sklearn.cluster import kmeans_plusplus
-
-from sklearn.decomposition._nmf import _beta_divergence
+from ._utils import check_input
 
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
@@ -124,19 +116,11 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             unq_V = sparse.hstack((unq_V, unq_V2), format="csr")
 
         if not self.hashing:  # Build n-grams/word vocabulary
-            if parse_version(sklearn_version) < parse_version("1.0"):
-                self.vocabulary = self.ngrams_count_.get_feature_names()
-            else:
-                self.vocabulary = self.ngrams_count_.get_feature_names_out()
+            self.vocabulary = self.ngrams_count_.get_feature_names_out()
             if self.add_words:
-                if parse_version(sklearn_version) < parse_version("1.0"):
-                    self.vocabulary = np.concatenate(
-                        (self.vocabulary, self.word_count_.get_feature_names())
-                    )
-                else:
-                    self.vocabulary = np.concatenate(
-                        (self.vocabulary, self.word_count_.get_feature_names_out())
-                    )
+                self.vocabulary = np.concatenate(
+                    (self.vocabulary, self.word_count_.get_feature_names_out())
+                )
         _, self.n_vocab = unq_V.shape
         # Init the topics W given the n-grams counts V
         self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], X)
@@ -169,26 +153,14 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         n-grams counts.
         """
         if self.init == "k-means++":
-            if parse_version(sklearn_version) < parse_version("0.24"):
-                W = (
-                    _k_init(
-                        V,
-                        self.n_components,
-                        x_squared_norms=row_norms(V, squared=True),
-                        random_state=self.random_state,
-                        n_local_trials=None,
-                    )
-                    + 0.1
-                )
-            else:
-                W, _ = kmeans_plusplus(
-                    V,
-                    self.n_components,
-                    x_squared_norms=row_norms(V, squared=True),
-                    random_state=self.random_state,
-                    n_local_trials=None,
-                )
-                W = W + 0.1  # To avoid restricting topics to a few n-grams only
+            W, _ = kmeans_plusplus(
+                V,
+                self.n_components,
+                x_squared_norms=row_norms(V, squared=True),
+                random_state=self.random_state,
+                n_local_trials=None,
+            )
+            W = W + 0.1  # To avoid restricting topics to a few n-grams only
         elif self.init == "random":
             W = self.random_state.gamma(
                 shape=self.gamma_shape_prior,
@@ -208,26 +180,14 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_components:
-                if parse_version(sklearn_version) < parse_version("0.24"):
-                    W2 = (
-                        _k_init(
-                            V,
-                            self.n_components - W.shape[0],
-                            x_squared_norms=row_norms(V, squared=True),
-                            random_state=self.random_state,
-                            n_local_trials=None,
-                        )
-                        + 0.1
-                    )
-                else:
-                    W2, _ = kmeans_plusplus(
-                        V,
-                        self.n_components - W.shape[0],
-                        x_squared_norms=row_norms(V, squared=True),
-                        random_state=self.random_state,
-                        n_local_trials=None,
-                    )
-                    W2 = W2 + 0.1
+                W2, _ = kmeans_plusplus(
+                    V,
+                    self.n_components - W.shape[0],
+                    x_squared_norms=row_norms(V, squared=True),
+                    random_state=self.random_state,
+                    n_local_trials=None,
+                )
+                W2 = W2 + 0.1
                 W = np.concatenate((W, W2), axis=0)
         else:
             raise ValueError(f"Initialization method {self.init!r} does not exist. ")
@@ -301,32 +261,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def get_feature_names(self, n_labels=3, prefix=""):
-        """Return clean feature names. Compatibility method for sklearn < 1.0.
-
-        Use :func:`~GapEncoderColumn.get_feature_names_out` instead.
-
-        Parameters
-        ----------
-        n_labels : int, default=3
-            The number of labels used to describe each topic.
-        prefix : str, default=''
-            Used as a prefix for the categories.
-
-        Returns
-        -------
-        list of str
-            The labels that best describe each topic.
-        """
-        warnings.warn(
-            "Following the changes in scikit-learn 1.0, "
-            "get_feature_names is deprecated. "
-            "Use get_feature_names_out instead. ",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.get_feature_names_out(n_labels=n_labels, prefix=prefix)
-
     def get_feature_names_out(
         self,
         n_labels: int = 3,
@@ -351,10 +285,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
-        if parse_version(sklearn_version) < parse_version("1.0"):
-            vocabulary = np.array(vectorizer.get_feature_names())
-        else:
-            vocabulary = np.array(vectorizer.get_feature_names_out())
+        vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self.transform(np.array(vocabulary).reshape(-1))
         encoding = abs(encoding)
         encoding = encoding / np.sum(encoding, axis=1, keepdims=True)
@@ -967,53 +898,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
             labels.extend(col_labels)
         return labels
-
-    def get_feature_names(
-        self,
-        col_names: List[str] = None,
-        n_labels: int = 3,
-        input_features=None,
-    ) -> List[str]:
-        """Return clean feature names. Compatibility method for sklearn < 1.0.
-
-        Use :func:`~GapEncoder.get_feature_names_out` instead.
-
-        For each topic, labels with the highest activations are selected.
-
-        Parameters
-        ----------
-        col_names : 'auto' or list of str, optional
-            The column names to be added as prefixes before the labels.
-            If `col_names=None`, no prefixes are used.
-            If `col_names='auto'`, column names are automatically defined:
-
-                - if the input data was a :obj:`~pandas.DataFrame`,
-                  its column names are used,
-                - otherwise, 'col1', ..., 'colN' are used as prefixes.
-
-            Prefixes can be manually set by passing a list for `col_names`.
-
-        n_labels : int, default=3
-            The number of labels used to describe each topic.
-
-        input_features : None
-            Unused, only here for compatibility.
-
-        Returns
-        -------
-        list of str
-            The labels that best describe each topic.
-            Each element contains the labels joined by a comma.
-        """
-        if parse_version(sklearn_version) >= parse_version("1.0"):
-            warnings.warn(
-                "Following the changes in scikit-learn 1.0, "
-                "get_feature_names is deprecated. "
-                "Use get_feature_names_out instead. ",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        return self.get_feature_names_out(col_names, n_labels)
 
     def score(self, X) -> float:
         """Score this instance on `X`.

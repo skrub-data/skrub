@@ -13,7 +13,6 @@ import pandas as pd
 import sklearn
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
-from sklearn import __version__ as sklearn_version
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -21,7 +20,6 @@ from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
-from skrub._utils import parse_version
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -244,11 +242,11 @@ class TableVectorizer(ColumnTransformer):
         See also attribute :attr:`~skrub.TableVectorizer.imputed_columns_`.
 
     remainder : {'drop', 'passthrough'} or Transformer, default='passthrough'
-        By default, all remaining columns that were not specified in `transformers` 
-        will be automatically passed through. This subset of columns is concatenated 
+        By default, all remaining columns that were not specified in `transformers`
+        will be automatically passed through. This subset of columns is concatenated
         with the output of the transformers. (default 'passthrough').
-        By specifying `remainder='drop'`, only the specified columns 
-        in `transformers` are transformed and combined in the output, and the 
+        By specifying `remainder='drop'`, only the specified columns
+        in `transformers` are transformed and combined in the output, and the
         non-specified columns are dropped.
         By setting `remainder` to be an estimator, the remaining
         non-specified columns will use the `remainder` estimator. The
@@ -417,29 +415,12 @@ class TableVectorizer(ColumnTransformer):
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
-            if parse_version(sklearn_version) >= parse_version("1.0"):
-                # sklearn is lenient and lets us use both
-                # `handle_unknown="ignore"` and `drop="if_binary"`
-                # at the same time
-                self.low_card_cat_transformer_ = OneHotEncoder(
-                    drop="if_binary", handle_unknown="ignore"
-                )  # TODO change to "infrequent_if_exists" when we bump sklearn min version to 1.1
-            else:
-                # sklearn is not lenient, and does not let us use both
-                # `handle_unknown="ignore"` and `drop="if_binary"`
-                # at the same time, so we use `handle_unknown="error"` instead
-                self.low_card_cat_transformer_ = OneHotEncoder(
-                    drop="if_binary", handle_unknown="error"
-                )
-                warn(
-                    f"You are using scikit-learn={sklearn_version}. "
-                    "Upgrade to scikit-learn>=1.0 to use "
-                    "handle_unknown='ignore'. "
-                    "Otherwise, pass a OneHotEncoder with drop=None as "
-                    "low_card_cat_transformer. "
-                    "Using handle_unknown='error' in low_card_cat_transformer.",
-                    stacklevel=2,
-                )
+            # sklearn is lenient and lets us use both
+            # `handle_unknown="infrequent_if_exists"` and `drop="if_binary"`
+            # at the same time
+            self.low_card_cat_transformer_ = OneHotEncoder(
+                drop="if_binary", handle_unknown="infrequent_if_exists"
+            )
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
         else:
@@ -627,9 +608,7 @@ class TableVectorizer(ColumnTransformer):
             X = self._auto_cast(X)
 
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(
-            include="number"
-        ).columns.to_list()
+        numeric_columns = X.select_dtypes(include="number").columns.to_list()
         categorical_columns = X.select_dtypes(
             include=["string", "object", "category"]
         ).columns.to_list()
@@ -641,7 +620,7 @@ class TableVectorizer(ColumnTransformer):
         low_card_cat_columns, high_card_cat_columns = [], []
         for col in categorical_columns:
             if X[col].nunique() < self.cardinality_threshold:
-                low_card_cat_columns.append(col)    
+                low_card_cat_columns.append(col)
             else:
                 high_card_cat_columns.append(col)
 
@@ -673,15 +652,8 @@ class TableVectorizer(ColumnTransformer):
                         self.imputed_columns_.append(col)
 
                 elif self.impute_missing == "auto":
-                    for name, trans, cols in all_transformers:
-                        if (
-                            isinstance(trans, OneHotEncoder)
-                            and parse_version(sklearn_version) < parse_version("0.24")
-                        ):
-                            # Only impute categorical columns
-                            for col in categorical_columns:
-                                X[col] = _replace_missing_in_cat_col(X[col])
-                                self.imputed_columns_.append(col)
+                    # Add special cases when we should impute.
+                    pass
 
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas gives different types depending on whether a column has
@@ -762,10 +734,7 @@ class TableVectorizer(ColumnTransformer):
         list of str
             Feature names.
         """
-        if parse_version(sklearn_version) < parse_version("1.0"):
-            ct_feature_names = super().get_feature_names()
-        else:
-            ct_feature_names = super().get_feature_names_out()
+        ct_feature_names = super().get_feature_names_out()
         all_trans_feature_names = []
 
         for name, trans, cols, _ in self._iter(fitted=True):
@@ -777,10 +746,7 @@ class TableVectorizer(ColumnTransformer):
                         cols = [self.columns_[i] for i in cols]
                     all_trans_feature_names.extend(cols)
                 continue
-            if parse_version(sklearn_version) < parse_version("1.0"):
-                trans_feature_names = trans.get_feature_names(cols)
-            else:
-                trans_feature_names = trans.get_feature_names_out(cols)
+            trans_feature_names = trans.get_feature_names_out(cols)
             all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
@@ -788,31 +754,6 @@ class TableVectorizer(ColumnTransformer):
             return list(ct_feature_names)
 
         return all_trans_feature_names
-
-    def get_feature_names(self, input_features=None) -> List[str]:
-        """Return clean feature names. Compatibility method for sklearn < 1.0.
-
-        Use :func:`~TableVectorizer.get_feature_names_out` instead.
-
-        Parameters
-        ----------
-        input_features : None
-            Unused, only here for compatibility.
-
-        Returns
-        -------
-        list of str
-            Feature names.
-        """
-        if parse_version(sklearn_version) >= parse_version("1.0"):
-            warn(
-                "Following the changes in scikit-learn 1.0, "
-                "get_feature_names is deprecated. "
-                "Use get_feature_names_out instead. ",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        return self.get_feature_names_out(input_features)
 
 
 @deprecated("Use TableVectorizer instead.")
