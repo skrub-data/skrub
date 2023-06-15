@@ -15,6 +15,9 @@ development and backward compatability is not ensured.
 Major changes
 -------------
 
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
+  :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 * The signatures of all encoders and functions have been revised to enforce
   cleaner calls. This means that some arguments that could previously be passed
   positionally now have to be passed as keywords.
@@ -22,6 +25,34 @@ Major changes
 
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
+
+* Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`
+  and :func:`fetch_ken_types` have been renamed.
+  :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* Bump minimal required Python version to 3.10. :pr:`606` by
+  :user:`Gael Varoquaux <GaelVaroquaux>`
+
+Minor changes
+-------------
+
+
+* Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`.
+  These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`
+  or the :class:`GapEncoder` instead. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+* Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor,
+  as we only support the ngram similarity. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Some bug fixes for :class:`TableVectorizer` ( :pr:`579`):
+
+  - `check_is_fitted` now looks at `"transformers_"` rather than `"columns_"`
+  - the default of the `remainder` parameter in the docstring is now `"passthrough"`
+    instead of `"drop"` to match the implementation.
+  - uint8 and int8 dtypes are now considered as numerical columns.
+
+* Removed the leading "<" and trailing ">" symbols from KEN entities
+  and types.
+  :pr:`601` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Before skrub: dirty_cat
 ========================
@@ -90,7 +121,7 @@ Minor changes
 -------------
 * Add example `Wikipedia embeddings to enrich the data`. :pr:`487` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* * **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
+* **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
   embeddings and filter them by type.
 
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download indicators

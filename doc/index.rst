@@ -8,6 +8,7 @@
 .. toctree::
    :hidden:
 
+   install
    documentation
    api
    auto_examples/index

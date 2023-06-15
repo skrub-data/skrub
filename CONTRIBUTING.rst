@@ -131,57 +131,13 @@ Preparing the ground
 If not already done, first create an issue, and discuss
 the changes with the project’s maintainers.
 
-Please refer to the previous section `*How do I submit a (good)
-enhancement proposal?*<https://skrub-data.org/stable/CONTRIBUTING.html#how-do-i-submit-a-good-enhancement-proposal>`__ for more information.
+See in the sections above for the right way to do this.
 
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Using a dedicated Python environment is highly recommended!
-
-Different solutions are available, the most common being
-`conda <https://docs.conda.io/projects/conda/en/latest/index.html>`__
-and `pyenv <https://github.com/pyenv/pyenv>`__.
-
-First step: create your environment.
-
-For instance, with conda:
-
-.. code:: console
-
-   conda create python=3.10 --name skrub
-   conda activate skrub
-
-Secondly, clone the repository (with ``git`` installed -
-it is already on most linux distributions).
-
-.. code:: console
-
-   git clone https://github.com/skrub-data/skrub
-
-Next, install the project dependencies. They are listed in ``setup.cfg``.
-
-.. code:: console
-
-   pip install -e .[dev]
-
-Code-formatting and linting is automatically done via 
-` ``pre-commit`` <https://github.com/pre-commit/pre-commit>`__. You
-install this setup using:
-
-.. code:: console
-
-   pip install pre-commit
-   pre-commit install
-
-A few revisions (formatting the whole code-base for instance) better be
-ignored by ``git blame`` and IDE integrations. The revisions to be
-ignored are listed in ``.git-blame-ignore-revs``, which can be set in
-your local repository with:
-
-.. code:: console
-
-   git config blame.ignoreRevsFile .git-blame-ignore-revs
+For this process, please refer to the [installation process](https://skrub-data.org/stable/install.html#advanced-usage-for-contributors),
+section *Advanced usage, for contributors*.
 
 Implementation
 ^^^^^^^^^^^^^^
@@ -209,8 +165,12 @@ There are a few specific project goals to keep in mind:
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
 
+<<<<<<< HEAD
 First, `fork <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`__
 the skrub repo on Github.
+=======
+First, you’ll want to [fork skrub on Github](https://github.com/skrub-data/skrub/fork).
+>>>>>>> main
 
 That will enable you to push your commits to a branch *on your fork*.
 It is advised to create a new branch every time you work on a new issue,
