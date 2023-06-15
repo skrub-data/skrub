@@ -28,6 +28,7 @@ Major changes
 
 * Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`
   and :func:`fetch_ken_types` have been renamed.
+  :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Minor changes
 -------------
