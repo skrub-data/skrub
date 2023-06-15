@@ -18,7 +18,7 @@ _correspondence_table_url = (
 )
 
 
-def get_ken_table_aliases() -> Set[str]:
+def fetch_ken_table_aliases() -> Set[str]:
     """Get the supported aliases of embedded KEN entities tables.
 
     These aliases can be using in subsequent functions (see section *See Also*).
@@ -30,9 +30,9 @@ def get_ken_table_aliases() -> Set[str]:
 
     See Also
     --------
-    :func:`get_ken_types`
+    :func:`fetch_ken_types`
         Helper function to search for entity types.
-    :func:`get_ken_embeddings`
+    :func:`fetch_ken_embeddings`
         Download Wikipedia embeddings by type.
 
     Notes
@@ -43,14 +43,14 @@ def get_ken_table_aliases() -> Set[str]:
     --------
     Let's see what are the current KEN subtables available
     for download:
-    >>> get_ken_table_aliases()
+    >>> fetch_ken_table_aliases()
     {'games', 'companies', 'schools', 'albums', 'all_entities', 'movies'}
     """
     correspondence = pd.read_csv(_correspondence_table_url)
     return set(["all_entities"] + list(correspondence["table"].values))
 
 
-def get_ken_types(
+def fetch_ken_types(
     search: str = None,
     *,
     exclude: Optional[str] = None,
@@ -58,7 +58,7 @@ def get_ken_types(
 ) -> pd.DataFrame:
     """Helper function to search for KEN entity types.
 
-    The result can then be used with :func:`get_ken_embeddings`.
+    The result can then be used with :func:`fetch_ken_embeddings`.
 
     Parameters
     ----------
@@ -68,7 +68,7 @@ def get_ken_types(
         Substring pattern to exclude from the search.
     embedding_table_id : str, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
-        Get the supported tables with :func:`get_ken_table_aliases`.
+        Get the supported tables with :func:`fetch_ken_table_aliases`.
         It is NOT possible to pass a custom figshare ID.
 
     Returns
@@ -78,7 +78,7 @@ def get_ken_types(
 
     See Also
     --------
-    :func:`get_ken_embeddings`
+    :func:`fetch_ken_embeddings`
         Download Wikipedia embeddings by type.
 
     References
@@ -89,13 +89,13 @@ def get_ken_types(
 
     Notes
     -----
-    Best used in conjunction with :func:`get_ken_embeddings`.
+    Best used in conjunction with :func:`fetch_ken_embeddings`.
     
     Examples
     --------
     To get all the existing KEN types of entities:
 
-    >>> embedding_types = get_ken_types()
+    >>> embedding_types = fetch_ken_types()
     >>> embedding_types.head()
                                 Type
     0                 wikicat_italian_male_screenwriters
@@ -106,7 +106,7 @@ def get_ken_types(
 
     Let's search for all KEN types with the strings "dance" or "music":
 
-    >>> embedding_filtered_types = get_ken_types(search="dance|music")
+    >>> embedding_filtered_types = fetch_ken_types(search="dance|music")
     >>> embedding_filtered_types.head()
                                     Type
     0                    wikicat_music_festivals_in_france
@@ -116,7 +116,7 @@ def get_ken_types(
     4  wikicat_alumni_of_the_london_academy_of_music_...
     """
     correspondence = pd.read_csv(_correspondence_table_url)
-    if embedding_table_id not in get_ken_table_aliases():
+    if embedding_table_id not in fetch_ken_table_aliases():
         raise ValueError(
             f"The embedding_table_id must be one of {correspondence['table'].unique()}."
         )
@@ -134,8 +134,8 @@ def get_ken_types(
     return search_result.reset_index(drop=True)
 
 
-def get_ken_embeddings(
-    types: Optional[str] = None,
+def fetch_ken_embeddings(
+    search_types: Optional[str] = None,
     *,
     exclude: Optional[str] = None,
     embedding_table_id: str = "all_entities",
@@ -150,7 +150,7 @@ def get_ken_embeddings(
 
     Parameters
     ----------
-    types : str, optional
+    search_types : str, optional
         Substring pattern that filters the types of entities.
         Will keep all entity types containing the substring.
         Write in lowercase. If `None`, all types will be passed.
@@ -158,11 +158,11 @@ def get_ken_embeddings(
         Type of embeddings to exclude from the types search.
     embedding_table_id : str, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
-        Get the supported tables with :func:`get_ken_table_aliases`.
+        Get the supported tables with :func:`fetch_ken_table_aliases`.
         It is also possible to pass a custom figshare ID.
     embedding_type_id : str, optional
         Figshare ID of the file containing the type of embeddings.
-        Get the supported tables with :func:`get_ken_types`.
+        Get the supported tables with :func:`fetch_ken_types`.
         Ignored unless a custom `embedding_table_id` is provided.
     pca_components : int, optional
         Size of the dimensional space on which the embeddings will be projected
@@ -178,9 +178,9 @@ def get_ken_embeddings(
 
     See Also
     --------
-    :func:`get_ken_table_aliases`
+    :func:`fetch_ken_table_aliases`
         Get the supported aliases of embedded entities tables.
-    :func:`get_ken_types`
+    :func:`fetch_ken_types`
         Helper function to search for entity types.
     :func:`skrub.fuzzy_join` :
         Join two tables (dataframes) based on approximate column matching.
@@ -199,23 +199,23 @@ def get_ken_embeddings(
     The files are read and returned in parquet format, this function needs
     pyarrow installed to run correctly.
 
-    The `types` parameter is there to filter the types by the input string
+    The `search_types` parameter is there to filter the types by the input string
     pattern.
     In case the input is "music", all types with this string will be included
     (e.g. "wikicat_musician_from_france", "wikicat_music_label" etc.).
     Going directly for the exact type name (e.g. "wikicat_rock_music_bands")
     is possible but may not be complete (as some relevant bands may be
     in other similar types).
-    For exploring available types, the :func:`~skrub.datasets.get_ken_types`
+    For exploring available types, the :func:`~skrub.datasets.fetch_ken_types`
     function can be used.
 
     Examples
     --------
-    :func:`get_ken_embeddings` allows you to extract embeddings
+    :func:`fetch_ken_embeddings` allows you to extract embeddings
     you are interested in. For instance, if we are interested in
     video games:
 
-    >>> games_embedding = get_ken_embeddings(types="video_games")
+    >>> games_embedding = fetch_ken_embeddings(search_types="video_games")
     >>> games_embedding.head()
                     Entity                       Type                       ...      X198      X199
     0       The_Mysterious_Island  wikicat_novels_adapted_into_video_games  ... -0.072814 -0.156973
@@ -225,12 +225,12 @@ def get_ken_embeddings(
     4                     Cruis'n               wikicat_racing_video_games  ... -0.260757  0.060700
 
     Extracts all embeddings with the "games" type. 
-    For the list of existing types see :func:`get_ken_types`.
+    For the list of existing types see :func:`fetch_ken_types`.
 
     Some tables are available pre-filtered for us using the 
     `embedding_table_id` parameter:
 
-    >>> games_embedding_fast = get_ken_embeddings(embedding_table_id="games")
+    >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games")
     >>> games_embedding_fast.head()
                      Entity                               Type                      ...      X198      X199
     0              R-Type_Delta                                 wikicat_irem_games  ... -0.125806  0.040006
@@ -241,9 +241,9 @@ def get_ken_embeddings(
 
     It takes less time to load the wanted output, and is more precise as the
     types have been carefully filtered out.
-    For a list of pre-filtered tables, see func:`get_ken_table_aliases`.
+    For a list of pre-filtered tables, see func:`fetch_ken_table_aliases`.
     """
-    if embedding_table_id in get_ken_table_aliases():
+    if embedding_table_id in fetch_ken_table_aliases():
         correspondence = pd.read_csv(_correspondence_table_url)
         embeddings_id = correspondence[correspondence["table"] == embedding_table_id][
             "entities_figshare_id"
@@ -254,8 +254,8 @@ def get_ken_embeddings(
     else:
         embeddings_id = embedding_table_id
     emb_type = fetch_figshare(embedding_type_id).X
-    if types is not None:
-        emb_type = emb_type[emb_type["Type"].str.contains(types)]
+    if search_types is not None:
+        emb_type = emb_type[emb_type["Type"].str.contains(search_types)]
     if exclude is not None:
         emb_type = emb_type[~emb_type["Type"].str.contains(exclude)]
     emb_type.drop_duplicates(subset=["Entity"], inplace=True)
