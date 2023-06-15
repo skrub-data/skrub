@@ -7,7 +7,8 @@ which is the batched version with batch_per_job=1
 Date: February 2023
 """
 
-from typing import Callable, Collection, Dict, List, Literal, Tuple
+from typing import Literal
+from collections.abc import Callable, Collection
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
@@ -117,7 +118,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         n_components: int = 30,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         hashing: Literal["fast", "murmur"] = "fast",
         minmax_hash: bool = False,
         handle_missing: Literal["error", "zero_impute"] = "zero_impute",
@@ -134,7 +135,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.batch_per_job = batch_per_job
         self.n_jobs = n_jobs
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """

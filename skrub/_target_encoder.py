@@ -1,5 +1,5 @@
 import collections
-from typing import Dict, List, Literal, Union
+from typing import Literal
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -109,14 +109,14 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     """
 
     n_features_in_: int
-    _label_encoders_: List[LabelEncoder]
-    categories_: List[np.ndarray]
+    _label_encoders_: list[LabelEncoder]
+    categories_: list[np.ndarray]
     n_: int
 
     def __init__(
         self,
         *,
-        categories: Union[Literal["auto"], List[Union[List[str], np.ndarray]]] = "auto",
+        categories: Literal["auto"] | list[list[str] | np.ndarray] = "auto",
         clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = "binary-clf",
         dtype: type = np.float64,
         handle_unknown: Literal["error", "ignore"] = "error",
@@ -128,7 +128,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.handle_unknown = handle_unknown
         self.handle_missing = handle_missing
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """

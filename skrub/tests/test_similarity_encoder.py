@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 import numpy.testing
@@ -138,7 +138,7 @@ def _test_missing_values_transform(input_type: str, missing: str) -> None:
 
 def _test_similarity(
     similarity_f: Callable,
-    hashing_dim: Optional[int] = None,
+    hashing_dim: int | None = None,
     categories: str = "auto",
 ) -> None:
     X = np.array(["aa", "aaa", "aaab"]).reshape(-1, 1)

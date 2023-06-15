@@ -3,7 +3,7 @@ Implements the FeatureAugmenter, a that allows chaining multiple fuzzy joins
 on a table.
 """
 
-from typing import List, Literal, Tuple
+from typing import Literal
 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -123,12 +123,12 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        tables: List[Tuple[pd.DataFrame, str]],
+        tables: list[tuple[pd.DataFrame, str]],
         main_key: str,
         *,
         match_score: float = 0.0,
         analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
     ):
         self.tables = tables
         self.main_key = main_key

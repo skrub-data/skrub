@@ -3,7 +3,7 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import sklearn
@@ -17,6 +17,9 @@ from sklearn.utils.validation import check_is_fitted
 from ._string_distances import get_ngram_count, preprocess
 from ._utils import parse_version
 
+# Ignore lines too long, first docstring lines can't be cut
+# flake8: noqa: E501
+
 
 def _ngram_similarity_one_sample_inplace(
     x_count_vector: np.ndarray,
@@ -26,7 +29,7 @@ def _ngram_similarity_one_sample_inplace(
     se_dict: dict,
     unq_X: np.ndarray,
     i: int,
-    ngram_range: Tuple[int, int],
+    ngram_range: tuple[int, int],
 ) -> None:
     """
     Update inplace a dict of similarities between a string and a vocabulary
@@ -70,8 +73,8 @@ def _ngram_similarity_one_sample_inplace(
 
 def ngram_similarity_matrix(
     X,
-    cats: List[str],
-    ngram_range: Tuple[int, int],
+    cats: list[str],
+    ngram_range: tuple[int, int],
     hashing_dim: int,
     dtype: type = np.float64,
 ) -> np.ndarray:
@@ -257,24 +260,24 @@ class SimilarityEncoder(OneHotEncoder):
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
     """
 
-    categories_: List[np.ndarray]
+    categories_: list[np.ndarray]
     n_features_in_: int
     drop_idx_: np.ndarray
-    vectorizers_: List[CountVectorizer]
-    vocabulary_count_matrices_: List[np.ndarray]
-    vocabulary_ngram_counts_: List[List[int]]
+    vectorizers_: list[CountVectorizer]
+    vocabulary_count_matrices_: list[np.ndarray]
+    vocabulary_ngram_counts_: list[list[int]]
     _infrequent_enabled: bool
 
     def __init__(
         self,
         *,
-        ngram_range: Tuple[int, int] = (2, 4),
-        categories: Union[Literal["auto"], List[List[str]]] = "auto",
+        ngram_range: tuple[int, int] = (2, 4),
+        categories: Literal["auto"] | list[list[str]] = "auto",
         dtype: type = np.float64,
         handle_unknown: Literal["error", "ignore"] = "ignore",
         handle_missing: Literal["error", ""] = "",
-        hashing_dim: Optional[int] = None,
-        n_jobs: Optional[int] = None,
+        hashing_dim: int | None = None,
+        n_jobs: int | None = None,
     ):
         super().__init__()
         self.categories = categories
@@ -490,7 +493,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     def _ngram_similarity_fast(
         self,
-        X: Union[list, np.ndarray],
+        X: list | np.ndarray,
         col_idx: int,
     ) -> np.ndarray:
         """

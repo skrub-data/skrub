@@ -1,7 +1,6 @@
 """
 Get the Wikipedia embeddings for feature augmentation.
 """
-from typing import Optional, Set
 
 import pandas as pd
 from sklearn.decomposition import PCA
@@ -18,7 +17,7 @@ _correspondence_table_url = (
 )
 
 
-def get_ken_table_aliases() -> Set[str]:
+def get_ken_table_aliases() -> set[str]:
     """Get the supported aliases of embedded KEN entities tables.
 
     These aliases can be using in subsequent functions (see section *See Also*).
@@ -46,7 +45,7 @@ def get_ken_table_aliases() -> Set[str]:
 def get_ken_types(
     search: str = None,
     *,
-    exclude: Optional[str] = None,
+    exclude: str | None = None,
     embedding_table_id: str = "all_entities",
 ) -> pd.DataFrame:
     """Helper function to search for KEN entity types.
@@ -103,12 +102,12 @@ def get_ken_types(
 
 
 def get_ken_embeddings(
-    types: Optional[str] = None,
+    types: str | None = None,
     *,
-    exclude: Optional[str] = None,
+    exclude: str | None = None,
     embedding_table_id: str = "all_entities",
-    embedding_type_id: Optional[str] = None,
-    pca_components: Optional[int] = None,
+    embedding_type_id: str | None = None,
+    pca_components: int | None = None,
     suffix: str = "",
 ) -> pd.DataFrame:
     """Download Wikipedia embeddings by type.

@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional
+from typing import Literal
 from warnings import warn
 
 import numpy as np
@@ -13,7 +13,7 @@ from skrub._utils import check_input, parse_version
 # flake8: noqa: E501
 
 
-WORD_TO_ALIAS: Dict[str, str] = {
+WORD_TO_ALIAS: dict[str, str] = {
     "year": "Y",
     "month": "M",
     "day": "D",
@@ -24,7 +24,7 @@ WORD_TO_ALIAS: Dict[str, str] = {
     "microsecond": "us",
     "nanosecond": "N",
 }
-TIME_LEVELS: List[str] = list(WORD_TO_ALIAS.keys())
+TIME_LEVELS: list[str] = list(WORD_TO_ALIAS.keys())
 AcceptedTimeValues = Literal[
     "year",
     "month",
@@ -103,8 +103,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     n_features_in_: int
     n_features_out_: int
-    features_per_column_: Dict[int, List[str]]
-    col_names_: Optional[List[str]]
+    features_per_column_: dict[int, list[str]]
+    col_names_: list[str] | None
 
     def __init__(
         self,
@@ -254,7 +254,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             idx += len(self.features_per_column_[i])
         return X_
 
-    def get_feature_names_out(self, input_features=None) -> List[str]:
+    def get_feature_names_out(self, input_features=None) -> list[str]:
         """Return clean feature names.
 
         Feature names are formatted like: "<column_name>_<new_feature>"
@@ -280,7 +280,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 feature_names.append(f"{prefix}_{feature}")
         return feature_names
 
-    def get_feature_names(self, input_features=None) -> List[str]:
+    def get_feature_names(self, input_features=None) -> list[str]:
         """Return clean feature names. Compatibility method for sklearn < 1.0.
 
         Use :func:`~DatetimeEncoder.get_feature_names_out` instead.

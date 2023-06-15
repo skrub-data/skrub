@@ -5,7 +5,7 @@ Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 import numbers
 import warnings
 from collections.abc import Iterable
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -24,9 +24,9 @@ from sklearn.preprocessing import StandardScaler
 
 def _numeric_encoding(
     main: pd.DataFrame,
-    main_cols: Union[str, List[str]],
+    main_cols: str | list[str],
     aux: pd.DataFrame,
-    aux_cols: Union[str, List[str]],
+    aux_cols: str | list[str],
 ) -> tuple:
     """Encoding numerical columns.
 
@@ -60,9 +60,9 @@ def _numeric_encoding(
 
 def _time_encoding(
     main: pd.DataFrame,
-    main_cols: Union[str, List[str]],
+    main_cols: str | list[str],
     aux: pd.DataFrame,
-    aux_cols: Union[str, List[str]],
+    aux_cols: str | list[str],
 ) -> tuple:
     """Encoding datetime columns.
 
@@ -98,11 +98,11 @@ def _time_encoding(
 
 def _string_encoding(
     main: pd.DataFrame,
-    main_cols: Union[str, List[str]],
+    main_cols: str | list[str],
     aux: pd.DataFrame,
-    aux_cols: Union[str, List[str]],
+    aux_cols: str | list[str],
     analyzer: Literal["word", "char", "char_wb"],
-    ngram_range: Tuple[int, int],
+    ngram_range: tuple[int, int],
     encoder: _VectorizerMixin = None,
 ) -> tuple:
     """Encoding string columns.
@@ -141,13 +141,9 @@ def _string_encoding(
     aux = aux[aux_cols].astype(str)
 
     first_col, other_cols = main_cols[0], main_cols[1:]
-    main = main[first_col].str.cat(
-        main[other_cols], sep="  "
-    )
+    main = main[first_col].str.cat(main[other_cols], sep="  ")
     first_col_aux, other_cols_aux = aux_cols[0], aux_cols[1:]
-    aux = aux[first_col_aux].str.cat(
-        aux[other_cols_aux], sep="  "
-    )
+    aux = aux[first_col_aux].str.cat(aux[other_cols_aux], sep="  ")
     all_cats = pd.concat([main, aux], axis=0).unique()
 
     if encoder is None:
@@ -165,7 +161,7 @@ def _string_encoding(
     return main_enc, aux_enc
 
 
-def _nearest_matches(main_array, aux_array) -> Tuple[np.ndarray, np.ndarray]:
+def _nearest_matches(main_array, aux_array) -> tuple[np.ndarray, np.ndarray]:
     """Find the closest matches using the nearest neighbors method.
 
     Parameters
@@ -197,17 +193,17 @@ def fuzzy_join(
     left: pd.DataFrame,
     right: pd.DataFrame,
     how: Literal["left", "right"] = "left",
-    left_on: Optional[Union[str, List[str], List[int]]] = None,
-    right_on: Optional[Union[str, List[str], List[int]]] = None,
-    on: Union[str, List[str], List[int], None] = None,
+    left_on: str | list[str] | list[int] | None = None,
+    right_on: str | list[str] | list[int] | None = None,
+    on: str | list[str] | list[int] | None = None,
     encoder: _VectorizerMixin = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    ngram_range: Tuple[int, int] = (2, 4),
+    ngram_range: tuple[int, int] = (2, 4),
     return_score: bool = False,
     match_score: float = 0,
     drop_unmatched: bool = False,
     sort: bool = False,
-    suffixes: Tuple[str, str] = ("_x", "_y"),
+    suffixes: tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
     """Join two tables based on approximate matching using the appropriate similarity metric.
 
@@ -224,7 +220,7 @@ def fuzzy_join(
 
     Joining on numerical columns is also possible based on
     the Euclidean distance.
-     
+
     Joining on datetime columns is based on the time difference.
 
     Parameters
@@ -430,8 +426,16 @@ def fuzzy_join(
     main_time_cols = main_table[main_cols].select_dtypes(include="datetime").columns
     aux_time_cols = aux_table[aux_cols].select_dtypes(include="datetime").columns
 
-    main_str_cols = main_table[main_cols].select_dtypes(include=["string", "category", "object"]).columns
-    aux_str_cols = aux_table[aux_cols].select_dtypes(include=["string", "category", "object"]).columns
+    main_str_cols = (
+        main_table[main_cols]
+        .select_dtypes(include=["string", "category", "object"])
+        .columns
+    )
+    aux_str_cols = (
+        aux_table[aux_cols]
+        .select_dtypes(include=["string", "category", "object"])
+        .columns
+    )
 
     # Check if included columns are numeric:
     any_numeric = len(main_num_cols) != 0

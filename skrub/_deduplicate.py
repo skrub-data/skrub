@@ -2,7 +2,8 @@
 Implements deduplication based on clustering string distance matrices.
 """
 
-from typing import List, Literal, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -16,8 +17,8 @@ from sklearn.metrics import silhouette_score
 
 
 def compute_ngram_distance(
-    unique_words: Union[Sequence[str], np.ndarray],
-    ngram_range: Tuple[int, int] = (2, 4),
+    unique_words: Sequence[str] | np.ndarray,
+    ngram_range: tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
 ) -> np.ndarray:
     """Compute the condensed pair-wise n-gram distance between `unique_words`.
@@ -82,8 +83,8 @@ def _guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
 
 
 def _create_spelling_correction(
-    unique_words: Union[Sequence[str], np.ndarray],
-    counts: Union[Sequence[int], np.ndarray],
+    unique_words: Sequence[str] | np.ndarray,
+    counts: Sequence[int] | np.ndarray,
     clusters: Sequence[int],
 ) -> pd.Series:
     """
@@ -109,8 +110,8 @@ def _create_spelling_correction(
         corrected spelling of each word as values.
     """
     count_series = pd.Series(counts, index=unique_words)
-    original_spelling: List[str] = []
-    corrected_spelling: List[str] = []
+    original_spelling: list[str] = []
+    corrected_spelling: list[str] = []
     for cluster in np.unique(clusters):
         sorted_spellings = (
             count_series.loc[clusters == cluster]
@@ -127,13 +128,13 @@ def _create_spelling_correction(
 def deduplicate(
     data: Sequence[str],
     *,
-    n_clusters: Optional[int] = None,
-    ngram_range: Tuple[int, int] = (2, 4),
+    n_clusters: int | None = None,
+    ngram_range: tuple[int, int] = (2, 4),
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     method: Literal[
         "single", "complete", "average", "centroid", "median", "ward"
     ] = "average",
-) -> List[str]:
+) -> list[str]:
     """Deduplicate categorical data by hierarchically clustering similar strings.
 
     This works best if there is a number of underlying categories that

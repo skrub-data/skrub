@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 import numpy as np
 
 from skrub import _string_distances
@@ -26,7 +24,7 @@ def test_get_unique_ngrams() -> None:
     assert ngrams == true_ngrams
 
 
-def _random_string_pairs(n_pairs=50, seed=1) -> List[Tuple[str, str]]:
+def _random_string_pairs(n_pairs=50, seed=1) -> list[tuple[str, str]]:
     rng = np.random.RandomState(seed)
     characters = list(map(chr, range(10000)))
     pairs = []
