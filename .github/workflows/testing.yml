@@ -44,15 +44,13 @@ jobs:
               - os: "macos-latest"
                 os-name: "MacOS"
               - dependencies-version: "dev"
-              - dependencies-version: "dev, min-py38"
-                python-version: "3.8"
-                dependencies-version-type: "minimal"
-              - dependencies-version: "dev, min-py39"
-                python-version: "3.9"
+              - dependencies-version: "dev"
+                python-version: "3.10"
                 dependencies-version-type: "minimal"
               - dependencies-version: "dev, min-py310"
                 python-version: "3.10"
-                dependencies-version-type: "minimal"
+              - dependencies-version: "dev"
+                python-version: "3.10"
     name: ${{ matrix.os-name }} with Python ${{ matrix.python-version }} and ${{ matrix.dependencies-version-type }} dependencies
     defaults:
       run:
