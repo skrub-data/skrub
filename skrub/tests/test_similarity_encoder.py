@@ -3,13 +3,11 @@ from collections.abc import Callable
 import numpy as np
 import numpy.testing
 import pytest
-from sklearn import __version__ as sklearn_version
 from sklearn.exceptions import NotFittedError
 
 from skrub import SimilarityEncoder
 from skrub._similarity_encoder import ngram_similarity_matrix
 from skrub._string_distances import ngram_similarity
-from skrub._utils import parse_version
 
 
 def test_specifying_categories() -> None:
@@ -211,11 +209,7 @@ def test_get_features() -> None:
     sim_enc = SimilarityEncoder()
     X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)
-    if parse_version(sklearn_version) < parse_version("1.0"):
-        feature_names = sim_enc.get_feature_names()
-    else:
-        feature_names = sim_enc.get_feature_names_out()
-    assert feature_names.tolist() == [
+    assert sim_enc.get_feature_names_out().tolist() == [
         "x0_ ",
         "x0_!",
         'x0_"',

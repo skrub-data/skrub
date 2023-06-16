@@ -26,8 +26,20 @@ Major changes
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
-* Bump minimal required Python version to 3.10. :pr:`606` by
+* Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`
+  and :func:`fetch_ken_types` have been renamed.
+  :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* Bumped minimal required Python version to 3.10. :pr:`606` by
   :user:`Gael Varoquaux <GaelVaroquaux>`
+
+* Bumped minimal required versions for the dependencies:
+  - numpy >= 1.23.5
+  - scipy >= 1.9.3
+  - scikit-learn >= 1.2.1
+  - pandas >= 1.5.3 :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
+
+* Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
 Minor changes
 -------------
@@ -35,8 +47,8 @@ Minor changes
 * Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`.
   These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`
   or the :class:`GapEncoder` instead. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
-
 * Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor,
+
   as we only support the ngram similarity. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * skrub now uses modern type hints introduced in PEP 585.
@@ -49,6 +61,9 @@ Minor changes
     instead of `"drop"` to match the implementation.
   - uint8 and int8 dtypes are now considered as numerical columns.
 
+* Removed the leading "<" and trailing ">" symbols from KEN entities
+  and types.
+  :pr:`601` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 Before skrub: dirty_cat
 ========================
@@ -117,7 +132,7 @@ Minor changes
 -------------
 * Add example `Wikipedia embeddings to enrich the data`. :pr:`487` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* * **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
+* **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
   embeddings and filter them by type.
 
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download indicators
