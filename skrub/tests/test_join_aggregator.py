@@ -1,28 +1,27 @@
 import re
-import numpy as np
+
 import pandas as pd
-from pandas.testing import assert_frame_equal
 import pytest
-from typing import Literal
+from pandas.testing import assert_frame_equal
 
 from skrub._join_aggregator import (
     JoinAggregator,
-    split_num_categ_ops,
-    dispatch_assembling_engine,
     PandasAssemblingEngine,
+    dispatch_assembling_engine,
+    split_num_categ_ops,
+)
+
+main = pd.DataFrame(
+    {
+        "userId": [1, 1, 1, 2, 2, 2],
+        "movieId": [1, 3, 6, 318, 6, 1704],
+        "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
+        "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
+    }
 )
 
 
-main = pd.DataFrame({
-    "userId": [1, 1, 1, 2, 2, 2],
-    "movieId": [1, 3, 6, 318, 6, 1704],
-    "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
-    "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"]
-})
-
-
 def test_join_agg():
-
     join_agg = JoinAggregator(
         tables=[
             (main, ["userId"], ["rating", "genre"]),
@@ -34,20 +33,21 @@ def test_join_agg():
     )
     main_user_movie = join_agg.fit_transform(main)
 
-    expected = pd.DataFrame({
-        'userId': [1, 1, 1, 2, 2, 2],
-        'movieId': [1, 3, 6, 318, 6, 1704],
-        'rating': [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
-        'genre': ['drama', 'drama', 'comedy', 'sf', 'comedy', 'sf'],
-        'rating_mean_user': [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
-        'genre_mode_user': ['drama', 'drama', 'drama', 'sf', 'sf', 'sf'],
-        'rating_mean_movie': [4.0, 4.0, 3.0, 3.0, 3.0, 4.0],
-    })
+    expected = pd.DataFrame(
+        {
+            "userId": [1, 1, 1, 2, 2, 2],
+            "movieId": [1, 3, 6, 318, 6, 1704],
+            "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
+            "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
+            "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
+            "genre_mode_user": ["drama", "drama", "drama", "sf", "sf", "sf"],
+            "rating_mean_movie": [4.0, 4.0, 3.0, 3.0, 3.0, 4.0],
+        }
+    )
     assert_frame_equal(main_user_movie, expected)
 
 
 def test_join_agg_check_cols():
-
     # check main key missing
     join_agg = JoinAggregator(
         tables=[
@@ -61,7 +61,7 @@ def test_join_agg_check_cols():
     )
     with pytest.raises(ValueError, match=re.escape(msg)):
         join_agg.check_cols(main)
-    
+
     # check too many main keys
     join_agg = JoinAggregator(
         tables=[
@@ -69,10 +69,7 @@ def test_join_agg_check_cols():
         ],
         main_key=["userId", "movieId"],
     )
-    msg = (
-        "The number of main keys must be either 1 or match "
-        "the number of tables"
-    ) 
+    msg = "The number of main keys must be either 1 or match the number of tables"
     with pytest.raises(ValueError, match=msg):
         join_agg.check_cols(main)
 
@@ -98,7 +95,7 @@ def test_join_agg_check_cols():
     msg = "{'wrong_key'} are missing in table 2"
     with pytest.raises(ValueError, match=msg):
         join_agg.check_cols(main)
-    
+
     # check no suffix with one table
     join_agg = JoinAggregator(
         tables=[
@@ -118,7 +115,7 @@ def test_join_agg_check_cols():
         main_key=["userId"],
     )
     join_agg.check_cols(main)
-    assert join_agg.suffixes_ == ['_0', '_1']
+    assert join_agg.suffixes_ == ["_0", "_1"]
 
     # check incorrect suffix type
     join_agg = JoinAggregator(
@@ -128,11 +125,8 @@ def test_join_agg_check_cols():
         ],
         main_key=["userId"],
         suffixes=1,
-    ) 
-    msg = (
-        "Suffixes must be a list of string matching "
-        "the number of tables, got: '1'"
     )
+    msg = "Suffixes must be a list of string matching the number of tables, got: '1'"
     with pytest.raises(ValueError, match=msg):
         join_agg.check_cols(main)
 
@@ -140,10 +134,16 @@ def test_join_agg_check_cols():
     join_agg = JoinAggregator(
         tables=[
             (main, "userId", ["rating", "genre"]),
-            (main, "movieId", ["rating",]),
+            (
+                main,
+                "movieId",
+                [
+                    "rating",
+                ],
+            ),
         ],
         main_key=["userId"],
-        suffixes=["_user", "_movie", "_tag"]
+        suffixes=["_user", "_movie", "_tag"],
     )
     msg = (
         "Suffixes must be None or match the number of tables"
@@ -151,10 +151,9 @@ def test_join_agg_check_cols():
     )
     with pytest.raises(ValueError, match=re.escape(msg)):
         join_agg.check_cols(main)
-    
+
 
 def test_join_agg_default_ops():
-
     # check default agg_ops
     join_agg = JoinAggregator(
         tables=[
@@ -171,18 +170,18 @@ def test_join_agg_default_ops():
             (main, "userId", ["rating", "genre"]),
         ],
         main_key=["userId"],
-        agg_ops=["min", "max", "mode"]
+        agg_ops=["min", "max", "mode"],
     )
     join_agg.fit(main)
     assert join_agg.agg_ops_ == ["min", "max", "mode"]
-    
-    # check not supported agg_ops 
+
+    # check not supported agg_ops
     join_agg = JoinAggregator(
         tables=[
             (main, "userId", ["rating", "genre"]),
         ],
         main_key=["userId"],
-        agg_ops=["most_frequent", "mode"]
+        agg_ops=["most_frequent", "mode"],
     )
     msg = (
         "'agg_ops' options are ['sum', 'mean', 'std', 'min', 'max', 'mode']"
@@ -190,7 +189,7 @@ def test_join_agg_default_ops():
     )
     with pytest.raises(ValueError, match=re.escape(msg)):
         join_agg.fit(main)
-    
+
     # check split ops
     num_ops, categ_ops = split_num_categ_ops(
         ["mean", "std", "min", "mode", "max", "sum"]
@@ -200,17 +199,21 @@ def test_join_agg_default_ops():
 
 
 def test_dispatch_assembling():
-    engine = dispatch_assembling_engine([
-        (main, None, None),
-        (main, None, None),
-    ])
+    engine = dispatch_assembling_engine(
+        [
+            (main, None, None),
+            (main, None, None),
+        ]
+    )
     assert isinstance(engine, PandasAssemblingEngine)
 
     msg = "Only Pandas or Polars dataframes are currently supported"
     with pytest.raises(NotImplementedError, match=msg):
-        dispatch_assembling_engine([
-            (main, None, None),
-            (main.values, None, None),
-        ])
-        
+        dispatch_assembling_engine(
+            [
+                (main, None, None),
+                (main.values, None, None),
+            ]
+        )
+
     # XXX add Polars check here when supported
