@@ -10,7 +10,7 @@ Ongoing development
 =====================
 
 Skrub has not been released yet. It is currently undergoing fast
-development and backward compatability is not ensured.
+development and backward compatibility is not ensured.
 
 Major changes
 -------------
@@ -22,6 +22,10 @@ Major changes
 
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
+
+* New experimental feature :class:`JoinAggregator`, a transformer performing
+  aggregation on auxiliary tables followed by left-joining on a base table.
+  :pr:`600` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 Minor changes
 -------------
@@ -84,7 +88,7 @@ Major changes
   :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
 
 * New experimental feature: :class:`FeatureAugmenter`, a transformer
-  that augments with :func:`fuzzy_join` the number of features in a main table by using information from auxilliary tables.
+  that augments with :func:`fuzzy_join` the number of features in a main table by using information from auxiliary tables.
   :pr:`409` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * Unnecessary API has been made private: everything (files, functions, classes)
