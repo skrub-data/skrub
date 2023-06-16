@@ -1,4 +1,4 @@
-/** Styling **************************************************************/
+/** Landing page *********************************************************/
 
 .bd-article {
     padding-left: 0px !important;
@@ -65,6 +65,23 @@
     margin-top: -20px;
 }
 
+
+/** Styling **************************************************************/
+
+/* Make the footer a bit less visible */
+.bd-footer {
+    border-top: 1px solid var(--pst-color-on-surface);
+    opacity: .7;
+}
+
+.bd-footer p {
+    color: var(--pst-color-text-muted);
+}
+
+.bd-footer a {
+    color: var(--pst-color-info-highlight);
+}
+
 /** Adapt boostrap colors ************************/
 :root {
     /* Change colors on boostrap elements to use the theme's colors */
@@ -84,6 +101,7 @@
 .nav-link:focus, .nav-link:hover {
   color: var(--pst-color-link-hover);
 }
+
 /** Landing header *******************************/
 
 
