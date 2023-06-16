@@ -1,7 +1,6 @@
 """
 Get the Wikipedia embeddings for feature augmentation.
 """
-from typing import Optional, Set
 
 import pandas as pd
 from sklearn.decomposition import PCA
@@ -18,7 +17,7 @@ _correspondence_table_url = (
 )
 
 
-def fetch_ken_table_aliases() -> Set[str]:
+def fetch_ken_table_aliases() -> set[str]:
     """Get the supported aliases of embedded KEN entities tables.
 
     These aliases can be using in subsequent functions (see section *See Also*).
@@ -53,7 +52,7 @@ def fetch_ken_table_aliases() -> Set[str]:
 def fetch_ken_types(
     search: str = None,
     *,
-    exclude: Optional[str] = None,
+    exclude: str | None = None,
     embedding_table_id: str = "all_entities",
 ) -> pd.DataFrame:
     """Helper function to search for KEN entity types.
@@ -90,7 +89,7 @@ def fetch_ken_types(
     Notes
     -----
     Best used in conjunction with :func:`fetch_ken_embeddings`.
-    
+
     Examples
     --------
     To get all the existing KEN types of entities:
@@ -135,12 +134,12 @@ def fetch_ken_types(
 
 
 def fetch_ken_embeddings(
-    search_types: Optional[str] = None,
+    search_types: str | None = None,
     *,
-    exclude: Optional[str] = None,
+    exclude: str | None = None,
     embedding_table_id: str = "all_entities",
-    embedding_type_id: Optional[str] = None,
-    pca_components: Optional[int] = None,
+    embedding_type_id: str | None = None,
+    pca_components: int | None = None,
     suffix: str = "",
 ) -> pd.DataFrame:
     """Download Wikipedia embeddings by type.
@@ -224,10 +223,10 @@ def fetch_ken_embeddings(
     3               Ethan_Winters   wikicat_male_characters_in_video_games  ... -0.107913 -0.089531
     4                     Cruis'n               wikicat_racing_video_games  ... -0.260757  0.060700
 
-    Extracts all embeddings with the "games" type. 
+    Extracts all embeddings with the "games" type.
     For the list of existing types see :func:`fetch_ken_types`.
 
-    Some tables are available pre-filtered for us using the 
+    Some tables are available pre-filtered for us using the
     `embedding_table_id` parameter:
 
     >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games")

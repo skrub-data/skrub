@@ -5,7 +5,7 @@ manually categorize them beforehand, or construct complex Pipelines.
 """
 
 import warnings
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Literal
 from warnings import warn
 
 import numpy as np
@@ -25,7 +25,7 @@ from skrub import DatetimeEncoder, GapEncoder
 # flake8: noqa: E501
 
 
-def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[str]:
+def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
     """Infer the date format of a date column,
     by finding a format which should work for all dates in the column.
 
@@ -89,16 +89,14 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[
         return
 
 
-def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
+def _has_missing_values(df: pd.DataFrame | pd.Series) -> bool:
     """
     Returns True if `array` contains missing values, False otherwise.
     """
     return any(df.isnull())
 
 
-def _replace_false_missing(
-    df: Union[pd.DataFrame, pd.Series]
-) -> Union[pd.DataFrame, pd.Series]:
+def _replace_false_missing(df: pd.DataFrame | pd.Series) -> pd.DataFrame | pd.Series:
     """
     Takes a DataFrame or a Series, and replaces the "false missing", that is,
     strings that designate a missing value, but do not have the corresponding
@@ -144,9 +142,9 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
-OptionalTransformer = Optional[
-    Union[TransformerMixin, Literal["drop", "remainder", "passthrough"]]
-]
+OptionalTransformer = (
+    TransformerMixin | Literal["drop", "remainder", "passthrough"] | None
+)
 
 
 class TableVectorizer(ColumnTransformer):
@@ -353,10 +351,10 @@ class TableVectorizer(ColumnTransformer):
     ]
     """
 
-    transformers_: List[Tuple[str, Union[str, TransformerMixin], List[str]]]
+    transformers_: list[tuple[str, str | TransformerMixin, list[str]]]
     columns_: pd.Index
-    types_: Dict[str, type]
-    imputed_columns_: List[str]
+    types_: dict[str, type]
+    imputed_columns_: list[str]
 
     # Override required parameters
     _required_parameters = []
@@ -372,9 +370,7 @@ class TableVectorizer(ColumnTransformer):
         auto_cast: bool = True,
         impute_missing: Literal["auto", "force", "skip"] = "auto",
         # The next parameters are inherited from ColumnTransformer
-        remainder: Union[
-            Literal["drop", "passthrough"], TransformerMixin
-        ] = "passthrough",
+        remainder: Literal["drop", "passthrough"] | TransformerMixin = "passthrough",
         sparse_threshold: float = 0.3,
         n_jobs: int = None,
         transformer_weights=None,
@@ -626,7 +622,7 @@ class TableVectorizer(ColumnTransformer):
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers: List[Tuple[str, OptionalTransformer, List[str]]] = [
+        all_transformers: list[tuple[str, OptionalTransformer, list[str]]] = [
             ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
             ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
@@ -673,7 +669,7 @@ class TableVectorizer(ColumnTransformer):
         for i, (name, enc, cols) in enumerate(self.transformers_):
             if name == "remainder" and len(cols) < 20:
                 # In this case, "cols" is a list of ints (the indices)
-                cols: List[int]
+                cols: list[int]
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
 
         return X_enc
@@ -716,7 +712,7 @@ class TableVectorizer(ColumnTransformer):
 
         return super().transform(X)
 
-    def get_feature_names_out(self, input_features=None) -> List[str]:
+    def get_feature_names_out(self, input_features=None) -> list[str]:
         """Return clean feature names.
 
         Feature names are formatted like:

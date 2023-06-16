@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -20,7 +18,7 @@ from skrub.datasets import make_deduplication_data
     [[[500, 100, 1500], 0.05], [[100, 100], 0.02], [[200, 50, 30, 200, 800], 0.01]],
 )
 def test_deduplicate(
-    entries_per_category: List[int],
+    entries_per_category: list[int],
     prob_mistake_per_letter: float,
     seed: int = 123,
 ) -> None:

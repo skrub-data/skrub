@@ -2,8 +2,9 @@
 Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 
+from collections.abc import Generator
 from copy import deepcopy
-from typing import Dict, Generator, List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -36,7 +37,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
     """
 
     rho_: float
-    H_dict_: Dict[np.ndarray, np.ndarray]
+    H_dict_: dict[np.ndarray, np.ndarray]
 
     def __init__(
         self,
@@ -52,10 +53,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         tol: float = 1e-4,
         min_iter: int = 2,
         max_iter: int = 5,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         analyzer: Literal["word", "char", "char_wb"] = "char",
         add_words: bool = False,
-        random_state: Optional[Union[int, RandomState]] = None,
+        random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
     ):
@@ -78,7 +79,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
-    def _init_vars(self, X) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _init_vars(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Build the bag-of-n-grams representation `V` of `X` and initialize
         the topics `W`.
@@ -142,7 +143,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             h_out[:] = self.H_dict_[x]
         return H_out
 
-    def _init_w(self, V: np.ndarray, X) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _init_w(self, V: np.ndarray, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Initialize the topics `W`.
         If `self.init='k-means++'`, we use the init method of
@@ -265,7 +266,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self,
         n_labels: int = 3,
         prefix: str = "",
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with the highest activations are selected.
@@ -646,8 +647,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     """
 
     rho_: float
-    fitted_models_: List[GapEncoderColumn]
-    column_names_: List[str]
+    fitted_models_: list[GapEncoderColumn]
+    column_names_: list[str]
 
     def __init__(
         self,
@@ -664,14 +665,14 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         tol: float = 1e-4,
         min_iter: int = 2,
         max_iter: int = 5,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         analyzer: Literal["word", "char", "char_wb"] = "char",
         add_words: bool = False,
-        random_state: Optional[Union[int, RandomState]] = None,
+        random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
         handle_missing: Literal["error", "empty_impute"] = "zero_impute",
-        n_jobs: Optional[int] = None,
+        n_jobs: int | None = None,
         verbose: int = 0,
     ):
         self.ngram_range = ngram_range
@@ -696,7 +697,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.n_jobs = n_jobs
         self.verbose = verbose
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """
@@ -849,7 +850,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def get_feature_names_out(
         self,
-        col_names: Optional[Union[Literal["auto"], List[str]]] = None,
+        col_names: Literal["auto"] | list[str] | None = None,
         n_labels: int = 3,
         input_features=None,
     ):
@@ -941,7 +942,7 @@ def _multiplicative_update_w(
     Ht: np.ndarray,
     rescale_W: bool,
     rho: float,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Multiplicative update step for the topics `W`.
     """
@@ -1005,7 +1006,7 @@ def _multiplicative_update_h(
 def batch_lookup(
     lookup: np.ndarray,
     n: int = 1,
-) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
     """
     Make batches of the lookup array.
     """
@@ -1021,10 +1022,10 @@ def get_kmeans_prototypes(
     n_prototypes: int,
     analyzer: Literal["word", "char", "char_wb"] = "char",
     hashing_dim: int = 128,
-    ngram_range: Tuple[int, int] = (2, 4),
+    ngram_range: tuple[int, int] = (2, 4),
     sparse: bool = False,
     sample_weight=None,
-    random_state: Optional[Union[int, RandomState]] = None,
+    random_state: int | RandomState | None = None,
 ):
     """
     Computes prototypes based on:

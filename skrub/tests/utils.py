@@ -1,5 +1,4 @@
 import random
-from typing import Optional, Union
 
 import numpy as np
 
@@ -7,7 +6,7 @@ import numpy as np
 def generate_data(
     n_samples,
     as_list=False,
-    random_state: Optional[Union[int, float, str, bytes, bytearray]] = None,
+    random_state: int | float | str | bytes | bytearray | None = None,
     sample_length: int = 100,
 ) -> np.ndarray:
     if random_state is not None:

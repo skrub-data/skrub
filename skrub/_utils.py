@@ -1,5 +1,6 @@
 import collections
-from typing import Any, Hashable
+from collections.abc import Hashable
+from typing import Any
 
 import numpy as np
 from sklearn.utils import parse_version  # noqa

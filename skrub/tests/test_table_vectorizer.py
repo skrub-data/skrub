@@ -1,5 +1,3 @@
-from typing import Any, Tuple
-
 import numpy as np
 import pandas as pd
 import pytest
@@ -408,7 +406,7 @@ def test_fit_transform_equiv() -> None:
         assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
 
-def _is_equal(elements: Tuple[Any, Any]) -> bool:
+def _is_equal(elements: tuple[any, any]) -> bool:
     """
     Fixture for values that return false when compared with `==`.
     """
