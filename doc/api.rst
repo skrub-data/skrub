@@ -57,6 +57,13 @@ Joining tables
 
    FeatureAugmenter
 
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
+   JoinAggregator
+
 Deduplication: merging variants of the same entry
 -------------------------------------------------
 

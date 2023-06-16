@@ -204,14 +204,12 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
     on the base dataframe.
 
     Apply numerical (mean, std, sum, min, max) and categorical (mode)
-    aggregation operations on the columns to agg, selected by dtypes.
+    aggregation operations on the columns to aggregate, selected by dtypes.
 
     The grouping columns used during the aggregation are the columns used
     as keys for joining.
 
-    These operations can run lazily by inputing polars LazyFrames.
-    Pandas and polars dataframes can't be mixed together, so the user has
-    to switch between format if needed.
+    Uses :obj:`~pandas.DataFrame` inputs only.
 
     Parameters
     ----------
@@ -220,7 +218,7 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
         specifying the auxiliary dataframes and their columns for joining
         and aggregation operations.
 
-        dataframe : pandas.DataFrame
+        dataframe : :obj:`~pandas.DataFrame`
             The auxiliary data to aggregate and join.
 
         columns_to_join : str or array-like
@@ -244,7 +242,7 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
 
     suffixes : list of str, default=None
         The suffixes that will be add to each table columns in case of
-        duplicate column names, similar to ("_x", "_y") in pandas.merge.
+        duplicate column names, similar to `("_x", "_y")` in :obj:`~pandas.merge`.
         If set to None, we will use the table index, by looking at their
         order in 'tables', e.g. for a duplicate columns: price, price_1, price_2.
 
