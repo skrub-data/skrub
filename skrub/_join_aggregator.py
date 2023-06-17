@@ -218,8 +218,10 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
         specifying the auxiliary dataframes and their columns for joining
         and aggregation operations.
 
-        dataframe : :obj:`~pandas.DataFrame`
+        dataframe : :obj:`~pandas.DataFrame` or str
             The auxiliary data to aggregate and join.
+            'X' can be provided as a string to perform self-aggregation on
+            the input data.
 
         columns_to_join : str or array-like
             Select the columns from the dataframe to use as keys during
@@ -362,23 +364,29 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
         self.main_keys_ = main_keys
 
         # Check agg and join columns
-        for idx, (table, cols_to_join, cols_to_agg) in enumerate(self.tables, start=1):
+        for idx, (table, cols_to_join, cols_to_agg) in enumerate(self.tables):
             cols_to_join = np.atleast_1d(cols_to_join).tolist()
             cols_to_agg = np.atleast_1d(cols_to_agg).tolist()
+
+            if isinstance(table, str):
+                if table != "X":
+                    raise ValueError(f"if string, table can only be 'X', got: {table}")
+                table = X.copy()
+                self.tables[idx] = (table, cols_to_join, cols_to_agg)
 
             table_cols = set(table.columns)
             input_cols = set([*cols_to_join, *cols_to_agg])
 
             missing_cols = input_cols - table_cols
             if len(missing_cols) > 0:
-                raise ValueError(f"{missing_cols} are missing in table {idx}")
+                raise ValueError(f"{missing_cols} are missing in table {idx+1}")
 
         # Check suffixes
         if self.suffixes is None:
             if n_tables == 1:
                 suffixes = [""]
             else:
-                suffixes = [f"_{idx}" for idx in range(len(self.tables))]
+                suffixes = [f"_{idx+1}" for idx in range(len(self.tables))]
         elif hasattr(self.suffixes, "__len__"):
             suffixes = np.atleast_1d(self.suffixes).tolist()
             if len(suffixes) != n_tables:
