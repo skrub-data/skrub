@@ -261,3 +261,52 @@ def test_check_fitted_minhash_encoder() -> None:
     # Check that it works after fitting
     encoder.fit(X)
     encoder.transform(X)
+
+
+def test_deterministic():
+    """Test that the encoder is deterministic"""
+    # TODO: add random state to encoder
+    encoder1 = MinHashEncoder(n_components=4)
+    encoder2 = MinHashEncoder(n_components=4)
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    encoded1 = encoder1.fit_transform(X)
+    encoded2 = encoder2.fit_transform(X)
+    assert np.array_equal(encoded1, encoded2)
+
+
+def test_get_feature_names_out():
+    """Test that get_feature_names_out returns the correct feature names"""
+    # encoder = MinHashEncoder(n_components=4)
+    encoder = MinHashEncoder(n_components=4)
+    X = pd.DataFrame(
+        {
+            "col1": ["a", "b", "c", "d", "e", "f", "g", "h"],
+            "col2": ["a", "b", "c", "d", "e", "f", "g", "h"],
+        }
+    )
+    encoder.fit(X)
+    # columns names should be col1_0 etc for each column and each component
+    assert all(
+        np.array(encoder.get_feature_names_out())
+        == np.array(
+            [
+                "col1_0",
+                "col1_1",
+                "col1_2",
+                "col1_3",
+                "col2_0",
+                "col2_1",
+                "col2_2",
+                "col2_3",
+            ]
+        )
+    )
+
+    # Test that it works with a list of strings
+    encoder = MinHashEncoder(n_components=4)
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"]).reshape(-1, 1)
+    encoder.fit(X)
+    assert all(
+        np.array(encoder.get_feature_names_out())
+        == np.array(["x0_0", "x0_1", "x0_2", "x0_3"])
+    )
