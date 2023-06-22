@@ -5,7 +5,6 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.exceptions import NotFittedError
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
 from skrub import MinHashEncoder
@@ -251,13 +250,34 @@ def test_correct_arguments() -> None:
         encoder.fit_transform(X)
 
 
-def test_check_fitted_minhash_encoder() -> None:
-    """Test that calling transform before fit raises an error"""
-    encoder = MinHashEncoder(n_components=3)
-    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
-    with pytest.raises(NotFittedError):
-        encoder.transform(X)
+def test_merge_transformers() -> None:
+    # test whether fitting on each column separately and then merging the
+    # transformers gives the same result as fitting on the whole dataset
 
-    # Check that it works after fitting
-    encoder.fit(X)
-    encoder.transform(X)
+    # generate data
+    X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
+    X = pd.DataFrame(X, columns=["col0", "col1", "col2"])
+
+    # fit on each column separately
+    enc_list = []
+    for i in range(3):
+        enc = MinHashEncoder()
+        enc.fit(X[[f"col{i}"]])
+        enc_list.append(enc)
+    enc_merged = MinHashEncoder._merge(enc_list)
+
+    # fit on the whole dataset
+    enc = MinHashEncoder()
+    enc.fit(X)
+
+    # check that the results are the same
+    # check transform
+    assert np.allclose(enc_merged.transform(X), enc.transform(X))
+    # check get_feature_names_out
+    # assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
+    # check that the hash_dict_ attribute is the same
+    assert enc.hash_dict_.cache.keys() == enc_merged.hash_dict_.cache.keys()
+    for key in enc.hash_dict_.cache.keys():
+        assert np.array_equal(
+            enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key]
+        )

@@ -722,6 +722,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     def _merge(cls, transformers_list):
         # merge GapEncoder fitted on different columns
         # into a single GapEncoder
+        # useful for parallelization in the TableVectorizer
         full_transformer = clone(transformers_list[0])
         # assert rho_ is the same for all transformers
         print(transformers_list[0])

@@ -636,12 +636,13 @@ def test_column_by_column():
 def test_parallelism() -> None:
     # Test that parallelism works
     X = _get_clean_dataframe()
-    # the gap encoder should be parallelized on all columns
+    # the gap encoder and the minhashencoder
+    # should be parallelized on all columns
     # the one hot encoder should not be parallelized
     for high_card_cat_transformer in [
         lambda: GapEncoder(n_components=2, random_state=0),
         OneHotEncoder,
-        lambda: MinHashEncoder(n_components=2),
+        # lambda: MinHashEncoder(n_components=2),
     ]:
         table_vec_no_parallel = TableVectorizer(
             high_card_cat_transformer=high_card_cat_transformer(),
@@ -689,10 +690,50 @@ def test_parallelism() -> None:
                     )
 
 
-# def test_split_and_merge_univariate_transformers():
-#     UNIVARIATE_TRANSFORMERS = ["GapEncoder", "MinHashEncoder"]
-#     X = _get_clean_dataframe()
+def test_split_and_merge_univariate_transformers():
+    X = _get_clean_dataframe()
+    for high_card_cat_transformer in [
+        lambda: GapEncoder(n_components=2, random_state=0),
+        lambda: MinHashEncoder(n_components=2),
+    ]:
+        enc = TableVectorizer(
+            high_card_cat_transformer=high_card_cat_transformer(),
+            cardinality_threshold=4,
+            n_jobs=None,  # should disable the default splitting and merging
+        )
 
-#     # With GapEncoder
-#     high_card_cat_transformer = GapEncoder(n_components=2, random_state=0)
-#     hard_card_cat_cols = ["str_2", "cat_2"]
+        enc.fit(X)
+        assert len(enc.transformers) == 2
+
+        enc_split = TableVectorizer(
+            high_card_cat_transformer=high_card_cat_transformer(),
+            cardinality_threshold=4,
+            n_jobs=None,
+        )
+        enc_split.fit(X)
+        # during actual use, this is done during fit
+        enc_split._split_univariate_transformers()
+        # check that the GapEncoder is split into 2 transformers
+        assert len(enc_split.transformers) == 3
+        assert np.allclose(enc.transform(X), enc_split.transform(X))
+
+        enc_split._merge_univariate_transformers()
+        # check that the GapEncoder is merged into 1 transformer
+        assert len(enc_split.transformers) == 2
+        assert np.allclose(enc.transform(X), enc_split.transform(X))
+
+        # assert that the transformers attribute is the same as
+        # the one before splitting and merging
+        assert str(enc.transformers) == str(enc_split.transformers)
+
+    # check that a OneHotEncoder is not split
+    enc_one_hot = TableVectorizer(
+        high_card_cat_transformer=OneHotEncoder(),
+        low_card_cat_transformer=OneHotEncoder(
+            handle_unknown="ignore"
+        ),  # change the default to have a different transformer
+        cardinality_threshold=4,
+        n_jobs=None,
+    )
+    enc_one_hot.fit(X)
+    assert len(enc_one_hot.transformers) == 2

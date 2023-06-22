@@ -118,6 +118,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def _merge(cls, transformers_list):
         # merge MinHashEncoder fitted on different columns
         # into a single MinHashEncoder
+        # useful for parallelization in the TableVectorizer
         full_transformer = clone(transformers_list[0])
         capacity = transformers_list[0]._capacity
         assert all(
