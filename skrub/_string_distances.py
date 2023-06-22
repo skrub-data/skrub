@@ -4,12 +4,11 @@ Some string distances
 
 import re
 from collections import Counter
-from typing import Tuple
 
 # TODO vectorize these functions (accept arrays)
 
 
-def get_ngram_count(string: str, ngram_range: Tuple[int, int]) -> int:
+def get_ngram_count(string: str, ngram_range: tuple[int, int]) -> int:
     """
     Compute the number of ngrams in a string.
 
@@ -57,7 +56,7 @@ def preprocess(x: str) -> str:
     return _white_spaces.sub(" ", x)
 
 
-def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
+def get_unique_ngrams(string: str, ngram_range: tuple[int, int]):
     """
     Return the set of unique n-grams of a string.
 

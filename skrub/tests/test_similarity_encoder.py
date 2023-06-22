@@ -1,15 +1,13 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 import numpy.testing
 import pytest
-from sklearn import __version__ as sklearn_version
 from sklearn.exceptions import NotFittedError
 
 from skrub import SimilarityEncoder
-from skrub._similarity_encoder import get_kmeans_prototypes, ngram_similarity_matrix
+from skrub._similarity_encoder import ngram_similarity_matrix
 from skrub._string_distances import ngram_similarity
-from skrub._utils import parse_version
 
 
 def test_specifying_categories() -> None:
@@ -138,101 +136,38 @@ def _test_missing_values_transform(input_type: str, missing: str) -> None:
 
 def _test_similarity(
     similarity_f: Callable,
-    hashing_dim: Optional[int] = None,
+    hashing_dim: int | None = None,
     categories: str = "auto",
-    n_prototypes: int = None,
 ) -> None:
-    if n_prototypes is None:
-        X = np.array(["aa", "aaa", "aaab"]).reshape(-1, 1)
-        X_test = np.array([["Aa", "aAa", "aaa", "aaab", " aaa  c"]]).reshape(-1, 1)
+    X = np.array(["aa", "aaa", "aaab"]).reshape(-1, 1)
+    X_test = np.array([["Aa", "aAa", "aaa", "aaab", " aaa  c"]]).reshape(-1, 1)
 
-        model = SimilarityEncoder(
-            hashing_dim=hashing_dim,
-            categories=categories,
-            n_prototypes=n_prototypes,
-            ngram_range=(3, 3),
-        )
+    model = SimilarityEncoder(
+        hashing_dim=hashing_dim,
+        categories=categories,
+        ngram_range=(3, 3),
+    )
 
-        X_test_enc = model.fit(X).transform(X_test)
+    X_test_enc = model.fit(X).transform(X_test)
 
-        ans = np.zeros((len(X_test), len(X)))
-        for i, x_t in enumerate(X_test.reshape(-1)):
-            for j, x in enumerate(X.reshape(-1)):
-                ans[i, j] = similarity_f(x_t, x, 3)
-        numpy.testing.assert_almost_equal(X_test_enc, ans)
-    else:
-        X = np.array(
-            ["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"]
-        ).reshape(-1, 1)
-        X_test = np.array([["Aa", "aAa", "aaa", "aaab", " aaa  c"]]).reshape(-1, 1)
-
-        if categories == "auto":
-            with pytest.warns(UserWarning, match=r"n_prototypes parameter ignored"):
-                SimilarityEncoder(
-                    categories=categories,
-                    n_prototypes=n_prototypes,
-                )
-        try:
-            model = SimilarityEncoder(
-                hashing_dim=hashing_dim,
-                categories=categories,
-                n_prototypes=n_prototypes,
-                random_state=42,
-                ngram_range=(3, 3),
-            )
-        except ValueError as e:
-            assert (
-                e.__str__()
-                == "n_prototypes expected None or a positive non null integer. "
-            )
-            return
-
-        X_test_enc = model.fit(X).transform(X_test)
-        if n_prototypes == 1:
-            assert model.categories_ == ["aaa"]
-        elif n_prototypes == 2:
-            a = [np.array(["aaa", "aaab"], dtype="<U4")]
-            assert np.array_equal(a, model.categories_)
-        elif n_prototypes == 3:
-            a = [np.array(["aaa", "aaab", "aac"], dtype="<U4")]
-            assert np.array_equal(a, model.categories_)
-
-        ans = np.zeros((len(X_test), len(np.array(model.categories_).reshape(-1))))
-        for i, x_t in enumerate(X_test.reshape(-1)):
-            for j, x in enumerate(np.array(model.categories_).reshape(-1)):
-                ans[i, j] = similarity_f(x_t, x, 3)
-
-        numpy.testing.assert_almost_equal(X_test_enc, ans)
+    ans = np.zeros((len(X_test), len(X)))
+    for i, x_t in enumerate(X_test.reshape(-1)):
+        for j, x in enumerate(X.reshape(-1)):
+            ans[i, j] = similarity_f(x_t, x, 3)
+    numpy.testing.assert_almost_equal(X_test_enc, ans)
 
 
 def test_similarity_encoder() -> None:
-    categories = ["auto", "most_frequent", "k-means"]
-    for category in categories:
-        if category == "auto":
-            _test_similarity(
-                ngram_similarity,
-                categories=category,
-                n_prototypes=None,
-            )
-            _test_similarity(
-                ngram_similarity,
-                hashing_dim=2**16,
-                categories=category,
-            )
-            _test_similarity(ngram_similarity, categories=category, n_prototypes=4)
-        else:
-            for i in range(0, 4):
-                _test_similarity(
-                    ngram_similarity,
-                    categories=category,
-                    n_prototypes=i,
-                )
-                _test_similarity(
-                    ngram_similarity,
-                    hashing_dim=2**16,
-                    categories=category,
-                    n_prototypes=i,
-                )
+    _test_similarity(
+        ngram_similarity,
+        categories="auto",
+    )
+    _test_similarity(
+        ngram_similarity,
+        hashing_dim=2**16,
+        categories="auto",
+    )
+    _test_similarity(ngram_similarity, categories="auto")
 
     input_types = ["list", "numpy", "pandas"]
     handle_missing = ["aaa", "error", ""]
@@ -242,15 +177,6 @@ def test_similarity_encoder() -> None:
             _test_missing_values_transform(input_type, missing)
 
 
-def test_kmeans_protoypes() -> None:
-    X_test = np.array(["cbbba", "baaac", "accc"])
-    proto = get_kmeans_prototypes(X_test, 3, sparse=True)
-    assert np.array_equal(np.sort(proto), np.sort(X_test))
-    X_test_2 = np.array(["aa", "bb", "cc", "bbb"])
-    with pytest.warns(UserWarning, match=r"number of unique prototypes is lower "):
-        get_kmeans_prototypes(X_test_2, 4)
-
-
 def test_ngram_similarity_matrix() -> None:
     X1 = np.array(["cat1", "cat2", "cat3"])
     X2 = np.array(["cata1", "caat2", "ccat3"])
@@ -258,11 +184,9 @@ def test_ngram_similarity_matrix() -> None:
     assert sim.shape == (len(X1), len(X2))
 
 
-def test_reproducibility() -> None:
+def test_determinist() -> None:
     sim_enc = SimilarityEncoder(
-        categories="k-means",
-        n_prototypes=10,
-        random_state=435,
+        categories="auto",
     )
     X = np.array([" %s " % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     prototypes = sim_enc.fit(X).categories_[0]
@@ -281,15 +205,11 @@ def test_fit_transform() -> None:
 
 
 def test_get_features() -> None:
-    # See https://github.com/dirty-cat/skrub/issues/168
-    sim_enc = SimilarityEncoder(random_state=435)
+    # See https://github.com/skrub-data/skrub/issues/168
+    sim_enc = SimilarityEncoder()
     X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)
-    if parse_version(sklearn_version) < parse_version("1.0"):
-        feature_names = sim_enc.get_feature_names()
-    else:
-        feature_names = sim_enc.get_feature_names_out()
-    assert feature_names.tolist() == [
+    assert sim_enc.get_feature_names_out().tolist() == [
         "x0_ ",
         "x0_!",
         'x0_"',
