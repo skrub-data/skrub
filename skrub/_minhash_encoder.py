@@ -71,6 +71,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ----------
     hash_dict_ : LRUDict
         Computed hashes.
+    n_features_in_ : int
+        Number of features seen during :term:`fit`.
+    feature_names_in_ : ndarray of shape (n_features_in,)
+        Names of features seen during :term:`fit`.
 
     See Also
     --------
@@ -347,6 +351,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
+
         The output feature names look like:
         `["x0_0", "x0_1", ..., "x0_(n_components - 1)",
         "x1_0", ..., "x1_(n_components - 1)", ...,
