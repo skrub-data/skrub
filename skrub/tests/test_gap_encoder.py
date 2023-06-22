@@ -271,3 +271,36 @@ def test_transform_deterministic() -> None:
     enc.transform(X_test)
     topics2 = enc.get_feature_names_out()
     assert topics1 == topics2
+
+
+def test_merge_transformers() -> None:
+    # test whether fitting on each column separately and then merging the
+    # transformers gives the same result as fitting on the whole dataset
+
+    # generate data
+    X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
+    X = pd.DataFrame(X, columns=["col0", "col1", "col2"])
+
+    # fit on each column separately
+    enc_list = []
+    for i in range(3):
+        enc = GapEncoder(random_state=42)
+        enc.fit(X[[f"col{i}"]])
+        enc_list.append(enc)
+    enc_merged = GapEncoder._merge(enc_list)
+
+    # fit on the whole dataset
+    enc = GapEncoder(random_state=42)
+    enc.fit(X)
+
+    # check that the results are the same
+    # check transform
+    assert np.allclose(enc_merged.transform(X), enc.transform(X))
+    # check get_feature_names_out
+    assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
+    # check score
+    assert enc_merged.score(X) == enc.score(X)
+    # check all attributes
+    attrs = ["rho_", "column_names_"]
+    for attr in attrs:
+        assert getattr(enc_merged, attr) == getattr(enc, attr)

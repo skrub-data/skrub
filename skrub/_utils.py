@@ -41,6 +41,14 @@ class LRUDict:
         return key in self.cache
 
 
+def combine_LRUDicts(capacity: int, *LRUDicts: LRUDict) -> LRUDict:
+    combined_LRUDict = LRUDict(capacity)
+    for lru_dict in LRUDicts:
+        for key, value in lru_dict.cache.items():
+            combined_LRUDict[key] = value
+    return combined_LRUDict
+
+
 def check_input(X) -> np.ndarray:
     """
     Check input with sklearn standards.

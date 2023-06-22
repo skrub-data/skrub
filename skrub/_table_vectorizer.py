@@ -30,26 +30,7 @@ from skrub._utils import parse_version
 
 # transformers which can be applied column-wise
 # and which are slow enough to be worth parallelizing over columns
-# TODO: add SimilarityEncoder? It was slower on a quick test.
-UNIVARIATE_TRANSFORMERS = (GapEncoder, MinHashEncoder)
-
-
-def _is_empty_column_selection(column):
-    """
-    Return True if the column selection is empty (empty list or all-False
-    boolean array).
-
-    """
-    if hasattr(column, "dtype") and np.issubdtype(column.dtype, np.bool_):
-        return not column.any()
-    elif hasattr(column, "__len__"):
-        return (
-            len(column) == 0
-            or all(isinstance(col, bool) for col in column)
-            and not any(column)
-        )
-    else:
-        return False
+UNIVARIATE_TRANSFORMERS = ["GapEncoder", "MinHashEncoder"]
 
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[str]:
@@ -424,84 +405,6 @@ class TableVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
-    # override _iter to parallelize on the columns instead of the transformers
-    # when possible
-    def _iter(self, fitted=False, replace_strings=False, column_as_strings=False):
-        """
-        Generate (name, trans, column, weight) tuples.
-
-        If fitted=True, use the fitted transformers, else use the
-        user specified transformers updated with converted column names
-        and potentially appended with transformer for remainder.
-
-        """
-        if fitted:
-            if replace_strings:
-                # Replace "passthrough" with the fitted version in
-                # _name_to_fitted_passthrough
-                def replace_passthrough(name, trans, columns):
-                    if name not in self._name_to_fitted_passthrough:
-                        return name, trans, columns
-                    return name, self._name_to_fitted_passthrough[name], columns
-
-                transformers = [
-                    replace_passthrough(*trans) for trans in self.transformers_
-                ]
-            else:
-                transformers = self.transformers_
-        else:
-            # interleave the validated column specifiers
-            transformers = [
-                (name, trans, column)
-                for (name, trans, _), column in zip(self.transformers, self._columns)
-            ]
-            # add transformer tuple for remainder
-            if self._remainder[2]:
-                transformers = chain(transformers, [self._remainder])
-        get_weight = (self.transformer_weights or {}).get
-
-        output_config = _get_output_config("transform", self)
-        for name, trans, columns in transformers:
-            ########################################
-            # We deviate from the original implementation
-            if isinstance(trans, UNIVARIATE_TRANSFORMERS):
-                columns_ = [[col] for col in columns]
-            else:
-                columns_ = [columns]
-            ########################################
-            for cols in columns_:
-                if replace_strings:
-                    # replace 'passthrough' with identity transformer and
-                    # skip in case of 'drop'
-                    if trans == "passthrough":
-                        trans = FunctionTransformer(
-                            accept_sparse=True,
-                            check_inverse=False,
-                            feature_names_out="one-to-one",
-                        ).set_output(transform=output_config["dense"])
-                    elif trans == "drop":
-                        continue
-                    elif _is_empty_column_selection(cols):
-                        continue
-
-                if column_as_strings:
-                    # Convert all columns to using their string labels
-                    columns_is_scalar = np.isscalar(cols)
-
-                    indices = self._transformer_to_input_indices[name]
-                    columns = self.feature_names_in_[indices]
-
-                    if columns_is_scalar:
-                        # selection is done with one dimension
-                        cols = cols[0]
-                # Another deviation from the original implementation
-                if isinstance(trans, UNIVARIATE_TRANSFORMERS) and len(columns_) > 1:
-                    # this should only happen before fitting
-                    assert not fitted
-                    yield (name, clone(trans), cols, get_weight(name))
-                else:
-                    yield (name, trans, cols, get_weight(name))
-
     def _more_tags(self):
         """
         Used internally by sklearn to ease the estimator checks.
@@ -577,6 +480,58 @@ class TableVectorizer(ColumnTransformer):
             self.datetime_transformer_ = self.datetime_transformer
 
         # TODO: check that the provided transformers are valid
+
+    def _split_univariate_transformers(self):
+        self._transformers_original = self.transformers
+        new_transformers = []
+        for name, trans, cols in self.transformers:
+            if trans.__class__.__name__ in UNIVARIATE_TRANSFORMERS:
+                for i, col in enumerate(cols):
+                    new_transformers.append(
+                        (name + "_split_" + str(i), clone(trans), [col])
+                    )
+            else:
+                new_transformers.append((name, trans, cols))
+        self.transformers = new_transformers
+
+    def _merge_univariate_transformers(self):
+        self.transformers = self._transformers_original
+        new_transformers_ = []
+        new_transformer_to_input_indices = {}
+        # find all base names
+        base_names = []
+        for name, _, _ in self.transformers_:
+            base_name = name.split("_split_")[0]
+            if base_name not in base_names:
+                base_names.append(base_name)
+        # merge all transformers with the same base name
+        for base_name in base_names:
+            transformers = []
+            columns = []
+            names = []
+            for name, trans, cols in self.transformers_:
+                if name.startswith(base_name):
+                    columns.extend(cols)
+                    transformers.append(trans)
+                    names.append(name)
+            if len(transformers) == 1:
+                new_transformers_.append((base_name, transformers[0], columns))
+                new_transformer_to_input_indices[base_name] = list(
+                    self._transformer_to_input_indices[base_name]
+                )
+            else:
+                # merge transformers
+                new_transformers_.append(
+                    (base_name, transformers[0].__class__._merge(transformers), columns)
+                )
+                new_transformer_to_input_indices[base_name] = list(
+                    np.concatenate(
+                        [self._transformer_to_input_indices[name] for name in names]
+                    )
+                )
+
+        self.transformers_ = new_transformers_
+        self._transformer_to_input_indices = new_transformer_to_input_indices
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
         """Takes a dataframe and tries to convert its columns to their best possible data type.
@@ -827,6 +782,11 @@ class TableVectorizer(ColumnTransformer):
         if self.verbose:
             print(f"[TableVectorizer] Assigned transformers: {self.transformers}")
 
+        # split the univariate transformers on each column
+        # to be able to parallelize the encoding
+        if self.n_jobs not in (None, 1):
+            self._split_univariate_transformers()
+
         X_enc = super().fit_transform(X, y)
 
         # For the "remainder" columns, the `ColumnTransformer` `transformers_`
@@ -838,6 +798,9 @@ class TableVectorizer(ColumnTransformer):
                 # In this case, "cols" is a list of ints (the indices)
                 cols: List[int]
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
+
+        if self.n_jobs not in (None, 1):
+            self._merge_univariate_transformers()
 
         return X_enc
 
@@ -877,7 +840,17 @@ class TableVectorizer(ColumnTransformer):
         if self.auto_cast:
             X = self._apply_cast(X)
 
-        return super().transform(X)
+        # split the univariate transformers on each column
+        # to be able to parallelize the encoding
+        if self.n_jobs not in (None, 1):
+            self._split_univariate_transformers()
+
+        res = super().transform(X)
+
+        if self.n_jobs not in (None, 1):
+            self._merge_univariate_transformers()
+
+        return res
 
     def get_feature_names_out(self, input_features=None) -> List[str]:
         """Return clean feature names.

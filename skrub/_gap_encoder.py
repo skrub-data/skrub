@@ -12,7 +12,7 @@ from joblib import Parallel, delayed
 from numpy.random import RandomState
 from scipy import sparse
 from sklearn import __version__ as sklearn_version
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
@@ -717,6 +717,25 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     rho_: float
     fitted_models_: List[GapEncoderColumn]
     column_names_: List[str]
+
+    @classmethod
+    def _merge(cls, transformers_list):
+        # merge GapEncoder fitted on different columns
+        # into a single GapEncoder
+        full_transformer = clone(transformers_list[0])
+        # assert rho_ is the same for all transformers
+        print(transformers_list[0])
+        rho_ = transformers_list[0].rho_
+        assert all([transformers.rho_ == rho_ for transformers in transformers_list])
+        full_transformer.rho_ = rho_
+        full_transformer.fitted_models_ = []
+        for transformers in transformers_list:
+            full_transformer.fitted_models_.extend(transformers.fitted_models_)
+        if hasattr(transformers_list[0], "column_names_"):
+            full_transformer.column_names_ = []
+            for transformers in transformers_list:
+                full_transformer.column_names_.extend(transformers.column_names_)
+        return full_transformer
 
     def __init__(
         self,

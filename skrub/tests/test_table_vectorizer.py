@@ -5,13 +5,12 @@ import numpy as np
 import pandas as pd
 import pytest
 import sklearn
-from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import GapEncoder, SuperVectorizer, TableVectorizer
+from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
 from skrub._utils import parse_version
 
@@ -642,6 +641,7 @@ def test_parallelism() -> None:
     for high_card_cat_transformer in [
         lambda: GapEncoder(n_components=2, random_state=0),
         OneHotEncoder,
+        lambda: MinHashEncoder(n_components=2),
     ]:
         table_vec_no_parallel = TableVectorizer(
             high_card_cat_transformer=high_card_cat_transformer(),
@@ -689,46 +689,10 @@ def test_parallelism() -> None:
                     )
 
 
-def test_original_iter() -> None:
-    # Test if the behavior changed when we overrided the _ iter
-    # method from the ColumnTransformer
-    # only the transformers_ attribute should be different
+# def test_split_and_merge_univariate_transformers():
+#     UNIVARIATE_TRANSFORMERS = ["GapEncoder", "MinHashEncoder"]
+#     X = _get_clean_dataframe()
 
-    X = _get_clean_dataframe()
-    table_vec_old_iter = TableVectorizer(
-        high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
-        cardinality_threshold=4,
-    )
-    table_vec_old_iter._iter = lambda *args, **kwargs: ColumnTransformer._iter(
-        table_vec_old_iter, *args, **kwargs
-    )
-    table_vec_new_iter = TableVectorizer(
-        high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
-        cardinality_threshold=4,
-    )
-    assert_array_equal(
-        table_vec_old_iter.fit_transform(X), table_vec_new_iter.fit_transform(X)
-    )
-    # assert that all attributes are equal except for
-    # the transformers_ attribute
-    for attr in [
-        "n_jobs",
-        "columns_",
-        "types_",
-        "imputed_columns_",
-    ]:
-        assert str(getattr(table_vec_old_iter, attr)) == str(
-            getattr(table_vec_new_iter, attr)
-        )
-    # assert that get_feature_names_out gives the same result
-    assert_array_equal(
-        table_vec_old_iter.get_feature_names_out(),
-        table_vec_new_iter.get_feature_names_out(),
-    )
-    # assert that get_params gives the same result expect for n_jobs
-    # remove n_jobs from the dict
-    params_old_iter = table_vec_old_iter.get_params()
-    params_new_iter = table_vec_new_iter.get_params()
-    assert str(params_old_iter) == str(params_new_iter)
-    # assert that transform gives the same result
-    assert_array_equal(table_vec_old_iter.transform(X), table_vec_new_iter.transform(X))
+#     # With GapEncoder
+#     high_card_cat_transformer = GapEncoder(n_components=2, random_state=0)
+#     hard_card_cat_cols = ["str_2", "cat_2"]

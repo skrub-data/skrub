@@ -7,13 +7,13 @@ from typing import Callable, Collection, Dict, List, Literal, Tuple
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils import gen_even_slices, murmurhash3_32
 from sklearn.utils.validation import check_is_fitted
 
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
-from ._utils import LRUDict, check_input
+from ._utils import LRUDict, check_input, combine_LRUDicts
 
 NoneType = type(None)
 
@@ -113,6 +113,20 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     hash_dict_: LRUDict
 
     _capacity: int = 2**10
+
+    @classmethod
+    def _merge(cls, transformers_list):
+        # merge MinHashEncoder fitted on different columns
+        # into a single MinHashEncoder
+        full_transformer = clone(transformers_list[0])
+        capacity = transformers_list[0]._capacity
+        assert all(
+            transformer._capacity == capacity for transformer in transformers_list
+        )
+        full_transformer.hash_dict_ = combine_LRUDicts(
+            capacity, *[transformer.hash_dict_ for transformer in transformers_list]
+        )
+        return full_transformer
 
     def __init__(
         self,
