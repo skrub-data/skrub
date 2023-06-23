@@ -657,7 +657,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         # useful for parallelization in the TableVectorizer
         full_transformer = clone(transformers_list[0])
         # assert rho_ is the same for all transformers
-        print(transformers_list[0])
         rho_ = transformers_list[0].rho_
         assert all([transformers.rho_ == rho_ for transformers in transformers_list])
         full_transformer.rho_ = rho_
@@ -669,6 +668,17 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             for transformers in transformers_list:
                 full_transformer.column_names_.extend(transformers.column_names_)
         return full_transformer
+
+    def _split(self):
+        check_is_fitted(self)
+        transformers_list = []
+        for i, model in enumerate(self.fitted_models_):
+            transformer = clone(self)
+            transformer.rho_ = model.rho_
+            transformer.fitted_models_ = [model]
+            transformer.column_names_ = [self.column_names_[i]]
+            transformers_list.append(transformer)
+        return transformers_list
 
     def __init__(
         self,

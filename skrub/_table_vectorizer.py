@@ -455,21 +455,70 @@ class TableVectorizer(ColumnTransformer):
 
         # TODO: check that the provided transformers are valid
 
-    def _split_univariate_transformers(self):
-        self._transformers_original = self.transformers
-        new_transformers = []
-        for name, trans, cols in self.transformers:
-            if trans.__class__.__name__ in UNIVARIATE_TRANSFORMERS:
-                for i, col in enumerate(cols):
-                    new_transformers.append(
-                        (name + "_split_" + str(i), clone(trans), [col])
-                    )
-            else:
-                new_transformers.append((name, trans, cols))
-        self.transformers = new_transformers
+    def _split_univariate_transformers(self, split_fitted=False):
+        """
+        Split univariate transformers into multiple transformers, one for each
+        column. This is useful to use the inherited `ColumnTransformer` class
+        parallelism.
+
+        Parameters
+        ----------
+        split_fitted : bool, default=False
+            Whether to split the self.transformers_ attribute (True) or the
+            self.transformers attribute (False). The former is used when
+            calling `transform` and the latter when calling `fit_transform`.
+        """
+        if split_fitted:
+            check_is_fitted(self, attributes=["transformers_"])
+            self._transformers_fitted_original = self.transformers_
+            new_transformers_ = []
+            new_transformer_to_input_indices = {}
+            for name, trans, cols in self.transformers_:
+                if (
+                    trans.__class__.__name__ in UNIVARIATE_TRANSFORMERS
+                    and len(cols) > 1
+                ):
+                    splitted_transformers_ = trans._split()
+                    assert len(splitted_transformers_) == len(cols)
+                    for i, col in enumerate(cols):
+                        new_transformers_.append(
+                            (
+                                name + "_split_" + str(i),
+                                splitted_transformers_[i],
+                                [col],
+                            )
+                        )
+                        new_transformer_to_input_indices[name + "_split_" + str(i)] = [
+                            self._transformer_to_input_indices[name][i]
+                        ]
+                else:
+                    new_transformers_.append((name, trans, cols))
+                    new_transformer_to_input_indices[
+                        name
+                    ] = self._transformer_to_input_indices[name]
+            self.transformers_ = new_transformers_
+            self._transformer_to_input_indices = new_transformer_to_input_indices
+        else:
+            self._transformers_original = self.transformers
+            new_transformers = []
+            for name, trans, cols in self.transformers:
+                if (
+                    trans.__class__.__name__ in UNIVARIATE_TRANSFORMERS
+                    and len(cols) > 1
+                ):
+                    for i, col in enumerate(cols):
+                        new_transformers.append(
+                            (name + "_split_" + str(i), clone(trans), [col])
+                        )
+                else:
+                    new_transformers.append((name, trans, cols))
+            self.transformers = new_transformers
 
     def _merge_univariate_transformers(self):
-        self.transformers = self._transformers_original
+        # merge back self.transformers if it was split
+        if hasattr(self, "_transformers_original"):
+            self.transformers = self._transformers_original
+        # merge self.transformers_
         new_transformers_ = []
         new_transformer_to_input_indices = {}
         # find all base names
@@ -719,7 +768,7 @@ class TableVectorizer(ColumnTransformer):
         # split the univariate transformers on each column
         # to be able to parallelize the encoding
         if self.n_jobs not in (None, 1):
-            self._split_univariate_transformers()
+            self._split_univariate_transformers(split_fitted=False)
 
         X_enc = super().fit_transform(X, y)
 
@@ -777,7 +826,7 @@ class TableVectorizer(ColumnTransformer):
         # split the univariate transformers on each column
         # to be able to parallelize the encoding
         if self.n_jobs not in (None, 1):
-            self._split_univariate_transformers()
+            self._split_univariate_transformers(split_fitted=True)
 
         res = super().transform(X)
 

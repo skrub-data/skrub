@@ -645,7 +645,6 @@ def test_parallelism() -> None:
                         cardinality_threshold=4,
                     )
                     X_trans_parallel = table_vec.fit_transform(X)
-                    # print(table_vec.transform(X))
                     assert_array_equal(X_trans, X_trans_parallel)
                     assert table_vec.n_jobs == n_jobs
                     # assert that all attributes are equal except for
