@@ -40,6 +40,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_validate
 from skrub import TableVectorizer
+from pathlib import Path
 
 from utils import monitor, default_parser, find_result
 
@@ -140,7 +141,7 @@ class ModifiedGapEncoder(GapEncoder):
         )
 
 
-benchmark_name = "gap_divergence"
+benchmark_name = Path(__file__).stem
 
 
 @monitor(
@@ -173,11 +174,12 @@ def benchmark(max_iter_e_step: int):
                                     max_iter=5,
                                     max_iter_e_step=max_iter_e_step,
                                     random_state=0,
+                                    n_jobs=-1,
                                 ),
                                 ["employee_position_title"],
                             )
                         ],
-                        remainder=TableVectorizer(),
+                        remainder=TableVectorizer(n_jobs=-1),
                     ),
                 ),
                 ("model", HistGradientBoostingRegressor(random_state=0)),
@@ -186,6 +188,7 @@ def benchmark(max_iter_e_step: int):
         dataset.X,
         dataset.y,
         return_estimator=True,
+        n_jobs=-1,
     )
 
     # Extract the estimators from the cross-validation results
