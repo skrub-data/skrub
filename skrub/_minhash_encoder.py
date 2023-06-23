@@ -353,21 +353,21 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """Get output feature names for transformation.
 
         The output feature names look like:
-        `["x0_0", "x0_1", ..., "x0_(n_components - 1)",
+        ``["x0_0", "x0_1", ..., "x0_(n_components - 1)",
         "x1_0", ..., "x1_(n_components - 1)", ...,
-        "x(n_features_out - 1)_(n_components - 1)"]`
+        "x(n_features_out - 1)_(n_components - 1)"]``
 
         Parameters
         ----------
         input_features : array-like of str or None, default=None
             Input features.
 
-            - If `input_features` is `None`, then `feature_names_in_` is
-              used as feature names in. If `feature_names_in_` is not defined,
+            - If ``input_features`` is ``None``, then ``feature_names_in_`` is
+              used as feature names in. If ``feature_names_in_`` is not defined,
               then the following input feature names are generated:
-              `["x0", "x1", ..., "x(n_features_in_ - 1)"]`.
-            - If `input_features` is an array-like, then `input_features` must
-              match `feature_names_in_` if `feature_names_in_` is defined.
+              ``["x0", "x1", ..., "x(n_features_in_ - 1)"]``.
+            - If ``input_features`` is an array-like, then ``input_features`` must
+              match ``feature_names_in_`` if ``feature_names_in_`` is defined.
 
         Returns
         -------
