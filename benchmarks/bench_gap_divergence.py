@@ -19,14 +19,13 @@ The logic is as follows:
   - singular values (`s` of `scipy.linalg.svd`)
 
 Date: June 12th 2023
-Commit: 7fc998dcafe12764c1c8ddf5b9f271868c720801
+Commit: dc77f610e240d2613c99436d01f98db4e4e7922c
 """
 
 import scipy as sp
 import numpy as np
 import pandas as pd
 
-from typing import List, Dict, Union
 from skrub.datasets import fetch_employee_salaries
 from argparse import ArgumentParser
 from skrub._gap_encoder import (
@@ -43,7 +42,7 @@ from utils import monitor, default_parser, find_result
 class ModifiedGapEncoderColumn(GapEncoderColumn):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.benchmark_results_: List[Dict[str, Union[np.ndarray, float]]] = []
+        self.benchmark_results_: list[dict[str, np.ndarray | float]] = []
 
     def fit(self, X, y=None):
         # Copy parameter rho
@@ -108,7 +107,7 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 
 
 class ModifiedGapEncoder(GapEncoder):
-    fitted_models_: List[ModifiedGapEncoderColumn]
+    fitted_models_: list[ModifiedGapEncoderColumn]
 
     @property
     def benchmark_results_(self):
