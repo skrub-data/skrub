@@ -35,6 +35,11 @@ from skrub._gap_encoder import (
     _multiplicative_update_w,
     batch_lookup,
 )
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_validate
+from skrub import TableVectorizer
 
 from utils import monitor, default_parser, find_result
 
@@ -146,34 +151,70 @@ benchmark_name = "gap_divergence"
 )
 def benchmark(max_iter_e_step: int):
     """
-    Fit a modified `GapEncoder` instance to a single high cardinality column.
+    Cross-validate a pipeline with a modified `GapEncoder` instance for the
+    high cardinality column. The rest of the columns are passed to a
+    TableVectorizer with the default parameters (which might include a
+    standard GapEncoder).
     """
-    gap = ModifiedGapEncoder(
-        min_iter=5,
-        max_iter=5,
-        max_iter_e_step=max_iter_e_step,
-        random_state=0,
+
+    dataset = fetch_employee_salaries()
+
+    cv = cross_validate(
+        Pipeline(
+            [
+                (
+                    "encoding",
+                    ColumnTransformer(
+                        [
+                            (
+                                "modified_gap_encoder",
+                                ModifiedGapEncoder(
+                                    min_iter=5,
+                                    max_iter=5,
+                                    max_iter_e_step=max_iter_e_step,
+                                    random_state=0,
+                                ),
+                                ["employee_position_title"],
+                            )
+                        ],
+                        remainder=TableVectorizer(),
+                    ),
+                ),
+                ("model", HistGradientBoostingRegressor(random_state=0)),
+            ]
+        ),
+        dataset.X,
+        dataset.y,
+        return_estimator=True,
     )
-    gap.fit(fetch_employee_salaries().X[["employee_position_title"]])
+
+    # Extract the estimators from the cross-validation results
+    pipelines = cv.pop("estimator")
+    # Transform the rest to a DataFrame, which will be easier to iterative over
+    cv_df = pd.DataFrame(cv)
 
     results = []
-    for i, result in enumerate(gap.benchmark_results_):
-        loop_results = {
-            "gap_iter": i + 1,
-            "W_change": result["W_change"],
-            "score": result["score"],
-        }
-        for matrix_name in ["W_", "A_", "B_"]:
-            loop_results.update(
-                {
-                    f"{matrix_name} mean": result[matrix_name].mean(),
-                    # f"{matrix_name} determinant": sp.linalg.det(result[matrix_name]),
-                    f"{matrix_name} singular values": sp.linalg.svd(
-                        result[matrix_name], compute_uv=False
-                    ),
-                }
-            )
-        results.append(loop_results)
+    for pipeline, cv_results in zip(pipelines, cv_df.iterrows()):
+        for gap_iter, inner_results in enumerate(
+            pipeline.encoding.modified_gap_encoder.benchmark_results_
+        ):
+            loop_results = {
+                "cv_test_score": cv_results["test_score"],
+                "gap_iter": gap_iter + 1,
+                "W_change": inner_results["W_change"],
+                "score": inner_results["score"],
+            }
+            for matrix_name in ["W_", "A_", "B_"]:
+                loop_results.update(
+                    {
+                        f"{matrix_name} mean": inner_results[matrix_name].mean(),
+                        # f"{matrix_name} determinant": sp.linalg.det(result[matrix_name]),
+                        f"{matrix_name} singular values": sp.linalg.svd(
+                            inner_results[matrix_name], compute_uv=False
+                        ),
+                    }
+                )
+            results.append(loop_results)
 
     return results
 
