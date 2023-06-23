@@ -197,7 +197,7 @@ def benchmark(max_iter_e_step: int):
     cv_df = pd.DataFrame(cv)
 
     results = []
-    for pipeline, cv_results in zip(pipelines, cv_df.iterrows()):
+    for pipeline, (_, cv_results) in zip(pipelines, cv_df.iterrows()):
         for gap_iter, inner_results in enumerate(
             pipeline["encoding"]
             .named_transformers_["modified_gap_encoder"]
