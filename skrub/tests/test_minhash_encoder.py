@@ -5,8 +5,9 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 from sklearn.exceptions import NotFittedError
-from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
+from sklearn.utils._testing import skip_if_no_parallel
 
 from skrub import MinHashEncoder
 
@@ -34,7 +35,7 @@ def test_minhash_encoder(hashing, minmax_hash) -> None:
     encoder2 = MinHashEncoder(n_components=2, hashing=hashing)
     encoder2.fit(X)
     y2 = encoder2.transform(X)
-    np.testing.assert_array_equal(y, y2)
+    assert_array_equal(y, y2)
 
     # Test min property
     if not minmax_hash:
@@ -66,9 +67,7 @@ def test_multiple_columns() -> None:
     fit1 = MinHashEncoder(n_components=30).fit_transform(X1)
     fit2 = MinHashEncoder(n_components=30).fit_transform(X2)
     fit = MinHashEncoder(n_components=30).fit_transform(X)
-    assert np.array_equal(
-        np.array([fit[:, :30], fit[:, 30:60]]), np.array([fit1, fit2])
-    )
+    assert_array_equal(np.array([fit[:, :30], fit[:, 30:60]]), np.array([fit1, fit2]))
 
 
 def test_input_type() -> None:
@@ -146,11 +145,11 @@ def test_missing_values_none() -> None:
 
     enc = MinHashEncoder()
     d = enc.fit_transform(a)
-    np.testing.assert_array_equal(d[2], 0)
+    assert_array_equal(d[2], 0)
 
     e = np.array([["a", "b", "", "c"]], dtype=object).T
     f = enc.fit_transform(e)
-    np.testing.assert_array_equal(f[2], 0)
+    assert_array_equal(f[2], 0)
 
 
 def test_cache_overflow() -> None:
@@ -271,7 +270,7 @@ def test_deterministic():
     X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
     encoded1 = encoder1.fit_transform(X)
     encoded2 = encoder2.fit_transform(X)
-    assert np.array_equal(encoded1, encoded2)
+    assert_array_equal(encoded1, encoded2)
 
 
 def test_get_feature_names_out():
@@ -285,28 +284,14 @@ def test_get_feature_names_out():
         }
     )
     encoder.fit(X)
-    # columns names should be col1_0 etc for each column and each component
-    assert all(
-        np.array(encoder.get_feature_names_out())
-        == np.array(
-            [
-                "col1_0",
-                "col1_1",
-                "col1_2",
-                "col1_3",
-                "col2_0",
-                "col2_1",
-                "col2_2",
-                "col2_3",
-            ]
-        )
+    expected_columns = np.array(
+        ["col1_0", "col1_1", "col1_2", "col1_3", "col2_0", "col2_1", "col2_2", "col2_3"]
     )
+    assert_array_equal(np.array(encoder.get_feature_names_out()), expected_columns)
 
     # Test that it works with a list of strings
     encoder = MinHashEncoder(n_components=4)
-    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"]).reshape(-1, 1)
+    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
     encoder.fit(X)
-    assert all(
-        np.array(encoder.get_feature_names_out())
-        == np.array(["x0_0", "x0_1", "x0_2", "x0_3"])
-    )
+    expected_columns = np.array(["x0_0", "x0_1", "x0_2", "x0_3"])
+    assert_array_equal(np.array(encoder.get_feature_names_out()), expected_columns)

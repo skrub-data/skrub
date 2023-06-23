@@ -251,7 +251,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self._check_n_features(X, reset=True)
         self._check_feature_names(X, reset=True)
         X = check_input(X)
-        self.n_features_in_ = X.shape[1]
 
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
