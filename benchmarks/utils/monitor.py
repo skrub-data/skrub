@@ -320,7 +320,7 @@ def monitor(
             save_dir = Path(__file__).parent.parent / "results"
             save_dir.mkdir(exist_ok=True)
             now = datetime.now()
-            file = f"{save_as}-{now.year}{now.month}{now.day}.parquet"
+            file = f"{save_as}-{now.year}{now.month:02d}{now.day:02d}.parquet"
             save_file = save_dir / file
             df.to_parquet(save_file)
             print(f"Results were saved to {save_file}")

@@ -2,4 +2,4 @@
 
 ## Format
 
-Results are saved with the format ``<name>-<YYYYMMDD>.csv``.
+Results are saved with the format ``<name>-<YYYYMMDD>.parquet``.
