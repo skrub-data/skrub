@@ -19,7 +19,7 @@ import warnings
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, TextIO, Union
+from typing import Any, Literal, TextIO
 from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
@@ -71,7 +71,7 @@ class Details:
 
 @dataclass(unsafe_hash=True)
 class Features:
-    names: List[str]
+    names: list[str]
 
 
 @dataclass(unsafe_hash=True)
@@ -96,7 +96,7 @@ class DatasetAll:
     X: pd.DataFrame
     y: pd.Series
     path: Path
-    read_csv_kwargs: Dict[str, Any]
+    read_csv_kwargs: dict[str, Any]
 
     def __eq__(self, other: DatasetAll) -> bool:
         """
@@ -135,13 +135,13 @@ class DatasetInfoOnly:
     source: str
     target: str
     path: Path
-    read_csv_kwargs: Dict[str, Any]
+    read_csv_kwargs: dict[str, Any]
 
 
 def _fetch_openml_dataset(
     dataset_id: int,
-    data_directory: Optional[Path] = None,
-) -> Dict[str, Any]:
+    data_directory: Path | None = None,
+) -> dict[str, Any]:
     """Gets a dataset from OpenML (https://www.openml.org).
 
     Parameters
@@ -224,8 +224,8 @@ def _fetch_openml_dataset(
 
 def _fetch_world_bank_data(
     indicator_id: str,
-    data_directory: Optional[Path] = None,
-) -> Dict[str, Any]:
+    data_directory: Path | None = None,
+) -> dict[str, Any]:
     """Gets a dataset from World Bank open data platform (https://data.worldbank.org/).
 
     Parameters
@@ -307,8 +307,8 @@ def _fetch_world_bank_data(
 
 def _fetch_figshare(
     figshare_id: str,
-    data_directory: Optional[Path] = None,
-) -> Dict[str, Any]:
+    data_directory: Path | None = None,
+) -> dict[str, Any]:
     """Fetch a dataset from figshare using the download ID number.
 
     Parameters
@@ -552,12 +552,12 @@ def _features_to_csv_format(features: Features) -> str:
 def _fetch_dataset_as_dataclass(
     source: Literal["openml", "world_bank", "figshare"],
     dataset_name: str,
-    dataset_id: Union[int, str],
-    target: Optional[str],
+    dataset_id: int | str,
+    target: str | None,
     load_dataframe: bool,
-    data_directory: Optional[Union[Path, str]] = None,
-    read_csv_kwargs: Optional[dict] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    data_directory: Path | str | None = None,
+    read_csv_kwargs: dict | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches a dataset from a source, and returns it as a dataclass.
 
     Takes a dataset identifier, a target column name (if applicable),
@@ -638,8 +638,8 @@ def fetch_employee_salaries(
     load_dataframe: bool = True,
     drop_linked: bool = True,
     drop_irrelevant: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the employee salaries dataset (regression), available at https://openml.org/d/42125
 
     Description of the dataset:
@@ -692,8 +692,8 @@ def fetch_employee_salaries(
 def fetch_road_safety(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the road safety dataset (classification), available at https://openml.org/d/42803
 
     Description of the dataset:
@@ -726,8 +726,8 @@ def fetch_road_safety(
 def fetch_medical_charge(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the medical charge dataset (regression), available at https://openml.org/d/42720
 
     Description of the dataset:
@@ -765,8 +765,8 @@ def fetch_medical_charge(
 def fetch_midwest_survey(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the midwest survey dataset (classification), available at https://openml.org/d/42805
 
     Description of the dataset:
@@ -797,8 +797,8 @@ def fetch_midwest_survey(
 def fetch_open_payments(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the open payments dataset (classification), available at https://openml.org/d/42738
 
     Description of the dataset:
@@ -831,8 +831,8 @@ def fetch_open_payments(
 def fetch_traffic_violations(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the traffic violations dataset (classification), available at https://openml.org/d/42132
 
     Description of the dataset:
@@ -867,8 +867,8 @@ def fetch_traffic_violations(
 def fetch_drug_directory(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the drug directory dataset (classification), available at https://openml.org/d/43044
 
     Description of the dataset:
@@ -901,8 +901,8 @@ def fetch_world_bank_indicator(
     indicator_id: str,
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches a dataset of an indicator from the World Bank open data platform.
 
     Description of the dataset:
@@ -932,8 +932,8 @@ def fetch_figshare(
     figshare_id: str,
     *,
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches a table of from figshare.
 
     Returns

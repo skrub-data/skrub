@@ -13,6 +13,5 @@ Cleaning
 into one, for instance typos. Such cleaning is needed to apply subsequent
 dataframe operations that need exact correspondances, such as counting
 elements. It is typically not needed when the entries are fed directly to
-a machine-learning model, as a :ref:`dirty-category encoder
-<dirty_categories>`_ can suffice.
-
+a machine-learning model, as a :ref:`dirty-category encoder <dirty_categories>`
+can suffice.

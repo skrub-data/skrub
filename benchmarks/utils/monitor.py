@@ -8,9 +8,9 @@ from pathlib import Path
 from random import choice
 from string import ascii_letters, digits
 from time import perf_counter, time as get_time
-from typing import Any, Dict, List, Optional, Union
 from collections.abc import Mapping, Collection, Callable
 from warnings import warn
+from typing import Any
 
 import pandas as pd
 from tqdm import tqdm
@@ -18,14 +18,12 @@ from tqdm import tqdm
 
 def monitor(
     *,
-    parametrize: Optional[
-        Union[Collection[Mapping[str, Any]], Mapping[str, Collection[Any]]]
-    ] = None,
-    save_as: Optional[str],
+    parametrize: Collection[Mapping[Any]] | Mapping[str, Collection[Any]] | None = None,
+    save_as: str | None = None,
     memory: bool = True,
     time: bool = True,
     repeat: int = 1,
-    hot_load: Optional[str] = None,
+    hot_load: str | None = None,
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
     """Decorator used to monitor the execution of a function.
 
@@ -131,7 +129,7 @@ def monitor(
     reserved_column_names = {"iter", "time", "memory"}
 
     def decorator(
-        func: Callable[..., Union[None, Mapping[str, Any], List[Mapping[str, Any]]]]
+        func: Callable[..., Mapping[str, Any] | list[Mapping[str, Any]] | None]
     ):
         """
         Catches the decorated function.
@@ -198,7 +196,7 @@ def monitor(
 
                 Parameters
                 ----------
-                **kwargs : Dict[str, Any]
+                **kwargs : mapping of str to any values
                     Keyword arguments to pass to the function.
 
                 Returns
@@ -276,7 +274,7 @@ def monitor(
 
                 return df_results
 
-            parametrization: List[Mapping] = []
+            parametrization: list[Mapping] = []
             if parametrize is None:
                 # Use the parameters passed by the call
                 parametrization = [call_kwargs]

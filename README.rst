@@ -33,7 +33,7 @@ What can `skrub` do?
 encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
 for which we usually identify three common cases: **similarities, typos and variations**
 
-`The first example notebook <https://skrub-data.github.io/stable/auto_examples/01_dirtycategories.html>`_
+`The first example notebook <https://skrub-data.org/stable/auto_examples/01_dirty_categories.html>`_
 goes in-depth on how to identify and deal with dirty data using the `skrub` library.
 
 What `skrub` cannot do

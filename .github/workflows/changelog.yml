@@ -1,7 +1,7 @@
 name: Check Changelog
 # This check makes sure that the changelog is properly updated
 # when a PR introduces a change in a test file.
-# To bypass this check, label the PR with "No Changelog Needed".
+# To bypass this check, label the PR with "no changelog needed".
 on:
   pull_request:
     types: [opened, edited, labeled, unlabeled, synchronize]
@@ -10,7 +10,7 @@ jobs:
   check:
     name: A reviewer will let you know if it is required or can be bypassed
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'No Changelog Needed') == 0 }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'no changelog needed') || contains(github.event.pull_request.labels.*.name, 'CI') == 0 }}
     steps:
       - name: Get PR number and milestone
         run: |
@@ -47,11 +47,11 @@ jobs:
               fi
             fi
           else
-            echo "A Changelog entry is missing."
+            echo "A changelog entry is missing."
             echo ""
             echo "Please add an entry to the changelog at 'CHANGES.rst'"
             echo "to document your change assuming that the PR will be merged"
-            echo "in time for the next release of dirty-cat."
+            echo "in time for the next release of skrub."
             echo ""
             echo "Look at other entries in that file for inspiration and please"
             echo "reference this pull request using the ':pr:' directive and"
@@ -63,6 +63,6 @@ jobs:
             echo ""
             echo "If you believe that this PR does not warrant a changelog"
             echo "entry, say so in a comment so that a maintainer will label"
-            echo "the PR with 'No Changelog Needed' to bypass this check."
+            echo "the PR with 'no changelog needed' to bypass this check."
             exit 1
           fi
