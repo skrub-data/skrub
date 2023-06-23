@@ -690,7 +690,7 @@ def test_split_and_merge_univariate_transformers():
         )
 
         enc.fit(X)
-        assert len(enc.transformers) == 2
+        assert len(enc.transformers) == 3
 
         enc_split = TableVectorizer(
             high_card_cat_transformer=high_card_cat_transformer(),
@@ -701,12 +701,12 @@ def test_split_and_merge_univariate_transformers():
         # during actual use, this is done during fit
         enc_split._split_univariate_transformers()
         # check that the GapEncoder is split into 2 transformers
-        assert len(enc_split.transformers) == 3
+        assert len(enc_split.transformers) == 4
         assert np.allclose(enc.transform(X), enc_split.transform(X))
 
         enc_split._merge_univariate_transformers()
         # check that the GapEncoder is merged into 1 transformer
-        assert len(enc_split.transformers) == 2
+        assert len(enc_split.transformers) == 3
         assert np.allclose(enc.transform(X), enc_split.transform(X))
 
         # assert that the transformers attribute is the same as
@@ -723,4 +723,4 @@ def test_split_and_merge_univariate_transformers():
         n_jobs=None,
     )
     enc_one_hot.fit(X)
-    assert len(enc_one_hot.transformers) == 2
+    assert len(enc_one_hot.transformers) == 3
