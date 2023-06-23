@@ -199,7 +199,7 @@ def benchmark(max_iter_e_step: int):
     results = []
     for pipeline, cv_results in zip(pipelines, cv_df.iterrows()):
         for gap_iter, inner_results in enumerate(
-            pipeline.encoding.modified_gap_encoder.benchmark_results_
+            pipeline["encoding"]["modified_gap_encoder"].benchmark_results_
         ):
             loop_results = {
                 "cv_test_score": cv_results["test_score"],
