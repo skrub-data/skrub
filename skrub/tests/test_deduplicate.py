@@ -103,7 +103,7 @@ def test__create_spelling_correction(seed: int = 123) -> None:
 def test_parallelism():
     # Test that parallelism works
     X = make_deduplication_data(examples=['black', 'white'],
-                                entries_per_example=[5, 5])
+                                entries_per_example=[15, 15])
     y = deduplicate(X, n_jobs=None)
     for n_jobs in [2, 1, -1]:
         y_parallel = deduplicate(X, n_jobs=n_jobs)
@@ -145,7 +145,7 @@ def test_backend_respected():
     """
     # Test that parallelism works
     X = make_deduplication_data(examples=['black', 'white'],
-                                entries_per_example=[5, 5])
+                                entries_per_example=[15, 15])
     deduplicate(X, n_jobs=2)
 
     with joblib.parallel_backend("testing") as (ba, n_jobs):
