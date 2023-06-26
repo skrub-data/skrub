@@ -71,6 +71,9 @@ Minor changes
   and types.
   :pr:`601` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+* Add `get_feature_names_out` method to :class:`MinHashEncoder`.
+  :pr:`616` by :user:`Leo Grinsztajn <LeoGrin>`
+
 Before skrub: dirty_cat
 ========================
 
