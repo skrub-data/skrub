@@ -15,7 +15,6 @@ The logic is as follows:
   - `B_`
 - For the visualization, extract from the matrices their:
   - mean
-  - determinant (`scipy.linalg.det`)
   - singular values (`s` of `scipy.linalg.svd`)
 
 Date: June 12th 2023
@@ -25,6 +24,8 @@ Commit: dc77f610e240d2613c99436d01f98db4e4e7922c
 import scipy as sp
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from skrub.datasets import fetch_employee_salaries
 from argparse import ArgumentParser
@@ -34,20 +35,24 @@ from skrub._gap_encoder import (
     _multiplicative_update_h,
     _multiplicative_update_w,
     batch_lookup,
+    check_input,
 )
+from joblib import Parallel, delayed
 from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_validate
 from skrub import TableVectorizer
 from pathlib import Path
+from skrub.datasets import DatasetAll
+from collections.abc import Callable
 
 from utils import monitor, default_parser, find_result
 
 
 class ModifiedGapEncoderColumn(GapEncoderColumn):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, column_name: str = "MISSING COLUMN", **kwargs):
         super().__init__(*args, **kwargs)
+        self.column_name = column_name
         self.benchmark_results_: list[dict[str, np.ndarray | float]] = []
 
     def fit(self, X, y=None):
@@ -96,6 +101,7 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 
             self.benchmark_results_.append(
                 {
+                    "column_name": self.column_name,
                     "score": score,
                     "W_change": W_change,
                     "W_": self.W_.copy(),
@@ -115,12 +121,9 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 class ModifiedGapEncoder(GapEncoder):
     fitted_models_: list[ModifiedGapEncoderColumn]
 
-    @property
-    def benchmark_results_(self):
-        return self.fitted_models_[0].benchmark_results_
-
-    def _create_column_gap_encoder(self):
+    def _create_column_gap_encoder(self, column_name: str):
         return ModifiedGapEncoderColumn(
+            column_name=column_name,
             ngram_range=self.ngram_range,
             n_components=self.n_components,
             analyzer=self.analyzer,
@@ -140,17 +143,45 @@ class ModifiedGapEncoder(GapEncoder):
             max_iter_e_step=self.max_iter_e_step,
         )
 
+    def fit(self, X, y=None):
+        # Check that n_samples >= n_components
+        if len(X) < self.n_components:
+            raise ValueError(
+                f"n_samples={len(X)} should be >= n_components={self.n_components}. "
+            )
+        # Copy parameter rho
+        self.rho_ = self.rho
+        # If X is a dataframe, store its column names
+        if isinstance(X, pd.DataFrame):
+            self.column_names_ = list(X.columns)
+        # Check input data shape
+        X = check_input(X)
+        X = self._handle_missing(X)
+        self.fitted_models_ = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+            delayed(self._create_column_gap_encoder(self.column_names_[k]).fit)(X[:, k])
+            for k in range(X.shape[1])
+        )
+        return self
+
 
 benchmark_name = Path(__file__).stem
+
+
+dataset_map = {
+    "employee_salaries": fetch_employee_salaries(),
+}
 
 
 @monitor(
     parametrize={
         "max_iter_e_step": range(1, 21),
+        "dataset_name": [
+            "employee_salaries",
+        ],
     },
     save_as=benchmark_name,
 )
-def benchmark(max_iter_e_step: int):
+def benchmark(max_iter_e_step: int, dataset_name: str):
     """
     Cross-validate a pipeline with a modified `GapEncoder` instance for the
     high cardinality column. The rest of the columns are passed to a
@@ -158,28 +189,21 @@ def benchmark(max_iter_e_step: int):
     standard GapEncoder).
     """
 
-    dataset = fetch_employee_salaries()
+    dataset = dataset_map[dataset_name]
 
     cv = cross_validate(
         Pipeline(
             [
                 (
                     "encoding",
-                    ColumnTransformer(
-                        [
-                            (
-                                "modified_gap_encoder",
-                                ModifiedGapEncoder(
-                                    min_iter=5,
-                                    max_iter=5,
-                                    max_iter_e_step=max_iter_e_step,
-                                    random_state=0,
-                                    n_jobs=-1,
-                                ),
-                                ["employee_position_title"],
-                            )
-                        ],
-                        remainder=TableVectorizer(n_jobs=-1),
+                    TableVectorizer(
+                        high_card_cat_transformer=ModifiedGapEncoder(
+                            min_iter=5,
+                            max_iter=5,
+                            max_iter_e_step=max_iter_e_step,
+                            random_state=0,
+                        ),
+                        n_jobs=-1,
                     ),
                 ),
                 ("model", HistGradientBoostingRegressor(random_state=0)),
@@ -198,34 +222,46 @@ def benchmark(max_iter_e_step: int):
 
     results = []
     for pipeline, (_, cv_results) in zip(pipelines, cv_df.iterrows()):
-        for gap_iter, inner_results in enumerate(
-            pipeline["encoding"]
-            .named_transformers_["modified_gap_encoder"]
-            .benchmark_results_
+        for modified_gap_encoder in (
+            pipeline["encoding"].named_transformers_["high_card_cat"].fitted_models_
         ):
-            loop_results = {
-                "cv_test_score": cv_results["test_score"],
-                "gap_iter": gap_iter + 1,
-                "W_change": inner_results["W_change"],
-                "score": inner_results["score"],
-            }
-            for matrix_name in ["W_", "A_", "B_"]:
-                loop_results.update(
-                    {
-                        f"{matrix_name} mean": inner_results[matrix_name].mean(),
-                        # f"{matrix_name} determinant": sp.linalg.det(result[matrix_name]),
-                        f"{matrix_name} singular values": sp.linalg.svd(
-                            inner_results[matrix_name], compute_uv=False
-                        ),
-                    }
-                )
-            results.append(loop_results)
+            for gap_iter, inner_results in enumerate(
+                modified_gap_encoder.benchmark_results_
+            ):
+                loop_results = {
+                    "column_name": f"{dataset_name}.{inner_results['column_name']}",
+                    "cv_test_score": cv_results["test_score"],
+                    "gap_iter": gap_iter + 1,
+                    "W_change": inner_results["W_change"],
+                    "score": inner_results["score"],
+                }
+                for matrix_name in ["W_", "A_", "B_"]:
+                    loop_results.update(
+                        {
+                            f"{matrix_name} mean": inner_results[matrix_name].mean(),
+                            f"{matrix_name} singular values": sp.linalg.svd(
+                                inner_results[matrix_name], compute_uv=False
+                            ),
+                        }
+                    )
+                results.append(loop_results)
 
     return results
 
 
 def plot(df: pd.DataFrame):
-    pass
+    sns.set_theme(style="ticks", palette="pastel")
+
+    ax = sns.lineplot(
+        data=df[df["gap_iter"] == 5],
+        x="max_iter_e_step",
+        y="W_change",
+        hue="column_name",
+    )
+    ax.axhline(y=ModifiedGapEncoderColumn().tol, color="red", linestyle="--")
+
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":
