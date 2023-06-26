@@ -275,7 +275,6 @@ def test_deterministic():
 
 def test_get_feature_names_out():
     """Test that get_feature_names_out returns the correct feature names"""
-    # encoder = MinHashEncoder(n_components=4)
     encoder = MinHashEncoder(n_components=4)
     X = pd.DataFrame(
         {
