@@ -27,7 +27,6 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from skrub.datasets import fetch_employee_salaries
 from argparse import ArgumentParser
 from skrub._gap_encoder import (
     GapEncoder,
@@ -38,15 +37,22 @@ from skrub._gap_encoder import (
     check_input,
 )
 from joblib import Parallel, delayed
-from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_validate
 from skrub import TableVectorizer
 from pathlib import Path
-from skrub.datasets import DatasetAll
-from collections.abc import Callable
 
-from utils import monitor, default_parser, find_result
+from utils import (
+    monitor,
+    default_parser,
+    find_result,
+    get_classification_datasets,
+    get_regression_datasets,
+)
 
 
 class ModifiedGapEncoderColumn(GapEncoderColumn):
@@ -167,15 +173,14 @@ class ModifiedGapEncoder(GapEncoder):
 benchmark_name = Path(__file__).stem
 
 
-dataset_map = {
-    "employee_salaries": fetch_employee_salaries(),
-}
-
-
 @monitor(
     parametrize={
         "max_iter_e_step": range(1, 21),
         "dataset_name": [
+            "medical_charge",
+            "open_payments",
+            "midwest_survey",
+            "medical_charge",
             "employee_salaries",
         ],
     },
@@ -190,6 +195,16 @@ def benchmark(max_iter_e_step: int, dataset_name: str):
     """
 
     dataset = dataset_map[dataset_name]
+
+    if "regression" in dataset.description:
+        estimator = HistGradientBoostingRegressor(random_state=0)
+    elif "classification" in dataset.description:
+        estimator = HistGradientBoostingClassifier(random_state=0)
+    else:
+        raise ValueError(
+            f"Could not figure out whether dataset {dataset_name} "
+            "is a regression or a classification problem. "
+        )
 
     cv = cross_validate(
         Pipeline(
@@ -206,7 +221,7 @@ def benchmark(max_iter_e_step: int, dataset_name: str):
                         n_jobs=-1,
                     ),
                 ),
-                ("model", HistGradientBoostingRegressor(random_state=0)),
+                ("model", estimator),
             ]
         ),
         dataset.X,
@@ -229,6 +244,7 @@ def benchmark(max_iter_e_step: int, dataset_name: str):
                 modified_gap_encoder.benchmark_results_
             ):
                 loop_results = {
+                    "dataset": dataset_name,
                     "column_name": f"{dataset_name}.{inner_results['column_name']}",
                     "cv_test_score": cv_results["test_score"],
                     "gap_iter": gap_iter + 1,
@@ -252,15 +268,48 @@ def benchmark(max_iter_e_step: int, dataset_name: str):
 def plot(df: pd.DataFrame):
     sns.set_theme(style="ticks", palette="pastel")
 
-    ax = sns.lineplot(
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+
+    sns.lineplot(
+        data=df[df["gap_iter"] == 5],
+        x="max_iter_e_step",
+        y="cv_test_score",
+        hue="dataset",
+        ax=ax1,
+    )
+
+    sns.lineplot(
         data=df[df["gap_iter"] == 5],
         x="max_iter_e_step",
         y="W_change",
         hue="column_name",
+        ax=ax2,
     )
-    ax.axhline(y=ModifiedGapEncoderColumn().tol, color="red", linestyle="--")
+    ax2.axhline(y=ModifiedGapEncoderColumn().tol, color="red", linestyle="--")
 
-    plt.tight_layout()
+    sns.lineplot(
+        data=df[df["gap_iter"] == 5],
+        x="max_iter_e_step",
+        y="A_ mean",
+        hue="column_name",
+        ax=ax3,
+    )
+    sns.lineplot(
+        data=df[df["gap_iter"] == 5],
+        x="max_iter_e_step",
+        y="B_ mean",
+        hue="column_name",
+        ax=ax3.twinx(),
+    )
+
+    sns.lineplot(
+        data=df[df["gap_iter"] == 5],
+        x="max_iter_e_step",
+        y="W_ mean",
+        hue="column_name",
+        ax=ax4,
+    )
+
     plt.show()
 
 
@@ -271,6 +320,10 @@ if __name__ == "__main__":
     ).parse_args()
 
     if _args.run:
+        dataset_map = dict(
+            **get_regression_datasets(),
+            **get_classification_datasets(),
+        )
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
