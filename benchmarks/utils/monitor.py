@@ -274,7 +274,7 @@ def monitor(
 
                 return df_results
 
-            parametrization: list[Mapping] = []
+            parametrization: list[Mapping]
             if parametrize is None:
                 # Use the parameters passed by the call
                 parametrization = [call_kwargs]

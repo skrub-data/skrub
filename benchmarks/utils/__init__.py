@@ -5,6 +5,5 @@ from ._various import (
     find_results,
     get_classification_datasets,
     get_regression_datasets,
-    get_dataset,
 )
 from .monitor import monitor
