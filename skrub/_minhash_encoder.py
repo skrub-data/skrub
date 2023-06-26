@@ -132,7 +132,28 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         full_transformer.hash_dict_ = combine_LRUDicts(
             capacity, *[transformer.hash_dict_ for transformer in transformers_list]
         )
+        full_transformer.n_features_in_ = sum(
+            transformer.n_features_in_ for transformer in transformers_list
+        )
+        full_transformer.feature_names_in_ = np.concatenate(
+            [transformer.feature_names_in_ for transformer in transformers_list]
+        )
         return full_transformer
+
+    def _split(self):
+        check_is_fitted(self)
+        transformer_list = []
+        for i in range(self.n_features_in_):
+            trans = clone(self)
+            attributes = ["hash_dict_", "_capacity"]
+            for a in attributes:
+                if hasattr(self, a):
+                    setattr(trans, a, getattr(self, a))
+                # TODO; do we want to deepcopy hash_dict_
+            trans.n_features_in_ = 1
+            trans.feature_names_in_ = np.array([self.feature_names_in_[i]])
+            transformer_list.append(trans)
+        return transformer_list
 
     def __init__(
         self,

@@ -1,3 +1,4 @@
+import copy
 import random
 from string import ascii_lowercase
 
@@ -249,39 +250,6 @@ def test_correct_arguments() -> None:
         encoder.fit_transform(X)
 
 
-def test_merge_transformers() -> None:
-    # test whether fitting on each column separately and then merging the
-    # transformers gives the same result as fitting on the whole dataset
-
-    # generate data
-    X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
-    X = pd.DataFrame(X, columns=["col0", "col1", "col2"])
-
-    # fit on each column separately
-    enc_list = []
-    for i in range(3):
-        enc = MinHashEncoder()
-        enc.fit(X[[f"col{i}"]])
-        enc_list.append(enc)
-    enc_merged = MinHashEncoder._merge(enc_list)
-
-    # fit on the whole dataset
-    enc = MinHashEncoder()
-    enc.fit(X)
-
-    # check that the results are the same
-    # check transform
-    assert np.allclose(enc_merged.transform(X), enc.transform(X))
-    # check get_feature_names_out
-    # assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
-    # check that the hash_dict_ attribute is the same
-    assert enc.hash_dict_.cache.keys() == enc_merged.hash_dict_.cache.keys()
-    for key in enc.hash_dict_.cache.keys():
-        assert np.array_equal(
-            enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key]
-        )
-
-
 def test_deterministic():
     """Test that the encoder is deterministic"""
     # TODO: add random state to encoder
@@ -314,3 +282,128 @@ def test_get_feature_names_out():
     encoder.fit(X)
     expected_columns = np.array(["x0_0", "x0_1", "x0_2", "x0_3"])
     assert_array_equal(np.array(encoder.get_feature_names_out()), expected_columns)
+
+
+def test_merge_transformers() -> None:
+    # test whether fitting on each column separately and then merging the
+    # transformers gives the same result as fitting on the whole dataset
+
+    # generate data
+    X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
+    X = pd.DataFrame(X, columns=["col0", "col1", "col2"])
+
+    # fit on each column separately
+    enc_list = []
+    for i in range(3):
+        enc = MinHashEncoder()
+        enc.fit(X[[f"col{i}"]])
+        enc_list.append(enc)
+    enc_merged = MinHashEncoder._merge(enc_list)
+
+    # fit on the whole dataset
+    enc = MinHashEncoder()
+    enc.fit(X)
+
+    # check that the results are the same
+    # check transform
+    assert np.allclose(enc_merged.transform(X), enc.transform(X))
+    # check get_feature_names_out
+    # assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
+    # check that the hash_dict_ attribute is the same
+    assert enc.hash_dict_.cache.keys() == enc_merged.hash_dict_.cache.keys()
+    for key in enc.hash_dict_.cache.keys():
+        assert np.array_equal(
+            enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key]
+        )
+    # check all attributes
+    attrs = ["_capacity", "n_features_in_"]
+    for attr in attrs:
+        assert getattr(enc_merged, attr) == getattr(enc, attr)
+    # check feature_names_in_
+    assert (enc_merged.feature_names_in_ == enc.feature_names_in_).all()
+
+
+def test_split_transformers() -> None:
+    # test whether splitting the transformer after fitting
+    # change the output of transform
+
+    # generate data
+    X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
+    X = pd.DataFrame(X, columns=["col0", "col1", "col2"])
+
+    # fit on the whole dataset
+    enc = MinHashEncoder()
+    enc.fit_transform(X)
+
+    # split the transformer
+    enc_list = copy.deepcopy(enc)._split()
+
+    # fit on each column separately
+    index = 0
+    for i in range(3):
+        # check that the results are the same
+        # check transform
+        transformed_X_i = enc_list[i].transform(X[[f"col{i}"]])
+        assert np.allclose(
+            transformed_X_i,
+            enc.transform(X)[:, index : index + transformed_X_i.shape[1]],
+        )
+        # check get_feature_names_out
+        assert_array_equal(
+            np.array(enc_list[i].get_feature_names_out()),
+            np.array(enc.get_feature_names_out())[
+                index : index + transformed_X_i.shape[1]
+            ],
+        )
+        # check self.feature_names_in_
+        assert enc_list[i].feature_names_in_ == [f"col{i}"]
+        # check self.n_features_in_
+        assert enc_list[i].n_features_in_ == 1
+        index += transformed_X_i.shape[1]
+        # check all attributes
+        attrs = ["_capacity"]
+        # TODO: do we want the hash_dict_ to be the same?
+        assert enc.hash_dict_.cache.keys() == enc_list[i].hash_dict_.cache.keys()
+        for key in enc.hash_dict_.cache.keys():
+            assert np.array_equal(
+                enc.hash_dict_.cache[key], enc_list[i].hash_dict_.cache[key]
+            )
+        for attr in attrs:
+            assert getattr(enc_list[i], attr) == getattr(enc, attr)
+
+
+def test_split_and_merge_transformers() -> None:
+    # test whether splitting the transformer after fitting
+    # and then merging the transformers gives the same result
+    # as fitting on the whole dataset
+
+    # generate data
+    X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
+    X = pd.DataFrame(X, columns=["col0", "col1", "col2"])
+
+    # fit on the whole dataset
+    enc = MinHashEncoder()
+    enc.fit(X)
+
+    # split the transformer
+    enc_list = copy.deepcopy(enc)._split()
+
+    # merge the transformers
+    enc_merged = MinHashEncoder._merge(enc_list)
+
+    # check that the results are the same
+    # check transform
+    assert np.allclose(enc_merged.transform(X), enc.transform(X))
+    # check get_feature_names_out
+    assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
+    assert enc.hash_dict_.cache.keys() == enc_merged.hash_dict_.cache.keys()
+    for key in enc.hash_dict_.cache.keys():
+        assert np.array_equal(
+            enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key]
+        )
+    # check all attributes
+    attrs = ["_capacity", "n_features_in_"]
+    for attr in attrs:
+        assert getattr(enc_merged, attr) == getattr(enc, attr)
+    # check feature_names_in_
+    assert (enc_merged.feature_names_in_ == enc.feature_names_in_).all()

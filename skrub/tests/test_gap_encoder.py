@@ -1,6 +1,9 @@
+import copy
+
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
@@ -285,6 +288,78 @@ def test_merge_transformers() -> None:
     # fit on the whole dataset
     enc = GapEncoder(random_state=42)
     enc.fit(X)
+
+    # check that the results are the same
+    # check transform
+    assert np.allclose(enc_merged.transform(X), enc.transform(X))
+    # check get_feature_names_out
+    assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
+    # check score
+    assert enc_merged.score(X) == enc.score(X)
+    # check all attributes
+    attrs = ["rho_", "column_names_"]
+    for attr in attrs:
+        assert getattr(enc_merged, attr) == getattr(enc, attr)
+
+
+def test_split_transformers() -> None:
+    # test whether splitting the transformer after fitting
+    # change the output of transform
+
+    # generate data
+    X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
+    X = pd.DataFrame(X, columns=["col0", "col1", "col2"])
+
+    # fit on the whole dataset
+    enc = GapEncoder(random_state=42)
+    enc.fit(X)
+
+    # split the transformer
+    enc_list = copy.deepcopy(enc)._split()
+
+    # fit on each column separately
+    index = 0
+    for i in range(3):
+        # check that the results are the same
+        # check transform
+        transformed_X_i = enc_list[i].transform(X[[f"col{i}"]])
+        assert np.allclose(
+            transformed_X_i,
+            enc.transform(X)[:, index : index + transformed_X_i.shape[1]],
+        )
+        # check get_feature_names_out
+        assert_array_equal(
+            np.array(enc_list[i].get_feature_names_out()),
+            np.array(enc.get_feature_names_out())[
+                index : index + transformed_X_i.shape[1]
+            ],
+        )
+        index += transformed_X_i.shape[1]
+        # check all attributes
+        attrs = ["rho_"]
+        for attr in attrs:
+            assert getattr(enc_list[i], attr) == getattr(enc, attr)
+        assert enc_list[i].column_names_ == [f"col{i}"]
+
+
+def test_split_and_merge_transformers() -> None:
+    # test whether splitting the transformer after fitting
+    # and then merging the transformers gives the same result
+    # as fitting on the whole dataset
+
+    # generate data
+    X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
+    X = pd.DataFrame(X, columns=["col0", "col1", "col2"])
+
+    # fit on the whole dataset
+    enc = GapEncoder(random_state=42)
+    enc.fit(X)
+
+    # split the transformer
+    enc_list = copy.deepcopy(enc)._split()
+
+    # merge the transformers
+    enc_merged = GapEncoder._merge(enc_list)
 
     # check that the results are the same
     # check transform
