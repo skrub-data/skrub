@@ -11,6 +11,7 @@ from warnings import warn
 import numpy as np
 import pandas as pd
 import sklearn
+from numpy.typing import ArrayLike, NDArray
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
 from sklearn.base import TransformerMixin, clone
@@ -549,7 +550,7 @@ class TableVectorizer(ColumnTransformer):
             X.loc[:, col] = X[col].astype(dtype)
         return X
 
-    def fit_transform(self, X, y=None):
+    def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
         """Fit all transformers, transform the data, and concatenate the results.
 
         In practice, it (1) converts features to their best possible types
@@ -674,7 +675,7 @@ class TableVectorizer(ColumnTransformer):
 
         return X_enc
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> ArrayLike:
         """Transform `X` by applying the fitted transformers on the columns.
 
         Parameters

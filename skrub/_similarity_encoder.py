@@ -8,6 +8,7 @@ from typing import Literal
 import numpy as np
 import sklearn
 from joblib import Parallel, delayed
+from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
@@ -22,12 +23,12 @@ from ._utils import parse_version
 
 
 def _ngram_similarity_one_sample_inplace(
-    x_count_vector: np.ndarray,
-    vocabulary_count_matrix: np.ndarray,
+    x_count_vector: NDArray,
+    vocabulary_count_matrix: NDArray,
     str_x: str,
-    vocabulary_ngram_counts: np.ndarray,
+    vocabulary_ngram_counts: NDArray,
     se_dict: dict,
-    unq_X: np.ndarray,
+    unq_X: NDArray,
     i: int,
     ngram_range: tuple[int, int],
 ) -> None:
@@ -77,7 +78,7 @@ def ngram_similarity_matrix(
     ngram_range: tuple[int, int],
     hashing_dim: int,
     dtype: type = np.float64,
-) -> np.ndarray:
+) -> NDArray:
     """
     Similarity encoding for dirty categorical variables:
     Given two arrays of strings, returns the similarity encoding matrix
@@ -260,11 +261,11 @@ class SimilarityEncoder(OneHotEncoder):
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
     """
 
-    categories_: list[np.ndarray]
+    categories_: list[NDArray]
     n_features_in_: int
-    drop_idx_: np.ndarray
+    drop_idx_: NDArray
     vectorizers_: list[CountVectorizer]
-    vocabulary_count_matrices_: list[np.ndarray]
+    vocabulary_count_matrices_: list[NDArray]
     vocabulary_ngram_counts_: list[list[int]]
     _infrequent_enabled: bool
 
@@ -295,7 +296,7 @@ class SimilarityEncoder(OneHotEncoder):
                     "'auto' or a list of prototypes. "
                 )
 
-    def fit(self, X, y=None) -> "SimilarityEncoder":
+    def fit(self, X: ArrayLike, y=None) -> "SimilarityEncoder":
         """Fit the instance to `X`.
 
         Parameters
@@ -418,7 +419,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         return self
 
-    def transform(self, X, fast: bool = True) -> np.ndarray:
+    def transform(self, X: ArrayLike, fast: bool = True) -> NDArray:
         """Transform `X` using specified encoding scheme.
 
         Parameters
@@ -492,9 +493,9 @@ class SimilarityEncoder(OneHotEncoder):
 
     def _ngram_similarity_fast(
         self,
-        X: list | np.ndarray,
+        X: list | NDArray,
         col_idx: int,
-    ) -> np.ndarray:
+    ) -> NDArray:
         """
         Fast computation of ngram similarity.
 

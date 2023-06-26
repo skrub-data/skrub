@@ -8,6 +8,7 @@ from typing import Literal
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
 from sklearn.utils.validation import _check_feature_names_in, check_is_fitted
@@ -142,7 +143,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def _get_murmur_hash(self, string: str) -> np.ndarray:
+    def _get_murmur_hash(self, string: str) -> NDArray:
         """
         Encode a string using murmur hashing function.
 
@@ -170,7 +171,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
-    def _get_fast_hash(self, string: str) -> np.ndarray:
+    def _get_fast_hash(self, string: str) -> NDArray:
         """Encode a string with fast hashing function.
 
         Fast hashing supports both min_hash and minmax_hash encoding.
@@ -201,8 +202,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             )
 
     def _compute_hash_batched(
-        self, batch: Collection[str], hash_func: Callable[[str], np.ndarray]
-    ):
+        self, batch: Collection[str], hash_func: Callable[[str], NDArray]
+    ) -> NDArray:
         """Function called to compute the hashes of a batch of strings.
 
         Check if the string is in the hash dictionary, if not, compute the hash
@@ -230,7 +231,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             res[i] = self.hash_dict_[string]
         return res
 
-    def fit(self, X, y=None) -> "MinHashEncoder":
+    def fit(self, X: ArrayLike, y=None) -> "MinHashEncoder":
         """Fit the MinHashEncoder to `X`.
 
         In practice, just initializes a dictionary
@@ -265,7 +266,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> NDArray:
         """
         Transform `X` using specified encoding scheme.
 
@@ -348,7 +349,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         return X_out.astype(np.float64)  # The output is an int32 before conversion
 
-    def get_feature_names_out(self, input_features=None):
+    def get_feature_names_out(
+        self, input_features: ArrayLike | str | None = None
+    ) -> NDArray[np.str_]:
         """Get output feature names for transformation.
 
         The output feature names look like:
