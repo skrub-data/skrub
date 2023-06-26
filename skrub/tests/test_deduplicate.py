@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
+import time
 
 from skrub._deduplicate import (
     _create_spelling_correction,
@@ -102,12 +103,22 @@ def test__create_spelling_correction(seed: int = 123) -> None:
 @skip_if_no_parallel
 def test_parallelism():
     # Test that parallelism works
-    X = make_deduplication_data(examples=['black', 'white'],
-                                entries_per_example=[50, 50])
+    X = make_deduplication_data(examples=['black', 'white', 'red'], entries_per_example=[500, 500, 500], prob_mistake_per_letter=0.3)
     y = deduplicate(X, n_jobs=None)
-    for n_jobs in [2, 1, -1]:
+    times = {}
+    jobs = [1, 2, 4]
+
+    for n_jobs in jobs:
+        start = time.time()
         y_parallel = deduplicate(X, n_jobs=n_jobs)
         assert_array_equal(y, y_parallel)
+        end = time.time()
+        timer = end - start
+        times[n_jobs] = timer
+    print(times)
+    # Test if execution time is shorter:
+    for i in range(len(jobs)-1):
+        assert times[jobs[i+1]] < times[jobs[i]]
 
     # Test with threading backend
     with joblib.parallel_backend("threading"):
