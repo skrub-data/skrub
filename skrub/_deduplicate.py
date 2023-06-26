@@ -55,7 +55,7 @@ def compute_ngram_distance(
     return distance_mat
 
 
-def _get_silhouette_avg(Z, n_clust, redundant_dist):
+def _get_silhouette_avg(Z: np.ndarray, n_clust: int, redundant_dist: np.ndarray) -> float:
     labels = fcluster(Z, n_clust, criterion="maxclust")
     silhouette_avg = silhouette_score(redundant_dist, labels, metric="precomputed")
     return silhouette_avg
