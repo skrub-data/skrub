@@ -26,7 +26,7 @@ def make_deduplication_data(
         Examples to duplicate.
     entries_per_example : list of int
         Number of duplications per example.
-    prob_mistake_per_letter : float in [0, 1], default=0.5
+    prob_mistake_per_letter : float in [0, 1], default=0.2
         Probability of misspelling a character in duplications.
         By default, 1/5 of the characters will be misspeled.
     random_state : int, :obj:`~numpy.random.RandomState` instance, optional
