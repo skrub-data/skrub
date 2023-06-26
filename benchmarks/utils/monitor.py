@@ -305,7 +305,7 @@ def monitor(
             with tqdm(total=len(parametrization) * repeat) as progress_bar:
                 for kwargs in tqdm(parametrization):
                     kwargs_s = pd.DataFrame(
-                        kwargs.values(),
+                        data=[list(kwargs.values())],
                         columns=list(kwargs.keys()),
                     )
                     if kwargs_s.isin(df[kwargs.keys()]).all(axis=1).any():
@@ -323,7 +323,7 @@ def monitor(
             file = f"{save_as}-{now.year}{now.month:02d}{now.day:02d}.parquet"
             save_file = save_dir / file
             df.to_parquet(save_file)
-            print(f"Results were saved to {save_file}")
+            print(f"Final results were saved to {save_file}")
 
             # Remove the intermediate results file
             intermediate_results_file.unlink()
