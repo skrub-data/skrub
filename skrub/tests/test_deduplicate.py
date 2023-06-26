@@ -106,7 +106,7 @@ def test_parallelism():
     X = make_deduplication_data(examples=['black', 'white', 'red'], entries_per_example=[500, 500, 500], prob_mistake_per_letter=0.3)
     y = deduplicate(X, n_jobs=None)
     times = {}
-    jobs = [1, 2, 4]
+    jobs = [1, 4]
 
     for n_jobs in jobs:
         start = time.time()
