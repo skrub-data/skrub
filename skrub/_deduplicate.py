@@ -138,7 +138,7 @@ def deduplicate(
     method: Literal[
         "single", "complete", "average", "centroid", "median", "ward"
     ] = "average",
-    n_jobs: int = None,
+    n_jobs: int | None = None,
 ) -> list[str]:
     """Deduplicate categorical data by hierarchically clustering similar strings.
 
