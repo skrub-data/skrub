@@ -61,7 +61,7 @@ def _get_silhouette_avg(Z: np.ndarray, n_clust: int, redundant_dist: np.ndarray)
     return silhouette_avg
 
 
-def _guess_clusters(Z: np.ndarray, distance_mat: np.ndarray, n_jobs: int | None) -> int:
+def _guess_clusters(Z: np.ndarray, distance_mat: np.ndarray, n_jobs: int | None = None) -> int:
     """Finds the number of clusters that maximize the silhouette score
     when clustering `distance_mat`.
 
