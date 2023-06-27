@@ -67,15 +67,10 @@ def benchmark(
 
     dataset = dataset_map[dataset_name]
 
-    if "regression" in dataset.description:
+    if dataset_name in regression_datasets:
         estimator = HistGradientBoostingRegressor(random_state=0)
-    elif "classification" in dataset.description:
+    elif dataset_name in classification_datasets:
         estimator = HistGradientBoostingClassifier(random_state=0)
-    else:
-        raise ValueError(
-            f"Could not figure out whether dataset {dataset_name} "
-            "is a regression or a classification problem. "
-        )
 
     pipeline = Pipeline(
         [
@@ -131,9 +126,11 @@ if __name__ == "__main__":
     ).parse_args()
 
     if _args.run:
+        regression_datasets = get_regression_datasets()
+        classification_datasets = get_classification_datasets()
         dataset_map = dict(
-            **get_regression_datasets(),
-            **get_classification_datasets(),
+            **regression_datasets,
+            **classification_datasets,
         )
         benchmark()
     else:
