@@ -303,8 +303,8 @@ def test_merge_transformers() -> None:
 
 
 def test_split_transformers() -> None:
-    # test whether splitting the transformer after fitting
-    # change the output of transform
+    # check that splitting the transformer after fitting
+    # doesn't change the output of transform
 
     # generate data
     X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
@@ -343,9 +343,8 @@ def test_split_transformers() -> None:
 
 
 def test_split_and_merge_transformers() -> None:
-    # test whether splitting the transformer after fitting
-    # and then merging the transformers gives the same result
-    # as fitting on the whole dataset
+    # check that splitting the transformer after fitting
+    # and then merging the transformers doesn't the same result
 
     # generate data
     X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)

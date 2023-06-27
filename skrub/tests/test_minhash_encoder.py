@@ -285,7 +285,7 @@ def test_get_feature_names_out():
 
 
 def test_merge_transformers() -> None:
-    # test whether fitting on each column separately and then merging the
+    # check that fitting on each column separately and then merging the
     # transformers gives the same result as fitting on the whole dataset
 
     # generate data
@@ -324,8 +324,8 @@ def test_merge_transformers() -> None:
 
 
 def test_split_transformers() -> None:
-    # test whether splitting the transformer after fitting
-    # change the output of transform
+    # check that splitting the transformer after fitting
+    # doesn't change the output of transform
 
     # generate data
     X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
@@ -373,9 +373,8 @@ def test_split_transformers() -> None:
 
 
 def test_split_and_merge_transformers() -> None:
-    # test whether splitting the transformer after fitting
-    # and then merging the transformers gives the same result
-    # as fitting on the whole dataset
+    # check that splitting the transformer after fitting
+    # and then merging the transformers doesn't change the result
 
     # generate data
     X = np.concatenate([generate_data(100, random_state=i) for i in range(3)], axis=1)
@@ -398,9 +397,7 @@ def test_split_and_merge_transformers() -> None:
     assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
     assert enc.hash_dict_.cache.keys() == enc_merged.hash_dict_.cache.keys()
     for key in enc.hash_dict_.cache.keys():
-        assert np.array_equal(
-            enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key]
-        )
+        assert_array_equal(enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key])
     # check all attributes
     attrs = ["_capacity", "n_features_in_"]
     for attr in attrs:
