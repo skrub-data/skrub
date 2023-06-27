@@ -699,7 +699,8 @@ def test_split_and_merge_univariate_transformers():
         enc_split.fit(X)
         # during actual use, this is done during fit
         enc_split._split_univariate_transformers(split_fitted=False)
-        # check that the GapEncoder is split into 2 transformers
+        # check that the high_card_cat_transformer
+        # is split into 2 transformers
         # the transformers_ attribute should not be modified
         # because split_fitted is False
         assert len(enc_split.transformers) == 4
@@ -708,22 +709,27 @@ def test_split_and_merge_univariate_transformers():
         # check that the GapEncoder is merged into 1 transformer
         assert len(enc_split.transformers) == 3
         assert np.allclose(enc.transform(X), enc_split.transform(X))
-
-        # Now split the transformers_ attribute (split_fitted=True)
-        enc._split_univariate_transformers(split_fitted=True)
-        assert len(enc.transformers) == 3
-        assert len(enc.transformers_) == 4
-        # the fitted transformers should still work
-        assert np.allclose(enc.transform(X), enc_split.transform(X))
-
-        enc_split._merge_univariate_transformers()
-        # check that the GapEncoder is merged into 1 transformer
-        assert len(enc_split.transformers) == 3
-        assert np.allclose(enc.transform(X), enc_split.transform(X))
-
         # assert that the transformers attribute is the same as
         # the one before splitting and merging
         assert str(enc.transformers) == str(enc_split.transformers)
+        # check that you can refit the transformer
+        enc_split.fit(X)
+
+        # Now split the transformers_ attribute (split_fitted=True)
+        enc_split._split_univariate_transformers(split_fitted=True)
+        assert len(enc_split.transformers) == 3
+        assert len(enc_split.transformers_) == 4
+        # the fitted transformers should still work
+        assert_array_equal(enc.transform(X), enc_split.transform(X))
+
+        enc_split._merge_univariate_transformers()
+        # check that the GapEncoder is merged into 1 transformer
+        assert len(enc_split.transformers_) == 3
+        assert_array_equal(enc.transform(X), enc_split.transform(X))
+
+        # assert that the transformers attribute is the same as
+        # the one before splitting and merging
+        assert str(enc.transformers_) == str(enc_split.transformers_)
 
     # check that a OneHotEncoder is not split
     enc_one_hot = TableVectorizer(

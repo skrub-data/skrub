@@ -306,21 +306,19 @@ def test_merge_transformers() -> None:
 
     # check that the results are the same
     # check transform
-    assert np.allclose(enc_merged.transform(X), enc.transform(X))
+    assert_array_equal(enc_merged.transform(X), enc.transform(X))
     # check get_feature_names_out
     # assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
     # check that the hash_dict_ attribute is the same
     assert enc.hash_dict_.cache.keys() == enc_merged.hash_dict_.cache.keys()
     for key in enc.hash_dict_.cache.keys():
-        assert np.array_equal(
-            enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key]
-        )
+        assert_array_equal(enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key])
     # check all attributes
     attrs = ["_capacity", "n_features_in_"]
     for attr in attrs:
         assert getattr(enc_merged, attr) == getattr(enc, attr)
     # check feature_names_in_
-    assert (enc_merged.feature_names_in_ == enc.feature_names_in_).all()
+    assert_array_equal(enc_merged.feature_names_in_, enc.feature_names_in_)
 
 
 def test_split_transformers() -> None:
@@ -344,7 +342,7 @@ def test_split_transformers() -> None:
         # check that the results are the same
         # check transform
         transformed_X_i = enc_list[i].transform(X[[f"col{i}"]])
-        assert np.allclose(
+        assert_array_equal(
             transformed_X_i,
             enc.transform(X)[:, index : index + transformed_X_i.shape[1]],
         )
@@ -362,14 +360,15 @@ def test_split_transformers() -> None:
         index += transformed_X_i.shape[1]
         # check all attributes
         attrs = ["_capacity"]
+        for attr in attrs:
+            assert getattr(enc_list[i], attr) == getattr(enc, attr)
+        # check hash_dict_
         # TODO: do we want the hash_dict_ to be the same?
         assert enc.hash_dict_.cache.keys() == enc_list[i].hash_dict_.cache.keys()
         for key in enc.hash_dict_.cache.keys():
-            assert np.array_equal(
+            assert_array_equal(
                 enc.hash_dict_.cache[key], enc_list[i].hash_dict_.cache[key]
             )
-        for attr in attrs:
-            assert getattr(enc_list[i], attr) == getattr(enc, attr)
 
 
 def test_split_and_merge_transformers() -> None:
@@ -392,9 +391,10 @@ def test_split_and_merge_transformers() -> None:
 
     # check that the results are the same
     # check transform
-    assert np.allclose(enc_merged.transform(X), enc.transform(X))
+    assert_array_equal(enc_merged.transform(X), enc.transform(X))
     # check get_feature_names_out
     assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
+    # check hash_dict_
     assert enc.hash_dict_.cache.keys() == enc_merged.hash_dict_.cache.keys()
     for key in enc.hash_dict_.cache.keys():
         assert_array_equal(enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key])
@@ -403,4 +403,4 @@ def test_split_and_merge_transformers() -> None:
     for attr in attrs:
         assert getattr(enc_merged, attr) == getattr(enc, attr)
     # check feature_names_in_
-    assert (enc_merged.feature_names_in_ == enc.feature_names_in_).all()
+    assert_array_equal(enc_merged.feature_names_in_, enc.feature_names_in_)

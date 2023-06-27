@@ -362,7 +362,7 @@ def test_split_and_merge_transformers() -> None:
 
     # check that the results are the same
     # check transform
-    assert np.allclose(enc_merged.transform(X), enc.transform(X))
+    assert_array_equal(enc_merged.transform(X), enc.transform(X))
     # check get_feature_names_out
     assert enc_merged.get_feature_names_out() == enc.get_feature_names_out()
     # check score
