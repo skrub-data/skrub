@@ -47,9 +47,12 @@ Minor changes
 * Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`.
   These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`
   or the :class:`GapEncoder` instead. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
-* Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor,
 
+* Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor,
   as we only support the ngram similarity. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Added the `analyzer` parameter to the :class:`SimilarityEncoder` to allow word counts
+  for similarity measures. :pr:`619` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * skrub now uses modern type hints introduced in PEP 585.
   :pr:`609` by :user:`Lilian Boulard <LilianBoulard>`
