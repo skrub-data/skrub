@@ -659,3 +659,30 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
         if pd.isna(c1) or pd.isna(c2):
             continue
         assert np.isclose(c1, c2)
+
+
+@pytest.mark.parametrize(
+    "pipeline",
+    [
+        TableVectorizer(),
+        TableVectorizer(
+            column_specific_transformers=[
+                (MinHashEncoder(), ["cat1", "cat2"]),
+            ],
+        ),
+        TableVectorizer(
+            low_card_cat_transformer=MinHashEncoder(),
+        ),
+    ],
+)
+def test_deterministic(pipeline) -> None:
+    """
+    Tests that running the same TableVectorizer multiple times with the same
+    (deterministic) components results in the same output.
+    """
+    X = _get_dirty_dataframe()
+    for i in range(5):
+        X_enc = pipeline.fit_transform(X)
+        if i != 0:
+            assert_array_equal(X_enc, X_enc_prev)  # noqa
+        X_enc_prev = X_enc  # noqa
