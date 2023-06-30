@@ -180,10 +180,10 @@ benchmark_name = Path(__file__).stem
             "medical_charge",
             "open_payments",
             "midwest_survey",
-            "medical_charge",
             "employee_salaries",
-            "road_safety",
+            # "road_safety",  # Crashes with an error in the DatetimeEncoder
             "drug_directory",
+            # "traffic_violations",  # Takes way too long and seems to cause memory leaks
         ],
     },
     save_as=benchmark_name,
@@ -263,48 +263,56 @@ def benchmark(max_iter_e_step: int, dataset_name: str):
 
 
 def plot(df: pd.DataFrame):
+    # Keep only the last outer iteration
+    # df = df[df["gap_iter"] == 5]
+
     sns.set_theme(style="ticks", palette="pastel")
 
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+    fig, ((ax1, ax2, _), (ax3, ax4, ax5)) = plt.subplots(2, 3)
 
     sns.lineplot(
-        data=df[df["gap_iter"] == 5],
+        data=df,
         x="max_iter_e_step",
         y="cv_test_score",
         hue="dataset",
         ax=ax1,
+        legend="brief",
     )
 
     sns.lineplot(
-        data=df[df["gap_iter"] == 5],
+        data=df,
         x="max_iter_e_step",
         y="W_change",
         hue="column_name",
         ax=ax2,
+        legend=False,
     )
     ax2.axhline(y=ModifiedGapEncoderColumn().tol, color="red", linestyle="--")
 
     sns.lineplot(
-        data=df[df["gap_iter"] == 5],
+        data=df,
         x="max_iter_e_step",
         y="A_ mean",
         hue="column_name",
         ax=ax3,
+        legend=False,
     )
     sns.lineplot(
-        data=df[df["gap_iter"] == 5],
+        data=df,
         x="max_iter_e_step",
         y="B_ mean",
         hue="column_name",
-        ax=ax3.twinx(),
+        ax=ax4,
+        legend=False,
     )
 
     sns.lineplot(
-        data=df[df["gap_iter"] == 5],
+        data=df,
         x="max_iter_e_step",
         y="W_ mean",
         hue="column_name",
-        ax=ax4,
+        ax=ax5,
+        legend=False,
     )
 
     plt.show()
