@@ -1,15 +1,28 @@
 """
-Implements fuzzy_join, a function to perform fuzzy joining between two tables.
+This benchmark compares the performance of using sparse vs dense arrays
+for a neareast neighbor search in the fuzzy_join.
+
+The results seem to indicate that using dense arrays, with the current state,
+is faster to search through than sparse arrays.
+
+Date: June 2023
 """
 
+import math
+from utils import default_parser, find_result, monitor
+from utils.join import evaluate, fetch_big_data
+from argparse import ArgumentParser
 import numbers
+from time import perf_counter
 import warnings
 from collections.abc import Iterable
 from typing import Literal
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.sparse import csr_matrix, hstack, vstack
+import seaborn as sns
+from scipy.sparse import hstack, vstack
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
     TfidfTransformer,
@@ -17,26 +30,24 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
-
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
+from sklearn import random_projection
 
 
 def _numeric_encoding(
     main: pd.DataFrame,
-    main_cols: str | list[str],
+    main_cols: list | str,
     aux: pd.DataFrame,
-    aux_cols: str | list[str],
+    aux_cols: list | str,
 ) -> tuple:
     """Encoding numerical columns.
 
     Parameters
     ----------
-    main : :obj:`~pandas.DataFrame`
+    main : :class:`~pandas.DataFrame`
         A table with numerical columns.
     main_cols : str or list
         The columns of the main table.
-    aux : :obj:`~pandas.DataFrame`
+    aux : :class:`~pandas.DataFrame`
         Another table with numerical columns.
     aux_cols : str or list
         The columns of the aux table.
@@ -55,76 +66,39 @@ def _numeric_encoding(
     scaler.fit(np.vstack((aux_array, main_array)))
     aux_array = scaler.transform(aux_array)
     main_array = scaler.transform(main_array)
-    return csr_matrix(main_array), csr_matrix(aux_array)
-
-
-def _time_encoding(
-    main: pd.DataFrame,
-    main_cols: str | list[str],
-    aux: pd.DataFrame,
-    aux_cols: str | list[str],
-) -> tuple:
-    """Encoding datetime columns.
-
-    Parameters
-    ----------
-    main : pd.DataFrame
-        A table with datetime columns.
-    main_cols : str or list
-        The datetime columns of the main table.
-    aux : pd.DataFrame
-        Another table with datetime columns.
-    aux_cols : str or list
-        The datetime columns of the aux table.
-
-    Returns
-    -------
-    main_array : array-like
-        An array of the encoded columns of the main table.
-    aux_array : array-like
-        An array of the encoded columns of the aux table.
-    """
-    # datetime representation in seconds
-    aux_array = aux[aux_cols].to_numpy(dtype="datetime64[s]")
-    main_array = main[main_cols].to_numpy(dtype="datetime64[s]")
-    # Re-weighting to avoid measure specificity
-    scaler = StandardScaler()
-    X = np.vstack([aux_array, main_array])
-    scaler.fit(X)
-    aux_array = scaler.transform(aux_array)
-    main_array = scaler.transform(main_array)
-    return csr_matrix(main_array), csr_matrix(aux_array)
+    return main_array, aux_array
 
 
 def _string_encoding(
     main: pd.DataFrame,
-    main_cols: str | list[str],
+    main_cols: list | str,
     aux: pd.DataFrame,
-    aux_cols: str | list[str],
+    aux_cols: list | str,
     analyzer: Literal["word", "char", "char_wb"],
-    ngram_range: tuple[int, int],
+    ngram_range: int | int,
     encoder: _VectorizerMixin = None,
+    sparse: bool = True,
 ) -> tuple:
     """Encoding string columns.
 
     Parameters
     ----------
-    main : :obj:`~pandas.DataFrame`
+    main : :class:`~pandas.DataFrame`
         A table with string columns.
     main_cols : str or list
         The columns of the main table.
-    aux : :obj:`~pandas.DataFrame`
+    aux : :class:`~pandas.DataFrame`
         Another table with string columns.
     aux_cols : str or list
         The columns of the aux table.
-    analyzer : {'word', 'char', 'char_wb'}
+    analyzer : {"word", "char", "char_wb"}
         Analyzer parameter for the HashingVectorizer passed to
         the encoder and used for the string similarities.
         See fuzzy_join's docstring for more information.
-    ngram_range : int 2-tuple, default=(2, 4)
-        The lower and upper boundaries of the range of n-values for different
-        n-grams used in the string similarity. All values of `n` such
-        that ``min_n <= n <= max_n`` will be used.
+    ngram_range : int 2-tuple, optional, default=(2, 4)
+        The lower and upper boundary of the range of n-values for different
+        n-grams used in the string similarity.
+        See fuzzy_join's docstring for more information.
     encoder: vectorizer instance, optional
         Encoder parameter for the Vectorizer.
         See fuzzy_join's docstring for more information.
@@ -137,31 +111,42 @@ def _string_encoding(
         An array of the encoded columns of the aux table.
     """
     # Make sure that the column types are string and categorical:
-    main = main[main_cols].astype(str)
-    aux = aux[aux_cols].astype(str)
+    main_cols_clean = main[main_cols].astype(str)
+    aux_cols_clean = aux[aux_cols].astype(str)
 
-    first_col, other_cols = main_cols[0], main_cols[1:]
-    main = main[first_col].str.cat(main[other_cols], sep="  ")
-    first_col_aux, other_cols_aux = aux_cols[0], aux_cols[1:]
-    aux = aux[first_col_aux].str.cat(aux[other_cols_aux], sep="  ")
-    all_cats = pd.concat([main, aux], axis=0).unique()
+    if isinstance(main_cols, list) and isinstance(aux_cols, list):
+        first_col, other_cols = main_cols[0], main_cols[1:]
+        main_cols_clean = main_cols_clean[first_col].str.cat(
+            main_cols_clean[other_cols], sep="  "
+        )
+        first_col_aux, other_cols_aux = aux_cols[0], aux_cols[1:]
+        aux_cols_clean = aux_cols_clean[first_col_aux].str.cat(
+            aux_cols_clean[other_cols_aux], sep="  "
+        )
+    all_cats = pd.concat([main_cols_clean, aux_cols_clean], axis=0).unique()
 
     if encoder is None:
         encoder = HashingVectorizer(analyzer=analyzer, ngram_range=ngram_range)
 
     encoder = encoder.fit(all_cats)
-    main_enc = encoder.transform(main)
-    aux_enc = encoder.transform(aux)
+    main_enc = encoder.transform(main_cols_clean)
+    aux_enc = encoder.transform(aux_cols_clean)
 
     all_enc = vstack((main_enc, aux_enc))
 
     tfidf = TfidfTransformer().fit(all_enc)
     main_enc = tfidf.transform(main_enc)
     aux_enc = tfidf.transform(aux_enc)
-    return main_enc, aux_enc
+    if sparse is True:
+        return main_enc, aux_enc
+    else:
+        transformer = random_projection.GaussianRandomProjection(eps=0.4)
+        main_enc_d = transformer.fit_transform(main_enc)
+        aux_enc_d = transformer.fit_transform(main_enc)
+        return main_enc_d, aux_enc_d
 
 
-def _nearest_matches(main_array, aux_array) -> tuple[np.ndarray, np.ndarray]:
+def _nearest_matches(main_array, aux_array, sparse=True) -> np.ndarray | np.ndarray:
     """Find the closest matches using the nearest neighbors method.
 
     Parameters
@@ -173,15 +158,21 @@ def _nearest_matches(main_array, aux_array) -> tuple[np.ndarray, np.ndarray]:
 
     Returns
     -------
-    :obj:`~numpy.ndarray`
+    np.ndarray
         Index of the closest matches of the main table in the aux table.
-    :obj:`~numpy.ndarray`
+    np.ndarray
         Distance between the closest matches, on a scale between 0 and 1.
     """
     # Find nearest neighbor using KNN :
     neigh = NearestNeighbors(n_neighbors=1)
-    neigh.fit(aux_array)
-    distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
+    if sparse is True:
+        neigh.fit(aux_array)
+        distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
+    else:
+        neigh.fit(np.asarray(aux_array))
+        distance, neighbors = neigh.kneighbors(
+            np.asarray(main_array), return_distance=True
+        )
     idx_closest = np.ravel(neighbors)
     distance = distance / np.max(distance)
     # Normalizing distance between 0 and 1:
@@ -196,6 +187,7 @@ def fuzzy_join(
     left_on: str | list[str] | list[int] | None = None,
     right_on: str | list[str] | list[int] | None = None,
     on: str | list[str] | list[int] | None = None,
+    numerical_match: Literal["string", "number"] = "number",
     encoder: _VectorizerMixin = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
     ngram_range: tuple[int, int] = (2, 4),
@@ -204,33 +196,20 @@ def fuzzy_join(
     drop_unmatched: bool = False,
     sort: bool = False,
     suffixes: tuple[str, str] = ("_x", "_y"),
+    sparse: bool = True,
 ) -> pd.DataFrame:
-    """Join two tables based on approximate matching using the appropriate similarity metric.
-
-    The principle is as follows:
-
-    1. We embed and transform the key string, numerical or datetime columns.
-    2. For each category, we use the nearest neighbor method to find its
-       closest neighbor and establish a match.
-    3. We match the tables using the previous information.
-
-    For string columns, categories from the two tables that share many sub-strings (n-grams)
-    have greater probability of being matched together. The join is based on
-    morphological similarities between strings.
-
-    Joining on numerical columns is also possible based on
-    the Euclidean distance.
-
-    Joining on datetime columns is based on the time difference.
+    """
+    Join two tables categorical string columns based on approximate
+    matching and using morphological similarity.
 
     Parameters
     ----------
-    left : :obj:`~pandas.DataFrame`
+    left : :class:`~pandas.DataFrame`
         A table to merge.
-    right : :obj:`~pandas.DataFrame`
+    right : :class:`~pandas.DataFrame`
         A table used to merge with.
-    how : {'left', 'right'}, default='left'
-        Type of merge to be performed. Note that unlike :func:`pandas.merge`,
+    how: typing.Literal["left", "right"], default=`left`
+        Type of merge to be performed. Note that unlike :func:`~pandas.merge`,
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
@@ -239,28 +218,32 @@ def fuzzy_join(
     right_on : str or list of str, optional
         Name of right table key column(s) to join
         with left table key column(s).
-    on : str or list of str or int, optional
+    on : str or list of str or int, optional, default=None
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    encoder : vectorizer instance, optional
+    numerical_match: {`string`, `number`}, optional, default='string'
+        For numerical columns, match using the Euclidean distance
+        ("number"). If "string", uses the default n-gram string
+        similarity on the string representation.
+    encoder: _VectorizerMixin, default=None
         Encoder parameter for the Vectorizer.
-        By default, uses a :obj:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        By default, uses a :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
         It is possible to pass a vectorizer instance inheriting
         :class:`~sklearn.feature_extraction.text._VectorizerMixin`
         to tweak the parameters of the encoder.
-    analyzer : {'word', 'char', 'char_wb'}, default='char_wb'
-        Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
-        passed to the encoder and used for the string similarities.
-        Describes whether the matrix `V` to factorize should be made of
-        word counts or character n-gram counts.
+    analyzer : {"word", "char", "char_wb"}, optional, default=`char_wb`
+        Analyzer parameter for the HashingVectorizer passed to
+        the encoder and used for the string similarities.
+        Options: {`word`, `char`, `char_wb`}, describing whether the matrix V
+        to factorize should be made of word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    ngram_range : 2-tuple of int, default=(2, 4)
-        The lower and upper boundaries of the range of n-values for different
-        n-grams used in the string similarity. All values of `n` such
-        that ``min_n <= n <= max_n`` will be used.
-    return_score : bool, default=True
+    ngram_range : int 2-tuple, optional, default=(2, 4)
+        The lower and upper boundary of the range of n-values for different
+        n-grams used in the string similarity. All values of n such
+        that min_n <= n <= max_n will be used.
+    return_score : boolean, default=True
         Whether to return matching score based on the distance between
         the nearest matched categories.
     match_score : float, default=0.0
@@ -270,37 +253,39 @@ def fuzzy_join(
         no matter how distant.
         For numerical joins, this defines the maximum Euclidean distance
         between the matches.
-    drop_unmatched : bool, default=False
+    drop_unmatched : boolean, default=False
         Remove categories for which a match was not found in the two tables.
-    sort : bool, default=False
-        Sort the join keys lexicographically in the resulting :obj:`~pandas.DataFrame`.
+    sort : boolean, default=False
+        Sort the join keys lexicographically in the result DataFrame.
         If False, the order of the join keys depends on the join type
         (`how` keyword).
-    suffixes : 2-tuple of str, default=('_x', '_y')
+    suffixes : str 2-tuple, default=('_x', '_y')
         A list of strings indicating the suffix to add when overlaping
         column names.
+    sparse : boolean, default=True
+        Use sparse or dense arrays for nearest neighbor search.
 
     Returns
     -------
-    df_joined : :obj:`~pandas.DataFrame`
-        The joined table returned as a :obj:`~pandas.DataFrame`.
-        If `return_score=True`, another column will be added
-        to the DataFrame containing the matching scores.
+    df_joined : :class:`~pandas.DataFrame`
+        The joined table returned as a DataFrame. If `return_score` is True,
+        another column will be added to the DataFrame containing the
+        matching scores.
 
     See Also
     --------
-    :class:`skrub.FeatureAugmenter`
+    :class:`~skrub.FeatureAugmenter` :
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 
     Notes
     -----
     For regular joins, the output of fuzzy_join is identical
-    to :func:`pandas.merge`, except that both key columns are returned.
+    to :func:`~pandas.merge`, except that both key columns are returned.
 
     Joining on indexes and multiple columns is not supported.
 
-    When `return_score=True`, the returned :obj:`~pandas.DataFrame` gives
+    When `return_score=True`, the returned :class:`~pandas.DataFrame` gives
     the distances between the closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.
@@ -351,9 +336,6 @@ def fuzzy_join(
 
     As expected, the category "nana" has no exact match (`match_score=1`).
     """
-
-    warnings.warn("This feature is still experimental.")
-
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
@@ -369,6 +351,12 @@ def fuzzy_join(
     if how not in ["left", "right"]:
         raise ValueError(
             f"Parameter 'how' should be either 'left' or 'right', got {how!r}. "
+        )
+
+    if numerical_match not in ["string", "number"]:
+        raise ValueError(
+            "Parameter 'numerical_match' should be either 'string' or 'number', "
+            f"got {numerical_match!r}. ",
         )
 
     for param in [on, left_on, right_on]:
@@ -423,45 +411,26 @@ def fuzzy_join(
     main_num_cols = main_table[main_cols].select_dtypes(include="number").columns
     aux_num_cols = aux_table[aux_cols].select_dtypes(include="number").columns
 
-    main_time_cols = main_table[main_cols].select_dtypes(include="datetime").columns
-    aux_time_cols = aux_table[aux_cols].select_dtypes(include="datetime").columns
-
-    main_str_cols = (
-        main_table[main_cols]
-        .select_dtypes(include=["string", "category", "object"])
-        .columns
-    )
-    aux_str_cols = (
-        aux_table[aux_cols]
-        .select_dtypes(include=["string", "category", "object"])
-        .columns
-    )
-
     # Check if included columns are numeric:
     any_numeric = len(main_num_cols) != 0
-    # Check if included columns are datetime:
-    any_time = len(main_time_cols) != 0
-    # Check if included columns are datetime:
-    any_str = len(main_str_cols) != 0
+    # Check if included columns have mixed types:
+    mixed_types = len(main_cols) > len(main_num_cols)
 
     if len(main_cols) == 1 and len(aux_cols) == 1 and any_numeric is False:
         main_cols = main_cols[0]
         aux_cols = aux_cols[0]
 
-    main_enc, aux_enc = [], []
-    if any_numeric:
+    if numerical_match in ["number"] and any_numeric and not mixed_types:
+        main_enc, aux_enc = _numeric_encoding(
+            main_table, main_num_cols, aux_table, aux_num_cols
+        )
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc, sparse=sparse)
+    elif numerical_match in ["number"] and any_numeric and mixed_types:
         main_num_enc, aux_num_enc = _numeric_encoding(
             main_table, main_num_cols, aux_table, aux_num_cols
         )
-        main_enc.append(main_num_enc)
-        aux_enc.append(aux_num_enc)
-    if any_time:
-        main_time_enc, aux_time_enc = _time_encoding(
-            main_table, main_time_cols, aux_table, aux_time_cols
-        )
-        main_enc.append(main_time_enc)
-        aux_enc.append(aux_time_enc)
-    if any_str:
+        main_str_cols = list(set(main_cols) - set(main_num_cols))
+        aux_str_cols = list(set(aux_cols) - set(aux_num_cols))
         main_str_enc, aux_str_enc = _string_encoding(
             main_table,
             main_str_cols,
@@ -470,12 +439,27 @@ def fuzzy_join(
             encoder=encoder,
             analyzer=analyzer,
             ngram_range=ngram_range,
+            sparse=sparse,
         )
-        main_enc.append(main_str_enc)
-        aux_enc.append(aux_str_enc)
-    main_enc = hstack(main_enc, format="csr")
-    aux_enc = hstack(aux_enc, format="csr")
-    idx_closest, matching_score = _nearest_matches(main_enc, aux_enc)
+        if sparse is True:
+            main_enc = hstack((main_num_enc, main_str_enc), format="csr")
+            aux_enc = hstack((aux_num_enc, aux_str_enc), format="csr")
+        else:
+            main_enc = np.hstack((main_num_enc, main_str_enc))
+            aux_enc = np.hstack((aux_num_enc, aux_str_enc))
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc, sparse=sparse)
+    else:
+        main_enc, aux_enc = _string_encoding(
+            main_table,
+            main_cols,
+            aux_table,
+            aux_cols,
+            encoder=encoder,
+            analyzer=analyzer,
+            ngram_range=ngram_range,
+            sparse=sparse,
+        )
+        idx_closest, matching_score = _nearest_matches(main_enc, aux_enc, sparse=sparse)
 
     main_table["fj_idx"] = idx_closest
     aux_table["fj_idx"] = aux_table.index
@@ -511,3 +495,133 @@ def fuzzy_join(
         df_joined["matching_score"] = matching_score
 
     return df_joined
+
+
+#########################################################
+# Benchmarking accuracy and speed on actual datasets
+#########################################################
+
+benchmark_name = "bench_fuzzy_join_sparse_vs_dense"
+
+
+@monitor(
+    parametrize={
+        "sparse": [True, False],
+        "dataset_name": [
+            "iTunes-Amazon",
+            "DBLP-ACM",
+            "DBLP-GoogleScholar",
+            "Walmart-Amazon",
+        ],
+        "analyzer": ["char_wb", "char", "word"],
+        "ngram_range": [(2, 4), (3, 4)],
+    },
+    memory=True,
+    time=True,
+    repeat=5,
+    save_as=benchmark_name,
+)
+def benchmark(
+    sparse: bool,
+    dataset_name: str,
+    analyzer: Literal["char_wb", "char", "word"],
+    ngram_range: tuple,
+):
+    left_table, right_table, gt = fetch_big_data(dataset_name)
+
+    start_time = perf_counter()
+    joined_fj = fuzzy_join(
+        left_table,
+        right_table,
+        how="left",
+        left_on=left_table.columns[0],
+        right_on=right_table.columns[0],
+        analyzer=analyzer,
+        ngram_range=ngram_range,
+        sparse=sparse,
+    )
+    end_time = perf_counter()
+
+    n_obs = len(joined_fj.index)
+
+    avg_word = np.round(
+        np.mean(
+            [
+                joined_fj["title_x"].str.split().map(len).mean(),
+                joined_fj["title_y"].str.split().map(len).mean(),
+            ]
+        )
+    )
+
+    pr, re, f1 = evaluate(
+        list(zip(joined_fj["title_x"], joined_fj["title_y"])),
+        list(zip(gt["title_l"], gt["title_r"])),
+    )
+
+    res_dic = {
+        "n_obs": n_obs,
+        "precision": pr,
+        "recall": re,
+        "f1": f1,
+        "time_fj": end_time - start_time,
+        "avg_count": avg_word,
+    }
+
+    return res_dic
+
+
+def plot(df: pd.DataFrame):
+    sns.set_theme(style="ticks", palette="pastel")
+
+    n_datasets = len(np.unique(df["dataset_name"]))
+    n_rows = min(n_datasets, 3)
+    f, axes = plt.subplots(
+        n_rows,
+        math.ceil(n_datasets / n_rows),
+        squeeze=False,
+        figsize=(20, 5),
+    )
+    plt.tight_layout()
+    # Create the subplots but indexed by 1 value
+    for i, dataset_name in enumerate(np.unique(df["dataset_name"])):
+        current_df = df[df["dataset_name"] == dataset_name].reset_index()
+        sns.scatterplot(
+            x="time_fj",
+            y="f1",
+            hue="sparse",
+            style="ngram_range",
+            size="analyzer",
+            alpha=0.8,
+            data=current_df,
+            ax=axes[i % n_rows, i // n_rows],
+        )
+        obs = current_df["n_obs"][0]
+        avg_word = current_df["avg_count"][0]
+        axes[i % n_rows, i // n_rows].set_title(
+            f"{dataset_name} Obs={obs} Avg_word_length={avg_word} "
+        )
+        # remove legend
+        axes[i % n_rows, i // n_rows].get_legend().remove()
+        # Put a legend to the right side if last row
+        if i == n_datasets - 1:
+            axes[i % n_rows, i // n_rows].legend(loc="center right")
+    plt.show()
+
+
+if __name__ == "__main__":
+    _args = ArgumentParser(
+        description=(
+            "Benchmark for the evaluating the fuzzy_join performance of sparse vs dense"
+            " arrays."
+        ),
+        parents=[default_parser],
+    ).parse_args()
+
+    if _args.run:
+        df = benchmark()
+    else:
+        result_file = find_result(benchmark_name)
+        df = pd.read_parquet(result_file)
+
+    if _args.plot:
+        plot(df)

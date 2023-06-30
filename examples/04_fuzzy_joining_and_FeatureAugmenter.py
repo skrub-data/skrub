@@ -73,7 +73,7 @@ gdppc.head(3)
 
 ###############################################################################
 # Then another table, with life expectancy by country:
-life_exp = fetch_world_bank_indicator("SP.DYN.LE00.IN", "life_exp").X
+life_exp = fetch_world_bank_indicator("SP.DYN.LE00.IN").X
 life_exp.head(3)
 
 ###############################################################################
@@ -312,10 +312,7 @@ y = df3[["Happiness score"]]
 
 ###################################################################
 # Let us now define the model that will be used to predict the happiness score:
-from sklearn import __version__ as sklearn_version
 
-if sklearn_version < "1.0":
-    from sklearn.experimental import enable_hist_gradient_boosting
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import KFold
 

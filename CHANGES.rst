@@ -1,24 +1,88 @@
-:orphan:
+.. _changes:
+
+========
+Changes
+========
 
 .. currentmodule:: skrub
 
-Release 0.5.0
-=============
+Ongoing development
+=====================
+
+Skrub has not been released yet. It is currently undergoing fast
+development and backward compatability is not ensured.
 
 Major changes
 -------------
+
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
+  :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * The signatures of all encoders and functions have been revised to enforce
   cleaner calls. This means that some arguments that could previously be passed
   positionally now have to be passed as keywords.
   :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
 
+* Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
+  added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
+
+* Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`
+  and :func:`fetch_ken_types` have been renamed.
+  :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* Bumped minimal required Python version to 3.10. :pr:`606` by
+  :user:`Gael Varoquaux <GaelVaroquaux>`
+
+* Bumped minimal required versions for the dependencies:
+  - numpy >= 1.23.5
+  - scipy >= 1.9.3
+  - scikit-learn >= 1.2.1
+  - pandas >= 1.5.3 :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
+
 * You can now pass column-specific transformers to :class:`TableVectorizer`
   using the `column_specific_transformers` argument.
   :pr:`583` by :user:`Lilian Boulard <LilianBoulard>`.
 
-Release 0.4.1
-=============
+Minor changes
+-------------
+
+* Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`.
+  These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`
+  or the :class:`GapEncoder` instead. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor,
+  as we only support the ngram similarity. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Added the `analyzer` parameter to the :class:`SimilarityEncoder` to allow word counts
+  for similarity measures. :pr:`619` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* skrub now uses modern type hints introduced in PEP 585.
+  :pr:`609` by :user:`Lilian Boulard <LilianBoulard>`
+
+* Some bug fixes for :class:`TableVectorizer` ( :pr:`579`):
+
+  - `check_is_fitted` now looks at `"transformers_"` rather than `"columns_"`
+  - the default of the `remainder` parameter in the docstring is now `"passthrough"`
+    instead of `"drop"` to match the implementation.
+  - uint8 and int8 dtypes are now considered as numerical columns.
+
+* Removed the leading "<" and trailing ">" symbols from KEN entities
+  and types.
+  :pr:`601` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* Add `get_feature_names_out` method to :class:`MinHashEncoder`.
+  :pr:`616` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
+
+Before skrub: dirty_cat
+========================
+
+Skrub was born from the `dirty_cat <http://dirty-cat.github.io>`__
+package.
+
+Dirty-cat release 0.4.1
+==========================
 
 Major changes
 -------------
@@ -43,12 +107,13 @@ Major changes
 Minor changes
 -------------
 * Improvement of date column detection and date format inference in :class:`TableVectorizer`. The
-  format inference now finds a format which works for all non-missing values of the column, instead
-  of relying on pandas behavior. If no such format exists, the column is not casted to a date column.
+  format inference now tries to find a format which works for all non-missing values of the column, and only
+  tries pandas default inference if it fails.
   :pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
+  :pr:`587` by :user:`Leo Grinsztajn <LeoGrin>`
 
-Release 0.4.0
-=============
+Dirty-cat Release 0.4.0
+=========================
 
 Major changes
 -------------
@@ -77,7 +142,7 @@ Minor changes
 -------------
 * Add example `Wikipedia embeddings to enrich the data`. :pr:`487` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* * **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
+* **datasets.fetching**: contains a new function :func:`get_ken_embeddings` that can be used to download Wikipedia
   embeddings and filter them by type.
 
 * **datasets.fetching**: contains a new function :func:`fetch_world_bank_indicator` that can be used to download indicators
@@ -106,8 +171,8 @@ Bug fixes
 * The :class:`MinHashEncoder` now considers `None` and empty strings as missing values, rather
   than raising an error. :pr:`378` by :user:`Gael Varoquaux <GaelVaroquaux>`
 
-Release 0.3.0
-=============
+Dirty-cat Release 0.3.0
+==========================
 
 Major changes
 -------------
@@ -150,8 +215,8 @@ Notes
   names instead of column indices for the "remainder" columns. :pr:`266` by :user:`Leo Grinsztajn <LeoGrin>`
 
 
-Release 0.2.2
-=============
+Dirty-cat Release 0.2.2
+=========================
 
 Bug fixes
 ---------
@@ -160,8 +225,8 @@ Bug fixes
   when using the :func:`get_feature_names_out` method. :pr:`262` by :user:`Lilian Boulard <LilianBoulard>`
 
 
-Release 0.2.1
-=============
+Dirty-cat Release 0.2.1
+==========================
 
 Major changes
 -------------
@@ -201,8 +266,8 @@ Notes
 
 * Documentation of the :class:`TableVectorizer` and the :class:`SimilarityEncoder` improved.
 
-Release 0.2.0
-=============
+Dirty-cat Release 0.2.0
+=========================
 
 Also see pre-release 0.2.0a1 below for additional changes.
 
@@ -253,8 +318,8 @@ Notes
 
   :pr:`201` by :user:`Lilian Boulard <LilianBoulard>`
 
-Release 0.2.0a1
-===============
+Dirty-cat Release 0.2.0a1
+============================
 
 Version 0.2.0a1 is a pre-release.
 To try it, you have to install it manually using::
@@ -294,8 +359,8 @@ Bug-fixes
 * Fix `get_feature_names` for scikit-learn > 0.21. :pr:`216` by :user:`Alexis Cvetkov <alexis-cvetkov>`
 
 
-Release 0.1.1
-=============
+Dirty-cat Release 0.1.1
+========================
 
 Major changes
 -------------
@@ -306,8 +371,8 @@ Bug-fixes
 * RuntimeWarnings due to overflow in :class:`GapEncoder`. :pr:`161` by :user:`Alexis Cvetkov <alexis-cvetkov>`
 
 
-Release 0.1.0
-=============
+Dirty-cat Release 0.1.0
+=========================
 
 Major changes
 -------------
@@ -323,8 +388,8 @@ Bug-fixes
 * Multiprocessing exception in notebook. :pr:`154` by :user:`Lilian Boulard <LilianBoulard>`
 
 
-Release 0.0.7
-=============
+Dirty-cat Release 0.0.7
+========================
 
 * **MinHashEncoder**: Added ``minhash_encoder.py`` and ``fast_hast.py`` files
   that implement minhash encoding through the :class:`MinHashEncoder` class.
@@ -350,8 +415,8 @@ Release 0.0.7
 * **MinHashEncoder**: Added a `handle_missing` attribute to allow encoding
   with missing values.
 
-Release 0.0.6
-=============
+Dirty-cat Release 0.0.6
+=========================
 
 * **SimilarityEncoder**: Accelerate ``SimilarityEncoder.transform``, by:
 
@@ -365,8 +430,8 @@ Release 0.0.6
 * **SimilarityEncoder**: Set the dtype passed to the ngram similarity
   to float32, which reduces memory consumption during encoding.
 
-Release 0.0.5
-=============
+Dirty-cat Release 0.0.5
+========================
 
 * **SimilarityEncoder**: Change the default ngram range to (2, 4) which
   performs better empirically.

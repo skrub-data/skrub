@@ -3,13 +3,14 @@ Implements the MinHashEncoder, which encodes string categorical features by
 applying the MinHash method to n-gram decompositions of strings.
 """
 
-from typing import Callable, Collection, Dict, List, Literal, Tuple
+from collections.abc import Callable, Collection
+from typing import Literal
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import _check_feature_names_in, check_is_fitted
 
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
@@ -70,6 +71,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     ----------
     hash_dict_ : LRUDict
         Computed hashes.
+    n_features_in_ : int
+        Number of features seen during :term:`fit`.
+    feature_names_in_ : ndarray of shape (n_features_in,)
+        Names of features seen during :term:`fit`.
 
     See Also
     --------
@@ -118,7 +123,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self,
         *,
         n_components: int = 30,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         hashing: Literal["fast", "murmur"] = "fast",
         minmax_hash: bool = False,
         handle_missing: Literal["error", "zero_impute"] = "zero_impute",
@@ -131,7 +136,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """
@@ -233,7 +238,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, ) or (n_samples, 1)
+        X : array-like, shape (n_samples, ) or (n_samples, n_columns)
             The string data to encode. Only here for compatibility.
         y : None
             Unused, only here for compatibility.
@@ -243,6 +248,10 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         :obj:`MinHashEncoder`
             The fitted :class:`MinHashEncoder` instance (self).
         """
+        self._check_n_features(X, reset=True)
+        self._check_feature_names(X, reset=True)
+        X = check_input(X)
+
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
                 f"Got hashing={self.hashing!r}, "
@@ -262,15 +271,17 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, ) or (n_samples, 1)
+        X : array-like, shape (n_samples, ) or (n_samples, n_columns)
             The string data to encode.
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
+        :obj:`~numpy.ndarray` of shape (n_samples, n_columns * n_components)
             Transformed input.
         """
         check_is_fitted(self, "hash_dict_")
+        self._check_n_features(X, reset=False)
+        self._check_feature_names(X, reset=False)
         X = check_input(X)
         if self.minmax_hash:
             if self.n_components % 2 != 0:
@@ -336,3 +347,39 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         )
 
         return X_out.astype(np.float64)  # The output is an int32 before conversion
+
+    def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
+
+        The output feature names look like:
+        ``["x0_0", "x0_1", ..., "x0_(n_components - 1)",
+        "x1_0", ..., "x1_(n_components - 1)", ...,
+        "x(n_features_out - 1)_(n_components - 1)"]``
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Input features.
+
+            - If ``input_features`` is ``None``, then ``feature_names_in_`` is
+              used as feature names in. If ``feature_names_in_`` is not defined,
+              then the following input feature names are generated:
+              ``["x0", "x1", ..., "x(n_features_in_ - 1)"]``.
+            - If ``input_features`` is an array-like, then ``input_features`` must
+              match ``feature_names_in_`` if ``feature_names_in_`` is defined.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+
+        check_is_fitted(self)
+        input_features = _check_feature_names_in(self, input_features)
+
+        feature_names = []
+        for feature in input_features:
+            for i in range(self.n_components):
+                feature_names.append(f"{feature}_{i}")
+
+        return feature_names

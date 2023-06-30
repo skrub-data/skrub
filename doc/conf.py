@@ -47,16 +47,19 @@ shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    # builtin
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.githubpages",
-    "numpydoc",
-    "sphinx_issues",
     "sphinx.ext.linkcode",
     "sphinx.ext.autodoc.typehints",
+    # contrib
+    "numpydoc",
+    "sphinx_issues",
+    "sphinx_copybutton",
     "sphinx_gallery.gen_gallery",
 ]
 
@@ -81,8 +84,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "skrub"
-copyright = f"2018-{datetime.now().year}, the skrub developers"
-author = "skrub developers"
+copyright = f"2018-2023, the dirty_cat developers, 2023-{datetime.now().year}, the skrub developers"
+author = "skrub contributors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -180,17 +183,19 @@ html_theme_options = {
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "footer_start": ["test.html", "test.html"],
-    # "secondary_sidebar_items": ["page-toc.html"],  # Remove the source buttons
+    #"secondary_sidebar_items": ["index.html"],  # Remove the source buttons
     #"switcher": {
     #    "json_url": json_url,
     #    "version_match": version_match,
     #},
 }
 
+# Additional templates that should be rendered to pages, maps page names to
+# template names.
+html_additional_pages = {"index": "index.html"}
 
 # Needed for the edit button
 html_context = {
-    # "github_url": "https://github.com", # or your GitHub Enterprise site
     "github_user": "skrub_data",
     "github_repo": "skrub",
     "github_version": "main",
@@ -202,7 +207,11 @@ html_context = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_css_files = ["css/custom.css"]
+html_css_files = [
+    "css/custom.css",
+]
+html_js_files = []
+
 
 # Project logo, to place at the top of the sidebar.
 html_logo = "_static/skrub.svg"
@@ -337,6 +346,29 @@ numpydoc_use_plots = True
 # see https://github.com/numpy/numpydoc/issues/69
 numpydoc_class_members_toctree = False
 
+numpydoc_xref_param_type = True
+numpydoc_xref_aliases = {
+    # Python
+    "file-like": ":term:`file-like <python:file object>`",
+    "iterator": ":term:`iterator <python:iterator>`",
+    "path-like": ":term:`path-like`",
+    "Path": ":class:`python:pathlib.Path`",
+    "bool": ":class:`python:bool`",
+    # Matplotlib
+    "colormap": ":doc:`colormap <matplotlib:tutorials/colors/colormaps>`",
+    "color": ":doc:`color <matplotlib:api/colors_api>`",
+    "Axes": "matplotlib.axes.Axes",
+    "Figure": "matplotlib.figure.Figure",
+    "Axes3D": "mpl_toolkits.mplot3d.axes3d.Axes3D",
+    "ColorbarBase": "matplotlib.colorbar.ColorbarBase",
+    # sklearn
+    "LeaveOneOut": "sklearn.model_selection.LeaveOneOut",
+    "Transformer": "sklearn.base.TransformerMixin",
+    # joblib
+    "joblib.Parallel": "joblib.Parallel",
+    "joblib.delayed": "joblib.delayed",
+}
+
 # -- sphinx.ext.autodoc configuration -----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 autodoc_typehints = "none"
@@ -354,3 +386,7 @@ linkcode_resolve = make_linkcode_resolve(
     "skrub",
     "https://github.com/skrub-data/skrub/blob/{revision}/{package}/{path}#L{lineno}",
 )
+
+# -- Sphinx-Copybutton configuration -----------------------------------------
+copybutton_prompt_text = r">>> |\.\.\. |\$ "
+copybutton_prompt_is_regexp = True

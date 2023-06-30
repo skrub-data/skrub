@@ -2,17 +2,18 @@
 Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 
-import warnings
+from collections.abc import Generator
 from copy import deepcopy
-from typing import Dict, Generator, List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from numpy.random import RandomState
 from scipy import sparse
-from sklearn import __version__ as sklearn_version
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, kmeans_plusplus
+from sklearn.decomposition._nmf import _beta_divergence
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state, gen_batches
@@ -20,14 +21,7 @@ from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
-from ._utils import check_input, parse_version
-
-if parse_version(sklearn_version) < parse_version("0.24"):
-    from sklearn.cluster._kmeans import _k_init
-else:
-    from sklearn.cluster import kmeans_plusplus
-
-from sklearn.decomposition._nmf import _beta_divergence
+from ._utils import check_input
 
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
@@ -43,7 +37,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
     """
 
     rho_: float
-    H_dict_: Dict[np.ndarray, np.ndarray]
+    H_dict_: dict[np.ndarray, np.ndarray]
 
     def __init__(
         self,
@@ -59,10 +53,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         tol: float = 1e-4,
         min_iter: int = 2,
         max_iter: int = 5,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         analyzer: Literal["word", "char", "char_wb"] = "char",
         add_words: bool = False,
-        random_state: Optional[Union[int, RandomState]] = None,
+        random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
     ):
@@ -85,7 +79,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
-    def _init_vars(self, X) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _init_vars(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Build the bag-of-n-grams representation `V` of `X` and initialize
         the topics `W`.
@@ -123,19 +117,11 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             unq_V = sparse.hstack((unq_V, unq_V2), format="csr")
 
         if not self.hashing:  # Build n-grams/word vocabulary
-            if parse_version(sklearn_version) < parse_version("1.0"):
-                self.vocabulary = self.ngrams_count_.get_feature_names()
-            else:
-                self.vocabulary = self.ngrams_count_.get_feature_names_out()
+            self.vocabulary = self.ngrams_count_.get_feature_names_out()
             if self.add_words:
-                if parse_version(sklearn_version) < parse_version("1.0"):
-                    self.vocabulary = np.concatenate(
-                        (self.vocabulary, self.word_count_.get_feature_names())
-                    )
-                else:
-                    self.vocabulary = np.concatenate(
-                        (self.vocabulary, self.word_count_.get_feature_names_out())
-                    )
+                self.vocabulary = np.concatenate(
+                    (self.vocabulary, self.word_count_.get_feature_names_out())
+                )
         _, self.n_vocab = unq_V.shape
         # Init the topics W given the n-grams counts V
         self.W_, self.A_, self.B_ = self._init_w(unq_V[lookup], X)
@@ -157,7 +143,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             h_out[:] = self.H_dict_[x]
         return H_out
 
-    def _init_w(self, V: np.ndarray, X) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _init_w(self, V: np.ndarray, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Initialize the topics `W`.
         If `self.init='k-means++'`, we use the init method of
@@ -168,26 +154,14 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         n-grams counts.
         """
         if self.init == "k-means++":
-            if parse_version(sklearn_version) < parse_version("0.24"):
-                W = (
-                    _k_init(
-                        V,
-                        self.n_components,
-                        x_squared_norms=row_norms(V, squared=True),
-                        random_state=self.random_state,
-                        n_local_trials=None,
-                    )
-                    + 0.1
-                )
-            else:
-                W, _ = kmeans_plusplus(
-                    V,
-                    self.n_components,
-                    x_squared_norms=row_norms(V, squared=True),
-                    random_state=self.random_state,
-                    n_local_trials=None,
-                )
-                W = W + 0.1  # To avoid restricting topics to a few n-grams only
+            W, _ = kmeans_plusplus(
+                V,
+                self.n_components,
+                x_squared_norms=row_norms(V, squared=True),
+                random_state=self.random_state,
+                n_local_trials=None,
+            )
+            W = W + 0.1  # To avoid restricting topics to a few n-grams only
         elif self.init == "random":
             W = self.random_state.gamma(
                 shape=self.gamma_shape_prior,
@@ -207,26 +181,14 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_components:
-                if parse_version(sklearn_version) < parse_version("0.24"):
-                    W2 = (
-                        _k_init(
-                            V,
-                            self.n_components - W.shape[0],
-                            x_squared_norms=row_norms(V, squared=True),
-                            random_state=self.random_state,
-                            n_local_trials=None,
-                        )
-                        + 0.1
-                    )
-                else:
-                    W2, _ = kmeans_plusplus(
-                        V,
-                        self.n_components - W.shape[0],
-                        x_squared_norms=row_norms(V, squared=True),
-                        random_state=self.random_state,
-                        n_local_trials=None,
-                    )
-                    W2 = W2 + 0.1
+                W2, _ = kmeans_plusplus(
+                    V,
+                    self.n_components - W.shape[0],
+                    x_squared_norms=row_norms(V, squared=True),
+                    random_state=self.random_state,
+                    n_local_trials=None,
+                )
+                W2 = W2 + 0.1
                 W = np.concatenate((W, W2), axis=0)
         else:
             raise ValueError(f"Initialization method {self.init!r} does not exist. ")
@@ -300,37 +262,11 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def get_feature_names(self, n_labels=3, prefix=""):
-        """Return clean feature names. Compatibility method for sklearn < 1.0.
-
-        Use :func:`~GapEncoderColumn.get_feature_names_out` instead.
-
-        Parameters
-        ----------
-        n_labels : int, default=3
-            The number of labels used to describe each topic.
-        prefix : str, default=''
-            Used as a prefix for the categories.
-
-        Returns
-        -------
-        list of str
-            The labels that best describe each topic.
-        """
-        warnings.warn(
-            "Following the changes in scikit-learn 1.0, "
-            "get_feature_names is deprecated. "
-            "Use get_feature_names_out instead. ",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.get_feature_names_out(n_labels=n_labels, prefix=prefix)
-
     def get_feature_names_out(
         self,
         n_labels: int = 3,
         prefix: str = "",
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with the highest activations are selected.
@@ -350,10 +286,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         vectorizer = CountVectorizer()
         vectorizer.fit(list(self.H_dict_.keys()))
-        if parse_version(sklearn_version) < parse_version("1.0"):
-            vocabulary = np.array(vectorizer.get_feature_names())
-        else:
-            vocabulary = np.array(vectorizer.get_feature_names_out())
+        vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self.transform(np.array(vocabulary).reshape(-1))
         encoding = abs(encoding)
         encoding = encoding / np.sum(encoding, axis=1, keepdims=True)
@@ -645,6 +578,13 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         (default is to impute).
         In :func:`~GapEncoder.inverse_transform`, the missing categories will
         be denoted as `None`.
+    n_jobs : int, optional
+        The number of jobs to run in parallel.
+        The process is parallelized column-wise,
+        meaning each column is fitted in parallel. Thus, having
+        `n_jobs` > X.shape[1] will not speed up the computation.
+    verbose : int, default=0
+        Verbosity level. The higher, the more granular the logging.
 
     Attributes
     ----------
@@ -707,8 +647,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     """
 
     rho_: float
-    fitted_models_: List[GapEncoderColumn]
-    column_names_: List[str]
+    fitted_models_: list[GapEncoderColumn]
+    column_names_: list[str]
 
     def __init__(
         self,
@@ -725,13 +665,15 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         tol: float = 1e-4,
         min_iter: int = 2,
         max_iter: int = 5,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         analyzer: Literal["word", "char", "char_wb"] = "char",
         add_words: bool = False,
-        random_state: Optional[Union[int, RandomState]] = None,
+        random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
         handle_missing: Literal["error", "empty_impute"] = "zero_impute",
+        n_jobs: int | None = None,
+        verbose: int = 0,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -752,8 +694,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
         self.handle_missing = handle_missing
+        self.n_jobs = n_jobs
+        self.verbose = verbose
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """
@@ -832,10 +776,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         # Check input data shape
         X = check_input(X)
         X = self._handle_missing(X)
-        self.fitted_models_ = []
-        for k in range(X.shape[1]):
-            col_enc = self._create_column_gap_encoder()
-            self.fitted_models_.append(col_enc.fit(X[:, k]))
+        self.fitted_models_ = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
+            delayed(self._create_column_gap_encoder().fit)(X[:, k])
+            for k in range(X.shape[1])
+        )
         return self
 
     def transform(self, X) -> np.ndarray:
@@ -906,7 +850,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def get_feature_names_out(
         self,
-        col_names: Optional[Union[Literal["auto"], List[str]]] = None,
+        col_names: Literal["auto"] | list[str] | None = None,
         n_labels: int = 3,
         input_features=None,
     ):
@@ -956,53 +900,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             labels.extend(col_labels)
         return labels
 
-    def get_feature_names(
-        self,
-        col_names: List[str] = None,
-        n_labels: int = 3,
-        input_features=None,
-    ) -> List[str]:
-        """Return clean feature names. Compatibility method for sklearn < 1.0.
-
-        Use :func:`~GapEncoder.get_feature_names_out` instead.
-
-        For each topic, labels with the highest activations are selected.
-
-        Parameters
-        ----------
-        col_names : 'auto' or list of str, optional
-            The column names to be added as prefixes before the labels.
-            If `col_names=None`, no prefixes are used.
-            If `col_names='auto'`, column names are automatically defined:
-
-                - if the input data was a :obj:`~pandas.DataFrame`,
-                  its column names are used,
-                - otherwise, 'col1', ..., 'colN' are used as prefixes.
-
-            Prefixes can be manually set by passing a list for `col_names`.
-
-        n_labels : int, default=3
-            The number of labels used to describe each topic.
-
-        input_features : None
-            Unused, only here for compatibility.
-
-        Returns
-        -------
-        list of str
-            The labels that best describe each topic.
-            Each element contains the labels joined by a comma.
-        """
-        if parse_version(sklearn_version) >= parse_version("1.0"):
-            warnings.warn(
-                "Following the changes in scikit-learn 1.0, "
-                "get_feature_names is deprecated. "
-                "Use get_feature_names_out instead. ",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        return self.get_feature_names_out(col_names, n_labels)
-
     def score(self, X) -> float:
         """Score this instance on `X`.
 
@@ -1045,7 +942,7 @@ def _multiplicative_update_w(
     Ht: np.ndarray,
     rescale_W: bool,
     rho: float,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Multiplicative update step for the topics `W`.
     """
@@ -1109,7 +1006,7 @@ def _multiplicative_update_h(
 def batch_lookup(
     lookup: np.ndarray,
     n: int = 1,
-) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
     """
     Make batches of the lookup array.
     """
@@ -1125,10 +1022,10 @@ def get_kmeans_prototypes(
     n_prototypes: int,
     analyzer: Literal["word", "char", "char_wb"] = "char",
     hashing_dim: int = 128,
-    ngram_range: Tuple[int, int] = (2, 4),
+    ngram_range: tuple[int, int] = (2, 4),
     sparse: bool = False,
     sample_weight=None,
-    random_state: Optional[Union[int, RandomState]] = None,
+    random_state: int | RandomState | None = None,
 ):
     """
     Computes prototypes based on:

@@ -15,7 +15,6 @@ The principle is as follows:
 """
 
 import functools
-from typing import Tuple
 
 import numpy as np
 
@@ -50,7 +49,7 @@ def gen_atom(atom_len, seed=0):
 
 def ngram_min_hash(
     string: str,
-    ngram_range: Tuple[int, int] = (2, 4),
+    ngram_range: tuple[int, int] = (2, 4),
     seed: int = 0,
     return_minmax=False,
 ):

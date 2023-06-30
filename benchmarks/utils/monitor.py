@@ -4,8 +4,9 @@ from datetime import datetime
 from itertools import product as _product
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Callable, Collection, Dict, List, Optional, Union
+from collections.abc import Callable, Collection
 from warnings import warn
+from typing import Any
 
 import pandas as pd
 from tqdm import tqdm
@@ -26,11 +27,11 @@ def repr_func(f: Callable, args: tuple, kwargs: dict) -> str:
 
 def monitor(
     *,
-    parametrize: Union[Collection[Collection[Any]], Dict[str, Collection[Any]]] = None,
+    parametrize: Collection[Collection[Any]] | dict[str, Collection[Any]] | None = None,
     memory: bool = True,
     time: bool = True,
     repeat: int = 1,
-    save_as: Optional[str] = None,
+    save_as: str | None = None,
 ) -> Callable[..., Callable[..., pd.DataFrame]]:
     """Decorator used to monitor the execution of a function.
 
@@ -107,16 +108,14 @@ def monitor(
             """
             Parameters
             ----------
-            call_args : Tuple[Any]
+            call_args : tuple of any values
                 Arguments passed by the function call.
-            call_kwargs : Dict[str, Any]
+            call_kwargs : mapping of str to any values
                 Keyword arguments passed by the function call.
             """
 
             def product(
-                iterables: Union[
-                    Collection[Collection[Any]], Dict[str, Collection[Any]]
-                ],
+                iterables: Collection[Collection[Any]] | dict[str, Collection[Any]],
             ):
                 """
                 Wrapper for ``itertools.product`` in order to better
@@ -129,18 +128,18 @@ def monitor(
                     for params in _product(*iterables):
                         return params, {}
 
-            def exec_func(*args, **kwargs) -> Dict[str, List[float]]:
+            def exec_func(*args, **kwargs) -> dict[str, list[float]]:
                 """
                 Parameters
                 ----------
-                *args : Tuple[Any]
+                *args : tuple of any values
                     Arguments to pass to the function.
-                **kwargs : Dict[str, Any]
+                **kwargs : mapping of str to any values
                     Keyword arguments to pass to the function.
 
                 Returns
                 -------
-                Dict[str, List[float]]
+                dictionary of str to list of float
                     a mapping of monitored resource name to a list of values:
                     - "time": how long the execution took, in seconds.
                       Only present if ``time=True``.
@@ -183,7 +182,7 @@ def monitor(
             if parametrize is None:
                 # Use the parameters passed by the call
                 parametrization = (call_args, call_kwargs)
-            elif isinstance(parametrize, dict):
+            elif isinstance(parametrize, list):
                 parametrization = (parametrize, ())
             else:
                 parametrization = list(product(parametrize))
@@ -215,8 +214,8 @@ def monitor(
                 save_dir = Path(__file__).parent.parent / "results"
                 save_dir.mkdir(exist_ok=True)
                 now = datetime.now()
-                file = f"{save_as}-{now.year}{now.month}{now.day}.csv"
-                df.to_csv(save_dir / file)
+                file = f"{save_as}-{now.year}{now.month}{now.day}.parquet"
+                df.to_parquet(save_dir / file)
 
             return df
 

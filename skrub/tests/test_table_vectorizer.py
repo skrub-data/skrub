@@ -1,16 +1,12 @@
-from typing import Any, Tuple
-
 import numpy as np
 import pandas as pd
 import pytest
-import sklearn
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
-from skrub._utils import parse_version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):
@@ -142,6 +138,10 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
                 "2015/12/31 01:31:34",
                 "2014/01/31 00:32:45",
             ],
+            # this date format is not found by pandas guess_datetime_format
+            # so shoulnd't be found by our _infer_datetime_format
+            # but pandas.to_datetime can still parse it
+            "mm/dd/yy": ["12/1/22", "2/3/05", "2/1/20", "10/7/99", "1/23/04"],
         }
     )
 
@@ -171,6 +171,7 @@ def _test_possibilities(X) -> None:
     # Test with higher cardinality threshold and no numeric transformer
     expected_transformers_2 = {
         "low_card_cat": ["str1", "str2", "cat1", "cat2"],
+        "numeric": ["int", "float"],
     }
     vectorizer_default = TableVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
@@ -255,6 +256,7 @@ def test_auto_cast() -> None:
         "dmy-": "datetime64[ns]",
         "ymd/": "datetime64[ns]",
         "ymd/_hms:": "datetime64[ns]",
+        "mm/dd/yy": "datetime64[ns]",
     }
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:
@@ -326,6 +328,8 @@ def test_get_feature_names_out() -> None:
 
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_pass = [
+        "int",
+        "float",
         "str1_public",
         "str2_chef",
         "str2_lawyer",
@@ -338,19 +342,16 @@ def test_get_feature_names_out() -> None:
         "cat2_40K+",
         "cat2_50K+",
         "cat2_60K+",
-        "int",
-        "float",
     ]
-    if parse_version(sklearn.__version__) < parse_version("1.0"):
-        assert vec_w_pass.get_feature_names() == expected_feature_names_pass
-    else:
-        assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
+    assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
 
     vec_w_drop = TableVectorizer(remainder="drop")
     vec_w_drop.fit(X)
 
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_drop = [
+        "int",
+        "float",
         "str1_public",
         "str2_chef",
         "str2_lawyer",
@@ -364,10 +365,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    if parse_version(sklearn.__version__) < parse_version("1.0"):
-        assert vec_w_drop.get_feature_names() == expected_feature_names_drop
-    else:
-        assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
+    assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
 
 
 def test_fit() -> None:
@@ -387,7 +385,7 @@ def test_transform() -> None:
     x = np.array(s).reshape(1, -1)
     x_trans = table_vec.transform(x)
     assert x_trans.tolist() == [
-        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 34.0, 5.5]
+        [34.0, 5.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     ]
     # To understand the list above:
     # print(dict(zip(table_vec.get_feature_names_out(), x_trans.tolist()[0])))
@@ -408,7 +406,7 @@ def test_fit_transform_equiv() -> None:
         assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
 
-def _is_equal(elements: Tuple[Any, Any]) -> bool:
+def _is_equal(elements: tuple[any, any]) -> bool:
     """
     Fixture for values that return false when compared with `==`.
     """
@@ -500,30 +498,24 @@ def test_handle_unknown() -> None:
             "cat2": pd.Series(["30K+", "20K+"], dtype="category"),
         }
     )
-    if parse_version(sklearn.__version__) >= parse_version("1.0.0"):
-        # Default behavior is "handle_unknown='ignore'",
-        # so unknown categories are encoded as all zeros
-        x_trans_unknown = table_vec.transform(x_unknown)
-        x_trans_known = table_vec.transform(x_known)
 
-        assert x_trans_unknown.shape == x_trans_known.shape
-        n_zeroes = (
-            X["str2"].nunique() + X["cat2"].nunique() + 2
-        )  # 2 for binary columns which get one
-        # cateogry dropped
-        assert np.allclose(
-            x_trans_unknown[0, :n_zeroes], np.zeros_like(x_trans_unknown[0, :n_zeroes])
-        )
-        assert x_trans_unknown[0, n_zeroes] != 0
-        assert not np.allclose(
-            x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
-        )
-    else:
-        # Default behavior is "handle_unknown='error'",
-        # so unknown categories raise an error
-        with pytest.raises(ValueError, match="Found unknown categories"):
-            table_vec.transform(x_unknown)
-        table_vec.transform(x_known)
+    # Default behavior is "handle_unknown='ignore'",
+    # so unknown categories are encoded as all zeros
+    x_trans_unknown = table_vec.transform(x_unknown)
+    x_trans_known = table_vec.transform(x_known)
+
+    assert x_trans_unknown.shape == x_trans_known.shape
+    n_zeroes = (
+        X["str2"].nunique() + X["cat2"].nunique() + 2
+    )  # 2 for binary columns which get one
+    # cateogry dropped
+    assert np.allclose(
+        x_trans_unknown[0, 2:n_zeroes], np.zeros_like(x_trans_unknown[0, 2:n_zeroes])
+    )
+    assert x_trans_unknown[0, 0] != 0
+    assert not np.allclose(
+        x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
+    )
 
 
 def test__infer_date_format() -> None:

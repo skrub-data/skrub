@@ -1,7 +1,17 @@
-/** Styling **************************************************************/
+/** Landing page *********************************************************/
 
 .bd-article {
     padding-left: 0px !important;
+    padding-top: 0px !important;
+}
+
+.bd-content {
+    justify-content: center;
+}
+
+.landing-container {
+    padding-top: 0%;
+    max-width: 100%;
 }
 
 .bd-main .bd-content {
@@ -17,15 +27,175 @@
 }
 
 .card-body {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 32px;
+    padding-right: 32px;
 }
 
 .card-title {
     margin-bottom: 1.0rem;
-    text-align: center;
+    text-align: left;
 }
 
 .card-body p {
-    text-align: justify;
+    text-align: left;
 }
+
+.schema-container {
+    display: flex;
+    justify-content: center;
+    max-width: 60em;
+    /* Vertical spacing as a function of the viewport height, to use better the page on very big displays */
+    margin-top: calc(10px + 1vh);
+    margin-bottom: calc(10px + 2vh);
+}
+
+/* Tall screens: add vertical spacing */
+@media screen and (min-height: 80ex) {
+    .schema-container {
+	margin-bottom: calc(10px + 3vh);
+	margin-top: calc(10px + 2vh);
+    }
+}
+
+.row justify-content-md-center {
+    gap: 30px;
+}
+
+.sk-landing-header text-white text-monospace {
+    margin-top: -20px;
+}
+
+
+/** Styling **************************************************************/
+
+/* Make the footer a bit less visible */
+.bd-footer {
+    border-top: 1px solid var(--pst-color-on-surface);
+    opacity: .7;
+}
+
+.bd-footer p {
+    color: var(--pst-color-text-muted);
+}
+
+.bd-footer a {
+    color: var(--pst-color-info-highlight);
+}
+
+/** Adapt boostrap colors ************************/
+:root {
+    /* Change colors on boostrap elements to use the theme's colors */
+    --bs-nav-pills-link-active-bg: var(--pst-color-primary);
+    --bs-nav-link-color:  var(--pst-color-primary);
+    --bs-nav-link-hover-color: var(--pst-color-link-hover);
+}
+
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+    background-color:var(--pst-color-primary);
+}
+
+.nav-link {
+    color:var(--pst-color-primary);
+}
+
+.nav-link:focus, .nav-link:hover {
+  color: var(--pst-color-link-hover);
+}
+
+/** Landing header *******************************/
+
+
+div.sk-landing-container {
+    max-width: 1400px;
+    margin-top: 35px;
+    min-height: 130px;
+}
+
+div.sk-landing-footer div.row {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+div.sk-landing-container .text-white {
+    text-shadow: 0px 0px 8px rgb(42, 98, 128);
+}
+
+ul.sk-landing-header-body {
+    margin-top: auto;
+    margin-bottom: auto;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: black;
+}
+
+div.sk-landing-bg-more-info dd {
+    padding-left: 0;
+}
+
+div.sk-landing-bg-more-info dd {
+    padding-left: 0;
+}
+
+div.sk-landing-bg {
+    background-image: linear-gradient(160deg, rgba(0,48,70,.75) 0%, rgba(0,118,179,.75) 17%, rgba(255,239,193,.75) 59%, rgba(255,149,40,.75) 100%);
+    margin-top: -18px !important;
+    margin-bottom: 45px;
+}
+
+div.sk-landing-bg-more-info {
+    background-color: #f8f8f8;
+    font-size: 0.96rem;
+  }
+
+.sk-landing-header {
+    font-size: 3.2rem;
+    margin-bottom: 5px;
+}
+  
+.sk-landing-subheader {
+    letter-spacing: 0.17rem;
+    margin-top: 5px;
+}
+
+/** Landing footer *******************************/
+div.sk-landing-footer {
+    margin-top: 30px;
+    border-top: 1px solid var(--pst-color-shadow);
+    background-color: var(--sg-code-background-color);
+    padding-top: 15px;
+    padding-bottom: 10px;
+}
+
+/** Tweak for very large screens ********************/
+/* At 1200px, we switch from width = 100% to width = 90vw, we do an
+ * affine formula to have a continuous function during the switch */
+@media (min-width: 1200px) {
+    .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
+	width: calc(min(100vw, 90vw + 120px));
+}
+
+@media (min-width: 1200px) {
+    .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
+	max-width: 120rem;
+    }
+
+    div.card-landing {
+	margin-left: 5%;
+	margin-right: 5%;
+    }
+    div.bd-sidebar-primary {
+	margin-right: 5%;
+	width: 20%;
+    }
+
+    div.bd-sidebar-secondary {
+	max-width: 20%;
+	margin-left: calc(min(max(3%, 3vw), 7rem));
+    }
+
+    .bd-main .bd-content div.bd-article-container {
+	max-width: 60rem;
+    }
+}
+
+
