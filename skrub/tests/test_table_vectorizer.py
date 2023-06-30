@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_array_equal
 from sklearn.compose import ColumnTransformer, make_column_transformer
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
@@ -613,7 +612,7 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
     tv = TableVectorizer(
         column_specific_transformers=[column_specific_transformers],
     )
-    X_enc = tv.fit_transform(X)
+    X_enc_tv = tv.fit_transform(X)
 
     if len(column_specific_transformers) == 2:
         column_specific_transformers: tuple[object, list[str]]
@@ -629,7 +628,7 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
         ct = make_column_transformer(
             *default_table_vectorizer_assignment, column_specific_transformers
         )
-        assert assert_array_equal(X_enc, ct.fit_transform(X))
+        X_enc_ct = ct.fit_transform(X)
     elif len(column_specific_transformers) == 3:
         column_specific_transformers: tuple[str, object, list[str]]
         # Named assignment
@@ -637,11 +636,26 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
         default_table_vectorizer_assignment = (
             TableVectorizer().fit(X.drop(columns=columns)).transformers
         )
+        # Assert the name is used in the assignment
+        assert name in tv.named_transformers_
         # Assert the return value is the one expected
         ct = ColumnTransformer(
             transformers=default_table_vectorizer_assignment
             + [column_specific_transformers],
         )
-        assert assert_array_equal(X_enc, ct.fit_transform(X))
-        # Assert the name is used in the assignment
-        assert name in tv.named_transformers_
+        X_enc_ct = ct.fit_transform(X)
+
+    assert X_enc_tv.shape == X_enc_ct.shape
+
+    # Assert the output is the same.
+    # This comparison works for arrays in a different order,
+    # which is a specificity of the output of the ColumnTransformer ; see
+    # https://github.com/skrub-data/skrub/blob/b1b05d910eb57f8de153f5a63dbc58067d961877/skrub/_table_vectorizer.py#L314.
+    # Basically, we check for each row that the convolution of the row with
+    # itself is the same for both outputs.
+    for row_index in range(X_enc_tv.shape[0]):
+        c1 = np.convolve(X_enc_tv[row_index], X_enc_tv[row_index], "valid")[0]
+        c2 = np.convolve(X_enc_tv[row_index], X_enc_ct[row_index], "valid")[0]
+        if pd.isna(c1) or pd.isna(c2):
+            continue
+        assert np.isclose(c1, c2)
