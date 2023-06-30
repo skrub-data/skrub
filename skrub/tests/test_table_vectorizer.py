@@ -81,13 +81,6 @@ def _get_mixed_types_dataframe() -> pd.DataFrame:
             "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
             "int_float": [1, 2, 3.0, 3, 5.0],
             "bool_str": ["True", False, True, "False", "True"],
-            "datetime_str": [
-                "2021-01-01",
-                "2021-01-02",
-                pd.Timestamp("2019-01-01"),
-                pd.Timestamp("2017-03-01"),
-                "2021-01-05",
-            ],
         }
     )
 
@@ -99,13 +92,6 @@ def _get_mixed_types_array() -> np.ndarray:
             ["1.0", np.nan, 3.0, "3.0", 5.0],
             [1, 2, 3.0, 3, 5.0],
             ["True", False, True, "False", "True"],
-            [
-                "2021-01-01",
-                "2021-01-02",
-                pd.Timestamp("2019-01-01"),
-                pd.Timestamp("2017-03-01"),
-                "2021-01-05",
-            ],
         ]
     ).T
 
@@ -636,8 +622,9 @@ def test__infer_date_format() -> None:
 
 
 def test_mixed_types():
+    # TODO: datetime/str mixed types
+    # don't work
     df = _get_mixed_types_dataframe()
-    df = df.drop(columns=["datetime_str"])  # doesn't work. TODO: fix?
     table_vec = TableVectorizer()
     table_vec.fit_transform(df)
     # check that the types are correctly inferred
@@ -649,7 +636,6 @@ def test_mixed_types():
     check_same_transformers(expected_transformers_df, table_vec.transformers)
 
     X = _get_mixed_types_array()
-    X = np.delete(X, 3, axis=1)  # doesn't work. TODO: fix?
     table_vec = TableVectorizer()
     table_vec.fit_transform(X)
     # check that the types are correctly inferred
