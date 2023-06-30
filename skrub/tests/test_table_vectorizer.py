@@ -614,7 +614,17 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
     )
     X_enc_tv = tv.fit_transform(X)
 
+    # For the following section, we will use a different syntax using the
+    # column transformer to assert that the internals of the TableVectorizer
+    # work as expected.
+    # To do that, we get the assignment done by the default TableVectorizer
+    # (no arguments passed), and extend it with the column specific transformer
+    # which we then pass to the ColumnTransformer.
+    # We fit_transform the ColumnTransformer, and expect the same
+    # transformation (albeit, not necessarily in the same order) as the
+    # TableVectorizer.
     if len(column_specific_transformers) == 2:
+        # Unnamed assignment
         column_specific_transformers: tuple[object, list[str]]
         transformer, columns = column_specific_transformers
         default_table_vectorizer_assignment = [
@@ -623,22 +633,19 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
             .fit(X.drop(columns=columns))
             .transformers
         ]
-        # Unnamed assignment
-        # Assert the return value is the one expected
         ct = make_column_transformer(
             *default_table_vectorizer_assignment, column_specific_transformers
         )
         X_enc_ct = ct.fit_transform(X)
     elif len(column_specific_transformers) == 3:
-        column_specific_transformers: tuple[str, object, list[str]]
         # Named assignment
+        column_specific_transformers: tuple[str, object, list[str]]
         name, transformer, columns = column_specific_transformers
         default_table_vectorizer_assignment = (
             TableVectorizer().fit(X.drop(columns=columns)).transformers
         )
         # Assert the name is used in the assignment
         assert name in tv.named_transformers_
-        # Assert the return value is the one expected
         ct = ColumnTransformer(
             transformers=default_table_vectorizer_assignment
             + [column_specific_transformers],
@@ -648,11 +655,9 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
     assert X_enc_tv.shape == X_enc_ct.shape
 
     # Assert the output is the same.
-    # This comparison works for arrays in a different order,
+    # This comparison works for arrays with possibly different order,
     # which is a specificity of the output of the ColumnTransformer ; see
-    # https://github.com/skrub-data/skrub/blob/b1b05d910eb57f8de153f5a63dbc58067d961877/skrub/_table_vectorizer.py#L314.
-    # Basically, we check for each row that the convolution of the row with
-    # itself is the same for both outputs.
+    # the TableVectorizer "Notes" section.
     for row_index in range(X_enc_tv.shape[0]):
         c1 = np.convolve(X_enc_tv[row_index], X_enc_tv[row_index], "valid")[0]
         c2 = np.convolve(X_enc_tv[row_index], X_enc_ct[row_index], "valid")[0]
