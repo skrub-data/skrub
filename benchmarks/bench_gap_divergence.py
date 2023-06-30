@@ -180,7 +180,7 @@ benchmark_name = Path(__file__).stem
             "open_payments",
             "midwest_survey",
             "employee_salaries",
-            # "road_safety",  # Crashes with an error in the DatetimeEncoder
+            # "road_safety",  # https://github.com/skrub-data/skrub/issues/622
             "drug_directory",
             # "traffic_violations",  # Takes way too long and seems to cause memory leaks
         ],
