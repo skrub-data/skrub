@@ -69,8 +69,6 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
         # Make n-grams counts matrix unq_V
         unq_X, unq_V, lookup = self._init_vars(X)
         n_batch = (len(X) - 1) // self.batch_size + 1
-        score = self.score(X)
-        del X
         # Get activations unq_H
         unq_H = self._get_H(unq_X)
 
@@ -105,6 +103,7 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
                     # Compute the norm of the update of W in the last batch
                     W_change = np.linalg.norm(self.W_ - W_last) / np.linalg.norm(W_last)
 
+            score = self.score(X)
             self.benchmark_results_.append(
                 {
                     "column_name": self.column_name,
