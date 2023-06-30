@@ -645,12 +645,23 @@ class TableVectorizer(ColumnTransformer):
         if self.auto_cast:
             X = self._auto_cast(X)
 
+        # We will filter X to keep only the columns that are not specified
+        # explicitly by the user.
+        X_filtered = X.drop(
+            columns=[
+                # We do this for loop as `self.column_specific_transformers_`
+                # might be empty.
+                col
+                for (_, _, columns) in self.column_specific_transformers_
+                for col in columns
+            ]
+        )
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(include="number").columns.to_list()
-        categorical_columns = X.select_dtypes(
+        numeric_columns = X_filtered.select_dtypes(include="number").columns.to_list()
+        categorical_columns = X_filtered.select_dtypes(
             include=["string", "object", "category"]
         ).columns.to_list()
-        datetime_columns = X.select_dtypes(
+        datetime_columns = X_filtered.select_dtypes(
             include=["datetime", "datetimetz"]
         ).columns.to_list()
 
