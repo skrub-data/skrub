@@ -477,7 +477,7 @@ class TableVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
-        # If mixed types,convert to string
+        # If mixed types, convert to string
         for col in X.columns:
             unique_types = X[col].apply(lambda x: type(x)).nunique()
             if unique_types > 1:
@@ -542,7 +542,7 @@ class TableVectorizer(ColumnTransformer):
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
-        # If mixed types,convert to string
+        # If mixed types, convert to string
         for col in X.columns:
             unique_types = X[col].apply(lambda x: type(x)).nunique()
             if unique_types > 1:
