@@ -15,6 +15,7 @@ from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
+from sklearn.compose._column_transformer import _get_transformer_list
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
@@ -221,15 +222,18 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    column_specific_transformers: list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str), optional
+    column_specific_transformers: list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
         On top of the default column type classification (see parameters above),
         this parameter allows you to manually specify transformers for
         specific columns.
         This is equivalent to using a :class:`~sklearn.compose.ColumnTransformer`
         for assigning the column-specific transformers,
         and passing the ``TableVectorizer`` as the ``remainder``.
-        This parameter takes a list of 2-tuples (transformer, column names or
-        indices).
+        This parameter can take two different formats, either:
+        - a list of 2-tuples (transformer, column names or indices)
+        - a list of 3-tuple (name, transformer, column names or indices)
+        In the latter format, you can specify the name of the assignment.
+        Mixing the two is not supported.
 
     auto_cast : bool, default=True
         If set to `True`, will try to convert each column to the best possible
@@ -363,6 +367,11 @@ class TableVectorizer(ColumnTransformer):
     columns_: pd.Index
     types_: dict[str, type]
     imputed_columns_: list[str]
+    low_card_cat_transformer_: Transformer
+    high_card_cat_transformer_: Transformer
+    numerical_transformer_: Transformer
+    datetime_transformer_: Transformer
+    column_specific_transformers_: list[tuple[str, Transformer, list[str, int]]]
 
     # Override required parameters
     _required_parameters = []
@@ -376,8 +385,10 @@ class TableVectorizer(ColumnTransformer):
         numerical_transformer: Transformer | None = None,
         datetime_transformer: Transformer | None = None,
         column_specific_transformers: list[
-            tuple[Transformer, list[str | int]] | None
-        ] = None,
+            tuple[Transformer, list[str | int]]
+            | tuple[str, Transformer, list[str, int]]
+        ]
+        | None = None,
         auto_cast: bool = True,
         impute_missing: Literal["auto", "force", "skip"] = "auto",
         # The next parameters are inherited from ColumnTransformer
@@ -404,13 +415,13 @@ class TableVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
-    def _more_tags(self):
+    def _more_tags(self) -> dict:
         """
         Used internally by sklearn to ease the estimator checks.
         """
         return {"allow_nan": [True]}
 
-    def _clone_transformers(self):
+    def _clone_transformers(self) -> None:
         """
         For each of the different transformers that can be passed,
         create the corresponding variable name with a trailing underscore,
@@ -462,7 +473,23 @@ class TableVectorizer(ColumnTransformer):
             self.datetime_transformer_ = self.datetime_transformer
 
         if self.column_specific_transformers is None:
-            self.column_specific_transformers_ = {}
+            self.column_specific_transformers_ = []
+        else:
+            if len(self.column_specific_transformers[0]) == 2:
+                # Unnamed assignments, transform to named
+                named_column_specific_transformers = _get_transformer_list(
+                    self.column_specific_transformers
+                )
+            elif len(self.column_specific_transformers[0]) == 3:
+                # Named assignments
+                named_column_specific_transformers = self.column_specific_transformers
+
+            self.column_specific_transformers_ = [
+                (name, clone(transformer), cols)
+                if isinstance(transformer, sklearn.base.TransformerMixin)
+                else (name, transformer, cols)
+                for name, transformer, cols in named_column_specific_transformers
+            ]
 
         # TODO: check that the provided transformers are valid
 
@@ -637,15 +664,15 @@ class TableVectorizer(ColumnTransformer):
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers: list[tuple[str, Transformer | None, list[str]]] = [
+        all_transformers: list[tuple[str, Transformer, list[str]]] = [
             ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
             ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
             ("high_card_cat", self.high_card_cat_transformer_, high_card_cat_columns),
+            *self.column_specific_transformers_,
         ]
-        # We will now filter this list, by keeping only the ones with:
-        # - at least one column
-        # - a valid encoder or string (filter out if None)
+        # We will now filter this list,
+        # by keeping only the ones with at least one column.
         self.transformers = []
         for trans in all_transformers:
             name, enc, cols = trans  # Unpack
