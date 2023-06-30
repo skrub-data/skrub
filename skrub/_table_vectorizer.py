@@ -222,7 +222,7 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    column_specific_transformers: list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
+    column_specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
         On top of the default column type classification (see parameters above),
         this parameter allows you to manually specify transformers for
         specific columns.
