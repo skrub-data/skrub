@@ -74,6 +74,42 @@ def _get_dirty_dataframe() -> pd.DataFrame:
     )
 
 
+def _get_mixed_types_dataframe() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "int_str": ["1", "2", 3, "3", 5],
+            "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
+            "int_float": [1, 2, 3.0, 3, 5.0],
+            "bool_str": ["True", False, True, "False", "True"],
+            "datetime_str": [
+                "2021-01-01",
+                "2021-01-02",
+                pd.Timestamp("2019-01-01"),
+                pd.Timestamp("2017-03-01"),
+                "2021-01-05",
+            ],
+        }
+    )
+
+
+def _get_mixed_types_array() -> np.ndarray:
+    return np.array(
+        [
+            ["1", "2", 3, "3", 5],
+            ["1.0", np.nan, 3.0, "3.0", 5.0],
+            [1, 2, 3.0, 3, 5.0],
+            ["True", False, True, "False", "True"],
+            [
+                "2021-01-01",
+                "2021-01-02",
+                pd.Timestamp("2019-01-01"),
+                pd.Timestamp("2017-03-01"),
+                "2021-01-05",
+            ],
+        ]
+    ).T
+
+
 def _get_numpy_array() -> np.ndarray:
     return np.array(
         [
@@ -399,6 +435,8 @@ def test_fit_transform_equiv() -> None:
     for X in [
         _get_clean_dataframe(),
         _get_dirty_dataframe(),
+        _get_mixed_types_dataframe(),
+        _get_mixed_types_array(),
     ]:
         enc1_x1 = TableVectorizer().fit_transform(X)
         enc2_x1 = TableVectorizer().fit(X).transform(X)
@@ -595,3 +633,29 @@ def test__infer_date_format() -> None:
     # Test with a column containing more than two date formats
     date_column = pd.Series(["2022-01-01", "01/02/2022", "20220103", "2022-Jan-04"])
     assert _infer_date_format(date_column) is None
+
+
+def test_mixed_types():
+    df = _get_mixed_types_dataframe()
+    df = df.drop(columns=["datetime_str"])  # doesn't work. TODO: fix?
+    table_vec = TableVectorizer()
+    table_vec.fit_transform(df)
+    # check that the types are correctly inferred
+    table_vec.fit_transform(df)
+    expected_transformers_df = {
+        "numeric": ["int_str", "float_str", "int_float"],
+        "low_card_cat": ["bool_str"],
+    }
+    check_same_transformers(expected_transformers_df, table_vec.transformers)
+
+    X = _get_mixed_types_array()
+    X = np.delete(X, 3, axis=1)  # doesn't work. TODO: fix?
+    table_vec = TableVectorizer()
+    table_vec.fit_transform(X)
+    # check that the types are correctly inferred
+    table_vec.fit_transform(X)
+    expected_transformers_array = {
+        "numeric": [0, 1, 2],
+        "low_card_cat": [3],
+    }
+    check_same_transformers(expected_transformers_array, table_vec.transformers)
