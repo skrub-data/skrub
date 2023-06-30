@@ -71,6 +71,10 @@ Minor changes
 * Add `get_feature_names_out` method to :class:`MinHashEncoder`.
   :pr:`616` by :user:`Leo Grinsztajn <LeoGrin>`
 
+* :class:`TableVectorizer` now handles mixed types columns without failing
+  by converting them to string before type inference.
+  :pr:`623`by :user:`Leo Grinsztajn <LeoGrin>`
+
 Before skrub: dirty_cat
 ========================
 
