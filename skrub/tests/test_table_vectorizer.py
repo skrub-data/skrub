@@ -1,11 +1,13 @@
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
+from sklearn.compose import ColumnTransformer, make_column_transformer
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import GapEncoder, SuperVectorizer, TableVectorizer
+from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
 
 
@@ -595,3 +597,51 @@ def test__infer_date_format() -> None:
     # Test with a column containing more than two date formats
     date_column = pd.Series(["2022-01-01", "01/02/2022", "20220103", "2022-Jan-04"])
     assert _infer_date_format(date_column) is None
+
+
+@pytest.mark.parametrize(
+    "column_specific_transformers",
+    [
+        (MinHashEncoder(), ["str1", "str2"]),
+        (StandardScaler(), ["float"]),
+        ("mh_cat1", MinHashEncoder(), ["cat1"]),
+    ],
+)
+def test_specifying_specific_column_transformer(column_specific_transformers) -> None:
+    X = _get_dirty_dataframe()
+
+    tv = TableVectorizer(
+        column_specific_transformers=[column_specific_transformers],
+    )
+    X_enc = tv.fit_transform(X)
+
+    if len(column_specific_transformers) == 2:
+        column_specific_transformers: tuple[object, list[str]]
+        transformer, columns = column_specific_transformers
+        default_table_vectorizer_assignment = [
+            (transformer, columns)
+            for _, transformer, columns in TableVectorizer()
+            .fit(X.drop(columns=columns))
+            .transformers
+        ]
+        # Unnamed assignment
+        # Assert the return value is the one expected
+        ct = make_column_transformer(
+            *default_table_vectorizer_assignment, column_specific_transformers
+        )
+        assert assert_array_equal(X_enc, ct.fit_transform(X))
+    elif len(column_specific_transformers) == 3:
+        column_specific_transformers: tuple[str, object, list[str]]
+        # Named assignment
+        name, transformer, columns = column_specific_transformers
+        default_table_vectorizer_assignment = (
+            TableVectorizer().fit(X.drop(columns=columns)).transformers
+        )
+        # Assert the return value is the one expected
+        ct = ColumnTransformer(
+            transformers=default_table_vectorizer_assignment
+            + [column_specific_transformers],
+        )
+        assert assert_array_equal(X_enc, ct.fit_transform(X))
+        # Assert the name is used in the assignment
+        assert name in tv.named_transformers_
