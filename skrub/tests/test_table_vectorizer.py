@@ -684,5 +684,5 @@ def test_deterministic(pipeline) -> None:
     for i in range(5):
         X_enc = pipeline.fit_transform(X)
         if i != 0:
-            assert_array_equal(X_enc, X_enc_prev)  # noqa
+            np.testing.assert_array_equal(X_enc, X_enc_prev)  # noqa
         X_enc_prev = X_enc  # noqa
