@@ -2,6 +2,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -161,7 +162,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                     - pd.Timestamp("1970-01-01", tz="utc")
                 ) // pd.Timedelta("1s")
 
-    def fit(self, X, y=None) -> "DatetimeEncoder":
+    def fit(self, X: ArrayLike, y=None) -> "DatetimeEncoder":
         """Fit the instance to X.
 
         In practice, just stores which extracted features are not constant.
@@ -216,7 +217,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X, y=None) -> np.ndarray:
+    def transform(self, X: ArrayLike, y=None) -> NDArray:
         """Transform `X` by replacing each datetime column with corresponding numerical features.
 
         Parameters

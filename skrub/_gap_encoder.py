@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from numpy.random import RandomState
+from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.cluster import KMeans, kmeans_plusplus
@@ -37,7 +38,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
     """
 
     rho_: float
-    H_dict_: dict[np.ndarray, np.ndarray]
+    H_dict_: dict[NDArray, NDArray]
 
     def __init__(
         self,
@@ -79,7 +80,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
-    def _init_vars(self, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _init_vars(self, X) -> tuple[NDArray, NDArray, NDArray]:
         """
         Build the bag-of-n-grams representation `V` of `X` and initialize
         the topics `W`.
@@ -134,7 +135,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             self.rho_ = self.rho ** (self.batch_size / len(X))
         return unq_X, unq_V, lookup
 
-    def _get_H(self, X: np.ndarray) -> np.ndarray:
+    def _get_H(self, X: NDArray) -> NDArray:
         """
         Return the bag-of-n-grams representation of `X`.
         """
@@ -143,7 +144,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             h_out[:] = self.H_dict_[x]
         return H_out
 
-    def _init_w(self, V: np.ndarray, X) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _init_w(self, V: NDArray, X) -> tuple[NDArray, NDArray, NDArray]:
         """
         Initialize the topics `W`.
         If `self.init='k-means++'`, we use the init method of
@@ -197,7 +198,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         B = A.copy()
         return W, A, B
 
-    def fit(self, X, y=None) -> "GapEncoderColumn":
+    def fit(self, X: ArrayLike, y=None) -> "GapEncoderColumn":
         """
         Fit the GapEncoder on `X`.
 
@@ -299,7 +300,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         topic_labels = [prefix + ", ".join(label) for label in topic_labels]
         return topic_labels
 
-    def score(self, X) -> float:
+    def score(self, X: ArrayLike) -> float:
         """Score this instance of `X`.
 
         Returns the Kullback-Leibler divergence between the n-grams counts
@@ -343,7 +344,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         )
         return kl_divergence
 
-    def partial_fit(self, X, y=None) -> "GapEncoderColumn":
+    def partial_fit(self, X: ArrayLike, y=None) -> "GapEncoderColumn":
         """Partial fit this instance on `X`.
 
         To be used in an online learning procedure where batches of data are
@@ -437,7 +438,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             )
             self.H_dict_.update(zip(unseen_X, unseen_H))
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> NDArray:
         """Return the encoded vectors (activations) `H` of input strings in `X`.
 
         Parameters
@@ -747,7 +748,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         return X
 
-    def fit(self, X, y=None) -> "GapEncoder":
+    def fit(self, X: ArrayLike, y=None) -> "GapEncoder":
         """Fit the instance on X.
 
         Parameters
@@ -782,7 +783,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         )
         return self
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> NDArray:
         """Return the encoded vectors (activations) `H` of input strings in `X`.
 
         Given the learnt topics `W`, the activations `H` are tuned to fit
@@ -813,7 +814,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         X_enc = np.hstack(X_enc)
         return X_enc
 
-    def partial_fit(self, X, y=None) -> "GapEncoder":
+    def partial_fit(self, X: ArrayLike, y=None) -> "GapEncoder":
         """Partial fit this instance on X.
 
         To be used in an online learning procedure where batches of data are
@@ -900,7 +901,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             labels.extend(col_labels)
         return labels
 
-    def score(self, X) -> float:
+    def score(self, X: ArrayLike) -> float:
         """Score this instance on `X`.
 
         Returns the sum over the columns of `X` of the Kullback-Leibler
@@ -924,7 +925,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         return kl_divergence
 
 
-def _rescale_W(W: np.ndarray, A: np.ndarray) -> None:
+def _rescale_W(W: NDArray, A: NDArray) -> None:
     """
     Rescale the topics `W` to have a L1-norm equal to 1.
     Note that they are modified in-place.
@@ -935,14 +936,14 @@ def _rescale_W(W: np.ndarray, A: np.ndarray) -> None:
 
 
 def _multiplicative_update_w(
-    Vt: np.ndarray,
-    W: np.ndarray,
-    A: np.ndarray,
-    B: np.ndarray,
-    Ht: np.ndarray,
+    Vt: NDArray,
+    W: NDArray,
+    A: NDArray,
+    B: NDArray,
+    Ht: NDArray,
     rescale_W: bool,
     rho: float,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[NDArray, NDArray, NDArray]:
     """
     Multiplicative update step for the topics `W`.
     """
@@ -956,7 +957,7 @@ def _multiplicative_update_w(
     return W, A, B
 
 
-def _rescale_h(V: np.ndarray, H: np.ndarray) -> np.ndarray:
+def _rescale_h(V: NDArray, H: NDArray) -> NDArray:
     """
     Rescale the activations `H`.
     """
@@ -967,9 +968,9 @@ def _rescale_h(V: np.ndarray, H: np.ndarray) -> np.ndarray:
 
 
 def _multiplicative_update_h(
-    Vt: np.ndarray,
-    W: np.ndarray,
-    Ht: np.ndarray,
+    Vt: NDArray,
+    W: NDArray,
+    Ht: NDArray,
     epsilon: float = 1e-3,
     max_iter: int = 10,
     rescale_W: bool = False,
@@ -1004,9 +1005,9 @@ def _multiplicative_update_h(
 
 
 def batch_lookup(
-    lookup: np.ndarray,
+    lookup: NDArray,
     n: int = 1,
-) -> Generator[tuple[np.ndarray, np.ndarray], None, None]:
+) -> Generator[tuple[NDArray, NDArray], None, None]:
     """
     Make batches of the lookup array.
     """
@@ -1018,7 +1019,7 @@ def batch_lookup(
 
 
 def get_kmeans_prototypes(
-    X,
+    X: ArrayLike,
     n_prototypes: int,
     analyzer: Literal["word", "char", "char_wb"] = "char",
     hashing_dim: int = 128,
@@ -1026,7 +1027,7 @@ def get_kmeans_prototypes(
     sparse: bool = False,
     sample_weight=None,
     random_state: int | RandomState | None = None,
-):
+) -> NDArray:
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
