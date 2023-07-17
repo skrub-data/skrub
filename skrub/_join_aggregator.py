@@ -8,7 +8,7 @@ try:
     import polars as pl
 
     # TODO: Enable polars accross the library
-    POLARS_SETUP = False
+    POLARS_SETUP = True
 except ImportError:
     POLARS_SETUP = False
 
@@ -224,11 +224,11 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
             the input data.
 
         columns_to_join : str or array-like
-            Select the columns from the dataframe to use as keys during
+            Select the columns from the auxiliary dataframe to use as keys during
             the join operation.
 
         columns_to_agg : str or array-like
-            Select the columns from the dataframe to use as values during
+            Select the columns from the auxiliary dataframe to use as values during
             the aggregation operations.
 
     main_key : str or array-like
