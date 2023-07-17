@@ -1,9 +1,13 @@
+import time
+from functools import cache
+
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
-import time
+from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
 from skrub._deduplicate import (
     _create_spelling_correction,
@@ -12,8 +16,6 @@ from skrub._deduplicate import (
     deduplicate,
 )
 from skrub.datasets import make_deduplication_data
-import joblib
-from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
 
 @pytest.mark.parametrize(
@@ -100,30 +102,44 @@ def test__create_spelling_correction(seed: int = 123) -> None:
         ).all()
 
 
+@cache
+def default_deduplicate(n: int = 500):
+    """
+    Create a default deduplication dataset.
+    """
+    X = make_deduplication_data(
+        examples=["black", "white", "red"],
+        entries_per_example=[n, n, n],
+        prob_mistake_per_letter=0.3,
+    )
+    y = deduplicate(X)
+    return X, y
+
+
 @skip_if_no_parallel
-def test_parallelism():
-    # Test that parallelism works
-    X = make_deduplication_data(examples=['black', 'white', 'red'], entries_per_example=[500, 500, 500], prob_mistake_per_letter=0.3)
-    y = deduplicate(X, n_jobs=None)
-    times = {}
-    jobs = [1, 4]
+def test_parallelism() -> None:
+    """Tests that parallelism works with different backends and n_jobs."""
 
-    for n_jobs in jobs:
-        start = time.time()
-        y_parallel = deduplicate(X, n_jobs=n_jobs)
-        assert_array_equal(y, y_parallel)
-        end = time.time()
-        timer = end - start
-        times[n_jobs] = timer
-    # Test if execution time is shorter:
-    for i in range(len(jobs)-1):
-        assert times[jobs[i+1]] < times[jobs[i]]
+    # This n_jobs list is sorted from the expected slowest to the fastest
+    X, y = default_deduplicate()
 
-    # Test with threading backend
-    # TODO: switch to joblib.parallel_config when we support joblib 1.3
-    with joblib.parallel_backend("threading"):
-        y_threading = deduplicate(X, n_jobs=1)
-    assert_array_equal(y, y_threading)
+    last_execution_time = np.inf
+
+    for n_jobs in [1, 4]:
+        times = []
+        for _ in range(2):
+            start = time.perf_counter()
+            y_parallel = deduplicate(X, n_jobs=n_jobs)
+            end = time.perf_counter()
+            assert_array_equal(y, y_parallel)
+            times.append(end - start)
+
+        # At each loop, expect the exec time to be less than the last
+        # (because the n_jobs_list is sorted from slowest to fastest)
+        new_execution_time = np.mean(times)
+        assert new_execution_time < last_execution_time
+
+        last_execution_time = new_execution_time
 
 
 DEFAULT_JOBLIB_BACKEND = joblib.parallel.get_active_backend()[0].__class__
@@ -136,6 +152,7 @@ class DummyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
     The `count` attribute is used to check that the backend is used.
     Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
     """
+
     def __init__(self, *args, **kwargs):
         self.count = 0
         super().__init__(*args, **kwargs)
@@ -155,11 +172,12 @@ def test_backend_respected():
     Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
     """
     # Test that parallelism works
-    X = make_deduplication_data(examples=['black', 'white'],
-                                entries_per_example=[15, 15])
+    X = make_deduplication_data(
+        examples=["black", "white"], entries_per_example=[15, 15]
+    )
     deduplicate(X, n_jobs=2)
 
-# TODO: switch to joblib.parallel_config when we support joblib 1.3
+    # TODO: switch to joblib.parallel_config when we support joblib 1.3
     with joblib.parallel_backend("testing") as (ba, n_jobs):
         deduplicate(X, n_jobs=n_jobs)
     assert ba.count > 0
