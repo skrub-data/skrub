@@ -8,6 +8,7 @@ from typing import Literal
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils import gen_even_slices, murmurhash3_32
 from sklearn.utils.validation import _check_feature_names_in, check_is_fitted
