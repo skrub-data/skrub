@@ -1,4 +1,7 @@
+import pytest
+
 from skrub.datasets import fetch_ken_embeddings, fetch_ken_table_aliases, fetch_ken_types
+from skrub.datasets._utils import is_parquet_file_reader_installed
 
 
 def test_fetch_ken_table_aliases():
@@ -11,6 +14,10 @@ def test_fetch_ken_table_aliases():
     assert "albums" in aliases
 
 
+@pytest.mark.skipif(
+    not is_parquet_file_reader_installed(),
+    reason="pyarrow or fastparquet not installed",
+)
 def test_fetch_ken_types():
     """
     Test if the types of entities are correctly fetched
@@ -26,6 +33,10 @@ def test_fetch_ken_types():
     assert types3.shape[0] == 2532
 
 
+@pytest.mark.skipif(
+    not is_parquet_file_reader_installed(),
+    reason="pyarrow or fastparquet not installed",
+)
 def test_small_ken_embeddings():
     """
     Test if small sized embeddings were fetched correctly
@@ -46,6 +57,10 @@ def test_small_ken_embeddings():
     assert emb2.shape[1] == 7
 
 
+@pytest.mark.skipif(
+    not is_parquet_file_reader_installed(),
+    reason="pyarrow or fastparquet not installed",
+)
 def test_big_ken_embeddings():
     """
     Test if bigger sized embeddings were fetched correctly
