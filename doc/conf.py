@@ -308,7 +308,7 @@ else:
 
 sphinx_gallery_conf = {
     "doc_module": "skrub",
-    "backreferences_dir": os.path.join("references", "generated"),
+    "backreferences_dir": os.path.join("generated"),
     "reference_url": {
         # The module we locally document (so, skrub) uses None
         "skrub": None,

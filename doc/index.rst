@@ -10,5 +10,5 @@
 
    install
    documentation
-   references/index
+   api
    auto_examples/index

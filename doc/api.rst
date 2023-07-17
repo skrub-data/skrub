@@ -1,14 +1,10 @@
-:html_themes.secondary_sidebar_items: edit-this-page
-
-.. _api:
-
-.. currentmodule:: skrub
-
 #############
 API reference
 #############
 
 This page lists all available functions and classes of `skrub`.
+
+.. currentmodule:: skrub
 
 .. raw:: html
 
