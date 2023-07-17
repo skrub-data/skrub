@@ -479,6 +479,11 @@ class TableVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
+        # for object dtype columns, first convert to string to avoid mixed types
+        object_cols = X.columns[X.dtypes == "object"]
+        for col in object_cols:
+            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
+
         # Convert to the best possible data type
         self.types_ = {}
         for col in X.columns:
@@ -538,6 +543,15 @@ class TableVectorizer(ColumnTransformer):
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
+        # for object dtype columns, first convert to string to avoid mixed types
+        # we do it both in auto_cast and apply_cast because
+        # the type infered for string columns during auto_cast
+        # is not necessarily string, it can be object because
+        # of missing values
+        object_cols = X.columns[X.dtypes == "object"]
+        for col in object_cols:
+            if pd.api.types.is_object_dtype(X[col]):
+                X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
         for col, dtype in self.types_.items():
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
@@ -548,7 +562,9 @@ class TableVectorizer(ColumnTransformer):
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col] = dtype
-            X.loc[:, col] = X[col].astype(dtype)
+            X[col] = X[col].astype(
+                dtype
+            )  # we dont use .loc (https://github.com/pandas-dev/pandas/issues/53729)
         return X
 
     def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
