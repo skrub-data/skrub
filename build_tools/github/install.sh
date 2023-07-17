@@ -12,3 +12,8 @@ if [[ "$INSTALL_NIGHTLY" == "true" ]]; then
 fi
 
 pip install --progress-bar off --only-binary :all: --no-binary liac-arff --upgrade ".[$DEPS_VERSION]"
+
+if [[ "$DEPS_VERSION" != *"pyarrow"* ]]
+    # Since pyarrow is a dependency of pandas, we need to uninstall it explicitly
+    pip uninstall -y pyarrow
+fi
