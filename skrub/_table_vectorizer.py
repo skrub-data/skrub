@@ -478,10 +478,10 @@ class TableVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
-        # if object, first convert to string to avoid mixed types
-        for col in X.columns:
-            if pd.api.types.is_object_dtype(X[col]):
-                X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
+        # for object dtype columns, first convert to string to avoid mixed types
+        object_cols = X.columns[X.dtypes == "object"]
+        for col in object_cols:
+            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
 
         # Convert to the best possible data type
         self.types_ = {}
@@ -542,12 +542,13 @@ class TableVectorizer(ColumnTransformer):
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
-        # if object, first convert to string to avoid mixed types
+        # for object dtype columns, first convert to string to avoid mixed types
         # we do it both in auto_cast and apply_cast because
         # the type infered for string columns during auto_cast
         # is not necessarily string, it can be object because
         # of missing values
-        for col in X.columns:
+        object_cols = X.columns[X.dtypes == "object"]
+        for col in object_cols:
             if pd.api.types.is_object_dtype(X[col]):
                 X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
         for col, dtype in self.types_.items():
