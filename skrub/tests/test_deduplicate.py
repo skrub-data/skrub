@@ -53,7 +53,7 @@ def test_deduplicate(
         ~translation_table.index.duplicated(keep="first")
     ]
     assert np.isin(np.unique(deduplicated_data), recovered_categories).all()
-    assert np.alltrue(translation_table[data] == np.array(deduplicated_data))
+    assert np.all(translation_table[data] == np.array(deduplicated_data))
     deduplicated_other_analyzer = np.array(
         deduplicate(data, n_clusters=n_clusters, analyzer="char")
     )
