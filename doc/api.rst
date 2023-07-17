@@ -2,6 +2,14 @@
 API reference
 #############
 
+.. raw:: html
+
+  <style type="text/css">
+  article section h2 {
+    margin-top: 4ex;
+  }
+  </style>
+
 This page lists all available functions and classes of `skrub`.
 
 .. currentmodule:: skrub
