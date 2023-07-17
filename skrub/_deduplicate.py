@@ -7,6 +7,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike, NDArray
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -17,10 +18,10 @@ from sklearn.metrics import silhouette_score
 
 
 def compute_ngram_distance(
-    unique_words: Sequence[str] | np.ndarray,
+    unique_words: Sequence[str] | NDArray,
     ngram_range: tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
-) -> np.ndarray:
+) -> NDArray:
     """Compute the condensed pair-wise n-gram distance between `unique_words`.
 
     Parameters
@@ -54,15 +55,15 @@ def compute_ngram_distance(
     return distance_mat
 
 
-def _guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
+def _guess_clusters(Z: NDArray, distance_mat: NDArray) -> int:
     """Finds the number of clusters that maximize the silhouette score
     when clustering `distance_mat`.
 
     Parameters
     ----------
-    Z : np.ndarray
+    Z : numpy ndarray
         hierarchical linkage matrix, specifies which clusters to merge.
-    distance_mat : np.ndarray
+    distance_mat : numpy ndarray
         distance matrix either in square or condensed form.
 
     Returns
@@ -83,8 +84,8 @@ def _guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
 
 
 def _create_spelling_correction(
-    unique_words: Sequence[str] | np.ndarray,
-    counts: Sequence[int] | np.ndarray,
+    unique_words: Sequence[str] | NDArray[np.str_],
+    counts: Sequence[int] | NDArray[np.int_],
     clusters: Sequence[int],
 ) -> pd.Series:
     """

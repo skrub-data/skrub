@@ -2,6 +2,7 @@ import collections
 from typing import Literal
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_array
@@ -110,13 +111,13 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     n_features_in_: int
     _label_encoders_: list[LabelEncoder]
-    categories_: list[np.ndarray]
+    categories_: list[NDArray]
     n_: int
 
     def __init__(
         self,
         *,
-        categories: Literal["auto"] | list[list[str] | np.ndarray] = "auto",
+        categories: Literal["auto"] | list[list[str] | NDArray] = "auto",
         clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = "binary-clf",
         dtype: type = np.float64,
         handle_unknown: Literal["error", "ignore"] = "error",
@@ -134,7 +135,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
-    def fit(self, X, y) -> "TargetEncoder":
+    def fit(self, X: ArrayLike, y: ArrayLike) -> "TargetEncoder":
         """Fit the instance to `X`.
 
         Parameters
@@ -227,7 +228,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> NDArray:
         """Transform `X` using the specified encoding scheme.
 
         Parameters
