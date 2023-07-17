@@ -1,5 +1,5 @@
 Contributing to skrub
-=========================
+=====================
 
 First off, thanks for taking the time to contribute!
 
@@ -22,13 +22,14 @@ What should I know before I get started?
 ----------------------------------------
 
 If you want to understand in more depth the incentives behind skrub,
-read our `vision statement! <https://skrub-data.org/stable/vision.html>`__ 
-If scientific literature doesn’t scare you, we greatly
+read our `vision statement! <https://skrub-data.org/stable/vision.html>`__
+If scientific literature doesn't scare you, we greatly
 encourage you to read the two following papers:
-   - `Similarity encoding for learning
-   with dirty categorical variables <https://hal.inria.fr/hal-01806175>`__
-   - `Encoding high-cardinality string categorical
-   variables <https://hal.inria.fr/hal-02171256v4>`__.
+
+- `Similarity encoding for learning
+  with dirty categorical variables <https://hal.inria.fr/hal-01806175>`__
+- `Encoding high-cardinality string categorical
+  variables <https://hal.inria.fr/hal-02171256v4>`__.
 
 How can I contribute?
 ---------------------
@@ -62,7 +63,7 @@ additional details to help maintainers easily reproduce the problem:
 -  **Use a clear and descriptive title** which identifies the problem.
 -  **Describe the result you expected**.
 -  **Add additional details to your description problem** such as
-   situations where the bug should have appeared but didn’t.
+   situations where the bug should have appeared but didn't.
 -  **Include a snippet of code that reproduces the error**, as it allows
    maintainers to reproduce it in a matter of seconds!
 -  **Specify versions** of Python, skrub, and other dependencies
@@ -70,7 +71,7 @@ additional details to help maintainers easily reproduce the problem:
    pandas, etc.).
 
 Some of these bullet points might not apply depending on the
-kind of error you’re submitting.
+kind of error you're submitting.
 
 Suggesting enhancements
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -95,7 +96,7 @@ How do I submit an enhancement proposal?
 -  **If it exists elsewhere, link resources**.
 
 Of course, some of these bullet points might not apply depending on the
-kind of enhancement you’re submitting.
+kind of enhancement you're submitting.
 
 If the enhancement is validated
 '''''''''''''''''''''''''''''''
@@ -104,10 +105,10 @@ Let maintainers know whether :
 
 - **You will write the code and submit a pull request (PR)**.
   Writing the feature yourself is the fastest way to getting it
-  implemented in the library, and we’ll help in that process if guidance
+  implemented in the library, and we'll help in that process if guidance
   is needed! To go further, refer to the section
-  `*Writing your first Pull Request*<https://skrub-data.org/stable/CONTRIBUTING.html#writing-your-first-pull-request>`__.
-- **You won’t be able to write the code**, in which case a
+  :ref:`writing-your-first-pull-request`.
+- **You won't be able to write the code**, in which case a
   developer can start working on it. Note however that maintainers
   are **volunteers**, and therefore cannot guarantee how much time
   it will take to implement the change.
@@ -116,11 +117,13 @@ If the enhancement is refused
 '''''''''''''''''''''''''''''
 
 There are specific incentives behind skrub. While most enhancement
-ideas are good, they don’t always fit in the context of the library.
+ideas are good, they don't always fit in the context of the library.
 
-If you’d like to implement your idea regardless, we’d be very glad if
+If you'd like to implement your idea regardless, we'd be very glad if
 you create a new package that builds on top of skrub! In some cases,
 we might even feature it on the official repository!
+
+.. _writing-your-first-pull-request:
 
 Writing your first Pull Request
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,7 +132,7 @@ Preparing the ground
 ^^^^^^^^^^^^^^^^^^^^
 
 If not already done, first create an issue, and discuss
-the changes with the project’s maintainers.
+the changes with the project's maintainers.
 
 See in the sections above for the right way to do this.
 
@@ -159,13 +162,13 @@ There are a few specific project goals to keep in mind:
   and type-hinted.
 
   - The public API describes the components users of the
-    library will import and use. It’s everything that can be imported and
+    library will import and use. It's everything that can be imported and
     does not start with an underscore.
 
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
 
-First, you’ll want to `fork skrub on Github <https://github.com/skrub-data/skrub/fork>`__.
+First, you'll want to `fork skrub on Github <https://github.com/skrub-data/skrub/fork>`__.
 
 That will enable you to push your commits to a branch *on your fork*.
 It is advised to create a new branch every time you work on a new issue,

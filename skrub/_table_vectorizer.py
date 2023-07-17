@@ -235,7 +235,8 @@ class TableVectorizer(ColumnTransformer):
         specific versions of pandas, numpy and scikit-learn).
         'force' will impute missing values in all categorical columns.
         'skip' will not impute at all.
-        When imputed, missing values are replaced by the string 'missing'.
+        When imputed, missing values are replaced by the string 'missing'
+        before being encoded.
         As imputation logic for numerical features can be quite intricate,
         it is left to the user to manage.
         See also attribute :attr:`~skrub.TableVectorizer.imputed_columns_`.
