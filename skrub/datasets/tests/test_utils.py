@@ -1,8 +1,6 @@
 from pathlib import Path
 from unittest import mock
 
-from skrub.datasets._utils import is_parquet_file_reader_installed
-
 
 @mock.patch("os.path.dirname")
 def test_get_data_dir(mock_os_path_dirname):
