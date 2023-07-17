@@ -11,6 +11,7 @@ from sklearn.utils import check_random_state
 
 
 def make_deduplication_data(
+    *,
     examples: list[str],
     entries_per_example: list[int],
     prob_mistake_per_letter: float = 0.2,

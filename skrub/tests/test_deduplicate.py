@@ -39,7 +39,10 @@ def test_deduplicate(
     n_clusters = len(entries_per_category)
     clean_categories = clean_categories[:n_clusters]
     data = make_deduplication_data(
-        clean_categories, entries_per_category, prob_mistake_per_letter, rng
+        examples=clean_categories,
+        entries_per_example=entries_per_category,
+        prob_mistake_per_letter=prob_mistake_per_letter,
+        random_state=rng,
     )
     deduplicated_data = np.array(deduplicate(data, n_clusters=None))
     assert deduplicated_data.shape[0] == len(data)
