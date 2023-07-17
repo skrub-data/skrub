@@ -3,6 +3,7 @@ from collections.abc import Hashable
 from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.utils import parse_version  # noqa
 from sklearn.utils import check_array
 
@@ -36,7 +37,7 @@ class LRUDict:
         return key in self.cache
 
 
-def check_input(X) -> np.ndarray:
+def check_input(X) -> NDArray:
     """
     Check input with sklearn standards.
     Also converts X to a numpy array if not already.
