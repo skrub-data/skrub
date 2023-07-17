@@ -115,7 +115,7 @@ def test_join_agg_check_cols():
         main_key=["userId"],
     )
     join_agg.check_cols(main)
-    assert join_agg.suffixes_ == ["_0", "_1"]
+    assert join_agg.suffixes_ == ["_1", "_2"]
 
     # check incorrect suffix type
     join_agg = JoinAggregator(
@@ -134,13 +134,7 @@ def test_join_agg_check_cols():
     join_agg = JoinAggregator(
         tables=[
             (main, "userId", ["rating", "genre"]),
-            (
-                main,
-                "movieId",
-                [
-                    "rating",
-                ],
-            ),
+            (main, "movieId", ["rating"]),
         ],
         main_key=["userId"],
         suffixes=["_user", "_movie", "_tag"],

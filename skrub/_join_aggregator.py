@@ -135,9 +135,8 @@ class PandasAssemblingEngine(AssemblingEngine):
 class PolarsAssemblingEngine(AssemblingEngine):
     def agg(self, table, cols_to_join, cols_to_agg, agg_ops, suffix):
         def split_num_categ_cols(table):
-            num_cols = table.select(pl.col(pl.NUMERIC_DTYPES)).columns
-
-            categ_cols = table.select(pl.col(pl.Utf8)).columns
+            num_cols = table.select(pl.selectors.numeric()).columns
+            categ_cols = table.select(pl.selectors.string()).columns
 
             return num_cols, categ_cols
 
