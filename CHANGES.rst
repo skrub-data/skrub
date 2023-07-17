@@ -26,7 +26,7 @@ Major changes
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
-* Parallelized the `deduplicate` function. Parameter `n_jobs`
+* Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`

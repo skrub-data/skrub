@@ -115,12 +115,12 @@ def test_parallelism():
         end = time.time()
         timer = end - start
         times[n_jobs] = timer
-    print(times)
     # Test if execution time is shorter:
     for i in range(len(jobs)-1):
         assert times[jobs[i+1]] < times[jobs[i]]
 
     # Test with threading backend
+    # TODO: switch to joblib.parallel_config when we support joblib 1.3
     with joblib.parallel_backend("threading"):
         y_threading = deduplicate(X, n_jobs=1)
     assert_array_equal(y, y_threading)
@@ -159,6 +159,7 @@ def test_backend_respected():
                                 entries_per_example=[15, 15])
     deduplicate(X, n_jobs=2)
 
+# TODO: switch to joblib.parallel_config when we support joblib 1.3
     with joblib.parallel_backend("testing") as (ba, n_jobs):
         deduplicate(X, n_jobs=n_jobs)
     assert ba.count > 0
