@@ -83,8 +83,8 @@ jobs:
       - shell: bash {0}
         env:
           IS_SCHEDULED: ${{ github.event_name == 'schedule' }}
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
-          IN_COMMIT_MESSAGE: ${{ contains(github.event.head_commit.message, '[deps nightly]') }}
+          COMMIT_MESSAGE: ${{ github.event.pull_request.head_commit.message }}
+          IN_COMMIT_MESSAGE: ${{ contains(github.event.pull_request.head_commit.message, '[deps nightly]') }}
         run: |
           echo "DEBUG"
           echo "$IS_SCHEDULED"
