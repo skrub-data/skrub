@@ -196,10 +196,10 @@ html_additional_pages = {"index": "index.html"}
 
 # Needed for the edit button
 html_context = {
-    "github_user": "skrub_data",
+    "github_user": "skrub-data",
     "github_repo": "skrub",
     "github_version": "main",
-    "doc_path": "docs",
+    "doc_path": "doc",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
