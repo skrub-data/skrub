@@ -24,7 +24,6 @@ from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
-from pyarrow.parquet import ParquetFile
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 
@@ -371,6 +370,8 @@ def _fetch_figshare(
             UserWarning,
             stacklevel=2,
         )
+        from skrub.datasets._utils import import_parquet_file
+        ParquetFile = import_parquet_file()
         try:
             filehandle, _ = urllib.request.urlretrieve(url)
             df = ParquetFile(filehandle)

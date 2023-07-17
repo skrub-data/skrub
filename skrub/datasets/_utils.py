@@ -21,3 +21,22 @@ def get_data_dir(name: str | None = None) -> Path:
     if name is not None:
         data_dir = data_dir / name
     return data_dir
+
+
+def import_parquet_file():
+    """Import `ParquetFile` from either pyarrow or fastparquet.
+
+    Since `pyarrow` and `fastparquet` are optional dependencies,
+    we need to import `ParquetFile` dynamically.
+    """
+
+    try:
+        from pyarrow.parquet import ParquetFile
+    except ModuleNotFoundError:
+        try:
+            from fastparquet import ParquetFile
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "You need to install either pyarrow or fastparquet to use this function."
+            )
+    return ParquetFile
