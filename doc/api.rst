@@ -86,5 +86,4 @@ Data download and generation
    datasets.fetch_ken_table_aliases
    datasets.fetch_ken_types
    datasets.fetch_ken_embeddings
-   datasets.fetch_data_dir
    datasets.make_deduplication_data
