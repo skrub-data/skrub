@@ -7,6 +7,10 @@ on:
   pull_request:
     branches:
       - '*'
+  schedule:
+    - cron: "30 2 * * *"
+      branches:
+        - "main"
 
 jobs:
   check_skip:
@@ -70,3 +74,36 @@ jobs:
       - uses: codecov/codecov-action@v3
         if: success()
         name: 'Upload coverage to CodeCov'
+
+  run_nightly:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ github.event_name == 'schedule' || contains(steps.get_head_commit_message.outputs.COMMIT_MSG, '[deps nightly]') }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - id: get_head_commit_message
+        name: get head commit message
+        run: echo "COMMIT_MSG=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
+
+  nightly:
+    needs: run_nightly
+    if: ${{ needs.run_nightly.outputs.run == 'true' }}
+    runs-on: ubuntu-latest
+    name: test against nighlty dependencies
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+            python-version: "3.11"
+        name: 'Setup python'
+      - shell: bash {0}
+        run: ./build_tools/github/install.sh
+        name: 'Install skrub'
+        env:
+          INSTALL_NIGHTLY: "true"
+          DEPS_VERSION: "dev"
+      - shell: bash {0}
+        run: ./build_tools/github/test.sh
+        name: 'Run tests'
