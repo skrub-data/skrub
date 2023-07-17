@@ -23,7 +23,7 @@ def get_data_dir(name: str | None = None) -> Path:
     return data_dir
 
 
-def import_parquet_file():
+def import_parquet_file_reader():
     """Import `ParquetFile` from either pyarrow or fastparquet.
 
     Since `pyarrow` and `fastparquet` are optional dependencies,
@@ -40,3 +40,12 @@ def import_parquet_file():
                 "You need to install either pyarrow or fastparquet to use this function."
             )
     return ParquetFile
+
+
+def is_parquet_file_reader_installed():
+    """Check if a `ParquetFile` reader is installed."""
+    try:
+        import_parquet_file_reader()
+        return True
+    except ModuleNotFoundError:
+        return False

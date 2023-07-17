@@ -370,8 +370,8 @@ def _fetch_figshare(
             UserWarning,
             stacklevel=2,
         )
-        from skrub.datasets._utils import import_parquet_file
-        ParquetFile = import_parquet_file()
+        from skrub.datasets._utils import import_parquet_file_reader
+        ParquetFile = import_parquet_file_reader()
         try:
             filehandle, _ = urllib.request.urlretrieve(url)
             df = ParquetFile(filehandle)
