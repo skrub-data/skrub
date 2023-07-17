@@ -77,7 +77,12 @@ jobs:
 
   nightly:
     needs: check_skip
-    if: ${{ github.event_name == 'schedule' || contains(github.event.head_commit.message, '[deps nightly]') }}
+    if: |
+      needs.check_skip.outputs.skip == 'false' &&
+      (
+        github.event_name == 'schedule' ||
+        contains(github.event.head_commit.message, '[deps nightly]'
+      )
     runs-on: ubuntu-latest
     name: test against nighlty dependencies
     steps:
