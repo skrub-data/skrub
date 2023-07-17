@@ -76,7 +76,7 @@ jobs:
         name: 'Upload coverage to CodeCov'
 
   nightly:
-    if: ${{ github.event_name == 'schedule' || contains(github.event.head_commit.message, '[deps nightly]' }}
+    if: ${{ github.event_name == 'schedule' || contains(github.event.head_commit.message, '[deps nightly]') }}
     runs-on: ubuntu-latest
     name: test against nighlty dependencies
     steps:
