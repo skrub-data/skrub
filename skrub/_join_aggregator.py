@@ -252,6 +252,33 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
     :class:`FeatureAugmenter` :
         Augment a main table by automatically joining multiple
         auxiliary tables on it.
+
+    Examples
+    --------
+    >>> main = pd.DataFrame({
+            "userId": [1, 1, 1, 2, 2, 2],
+            "movieId": [1, 3, 6, 318, 6, 1704],
+            "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
+            "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
+        })
+    >>> join_agg = JoinAggregator(
+            tables=[
+                (main, ["userId"], ["rating", "genre"]),
+                (main, ["movieId"], ["rating"]),
+            ],
+            main_key=["userId", "movieId"],
+            suffixes=["_user", "_movie"],
+            agg_ops=["mean", "mode"],
+        )
+    >>> join_agg_fit_transform(main)
+        userId	movieId	rating	genre	rating_mean_user	genre_mode_user	rating_mean_movie
+    0	1	1	4.0	drama	4.0	drama	4.0
+    1	1	3	4.0	drama	4.0	drama	4.0
+    2	1	6	4.0	comedy	4.0	drama	3.0
+    3	2	318	3.0	sf	3.0	sf	3.0
+    4	2	6	2.0	comedy	3.0	sf	3.0
+    5	2	1704	4.0	sf	3.0	sf	4.0
+
     """
 
     def __init__(self, tables, main_key, agg_ops=None, suffixes=None):
@@ -280,8 +307,6 @@ class JoinAggregator(BaseEstimator, TransformerMixin):
             Fitted :class:`JoinAggregator` instance (self).
         """
         self.check_cols(X)
-
-        # TODO: filter 'tables' using X, before aggregation
 
         if self.agg_ops is None:
             agg_ops = ["mean", "mode"]
