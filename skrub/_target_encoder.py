@@ -133,7 +133,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"X_types": ["categorical"]}
+        return {"X_types": ["2darray", "categorical"]}
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> "TargetEncoder":
         """Fit the instance to `X`.

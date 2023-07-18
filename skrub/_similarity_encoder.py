@@ -564,3 +564,6 @@ class SimilarityEncoder(OneHotEncoder):
             out_row[:] = se_dict[x]
 
         return np.nan_to_num(out, copy=False)
+
+    def _more_tags(self):
+        return {"X_types": ["categorical"]}

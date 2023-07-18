@@ -141,7 +141,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"X_types": ["categorical"]}
+        return {"X_types": ["2darray", "categorical"]}
 
     def _get_murmur_hash(self, string: str) -> NDArray:
         """

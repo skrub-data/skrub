@@ -1,33 +1,29 @@
-from sklearn.utils.estimator_checks import check_estimator
+from sklearn.utils.estimator_checks import parametrize_with_checks
 
-from skrub import (  # TableVectorizer,
+from skrub import (
     DatetimeEncoder,
+    FeatureAugmenter,
     GapEncoder,
     MinHashEncoder,
     SimilarityEncoder,
+    TableVectorizer,
     TargetEncoder,
 )
 
 
-def test_sklearn_compatible_DatetimeEncoder():
-    check_estimator(DatetimeEncoder())
+def _tested_estimators():
+    for Estimator in [
+        DatetimeEncoder,
+        # FeatureAugmenter,
+        GapEncoder,
+        MinHashEncoder,
+        SimilarityEncoder,
+        TableVectorizer,
+        TargetEncoder,
+    ]:
+        yield Estimator()
 
 
-def test_sklearn_compatible_GapEncoder():
-    check_estimator(GapEncoder())
-
-
-def test_sklearn_compatible_MinHashEncoder():
-    check_estimator(MinHashEncoder())
-
-
-def test_sklearn_compatible_SimilarityEncoder():
-    check_estimator(SimilarityEncoder())
-
-
-# def test_sklearn_compatible_TableVectorizer():
-#     check_estimator(TableVectorizer())
-
-
-def test_sklearn_compatible_TargetEncoder():
-    check_estimator(TargetEncoder())
+@parametrize_with_checks(list(_tested_estimators()))
+def test_estimators_compatibility_sklearn(estimator, check, request):
+    check(estimator)

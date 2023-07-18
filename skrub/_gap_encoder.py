@@ -702,7 +702,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"X_types": ["categorical"]}
+        return {"X_types": ["2darray", "categorical"]}
 
     def _create_column_gap_encoder(self) -> GapEncoderColumn:
         """Helper method for creating a GapEncoderColumn from
