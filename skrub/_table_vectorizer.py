@@ -254,7 +254,7 @@ class TableVectorizer(ColumnTransformer):
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
 
-    sparse_threshold : float, default=0.3
+    sparse_threshold : float, default=0.0
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
         lower than this value. Use `sparse_threshold=0` to always return dense.
@@ -373,7 +373,7 @@ class TableVectorizer(ColumnTransformer):
         impute_missing: Literal["auto", "force", "skip"] = "auto",
         # The next parameters are inherited from ColumnTransformer
         remainder: Literal["drop", "passthrough"] | TransformerMixin = "passthrough",
-        sparse_threshold: float = 0.3,
+        sparse_threshold: float = 0.0,
         n_jobs: int = None,
         transformer_weights=None,
         verbose: bool = False,
