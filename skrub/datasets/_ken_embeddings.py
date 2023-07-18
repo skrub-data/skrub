@@ -90,6 +90,8 @@ def fetch_ken_types(
     -----
     Best used in conjunction with :func:`fetch_ken_embeddings`.
 
+    This function requires `pyarrow` to be installed.
+
     Examples
     --------
     To get all the existing KEN types of entities:
@@ -196,7 +198,7 @@ def fetch_ken_embeddings(
     Notes
     -----
     The files are read and returned in parquet format, this function needs
-    pyarrow installed to run correctly.
+    `pyarrow` installed to run correctly.
 
     The `search_types` parameter is there to filter the types by the input string
     pattern.
