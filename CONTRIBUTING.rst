@@ -195,10 +195,10 @@ cannot guarantee how much time it will take to review the changes.
 Continuous Integration (CI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Github Actions are used for various tasks including testing skrub on Linux, Mac
-and Windows, with different dependencies and settings.
+* Github Actions are used for various tasks including testing skrub on Linux, Mac
+  and Windows, with different dependencies and settings.
 
-CircleCI is used to build the docs.
+* CircleCI is used to build the documentation.
 
 If any of the following markers appears in the commit message, the following
 actions are taken.
