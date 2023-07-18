@@ -79,6 +79,9 @@ Minor changes
   by converting them to string before type inference.
   :pr:`623`by :user:`Leo Grinsztajn <LeoGrin>`
 
+* Moved the default storage location of data to the user's home folder.
+  :pr:`652` by :user:`Felix Lefebvre <flefebv>`
+
 Before skrub: dirty_cat
 ========================
 
