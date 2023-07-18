@@ -24,6 +24,7 @@ from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
+from pandas.compat._optional import import_optional_dependency
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 
@@ -339,7 +340,7 @@ def _fetch_figshare(
         data_directory = get_data_dir()
     parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
-    url = f"https://figshare.com/ndownloader/files/{figshare_id}"
+    url = f"https://ndownloader.figshare.com/files/{figshare_id}"
     description = f"This table shows the {figshare_id!r} figshare file."
     file_paths = [
         file
@@ -370,8 +371,10 @@ def _fetch_figshare(
             UserWarning,
             stacklevel=2,
         )
-        from skrub.datasets._utils import import_parquet_file_reader
-        ParquetFile = import_parquet_file_reader()
+        import_optional_dependency(
+            "pyarrow", extra="pyarrow is required for parquet support."
+        )
+        from pyarrow.parquet import ParquetFile
         try:
             filehandle, _ = urllib.request.urlretrieve(url)
             df = ParquetFile(filehandle)
