@@ -30,6 +30,10 @@ Major changes
   and :func:`fetch_ken_types` have been renamed.
   :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+* Make `pyarrow` an optional dependencies to facilitate the integration
+  with `pyodide`.
+  :pr:`639` by :user:`Guillaume Lemaitre <glemaitre>`.
+
 * Bumped minimal required Python version to 3.10. :pr:`606` by
   :user:`Gael Varoquaux <GaelVaroquaux>`
 
