@@ -52,7 +52,7 @@ def _get_clean_dataframe() -> pd.DataFrame:
     )
 
 
-def _get_dirty_dataframe() -> pd.DataFrame:
+def _get_dirty_dataframe(categorical_dtype="object") -> pd.DataFrame:
     """
     Creates a simple DataFrame with some missing values.
     We'll use different types of missing values (np.nan, pd.NA, None)
@@ -63,13 +63,18 @@ def _get_dirty_dataframe() -> pd.DataFrame:
             "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
             "float": pd.Series([5.2, 2.4, 6.2, 10.45, np.nan], dtype="Float64"),
             "str1": pd.Series(
-                ["public", np.nan, "private", "private", "public"], dtype="object"
+                ["public", np.nan, "private", "private", "public"],
+                dtype=categorical_dtype,
             ),
             "str2": pd.Series(
-                ["officer", "manager", None, "chef", "teacher"], dtype="object"
+                ["officer", "manager", None, "chef", "teacher"], dtype=categorical_dtype
             ),
-            "cat1": pd.Series([np.nan, "yes", "no", "yes", "no"], dtype="object"),
-            "cat2": pd.Series(["20K+", "40K+", "60K+", "30K+", np.nan], dtype="object"),
+            "cat1": pd.Series(
+                [np.nan, "yes", "no", "yes", "no"], dtype=categorical_dtype
+            ),
+            "cat2": pd.Series(
+                ["20K+", "40K+", "60K+", "30K+", np.nan], dtype=categorical_dtype
+            ),
         }
     )
 
@@ -272,7 +277,8 @@ def test_with_dirty_data() -> None:
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a dataset containing missing values.
     """
-    _test_possibilities(_get_dirty_dataframe())
+    _test_possibilities(_get_dirty_dataframe(categorical_dtype="object"))
+    _test_possibilities(_get_dirty_dataframe(categorical_dtype="category"))
 
 
 def test_auto_cast() -> None:
@@ -434,7 +440,8 @@ def test_fit_transform_equiv() -> None:
     """
     for X in [
         _get_clean_dataframe(),
-        _get_dirty_dataframe(),
+        _get_dirty_dataframe(categorical_dtype="object"),
+        _get_dirty_dataframe(categorical_dtype="category"),
         _get_mixed_types_dataframe(),
         _get_mixed_types_array(),
     ]:
