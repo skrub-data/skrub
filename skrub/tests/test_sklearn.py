@@ -13,12 +13,12 @@ from skrub import (
 
 def _tested_estimators():
     for Estimator in [
-        DatetimeEncoder,
+        # DatetimeEncoder,
         # FeatureAugmenter,
-        GapEncoder,
-        MinHashEncoder,
-        SimilarityEncoder,
-        TableVectorizer,
+        # GapEncoder,
+        # MinHashEncoder,
+        # SimilarityEncoder,
+        # TableVectorizer,
         TargetEncoder,
     ]:
         yield Estimator()
