@@ -245,6 +245,20 @@ def _test_possibilities(X) -> None:
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
 
 
+def test_duplicate_column_names() -> None:
+    """
+    Test to check if the tablevectorizer raises an error with
+    duplicate column names
+    """
+    tablevectorizer = TableVectorizer()
+    # Creates a simple dataframe with duplicate column names
+    data = [(3, "a"), (2, "b"), (1, "c"), (0, "d")]
+    X_dup_col_names = pd.DataFrame.from_records(data, columns=["col_1", "col_1"])
+
+    with pytest.raises(AssertionError,  match=r"Duplicate column names"):
+        tablevectorizer.fit_transform(X_dup_col_names)
+
+
 def test_with_clean_data() -> None:
     """
     Defines the expected returns of the vectorizer in different settings,

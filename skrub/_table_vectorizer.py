@@ -613,6 +613,15 @@ class TableVectorizer(ColumnTransformer):
         # in numerical columns for instance.
         X = _replace_false_missing(X)
 
+        ###
+        # We need to check for duplicate column names.
+        # It is checked by comparing the number of unique values
+        # to the length of the column names
+        if len(set(X.columns)) != len(X.columns):
+            raise AssertionError("Duplicate column names in the dataframe."
+                                 f"The column names are {X.columns}")
+        ###
+
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
         # We'll keep the results in order to apply the types in `transform`.
