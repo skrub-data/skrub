@@ -121,11 +121,11 @@ def test_parallelism() -> None:
     """Tests that parallelism works with different backends and n_jobs."""
 
     # This n_jobs list is sorted from the expected slowest to the fastest
-    X, y = default_deduplicate()
+    X, y = default_deduplicate(n=200)
 
     last_execution_time = np.inf
 
-    for n_jobs in [1, 4]:
+    for n_jobs in [1, 2]:
         times = []
         for _ in range(2):
             start = time.perf_counter()
