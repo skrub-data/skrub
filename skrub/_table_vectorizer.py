@@ -558,6 +558,8 @@ class TableVectorizer(ColumnTransformer):
             if pd.api.types.is_categorical_dtype(dtype):
                 known_categories = dtype.categories
                 new_categories = pd.unique(X[col])
+                # remove nan from new_categories
+                new_categories = new_categories[~pd.isnull(new_categories)]
                 dtype = pd.CategoricalDtype(
                     categories=known_categories.union(new_categories)
                 )
