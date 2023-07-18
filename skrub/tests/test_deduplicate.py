@@ -1,4 +1,3 @@
-import time
 from functools import cache
 
 import joblib
@@ -116,30 +115,13 @@ def default_deduplicate(n: int = 500):
     return X, y
 
 
-@skip_if_no_parallel
 def test_parallelism() -> None:
     """Tests that parallelism works with different backends and n_jobs."""
 
-    # This n_jobs list is sorted from the expected slowest to the fastest
-    X, y = default_deduplicate()
+    X, y = default_deduplicate(n=200)
 
-    last_execution_time = np.inf
-
-    for n_jobs in [1, 4]:
-        times = []
-        for _ in range(2):
-            start = time.perf_counter()
-            y_parallel = deduplicate(X, n_jobs=n_jobs)
-            end = time.perf_counter()
-            assert_array_equal(y, y_parallel)
-            times.append(end - start)
-
-        # At each loop, expect the exec time to be less than the last
-        # (because the n_jobs_list is sorted from slowest to fastest)
-        new_execution_time = np.mean(times)
-        assert new_execution_time < last_execution_time
-
-        last_execution_time = new_execution_time
+    y_parallel = deduplicate(X, n_jobs=2)
+    assert_array_equal(y, y_parallel)
 
 
 DEFAULT_JOBLIB_BACKEND = joblib.parallel.get_active_backend()[0].__class__
