@@ -79,6 +79,9 @@ Minor changes
   by converting them to string before type inference.
   :pr:`623`by :user:`Leo Grinsztajn <LeoGrin>`
 
+* :class:`TableVectorizer` never output a sparse matrix by default. This can be changed by
+  increasing the `sparse_threshold` parameter. :pr:`646` by :user:`Leo Grinsztajn <LeoGrin>`
+
 Before skrub: dirty_cat
 ========================
 
