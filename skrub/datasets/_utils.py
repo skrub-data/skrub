@@ -28,9 +28,8 @@ def get_data_home(data_home=None) -> str:
         The path to skrub data directory.
     """
     if data_home is None:
-        data_home = os.path.join("~", "skrub_data")
-    data_home = os.path.expanduser(data_home)
-    os.makedirs(data_home, exist_ok=True)
+        data_home = Path("~") / "skrub_data"
+    data_home.make_dir(exist_ok=True)
     return data_home
 
 
