@@ -158,12 +158,12 @@ html_theme_options = {
         "image_light": "_static/skrub.svg",
         "image_dark": "_static/skrub.svg",
     },
-    #"external_links": [
-    #    {
-    #        "url": "https://pydata.org",
-    #        "name": "PyData",
-    #    },
-    #],
+    # "external_links": [
+    #     {
+    #         "url": "https://pydata.org",
+    #         "name": "PyData",
+    #     },
+    # ],
     "header_links_before_dropdown": 4,
     "icon_links": [
         {
@@ -188,7 +188,7 @@ html_theme_options = {
     "use_edit_page_button": True,
     "show_toc_level": 1,
     "navbar_align": "left",  # [left, content, right] For testing that the navbar items align properly
-    #"navbar_center": ["version-switcher", "navbar-nav"],
+    # "navbar_center": ["version-switcher", "navbar-nav"],
     "navbar_center": ["navbar-nav"],
     "announcement": "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html",
     # "show_nav_level": 2,
@@ -199,11 +199,11 @@ html_theme_options = {
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "footer_start": ["test.html", "test.html"],
-    #"secondary_sidebar_items": ["index.html"],  # Remove the source buttons
-    #"switcher": {
-    #    "json_url": json_url,
-    #    "version_match": version_match,
-    #},
+    # "secondary_sidebar_items": ["index.html"],  # Remove the source buttons
+    # "switcher": {
+    #     "json_url": json_url,
+    #     "version_match": version_match,
+    # },
 }
 
 # Additional templates that should be rendered to pages, maps page names to
@@ -212,10 +212,10 @@ html_additional_pages = {"index": "index.html"}
 
 # Needed for the edit button
 html_context = {
-    "github_user": "skrub_data",
+    "github_user": "skrub-data",
     "github_repo": "skrub",
     "github_version": "main",
-    "doc_path": "docs",
+    "doc_path": "doc",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

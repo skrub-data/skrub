@@ -26,3 +26,19 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # Turn deprecation warnings into errors
+    "error::FutureWarning",
+    "error::DeprecationWarning",
+    "error::numpy.VisibleDeprecationWarning",
+
+    # Ignore warning from np.in1d since the future behavior is already the desired
+    # behavior. TODO remove when numpy min version >= 1.25.
+    'ignore:elementwise\ comparison\ failed:FutureWarning',
+
+    # TODO we should probably deal with those
+    'ignore:pkg_resources\ is\ deprecated\ as\ an\ API:DeprecationWarning',
+    'ignore:Deprecated\ call\ to\ `pkg_resources:DeprecationWarning',
+]

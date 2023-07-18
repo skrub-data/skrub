@@ -137,7 +137,7 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     replaces the missing values, and returns it.
     """
     ser = _replace_false_missing(ser)
-    if pd.api.types.is_categorical_dtype(ser) and (value not in ser.cat.categories):
+    if isinstance(ser.dtype, pd.CategoricalDtype) and (value not in ser.cat.categories):
         ser = ser.cat.add_categories([value])
     ser = ser.fillna(value=value)
     return ser
@@ -235,7 +235,8 @@ class TableVectorizer(ColumnTransformer):
         specific versions of pandas, numpy and scikit-learn).
         'force' will impute missing values in all categorical columns.
         'skip' will not impute at all.
-        When imputed, missing values are replaced by the string 'missing'.
+        When imputed, missing values are replaced by the string 'missing'
+        before being encoded.
         As imputation logic for numerical features can be quite intricate,
         it is left to the user to manage.
         See also attribute :attr:`~skrub.TableVectorizer.imputed_columns_`.
@@ -253,7 +254,7 @@ class TableVectorizer(ColumnTransformer):
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
 
-    sparse_threshold : float, default=0.3
+    sparse_threshold : float, default=0.0
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
         lower than this value. Use `sparse_threshold=0` to always return dense.
@@ -372,7 +373,7 @@ class TableVectorizer(ColumnTransformer):
         impute_missing: Literal["auto", "force", "skip"] = "auto",
         # The next parameters are inherited from ColumnTransformer
         remainder: Literal["drop", "passthrough"] | TransformerMixin = "passthrough",
-        sparse_threshold: float = 0.3,
+        sparse_threshold: float = 0.0,
         n_jobs: int = None,
         transformer_weights=None,
         verbose: bool = False,
@@ -478,6 +479,11 @@ class TableVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
+        # for object dtype columns, first convert to string to avoid mixed types
+        object_cols = X.columns[X.dtypes == "object"]
+        for col in object_cols:
+            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
+
         # Convert to the best possible data type
         self.types_ = {}
         for col in X.columns:
@@ -537,17 +543,26 @@ class TableVectorizer(ColumnTransformer):
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
+        # for object dtype columns, first convert to string to avoid mixed types
+        # we do it both in auto_cast and apply_cast because
+        # the type infered for string columns during auto_cast
+        # is not necessarily string, it can be object because
+        # of missing values
+        object_cols = X.columns[X.dtypes == "object"]
+        for col in object_cols:
+            if pd.api.types.is_object_dtype(X[col]):
+                X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
         for col, dtype in self.types_.items():
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
-            if pd.api.types.is_categorical_dtype(dtype):
+            if isinstance(dtype, pd.CategoricalDtype):
                 known_categories = dtype.categories
                 new_categories = pd.unique(X[col])
                 dtype = pd.CategoricalDtype(
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col] = dtype
-            X.loc[:, col] = X[col].astype(dtype)
+        X = X.astype(self.types_)
         return X
 
     def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
