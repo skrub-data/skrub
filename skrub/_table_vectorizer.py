@@ -618,7 +618,8 @@ class TableVectorizer(ColumnTransformer):
         # It is checked by comparing the number of unique values
         # to the length of the column names
         if len(set(X.columns)) != len(X.columns):
-            raise AssertionError("Duplicate column names in the dataframe")
+            raise AssertionError("Duplicate column names in the dataframe."
+                                 f"The column names are {X.columns}")
         ###
 
         # If auto_cast is True, we'll find and apply the best possible type
