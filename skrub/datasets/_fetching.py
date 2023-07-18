@@ -24,11 +24,10 @@ from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
-from pandas.compat._optional import import_optional_dependency
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 
-from skrub._utils import parse_version
+from skrub._utils import import_optional_dependency, parse_version
 from skrub.datasets._utils import get_data_dir
 
 # Ignore lines too long, first docstring lines can't be cut
