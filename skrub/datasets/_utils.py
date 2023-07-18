@@ -1,5 +1,4 @@
 import os
-import shutil
 from pathlib import Path
 
 
@@ -33,19 +32,6 @@ def get_data_home(data_home=None) -> str:
     data_home = os.path.expanduser(data_home)
     os.makedirs(data_home, exist_ok=True)
     return data_home
-
-
-def clear_data_home(data_home=None):
-    """Delete all the content of the data home cache.
-
-    Parameters
-    ----------
-    data_home : str or path-like, default=None
-        The path to skrub data directory. If `None`, the default path
-        is `~/skrub_data`.
-    """
-    data_home = get_data_home(data_home)
-    shutil.rmtree(data_home)
 
 
 def get_data_dir(name: str | None = None, data_home: str | None = None) -> Path:
