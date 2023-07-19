@@ -23,7 +23,7 @@ def get_data_home(data_home: Path | str | None = None) -> Path:
 
     Returns
     -------
-    data_home: str or path-like, default=None
+    data_home: Path
         The validated path to the skrub data directory.
     """
     if data_home is None:
