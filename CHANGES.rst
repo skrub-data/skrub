@@ -49,6 +49,11 @@ Major changes
 
 * Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
+* skrub now vendors the scikit-learn implementation of the :class:`TargetEncoder` until
+  the minimum required version of scikit-learn is 1.4, after what it will be removed and
+  should be imported from scikit-learn instead.
+  :pr:`??` by :user:`Jérémie du Boisberranger <jeremiedbb>`.
+
 Minor changes
 -------------
 
