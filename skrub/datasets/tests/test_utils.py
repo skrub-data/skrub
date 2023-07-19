@@ -59,14 +59,24 @@ def test_get_data_home_path():
 
 def test_get_data_home_default():
     """Test function for ``get_data_home()`` with default `data_home`."""
-    # Get the default location where we expect the data to be stored.
+    # We should take care of not deleting the folder if our user
+    # already cached some data
     user_path = Path("~") / "skrub_data"
+    is_already_existing = user_path.exists()
 
-    # if the folder does not exist, create it, and clear it
-    if not user_path.exists():
+    data_home = get_data_home(data_home=None)
+    assert data_home == user_path
+    assert data_home.exists()
+
+    if not is_already_existing:
+        # In case the folder was not existing, the previous
+        # call should have created the folder. Check that we get
+        # the proper path to the folder if it already exists.
         data_home = get_data_home(data_home=None)
         assert data_home == user_path
         assert data_home.exists()
 
-        shutil.rmtree(data_home)
+    if not is_already_existing:
+        # Clear the folder if it was not already existing.
+        shutil.rmtree(user_path)
         assert not data_home.exists()
