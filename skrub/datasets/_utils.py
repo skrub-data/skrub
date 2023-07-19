@@ -27,7 +27,7 @@ def get_data_home(data_home: Path | str | None = None) -> Path:
         The validated path to the skrub data directory.
     """
     if data_home is None:
-        data_home = Path("~") / "skrub_data"
+        data_home = Path("~").expanduser() / "skrub_data"
     elif isinstance(data_home, str):
         data_home = Path(data_home)
     data_home.mkdir(parents=True, exist_ok=True)
