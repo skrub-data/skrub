@@ -140,7 +140,7 @@ class DatasetInfoOnly:
 
 def _fetch_openml_dataset(
     dataset_id: int,
-    data_home: Path | None = None,
+    data_home: Path | str | None = None,
 ) -> dict[str, Any]:
     """Gets a dataset from OpenML (https://www.openml.org).
 
@@ -148,7 +148,7 @@ def _fetch_openml_dataset(
     ----------
     dataset_id : int
         The ID of the dataset to fetch.
-    data_home : Path, optional
+    data_home : Path or str, optional
         The path to the root data directory.
         By default, the skrub data directory.
 
@@ -223,7 +223,7 @@ def _fetch_openml_dataset(
 
 def _fetch_world_bank_data(
     indicator_id: str,
-    data_home: Path | None = None,
+    data_home: Path | str | None = None,
 ) -> dict[str, Any]:
     """Gets a dataset from World Bank open data platform (https://data.worldbank.org/).
 
@@ -231,7 +231,7 @@ def _fetch_world_bank_data(
     ----------
     indicator_id : str
         The ID of the indicator's dataset to fetch.
-    data_home : Path, optional
+    data_home : Path or str, optional
         The path to the root data directory.
         By default, the skrub data directory.
 
@@ -305,7 +305,7 @@ def _fetch_world_bank_data(
 
 def _fetch_figshare(
     figshare_id: str,
-    data_home: Path | None = None,
+    data_home: Path | str | None = None,
 ) -> dict[str, Any]:
     """Fetch a dataset from figshare using the download ID number.
 
@@ -313,7 +313,7 @@ def _fetch_figshare(
     ----------
     figshare_id : str
         The ID of the dataset to fetch.
-    data_home : Path, optional
+    data_home : Path or str, optional
         The path to the root data directory.
         By default, the skrub data directory.
 
@@ -578,9 +578,6 @@ def _fetch_dataset_as_dataclass(
     :obj:`DatasetInfoOnly`
         If `load_dataframe=False`
     """
-    if isinstance(data_home, str):
-        data_home = Path(data_home)
-
     if source == "openml":
         info = _fetch_openml_dataset(dataset_id, data_home)
     elif source == "world_bank":

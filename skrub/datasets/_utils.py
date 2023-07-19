@@ -17,8 +17,8 @@ def get_data_home(data_home: Path | str | None = None) -> Path:
 
     Parameters
     ----------
-    data_home : Path, default=None
-        The path to skrub data directory. If `None`, the default path
+    data_home: pathlib.Path or string, optional
+        The path to the skrub data directory. If `None`, the default path
         is `~/skrub_data`.
 
     Returns

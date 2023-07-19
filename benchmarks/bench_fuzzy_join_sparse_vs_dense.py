@@ -527,7 +527,7 @@ def benchmark(
     dataset_name: str,
     analyzer: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
-    data_home: Path = None,
+    data_home: Path | str = None,
     data_directory: str = "benchmarks_data",
 ):
     left_table, right_table, gt = fetch_big_data(
