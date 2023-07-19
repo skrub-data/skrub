@@ -34,7 +34,7 @@ def get_data_home(data_home: Path | str | None = None) -> Path:
     return data_home
 
 
-def get_data_dir(name: str | None = None, data_home: Path | None = None) -> Path:
+def get_data_dir(name: str | None = None, data_home: Path | str | None = None) -> Path:
     """
     Returns the directory in which skrub looks for data.
 
