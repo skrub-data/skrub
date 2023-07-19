@@ -351,7 +351,19 @@ def notebook_modification_function(notebook_content, notebook_filename):
     dummy_notebook_content = {"cells": []}
     add_markdown_cell(dummy_notebook_content, markdown)
 
+    # TODO: in the next release, we need to uncomment the following line that should
+    # replace the manual install from TestPyPI
+    # code_lines = ["%pip install skrub"]
     code_lines = []
+    code_lines.extend(
+        [
+            "import micropip",
+            "await micropip.install("
+            "'https://test-files.pythonhosted.org/packages/3c/03/"
+            "e1598c7abe536e56834f568f61497ad075d966c4c8fb7d0ad004b81e7bfc/"
+            "skrub-0.0.1.dev1-py3-none-any.whl')"
+        ]
+    )
 
     if "seaborn" in notebook_content_str:
         code_lines.append("%pip install seaborn")
