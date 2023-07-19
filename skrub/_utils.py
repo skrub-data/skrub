@@ -37,12 +37,12 @@ class LRUDict:
         return key in self.cache
 
 
-def combine_LRUDicts(capacity: int, *LRUDicts: LRUDict) -> LRUDict:
-    combined_LRUDict = LRUDict(capacity)
-    for lru_dict in LRUDicts:
+def combine_LRUDicts(capacity: int, *lru_dicts: LRUDict) -> LRUDict:
+    combined_lru_dict = LRUDict(capacity)
+    for lru_dict in lru_dicts:
         for key, value in lru_dict.cache.items():
-            combined_LRUDict[key] = value
-    return combined_LRUDict
+            combined_lru_dict[key] = value
+    return combined_lru_dict
 
 
 def check_input(X) -> NDArray:
