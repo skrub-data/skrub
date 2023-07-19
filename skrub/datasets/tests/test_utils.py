@@ -38,9 +38,7 @@ def test_get_data_home_str():
 
 
 def test_get_data_home_default():
-    """
-    Test function for ``get_data_home()`` with `data_home` set to `None`.
-    """
+    """Test function for ``get_data_home()`` with default `data_home`."""
     # get path of the folder 'skrub_data' in the user home folder
     user_path = Path("~") / "skrub_data"
 
