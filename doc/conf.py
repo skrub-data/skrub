@@ -342,7 +342,7 @@ def notebook_modification_function(notebook_content, notebook_filename):
         " encounter some unexpected behavior.\n\nThe main difference is that imports"
         " will take a lot longer than usual, for example the first `import skrub` can"
         " take roughly 10-20s.\n\nIf you notice problems, feel free to open an"
-        " [issue](https://github.com/scikit-learn/scikit-learn/issues/new/choose)"
+        " [issue](https://github.com/skrub-data/skrub/issues/new/choose)"
         " about it."
     )
 
