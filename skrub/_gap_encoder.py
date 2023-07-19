@@ -860,7 +860,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             If `col_names=None`, no prefixes are used.
             If `col_names='auto'`, column names are automatically defined:
 
-                - if the input data was a DataFrame,
+                - if the input data was a :obj:`~pandas.DataFrame`,
                   its column names are used,
                 - otherwise, 'col1', ..., 'colN' are used as prefixes.
 

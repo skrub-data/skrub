@@ -152,7 +152,7 @@ class TableVectorizer(ColumnTransformer):
     """Automatically transform a heterogeneous dataframe to a numerical array.
 
     Easily transforms a heterogeneous data table
-    (such as a DataFrame) to a numerical array for machine
+    (such as a :obj:`~pandas.DataFrame`) to a numerical array for machine
     learning. For this it transforms each column depending on its data type.
     It provides a simplified interface for the ColumnTransformer ;
     more documentation of attributes and functions are available in its doc.
@@ -449,13 +449,13 @@ class TableVectorizer(ColumnTransformer):
 
         Parameters
         ----------
-        X : DataFrame of shape (n_samples, n_features)
+        X : :obj:`~pandas.DataFrame` of shape (n_samples, n_features)
             The data to be transformed.
 
         Returns
         -------
-        DataFrame
-            The same DataFrame, with its columns cast to their
+        :obj:`~pandas.DataFrame`
+            The same :obj:`~pandas.DataFrame`, with its columns cast to their
             best possible data type.
         """
         # Handle missing values

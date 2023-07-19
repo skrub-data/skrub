@@ -33,11 +33,11 @@ def _numeric_encoding(
 
     Parameters
     ----------
-    main : DataFrame
+    main : :obj:`~pandas.DataFrame`
         A table with numerical columns.
     main_cols : str or list
         The columns of the main table.
-    aux : DataFrame
+    aux : :obj:`~pandas.DataFrame`
         Another table with numerical columns.
     aux_cols : str or list
         The columns of the aux table.
@@ -110,11 +110,11 @@ def _string_encoding(
 
     Parameters
     ----------
-    main : DataFrame
+    main : :obj:`~pandas.DataFrame`
         A table with string columns.
     main_cols : str or list
         The columns of the main table.
-    aux : DataFrame
+    aux : :obj:`~pandas.DataFrame`
         Another table with string columns.
     aux_cols : str or list
         The columns of the aux table.
@@ -228,9 +228,9 @@ def fuzzy_join(
 
     Parameters
     ----------
-    left : DataFrame
+    left : :obj:`~pandas.DataFrame`
         A table to merge.
-    right : DataFrame
+    right : :obj:`~pandas.DataFrame`
         A table used to merge with.
     how : {'left', 'right'}, default='left'
         Type of merge to be performed. Note that unlike pandas.merge,
@@ -275,7 +275,7 @@ def fuzzy_join(
     drop_unmatched : bool, default=False
         Remove categories for which a match was not found in the two tables.
     sort : bool, default=False
-        Sort the join keys lexicographically in the resulting DataFrame.
+        Sort the join keys lexicographically in the resulting :obj:`~pandas.DataFrame`.
         If False, the order of the join keys depends on the join type
         (`how` keyword).
     suffixes : 2-tuple of str, default=('_x', '_y')
@@ -284,8 +284,8 @@ def fuzzy_join(
 
     Returns
     -------
-    df_joined : DataFrame
-        The joined table returned as a DataFrame.
+    df_joined : :obj:`~pandas.DataFrame`
+        The joined table returned as a :obj:`~pandas.DataFrame`.
         If `return_score=True`, another column will be added
         to the DataFrame containing the matching scores.
 
@@ -302,7 +302,7 @@ def fuzzy_join(
 
     Joining on indexes and multiple columns is not supported.
 
-    When `return_score=True`, the returned DataFrame gives
+    When `return_score=True`, the returned :obj:`~pandas.DataFrame` gives
     the distances between the closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.

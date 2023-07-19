@@ -72,7 +72,7 @@ def fetch_ken_types(
 
     Returns
     -------
-    DataFrame
+    :obj:`~pandas.DataFrame`
         The types of entities containing the substring.
 
     See Also
@@ -174,7 +174,7 @@ def fetch_ken_embeddings(
 
     Returns
     -------
-    DataFrame
+    :obj:`~pandas.DataFrame`
         The embeddings of entities and the specified type from Wikipedia.
 
     See Also

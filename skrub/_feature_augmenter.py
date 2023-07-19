@@ -31,7 +31,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    tables : list of 2-tuples of (DataFrame, str)
+    tables : list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
         List of (table, column name) tuples, the tables to join.
     main_key : str
         The key column name in the main table (passed during fit) on which
@@ -143,7 +143,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : DataFrame, shape [n_samples, n_features]
+        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
@@ -172,14 +172,14 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        X : DataFrame, shape [n_samples, n_features]
+        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
 
         Returns
         -------
-        DataFrame
+        :obj:`~pandas.DataFrame`
             The final joined table.
         """
 
