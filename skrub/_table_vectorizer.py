@@ -457,7 +457,7 @@ class TableVectorizer(ColumnTransformer):
 
         # TODO: check that the provided transformers are valid
 
-    def _split_univariate_transformers(self, split_fitted=False):
+    def _split_univariate_transformers(self, split_fitted: bool = False):
         """
         Split univariate transformers into multiple transformers, one for each
         column. This is useful to use the inherited `ColumnTransformer` class

@@ -652,7 +652,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     column_names_: list[str]
 
     @classmethod
-    def _merge(cls, transformers_list):
+    def _merge(cls, transformers_list: list[GapEncoder]):
         # merge GapEncoder fitted on different columns
         # into a single GapEncoder
         # useful for parallelization in the TableVectorizer

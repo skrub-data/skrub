@@ -121,7 +121,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     _capacity: int = 2**10
 
     @classmethod
-    def _merge(cls, transformers_list):
+    def _merge(cls, transformers_list: list[MinHashEncoder]):
         # merge MinHashEncoder fitted on different columns
         # into a single MinHashEncoder
         # useful for parallelization in the TableVectorizer
