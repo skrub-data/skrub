@@ -1,8 +1,7 @@
-import os
 from pathlib import Path
 
 
-def get_data_home(data_home=None) -> str:
+def get_data_home(data_home: Path | None = None) -> Path:
     """Returns the path of the skrub data directory.
 
     This folder is used by some large dataset loaders to avoid downloading the
@@ -18,7 +17,7 @@ def get_data_home(data_home=None) -> str:
 
     Parameters
     ----------
-    data_home : str, default=None
+    data_home : Path, default=None
         The path to skrub data directory. If `None`, the default path
         is `~/skrub_data`.
 
@@ -29,11 +28,11 @@ def get_data_home(data_home=None) -> str:
     """
     if data_home is None:
         data_home = Path("~") / "skrub_data"
-    data_home.make_dir(exist_ok=True)
+    data_home.mkdir(parents=True, exist_ok=True)
     return data_home
 
 
-def get_data_dir(name: str | None = None, data_home: str | None = None) -> Path:
+def get_data_dir(name: str | None = None, data_home: Path | None = None) -> Path:
     """
     Returns the directory in which skrub looks for data.
 
@@ -42,14 +41,14 @@ def get_data_dir(name: str | None = None, data_home: str | None = None) -> Path:
 
     Parameters
     ----------
-    data_home : str, default=None
+    data_home : Path, default=None
         The path to skrub data directory. If `None`, the default path
         is `~/skrub_data`.
     name: str, optional
         Subdirectory name. If omitted, the root data directory is returned.
     """
     data_home = get_data_home(data_home)
-    data_dir = Path(data_home).resolve()
+    data_dir = data_home.resolve()
     if name is not None:
         data_dir = data_dir / name
     return data_dir
