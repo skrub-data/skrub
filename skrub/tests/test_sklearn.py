@@ -61,7 +61,7 @@ sklearn.utils.estimator_checks._enforce_estimator_tags_X = (
 
 def _tested_estimators():
     for Estimator in [
-        # DatetimeEncoder,
+        DatetimeEncoder,
         # FeatureAugmenter,
         GapEncoder,
         MinHashEncoder,
