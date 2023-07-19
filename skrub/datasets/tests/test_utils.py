@@ -37,7 +37,7 @@ def test_get_data_home_str():
         assert data_home.exists()
 
 
-def test_get_data_home_None():
+def test_get_data_home_default():
     """
     Test function for ``get_data_home()`` with `data_home` set to `None`.
     """
