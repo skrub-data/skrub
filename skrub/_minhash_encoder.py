@@ -15,7 +15,7 @@ from sklearn.utils.validation import _check_feature_names_in, check_is_fitted
 
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
-from ._utils import LRUDict, check_input, combine_LRUDicts
+from ._utils import LRUDict, check_input, combine_lru_dicts
 
 NoneType = type(None)
 
@@ -130,7 +130,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         assert all(
             transformer._capacity == capacity for transformer in transformers_list
         )
-        full_transformer.hash_dict_ = combine_LRUDicts(
+        full_transformer.hash_dict_ = combine_lru_dicts(
             capacity, *[transformer.hash_dict_ for transformer in transformers_list]
         )
         full_transformer.n_features_in_ = sum(

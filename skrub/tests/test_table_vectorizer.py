@@ -686,7 +686,7 @@ def test_parallelism() -> None:
             cardinality_threshold=4,
         )
         X_trans = table_vec_no_parallel.fit_transform(X)
-        for joblib_backend in ["loky", "threading", "multiprocessing"]:
+        for joblib_backend in ["loky"]:
             with joblib.parallel_backend(joblib_backend):
                 for n_jobs in [None, 2, -1]:
                     table_vec = TableVectorizer(

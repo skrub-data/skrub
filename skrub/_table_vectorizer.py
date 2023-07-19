@@ -404,6 +404,10 @@ class TableVectorizer(ColumnTransformer):
         """
         return {"allow_nan": [True]}
 
+    @property
+    def is_parallelized(self) -> bool:
+        return self.n_jobs not in (None, 1)
+
     def _clone_transformers(self):
         """
         For each of the different transformers that can be passed,
@@ -785,7 +789,7 @@ class TableVectorizer(ColumnTransformer):
 
         # split the univariate transformers on each column
         # to be able to parallelize the encoding
-        if self.n_jobs not in (None, 1):
+        if self.is_parallelized:
             self._split_univariate_transformers(split_fitted=False)
 
         X_enc = super().fit_transform(X, y)
@@ -800,7 +804,7 @@ class TableVectorizer(ColumnTransformer):
                 cols: list[int]
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
 
-        if self.n_jobs not in (None, 1):
+        if self.is_parallelized:
             self._merge_univariate_transformers()
 
         return X_enc
@@ -843,12 +847,12 @@ class TableVectorizer(ColumnTransformer):
 
         # split the univariate transformers on each column
         # to be able to parallelize the encoding
-        if self.n_jobs not in (None, 1):
+        if self.is_parallelized:
             self._split_univariate_transformers(split_fitted=True)
 
         res = super().transform(X)
 
-        if self.n_jobs not in (None, 1):
+        if self.is_parallelized:
             self._merge_univariate_transformers()
 
         return res
