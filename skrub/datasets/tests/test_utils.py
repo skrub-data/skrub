@@ -39,7 +39,7 @@ def test_get_data_home_str():
 
 def test_get_data_home_default():
     """Test function for ``get_data_home()`` with default `data_home`."""
-    # get path of the folder 'skrub_data' in the user home folder
+    # Get the default location where we expect the data to be stored.
     user_path = Path("~") / "skrub_data"
 
     # if the folder does not exist, create it, and clear it
