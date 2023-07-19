@@ -486,7 +486,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return feature_names_out
 
 
-class GapEncoder(BaseEstimator, TransformerMixin):
+class GapEncoder(TransformerMixin, BaseEstimator):
     """Constructs latent topics with continuous encoding.
 
     This encoder can be understood as a continuous encoding on a set of latent
