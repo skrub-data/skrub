@@ -1044,7 +1044,7 @@ def get_kmeans_prototypes(
     projected = vectorizer.transform(X)
     if not sparse:
         projected = projected.toarray()
-    kmeans = KMeans(n_clusters=n_prototypes, random_state=random_state)
+    kmeans = KMeans(n_clusters=n_prototypes, n_init=10, random_state=random_state)
     kmeans.fit(projected, sample_weight=sample_weight)
     centers = kmeans.cluster_centers_
     neighbors = NearestNeighbors()

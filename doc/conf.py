@@ -18,6 +18,7 @@
 #
 import os
 import shutil
+import warnings
 from datetime import datetime
 import sys
 
@@ -27,6 +28,7 @@ import sys
 # absolute, like shown here.
 sys.path.insert(0, os.path.abspath("sphinxext"))
 from github_link import make_linkcode_resolve
+from sphinx_gallery.notebook import add_code_cell, add_markdown_cell
 
 
 # -- Copy files for docs --------------------------------------------------
@@ -69,6 +71,20 @@ try:
     extensions.append("sphinxext.opengraph")
 except ImportError:
     print("ERROR: sphinxext.opengraph import failed")
+
+try:
+    import jupyterlite_sphinx  # noqa: F401
+
+    extensions.append("jupyterlite_sphinx")
+    with_jupyterlite = True
+except ImportError:
+    # In some cases we don't want to require jupyterlite_sphinx to be installed,
+    # e.g. the doc-min-dependencies build
+    warnings.warn(
+        "jupyterlite_sphinx is not installed, you need to install it "
+        "if you want JupyterLite links to appear in each example"
+    )
+    with_jupyterlite = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -306,6 +322,83 @@ if 'dev' in release:
 else:
     binder_branch = release
 
+
+def notebook_modification_function(notebook_content, notebook_filename):
+    notebook_content_str = str(notebook_content)
+    warning_template = "\n".join(
+        [
+            "<div class='alert alert-{message_class}'>",
+            "",
+            "# JupyterLite warning",
+            "",
+            "{message}",
+            "</div>",
+        ]
+    )
+
+    if "06_ken_embeddings_example" in notebook_filename:
+        message_class = "danger"
+        message = (
+            "This example requires PyArrow, which is currently unavailable in Pyodide "
+            "(see https://github.com/pyodide/pyodide/issues/2933). Thus, this example cannot "
+            "be run in JupyterLite."
+        )
+    else:
+        message_class = "warning"
+        message = (
+            "Running the skrub examples in JupyterLite is experimental and you may"
+            "encounter some unexpected behavior.\n\n"
+            "The main difference is that imports will take a lot longer than usual, "
+            "for example the first `import skrub` can take roughly 10-20s.\n\n"
+            "If you notice problems, feel free to open an "
+            "[issue](https://github.com/skrub-data/skrub/issues/new/choose) about it."
+        )
+
+    markdown = warning_template.format(message_class=message_class, message=message)
+
+    dummy_notebook_content = {"cells": []}
+    add_markdown_cell(dummy_notebook_content, markdown)
+
+    # TODO: in the next release, we need to uncomment the following line that should
+    # replace the manual install from TestPyPI
+    # code_lines = ["%pip install skrub"]
+    code_lines = []
+    code_lines.extend(
+        [
+            "import micropip",
+            "await micropip.install("
+            "'https://test-files.pythonhosted.org/packages/3c/03/"
+            "e1598c7abe536e56834f568f61497ad075d966c4c8fb7d0ad004b81e7bfc/"
+            "skrub-0.0.1.dev1-py3-none-any.whl')"
+        ]
+    )
+
+    if "seaborn" in notebook_content_str:
+        code_lines.append("%pip install seaborn")
+    if "statsmodel" in notebook_content_str:
+        code_lines.append("%pip install statsmodels")
+    if "fetch_" in notebook_content_str:
+        code_lines.extend(
+            [
+                "%pip install pyodide-http",
+                "import pyodide_http",
+                "pyodide_http.patch_all()",
+            ]
+        )
+    # always import matplotlib and pandas to avoid Pyodide limitation with
+    # imports inside functions
+    code_lines.extend(["import matplotlib", "import pandas"])
+
+    if code_lines:
+        code_lines = ["# JupyterLite-specific code"] + code_lines
+        code = "\n".join(code_lines)
+        add_code_cell(dummy_notebook_content, code)
+
+    notebook_content["cells"] = (
+        dummy_notebook_content["cells"] + notebook_content["cells"]
+    )
+
+
 sphinx_gallery_conf = {
     "doc_module": "skrub",
     "backreferences_dir": os.path.join("generated"),
@@ -329,6 +422,10 @@ sphinx_gallery_conf = {
         "use_jupyter_lab": True,
     },
 }
+if with_jupyterlite:
+    sphinx_gallery_conf["jupyterlite"] = {
+        "notebook_modification_function": notebook_modification_function
+    }
 
 # -- sphinx.ext.opengraph configuration ---------------------------------------
 ogp_site_url = "https://skrub-data.github.io/stable/"

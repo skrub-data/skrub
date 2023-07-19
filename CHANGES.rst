@@ -34,6 +34,10 @@ Major changes
   and :func:`fetch_ken_types` have been renamed.
   :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+* Make `pyarrow` an optional dependencies to facilitate the integration
+  with `pyodide`.
+  :pr:`639` by :user:`Guillaume Lemaitre <glemaitre>`.
+
 * Bumped minimal required Python version to 3.10. :pr:`606` by
   :user:`Gael Varoquaux <GaelVaroquaux>`
 
@@ -81,6 +85,13 @@ Minor changes
 
 * Moved the default storage location of data to the user's home folder.
   :pr:`652` by :user:`Felix Lefebvre <flefebv>`
+
+* Fixed bug when using :class:`TableVectorizer`'s `transform` method on
+  categorical columns with missing values.
+  :pr:`644` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* :class:`TableVectorizer` never output a sparse matrix by default. This can be changed by
+  increasing the `sparse_threshold` parameter. :pr:`646` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Before skrub: dirty_cat
 ========================

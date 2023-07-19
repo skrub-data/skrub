@@ -191,3 +191,29 @@ merging the PR.
 
 Once again, remember that maintainers are **volunteers** and therefore
 cannot guarantee how much time it will take to review the changes.
+
+Continuous Integration (CI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Github Actions are used for various tasks including testing skrub on Linux, Mac
+  and Windows, with different dependencies and settings.
+
+* CircleCI is used to build the documentation.
+
+If any of the following markers appears in the commit message, the following
+actions are taken.
+
+    ====================== ===================
+    Commit Message Marker  Action Taken by CI
+    ---------------------- -------------------
+    [ci skip]              CI is skipped completely
+    [skip ci]              CI is skipped completely
+    [skip github]          CI is skipped completely
+    [deps nightly]         CI is run with the nightly builds of dependencies
+    [doc skip]             Docs are not built
+    [doc quick]            Docs built, but excludes example gallery plots
+    [doc build]            Docs built including example gallery plots (longer)
+    ====================== ===================
+
+Note that by default the documentation is built, but only the examples that are
+directly modified by the pull request are executed.
