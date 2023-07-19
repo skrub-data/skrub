@@ -474,15 +474,33 @@ class TableVectorizer(ColumnTransformer):
 
         if self.column_specific_transformers is None:
             self.column_specific_transformers_ = []
+        elif len(self.column_specific_transformers) == 0:
+            pass
         else:
-            if len(self.column_specific_transformers[0]) == 2:
+            # Check all tuples are the same length
+            first_item_length = len(self.column_specific_transformers[0])
+            for i, tup in enumerate(self.column_specific_transformers):
+                if len(tup) != first_item_length:
+                    raise TypeError(
+                        "Expected `specific_transformers` to be a list of "
+                        "tuples of all the same lengths, got length "
+                        f"{len(tup)} at index {i} (compared to index 0, "
+                        f"which has length {first_item_length}). "
+                    )
+            if first_item_length == 2:
                 # Unnamed assignments, transform to named
                 named_column_specific_transformers = _get_transformer_list(
                     self.column_specific_transformers
                 )
-            elif len(self.column_specific_transformers[0]) == 3:
+            elif first_item_length == 3:
                 # Named assignments
                 named_column_specific_transformers = self.column_specific_transformers
+            else:
+                raise TypeError(
+                    "Expected `specific_transformers` to be a list of tuples "
+                    "of length 2 or 3, got a list of tuples of length "
+                    f"{first_item_length}. "
+                )
 
             self.column_specific_transformers_ = [
                 (name, clone(transformer), cols)
