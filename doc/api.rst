@@ -1,17 +1,28 @@
-API
-===
+#############
+API reference
+#############
 
-This page lists all available functions and classes of skrub
+.. raw:: html
+
+  <style type="text/css">
+  article section h2 {
+    margin-top: 4ex;
+  }
+  </style>
+
+This page lists all available functions and classes of `skrub`.
 
 .. currentmodule:: skrub
 
-Joining tables
---------------
+.. raw:: html
+
+   <h2>Joining tables</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: function.rst
    :nosignatures:
+   :caption: Joining tables
 
    fuzzy_join
 
@@ -22,58 +33,66 @@ Joining tables
 
    FeatureAugmenter
 
+.. raw:: html
 
-Vectorizing a dataframe
------------------------
+   <h2>Vectorizing a dataframe</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
    :nosignatures:
+   :caption: Vectorizing a dataframe
 
    TableVectorizer
 
-Dirty category encoders
------------------------
+.. raw:: html
+
+   <h2>Dirty category encoders</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
    :nosignatures:
+   :caption: Dirty category encoders
 
    GapEncoder
    MinHashEncoder
    SimilarityEncoder
    TargetEncoder
 
-Other encoders
---------------
+.. raw:: html
+
+   <h2>Other encoders</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
    :nosignatures:
+   :caption: Other encoders
 
    DatetimeEncoder
 
-Deduplication: merging variants of the same entry
--------------------------------------------------
+.. raw:: html
+
+   <h2>Deduplication: merging variants of the same entry</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: function.rst
    :nosignatures:
+   :caption: Deduplication: merging variants of the same entry
 
    deduplicate
 
+.. raw:: html
 
-Data download and generation
-----------------------------
+   <h2>Data download and generation</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: function.rst
    :nosignatures:
+   :caption: Data download and generation
 
    datasets.fetch_employee_salaries
    datasets.fetch_medical_charge
