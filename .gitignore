@@ -65,3 +65,6 @@ doc/CONTRIBUTING.rst
 
 # Pkl files for benchmarks
 benchmarks/*.pkl
+
+# Default JupyterLite content
+jupyterlite_contents
