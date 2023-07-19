@@ -28,6 +28,8 @@ def get_data_home(data_home: Path | None = None) -> Path:
     """
     if data_home is None:
         data_home = Path("~") / "skrub_data"
+    elif isinstance(data_home, str):
+        data_home = Path(data_home)
     data_home.mkdir(parents=True, exist_ok=True)
     return data_home
 
