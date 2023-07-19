@@ -9,6 +9,7 @@ Date: June 2023
 """
 
 import math
+from pathlib import Path
 from utils import default_parser, find_result, monitor
 from utils.join import evaluate, fetch_big_data
 from argparse import ArgumentParser
@@ -526,8 +527,12 @@ def benchmark(
     dataset_name: str,
     analyzer: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
+    data_home: Path = None,
+    data_directory: str = "benchmarks_data",
 ):
-    left_table, right_table, gt = fetch_big_data(dataset_name)
+    left_table, right_table, gt = fetch_big_data(
+        dataset_name=dataset_name, data_home=data_home, data_directory=data_directory
+    )
 
     start_time = perf_counter()
     joined_fj = fuzzy_join(

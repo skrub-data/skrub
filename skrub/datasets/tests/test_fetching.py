@@ -32,7 +32,7 @@ def test_openml_fetching(fetch_openml_mock: mock.Mock):
     with TemporaryDirectory() as temp_dir:
         # Download the dataset without loading it in memory.
         dataset = _fetching.fetch_midwest_survey(
-            directory=temp_dir,
+            data_home=temp_dir,
             load_dataframe=False,
         )
         fetch_openml_mock.assert_called_once()
@@ -51,7 +51,7 @@ def test_openml_fetching(fetch_openml_mock: mock.Mock):
         assert str(_fetching.MIDWEST_SURVEY_ID) in dataset.source
         # Now, load it into memory, and expect `fetch_openml`
         # to not be called because the dataset is already on disk.
-        dataset = _fetching.fetch_midwest_survey(directory=temp_dir)
+        dataset = _fetching.fetch_midwest_survey(data_home=temp_dir)
         fetch_openml_mock.assert_not_called()
         fetch_openml_mock.reset_mock()
         assert dataset.X.shape == (2494, 28)
@@ -95,7 +95,7 @@ def test_openml_datasets_calls(fetch_openml_mock: mock.Mock):
             (_fetching.fetch_drug_directory, _fetching.DRUG_DIRECTORY_ID),
         ]:
             try:
-                fetching_function(directory=temp_dir)
+                fetching_function(data_home=temp_dir)
             except FileNotFoundError:
                 pass
             fetch_openml_mock.assert_called_once()
@@ -120,17 +120,17 @@ def test_fetch_world_bank_indicator():
             # First, we want to purposefully test FileNotFoundError exceptions.
             with pytest.raises(FileNotFoundError):
                 assert _fetching.fetch_world_bank_indicator(
-                    indicator_id=0, directory=temp_dir
+                    indicator_id=0, data_home=temp_dir
                 )
                 assert _fetching.fetch_world_bank_indicator(
                     indicator_id=2**32,
-                    directory=temp_dir,
+                    data_home=temp_dir,
                 )
 
             # Valid call
             returned_info = _fetching.fetch_world_bank_indicator(
                 indicator_id=test_dataset["id"],
-                directory=temp_dir,
+                data_home=temp_dir,
             )
 
         except (ConnectionError, URLError):
@@ -156,7 +156,7 @@ def test_fetch_world_bank_indicator():
             # Same valid call as above
             disk_loaded_info = _fetching.fetch_world_bank_indicator(
                 indicator_id=test_dataset["id"],
-                directory=temp_dir,
+                data_home=temp_dir,
             )
             mock_urlretrieve.assert_not_called()
             assert disk_loaded_info == returned_info
