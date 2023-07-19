@@ -24,7 +24,7 @@ def get_data_home(data_home: Path | None = None) -> Path:
     Returns
     -------
     data_home: str or path-like, default=None
-        The path to skrub data directory.
+        The validated path to the skrub data directory.
     """
     if data_home is None:
         data_home = Path("~") / "skrub_data"
