@@ -7,6 +7,8 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
+from numpy.typing import NDArray
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -17,10 +19,10 @@ from sklearn.metrics import silhouette_score
 
 
 def compute_ngram_distance(
-    unique_words: Sequence[str] | np.ndarray,
+    unique_words: Sequence[str] | NDArray,
     ngram_range: tuple[int, int] = (2, 4),
     analyzer: str = "char_wb",
-) -> np.ndarray:
+) -> NDArray:
     """Compute the condensed pair-wise n-gram distance between `unique_words`.
 
     Parameters
@@ -54,15 +56,23 @@ def compute_ngram_distance(
     return distance_mat
 
 
-def _guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
+def _get_silhouette_avg(Z: NDArray, n_clust: int, redundant_dist: NDArray) -> float:
+    labels = fcluster(Z, n_clust, criterion="maxclust")
+    silhouette_avg = silhouette_score(redundant_dist, labels, metric="precomputed")
+    return silhouette_avg
+
+
+def _guess_clusters(
+    Z: NDArray, distance_mat: NDArray, n_jobs: int | None = None
+) -> int:
     """Finds the number of clusters that maximize the silhouette score
     when clustering `distance_mat`.
 
     Parameters
     ----------
-    Z : np.ndarray
+    Z : numpy ndarray
         hierarchical linkage matrix, specifies which clusters to merge.
-    distance_mat : np.ndarray
+    distance_mat : numpy ndarray
         distance matrix either in square or condensed form.
 
     Returns
@@ -74,17 +84,16 @@ def _guess_clusters(Z: np.ndarray, distance_mat: np.ndarray) -> int:
     n_clusters = np.arange(2, max_clusters)
     # silhouette score needs a redundant distance matrix
     redundant_dist = squareform(distance_mat)
-    silhouette_scores = []
-    for n_clust in n_clusters:
-        labels = fcluster(Z, n_clust, criterion="maxclust")
-        silhouette_avg = silhouette_score(redundant_dist, labels, metric="precomputed")
-        silhouette_scores.append(silhouette_avg)
+    silhouette_scores = Parallel(n_jobs=n_jobs, prefer="processes")(
+        delayed(_get_silhouette_avg)(Z, n_clust, redundant_dist)
+        for n_clust in n_clusters
+    )
     return n_clusters[np.argmax(silhouette_scores)]
 
 
 def _create_spelling_correction(
-    unique_words: Sequence[str] | np.ndarray,
-    counts: Sequence[int] | np.ndarray,
+    unique_words: Sequence[str] | NDArray[np.str_],
+    counts: Sequence[int] | NDArray[np.int_],
     clusters: Sequence[int],
 ) -> pd.Series:
     """
@@ -134,6 +143,7 @@ def deduplicate(
     method: Literal[
         "single", "complete", "average", "centroid", "median", "ward"
     ] = "average",
+    n_jobs: int | None = None,
 ) -> list[str]:
     """Deduplicate categorical data by hierarchically clustering similar strings.
 
@@ -163,6 +173,8 @@ def deduplicate(
         :func:`scipy.cluster.hierarchy.linkage`.
         Option `average` calculates the distance between two clusters as the
         average distance between data points in the first and second cluster.
+    n_jobs : int, optional
+        The number of jobs to run in parallel.
 
     Returns
     -------
@@ -233,7 +245,7 @@ def deduplicate(
 
     Z = linkage(distance_mat, method=method, optimal_ordering=True)
     if n_clusters is None:
-        n_clusters = _guess_clusters(Z, distance_mat)
+        n_clusters = _guess_clusters(Z, distance_mat, n_jobs)
     clusters = fcluster(Z, n_clusters, criterion="maxclust")
 
     translation_table = _create_spelling_correction(unique_words, counts, clusters)

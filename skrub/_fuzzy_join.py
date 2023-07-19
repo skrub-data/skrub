@@ -9,6 +9,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike, NDArray
 from scipy.sparse import csr_matrix, hstack, vstack
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -27,7 +28,7 @@ def _numeric_encoding(
     main_cols: str | list[str],
     aux: pd.DataFrame,
     aux_cols: str | list[str],
-) -> tuple:
+) -> tuple[ArrayLike, ArrayLike]:
     """Encoding numerical columns.
 
     Parameters
@@ -63,7 +64,7 @@ def _time_encoding(
     main_cols: str | list[str],
     aux: pd.DataFrame,
     aux_cols: str | list[str],
-) -> tuple:
+) -> tuple[ArrayLike, ArrayLike]:
     """Encoding datetime columns.
 
     Parameters
@@ -104,7 +105,7 @@ def _string_encoding(
     analyzer: Literal["word", "char", "char_wb"],
     ngram_range: tuple[int, int],
     encoder: _VectorizerMixin = None,
-) -> tuple:
+) -> tuple[ArrayLike, ArrayLike]:
     """Encoding string columns.
 
     Parameters
@@ -161,7 +162,9 @@ def _string_encoding(
     return main_enc, aux_enc
 
 
-def _nearest_matches(main_array, aux_array) -> tuple[np.ndarray, np.ndarray]:
+def _nearest_matches(
+    main_array: ArrayLike, aux_array: ArrayLike
+) -> tuple[NDArray, NDArray]:
     """Find the closest matches using the nearest neighbors method.
 
     Parameters
