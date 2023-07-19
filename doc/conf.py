@@ -339,18 +339,18 @@ def notebook_modification_function(notebook_content, notebook_filename):
     if "06_ken_embeddings_example" in notebook_filename:
         message_class = "danger"
         message = (
-            "This example requires PyArrow that is not currently available in Pyodide: "
-            "https://github.com/pyodide/pyodide/issues/2933. Thus, this example cannot "
+            "This example requires PyArrow, which is currently unavailable in Pyodide "
+            "(see https://github.com/pyodide/pyodide/issues/2933). Thus, this example cannot "
             "be run in JupyterLite."
         )
     else:
         message_class = "warning"
         message = (
             "Running the skrub examples in JupyterLite is experimental and you may"
-            " encounter some unexpected behavior.\n\nThe main difference is that "
-            " imports will take a lot longer than usual, for example the first "
-            " `import skrub` can take roughly 10-20s.\n\nIf you notice problems, feel "
-            " free to open an "
+            "encounter some unexpected behavior.\n\n"
+            "The main difference is that imports will take a lot longer than usual, "
+            "for example the first `import skrub` can take roughly 10-20s.\n\n"
+            "If you notice problems, feel free to open an "
             "[issue](https://github.com/skrub-data/skrub/issues/new/choose) about it."
         )
 
