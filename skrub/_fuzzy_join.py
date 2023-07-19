@@ -33,11 +33,11 @@ def _numeric_encoding(
 
     Parameters
     ----------
-    main : :obj:`~pandas.DataFrame`
+    main : DataFrame
         A table with numerical columns.
     main_cols : str or list
         The columns of the main table.
-    aux : :obj:`~pandas.DataFrame`
+    aux : DataFrame
         Another table with numerical columns.
     aux_cols : str or list
         The columns of the aux table.
@@ -110,11 +110,11 @@ def _string_encoding(
 
     Parameters
     ----------
-    main : :obj:`~pandas.DataFrame`
+    main : DataFrame
         A table with string columns.
     main_cols : str or list
         The columns of the main table.
-    aux : :obj:`~pandas.DataFrame`
+    aux : DataFrame
         Another table with string columns.
     aux_cols : str or list
         The columns of the aux table.
@@ -176,9 +176,9 @@ def _nearest_matches(
 
     Returns
     -------
-    :obj:`~numpy.ndarray`
+    ndarray
         Index of the closest matches of the main table in the aux table.
-    :obj:`~numpy.ndarray`
+    ndarray
         Distance between the closest matches, on a scale between 0 and 1.
     """
     # Find nearest neighbor using KNN :
@@ -228,12 +228,12 @@ def fuzzy_join(
 
     Parameters
     ----------
-    left : :obj:`~pandas.DataFrame`
+    left : DataFrame
         A table to merge.
-    right : :obj:`~pandas.DataFrame`
+    right : DataFrame
         A table used to merge with.
     how : {'left', 'right'}, default='left'
-        Type of merge to be performed. Note that unlike :func:`pandas.merge`,
+        Type of merge to be performed. Note that unlike pandas.merge,
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
@@ -248,12 +248,11 @@ def fuzzy_join(
         and `right_on` parameters are not specified.
     encoder : vectorizer instance, optional
         Encoder parameter for the Vectorizer.
-        By default, uses a :obj:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        By default, uses a HashingVectorizer.
         It is possible to pass a vectorizer instance inheriting
-        :class:`~sklearn.feature_extraction.text._VectorizerMixin`
-        to tweak the parameters of the encoder.
+        _VectorizerMixin to tweak the parameters of the encoder.
     analyzer : {'word', 'char', 'char_wb'}, default='char_wb'
-        Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
+        Analyzer parameter for the HashingVectorizer
         passed to the encoder and used for the string similarities.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character n-gram counts.
@@ -276,7 +275,7 @@ def fuzzy_join(
     drop_unmatched : bool, default=False
         Remove categories for which a match was not found in the two tables.
     sort : bool, default=False
-        Sort the join keys lexicographically in the resulting :obj:`~pandas.DataFrame`.
+        Sort the join keys lexicographically in the resulting DataFrame.
         If False, the order of the join keys depends on the join type
         (`how` keyword).
     suffixes : 2-tuple of str, default=('_x', '_y')
@@ -285,25 +284,25 @@ def fuzzy_join(
 
     Returns
     -------
-    df_joined : :obj:`~pandas.DataFrame`
-        The joined table returned as a :obj:`~pandas.DataFrame`.
+    df_joined : DataFrame
+        The joined table returned as a DataFrame.
         If `return_score=True`, another column will be added
         to the DataFrame containing the matching scores.
 
     See Also
     --------
-    :class:`skrub.FeatureAugmenter`
+    FeatureAugmenter
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 
     Notes
     -----
     For regular joins, the output of fuzzy_join is identical
-    to :func:`pandas.merge`, except that both key columns are returned.
+    to pandas.merge, except that both key columns are returned.
 
     Joining on indexes and multiple columns is not supported.
 
-    When `return_score=True`, the returned :obj:`~pandas.DataFrame` gives
+    When `return_score=True`, the returned DataFrame gives
     the distances between the closest matches in a [0, 1] interval.
     0 corresponds to no matching n-grams, while 1 is a
     perfect match.

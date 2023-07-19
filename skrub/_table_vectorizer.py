@@ -32,7 +32,7 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | Non
 
     Parameters
     ----------
-    date_column : :obj:`~pandas.Series`
+    date_column : Series
         A column of dates, as strings.
     n_trials : int, default=100
         Number of rows to use to infer the date format.
@@ -152,11 +152,10 @@ class TableVectorizer(ColumnTransformer):
     """Automatically transform a heterogeneous dataframe to a numerical array.
 
     Easily transforms a heterogeneous data table
-    (such as a :obj:`~pandas.DataFrame`) to a numerical array for machine
+    (such as a DataFrame) to a numerical array for machine
     learning. For this it transforms each column depending on its data type.
-    It provides a simplified interface for the
-    :class:`~sklearn.compose.ColumnTransformer`; more documentation of
-    attributes and functions are available in its doc.
+    It provides a simplified interface for the ColumnTransformer ;
+    more documentation of attributes and functions are available in its doc.
 
     .. versionadded:: 0.2.0
 
@@ -175,14 +174,13 @@ class TableVectorizer(ColumnTransformer):
     low_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance
-        (e.g. :class:`~sklearn.preprocessing.OneHotEncoder`),
-        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance (e.g. OneHotEncoder),
+        a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or `None` to use the default transformer
-        (:class:`~sklearn.preprocessing.OneHotEncoder(handle_unknown="ignore", drop="if_binary")`).
+        (OneHotEncoder(handle_unknown="ignore", drop="if_binary")).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -190,21 +188,18 @@ class TableVectorizer(ColumnTransformer):
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
-        (e.g. :class:`~skrub.GapEncoder`),
-        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
+        (e.g. GapEncoder), a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer
-        (:class:`~skrub.GapEncoder(n_components=30)`).
+        or `None` to use the default transformer (GapEncoder(n_components=30)).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
     numerical_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on numerical features.
-        Can either be a transformer object instance
-        (e.g. :class:`~sklearn.preprocessing.StandardScaler`),
-        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance (e.g. StandardScaler),
+        a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
@@ -214,13 +209,12 @@ class TableVectorizer(ColumnTransformer):
 
     datetime_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on datetime features.
-        Can either be a transformer object instance
-        (e.g. :class:`~skrub.DatetimeEncoder`),
-        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance (e.g. DatetimeEncoder),
+        a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (:class:`~skrub.DatetimeEncoder()`).
+        or `None` to use the default transformer (DatetimeEncoder()).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -264,7 +258,7 @@ class TableVectorizer(ColumnTransformer):
     n_jobs : int, optional
         Number of jobs to run in parallel.
         ``None`` (the default) means 1 unless in a
-        :obj:`joblib.parallel_backend` context.
+        joblib.parallel_backend context.
         ``-1`` means using all processors.
 
     transformer_weights : dict, optional
@@ -290,7 +284,7 @@ class TableVectorizer(ColumnTransformer):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    columns_ : :obj:`~pandas.Index`
+    columns_ : pandas.Index
         The fitted array's columns. They are applied to the data passed
         to the `transform` method.
 
@@ -304,30 +298,27 @@ class TableVectorizer(ColumnTransformer):
 
     See Also
     --------
-    :class:`skrub.GapEncoder` :
+    GapEncoder :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`skrub.MinHashEncoder` :
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder` :
+    SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Notes
     -----
     The column order of the input data is not guaranteed to be the same
-    as the output data (returned by :func:`~TableVectorizer.transform`).
-    This is a due to the way the :class:`~sklearn.compose.ColumnTransformer`
-    works.
+    as the output data (returned by TableVectorizer.transform).
+    This is a due to the way the ColumnTransformer works.
     However, the output column order will always be the same for different
-    calls to :func:`~TableVectorizer.transform` on a same fitted
-    :class:`TableVectorizer` instance.
+    calls to TableVectorizer.transform on a same fitted TableVectorizer instance.
     For example, if input data has columns ['name', 'job', 'year'], then output
     columns might be shuffled, e.g. ['job', 'year', 'name'], but every call
-    to :func:`~TableVectorizer.transform` on this instance will return this
-    order.
+    to TableVectorizer.transform on this instance will return this order.
 
     Examples
     --------
-    Fit a :class:`TableVectorizer` on an example dataset:
+    Fit a TableVectorizer on an example dataset:
 
     >>> from skrub.datasets import fetch_employee_salaries
     >>> ds = fetch_employee_salaries()
@@ -408,7 +399,7 @@ class TableVectorizer(ColumnTransformer):
         We clone the instances to avoid altering them.
         See the clone function docstring.
         Note: typos are not detected here, they are left in and are detected
-        down the line in :func:`~sklearn.compose.ColumnTransformer.fit_transform`.
+        down the line in ColumnTransformer.fit_transform.
         """
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
@@ -458,13 +449,13 @@ class TableVectorizer(ColumnTransformer):
 
         Parameters
         ----------
-        X : :obj:`~pandas.DataFrame` of shape (n_samples, n_features)
+        X : DataFrame of shape (n_samples, n_features)
             The data to be transformed.
 
         Returns
         -------
-        :obj:`~pandas.DataFrame`
-            The same :obj:`~pandas.DataFrame`, with its columns cast to their
+        DataFrame
+            The same DataFrame, with its columns cast to their
             best possible data type.
         """
         # Handle missing values
@@ -572,7 +563,7 @@ class TableVectorizer(ColumnTransformer):
 
         In practice, it (1) converts features to their best possible types
         if `auto_cast=True`, (2) classify columns based on their data type,
-        (3) replaces "false missing" (see :func:`_replace_false_missing`),
+        (3) replaces "false missing" (see _replace_false_missing),
         and imputes categorical columns depending on `impute_missing`, and
         finally, transforms `X`.
 
@@ -620,8 +611,10 @@ class TableVectorizer(ColumnTransformer):
         # It is checked by comparing the number of unique values
         # to the length of the column names
         if len(set(X.columns)) != len(X.columns):
-            raise AssertionError("Duplicate column names in the dataframe."
-                                 f"The column names are {X.columns}")
+            raise AssertionError(
+                "Duplicate column names in the dataframe."
+                f"The column names are {X.columns}"
+            )
         ###
 
         # If auto_cast is True, we'll find and apply the best possible type
@@ -743,8 +736,7 @@ class TableVectorizer(ColumnTransformer):
         """Return clean feature names.
 
         Feature names are formatted like:
-        "<column_name>_<value>" if encoded by
-        :class:`~sklearn.preprocessing.OneHotEncoder` or alike,
+        "<column_name>_<value>" if encoded by OneHotEncoder or alike,
         (e.g. "job_title_Police officer"), or "<column_name>" otherwise.
 
         Parameters
