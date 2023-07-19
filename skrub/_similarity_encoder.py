@@ -351,7 +351,7 @@ class SimilarityEncoder(OneHotEncoder):
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
-        self.n_features_in_ = n_features
+        self._check_n_features(X, reset=True)
 
         if self.handle_unknown not in ["error", "ignore"]:
             raise ValueError(
@@ -469,6 +469,7 @@ class SimilarityEncoder(OneHotEncoder):
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
+        self._check_n_features(X, reset=False)
 
         for i in range(n_features):
             Xi = Xlist[i]
@@ -484,7 +485,7 @@ class SimilarityEncoder(OneHotEncoder):
         min_n, max_n = self.ngram_range
 
         total_length = sum(len(x) for x in self.categories_)
-        out = np.empty((len(X), total_length), dtype=self.dtype)
+        out = np.empty((n_samples, total_length), dtype=self.dtype)
         last = 0
         for j, categories in enumerate(self.categories_):
             if fast:
@@ -566,4 +567,14 @@ class SimilarityEncoder(OneHotEncoder):
         return np.nan_to_num(out, copy=False)
 
     def _more_tags(self):
-        return {"X_types": ["categorical"]}
+        return {
+            "X_types": ["2darray", "categorical", "string"],
+            "preserves_dtype": [],
+            "allow_nan": True,
+            "_xfail_checks": {
+                "check_estimator_sparse_data": (
+                    "Cannot create sparse matrix with strings."
+                ),
+                "check_estimators_dtypes": "We only support string dtypes.",
+            },
+        }

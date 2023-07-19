@@ -65,7 +65,7 @@ def _tested_estimators():
         # FeatureAugmenter,
         GapEncoder,
         MinHashEncoder,
-        # SimilarityEncoder,
+        SimilarityEncoder,
         # TableVectorizer,
         # TargetEncoder,
     ]:
