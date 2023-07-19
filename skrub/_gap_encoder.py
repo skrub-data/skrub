@@ -1,6 +1,7 @@
 """
 Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
+from __future__ import annotations
 
 from collections.abc import Generator
 from copy import deepcopy

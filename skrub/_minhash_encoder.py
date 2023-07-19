@@ -2,6 +2,7 @@
 Implements the MinHashEncoder, which encodes string categorical features by
 applying the MinHash method to n-gram decompositions of strings.
 """
+from __future__ import annotations
 
 from collections.abc import Callable, Collection
 from typing import Literal
