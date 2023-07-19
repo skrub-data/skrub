@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def get_data_home(data_home: Path | None = None) -> Path:
+def get_data_home(data_home: Path | str | None = None) -> Path:
     """Returns the path of the skrub data directory.
 
     This folder is used by some large dataset loaders to avoid downloading the
