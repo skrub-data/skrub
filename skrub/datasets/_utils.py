@@ -43,11 +43,11 @@ def get_data_dir(name: str | None = None, data_home: Path | str | None = None) -
 
     Parameters
     ----------
-    data_home : Path, default=None
-        The path to skrub data directory. If `None`, the default path
-        is `~/skrub_data`.
     name: str, optional
         Subdirectory name. If omitted, the root data directory is returned.
+    data_home : pathlib.Path or str, optional
+        The path to skrub data directory. If `None`, the default path
+        is `~/skrub_data`.
     """
     data_home = get_data_home(data_home)
     data_dir = data_home.resolve()
