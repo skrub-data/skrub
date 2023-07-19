@@ -222,7 +222,7 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    column_specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
+    specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
         On top of the default column type classification (see parameters above),
         this parameter allows you to manually specify transformers for
         specific columns.
@@ -384,7 +384,7 @@ class TableVectorizer(ColumnTransformer):
         high_card_cat_transformer: Transformer | None = None,
         numerical_transformer: Transformer | None = None,
         datetime_transformer: Transformer | None = None,
-        column_specific_transformers: list[
+        specific_transformers: list[
             tuple[Transformer, list[str | int]]
             | tuple[str, Transformer, list[str, int]]
         ]
@@ -405,7 +405,7 @@ class TableVectorizer(ColumnTransformer):
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
         self.datetime_transformer = datetime_transformer
-        self.column_specific_transformers = column_specific_transformers
+        self.column_specific_transformers = specific_transformers
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
 

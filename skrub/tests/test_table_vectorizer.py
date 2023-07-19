@@ -599,7 +599,7 @@ def test__infer_date_format() -> None:
 
 
 @pytest.mark.parametrize(
-    "column_specific_transformers",
+    "specific_transformers",
     [
         (MinHashEncoder(), ["str1", "str2"]),
         (StandardScaler(), ["float"]),
@@ -610,7 +610,7 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
     X = _get_dirty_dataframe()
 
     tv = TableVectorizer(
-        column_specific_transformers=[column_specific_transformers],
+        specific_transformers=[column_specific_transformers],
     )
     X_enc_tv = tv.fit_transform(X)
 
@@ -671,7 +671,7 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
     [
         TableVectorizer(),
         TableVectorizer(
-            column_specific_transformers=[
+            specific_transformers=[
                 (MinHashEncoder(), ["cat1", "cat2"]),
             ],
         ),
