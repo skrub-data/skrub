@@ -558,6 +558,8 @@ class TableVectorizer(ColumnTransformer):
             if isinstance(dtype, pd.CategoricalDtype):
                 known_categories = dtype.categories
                 new_categories = pd.unique(X[col])
+                # remove nan from new_categories
+                new_categories = new_categories[~pd.isnull(new_categories)]
                 dtype = pd.CategoricalDtype(
                     categories=known_categories.union(new_categories)
                 )
@@ -612,6 +614,15 @@ class TableVectorizer(ColumnTransformer):
         # as we might have some false missing
         # in numerical columns for instance.
         X = _replace_false_missing(X)
+
+        ###
+        # We need to check for duplicate column names.
+        # It is checked by comparing the number of unique values
+        # to the length of the column names
+        if len(set(X.columns)) != len(X.columns):
+            raise AssertionError("Duplicate column names in the dataframe."
+                                 f"The column names are {X.columns}")
+        ###
 
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
