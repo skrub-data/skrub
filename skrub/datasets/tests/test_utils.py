@@ -6,8 +6,8 @@ from skrub.datasets._utils import get_data_dir, get_data_home
 
 
 def test_get_data_dir():
-    """
-    Tests function ``get_data_dir()``.
+    """Check the behaviour of `get_data_dir` when passing the path to
+    an already existing folder.
     """
     with tempfile.TemporaryDirectory() as tmpdirname:
         tmpdirpath = Path(tmpdirname)
