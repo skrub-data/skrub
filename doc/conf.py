@@ -337,7 +337,7 @@ def notebook_modification_function(notebook_content, notebook_filename):
     )
 
     if "06_ken_embeddings_example" in notebook_filename:
-        message_class = "error"
+        message_class = "danger"
         message = (
             "This example requires PyArrow that is not currently available in Pyodide: "
             "https://github.com/pyodide/pyodide/issues/2933. Thus, this example cannot "
