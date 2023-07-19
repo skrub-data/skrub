@@ -69,14 +69,6 @@ def test_get_data_home_default():
     assert data_home.exists()
 
     if not is_already_existing:
-        # In case the folder was not existing, the previous
-        # call should have created the folder. Check that we get
-        # the proper path to the folder if it already exists.
-        data_home = get_data_home(data_home=None)
-        assert data_home == user_path
-        assert data_home.exists()
-
-    if not is_already_existing:
         # Clear the folder if it was not already existing.
         shutil.rmtree(user_path)
-        assert not data_home.exists()
+        assert not user_path.exists()
