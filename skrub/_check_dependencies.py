@@ -18,12 +18,12 @@ def check_dependencies():
             installed_dep = version(req.name)
             if not req.specifier.contains(installed_dep):
                 raise ImportError(
-                    f"{package_name} {package_version} requires {str(req)} "
-                    f"but you have {req.name}={installed_dep}, which is not compatible."
+                    f"{package_name} {package_version} requires {req!s} "
+                    f"but you have {req.name} {installed_dep} installed, which is incompatible."
                 )
 
         except PackageNotFoundError:
             raise ImportError(
-                f"{package_name} {package_version} requires {str(req)}, "
-                "which you don't have."
+                f"{package_name} {package_version} requires {req!s}, "
+                "which you don't have installed."
             )
