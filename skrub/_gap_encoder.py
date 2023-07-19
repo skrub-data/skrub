@@ -33,7 +33,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`~skrub.GapEncoder`
+    GapEncoder
         For more information.
     """
 
@@ -211,8 +211,8 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`GapEncoderColumn`
-            The fitted :class:`GapEncoderColumn` instance (self).
+        GapEncoderColumn
+            The fitted GapEncoderColumn instance (self).
         """
         # Copy parameter rho
         self.rho_ = self.rho
@@ -448,7 +448,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape (n_samples, n_topics)
+        ndarray, shape (n_samples, n_topics)
             Transformed input.
         """
         check_is_fitted(self, "H_dict_")
@@ -493,8 +493,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     categories estimated from the data. The latent categories are built by
     capturing combinations of substrings that frequently co-occur.
 
-    The :class:`~skrub.GapEncoder` supports online learning on batches of
-    data for scalability through the :func:`~skrub.GapEncoder.partial_fit`
+    The GapEncoder supports online learning on batches of
+    data for scalability through the GapEncoder.partial_fit
     method.
 
     The principle is as follows:
@@ -528,22 +528,19 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         If `True`, use ``rho ** (batch_size / len(X))`` instead of rho to obtain
         an update rate per iteration that is independent of the batch size.
     hashing : bool, optional, default=False
-        If `True`, :class:`~sklearn.feature_extraction.text.HashingVectorizer`
-        is used instead of :class:`~sklearn.feature_extraction.text.CountVectorizer`.
+        If `True`, HashingVectorizer is used instead of CountVectorizer.
         It has the advantage of being very low memory, scalable to large
         datasets as there is no need to store a vocabulary dictionary in
         memory.
     hashing_n_features : int, default=2**12
-        Number of features for the
-        :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        Number of features for the HashingVectorizer.
         Only relevant if `hashing=True`.
     init : {'k-means++', 'random', 'k-means'}, default='k-means++'
         Initialization method of the `W` matrix.
-        If `init='k-means++'`, we use the init method of
-        :class:`~sklearn.cluster.KMeans`.
+        If `init='k-means++'`, we use the init method of KMeans.
         If `init='random'`, topics are initialized with a Gamma distribution.
-        If `init='k-means'`, topics are initialized with a
-        :class:`~sklearn.cluster.KMeans` on the n-grams counts.
+        If `init='k-means'`, topics are initialized with a KMeans on the
+        n-grams counts.
     tol : float, default=1e-4
         Tolerance for the convergence of the matrix `W`.
     min_iter : int, default=2
@@ -555,9 +552,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default='char'
-        Analyzer parameter for the
-        :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
-        / :obj:`~sklearn.feature_extraction.text.CountVectorizer`.
+        Analyzer parameter for the HashingVectorizer / CountVectorizer.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character-level n-gram counts.
         Option ‘char_wb’ creates character n-grams only from text inside word
@@ -565,7 +560,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     add_words : bool, default=False
         If `True`, add the words counts to the bag-of-n-grams representation
         of the input data.
-    random_state : int or :obj:`~numpy.random.RandomState`, optional
+    random_state : int or RandomState, optional
         Random number generator seed for reproducible output across multiple
         function calls.
     rescale_W : bool, default=True
@@ -575,9 +570,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Maximum number of iterations to adjust the activations h at each step.
     handle_missing : {'error', 'empty_impute'}, default='empty_impute'
         Whether to raise an error or impute with empty string ('') if missing
-        values (NaN) are present during :func:`~GapEncoder.fit`
-        (default is to impute).
-        In :func:`~GapEncoder.inverse_transform`, the missing categories will
+        values (NaN) are present during GapEncoder.fit (default is to impute).
+        In GapEncoder.inverse_transform, the missing categories will
         be denoted as `None`.
     n_jobs : int, optional
         The number of jobs to run in parallel.
@@ -591,18 +585,18 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     ----------
     rho_ : float
         Effective update rate for the `W` matrix.
-    fitted_models_ : list of :obj:`GapEncoderColumn`
+    fitted_models_ : list of GapEncoderColumn
         Column-wise fitted GapEncoders.
     column_names_ : list of str
         Column names of the data the Gap was fitted on.
 
     See Also
     --------
-    :class:`skrub.MinHashEncoder`
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder`
+    SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
-    :class:`skrub.deduplicate`
+    deduplicate :
         Deduplicate data by hierarchically clustering similar strings.
 
     References
@@ -623,7 +617,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     >>> enc.fit(X)
     GapEncoder(n_components=2)
 
-    The :class:`~skrub.GapEncoder` has found the following two topics:
+    The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names_out()
     ['england, london, uk', 'france, paris, pqris']
@@ -760,8 +754,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~skrub.GapEncoder`
-            The fitted :class:`~skrub.GapEncoder` instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
 
         # Check that n_samples >= n_components
@@ -801,7 +795,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape (n_samples, n_topics * n_features)
+        ndarray, shape (n_samples, n_topics * n_features)
             Transformed input.
         """
         check_is_fitted(self, "fitted_models_")
@@ -829,8 +823,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~skrub.GapEncoder`
-            The fitted :class:`~skrub.GapEncoder` instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
 
         # If X is a dataframe, store its column names
