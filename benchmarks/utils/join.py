@@ -4,7 +4,7 @@ from skrub.datasets._utils import get_data_dir
 
 
 def get_local_data(
-    dataset_name: str, data_home: Path | str = None, data_directory: str = None
+    dataset_name: str, data_home: Path | str | None = None, data_directory: str | None = None
 ):
     """Get the path to the local datasets."""
     data_directory = get_data_dir(data_directory, data_home)
@@ -24,8 +24,8 @@ def get_local_data(
 def fetch_data(
     dataset_name: str,
     save: bool = True,
-    data_home: Path | str = None,
-    data_directory: str = None,
+    data_home: Path | str | None = None,
+    data_directory: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Fetch datasets from https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark
 
@@ -41,7 +41,7 @@ def fetch_data(
         The path to the root data directory.
         By default, will point to the skrub data directory.
 
-    data_directory: str, default=None
+    data_directory: str, optional
         The name of the subdirectory in which data is stored.
 
     Returns
@@ -83,8 +83,8 @@ def fetch_big_data(
     dataset_name: str,
     data_type: str = "Dirty",
     save: bool = True,
-    data_home: Path | str = None,
-    data_directory: str = None,
+    data_home: Path | str | None = None,
+    data_directory: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Fetch datasets from https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md
 
@@ -104,7 +104,7 @@ def fetch_big_data(
         The path to the root data directory.
         By default, will point to the skrub data directory.
 
-    data_directory: str, default=None
+    data_directory: str, optional
         The name of the subdirectory in which data is stored.
 
     Returns
