@@ -406,6 +406,9 @@ class TableVectorizer(ColumnTransformer):
 
     @property
     def is_parallelized(self) -> bool:
+        """
+        Returns True if the transformers are parallelized over columns, False otherwise.
+        """
         return self.n_jobs not in (None, 1)
 
     def _clone_transformers(self):
