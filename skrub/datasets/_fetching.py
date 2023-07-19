@@ -139,7 +139,7 @@ class DatasetInfoOnly:
 
 def _fetch_openml_dataset(
     dataset_id: int,
-    data_directory: Path | str | None = None,
+    data_directory: Path | None = None,
 ) -> dict[str, Any]:
     """
     Gets a dataset from OpenML (https://www.openml.org).
@@ -224,7 +224,7 @@ def _fetch_openml_dataset(
 
 def _fetch_world_bank_data(
     indicator_id: str,
-    data_directory: Path | str | None = None,
+    data_directory: Path | None = None,
 ) -> dict[str, Any]:
     """Gets a dataset from World Bank open data platform (https://data.worldbank.org/).
 
@@ -307,7 +307,7 @@ def _fetch_world_bank_data(
 
 def _fetch_figshare(
     figshare_id: str,
-    data_directory: Path | str | None = None,
+    data_directory: Path | None = None,
 ) -> dict[str, Any]:
     """Fetch a dataset from figshare using the download ID number.
 
