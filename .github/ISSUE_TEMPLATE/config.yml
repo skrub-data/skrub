@@ -3,5 +3,5 @@ contact_links:
     url: https://github.com/skrub-data/skrub/discussions
     about: Ask questions and discuss with other members of the community
   - name: Blank issue
-    url: https://github.com/scikit-learn/scikit-learn/issues/new
+    url: https://github.com/skrub-data/skrub/issues/new
     about: Please note that Github Discussions should be used in most cases instead
