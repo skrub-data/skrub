@@ -553,7 +553,7 @@ class TableVectorizer(ColumnTransformer):
         # of missing values
         object_cols = X.columns[X.dtypes == "object"]
         for col in object_cols:
-                X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
+            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
         for col, dtype in self.types_.items():
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
