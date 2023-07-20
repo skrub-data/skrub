@@ -148,7 +148,7 @@ def _fetch_openml_dataset(
     ----------
     dataset_id : int
         The ID of the dataset to fetch.
-    data_directory : Path or str, optional
+    data_directory : pathlib.Path, optional
         The directory where the dataset is stored.
         By default, a subdirectory "openml" in the skrub data directory.
 
@@ -232,7 +232,7 @@ def _fetch_world_bank_data(
     ----------
     indicator_id : str
         The ID of the indicator's dataset to fetch.
-    data_directory : Path or str, optional
+    data_directory : pathlib.Path, optional
         The directory where the dataset is stored.
         By default, a subdirectory "world_bank" in the skrub data directory.
 
@@ -315,7 +315,7 @@ def _fetch_figshare(
     ----------
     figshare_id : str
         The ID of the dataset to fetch.
-    data_directory : Path or str, optional
+    data_directory : pathlib.Path, optional
         The directory where the dataset is stored.
         By default, a subdirectory "figshare" in the skrub data directory.
 
@@ -663,7 +663,7 @@ def fetch_employee_salaries(
         Drops column "full_name", which is usually irrelevant to the
         statistical analysis.
 
-    data_directory: Path or str, optional
+    data_directory: pathlib.Path or str, optional
         The directory where the dataset is stored.
 
     Returns
