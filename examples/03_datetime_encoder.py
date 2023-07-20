@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore")
 import pandas as pd
 
 data = pd.read_csv(
-    "https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/air_quality_no2_long.csv"
+    "https://raw.githubusercontent.com/pandas-dev/pandas/main/doc/data/air_quality_no2_long.csv"  # noqa
 )
 y = data["value"]
 X = data[["city", "date.utc"]]
@@ -47,6 +47,7 @@ X
 # Encoders for categorical and datetime features
 # ..............................................
 from sklearn.preprocessing import OneHotEncoder
+
 from skrub import DatetimeEncoder
 
 cat_encoder = OneHotEncoder(handle_unknown="ignore")
@@ -78,13 +79,14 @@ encoder.get_feature_names_out()
 ###############################################################################
 X_
 
+from pprint import pprint
+
 ###############################################################################
 # One-liner with the |TV|
 # .......................
 # The |DtE| is used by default in the |TV|, which
 # automatically detects datetime features.
 from skrub import TableVectorizer
-from pprint import pprint
 
 table_vec = TableVectorizer()
 table_vec.fit_transform(X)
