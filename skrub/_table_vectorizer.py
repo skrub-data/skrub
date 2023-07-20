@@ -556,10 +556,11 @@ class TableVectorizer(ColumnTransformer):
                 )
                 self.types_[col] = dtype
         for col, dtype in self.types_.items():
-            # if numerical, convert with errors='coerce'
+            # if the inferred dtype is numerical or datetime,
+            # we want to ignore entries that cannot be converted
+            # to this dtype
             if pd.api.types.is_numeric_dtype(dtype):
                 X[col] = pd.to_numeric(X[col], errors="coerce")
-            # if datetime, convert with errors='coerce'
             elif pd.api.types.is_datetime64_any_dtype(dtype):
                 X[col] = pd.to_datetime(X[col], errors="coerce")
             else:
