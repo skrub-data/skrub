@@ -7,27 +7,24 @@ which is the batched version with batch_per_job=1
 Date: February 2023
 """
 
-from typing import Literal
+import pickle
+from argparse import ArgumentParser
 from collections.abc import Callable, Collection
+from pathlib import Path
+from typing import Literal
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
+from utils import default_parser, find_result, monitor
 
 from skrub._fast_hash import ngram_min_hash
 from skrub._string_distances import get_unique_ngrams
 from skrub._utils import LRUDict, check_input
-
-import pickle
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-from argparse import ArgumentParser
-
-from pathlib import Path
-
-from utils import monitor, find_result, default_parser
 from skrub.tests.utils import generate_data
 
 NoneType = type(None)

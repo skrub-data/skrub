@@ -49,6 +49,11 @@ Major changes
 
 * Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Do not support 1-D array (and pandas Series) in :class:`TableVectorizer`. Pass a
+  2-D array (or a pandas DataFrame) with a single column instead. This change is for
+  compliance with the scikit-learn API.
+  :pr:`647` by :user:`Guillaume Lemaitre <glemaitre>`
+
 Minor changes
 -------------
 

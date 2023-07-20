@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import _check_y, check_is_fitted
 
 from skrub._utils import check_input
 
@@ -133,7 +133,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"X_types": ["categorical"]}
+        return {
+            "X_types": ["2darray", "categorical"],
+            "allow_nan": True,
+        }
 
     def fit(self, X: ArrayLike, y: ArrayLike) -> "TargetEncoder":
         """Fit the instance to `X`.
@@ -151,6 +154,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             Fitted TargetEncoder instance (self).
         """
         X = check_input(X)
+        y = _check_y(y, y_numeric=True, estimator=self)
         self.n_features_in_ = X.shape[1]
         if self.handle_missing not in ["error", ""]:
             raise ValueError(

@@ -150,12 +150,7 @@ np.unique(y)
 # We will now experiment with encoders specially made for handling
 # dirty columns:
 
-from skrub import (
-    SimilarityEncoder,
-    TargetEncoder,
-    MinHashEncoder,
-    GapEncoder,
-)
+from skrub import GapEncoder, MinHashEncoder, SimilarityEncoder, TargetEncoder
 
 encoders = {
     "one-hot": one_hot,
@@ -195,8 +190,8 @@ for name, method in encoders.items():
 #
 # Finally, we plot the scores on a boxplot:
 
-import seaborn
 import matplotlib.pyplot as plt
+import seaborn
 
 plt.figure(figsize=(4, 3))
 ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient="h")
