@@ -14,6 +14,7 @@ import sklearn
 from numpy.typing import ArrayLike, NDArray
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
+from scipy import sparse
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -389,7 +390,18 @@ class TableVectorizer(ColumnTransformer):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"allow_nan": [True]}
+        return {
+            "X_types": ["2darray", "string"],
+            "allow_nan": [True],
+            "_xfail_checks": {
+                "check_complex_data": "Passthrough complex columns as-is.",
+                "check_dont_overwrite_parameters": (
+                    "`transformers` is modified during fit but it is not pass by the"
+                    " user. We need to create an instance of ColumnTransformer instead"
+                    " but the current behaviour is not leading to a bug."
+                ),
+            },
+        }
 
     def _clone_transformers(self):
         """
@@ -558,6 +570,52 @@ class TableVectorizer(ColumnTransformer):
         X = X.astype(self.types_)
         return X
 
+    def _check_X(self, X, reset):
+        if sparse.isspmatrix(X):
+            raise TypeError(
+                "A sparse matrix was passed, but dense data is required. Use "
+                "X.toarray() to convert to a dense numpy array."
+            )
+
+        if not isinstance(X, pd.DataFrame):
+            # check the dimension of X before to create a dataframe that always
+            # `ndim == 2`
+            # unfortunately, we need to call `asarray` before to call `ndim`
+            # in case that the container implement `__array_function__`
+            X_array = np.asarray(X)
+            if X_array.ndim == 0:
+                raise ValueError(
+                    f"Expected 2D array, got scalar array instead:\narray={X}.\n"
+                    "Reshape your data either using array.reshape(-1, 1) if "
+                    "your data has a single feature or array.reshape(1, -1) "
+                    "if it contains a single sample."
+                )
+            if X_array.ndim == 1:
+                raise ValueError(
+                    f"Expected 2D array, got 1D array instead:\narray={X}.\n"
+                    "Reshape your data either using array.reshape(-1, 1) if "
+                    "your data has a single feature or array.reshape(1, -1) "
+                    "if it contains a single sample."
+                )
+            X = pd.DataFrame(X_array)
+        else:
+            # Create a copy to avoid altering the original data.
+            X = X.copy()
+
+        if X.shape[0] < 1:
+            raise ValueError(
+                f"Found array with {X.shape[0]} sample(s) (shape={X.shape}) while a"
+                " minimum of 1 is required."
+            )
+        if X.shape[1] < 1:
+            raise ValueError(
+                f"Found array with {X.shape[1]} feature(s) (shape={X.shape}) while"
+                " a minimum of 1 is required."
+            )
+        self._check_n_features(X, reset=reset)
+
+        return X
+
     def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
         """Fit all transformers, transform the data, and concatenate the results.
 
@@ -592,12 +650,7 @@ class TableVectorizer(ColumnTransformer):
 
         self._clone_transformers()
 
-        # Convert to pandas DataFrame if not already.
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
+        X = self._check_X(X, reset=True)
 
         self.columns_ = X.columns
 
@@ -711,18 +764,8 @@ class TableVectorizer(ColumnTransformer):
             sparse matrices.
         """
         check_is_fitted(self, attributes=["transformers_"])
-        if X.shape[1] != len(self.columns_):
-            raise ValueError(
-                "Passed array does not match column count of "
-                f"array seen during fit. Got {X.shape[1]} "
-                f"columns, expected {len(self.columns_)}"
-            )
 
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
+        X = self._check_X(X, reset=False)
 
         if (X.columns != self.columns_).all():
             X.columns = self.columns_

@@ -24,7 +24,7 @@ NoneType = type(None)
 # flake8: noqa: E501
 
 
-class MinHashEncoder(BaseEstimator, TransformerMixin):
+class MinHashEncoder(TransformerMixin, BaseEstimator):
     """Encode string categorical features by applying the MinHash method to n-gram decompositions of strings.
 
     The principle is as follows:
@@ -137,12 +137,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
 
-    def _more_tags(self) -> dict[str, list[str]]:
-        """
-        Used internally by sklearn to ease the estimator checks.
-        """
-        return {"X_types": ["categorical"]}
-
     def _get_murmur_hash(self, string: str) -> NDArray:
         """
         Encode a string using murmur hashing function.
@@ -249,9 +243,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         MinHashEncoder
             The fitted MinHashEncoder instance (self).
         """
-        self._check_n_features(X, reset=True)
         self._check_feature_names(X, reset=True)
         X = check_input(X)
+        self._check_n_features(X, reset=True)
 
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
@@ -281,9 +275,9 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             Transformed input.
         """
         check_is_fitted(self, "hash_dict_")
-        self._check_n_features(X, reset=False)
-        self._check_feature_names(X, reset=False)
         X = check_input(X)
+        self._check_feature_names(X, reset=False)
+        self._check_n_features(X, reset=False)
         if self.minmax_hash:
             if self.n_components % 2 != 0:
                 raise ValueError(
@@ -386,3 +380,19 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 feature_names.append(f"{feature}_{i}")
 
         return feature_names
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {
+            "X_types": ["2darray", "categorical", "string"],
+            "preserves_dtype": [],
+            "allow_nan": True,
+            "_xfail_checks": {
+                "check_estimator_sparse_data": (
+                    "Cannot create sparse matrix with strings."
+                ),
+                "check_estimators_dtypes": "We only support string dtypes.",
+            },
+        }

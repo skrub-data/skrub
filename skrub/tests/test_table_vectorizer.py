@@ -217,11 +217,11 @@ def _test_possibilities(X) -> None:
         expected_transformers_np_no_cast, vectorizer_base.transformers
     )
 
-    # Test with pandas series
+    # Test with single column dataframe
     expected_transformers_series = {
         "low_card_cat": ["cat1"],
     }
-    vectorizer_base.fit_transform(X["cat1"])
+    vectorizer_base.fit_transform(X[["cat1"]])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
 
     # Test casting values
