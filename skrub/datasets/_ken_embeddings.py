@@ -29,9 +29,9 @@ def fetch_ken_table_aliases() -> set[str]:
 
     See Also
     --------
-    :func:`fetch_ken_types`
+    fetch_ken_types
         Helper function to search for entity types.
-    :func:`fetch_ken_embeddings`
+    fetch_ken_embeddings
         Download Wikipedia embeddings by type.
 
     Notes
@@ -57,7 +57,7 @@ def fetch_ken_types(
 ) -> pd.DataFrame:
     """Helper function to search for KEN entity types.
 
-    The result can then be used with :func:`fetch_ken_embeddings`.
+    The result can then be used with fetch_ken_embeddings.
 
     Parameters
     ----------
@@ -67,7 +67,7 @@ def fetch_ken_types(
         Substring pattern to exclude from the search.
     embedding_table_id : str, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
-        Get the supported tables with :func:`fetch_ken_table_aliases`.
+        Get the supported tables with fetch_ken_table_aliases.
         It is NOT possible to pass a custom figshare ID.
 
     Returns
@@ -77,7 +77,7 @@ def fetch_ken_types(
 
     See Also
     --------
-    :func:`fetch_ken_embeddings`
+    fetch_ken_embeddings
         Download Wikipedia embeddings by type.
 
     References
@@ -88,7 +88,7 @@ def fetch_ken_types(
 
     Notes
     -----
-    Best used in conjunction with :func:`fetch_ken_embeddings`.
+    Best used in conjunction with fetch_ken_embeddings.
 
     This function requires `pyarrow` to be installed.
 
@@ -159,11 +159,11 @@ def fetch_ken_embeddings(
         Type of embeddings to exclude from the types search.
     embedding_table_id : str, default='all_entities'
         Table of embedded entities from which to extract the embeddings.
-        Get the supported tables with :func:`fetch_ken_table_aliases`.
+        Get the supported tables with fetch_ken_table_aliases.
         It is also possible to pass a custom figshare ID.
     embedding_type_id : str, optional
         Figshare ID of the file containing the type of embeddings.
-        Get the supported tables with :func:`fetch_ken_types`.
+        Get the supported tables with fetch_ken_types.
         Ignored unless a custom `embedding_table_id` is provided.
     pca_components : int, optional
         Size of the dimensional space on which the embeddings will be projected
@@ -179,13 +179,13 @@ def fetch_ken_embeddings(
 
     See Also
     --------
-    :func:`fetch_ken_table_aliases`
+    fetch_ken_table_aliases :
         Get the supported aliases of embedded entities tables.
-    :func:`fetch_ken_types`
+    fetch_ken_types :
         Helper function to search for entity types.
-    :func:`skrub.fuzzy_join` :
+    fuzzy_join :
         Join two tables (dataframes) based on approximate column matching.
-    :class:`skrub.FeatureAugmenter` :
+    FeatureAugmenter :
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 
@@ -207,12 +207,12 @@ def fetch_ken_embeddings(
     Going directly for the exact type name (e.g. "wikicat_rock_music_bands")
     is possible but may not be complete (as some relevant bands may be
     in other similar types).
-    For exploring available types, the :func:`~skrub.datasets.fetch_ken_types`
+    For exploring available types, the fetch_ken_types
     function can be used.
 
     Examples
     --------
-    :func:`fetch_ken_embeddings` allows you to extract embeddings
+    fetch_ken_embeddings allows you to extract embeddings
     you are interested in. For instance, if we are interested in
     video games:
 
@@ -226,7 +226,7 @@ def fetch_ken_embeddings(
     4                     Cruis'n               wikicat_racing_video_games  ... -0.260757  0.060700
 
     Extracts all embeddings with the "games" type.
-    For the list of existing types see :func:`fetch_ken_types`.
+    For the list of existing types see fetch_ken_types.
 
     Some tables are available pre-filtered for us using the
     `embedding_table_id` parameter:

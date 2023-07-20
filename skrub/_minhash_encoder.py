@@ -64,7 +64,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
     n_jobs : int, optional
         The number of jobs to run in parallel.
         The hash computations for all unique elements are parallelized.
-        `None` means 1 unless in a :class:`joblib.parallel_backend`.
+        `None` means 1 unless in a joblib.parallel_backend.
         -1 means using all processors.
         See :term:`n_jobs` for more details.
 
@@ -79,11 +79,11 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
     See Also
     --------
-    :class:`skrub.GapEncoder`
+    GapEncoder
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`skrub.SimilarityEncoder`
+    SimilarityEncoder
         Encode string columns as a numeric array with n-gram string similarity.
-    :func:`skrub.deduplicate`
+    deduplicate
         Deduplicate data by hierarchically clustering similar strings.
 
     References
@@ -148,7 +148,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string.
         """
         min_hashes = np.ones(self.n_components) * np.infty
@@ -177,7 +177,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -212,7 +212,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
+        ndarray of shape (n_samples, n_components)
             The encoded strings, using specified encoding scheme.
         """
         res = np.zeros((len(batch), self.n_components))
@@ -240,8 +240,8 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        :obj:`MinHashEncoder`
-            The fitted :class:`MinHashEncoder` instance (self).
+        MinHashEncoder
+            The fitted MinHashEncoder instance (self).
         """
         self._check_feature_names(X, reset=True)
         X = check_input(X)
@@ -271,7 +271,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_samples, n_columns * n_components)
+        ndarray of shape (n_samples, n_columns * n_components)
             Transformed input.
         """
         check_is_fitted(self, "hash_dict_")

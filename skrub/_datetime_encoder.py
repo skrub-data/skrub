@@ -72,11 +72,11 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`skrub.GapEncoder` :
+    GapEncoder :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`skrub.MinHashEncoder` :
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder` :
+    SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Examples
@@ -182,8 +182,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`DatetimeEncoder`
-            Fitted :class:`DatetimeEncoder` instance (self).
+        DatetimeEncoder
+            Fitted DatetimeEncoder instance (self).
         """
         self._validate_keywords()
         # Columns to extract for each column,
@@ -235,7 +235,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape (n_samples, `n_features_out_`)
+        ndarray, shape (n_samples, `n_features_out_`)
             Transformed input.
         """
         check_is_fitted(
