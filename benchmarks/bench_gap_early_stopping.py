@@ -6,13 +6,13 @@ The logic is as follows:
 - Tweak the default parameters of the Gap:
   - Set RNG seed
   - Set `min_iter` to 5 (`= max_iter`)
-  - Set `max_iter_e_step` to 2 (from the benchmark in 
+  - Set `max_iter_e_step` to 2 (from the benchmark in
     https://github.com/skrub-data/skrub/pull/593 final performance does not depend much on this parameter)
 - At each iteration, save the following:
   - `score`, from ``self.score(X)``
-- Run benchmark comparing 
+- Run benchmark comparing
     1. Gap without early-stopping
-    2. Gap with early-stopping 
+    2. Gap with early-stopping
     3. Gap with early_stopping with update every 5 monitor_steps
 
 Date: July 20th 2023
@@ -55,15 +55,23 @@ from utils import (
 
 
 class ModifiedGapEncoderColumn(GapEncoderColumn):
-    def __init__(self, *args, column_name: str = "MISSING COLUMN", 
-                 monitor_steps=10, early_stop=False, patience=5, **kwargs):
+    def __init__(
+        self,
+        *args,
+        column_name: str = "MISSING COLUMN",
+        monitor_steps=10,
+        early_stop=False,
+        patience=5,
+        min_delta_score=0.001,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.column_name = column_name
         self.benchmark_results_: list[dict[str, np.ndarray | float]] = []
         self.monitor_steps = monitor_steps
         self.early_stop = early_stop
         self.patience = patience
-
+        self.min_delta_score = min_delta_score
 
     def fit(self, X, y=None):
         # Copy parameter rho
@@ -83,7 +91,7 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
             previous_steps = n_batch * n_iter_
             # Loop over batches
             for i, (unq_idx, idx) in enumerate(batch_lookup(lookup, n=self.batch_size)):
-                #if i == n_batch - 1:
+                # if i == n_batch - 1:
                 if i % self.monitor_steps == 0:
                     W_last = self.W_.copy()
                 # Update activations unq_H
@@ -108,38 +116,41 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
                     self.rho_,
                 )
 
-                #if i == n_batch - 1:
+                # if i == n_batch - 1:
                 #    # Compute the norm of the update of W in the last batch
                 if i % self.monitor_steps == 0:
                     W_change = np.linalg.norm(self.W_ - W_last) / np.linalg.norm(W_last)
 
                     score = self.score(X)
-                
+
                     self.benchmark_results_.append(
-                    {
-                        "column_name": self.column_name,
-                        "score": score,
-                        "n_batch": i,
-                        "n_iter": n_iter_,
-                        "global_gap_iter": i + previous_steps,
-                        "n_batches": n_batch
-                    })
+                        {
+                            "column_name": self.column_name,
+                            "score": score,
+                            "n_batch": i,
+                            "n_iter": n_iter_,
+                            "global_gap_iter": i + previous_steps,
+                            "n_batches": n_batch,
+                        }
+                    )
 
                     if self.early_stop:
                         if min_score is None:
                             min_score = score
-                        elif score < min_score:
-                            min_score = score
+                        # elif score < min_score:
+                        elif (min_score - score) / min_score > self.min_delta_score:
+                            if min_score - score > 0:
+                                min_score = score
                             n_iter_patience = 0
                         else:
                             n_iter_patience += 1
                             if n_iter_patience > self.patience:
                                 stop = True
                                 break
-                    
-            #score = self.score(X)
-            
-            if stop or ( (W_change < self.tol) and (n_iter_ >= self.min_iter - 1) ):
+
+            # score = self.score(X)
+
+            if stop or ((W_change < self.tol) and (n_iter_ >= self.min_iter - 1)):
                 break  # Stop if the change in W is smaller than the tolerance
 
         # Update self.H_dict_ with the learned encoded vectors (activations)
@@ -178,7 +189,7 @@ class ModifiedGapEncoder(GapEncoder):
             max_iter_e_step=self.max_iter_e_step,
             monitor_steps=self.monitor_steps,
             early_stop=self.early_stop,
-            patience=self.patience
+            patience=self.patience,
         )
 
     def fit(self, X, y=None):
@@ -204,20 +215,21 @@ class ModifiedGapEncoder(GapEncoder):
 
 benchmark_name = Path(__file__).stem
 
+
 @monitor(
     parametrize={
-        "early_stop_config":  [
-            {"early_stop": False, "patience": -1, "monitor_steps": 1} ,
-            {"early_stop": True, "patience": 5, "monitor_steps": 1} ,
-            {"early_stop": True, "patience": 1, "monitor_steps": 5} 
+        "early_stop_config": [
+            {"early_stop": False, "patience": -1, "monitor_steps": 1},
+            {"early_stop": True, "patience": 5, "monitor_steps": 1},
+            {"early_stop": True, "patience": 1, "monitor_steps": 5},
         ],
         "dataset_name": [
-            #"medical_charge",
-            #"open_payments",
-            #"midwest_survey",
+            # "medical_charge",
+            # "open_payments",
+            # "midwest_survey",
             "employee_salaries",
             # "road_safety",  # https://github.com/skrub-data/skrub/issues/622
-            #"drug_directory",
+            # "drug_directory",
             # "traffic_violations",  # Takes way too long and seems to cause memory leaks
         ],
     },
@@ -249,9 +261,9 @@ def benchmark(early_stop_config: list, dataset_name: str):
                             random_state=0,
                             early_stop=early_stop_config["early_stop"],
                             patience=early_stop_config["patience"],
-                            monitor_steps=early_stop_config["monitor_steps"]
+                            monitor_steps=early_stop_config["monitor_steps"],
                         ),
-                        # drop all other features to check possible degradation in prediction 
+                        # drop all other features to check possible degradation in prediction
                         # due to early-stopping in gap-encoded features
                         low_card_cat_transformer="drop",
                         numerical_transformer="drop",
@@ -267,7 +279,7 @@ def benchmark(early_stop_config: list, dataset_name: str):
         dataset.y,
         return_estimator=True,
         n_jobs=-1,
-        cv=3
+        cv=3,
     )
 
     # Extract the estimators from the cross-validation results
@@ -283,37 +295,48 @@ def benchmark(early_stop_config: list, dataset_name: str):
             for gap_iter, inner_results in enumerate(
                 modified_gap_encoder.benchmark_results_
             ):
-                cardinality = len(dataset.X[inner_results['column_name']].unique())
-                entropy = sp.stats.entropy(dataset.X[inner_results['column_name']].value_counts(normalize=True, sort=False))
-                
+                cardinality = len(dataset.X[inner_results["column_name"]].unique())
+                entropy = sp.stats.entropy(
+                    dataset.X[inner_results["column_name"]].value_counts(
+                        normalize=True, sort=False
+                    )
+                )
+
                 loop_results = {
                     "dataset": dataset_name,
                     "column_name": f"{dataset_name}.{inner_results['column_name']}",
                     "cv_test_score": cv_results["test_score"],
-                    "gap_iter": gap_iter + 1, # counts the results recorded, so max_iter * n_batches if no early-stopping
-                    "n_batch": inner_results['n_batch'], # counts the number of batches processed
-                    "n_iter": inner_results['n_iter'], # counts the external iterations, from min_iter to max_iter
-                    "global_gap_iter": inner_results['global_gap_iter'], # needed when monitor_steps > 1
+                    "gap_iter": gap_iter
+                    + 1,  # counts the results recorded, so max_iter * n_batches if no early-stopping
+                    "n_batch": inner_results[
+                        "n_batch"
+                    ],  # counts the number of batches processed
+                    "n_iter": inner_results[
+                        "n_iter"
+                    ],  # counts the external iterations, from min_iter to max_iter
+                    "global_gap_iter": inner_results[
+                        "global_gap_iter"
+                    ],  # needed when monitor_steps > 1
                     "score": inner_results["score"],
                     "cardinality": cardinality,
                     "entropy": entropy,
-                    "n_batches": inner_results["n_batches"]
+                    "n_batches": inner_results["n_batches"],
                 }
                 results.append(loop_results)
 
     return results
 
-def plot(df: pd.DataFrame):
 
+def plot(df: pd.DataFrame):
     for config_str in df["early_stop_config"].unique().tolist():
         config = eval(config_str)
-        if config["early_stop"]==False:
-            results_df = df[df["early_stop_config"]==config_str]
-        elif config["monitor_steps"]==1:
-            results_df_early_stop = df[df["early_stop_config"]==config_str]
+        if config["early_stop"] == False:
+            results_df = df[df["early_stop_config"] == config_str]
+        elif config["monitor_steps"] == 1:
+            results_df_early_stop = df[df["early_stop_config"] == config_str]
         else:
-            results_df_early_stop_skip = df[df["early_stop_config"]==config_str]
-    
+            results_df_early_stop_skip = df[df["early_stop_config"] == config_str]
+
     sns.set_theme(style="ticks", palette="pastel")
 
     fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3)
@@ -322,114 +345,162 @@ def plot(df: pd.DataFrame):
 
     hue_order = results_df["column_name"].unique().tolist()
 
-    sns.lineplot(data=results_df,
-                x="global_gap_iter",
-                y="score",
-                hue="column_name",
-                hue_order=hue_order,
-                legend=True,
-                linewidth=1,
-                ax=ax1)
+    sns.lineplot(
+        data=results_df,
+        x="global_gap_iter",
+        y="score",
+        hue="column_name",
+        hue_order=hue_order,
+        legend=True,
+        linewidth=1,
+        ax=ax1,
+    )
 
-    sns.lineplot(data=results_df_early_stop,
-                x="global_gap_iter",
-                y="score",
-                hue="column_name",
-                hue_order=hue_order,
-                legend=False,
-                marker='o',
-                markeredgecolor='r',
-                markerfacecolor='none',
-                markeredgewidth=1,
-                markersize=8,
-                linewidth=1,
-                linestyle= "-.",
-                ax=ax1)
+    sns.lineplot(
+        data=results_df_early_stop,
+        x="global_gap_iter",
+        y="score",
+        hue="column_name",
+        hue_order=hue_order,
+        legend=False,
+        marker="o",
+        markeredgecolor="r",
+        markerfacecolor="none",
+        markeredgewidth=1,
+        markersize=8,
+        linewidth=1,
+        linestyle="-.",
+        ax=ax1,
+    )
 
-    sns.lineplot(data=results_df_early_stop_skip,
-                x="global_gap_iter",
-                y="score",
-                hue="column_name",
-                hue_order=hue_order,
-                legend=False,
-                marker='*',
-                markerfacecolor='r',
-                markeredgecolor='k',
-                markeredgewidth=1,
-                markersize=6,
-                linewidth=1,
-                linestyle= "--",
-                ax=ax1)
+    sns.lineplot(
+        data=results_df_early_stop_skip,
+        x="global_gap_iter",
+        y="score",
+        hue="column_name",
+        hue_order=hue_order,
+        legend=False,
+        marker="*",
+        markerfacecolor="r",
+        markeredgecolor="k",
+        markeredgewidth=1,
+        markersize=6,
+        linewidth=1,
+        linestyle="--",
+        ax=ax1,
+    )
 
-    ax1.set_yscale('log')
-    ax1.set_xlim(xmax=n_batches * (results_df['n_iter'].max() + 1))
+    ax1.set_yscale("log")
+    ax1.set_xlim(xmax=n_batches * (results_df["n_iter"].max() + 1))
 
-    for i in range(1, results_df['n_iter'].astype(int).max()+1):
-        ax1.axvline(x=n_batches*i, color="gray", linestyle=":")
+    for i in range(1, results_df["n_iter"].astype(int).max() + 1):
+        ax1.axvline(x=n_batches * i, color="gray", linestyle=":")
 
-    ax1.legend(loc='upper center', bbox_to_anchor=(0.5, 1.41))
+    ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.41))
 
-    ax2.bar(['No Early-Stop', 'Early-Stop', 'Early-Stop Skip Steps'], 
-        [results_df.gap_iter.max(), results_df_early_stop.gap_iter.max(), results_df_early_stop_skip.gap_iter.max()],
-        yerr=[results_df.gap_iter.std(), results_df_early_stop.gap_iter.std(), results_df_early_stop_skip.gap_iter.std()])
-    ax2.set_ylabel('total n. of batches processed') 
+    ax2.bar(
+        ["No Early-Stop", "Early-Stop", "Early-Stop Skip Steps"],
+        [
+            results_df.gap_iter.max(),
+            results_df_early_stop.gap_iter.max(),
+            results_df_early_stop_skip.gap_iter.max(),
+        ],
+        yerr=[
+            results_df.gap_iter.std(),
+            results_df_early_stop.gap_iter.std(),
+            results_df_early_stop_skip.gap_iter.std(),
+        ],
+    )
+    ax2.set_ylabel("total n. of batches processed")
 
-    ax3.bar(['No Early-Stop', 'Early-Stop', 'Early-Stop Skip Steps'], 
-        [results_df.cv_test_score.mean(), results_df_early_stop.cv_test_score.mean(), results_df_early_stop_skip.cv_test_score.mean()],
-        yerr=[results_df.cv_test_score.std(), results_df_early_stop.cv_test_score.std(), results_df_early_stop_skip.cv_test_score.std()])
-    ax3.set_ylabel('cv test score')
+    ax3.bar(
+        ["No Early-Stop", "Early-Stop", "Early-Stop Skip Steps"],
+        [
+            results_df.cv_test_score.mean(),
+            results_df_early_stop.cv_test_score.mean(),
+            results_df_early_stop_skip.cv_test_score.mean(),
+        ],
+        yerr=[
+            results_df.cv_test_score.std(),
+            results_df_early_stop.cv_test_score.std(),
+            results_df_early_stop_skip.cv_test_score.std(),
+        ],
+    )
+    ax3.set_ylabel("cv test score")
 
-    results_df = results_df.merge(results_df_early_stop, how='left',
-                                  on=['global_gap_iter', 'column_name', 'n_iter'], suffixes=('', '_ES'))
-    results_df = results_df.merge(results_df_early_stop_skip, how='left',
-                                  on=['global_gap_iter', 'column_name', 'n_iter'], suffixes=('', '_ES_skip'))
+    results_df = results_df.merge(
+        results_df_early_stop,
+        how="left",
+        on=["global_gap_iter", "column_name", "n_iter"],
+        suffixes=("", "_ES"),
+    )
+    results_df = results_df.merge(
+        results_df_early_stop_skip,
+        how="left",
+        on=["global_gap_iter", "column_name", "n_iter"],
+        suffixes=("", "_ES_skip"),
+    )
 
-    results_df["relative_score_diff_early-stop"] = (results_df["score"] - results_df["score_ES"]).abs() / results_df["score"]
-    results_df["relative_score_diff_early-stop_skip"] = (results_df["score"] - results_df["score_ES_skip"]).abs() / results_df["score"]
+    results_df["relative_score_diff_early-stop"] = (
+        results_df["score"] - results_df["score_ES"]
+    ).abs() / results_df["score"]
+    results_df["relative_score_diff_early-stop_skip"] = (
+        results_df["score"] - results_df["score_ES_skip"]
+    ).abs() / results_df["score"]
 
-    sns.lineplot(data=results_df,
-                x="global_gap_iter",
-                y="relative_score_diff_early-stop",
-                hue="column_name",
-                hue_order=hue_order,
-                legend=False,
-                markersize=5,
-                ax=ax4)
+    sns.lineplot(
+        data=results_df,
+        x="global_gap_iter",
+        y="relative_score_diff_early-stop",
+        hue="column_name",
+        hue_order=hue_order,
+        legend=False,
+        markersize=5,
+        ax=ax4,
+    )
 
-    sns.lineplot(data=results_df,
-                x="global_gap_iter",
-                y="relative_score_diff_early-stop_skip",
-                hue="column_name",
-                hue_order=hue_order,
-                legend=False,
-                linestyle= "--",
-                markersize=5,
-                ax=ax4)
+    sns.lineplot(
+        data=results_df,
+        x="global_gap_iter",
+        y="relative_score_diff_early-stop_skip",
+        hue="column_name",
+        hue_order=hue_order,
+        legend=False,
+        linestyle="--",
+        markersize=5,
+        ax=ax4,
+    )
 
-    #ax4.set_yscale('log')
-    ax4.set_xlim(xmax=n_batches * (results_df['n_iter'].max() + 1))
+    # ax4.set_yscale('log')
+    ax4.set_xlim(xmax=n_batches * (results_df["n_iter"].max() + 1))
 
-    for i in range(1, results_df['n_iter'].astype(int).max()+1):
-        ax4.axvline(x=n_batches*i, color="gray", linestyle=":")
+    for i in range(1, results_df["n_iter"].astype(int).max() + 1):
+        ax4.axvline(x=n_batches * i, color="gray", linestyle=":")
 
-    sns.stripplot(data=results_df,
-                x="cardinality",
-                y="score",
-                hue="column_name",
-                hue_order=hue_order,
-                legend=False,
-                ax=ax5)
-    ax5.set_yscale('log')
+    sns.stripplot(
+        data=results_df,
+        x="cardinality",
+        y="score",
+        hue="column_name",
+        hue_order=hue_order,
+        legend=False,
+        ax=ax5,
+    )
+    ax5.set_yscale("log")
 
-    sns.stripplot(data=results_df,
-                x="entropy",
-                y="score",
-                hue="column_name",
-                hue_order=hue_order,
-                legend=False,
-                ax=ax6)
-    ax6.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.2f}'.format(x)))
-    ax6.set_yscale('log')
+    sns.stripplot(
+        data=results_df,
+        x="entropy",
+        y="score",
+        hue="column_name",
+        hue_order=hue_order,
+        legend=False,
+        ax=ax6,
+    )
+    ax6.xaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda x, pos: "{:,.2f}".format(x))
+    )
+    ax6.set_yscale("log")
 
     plt.show()
 
