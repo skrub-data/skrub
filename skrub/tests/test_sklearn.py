@@ -1,5 +1,4 @@
 import numpy as np
-from scipy import sparse
 
 import sklearn
 from sklearn.metrics.pairwise import linear_kernel, pairwise_distances
@@ -11,16 +10,19 @@ from sklearn.utils._tags import _safe_tags
 
 from skrub import (
     DatetimeEncoder,
-    FeatureAugmenter,
+    # FeatureAugmenter,
     GapEncoder,
     MinHashEncoder,
     SimilarityEncoder,
     TableVectorizer,
-    TargetEncoder,
+    # TargetEncoder,
 )
 
 
 def _enforce_estimator_tags_X_monkey_patch(estimator, X, kernel=linear_kernel):
+    """Monkey patch scikit-learn function to create a specific case where to enforce
+    having only strings with some encoders.
+    """
     # Estimators with `1darray` in `X_types` tag only accept
     # X of shape (`n_samples`,)
     if "1darray" in _safe_tags(estimator, key="X_types"):
@@ -32,6 +34,7 @@ def _enforce_estimator_tags_X_monkey_patch(estimator, X, kernel=linear_kernel):
     if "categorical" in _safe_tags(estimator, key="X_types"):
         X = np.round((X - X.min()))
         if "string" in _safe_tags(estimator, key="X_types"):
+            # Note: this part is the monkey patch
             X = X.astype(object)
             for i in range(X.shape[0]):
                 for j in range(X.shape[1]):
@@ -62,12 +65,12 @@ sklearn.utils.estimator_checks._enforce_estimator_tags_X = (
 def _tested_estimators():
     for Estimator in [
         DatetimeEncoder,
-        # FeatureAugmenter,
+        # FeatureAugmenter,  # requires auxiliary tables
         GapEncoder,
         MinHashEncoder,
         SimilarityEncoder,
         TableVectorizer,
-        # TargetEncoder,
+        # TargetEncoder,  # will be tested in scikit-learn
     ]:
         yield Estimator()
 
