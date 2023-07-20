@@ -224,13 +224,13 @@ benchmark_name = Path(__file__).stem
             {"early_stop": True, "patience": 1, "monitor_steps": 5},
         ],
         "dataset_name": [
-            # "medical_charge",
-            # "open_payments",
-            # "midwest_survey",
+            "medical_charge",
+            "open_payments",
+            "midwest_survey",
             "employee_salaries",
             # "road_safety",  # https://github.com/skrub-data/skrub/issues/622
-            # "drug_directory",
-            # "traffic_violations",  # Takes way too long and seems to cause memory leaks
+            "drug_directory",
+            "traffic_violations",  # Takes way too long and seems to cause memory leaks
         ],
     },
     save_as=benchmark_name,
@@ -240,6 +240,8 @@ def benchmark(early_stop_config: list, dataset_name: str):
     Cross-validate a pipeline with a modified `GapEncoder` instance for the
     high cardinality column. The rest of the columns are dropped.
     """
+
+    max_rows = 50_000
 
     dataset = dataset_map[dataset_name]
 
@@ -275,8 +277,8 @@ def benchmark(early_stop_config: list, dataset_name: str):
                 ("model", estimator),
             ]
         ),
-        dataset.X,
-        dataset.y,
+        dataset.X[:max_rows],
+        dataset.y[:max_rows],
         return_estimator=True,
         n_jobs=-1,
         cv=3,
