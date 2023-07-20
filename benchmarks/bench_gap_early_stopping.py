@@ -516,10 +516,12 @@ if __name__ == "__main__":
     if _args.run:
         regression_datasets = get_regression_datasets()
         classification_datasets = get_classification_datasets()
-        dataset_map = dict(
-            **regression_datasets,
-            **classification_datasets,
-        )
+        dataset_map = {
+            key: value for value, key in regression_datasets + classification_datasets
+        }
+        regression_datasets = [key for value, key in regression_datasets]
+        classification_datasets = [key for value, key in classification_datasets]
+
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
