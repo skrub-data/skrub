@@ -11,7 +11,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from skrub._fuzzy_join import fuzzy_join
 
 
-class FeatureAugmenter(BaseEstimator, TransformerMixin):
+class FeatureAugmenter(TransformerMixin, BaseEstimator):
     """Augment a main table by automatically joining multiple auxiliary tables on it.
 
     Given a list of tables and key column names,
