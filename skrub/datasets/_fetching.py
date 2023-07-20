@@ -398,11 +398,10 @@ def _fetch_figshare(
                 expected_checksum = figshare_id_to_hash[figshare_id]
                 if checksum != expected_checksum:
                     raise OSError(
-                        "{} has an SHA256 checksum ({}) "
-                        "differing from expected ({}), "
-                        "file may be corrupted.".format(
-                            filehandle, checksum, expected_checksum
-                        )
+                        f"{filehandle!r} SHA256 checksum differs from "
+                        f"expected ({checksum}!={expected_checksum}) ; "
+                        f"file is probably corrupted. Please try again. "
+                        f"If the error persists, please open an issue on GitHub. "
                     )
 
             df = ParquetFile(filehandle)
