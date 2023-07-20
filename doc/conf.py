@@ -495,8 +495,7 @@ numpydoc_xref_aliases = {
     "DatetimeEncoder": "skrub.DatetimeEncoder",
     "deduplicate": "skrub.deduplicate",
     "TableVectorizer": "skrub.TableVectorizer",
-    "DatasetInfoOnly": "skrub.datasets._fetching.DatasetInfoOnly",
-    "DatasetAll": "skrub.datasets._fetching.DatasetAll",
+    "Dataset": "skrub.datasets.Dataset",
     "_replace_false_missing": "skrub._table_vectorizer._replace_false_missing",
 }
 

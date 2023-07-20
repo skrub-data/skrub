@@ -10,7 +10,7 @@ from skrub.datasets import (
     fetch_traffic_violations,
 )
 
-from skrub.datasets._fetching import DatasetAll
+from skrub.datasets import Dataset
 
 import pandas as pd
 
@@ -66,7 +66,7 @@ def choose_file(results: list[Path]) -> Path:
         return results[int(choice) - 1]
 
 
-def get_classification_datasets() -> list[tuple[DatasetAll, str]]:
+def get_classification_datasets() -> list[tuple[Dataset, str]]:
     return [
         (fetch_open_payments(), "open_payments"),
         (fetch_drug_directory(), "drug_directory"),
@@ -76,14 +76,14 @@ def get_classification_datasets() -> list[tuple[DatasetAll, str]]:
     ]
 
 
-def get_regression_datasets() -> list[tuple[DatasetAll, str]]:
+def get_regression_datasets() -> list[tuple[Dataset, str]]:
     return [
         (fetch_medical_charge(), "medical_charge"),
         (fetch_employee_salaries(), "employee_salaries"),
     ]
 
 
-def get_dataset(info: tuple[DatasetAll, str]) -> tuple[pd.DataFrame, pd.Series]:
+def get_dataset(info: tuple[Dataset, str]) -> tuple[pd.DataFrame, pd.Series]:
     y = info.y
     X = info.X
     return X, y
