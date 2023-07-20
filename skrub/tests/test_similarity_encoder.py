@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import numpy as np
 import numpy.testing
@@ -136,7 +136,7 @@ def _test_missing_values_transform(input_type: str, missing: str) -> None:
 
 def _test_similarity(
     similarity_f: Callable,
-    hashing_dim: Optional[int] = None,
+    hashing_dim: int | None = None,
     categories: str = "auto",
 ) -> None:
     X = np.array(["aa", "aaa", "aaab"]).reshape(-1, 1)
@@ -177,10 +177,11 @@ def test_similarity_encoder() -> None:
             _test_missing_values_transform(input_type, missing)
 
 
-def test_ngram_similarity_matrix() -> None:
+@pytest.mark.parametrize("analyzer", ["char", "char_wb", "word"])
+def test_ngram_similarity_matrix(analyzer) -> None:
     X1 = np.array(["cat1", "cat2", "cat3"])
     X2 = np.array(["cata1", "caat2", "ccat3"])
-    sim = ngram_similarity_matrix(X1, X2, ngram_range=(2, 2), hashing_dim=5)
+    sim = ngram_similarity_matrix(X1, X2, ngram_range=(2, 2), analyzer=analyzer, hashing_dim=5)
     assert sim.shape == (len(X1), len(X2))
 
 

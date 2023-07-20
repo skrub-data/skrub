@@ -1,7 +1,10 @@
 import collections
-from typing import Any, Hashable
+import importlib
+from collections.abc import Hashable
+from typing import Any
 
 import numpy as np
+from numpy.typing import NDArray
 from sklearn.utils import parse_version  # noqa
 from sklearn.utils import check_array
 
@@ -35,7 +38,7 @@ class LRUDict:
         return key in self.cache
 
 
-def check_input(X) -> np.ndarray:
+def check_input(X) -> NDArray:
     """
     Check input with sklearn standards.
     Also converts X to a numpy array if not already.
@@ -60,3 +63,34 @@ def check_input(X) -> np.ndarray:
             )
 
     return X_
+
+
+def import_optional_dependency(name: str, extra: str = ""):
+    """Import an optional dependency.
+
+    By default, if a dependency is missing an ImportError with a nice
+    message will be raised.
+
+    Parameters
+    ----------
+    name : str
+        The module name.
+    extra : str
+        Additional text to include in the ImportError message.
+
+    Returns
+    -------
+    maybe_module : Optional[ModuleType]
+        The imported module when found.
+    """
+
+    msg = (
+        f"Missing optional dependency '{name}'. {extra} "
+        f"Use pip or conda to install {name}."
+    )
+    try:
+        module = importlib.import_module(name)
+    except ImportError as exc:
+        raise ImportError(msg) from exc
+
+    return module

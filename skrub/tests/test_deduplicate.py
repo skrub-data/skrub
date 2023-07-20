@@ -1,10 +1,12 @@
-from typing import List
+from functools import cache
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
+from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
 from skrub._deduplicate import (
     _create_spelling_correction,
@@ -20,7 +22,7 @@ from skrub.datasets import make_deduplication_data
     [[[500, 100, 1500], 0.05], [[100, 100], 0.02], [[200, 50, 30, 200, 800], 0.01]],
 )
 def test_deduplicate(
-    entries_per_category: List[int],
+    entries_per_category: list[int],
     prob_mistake_per_letter: float,
     seed: int = 123,
 ) -> None:
@@ -50,7 +52,7 @@ def test_deduplicate(
         ~translation_table.index.duplicated(keep="first")
     ]
     assert np.isin(np.unique(deduplicated_data), recovered_categories).all()
-    assert np.alltrue(translation_table[data] == np.array(deduplicated_data))
+    assert np.all(translation_table[data] == np.array(deduplicated_data))
     deduplicated_other_analyzer = np.array(
         deduplicate(data, n_clusters=n_clusters, analyzer="char")
     )
@@ -97,3 +99,67 @@ def test__create_spelling_correction(seed: int = 123) -> None:
             spelling_correction.values[clusters == n].astype("int")
             == counts[clusters == n].max()
         ).all()
+
+
+@cache
+def default_deduplicate(n: int = 500):
+    """
+    Create a default deduplication dataset.
+    """
+    X = make_deduplication_data(
+        examples=["black", "white", "red"],
+        entries_per_example=[n, n, n],
+        prob_mistake_per_letter=0.3,
+    )
+    y = deduplicate(X)
+    return X, y
+
+
+def test_parallelism() -> None:
+    """Tests that parallelism works with different backends and n_jobs."""
+
+    X, y = default_deduplicate(n=200)
+
+    y_parallel = deduplicate(X, n_jobs=2)
+    assert_array_equal(y, y_parallel)
+
+
+DEFAULT_JOBLIB_BACKEND = joblib.parallel.get_active_backend()[0].__class__
+
+
+class DummyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
+    """
+    A dummy backend used to check that specifying a backend works
+    in deduplicate.
+    The `count` attribute is used to check that the backend is used.
+    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.count = 0
+        super().__init__(*args, **kwargs)
+
+    def start_call(self):
+        self.count += 1
+        return super().start_call()
+
+
+joblib.register_parallel_backend("testing", DummyBackend)
+
+
+@skip_if_no_parallel
+def test_backend_respected():
+    """
+    Test that the joblib backend is used.
+    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    """
+    # Test that parallelism works
+    X = make_deduplication_data(
+        examples=["black", "white"], entries_per_example=[15, 15]
+    )
+    deduplicate(X, n_jobs=2)
+
+    # TODO: switch to joblib.parallel_config when we support joblib 1.3
+    with joblib.parallel_backend("testing") as (ba, n_jobs):
+        deduplicate(X, n_jobs=n_jobs)
+    assert ba.count > 0

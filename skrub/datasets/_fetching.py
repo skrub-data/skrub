@@ -1,9 +1,7 @@
 """
-Fetching functions to retrieve example datasets, using
-:func:`sklearn.datasets.fetch_openml`.
+Fetching functions to retrieve example datasets, using fetch_openml.
 
-Public API functions should return either a :obj:`DatasetInfoOnly`
-or a :obj:`DatasetAll`.
+Public API functions should return either a DatasetInfoOnly or a DatasetAll.
 """
 
 # Future notes:
@@ -19,16 +17,15 @@ import warnings
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, TextIO, Union
+from typing import Any, Literal, TextIO
 from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
-from pyarrow.parquet import ParquetFile
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 
-from skrub._utils import parse_version
+from skrub._utils import import_optional_dependency, parse_version
 from skrub.datasets._utils import get_data_dir
 
 # Ignore lines too long, first docstring lines can't be cut
@@ -71,15 +68,14 @@ class Details:
 
 @dataclass(unsafe_hash=True)
 class Features:
-    names: List[str]
+    names: list[str]
 
 
 @dataclass(unsafe_hash=True)
 class DatasetAll:
     """
     Represents a dataset and its information.
-    With this state, the dataset is loaded in memory as a
-    :obj:`~pandas.DataFrame` (`X` and `y`).
+    With this state, the dataset is loaded in memory as a DataFrame (`X` and `y`).
     Additional information such as `path` and `read_csv_kwargs` are provided
     in case the dataframe has to be read from disk, as such:
 
@@ -96,14 +92,13 @@ class DatasetAll:
     X: pd.DataFrame
     y: pd.Series
     path: Path
-    read_csv_kwargs: Dict[str, Any]
+    read_csv_kwargs: dict[str, Any]
 
     def __eq__(self, other: DatasetAll) -> bool:
         """
         Implemented for the tests to work without bloating the code.
         The main reason for which it's needed is that equality between
-        :obj:`~pandas.DataFrame` (`X` and `y`)
-        is often ambiguous and will raise an error.
+        DataFrame (`X` and `y`) is often ambiguous and will raise an error.
         """
         return (
             self.name == other.name
@@ -135,13 +130,13 @@ class DatasetInfoOnly:
     source: str
     target: str
     path: Path
-    read_csv_kwargs: Dict[str, Any]
+    read_csv_kwargs: dict[str, Any]
 
 
 def _fetch_openml_dataset(
     dataset_id: int,
-    data_directory: Optional[Path] = None,
-) -> Dict[str, Any]:
+    data_directory: Path | None = None,
+) -> dict[str, Any]:
     """Gets a dataset from OpenML (https://www.openml.org).
 
     Parameters
@@ -161,7 +156,7 @@ def _fetch_openml_dataset(
               as gathered from OpenML.
           - `source` : str
               The dataset's URL from OpenML.
-          - `path` : :obj:`~pathlib.Path`
+          - `path` : pathlib.Path
               The local path leading to the dataset,
               saved as a CSV file.
     """
@@ -224,8 +219,8 @@ def _fetch_openml_dataset(
 
 def _fetch_world_bank_data(
     indicator_id: str,
-    data_directory: Optional[Path] = None,
-) -> Dict[str, Any]:
+    data_directory: Path | None = None,
+) -> dict[str, Any]:
     """Gets a dataset from World Bank open data platform (https://data.worldbank.org/).
 
     Parameters
@@ -245,7 +240,7 @@ def _fetch_world_bank_data(
               as gathered from World Bank data.
           - `source` : str
               The dataset's URL from the World Bank data platform.
-          - `path` : :obj:`~pathlib.Path`
+          - `path` : pathlib.Path
               The local path leading to the dataset,
               saved as a CSV file.
     """
@@ -307,15 +302,15 @@ def _fetch_world_bank_data(
 
 def _fetch_figshare(
     figshare_id: str,
-    data_directory: Optional[Path] = None,
-) -> Dict[str, Any]:
+    data_directory: Path | None = None,
+) -> dict[str, Any]:
     """Fetch a dataset from figshare using the download ID number.
 
     Parameters
     ----------
     figshare_id : str
         The ID of the dataset to fetch.
-    data_directory : :obj:`~pathlib.Path`, optional
+    data_directory : pathlib.Path, optional
         A directory to save the data to.
         By default, the skrub data directory.
 
@@ -327,7 +322,7 @@ def _fetch_figshare(
               The description of the dataset.
           - `source` : str
               The dataset's URL.
-          - `path` : :obj:`~pathlib.Path`
+          - `path` : pathlib.Path
               The local path leading to the dataset,
               saved as a parquet file.
 
@@ -340,7 +335,7 @@ def _fetch_figshare(
         data_directory = get_data_dir()
     parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
-    url = f"https://figshare.com/ndownloader/files/{figshare_id}"
+    url = f"https://ndownloader.figshare.com/files/{figshare_id}"
     description = f"This table shows the {figshare_id!r} figshare file."
     file_paths = [
         file
@@ -371,6 +366,11 @@ def _fetch_figshare(
             UserWarning,
             stacklevel=2,
         )
+        import_optional_dependency(
+            "pyarrow", extra="pyarrow is required for parquet support."
+        )
+        from pyarrow.parquet import ParquetFile
+
         try:
             filehandle, _ = urllib.request.urlretrieve(url)
             df = ParquetFile(filehandle)
@@ -407,7 +407,7 @@ def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) ->
     ----------
     dataset_id : int
         The ID of the dataset to download.
-    data_directory : :obj:`~pathlib.Path`
+    data_directory : pathlib.Path
         The directory in which the data will be saved.
 
     Raises
@@ -449,7 +449,7 @@ def _read_json_from_gz(compressed_dir_path: Path) -> dict:
 
     Parameters
     ----------
-    compressed_dir_path : :obj:`~pathlib.Path`
+    compressed_dir_path : pathlib.Path
         Path to the `.gz` file to read.
 
     Returns
@@ -474,13 +474,13 @@ def _get_details(compressed_dir_path: Path) -> Details:
 
     Parameters
     ----------
-    compressed_dir_path : :obj:`~pathlib.Path`
+    compressed_dir_path : pathlib.Path
         The path to the `.gz` file containing the details.
 
     Returns
     -------
-    :obj:`Details`
-        A :class:`Details` instance.
+    Details
+        A Details instance.
     """
     details = _read_json_from_gz(compressed_dir_path)["data_set_description"]
     # We filter out the irrelevant information.
@@ -500,13 +500,13 @@ def _get_features(compressed_dir_path: Path) -> Features:
 
     Parameters
     ----------
-    compressed_dir_path : :obj:`~pathlib.Path`
+    compressed_dir_path : pathlib.Path
         Path to the gzip file containing the features.
 
     Returns
     -------
-    :obj:`Features`
-        A :class:`Features` instance.
+    Features
+        A Features instance.
     """
     raw_features = _read_json_from_gz(compressed_dir_path)["data_features"]
     # We filter out the irrelevant information.
@@ -522,12 +522,12 @@ def _export_gz_data_to_csv(
 
     Parameters
     ----------
-    compressed_dir_path : :obj:`~pathlib.Path`
+    compressed_dir_path : pathlib.Path
         Path to the `.gz` file containing the ARFF data.
-    destination_file : :obj:`~pathlib.Path`
+    destination_file : pathlib.Path
         A CSV file to write to.
-    features : :obj:`Features`
-        A :class:`Features` instance containing the first CSV line (the column names).
+    features : Features
+        A Features instance containing the first CSV line (the column names).
     """
     atdata_found = False
     with destination_file.open(mode="w", encoding="utf8") as csv:
@@ -552,16 +552,16 @@ def _features_to_csv_format(features: Features) -> str:
 def _fetch_dataset_as_dataclass(
     source: Literal["openml", "world_bank", "figshare"],
     dataset_name: str,
-    dataset_id: Union[int, str],
-    target: Optional[str],
+    dataset_id: int | str,
+    target: str | None,
     load_dataframe: bool,
-    data_directory: Optional[Union[Path, str]] = None,
-    read_csv_kwargs: Optional[dict] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    data_directory: Path | str | None = None,
+    read_csv_kwargs: dict | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches a dataset from a source, and returns it as a dataclass.
 
     Takes a dataset identifier, a target column name (if applicable),
-    and some additional keyword arguments for :func:`~pandas.read_csv`.
+    and some additional keyword arguments for read_csv.
 
     If you don't need the dataset to be loaded in memory,
     pass `load_dataframe=False`.
@@ -575,10 +575,10 @@ def _fetch_dataset_as_dataclass(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     if isinstance(data_directory, str):
@@ -638,8 +638,8 @@ def fetch_employee_salaries(
     load_dataframe: bool = True,
     drop_linked: bool = True,
     drop_irrelevant: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the employee salaries dataset (regression), available at https://openml.org/d/42125
 
     Description of the dataset:
@@ -659,10 +659,10 @@ def fetch_employee_salaries(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     dataset = _fetch_dataset_as_dataclass(
@@ -692,8 +692,8 @@ def fetch_employee_salaries(
 def fetch_road_safety(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the road safety dataset (classification), available at https://openml.org/d/42803
 
     Description of the dataset:
@@ -704,10 +704,10 @@ def fetch_road_safety(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -726,8 +726,8 @@ def fetch_road_safety(
 def fetch_medical_charge(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the medical charge dataset (regression), available at https://openml.org/d/42720
 
     Description of the dataset:
@@ -742,10 +742,10 @@ def fetch_medical_charge(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -765,8 +765,8 @@ def fetch_medical_charge(
 def fetch_midwest_survey(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the midwest survey dataset (classification), available at https://openml.org/d/42805
 
     Description of the dataset:
@@ -774,10 +774,10 @@ def fetch_midwest_survey(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -797,8 +797,8 @@ def fetch_midwest_survey(
 def fetch_open_payments(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the open payments dataset (classification), available at https://openml.org/d/42738
 
     Description of the dataset:
@@ -807,10 +807,10 @@ def fetch_open_payments(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -831,8 +831,8 @@ def fetch_open_payments(
 def fetch_traffic_violations(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the traffic violations dataset (classification), available at https://openml.org/d/42132
 
     Description of the dataset:
@@ -843,10 +843,10 @@ def fetch_traffic_violations(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -867,8 +867,8 @@ def fetch_traffic_violations(
 def fetch_drug_directory(
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches the drug directory dataset (classification), available at https://openml.org/d/43044
 
     Description of the dataset:
@@ -877,10 +877,10 @@ def fetch_drug_directory(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -901,8 +901,8 @@ def fetch_world_bank_indicator(
     indicator_id: str,
     *,
     load_dataframe: bool = True,
-    directory: Optional[Union[Path, str]] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches a dataset of an indicator from the World Bank open data platform.
 
     Description of the dataset:
@@ -912,10 +912,10 @@ def fetch_world_bank_indicator(
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(
@@ -932,16 +932,16 @@ def fetch_figshare(
     figshare_id: str,
     *,
     load_dataframe: bool = True,
-    directory: Optional[Path] = None,
-) -> Union[DatasetAll, DatasetInfoOnly]:
+    directory: Path | str | None = None,
+) -> DatasetAll | DatasetInfoOnly:
     """Fetches a table of from figshare.
 
     Returns
     -------
-    :obj:`DatasetAll`
+    DatasetAll
         If `load_dataframe=True`
 
-    :obj:`DatasetInfoOnly`
+    DatasetInfoOnly
         If `load_dataframe=False`
     """
     return _fetch_dataset_as_dataclass(

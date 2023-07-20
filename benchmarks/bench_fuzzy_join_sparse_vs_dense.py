@@ -16,7 +16,7 @@ import numbers
 from time import perf_counter
 import warnings
 from collections.abc import Iterable
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,9 +35,9 @@ from sklearn import random_projection
 
 def _numeric_encoding(
     main: pd.DataFrame,
-    main_cols: Union[list, str],
+    main_cols: list | str,
     aux: pd.DataFrame,
-    aux_cols: Union[list, str],
+    aux_cols: list | str,
 ) -> tuple:
     """Encoding numerical columns.
 
@@ -71,11 +71,11 @@ def _numeric_encoding(
 
 def _string_encoding(
     main: pd.DataFrame,
-    main_cols: Union[list, str],
+    main_cols: list | str,
     aux: pd.DataFrame,
-    aux_cols: Union[list, str],
+    aux_cols: list | str,
     analyzer: Literal["word", "char", "char_wb"],
-    ngram_range: Tuple[int, int],
+    ngram_range: int | int,
     encoder: _VectorizerMixin = None,
     sparse: bool = True,
 ) -> tuple:
@@ -146,9 +146,7 @@ def _string_encoding(
         return main_enc_d, aux_enc_d
 
 
-def _nearest_matches(
-    main_array, aux_array, sparse=True
-) -> Tuple[np.ndarray, np.ndarray]:
+def _nearest_matches(main_array, aux_array, sparse=True) -> np.ndarray | np.ndarray:
     """Find the closest matches using the nearest neighbors method.
 
     Parameters
@@ -186,18 +184,18 @@ def fuzzy_join(
     left: pd.DataFrame,
     right: pd.DataFrame,
     how: Literal["left", "right"] = "left",
-    left_on: Optional[Union[str, List[str], List[int]]] = None,
-    right_on: Optional[Union[str, List[str], List[int]]] = None,
-    on: Union[str, List[str], List[int], None] = None,
+    left_on: str | list[str] | list[int] | None = None,
+    right_on: str | list[str] | list[int] | None = None,
+    on: str | list[str] | list[int] | None = None,
     numerical_match: Literal["string", "number"] = "number",
     encoder: _VectorizerMixin = None,
     analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    ngram_range: Tuple[int, int] = (2, 4),
+    ngram_range: tuple[int, int] = (2, 4),
     return_score: bool = False,
     match_score: float = 0,
     drop_unmatched: bool = False,
     sort: bool = False,
-    suffixes: Tuple[str, str] = ("_x", "_y"),
+    suffixes: tuple[str, str] = ("_x", "_y"),
     sparse: bool = True,
 ) -> pd.DataFrame:
     """
@@ -230,10 +228,9 @@ def fuzzy_join(
         similarity on the string representation.
     encoder: _VectorizerMixin, default=None
         Encoder parameter for the Vectorizer.
-        By default, uses a :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        By default, uses a HashingVectorizer.
         It is possible to pass a vectorizer instance inheriting
-        :class:`~sklearn.feature_extraction.text._VectorizerMixin`
-        to tweak the parameters of the encoder.
+        _VectorizerMixin to tweak the parameters of the encoder.
     analyzer : {"word", "char", "char_wb"}, optional, default=`char_wb`
         Analyzer parameter for the HashingVectorizer passed to
         the encoder and used for the string similarities.
@@ -546,8 +543,14 @@ def benchmark(
 
     n_obs = len(joined_fj.index)
 
-    avg_word = np.round(np.mean([joined_fj['title_x'].str.split().map(len).mean(),
-                        joined_fj['title_y'].str.split().map(len).mean()]))
+    avg_word = np.round(
+        np.mean(
+            [
+                joined_fj["title_x"].str.split().map(len).mean(),
+                joined_fj["title_y"].str.split().map(len).mean(),
+            ]
+        )
+    )
 
     pr, re, f1 = evaluate(
         list(zip(joined_fj["title_x"], joined_fj["title_y"])),
@@ -594,10 +597,8 @@ def plot(df: pd.DataFrame):
         obs = current_df["n_obs"][0]
         avg_word = current_df["avg_count"][0]
         axes[i % n_rows, i // n_rows].set_title(
-                f"{dataset_name} "
-                f"Obs={obs} "
-                f"Avg_word_length={avg_word} "
-                )
+            f"{dataset_name} Obs={obs} Avg_word_length={avg_word} "
+        )
         # remove legend
         axes[i % n_rows, i // n_rows].get_legend().remove()
         # Put a legend to the right side if last row

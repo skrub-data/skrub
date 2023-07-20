@@ -1,10 +1,9 @@
 import pandas as pd
-from typing import Tuple
 from skrub.datasets._utils import get_data_dir
 
 
 def get_local_data(dataset_name: str, data_directory: str = None):
-    """ Get the path to the local datasets. """
+    """Get the path to the local datasets."""
     if data_directory is None:
         data_directory = get_data_dir("benchmarks_data")
     left_path = str(data_directory) + f"/left_{dataset_name}.parquet"
@@ -21,9 +20,8 @@ def get_local_data(dataset_name: str, data_directory: str = None):
 
 
 def fetch_data(
-    dataset_name: str,
-    save: bool = True
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    dataset_name: str, save: bool = True
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Fetch datasets from https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark
 
     Parameters
@@ -48,9 +46,9 @@ def fetch_data(
     left_path, right_path, gt_path, file_paths = get_local_data(dataset_name)
     if len(file_paths) == 0:
         repository = "Yeye-He/Auto-Join"
-        dataset_name = dataset_name.replace(' ', '%20')
+        dataset_name = dataset_name.replace(" ", "%20")
         base_url = base_url = (
-            f"https://raw.githubusercontent.com/"
+            "https://raw.githubusercontent.com/"
             f"{repository}/master/autojoin-Benchmark/{dataset_name}"
         )
         left = pd.read_csv(f"{base_url}/source.csv")
@@ -69,9 +67,9 @@ def fetch_data(
 
 def fetch_big_data(
     dataset_name: str,
-    data_type : str = 'Dirty',
+    data_type: str = "Dirty",
     save: bool = True,
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Fetch datasets from https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md
 
     Parameters
@@ -106,13 +104,17 @@ def fetch_big_data(
         idx = pd.concat([test_idx, train_idx, valid_idx], ignore_index=True)
         idx = idx[idx["label"] == 1].reset_index()
 
-        left = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/tableA.csv").iloc[idx["ltable_id"], 1]
-        left = left.rename('title')
-        right = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/tableB.csv").iloc[idx["rtable_id"], 1]
-        right = right.rename('title')
+        left = pd.read_csv(
+            f"{link}/{data_type}/{dataset_name}/exp_data/tableA.csv"
+        ).iloc[idx["ltable_id"], 1]
+        left = left.rename("title")
+        right = pd.read_csv(
+            f"{link}/{data_type}/{dataset_name}/exp_data/tableB.csv"
+        ).iloc[idx["rtable_id"], 1]
+        right = right.rename("title")
         left = left.reset_index(drop=True).reset_index()
         right = right.reset_index(drop=True).reset_index()
-        gt = pd.merge(left, right, on='index', suffixes=('_l', '_r'))
+        gt = pd.merge(left, right, on="index", suffixes=("_l", "_r"))
         if save is True:
             left.to_parquet(left_path)
             right.to_parquet(right_path)

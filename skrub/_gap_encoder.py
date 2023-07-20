@@ -2,13 +2,15 @@
 Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 
+from collections.abc import Generator
 from copy import deepcopy
-from typing import Dict, Generator, List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from numpy.random import RandomState
+from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.cluster import KMeans, kmeans_plusplus
@@ -31,12 +33,12 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`~skrub.GapEncoder`
+    GapEncoder
         For more information.
     """
 
     rho_: float
-    H_dict_: Dict[np.ndarray, np.ndarray]
+    H_dict_: dict[NDArray, NDArray]
 
     def __init__(
         self,
@@ -52,10 +54,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         tol: float = 1e-4,
         min_iter: int = 2,
         max_iter: int = 5,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         analyzer: Literal["word", "char", "char_wb"] = "char",
         add_words: bool = False,
-        random_state: Optional[Union[int, RandomState]] = None,
+        random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
     ):
@@ -78,7 +80,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
 
-    def _init_vars(self, X) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _init_vars(self, X) -> tuple[NDArray, NDArray, NDArray]:
         """
         Build the bag-of-n-grams representation `V` of `X` and initialize
         the topics `W`.
@@ -133,7 +135,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             self.rho_ = self.rho ** (self.batch_size / len(X))
         return unq_X, unq_V, lookup
 
-    def _get_H(self, X: np.ndarray) -> np.ndarray:
+    def _get_H(self, X: NDArray) -> NDArray:
         """
         Return the bag-of-n-grams representation of `X`.
         """
@@ -142,7 +144,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             h_out[:] = self.H_dict_[x]
         return H_out
 
-    def _init_w(self, V: np.ndarray, X) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _init_w(self, V: NDArray, X) -> tuple[NDArray, NDArray, NDArray]:
         """
         Initialize the topics `W`.
         If `self.init='k-means++'`, we use the init method of
@@ -196,7 +198,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         B = A.copy()
         return W, A, B
 
-    def fit(self, X, y=None) -> "GapEncoderColumn":
+    def fit(self, X: ArrayLike, y=None) -> "GapEncoderColumn":
         """
         Fit the GapEncoder on `X`.
 
@@ -209,8 +211,8 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`GapEncoderColumn`
-            The fitted :class:`GapEncoderColumn` instance (self).
+        GapEncoderColumn
+            The fitted GapEncoderColumn instance (self).
         """
         # Copy parameter rho
         self.rho_ = self.rho
@@ -265,7 +267,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self,
         n_labels: int = 3,
         prefix: str = "",
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Returns the labels that best summarize the learned components/topics.
         For each topic, labels with the highest activations are selected.
@@ -298,7 +300,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         topic_labels = [prefix + ", ".join(label) for label in topic_labels]
         return topic_labels
 
-    def score(self, X) -> float:
+    def score(self, X: ArrayLike) -> float:
         """Score this instance of `X`.
 
         Returns the Kullback-Leibler divergence between the n-grams counts
@@ -342,7 +344,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         )
         return kl_divergence
 
-    def partial_fit(self, X, y=None) -> "GapEncoderColumn":
+    def partial_fit(self, X: ArrayLike, y=None) -> "GapEncoderColumn":
         """Partial fit this instance on `X`.
 
         To be used in an online learning procedure where batches of data are
@@ -436,7 +438,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             )
             self.H_dict_.update(zip(unseen_X, unseen_H))
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> NDArray:
         """Return the encoded vectors (activations) `H` of input strings in `X`.
 
         Parameters
@@ -446,7 +448,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape (n_samples, n_topics)
+        ndarray, shape (n_samples, n_topics)
             Transformed input.
         """
         check_is_fitted(self, "H_dict_")
@@ -491,8 +493,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     categories estimated from the data. The latent categories are built by
     capturing combinations of substrings that frequently co-occur.
 
-    The :class:`~skrub.GapEncoder` supports online learning on batches of
-    data for scalability through the :func:`~skrub.GapEncoder.partial_fit`
+    The GapEncoder supports online learning on batches of
+    data for scalability through the GapEncoder.partial_fit
     method.
 
     The principle is as follows:
@@ -526,22 +528,19 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         If `True`, use ``rho ** (batch_size / len(X))`` instead of rho to obtain
         an update rate per iteration that is independent of the batch size.
     hashing : bool, optional, default=False
-        If `True`, :class:`~sklearn.feature_extraction.text.HashingVectorizer`
-        is used instead of :class:`~sklearn.feature_extraction.text.CountVectorizer`.
+        If `True`, HashingVectorizer is used instead of CountVectorizer.
         It has the advantage of being very low memory, scalable to large
         datasets as there is no need to store a vocabulary dictionary in
         memory.
     hashing_n_features : int, default=2**12
-        Number of features for the
-        :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        Number of features for the HashingVectorizer.
         Only relevant if `hashing=True`.
     init : {'k-means++', 'random', 'k-means'}, default='k-means++'
         Initialization method of the `W` matrix.
-        If `init='k-means++'`, we use the init method of
-        :class:`~sklearn.cluster.KMeans`.
+        If `init='k-means++'`, we use the init method of KMeans.
         If `init='random'`, topics are initialized with a Gamma distribution.
-        If `init='k-means'`, topics are initialized with a
-        :class:`~sklearn.cluster.KMeans` on the n-grams counts.
+        If `init='k-means'`, topics are initialized with a KMeans on the
+        n-grams counts.
     tol : float, default=1e-4
         Tolerance for the convergence of the matrix `W`.
     min_iter : int, default=2
@@ -553,9 +552,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default='char'
-        Analyzer parameter for the
-        :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
-        / :obj:`~sklearn.feature_extraction.text.CountVectorizer`.
+        Analyzer parameter for the HashingVectorizer / CountVectorizer.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character-level n-gram counts.
         Option ‘char_wb’ creates character n-grams only from text inside word
@@ -563,7 +560,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     add_words : bool, default=False
         If `True`, add the words counts to the bag-of-n-grams representation
         of the input data.
-    random_state : int or :obj:`~numpy.random.RandomState`, optional
+    random_state : int or RandomState, optional
         Random number generator seed for reproducible output across multiple
         function calls.
     rescale_W : bool, default=True
@@ -573,9 +570,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Maximum number of iterations to adjust the activations h at each step.
     handle_missing : {'error', 'empty_impute'}, default='empty_impute'
         Whether to raise an error or impute with empty string ('') if missing
-        values (NaN) are present during :func:`~GapEncoder.fit`
-        (default is to impute).
-        In :func:`~GapEncoder.inverse_transform`, the missing categories will
+        values (NaN) are present during GapEncoder.fit (default is to impute).
+        In GapEncoder.inverse_transform, the missing categories will
         be denoted as `None`.
     n_jobs : int, optional
         The number of jobs to run in parallel.
@@ -589,18 +585,18 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     ----------
     rho_ : float
         Effective update rate for the `W` matrix.
-    fitted_models_ : list of :obj:`GapEncoderColumn`
+    fitted_models_ : list of GapEncoderColumn
         Column-wise fitted GapEncoders.
     column_names_ : list of str
         Column names of the data the Gap was fitted on.
 
     See Also
     --------
-    :class:`skrub.MinHashEncoder`
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder`
+    SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
-    :class:`skrub.deduplicate`
+    deduplicate :
         Deduplicate data by hierarchically clustering similar strings.
 
     References
@@ -621,7 +617,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     >>> enc.fit(X)
     GapEncoder(n_components=2)
 
-    The :class:`~skrub.GapEncoder` has found the following two topics:
+    The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names_out()
     ['england, london, uk', 'france, paris, pqris']
@@ -646,8 +642,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     """
 
     rho_: float
-    fitted_models_: List[GapEncoderColumn]
-    column_names_: List[str]
+    fitted_models_: list[GapEncoderColumn]
+    column_names_: list[str]
 
     def __init__(
         self,
@@ -664,14 +660,14 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         tol: float = 1e-4,
         min_iter: int = 2,
         max_iter: int = 5,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         analyzer: Literal["word", "char", "char_wb"] = "char",
         add_words: bool = False,
-        random_state: Optional[Union[int, RandomState]] = None,
+        random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
         handle_missing: Literal["error", "empty_impute"] = "zero_impute",
-        n_jobs: Optional[int] = None,
+        n_jobs: int | None = None,
         verbose: int = 0,
     ):
         self.ngram_range = ngram_range
@@ -696,7 +692,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.n_jobs = n_jobs
         self.verbose = verbose
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """
@@ -746,7 +742,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         return X
 
-    def fit(self, X, y=None) -> "GapEncoder":
+    def fit(self, X: ArrayLike, y=None) -> "GapEncoder":
         """Fit the instance on X.
 
         Parameters
@@ -758,8 +754,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~skrub.GapEncoder`
-            The fitted :class:`~skrub.GapEncoder` instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
 
         # Check that n_samples >= n_components
@@ -781,7 +777,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         )
         return self
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> NDArray:
         """Return the encoded vectors (activations) `H` of input strings in `X`.
 
         Given the learnt topics `W`, the activations `H` are tuned to fit
@@ -799,7 +795,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape (n_samples, n_topics * n_features)
+        ndarray, shape (n_samples, n_topics * n_features)
             Transformed input.
         """
         check_is_fitted(self, "fitted_models_")
@@ -812,7 +808,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         X_enc = np.hstack(X_enc)
         return X_enc
 
-    def partial_fit(self, X, y=None) -> "GapEncoder":
+    def partial_fit(self, X: ArrayLike, y=None) -> "GapEncoder":
         """Partial fit this instance on X.
 
         To be used in an online learning procedure where batches of data are
@@ -827,8 +823,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~skrub.GapEncoder`
-            The fitted :class:`~skrub.GapEncoder` instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
 
         # If X is a dataframe, store its column names
@@ -849,7 +845,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
     def get_feature_names_out(
         self,
-        col_names: Optional[Union[Literal["auto"], List[str]]] = None,
+        col_names: Literal["auto"] | list[str] | None = None,
         n_labels: int = 3,
         input_features=None,
     ):
@@ -899,7 +895,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             labels.extend(col_labels)
         return labels
 
-    def score(self, X) -> float:
+    def score(self, X: ArrayLike) -> float:
         """Score this instance on `X`.
 
         Returns the sum over the columns of `X` of the Kullback-Leibler
@@ -923,7 +919,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         return kl_divergence
 
 
-def _rescale_W(W: np.ndarray, A: np.ndarray) -> None:
+def _rescale_W(W: NDArray, A: NDArray) -> None:
     """
     Rescale the topics `W` to have a L1-norm equal to 1.
     Note that they are modified in-place.
@@ -934,14 +930,14 @@ def _rescale_W(W: np.ndarray, A: np.ndarray) -> None:
 
 
 def _multiplicative_update_w(
-    Vt: np.ndarray,
-    W: np.ndarray,
-    A: np.ndarray,
-    B: np.ndarray,
-    Ht: np.ndarray,
+    Vt: NDArray,
+    W: NDArray,
+    A: NDArray,
+    B: NDArray,
+    Ht: NDArray,
     rescale_W: bool,
     rho: float,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[NDArray, NDArray, NDArray]:
     """
     Multiplicative update step for the topics `W`.
     """
@@ -955,7 +951,7 @@ def _multiplicative_update_w(
     return W, A, B
 
 
-def _rescale_h(V: np.ndarray, H: np.ndarray) -> np.ndarray:
+def _rescale_h(V: NDArray, H: NDArray) -> NDArray:
     """
     Rescale the activations `H`.
     """
@@ -966,9 +962,9 @@ def _rescale_h(V: np.ndarray, H: np.ndarray) -> np.ndarray:
 
 
 def _multiplicative_update_h(
-    Vt: np.ndarray,
-    W: np.ndarray,
-    Ht: np.ndarray,
+    Vt: NDArray,
+    W: NDArray,
+    Ht: NDArray,
     epsilon: float = 1e-3,
     max_iter: int = 10,
     rescale_W: bool = False,
@@ -1003,9 +999,9 @@ def _multiplicative_update_h(
 
 
 def batch_lookup(
-    lookup: np.ndarray,
+    lookup: NDArray,
     n: int = 1,
-) -> Generator[Tuple[np.ndarray, np.ndarray], None, None]:
+) -> Generator[tuple[NDArray, NDArray], None, None]:
     """
     Make batches of the lookup array.
     """
@@ -1017,15 +1013,15 @@ def batch_lookup(
 
 
 def get_kmeans_prototypes(
-    X,
+    X: ArrayLike,
     n_prototypes: int,
     analyzer: Literal["word", "char", "char_wb"] = "char",
     hashing_dim: int = 128,
-    ngram_range: Tuple[int, int] = (2, 4),
+    ngram_range: tuple[int, int] = (2, 4),
     sparse: bool = False,
     sample_weight=None,
-    random_state: Optional[Union[int, RandomState]] = None,
-):
+    random_state: int | RandomState | None = None,
+) -> NDArray:
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)
@@ -1042,7 +1038,7 @@ def get_kmeans_prototypes(
     projected = vectorizer.transform(X)
     if not sparse:
         projected = projected.toarray()
-    kmeans = KMeans(n_clusters=n_prototypes, random_state=random_state)
+    kmeans = KMeans(n_clusters=n_prototypes, n_init=10, random_state=random_state)
     kmeans.fit(projected, sample_weight=sample_weight)
     centers = kmeans.cluster_centers_
     neighbors = NearestNeighbors()

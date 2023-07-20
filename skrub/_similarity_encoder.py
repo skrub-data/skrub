@@ -3,11 +3,12 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Literal
 
 import numpy as np
 import sklearn
 from joblib import Parallel, delayed
+from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
@@ -22,31 +23,31 @@ from ._utils import parse_version
 
 
 def _ngram_similarity_one_sample_inplace(
-    x_count_vector: np.ndarray,
-    vocabulary_count_matrix: np.ndarray,
+    x_count_vector: NDArray,
+    vocabulary_count_matrix: NDArray,
     str_x: str,
-    vocabulary_ngram_counts: np.ndarray,
+    vocabulary_ngram_counts: NDArray,
     se_dict: dict,
-    unq_X: np.ndarray,
+    unq_X: NDArray,
     i: int,
-    ngram_range: Tuple[int, int],
+    ngram_range: tuple[int, int],
 ) -> None:
     """
     Update inplace a dict of similarities between a string and a vocabulary
 
     Parameters
     ----------
-    x_count_vector : :obj:`~numpy.ndarray`
+    x_count_vector : ndarray
         Count vector of the sample based on the ngrams of the vocabulary
-    vocabulary_count_matrix : :obj:`~numpy.ndarray`
+    vocabulary_count_matrix : ndarray
         Count vector of the vocabulary based on its ngrams
     str_x: str
         The actual sample string
-    vocabulary_ngram_counts : :obj:`~numpy.ndarray`
+    vocabulary_ngram_counts : ndarray
         Number of ngrams for each unique element of the vocabulary
     se_dict : dict
         Dictionary containing the similarities for each x in unq_X
-    unq_X : :obj:`~numpy.ndarray`
+    unq_X : ndarray
         The arrays of all unique samples
     i : str
         The index of x_count_vector in the csr count matrix
@@ -73,11 +74,12 @@ def _ngram_similarity_one_sample_inplace(
 
 def ngram_similarity_matrix(
     X,
-    cats: List[str],
-    ngram_range: Tuple[int, int],
+    cats: list[str],
+    ngram_range: tuple[int, int],
+    analyzer: Literal["word", "char", "char_wb"],
     hashing_dim: int,
     dtype: type = np.float64,
-) -> np.ndarray:
+) -> NDArray:
     """
     Similarity encoding for dirty categorical variables:
     Given two arrays of strings, returns the similarity encoding matrix
@@ -92,12 +94,12 @@ def ngram_similarity_matrix(
     unq_X_ = np.array([" %s " % x for x in unq_X])
     if not hashing_dim:
         vectorizer = CountVectorizer(
-            analyzer="char", ngram_range=(min_n, max_n), dtype=dtype
+            analyzer=analyzer, ngram_range=(min_n, max_n), dtype=dtype
         )
         vectorizer.fit(np.concatenate((cats, unq_X_)))
     else:
         vectorizer = HashingVectorizer(
-            analyzer="char",
+            analyzer=analyzer,
             ngram_range=(min_n, max_n),
             n_features=hashing_dim,
             norm=None,
@@ -136,8 +138,8 @@ class SimilarityEncoder(OneHotEncoder):
     The input to this transformer should be an array-like of strings.
     The method is based on calculating the morphological similarities
     between the categories.
-    This encoding is an alternative to
-    :class:`~sklearn.preprocessing.OneHotEncoder` for dirty categorical variables.
+    This encoding is an alternative to OneHotEncoder for
+    dirty categorical variables.
 
     The principle of this encoder is as follows:
 
@@ -163,6 +165,12 @@ class SimilarityEncoder(OneHotEncoder):
         The lower and upper boundaries of the range of n-values for different
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
+    analyzer : {'word', 'char', 'char_wb'}, default='char'
+        Analyzer parameter for the HashingVectorizer / CountVectorizer.
+        Describes whether the matrix `V` to factorize should be made of
+        word counts or character-level n-gram counts.
+        Option ‘char_wb’ creates character n-grams only from text inside word
+        boundaries; n-grams at the edges of words are padded with space.
     categories : {'auto'} or list of list of str
         Categories (unique values) per feature:
 
@@ -171,9 +179,9 @@ class SimilarityEncoder(OneHotEncoder):
           column. The passed categories must be sorted and should not mix
           strings and numeric values.
 
-        The categories used can be found in the
-        :attr:`~SimilarityEncoder.categories_` attribute.
-    dtype : number type, default :class:`~numpy.float64`
+        The categories used can be found in the SimilarityEncoder.categories_
+        attribute.
+    dtype : number type, default=float64
         Desired dtype of output.
     handle_unknown : 'error' or 'ignore', default=''
         Whether to raise an error or ignore if an unknown categorical feature
@@ -190,38 +198,35 @@ class SimilarityEncoder(OneHotEncoder):
         will be all zeros. In the inverse transform, the missing category
         will be denoted as None.
     hashing_dim : int, optional
-        If `None`, the base vectorizer is a
-        :obj:`~sklearn.feature_extraction.text.CountVectorizer`,
-        otherwise it is a
-        :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
-        with a number of features equal to `hashing_dim`.
+        If `None`, the base vectorizer is a CountVectorizer, otherwise it is a
+        HashingVectorizer with a number of features equal to `hashing_dim`.
     n_jobs : int, optional
         Maximum number of processes used to compute similarity matrices. Used
-        only if `fast=True` in :func:`~SimilarityEncoder.transform`.
+        only if `fast=True` in SimilarityEncoder.transform.
 
     Attributes
     ----------
-    categories_ : list of :obj:`~numpy.ndarray`
+    categories_ : list of ndarray
         The categories of each feature determined during fitting
-        (in the same order as the output of :func:`~SimilarityEncoder.transform`).
+        (in the same order as the output of SimilarityEncoder.transform).
 
     See Also
     --------
-    :class:`skrub.MinHashEncoder` :
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.GapEncoder` :
+    GapEncoder :
         Encodes dirty categories (strings) by constructing latent topics
         with continuous encoding.
-    :class:`skrub.deduplicate` :
+    deduplicate :
         Deduplicate data by hierarchically clustering similar strings.
 
     Notes
     -----
-    The functionality of :class:SimilarityEncoder is easy to explain and understand,
+    The functionality of SimilarityEncoder is easy to explain and understand,
     but it is not scalable. It is useful only to capture links across a few categories
     (eg eg: “west”, “north”, “north-west”), but not when there are many categories,
     as with open-ended entries.
-    Instead, the :class:~skrub.GapEncoder is usually recommended.
+    Instead, the GapEncoder is usually recommended.
 
     References
     ----------
@@ -237,8 +242,7 @@ class SimilarityEncoder(OneHotEncoder):
     >>> enc.fit(X)
     SimilarityEncoder()
 
-    It inherits the same methods as the
-    :class:`~sklearn.preprocessing.OneHotEncoder`:
+    It inherits the same methods as theOneHotEncoder:
 
     >>> enc.categories_
     [array(['Female', 'Male'], dtype=object), array([1, 2, 3], dtype=object)]
@@ -260,24 +264,25 @@ class SimilarityEncoder(OneHotEncoder):
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
     """
 
-    categories_: List[np.ndarray]
+    categories_: list[NDArray]
     n_features_in_: int
-    drop_idx_: np.ndarray
-    vectorizers_: List[CountVectorizer]
-    vocabulary_count_matrices_: List[np.ndarray]
-    vocabulary_ngram_counts_: List[List[int]]
+    drop_idx_: NDArray
+    vectorizers_: list[CountVectorizer]
+    vocabulary_count_matrices_: list[NDArray]
+    vocabulary_ngram_counts_: list[list[int]]
     _infrequent_enabled: bool
 
     def __init__(
         self,
         *,
-        ngram_range: Tuple[int, int] = (2, 4),
-        categories: Union[Literal["auto"], List[List[str]]] = "auto",
+        ngram_range: tuple[int, int] = (2, 4),
+        analyzer: Literal["word", "char", "char_wb"] = "char",
+        categories: Literal["auto"] | list[list[str]] = "auto",
         dtype: type = np.float64,
         handle_unknown: Literal["error", "ignore"] = "ignore",
         handle_missing: Literal["error", ""] = "",
-        hashing_dim: Optional[int] = None,
-        n_jobs: Optional[int] = None,
+        hashing_dim: int | None = None,
+        n_jobs: int | None = None,
     ):
         super().__init__()
         self.categories = categories
@@ -285,6 +290,7 @@ class SimilarityEncoder(OneHotEncoder):
         self.handle_unknown = handle_unknown
         self.handle_missing = handle_missing
         self.ngram_range = ngram_range
+        self.analyzer = analyzer
         self.hashing_dim = hashing_dim
         self.n_jobs = n_jobs
 
@@ -295,7 +301,7 @@ class SimilarityEncoder(OneHotEncoder):
                     "'auto' or a list of prototypes. "
                 )
 
-    def fit(self, X, y=None) -> "SimilarityEncoder":
+    def fit(self, X: ArrayLike, y=None) -> "SimilarityEncoder":
         """Fit the instance to `X`.
 
         Parameters
@@ -307,8 +313,8 @@ class SimilarityEncoder(OneHotEncoder):
 
         Returns
         -------
-        :obj:`SimilarityEncoder`
-            The fitted :class:`SimilarityEncoder` instance (self).
+        SimilarityEncoder
+            The fitted SimilarityEncoder instance (self).
         """
 
         if self.handle_missing not in ["error", ""]:
@@ -381,8 +387,8 @@ class SimilarityEncoder(OneHotEncoder):
 
         for i in range(n_features):
             vectorizer = CountVectorizer(
-                analyzer="char",
                 ngram_range=self.ngram_range,
+                analyzer=self.analyzer,
                 dtype=self.dtype,
                 strip_accents=None,
             )
@@ -418,7 +424,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         return self
 
-    def transform(self, X, fast: bool = True) -> np.ndarray:
+    def transform(self, X: ArrayLike, fast: bool = True) -> NDArray:
         """Transform `X` using specified encoding scheme.
 
         Parameters
@@ -430,7 +436,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape [n_samples, n_features_new]
+        ndarray, shape [n_samples, n_features_new]
             Transformed input.
         """
         check_is_fitted(self, "categories_")
@@ -482,6 +488,7 @@ class SimilarityEncoder(OneHotEncoder):
                     Xlist[j],
                     categories,
                     ngram_range=(min_n, max_n),
+                    analyzer=self.analyzer,
                     hashing_dim=self.hashing_dim,
                     dtype=np.float32,
                 )
@@ -492,13 +499,13 @@ class SimilarityEncoder(OneHotEncoder):
 
     def _ngram_similarity_fast(
         self,
-        X: Union[list, np.ndarray],
+        X: list | NDArray,
         col_idx: int,
-    ) -> np.ndarray:
+    ) -> NDArray:
         """
         Fast computation of ngram similarity.
 
-        :func:`~skrub.SimilarityEncoder.transform` uses the count vectors
+        SimilarityEncoder.transform uses the count vectors
         of the vocabulary in its computations.
         In `ngram_similarity`, these count vectors have to be
         re-computed each time, which can slow down the execution. In this
@@ -508,7 +515,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         Parameters
         ----------
-        X : list or :obj:`numpy.ndarray`
+        X : list or ndarray
             Observations being transformed.
         col_idx : int
             The column index of X in the original feature matrix.

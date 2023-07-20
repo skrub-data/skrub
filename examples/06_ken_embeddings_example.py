@@ -14,6 +14,9 @@ These will be called `KEN embeddings` in the following example.
 We will see that these embeddings of common entities significantly
 improve our results.
 
+.. note::
+    This example requires `pyarrow` to be installed.
+
 .. [#] https://soda-inria.github.io/ken_embeddings/
 
 
