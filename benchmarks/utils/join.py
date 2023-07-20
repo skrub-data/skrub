@@ -1,4 +1,5 @@
 import pandas as pd
+
 from skrub.datasets._utils import get_data_dir
 
 
@@ -22,7 +23,7 @@ def get_local_data(dataset_name: str, data_directory: str = None):
 def fetch_data(
     dataset_name: str, save: bool = True
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Fetch datasets from https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark
+    """Fetch datasets from https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark  # noqa
 
     Parameters
     ----------
@@ -70,7 +71,7 @@ def fetch_big_data(
     data_type: str = "Dirty",
     save: bool = True,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Fetch datasets from https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md
+    """Fetch datasets from https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md  # noqa
 
     Parameters
     ----------

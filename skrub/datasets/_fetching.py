@@ -397,8 +397,8 @@ def _fetch_figshare(
                     raise OSError(
                         f"{filehandle!r} SHA256 checksum differs from "
                         f"expected ({checksum}!={expected_checksum}) ; "
-                        f"file is probably corrupted. Please try again. "
-                        f"If the error persists, please open an issue on GitHub. "
+                        "file is probably corrupted. Please try again. "
+                        "If the error persists, please open an issue on GitHub. "
                     )
 
             df = ParquetFile(filehandle)
