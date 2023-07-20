@@ -30,6 +30,8 @@ def get_data_home(data_home: Path | str | None = None) -> Path:
         data_home = Path("~").expanduser() / "skrub_data"
     elif isinstance(data_home, str):
         data_home = Path(data_home)
+    else:
+        data_home = Path(data_home).resolve()
     data_home.mkdir(parents=True, exist_ok=True)
     return data_home
 
