@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
-from sklearn.utils.validation import check_is_fitted, _check_y
+from sklearn.utils.validation import _check_y, check_is_fitted
 
 from skrub._utils import check_input
 
