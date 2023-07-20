@@ -79,13 +79,13 @@ encoder.get_feature_names_out()
 ###############################################################################
 X_
 
-from pprint import pprint
-
 ###############################################################################
 # One-liner with the |TV|
 # .......................
 # The |DtE| is used by default in the |TV|, which
 # automatically detects datetime features.
+from pprint import pprint
+
 from skrub import TableVectorizer
 
 table_vec = TableVectorizer()

@@ -58,10 +58,10 @@ X.head(3)
 y = X["Global_Sales"]
 y
 
-import matplotlib.pyplot as plt
 
 ###############################################################################
 # Let's take a look at the distribution of our target variable:
+import matplotlib.pyplot as plt
 import seaborn as sns
 
 sns.set_theme(style="ticks")

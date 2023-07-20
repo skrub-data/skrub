@@ -386,12 +386,11 @@ df_final = fa.fit_transform(df)
 
 df_final.head(10)
 
-from sklearn.compose import make_column_transformer
-
 ##########################################################################
 # And that's it! As previously, we now have a big table
 # ready for machine learning.
 # Let's create our machine learning pipeline:
+from sklearn.compose import make_column_transformer
 from sklearn.pipeline import make_pipeline
 
 # We include only the columns that will be pertinent for our regression:
