@@ -66,7 +66,7 @@ def _tested_estimators():
         GapEncoder,
         MinHashEncoder,
         SimilarityEncoder,
-        # TableVectorizer,
+        TableVectorizer,
         # TargetEncoder,
     ]:
         yield Estimator()
