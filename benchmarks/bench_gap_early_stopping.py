@@ -230,18 +230,27 @@ benchmark_name = Path(__file__).stem
             "employee_salaries",
             # "road_safety",  # https://github.com/skrub-data/skrub/issues/622
             "drug_directory",
-            "traffic_violations",  # Takes way too long and seems to cause memory leaks
+            "traffic_violations",
         ],
+        "batch_size": [
+            32,
+            128,
+            512,
+        ],
+        "max_iter_e_step": [2, 5, 10],
     },
     save_as=benchmark_name,
+    repeat=3,
 )
-def benchmark(early_stop_config: list, dataset_name: str):
+def benchmark(
+    early_stop_config: list, dataset_name: str, batch_size: int, max_iter_e_step: int
+):
     """
     Cross-validate a pipeline with a modified `GapEncoder` instance for the
     high cardinality column. The rest of the columns are dropped.
     """
 
-    max_rows = 50_000
+    max_rows = 500
 
     dataset = dataset_map[dataset_name]
 
@@ -257,13 +266,14 @@ def benchmark(early_stop_config: list, dataset_name: str):
                     "encoding",
                     TableVectorizer(
                         high_card_cat_transformer=ModifiedGapEncoder(
-                            min_iter=5,
+                            min_iter=2,
                             max_iter=5,
-                            max_iter_e_step=2,
                             random_state=0,
                             early_stop=early_stop_config["early_stop"],
                             patience=early_stop_config["patience"],
                             monitor_steps=early_stop_config["monitor_steps"],
+                            batch_size=batch_size,
+                            max_iter_e_step=max_iter_e_step,
                         ),
                         # drop all other features to check possible degradation in prediction
                         # due to early-stopping in gap-encoded features
@@ -326,6 +336,8 @@ def benchmark(early_stop_config: list, dataset_name: str):
                 }
                 results.append(loop_results)
 
+    # transform a list of dicts to a dict of lists
+    results = {key: [dic[key] for dic in results] for key in results[0]}
     return results
 
 
