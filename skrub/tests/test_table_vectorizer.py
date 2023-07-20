@@ -54,7 +54,7 @@ def _get_clean_dataframe() -> pd.DataFrame:
     )
 
 
-def _get_dirty_dataframe() -> pd.DataFrame:
+def _get_dirty_dataframe(categorical_dtype="object") -> pd.DataFrame:
     """
     Creates a simple DataFrame with some missing values.
     We'll use different types of missing values (np.nan, pd.NA, None)
@@ -65,13 +65,18 @@ def _get_dirty_dataframe() -> pd.DataFrame:
             "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
             "float": pd.Series([5.2, 2.4, 6.2, 10.45, np.nan], dtype="Float64"),
             "str1": pd.Series(
-                ["public", np.nan, "private", "private", "public"], dtype="object"
+                ["public", np.nan, "private", "private", "public"],
+                dtype=categorical_dtype,
             ),
             "str2": pd.Series(
-                ["officer", "manager", None, "chef", "teacher"], dtype="object"
+                ["officer", "manager", None, "chef", "teacher"], dtype=categorical_dtype
             ),
-            "cat1": pd.Series([np.nan, "yes", "no", "yes", "no"], dtype="object"),
-            "cat2": pd.Series(["20K+", "40K+", "60K+", "30K+", np.nan], dtype="object"),
+            "cat1": pd.Series(
+                [np.nan, "yes", "no", "yes", "no"], dtype=categorical_dtype
+            ),
+            "cat2": pd.Series(
+                ["20K+", "40K+", "60K+", "30K+", np.nan], dtype=categorical_dtype
+            ),
         }
     )
 
@@ -247,6 +252,20 @@ def _test_possibilities(X) -> None:
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
 
 
+def test_duplicate_column_names() -> None:
+    """
+    Test to check if the tablevectorizer raises an error with
+    duplicate column names
+    """
+    tablevectorizer = TableVectorizer()
+    # Creates a simple dataframe with duplicate column names
+    data = [(3, "a"), (2, "b"), (1, "c"), (0, "d")]
+    X_dup_col_names = pd.DataFrame.from_records(data, columns=["col_1", "col_1"])
+
+    with pytest.raises(AssertionError,  match=r"Duplicate column names"):
+        tablevectorizer.fit_transform(X_dup_col_names)
+
+
 def test_with_clean_data() -> None:
     """
     Defines the expected returns of the vectorizer in different settings,
@@ -260,7 +279,8 @@ def test_with_dirty_data() -> None:
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a dataset containing missing values.
     """
-    _test_possibilities(_get_dirty_dataframe())
+    _test_possibilities(_get_dirty_dataframe(categorical_dtype="object"))
+    _test_possibilities(_get_dirty_dataframe(categorical_dtype="category"))
 
 
 def test_auto_cast() -> None:
@@ -422,7 +442,8 @@ def test_fit_transform_equiv() -> None:
     """
     for X in [
         _get_clean_dataframe(),
-        _get_dirty_dataframe(),
+        _get_dirty_dataframe(categorical_dtype="object"),
+        _get_dirty_dataframe(categorical_dtype="category"),
         _get_mixed_types_dataframe(),
         _get_mixed_types_array(),
     ]:

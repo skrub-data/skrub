@@ -228,10 +228,9 @@ def fuzzy_join(
         similarity on the string representation.
     encoder: _VectorizerMixin, default=None
         Encoder parameter for the Vectorizer.
-        By default, uses a :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        By default, uses a HashingVectorizer.
         It is possible to pass a vectorizer instance inheriting
-        :class:`~sklearn.feature_extraction.text._VectorizerMixin`
-        to tweak the parameters of the encoder.
+        _VectorizerMixin to tweak the parameters of the encoder.
     analyzer : {"word", "char", "char_wb"}, optional, default=`char_wb`
         Analyzer parameter for the HashingVectorizer passed to
         the encoder and used for the string similarities.

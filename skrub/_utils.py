@@ -1,4 +1,5 @@
 import collections
+import importlib
 from collections.abc import Hashable
 from typing import Any
 
@@ -70,3 +71,34 @@ def check_input(X) -> NDArray:
             )
 
     return X_
+
+
+def import_optional_dependency(name: str, extra: str = ""):
+    """Import an optional dependency.
+
+    By default, if a dependency is missing an ImportError with a nice
+    message will be raised.
+
+    Parameters
+    ----------
+    name : str
+        The module name.
+    extra : str
+        Additional text to include in the ImportError message.
+
+    Returns
+    -------
+    maybe_module : Optional[ModuleType]
+        The imported module when found.
+    """
+
+    msg = (
+        f"Missing optional dependency '{name}'. {extra} "
+        f"Use pip or conda to install {name}."
+    )
+    try:
+        module = importlib.import_module(name)
+    except ImportError as exc:
+        raise ImportError(msg) from exc
+
+    return module
