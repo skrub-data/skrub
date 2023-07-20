@@ -362,6 +362,8 @@ class TableVectorizer(ColumnTransformer):
     types_: dict[str, type]
     imputed_columns_: list[str]
 
+    _transformer_to_input_indices: dict[str, list[int]]
+
     # Override required parameters
     _required_parameters = []
 
