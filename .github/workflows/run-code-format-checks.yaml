@@ -18,4 +18,4 @@ jobs:
         pre-commit install
 
     - name: Run checks
-      run: pre-commit run --all-files --show-diff-on-failure
+      run: pre-commit run -v --all-files --show-diff-on-failure
