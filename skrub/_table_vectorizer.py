@@ -538,13 +538,14 @@ class TableVectorizer(ColumnTransformer):
             base_name = name.split("_split_")[0]
             if base_name not in base_names:
                 base_names.append(base_name)
-        # merge all transformers with the same base name
         for base_name in base_names:
+            # merge all transformers with the same base name
+            transformers, columns, names = [], [], []
             for name, trans, cols in self.transformers_:
                 if name.startswith(base_name):
-                    names, transformers, nested_columns = zip(*self.transformers_)
-                    # Flatten list[list[str]] to list[str]
-                    columns = [column for column in columns for columns in nested_columns]
+                    columns.extend(cols)
+                    transformers.append(trans)
+                    names.append(name)
             if len(transformers) == 1:
                 new_transformers_.append((base_name, transformers[0], columns))
                 new_transformer_to_input_indices[base_name] = list(
