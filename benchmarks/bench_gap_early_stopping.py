@@ -250,7 +250,7 @@ def benchmark(
     high cardinality column. The rest of the columns are dropped.
     """
 
-    max_rows = 500
+    max_rows = 40_000
 
     dataset = dataset_map[dataset_name]
 
