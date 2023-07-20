@@ -5,32 +5,29 @@ among a selection.
 Date: September 2021
 """
 
-import seaborn as sns
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import math
+from argparse import ArgumentParser
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
 )
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_val_score
-
-
-from skrub import TableVectorizer, MinHashEncoder
-
-from argparse import ArgumentParser
+from sklearn.pipeline import Pipeline
 from utils import (
     default_parser,
     find_result,
-    monitor,
-    get_dataset,
     get_classification_datasets,
+    get_dataset,
     get_regression_datasets,
+    monitor,
 )
 
+from skrub import MinHashEncoder, TableVectorizer
 
 ###############################################
 # Benchmarking TableVectorizer parameters

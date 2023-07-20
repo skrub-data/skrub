@@ -10,7 +10,9 @@ jobs:
   check:
     name: A reviewer will let you know if it is required or can be bypassed
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'no changelog needed') == 0 || contains(github.event.pull_request.labels.*.name, 'CI') == 0 }}
+    if: |
+      ! contains(github.event.pull_request.labels.*.name, 'no changelog needed') &&
+      ! contains(github.event.pull_request.labels.*.name, 'CI')
     steps:
       - name: Get PR number and milestone
         run: |

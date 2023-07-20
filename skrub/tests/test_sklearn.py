@@ -1,15 +1,13 @@
 import numpy as np
 import pytest
-
 import sklearn
 from sklearn.metrics.pairwise import linear_kernel, pairwise_distances
-from sklearn.utils.estimator_checks import (
-    _is_pairwise_metric,
-    parametrize_with_checks,
-)
 from sklearn.utils._tags import _safe_tags
+from sklearn.utils.estimator_checks import _is_pairwise_metric, parametrize_with_checks
 
-from skrub import (
+from skrub._utils import parse_version
+
+from skrub import (  # isort:skip
     DatetimeEncoder,
     # FeatureAugmenter,
     GapEncoder,
@@ -18,7 +16,6 @@ from skrub import (
     TableVectorizer,
     # TargetEncoder,
 )
-from skrub._utils import parse_version
 
 
 def _enforce_estimator_tags_X_monkey_patch(estimator, X, kernel=linear_kernel):
