@@ -243,9 +243,9 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         :obj:`MinHashEncoder`
             The fitted :class:`MinHashEncoder` instance (self).
         """
+        self._check_feature_names(X, reset=True)
         X = check_input(X)
         self._check_n_features(X, reset=True)
-        self._check_feature_names(X, reset=True)
 
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
@@ -276,8 +276,8 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self, "hash_dict_")
         X = check_input(X)
-        self._check_n_features(X, reset=False)
         self._check_feature_names(X, reset=False)
+        self._check_n_features(X, reset=False)
         if self.minmax_hash:
             if self.n_components % 2 != 0:
                 raise ValueError(

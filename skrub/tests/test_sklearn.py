@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 import sklearn
@@ -80,10 +81,10 @@ def _tested_estimators():
 # TODO: remove the skip when the scikit-learn common test will be more lenient towards
 # the string categorical data:
 # xref: https://github.com/scikit-learn/scikit-learn/pull/26860
-@pytest.mark.skipif(
-    parse_version(sklearn.__version__) < parse_version("1.4"),
-    reason="Common tests in scikit-learn are not allowing for categorical string data.",
-)
+# @pytest.mark.skipif(
+#     parse_version(sklearn.__version__) < parse_version("1.4"),
+#     reason="Common tests in scikit-learn are not allowing for categorical string data.",
+# )
 @parametrize_with_checks(list(_tested_estimators()))
 def test_estimators_compatibility_sklearn(estimator, check, request):
     check(estimator)
