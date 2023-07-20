@@ -226,21 +226,20 @@ benchmark_name = Path(__file__).stem
         "dataset_name": [
             "medical_charge",
             "open_payments",
-            "midwest_survey",
+            # "midwest_survey",
             "employee_salaries",
             # "road_safety",  # https://github.com/skrub-data/skrub/issues/622
             "drug_directory",
             "traffic_violations",
         ],
         "batch_size": [
-            32,
             128,
             512,
         ],
-        "max_iter_e_step": [2, 5, 10],
+        "max_iter_e_step": [2, 5],
     },
     save_as=benchmark_name,
-    repeat=3,
+    repeat=1,
 )
 def benchmark(
     early_stop_config: list, dataset_name: str, batch_size: int, max_iter_e_step: int
