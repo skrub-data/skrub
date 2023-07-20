@@ -555,7 +555,15 @@ class TableVectorizer(ColumnTransformer):
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col] = dtype
-        X = X.astype(self.types_)
+        for col, dtype in self.types_.items():
+            # if numerical, convert with errors='coerce'
+            if pd.api.types.is_numeric_dtype(dtype):
+                X[col] = pd.to_numeric(X[col], errors="coerce")
+            # if datetime, convert with errors='coerce'
+            elif pd.api.types.is_datetime64_any_dtype(dtype):
+                X[col] = pd.to_datetime(X[col], errors="coerce")
+            else:
+                X[col] = X[col].astype(dtype)
         return X
 
     def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:

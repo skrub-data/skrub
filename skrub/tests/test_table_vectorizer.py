@@ -260,7 +260,7 @@ def test_duplicate_column_names() -> None:
     data = [(3, "a"), (2, "b"), (1, "c"), (0, "d")]
     X_dup_col_names = pd.DataFrame.from_records(data, columns=["col_1", "col_1"])
 
-    with pytest.raises(AssertionError,  match=r"Duplicate column names"):
+    with pytest.raises(AssertionError, match=r"Duplicate column names"):
         tablevectorizer.fit_transform(X_dup_col_names)
 
 
@@ -666,3 +666,44 @@ def test_mixed_types():
         "low_card_cat": [3],
     }
     check_same_transformers(expected_transformers_array, table_vec.transformers)
+
+
+@pytest.mark.parametrize(
+    "X_fit, X_transform",
+    [
+        # All nans during fit, 1 category during transform
+        (
+            pd.DataFrame(pd.Series([np.nan, np.nan, np.nan])),
+            pd.DataFrame(pd.Series([np.nan, np.nan, "a"])),
+        ),
+        # All floats during fit, 1 category during transform
+        (
+            pd.DataFrame(pd.Series([1.0, 2.0, 3.0])),
+            pd.DataFrame(pd.Series([1.0, 2.0, "a"])),
+        ),
+        # All datetimes during fit, 1 category during transform
+        (
+            pd.DataFrame(
+                pd.Series(
+                    [
+                        pd.Timestamp("2019-01-01"),
+                        pd.Timestamp("2019-01-02"),
+                        pd.Timestamp("2019-01-03"),
+                    ]
+                )
+            ),
+            pd.DataFrame(
+                pd.Series([pd.Timestamp("2019-01-01"), pd.Timestamp("2019-01-02"), "a"])
+            ),
+        ),
+    ],
+)
+def test_changing_types(X_fit, X_transform):
+    """
+    Test that the TableVectorizer performs properly when the
+    type inferred during fit does not match the type of the
+    data during transform.
+    """
+    table_vec = TableVectorizer()
+    table_vec.fit_transform(X_fit)
+    table_vec.transform(X_transform)
