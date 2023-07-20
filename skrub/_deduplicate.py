@@ -38,7 +38,7 @@ def compute_ngram_distance(
 
     Returns
     -------
-    :obj:`~numpy.ndarray`
+    ndarray
         An n-times-(n-1)/2 array of n-gram tf-idf distances between `unique_words`.
 
     Notes
@@ -162,7 +162,7 @@ def deduplicate(
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
-        Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.CountVectorizer`
+        Analyzer parameter for the CountVectorizer
         used for the string similarities.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character n-gram counts.
@@ -183,12 +183,12 @@ def deduplicate(
 
     See Also
     --------
-    :class:`skrub.GapEncoder` :
+    GapEncoder :
         Encodes dirty categories (strings) by constructing latent topics with
         continuous encoding.
-    :class:`skrub.MinHashEncoder` :
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder` :
+    SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Notes
