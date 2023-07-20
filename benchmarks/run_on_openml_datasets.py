@@ -34,7 +34,7 @@ parser.add_argument("--n_jobs", type=int, default=1)
 parser.add_argument("--cache_directory", type=str, default="~/.openml/cache")
 args = parser.parse_args()
 
-# openml.config.cache_directory = os.path.expanduser(args.cache_directory)
+openml.config.cache_directory = os.path.expanduser(args.cache_directory)
 
 types = [1, 2]  # classification and regression
 
