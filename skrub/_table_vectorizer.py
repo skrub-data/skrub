@@ -3,7 +3,6 @@ Implements the TableVectorizer: a preprocessor to automatically apply
 transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
-import copy
 import warnings
 from typing import Literal
 from warnings import warn
