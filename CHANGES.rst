@@ -57,7 +57,7 @@ Major changes
 * Fixes a bug in :class:`TableVectorizer` where `remainder` is now cloned if this is
   a transformer such that the same instance is not shared between different
   transformers.
-  :pr:`xxx` by :user:`Guillaume Lemaitre <glemaitre>`
+  :pr:`678` by :user:`Guillaume Lemaitre <glemaitre>`
 
 Minor changes
 -------------
