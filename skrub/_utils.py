@@ -99,23 +99,22 @@ def import_optional_dependency(name: str, extra: str = ""):
 
 def parse_astype_error_message(e):
     """
-    Parse the error message from a failed df.astype call.
+    Parse the error message from a failed df.astype or pd.to_numeric call.
     """
+    culprit = None
     if str(e).startswith("Given date string"):
         match = re.search(r"Given date string (.*?) not likely", str(e))
         if match:
             culprit = match.group(1)
-        else:
-            culprit = None
     elif str(e).startswith("could not convert"):
         culprit = str(e).split(":")[1].strip()
     elif str(e).startswith("Unknown string format"):
         match = re.search(r"Unknown string format: (.*?) present at position", str(e))
         if match:
             culprit = match.group(1)
-        else:
-            culprit = None
-    else:
-        culprit = None
+    elif str(e).startswith("Unable to parse string"):
+        match = re.search(r"""Unable to parse string "(.*?)" at position""", str(e))
+        if match:
+            culprit = match.group(1)
 
     return culprit

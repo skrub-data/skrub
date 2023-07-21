@@ -571,7 +571,11 @@ class TableVectorizer(ColumnTransformer):
                 self.types_[col] = dtype
         for col, dtype in self.types_.items():
             try:
-                X[col] = X[col].astype(dtype)
+                if pd.api.types.is_numeric_dtype(dtype):
+                    # we don't use astype because it can convert float to int
+                    X[col] = pd.to_numeric(X[col])
+                else:
+                    X[col] = X[col].astype(dtype)
             except ValueError as e:
                 culprit = parse_astype_error_message(e)
                 if culprit is None:
