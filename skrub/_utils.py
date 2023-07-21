@@ -1,5 +1,6 @@
 import collections
 import importlib
+import re
 from collections.abc import Hashable
 from typing import Any
 
@@ -94,3 +95,27 @@ def import_optional_dependency(name: str, extra: str = ""):
         raise ImportError(msg) from exc
 
     return module
+
+
+def parse_astype_error_message(e):
+    """
+    Parse the error message from a failed df.astype call.
+    """
+    if str(e).startswith("Given date string"):
+        match = re.search(r"Given date string (.*?) not likely", str(e))
+        if match:
+            culprit = match.group(1)
+        else:
+            culprit = None
+    elif str(e).startswith("could not convert"):
+        culprit = str(e).split(":")[1].strip()
+    elif str(e).startswith("Unknown string format"):
+        match = re.search(r"Unknown string format: (.*?) present at position", str(e))
+        if match:
+            culprit = match.group(1)
+        else:
+            culprit = None
+    else:
+        culprit = None
+
+    return culprit
