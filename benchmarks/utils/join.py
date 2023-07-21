@@ -5,7 +5,9 @@ from skrub.datasets._utils import get_data_dir
 
 
 def get_local_data(
-    dataset_name: str, data_home: Path | str | None = None, data_directory: str | None = None
+    dataset_name: str,
+    data_home: Path | str | None = None,
+    data_directory: str | None = None,
 ):
     """Get the path to the local datasets."""
     data_directory = get_data_dir(data_directory, data_home)
