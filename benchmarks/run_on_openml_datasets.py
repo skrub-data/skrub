@@ -2,13 +2,13 @@
 This script runs the canonical skrub pipeline on all OpenML datasets.
 It can be used to check that we can deal with any dataset without failing.
 It can also be used to compare our scores to OpenML scores uploaded by other users,
-using the --compare_scores flag (this is slow).
+using the `--compare_scores` flag (this is slow).
 """
-
 
 import openml
 import os
 import numpy as np
+from .utils import default_parser
 from skrub import TableVectorizer, MinHashEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import (
@@ -17,35 +17,40 @@ from sklearn.ensemble import (
 )
 from sklearn.model_selection import cross_val_score
 import argparse
+from loguru import logger
 
 # argparse
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(parents=[default_parser])
 # add max number of rows
 parser.add_argument("--max_rows", type=int, default=500000)
 parser.add_argument("--min_rows", type=int, default=10)
 parser.add_argument("--max_features", type=int, default=1000)
-# int or None
-parser.add_argument("--rows", type=int, default=500)
+parser.add_argument(
+    "--row_limit",
+    type=int,
+    default=500,
+    help="Random sample size taken from the dataset to assert the pipeline works.",
+)
 # add an option to compare scores to OpenML
-parser.add_argument("--compare_scores", action="store_true")
-# n_jobs
+parser.add_argument(
+    "--compare_scores",
+    action="store_true",
+    help="Compare our scores to the ones available on OpenML (this is slow)",
+)
 parser.add_argument("--n_jobs", type=int, default=1)
-# openml cache directory
 parser.add_argument("--cache_directory", type=str, default="~/.openml/cache")
 args = parser.parse_args()
 
 openml.config.cache_directory = os.path.expanduser(args.cache_directory)
 
-types = [1, 2]  # classification and regression
-
-pipe_clf = Pipeline(
+classification_pipeline = Pipeline(
     [
         ("vectorizer", TableVectorizer(high_card_cat_transformer=MinHashEncoder())),
         ("classifier", HistGradientBoostingClassifier()),
     ]
 )
 
-pipe_reg = Pipeline(
+regression_pipeline = Pipeline(
     [
         ("vectorizer", TableVectorizer(high_card_cat_transformer=MinHashEncoder())),
         ("regressor", HistGradientBoostingRegressor()),
@@ -54,95 +59,119 @@ pipe_reg = Pipeline(
 
 errors = {}
 low_scores = {}
+constraint_error_template = "Skipping task {id} because {reason}. "
 
-for type in types:
-    if type == 1:
-        pipe = pipe_clf
-    else:
-        pipe = pipe_reg
-    for task_id in openml.tasks.list_tasks(type=type):
+for type_id, problem, pipeline, metric in [
+    (1, "classification", classification_pipeline, "predictive_accuracy"),
+    (2, "regression", regression_pipeline, "mean_absolute_error"),
+]:
+    for task_id in openml.tasks.list_tasks(type=type_id):
         try:
             task = openml.tasks.get_task(task_id, download_data=False)
             dataset = openml.datasets.get_dataset(task.dataset_id, download_data=False)
             # check if it's not too big
-            if dataset.qualities["NumberOfInstances"] > 500000:
-                print(f"Skipping task {task_id} because it has too many instances")
+            if dataset.qualities["NumberOfInstances"] > args.max_rows:
+                logger.debug(
+                    constraint_error_template.format(
+                        id=task_id, reason="it has too many instances"
+                    )
+                )
                 continue
-            if dataset.qualities["NumberOfInstances"] < 10:
-                print(f"Skipping task {task_id} because it has too few instances")
+            if dataset.qualities["NumberOfInstances"] < args.min_rows:
+                logger.debug(
+                    constraint_error_template.format(
+                        id=task_id, reason="it has too few instances"
+                    )
+                )
                 continue
-            if dataset.qualities["NumberOfFeatures"] > 1000:
-                print(f"Skipping task {task_id} because it has too many features")
+            if dataset.qualities["NumberOfFeatures"] > args.max_features:
+                logger.debug(
+                    constraint_error_template.format(
+                        id=task_id, reason="it has too many features"
+                    )
+                )
                 continue
         except Exception as e:
-            print(f"Skipping task {task_id} because it could not be fetched")
-            print(e)
+            logger.warning(
+                constraint_error_template.format(
+                    id=task_id, reason=f"it could not be fetched, exception: {e}"
+                )
+            )
             continue
-        print(f"Running task {task_id}")
+        logger.info(f"Running task {task_id}")
         try:
             # get results and compare to OpenML
-            if type == 1:
-                metric = "predictive_accuracy"
-            elif type == 2:
-                metric = "mean_absolute_error"
-            if not args.compare_scores:
+            if args.compare_scores:
+                run = openml.runs.run_model_on_task(
+                    pipeline, task, avoid_duplicate_runs=False
+                )
+                scores = list(run.fold_evaluations[metric][0].values())
+                mean = np.mean(scores)
+                std = np.std(scores)
+                # scores is an OrderedDict of OrderedDicts
+                logger.info(f"Task {task_id} scored {mean} +- {std}. ")
+            else:
                 try:
                     X, y, categorical_indicator, attribute_names = dataset.get_data(
                         dataset_format="dataframe", target=task.target_name
                     )
                 except Exception as e:
-                    print(f"Skipping task {task_id} because it could not be downloaded")
-                    print(e)
+                    logger.warning(
+                        constraint_error_template.format(
+                            id=task_id,
+                            reason=f"it could not be fetched, exception: {e}",
+                        )
+                    )
                     continue
                 # fit on a subset of the data to check that it works
-                n = args.rows
+                n = args.row_limit
                 if X.shape[0] < n:
                     n = X.shape[0]
-                X = X.sample(n=n, random_state=42)
+                X = X.sample(n=n, random_state=0)
                 y = y[X.index]
-                scores = cross_val_score(pipe, X, y, cv=2)
-                print(
-                    f"Task {task_id} scored {np.mean(scores)} using"
-                    f" {n}/{dataset.qualities['NumberOfInstances']} rows"
+                scores = cross_val_score(pipeline, X, y, cv=2)
+                mean = np.mean(scores)
+                std = np.std(scores)
+                logger.info(
+                    f"Task {task_id} scored {mean} +- {std} using "
+                    f"{n}/{dataset.qualities['NumberOfInstances']} rows. "
                 )
-            else:
-                run = openml.runs.run_model_on_task(
-                    pipe, task, avoid_duplicate_runs=False
-                )
-                scores = list(run.fold_evaluations[metric][0].values())
-                # scores is an OrderedDict of OrderedDicts
-                print(f"Task {task_id} scored {np.mean(scores)} +- {np.std(scores)}")
             evals = openml.evaluations.list_evaluations(
                 function=metric, tasks=[task_id], output_format="dataframe"
             )
 
-            print(f"OpenML scores on {len(evals)} runs (on the full dataset):")
-            print("25% percentile:", np.percentile(evals.value, 25))
-            print("50% percentile:", np.percentile(evals.value, 50))
-            print("75% percentile:", np.percentile(evals.value, 75))
-            # warn if our score is below the 25% percentile
+            percentiles = {p: np.percentile(evals.value, p) for p in {25, 50, 75}}
+            logger.info(
+                f"OpenML scores on {len(evals)} runs (on the full dataset): "
+                + " ; ".join(
+                    f"{p}% percentile: {value}" for p, value in percentiles.items()
+                )
+            )
             if args.compare_scores:
-                if type == 1 and np.mean(scores) < np.percentile(evals.value, 25):
-                    print("-----------------------------------")
-                    print("WARNING: our score is below the 25% percentile")
-                    print("-----------------------------------")
-                    low_scores[task_id] = np.mean(scores)
-                if type == 2 and np.mean(scores) > np.percentile(evals.value, 25):
-                    print("-----------------------------------")
-                    print("WARNING: our score is above the 25% percentile")
-                    print("-----------------------------------")
+                if (
+                    problem == "classification"
+                    and mean < percentiles[25]
+                    or problem == "regression"
+                    and mean > percentiles[25]
+                ):
+                    logger.warning(
+                        f"Our score is below the 25% percentile on {task_id}"
+                    )
                     low_scores[task_id] = np.mean(scores)
         except Exception as e:
-            print(f"Skipping task {task_id} because of error {e}")
+            logger.warning(
+                constraint_error_template.format(
+                    id=task_id, reason=f"of an unhandled error: {e}"
+                )
+            )
             errors[task_id] = e
             continue
 
-print(f"Finished! {len(errors)} errors occurred")
-print("Task IDs with errors:")
-print(errors.keys())
+logger.info(f"Finished! ")
+logger.error(f"{len(errors)} tasks with errors: {set(errors.keys())}")
+
 if args.compare_scores:
-    print(
-        f"{len(low_scores)} tasks have scores below the 25% percentile of OpenML runs"
+    logger.info(
+        f"{len(low_scores)} tasks with low scores "
+        f"(25% percentile on OpenML runs: {set(low_scores.keys())}"
     )
-    print("Task IDs with low scores:")
-    print(low_scores.keys())
