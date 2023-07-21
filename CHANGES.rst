@@ -89,7 +89,8 @@ Minor changes
   :pr:`623`by :user:`Leo Grinsztajn <LeoGrin>`
 
 * Moved the default storage location of data to the user's home folder.
-  :pr:`652` by :user:`Felix Lefebvre <flefebv>`
+  :pr:`652` by :user:`Felix Lefebvre <flefebv>` and
+  :user:`Gael Varoquaux <GaelVaroquaux>`
 
 * Fixed bug when using :class:`TableVectorizer`'s `transform` method on
   categorical columns with missing values.
