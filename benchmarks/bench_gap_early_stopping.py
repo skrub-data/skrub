@@ -348,6 +348,7 @@ def plot(df: pd.DataFrame):
         elif config["monitor_steps"] == 1:
             results_df_early_stop = df[df["early_stop_config"] == config_str]
         else:
+            monitor_steps = config["monitor_steps"]
             results_df_early_stop_skip = df[df["early_stop_config"] == config_str]
 
     sns.set_theme(style="ticks", palette="pastel")
@@ -410,19 +411,19 @@ def plot(df: pd.DataFrame):
         ax1.axvline(x=n_batches * i, color="gray", linestyle=":")
 
     ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.41))
-
     ax2.bar(
-        ["No Early-Stop", "Early-Stop", "Early-Stop Skip Steps"],
+        ['No Early-Stop', 'Early-Stop', 'Early-Stop Skip Steps'], 
         [
-            results_df.gap_iter.max(),
-            results_df_early_stop.gap_iter.max(),
-            results_df_early_stop_skip.gap_iter.max(),
+            results_df.groupby('cv_test_score').max().gap_iter.mean(), 
+            results_df_early_stop.groupby('cv_test_score').max().gap_iter.mean(), 
+            results_df_early_stop_skip.groupby('cv_test_score').max().gap_iter.mean() * monitor_steps
         ],
-        yerr=[
-            results_df.gap_iter.std(),
-            results_df_early_stop.gap_iter.std(),
-            results_df_early_stop_skip.gap_iter.std(),
-        ],
+        yerr=
+        [
+            results_df.groupby('cv_test_score').max().gap_iter.std(), 
+            results_df_early_stop.groupby('cv_test_score').max().gap_iter.std(), 
+            results_df_early_stop_skip.groupby('cv_test_score').max().gap_iter.std()
+        ]
     )
     ax2.set_ylabel("total n. of batches processed")
 
