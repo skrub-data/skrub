@@ -10,7 +10,7 @@ from warnings import warn
 import numpy as np
 import pandas as pd
 import sklearn
-from numpy.typing import ArrayLike, NDArray
+from numpy.typing import ArrayLike
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
 from scipy import sparse
