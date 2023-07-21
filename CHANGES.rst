@@ -15,6 +15,9 @@ development and backward compatability is not ensured.
 Major changes
 -------------
 
+* :class:`FeatureAugmenter` is renamed as :class:`Joiner` 
+  :pr:`` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
   :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 

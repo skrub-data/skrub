@@ -1,5 +1,5 @@
 """
-Fuzzy joining dirty tables and the FeatureAugmenter
+Fuzzy joining dirty tables and the Joiner
 =====================================================
 
 Here we show how to combine data from different sources,
@@ -24,7 +24,7 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 
 .. |fj| replace:: :func:`~skrub.fuzzy_join`
 
-.. |fa| replace:: :func:`~skrub.FeatureAugmenter`
+.. |fa| replace:: :func:`~skrub.Joiner`
 """
 
 ###############################################################################
@@ -356,7 +356,7 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # a main table.
 
 #######################################################################
-# .. _example_feature_augmenter:
+# .. _example_joiner:
 #
 # Instantiating the transformer
 # .............................
@@ -366,9 +366,9 @@ y = df["Happiness score"]
 # We gather the auxilliary tables into a
 # list of (tables, keys) for the `tables` parameter.
 # An instance of the transformer with the necessary information is:
-from skrub import FeatureAugmenter
+from skrub import Joiner
 
-fa = FeatureAugmenter(
+fa = Joiner(
     tables=[
         (gdppc, "Country Name"),
         (life_exp, "Country Name"),
@@ -416,7 +416,7 @@ pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
 from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
-params = {"featureaugmenter__match_score": [0.2, 0.3, 0.4, 0.5]}
+params = {"Joiner__match_score": [0.2, 0.3, 0.4, 0.5]}
 
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)

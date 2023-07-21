@@ -1,5 +1,5 @@
 """
-Implements the FeatureAugmenter, a that allows chaining multiple fuzzy joins
+Implements the Joiner, a that allows chaining multiple fuzzy joins
 on a table.
 """
 
@@ -21,12 +21,12 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     1. The main table and the key column name are provided at initialisation.
     2. The auxiliary tables are provided for fitting, and will be joined
-       sequentially when FeatureAugmenter.transform is called.
+       sequentially when Joiner.transform is called.
 
     It is advised to use hyperparameter tuning tools such as GridSearchCV
     to determine the best `match_score` parameter, as this can significantly
     improve your results.
-    (see example 'Fuzzy joining dirty tables with the FeatureAugmenter'
+    (see example 'Fuzzy joining dirty tables with the Joiner'
     for an illustration)
 
     Parameters
@@ -110,7 +110,7 @@ class Joiner(TransformerMixin, BaseEstimator):
                       (aux_table_2, "Country name"),
                       (aux_table_3, "Countries")]
 
-    >>> fa = FeatureAugmenter(tables=aux_tables, main_key='Country')
+    >>> fa = Joiner(tables=aux_tables, main_key='Country')
 
     >>> augmented_table = fa.fit_transform(X)
     >>> augmented_table
@@ -135,7 +135,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.analyzer = analyzer
         self.ngram_range = ngram_range
 
-    def fit(self, X: pd.DataFrame, y=None) -> "FeatureAugmenter":
+    def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
 
         In practice, just checks if the key columns in X,
@@ -150,8 +150,8 @@ class Joiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        FeatureAugmenter
-            Fitted FeatureAugmenter instance (self).
+        Joiner
+            Fitted Joiner instance (self).
         """
 
         if self.main_key not in X.columns:

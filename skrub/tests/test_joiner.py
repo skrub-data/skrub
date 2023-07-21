@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
 
-from skrub import FeatureAugmenter
+from skrub import Joiner
 
 
-def test_feature_augmenter() -> None:
+def test_joiner() -> None:
     main_table = pd.DataFrame(
         [
             "France",
@@ -48,7 +48,7 @@ def test_feature_augmenter() -> None:
         (aux_table_3, "Countries"),
     ]
 
-    fa = FeatureAugmenter(tables=aux_tables, main_key="Country")
+    fa = Joiner(tables=aux_tables, main_key="Country")
 
     fa.fit(main_table)
 
@@ -70,7 +70,7 @@ def test_feature_augmenter() -> None:
     big_table = fa.fit_transform(main_table)
     assert big_table.shape == (main_table.shape[0], number_of_cols)
 
-    false_fa = FeatureAugmenter(tables=aux_tables, main_key="Countryy")
+    false_fa = Joiner(tables=aux_tables, main_key="Countryy")
 
     with pytest.raises(
         ValueError,
@@ -84,7 +84,7 @@ def test_feature_augmenter() -> None:
         (aux_table_3, "Countries"),
     ]
 
-    false_fa2 = FeatureAugmenter(tables=false_aux_tables, main_key="Country")
+    false_fa2 = Joiner(tables=false_aux_tables, main_key="Country")
     with pytest.raises(
         ValueError,
         match=r"Got column key",
