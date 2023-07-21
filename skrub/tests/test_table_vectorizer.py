@@ -651,11 +651,11 @@ def test__infer_date_format() -> None:
         ("mh_cat1", MinHashEncoder(), ["cat1"]),
     ],
 )
-def test_specifying_specific_column_transformer(column_specific_transformers) -> None:
+def test_specifying_specific_column_transformer(specific_transformers) -> None:
     X = _get_dirty_dataframe()
 
     tv = TableVectorizer(
-        specific_transformers=[column_specific_transformers],
+        specific_transformers=[specific_transformers],
     )
     X_enc_tv = tv.fit_transform(X)
 
@@ -668,10 +668,10 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
     # We fit_transform the ColumnTransformer, and expect the same
     # transformation (albeit, not necessarily in the same order) as the
     # TableVectorizer.
-    if len(column_specific_transformers) == 2:
+    if len(specific_transformers) == 2:
         # Unnamed assignment
-        column_specific_transformers: tuple[object, list[str]]
-        transformer, columns = column_specific_transformers
+        specific_transformers: tuple[object, list[str]]
+        transformer, columns = specific_transformers
         default_table_vectorizer_assignment = [
             (transformer, columns)
             for _, transformer, columns in TableVectorizer()
@@ -679,21 +679,20 @@ def test_specifying_specific_column_transformer(column_specific_transformers) ->
             .transformers
         ]
         ct = make_column_transformer(
-            *default_table_vectorizer_assignment, column_specific_transformers
+            *default_table_vectorizer_assignment, specific_transformers
         )
         X_enc_ct = ct.fit_transform(X)
-    elif len(column_specific_transformers) == 3:
+    elif len(specific_transformers) == 3:
         # Named assignment
-        column_specific_transformers: tuple[str, object, list[str]]
-        name, transformer, columns = column_specific_transformers
+        specific_transformers: tuple[str, object, list[str]]
+        name, transformer, columns = specific_transformers
         default_table_vectorizer_assignment = (
             TableVectorizer().fit(X.drop(columns=columns)).transformers
         )
         # Assert the name is used in the assignment
         assert name in tv.named_transformers_
         ct = ColumnTransformer(
-            transformers=default_table_vectorizer_assignment
-            + [column_specific_transformers],
+            transformers=default_table_vectorizer_assignment + [specific_transformers],
         )
         X_enc_ct = ct.fit_transform(X)
 
