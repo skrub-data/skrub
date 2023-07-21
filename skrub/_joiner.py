@@ -117,8 +117,8 @@ class Joiner(TransformerMixin, BaseEstimator):
     >>> augmented_table
         Country Country_aux  Population Country name  GDP (billion) Countries Capital
     0   France      France    68000000  French Republic       2937    France   Paris
-    1  Germany     Germany    84000000      Germany           4223   Germany  Berlin
-    2    Italy       Italy    59000000        Italy           2099    Italia    Rome
+    1   Germany     Germany   84000000      Germany           4223   Germany   Berlin
+    2    Italy       Italy    59000000        Italy           2099    Italia   Rome
     """
 
     def __init__(
@@ -161,7 +161,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         for col in self.main_key_:
             if col not in X.columns:
                 raise ValueError(
-                    f"Main key {col!r} not found in columns of X: {X.columns.tolist()}. "
+                    f"Main key {col!r} not found in columns of X:"
+                    f" {X.columns.tolist()}. "
                 )
 
         for table_idx, (df, cols) in enumerate(self.tables):
