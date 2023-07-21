@@ -836,6 +836,18 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
         return all_trans_feature_names
 
+    @property
+    def named_transformers_(self):
+        return self._column_transformer.named_transformers_
+
+    @property
+    def sparse_output_(self):
+        return self._column_transformer.sparse_output_
+
+    @property
+    def output_indices_(self):
+        return self._column_transformer.output_indices_
+
 
 @deprecated("Use TableVectorizer instead.")
 class SuperVectorizer(TableVectorizer):
