@@ -1,6 +1,7 @@
 import shutil
 import tempfile
 from pathlib import Path
+
 import pytest
 
 from skrub.datasets._utils import get_data_dir, get_data_home
