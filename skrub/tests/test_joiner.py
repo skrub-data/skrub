@@ -101,7 +101,7 @@ def test_multiple_keys():
         [["France", "Paris"], ["Italy", "Rome"], ["Germany", "Berlin"]],
         columns=["CO", "CA"],
     )
-    joiner = Joiner()
+    joiner = Joiner(tables=[(df2, ["CO", "CA"])], main_key=["Co", "Ca"])
     result = joiner.fit_transform(df)
     expected = pd.DataFrame(pd.concat([df, df2], axis=1))
     pd.testing.assert_frame_equal(result, expected)
