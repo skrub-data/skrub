@@ -3,7 +3,7 @@ Implements the TableVectorizer: a preprocessor to automatically apply
 transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
-
+import copy
 import warnings
 from typing import Literal
 from warnings import warn
@@ -19,6 +19,7 @@ from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.deprecation import deprecated
+from sklearn.utils.metaestimators import _BaseComposition
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
@@ -149,7 +150,7 @@ OptionalTransformer = (
 )
 
 
-class TableVectorizer(ColumnTransformer):
+class TableVectorizer(TransformerMixin, _BaseComposition):
     """Automatically transform a heterogeneous dataframe to a numerical array.
 
     Easily transforms a heterogeneous data table
@@ -370,8 +371,6 @@ class TableVectorizer(ColumnTransformer):
         transformer_weights=None,
         verbose: bool = False,
     ):
-        super().__init__(transformers=[])
-
         self.cardinality_threshold = cardinality_threshold
         self.low_card_cat_transformer = low_card_cat_transformer
         self.high_card_cat_transformer = high_card_cat_transformer
@@ -395,11 +394,6 @@ class TableVectorizer(ColumnTransformer):
             "allow_nan": [True],
             "_xfail_checks": {
                 "check_complex_data": "Passthrough complex columns as-is.",
-                "check_dont_overwrite_parameters": (
-                    "`transformers` is modified during fit but it is not pass by the"
-                    " user. We need to create an instance of ColumnTransformer instead"
-                    " but the current behaviour is not leading to a bug."
-                ),
             },
         }
 
@@ -615,6 +609,28 @@ class TableVectorizer(ColumnTransformer):
 
         return X
 
+    def fit(self, X, y=None):
+        """Fit all transformers using X.
+
+        Parameters
+        ----------
+        X : {array-like, dataframe} of shape (n_samples, n_features)
+            Input data, of which specified subsets are used to fit the
+            transformers.
+
+        y : array-like of shape (n_samples,...), default=None
+            Targets for supervised learning.
+
+        Returns
+        -------
+        self : ColumnTransformer
+            This estimator.
+        """
+        # we use fit_transform to make sure to set sparse_output_ (for which we
+        # need the transformed data) to have consistent output type in predict
+        self.fit_transform(X, y=y)
+        return self
+
     def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
         """Fit all transformers, transform the data, and concatenate the results.
 
@@ -650,7 +666,6 @@ class TableVectorizer(ColumnTransformer):
         self._clone_transformers()
 
         X = self._check_X(X, reset=True)
-
         self.columns_ = X.columns
 
         # We replace in all columns regardless of their type,
@@ -703,11 +718,11 @@ class TableVectorizer(ColumnTransformer):
         # We will now filter this list, by keeping only the ones with:
         # - at least one column
         # - a valid encoder or string (filter out if None)
-        self.transformers = []
+        self._transformers = []
         for trans in all_transformers:
             name, enc, cols = trans  # Unpack
             if len(cols) > 0 and enc is not None:
-                self.transformers.append(trans)
+                self._transformers.append(trans)
 
         self.imputed_columns_ = []
         if self.impute_missing != "skip":
@@ -730,14 +745,18 @@ class TableVectorizer(ColumnTransformer):
             X = self._auto_cast(X)
 
         if self.verbose:
-            print(f"[TableVectorizer] Assigned transformers: {self.transformers}")
+            print(f"[TableVectorizer] Assigned transformers: {self._transformers}")
 
-        X_enc = super().fit_transform(X, y)
+        self._column_transformer = ColumnTransformer(
+            transformers=self._transformers,
+        )
+        X_enc = self._column_transformer.fit_transform(X, y)
 
         # For the "remainder" columns, the `ColumnTransformer` `transformers_`
         # attribute contains the index instead of the column name,
         # so we convert the values to the appropriate column names
         # if there is less than 20 columns in the remainder.
+        self.transformers_ = self._column_transformer.transformers_
         for i, (name, enc, cols) in enumerate(self.transformers_):
             if name == "remainder" and len(cols) < 20:
                 # In this case, "cols" is a list of ints (the indices)
@@ -772,7 +791,7 @@ class TableVectorizer(ColumnTransformer):
         if self.auto_cast:
             X = self._apply_cast(X)
 
-        return super().transform(X)
+        return self._column_transformer.transform(X)
 
     def get_feature_names_out(self, input_features=None) -> list[str]:
         """Return clean feature names.
@@ -791,10 +810,10 @@ class TableVectorizer(ColumnTransformer):
         list of str
             Feature names.
         """
-        ct_feature_names = super().get_feature_names_out()
+        ct_feature_names = self._column_transformer.get_feature_names_out()
         all_trans_feature_names = []
 
-        for name, trans, cols, _ in self._iter(fitted=True):
+        for name, trans, cols, _ in self._column_transformer._iter(fitted=True):
             if isinstance(trans, str):
                 if trans == "drop":
                     continue
