@@ -74,7 +74,7 @@ def test_joiner() -> None:
 
     with pytest.raises(
         ValueError,
-        match=r"Got main_key",
+        match=r"Main key",
     ):
         false_joiner.fit(main_table)
 
@@ -87,7 +87,7 @@ def test_joiner() -> None:
     false_joiner2 = Joiner(tables=false_aux_tables, main_key="Country")
     with pytest.raises(
         ValueError,
-        match=r"Got column key",
+        match=r"Column key",
     ):
         false_joiner2.fit(main_table)
 
