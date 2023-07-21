@@ -28,10 +28,9 @@ def get_data_home(data_home: Path | str | None = None) -> Path:
     """
     if data_home is None:
         data_home = Path("~").expanduser() / "skrub_data"
-    elif isinstance(data_home, str):
-        data_home = Path(data_home)
     else:
-        data_home = Path(data_home).resolve()
+        data_home = Path(data_home)
+    data_home = data_home.resolve()
     data_home.mkdir(parents=True, exist_ok=True)
     return data_home
 
@@ -51,8 +50,7 @@ def get_data_dir(name: str | None = None, data_home: Path | str | None = None) -
         The path to skrub data directory. If `None`, the default path
         is `~/skrub_data`.
     """
-    data_home = get_data_home(data_home)
-    data_dir = data_home.resolve()
+    data_dir = get_data_home(data_home)
     if name is not None:
         data_dir = data_dir / name
     return data_dir
