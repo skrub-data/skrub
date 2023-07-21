@@ -9,13 +9,11 @@ Date: June 2023
 """
 
 import math
-from utils import default_parser, find_result, monitor
-from utils.join import evaluate, fetch_big_data
-from argparse import ArgumentParser
 import numbers
-from time import perf_counter
 import warnings
+from argparse import ArgumentParser
 from collections.abc import Iterable
+from time import perf_counter
 from typing import Literal
 
 import matplotlib.pyplot as plt
@@ -23,6 +21,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.sparse import hstack, vstack
+from sklearn import random_projection
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
     TfidfTransformer,
@@ -30,7 +29,8 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
-from sklearn import random_projection
+from utils import default_parser, find_result, monitor
+from utils.join import evaluate, fetch_big_data
 
 
 def _numeric_encoding(

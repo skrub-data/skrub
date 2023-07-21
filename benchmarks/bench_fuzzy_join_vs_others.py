@@ -7,21 +7,22 @@ skrub's fuzzy_join outperforms all other methods.
 Date: September 2022
 """
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+import math
 from argparse import ArgumentParser
 from time import perf_counter
-import seaborn as sns
-import math
 
-from thefuzz.fuzz import partial_ratio
-from thefuzz import process
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from autofj import AutoFJ
 from autofj.datasets import load_data
-from skrub import fuzzy_join
+from thefuzz import process
+from thefuzz.fuzz import partial_ratio
 from utils import default_parser, find_result, monitor
 from utils.join import evaluate
+
+from skrub import fuzzy_join
 
 
 def thefuzz_merge(
@@ -35,8 +36,10 @@ def thefuzz_merge(
         df_2: the right table to join
         left_on: key column of the left table
         right_on: key column of the right table
-        threshold: how close the matches should be to return a match, based on Levenshtein distance
-        limit: the amount of matches that will get returned, these are sorted high to low
+        threshold: how close the matches should be to return a match,
+                   based on Levenshtein distance
+        limit: the amount of matches that will get returned, these are sorted
+               high to low
 
     Return:
         Dataframe with boths keys and matches.
@@ -106,7 +109,7 @@ def benchmark(
             how="left",
             left_on="title",
             right_on="title",
-            suffixes=('_l', '_r')
+            suffixes=("_l", "_r"),
         )
         end_time = perf_counter()
         pr, re, f1 = evaluate(
@@ -125,8 +128,8 @@ def benchmark(
             list(zip(gt["title_l"], gt["title_r"])),
         )
     elif join == "thefuzz":
-        left_table.rename(columns={'title': 'title_l'}, inplace=True)
-        right_table.rename(columns={'title': 'title_r'}, inplace=True)
+        left_table.rename(columns={"title": "title_l"}, inplace=True)
+        right_table.rename(columns={"title": "title_r"}, inplace=True)
         start_time = perf_counter()
         joined_fj = thefuzz_merge(
             df_1=left_table,

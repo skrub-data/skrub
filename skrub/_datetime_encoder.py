@@ -121,9 +121,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return {
             "X_types": ["2darray", "categorical"],
             "allow_nan": True,
-            "_xfail_checks": {
-                "check_dtype_object": "Specific datetime error."
-            },
+            "_xfail_checks": {"check_dtype_object": "Specific datetime error."},
         }
 
     def _validate_keywords(self):

@@ -18,9 +18,9 @@
 #
 import os
 import shutil
+import sys
 import warnings
 from datetime import datetime
-import sys
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
@@ -29,7 +29,6 @@ import sys
 sys.path.insert(0, os.path.abspath("sphinxext"))
 from github_link import make_linkcode_resolve
 from sphinx_gallery.notebook import add_code_cell, add_markdown_cell
-
 
 # -- Copy files for docs --------------------------------------------------
 #
@@ -100,7 +99,10 @@ master_doc = "index"
 
 # General information about the project.
 project = "skrub"
-copyright = f"2018-2023, the dirty_cat developers, 2023-{datetime.now().year}, the skrub developers"
+copyright = (
+    f"2018-2023, the dirty_cat developers, 2023-{datetime.now().year}, the skrub"
+    " developers"
+)
 author = "skrub contributors"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -187,10 +189,13 @@ html_theme_options = {
     # "twitter_url": "https://twitter.com/PyData",
     "use_edit_page_button": True,
     "show_toc_level": 1,
-    "navbar_align": "left",  # [left, content, right] For testing that the navbar items align properly
+    # "navbar_align": [left, content, right] to test that navbar items align properly
+    "navbar_align": "left",
     # "navbar_center": ["version-switcher", "navbar-nav"],
     "navbar_center": ["navbar-nav"],
-    "announcement": "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html",
+    "announcement": (
+        "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html"
+    ),
     # "show_nav_level": 2,
     # "navbar_start": ["navbar-logo"],
     # "navbar_end": ["theme-switcher", "navbar-icon-links"],
@@ -317,8 +322,8 @@ intersphinx_mapping = {
 # -- sphinx-gallery configuration ---------------------------------------------
 from sphinx_gallery.sorting import FileNameSortKey  # noqa
 
-if 'dev' in release:
-    binder_branch = 'main'
+if "dev" in release:
+    binder_branch = "main"
 else:
     binder_branch = release
 
@@ -339,9 +344,9 @@ def notebook_modification_function(notebook_content, notebook_filename):
     if "06_ken_embeddings_example" in notebook_filename:
         message_class = "danger"
         message = (
-            "This example requires PyArrow, which is currently unavailable in Pyodide "
-            "(see https://github.com/pyodide/pyodide/issues/2933). Thus, this example cannot "
-            "be run in JupyterLite."
+            "This example requires PyArrow, which is currently unavailable in Pyodide"
+            " (see https://github.com/pyodide/pyodide/issues/2933). Thus, this example"
+            " cannot be run in JupyterLite."
         )
     else:
         message_class = "warning"
@@ -366,10 +371,12 @@ def notebook_modification_function(notebook_content, notebook_filename):
     code_lines.extend(
         [
             "import micropip",
-            "await micropip.install("
-            "'https://test-files.pythonhosted.org/packages/3c/03/"
-            "e1598c7abe536e56834f568f61497ad075d966c4c8fb7d0ad004b81e7bfc/"
-            "skrub-0.0.1.dev1-py3-none-any.whl')"
+            (
+                "await micropip.install("
+                "'https://test-files.pythonhosted.org/packages/3c/03/"
+                "e1598c7abe536e56834f568f61497ad075d966c4c8fb7d0ad004b81e7bfc/"
+                "skrub-0.0.1.dev1-py3-none-any.whl')"
+            ),
         ]
     )
 

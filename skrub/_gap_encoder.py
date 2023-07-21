@@ -20,7 +20,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
-from sklearn.utils.validation import check_is_fitted, _num_samples
+from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from ._utils import check_input
 
