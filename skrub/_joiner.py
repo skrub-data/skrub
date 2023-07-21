@@ -6,6 +6,7 @@ on a table.
 from typing import Literal
 
 import pandas as pd
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from skrub._fuzzy_join import fuzzy_join
@@ -33,7 +34,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     ----------
     tables : list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
         List of (table, column name) tuples, the tables to join.
-    main_key : str
+    main_key : str or list of str
         The key column name in the main table (passed during fit) on which
         the join will be performed.
     match_score : float, default=0
@@ -110,9 +111,9 @@ class Joiner(TransformerMixin, BaseEstimator):
                       (aux_table_2, "Country name"),
                       (aux_table_3, "Countries")]
 
-    >>> fa = Joiner(tables=aux_tables, main_key='Country')
+    >>> joiner = Joiner(tables=aux_tables, main_key='Country')
 
-    >>> augmented_table = fa.fit_transform(X)
+    >>> augmented_table = joiner.fit_transform(X)
     >>> augmented_table
         Country Country_aux  Population Country name  GDP (billion) Countries Capital
     0   France      France    68000000  French Republic       2937    France   Paris
@@ -123,7 +124,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         tables: list[tuple[pd.DataFrame, str]],
-        main_key: str,
+        main_key: str | list[str],
         *,
         match_score: float = 0.0,
         analyzer: Literal["word", "char", "char_wb"] = "char_wb",
@@ -154,17 +155,23 @@ class Joiner(TransformerMixin, BaseEstimator):
             Fitted Joiner instance (self).
         """
 
-        if self.main_key not in X.columns:
-            raise ValueError(
-                f"Got main_key={self.main_key!r}, but column not in {list(X.columns)}."
-            )
+        main_key = np.atleast_1d(self.main_key).tolist()
+        self.main_key_ = main_key
 
-        for pairs in self.tables:
-            if pairs[1] not in pairs[0].columns:
+        for col in self.main_key_:
+            if col not in X.columns:
                 raise ValueError(
-                    f"Got column key {pairs[1]!r}, "
-                    f"but column not in {pairs[0].columns}."
+                    f"Got main_key={col!r}, but column not in {list(X.columns)}."
                 )
+
+        for df, cols in self.tables:
+            cols = np.atleast_1d(cols).tolist()
+            for col in cols:
+                if col not in df.columns:
+                    raise ValueError(
+                        f"Got column key {col!r}, "
+                        f"but column not in {df.columns}."
+                    )
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
@@ -183,15 +190,13 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
 
-        for pairs in self.tables:
-            # TODO: Add an option to fuzzy_join on multiple columns at once
-            # (will be if len(inter_col)!=0)
-            aux_table = pairs[0]
+        for df, cols in self.tables:
+            aux_table = df
             X = fuzzy_join(
                 X,
                 aux_table,
                 left_on=self.main_key,
-                right_on=pairs[1],
+                right_on=cols,
                 match_score=self.match_score,
                 analyzer=self.analyzer,
                 ngram_range=self.ngram_range,

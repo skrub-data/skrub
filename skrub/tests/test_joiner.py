@@ -48,9 +48,9 @@ def test_joiner() -> None:
         (aux_table_3, "Countries"),
     ]
 
-    fa = Joiner(tables=aux_tables, main_key="Country")
+    joiner = Joiner(tables=aux_tables, main_key="Country")
 
-    fa.fit(main_table)
+    joiner.fit(main_table)
 
     number_of_cols = tuple(
         map(
@@ -64,19 +64,19 @@ def test_joiner() -> None:
         )
     )[1]
 
-    big_table = fa.transform(main_table)
+    big_table = joiner.transform(main_table)
     assert big_table.shape == (main_table.shape[0], number_of_cols)
 
-    big_table = fa.fit_transform(main_table)
+    big_table = joiner.fit_transform(main_table)
     assert big_table.shape == (main_table.shape[0], number_of_cols)
 
-    false_fa = Joiner(tables=aux_tables, main_key="Countryy")
+    false_joiner = Joiner(tables=aux_tables, main_key="Countryy")
 
     with pytest.raises(
         ValueError,
         match=r"Got main_key",
     ):
-        false_fa.fit(main_table)
+        false_joiner.fit(main_table)
 
     false_aux_tables = [
         (aux_table_1, "Countrys"),
@@ -84,9 +84,22 @@ def test_joiner() -> None:
         (aux_table_3, "Countries"),
     ]
 
-    false_fa2 = Joiner(tables=false_aux_tables, main_key="Country")
+    false_joiner2 = Joiner(tables=false_aux_tables, main_key="Country")
     with pytest.raises(
         ValueError,
         match=r"Got column key",
     ):
-        false_fa2.fit(main_table)
+        false_joiner2.fit(main_table)
+
+
+def test_multiple_keys():
+    df = pd.DataFrame([['France', 'Paris'],
+                   ['Italia', 'Roma'],
+                   ['Deutchland', 'Berlin']], columns=['Co', 'Ca'])
+    df2 = pd.DataFrame([['France', 'Paris'],
+                        ['Italy', 'Rome'],
+                        ['Germany', 'Berlin']], columns=['CO', 'CA'])
+    joiner = Joiner()
+    result = joiner.fit_transform(df)
+    expected = pd.DataFrame(pd.concat([df, df2], axis=1))
+    pd.testing.assert_frame_equal(result, expected)

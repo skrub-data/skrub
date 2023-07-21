@@ -16,7 +16,7 @@ To illustrate, we will join data from the
 provided in `the World Bank open data platform <https://data.worldbank.org/>`_
 in order to create a first prediction model.
 
-Moreover, the |fa| is a scikit-learn Transformer that makes it easy to
+Moreover, the |joiner| is a scikit-learn Transformer that makes it easy to
 use such fuzzy joining multiple tables to bring in information in a
 machine-learning pipeline. In particular, it enables tuning parameters of
 |fj| to find the matches that maximize prediction accuracy.
@@ -24,7 +24,7 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 
 .. |fj| replace:: :func:`~skrub.fuzzy_join`
 
-.. |fa| replace:: :func:`~skrub.Joiner`
+.. |joiner| replace:: :func:`~skrub.Joiner`
 """
 
 ###############################################################################
@@ -347,12 +347,12 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # beating our result!
 
 #######################################################################
-# Using the |fa| to fuzzy join multiple tables
+# Using the |joiner| to fuzzy join multiple tables
 # --------------------------------------------
 # A faster way to merge different tables from the World Bank
-# to `X` is to use the |fa|.
+# to `X` is to use the |joiner|.
 #
-# The |fa| is a transformer that can easily chain joins of tables on
+# The |joiner| is a transformer that can easily chain joins of tables on
 # a main table.
 
 #######################################################################
@@ -368,7 +368,7 @@ y = df["Happiness score"]
 # An instance of the transformer with the necessary information is:
 from skrub import Joiner
 
-fa = Joiner(
+joiner = Joiner(
     tables=[
         (gdppc, "Country Name"),
         (life_exp, "Country Name"),
@@ -381,8 +381,8 @@ fa = Joiner(
 # Fitting and transforming into the final table
 # .............................................
 # To get our final joined table we will fit and transform the main table (df)
-# with our create instance of the |fa|:
-df_final = fa.fit_transform(df)
+# with our create instance of the |joiner|:
+df_final = joiner.fit_transform(df)
 
 df_final.head(10)
 
@@ -406,7 +406,7 @@ encoder = make_column_transformer(
     remainder="drop",
 )
 
-pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
+pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the parameters of the |fj|.
