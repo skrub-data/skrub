@@ -21,7 +21,7 @@ def test_get_data_dir_existing_folder(data_home_type):
 
         assert (
             get_data_dir(name="tests", data_home=tmp_dir)
-            == Path(target_dir).absolute() / "tests"
+            == data_home / "tests"
         )
 
         # if the folder is missing it will be created
