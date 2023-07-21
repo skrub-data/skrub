@@ -62,7 +62,9 @@ Joining tables
    :template: class.rst
    :nosignatures:
 
-   JoinAggregator
+   AggJoiner
+   AggTarget
+
 
 Deduplication: merging variants of the same entry
 -------------------------------------------------
@@ -91,6 +93,7 @@ Data download and generation
    datasets.fetch_traffic_violations
    datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
+   datasets.fetch_movielens
    datasets.get_ken_table_aliases
    datasets.get_ken_types
    datasets.get_ken_embeddings

@@ -14,6 +14,7 @@ except ModuleNotFoundError:
         "pkg_resources is not available, dependencies versions will not be checked."
     )
 
+from ._agg_joiner import AggJoiner, AggTarget
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._feature_augmenter import FeatureAugmenter
@@ -23,7 +24,6 @@ from ._minhash_encoder import MinHashEncoder
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import SuperVectorizer, TableVectorizer
 from ._target_encoder import TargetEncoder
-from ._join_aggregator import JoinAggregator
 
 with open(_Path(__file__).parent / "VERSION.txt") as _fh:
     __version__ = _fh.read().strip()
@@ -41,5 +41,6 @@ __all__ = [
     "TargetEncoder",
     "deduplicate",
     "compute_ngram_distance",
-    "JoinAggregator",
+    "AggJoiner",
+    "AggTarget",
 ]
