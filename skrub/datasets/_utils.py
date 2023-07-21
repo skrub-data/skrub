@@ -52,7 +52,7 @@ def get_data_dir(name: str | None = None, data_home: Path | str | None = None) -
         is `~/skrub_data`.
     """
     data_home = get_data_home(data_home)
-    data_dir = data_home.resolve()
+    data_dir = data_home.absolute()
     if name is not None:
         data_dir = data_dir / name
     return data_dir
