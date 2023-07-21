@@ -11,8 +11,9 @@ an exact match on the other side.
 The |fj| function enables to join tables without cleaning the data by
 accounting for the label variations.
 
-To illustrate, we will join data from the `2022 World Happiness Report <https://worldhappiness.report/>`_.
-with tables provided in `the World Bank open data platform <https://data.worldbank.org/>`_
+To illustrate, we will join data from the
+`2022 World Happiness Report <https://worldhappiness.report/>`_, with tables
+provided in `the World Bank open data platform <https://data.worldbank.org/>`_
 in order to create a first prediction model.
 
 Moreover, the |fa| is a scikit-learn Transformer that makes it easy to
@@ -34,7 +35,7 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 import pandas as pd
 
 df = pd.read_csv(
-    "https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv",
+    "https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv",  # noqa
     thousands=",",
 )
 df.drop(df.tail(1).index, inplace=True)
@@ -109,6 +110,9 @@ gdppc.sort_values(by="Country Name").tail(7)
 # we have extracted.
 #
 
+# We will ignore the warnings:
+import warnings
+
 ###############################################################################
 # .. _example_fuzzy_join:
 #
@@ -117,9 +121,6 @@ gdppc.sort_values(by="Country Name").tail(7)
 #
 # To join them with skrub, we only need to do the following:
 from skrub import fuzzy_join
-
-# We will ignore the warnings:
-import warnings
 
 warnings.filterwarnings("ignore")
 
@@ -151,7 +152,7 @@ df1.tail(20)
 # .. topic:: Note:
 #
 #    This would all be missed out if we were using other methods such as
-#    `pandas.merge <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.merge.html>`_,
+#    `pandas.merge <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.merge.html>`_,  # noqa
 #    which can only find exact matches.
 #    In this case, to reach the best result, we would have to `manually` clean
 #    the data (e.g. remove the * after country name) and look
@@ -389,8 +390,8 @@ df_final.head(10)
 # And that's it! As previously, we now have a big table
 # ready for machine learning.
 # Let's create our machine learning pipeline:
-from sklearn.pipeline import make_pipeline
 from sklearn.compose import make_column_transformer
+from sklearn.pipeline import make_pipeline
 
 # We include only the columns that will be pertinent for our regression:
 encoder = make_column_transformer(

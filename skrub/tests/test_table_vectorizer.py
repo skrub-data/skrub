@@ -217,11 +217,11 @@ def _test_possibilities(X) -> None:
         expected_transformers_np_no_cast, vectorizer_base.transformers
     )
 
-    # Test with pandas series
+    # Test with single column dataframe
     expected_transformers_series = {
         "low_card_cat": ["cat1"],
     }
-    vectorizer_base.fit_transform(X["cat1"])
+    vectorizer_base.fit_transform(X[["cat1"]])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
 
     # Test casting values
@@ -260,7 +260,7 @@ def test_duplicate_column_names() -> None:
     data = [(3, "a"), (2, "b"), (1, "c"), (0, "d")]
     X_dup_col_names = pd.DataFrame.from_records(data, columns=["col_1", "col_1"])
 
-    with pytest.raises(AssertionError,  match=r"Duplicate column names"):
+    with pytest.raises(AssertionError, match=r"Duplicate column names"):
         tablevectorizer.fit_transform(X_dup_col_names)
 
 

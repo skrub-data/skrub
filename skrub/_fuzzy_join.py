@@ -176,9 +176,9 @@ def _nearest_matches(
 
     Returns
     -------
-    :obj:`~numpy.ndarray`
+    ndarray
         Index of the closest matches of the main table in the aux table.
-    :obj:`~numpy.ndarray`
+    ndarray
         Distance between the closest matches, on a scale between 0 and 1.
     """
     # Find nearest neighbor using KNN :
@@ -233,7 +233,7 @@ def fuzzy_join(
     right : :obj:`~pandas.DataFrame`
         A table used to merge with.
     how : {'left', 'right'}, default='left'
-        Type of merge to be performed. Note that unlike :func:`pandas.merge`,
+        Type of merge to be performed. Note that unlike pandas.merge,
         only "left" and "right" are supported so far, as the fuzzy-join comes
         with its own mechanism to resolve lack of correspondence between
         left and right tables.
@@ -248,12 +248,11 @@ def fuzzy_join(
         and `right_on` parameters are not specified.
     encoder : vectorizer instance, optional
         Encoder parameter for the Vectorizer.
-        By default, uses a :obj:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        By default, uses a HashingVectorizer.
         It is possible to pass a vectorizer instance inheriting
-        :class:`~sklearn.feature_extraction.text._VectorizerMixin`
-        to tweak the parameters of the encoder.
+        _VectorizerMixin to tweak the parameters of the encoder.
     analyzer : {'word', 'char', 'char_wb'}, default='char_wb'
-        Analyzer parameter for the :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
+        Analyzer parameter for the HashingVectorizer
         passed to the encoder and used for the string similarities.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character n-gram counts.
@@ -292,14 +291,14 @@ def fuzzy_join(
 
     See Also
     --------
-    :class:`skrub.FeatureAugmenter`
+    FeatureAugmenter
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 
     Notes
     -----
     For regular joins, the output of fuzzy_join is identical
-    to :func:`pandas.merge`, except that both key columns are returned.
+    to pandas.merge, except that both key columns are returned.
 
     Joining on indexes and multiple columns is not supported.
 
