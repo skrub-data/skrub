@@ -669,17 +669,19 @@ def test_mixed_types():
 
 
 @pytest.mark.parametrize(
-    "X_fit, X_transform",
+    "X_fit, X_transform, X_transform_with_missing",
     [
         # All nans during fit, 1 category during transform
         (
             pd.DataFrame(pd.Series([np.nan, np.nan, np.nan])),
             pd.DataFrame(pd.Series([np.nan, np.nan, "a"])),
+            pd.DataFrame(pd.Series([np.nan, np.nan, np.nan])),
         ),
         # All floats during fit, 1 category during transform
         (
             pd.DataFrame(pd.Series([1.0, 2.0, 3.0])),
             pd.DataFrame(pd.Series([1.0, 2.0, "a"])),
+            pd.DataFrame(pd.Series([1.0, 2.0, np.nan])),
         ),
         # All datetimes during fit, 1 category during transform
         (
@@ -695,10 +697,15 @@ def test_mixed_types():
             pd.DataFrame(
                 pd.Series([pd.Timestamp("2019-01-01"), pd.Timestamp("2019-01-02"), "a"])
             ),
+            pd.DataFrame(
+                pd.Series(
+                    [pd.Timestamp("2019-01-01"), pd.Timestamp("2019-01-02"), np.nan]
+                )
+            ),
         ),
     ],
 )
-def test_changing_types(X_fit, X_transform):
+def test_changing_types(X_fit, X_transform, X_transform_with_missing):
     """
     Test that the TableVectorizer performs properly when the
     type inferred during fit does not match the type of the
@@ -706,4 +713,21 @@ def test_changing_types(X_fit, X_transform):
     """
     table_vec = TableVectorizer()
     table_vec.fit_transform(X_fit)
-    table_vec.transform(X_transform)
+    res = table_vec.transform(X_transform)
+    # the TableVectorizer should behave as if the new entry
+    # with the wrong type was missing
+    res_missing = table_vec.transform(X_transform_with_missing)
+    assert np.allclose(res, res_missing, equal_nan=True)
+
+
+def test_changing_types_int_float():
+    # The TableVectorizer shouldn't cast floats to ints
+    # even if only ints were seen during fit
+    X_fit, X_transform = (
+        pd.DataFrame(pd.Series([1, 2, 3])),
+        pd.DataFrame(pd.Series([1, 2, 3.3])),
+    )
+    table_vec = TableVectorizer()
+    table_vec.fit_transform(X_fit)
+    res = table_vec.transform(X_transform)
+    assert np.allclose(res, np.array([[1.0], [2.0], [3.3]]))
