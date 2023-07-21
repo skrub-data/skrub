@@ -1,6 +1,6 @@
 """
 Fuzzy joining dirty tables and the Joiner
-=====================================================
+=========================================
 
 Here we show how to combine data from different sources,
 with a vocabulary not well normalized.
