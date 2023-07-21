@@ -116,5 +116,8 @@ def parse_astype_error_message(e):
         match = re.search(r"""Unable to parse string "(.*?)" at position""", str(e))
         if match:
             culprit = match.group(1)
-
+    elif str(e).startswith("time data"):
+        match = re.search(r"""time data "(.*?)" doesn't match format""", str(e))
+        if match:
+            culprit = match.group(1)
     return culprit
