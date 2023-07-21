@@ -79,7 +79,7 @@ def test_joiner() -> None:
         false_joiner.fit(main_table)
 
     false_aux_tables = [
-        (aux_table_1, "Countrys"),
+        (aux_table_1, ["Countrys"]),
         (aux_table_2, "Country name"),
         (aux_table_3, "Countries"),
     ]
