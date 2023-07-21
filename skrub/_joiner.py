@@ -35,7 +35,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     tables : list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
         List of (table, column name) tuples, the tables to join.
     main_key : str or list of str
-        The key column name in the main table (passed during fit) on which
+        The key columns in the main table on which
         the join will be performed.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
