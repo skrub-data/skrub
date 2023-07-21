@@ -61,7 +61,7 @@ def test_get_data_home_default():
     """Test function for ``get_data_home()`` with default `data_home`."""
     # We should take care of not deleting the folder if our user
     # already cached some data
-    user_path = Path("~") / "skrub_data"
+    user_path = Path("~").expanduser() / "skrub_data"
     is_already_existing = user_path.exists()
 
     data_home = get_data_home(data_home=None)
