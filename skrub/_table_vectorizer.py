@@ -378,6 +378,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
 
+        # These parameters should be passed to the ColumnTransformer instance
         self.remainder = remainder
         self.sparse_threshold = sparse_threshold
         self.n_jobs = n_jobs
@@ -748,6 +749,11 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
         self._column_transformer = ColumnTransformer(
             transformers=self._transformers,
+            remainder=self.remainder,
+            sparse_threshold=self.sparse_threshold,
+            n_jobs=self.n_jobs,
+            transformer_weights=self.transformer_weights,
+            verbose=self.verbose,
         )
         X_enc = self._column_transformer.fit_transform(X, y)
 
