@@ -27,7 +27,7 @@ def test_openml_fetching(fetch_openml_mock: mock.Mock):
     that asserts the fetching function works correctly.
 
     We don't download all datasets as it would take way too long:
-    see https://github.com/dirty-cat/skrub/issues/523
+    see https://github.com/skrub-data/skrub/issues/523
     """
     with TemporaryDirectory() as temp_dir:
         # Download the dataset without loading it in memory.
