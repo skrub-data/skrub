@@ -5,8 +5,8 @@ on a table.
 
 from typing import Literal
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from skrub._fuzzy_join import fuzzy_join
@@ -35,8 +35,8 @@ class Joiner(TransformerMixin, BaseEstimator):
     tables : list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
         List of (table, column name) tuples, the tables to join.
     main_key : str or list of str
-        The key columns in the main table on which
-        the join will be performed.
+        The key columns in the main table on which the join will
+        be performed.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. 1 means that only a perfect match will be
@@ -169,8 +169,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             for col in cols:
                 if col not in df.columns:
                     raise ValueError(
-                        f"Got column key {col!r}, "
-                        f"but column not in {df.columns}."
+                        f"Got column key {col!r}, but column not in {df.columns}."
                     )
         return self
 

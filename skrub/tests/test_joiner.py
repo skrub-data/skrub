@@ -93,12 +93,14 @@ def test_joiner() -> None:
 
 
 def test_multiple_keys():
-    df = pd.DataFrame([['France', 'Paris'],
-                   ['Italia', 'Roma'],
-                   ['Deutchland', 'Berlin']], columns=['Co', 'Ca'])
-    df2 = pd.DataFrame([['France', 'Paris'],
-                        ['Italy', 'Rome'],
-                        ['Germany', 'Berlin']], columns=['CO', 'CA'])
+    df = pd.DataFrame(
+        [["France", "Paris"], ["Italia", "Roma"], ["Deutchland", "Berlin"]],
+        columns=["Co", "Ca"],
+    )
+    df2 = pd.DataFrame(
+        [["France", "Paris"], ["Italy", "Rome"], ["Germany", "Berlin"]],
+        columns=["CO", "CA"],
+    )
     joiner = Joiner()
     result = joiner.fit_transform(df)
     expected = pd.DataFrame(pd.concat([df, df2], axis=1))
