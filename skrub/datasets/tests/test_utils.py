@@ -1,59 +1,30 @@
 import shutil
 import tempfile
 from pathlib import Path
+import pytest
 
 from skrub.datasets._utils import get_data_dir, get_data_home
 
 
-def test_get_data_dir():
-    """
-    Check the behaviour of `get_data_dir` when passing the path to
-    an already existing folder.
-    """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        tmpdirpath = Path(tmpdirname)
-        assert get_data_dir(data_home=tmpdirpath) == tmpdirpath
+@pytest.mark.parametrize("data_home_type", ["string", "path"])
+def test_get_data_dir_existing_folder(data_home_type):
+    with tempfile.TemporaryDirectory() as target_dir:
+        tmp_dir = target_dir if data_home_type == "string" else Path(target_dir)
 
-        assert get_data_dir(name="tests", data_home=tmpdirpath) == tmpdirpath / "tests"
+        # with a pre-existing folder
+        assert Path(tmp_dir).exists()
+        data_home = get_data_home(data_home=tmp_dir)
+        assert data_home == Path(target_dir)
 
-
-def test_get_data_home_str():
-    """
-    Test function for ``get_data_home()`` when `data_home` is a string.
-    """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        tmpdirpath = Path(tmpdirname)
-
-        # get_data_home will point to a pre-existing folder
-        assert tmpdirpath.exists()
-        data_home = get_data_home(data_home=tmpdirpath)
-        assert data_home == tmpdirpath
         assert data_home.exists()
+
+        assert (get_data_dir(name="tests", data_home=tmp_dir)
+            == Path(tmp_dir) / "tests")
 
         # if the folder is missing it will be created
-        shutil.rmtree(data_home)
-        assert not data_home.exists()
-        assert not tmpdirpath.exists()
-        data_home = get_data_home(data_home=tmpdirpath)
-        assert data_home.exists()
-
-
-def test_get_data_home_path():
-    """
-    Test function for ``get_data_home()`` when `data_home` is a pathlib.Path.
-    """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        tmpdirpath = Path(tmpdirname)
-        # get_data_home will point to a pre-existing folder
-        data_home = get_data_home(data_home=tmpdirname)
-        assert data_home == tmpdirpath
-        assert data_home.exists()
-
-        # if the folder is missing it will be created
-        shutil.rmtree(data_home)
-        assert not data_home.exists()
-        assert not tmpdirpath.exists()
-        data_home = get_data_home(data_home=tmpdirname)
+        shutil.rmtree(tmp_dir)
+        assert not Path(tmp_dir).exists()
+        data_home = get_data_home(data_home=tmp_dir)
         assert data_home.exists()
 
 
