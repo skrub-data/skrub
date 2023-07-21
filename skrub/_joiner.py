@@ -164,12 +164,13 @@ class Joiner(TransformerMixin, BaseEstimator):
                     f"Got main_key={col!r}, but column not in {list(X.columns)}."
                 )
 
-        for df, cols in self.tables:
+        for table_idx, (df, cols) in enumerate(self.tables):
             cols = np.atleast_1d(cols).tolist()
             for col in cols:
                 if col not in df.columns:
                     raise ValueError(
-                        f"Got column key {col!r}, but column not in {df.columns}."
+                        f"Column key {col!r} not found in columns of "
+                        f"table index {table_idx}: {df.columns.tolist()}. "
                     )
         return self
 
