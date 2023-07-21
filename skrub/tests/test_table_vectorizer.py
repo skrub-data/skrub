@@ -650,7 +650,6 @@ def test_mixed_types():
     df = _get_mixed_types_dataframe()
     table_vec = TableVectorizer()
     table_vec.fit_transform(df)
-    print(table_vec.n_features_in_)
     # check that the types are correctly inferred
     table_vec.fit_transform(df)
     expected_transformers_df = {
