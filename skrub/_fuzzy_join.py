@@ -291,7 +291,7 @@ def fuzzy_join(
 
     See Also
     --------
-    FeatureAugmenter
+    Joiner
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 
