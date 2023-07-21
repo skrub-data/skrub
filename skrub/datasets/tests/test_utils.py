@@ -13,7 +13,7 @@ def test_get_data_dir_existing_folder(data_home_type):
         tmp_dir = target_dir if data_home_type == "string" else Path(target_dir)
 
         # with a pre-existing folder
-        assert Path(tmp_dir).exists()
+        assert Path(target_dir).exists()
         data_home = get_data_home(data_home=tmp_dir)
         assert data_home == Path(target_dir)
 
@@ -21,12 +21,12 @@ def test_get_data_dir_existing_folder(data_home_type):
 
         assert (
             get_data_dir(name="tests", data_home=tmp_dir)
-            == Path(tmp_dir).absolute() / "tests"
+            == Path(target_dir).absolute() / "tests"
         )
 
         # if the folder is missing it will be created
         shutil.rmtree(tmp_dir)
-        assert not Path(tmp_dir).exists()
+        assert not Path(target_dir).exists()
         data_home = get_data_home(data_home=tmp_dir)
         assert data_home.exists()
 
