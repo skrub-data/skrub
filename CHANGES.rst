@@ -16,10 +16,13 @@ Major changes
 -------------
 
 * :class:`FeatureAugmenter` is renamed as :class:`Joiner` 
-  :pr:`` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+  :pr:`674` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
   :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* :class:`Joiner` now supports many-to-many joins.  
+  :pr:`674` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * The signatures of all encoders and functions have been revised to enforce
   cleaner calls. This means that some arguments that could previously be passed
