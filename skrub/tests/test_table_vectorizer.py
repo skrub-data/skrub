@@ -247,7 +247,9 @@ def _test_possibilities(X) -> None:
         "high_card_cat": [3, 5],
     }
     vectorizer_cast.fit_transform(X_str.to_numpy())
-    check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers_)
+    check_same_transformers(
+        expected_transformers_np_cast, vectorizer_cast.transformers_
+    )
 
 
 def test_duplicate_column_names() -> None:
