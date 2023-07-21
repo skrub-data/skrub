@@ -29,14 +29,14 @@ In sum, equivalent to :func:`pandas.merge`, the :func:`fuzzy_join`
 has no need for pre-cleaning.
 
 
-Feature augmentation for machine learning
------------------------------------------
+Joiner for machine learning
+---------------------------
 
-Joining is pretty straigthforward for two tables: you only need to identify
+Fuzzy joining is pretty straigthforward for two tables: you only need to identify
 the common key.
 
 However, for more complex analysis, merging multiple tables is necessary.
-skrub provides the :class:`FeatureAugmenter` as a convenient solution:
+skrub provides the :class:`Joiner` as a convenient solution:
 multiple fuzzy joins can be performed at the same time, given a set of 
 input tables and key columns.
 
