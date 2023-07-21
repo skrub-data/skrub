@@ -1,39 +1,90 @@
 """
-TODO : Add some docstring
-----
+Self-aggregation with MovieLens
+===============================
+
+MovieLens is a famous movie dataset used for both explicit
+and implicit recommender system. It provides a main table,
+"ratings", that can be viewed as logs or transactions, comprised
+of only 4 columns: userId, movieId, rating and timestamp.
+MovieLens also gives a contextual table "movies", including
+movieId, title and types, to enable content-based feature extraction.
+
+In this notebook, we only deal with the main table "ratings".
+Our objective is **not to achieve state-of-the-art performance** on
+the explicit regression task, but rather to illustrate how to perform
+feature engineering in a simple way using |AggJoiner| and |AggTarget|.
+Note that our performance is higher than the baseline of using the mean
+rating per movies.
+
+
+.. |AggJoiner| replace::
+     :class:`~skrub.AggJoiner`
+
+.. |TargetJoiner| replace::
+     :class:`~skrub.TargetJoiner`
+
+.. |TableVectorizer| replace::
+     :class:`~skrub.TableVectorizer`
+
+.. |DatetimeEncoder| replace::
+     :class:`~skrub.DatetimeEncoder`
+
+.. |TargetEncoder| replace::
+     :class:`~skrub.TargetEncoder`
+
+.. |Pipeline| replace::
+     :class:`~sklearn.pipeline.Pipeline`
+
+.. |RandomizedSearchCV| replace::
+     :class:`~sklearn.model_selection.RandomizedSearchCV`
+
+.. |TimeSeriesSplit| replace::
+     :class:`~sklearn.model_selection.TimeSeriesSplit`
+
+.. |HGBR| replace::
+     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 """
-#!/usr/bin/env python
-# coding: utf-8
 
-# # Movies recommendation with explicit labels
-
-# ## Loading data
-
-# In[1]:
-
+###############################################################################
+# The data
+# --------
+#
+# We begin with loading the ratings table from MovieLens.
+# Note that we use the light version (100k rows).
+import pandas as pd
+import numpy as np
 
 from skrub.datasets import fetch_movielens
 
+
 ratings = fetch_movielens(dataset_id="ratings")
-ratings = ratings.X
-ratings
-
-
-# In[2]:
-
-
-import pandas as pd
-
+ratings = ratings.X.sort_values("timestamp").reset_index(drop=True)
 ratings["timestamp"] = pd.to_datetime(ratings["timestamp"], unit="s")
-ratings["year"] = ratings["timestamp"].dt.year
-ratings["day_name"] = ratings["timestamp"].dt.day_name()
+
+X = ratings[["userId", "movieId", "timestamp"]]
+y = ratings["rating"]
+print(X.shape)
+print(X.head())
+
+###############################################################################
+# Encoding timestamp with TableVectorizer
+# ---------------------------------------
+#
+# Our first step is to extract features from the timestamp, using the
+# |TableVectorizer|. Natively, it uses the |DatetimeEncoder| on datetime
+# columns, and doesn't interact with numerical columns.
+from skrub import TableVectorizer, DatetimeEncoder
 
 
-# ## Quick Data Exploration
+table_vectorizer = TableVectorizer(
+    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True)
+)
+table_vectorizer.set_output(transform="pandas")
+X_date_encoded = table_vectorizer.fit_transform(X)
+print(X_date_encoded)
 
-# In[3]:
-
-
+###############################################################################
+# This allows us to start making plot and gaining insight on our dataset.
 from matplotlib import pyplot as plt
 import seaborn as sns
 
@@ -50,73 +101,22 @@ def make_barplot(x, y, title):
         palette=cmap(norm(y)),
     )
     plt.xticks(rotation=30)
-    plt.xlabel(None)
+    plt.xlabel(title)
     plt.ylabel(None)
     plt.tight_layout()
-    plt.title(title)
 
 
-# In[4]:
+# O is Monday, 6 is Sunday
 
-
-year_volume = ratings["year"].value_counts().sort_index()
+daily_volume = X_date_encoded["timestamp_dayofweek"].value_counts().sort_index()
 
 make_barplot(
-    x=year_volume.index,
-    y=year_volume.values,
-    title="Yearly volume of ratings",
+    x=daily_volume.index, y=daily_volume.values, title="Daily volume of ratings"
 )
 
-
-# In[5]:
-
-
-ratings["day_index"] = ratings["timestamp"].dt.weekday
-
-day_name_index = (
-    ratings[["day_index", "day_name"]].drop_duplicates().set_index("day_index")
-)
-day_name_index.sort_index()
-
-
-# In[6]:
-
-
-daily_volume = (
-    ratings["day_index"].value_counts().sort_index().to_frame().join(day_name_index)
-)
-
-make_barplot(
-    x=daily_volume["day_name"], y=daily_volume["count"], title="Daily volume of ratings"
-)
-
-
-# In[7]:
-
-
-user_count_ratings = (
-    ratings.groupby("userId").agg(n_ratings=("rating", "count")).reset_index()
-)
-
-print(
-    "min:",
-    user_count_ratings["n_ratings"].min(),
-    "max:",
-    user_count_ratings["n_ratings"].max(),
-)
-
-ax = sns.histplot(user_count_ratings["n_ratings"])
-ax.set(
-    xlabel="Number of ratings given by users",
-    ylabel="Total number of users",
-    title="Number of ratings given by user",
-)
-
-
-# In[8]:
-
-
-rating_count = ratings["rating"].value_counts().sort_index()
+###############################################################################
+# We also display the distribution of our target ``y``.
+rating_count = y.value_counts().sort_index()
 
 make_barplot(
     x=rating_count.index,
@@ -124,315 +124,212 @@ make_barplot(
     title="Distribution of ratings given to movies",
 )
 
-
-# In[9]:
-
-
-## Split train test by date
-
-min_date = ratings["timestamp"].min()
-max_date = ratings["timestamp"].max()
-duration = max_date - min_date
-train_threshold = max_date - duration / 3
-
-train = ratings.loc[ratings["timestamp"] < train_threshold]
-test = ratings.loc[ratings["timestamp"] >= train_threshold]
-train.shape, test.shape
-
-
-# ## Feature Engineering
-
-# ***Ohe Hot Encoding day names***
-
-# In[10]:
-
-
-from sklearn.pipeline import make_pipeline, FunctionTransformer
-from sklearn.compose import make_column_transformer
-from sklearn.preprocessing import OneHotEncoder
-
-col_trans = make_column_transformer(
-    ("passthrough", ["userId", "movieId", "rating"]),
-    (OneHotEncoder(sparse_output=False), ["day_name"]),
-    remainder="drop",
-    verbose_feature_names_out=False,
-)
-
-train = col_trans.fit_transform(train)
-train = pd.DataFrame(train, columns=col_trans.get_feature_names_out())
-train.head()
+###############################################################################
+# AggJoiner: aggregation of auxiliary tables, then join
+# -----------------------------------------------------
+#
+# We now want to extract aggregated datetime features both about the users
+# and the movies. These features answer to questions like
+# *"How many times has this user rated a movie in 2008?"* or
+# *"What is the most frequent hour for this movie to be rated?"*.
+#
+# Below, |AggJoiner| first performs the aggregations defined by ``agg_ops``,
+# on ``"userId"``, then on ``"movieId"``, before joining both results on
+# the main table.
+# The ``tables`` tuple indicates:
+#
+# - the auxiliary tables on which to perform the aggregation
+# - the key used to group and to join
+# - the columns to aggregate (``timestamp_cols``).
+#
+# Here, the auxiliary tables are the main table ``X_date_encoded`` itself.
+#
+# The ``main_key`` indicates the key of the main table to join each tuple of
+# ``tables``.
+from skrub import AggJoiner
 
 
-# ***Join aggregator on `movieId` and `userId`***
-
-# In[11]:
-
-
-from skrub import JoinAggregator
-
-cols_day_name = list(set(train.columns) - set(["userId", "movieId"]))
-
-join_agg_rating = JoinAggregator(
-    tables=[
-        (train, "userId", cols_day_name),
-        (train, "movieId", cols_day_name),
-    ],
-    main_key=["userId", "movieId"],
-    suffixes=["_user", "_movie"],
-    agg_ops=["sum", "mean"],
-)
-train = join_agg_rating.fit_transform(train[["userId", "movieId", "rating"]])
-
-cols_to_drop = [
-    col
-    for col in train.columns
-    if ("mean" in col and "day_name" in col) or ("rating_mean" in col)
+timestamp_cols = [
+    "timestamp_year",
+    "timestamp_month",
+    "timestamp_hour",
+    "timestamp_dayofweek",
 ]
-train = train.drop(cols_to_drop, axis=1)
-train
 
-
-# ### Encoding movies
-
-# In[12]:
-
-
-movies = fetch_movielens(dataset_id="movies")
-movies = movies.X
-movies
-
-
-# In[13]:
-
-
-movies["genres"] = movies["genres"].str.replace("|", " ")
-all_genres = movies["genres"].str.split().explode().unique()[:-3]
-all_genres
-
-
-# In[14]:
-
-
-from sklearn.feature_extraction.text import CountVectorizer
-from skrub import MinHashEncoder
-
-vectorizer = CountVectorizer(
-    vocabulary=all_genres,
-    ngram_range=(1, 1),
-    lowercase=False,
-)
-
-n_components = 10
-min_hash_encoder = MinHashEncoder(n_components=n_components)
-
-movie_transformer = make_column_transformer(
-    ("passthrough", ["movieId"]),
-    (min_hash_encoder, ["title"]),
-    (vectorizer, "genres"),
-    sparse_threshold=0,
-)
-movie_embedding = movie_transformer.fit_transform(movies)
-
-embedding_cols = [f"title_x{idx}" for idx in range(n_components)] + all_genres.tolist()
-movie_embedding = pd.DataFrame(movie_embedding, columns=["movieId", *embedding_cols])
-movie_embedding
-
-
-# ## Encoding users
-
-# In[15]:
-
-
-train_user_movie_embedding = train[["userId", "movieId"]].merge(
-    movie_embedding, on="movieId", how="left"
-)
-train_user_movie_embedding.shape
-
-
-# ## Join Aggregate user and movie embeddings!
-
-# In[16]:
-
-
-join_agg_embedding = JoinAggregator(
+agg_joiner = AggJoiner(
     tables=[
-        (movie_embedding, "movieId", embedding_cols),
-        (train_user_movie_embedding, "userId", embedding_cols),
-    ],
-    main_key=["movieId", "userId"],
-    agg_ops=["mean"],
-    suffixes=["_movie", "_user"],
-)
-train_embedding = join_agg_embedding.fit_transform(train)
-train_embedding
-
-
-# ## Putting everything together!
-
-# In[17]:
-
-
-def get_year_and_day_name(ratings):
-    timestamps = pd.to_datetime(ratings["timestamp"], unit="s")
-    day_names = timestamps.dt.day_name()
-    return pd.get_dummies(day_names)
-
-
-pipe_ohe_days = make_pipeline(
-    FunctionTransformer(get_year_and_day_name),
-)
-
-
-# In[74]:
-
-
-from sklearn.preprocessing import OneHotEncoder
-
-
-def get_day_name(ratings):
-    timestamps = pd.to_datetime(ratings["timestamp"], unit="s")
-    day_names = timestamps.dt.day_name()
-    return day_names.to_frame()
-
-
-ft_get_day_name = FunctionTransformer(get_day_name)
-
-pipe_ohe_day_name = make_pipeline(
-    ft_get_day_name,
-    OneHotEncoder(sparse_output=False, drop="if_binary"),
-)
-
-cols_base = ["userId", "movieId"]
-pipe_ohe_day_name.fit(ratings)
-cols_days = pipe_ohe_day_name[-1].get_feature_names_out().tolist()
-
-ct_ohe_days = make_column_transformer(
-    ("passthrough", cols_base),
-    (pipe_ohe_day_name, ["timestamp"]),
-    remainder="drop",
-    # verbose_feature_names_out=False,
-)
-
-ft_to_pandas_days = FunctionTransformer(
-    lambda X: pd.DataFrame(X, columns=cols_base + cols_days)
-)
-
-join_agg_rating = JoinAggregator(
-    tables=[
-        ("X", "userId", cols_days),
-        ("X", "movieId", cols_days),
+        (X_date_encoded, "userId", timestamp_cols),
+        (X_date_encoded, "movieId", timestamp_cols),
     ],
     main_key=["userId", "movieId"],
     suffixes=["_user", "_movie"],
-    agg_ops=["sum"],
+    agg_ops=["value_counts"],
 )
+X_transformed = agg_joiner.fit_transform(X_date_encoded)
 
-ft_filter_columns_days = FunctionTransformer(
-    lambda df: df.drop(cols_base + cols_days, axis=1)
+print(X_transformed.shape)
+print(X_transformed.head())
+
+###############################################################################
+# AggTarget: aggregation of y, then join
+# --------------------------------------
+#
+# We just expanded our timestamp to create datetime features.
+#
+# Let's now perform a similar expansion for the target ``y``. Of course,
+# the biggest risk of doing target expansion with multiple pandas operations
+# is to end up leaking the target.
+#
+# Similarly to |AggJoiner|, the |AggTarget| transformer allows you to
+# aggregate the target ``y`` before joining it on the main table, without
+# risk of leaking.
+#
+# You can think of it as a generalization of the |TargetEncoder|, which
+# encodes categorical features based on the target.
+#
+# Here, we group the target by ``"userId"``, then by ``"movieId"``, and for
+# each group we compute the histogram of the target with 3 bins.
+#
+# Finally, we join both user and movie aggregations back on the main table.
+from skrub import AggTarget
+
+
+agg_target = AggTarget(
+    main_key=["userId", "movieId"],
+    suffixes=["_user", "_movie"],
+    agg_ops=["hist(3)"],
 )
+X_transformed = agg_target.fit_transform(X, y)
 
-aggregation_days = make_pipeline(
-    ct_ohe_days,
-    ft_to_pandas_days,
-    join_agg_rating,
-    ft_filter_columns_days,
-)
-aggregation_days
+print(X_transformed.shape)
+print(X_transformed.head())
 
-
-# In[75]:
-
-
-aggregation_days.fit_transform(ratings)
-
-
-# In[76]:
-
-
-def merge_movie_embedding(X):
-    return X.merge(movie_embedding, on="movieId", how="left")
-
-
-ft_merge_movie_embedding = FunctionTransformer(merge_movie_embedding)
-
-ct_merge_movie_embedding = make_column_transformer(
-    ("passthrough", ["userId"]),
-    (ft_merge_movie_embedding, ["movieId"]),
-    remainder="drop",
-    verbose_feature_names_out=True,
-)
-
-cols_embedding = ft_merge_movie_embedding.fit_transform(
-    ratings[["movieId"]]
-).columns.tolist()
-
-ft_to_pandas_embedding = FunctionTransformer(
-    lambda X: pd.DataFrame(X, columns=["userId"] + cols_embedding)
-)
-
-join_agg_embedding = JoinAggregator(
-    tables=[
-        (movie_embedding, "movieId", cols_embedding),
-        ("X", "userId", cols_embedding),
-    ],
-    main_key=["movieId", "userId"],
-    agg_ops=["mean"],
-    suffixes=["_movie", "_user"],
-)
-
-ft_filter_cols_embedding = FunctionTransformer(lambda df: df.drop(cols_base, axis=1))
-
-aggregation_embedding = make_pipeline(
-    ct_merge_movie_embedding,
-    ft_to_pandas_embedding,
-    join_agg_embedding,
-    ft_filter_cols_embedding,
-)
-aggregation_embedding
-
-
-# In[77]:
-
-
-aggregation_embedding.fit_transform(ratings)
-
-
-# In[78]:
-
-
-from sklearn.compose import make_column_selector
-from sklearn.pipeline import FeatureUnion
+###############################################################################
+# Chaining everything together in a pipeline
+# ----------------------------------------
+#
+# To perform cross-validation and enable hyper-parameter tuning, we gather
+# all elements into a scikit-learn |Pipeline| and use scikit-learn |HGBR|.
+#
+# Since the auxiliary tables of |AggJoiner| are the main table itself, we need
+# to use the output of the previous layer (here the |TableVectorizer|).
+# We enable this behaviour by **using the placeholder** ``"X"`` **instead of a
+# dataframe** in the ``tables`` tuple.
 from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.pipeline import make_pipeline
 
-feature_engineering = FeatureUnion(
-    [
-        ("aggregation_days", aggregation_days),
-        ("aggregation_embedding", aggregation_embedding),
-    ]
+
+table_vectorizer = TableVectorizer(
+    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True)
+)
+table_vectorizer.set_output(transform="pandas")
+
+agg_joiner = AggJoiner(
+    tables=[
+        ("X", "userId", timestamp_cols),
+        ("X", "movieId", timestamp_cols),
+    ],
+    main_key=["userId", "movieId"],
+    suffixes=["_user", "_movie"],
+    agg_ops=["value_counts"],
 )
 
-regressor_pipeline = make_pipeline(
-    feature_engineering,
-    HistGradientBoostingRegressor(),
+agg_target = AggTarget(
+    main_key=["userId", "movieId"],
+    suffixes=["_user", "_movie"],
+    agg_ops=["value_counts"],
 )
 
-regressor_pipeline
+pipeline = make_pipeline(
+    table_vectorizer,
+    agg_joiner,
+    agg_target,
+    HistGradientBoostingRegressor(learning_rate=0.1, max_depth=4, max_iter=40),
+)
+
+pipeline
+
+###############################################################################
+# Hyper-parameters tuning and cross validation
+# --------------------------------------------
+#
+# We can finally create our hyper-parameter search space, and use a
+# |RandomizedSearchCV|. We select the cross validation splitter to be
+# the |TimeSeriesSplit| to prevent leakage, since our data are timestamped
+# logs.
+#
+# The score used in this regression task is the R2. Remember that the R2
+# evaluates the relative performance compared to the naive baseline consisting
+# in always predicting the mean value of ``y_test``.
+# Therefore, the R2 is 0 when ``y_pred = y_true.mean()`` and is upper bounded
+# to 1 when ``y_pred = y_true``.
+list(pipeline.named_steps)
+
+###############################################################################
+from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 
 
-# ## Predict and score
+params = {
+    "aggjoiner__agg_ops": ["value_counts"],
+    "aggtarget__agg_ops": ["mean", "hist(3)", "hist(5)", "hist(7)", "value_counts"],
+}
 
-# In[90]:
+cv = GridSearchCV(pipeline, params, cv=TimeSeriesSplit(n_splits=10))
+cv.fit(X, y)
+
+results = pd.DataFrame(
+    np.vstack([cv.cv_results_[f"split{idx}_test_score"] for idx in range(10)]),
+    columns=cv.cv_results_["param_aggtarget__agg_ops"],
+)
+
+###############################################################################
+# To get a better sense of the learning performances of our simple pipeline,
+# we also compute the average rating of each movie in the training set,
+# and uses this average to predict the ratings in the test set.
+from sklearn.metrics import r2_score
 
 
-from sklearn.model_selection import TimeSeriesSplit, cross_validate
+def baseline_r2(X, y, train_idx, test_idx):
+    """Compute the average rating for all movies in the train set,
+    and map these averages to the test set as a prediction.
 
-ratings = fetch_movielens(dataset_id="ratings").X
-ratings = ratings.sort_values("timestamp").reset_index(drop=True)
-X = ratings[["movieId", "userId", "timestamp"]]
-y = ratings["rating"]
+    If a movie in the test set is not present in the training set,
+    we simply predict the global average rating of the training set.
+    """
+    X_train, y_train = X.iloc[train_idx].copy(), y.iloc[train_idx]
+    X_test, y_test = X.iloc[test_idx], y.iloc[test_idx]
 
-tscv = TimeSeriesSplit()
-cross_validate(regressor_pipeline, X, y, cv=tscv)
+    X_train["y"] = y_train
+
+    movie_avg_rating = X_train.groupby("movieId")["y"].mean().to_frame().reset_index()
+
+    y_pred = X_test.merge(movie_avg_rating, on="movieId", how="left")["y"]
+    y_pred = y_pred.fillna(y_pred.mean())
+
+    return r2_score(y_true=y_test, y_pred=y_pred)
 
 
-# In[ ]:
+all_baseline_r2 = []
+for train_idx, test_idx in TimeSeriesSplit(n_splits=10).split(X, y):
+    all_baseline_r2.append(baseline_r2(X, y, train_idx, test_idx))
+
+results.insert(0, "naive mean estimator", all_baseline_r2)
+
+# we only keep the 5 out of 10 last results
+# because the initial size of the train set is rather small
+sns.boxplot(results.tail(5))
+plt.tight_layout()
+
+###############################################################################
+# The naive estimator has a lower performance than our pipeline, which means
+# that our extracted features brought some predictive power.
+#
+# It seems that using the ``"value_counts"`` as an aggregation operator for
+# |AggTarget| yields better performances than using the mean (which is
+# equivalent to the |TargetEncoder|).
+#
+# Here, the number of bins to encode the target is proportional to the
+# performance: computing the mean yields a single statistic, histograms yields
+# a density over a reduced set of bins and ``"value_counts"`` yields an
+# exhaustive histogram over all the possible values of ratings
+# (here 10 different values, from 0.5 to 5).
