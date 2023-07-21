@@ -373,7 +373,7 @@ class TableVectorizer(ColumnTransformer):
     high_card_cat_transformer_: Transformer
     numerical_transformer_: Transformer
     datetime_transformer_: Transformer
-    column_specific_transformers_: list[tuple[str, Transformer, list[str, int]]]
+    specific_transformers_: list[tuple[str, Transformer, list[str, int]]]
 
     # Override required parameters
     _required_parameters = []
@@ -407,7 +407,7 @@ class TableVectorizer(ColumnTransformer):
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
         self.datetime_transformer = datetime_transformer
-        self.column_specific_transformers = specific_transformers
+        self.specific_transformers = specific_transformers
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
 
@@ -474,14 +474,14 @@ class TableVectorizer(ColumnTransformer):
         else:
             self.datetime_transformer_ = self.datetime_transformer
 
-        if self.column_specific_transformers is None:
+        if self.specific_transformers is None:
             self.column_specific_transformers_ = []
-        elif len(self.column_specific_transformers) == 0:
+        elif len(self.specific_transformers) == 0:
             pass
         else:
             # Check all tuples are the same length
-            first_item_length = len(self.column_specific_transformers[0])
-            for i, tup in enumerate(self.column_specific_transformers):
+            first_item_length = len(self.specific_transformers[0])
+            for i, tup in enumerate(self.specific_transformers):
                 if len(tup) != first_item_length:
                     raise TypeError(
                         "Expected `specific_transformers` to be a list of "
@@ -492,11 +492,11 @@ class TableVectorizer(ColumnTransformer):
             if first_item_length == 2:
                 # Unnamed assignments, transform to named
                 named_column_specific_transformers = _get_transformer_list(
-                    self.column_specific_transformers
+                    self.specific_transformers
                 )
             elif first_item_length == 3:
                 # Named assignments
-                named_column_specific_transformers = self.column_specific_transformers
+                named_column_specific_transformers = self.specific_transformers
             else:
                 raise TypeError(
                     "Expected `specific_transformers` to be a list of tuples "
