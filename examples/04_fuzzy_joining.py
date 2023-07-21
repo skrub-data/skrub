@@ -416,7 +416,7 @@ pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
-params = {"Joiner__match_score": [0.2, 0.3, 0.4, 0.5]}
+params = {"joiner__match_score": [0.2, 0.3, 0.4, 0.5]}
 
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)
