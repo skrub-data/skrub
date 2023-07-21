@@ -17,12 +17,14 @@ def test_get_data_dir_existing_folder(data_home_type):
         data_home = get_data_home(data_home=tmp_dir)
         assert data_home == Path(target_dir)
 
-        assert data_home.exists()
-
         assert (
             get_data_dir(name="tests", data_home=tmp_dir)
             == data_home.resolve() / "tests"
         )
+
+        # Calling ".exists" resolves the path and changes it on the CI.
+        # It needs to be called at the end
+        assert data_home.exists()
 
         # if the folder is missing it will be created
         shutil.rmtree(tmp_dir)
