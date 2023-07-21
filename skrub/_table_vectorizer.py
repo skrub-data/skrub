@@ -425,7 +425,12 @@ class TableVectorizer(ColumnTransformer):
                 drop="if_binary", handle_unknown="infrequent_if_exist"
             )
         elif self.low_card_cat_transformer == "remainder":
-            self.low_card_cat_transformer_ = self.remainder
+            remainder = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
+            self.low_card_cat_transformer_ = remainder
         else:
             self.low_card_cat_transformer_ = self.low_card_cat_transformer
 
@@ -434,7 +439,12 @@ class TableVectorizer(ColumnTransformer):
         elif self.high_card_cat_transformer is None:
             self.high_card_cat_transformer_ = GapEncoder(n_components=30)
         elif self.high_card_cat_transformer == "remainder":
-            self.high_card_cat_transformer_ = self.remainder
+            remainder = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
+            self.high_card_cat_transformer_ = remainder
         else:
             self.high_card_cat_transformer_ = self.high_card_cat_transformer
 
@@ -443,7 +453,12 @@ class TableVectorizer(ColumnTransformer):
         elif self.numerical_transformer is None:
             self.numerical_transformer_ = "passthrough"
         elif self.numerical_transformer == "remainder":
-            self.numerical_transformer_ = self.remainder
+            remainder = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
+            self.numerical_transformer_ = remainder
         else:
             self.numerical_transformer_ = self.numerical_transformer
 
@@ -452,7 +467,12 @@ class TableVectorizer(ColumnTransformer):
         elif self.datetime_transformer is None:
             self.datetime_transformer_ = DatetimeEncoder()
         elif self.datetime_transformer == "remainder":
-            self.datetime_transformer_ = self.remainder
+            remainder = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
+            self.datetime_transformer_ = remainder
         else:
             self.datetime_transformer_ = self.datetime_transformer
 
@@ -581,8 +601,8 @@ class TableVectorizer(ColumnTransformer):
                     raise e
                 warnings.warn(
                     f"Value '{culprit}' could not be converted to infered type"
-                    f" {str(dtype)} in column '{col}'. Such values will be replaced by"
-                    " NaN.",
+                    f" {str(dtype)} in column '{col}'. Such values will be replaced"
+                    " by NaN.",
                     UserWarning,
                     stacklevel=2,
                 )
