@@ -59,7 +59,7 @@ regression_pipeline = Pipeline(
 
 errors = {}
 low_scores = {}
-constraint_error_template = "Skipping task {id} because {reason}. "
+constraint_error_template = "Skipping task {id} because {reason}"
 
 for type_id, problem, pipeline, metric in [
     (1, "classification", classification_pipeline, "predictive_accuracy"),
@@ -148,11 +148,8 @@ for type_id, problem, pipeline, metric in [
                 )
             )
             if args.compare_scores:
-                if (
-                    problem == "classification"
-                    and mean < percentiles[25]
-                    or problem == "regression"
-                    and mean > percentiles[25]
+                if (problem == "classification" and mean < percentiles[25]) or (
+                    problem == "regression" and mean > percentiles[25]
                 ):
                     logger.warning(
                         f"Our score is below the 25% percentile on {task_id}"
