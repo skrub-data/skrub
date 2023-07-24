@@ -1,6 +1,10 @@
 import pytest
 
-from skrub.datasets import fetch_ken_embeddings, fetch_ken_table_aliases, fetch_ken_types
+from skrub.datasets import (
+    fetch_ken_embeddings,
+    fetch_ken_table_aliases,
+    fetch_ken_types,
+)
 
 
 def test_fetch_ken_table_aliases():

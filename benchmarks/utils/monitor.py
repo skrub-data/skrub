@@ -1,12 +1,12 @@
 import tracemalloc
 from collections import defaultdict
+from collections.abc import Callable, Collection
 from datetime import datetime
 from itertools import product as _product
 from pathlib import Path
 from time import perf_counter
-from collections.abc import Callable, Collection
-from warnings import warn
 from typing import Any
+from warnings import warn
 
 import pandas as pd
 from tqdm import tqdm

@@ -49,6 +49,11 @@ Major changes
 
 * Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Do not support 1-D array (and pandas Series) in :class:`TableVectorizer`. Pass a
+  2-D array (or a pandas DataFrame) with a single column instead. This change is for
+  compliance with the scikit-learn API.
+  :pr:`647` by :user:`Guillaume Lemaitre <glemaitre>`
+
 Minor changes
 -------------
 
@@ -83,12 +88,19 @@ Minor changes
   by converting them to string before type inference.
   :pr:`623`by :user:`Leo Grinsztajn <LeoGrin>`
 
+* Moved the default storage location of data to the user's home folder.
+  :pr:`652` by :user:`Felix Lefebvre <flefebv>` and
+  :user:`Gael Varoquaux <GaelVaroquaux>`
+
 * Fixed bug when using :class:`TableVectorizer`'s `transform` method on
   categorical columns with missing values.
   :pr:`644` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * :class:`TableVectorizer` never output a sparse matrix by default. This can be changed by
   increasing the `sparse_threshold` parameter. :pr:`646` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* :class:`TableVectorizer` doesn't fail anymore if an infered type doesn't work during transform.
+  The new entries not matching the type are replaced by missing values. :pr:`666` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Before skrub: dirty_cat
 ========================

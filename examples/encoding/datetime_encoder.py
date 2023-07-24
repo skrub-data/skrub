@@ -74,6 +74,7 @@ X
 # lower units, as they are probably unimportant.
 
 from sklearn.preprocessing import OneHotEncoder
+
 from skrub import DatetimeEncoder
 
 from sklearn.compose import make_column_transformer
@@ -97,13 +98,15 @@ encoder.get_feature_names_out()
 
 ###############################################################################
 # One-liner with the |TableVectorizer|
-# ------------------------------------
+# ....................................
 #
 # As mentioned earlier, the |TableVectorizer| makes use of the
 # |DatetimeEncoder| by default.
 
 from skrub import TableVectorizer
 from pprint import pprint
+
+from skrub import TableVectorizer
 
 table_vec = TableVectorizer()
 table_vec.fit_transform(X)

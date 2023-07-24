@@ -76,11 +76,12 @@ X.head(3)
 y = X["Global_Sales"]
 y
 
+
 ###############################################################################
 # Let's take a look at the distribution of our target variable:
 
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 sns.set_theme(style="ticks")
 
@@ -195,8 +196,8 @@ X_full = fa2.fit_transform(X_full)
 # categorical variables using the |MinHashEncoder| and |OneHotEncoder|:
 
 from sklearn.compose import make_column_transformer
-
 from sklearn.preprocessing import OneHotEncoder
+
 from skrub import MinHashEncoder
 
 min_hash = MinHashEncoder(n_components=100)

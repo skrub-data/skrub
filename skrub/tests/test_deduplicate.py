@@ -158,7 +158,7 @@ def test_backend_respected():
     """
     # Test that parallelism works
     X = make_deduplication_data(
-        examples=["black", "white"], entries_per_example=[15, 15]
+        examples=["black", "white"], entries_per_example=[15, 15], random_state=0
     )
     deduplicate(X, n_jobs=2)
 

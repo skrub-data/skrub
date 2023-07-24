@@ -9,13 +9,14 @@ Date: June 2023
 """
 
 import math
+from pathlib import Path
 from utils import default_parser, find_result, monitor
 from utils.join import evaluate, fetch_big_data
 from argparse import ArgumentParser
 import numbers
-from time import perf_counter
 import warnings
 from collections.abc import Iterable
+from time import perf_counter
 from typing import Literal
 
 import matplotlib.pyplot as plt
@@ -23,6 +24,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy.sparse import hstack, vstack
+from sklearn import random_projection
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
     TfidfTransformer,
@@ -30,7 +32,6 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
-from sklearn import random_projection
 
 
 def _numeric_encoding(
@@ -525,8 +526,12 @@ def benchmark(
     dataset_name: str,
     analyzer: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
+    data_home: Path | str | None = None,
+    data_directory: str | None = "benchmarks_data",
 ):
-    left_table, right_table, gt = fetch_big_data(dataset_name)
+    left_table, right_table, gt = fetch_big_data(
+        dataset_name=dataset_name, data_home=data_home, data_directory=data_directory
+    )
 
     start_time = perf_counter()
     joined_fj = fuzzy_join(

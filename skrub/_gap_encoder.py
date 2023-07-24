@@ -20,7 +20,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from ._utils import check_input
 
@@ -486,7 +486,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return feature_names_out
 
 
-class GapEncoder(BaseEstimator, TransformerMixin):
+class GapEncoder(TransformerMixin, BaseEstimator):
     """Constructs latent topics with continuous encoding.
 
     This encoder can be understood as a continuous encoding on a set of latent
@@ -692,12 +692,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.n_jobs = n_jobs
         self.verbose = verbose
 
-    def _more_tags(self) -> dict[str, list[str]]:
-        """
-        Used internally by sklearn to ease the estimator checks.
-        """
-        return {"X_types": ["categorical"]}
-
     def _create_column_gap_encoder(self) -> GapEncoderColumn:
         """Helper method for creating a GapEncoderColumn from
         the parameters of this instance."""
@@ -759,9 +753,10 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         """
 
         # Check that n_samples >= n_components
-        if len(X) < self.n_components:
+        n_samples = _num_samples(X)
+        if n_samples < self.n_components:
             raise ValueError(
-                f"n_samples={len(X)} should be >= n_components={self.n_components}. "
+                f"n_samples={n_samples} should be >= n_components={self.n_components}. "
             )
         # Copy parameter rho
         self.rho_ = self.rho
@@ -770,6 +765,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             self.column_names_ = list(X.columns)
         # Check input data shape
         X = check_input(X)
+        self._check_n_features(X, reset=True)
         X = self._handle_missing(X)
         self.fitted_models_ = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
             delayed(self._create_column_gap_encoder().fit)(X[:, k])
@@ -801,6 +797,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         check_is_fitted(self, "fitted_models_")
         # Check input data shape
         X = check_input(X)
+        self._check_n_features(X, reset=False)
         X = self._handle_missing(X)
         X_enc = []
         for k in range(X.shape[1]):
@@ -895,7 +892,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             labels.extend(col_labels)
         return labels
 
-    def score(self, X: ArrayLike) -> float:
+    def score(self, X: ArrayLike, y=None) -> float:
         """Score this instance on `X`.
 
         Returns the sum over the columns of `X` of the Kullback-Leibler
@@ -906,6 +903,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         ----------
         X : array-like, shape (n_samples, n_features)
             The data to encode.
+        y : Ignored
+            Not used, present for API consistency by convention.
 
         Returns
         -------
@@ -917,6 +916,23 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         for k in range(X.shape[1]):
             kl_divergence += self.fitted_models_[k].score(X[:, k])
         return kl_divergence
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {
+            "X_types": ["2darray", "categorical", "string"],
+            "preserves_dtype": [],
+            "allow_nan": True,
+            "_xfail_checks": {
+                "check_transformer_n_iter": "Don't want to add an `n_iter_` attribute.",
+                "check_estimator_sparse_data": (
+                    "Cannot create sparse matrix with strings."
+                ),
+                "check_estimators_dtypes": "We only support string dtypes.",
+            },
+        }
 
 
 def _rescale_W(W: NDArray, A: NDArray) -> None:

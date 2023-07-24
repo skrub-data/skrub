@@ -41,6 +41,7 @@ misspelled category names in an unsupervised manner.
 # Let's generate some example data that demonstrate this.
 
 import numpy as np
+
 from skrub.datasets import make_deduplication_data
 
 duplicated_names = make_deduplication_data(
@@ -90,8 +91,9 @@ plt.ylabel("Counts")
 # We can see that we are dealing with three clusters - the original medication
 # names and their misspellings that cluster around them.
 
-from skrub import compute_ngram_distance
 from scipy.spatial.distance import squareform
+
+from skrub import compute_ngram_distance
 
 ngram_distances = compute_ngram_distance(unique_examples)
 square_distances = squareform(ngram_distances)

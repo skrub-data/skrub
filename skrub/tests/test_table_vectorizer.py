@@ -217,11 +217,11 @@ def _test_possibilities(X) -> None:
         expected_transformers_np_no_cast, vectorizer_base.transformers
     )
 
-    # Test with pandas series
+    # Test with single column dataframe
     expected_transformers_series = {
         "low_card_cat": ["cat1"],
     }
-    vectorizer_base.fit_transform(X["cat1"])
+    vectorizer_base.fit_transform(X[["cat1"]])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
 
     # Test casting values
@@ -260,7 +260,7 @@ def test_duplicate_column_names() -> None:
     data = [(3, "a"), (2, "b"), (1, "c"), (0, "d")]
     X_dup_col_names = pd.DataFrame.from_records(data, columns=["col_1", "col_1"])
 
-    with pytest.raises(AssertionError,  match=r"Duplicate column names"):
+    with pytest.raises(AssertionError, match=r"Duplicate column names"):
         tablevectorizer.fit_transform(X_dup_col_names)
 
 
@@ -666,3 +666,93 @@ def test_mixed_types():
         "low_card_cat": [3],
     }
     check_same_transformers(expected_transformers_array, table_vec.transformers)
+
+
+@pytest.mark.parametrize(
+    "X_fit, X_transform_original, X_transform_with_missing_original",
+    [
+        # All nans during fit, 1 category during transform
+        (
+            pd.DataFrame({"col1": [np.nan, np.nan, np.nan]}),
+            pd.DataFrame({"col1": [np.nan, np.nan, "placeholder"]}),
+            pd.DataFrame({"col1": [np.nan, np.nan, np.nan]}),
+        ),
+        # All floats during fit, 1 category during transform
+        (
+            pd.DataFrame({"col1": [1.0, 2.0, 3.0]}),
+            pd.DataFrame({"col1": [1.0, 2.0, "placeholder"]}),
+            pd.DataFrame({"col1": [1.0, 2.0, np.nan]}),
+        ),
+        # All datetimes during fit, 1 category during transform
+        (
+            pd.DataFrame(
+                {
+                    "col1": [
+                        pd.Timestamp("2019-01-01"),
+                        pd.Timestamp("2019-01-02"),
+                        pd.Timestamp("2019-01-03"),
+                    ]
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "col1": [
+                        pd.Timestamp("2019-01-01"),
+                        pd.Timestamp("2019-01-02"),
+                        "placeholder",
+                    ]
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "col1": [
+                        pd.Timestamp("2019-01-01"),
+                        pd.Timestamp("2019-01-02"),
+                        np.nan,
+                    ]
+                }
+            ),
+        ),
+    ],
+)
+def test_changing_types(X_fit, X_transform_original, X_transform_with_missing_original):
+    """
+    Test that the TableVectorizer performs properly when the
+    type inferred during fit does not match the type of the
+    data during transform.
+    """
+    for new_category in ["a", "new category", "[test]"]:
+        table_vec = TableVectorizer()
+        table_vec.fit_transform(X_fit)
+        expected_dtype = table_vec.types_["col1"]
+        # convert [ and ] to \\[ and \\] to avoid pytest warning
+        expected_dtype = str(expected_dtype).replace("[", "\\[").replace("]", "\\]")
+        new_category_regex = str(new_category).replace("[", "\\[").replace("]", "\\]")
+        expected_warning_msg = (
+            f".*'{new_category_regex}'.*could not be converted.*{expected_dtype}.*"
+        )
+
+        # replace "placeholder" with the new category
+        X_transform = X_transform_original.replace("placeholder", new_category)
+        X_transform_with_missing = X_transform_with_missing_original.replace(
+            "placeholder", new_category
+        )
+        with pytest.warns(UserWarning, match=expected_warning_msg):
+            res = table_vec.transform(X_transform)
+        # the TableVectorizer should behave as if the new entry
+        # with the wrong type was missing
+        res_missing = table_vec.transform(X_transform_with_missing)
+        assert np.allclose(res, res_missing, equal_nan=True)
+
+
+def test_changing_types_int_float():
+    # The TableVectorizer shouldn't cast floats to ints
+    # even if only ints were seen during fit
+    X_fit, X_transform = (
+        pd.DataFrame(pd.Series([1, 2, 3])),
+        pd.DataFrame(pd.Series([1, 2, 3.3])),
+    )
+    table_vec = TableVectorizer()
+    table_vec.fit_transform(X_fit)
+    res = table_vec.transform(X_transform)
+    assert np.allclose(res, np.array([[1.0], [2.0], [3.3]]))
