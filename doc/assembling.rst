@@ -29,10 +29,10 @@ In sum, equivalent to :func:`pandas.merge`, the :func:`fuzzy_join`
 has no need for pre-cleaning.
 
 
-Joiner for machine learning
----------------------------
+Joining external tables for machine learning
+--------------------------------------------
 
-Fuzzy joining is pretty straigthforward for two tables: you only need to identify
+Joining is pretty straigthforward for two tables: you only need to identify
 the common key.
 
 However, for more complex analysis, merging multiple tables is necessary.

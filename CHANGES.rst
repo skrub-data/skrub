@@ -21,7 +21,7 @@ Major changes
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
   :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* :class:`Joiner` now supports many-to-many joins.
+* :class:`Joiner` now supports joining on multiple column keys.
   :pr:`674` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * The signatures of all encoders and functions have been revised to enforce
