@@ -58,7 +58,7 @@ duplicated_names = make_deduplication_data(
     random_state=42,  # set seed for reproducibility
 )
 
-duplicated_names.head(10)
+duplicated_names[:10]
 ###############################################################################
 # We then extract the unique medication names in the data & how often they appear:
 
