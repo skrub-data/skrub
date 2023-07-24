@@ -52,7 +52,7 @@ def ngram_min_hash(
     ngram_range: tuple[int, int] = (2, 4),
     seed: int = 0,
     return_minmax=False,
-):
+) -> int | tuple[int, int]:
     """
     Compute the min/max hash of the ngrams of the string.
 

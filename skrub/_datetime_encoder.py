@@ -2,6 +2,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -71,11 +72,11 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`skrub.GapEncoder` :
+    GapEncoder :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`skrub.MinHashEncoder` :
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder` :
+    SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Examples
@@ -117,7 +118,11 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"X_types": ["categorical"]}
+        return {
+            "X_types": ["2darray", "categorical"],
+            "allow_nan": True,
+            "_xfail_checks": {"check_dtype_object": "Specific datetime error."},
+        }
 
     def _validate_keywords(self):
         if self.extract_until not in TIME_LEVELS:
@@ -161,7 +166,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                     - pd.Timestamp("1970-01-01", tz="utc")
                 ) // pd.Timedelta("1s")
 
-    def fit(self, X, y=None) -> "DatetimeEncoder":
+    def fit(self, X: ArrayLike, y=None) -> "DatetimeEncoder":
         """Fit the instance to X.
 
         In practice, just stores which extracted features are not constant.
@@ -175,8 +180,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`DatetimeEncoder`
-            Fitted :class:`DatetimeEncoder` instance (self).
+        DatetimeEncoder
+            Fitted DatetimeEncoder instance (self).
         """
         self._validate_keywords()
         # Columns to extract for each column,
@@ -216,7 +221,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X, y=None) -> np.ndarray:
+    def transform(self, X: ArrayLike, y=None) -> NDArray:
         """Transform `X` by replacing each datetime column with corresponding numerical features.
 
         Parameters
@@ -228,7 +233,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape (n_samples, `n_features_out_`)
+        ndarray, shape (n_samples, `n_features_out_`)
             Transformed input.
         """
         check_is_fitted(

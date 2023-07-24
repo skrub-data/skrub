@@ -52,7 +52,8 @@ print(data["employee_position_title"].value_counts().sort_index())
 #   will create orthogonal features, whereas it is clear that
 #   those 3 terms have a lot in common.
 #
-# * If we wanted to use word embedding methods such as `Word2vec <https://www.tensorflow.org/tutorials/text/word2vec>`_,
+# * If we wanted to use word embedding methods such as
+#   `Word2vec <https://www.tensorflow.org/tutorials/text/word2vec>`_,
 #   we would have to go through a cleaning phase: those algorithms
 #   are not trained to work on data such as "Accountant/Auditor I".
 #   However, this can be error-prone and time-consuming.

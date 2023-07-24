@@ -26,9 +26,17 @@ Major changes
 * Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
+  added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+  and :user:`Lilian Boulard <LilianBoulard>`
+
 * Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`
   and :func:`fetch_ken_types` have been renamed.
   :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* Make `pyarrow` an optional dependencies to facilitate the integration
+  with `pyodide`.
+  :pr:`639` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 * Bumped minimal required Python version to 3.10. :pr:`606` by
   :user:`Gael Varoquaux <GaelVaroquaux>`
@@ -41,15 +49,23 @@ Major changes
 
 * Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Do not support 1-D array (and pandas Series) in :class:`TableVectorizer`. Pass a
+  2-D array (or a pandas DataFrame) with a single column instead. This change is for
+  compliance with the scikit-learn API.
+  :pr:`647` by :user:`Guillaume Lemaitre <glemaitre>`
+
 Minor changes
 -------------
 
 * Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`.
   These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`
   or the :class:`GapEncoder` instead. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
-* Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor,
 
+* Removed the `similarity` argument from the :class:`SimilarityEncoder` constructor,
   as we only support the ngram similarity. :pr:`596` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Added the `analyzer` parameter to the :class:`SimilarityEncoder` to allow word counts
+  for similarity measures. :pr:`619` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * skrub now uses modern type hints introduced in PEP 585.
   :pr:`609` by :user:`Lilian Boulard <LilianBoulard>`
@@ -64,6 +80,27 @@ Minor changes
 * Removed the leading "<" and trailing ">" symbols from KEN entities
   and types.
   :pr:`601` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* Add `get_feature_names_out` method to :class:`MinHashEncoder`.
+  :pr:`616` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* :class:`TableVectorizer` now handles mixed types columns without failing
+  by converting them to string before type inference.
+  :pr:`623`by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Moved the default storage location of data to the user's home folder.
+  :pr:`652` by :user:`Felix Lefebvre <flefebv>` and
+  :user:`Gael Varoquaux <GaelVaroquaux>`
+
+* Fixed bug when using :class:`TableVectorizer`'s `transform` method on
+  categorical columns with missing values.
+  :pr:`644` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* :class:`TableVectorizer` never output a sparse matrix by default. This can be changed by
+  increasing the `sparse_threshold` parameter. :pr:`646` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* :class:`TableVectorizer` doesn't fail anymore if an infered type doesn't work during transform.
+  The new entries not matching the type are replaced by missing values. :pr:`666` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Before skrub: dirty_cat
 ========================
