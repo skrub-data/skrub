@@ -48,7 +48,7 @@ Major changes
   - pandas >= 1.5.3 :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
 * You can now pass column-specific transformers to :class:`TableVectorizer`
-  using the `column_specific_transformers` argument.
+  using the `specific_transformers` argument.
   :pr:`583` by :user:`Lilian Boulard <LilianBoulard>`.
 
 Minor changes
