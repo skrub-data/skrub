@@ -9,9 +9,12 @@ Date: June 2023
 """
 
 import math
+from pathlib import Path
+from utils import default_parser, find_result, monitor
+from utils.join import evaluate, fetch_big_data
+from argparse import ArgumentParser
 import numbers
 import warnings
-from argparse import ArgumentParser
 from collections.abc import Iterable
 from time import perf_counter
 from typing import Literal
@@ -29,8 +32,6 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
-from utils import default_parser, find_result, monitor
-from utils.join import evaluate, fetch_big_data
 
 
 def _numeric_encoding(
@@ -525,8 +526,12 @@ def benchmark(
     dataset_name: str,
     analyzer: Literal["char_wb", "char", "word"],
     ngram_range: tuple,
+    data_home: Path | str | None = None,
+    data_directory: str | None = "benchmarks_data",
 ):
-    left_table, right_table, gt = fetch_big_data(dataset_name)
+    left_table, right_table, gt = fetch_big_data(
+        dataset_name=dataset_name, data_home=data_home, data_directory=data_directory
+    )
 
     start_time = perf_counter()
     joined_fj = fuzzy_join(

@@ -94,12 +94,19 @@ Minor changes
   by converting them to string before type inference.
   :pr:`623`by :user:`Leo Grinsztajn <LeoGrin>`
 
+* Moved the default storage location of data to the user's home folder.
+  :pr:`652` by :user:`Felix Lefebvre <flefebv>` and
+  :user:`Gael Varoquaux <GaelVaroquaux>`
+
 * Fixed bug when using :class:`TableVectorizer`'s `transform` method on
   categorical columns with missing values.
   :pr:`644` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * :class:`TableVectorizer` never output a sparse matrix by default. This can be changed by
   increasing the `sparse_threshold` parameter. :pr:`646` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* :class:`TableVectorizer` doesn't fail anymore if an infered type doesn't work during transform.
+  The new entries not matching the type are replaced by missing values. :pr:`666` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Before skrub: dirty_cat
 ========================

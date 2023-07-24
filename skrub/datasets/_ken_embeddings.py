@@ -12,7 +12,7 @@ from skrub.datasets import fetch_figshare
 
 
 _correspondence_table_url = (
-    "https://raw.githubusercontent.com/dirty-cat/datasets"
+    "https://raw.githubusercontent.com/skrub-data/datasets"
     "/master/data/ken_correspondence.csv"
 )
 
