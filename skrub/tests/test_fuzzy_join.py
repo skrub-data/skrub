@@ -3,8 +3,8 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.feature_extraction.text import HashingVectorizer
 from pandas.testing import assert_frame_equal
+from sklearn.feature_extraction.text import HashingVectorizer
 
 from skrub import fuzzy_join
 
@@ -294,9 +294,7 @@ def test_numerical_column() -> None:
 
     assert fj_num.shape == (n_samples, n_cols)
 
-    fj_num2 = fuzzy_join(
-        left, right, on="int", return_score=True
-    )
+    fj_num2 = fuzzy_join(left, right, on="int", return_score=True)
     assert fj_num2.shape == (n_samples, n_cols + 1)
 
     fj_num3 = fuzzy_join(
@@ -336,9 +334,7 @@ def test_datetime_column():
             "str1": ["aa", "a", "bb"],
             "date_x": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
             "str2": ["aa", "bb", "a"],
-            "date_y": pd.to_datetime(
-                ["09/10/2022", "12/24/2021", "09/25/2010"]
-            ),
+            "date_y": pd.to_datetime(["09/10/2022", "12/24/2021", "09/25/2010"]),
         }
     )
     assert_frame_equal(fj_time, fj_time_expected)
@@ -348,9 +344,7 @@ def test_datetime_column():
 
     assert fj_time.shape == (n_samples, n_cols)
 
-    fj_time2 = fuzzy_join(
-        left, right, on="date", return_score=True
-    )
+    fj_time2 = fuzzy_join(left, right, on="date", return_score=True)
     assert fj_time2.shape == (n_samples, n_cols + 1)
 
     fj_time3 = fuzzy_join(
@@ -393,21 +387,19 @@ def test_mixed_joins():
     fj_num = fuzzy_join(left, right, on=["int1", "int2"])
 
     expected_fj_num = pd.DataFrame(
-            {
-                "str1": ["Paris", "Paris", "Paris"],
-                "str2": ["Texas", "France", "Greek God"],
-                "int1_x": [10, 2, 5],
-                "int2_x": [103, 250, 532],
-                "date_x": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
-                "str_1": ["Paris", "Paris", "dd"],
-                "str_2": ["FR", "FR", "dd"],
-                "int1_y": [6, 6, 6],
-                "int2_y": [146, 146, 612],
-                "date_y": pd.to_datetime(
-                    ["12/24/2021", "12/24/2021", "02/21/2000"]
-                )
-            }
-        )
+        {
+            "str1": ["Paris", "Paris", "Paris"],
+            "str2": ["Texas", "France", "Greek God"],
+            "int1_x": [10, 2, 5],
+            "int2_x": [103, 250, 532],
+            "date_x": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
+            "str_1": ["Paris", "Paris", "dd"],
+            "str_2": ["FR", "FR", "dd"],
+            "int1_y": [6, 6, 6],
+            "int2_y": [146, 146, 612],
+            "date_y": pd.to_datetime(["12/24/2021", "12/24/2021", "02/21/2000"]),
+        }
+    )
     assert_frame_equal(fj_num, expected_fj_num)
     assert fj_num.shape == (3, 10)
 
@@ -419,18 +411,20 @@ def test_mixed_joins():
         right_on=["str_1", "str_2"],
     )
 
-    expected_fj_str = pd.DataFrame({
-        "str1": ["Paris", "Paris", "Paris"],
-        "str2": ["Texas", "France", "Greek God"],
-        "int1_x": [10, 2, 5],
-        "int2_x": [103, 250, 532],
-        "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
-        "str_1": ["Paris", "Paris", "Paris"],
-        "str_2": ["TX", "FR", "GR Mytho"],
-        "int1_y": [55, 6, 2],
-        "int2_y": [554, 146, 32],
-        "date_y": pd.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
-    })
+    expected_fj_str = pd.DataFrame(
+        {
+            "str1": ["Paris", "Paris", "Paris"],
+            "str2": ["Texas", "France", "Greek God"],
+            "int1_x": [10, 2, 5],
+            "int2_x": [103, 250, 532],
+            "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
+            "str_1": ["Paris", "Paris", "Paris"],
+            "str_2": ["TX", "FR", "GR Mytho"],
+            "int1_y": [55, 6, 2],
+            "int2_y": [554, 146, 32],
+            "date_y": pd.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
+        }
+    )
     assert_frame_equal(fj_str, expected_fj_str)
     assert fj_str.shape == (3, 10)
 
@@ -441,18 +435,20 @@ def test_mixed_joins():
         left_on=["str1", "str2", "int2"],
         right_on=["str_1", "str_2", "int2"],
     )
-    expected_fj_mixed = pd.DataFrame({
-        "str1": ["Paris", "Paris", "Paris"],
-        "str2": ["Texas", "France", "Greek God"],
-        "int1_x": [10, 2, 5],
-        "int2_x": [103, 250, 532],
-        "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
-        "str_1": ["Paris", "Paris", "Paris"],
-        "str_2": ["FR", "FR", "TX"],
-        "int1_y": [6, 6, 55],
-        "int2_y": [146, 146, 554],
-        "date_y": pd.to_datetime(["2021-12-24", "2021-12-24", "2022-09-10"]),
-    })
+    expected_fj_mixed = pd.DataFrame(
+        {
+            "str1": ["Paris", "Paris", "Paris"],
+            "str2": ["Texas", "France", "Greek God"],
+            "int1_x": [10, 2, 5],
+            "int2_x": [103, 250, 532],
+            "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
+            "str_1": ["Paris", "Paris", "Paris"],
+            "str_2": ["FR", "FR", "TX"],
+            "int1_y": [6, 6, 55],
+            "int2_y": [146, 146, 554],
+            "date_y": pd.to_datetime(["2021-12-24", "2021-12-24", "2022-09-10"]),
+        }
+    )
     assert_frame_equal(fj_mixed, expected_fj_mixed)
     assert fj_mixed.shape == (3, 10)
 
@@ -463,18 +459,20 @@ def test_mixed_joins():
         left_on=["str1", "date"],
         right_on=["str_1", "date"],
     )
-    expected_fj_mixed2 = pd.DataFrame({
-        "str1": ["Paris", "Paris", "Paris"],
-        "str2": ["Texas", "France", "Greek God"],
-        "int1_x": [10, 2, 5],
-        "int2_x": [103, 250, 532],
-        "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
-        "str_1": ["Paris", "Paris", "Paris"],
-        "str_2": ["TX", "FR", "GR Mytho"],
-        "int1_y": [55, 6, 2],
-        "int2_y": [554, 146, 32],
-        "date_y": pd.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
-    })
+    expected_fj_mixed2 = pd.DataFrame(
+        {
+            "str1": ["Paris", "Paris", "Paris"],
+            "str2": ["Texas", "France", "Greek God"],
+            "int1_x": [10, 2, 5],
+            "int2_x": [103, 250, 532],
+            "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
+            "str_1": ["Paris", "Paris", "Paris"],
+            "str_2": ["TX", "FR", "GR Mytho"],
+            "int1_y": [55, 6, 2],
+            "int2_y": [554, 146, 32],
+            "date_y": pd.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
+        }
+    )
     assert_frame_equal(fj_mixed2, expected_fj_mixed2)
     assert fj_mixed2.shape == (3, 10)
 
@@ -485,18 +483,20 @@ def test_mixed_joins():
         left_on=["int1", "date"],
         right_on=["int1", "date"],
     )
-    expected_fj_mixed3 = pd.DataFrame({
-        "str1": ["Paris", "Paris", "Paris"],
-        "str2": ["Texas", "France", "Greek God"],
-        "int1_x": [10, 2, 5],
-        "int2_x": [103, 250, 532],
-        "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
-        "str_1": ["Paris", "Paris", "Paris"],
-        "str_2": ["FR", "FR", "GR Mytho"],
-        "int1_y": [6, 6, 2],
-        "int2_y": [146, 146, 32],
-        "date_y": pd.to_datetime(["2021-12-24", "2021-12-24", "2010-09-25"]),
-    })
+    expected_fj_mixed3 = pd.DataFrame(
+        {
+            "str1": ["Paris", "Paris", "Paris"],
+            "str2": ["Texas", "France", "Greek God"],
+            "int1_x": [10, 2, 5],
+            "int2_x": [103, 250, 532],
+            "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
+            "str_1": ["Paris", "Paris", "Paris"],
+            "str_2": ["FR", "FR", "GR Mytho"],
+            "int1_y": [6, 6, 2],
+            "int2_y": [146, 146, 32],
+            "date_y": pd.to_datetime(["2021-12-24", "2021-12-24", "2010-09-25"]),
+        }
+    )
     assert_frame_equal(fj_mixed3, expected_fj_mixed3)
     assert fj_mixed3.shape == (3, 10)
 
