@@ -643,7 +643,7 @@ def test__infer_date_format() -> None:
 
 
 @pytest.mark.parametrize(
-    "specific_transformers",
+    ["specific_transformers", "expected_transformers_"],
     [
         (
             (MinHashEncoder(), ["str1", "str2"]),
@@ -654,7 +654,8 @@ def test__infer_date_format() -> None:
             ],
         ),
         (
-            ("mh_cat1", MinHashEncoder(), ["cat1"])[
+            ("mh_cat1", MinHashEncoder(), ["cat1"]),
+            [
                 ("numeric", "passthrough", ["int", "float"]),
                 ("mh_cat1", "MinHashEncoder", ["cat1"]),
                 ("low_card_cat", "OneHotEncoder", ["str1", "str2", "cat2"]),
@@ -670,7 +671,14 @@ def test_specifying_specific_column_transformer(
     """
     X = _get_dirty_dataframe()
     tv = TableVectorizer(specific_transformers=[specific_transformers]).fit(X)
-    assert tv.transformers_ == expected_transformers_
+    clean_transformers_ = [
+        (name, transformer.__class__.__name__, columns)
+        if not isinstance(transformer, str)
+        else (name, transformer, columns)
+        for name, transformer, columns in tv.transformers_
+    ]
+    # Sort to ignore order
+    assert sorted(clean_transformers_) == sorted(expected_transformers_)
 
 
 def test_specific_transformers_unexpected_behavior():
