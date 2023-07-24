@@ -89,12 +89,13 @@ plt.xlabel("Counts")
 # The |deduplicate| function uses clustering based on
 # string similarities to group duplicated names.
 #
+# Let's deduplicate our data:
 
 from skrub import deduplicate
 
 deduplicated_data = deduplicate(duplicated_names)
 
-# And now we have the deduplicated data!
+# And that's it! We now have the deduplicated data.
 ###############################################################################
 # .. topic:: Note:
 #
