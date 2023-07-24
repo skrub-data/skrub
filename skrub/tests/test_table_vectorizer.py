@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.compose import ColumnTransformer, make_column_transformer
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
@@ -646,71 +645,38 @@ def test__infer_date_format() -> None:
 @pytest.mark.parametrize(
     "specific_transformers",
     [
-        (MinHashEncoder(), ["str1", "str2"]),
-        (StandardScaler(), ["float"]),
-        ("mh_cat1", MinHashEncoder(), ["cat1"]),
+        (
+            (MinHashEncoder(), ["str1", "str2"]),
+            [
+                ("numeric", "passthrough", ["int", "float"]),
+                ("minhashencoder", "MinHashEncoder", ["str1", "str2"]),
+                ("low_card_cat", "OneHotEncoder", ["cat1", "cat2"]),
+            ],
+        ),
+        (
+            ("mh_cat1", MinHashEncoder(), ["cat1"])[
+                ("numeric", "passthrough", ["int", "float"]),
+                ("mh_cat1", "MinHashEncoder", ["cat1"]),
+                ("low_card_cat", "OneHotEncoder", ["str1", "str2", "cat2"]),
+            ],
+        ),
     ],
 )
-def test_specifying_specific_column_transformer(specific_transformers) -> None:
+def test_specifying_specific_column_transformer(
+    specific_transformers, expected_transformers_
+) -> None:
+    """
+    Test that specifying a specific transformer works as expected.
+    """
     X = _get_dirty_dataframe()
-
-    tv = TableVectorizer(
-        specific_transformers=[specific_transformers],
-    )
-    X_enc_tv = tv.fit_transform(X)
-
-    # For the following section, we will use a different syntax using the
-    # column transformer to assert that the internals of the TableVectorizer
-    # work as expected.
-    # To do that, we get the assignment done by the default TableVectorizer
-    # (no arguments passed), and extend it with the column specific transformer
-    # which we then pass to the ColumnTransformer.
-    # We fit_transform the ColumnTransformer, and expect the same
-    # transformation (albeit, not necessarily in the same order) as the
-    # TableVectorizer.
-    if len(specific_transformers) == 2:
-        # Unnamed assignment
-        specific_transformers: tuple[object, list[str]]
-        transformer, columns = specific_transformers
-        default_table_vectorizer_assignment = [
-            (transformer, columns)
-            for _, transformer, columns in TableVectorizer()
-            .fit(X.drop(columns=columns))
-            .transformers
-        ]
-        ct = make_column_transformer(
-            *default_table_vectorizer_assignment, specific_transformers
-        )
-        X_enc_ct = ct.fit_transform(X)
-    elif len(specific_transformers) == 3:
-        # Named assignment
-        specific_transformers: tuple[str, object, list[str]]
-        name, transformer, columns = specific_transformers
-        default_table_vectorizer_assignment = (
-            TableVectorizer().fit(X.drop(columns=columns)).transformers
-        )
-        # Assert the name is used in the assignment
-        assert name in tv.named_transformers_
-        ct = ColumnTransformer(
-            transformers=default_table_vectorizer_assignment + [specific_transformers],
-        )
-        X_enc_ct = ct.fit_transform(X)
-
-    assert X_enc_tv.shape == X_enc_ct.shape
-
-    # Assert the output is the same.
-    # This comparison works for arrays with possibly different order,
-    # which is a specificity of the output of the ColumnTransformer ; see
-    # the TableVectorizer "Notes" section.
-    for row_index in range(X_enc_tv.shape[0]):
-        c1 = np.convolve(X_enc_tv[row_index], X_enc_tv[row_index], "valid")[0]
-        c2 = np.convolve(X_enc_tv[row_index], X_enc_ct[row_index], "valid")[0]
-        if pd.isna(c1) or pd.isna(c2):
-            continue
-        assert np.isclose(c1, c2)
+    tv = TableVectorizer(specific_transformers=[specific_transformers]).fit(X)
+    assert tv.transformers_ == expected_transformers_
 
 
 def test_specific_transformers_unexpected_behavior():
+    """
+    Tests a few cases of unsupported behavior when using `specific_transformers`.
+    """
     X = _get_clean_dataframe()
 
     # Test that using tuple lengths other than 2 or 3 raises an error
