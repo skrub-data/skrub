@@ -58,25 +58,21 @@ duplicated_names = make_deduplication_data(
     random_state=42,  # set seed for reproducibility
 )
 
-duplicated_names[:10]
+duplicated_names[:5]
 ###############################################################################
-# We then extract the unique medication names in the data & how often they appear:
+# We then extract the unique medication names in the data and
+# visualize how often they appear:
+
+import matplotlib.pyplot as plt
 
 unique_examples, counts = np.unique(duplicated_names, return_counts=True)
 
 # and build a series out of them
 ex_series = pd.Series(counts, index=unique_examples)
-ex_series.sample(random_state=1).head()
-
-###############################################################################
-# Visualize the data
-# ------------------
-
-import matplotlib.pyplot as plt
 
 ex_series.plot.barh(figsize=(10, 15))
-plt.xlabel("Medication name")
-plt.ylabel("Counts")
+plt.ylabel("Medication name")
+plt.xlabel("Counts")
 
 ###############################################################################
 # We can now see clearly the structure of the data:
