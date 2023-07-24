@@ -224,9 +224,9 @@ class TableVectorizer(ColumnTransformer):
         On top of the default column type classification (see parameters above),
         this parameter allows you to manually specify transformers for
         specific columns.
-        This is equivalent to using a :class:`~sklearn.compose.ColumnTransformer`
-        for assigning the column-specific transformers,
-        and passing the ``TableVectorizer`` as the ``remainder``.
+        This is equivalent to using a ColumnTransformer for assigning the
+        column-specific transformers, and passing the ``TableVectorizer``
+        as the ``remainder``.
         This parameter can take two different formats, either:
         - a list of 2-tuples (transformer, column names or indices)
         - a list of 3-tuple (name, transformer, column names or indices)
