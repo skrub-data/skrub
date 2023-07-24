@@ -491,7 +491,7 @@ class TableVectorizer(ColumnTransformer):
                     raise TypeError(
                         "Expected `specific_transformers` to be a list of "
                         "tuples of all the same lengths, got length "
-                        f"{len(tup)} at index {i} (previous indices have"
+                        f"{len(tup)} at index {i} (previous indices have "
                         f"length {first_item_length}). "
                     )
             if first_item_length == 2:
