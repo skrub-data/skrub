@@ -66,8 +66,6 @@ duplicated_names[:5]
 import matplotlib.pyplot as plt
 
 unique_examples, counts = np.unique(duplicated_names, return_counts=True)
-
-# and build a series out of them
 ex_series = pd.Series(counts, index=unique_examples)
 
 ex_series.plot.barh(figsize=(10, 15))
@@ -75,9 +73,9 @@ plt.ylabel("Medication name")
 plt.xlabel("Counts")
 
 ###############################################################################
-# We can now see clearly the structure of the data:
-# the three original medications are the most common ones,
-# but there are many spelling mistakes or
+# We clearly see the structure of the data:
+# the three original medications ("Contrivan", "Genericon" and "Zipholan")
+# are the most common ones, but there are many spelling mistakes or
 # slight variations of the original names.
 #
 # The idea is to use the fact that the string distance of misspelled
@@ -91,14 +89,19 @@ plt.xlabel("Counts")
 # The |deduplicate| function uses clustering based on
 # string similarities to group duplicated names.
 #
-# The number of clusters will need some adjustment depending on the data.
-# If no fixed number of clusters is given, |deduplicate| tries to set it
-# automatically via the
-# `silhouette score <https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.
 
 from skrub import deduplicate
 
 deduplicated_data = deduplicate(duplicated_names)
+
+# And now we have the deduplicated data!
+###############################################################################
+# .. topic:: Note:
+#
+#    The number of clusters will need some adjustment depending on the data.
+#    If no fixed number of clusters is given, |deduplicate| tries to set it
+#    automatically via the
+#    `silhouette score <https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.
 
 ###############################################################################
 # We can visualize the distribution of categories in the deduplicated data:
