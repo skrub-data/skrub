@@ -95,8 +95,9 @@ from skrub import deduplicate
 
 deduplicated_data = deduplicate(duplicated_names)
 
-# And that's it! We now have the deduplicated data.
 ###############################################################################
+# And that's it! We now have the deduplicated data.
+#
 # .. topic:: Note:
 #
 #    The number of clusters will need some adjustment depending on the data.
