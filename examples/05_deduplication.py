@@ -24,10 +24,10 @@ misspelled category names in an unsupervised manner.
 .. |deduplicate| replace::
     :func:`~skrub.deduplicate`
 
- .. |Gap| replace::
+.. |Gap| replace::
      :class:`~skrub.GapEncoder`
 
- .. |MinHash| replace::
+.. |MinHash| replace::
      :class:`~skrub.MinHashEncoder`
 """
 
@@ -57,12 +57,16 @@ duplicated_names = make_deduplication_data(
     prob_mistake_per_letter=0.05,  # 5% probability of typo per letter
     random_state=42,  # set seed for reproducibility
 )
-# we extract the unique medication names in the data & how often they appear
+
+duplicated_names.head(10)
+###############################################################################
+# We then extract the unique medication names in the data & how often they appear:
+
 unique_examples, counts = np.unique(duplicated_names, return_counts=True)
 
 # and build a series out of them
 ex_series = pd.Series(counts, index=unique_examples)
-ex_series.head()
+ex_series.sample(random_state=1).head()
 
 ###############################################################################
 # Visualize the data
@@ -83,30 +87,6 @@ plt.ylabel("Counts")
 # The idea is to use the fact that the string distance of misspelled
 # medications will be closest to their original (most frequent)
 # medication name - and therefore form clusters.
-
-###############################################################################
-# Visualizing the pair-wise distance between all names
-# ----------------------------------------------------
-#
-# Below, we use a heatmap to visualize the pairwise-distance between medication
-# names. A darker color means that two medication names are closer together
-# (i.e. more similar), a lighter color means a larger distance.
-#
-# We have three clusters - the original medication
-# names and their misspellings that form a cluster around them.
-
-from skrub import compute_ngram_distance
-from scipy.spatial.distance import squareform
-
-ngram_distances = compute_ngram_distance(unique_examples)
-square_distances = squareform(ngram_distances)
-
-import seaborn as sns
-
-fig, axes = plt.subplots(1, 1, figsize=(12, 12))
-sns.heatmap(
-    square_distances, yticklabels=ex_series.index, xticklabels=ex_series.index, ax=axes
-)
 
 ###############################################################################
 # Deduplication: suggest corrections of misspelled names
@@ -155,15 +135,32 @@ translation_table.head()
 ###############################################################################
 # It shows side by side the category name and the cluster into which it
 # was translated.
+# In case we want to adapt the translation table we can easily
+# modify it manually.
 
 ###############################################################################
-# In case we want to adapt the translation table post-hoc we can easily
-# modify and apply it manually, for instance modifying the
-# correspondance for the last entry as such:
+# Visualizing string pair-wise distance between names
+# ---------------------------------------------------
+#
+# Below, we use a heatmap to visualize the pairwise-distance between medication
+# names. A darker color means that two medication names are closer together
+# (i.e. more similar), a lighter color means a larger distance.
+#
+# We have three clusters - the original medication
+# names and their misspellings that form a cluster around them.
 
-translation_table.iloc[-1] = "Completely new category"
-new_deduplicated_names = translation_table[duplicated_names]
-assert (new_deduplicated_names == "Completely new category").sum() > 0
+from skrub import compute_ngram_distance
+from scipy.spatial.distance import squareform
+
+ngram_distances = compute_ngram_distance(unique_examples)
+square_distances = squareform(ngram_distances)
+
+import seaborn as sns
+
+fig, axes = plt.subplots(1, 1, figsize=(12, 12))
+sns.heatmap(
+    square_distances, yticklabels=ex_series.index, xticklabels=ex_series.index, ax=axes
+)
 
 ###############################################################################
 # Conclusion
@@ -174,7 +171,7 @@ assert (new_deduplicated_names == "Completely new category").sum() > 0
 #
 # Note that deduplication is especially useful when we either
 # know our ground truth (e.g. the original medication names),
-# or when we know the (dis)similarity doesn't provide any
-# useful information for our machine learning task.
+# or when we cannot use the similarity across string directly
+# in a machine learning task.
 # Otherwise, it is better to use encoding methods such as |Gap|
 # or |MinHash|.
