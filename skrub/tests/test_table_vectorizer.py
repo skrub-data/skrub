@@ -1,16 +1,12 @@
-from typing import Any, Tuple
-
 import numpy as np
 import pandas as pd
 import pytest
-import sklearn
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
-from skrub._utils import parse_version
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):
@@ -56,7 +52,7 @@ def _get_clean_dataframe() -> pd.DataFrame:
     )
 
 
-def _get_dirty_dataframe() -> pd.DataFrame:
+def _get_dirty_dataframe(categorical_dtype="object") -> pd.DataFrame:
     """
     Creates a simple DataFrame with some missing values.
     We'll use different types of missing values (np.nan, pd.NA, None)
@@ -67,15 +63,42 @@ def _get_dirty_dataframe() -> pd.DataFrame:
             "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
             "float": pd.Series([5.2, 2.4, 6.2, 10.45, np.nan], dtype="Float64"),
             "str1": pd.Series(
-                ["public", np.nan, "private", "private", "public"], dtype="object"
+                ["public", np.nan, "private", "private", "public"],
+                dtype=categorical_dtype,
             ),
             "str2": pd.Series(
-                ["officer", "manager", None, "chef", "teacher"], dtype="object"
+                ["officer", "manager", None, "chef", "teacher"], dtype=categorical_dtype
             ),
-            "cat1": pd.Series([np.nan, "yes", "no", "yes", "no"], dtype="object"),
-            "cat2": pd.Series(["20K+", "40K+", "60K+", "30K+", np.nan], dtype="object"),
+            "cat1": pd.Series(
+                [np.nan, "yes", "no", "yes", "no"], dtype=categorical_dtype
+            ),
+            "cat2": pd.Series(
+                ["20K+", "40K+", "60K+", "30K+", np.nan], dtype=categorical_dtype
+            ),
         }
     )
+
+
+def _get_mixed_types_dataframe() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "int_str": ["1", "2", 3, "3", 5],
+            "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
+            "int_float": [1, 2, 3.0, 3, 5.0],
+            "bool_str": ["True", False, True, "False", "True"],
+        }
+    )
+
+
+def _get_mixed_types_array() -> np.ndarray:
+    return np.array(
+        [
+            ["1", "2", 3, "3", 5],
+            ["1.0", np.nan, 3.0, "3.0", 5.0],
+            [1, 2, 3.0, 3, 5.0],
+            ["True", False, True, "False", "True"],
+        ]
+    ).T
 
 
 def _get_numpy_array() -> np.ndarray:
@@ -142,6 +165,10 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
                 "2015/12/31 01:31:34",
                 "2014/01/31 00:32:45",
             ],
+            # this date format is not found by pandas guess_datetime_format
+            # so shoulnd't be found by our _infer_datetime_format
+            # but pandas.to_datetime can still parse it
+            "mm/dd/yy": ["12/1/22", "2/3/05", "2/1/20", "10/7/99", "1/23/04"],
         }
     )
 
@@ -171,6 +198,7 @@ def _test_possibilities(X) -> None:
     # Test with higher cardinality threshold and no numeric transformer
     expected_transformers_2 = {
         "low_card_cat": ["str1", "str2", "cat1", "cat2"],
+        "numeric": ["int", "float"],
     }
     vectorizer_default = TableVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
@@ -189,11 +217,11 @@ def _test_possibilities(X) -> None:
         expected_transformers_np_no_cast, vectorizer_base.transformers
     )
 
-    # Test with pandas series
+    # Test with single column dataframe
     expected_transformers_series = {
         "low_card_cat": ["cat1"],
     }
-    vectorizer_base.fit_transform(X["cat1"])
+    vectorizer_base.fit_transform(X[["cat1"]])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
 
     # Test casting values
@@ -222,6 +250,20 @@ def _test_possibilities(X) -> None:
     check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
 
 
+def test_duplicate_column_names() -> None:
+    """
+    Test to check if the tablevectorizer raises an error with
+    duplicate column names
+    """
+    tablevectorizer = TableVectorizer()
+    # Creates a simple dataframe with duplicate column names
+    data = [(3, "a"), (2, "b"), (1, "c"), (0, "d")]
+    X_dup_col_names = pd.DataFrame.from_records(data, columns=["col_1", "col_1"])
+
+    with pytest.raises(AssertionError, match=r"Duplicate column names"):
+        tablevectorizer.fit_transform(X_dup_col_names)
+
+
 def test_with_clean_data() -> None:
     """
     Defines the expected returns of the vectorizer in different settings,
@@ -235,7 +277,8 @@ def test_with_dirty_data() -> None:
     Defines the expected returns of the vectorizer in different settings,
     and runs the tests with a dataset containing missing values.
     """
-    _test_possibilities(_get_dirty_dataframe())
+    _test_possibilities(_get_dirty_dataframe(categorical_dtype="object"))
+    _test_possibilities(_get_dirty_dataframe(categorical_dtype="category"))
 
 
 def test_auto_cast() -> None:
@@ -255,6 +298,7 @@ def test_auto_cast() -> None:
         "dmy-": "datetime64[ns]",
         "ymd/": "datetime64[ns]",
         "ymd/_hms:": "datetime64[ns]",
+        "mm/dd/yy": "datetime64[ns]",
     }
     X_trans = vectorizer._auto_cast(X)
     for col in X_trans.columns:
@@ -326,6 +370,8 @@ def test_get_feature_names_out() -> None:
 
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_pass = [
+        "int",
+        "float",
         "str1_public",
         "str2_chef",
         "str2_lawyer",
@@ -338,19 +384,16 @@ def test_get_feature_names_out() -> None:
         "cat2_40K+",
         "cat2_50K+",
         "cat2_60K+",
-        "int",
-        "float",
     ]
-    if parse_version(sklearn.__version__) < parse_version("1.0"):
-        assert vec_w_pass.get_feature_names() == expected_feature_names_pass
-    else:
-        assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
+    assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
 
     vec_w_drop = TableVectorizer(remainder="drop")
     vec_w_drop.fit(X)
 
     # In this test, order matters. If it doesn't, convert to set.
     expected_feature_names_drop = [
+        "int",
+        "float",
         "str1_public",
         "str2_chef",
         "str2_lawyer",
@@ -364,10 +407,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    if parse_version(sklearn.__version__) < parse_version("1.0"):
-        assert vec_w_drop.get_feature_names() == expected_feature_names_drop
-    else:
-        assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
+    assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
 
 
 def test_fit() -> None:
@@ -387,7 +427,7 @@ def test_transform() -> None:
     x = np.array(s).reshape(1, -1)
     x_trans = table_vec.transform(x)
     assert x_trans.tolist() == [
-        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 34.0, 5.5]
+        [34.0, 5.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     ]
     # To understand the list above:
     # print(dict(zip(table_vec.get_feature_names_out(), x_trans.tolist()[0])))
@@ -400,7 +440,10 @@ def test_fit_transform_equiv() -> None:
     """
     for X in [
         _get_clean_dataframe(),
-        _get_dirty_dataframe(),
+        _get_dirty_dataframe(categorical_dtype="object"),
+        _get_dirty_dataframe(categorical_dtype="category"),
+        _get_mixed_types_dataframe(),
+        _get_mixed_types_array(),
     ]:
         enc1_x1 = TableVectorizer().fit_transform(X)
         enc2_x1 = TableVectorizer().fit(X).transform(X)
@@ -408,7 +451,7 @@ def test_fit_transform_equiv() -> None:
         assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
 
 
-def _is_equal(elements: Tuple[Any, Any]) -> bool:
+def _is_equal(elements: tuple[any, any]) -> bool:
     """
     Fixture for values that return false when compared with `==`.
     """
@@ -500,30 +543,24 @@ def test_handle_unknown() -> None:
             "cat2": pd.Series(["30K+", "20K+"], dtype="category"),
         }
     )
-    if parse_version(sklearn.__version__) >= parse_version("1.0.0"):
-        # Default behavior is "handle_unknown='ignore'",
-        # so unknown categories are encoded as all zeros
-        x_trans_unknown = table_vec.transform(x_unknown)
-        x_trans_known = table_vec.transform(x_known)
 
-        assert x_trans_unknown.shape == x_trans_known.shape
-        n_zeroes = (
-            X["str2"].nunique() + X["cat2"].nunique() + 2
-        )  # 2 for binary columns which get one
-        # cateogry dropped
-        assert np.allclose(
-            x_trans_unknown[0, :n_zeroes], np.zeros_like(x_trans_unknown[0, :n_zeroes])
-        )
-        assert x_trans_unknown[0, n_zeroes] != 0
-        assert not np.allclose(
-            x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
-        )
-    else:
-        # Default behavior is "handle_unknown='error'",
-        # so unknown categories raise an error
-        with pytest.raises(ValueError, match="Found unknown categories"):
-            table_vec.transform(x_unknown)
-        table_vec.transform(x_known)
+    # Default behavior is "handle_unknown='ignore'",
+    # so unknown categories are encoded as all zeros
+    x_trans_unknown = table_vec.transform(x_unknown)
+    x_trans_known = table_vec.transform(x_known)
+
+    assert x_trans_unknown.shape == x_trans_known.shape
+    n_zeroes = (
+        X["str2"].nunique() + X["cat2"].nunique() + 2
+    )  # 2 for binary columns which get one
+    # cateogry dropped
+    assert np.allclose(
+        x_trans_unknown[0, 2:n_zeroes], np.zeros_like(x_trans_unknown[0, 2:n_zeroes])
+    )
+    assert x_trans_unknown[0, 0] != 0
+    assert not np.allclose(
+        x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
+    )
 
 
 def test__infer_date_format() -> None:
@@ -603,3 +640,119 @@ def test__infer_date_format() -> None:
     # Test with a column containing more than two date formats
     date_column = pd.Series(["2022-01-01", "01/02/2022", "20220103", "2022-Jan-04"])
     assert _infer_date_format(date_column) is None
+
+
+def test_mixed_types():
+    # TODO: datetime/str mixed types
+    # don't work
+    df = _get_mixed_types_dataframe()
+    table_vec = TableVectorizer()
+    table_vec.fit_transform(df)
+    # check that the types are correctly inferred
+    table_vec.fit_transform(df)
+    expected_transformers_df = {
+        "numeric": ["int_str", "float_str", "int_float"],
+        "low_card_cat": ["bool_str"],
+    }
+    check_same_transformers(expected_transformers_df, table_vec.transformers)
+
+    X = _get_mixed_types_array()
+    table_vec = TableVectorizer()
+    table_vec.fit_transform(X)
+    # check that the types are correctly inferred
+    table_vec.fit_transform(X)
+    expected_transformers_array = {
+        "numeric": [0, 1, 2],
+        "low_card_cat": [3],
+    }
+    check_same_transformers(expected_transformers_array, table_vec.transformers)
+
+
+@pytest.mark.parametrize(
+    "X_fit, X_transform_original, X_transform_with_missing_original",
+    [
+        # All nans during fit, 1 category during transform
+        (
+            pd.DataFrame({"col1": [np.nan, np.nan, np.nan]}),
+            pd.DataFrame({"col1": [np.nan, np.nan, "placeholder"]}),
+            pd.DataFrame({"col1": [np.nan, np.nan, np.nan]}),
+        ),
+        # All floats during fit, 1 category during transform
+        (
+            pd.DataFrame({"col1": [1.0, 2.0, 3.0]}),
+            pd.DataFrame({"col1": [1.0, 2.0, "placeholder"]}),
+            pd.DataFrame({"col1": [1.0, 2.0, np.nan]}),
+        ),
+        # All datetimes during fit, 1 category during transform
+        (
+            pd.DataFrame(
+                {
+                    "col1": [
+                        pd.Timestamp("2019-01-01"),
+                        pd.Timestamp("2019-01-02"),
+                        pd.Timestamp("2019-01-03"),
+                    ]
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "col1": [
+                        pd.Timestamp("2019-01-01"),
+                        pd.Timestamp("2019-01-02"),
+                        "placeholder",
+                    ]
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "col1": [
+                        pd.Timestamp("2019-01-01"),
+                        pd.Timestamp("2019-01-02"),
+                        np.nan,
+                    ]
+                }
+            ),
+        ),
+    ],
+)
+def test_changing_types(X_fit, X_transform_original, X_transform_with_missing_original):
+    """
+    Test that the TableVectorizer performs properly when the
+    type inferred during fit does not match the type of the
+    data during transform.
+    """
+    for new_category in ["a", "new category", "[test]"]:
+        table_vec = TableVectorizer()
+        table_vec.fit_transform(X_fit)
+        expected_dtype = table_vec.types_["col1"]
+        # convert [ and ] to \\[ and \\] to avoid pytest warning
+        expected_dtype = str(expected_dtype).replace("[", "\\[").replace("]", "\\]")
+        new_category_regex = str(new_category).replace("[", "\\[").replace("]", "\\]")
+        expected_warning_msg = (
+            f".*'{new_category_regex}'.*could not be converted.*{expected_dtype}.*"
+        )
+
+        # replace "placeholder" with the new category
+        X_transform = X_transform_original.replace("placeholder", new_category)
+        X_transform_with_missing = X_transform_with_missing_original.replace(
+            "placeholder", new_category
+        )
+        with pytest.warns(UserWarning, match=expected_warning_msg):
+            res = table_vec.transform(X_transform)
+        # the TableVectorizer should behave as if the new entry
+        # with the wrong type was missing
+        res_missing = table_vec.transform(X_transform_with_missing)
+        assert np.allclose(res, res_missing, equal_nan=True)
+
+
+def test_changing_types_int_float():
+    # The TableVectorizer shouldn't cast floats to ints
+    # even if only ints were seen during fit
+    X_fit, X_transform = (
+        pd.DataFrame(pd.Series([1, 2, 3])),
+        pd.DataFrame(pd.Series([1, 2, 3.3])),
+    )
+    table_vec = TableVectorizer()
+    table_vec.fit_transform(X_fit)
+    res = table_vec.transform(X_transform)
+    assert np.allclose(res, np.array([[1.0], [2.0], [3.3]]))

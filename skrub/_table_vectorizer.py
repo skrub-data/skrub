@@ -4,16 +4,18 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 
+import re
 import warnings
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Literal
 from warnings import warn
 
 import numpy as np
 import pandas as pd
 import sklearn
+from numpy.typing import ArrayLike, NDArray
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
-from sklearn import __version__ as sklearn_version
+from scipy import sparse
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -21,19 +23,19 @@ from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
-from skrub._utils import parse_version
+from skrub._utils import parse_astype_error_message
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
 
 
-def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[str]:
+def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
     """Infer the date format of a date column,
     by finding a format which should work for all dates in the column.
 
     Parameters
     ----------
-    date_column : :obj:`~pandas.Series`
+    date_column : Series
         A column of dates, as strings.
     n_trials : int, default=100
         Number of rows to use to infer the date format.
@@ -75,7 +77,7 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[
                 warnings.warn(
                     f"""
                     Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
-                    formats for the dates in column {date_column.name}.
+                    formats for the dates in column '{date_column.name}'.
                     Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
@@ -91,16 +93,14 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> Optional[
         return
 
 
-def _has_missing_values(df: Union[pd.DataFrame, pd.Series]) -> bool:
+def _has_missing_values(df: pd.DataFrame | pd.Series) -> bool:
     """
     Returns True if `array` contains missing values, False otherwise.
     """
     return any(df.isnull())
 
 
-def _replace_false_missing(
-    df: Union[pd.DataFrame, pd.Series]
-) -> Union[pd.DataFrame, pd.Series]:
+def _replace_false_missing(df: pd.DataFrame | pd.Series) -> pd.DataFrame | pd.Series:
     """
     Takes a DataFrame or a Series, and replaces the "false missing", that is,
     strings that designate a missing value, but do not have the corresponding
@@ -140,15 +140,15 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     replaces the missing values, and returns it.
     """
     ser = _replace_false_missing(ser)
-    if pd.api.types.is_categorical_dtype(ser) and (value not in ser.cat.categories):
+    if isinstance(ser.dtype, pd.CategoricalDtype) and (value not in ser.cat.categories):
         ser = ser.cat.add_categories([value])
     ser = ser.fillna(value=value)
     return ser
 
 
-OptionalTransformer = Optional[
-    Union[TransformerMixin, Literal["drop", "remainder", "passthrough"]]
-]
+OptionalTransformer = (
+    TransformerMixin | Literal["drop", "remainder", "passthrough"] | None
+)
 
 
 class TableVectorizer(ColumnTransformer):
@@ -157,9 +157,8 @@ class TableVectorizer(ColumnTransformer):
     Easily transforms a heterogeneous data table
     (such as a :obj:`~pandas.DataFrame`) to a numerical array for machine
     learning. For this it transforms each column depending on its data type.
-    It provides a simplified interface for the
-    :class:`~sklearn.compose.ColumnTransformer`; more documentation of
-    attributes and functions are available in its doc.
+    It provides a simplified interface for the ColumnTransformer ;
+    more documentation of attributes and functions are available in its doc.
 
     .. versionadded:: 0.2.0
 
@@ -178,14 +177,13 @@ class TableVectorizer(ColumnTransformer):
     low_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance
-        (e.g. :class:`~sklearn.preprocessing.OneHotEncoder`),
-        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance (e.g. OneHotEncoder),
+        a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or `None` to use the default transformer
-        (:class:`~sklearn.preprocessing.OneHotEncoder(handle_unknown="ignore", drop="if_binary")`).
+        (OneHotEncoder(handle_unknown="ignore", drop="if_binary")).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -193,21 +191,18 @@ class TableVectorizer(ColumnTransformer):
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
-        (e.g. :class:`~skrub.GapEncoder`),
-        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
+        (e.g. GapEncoder), a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer
-        (:class:`~skrub.GapEncoder(n_components=30)`).
+        or `None` to use the default transformer (GapEncoder(n_components=30)).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
     numerical_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on numerical features.
-        Can either be a transformer object instance
-        (e.g. :class:`~sklearn.preprocessing.StandardScaler`),
-        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance (e.g. StandardScaler),
+        a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
@@ -217,13 +212,12 @@ class TableVectorizer(ColumnTransformer):
 
     datetime_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on datetime features.
-        Can either be a transformer object instance
-        (e.g. :class:`~skrub.DatetimeEncoder`),
-        a :class:`~sklearn.pipeline.Pipeline` containing the preprocessing steps,
+        Can either be a transformer object instance (e.g. DatetimeEncoder),
+        a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (:class:`~skrub.DatetimeEncoder()`).
+        or `None` to use the default transformer (DatetimeEncoder()).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -238,26 +232,26 @@ class TableVectorizer(ColumnTransformer):
         specific versions of pandas, numpy and scikit-learn).
         'force' will impute missing values in all categorical columns.
         'skip' will not impute at all.
-        When imputed, missing values are replaced by the string 'missing'.
+        When imputed, missing values are replaced by the string 'missing'
+        before being encoded.
         As imputation logic for numerical features can be quite intricate,
         it is left to the user to manage.
         See also attribute :attr:`~skrub.TableVectorizer.imputed_columns_`.
 
-    remainder : {'drop', 'passthrough'} or Transformer, default='drop'
-        By default, only the specified columns in `transformers` are
-        transformed and combined in the output, and the non-specified
-        columns are dropped. (default 'drop').
-        By specifying `remainder='passthrough'`, all remaining columns that
-        were not specified in `transformers` will be automatically passed
-        through. This subset of columns is concatenated with the output of
-        the transformers.
+    remainder : {'drop', 'passthrough'} or Transformer, default='passthrough'
+        By default, all remaining columns that were not specified in `transformers`
+        will be automatically passed through. This subset of columns is concatenated
+        with the output of the transformers. (default 'passthrough').
+        By specifying `remainder='drop'`, only the specified columns
+        in `transformers` are transformed and combined in the output, and the
+        non-specified columns are dropped.
         By setting `remainder` to be an estimator, the remaining
         non-specified columns will use the `remainder` estimator. The
         estimator must support :term:`fit` and :term:`transform`.
         Note that using this feature requires that the DataFrame columns
         input at :term:`fit` and :term:`transform` have identical order.
 
-    sparse_threshold : float, default=0.3
+    sparse_threshold : float, default=0.0
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
         lower than this value. Use `sparse_threshold=0` to always return dense.
@@ -267,7 +261,7 @@ class TableVectorizer(ColumnTransformer):
     n_jobs : int, optional
         Number of jobs to run in parallel.
         ``None`` (the default) means 1 unless in a
-        :obj:`joblib.parallel_backend` context.
+        joblib.parallel_backend context.
         ``-1`` means using all processors.
 
     transformer_weights : dict, optional
@@ -293,7 +287,7 @@ class TableVectorizer(ColumnTransformer):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    columns_ : :obj:`~pandas.Index`
+    columns_ : pandas.Index
         The fitted array's columns. They are applied to the data passed
         to the `transform` method.
 
@@ -307,30 +301,27 @@ class TableVectorizer(ColumnTransformer):
 
     See Also
     --------
-    :class:`skrub.GapEncoder` :
+    GapEncoder :
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`skrub.MinHashEncoder` :
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder` :
+    SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 
     Notes
     -----
     The column order of the input data is not guaranteed to be the same
-    as the output data (returned by :func:`~TableVectorizer.transform`).
-    This is a due to the way the :class:`~sklearn.compose.ColumnTransformer`
-    works.
+    as the output data (returned by TableVectorizer.transform).
+    This is a due to the way the ColumnTransformer works.
     However, the output column order will always be the same for different
-    calls to :func:`~TableVectorizer.transform` on a same fitted
-    :class:`TableVectorizer` instance.
+    calls to TableVectorizer.transform on a same fitted TableVectorizer instance.
     For example, if input data has columns ['name', 'job', 'year'], then output
     columns might be shuffled, e.g. ['job', 'year', 'name'], but every call
-    to :func:`~TableVectorizer.transform` on this instance will return this
-    order.
+    to TableVectorizer.transform on this instance will return this order.
 
     Examples
     --------
-    Fit a :class:`TableVectorizer` on an example dataset:
+    Fit a TableVectorizer on an example dataset:
 
     >>> from skrub.datasets import fetch_employee_salaries
     >>> ds = fetch_employee_salaries()
@@ -356,10 +347,10 @@ class TableVectorizer(ColumnTransformer):
     ]
     """
 
-    transformers_: List[Tuple[str, Union[str, TransformerMixin], List[str]]]
+    transformers_: list[tuple[str, str | TransformerMixin, list[str]]]
     columns_: pd.Index
-    types_: Dict[str, type]
-    imputed_columns_: List[str]
+    types_: dict[str, type]
+    imputed_columns_: list[str]
 
     # Override required parameters
     _required_parameters = []
@@ -375,10 +366,8 @@ class TableVectorizer(ColumnTransformer):
         auto_cast: bool = True,
         impute_missing: Literal["auto", "force", "skip"] = "auto",
         # The next parameters are inherited from ColumnTransformer
-        remainder: Union[
-            Literal["drop", "passthrough"], TransformerMixin
-        ] = "passthrough",
-        sparse_threshold: float = 0.3,
+        remainder: Literal["drop", "passthrough"] | TransformerMixin = "passthrough",
+        sparse_threshold: float = 0.0,
         n_jobs: int = None,
         transformer_weights=None,
         verbose: bool = False,
@@ -403,7 +392,18 @@ class TableVectorizer(ColumnTransformer):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"allow_nan": [True]}
+        return {
+            "X_types": ["2darray", "string"],
+            "allow_nan": [True],
+            "_xfail_checks": {
+                "check_complex_data": "Passthrough complex columns as-is.",
+                "check_dont_overwrite_parameters": (
+                    "`transformers` is modified during fit but it is not pass by the"
+                    " user. We need to create an instance of ColumnTransformer instead"
+                    " but the current behaviour is not leading to a bug."
+                ),
+            },
+        }
 
     def _clone_transformers(self):
         """
@@ -413,34 +413,17 @@ class TableVectorizer(ColumnTransformer):
         We clone the instances to avoid altering them.
         See the clone function docstring.
         Note: typos are not detected here, they are left in and are detected
-        down the line in :func:`~sklearn.compose.ColumnTransformer.fit_transform`.
+        down the line in ColumnTransformer.fit_transform.
         """
         if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
             self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
         elif self.low_card_cat_transformer is None:
-            if parse_version(sklearn_version) >= parse_version("1.0"):
-                # sklearn is lenient and lets us use both
-                # `handle_unknown="ignore"` and `drop="if_binary"`
-                # at the same time
-                self.low_card_cat_transformer_ = OneHotEncoder(
-                    drop="if_binary", handle_unknown="ignore"
-                )  # TODO change to "infrequent_if_exists" when we bump sklearn min version to 1.1
-            else:
-                # sklearn is not lenient, and does not let us use both
-                # `handle_unknown="ignore"` and `drop="if_binary"`
-                # at the same time, so we use `handle_unknown="error"` instead
-                self.low_card_cat_transformer_ = OneHotEncoder(
-                    drop="if_binary", handle_unknown="error"
-                )
-                warn(
-                    f"You are using scikit-learn={sklearn_version}. "
-                    "Upgrade to scikit-learn>=1.0 to use "
-                    "handle_unknown='ignore'. "
-                    "Otherwise, pass a OneHotEncoder with drop=None as "
-                    "low_card_cat_transformer. "
-                    "Using handle_unknown='error' in low_card_cat_transformer.",
-                    stacklevel=2,
-                )
+            # sklearn is lenient and lets us use both
+            # `handle_unknown="infrequent_if_exist"` and `drop="if_binary"`
+            # at the same time
+            self.low_card_cat_transformer_ = OneHotEncoder(
+                drop="if_binary", handle_unknown="infrequent_if_exist"
+            )
         elif self.low_card_cat_transformer == "remainder":
             self.low_card_cat_transformer_ = self.remainder
         else:
@@ -489,11 +472,6 @@ class TableVectorizer(ColumnTransformer):
             The same :obj:`~pandas.DataFrame`, with its columns cast to their
             best possible data type.
         """
-        # We replace in all columns regardless of their type,
-        # as we might have some false missing
-        # in numerical columns for instance.
-        X = _replace_false_missing(X)
-
         # Handle missing values
         for col in X.columns:
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
@@ -506,6 +484,11 @@ class TableVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(np.float64)
                 X[col].fillna(value=np.nan, inplace=True)
 
+        # for object dtype columns, first convert to string to avoid mixed types
+        object_cols = X.columns[X.dtypes == "object"]
+        for col in object_cols:
+            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
+
         # Convert to the best possible data type
         self.types_ = {}
         for col in X.columns:
@@ -516,9 +499,32 @@ class TableVectorizer(ColumnTransformer):
                 except (ValueError, TypeError):
                     # Only try to convert to datetime
                     # if the variable isn't numeric.
+                    # try to find the best format
                     format = _infer_date_format(X[col])
-                    if format is not None:
-                        X[col] = pd.to_datetime(X[col], errors="raise", format=format)
+                    # if a format is found, try to apply to the whole column
+                    # if no format is found, pandas will try to parse each row
+                    # with a different engine, which can understand weirder formats
+                    try:
+                        # catch the warnings raised by pandas
+                        # in case the conversion fails
+                        with warnings.catch_warnings(record=True) as w:
+                            X[col] = pd.to_datetime(
+                                X[col], errors="raise", format=format
+                            )
+                        # if the conversion worked, raise pandas warnings
+                        for warning in w:
+                            with warnings.catch_warnings():
+                                # otherwise the warning is considered a duplicate
+                                warnings.simplefilter("always")
+                                warnings.warn(
+                                    "Warning raised by pandas when converting column"
+                                    f" '{col}' to datetime: "
+                                    + str(warning.message),
+                                    UserWarning,
+                                    stacklevel=2,
+                                )
+                    except (ValueError, TypeError):
+                        pass
             # Cast pandas dtypes to numpy dtypes
             # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
@@ -526,7 +532,7 @@ class TableVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(X[col].dtype.type, errors="ignore")
                 except (TypeError, ValueError):
                     pass
-            self.types_.update({col: X[col].dtype})
+            self.types_[col] = X[col].dtype
         return X
 
     def _apply_cast(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -542,25 +548,108 @@ class TableVectorizer(ColumnTransformer):
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
+        # for object dtype columns, first convert to string to avoid mixed types
+        # we do it both in auto_cast and apply_cast because
+        # the type infered for string columns during auto_cast
+        # is not necessarily string, it can be object because
+        # of missing values
+        object_cols = X.columns[X.dtypes == "object"]
+        for col in object_cols:
+            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
         for col, dtype in self.types_.items():
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
-            if pd.api.types.is_categorical_dtype(dtype):
+            if isinstance(dtype, pd.CategoricalDtype):
                 known_categories = dtype.categories
                 new_categories = pd.unique(X[col])
+                # remove nan from new_categories
+                new_categories = new_categories[~pd.isnull(new_categories)]
                 dtype = pd.CategoricalDtype(
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col] = dtype
-            X.loc[:, col] = X[col].astype(dtype)
+        for col, dtype in self.types_.items():
+            try:
+                if pd.api.types.is_numeric_dtype(dtype):
+                    # we don't use astype because it can convert float to int
+                    X[col] = pd.to_numeric(X[col])
+                else:
+                    X[col] = X[col].astype(dtype)
+            except ValueError as e:
+                culprit = parse_astype_error_message(e)
+                if culprit is None:
+                    raise e
+                warnings.warn(
+                    f"Value '{culprit}' could not be converted to infered type"
+                    f" {str(dtype)} in column '{col}'. Such values will be replaced by"
+                    " NaN.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                # if the inferred dtype is numerical or datetime,
+                # we want to ignore entries that cannot be converted
+                # to this dtype
+                if pd.api.types.is_numeric_dtype(dtype):
+                    X[col] = pd.to_numeric(X[col], errors="coerce")
+                elif pd.api.types.is_datetime64_any_dtype(dtype):
+                    X[col] = pd.to_datetime(X[col], errors="coerce")
+                else:
+                    # this should not happen
+                    raise e
         return X
 
-    def fit_transform(self, X, y=None):
+    def _check_X(self, X, reset):
+        if sparse.isspmatrix(X):
+            raise TypeError(
+                "A sparse matrix was passed, but dense data is required. Use "
+                "X.toarray() to convert to a dense numpy array."
+            )
+
+        if not isinstance(X, pd.DataFrame):
+            # check the dimension of X before to create a dataframe that always
+            # `ndim == 2`
+            # unfortunately, we need to call `asarray` before to call `ndim`
+            # in case that the container implement `__array_function__`
+            X_array = np.asarray(X)
+            if X_array.ndim == 0:
+                raise ValueError(
+                    f"Expected 2D array, got scalar array instead:\narray={X}.\n"
+                    "Reshape your data either using array.reshape(-1, 1) if "
+                    "your data has a single feature or array.reshape(1, -1) "
+                    "if it contains a single sample."
+                )
+            if X_array.ndim == 1:
+                raise ValueError(
+                    f"Expected 2D array, got 1D array instead:\narray={X}.\n"
+                    "Reshape your data either using array.reshape(-1, 1) if "
+                    "your data has a single feature or array.reshape(1, -1) "
+                    "if it contains a single sample."
+                )
+            X = pd.DataFrame(X_array)
+        else:
+            # Create a copy to avoid altering the original data.
+            X = X.copy()
+
+        if X.shape[0] < 1:
+            raise ValueError(
+                f"Found array with {X.shape[0]} sample(s) (shape={X.shape}) while a"
+                " minimum of 1 is required."
+            )
+        if X.shape[1] < 1:
+            raise ValueError(
+                f"Found array with {X.shape[1]} feature(s) (shape={X.shape}) while"
+                " a minimum of 1 is required."
+            )
+        self._check_n_features(X, reset=reset)
+
+        return X
+
+    def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
         """Fit all transformers, transform the data, and concatenate the results.
 
         In practice, it (1) converts features to their best possible types
         if `auto_cast=True`, (2) classify columns based on their data type,
-        (3) replaces "false missing" (see :func:`_replace_false_missing`),
+        (3) replaces "false missing" (see _replace_false_missing),
         and imputes categorical columns depending on `impute_missing`, and
         finally, transforms `X`.
 
@@ -589,14 +678,26 @@ class TableVectorizer(ColumnTransformer):
 
         self._clone_transformers()
 
-        # Convert to pandas DataFrame if not already.
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
+        X = self._check_X(X, reset=True)
 
         self.columns_ = X.columns
+
+        # We replace in all columns regardless of their type,
+        # as we might have some false missing
+        # in numerical columns for instance.
+        X = _replace_false_missing(X)
+
+        ###
+        # We need to check for duplicate column names.
+        # It is checked by comparing the number of unique values
+        # to the length of the column names
+        if len(set(X.columns)) != len(X.columns):
+            raise AssertionError(
+                "Duplicate column names in the dataframe."
+                f"The column names are {X.columns}"
+            )
+        ###
+
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
         # We'll keep the results in order to apply the types in `transform`.
@@ -604,21 +705,7 @@ class TableVectorizer(ColumnTransformer):
             X = self._auto_cast(X)
 
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(
-            include=[
-                "int",
-                "float",
-                np.float64,
-                np.float32,
-                np.float16,
-                np.int64,
-                np.int32,
-                np.int16,
-                np.uint64,
-                np.uint32,
-                np.uint16,
-            ]
-        ).columns.to_list()
+        numeric_columns = X.select_dtypes(include="number").columns.to_list()
         categorical_columns = X.select_dtypes(
             include=["string", "object", "category"]
         ).columns.to_list()
@@ -627,26 +714,17 @@ class TableVectorizer(ColumnTransformer):
         ).columns.to_list()
 
         # Classify categorical columns by cardinality
-        _nunique_values = {  # Cache results
-            col: X[col].nunique() for col in categorical_columns
-        }
-        low_card_cat_columns = [
-            col
-            for col in categorical_columns
-            if _nunique_values[col] < self.cardinality_threshold
-        ]
-        high_card_cat_columns = [
-            col
-            for col in categorical_columns
-            if _nunique_values[col] >= self.cardinality_threshold
-        ]
-        # Clear cache
-        del _nunique_values
+        low_card_cat_columns, high_card_cat_columns = [], []
+        for col in categorical_columns:
+            if X[col].nunique() < self.cardinality_threshold:
+                low_card_cat_columns.append(col)
+            else:
+                high_card_cat_columns.append(col)
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers: List[Tuple[str, OptionalTransformer, List[str]]] = [
-            ("numeric", self.numerical_transformer, numeric_columns),
+        all_transformers: list[tuple[str, OptionalTransformer, list[str]]] = [
+            ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
             ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
             ("high_card_cat", self.high_card_cat_transformer_, high_card_cat_columns),
@@ -662,35 +740,17 @@ class TableVectorizer(ColumnTransformer):
 
         self.imputed_columns_ = []
         if self.impute_missing != "skip":
-            # First, replace false missing
-            # This is technically redundant with the call made in `_auto_cast`,
-            # but we do it again anyway.
-            X = _replace_false_missing(X)
-
-            # Then, impute if suiting
+            # Impute if suiting
             if _has_missing_values(X):
                 if self.impute_missing == "force":
-                    for col in X.columns:
-                        # Only impute categorical columns
-                        if col in categorical_columns:
-                            X[col] = _replace_missing_in_cat_col(X[col])
-                            self.imputed_columns_.append(col)
+                    # Only impute categorical columns
+                    for col in categorical_columns:
+                        X[col] = _replace_missing_in_cat_col(X[col])
+                        self.imputed_columns_.append(col)
 
                 elif self.impute_missing == "auto":
-                    for name, trans, cols in all_transformers:
-                        impute: bool = False
-
-                        if isinstance(trans, OneHotEncoder) and parse_version(
-                            sklearn_version
-                        ) < parse_version("0.24"):
-                            impute = True
-
-                        if impute:
-                            for col in cols:
-                                # Only impute categorical columns
-                                if col in categorical_columns:
-                                    X[col] = _replace_missing_in_cat_col(X[col])
-                                    self.imputed_columns_.append(col)
+                    # Add special cases when we should impute.
+                    pass
 
         # If there was missing values imputation, we cast the DataFrame again,
         # as pandas gives different types depending on whether a column has
@@ -710,12 +770,12 @@ class TableVectorizer(ColumnTransformer):
         for i, (name, enc, cols) in enumerate(self.transformers_):
             if name == "remainder" and len(cols) < 20:
                 # In this case, "cols" is a list of ints (the indices)
-                cols: List[int]
+                cols: list[int]
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
 
         return X_enc
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> ArrayLike:
         """Transform `X` by applying the fitted transformers on the columns.
 
         Parameters
@@ -731,19 +791,9 @@ class TableVectorizer(ColumnTransformer):
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
         """
-        check_is_fitted(self, attributes=["columns_"])
-        if X.shape[1] != len(self.columns_):
-            raise ValueError(
-                "Passed array does not match column count of "
-                f"array seen during fit. Got {X.shape[1]} "
-                f"columns, expected {len(self.columns_)}"
-            )
+        check_is_fitted(self, attributes=["transformers_"])
 
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
+        X = self._check_X(X, reset=False)
 
         if (X.columns != self.columns_).all():
             X.columns = self.columns_
@@ -753,12 +803,11 @@ class TableVectorizer(ColumnTransformer):
 
         return super().transform(X)
 
-    def get_feature_names_out(self, input_features=None) -> List[str]:
+    def get_feature_names_out(self, input_features=None) -> list[str]:
         """Return clean feature names.
 
         Feature names are formatted like:
-        "<column_name>_<value>" if encoded by
-        :class:`~sklearn.preprocessing.OneHotEncoder` or alike,
+        "<column_name>_<value>" if encoded by OneHotEncoder or alike,
         (e.g. "job_title_Police officer"), or "<column_name>" otherwise.
 
         Parameters
@@ -771,10 +820,7 @@ class TableVectorizer(ColumnTransformer):
         list of str
             Feature names.
         """
-        if parse_version(sklearn_version) < parse_version("1.0"):
-            ct_feature_names = super().get_feature_names()
-        else:
-            ct_feature_names = super().get_feature_names_out()
+        ct_feature_names = super().get_feature_names_out()
         all_trans_feature_names = []
 
         for name, trans, cols, _ in self._iter(fitted=True):
@@ -786,10 +832,7 @@ class TableVectorizer(ColumnTransformer):
                         cols = [self.columns_[i] for i in cols]
                     all_trans_feature_names.extend(cols)
                 continue
-            if parse_version(sklearn_version) < parse_version("1.0"):
-                trans_feature_names = trans.get_feature_names(cols)
-            else:
-                trans_feature_names = trans.get_feature_names_out(cols)
+            trans_feature_names = trans.get_feature_names_out(cols)
             all_trans_feature_names.extend(trans_feature_names)
 
         if len(ct_feature_names) != len(all_trans_feature_names):
@@ -797,31 +840,6 @@ class TableVectorizer(ColumnTransformer):
             return list(ct_feature_names)
 
         return all_trans_feature_names
-
-    def get_feature_names(self, input_features=None) -> List[str]:
-        """Return clean feature names. Compatibility method for sklearn < 1.0.
-
-        Use :func:`~TableVectorizer.get_feature_names_out` instead.
-
-        Parameters
-        ----------
-        input_features : None
-            Unused, only here for compatibility.
-
-        Returns
-        -------
-        list of str
-            Feature names.
-        """
-        if parse_version(sklearn_version) >= parse_version("1.0"):
-            warn(
-                "Following the changes in scikit-learn 1.0, "
-                "get_feature_names is deprecated. "
-                "Use get_feature_names_out instead. ",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        return self.get_feature_names_out(input_features)
 
 
 @deprecated("Use TableVectorizer instead.")

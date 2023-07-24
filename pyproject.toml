@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88
-target_version = ['py38', 'py39', 'py310']
+target_version = ['py310', 'py311']
 preview = true
 # Exclude irrelevant directories for formatting
 exclude = '''
@@ -26,3 +26,15 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # Turn deprecation warnings into errors
+    "error::FutureWarning",
+    "error::DeprecationWarning",
+    "error::numpy.VisibleDeprecationWarning",
+
+    # Ignore warning from np.in1d since the future behavior is already the desired
+    # behavior. TODO remove when numpy min version >= 1.25.
+    'ignore:elementwise\ comparison\ failed:FutureWarning',
+]

@@ -1,3 +1,5 @@
+.. _encoding:
+
 ====================================
 Encoding: creating feature matrices
 ====================================
@@ -58,6 +60,6 @@ categories, eg to replace :class:`~sklearn.preprocessing.OneHotEncoder`:
 Encoding dates
 ---------------
 
-The :class:`DateTimeEncoder` encodes date and time: it represent them as
+The :class:`DatetimeEncoder` encodes date and time: it represent them as
 time in seconds since a fixed date, but also added features useful to
 capture regularities: week of the day, month of the year...

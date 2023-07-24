@@ -14,6 +14,9 @@ These will be called `KEN embeddings` in the following example.
 We will see that these embeddings of common entities significantly
 improve our results.
 
+.. note::
+    This example requires `pyarrow` to be installed.
+
 .. [#] https://soda-inria.github.io/ken_embeddings/
 
 
@@ -55,10 +58,11 @@ X.head(3)
 y = X["Global_Sales"]
 y
 
+
 ###############################################################################
 # Let's take a look at the distribution of our target variable:
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 sns.set_theme(style="ticks")
 
@@ -89,36 +93,40 @@ y = y[~mask]
 # We will use KEN embeddings to enrich our data.
 #
 # We will start by checking out the available tables with
-# :class:`~skrub.datasets.get_ken_table_aliases`:
-from skrub.datasets import get_ken_table_aliases
+# :class:`~skrub.datasets.fetch_ken_table_aliases`:
+from skrub.datasets import fetch_ken_table_aliases
 
-get_ken_table_aliases()
+fetch_ken_table_aliases()
 
 ###############################################################################
 # The *games* table is the most relevant to our case.
 # Let's see what kind of types we can find in it with the function
-# :class:`~skrub.datasets.get_ken_types`:
-from skrub.datasets import get_ken_types
+# :class:`~skrub.datasets.fetch_ken_types`:
+from skrub.datasets import fetch_ken_types
 
-get_ken_types(embedding_table_id="games")
+fetch_ken_types(embedding_table_id="games")
 
 ###############################################################################
 # Interesting, we have a broad range of topics!
 #
-# Next, we'll use :class:`~skrub.datasets.get_ken_embeddings`
+# Next, we'll use :class:`~skrub.datasets.fetch_ken_embeddings`
 # to extract the embeddings of entities we need:
-from skrub.datasets import get_ken_embeddings
+from skrub.datasets import fetch_ken_embeddings
 
 ###############################################################################
 # KEN Embeddings are classified by types.
-# The :class:`~skrub.datasets.get_ken_embeddings` function
+# See the example on :class:`~skrub.datasets.fetch_ken_embeddings`
+# to understand how you can filter types you are interested in.
+#
+# The :class:`~skrub.datasets.fetch_ken_embeddings` function
 # allows us to specify the types to be included and/or excluded
 # so as not to load all Wikipedia entity embeddings in a table.
 #
+#
 # In a first table, we include all embeddings with the type name "game"
 # and exclude those with type name "companies" or "developer".
-embedding_games = get_ken_embeddings(
-    types="game",
+embedding_games = fetch_ken_embeddings(
+    search_types="game",
     exclude="companies|developer",
     embedding_table_id="games",
 )
@@ -126,8 +134,8 @@ embedding_games = get_ken_embeddings(
 ###############################################################################
 # In a second table, we include all embeddings containing the type name
 # "game_development_companies", "game_companies" or "game_publish":
-embedding_publisher = get_ken_embeddings(
-    types="game_development_companies|game_companies|game_publish",
+embedding_publisher = fetch_ken_embeddings(
+    search_types="game_development_companies|game_companies|game_publish",
     embedding_table_id="games",
     suffix="_aux",
 )
@@ -170,8 +178,8 @@ X_full = fa2.fit_transform(X_full)
 # that will be included in the learning process and the appropriate encoding of
 # categorical variables using the |MinHash| and |OneHotEncoder|:
 from sklearn.compose import make_column_transformer
-
 from sklearn.preprocessing import OneHotEncoder
+
 from skrub import MinHashEncoder
 
 min_hash = MinHashEncoder(n_components=100)

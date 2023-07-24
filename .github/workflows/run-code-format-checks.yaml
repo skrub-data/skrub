@@ -10,7 +10,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Install pre-commit setup
       run: |
@@ -18,4 +18,4 @@ jobs:
         pre-commit install
 
     - name: Run checks
-      run: pre-commit run
+      run: pre-commit run -v --all-files --show-diff-on-failure

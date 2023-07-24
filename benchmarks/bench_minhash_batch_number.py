@@ -1,20 +1,31 @@
 """
-The MinHashEncoder version used for the benchmark.
+Testing the performance of the MinHashEncoder based on the number of batches used.
 On the main branch, we only kept the best version of the MinHashEncoder
 which is the batched version with batch_per_job=1
 (the batch_per_job parameter has no effect on the results)
+
+Date: February 2023
 """
 
-from typing import Callable, Collection, Dict, List, Literal, Tuple
+import pickle
+from argparse import ArgumentParser
+from collections.abc import Callable, Collection
+from pathlib import Path
+from typing import Literal
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
+from utils import default_parser, find_result, monitor
 
 from skrub._fast_hash import ngram_min_hash
 from skrub._string_distances import get_unique_ngrams
 from skrub._utils import LRUDict, check_input
+from skrub.tests.utils import generate_data
 
 NoneType = type(None)
 
@@ -104,7 +115,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         n_components: int = 30,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         hashing: Literal["fast", "murmur"] = "fast",
         minmax_hash: bool = False,
         handle_missing: Literal["error", "zero_impute"] = "zero_impute",
@@ -121,7 +132,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.batch_per_job = batch_per_job
         self.n_jobs = n_jobs
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """
@@ -362,18 +373,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         return X_out.astype(np.float64)  # The output is an int32 before conversion
 
 
-import pickle
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-from argparse import ArgumentParser
-
-from pathlib import Path
-
-from utils import monitor, find_result, default_parser
-from skrub.tests.utils import generate_data
-
-benchmark_name = "minhash_batch_comparison"
+benchmark_name = "bench_minhash_batch_number"
 
 
 @monitor(
@@ -411,10 +411,10 @@ def plot(df: pd.DataFrame):
         else "batched=False",
         axis=1,
     )
-
     sns.boxplot(x="n_jobs", y="time", hue="config", data=df)
     # Log scale for the y-axis
     plt.yscale("log")
+    plt.tight_layout()
     plt.show()
 
 
@@ -445,7 +445,7 @@ if __name__ == "__main__":
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
-        df = pd.read_csv(result_file)
+        df = pd.read_parquet(result_file)
 
     if _args.plot:
         plot(df)

@@ -1,15 +1,15 @@
 import random
-from typing import Optional, Union
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 def generate_data(
-    n_samples,
-    as_list=False,
-    random_state: Optional[Union[int, float, str, bytes, bytearray]] = None,
+    n_samples: int,
+    as_list: bool = False,
+    random_state: int | float | str | bytes | bytearray | None = None,
     sample_length: int = 100,
-) -> np.ndarray:
+) -> NDArray:
     if random_state is not None:
         random.seed(random_state)
     MAX_LIMIT = 255  # extended ASCII Character set

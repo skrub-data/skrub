@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+{% set title = 'skrub: Prepping tables for machine learning' %}
+
+{%- block extrahead %}
+    {{ super() }}
+    {# Add here landing-page specific stuff that goes in the header (eg css) #}
+{%- endblock extrahead %}
+
+{% block docs_navbar %}
+    {{ super() }}
+
+    {# We add the full-width banner below the navbar, as the div there is
+still full-width (unlike the article) #}
+    <div class="container-fluid sk-landing-bg">
+    <div class="container sk-landing-container">
+	<div class="row">
+	<div class="col-md-6 mb-3 mb-md-0">
+	    <h1 class="sk-landing-header text-white text-monospace">skrub</h1>
+	    <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
+	</div>
+	<div class="col-md-6 d-flex">
+	    <ul class="sk-landing-header-body">
+	    <li>Built for scikit-learn, Python</li>
+	    <li>Robust to dirty data</li>
+	    <li>Easy learning on pandas dataframes</li>
+	    </ul>
+	</div>
+	</div>
+    </div>
+    </div>
+{% endblock docs_navbar %}
+
+{% block docs_main %}
+<div class="container-fluid schema-container">
+    <img src="_static/skrub_pipeline.svg">
+</div>
+
+<article class="bd-article" role="main">
+<div class="bd-content">
+<div class="landing-container">
+
+<div class="container-fluid">
+  <div class="row justify-content-md-center">
+    <div class="col-lg-4">
+      <div class="sd-card sd-shadow-sm card-landing">
+        <div class="card-body">
+          <h4 class="card-title"><a href="{{ pathto('assembling') }}">Assembling</a></h4>
+    <p><a class="reference internal" href="generated/skrub.fuzzy_join.html"
+title="skrub.fuzzy_join"><code class="xref py py-func docutils literal
+notranslate"><span class="pre">fuzzy_join()</span></code></a>, Joining
+tables on non-normalized categories with approximate matching. <a
+class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining_and_FeatureAugmenter') }}"><span class="std std-ref">Example</span></a></p>
+<p><a class="reference internal"
+href="generated/skrub.FeatureAugmenter.html"
+title="skrub.FeatureAugmenter"><code class="xref py py-class docutils
+literal notranslate"><span class="pre">FeatureAugmenter</span></code></a>, a transformer for joining
+multiple tables together. <a class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining_and_FeatureAugmenter') }}"><span class="std std-ref">Example</span></a></p>
+    </div>
+  </div>
+</div>
+<div class="col-lg-4">
+  <div class="sd-card sd-shadow-sm card-landing">
+    <div class="card-body">
+      <h4 class="card-title"><a href="{{ pathto('encoding') }}">Encoding</a></h4><p><a class="reference
+internal"
+href="generated/skrub.TableVectorizer.html#skrub.TableVectorizer"
+title="skrub.TableVectorizer"><code class="xref py py-class docutils
+literal notranslate"><span class="pre">TableVectorizer</span></code></a>:
+<strong>turn a pandas dataframe into a numerical array</strong> for
+machine learning. <a class="reference internal" href="auto_examples/01_dirty_categories.html#example-table-vectorizer"><span class="std std-ref">Example</span></a></p>
+<p><a class="reference internal"
+href="generated/skrub.GapEncoder.html#skrub.GapEncoder"
+title="skrub.GapEncoder"><code class="xref py py-class docutils literal
+notranslate"><span class="pre">GapEncoder</span></code></a>,
+OneHotEncoder but robust to typos or non-normalized categories. <a
+class="reference internal" href="auto_examples/02_investigating_dirty_categories.html#example-gap-encoder"><span class="std std-ref">Example</span></a></p>
+    </div>
+  </div>
+</div>
+<div class="col-lg-4">
+  <div class="sd-card sd-shadow-sm card-landing">
+    <div class="card-body">
+      <h4 class="card-title"><a href="{{ pathto('cleaning') }}">Cleaning</a></h4><p><a class="reference
+internal" href="generated/skrub.deduplicate.html#skrub.deduplicate"
+title="skrub.deduplicate"><code class="xref py py-func docutils literal
+notranslate"><span class="pre">deduplicate()</span></code></a>: merge
+categories of similar morphology (spelling). <a class="reference internal" href="auto_examples/05_deduplication.html"><span class="std std-ref">Example</span></a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</article>
+<h2 style="margin-top: max(4rem, 7vh);text-align: center;margin-bottom: .1rem;font-size: max(1.3vw, 4ex);">Less data wrangling, more machine learning</h2>
+<h1 style="text-align: center;margin-top: max(2rem, 2vh);margin-bottom: 3rem;font-size: max(4vw, 7ex);">Coming soon</h1>
+
+{# So far, no article footer. Maybe this is brutal #}              
+</div>
+</div>
+{% endblock docs_main %}
+
+{%- block footer %}
+<div class="container-fluid sk-landing-footer">
+  <div class="row justify-content-md-center">
+    <div class="col-lg-4">
+	<p><a href="CHANGES.html">Recent changes</a></p>
+    </div>
+    <div class="col-lg-4">
+	<p><a href="CONTRIBUTING.html">Contributing</a></p>
+    </div>
+  </div>
+</div>
+{%- endblock footer %}
