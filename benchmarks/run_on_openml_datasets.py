@@ -139,22 +139,24 @@ for type_id, problem, pipeline, metric in [
             evals = openml.evaluations.list_evaluations(
                 function=metric, tasks=[task_id], output_format="dataframe"
             )
-
-            percentiles = {p: np.percentile(evals.value, p) for p in {25, 50, 75}}
-            logger.info(
-                f"OpenML scores on {len(evals)} runs (on the full dataset): "
-                + " ; ".join(
-                    f"{p}% percentile: {value}" for p, value in percentiles.items()
-                )
-            )
-            if args.compare_scores:
-                if (problem == "classification" and mean < percentiles[25]) or (
-                    problem == "regression" and mean > percentiles[25]
-                ):
-                    logger.warning(
-                        f"Our score is below the 25% percentile on {task_id}"
+            if len(evals) > 0:
+                percentiles = {p: np.percentile(evals.value, p) for p in {25, 50, 75}}
+                logger.info(
+                    f"OpenML scores on {len(evals)} runs (on the full dataset): "
+                    + " ; ".join(
+                        f"{p}% percentile: {value}" for p, value in percentiles.items()
                     )
-                    low_scores[task_id] = np.mean(scores)
+                )
+                if args.compare_scores:
+                    if (problem == "classification" and mean < percentiles[25]) or (
+                        problem == "regression" and mean > percentiles[25]
+                    ):
+                        logger.warning(
+                            f"Our score is below the 25% percentile on {task_id}"
+                        )
+                        low_scores[task_id] = np.mean(scores)
+            else:
+                logger.warning(f"No OpenML scores available for {task_id}")
         except Exception as e:
             logger.warning(
                 constraint_error_template.format(
