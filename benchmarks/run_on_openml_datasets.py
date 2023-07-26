@@ -8,7 +8,7 @@ using the `--compare_scores` flag (this is slow).
 import openml
 import os
 import numpy as np
-from .utils import default_parser
+from benchmarks.utils import default_parser
 from skrub import TableVectorizer, MinHashEncoder
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import (
