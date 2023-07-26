@@ -5,15 +5,15 @@
 Deduplicating misspelled categories
 ===================================
 
-Real world datasets often come with misspellings in the category
-names, for instance if the category is manually inputted.
+Real world datasets often come with misspellings, for instance
+in manually inputted categorical variables.
 Such misspelling break data analysis steps that require
-exact matching, such as a 'GROUP BY' operations.
+exact matching, such as a `GROUP BY` operation.
 
 Merging multiple variants of the same category is known as
 *deduplication*. It is implemented in skrub with the |deduplicate| function.
 
-Deduplication relies on *unsupervised learning*, it finds structures in
+Deduplication relies on *unsupervised learning*. It finds structures in
 the data without providing a-priori known and explicit labels/categories.
 Specifically, measuring the distance between strings can be used to
 find clusters of strings that are similar to each other (e.g. differ only
@@ -39,7 +39,7 @@ misspelled category names in an unsupervised manner.
 # as a data scientist, your job is to analyze the data from a hospital ward.
 # In the data, we notice that in most of the cases the doctor prescribes
 # one of three following medications:
-# "Contrivan", "Genericon", or "Zipholan".
+# "Contrivan", "Genericon" or "Zipholan".
 #
 # However, data entry is manual and - either because the doctor's
 # handwriting was hard to decipher, or due to mistakes during input -
@@ -71,6 +71,7 @@ ex_series = pd.Series(counts, index=unique_examples)
 ex_series.plot.barh(figsize=(10, 15))
 plt.ylabel("Medication name")
 plt.xlabel("Counts")
+plt.show()
 
 ###############################################################################
 # We clearly see the structure of the data:
@@ -78,9 +79,10 @@ plt.xlabel("Counts")
 # are the most common ones, but there are many spelling mistakes or
 # slight variations of the original names.
 #
-# The idea is to use the fact that the string distance of misspelled
-# medications will be closest to their original (most frequent)
-# medication name - and therefore form clusters.
+# The idea behind |deduplicate| is to use the fact that
+# the string distance of misspelled medications will be
+# closest to their original (most frequent) medication name
+# - and therefore form clusters.
 
 ###############################################################################
 # Deduplication: suggest corrections of misspelled names
@@ -95,6 +97,7 @@ from skrub import deduplicate
 
 deduplicated_data = deduplicate(duplicated_names)
 
+deduplicated_data[:5]
 ###############################################################################
 # And that's it! We now have the deduplicated data.
 #
@@ -116,10 +119,11 @@ deduplicated_series = pd.Series(deduplicated_counts, index=deduplicated_unique_e
 deduplicated_series.plot.barh(figsize=(10, 15))
 plt.xlabel("Medication name")
 plt.ylabel("Counts")
+plt.show()
 
 ###############################################################################
 # Here, the silhouette score finds the ideal number of
-# clusters and groups the spelling mistakes.
+# clusters (3) and groups the spelling mistakes.
 #
 # In practice, the translation/deduplication will often be imperfect
 # and require some tweaks.
@@ -147,8 +151,6 @@ translation_table.head()
 # names. A darker color means that two medication names are closer together
 # (i.e. more similar), a lighter color means a larger distance.
 #
-# We have three clusters - the original medication
-# names and their misspellings that form a cluster around them.
 
 from skrub import compute_ngram_distance
 from scipy.spatial.distance import squareform
@@ -162,6 +164,11 @@ fig, axes = plt.subplots(1, 1, figsize=(12, 12))
 sns.heatmap(
     square_distances, yticklabels=ex_series.index, xticklabels=ex_series.index, ax=axes
 )
+plt.show()
+
+###############################################################################
+# We have three clusters appearing - the original medication
+# names and their misspellings that form a cluster around them.
 
 ###############################################################################
 # Conclusion
