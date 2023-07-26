@@ -1,6 +1,6 @@
 """
-Fuzzy joining dirty tables and the Joiner
-=========================================
+Fuzzy joining dirty tables with the Joiner
+==========================================
 
 Here we show how to combine data from different sources,
 with a vocabulary not well normalized.
@@ -113,6 +113,8 @@ gdppc.sort_values(by="Country Name").tail(7)
 # We will ignore the warnings:
 import warnings
 
+warnings.filterwarnings("ignore")
+
 ###############################################################################
 # .. _example_fuzzy_join:
 #
@@ -121,8 +123,6 @@ import warnings
 #
 # To join them with skrub, we only need to do the following:
 from skrub import fuzzy_join
-
-warnings.filterwarnings("ignore")
 
 df1 = fuzzy_join(
     df,  # our table to join
