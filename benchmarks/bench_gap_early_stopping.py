@@ -219,7 +219,7 @@ benchmark_name = Path(__file__).stem
 @monitor(
     parametrize={
         "early_stop_config": [
-            {"early_stop": False, "patience": -1, "monitor_steps": 1},
+            {"early_stop": False, "patience": -1, "monitor_steps": 100},
             {"early_stop": True, "patience": 5, "monitor_steps": 1},
             {"early_stop": True, "patience": 1, "monitor_steps": 5},
         ],
@@ -412,18 +412,18 @@ def plot(df: pd.DataFrame):
 
     ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.41))
     ax2.bar(
-        ['No Early-Stop', 'Early-Stop', 'Early-Stop Skip Steps'], 
+        ["No Early-Stop", "Early-Stop", "Early-Stop Skip Steps"],
         [
-            results_df.groupby('cv_test_score').max().gap_iter.mean(), 
-            results_df_early_stop.groupby('cv_test_score').max().gap_iter.mean(), 
-            results_df_early_stop_skip.groupby('cv_test_score').max().gap_iter.mean() * monitor_steps
+            results_df.groupby("cv_test_score").max().gap_iter.mean(),
+            results_df_early_stop.groupby("cv_test_score").max().gap_iter.mean(),
+            results_df_early_stop_skip.groupby("cv_test_score").max().gap_iter.mean()
+            * monitor_steps,
         ],
-        yerr=
-        [
-            results_df.groupby('cv_test_score').max().gap_iter.std(), 
-            results_df_early_stop.groupby('cv_test_score').max().gap_iter.std(), 
-            results_df_early_stop_skip.groupby('cv_test_score').max().gap_iter.std()
-        ]
+        yerr=[
+            results_df.groupby("cv_test_score").max().gap_iter.std(),
+            results_df_early_stop.groupby("cv_test_score").max().gap_iter.std(),
+            results_df_early_stop_skip.groupby("cv_test_score").max().gap_iter.std(),
+        ],
     )
     ax2.set_ylabel("total n. of batches processed")
 
