@@ -218,7 +218,7 @@ def benchmark(
 ):
     print(f"Running benchmark")
     ds = fetch_traffic_violations()
-    X = np.array(ds.X[high_card_feature]).reshape(-1, 1)
+    X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
     y = ds.y
     # only keep the first max_rows rows
     # split the data into train and test
