@@ -183,9 +183,7 @@ def test_overflow_error() -> None:
     np.seterr(over="raise", divide="raise")
     r = np.random.RandomState(0)
     X = r.randint(1e5, 1e6, size=(8000, 1)).astype(str)
-    enc = GapEncoder(
-        n_components=2, batch_size=1, min_iter=1, max_iter=1, random_state=0
-    )
+    enc = GapEncoder(n_components=2, batch_size=1, max_iter=1, random_state=0)
     enc.fit(X)
 
 

@@ -51,8 +51,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         hashing: bool = False,
         hashing_n_features: int = 2**12,
         init: Literal["k-means++", "random", "k-means"] = "k-means++",
-        tol: float = 1e-4,
-        min_iter: int = 2,
         max_iter: int = 5,
         ngram_range: tuple[int, int] = (2, 4),
         analyzer: Literal["word", "char", "char_wb"] = "char",
@@ -60,6 +58,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
+        verbose: int = 0,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -68,17 +67,17 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.rho = rho
         self.rescale_rho = rescale_rho
         self.batch_size = batch_size
-        self.tol = tol
         self.hashing = hashing
         self.hashing_n_features = hashing_n_features
         self.max_iter = max_iter
-        self.min_iter = min_iter
         self.init = init
         self.analyzer = analyzer
         self.add_words = add_words
         self.random_state = check_random_state(random_state)
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
+        self.max_no_improvement = 10
+        self.verbose = verbose
 
     def _init_vars(self, X) -> tuple[NDArray, NDArray, NDArray]:
         """
@@ -198,6 +197,57 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         B = A.copy()
         return W, A, B
 
+    def _minibatch_convergence(self, batch_size, batch_cost, n_samples, step, n_steps):
+        """Helper function to encapsulate the early stopping logic"""
+        # adapted from sklearn.decomposition.MiniBatchNMF
+
+        # counts steps starting from 1 for user friendly verbose mode.
+        step = step + 1
+
+        # Ignore first iteration because H is not updated yet.
+        if step == 1:
+            if self.verbose:
+                print(f"Minibatch step {step}/{n_steps}: mean batch cost: {batch_cost}")
+            return False
+
+        # Compute an Exponentially Weighted Average of the cost function to
+        # monitor the convergence while discarding minibatch-local stochastic
+        # variability: https://en.wikipedia.org/wiki/Moving_average
+        if self._ewa_cost is None:
+            self._ewa_cost = batch_cost
+        else:
+            alpha = batch_size / (n_samples + 1)
+            alpha = min(alpha, 1)
+            self._ewa_cost = self._ewa_cost * (1 - alpha) + batch_cost * alpha
+
+        # Log progress to be able to monitor convergence
+        if self.verbose:
+            print(
+                f"Minibatch step {step}/{n_steps}: mean batch cost: "
+                f"{batch_cost}, ewa cost: {self._ewa_cost}"
+            )
+
+        # Early stopping heuristic due to lack of improvement on smoothed
+        # cost function
+        if self._ewa_cost_min is None or self._ewa_cost < self._ewa_cost_min:
+            self._no_improvement = 0
+            self._ewa_cost_min = self._ewa_cost
+        else:
+            self._no_improvement += 1
+
+        if (
+            self.max_no_improvement is not None
+            and self._no_improvement >= self.max_no_improvement
+        ):
+            if self.verbose:
+                print(
+                    "Converged (lack of improvement in objective function) "
+                    f"at step {step}/{n_steps}"
+                )
+            return True
+
+        return False
+
     def fit(self, X: ArrayLike, y=None) -> "GapEncoderColumn":
         """
         Fit the GapEncoder on `X`.
@@ -216,11 +266,16 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         """
         # Copy parameter rho
         self.rho_ = self.rho
+        # Attributes to monitor the convergence
+        self._ewa_cost = None
+        self._ewa_cost_min = None
+        self._no_improvement = 0
         # Check if first item has str or np.str_ type
         assert isinstance(X[0], str), "Input data is not string. "
         # Make n-grams counts matrix unq_V
         unq_X, unq_V, lookup = self._init_vars(X)
         n_batch = (len(X) - 1) // self.batch_size + 1
+        n_samples = len(X)
         del X
         # Get activations unq_H
         unq_H = self._get_H(unq_X)
@@ -228,8 +283,6 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         for n_iter_ in range(self.max_iter):
             # Loop over batches
             for i, (unq_idx, idx) in enumerate(batch_lookup(lookup, n=self.batch_size)):
-                if i == n_batch - 1:
-                    W_last = self.W_.copy()
                 # Update activations unq_H
                 unq_H[unq_idx] = _multiplicative_update_h(
                     unq_V[unq_idx],
@@ -251,13 +304,25 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                     self.rescale_W,
                     self.rho_,
                 )
-
-                if i == n_batch - 1:
-                    # Compute the norm of the update of W in the last batch
-                    W_change = np.linalg.norm(self.W_ - W_last) / np.linalg.norm(W_last)
-
-            if (W_change < self.tol) and (n_iter_ >= self.min_iter - 1):
-                break  # Stop if the change in W is smaller than the tolerance
+                batch_cost = _beta_divergence(
+                    unq_V[idx],
+                    unq_H[idx],
+                    self.W_,
+                    "kullback-leibler",
+                    square_root=False,
+                )
+                if self._minibatch_convergence(
+                    batch_size=len(idx),
+                    batch_cost=batch_cost,
+                    n_samples=n_samples,
+                    step=n_iter_ * n_batch + i,
+                    n_steps=self.max_iter * n_batch,
+                ):
+                    break
+            else:
+                # only continue if no break occurred
+                continue
+            break
 
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
@@ -541,10 +606,6 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         If `init='random'`, topics are initialized with a Gamma distribution.
         If `init='k-means'`, topics are initialized with a KMeans on the
         n-grams counts.
-    tol : float, default=1e-4
-        Tolerance for the convergence of the matrix `W`.
-    min_iter : int, default=2
-        Minimum number of iterations on the input data.
     max_iter : int, default=5
         Maximum number of iterations on the input data.
     ngram_range : int 2-tuple, default=(2, 4)
@@ -657,8 +718,6 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         hashing: bool = False,
         hashing_n_features: int = 2**12,
         init: Literal["k-means++", "random", "k-means"] = "k-means++",
-        tol: float = 1e-4,
-        min_iter: int = 2,
         max_iter: int = 5,
         ngram_range: tuple[int, int] = (2, 4),
         analyzer: Literal["word", "char", "char_wb"] = "char",
@@ -677,11 +736,9 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         self.rho = rho
         self.rescale_rho = rescale_rho
         self.batch_size = batch_size
-        self.tol = tol
         self.hashing = hashing
         self.hashing_n_features = hashing_n_features
         self.max_iter = max_iter
-        self.min_iter = min_iter
         self.init = init
         self.analyzer = analyzer
         self.add_words = add_words
@@ -704,7 +761,6 @@ class GapEncoder(TransformerMixin, BaseEstimator):
             rho=self.rho,
             rescale_rho=self.rescale_rho,
             batch_size=self.batch_size,
-            tol=self.tol,
             hashing=self.hashing,
             hashing_n_features=self.hashing_n_features,
             max_iter=self.max_iter,
@@ -713,6 +769,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
             random_state=self.random_state,
             rescale_W=self.rescale_W,
             max_iter_e_step=self.max_iter_e_step,
+            verbose=self.verbose,
         )
 
     def _handle_missing(self, X):
