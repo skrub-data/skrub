@@ -483,8 +483,8 @@ def _download_and_write_movielens_dataset(dataset_id, data_directory, zip_direct
     url = MOVIELENS_URL.format(zip_directory=zip_directory)
     try:
         tmp_file, _ = urllib.request.urlretrieve(url)
-        data_file = str(zip_directory / f"{dataset_id}.csv")
-        readme_file = str(zip_directory / "README.txt")
+        data_file = str((zip_directory / f"{dataset_id}.csv").as_posix())
+        readme_file = str((zip_directory / "README.txt").as_posix())
         with ZipFile(tmp_file, "r") as zip_file:
             zip_file.extractall(
                 data_directory,
