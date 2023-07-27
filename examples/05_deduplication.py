@@ -37,7 +37,7 @@ misspelled category names in an unsupervised manner.
 #
 # Let's take an example:
 # as a data scientist, your job is to analyze the data from a hospital ward.
-# In the data, we notice that in most of the cases the doctor prescribes
+# In the data, we notice that in most cases, the doctor prescribes
 # one of three following medications:
 # "Contrivan", "Genericon" or "Zipholan".
 #
