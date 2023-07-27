@@ -120,7 +120,7 @@ deduplicated_series = pd.Series(deduplicated_counts, index=deduplicated_unique_e
 
 deduplicated_series.plot.barh(figsize=(10, 15))
 plt.xlabel("Medication name")
-plt.ylabel("Counts")
+plt.ylabel("Count")
 plt.show()
 
 ###############################################################################
