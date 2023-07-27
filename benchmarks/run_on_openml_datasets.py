@@ -58,6 +58,7 @@ regression_pipeline = Pipeline(
 )
 
 errors = {}
+errors_one_line = {}
 low_scores = {}
 constraint_error_template = "Skipping task {id} because {reason}"
 
@@ -67,8 +68,13 @@ for type_id, problem, pipeline, metric in [
 ]:
     for task_id in openml.tasks.list_tasks(type=type_id):
         try:
-            task = openml.tasks.get_task(task_id, download_data=False)
-            dataset = openml.datasets.get_dataset(task.dataset_id, download_data=False)
+            task = openml.tasks.get_task(task_id, download_splits=True)
+            dataset = openml.datasets.get_dataset(
+                task.dataset_id,
+                download_data=False,
+                download_qualities=True,
+                download_features_meta_data=False,
+            )
             # check if it's not too big
             if dataset.qualities["NumberOfInstances"] > args.max_rows:
                 logger.debug(
@@ -163,21 +169,22 @@ for type_id, problem, pipeline, metric in [
                         )
                         low_scores[task_id] = np.mean(scores)
             else:
-                logger.warning(f"No OpenML scores available for {task_id}")
+                logger.debug(f"No OpenML scores available for {task_id}")
         except Exception as e:
             logger.warning(
                 constraint_error_template.format(
-                    id=task_id, reason=f"of an unhandled error: {e}"
+                    id=task_id, reason=f"of an unhandled error: {e}."
                 )
             )
             errors[task_id] = e
+            errors_one_line[task_id] = str(e).split("\n")[-2]
             continue
 
 logger.info(f"Finished! ")
 logger.error(f"{len(errors)} tasks with errors: {set(errors.keys())}")
-# show all unique errors
-for error in set(errors.values()):
-    logger.error(f"Error: {error}")
+# print all unique errors
+for error in set(errors_one_line.values()):
+    logger.error(f"Error: {error}, {list(errors_one_line.values()).count(error)} times")
 
 if args.compare_scores:
     logger.info(
