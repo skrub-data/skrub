@@ -25,7 +25,7 @@ NoneType = type(None)
 # flake8: noqa: E501
 
 
-class MinHashEncoder(BaseEstimator, TransformerMixin):
+class MinHashEncoder(TransformerMixin, BaseEstimator):
     """Encode string categorical features by applying the MinHash method to n-gram decompositions of strings.
 
     The principle is as follows:
@@ -65,7 +65,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     n_jobs : int, optional
         The number of jobs to run in parallel.
         The hash computations for all unique elements are parallelized.
-        `None` means 1 unless in a :class:`joblib.parallel_backend`.
+        `None` means 1 unless in a joblib.parallel_backend.
         -1 means using all processors.
         See :term:`n_jobs` for more details.
 
@@ -80,11 +80,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`skrub.GapEncoder`
+    GapEncoder
         Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
-    :class:`skrub.SimilarityEncoder`
+    SimilarityEncoder
         Encode string columns as a numeric array with n-gram string similarity.
-    :func:`skrub.deduplicate`
+    deduplicate
         Deduplicate data by hierarchically clustering similar strings.
 
     References
@@ -174,12 +174,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
 
-    def _more_tags(self) -> dict[str, list[str]]:
-        """
-        Used internally by sklearn to ease the estimator checks.
-        """
-        return {"X_types": ["categorical"]}
-
     def _get_murmur_hash(self, string: str) -> NDArray:
         """
         Encode a string using murmur hashing function.
@@ -191,7 +185,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string.
         """
         min_hashes = np.ones(self.n_components) * np.infty
@@ -220,7 +214,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_components, )
+        ndarray of shape (n_components, )
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
@@ -255,7 +249,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_samples, n_components)
+        ndarray of shape (n_samples, n_components)
             The encoded strings, using specified encoding scheme.
         """
         res = np.zeros((len(batch), self.n_components))
@@ -283,12 +277,12 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`MinHashEncoder`
-            The fitted :class:`MinHashEncoder` instance (self).
+        MinHashEncoder
+            The fitted MinHashEncoder instance (self).
         """
-        self._check_n_features(X, reset=True)
         self._check_feature_names(X, reset=True)
         X = check_input(X)
+        self._check_n_features(X, reset=True)
 
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
@@ -314,13 +308,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray` of shape (n_samples, n_columns * n_components)
+        ndarray of shape (n_samples, n_columns * n_components)
             Transformed input.
         """
         check_is_fitted(self, "hash_dict_")
-        self._check_n_features(X, reset=False)
-        self._check_feature_names(X, reset=False)
         X = check_input(X)
+        self._check_feature_names(X, reset=False)
+        self._check_n_features(X, reset=False)
         if self.minmax_hash:
             if self.n_components % 2 != 0:
                 raise ValueError(
@@ -423,3 +417,19 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 feature_names.append(f"{feature}_{i}")
 
         return feature_names
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {
+            "X_types": ["2darray", "categorical", "string"],
+            "preserves_dtype": [],
+            "allow_nan": True,
+            "_xfail_checks": {
+                "check_estimator_sparse_data": (
+                    "Cannot create sparse matrix with strings."
+                ),
+                "check_estimators_dtypes": "We only support string dtypes.",
+            },
+        }

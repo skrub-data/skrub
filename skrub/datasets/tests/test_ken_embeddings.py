@@ -1,4 +1,10 @@
-from skrub.datasets import fetch_ken_embeddings, fetch_ken_table_aliases, fetch_ken_types
+import pytest
+
+from skrub.datasets import (
+    fetch_ken_embeddings,
+    fetch_ken_table_aliases,
+    fetch_ken_types,
+)
 
 
 def test_fetch_ken_table_aliases():
@@ -15,6 +21,7 @@ def test_fetch_ken_types():
     """
     Test if the types of entities are correctly fetched
     """
+    pytest.importorskip("pyarrow")
     # Tests the full result returns alright
     types = fetch_ken_types()
     assert types.shape[0] == 114509
@@ -30,6 +37,7 @@ def test_small_ken_embeddings():
     """
     Test if small sized embeddings were fetched correctly
     """
+    pytest.importorskip("pyarrow")
     emb = fetch_ken_embeddings(
         search_types="game_designers",
         embedding_table_id="games",
@@ -50,6 +58,7 @@ def test_big_ken_embeddings():
     """
     Test if bigger sized embeddings were fetched correctly
     """
+    pytest.importorskip("pyarrow")
     # With custom figshare ID's:
     emb3 = fetch_ken_embeddings(
         search_types="rock",

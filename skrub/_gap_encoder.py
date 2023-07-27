@@ -21,7 +21,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.fixes import _object_dtype_isnan
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from ._utils import check_input
 
@@ -34,7 +34,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`~skrub.GapEncoder`
+    GapEncoder
         For more information.
     """
 
@@ -212,8 +212,8 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`GapEncoderColumn`
-            The fitted :class:`GapEncoderColumn` instance (self).
+        GapEncoderColumn
+            The fitted GapEncoderColumn instance (self).
         """
         # Copy parameter rho
         self.rho_ = self.rho
@@ -449,7 +449,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape (n_samples, n_topics)
+        ndarray, shape (n_samples, n_topics)
             Transformed input.
         """
         check_is_fitted(self, "H_dict_")
@@ -487,15 +487,15 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return feature_names_out
 
 
-class GapEncoder(BaseEstimator, TransformerMixin):
+class GapEncoder(TransformerMixin, BaseEstimator):
     """Constructs latent topics with continuous encoding.
 
     This encoder can be understood as a continuous encoding on a set of latent
     categories estimated from the data. The latent categories are built by
     capturing combinations of substrings that frequently co-occur.
 
-    The :class:`~skrub.GapEncoder` supports online learning on batches of
-    data for scalability through the :func:`~skrub.GapEncoder.partial_fit`
+    The GapEncoder supports online learning on batches of
+    data for scalability through the GapEncoder.partial_fit
     method.
 
     The principle is as follows:
@@ -529,22 +529,19 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         If `True`, use ``rho ** (batch_size / len(X))`` instead of rho to obtain
         an update rate per iteration that is independent of the batch size.
     hashing : bool, optional, default=False
-        If `True`, :class:`~sklearn.feature_extraction.text.HashingVectorizer`
-        is used instead of :class:`~sklearn.feature_extraction.text.CountVectorizer`.
+        If `True`, HashingVectorizer is used instead of CountVectorizer.
         It has the advantage of being very low memory, scalable to large
         datasets as there is no need to store a vocabulary dictionary in
         memory.
     hashing_n_features : int, default=2**12
-        Number of features for the
-        :class:`~sklearn.feature_extraction.text.HashingVectorizer`.
+        Number of features for the HashingVectorizer.
         Only relevant if `hashing=True`.
     init : {'k-means++', 'random', 'k-means'}, default='k-means++'
         Initialization method of the `W` matrix.
-        If `init='k-means++'`, we use the init method of
-        :class:`~sklearn.cluster.KMeans`.
+        If `init='k-means++'`, we use the init method of KMeans.
         If `init='random'`, topics are initialized with a Gamma distribution.
-        If `init='k-means'`, topics are initialized with a
-        :class:`~sklearn.cluster.KMeans` on the n-grams counts.
+        If `init='k-means'`, topics are initialized with a KMeans on the
+        n-grams counts.
     tol : float, default=1e-4
         Tolerance for the convergence of the matrix `W`.
     min_iter : int, default=2
@@ -556,9 +553,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
     analyzer : {'word', 'char', 'char_wb'}, default='char'
-        Analyzer parameter for the
-        :obj:`~sklearn.feature_extraction.text.HashingVectorizer`
-        / :obj:`~sklearn.feature_extraction.text.CountVectorizer`.
+        Analyzer parameter for the HashingVectorizer / CountVectorizer.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character-level n-gram counts.
         Option ‘char_wb’ creates character n-grams only from text inside word
@@ -566,7 +561,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     add_words : bool, default=False
         If `True`, add the words counts to the bag-of-n-grams representation
         of the input data.
-    random_state : int or :obj:`~numpy.random.RandomState`, optional
+    random_state : int or RandomState, optional
         Random number generator seed for reproducible output across multiple
         function calls.
     rescale_W : bool, default=True
@@ -576,9 +571,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         Maximum number of iterations to adjust the activations h at each step.
     handle_missing : {'error', 'empty_impute'}, default='empty_impute'
         Whether to raise an error or impute with empty string ('') if missing
-        values (NaN) are present during :func:`~GapEncoder.fit`
-        (default is to impute).
-        In :func:`~GapEncoder.inverse_transform`, the missing categories will
+        values (NaN) are present during GapEncoder.fit (default is to impute).
+        In GapEncoder.inverse_transform, the missing categories will
         be denoted as `None`.
     n_jobs : int, optional
         The number of jobs to run in parallel.
@@ -592,18 +586,18 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     ----------
     rho_ : float
         Effective update rate for the `W` matrix.
-    fitted_models_ : list of :obj:`GapEncoderColumn`
+    fitted_models_ : list of GapEncoderColumn
         Column-wise fitted GapEncoders.
     column_names_ : list of str
         Column names of the data the Gap was fitted on.
 
     See Also
     --------
-    :class:`skrub.MinHashEncoder`
+    MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder`
+    SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
-    :class:`skrub.deduplicate`
+    deduplicate :
         Deduplicate data by hierarchically clustering similar strings.
 
     References
@@ -624,7 +618,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
     >>> enc.fit(X)
     GapEncoder(n_components=2)
 
-    The :class:`~skrub.GapEncoder` has found the following two topics:
+    The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names_out()
     ['england, london, uk', 'france, paris, pqris']
@@ -729,12 +723,6 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         self.n_jobs = n_jobs
         self.verbose = verbose
 
-    def _more_tags(self) -> dict[str, list[str]]:
-        """
-        Used internally by sklearn to ease the estimator checks.
-        """
-        return {"X_types": ["categorical"]}
-
     def _create_column_gap_encoder(self) -> GapEncoderColumn:
         """Helper method for creating a GapEncoderColumn from
         the parameters of this instance."""
@@ -791,14 +779,15 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~skrub.GapEncoder`
-            The fitted :class:`~skrub.GapEncoder` instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
 
         # Check that n_samples >= n_components
-        if len(X) < self.n_components:
+        n_samples = _num_samples(X)
+        if n_samples < self.n_components:
             raise ValueError(
-                f"n_samples={len(X)} should be >= n_components={self.n_components}. "
+                f"n_samples={n_samples} should be >= n_components={self.n_components}. "
             )
         # Copy parameter rho
         self.rho_ = self.rho
@@ -807,6 +796,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             self.column_names_ = list(X.columns)
         # Check input data shape
         X = check_input(X)
+        self._check_n_features(X, reset=True)
         X = self._handle_missing(X)
         self.fitted_models_ = Parallel(n_jobs=self.n_jobs, verbose=self.verbose)(
             delayed(self._create_column_gap_encoder().fit)(X[:, k])
@@ -832,12 +822,13 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~numpy.ndarray`, shape (n_samples, n_topics * n_features)
+        ndarray, shape (n_samples, n_topics * n_features)
             Transformed input.
         """
         check_is_fitted(self, "fitted_models_")
         # Check input data shape
         X = check_input(X)
+        self._check_n_features(X, reset=False)
         X = self._handle_missing(X)
         X_enc = []
         for k in range(X.shape[1]):
@@ -860,8 +851,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`~skrub.GapEncoder`
-            The fitted :class:`~skrub.GapEncoder` instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
 
         # If X is a dataframe, store its column names
@@ -932,7 +923,7 @@ class GapEncoder(BaseEstimator, TransformerMixin):
             labels.extend(col_labels)
         return labels
 
-    def score(self, X: ArrayLike) -> float:
+    def score(self, X: ArrayLike, y=None) -> float:
         """Score this instance on `X`.
 
         Returns the sum over the columns of `X` of the Kullback-Leibler
@@ -943,6 +934,8 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         ----------
         X : array-like, shape (n_samples, n_features)
             The data to encode.
+        y : Ignored
+            Not used, present for API consistency by convention.
 
         Returns
         -------
@@ -954,6 +947,23 @@ class GapEncoder(BaseEstimator, TransformerMixin):
         for k in range(X.shape[1]):
             kl_divergence += self.fitted_models_[k].score(X[:, k])
         return kl_divergence
+
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {
+            "X_types": ["2darray", "categorical", "string"],
+            "preserves_dtype": [],
+            "allow_nan": True,
+            "_xfail_checks": {
+                "check_transformer_n_iter": "Don't want to add an `n_iter_` attribute.",
+                "check_estimator_sparse_data": (
+                    "Cannot create sparse matrix with strings."
+                ),
+                "check_estimators_dtypes": "We only support string dtypes.",
+            },
+        }
 
 
 def _rescale_W(W: NDArray, A: NDArray) -> None:
@@ -1075,7 +1085,7 @@ def get_kmeans_prototypes(
     projected = vectorizer.transform(X)
     if not sparse:
         projected = projected.toarray()
-    kmeans = KMeans(n_clusters=n_prototypes, random_state=random_state)
+    kmeans = KMeans(n_clusters=n_prototypes, n_init=10, random_state=random_state)
     kmeans.fit(projected, sample_weight=sample_weight)
     centers = kmeans.cluster_centers_
     neighbors = NearestNeighbors()

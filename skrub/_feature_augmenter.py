@@ -11,7 +11,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from skrub._fuzzy_join import fuzzy_join
 
 
-class FeatureAugmenter(BaseEstimator, TransformerMixin):
+class FeatureAugmenter(TransformerMixin, BaseEstimator):
     """Augment a main table by automatically joining multiple auxiliary tables on it.
 
     Given a list of tables and key column names,
@@ -21,11 +21,11 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     1. The main table and the key column name are provided at initialisation.
     2. The auxiliary tables are provided for fitting, and will be joined
-       sequentially when :func:`~FeatureAugmenter.transform` is called.
+       sequentially when FeatureAugmenter.transform is called.
 
-    It is advised to use hyperparameter tuning tools such as
-    :class:`~sklearn.model_selection.GridSearchCV` to determine the best
-    `match_score` parameter, as this can significantly improve your results.
+    It is advised to use hyperparameter tuning tools such as GridSearchCV
+    to determine the best `match_score` parameter, as this can significantly
+    improve your results.
     (see example 'Fuzzy joining dirty tables with the FeatureAugmenter'
     for an illustration)
 
@@ -44,8 +44,7 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
         For numerical joins, this defines the maximum Euclidean distance
         between the matches.
     analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
-        Analyzer parameter for the
-        :obj:`~sklearn.feature_extraction.text.CountVectorizer` used for
+        Analyzer parameter for the CountVectorizer used for
         the string similarities.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character n-gram counts.
@@ -58,10 +57,10 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :func:`skrub.fuzzy_join` :
+    fuzzy_join :
         Join two tables (dataframes) based on approximate column matching.
 
-    :func:`skrub.datasets.get_ken_embeddings` :
+    get_ken_embeddings :
         Download vector embeddings for many common entities (cities,
         places, people...).
 
@@ -151,8 +150,8 @@ class FeatureAugmenter(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        :obj:`FeatureAugmenter`
-            Fitted :class:`FeatureAugmenter` instance (self).
+        FeatureAugmenter
+            Fitted FeatureAugmenter instance (self).
         """
 
         if self.main_key not in X.columns:

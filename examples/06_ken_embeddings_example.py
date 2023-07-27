@@ -14,6 +14,9 @@ These will be called `KEN embeddings` in the following example.
 We will see that these embeddings of common entities significantly
 improve our results.
 
+.. note::
+    This example requires `pyarrow` to be installed.
+
 .. [#] https://soda-inria.github.io/ken_embeddings/
 
 
@@ -55,10 +58,11 @@ X.head(3)
 y = X["Global_Sales"]
 y
 
+
 ###############################################################################
 # Let's take a look at the distribution of our target variable:
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 sns.set_theme(style="ticks")
 
@@ -174,8 +178,8 @@ X_full = fa2.fit_transform(X_full)
 # that will be included in the learning process and the appropriate encoding of
 # categorical variables using the |MinHash| and |OneHotEncoder|:
 from sklearn.compose import make_column_transformer
-
 from sklearn.preprocessing import OneHotEncoder
+
 from skrub import MinHashEncoder
 
 min_hash = MinHashEncoder(n_components=100)
