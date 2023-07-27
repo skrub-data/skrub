@@ -59,6 +59,7 @@ duplicated_names = make_deduplication_data(
 )
 
 duplicated_names[:5]
+
 ###############################################################################
 # We then extract the unique medication names in the data and
 # visualize how often they appear:
