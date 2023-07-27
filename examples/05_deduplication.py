@@ -118,7 +118,7 @@ deduplicated_unique_examples, deduplicated_counts = np.unique(
 )
 deduplicated_series = pd.Series(deduplicated_counts, index=deduplicated_unique_examples)
 
-deduplicated_series.plot.barh(figsize=(10, 15))
+deduplicated_series.plot.barh(figsize=(10, 5))
 plt.xlabel("Medication name")
 plt.ylabel("Count")
 plt.show()
