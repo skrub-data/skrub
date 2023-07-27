@@ -180,9 +180,6 @@ def test_fetch_movielens():
             msg = "dataset_id options are ['movies', 'ratings'], got 'wrong_name'."
             with pytest.raises(ValueError, match=re.escape(msg)):
                 assert _fetching.fetch_movielens(
-                    dataset_id="ratings", data_directory=temp_dir
-                )
-                assert _fetching.fetch_movielens(
                     dataset_id="wrong_name", data_directory=temp_dir
                 )
 
