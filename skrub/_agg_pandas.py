@@ -1,8 +1,5 @@
 import re
-from functools import partial
 from itertools import product
-from numbers import Number
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -104,7 +101,7 @@ def _parse_argument(op_name):
         args = re.split(f"^{op_root}", op_name)
         args = args[1]
         args = re.sub("\(|\)", "", args)
-        args = float(args)
+        args = int(args)
         return op_root, args
     else:
         return op_root, None
@@ -126,28 +123,13 @@ def _get_ops(serie, op_root, args):
             # If bins is a number, we need to set a fix bin range,
             # otherwise bins edges will be defined dynamically for
             # each rows.
-            if isinstance(args, Number):
-                min_, max_ = serie.min(), serie.max()
-                args = np.linspace(min_, max_, int(args) + 1)
-            elif isinstance(args, Iterable):
-                pass
-            else:
-                raise ValueError(
-                    "'bins' of {op_root} must either be "
-                    f"a number or an array, got: {args}"
-                )
+            min_, max_ = serie.min(), serie.max()
+            args = np.linspace(min_, max_, args + 1)
             args = dict(bins=args)
-
-        elif op_root == "quantile":
-            if not isinstance(args, Number):
-                raise ValueError(f"'q' of quantile must be a number, got: {args}")
-            op = partial(op, q=args)
-
         else:
             raise ValueError(
-                f"Operator {op_root} doesn't take any argument, but got: {args}"
+                f"Operator '{op_root}' doesn't take any argument, got '{args}'"
             )
-
     else:
         args = {}
 
