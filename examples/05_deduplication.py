@@ -32,7 +32,7 @@ misspelled category names in an unsupervised manner.
 """
 
 ###############################################################################
-# An example dataset
+# A typical use case
 # ------------------
 #
 # Let's take an example:
@@ -119,8 +119,8 @@ deduplicated_unique_examples, deduplicated_counts = np.unique(
 deduplicated_series = pd.Series(deduplicated_counts, index=deduplicated_unique_examples)
 
 deduplicated_series.plot.barh(figsize=(10, 5))
-plt.xlabel("Medication name")
-plt.ylabel("Count")
+plt.xlabel("Count")
+plt.ylabel("Medication name")
 plt.show()
 
 ###############################################################################
@@ -132,7 +132,7 @@ plt.show()
 # In this case, we can construct and update a translation table based on the
 # data returned by |deduplicate|.
 
-# create a table that maps original -> corrected categories
+# create a table that maps original to corrected categories
 translation_table = pd.Series(deduplicated_data, index=duplicated_names)
 
 # remove duplicates in the original data
