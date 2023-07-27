@@ -91,6 +91,13 @@ for type_id, problem, pipeline, metric in [
                     )
                 )
                 continue
+            if dataset.qualities["NumberOfFeatures"] < 1:
+                logger.debug(
+                    constraint_error_template.format(
+                        id=task_id, reason="it has too few features"
+                    )
+                )
+                continue
         except Exception as e:
             logger.warning(
                 constraint_error_template.format(
@@ -168,6 +175,9 @@ for type_id, problem, pipeline, metric in [
 
 logger.info(f"Finished! ")
 logger.error(f"{len(errors)} tasks with errors: {set(errors.keys())}")
+# show all unique errors
+for error in set(errors.values()):
+    logger.error(f"Error: {error}")
 
 if args.compare_scores:
     logger.info(
