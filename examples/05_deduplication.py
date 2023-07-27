@@ -141,10 +141,10 @@ translation_table = translation_table[~translation_table.index.duplicated(keep="
 translation_table.head()
 
 ###############################################################################
-# In this table, we have the category name on the left, 
+# In this table, we have the category name on the left,
 # and the cluster it was translated to on the right.
 # If we want to adapt the translation table, we can
-# tweak it manually.
+# modify it manually.
 
 ###############################################################################
 # Visualizing string pair-wise distance between names
