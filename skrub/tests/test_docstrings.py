@@ -10,8 +10,8 @@ should also remove their corresponding references from the list.
 
 import inspect
 import re
+from collections.abc import Callable
 from importlib import import_module
-from typing import Callable, Optional
 
 import pytest
 from numpydoc.validate import validate
@@ -69,8 +69,8 @@ def get_functions_to_validate():
 
 def repr_errors(
     res: dict,
-    estimator: Optional[type] = None,
-    method: Optional[str] = None,
+    estimator: type | None = None,
+    method: str | None = None,
 ) -> str:
     """
     Pretty print original docstring and the obtained errors
@@ -126,7 +126,7 @@ def repr_errors(
     return msg
 
 
-def filter_errors(errors, method: Callable, estimator_cls: Optional[type] = None):
+def filter_errors(errors, method: Callable, estimator_cls: type | None = None):
     """
     Ignore some errors based on the method type.
     """

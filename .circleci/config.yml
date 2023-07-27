@@ -7,7 +7,7 @@ jobs:
     environment:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv
-      - PYTHON_VERSION: 3.9
+      - PYTHON_VERSION: "3.10"
       - OMP_NUM_THREADS: 2 # Avoid over-commit with HistGradientBoosting
     steps:
       - checkout

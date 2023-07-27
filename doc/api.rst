@@ -1,52 +1,28 @@
+#############
+API reference
+#############
 
-API
-=================
+.. raw:: html
 
-This page lists all the functions and classes of skrub:
+  <style type="text/css">
+  article section h2 {
+    margin-top: 4ex;
+  }
+  </style>
+
+This page lists all available functions and classes of `skrub`.
 
 .. currentmodule:: skrub
 
+.. raw:: html
 
-Vectorizing a dataframe
------------------------
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-   :nosignatures:
-
-   TableVectorizer
-
-Dirty category encoders
------------------------
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-   :nosignatures:
-
-   GapEncoder
-   MinHashEncoder
-   SimilarityEncoder
-   TargetEncoder
-
-Other encoders
---------------
-
-.. autosummary::
-   :toctree: generated/
-   :template: class.rst
-   :nosignatures:
-
-   DatetimeEncoder
-
-Joining tables
---------------
+   <h2>Joining tables</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: function.rst
    :nosignatures:
+   :caption: Joining tables
 
    fuzzy_join
 
@@ -56,34 +32,70 @@ Joining tables
    :nosignatures:
 
    FeatureAugmenter
+   AggJoiner
+   AggTarget
+
+
+.. raw:: html
+
+   <h2>Vectorizing a dataframe</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: class.rst
    :nosignatures:
+   :caption: Vectorizing a dataframe
 
-   AggJoiner
-   AggTarget
+   TableVectorizer
 
+.. raw:: html
 
-Deduplication: merging variants of the same entry
--------------------------------------------------
+   <h2>Dirty category encoders</h2>
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+   :caption: Dirty category encoders
+
+   GapEncoder
+   MinHashEncoder
+   SimilarityEncoder
+   TargetEncoder
+
+.. raw:: html
+
+   <h2>Other encoders</h2>
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+   :caption: Other encoders
+
+   DatetimeEncoder
+
+.. raw:: html
+
+   <h2>Deduplication: merging variants of the same entry</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: function.rst
    :nosignatures:
+   :caption: Deduplication: merging variants of the same entry
 
    deduplicate
 
+.. raw:: html
 
-Data download and generation
-----------------------------
+   <h2>Data download and generation</h2>
 
 .. autosummary::
    :toctree: generated/
    :template: function.rst
    :nosignatures:
+   :caption: Data download and generation
 
    datasets.fetch_employee_salaries
    datasets.fetch_medical_charge
@@ -94,8 +106,7 @@ Data download and generation
    datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
    datasets.fetch_movielens
-   datasets.get_ken_table_aliases
-   datasets.get_ken_types
-   datasets.get_ken_embeddings
-   datasets.get_data_dir
+   datasets.fetch_ken_table_aliases
+   datasets.fetch_ken_types
+   datasets.fetch_ken_embeddings
    datasets.make_deduplication_data

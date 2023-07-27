@@ -1,12 +1,13 @@
 import collections
-from typing import Dict, List, Literal, Union
+from typing import Literal
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_array
 from sklearn.utils.fixes import _object_dtype_isnan
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import _check_y, check_is_fitted
 
 from skrub._utils import check_input
 
@@ -47,30 +48,30 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         will be assigned the prior mean of the target variable.
     handle_missing : {'error', ''}, default=''
         Whether to raise an error or impute with blank string '' if missing
-        values (NaN) are present during :func:`~TargetEncoder.fit`
+        values (NaN) are present during TargetEncoder.fit
         (default is to impute).
         When this parameter is set to '', and a missing value is encountered
-        during :func:`~TargetEncoder.fit_transform`, the resulting encoded
+        during TargetEncoder.fit_transform, the resulting encoded
         columns for this feature will be all zeros.
 
     Attributes
     ----------
     n_features_in_ : int
-        Number of features in the data seen during :func:`~TargetEncoder.fit`.
-    categories_ : list of :obj:`~numpy.ndarray`
-        The categories of each feature determined during :func:`~TargetEncoder.fit`
-        (in order corresponding with output of :func:`~TargetEncoder.transform`).
+        Number of features in the data seen during TargetEncoder.fit.
+    categories_ : list of ndarray
+        The categories of each feature determined during TargetEncoder.fit
+        (in order corresponding with output of TargetEncoder.transform).
     n_ : int
         Length of :term:`y`
 
     See Also
     --------
-    :class:`skrub.GapEncoder`
+    GapEncoder
         Encodes dirty categories (strings) by constructing latent topics with
         continuous encoding.
-    :class:`skrub.MinHashEncoder`
+    MinHashEncoder
         Encode string columns as a numeric array with the minhash method.
-    :class:`skrub.SimilarityEncoder`
+    SimilarityEncoder
         Encode string columns as a numeric array with n-gram string similarity.
 
     References
@@ -109,14 +110,14 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
     """
 
     n_features_in_: int
-    _label_encoders_: List[LabelEncoder]
-    categories_: List[np.ndarray]
+    _label_encoders_: list[LabelEncoder]
+    categories_: list[NDArray]
     n_: int
 
     def __init__(
         self,
         *,
-        categories: Union[Literal["auto"], List[Union[List[str], np.ndarray]]] = "auto",
+        categories: Literal["auto"] | list[list[str] | NDArray] = "auto",
         clf_type: Literal["regression", "binary-clf", "multiclass-clf"] = "binary-clf",
         dtype: type = np.float64,
         handle_unknown: Literal["error", "ignore"] = "error",
@@ -128,28 +129,32 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.handle_unknown = handle_unknown
         self.handle_missing = handle_missing
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"X_types": ["categorical"]}
+        return {
+            "X_types": ["2darray", "categorical"],
+            "allow_nan": True,
+        }
 
-    def fit(self, X, y) -> "TargetEncoder":
+    def fit(self, X: ArrayLike, y: ArrayLike) -> "TargetEncoder":
         """Fit the instance to `X`.
 
         Parameters
         ----------
         X : array-like, shape [n_samples, n_features]
             The data to determine the categories of each feature.
-        y : :obj:`~numpy.ndarray`
+        y : ndarray
             The associated target vector.
 
         Returns
         -------
-        :obj:`~skrub.TargetEncoder`
-            Fitted :class:`~skrub.TargetEncoder` instance (self).
+        TargetEncoder
+            Fitted TargetEncoder instance (self).
         """
         X = check_input(X)
+        y = _check_y(y, y_numeric=True, estimator=self)
         self.n_features_in_ = X.shape[1]
         if self.handle_missing not in ["error", ""]:
             raise ValueError(
@@ -227,7 +232,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self.k_ = {j: len(self.counter_[j]) for j in self.counter_}
         return self
 
-    def transform(self, X) -> np.ndarray:
+    def transform(self, X: ArrayLike) -> NDArray:
         """Transform `X` using the specified encoding scheme.
 
         Parameters
@@ -237,7 +242,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        2-d :class:`~numpy.ndarray`
+        2-d ndarray
             Transformed input.
         """
         check_is_fitted(self, attributes=["n_features_in_"])

@@ -4,12 +4,11 @@ Some string distances
 
 import re
 from collections import Counter
-from typing import Tuple
 
 # TODO vectorize these functions (accept arrays)
 
 
-def get_ngram_count(string: str, ngram_range: Tuple[int, int]) -> int:
+def get_ngram_count(string: str, ngram_range: tuple[int, int]) -> int:
     """
     Compute the number of ngrams in a string.
 
@@ -57,7 +56,7 @@ def preprocess(x: str) -> str:
     return _white_spaces.sub(" ", x)
 
 
-def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
+def get_unique_ngrams(string: str, ngram_range: tuple[int, int]):
     """
     Return the set of unique n-grams of a string.
 
@@ -84,8 +83,8 @@ def get_unique_ngrams(string: str, ngram_range: Tuple[int, int]):
     return ngram_set
 
 
-def get_ngrams(string, n):
-    """Return the set of different tri-grams in a string"""
+def get_ngrams(string: str, n: int) -> list[tuple]:
+    """Return the set of different n-grams in a string"""
     # Pure Python implementation: no numpy
     spaces = " "  # * (n // 2 + n % 2)
     string = spaces + " ".join(string.lower().split()) + spaces
@@ -108,9 +107,3 @@ def ngram_similarity(string1, string2, n, preprocess_strings=True):
     allgrams = len(ngrams1) + len(ngrams2)
     similarity = samegrams / (allgrams - samegrams)
     return similarity
-
-
-if __name__ == "__main__":
-    s1 = "aa"
-    s2 = "aaab"
-    print("3-gram similarity: %.3f" % ngram_similarity(s1, s2, 3))

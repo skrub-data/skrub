@@ -11,7 +11,7 @@ except ModuleNotFoundError:
     import warnings
 
     warnings.warn(
-        "pkg_resources is not available, dependencies versions will not be checked."
+        "packaging is not available, dependencies versions will not be checked."
     )
 
 from ._agg_joiner import AggJoiner, AggTarget

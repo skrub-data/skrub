@@ -5,23 +5,29 @@ among a selection.
 Date: September 2021
 """
 
-import seaborn as sns
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import math
-
-from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
-from sklearn.pipeline import Pipeline
-from sklearn.model_selection import cross_val_score
-
-
-from skrub import TableVectorizer, MinHashEncoder
-
-from typing import List, Tuple
 from argparse import ArgumentParser
-from utils import default_parser, find_result, monitor, get_dataset, get_classification_datasets, get_regression_datasets
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
+from sklearn.model_selection import cross_val_score
+from sklearn.pipeline import Pipeline
+from utils import (
+    default_parser,
+    find_result,
+    get_classification_datasets,
+    get_dataset,
+    get_regression_datasets,
+    monitor,
+)
+
+from skrub import MinHashEncoder, TableVectorizer
 
 ###############################################
 # Benchmarking TableVectorizer parameters
@@ -36,9 +42,13 @@ benchmark_name = "bench_tablevectorizer_tuning"
     parametrize={
         "tv_cardinality_threshold": [20, 40, 60],
         "minhash_n_components": [10, 30, 50],
-        "dataset_name": ["medical_charge", "open_payments",
-                         "midwest_survey", "medical_charge",
-                         "employee_salaries"]
+        "dataset_name": [
+            "medical_charge",
+            "open_payments",
+            "midwest_survey",
+            "medical_charge",
+            "employee_salaries",
+        ],
     },
     save_as=benchmark_name,
     repeat=3,
@@ -48,8 +58,10 @@ def benchmark(
     minhash_n_components: int,
     dataset_name: str,
 ):
-    tv = TableVectorizer(cardinality_threshold=tv_cardinality_threshold,
-                         high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components))
+    tv = TableVectorizer(
+        cardinality_threshold=tv_cardinality_threshold,
+        high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components),
+    )
     regression_pipeline = Pipeline(
         [
             ("tv", tv),
@@ -78,10 +90,7 @@ def benchmark(
                 pipeline.fit(X, y)
                 scores = cross_val_score(pipeline, X, y, cv=3)
                 score = np.mean(scores)
-    res_dic = {
-            "grid_search_results": score,
-            "dataset_name": dataset_name
-            }
+    res_dic = {"grid_search_results": score, "dataset_name": dataset_name}
     return res_dic
 
 

@@ -5,18 +5,17 @@ Functions that generate example data.
 from __future__ import annotations
 
 import string
-from typing import List, Optional, Union
 
 import numpy as np
 from sklearn.utils import check_random_state
 
 
 def make_deduplication_data(
-    examples: List[str],
-    entries_per_example: List[int],
-    prob_mistake_per_letter: float,
-    random_state: Optional[Union[int, np.random.RandomState]] = None,
-) -> List[str]:
+    examples: list[str],
+    entries_per_example: list[int],
+    prob_mistake_per_letter: float = 0.2,
+    random_state: int | np.random.RandomState | None = None,
+) -> list[str]:
     """Duplicates examples with spelling mistakes.
 
     Characters are misspelled with probability `prob_mistake_per_letter`.
@@ -24,12 +23,13 @@ def make_deduplication_data(
     Parameters
     ----------
     examples : list of str
-        Examples to duplicate
+        Examples to duplicate.
     entries_per_example : list of int
-        Number of duplications per example
-    prob_mistake_per_letter : float in [0, 1]
-        Probability of misspelling a character in duplications
-    random_state : int, :obj:`~numpy.random.RandomState` instance, optional
+        Number of duplications per example.
+    prob_mistake_per_letter : float in [0, 1], default=0.2
+        Probability of misspelling a character in duplications.
+        By default, 1/5 of the characters will be misspeled.
+    random_state : int, RandomState instance, optional
         Determines random number generation for dataset noise. Pass an int
         for reproducible output across multiple function calls.
 

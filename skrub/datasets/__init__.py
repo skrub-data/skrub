@@ -14,7 +14,11 @@ from ._fetching import (
     get_data_dir,
 )
 from ._generating import make_deduplication_data
-from ._ken_embeddings import get_ken_embeddings, get_ken_table_aliases, get_ken_types
+from ._ken_embeddings import (
+    fetch_ken_embeddings,
+    fetch_ken_table_aliases,
+    fetch_ken_types,
+)
 
 __all__ = [
     "DatasetAll",
@@ -31,7 +35,7 @@ __all__ = [
     "fetch_movielens",
     "get_data_dir",
     "make_deduplication_data",
-    "get_ken_embeddings",
-    "get_ken_table_aliases",
-    "get_ken_types",
+    "fetch_ken_embeddings",
+    "fetch_ken_table_aliases",
+    "fetch_ken_types",
 ]

@@ -7,26 +7,24 @@ which is the batched version with batch_per_job=1
 Date: February 2023
 """
 
-from typing import Callable, Collection, Dict, List, Literal, Tuple
+import pickle
+from argparse import ArgumentParser
+from collections.abc import Callable, Collection
+from pathlib import Path
+from typing import Literal
 
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
+from utils import default_parser, find_result, monitor
 
 from skrub._fast_hash import ngram_min_hash
 from skrub._string_distances import get_unique_ngrams
 from skrub._utils import LRUDict, check_input
-
-import pickle
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-from argparse import ArgumentParser
-
-from pathlib import Path
-
-from utils import monitor, find_result, default_parser
 from skrub.tests.utils import generate_data
 
 NoneType = type(None)
@@ -117,7 +115,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         n_components: int = 30,
-        ngram_range: Tuple[int, int] = (2, 4),
+        ngram_range: tuple[int, int] = (2, 4),
         hashing: Literal["fast", "murmur"] = "fast",
         minmax_hash: bool = False,
         handle_missing: Literal["error", "zero_impute"] = "zero_impute",
@@ -134,7 +132,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.batch_per_job = batch_per_job
         self.n_jobs = n_jobs
 
-    def _more_tags(self) -> Dict[str, List[str]]:
+    def _more_tags(self) -> dict[str, list[str]]:
         """
         Used internally by sklearn to ease the estimator checks.
         """

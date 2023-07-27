@@ -23,20 +23,21 @@ misspelled category names in an unsupervised manner.
 
 ###############################################################################
 # An example dataset
-# -------------------
+# ------------------
 #
 # Imagine the following example:
 # As a data scientist, our job is to analyze the data from a hospital ward.
-# We notice that most of the cases involve the prescription of one of three different medications:
-#  "Contrivan", "Genericon", or "Zipholan".
-# However, data entry is manual and - either because the prescribing doctor's handwriting
-# was hard to decipher, or due to mistakes during data input - there are multiple
-# spelling mistakes for these three medications.
+# We notice that most of the cases involve the prescription of one of three different
+# medications: "Contrivan", "Genericon", or "Zipholan".
+# However, data entry is manual and - either because the prescribing doctor's
+# handwriting was hard to decipher, or due to mistakes during data input - there are
+# multiple spelling mistakes for these three medications.
 #
 # Let's generate some example data that demonstrate this.
 
 
 import numpy as np
+
 from skrub.datasets import make_deduplication_data
 
 # our three medication names
@@ -86,12 +87,14 @@ plt.ylabel("Counts")
 # --------------------------------------------------------------------
 #
 # Below we use a heatmap to visualize the pairwise-distance between medication names.
-# A darker color means that two medication names are closer together (i.e. more similar),
-# a lighter color means a larger distance. We can see that we are dealing with three
-# clusters - the original medication names and their misspellings that cluster around them.
+# A darker color means that two medication names are closer together
+# (i.e. more similar), a lighter color means a larger distance. We can see that we are
+# dealing with three clusters - the original medication names and their misspellings
+# that cluster around them.
+
+from scipy.spatial.distance import squareform
 
 from skrub import compute_ngram_distance
-from scipy.spatial.distance import squareform
 
 ngram_distances = compute_ngram_distance(unique_examples)
 square_distances = squareform(ngram_distances)
@@ -114,7 +117,7 @@ sns.heatmap(
 #
 # The number of clusters will need some adjustment depending on the data you have.
 # If no fixed number of clusters is given, |dd| tries to set it automatically
-# via the `silhouette score <https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.
+# via the `silhouette score <https://scikit-learn.org/stable/modules/clustering.html#silhouette-coefficient>`_.  # noqa
 
 from skrub import deduplicate
 
@@ -136,9 +139,9 @@ plt.ylabel("Counts")
 # In this example we can correct all spelling mistakes by using the ideal number
 # of clusters as determined by the silhouette score.
 #
-# However, often the translation/deduplication won't be perfect and will require some tweaks.
-# In this case, we can construct and update a translation table based on the data
-# returned by |dd|.
+# However, often the translation/deduplication won't be perfect and will require some
+# tweaks. In this case, we can construct and update a translation table based on the
+# data returned by |dd|.
 # It consists of the (potentially) misspelled category names as indices and the
 # (potentially) correct categories as values.
 

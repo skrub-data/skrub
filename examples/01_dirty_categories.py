@@ -122,11 +122,7 @@ encoder = make_column_transformer(
 #
 # We will use a |HGBR|,
 # which is a good predictor for data with heterogeneous columns
-# (we need to require the experimental feature for scikit-learn versions
-# earlier than 1.0):
-from sklearn.experimental import enable_hist_gradient_boosting
 
-# We can now import the |HGBR| from ensemble
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 # We then create a pipeline chaining our encoders to a learner
@@ -154,12 +150,7 @@ np.unique(y)
 # We will now experiment with encoders specially made for handling
 # dirty columns:
 
-from skrub import (
-    SimilarityEncoder,
-    TargetEncoder,
-    MinHashEncoder,
-    GapEncoder,
-)
+from skrub import GapEncoder, MinHashEncoder, SimilarityEncoder, TargetEncoder
 
 encoders = {
     "one-hot": one_hot,
@@ -199,8 +190,8 @@ for name, method in encoders.items():
 #
 # Finally, we plot the scores on a boxplot:
 
-import seaborn
 import matplotlib.pyplot as plt
+import seaborn
 
 plt.figure(figsize=(4, 3))
 ax = seaborn.boxplot(data=pd.DataFrame(all_scores), orient="h")
@@ -217,7 +208,7 @@ plt.tight_layout()
 # data than the |MinHash| and |Gap|. The most scalable encoder is
 # the |MinHash|. On the other hand, the |Gap| has the benefit of
 # providing interpretable features
-# (see :ref:`sphx_glr_auto_examples_02_investigating_skrubegories.py`)
+# (see :ref:`sphx_glr_auto_examples_02_investigating_dirty_categories.py`)
 #
 # |
 #
