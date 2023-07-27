@@ -1,12 +1,12 @@
 import re
 
 import pandas as pd
-import polars as pl
 import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
 from skrub._agg_joiner import AggJoiner, AggTarget, get_namespace, split_num_categ_ops
+from skrub._agg_polars import POLARS_SETUP
 
 main = pd.DataFrame(
     {
@@ -226,16 +226,19 @@ def test_get_namespace():
     agg_px, _ = get_namespace([main, main])
     assert agg_px.__name__ == "skrub._agg_pandas"
 
-    agg_px, _ = get_namespace([pl.DataFrame(main), pl.DataFrame(main)])
-    assert agg_px.__name__ == "skrub._agg_polars"
-
     msg = "Only Pandas or Polars dataframes are currently supported"
     with pytest.raises(TypeError, match=msg):
         get_namespace([main, main.values])
 
-    msg = "Mixing polars lazyframes and dataframes is not supported."
-    with pytest.raises(TypeError, match=msg):
-        get_namespace([pl.DataFrame(main), pl.LazyFrame(main)])
+    if POLARS_SETUP:
+        import polars as pl
+
+        agg_px, _ = get_namespace([pl.DataFrame(main), pl.DataFrame(main)])
+        assert agg_px.__name__ == "skrub._agg_polars"
+
+        msg = "Mixing polars lazyframes and dataframes is not supported."
+        with pytest.raises(TypeError, match=msg):
+            get_namespace([pl.DataFrame(main), pl.LazyFrame(main)])
 
 
 def test_tuples_tables():
