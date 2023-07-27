@@ -58,6 +58,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
+        max_no_improvement: int = 10,
         verbose: int = 0,
     ):
         self.ngram_range = ngram_range
@@ -76,7 +77,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         self.random_state = check_random_state(random_state)
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
-        self.max_no_improvement = 10
+        self.max_no_improvement = max_no_improvement
         self.verbose = verbose
 
     def _init_vars(self, X) -> tuple[NDArray, NDArray, NDArray]:
@@ -629,6 +630,11 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         to have a l1 norm equal to 1 for each row.
     max_iter_e_step : int, default=20
         Maximum number of iterations to adjust the activations h at each step.
+    max_no_improvement : int, default=10
+        Control early stopping based on the consecutive number of mini batches
+        that does not yield an improvement on the smoothed cost function.
+        To disable convergence detection based on cost function,
+        set max_no_improvement to None.
     handle_missing : {'error', 'empty_impute'}, default='empty_impute'
         Whether to raise an error or impute with empty string ('') if missing
         values (NaN) are present during GapEncoder.fit (default is to impute).
@@ -725,6 +731,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         random_state: int | RandomState | None = None,
         rescale_W: bool = True,
         max_iter_e_step: int = 20,
+        max_no_improvement: int = 10,
         handle_missing: Literal["error", "empty_impute"] = "zero_impute",
         n_jobs: int | None = None,
         verbose: int = 0,
@@ -745,6 +752,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         self.random_state = random_state
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
+        self.max_no_improvement = max_no_improvement
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
         self.verbose = verbose
@@ -769,6 +777,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
             random_state=self.random_state,
             rescale_W=self.rescale_W,
             max_iter_e_step=self.max_iter_e_step,
+            max_no_improvement=self.max_no_improvement,
             verbose=self.verbose,
         )
 

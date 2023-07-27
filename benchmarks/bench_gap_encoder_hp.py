@@ -30,26 +30,21 @@ benchmark_name = "gap_encoder_benchmark"
             "location",
             "search_reason_for_stop",
             "state",
-            "make",
-            "model",
             "charge",
             "driver_city",
             "driver_state",
             "dl_state",
-            "geolocation",
         ],
         "batch_size": [128, 512, 1024],
-        "n_components": [10, 20, 30],
         "max_iter_e_step": [10, 20, 30],
         "max_rows": [5_000, 20_000, 100_000],
     },
     save_as=benchmark_name,
-    repeat=2,
+    repeat=1,
 )
 def benchmark(
     high_card_feature: str,
     batch_size: int,
-    n_components: int,
     max_iter_e_step: int,
     max_rows: int,
 ):
@@ -65,7 +60,6 @@ def benchmark(
 
     gap = GapEncoder(
         batch_size=batch_size,
-        n_components=n_components,
         max_iter_e_step=max_iter_e_step,
     )
 
