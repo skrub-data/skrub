@@ -4,7 +4,7 @@ It can be used to check that we can deal with any dataset without failing.
 It can also be used to compare our scores to OpenML scores uploaded by other users,
 using the `--compare_scores` flag (this is slow).
 """
-
+from collections import Counter
 import openml
 import os
 import numpy as np
