@@ -139,6 +139,7 @@ translation_table = pd.Series(deduplicated_data, index=duplicated_names)
 translation_table = translation_table[~translation_table.index.duplicated(keep="first")]
 
 translation_table.head()
+
 ###############################################################################
 # It shows side by side the category name and the cluster into which it
 # was translated.
