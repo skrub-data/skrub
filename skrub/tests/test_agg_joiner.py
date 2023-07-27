@@ -1,11 +1,15 @@
 import re
 
 import pandas as pd
-import polars as pl
 import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
-from polars.testing import assert_frame_equal as assert_frame_equal_pl
+
+from skrub._agg_polars import POLARS_SETUP
+
+if POLARS_SETUP:
+    import polars as pl
+    from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
 from skrub._agg_joiner import AggJoiner, AggTarget, get_namespace, split_num_categ_ops
 
@@ -19,12 +23,14 @@ main = pd.DataFrame(
 )
 
 
+tuples = [(main, pd, assert_frame_equal)]
+if POLARS_SETUP:
+    tuples.append((pl.DataFrame(main), pl, assert_frame_equal_pl))
+
+
 @pytest.mark.parametrize(
     "X, px, assert_frame_equal_",
-    [
-        (main, pd, assert_frame_equal),
-        (pl.DataFrame(main), pl, assert_frame_equal_pl),
-    ],
+    tuples,
 )
 def test_agg_join(X, px, assert_frame_equal_):
     agg_join = AggJoiner(
@@ -66,19 +72,20 @@ def test_agg_join(X, px, assert_frame_equal_):
 
 
 def test_polars_unavailable_ops():
-    agg_join = AggJoiner(
-        tables=[
-            ("X", "movieId", ["rating"]),
-        ],
-        main_key="userId",
-        agg_ops=["value_counts"],
-    )
-    msg = (
-        "Polars operation 'value_counts' is not supported. "
-        "Available: ['mean', 'std', 'sum', 'min', 'max', 'mode']"
-    )
-    with pytest.raises(ValueError, match=re.escape(msg)):
-        agg_join.fit(pl.DataFrame(main))
+    if POLARS_SETUP:
+        agg_join = AggJoiner(
+            tables=[
+                ("X", "movieId", ["rating"]),
+            ],
+            main_key="userId",
+            agg_ops=["value_counts"],
+        )
+        msg = (
+            "Polars operation 'value_counts' is not supported. "
+            "Available: ['mean', 'std', 'sum', 'min', 'max', 'mode']"
+        )
+        with pytest.raises(ValueError, match=re.escape(msg)):
+            agg_join.fit(pl.DataFrame(main))
 
 
 def test_agg_join_check_input():
@@ -254,12 +261,13 @@ def test_get_namespace():
     with pytest.raises(TypeError, match=msg):
         get_namespace([main, main.values])
 
-    agg_px, _ = get_namespace([pl.DataFrame(main), pl.DataFrame(main)])
-    assert agg_px.__name__ == "skrub._agg_polars"
+    if POLARS_SETUP:
+        agg_px, _ = get_namespace([pl.DataFrame(main), pl.DataFrame(main)])
+        assert agg_px.__name__ == "skrub._agg_polars"
 
-    msg = "Mixing polars lazyframes and dataframes is not supported."
-    with pytest.raises(TypeError, match=msg):
-        get_namespace([pl.DataFrame(main), pl.LazyFrame(main)])
+        msg = "Mixing polars lazyframes and dataframes is not supported."
+        with pytest.raises(TypeError, match=msg):
+            get_namespace([pl.DataFrame(main), pl.LazyFrame(main)])
 
 
 def test_tuples_tables():
