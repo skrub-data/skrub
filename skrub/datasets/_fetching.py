@@ -455,7 +455,7 @@ def _fetch_movielens(dataset_id: str, data_directory: Path | None = None) -> dic
         # download the dataset.
         warnings.warn(
             f"Could not find the dataset {dataset_id!r} locally. "
-            "Downloading it from OpenML; this might take a while... "
+            "Downloading it from MovieLens; this might take a while... "
             "If it is interrupted, some files might be invalid/incomplete: "
             "if on the following run, the fetching raises errors, you can try "
             f"fixing this issue by deleting the directory {data_directory!s}.",
@@ -1059,7 +1059,7 @@ def fetch_movielens(
     dataset_id: str = "ratings",
     *,
     load_dataframe: bool = True,
-    directory: Path | None = None,
+    data_directory: Path | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches a dataset from Movielens.
 
@@ -1082,5 +1082,5 @@ def fetch_movielens(
         dataset_id=dataset_id,
         target=None,
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
