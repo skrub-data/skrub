@@ -114,8 +114,7 @@ def check_suffixes(suffixes, main_keys):
 
 
 class AggJoiner(BaseEstimator, TransformerMixin):
-    """Aggregates auxiliary dataframes before joining them
-    on the base dataframe.
+    """Aggregates auxiliary dataframes before joining them on the base dataframe.
 
     Apply numerical and categorical aggregation operations on the columns
     to aggregate, selected by dtypes. See the list of supported operations
@@ -215,23 +214,21 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         self.agg_ops = agg_ops
         self.suffixes = suffixes
 
-    def fit(self, X, y=None):
-        """Fit the instance to the auxiliary tables by aggregating them
-        and storing the outputs.
+    def fit(self, X, y=None) -> "AggJoiner":
+        """Aggregate auxiliary tables based on the main keys.
 
         Parameters
         ----------
         X : {pandas.Dataframe}
             Input data, based table on which to left join the
-            auxiliary tables..
-
+            auxiliary tables.
         y : array-like of shape (n_samples), default=None
             Used to compute the correlation between the generated covariates
             and the target for screening purposes.
 
         Returns
         -------
-        :obj:`AggJoiner`
+        AggJoiner
             Fitted :class:`AggJoiner` instance (self).
         """
         self.check_input(X)
@@ -263,13 +260,17 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        """Transform `X` by left joining the pre-aggregated
-        auxiliary tables to it.
+        """Left-join pre-aggregated tables on `X`.
 
         Parameters
         ----------
-        X : pandas.DataFrame
+        X : dataframe,
             The input data to transform.
+
+        Returns
+        -------
+        X_transformed : dataframe,
+            The augmented input.
         """
 
         check_is_fitted(self, "agg_tables_")
@@ -293,8 +294,12 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         return agg_table
 
     def check_input(self, X):
-        """Check that all columns to join and columns to aggregate
-        belong to their respective dataframes.
+        """Perform a check on column names data type and suffixes.
+
+        Parameters
+        ----------
+        X : dataframe
+            The raw input to check.
         """
         if not hasattr(X, "__dataframe__"):
             raise TypeError(f"X must be a dataframe, got {type(X)}.")
@@ -379,8 +384,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
 
 class AggTarget(BaseEstimator, TransformerMixin):
-    """Aggregates the target `y` before joining its aggregation
-    on the base dataframe.
+    """Aggregates the target `y` before joining its aggregation on the base dataframe.
 
     Uses :obj:`~pandas.DataFrame` inputs only.
 
@@ -452,6 +456,31 @@ class AggTarget(BaseEstimator, TransformerMixin):
         self.suffixes = suffixes
 
     def fit(self, X, y):
+        """Aggregate the target ``y`` based on keys from ``X``.
+
+        Parameters
+        ----------
+        X : dataframe
+            Must contains the columns names defined in ``main_key``.
+        y : dataframe or array-like
+            Must have the length of ``X``, with matching indices.
+            The target can be continuous or discrete, with multiple columns.
+
+            If the target is continuous, only numerical operations,
+            listed in NUM_OPS, are applied.
+
+            If the target is discrete, only categorical operations,
+            listed in CATEG_OPS, are applied.
+
+            Note that the target type is determined by
+            :func:`sklearn.utils.multiclass.type_of_target`.
+
+        Returns
+        -------
+        AggTarget
+            Fitted AggTarget instance (self).
+        """
+
         y_ = self.check_input(X, y)
         agg_px, _ = get_namespace([X, y_])
 
@@ -474,6 +503,18 @@ class AggTarget(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        """Left-join pre-aggregated tables on `X`.
+
+        Parameters
+        ----------
+        X : dataframe,
+            The input data to transform.
+
+        Returns
+        -------
+        X_transformed : dataframe,
+            The augmented input.
+        """
         check_is_fitted(self, "all_agg_y_")
         agg_px, _ = get_namespace([X])
 
@@ -488,6 +529,20 @@ class AggTarget(BaseEstimator, TransformerMixin):
         return X
 
     def check_input(self, X, y):
+        """Perform a check on column names data type and suffixes.
+
+        Parameters
+        ----------
+        X : dataframe
+            The raw input to check.
+        y : array-like or dataframe,
+            The raw target to check.
+
+        Returns
+        -------
+        y_ : dataframe,
+            Transformation of the target.
+        """
         _, px = get_namespace([X])
 
         main_keys = check_missing_columns(X, self.main_key)
