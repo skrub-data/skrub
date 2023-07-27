@@ -99,6 +99,7 @@ from skrub import deduplicate
 deduplicated_data = deduplicate(duplicated_names)
 
 deduplicated_data[:5]
+
 ###############################################################################
 # And that's it! We now have the deduplicated data.
 #
