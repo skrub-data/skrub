@@ -1,12 +1,13 @@
 import re
 
 import pandas as pd
+import polars as pl
 import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
+from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
 from skrub._agg_joiner import AggJoiner, AggTarget, get_namespace, split_num_categ_ops
-from skrub._agg_polars import POLARS_SETUP
 
 main = pd.DataFrame(
     {
@@ -18,19 +19,26 @@ main = pd.DataFrame(
 )
 
 
-def test_agg_join():
+@pytest.mark.parametrize(
+    "X, px, assert_frame_equal_",
+    [
+        (main, pd, assert_frame_equal),
+        (pl.DataFrame(main), pl, assert_frame_equal_pl),
+    ],
+)
+def test_agg_join(X, px, assert_frame_equal_):
     agg_join = AggJoiner(
         tables=[
-            (main, ["userId"], ["rating", "genre"]),
-            (main, ["movieId"], ["rating"]),
+            (X, ["userId"], ["rating", "genre"]),
+            (X, ["movieId"], ["rating"]),
         ],
         main_key=["userId", "movieId"],
         suffixes=["_user", "_movie"],
         agg_ops=["mean", "mode"],
     )
-    main_user_movie = agg_join.fit_transform(main)
+    main_user_movie = agg_join.fit_transform(X)
 
-    expected = pd.DataFrame(
+    expected = px.DataFrame(
         {
             "userId": [1, 1, 1, 2, 2, 2],
             "movieId": [1, 3, 6, 318, 6, 1704],
@@ -41,7 +49,7 @@ def test_agg_join():
             "rating_mean_movie": [4.0, 4.0, 3.0, 3.0, 3.0, 4.0],
         }
     )
-    assert_frame_equal(main_user_movie, expected)
+    assert_frame_equal_(main_user_movie, expected)
 
     agg_join = AggJoiner(
         tables=[
@@ -52,9 +60,25 @@ def test_agg_join():
         suffixes=["_user", "_movie"],
         agg_ops=["mean", "mode"],
     )
-    X_string_user_movie = agg_join.fit_transform(main)
+    X_string_user_movie = agg_join.fit_transform(X)
 
-    assert_frame_equal(main_user_movie, X_string_user_movie)
+    assert_frame_equal_(main_user_movie, X_string_user_movie)
+
+
+def test_polars_unavailable_ops():
+    agg_join = AggJoiner(
+        tables=[
+            ("X", "movieId", ["rating"]),
+        ],
+        main_key="userId",
+        agg_ops=["value_counts"],
+    )
+    msg = (
+        "Polars operation 'value_counts' is not supported. "
+        "Available: ['mean', 'std', 'sum', 'min', 'max', 'mode']"
+    )
+    with pytest.raises(ValueError, match=re.escape(msg)):
+        agg_join.fit(pl.DataFrame(main))
 
 
 def test_agg_join_check_input():
@@ -230,15 +254,12 @@ def test_get_namespace():
     with pytest.raises(TypeError, match=msg):
         get_namespace([main, main.values])
 
-    if POLARS_SETUP:
-        import polars as pl
+    agg_px, _ = get_namespace([pl.DataFrame(main), pl.DataFrame(main)])
+    assert agg_px.__name__ == "skrub._agg_polars"
 
-        agg_px, _ = get_namespace([pl.DataFrame(main), pl.DataFrame(main)])
-        assert agg_px.__name__ == "skrub._agg_polars"
-
-        msg = "Mixing polars lazyframes and dataframes is not supported."
-        with pytest.raises(TypeError, match=msg):
-            get_namespace([pl.DataFrame(main), pl.LazyFrame(main)])
+    msg = "Mixing polars lazyframes and dataframes is not supported."
+    with pytest.raises(TypeError, match=msg):
+        get_namespace([pl.DataFrame(main), pl.LazyFrame(main)])
 
 
 def test_tuples_tables():

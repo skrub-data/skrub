@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -338,7 +340,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
                         "If the dataframe is declared with a string, "
                         f"it can only be 'X', got '{table}'."
                     )
-                table = X.copy()
+                table = deepcopy(X)
             elif not hasattr(table, "__dataframe__"):
                 raise TypeError(
                     "'tables' must be a list of tuple and the first element of each "

@@ -1,5 +1,6 @@
 try:
     import polars as pl
+    import polars.selectors as cs
 
     # TODO: Enable polars accross the library
     POLARS_SETUP = True
@@ -35,8 +36,9 @@ def aggregate(
         col: f"{col}{suffix}" for col in table.columns if col not in cols_to_join
     }
     table = table.rename(cols_renaming)
+    sorted_cols = sorted(table.columns)
 
-    return table
+    return table[sorted_cols]
 
 
 def join(left, right, left_on, right_on):
@@ -49,8 +51,8 @@ def join(left, right, left_on, right_on):
 
 
 def split_num_categ_cols(table):
-    num_cols = table.select(pl.selectors.numeric()).columns
-    categ_cols = table.select(pl.selectors.string()).columns
+    num_cols = table.select(cs.numeric()).columns
+    categ_cols = table.select(cs.string()).columns
 
     return num_cols, categ_cols
 
@@ -70,7 +72,8 @@ def get_agg_ops(cols, agg_ops):
         op = op_dict.get(op_name, None)
         if op is None:
             raise ValueError(
-                f"Polars operation '{op}' is not supported. Available: {list(op_dict)}"
+                f"Polars operation '{op_name}' is not supported. Available:"
+                f" {list(op_dict)}"
             )
         stats.append(op)
 
