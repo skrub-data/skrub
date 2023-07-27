@@ -183,8 +183,9 @@ for type_id, problem, pipeline, metric in [
 logger.info(f"Finished! ")
 logger.error(f"{len(errors)} tasks with errors: {set(errors.keys())}")
 # print all unique errors
-for error in set(errors_one_line.values()):
-    logger.error(f"Error: {error}, {list(errors_one_line.values()).count(error)} times")
+errors_counter = Counter(errors_one_line.values())
+for error, count in errors_counter.items():
+    logger.error(f"Error: {error}, {count} times")
 
 if args.compare_scores:
     logger.info(
