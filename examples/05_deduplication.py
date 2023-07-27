@@ -163,7 +163,7 @@ square_distances = squareform(ngram_distances)
 
 import seaborn as sns
 
-fig, ax = plt.subplots(figsize=(13, 12))
+fig, ax = plt.subplots(figsize=(14, 12))
 sns.heatmap(
     square_distances, yticklabels=ex_series.index, xticklabels=ex_series.index, ax=ax
 )
