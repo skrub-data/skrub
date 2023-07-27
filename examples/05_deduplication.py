@@ -71,7 +71,7 @@ ex_series = pd.Series(counts, index=unique_examples)
 
 ex_series.plot.barh(figsize=(10, 15))
 plt.ylabel("Medication name")
-plt.xlabel("Counts")
+plt.xlabel("Count")
 plt.show()
 
 ###############################################################################
