@@ -33,7 +33,7 @@ misspelled category names in an unsupervised manner.
 
 ###############################################################################
 # An example dataset
-# -------------------
+# ------------------
 #
 # Let's take an example:
 # as a data scientist, your job is to analyze the data from a hospital ward.
