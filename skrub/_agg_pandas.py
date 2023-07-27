@@ -95,12 +95,12 @@ def _parse_argument(op_name):
     >>> _parse_argument("hist([2, 3])")
     "hist", [2, 3]
     """
-    split = re.split(r"\(.+\)", op_name)
+    split = re.split("\\(.+\\)", op_name)
     op_root = split[0]
     if len(split) > 1:
         args = re.split(f"^{op_root}", op_name)
         args = args[1]
-        args = re.sub(r"\(|\)", "", args)
+        args = re.sub("\\(|\\)", "", args)
         args = int(args)
         return op_root, args
     else:

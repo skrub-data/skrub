@@ -234,7 +234,6 @@ def test_get_namespace():
         get_namespace([main, main.values])
 
     msg = "Mixing polars lazyframes and dataframes is not supported."
-    print(pl.LazyFrame(main))
     with pytest.raises(TypeError, match=msg):
         get_namespace([pl.DataFrame(main), pl.LazyFrame(main)])
 
