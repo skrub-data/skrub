@@ -58,7 +58,6 @@ regression_pipeline = Pipeline(
 )
 
 errors = {}
-errors_one_line = {}
 low_scores = {}
 constraint_error_template = "Skipping task {id} because {reason}"
 
@@ -176,14 +175,13 @@ for type_id, problem, pipeline, metric in [
                     id=task_id, reason=f"of an unhandled error: {e}."
                 )
             )
-            errors[task_id] = e
-            errors_one_line[task_id] = str(e).split("\n")[-2]
+            errors[task_id] = str(e)
             continue
 
 logger.info(f"Finished! ")
 logger.error(f"{len(errors)} tasks with errors: {set(errors.keys())}")
 # print all unique errors
-errors_counter = Counter(errors_one_line.values())
+errors_counter = Counter(errors.values())
 for error, count in errors_counter.items():
     logger.error(f"Error: {error}, {count} times")
 
