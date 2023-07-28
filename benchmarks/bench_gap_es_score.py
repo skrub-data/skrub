@@ -180,6 +180,8 @@ class ModifiedGapEncoder(GapEncoder):
             random_state=self.random_state,
             rescale_W=self.rescale_W,
             max_iter_e_step=self.max_iter_e_step,
+            max_no_improvement=10,
+            verbose=True,
         )
 
 
@@ -205,11 +207,11 @@ benchmark_name = "gap_encoder_benchmark"
             "driver_state",
             "dl_state",
         ],
-        "max_rows": [5_000, 20_000, 40_000],
+        "max_rows": [5_000, 20_000, 50_000],
         "modif": [True, False],
     },
     save_as=benchmark_name,
-    repeat=1,
+    repeat=2,
 )
 def benchmark(
     high_card_feature: str,
@@ -223,12 +225,14 @@ def benchmark(
     # only keep the first max_rows rows
     # split the data into train and test
     X_train, X_test, y_train, y_test = train_test_split(
-        X[:max_rows], y[:max_rows], test_size=0.2, random_state=42
+        X[:max_rows],
+        y[:max_rows],
+        test_size=0.2,
     )
     if not modif:
         gap = GapEncoder()
     else:
-        gap = ModifiedGapEncoder()
+        gap = ModifiedGapEncoder(verbose=True)
     start_time = perf_counter()
     gap.fit(X_train)
     end_time = perf_counter()
