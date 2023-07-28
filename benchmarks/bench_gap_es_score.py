@@ -307,6 +307,23 @@ def plot(df: pd.DataFrame):
     plt.tight_layout()
     plt.show()
 
+    sns.lineplot(
+        x="train_size",
+        y="balanced_accuracy_hgb_test",
+        data=df,
+        hue="high_card_feature",
+        style="modif",
+    )
+    plt.yscale("log")
+    # put the legend out of the figure
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
+    plt.ylabel("Balanced accuracy")
+    plt.xlabel("Train size")
+    plt.title("Balanced accuracy on test set")
+    # make sure the plot is not cut
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
