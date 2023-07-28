@@ -484,8 +484,8 @@ class TableVectorizer(ColumnTransformer):
         elif len(self.specific_transformers) == 0:
             pass
         else:
-            # Check all tuples are the same length
             first_item_length = len(self.specific_transformers[0])
+            # Check all tuples are the same length
             for i, tup in enumerate(self.specific_transformers):
                 if len(tup) != first_item_length:
                     raise TypeError(
@@ -496,12 +496,12 @@ class TableVectorizer(ColumnTransformer):
                     )
             if first_item_length == 2:
                 # Unnamed assignments, transform to named
-                named_column_specific_transformers = _get_transformer_list(
+                named_specific_transformers = _get_transformer_list(
                     self.specific_transformers
                 )
             elif first_item_length == 3:
                 # Named assignments
-                named_column_specific_transformers = self.specific_transformers
+                named_specific_transformers = self.specific_transformers
             else:
                 raise TypeError(
                     "Expected `specific_transformers` to be a list of tuples "
@@ -509,7 +509,7 @@ class TableVectorizer(ColumnTransformer):
                     f"{first_item_length}. "
                 )
 
-            self.column_specific_transformers_ = [
+            self.specific_transformers_ = [
                 (name, clone(transformer), cols)
                 if isinstance(transformer, sklearn.base.TransformerMixin)
                 else (name, transformer, cols)
@@ -799,7 +799,7 @@ class TableVectorizer(ColumnTransformer):
             ("datetime", self.datetime_transformer_, datetime_columns),
             ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
             ("high_card_cat", self.high_card_cat_transformer_, high_card_cat_columns),
-            *self.column_specific_transformers_,
+            *self.specific_transformers_,
         ]
         # We will now filter this list,
         # by keeping only the ones with at least one column.
