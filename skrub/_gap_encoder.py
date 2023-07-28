@@ -8,6 +8,7 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from joblib import Parallel, delayed
 from numpy.random import RandomState
 from numpy.typing import ArrayLike, NDArray
@@ -311,7 +312,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                     self.W_,
                     "kullback-leibler",
                     square_root=False,
-                )
+                ) / len(idx)
                 if self._minibatch_convergence(
                     batch_size=len(idx),
                     batch_cost=batch_cost,
@@ -1011,6 +1012,29 @@ def _rescale_W(W: NDArray, A: NDArray) -> None:
     A /= s
 
 
+def _special_sparse_dot(W, H, X):
+    """Computes np.dot(W, H), only where X is non zero."""
+    # taken from sklearn.decomposition.MiniBatchNMF
+    if sp.issparse(X):
+        ii, jj = X.nonzero()
+        n_vals = ii.shape[0]
+        dot_vals = np.empty(n_vals)
+        n_components = W.shape[1]
+        batch_size = max(n_components, n_vals // n_components)
+        for start in range(0, n_vals, batch_size):
+            batch = slice(start, start + batch_size)
+            dot_vals[batch] = np.multiply(W[ii[batch], :], H.T[jj[batch], :]).sum(
+                axis=1
+            )
+
+        WH = sp.coo_matrix((dot_vals, (ii, jj)), shape=X.shape)
+        # in sklearn, it was return WH.tocsr(), but it breaks the code in our case
+        # I'm not sure why
+        return WH
+    else:
+        return np.dot(W, H)
+
+
 def _multiplicative_update_w(
     Vt: NDArray,
     W: NDArray,
@@ -1024,7 +1048,12 @@ def _multiplicative_update_w(
     Multiplicative update step for the topics `W`.
     """
     A *= rho
-    A += W * safe_sparse_dot(Ht.T, Vt.multiply(1 / (np.dot(Ht, W) + 1e-10)))
+    HtW = _special_sparse_dot(Ht, W, Vt)
+    Vt_data = Vt.data
+    HtW_data = HtW.data
+    np.divide(Vt_data, HtW_data + 1e-10, out=Vt_data)
+    HtVt = safe_sparse_dot(Ht.T, Vt)
+    A += W * HtVt
     B *= rho
     B += Ht.sum(axis=0).reshape(-1, 1)
     np.divide(A, B, out=W)
@@ -1070,7 +1099,7 @@ def _multiplicative_update_h(
         W_WT1_ = W_WT1[:, idx]
         W_ = W[:, idx]
         squared_norm = 1
-        for n_iter_ in range(max_iter):
+        for _ in range(max_iter):
             if squared_norm <= squared_epsilon:
                 break
             aux = np.dot(W_WT1_, vt_ / (np.dot(ht, W_) + 1e-10))
