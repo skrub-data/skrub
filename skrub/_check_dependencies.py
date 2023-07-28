@@ -17,7 +17,7 @@ def check_dependencies():
 
         try:
             installed_dep = version(req.name)
-            if not req.specifier.contains(installed_dep):
+            if not req.specifier.contains(installed_dep, prereleases=True):
                 raise ImportError(
                     f"{package_name} {package_version} requires {req!s} but you have"
                     f" {req.name} {installed_dep} installed, which is incompatible."

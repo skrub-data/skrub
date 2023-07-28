@@ -4,6 +4,7 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 
+import re
 import warnings
 from typing import Literal
 from warnings import warn
@@ -22,6 +23,7 @@ from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
+from skrub._utils import parse_astype_error_message
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -553,8 +555,7 @@ class TableVectorizer(ColumnTransformer):
         # of missing values
         object_cols = X.columns[X.dtypes == "object"]
         for col in object_cols:
-            if pd.api.types.is_object_dtype(X[col]):
-                X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
+            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
         for col, dtype in self.types_.items():
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
@@ -567,7 +568,34 @@ class TableVectorizer(ColumnTransformer):
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col] = dtype
-        X = X.astype(self.types_)
+        for col, dtype in self.types_.items():
+            try:
+                if pd.api.types.is_numeric_dtype(dtype):
+                    # we don't use astype because it can convert float to int
+                    X[col] = pd.to_numeric(X[col])
+                else:
+                    X[col] = X[col].astype(dtype)
+            except ValueError as e:
+                culprit = parse_astype_error_message(e)
+                if culprit is None:
+                    raise e
+                warnings.warn(
+                    f"Value '{culprit}' could not be converted to infered type"
+                    f" {str(dtype)} in column '{col}'. Such values will be replaced by"
+                    " NaN.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                # if the inferred dtype is numerical or datetime,
+                # we want to ignore entries that cannot be converted
+                # to this dtype
+                if pd.api.types.is_numeric_dtype(dtype):
+                    X[col] = pd.to_numeric(X[col], errors="coerce")
+                elif pd.api.types.is_datetime64_any_dtype(dtype):
+                    X[col] = pd.to_datetime(X[col], errors="coerce")
+                else:
+                    # this should not happen
+                    raise e
         return X
 
     def _check_X(self, X, reset):

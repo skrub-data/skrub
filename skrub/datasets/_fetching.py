@@ -72,7 +72,8 @@ def _fetch_openml_dataset(
     target: str,
     download_if_missing: bool,  # TODO
 ) -> dict[str, Any]:
-    """Gets a dataset from OpenML (https://www.openml.org).
+    """
+    Gets a dataset from OpenML (https://www.openml.org).
 
     Parameters
     ----------
@@ -80,9 +81,9 @@ def _fetch_openml_dataset(
         The ID of the dataset to fetch.
     target : str
         The name of the target column.
-    data_directory : Path
-        A directory to save the data to.
-        By default, the skrub data directory.
+    data_directory : pathlib.Path
+        The directory where the dataset is stored.
+        By default, a subdirectory "openml" in the skrub data directory.
     download_if_missing : bool
         Whether to download the data if it is not found locally.
 
@@ -137,7 +138,7 @@ def _fetch_openml_dataset(
 
 def _fetch_world_bank_data(
     indicator_id: str,
-    data_directory: Path,
+    data_directory: Path | None,
     download_if_missing: bool,
 ) -> dict[str, Any]:
     """Gets a dataset from World Bank open data platform (https://data.worldbank.org/).
@@ -146,9 +147,9 @@ def _fetch_world_bank_data(
     ----------
     indicator_id : str
         The ID of the indicator's dataset to fetch.
-    data_directory : Path, optional
-        A directory to save the data to.
-        By default, the skrub data directory.
+    data_directory : pathlib.Path, optional
+        The directory where the dataset is stored.
+        By default, a subdirectory "world_bank" in the skrub data directory.
 
     Returns
     -------
@@ -220,8 +221,8 @@ def _fetch_figshare(
     figshare_id : str
         The ID of the dataset to fetch.
     data_directory : pathlib.Path, optional
-        A directory to save the data to.
-        By default, the skrub data directory.
+        The directory where the dataset is stored.
+        By default, a subdirectory "figshare" in the skrub data directory.
     download_if_missing : bool
         Whether to download the data if it is not found locally.
 
@@ -243,7 +244,8 @@ def _fetch_figshare(
     pyarrow installed to run correctly.
     """
     if data_directory is None:
-        data_directory = get_data_dir()
+        data_directory = get_data_dir(name="figshare")
+
     parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
     url = f"https://ndownloader.figshare.com/files/{figshare_id}"
