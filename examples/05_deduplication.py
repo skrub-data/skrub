@@ -185,5 +185,5 @@ plt.show()
 # know our ground truth (e.g. the original medication names),
 # or when the similarity across strings does not
 # carry useful information for our machine learning task.
-# Otherwise, it is better to use encoding methods such as |Gap|
+# Otherwise, we prefer using encoding methods such as |Gap|
 # or |MinHash|.
