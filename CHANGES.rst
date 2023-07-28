@@ -54,6 +54,12 @@ Major changes
   compliance with the scikit-learn API.
   :pr:`647` by :user:`Guillaume Lemaitre <glemaitre>`
 
+* Fetching functions now have a unified and simpler API: a :class:`dataset.Dataset`
+  object is returned by all functions. Lazy loading (parameters `load_dataframe`)
+  has been removed. Parameter `download_if_missing` added to world bank and
+  figshare fetchers.
+  :pr:`669` by :user:`Lilian Boulard <LilianBoulard>`.
+
 Minor changes
 -------------
 
