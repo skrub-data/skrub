@@ -65,6 +65,13 @@ Major changes
   transformers.
   :pr:`678` by :user:`Guillaume Lemaitre <glemaitre>`
 
+* Improved :class:`GapEncoder`'s early stopping logic. The parameters `tol` and `min_iter`
+  have been removed. The parameter `max_no_improvement` can now be used to control the
+  early stopping. :pr:`680` by :user:`Leo Grinsztajn <LeoGrin>`
+  :pr:`663` by :user:`Simona Maggio <simonamaggio>`
+  :pr:`593` by  :user:`Lilian Boulard <LilianBoulard>`
+  :pr:`681` by  :user:`Leo Grinsztajn <LeoGrin>`
+
 Minor changes
 -------------
 

@@ -109,31 +109,8 @@ def benchmark(
 
 
 def plot(df: pd.DataFrame):
-    sns.lineplot(
-        x="train_size", y="time_fit", data=df, hue="high_card_feature", style="modif"
-    )
-    plt.yscale("log")
-    # put the legend out of the figure
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
-    plt.ylabel("Time (s)")
-    plt.xlabel("Train size")
-    plt.title("Time to fit the encoder")
-    # make sure the plot is not cut
-    plt.tight_layout()
-    plt.show()
-
-    sns.lineplot(
-        x="train_size", y="score_train", data=df, hue="high_card_feature", style="modif"
-    )
-    plt.yscale("log")
-    # put the legend out of the figure
-    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
-    plt.ylabel("Score")
-    plt.xlabel("Train size")
-    plt.title("Score on train set")
-    # make sure the plot is not cut
-    plt.tight_layout()
-    plt.show()
+    # TODO
+    pass
 
 
 if __name__ == "__main__":
