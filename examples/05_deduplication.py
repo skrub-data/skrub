@@ -67,9 +67,9 @@ duplicated_names[:5]
 import matplotlib.pyplot as plt
 
 unique_examples, counts = np.unique(duplicated_names, return_counts=True)
-ex_series = pd.Series(counts, index=unique_examples)
 
-ex_series.plot.barh(figsize=(10, 15))
+plt.figure(figsize=(10, 15))
+plt.barh(unique_examples, counts)
 plt.ylabel("Medication name")
 plt.xlabel("Count")
 plt.show()
@@ -118,7 +118,8 @@ deduplicated_unique_examples, deduplicated_counts = np.unique(
 )
 deduplicated_series = pd.Series(deduplicated_counts, index=deduplicated_unique_examples)
 
-deduplicated_series.plot.barh(figsize=(10, 5))
+plt.figure(figsize=(10, 5))
+plt.barh(deduplicated_unique_examples, deduplicated_counts)
 plt.xlabel("Count")
 plt.ylabel("Medication name")
 plt.show()
@@ -165,7 +166,7 @@ import seaborn as sns
 
 fig, ax = plt.subplots(figsize=(14, 12))
 sns.heatmap(
-    square_distances, yticklabels=ex_series.index, xticklabels=ex_series.index, ax=ax
+    square_distances, yticklabels=unique_examples, xticklabels=unique_examples, ax=ax
 )
 plt.show()
 
