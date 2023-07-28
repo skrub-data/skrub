@@ -22,9 +22,11 @@ from skrub._gap_encoder import (
 
 class ModifiedGapEncoderColumn(GapEncoderColumn):
     def __init__(self, *args, **kwargs):
+        if "max_no_improvement" in kwargs:
+            self.max_no_improvement = kwargs.pop("max_no_improvement")
+        if "verbose" in kwargs:
+            self.verbose = kwargs.pop("verbose")
         super().__init__(*args, **kwargs)
-        self.max_no_improvement = kwargs.get("max_no_improvement", 10)
-        self.verbose = kwargs.get("verbose", False)
 
     def _minibatch_convergence(self, batch_size, batch_cost, n_samples, step, n_steps):
         """Helper function to encapsulate the early stopping logic"""
@@ -232,7 +234,7 @@ def benchmark(
     if not modif:
         gap = GapEncoder()
     else:
-        gap = ModifiedGapEncoder(verbose=True)
+        gap = ModifiedGapEncoder(verbose=True, batch_size=512)
     start_time = perf_counter()
     gap.fit(X_train)
     end_time = perf_counter()
