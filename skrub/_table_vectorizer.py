@@ -480,7 +480,7 @@ class TableVectorizer(ColumnTransformer):
             self.datetime_transformer_ = self.datetime_transformer
 
         if self.specific_transformers is None:
-            self.column_specific_transformers_ = []
+            self.specific_transformers_ = []
         elif len(self.specific_transformers) == 0:
             pass
         else:
@@ -513,7 +513,7 @@ class TableVectorizer(ColumnTransformer):
                 (name, clone(transformer), cols)
                 if isinstance(transformer, sklearn.base.TransformerMixin)
                 else (name, transformer, cols)
-                for name, transformer, cols in named_column_specific_transformers
+                for name, transformer, cols in named_specific_transformers
             ]
 
         # TODO: check that the provided transformers are valid
@@ -768,10 +768,10 @@ class TableVectorizer(ColumnTransformer):
         # explicitly by the user.
         X_filtered = X.drop(
             columns=[
-                # We do this for loop as `self.column_specific_transformers_`
+                # We do this for loop as `self.specific_transformers_`
                 # might be empty.
                 col
-                for (_, _, columns) in self.column_specific_transformers_
+                for (_, _, columns) in self.specific_transformers_
                 for col in columns
             ]
         )
