@@ -691,6 +691,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
         self.verbose = verbose
+        print("You're on the right branch")
 
     def _create_column_gap_encoder(self) -> GapEncoderColumn:
         """Helper method for creating a GapEncoderColumn from
