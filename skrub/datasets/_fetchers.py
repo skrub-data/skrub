@@ -60,10 +60,28 @@ class Dataset:
             self.name == other.name
             and self.description == other.description
             and self.source == other.source
-            and self.target == other.target
             and self.X.equals(other.X)
             and self.y.equals(other.y)
-            # TODO
+            and self.target == other.target
+            and self.problem == other.problem
+        )
+
+    def __repr__(self):
+        y = (
+            f"{self.y.__class__.__name__} of shape {self.y.shape}"
+            if self.y is not None
+            else None
+        )
+        return (
+            "Dataset("
+            f"name={self.name!r}, "
+            f"description={self.description!r}, "
+            f"source={self.source!r}, "
+            f"X={self.X.__class__.__name__} of shape {self.X.shape}, "
+            f"y={y}, "
+            f"target={self.target!r}, "
+            f"problem={self.problem!r}"
+            ")"
         )
 
 
@@ -81,7 +99,6 @@ def fetch_employee_salaries(
     drop_linked: bool = True,
     drop_irrelevant: bool = True,
     directory: Path | str | None = None,
-    download_if_missing: bool = True,
 ) -> Dataset:
     """Fetches the employee salaries dataset, available at https://openml.org/d/42125
 
@@ -101,8 +118,6 @@ def fetch_employee_salaries(
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
-    download_if_missing : bool, default=True
-        Whether to download the data from the Internet if not already on disk.
 
     Returns
     -------
@@ -111,12 +126,11 @@ def fetch_employee_salaries(
     """
     dataset = Dataset(
         name="Employee salaries",
-        target="current_annual_salary",
         problem="regression",
         **_fetch_openml_dataset(
             dataset_id=EMPLOYEE_SALARIES_ID,
-            data_directory=_resolve_path(directory),
-            download_if_missing=download_if_missing,
+            target="current_annual_salary",
+            data_directory=_resolve_path(directory, suffix="openml"),
         ),
     )
 
@@ -133,7 +147,6 @@ def fetch_employee_salaries(
 def fetch_road_safety(
     *,
     directory: Path | str | None = None,
-    download_if_missing: bool = True,
 ) -> Dataset:
     """Fetches the road safety dataset, available at https://openml.org/d/42803
 
@@ -148,8 +161,6 @@ def fetch_road_safety(
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
-    download_if_missing : bool, default=True
-        Whether to download the data from the Internet if not already on disk.
 
     Returns
     -------
@@ -161,9 +172,8 @@ def fetch_road_safety(
         problem="classification",
         **_fetch_openml_dataset(
             dataset_id=ROAD_SAFETY_ID,
-            data_directory=_resolve_path(directory),
+            data_directory=_resolve_path(directory, suffix="openml"),
             target="Sex_of_Driver",
-            download_if_missing=download_if_missing,
         ),
     )
 
@@ -171,7 +181,6 @@ def fetch_road_safety(
 def fetch_medical_charge(
     *,
     directory: Path | str | None = None,
-    download_if_missing: bool = True,
 ) -> Dataset:
     """Fetches the medical charge dataset, available at https://openml.org/d/42720
 
@@ -190,8 +199,6 @@ def fetch_medical_charge(
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
-    download_if_missing : bool, default=True
-        Whether to download the data from the Internet if not already on disk.
 
     Returns
     -------
@@ -203,9 +210,8 @@ def fetch_medical_charge(
         problem="regression",
         **_fetch_openml_dataset(
             dataset_id=MEDICAL_CHARGE_ID,
-            data_directory=_resolve_path(directory),
+            data_directory=_resolve_path(directory, suffix="openml"),
             target="Average_Total_Payments",
-            download_if_missing=download_if_missing,
         ),
     )
 
@@ -213,7 +219,6 @@ def fetch_medical_charge(
 def fetch_midwest_survey(
     *,
     directory: Path | str | None = None,
-    download_if_missing: bool = True,
 ) -> Dataset:
     """Fetches the midwest survey dataset, available at https://openml.org/d/42805
 
@@ -225,8 +230,6 @@ def fetch_midwest_survey(
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
-    download_if_missing : bool, default=True
-        Whether to download the data from the Internet if not already on disk.
 
     Returns
     -------
@@ -238,9 +241,8 @@ def fetch_midwest_survey(
         problem="classification",
         **_fetch_openml_dataset(
             dataset_id=MIDWEST_SURVEY_ID,
-            data_directory=_resolve_path(directory),
+            data_directory=_resolve_path(directory, suffix="openml"),
             target="Census_Region",
-            download_if_missing=download_if_missing,
         ),
     )
 
@@ -248,7 +250,6 @@ def fetch_midwest_survey(
 def fetch_open_payments(
     *,
     directory: Path | str | None = None,
-    download_if_missing: bool = True,
 ) -> Dataset:
     """Fetches the open payments dataset, available at https://openml.org/d/42738
 
@@ -261,8 +262,6 @@ def fetch_open_payments(
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
-    download_if_missing : bool, default=True
-        Whether to download the data from the Internet if not already on disk.
 
     Returns
     -------
@@ -274,9 +273,8 @@ def fetch_open_payments(
         problem="classification",
         **_fetch_openml_dataset(
             dataset_id=OPEN_PAYMENTS_ID,
-            data_directory=_resolve_path(directory),
+            data_directory=_resolve_path(directory, suffix="openml"),
             target="status",
-            download_if_missing=download_if_missing,
         ),
     )
 
@@ -284,7 +282,6 @@ def fetch_open_payments(
 def fetch_traffic_violations(
     *,
     directory: Path | str | None = None,
-    download_if_missing: bool = True,
 ) -> Dataset:
     """Fetches the traffic violations dataset, available at https://openml.org/d/42132
 
@@ -299,8 +296,6 @@ def fetch_traffic_violations(
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
-    download_if_missing : bool, default=True
-        Whether to download the data from the Internet if not already on disk.
 
     Returns
     -------
@@ -312,9 +307,8 @@ def fetch_traffic_violations(
         problem="classification",
         **_fetch_openml_dataset(
             dataset_id=TRAFFIC_VIOLATIONS_ID,
-            data_directory=_resolve_path(directory),
+            data_directory=_resolve_path(directory, suffix="openml"),
             target="violation_type",
-            download_if_missing=download_if_missing,
         ),
     )
 
@@ -322,7 +316,6 @@ def fetch_traffic_violations(
 def fetch_drug_directory(
     *,
     directory: Path | str | None = None,
-    download_if_missing: bool = True,
 ) -> Dataset:
     """Fetches the drug directory dataset, available at https://openml.org/d/43044
 
@@ -335,8 +328,6 @@ def fetch_drug_directory(
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
-    download_if_missing : bool, default=True
-        Whether to download the data from the Internet if not already on disk.
 
     Returns
     -------
@@ -348,9 +339,8 @@ def fetch_drug_directory(
         problem="classification",
         **_fetch_openml_dataset(
             dataset_id=DRUG_DIRECTORY_ID,
-            data_directory=_resolve_path(directory),
+            data_directory=_resolve_path(directory, suffix="openml"),
             target="PRODUCTTYPENAME",
-            download_if_missing=download_if_missing,
         ),
     )
 
@@ -363,13 +353,13 @@ def fetch_world_bank_indicator(
 ) -> Dataset:
     """Fetches a dataset of an indicator from the World Bank open data platform.
 
-    Description of the dataset:
-        The dataset contains two columns: the indicator value and the
-        country names. A list of all available indicators can be found
-        at https://data.worldbank.org/indicator.
+    The dataset contains two columns: the indicator value and the country names.
 
     Parameters
     ----------
+    indicator_id : str
+        ID of the WorldBank table. A list of all available indicators can be
+        found at https://data.worldbank.org/indicator.
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
@@ -387,7 +377,7 @@ def fetch_world_bank_indicator(
         problem=None,
         **_fetch_world_bank_data(
             indicator_id=indicator_id,
-            data_directory=_resolve_path(directory),
+            data_directory=_resolve_path(directory, suffix="world_bank"),
             download_if_missing=download_if_missing,
         ),
     )
@@ -423,7 +413,7 @@ def fetch_figshare(
         problem=None,
         **_fetch_figshare(
             figshare_id=figshare_id,
-            data_directory=_resolve_path(directory),
+            data_directory=_resolve_path(directory, suffix="figshare"),
             download_if_missing=download_if_missing,
         ),
     )

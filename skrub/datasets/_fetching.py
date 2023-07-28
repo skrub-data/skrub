@@ -41,7 +41,7 @@ figshare_id_to_hash = {
 }
 
 
-def _resolve_path(path: str | Path | None) -> Path:
+def _resolve_path(path: str | Path | None, suffix: str = "") -> Path:
     """Resolves a path to a file.
 
     Parameters
@@ -49,6 +49,9 @@ def _resolve_path(path: str | Path | None) -> Path:
     path : str or pathlib.Path or None
         The path to resolve.
         If None, uses the default data directory.
+    suffix : str
+        If ``path`` is unspecified (``None``), adds this suffix to the
+        default data directory.
 
     Returns
     -------
@@ -57,7 +60,7 @@ def _resolve_path(path: str | Path | None) -> Path:
         The directory exists (it was created if necessary).
     """
     if path is None:
-        path = get_data_dir()
+        path = get_data_dir(suffix)
     elif isinstance(path, str):
         path = Path(path).expanduser().resolve()
     elif isinstance(path, Path):
@@ -70,7 +73,6 @@ def _fetch_openml_dataset(
     dataset_id: int,
     data_directory: Path,
     target: str,
-    download_if_missing: bool,  # TODO
 ) -> dict[str, Any]:
     """
     Gets a dataset from OpenML (https://www.openml.org).
@@ -84,8 +86,6 @@ def _fetch_openml_dataset(
     data_directory : pathlib.Path
         The directory where the dataset is stored.
         By default, a subdirectory "openml" in the skrub data directory.
-    download_if_missing : bool
-        Whether to download the data if it is not found locally.
 
     Returns
     -------
@@ -103,10 +103,6 @@ def _fetch_openml_dataset(
           - `y` : pandas.Series
               The dataset's target.
     """
-    # Make path absolute
-    data_directory = data_directory.resolve()
-    data_directory.mkdir(parents=True, exist_ok=True)
-
     url = openml_url.format(id=dataset_id)
 
     # The ``fetch_openml()`` function returns a Scikit-Learn ``Bunch`` object,
@@ -138,7 +134,7 @@ def _fetch_openml_dataset(
 
 def _fetch_world_bank_data(
     indicator_id: str,
-    data_directory: Path | None,
+    data_directory: Path,
     download_if_missing: bool,
 ) -> dict[str, Any]:
     """Gets a dataset from World Bank open data platform (https://data.worldbank.org/).
@@ -147,9 +143,11 @@ def _fetch_world_bank_data(
     ----------
     indicator_id : str
         The ID of the indicator's dataset to fetch.
-    data_directory : pathlib.Path, optional
+    data_directory : pathlib.Path
         The directory where the dataset is stored.
         By default, a subdirectory "world_bank" in the skrub data directory.
+    download_if_missing : bool
+        Whether to download the data if it is not found locally.
 
     Returns
     -------
@@ -164,13 +162,17 @@ def _fetch_world_bank_data(
               The local path leading to the dataset,
               saved as a CSV file.
     """
-    csv_path = (data_directory / f"{indicator_id}.csv").resolve()
-    data_directory.mkdir(parents=True, exist_ok=True)
+    csv_path = data_directory / f"{indicator_id}.csv"
     url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"
     if csv_path.is_file():
-        df = pd.read_csv(csv_path, nrows=0)
+        df = pd.read_csv(csv_path)
         indicator_name = df.columns[1]
     else:
+        if not download_if_missing:
+            raise FileNotFoundError(
+                f"Couldn't find file for indicator {indicator_id!r} locally. "
+            )
+
         try:
             filehandle, _ = urllib.request.urlretrieve(url)
             zip_file_object = ZipFile(filehandle, "r")
@@ -202,17 +204,19 @@ def _fetch_world_bank_data(
         df.to_csv(csv_path, index=False)
 
     return {
-        "dataset_name": indicator_name,
-        "description": f"This table shows the {indicator_name!r} World Bank indicator.",
+        "description": (
+            f"This table shows the {indicator_name!r} World Bank indicator. "
+        ),
         "source": url,
-        "path": csv_path,
+        "X": df,
+        "y": None,
     }
 
 
 def _fetch_figshare(
     figshare_id: str,
     data_directory: Path | None,
-    download_if_missing: bool,
+    download_if_missing: bool,  # TODO
 ) -> dict[str, Any]:
     """Fetch a dataset from figshare using the download ID number.
 
@@ -225,6 +229,7 @@ def _fetch_figshare(
         By default, a subdirectory "figshare" in the skrub data directory.
     download_if_missing : bool
         Whether to download the data if it is not found locally.
+        FIXME: Currently not implemented.
 
     Returns
     -------
@@ -243,29 +248,27 @@ def _fetch_figshare(
     The files are read and returned in parquet format, this function needs
     pyarrow installed to run correctly.
     """
-    if data_directory is None:
-        data_directory = get_data_dir(name="figshare")
-
-    parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
-    data_directory.mkdir(parents=True, exist_ok=True)
+    parquet_path = data_directory.resolve() / f"figshare_{figshare_id}.parquet"
     url = f"https://ndownloader.figshare.com/files/{figshare_id}"
     description = f"This table shows the {figshare_id!r} figshare file."
-    file_paths = [
+    existing_files = [
         file
         for file in data_directory.iterdir()
-        if file.name.startswith(f"figshare_{figshare_id}")
+        if figshare_id in file.name and file.suffix == ".parquet"
     ]
-    if len(file_paths) > 0:
-        if len(file_paths) == 1:
-            parquet_paths = [str(file_paths[0].resolve())]
+    if len(existing_files) > 0:
+        if len(existing_files) == 1:
+            parquet_paths = [str(existing_files[0].resolve())]
         else:
             parquet_paths = []
-            for path in file_paths:
+            for path in existing_files:
                 parquet_path = str(path.resolve())
                 parquet_paths += [parquet_path]
         return {
             "description": description,
             "source": url,
+            "X": pd.read_parquet(parquet_paths),
+            "y": None,
         }
     else:
         warnings.warn(
@@ -302,21 +305,23 @@ def _fetch_figshare(
                 batch_size=1_000_000,
             )
             idx = []
-            for _, x in enumerate(
-                chain(range(0, df.metadata.num_rows, 1_000_000), [df.metadata.num_rows])
+            for x in chain(
+                range(0, df.metadata.num_rows, 1_000_000), [df.metadata.num_rows]
             ):
                 idx += [x]
             parquet_paths = []
             for i in range(1, len(idx)):
                 parquet_path = (
                     data_directory / f"figshare_{figshare_id}_{idx[i]}.parquet"
-                ).resolve()
+                )
                 batch = next(record).to_pandas()
                 batch.to_parquet(parquet_path, index=False)
                 parquet_paths += [parquet_path]
             return {
                 "description": description,
                 "source": url,
+                "X": pd.read_parquet(parquet_paths),
+                "y": None,
             }
         except URLError:
             raise URLError("No internet connection or the website is down.")
