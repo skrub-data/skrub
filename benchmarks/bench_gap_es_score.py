@@ -18,6 +18,8 @@ from skrub._gap_encoder import (
     _multiplicative_update_h,
     _multiplicative_update_w,
 )
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 class ModifiedGapEncoderColumn(GapEncoderColumn):
@@ -191,7 +193,7 @@ class ModifiedGapEncoder(GapEncoder):
 # Benchmarking accuracy and speed on actual traffic_violations dataset
 #########################################################
 
-benchmark_name = "gap_encoder_benchmark"
+benchmark_name = "gap_encoder_benchmark_es_score"
 
 
 @monitor(
@@ -279,7 +281,31 @@ def benchmark(
 
 
 def plot(df: pd.DataFrame):
-    print("Not implemented yet")
+    sns.lineplot(
+        x="train_size", y="time_fit", data=df, hue="high_card_feature", style="modif"
+    )
+    plt.yscale("log")
+    # put the legend out of the figure
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
+    plt.ylabel("Time (s)")
+    plt.xlabel("Train size")
+    plt.title("Time to fit the encoder")
+    # make sure the plot is not cut
+    plt.tight_layout()
+    plt.show()
+
+    sns.lineplot(
+        x="train_size", y="score_train", data=df, hue="high_card_feature", style="modif"
+    )
+    plt.yscale("log")
+    # put the legend out of the figure
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
+    plt.ylabel("Score")
+    plt.xlabel("Train size")
+    plt.title("Score on train set")
+    # make sure the plot is not cut
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -295,7 +321,7 @@ if __name__ == "__main__":
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
-        df = pd.read_csv(result_file)
+        df = pd.read_parquet(result_file)
 
     if _args.plot:
         plot(df)
