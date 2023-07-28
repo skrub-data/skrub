@@ -182,7 +182,7 @@ plt.show()
 #
 # Note that deduplication is especially useful when we either
 # know our ground truth (e.g. the original medication names),
-# or when we cannot use the similarity across string directly
-# in a machine learning task.
+# or when we the similarity across string does not
+# carry useful information for our machine learning task.
 # Otherwise, it is better to use encoding methods such as |Gap|
 # or |MinHash|.
