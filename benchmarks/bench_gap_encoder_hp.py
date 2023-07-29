@@ -26,6 +26,7 @@ benchmark_name = "gap_encoder_benchmark_hp"
     memory=True,
     time=True,
     parametrize={
+        "ds": [fetch_traffic_violations()],
         "high_card_feature": [
             "seqid",
             "description",
@@ -47,14 +48,15 @@ benchmark_name = "gap_encoder_benchmark_hp"
     repeat=1,
 )
 def benchmark(
+    ds,
     high_card_feature: str,
     batch_size: int,
     max_iter_e_step: int,
     max_rows: int,
+    max_no_improvement: int,
     random_state: int,
 ):
     print(f"Running benchmark")
-    ds = fetch_traffic_violations()
     X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
     y = ds.y
     # only keep the first max_rows rows
@@ -66,6 +68,8 @@ def benchmark(
     gap = GapEncoder(
         batch_size=batch_size,
         max_iter_e_step=max_iter_e_step,
+        max_no_improvement=max_no_improvement,
+        random_state=random_state,
     )
 
     start_time = perf_counter()
@@ -120,7 +124,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
 
     _args = ArgumentParser(
-        description="Benchmark for the batch feature of the MinHashEncoder.",
+        description="Benchmark for the GapEncoder's hp",
         parents=[default_parser],
     ).parse_args()
 
