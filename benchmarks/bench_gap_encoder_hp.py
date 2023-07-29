@@ -38,8 +38,10 @@ benchmark_name = "gap_encoder_benchmark_hp"
             "dl_state",
         ],
         "batch_size": [128, 512, 1024],
-        "max_iter_e_step": [10, 20, 30],
+        "max_iter_e_step": [1, 3, 5, 10],
         "max_rows": [5_000, 20_000, 100_000],
+        "max_no_improvement": [5, 10, 20],
+        "random_state": [1, 2, 3],
     },
     save_as=benchmark_name,
     repeat=1,
@@ -49,6 +51,7 @@ def benchmark(
     batch_size: int,
     max_iter_e_step: int,
     max_rows: int,
+    random_state: int,
 ):
     print(f"Running benchmark")
     ds = fetch_traffic_violations()
@@ -57,7 +60,7 @@ def benchmark(
     # only keep the first max_rows rows
     # split the data into train and test
     X_train, X_test, y_train, y_test = train_test_split(
-        X[:max_rows], y[:max_rows], test_size=0.2, random_state=42
+        X[:max_rows], y[:max_rows], test_size=0.2, random_state=random_state
     )
 
     gap = GapEncoder(
