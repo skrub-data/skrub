@@ -1012,27 +1012,27 @@ def _rescale_W(W: NDArray, A: NDArray) -> None:
     A /= s
 
 
-def _special_sparse_dot(W, H, X):
-    """Computes np.dot(W, H), only where X is non zero."""
-    # taken from sklearn.decomposition.MiniBatchNMF
+def _special_sparse_dot(H, W, X):
+    """Computes np.dot(H, W), only where X is non zero."""
+    # adapted from sklearn.decomposition.MiniBatchNMF
     if sp.issparse(X):
         ii, jj = X.nonzero()
         n_vals = ii.shape[0]
         dot_vals = np.empty(n_vals)
-        n_components = W.shape[1]
+        n_components = H.shape[1]
         batch_size = max(n_components, n_vals // n_components)
         for start in range(0, n_vals, batch_size):
             batch = slice(start, start + batch_size)
-            dot_vals[batch] = np.multiply(W[ii[batch], :], H.T[jj[batch], :]).sum(
+            dot_vals[batch] = np.multiply(H[ii[batch], :], W.T[jj[batch], :]).sum(
                 axis=1
             )
 
-        WH = sp.coo_matrix((dot_vals, (ii, jj)), shape=X.shape)
+        HW = sp.coo_matrix((dot_vals, (ii, jj)), shape=X.shape)
         # in sklearn, it was return WH.tocsr(), but it breaks the code in our case
         # I'm not sure why
-        return WH
+        return HW
     else:
-        return np.dot(W, H)
+        return np.dot(H, W)
 
 
 def _multiplicative_update_w(
