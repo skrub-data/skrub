@@ -200,7 +200,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             suffixes=["_user", "_movie"],
             agg_ops=["mean", "mode"],
         )
-    >>> join_agg_fit_transform(main)
+    >>> join_agg.fit_transform(main)
         userId  movieId  rating   genre genre_mode_user  rating_mean_user  rating_mean_movie
     0       1        1     4.0   drama           drama               4.0   3.5
     1       1        3     4.0   drama           drama               4.0   3.0
