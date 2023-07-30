@@ -20,8 +20,8 @@ rating per movies.
 .. |AggJoiner| replace::
      :class:`~skrub.AggJoiner`
 
-.. |TargetJoiner| replace::
-     :class:`~skrub.TargetJoiner`
+.. |AggTarget| replace::
+     :class:`~skrub.AggTarget`
 
 .. |TableVectorizer| replace::
      :class:`~skrub.TableVectorizer`
