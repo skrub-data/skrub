@@ -14,7 +14,6 @@ from skrub import GapEncoder
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-
 #########################################################
 # Benchmarking accuracy and speed on actual traffic_violations dataset
 #########################################################
@@ -26,7 +25,6 @@ benchmark_name = "gap_encoder_benchmark_hp"
     memory=True,
     time=True,
     parametrize={
-        "ds": [fetch_traffic_violations()],
         "high_card_feature": [
             "seqid",
             "description",
@@ -48,7 +46,6 @@ benchmark_name = "gap_encoder_benchmark_hp"
     repeat=1,
 )
 def benchmark(
-    ds,
     high_card_feature: str,
     batch_size: int,
     max_iter_e_step: int,
@@ -56,6 +53,7 @@ def benchmark(
     max_no_improvement: int,
     random_state: int,
 ):
+    global ds
     print(f"Running benchmark")
     X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
     y = ds.y
@@ -127,6 +125,8 @@ if __name__ == "__main__":
         description="Benchmark for the GapEncoder's hp",
         parents=[default_parser],
     ).parse_args()
+
+    ds = fetch_traffic_violations()
 
     if _args.run:
         print("Running benchmark")
