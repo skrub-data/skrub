@@ -222,7 +222,6 @@ def benchmark(
     max_rows: int,
     modif: bool,
 ):
-    print(f"Running benchmark")
     ds = fetch_traffic_violations()
     X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
     y = ds.y
@@ -236,7 +235,7 @@ def benchmark(
     if not modif:
         gap = GapEncoder()
     else:
-        gap = ModifiedGapEncoder(verbose=True, batch_size=512)
+        gap = ModifiedGapEncoder(verbose=False, batch_size=512)
     start_time = perf_counter()
     gap.fit(X_train)
     end_time = perf_counter()
@@ -273,9 +272,6 @@ def benchmark(
         "train_size": X_train.shape[0],
         "test_size": X_test.shape[0],
     }
-
-    print("Done")
-    print(res_dic)
 
     return res_dic
 
@@ -334,7 +330,6 @@ if __name__ == "__main__":
     ).parse_args()
 
     if _args.run:
-        print("Running benchmark")
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
