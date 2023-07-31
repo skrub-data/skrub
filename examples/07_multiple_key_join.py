@@ -120,7 +120,8 @@ main.head()
 ###############################################################################
 # We now have combined all the information from our pool of tables into one.
 # We will use this main table to model the prediction of flight delay.
-# Training data is introduced in a |Pipeline|:
+# Training data is passed through a |Pipeline|:
+
 
 from skrub import TableVectorizer
 from sklearn.ensemble import HistGradientBoostingClassifier
