@@ -106,7 +106,8 @@ aux_augmented.head()
 
 ###############################################################################
 # Joining airports with flights data:
-# Another muliple key join: on the date and the airport:
+# Another multiple key join on the date and the airport
+
 
 joiner = Joiner(
     tables=[(aux_augmented, ["YEAR/MONTH/DAY", "iata"])],
