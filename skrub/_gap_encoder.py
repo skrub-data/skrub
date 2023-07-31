@@ -583,7 +583,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
     ----------
     n_components : int, optional, default=10
         Number of latent categories used to model string data.
-    batch_size : int, optional, default=128
+    batch_size : int, optional, default=1024
         Number of samples per batch.
     gamma_shape_prior : float, optional, default=1.1
         Shape parameter for the Gamma prior distribution.
@@ -629,9 +629,9 @@ class GapEncoder(TransformerMixin, BaseEstimator):
     rescale_W : bool, default=True
         If `True`, the weight matrix `W` is rescaled at each iteration
         to have a l1 norm equal to 1 for each row.
-    max_iter_e_step : int, default=20
+    max_iter_e_step : int, default=1
         Maximum number of iterations to adjust the activations h at each step.
-    max_no_improvement : int, default=10
+    max_no_improvement : int, default=5
         Control early stopping based on the consecutive number of mini batches
         that does not yield an improvement on the smoothed cost function.
         To disable convergence detection based on cost function,
@@ -717,7 +717,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         self,
         *,
         n_components: int = 10,
-        batch_size: int = 128,
+        batch_size: int = 1024,
         gamma_shape_prior: float = 1.1,
         gamma_scale_prior: float = 1.0,
         rho: float = 0.95,
@@ -731,8 +731,8 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         add_words: bool = False,
         random_state: int | RandomState | None = None,
         rescale_W: bool = True,
-        max_iter_e_step: int = 20,
-        max_no_improvement: int = 10,
+        max_iter_e_step: int = 1,
+        max_no_improvement: int = 5,
         handle_missing: Literal["error", "empty_impute"] = "zero_impute",
         n_jobs: int | None = None,
         verbose: int = 0,
