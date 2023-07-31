@@ -10,8 +10,8 @@ are significant for the join. For instance, this is the case
 for **spatial joins** on two columns, usually
 longitude and latitude.
 
-|joiner| is a scikit-learn compatible transformer that allows
-you to perform joining across multiple keys,
+|joiner| is a scikit-learn compatible transformer that enables
+performing joins across multiple keys,
 independantly of the data type (numerical, string or mixed).
 
 The following example uses US domestic flights data
