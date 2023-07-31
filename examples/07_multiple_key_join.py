@@ -1,6 +1,6 @@
 """
-Joining across multiple column keys
-===================================
+Joining across multiple columns
+===============================
 
 Joining tables is difficult: one entry on one side does not have
 an exact match on the other side.
