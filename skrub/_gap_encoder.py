@@ -634,8 +634,8 @@ class GapEncoder(TransformerMixin, BaseEstimator):
     max_no_improvement : int, default=5
         Control early stopping based on the consecutive number of mini batches
         that does not yield an improvement on the smoothed cost function.
-        To disable convergence detection based on cost function,
-        set max_no_improvement to None.
+        To disable early stopping and run the process fully,
+        set ``max_no_improvement=None``.
     handle_missing : {'error', 'empty_impute'}, default='empty_impute'
         Whether to raise an error or impute with empty string ('') if missing
         values (NaN) are present during GapEncoder.fit (default is to impute).
