@@ -114,8 +114,44 @@ def benchmark(
 
 
 def plot(df: pd.DataFrame):
-    # TODO
-    pass
+    base_values = {"batch_size": 1024, "max_iter_e_step": 1, "max_no_improvement": 5}
+    for variable in base_values.keys():
+        df_to_plot = df
+        for other_variable in base_values.keys():
+            if other_variable != variable:
+                df_to_plot = df_to_plot[
+                    df_to_plot[other_variable] == base_values[other_variable]
+                ]
+        # 2 subplots with a shared legend
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+        sns.lineplot(
+            x="max_rows",
+            y="score_train",
+            hue="high_card_feature",
+            style=variable,
+            data=df_to_plot,
+            ax=ax1,
+            alpha=0.5,
+        )
+        ax1.get_legend().remove()
+        sns.lineplot(
+            x="max_rows",
+            y="time_fit",
+            hue="high_card_feature",
+            style=variable,
+            data=df_to_plot,
+            ax=ax2,
+            alpha=0.5,
+        )
+        # log scale
+        ax1.set_yscale("log")
+        ax2.set_yscale("log")
+        fig.suptitle(f"Effect of {variable} on score_train and time_fit")
+        # legend outside
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
+        # tight layout
+        plt.tight_layout()
+        plt.show()
 
 
 if __name__ == "__main__":

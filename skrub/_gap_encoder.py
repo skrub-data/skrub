@@ -44,7 +44,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         n_components: int = 10,
-        batch_size: int = 128,
+        batch_size: int = 1024,
         gamma_shape_prior: float = 1.1,
         gamma_scale_prior: float = 1.0,
         rho: float = 0.95,
@@ -58,8 +58,8 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         add_words: bool = False,
         random_state: int | RandomState | None = None,
         rescale_W: bool = True,
-        max_iter_e_step: int = 20,
-        max_no_improvement: int = 10,
+        max_iter_e_step: int = 1,
+        max_no_improvement: int = 5,
         verbose: int = 0,
     ):
         self.ngram_range = ngram_range
