@@ -30,12 +30,10 @@ pool of tables are combined for machine learning.
 # We have a pool of tables that we will use to improve our prediction.
 # Here is a schematic view of the available tables:
 
-from PIL import Image
+import IPython
 
-image = Image.open(
-    "https://github.com/jovan-stojanovic/datasets/blob/2a0116f4d0fc9c1b53cf6fc0e7ccf1a37c0bf552/figures/flights_example.jpg"
-)
-image.show()
+url = "https://github.com/jovan-stojanovic/datasets/blob/2a0116f4d0fc9c1b53cf6fc0e7ccf1a37c0bf552/figures/flights_example.jpg"
+IPython.display.Image(url, width=250)
 
 ###############################################################################
 #
