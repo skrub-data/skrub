@@ -29,6 +29,12 @@ pool of tables are combined for machine learning.
 # The goal is to predict flight delays.
 # We have a pool of tables that we will use to improve our prediction.
 # Here is a schematic view of the available tables:
+from PIL import Image
+
+image = Image.open(
+    "https://github.com/jovan-stojanovic/datasets/blob/2a0116f4d0fc9c1b53cf6fc0e7ccf1a37c0bf552/figures/flights_example.jpg"
+)
+image.show()
 
 ###############################################################################
 #
@@ -42,8 +48,8 @@ pool of tables are combined for machine learning.
 
 import pandas as pd
 
-pd.set_option("display.width", 150)
-# pd.set_option('display.max_colwidth', 7)
+# pd.set_option("display.width", 150)
+pd.set_option("display.max_colwidth", 7)
 
 flights = pd.read_parquet("https://figshare.com/ndownloader/files/41771418")
 # Sampling for faster computation.
