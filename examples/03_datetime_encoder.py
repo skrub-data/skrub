@@ -67,8 +67,8 @@ X
 # Encoding the features
 # .....................
 #
-# We will construct a |ColumnTransformer| with |make_column_transformer|.
-# We'll want to encode the city names with a |OneHotEncoder|, and the date
+# We will construct a |ColumnTransformer| in which we will encode
+# the city names with a |OneHotEncoder|, and the date
 # with a |DatetimeEncoder|.
 #
 # During the instantiation of the |DatetimeEncoder|, we specify that we want
@@ -92,12 +92,12 @@ X_enc = encoder.fit_transform(X)
 encoder.get_feature_names_out()
 
 ###############################################################################
-# We can see that the encoder is working as expected: the "date.utc" column has
+# We see that the encoder is working as expected: the "date.utc" column has
 # been replaced by features extracting the month, day, hour, and day of the
 # week information.
 #
-# Noting the year and minute features are not present, this is because they
-# have been removed by the encoder as they are the same for the whole feature.
+# Note the year and minute features are not present, this is because they
+# have been removed by the encoder as they are constant the whole period.
 
 ###############################################################################
 # One-liner with the |TableVectorizer|
@@ -119,8 +119,7 @@ pprint(table_vec.get_feature_names_out())
 # If we want to customize the |DatetimeEncoder| inside the |TableVectorizer|,
 # we can replace its default parameter with a new, custom instance:
 #
-# Here, for example, we want to extract the day of the week (which it doesn't
-# do by default).
+# Here, for example, we want it to extract the day of the week.
 
 table_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
@@ -265,7 +264,7 @@ for i, city in enumerate(zoomed_cities):
 plt.show()
 
 ###############################################################################
-# Feature importances
+# Features importance
 # -------------------
 #
 # Using the |DatetimeEncoder| allows us to better understand how the date
