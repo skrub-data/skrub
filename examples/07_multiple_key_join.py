@@ -29,6 +29,7 @@ pool of tables are combined for machine learning.
 # The goal is to predict flight delays.
 # We have a pool of tables that we will use to improve our prediction.
 # Here is a schematic view of the available tables:
+
 from PIL import Image
 
 image = Image.open(
@@ -48,7 +49,6 @@ image.show()
 
 import pandas as pd
 
-# pd.set_option("display.width", 150)
 pd.set_option("display.max_colwidth", 7)
 
 flights = pd.read_parquet("https://figshare.com/ndownloader/files/41771418")
@@ -60,6 +60,7 @@ flights.head()
 # Auxilliary tables provided in the same database:
 #     - The "airports" dataset, with information such as their name
 #       and location (longitude, latitude).
+
 airports = pd.read_parquet("https://figshare.com/ndownloader/files/41710257")
 airports.head()
 
@@ -67,6 +68,7 @@ airports.head()
 # Auxilliary tables provided by external sources:
 #     - The "stations" dataset. Provides location of all the weather measurement
 #       stations in the US.
+
 stations = pd.read_parquet("https://figshare.com/ndownloader/files/41710524")
 stations.head()
 
@@ -74,6 +76,7 @@ stations.head()
 #     - The "weather" table. Weather details by measurement station.
 #       Both tables are from the Global Historical Climatology Network.
 #       Here, we consider only weather measurements from 2008.
+
 weather = pd.read_parquet("https://figshare.com/ndownloader/files/41771457")
 # Sampling for faster computation.
 weather = weather.sample(100_000, random_state=42, ignore_index=True)
@@ -83,12 +86,14 @@ weather.head()
 # Joining
 # -------
 # First we join the stations with weather on the ID (exact join):
+
 aux = pd.merge(stations, weather, on="ID")
 aux.head()
 
 ###############################################################################
 # Then we join this table with the airports so that we get all auxilliary
 # tables into one.
+
 from skrub import Joiner
 
 joiner = Joiner(
@@ -102,6 +107,7 @@ aux_augmented.head()
 ###############################################################################
 # Joining airports with flights data:
 # Another muliple key join: on the date and the airport:
+
 joiner = Joiner(
     tables=[(aux_augmented, ["YEAR/MONTH/DAY", "iata"])],
     main_key=["Year_Month_DayofMonth", "Origin"],
@@ -114,6 +120,7 @@ main.head()
 # We now have combined all the information from our pool of tables into one.
 # We will use this main table to model the prediction of flight delay.
 # Training data is introduced in a |Pipeline|:
+
 from skrub import TableVectorizer
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import make_pipeline
