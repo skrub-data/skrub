@@ -189,9 +189,9 @@ class ModifiedGapEncoder(GapEncoder):
         )
 
 
-#########################################################
-# Benchmarking accuracy and speed on actual traffic_violations dataset
-#########################################################
+###############################################################
+# Benchmarking accuracy and speed on traffic_violations dataset
+###############################################################
 
 benchmark_name = "gap_encoder_benchmark_es_score"
 
