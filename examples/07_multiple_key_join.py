@@ -2,21 +2,21 @@
 Joining across multiple column keys
 ===================================
 
-|joiner| is a scikit-learn compatible transformer that allows
-you to perform joining across multiple keys,
-independantly of the data type (numerical, string or mixed).
-
-Joining is difficult: one entry on one side does not have
+Joining tables is difficult: one entry on one side does not have
 an exact match on the other side.
 
 This problem becomes even more complex when multiple columns
 are significant for the join. For instance, this is the case
-for *spatial joins* that requires joining on two columns,
+for **spatial joins** on two columns, usually
 longitude and latitude.
+
+|joiner| is a scikit-learn compatible transformer that allows
+you to perform joining across multiple keys,
+independantly of the data type (numerical, string or mixed).
 
 The following example uses US domestic flights data
 to illustrate how space and time information from a
-pool of tables can be combined for machine learning.
+pool of tables are combined for machine learning.
 
 .. |fj| replace:: :func:`~skrub.fuzzy_join`
 
@@ -26,23 +26,28 @@ pool of tables can be combined for machine learning.
 ###############################################################################
 # The data
 # --------
-# Our goal will be to predict flight delays.
+# The goal is to predict flight delays.
 # We have a pool of tables that we will use to improve our prediction.
 # Here is a schematic view of the available tables:
 
 ###############################################################################
 #
 # To do so, we have the following tables at our disposal:
-# Our main table:
-#     - The "flights" datasets. It contains all US flights
-#     date, origin and destination airports and flight time.
-#     Here, we consider only flights from 2008.
+
+###############################################################################
+# The main table:
+#     - The "flights" datasets. It contains all US flights date, origin
+#       and destination airports and flight time.
+#       Here, we consider only flights from 2008.
 
 import pandas as pd
 
+pd.set_option("display.width", 150)
+# pd.set_option('display.max_colwidth', 7)
+
 flights = pd.read_parquet("https://figshare.com/ndownloader/files/41771418")
 # Sampling for faster computation.
-flights = flights.sample(50_000, random_state=42)
+flights = flights.sample(50_000, random_state=42, ignore_index=True)
 flights.head()
 
 ############################################################################
@@ -55,7 +60,7 @@ airports.head()
 ########################################################################
 # Auxilliary tables provided by external sources:
 #     - The "stations" dataset. Provides location of all the weather measurement
-#     stations in the US.
+#       stations in the US.
 stations = pd.read_parquet("https://figshare.com/ndownloader/files/41710524")
 stations.head()
 
@@ -65,7 +70,7 @@ stations.head()
 #       Here, we consider only weather measurements from 2008.
 weather = pd.read_parquet("https://figshare.com/ndownloader/files/41771457")
 # Sampling for faster computation.
-weather = weather.sample(100_000, random_state=42)
+weather = weather.sample(100_000, random_state=42, ignore_index=True)
 weather.head()
 
 ###############################################################################
