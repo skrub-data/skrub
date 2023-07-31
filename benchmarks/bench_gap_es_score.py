@@ -233,7 +233,7 @@ def benchmark(
         test_size=0.2,
     )
     if not modif:
-        gap = GapEncoder()
+        gap = GapEncoder(batch_size=512)
     else:
         gap = ModifiedGapEncoder(verbose=False, batch_size=512)
     start_time = perf_counter()
