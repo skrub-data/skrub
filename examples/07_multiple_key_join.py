@@ -28,16 +28,8 @@ pool of tables are combined for machine learning.
 # --------
 # The goal is to predict flight delays.
 # We have a pool of tables that we will use to improve our prediction.
-# Here is a schematic view of the available tables:
-
-import IPython
-
-url = "https://github.com/jovan-stojanovic/datasets/blob/2a0116f4d0fc9c1b53cf6fc0e7ccf1a37c0bf552/figures/flights_example.jpg"
-IPython.display.Image(url, width=250)
-
-###############################################################################
 #
-# To do so, we have the following tables at our disposal:
+# The following tables are at our disposal:
 
 ###############################################################################
 # The main table:
