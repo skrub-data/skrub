@@ -124,7 +124,8 @@ hgb = HistGradientBoostingClassifier()
 pipeline_hgb = make_pipeline(tv, hgb)
 
 ###############################################################################
-# We isolate our target variable and remove unuseful ID variables:
+# We isolate our target variable and remove useless ID variables:
+
 y = main["ArrDelay"]
 X = main.drop(columns=["ArrDelay", "FlightNum", "TailNum", "ID", "iata"])
 
