@@ -1,18 +1,17 @@
 from pathlib import Path
 
+import pandas as pd
+
 from skrub.datasets import (
-    fetch_open_payments,
     fetch_drug_directory,
-    fetch_road_safety,
-    fetch_midwest_survey,
-    fetch_medical_charge,
     fetch_employee_salaries,
+    fetch_medical_charge,
+    fetch_midwest_survey,
+    fetch_open_payments,
+    fetch_road_safety,
     fetch_traffic_violations,
 )
-
 from skrub.datasets._fetching import DatasetAll
-
-import pandas as pd
 
 
 def find_result(bench_name: str) -> Path:

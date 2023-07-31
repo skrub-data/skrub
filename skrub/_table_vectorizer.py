@@ -4,6 +4,7 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 
+import re
 import warnings
 from typing import Literal
 from warnings import warn
@@ -14,6 +15,7 @@ import sklearn
 from numpy.typing import ArrayLike, NDArray
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
+from scipy import sparse
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
@@ -21,6 +23,7 @@ from sklearn.utils.deprecation import deprecated
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
+from skrub._utils import parse_astype_error_message
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -389,7 +392,18 @@ class TableVectorizer(ColumnTransformer):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"allow_nan": [True]}
+        return {
+            "X_types": ["2darray", "string"],
+            "allow_nan": [True],
+            "_xfail_checks": {
+                "check_complex_data": "Passthrough complex columns as-is.",
+                "check_dont_overwrite_parameters": (
+                    "`transformers` is modified during fit but it is not pass by the"
+                    " user. We need to create an instance of ColumnTransformer instead"
+                    " but the current behaviour is not leading to a bug."
+                ),
+            },
+        }
 
     def _clone_transformers(self):
         """
@@ -411,7 +425,11 @@ class TableVectorizer(ColumnTransformer):
                 drop="if_binary", handle_unknown="infrequent_if_exist"
             )
         elif self.low_card_cat_transformer == "remainder":
-            self.low_card_cat_transformer_ = self.remainder
+            self.low_card_cat_transformer_ = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
         else:
             self.low_card_cat_transformer_ = self.low_card_cat_transformer
 
@@ -420,7 +438,11 @@ class TableVectorizer(ColumnTransformer):
         elif self.high_card_cat_transformer is None:
             self.high_card_cat_transformer_ = GapEncoder(n_components=30)
         elif self.high_card_cat_transformer == "remainder":
-            self.high_card_cat_transformer_ = self.remainder
+            self.high_card_cat_transformer_ = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
         else:
             self.high_card_cat_transformer_ = self.high_card_cat_transformer
 
@@ -429,7 +451,11 @@ class TableVectorizer(ColumnTransformer):
         elif self.numerical_transformer is None:
             self.numerical_transformer_ = "passthrough"
         elif self.numerical_transformer == "remainder":
-            self.numerical_transformer_ = self.remainder
+            self.numerical_transformer_ = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
         else:
             self.numerical_transformer_ = self.numerical_transformer
 
@@ -438,7 +464,11 @@ class TableVectorizer(ColumnTransformer):
         elif self.datetime_transformer is None:
             self.datetime_transformer_ = DatetimeEncoder()
         elif self.datetime_transformer == "remainder":
-            self.datetime_transformer_ = self.remainder
+            self.datetime_transformer_ = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
         else:
             self.datetime_transformer_ = self.datetime_transformer
 
@@ -541,8 +571,7 @@ class TableVectorizer(ColumnTransformer):
         # of missing values
         object_cols = X.columns[X.dtypes == "object"]
         for col in object_cols:
-            if pd.api.types.is_object_dtype(X[col]):
-                X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
+            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
         for col, dtype in self.types_.items():
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
@@ -555,7 +584,80 @@ class TableVectorizer(ColumnTransformer):
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col] = dtype
-        X = X.astype(self.types_)
+        for col, dtype in self.types_.items():
+            try:
+                if pd.api.types.is_numeric_dtype(dtype):
+                    # we don't use astype because it can convert float to int
+                    X[col] = pd.to_numeric(X[col])
+                else:
+                    X[col] = X[col].astype(dtype)
+            except ValueError as e:
+                culprit = parse_astype_error_message(e)
+                if culprit is None:
+                    raise e
+                warnings.warn(
+                    f"Value '{culprit}' could not be converted to infered type"
+                    f" {dtype!s} in column '{col}'. Such values will be replaced"
+                    " by NaN.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                # if the inferred dtype is numerical or datetime,
+                # we want to ignore entries that cannot be converted
+                # to this dtype
+                if pd.api.types.is_numeric_dtype(dtype):
+                    X[col] = pd.to_numeric(X[col], errors="coerce")
+                elif pd.api.types.is_datetime64_any_dtype(dtype):
+                    X[col] = pd.to_datetime(X[col], errors="coerce")
+                else:
+                    # this should not happen
+                    raise e
+        return X
+
+    def _check_X(self, X, reset):
+        if sparse.isspmatrix(X):
+            raise TypeError(
+                "A sparse matrix was passed, but dense data is required. Use "
+                "X.toarray() to convert to a dense numpy array."
+            )
+
+        if not isinstance(X, pd.DataFrame):
+            # check the dimension of X before to create a dataframe that always
+            # `ndim == 2`
+            # unfortunately, we need to call `asarray` before to call `ndim`
+            # in case that the container implement `__array_function__`
+            X_array = np.asarray(X)
+            if X_array.ndim == 0:
+                raise ValueError(
+                    f"Expected 2D array, got scalar array instead:\narray={X}.\n"
+                    "Reshape your data either using array.reshape(-1, 1) if "
+                    "your data has a single feature or array.reshape(1, -1) "
+                    "if it contains a single sample."
+                )
+            if X_array.ndim == 1:
+                raise ValueError(
+                    f"Expected 2D array, got 1D array instead:\narray={X}.\n"
+                    "Reshape your data either using array.reshape(-1, 1) if "
+                    "your data has a single feature or array.reshape(1, -1) "
+                    "if it contains a single sample."
+                )
+            X = pd.DataFrame(X_array)
+        else:
+            # Create a copy to avoid altering the original data.
+            X = X.copy()
+
+        if X.shape[0] < 1:
+            raise ValueError(
+                f"Found array with {X.shape[0]} sample(s) (shape={X.shape}) while a"
+                " minimum of 1 is required."
+            )
+        if X.shape[1] < 1:
+            raise ValueError(
+                f"Found array with {X.shape[1]} feature(s) (shape={X.shape}) while"
+                " a minimum of 1 is required."
+            )
+        self._check_n_features(X, reset=reset)
+
         return X
 
     def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
@@ -592,12 +694,7 @@ class TableVectorizer(ColumnTransformer):
 
         self._clone_transformers()
 
-        # Convert to pandas DataFrame if not already.
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
+        X = self._check_X(X, reset=True)
 
         self.columns_ = X.columns
 
@@ -711,18 +808,8 @@ class TableVectorizer(ColumnTransformer):
             sparse matrices.
         """
         check_is_fitted(self, attributes=["transformers_"])
-        if X.shape[1] != len(self.columns_):
-            raise ValueError(
-                "Passed array does not match column count of "
-                f"array seen during fit. Got {X.shape[1]} "
-                f"columns, expected {len(self.columns_)}"
-            )
 
-        if not isinstance(X, pd.DataFrame):
-            X = pd.DataFrame(X)
-        else:
-            # Create a copy to avoid altering the original data.
-            X = X.copy()
+        X = self._check_X(X, reset=False)
 
         if (X.columns != self.columns_).all():
             X.columns = self.columns_

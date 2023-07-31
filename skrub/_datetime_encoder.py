@@ -118,7 +118,11 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         """
         Used internally by sklearn to ease the estimator checks.
         """
-        return {"X_types": ["categorical"]}
+        return {
+            "X_types": ["2darray", "categorical"],
+            "allow_nan": True,
+            "_xfail_checks": {"check_dtype_object": "Specific datetime error."},
+        }
 
     def _validate_keywords(self):
         if self.extract_until not in TIME_LEVELS:
