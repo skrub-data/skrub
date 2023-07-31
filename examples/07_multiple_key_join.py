@@ -141,8 +141,9 @@ X = main.drop(columns=["ArrDelay", "FlightNum", "TailNum", "ID", "iata"])
 ###############################################################################
 # We want to frame this as a classification problem:
 # suppose that your company is obliged to reimburse the ticket
-# price if the delay is bigger than 1h.
-# We are classifying if the flights risks to be delayed (1) or not (0).
+# price if the flight is delayed.
+# We have a binary classification problem:
+# the flight was delayed (1) or not (0).
 
 y = (y > 0).astype(int)
 y.value_counts()
