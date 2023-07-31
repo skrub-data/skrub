@@ -4,8 +4,8 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 
-import re
 import warnings
+from collections import Counter
 from typing import Literal
 from warnings import warn
 
@@ -479,10 +479,7 @@ class TableVectorizer(ColumnTransformer):
         else:
             self.datetime_transformer_ = self.datetime_transformer
 
-        if (
-            (self.specific_transformers is None)
-            or len(self.specific_transformers) == 0
-        ):
+        if (self.specific_transformers is None) or len(self.specific_transformers) == 0:
             self.specific_transformers_ = []
         else:
             first_item_length = len(self.specific_transformers[0])
@@ -609,10 +606,10 @@ class TableVectorizer(ColumnTransformer):
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
-        # for object dtype columns, first convert to string to avoid mixed types
-        # we do it both in auto_cast and apply_cast because
-        # the type infered for string columns during auto_cast
-        # is not necessarily string, it can be object because
+        # for object dtype columns, first convert to string to avoid mixed
+        # types we do it both in auto_cast and apply_cast because
+        # the type inferred for string columns during auto_cast
+        # is not necessarily string, it can be an object because
         # of missing values
         object_cols = X.columns[X.dtypes == "object"]
         for col in object_cols:
@@ -748,16 +745,12 @@ class TableVectorizer(ColumnTransformer):
         # in numerical columns for instance.
         X = _replace_false_missing(X)
 
-        ###
-        # We need to check for duplicate column names.
-        # It is checked by comparing the number of unique values
-        # to the length of the column names
-        if len(set(X.columns)) != len(X.columns):
+        # Check for duplicate column names.
+        duplicate_columns = {k for k, v in Counter(X.columns).items() if v > 1}
+        if duplicate_columns:
             raise AssertionError(
-                "Duplicate column names in the dataframe."
-                f"The column names are {X.columns}"
+                f"Duplicate column names in the dataframe: {duplicate_columns}"
             )
-        ###
 
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
