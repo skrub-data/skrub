@@ -479,10 +479,11 @@ class TableVectorizer(ColumnTransformer):
         else:
             self.datetime_transformer_ = self.datetime_transformer
 
-        if self.specific_transformers is None:
+        if (
+            (self.specific_transformers is None)
+            or len(self.specific_transformers) == 0
+        ):
             self.specific_transformers_ = []
-        elif len(self.specific_transformers) == 0:
-            pass
         else:
             first_item_length = len(self.specific_transformers[0])
             # Check all tuples are the same length

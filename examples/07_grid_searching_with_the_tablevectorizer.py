@@ -80,8 +80,7 @@ pprint(tv.transformers_)
 #
 # Say we wanted to use a |MinHashEncoder| instead of the default |GapEncoder|,
 # but only for the column ``department_name``.
-# The best way to apply a column-specific transformer is to use the
-# dedicated parameter ``specific_transformers``:
+# We can apply a column-specific transformer by using the ``specific_transformers`` parameter.
 
 tv = TableVectorizer(specific_transformers=[(MinHashEncoder(), ["department_name"])])
 tv.fit(X)
@@ -101,13 +100,12 @@ pprint(tv.transformers_)
 # |TableVectorizer| is easy!
 # For that, we use the dunder separator, which indicates a nesting layer.
 # That means that for tuning the parameter ``n_components`` of the
-# `GapEncoder` saved in the |TableVectorizer| attribute
+# |GapEncoder| saved in the |TableVectorizer| attribute
 # ``high_card_cat_transformer``, we use the syntax
 # ``tablevectorizer__high_card_cat_transformer__n_components``.
 #
-# For the column-specific transformers we specify, it is recommended to
-# use the 3-tuple syntax, which enables giving a name to the assignment
-# (here ``mh_dep_name``).
+# We recommend using the 3-tuple syntax for the column-specific transformers, 
+# which allows us to give a name to the assignment (here ``mh_dep_name``).
 
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
