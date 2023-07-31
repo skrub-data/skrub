@@ -1,47 +1,64 @@
 """
-Wikipedia embeddings to enrich the data
-=======================================
+.. _example_using_ken_embeddings:
 
-When the data comprises common entities (cities,
-companies or famous people), bringing new information assembled from external
-sources may be the key to improving the analysis.
+==============================================
+Using Wikipedia embeddings to enrich a dataset
+==============================================
 
-Embeddings, or vectorial representations of entities, are a conveniant way to
-capture and summarize the information on an entity.
-Relational data embeddings capture all common entities from Wikipedia. [#]_
-These will be called `KEN embeddings` in the following example.
+When the data contains common entities (cities, countries, companies,
+famous people, etc.), bringing new information assembled from external sources
+is a key to significantly improve the statistical analysis.
 
-We will see that these embeddings of common entities significantly
-improve our results.
+Usually, this would be done by injecting our dataset with other tables,
+which we can for example download from the Internet.
+
+In this category, Wikipedia is one of the richest sources of information when
+dealing with these common entities. However, instead of downloading and joining
+massive tables extracted from Wikipedia, we can instead use **embeddings**.
+
+Embeddings, or vectorial representations of entities, are a convenient way to
+capture and summarize the information related to an entity.
+We will use `KEN embeddings`, which are embeddings extracted from Wikipedia
+(`YAGO <https://yago-knowledge.org/>_`). [#]_
+
+We will see how to use them in a tabular learning setting, and see whether
+they improve our model's accuracy (spoiler: they do).
+
 
 .. note::
     This example requires `pyarrow` to be installed.
 
 .. [#] https://soda-inria.github.io/ken_embeddings/
 
+.. |Pipeline| replace::
+    :class:`~sklearn.pipeline.Pipeline`
 
- .. |Pipeline| replace::
-     :class:`~sklearn.pipeline.Pipeline`
+.. |OneHotEncoder| replace::
+    :class:`~sklearn.preprocessing.OneHotEncoder`
 
- .. |OneHotEncoder| replace::
-     :class:`~sklearn.preprocessing.OneHotEncoder`
+.. |ColumnTransformer| replace::
+    :class:`~sklearn.compose.ColumnTransformer`
 
- .. |ColumnTransformer| replace::
-     :class:`~sklearn.compose.ColumnTransformer`
+.. |MinHashEncoder| replace::
+    :class:`~skrub.MinHashEncoder`
 
- .. |MinHash| replace::
-     :class:`~skrub.MinHashEncoder`
+.. |get_ken_embeddings| replace::
+    :class:`~skrub.datasets.get_ken_embeddings`
 
- .. |HGBR| replace::
-     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
+.. |HGBR| replace::
+    :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
+
+.. |FeatureAugmenter| replace::
+    :class:`~skrub.FeatureAugmenter`
 """
 
 ###############################################################################
-# The data
-# --------
+# Predicting video game sales
+# ---------------------------
 #
-# We will take a look at the video game sales dataset.
-# Let's retrieve the dataset:
+# In this example, we will take a look at a video game sales dataset.
+# We first retrieve our base dataset:
+
 import pandas as pd
 
 X = pd.read_csv(
@@ -49,38 +66,36 @@ X = pd.read_csv(
     sep=";",
     on_bad_lines="skip",
 )
-# Shuffle the data
-X = X.sample(frac=1, random_state=11, ignore_index=True)
 X.head(3)
 
 ###############################################################################
-# Our goal will be to predict the sales amount (y, our target column):
+# Our goal will be to predict our target column y, the global sales
+# (in millions of copies, known via
+# `cross-sourcing <https://www.gamecubicle.com/features-mario-units_sold_sales.htm>`_).
+
 y = X["Global_Sales"]
 y
 
 
 ###############################################################################
 # Let's take a look at the distribution of our target variable:
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 sns.set_theme(style="ticks")
 
-sns.histplot(y)
+fig, ax = plt.subplots()
+sns.histplot(y, kde=True)
+ax.set(xlim=(0, 10), ylim=(0, 1000))
 plt.show()
 
 ###############################################################################
-# It seems better to take the log of sales rather than the absolute values:
-import numpy as np
+# FIXME
+#
+# Before going further, let's clean up our dataset a bit:
 
-y = np.log(y)
-sns.histplot(y)
-plt.show()
-
-###############################################################################
-# Before moving further, let's carry out some basic preprocessing:
-
-# Get a mask of the rows with missing values in "Publisher" and "Global_Sales"
+# Get a mask of the rows with missing values in "Publisher" or "Global_Sales"
 mask = X.isna()["Publisher"] | X.isna()["Global_Sales"]
 # And remove them
 X.dropna(subset=["Publisher", "Global_Sales"], inplace=True)
@@ -90,10 +105,13 @@ y = y[~mask]
 # Extracting entity embeddings
 # ----------------------------
 #
-# We will use KEN embeddings to enrich our data.
+# We will use a subset of the KEN embeddings -- specific to the video game
+# industry -- that we built in the example
+# `_example_create_ken_embedding_subset`.
 #
 # We will start by checking out the available tables with
 # :class:`~skrub.datasets.fetch_ken_table_aliases`:
+
 from skrub.datasets import fetch_ken_table_aliases
 
 fetch_ken_table_aliases()
@@ -102,6 +120,7 @@ fetch_ken_table_aliases()
 # The *games* table is the most relevant to our case.
 # Let's see what kind of types we can find in it with the function
 # :class:`~skrub.datasets.fetch_ken_types`:
+
 from skrub.datasets import fetch_ken_types
 
 fetch_ken_types(embedding_table_id="games")
@@ -109,18 +128,15 @@ fetch_ken_types(embedding_table_id="games")
 ###############################################################################
 # Interesting, we have a broad range of topics!
 #
-# Next, we'll use :class:`~skrub.datasets.fetch_ken_embeddings`
-# to extract the embeddings of entities we need:
+# We will use the |fetch_ken_embeddings| function to extract the embeddings
+# of entities we need:
+
 from skrub.datasets import fetch_ken_embeddings
 
 ###############################################################################
 # KEN Embeddings are classified by types.
-# See the example on :class:`~skrub.datasets.fetch_ken_embeddings`
-# to understand how you can filter types you are interested in.
-#
-# The :class:`~skrub.datasets.fetch_ken_embeddings` function
-# allows us to specify the types to be included and/or excluded
-# so as not to load all Wikipedia entity embeddings in a table.
+# The `fetch_ken_embeddings` function allows us to specify the types to be
+# included and/or excluded so as not to load all Wikipedia entity embeddings in a table.
 #
 #
 # In a first table, we include all embeddings with the type name "game"
@@ -130,6 +146,7 @@ embedding_games = fetch_ken_embeddings(
     exclude="companies|developer",
     embedding_table_id="games",
 )
+# TODO: dive deeper
 
 ###############################################################################
 # In a second table, we include all embeddings containing the type name
@@ -156,7 +173,8 @@ emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
 #
 # The entities from the 'embedding_games' table will be merged along the
 # column "Name" and the ones from 'embedding_publisher' table with the
-# column "Publisher"
+# column "Publisher". For that we will use a |FeatureAugmenter|:
+
 from skrub import FeatureAugmenter
 
 fa1 = FeatureAugmenter(tables=[(embedding_games, "Entity")], main_key="Name")
@@ -169,14 +187,14 @@ X_full = fa2.fit_transform(X_full)
 # Prediction with base features
 # -----------------------------
 #
-# We will forget for now the KEN Embeddings and build a typical learning
-# pipeline, where will we try to predict the amount of sales only using
-# the base features contained in the initial table.
-
-###############################################################################
+# We will put the KEN Embeddings aside for now, and build a machine learning
+# pipeline, where will we try to predict the global sales using only
+# the base features contained in our initial table.
+#
 # We first use scikit-learn's |ColumnTransformer| to define the columns
 # that will be included in the learning process and the appropriate encoding of
-# categorical variables using the |MinHash| and |OneHotEncoder|:
+# categorical variables using the |MinHashEncoder| and |OneHotEncoder|:
+
 from sklearn.compose import make_column_transformer
 from sklearn.preprocessing import OneHotEncoder
 
@@ -194,7 +212,8 @@ encoder = make_column_transformer(
 
 ###############################################################################
 # We incorporate our |ColumnTransformer| into a |Pipeline|.
-# We define a predictor, |HGBR|, fast and reliable for big datasets.
+# We define a predictor -- |HGBR| -- fast and reliable for big datasets.
+
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
@@ -202,10 +221,11 @@ hgb = HistGradientBoostingRegressor(random_state=0)
 pipeline = make_pipeline(encoder, hgb)
 
 ###############################################################################
-# The |Pipeline| can now be readily applied to the dataframe for prediction:
+# The |Pipeline| can now be applied to the dataframe for prediction:
+
 from sklearn.model_selection import cross_validate
 
-# We will save the results in a dictionnary:
+# We will save the results in dictionaries:
 all_r2_scores = dict()
 all_rmse_scores = dict()
 
@@ -218,10 +238,10 @@ all_rmse_scores["Base features"] = -cv_results["test_neg_root_mean_squared_error
 
 print("With base features:")
 print(
-    f"Mean R2 is {all_r2_scores['Base features'].mean():.2f} +-"
-    f" {all_r2_scores['Base features'].std():.2f} and the RMSE is"
-    f" {all_rmse_scores['Base features'].mean():.2f} +-"
-    f" {all_rmse_scores['Base features'].std():.2f}"
+    f"Mean R2 is {all_r2_scores['Base features'].mean():.2f} +- "
+    f"{all_r2_scores['Base features'].std():.2f} and the RMSE is "
+    f"{all_rmse_scores['Base features'].mean():.2f} +- "
+    f"{all_rmse_scores['Base features'].std():.2f}. "
 )
 
 ###############################################################################
@@ -230,19 +250,21 @@ print(
 #
 # We will now build a second learning pipeline using only the KEN embeddings
 # from Wikipedia.
-
-###############################################################################
+#
 # We keep only the embeddings columns:
+
 encoder2 = make_column_transformer(
     ("passthrough", emb_columns), ("passthrough", emb_columns2), remainder="drop"
 )
 
 ###############################################################################
 # We redefine the |Pipeline|:
+
 pipeline2 = make_pipeline(encoder2, hgb)
 
 ###############################################################################
 # Let's look at the results:
+
 cv_results = cross_validate(
     pipeline2, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
 )
@@ -266,12 +288,10 @@ print(
 # Prediction with KEN Embeddings and base features
 # ------------------------------------------------
 #
-# As we have seen the predictions scores in the case when embeddings are
-# only present and when they are missing, we will do a final prediction
-# with all variables included.
+# As we have seen the predictions scores both when embeddings used exclusively,
+# and when they are missing entirely.
+# We will now do a final prediction with all the features we have:
 
-###############################################################################
-# We include both the embeddings and the base features:
 encoder3 = make_column_transformer(
     ("passthrough", emb_columns),
     ("passthrough", emb_columns2),
@@ -283,10 +303,12 @@ encoder3 = make_column_transformer(
 
 ###############################################################################
 # We redefine the |Pipeline|:
+
 pipeline3 = make_pipeline(encoder3, hgb)
 
 ###############################################################################
 # Let's look at the results:
+
 cv_results = cross_validate(
     pipeline3, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
 )
@@ -303,12 +325,12 @@ print(
 )
 
 ###############################################################################
-# Plotting the results
-# ....................
+# Comparing the difference
+# ........................
 #
 # Finally, we plot the scores on a boxplot:
+
 plt.figure(figsize=(5, 3))
-# sphinx_gallery_thumbnail_number = -1
 ax = sns.boxplot(data=pd.DataFrame(all_r2_scores), orient="h")
 plt.xlabel("Prediction accuracy     ", size=15)
 plt.yticks(size=15)
@@ -318,9 +340,10 @@ plt.tight_layout()
 # There is a clear improvement when including the KEN embeddings among the
 # explanatory variables.
 #
+# Conclusion
+# ----------
+#
 # In this case, the embeddings from Wikipedia introduced
 # additional background information on the game and the publisher of the
-# game that would otherwise be missed.
-#
-# It helped significantly improve the prediction score.
-#
+# game that would otherwise be missed, which helped significantly
+# for improving the prediction score.
