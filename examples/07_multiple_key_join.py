@@ -39,11 +39,9 @@ pool of tables are combined for machine learning.
 
 import pandas as pd
 
-pd.set_option("display.max_colwidth", 7)
-
 flights = pd.read_parquet("https://figshare.com/ndownloader/files/41771418")
 # Sampling for faster computation.
-flights = flights.sample(50_000, random_state=42, ignore_index=True)
+flights = flights.sample(50_000, random_state=1, ignore_index=True)
 flights.head()
 
 ############################################################################
@@ -69,7 +67,7 @@ stations.head()
 
 weather = pd.read_parquet("https://figshare.com/ndownloader/files/41771457")
 # Sampling for faster computation.
-weather = weather.sample(100_000, random_state=42, ignore_index=True)
+weather = weather.sample(100_000, random_state=1, ignore_index=True)
 weather.head()
 
 ###############################################################################
@@ -111,6 +109,7 @@ main.head()
 # We will use this main table to model the prediction of flight delay.
 # Training data is passed through a |Pipeline|:
 
+
 from skrub import TableVectorizer
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import make_pipeline
@@ -143,3 +142,11 @@ from sklearn.model_selection import cross_val_score
 
 scores = cross_val_score(pipeline_hgb, X, y)
 scores.mean()
+
+###############################################################################
+# We have combined multiple tables with complex joins:
+# imprecise and multiple-key correspondence.
+# This is made easy by skrub's |Joiner| transformer.
+#
+# Introduced into a pipeline, the model predicting
+# flights delay achieved an accuracy score of 0.58.
