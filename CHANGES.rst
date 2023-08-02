@@ -60,6 +60,11 @@ Major changes
   compliance with the scikit-learn API.
   :pr:`647` by :user:`Guillaume Lemaitre <glemaitre>`
 
+* Fixes a bug in :class:`TableVectorizer` with `remainder`: it is now cloned if it's
+  a transformer so that the same instance is not shared between different
+  transformers.
+  :pr:`678` by :user:`Guillaume Lemaitre <glemaitre>`
+
 Minor changes
 -------------
 
