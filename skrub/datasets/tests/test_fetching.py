@@ -18,7 +18,7 @@ def test_openml_fetching() -> None:
     """
     with TemporaryDirectory() as temp_dir:
         dataset = _fetchers.fetch_midwest_survey(directory=temp_dir)
-        assert dataset.X.shape == (2494, 28)
+        assert dataset.X.shape == (2494, 27)
         assert dataset.y.shape == (2494,)
         # Assert there is at least one file named after the dataset ID
         # in the temporary directory tree.
