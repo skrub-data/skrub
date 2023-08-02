@@ -149,4 +149,4 @@ scores.mean()
 # This is made easy by skrub's |Joiner| transformer.
 #
 # Introduced into a pipeline, the model predicting
-# flights delay achieved an accuracy score of 0.58.
+# flights delay achieved an accuracy score of 0.6.
