@@ -144,9 +144,11 @@ scores = cross_val_score(pipeline_hgb, X, y)
 scores.mean()
 
 ###############################################################################
-# We have combined multiple tables with complex joins:
-# imprecise and multiple-key correspondence.
+# Conclusion
+# ----------
+#
+# In this example, we have combined multiple tables with complex joins
+# on imprecise and multiple-key correspondences.
 # This is made easy by skrub's |Joiner| transformer.
 #
-# Introduced into a pipeline, the model predicting
-# flights delay achieved an accuracy score of 0.6.
+# Our final cross-validated accuracy score is 0.6.
