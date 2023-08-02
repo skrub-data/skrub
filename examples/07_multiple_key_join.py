@@ -98,7 +98,6 @@ aux_augmented.head()
 # Joining airports with flights data:
 # Another multiple key join on the date and the airport
 
-
 joiner = Joiner(
     tables=[(aux_augmented, ["YEAR/MONTH/DAY", "iata"])],
     main_key=["Year_Month_DayofMonth", "Origin"],
@@ -111,7 +110,6 @@ main.head()
 # We now have combined all the information from our pool of tables into one.
 # We will use this main table to model the prediction of flight delay.
 # Training data is passed through a |Pipeline|:
-
 
 from skrub import TableVectorizer
 from sklearn.ensemble import HistGradientBoostingClassifier
