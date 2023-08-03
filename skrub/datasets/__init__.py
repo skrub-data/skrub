@@ -1,4 +1,4 @@
-from ._fetchers import (
+from ._fetching_functions import (
     Dataset,
     fetch_drug_directory,
     fetch_employee_salaries,

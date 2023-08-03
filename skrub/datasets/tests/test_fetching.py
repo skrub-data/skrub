@@ -5,7 +5,16 @@ from urllib.error import URLError
 
 import pytest
 
-from skrub.datasets import _fetchers
+from skrub.datasets import fetch_midwest_survey, fetch_world_bank_indicator
+from skrub.datasets._fetching_functions import (
+    DRUG_DIRECTORY_ID,
+    EMPLOYEE_SALARIES_ID,
+    MEDICAL_CHARGE_ID,
+    MIDWEST_SURVEY_ID,
+    OPEN_PAYMENTS_ID,
+    ROAD_SAFETY_ID,
+    TRAFFIC_VIOLATIONS_ID,
+)
 
 
 def test_openml_fetching() -> None:
@@ -17,12 +26,12 @@ def test_openml_fetching() -> None:
     see https://github.com/skrub-data/skrub/issues/523
     """
     with TemporaryDirectory() as temp_dir:
-        dataset = _fetchers.fetch_midwest_survey(directory=temp_dir)
+        dataset = fetch_midwest_survey(directory=temp_dir)
         assert dataset.X.shape == (2494, 27)
         assert dataset.y.shape == (2494,)
         # Assert there is at least one file named after the dataset ID
         # in the temporary directory tree.
-        assert Path(temp_dir).rglob(f"*{_fetchers.MIDWEST_SURVEY_ID}*")
+        assert Path(temp_dir).rglob(f"*{MIDWEST_SURVEY_ID}*")
 
 
 def test_openml_datasets_exist() -> None:
@@ -32,13 +41,13 @@ def test_openml_datasets_exist() -> None:
     openml = pytest.importorskip("openml")
     openml.datasets.check_datasets_active(
         dataset_ids=[
-            _fetchers.ROAD_SAFETY_ID,
-            _fetchers.OPEN_PAYMENTS_ID,
-            _fetchers.MIDWEST_SURVEY_ID,
-            _fetchers.MEDICAL_CHARGE_ID,
-            _fetchers.EMPLOYEE_SALARIES_ID,
-            _fetchers.TRAFFIC_VIOLATIONS_ID,
-            _fetchers.DRUG_DIRECTORY_ID,
+            ROAD_SAFETY_ID,
+            OPEN_PAYMENTS_ID,
+            MIDWEST_SURVEY_ID,
+            MEDICAL_CHARGE_ID,
+            EMPLOYEE_SALARIES_ID,
+            TRAFFIC_VIOLATIONS_ID,
+            DRUG_DIRECTORY_ID,
         ],
         raise_error_if_not_exist=True,
     )
@@ -62,16 +71,16 @@ def test_fetch_world_bank_indicator() -> None:
         try:
             # First, we want to purposefully test FileNotFoundError exceptions.
             with pytest.raises(FileNotFoundError):
-                assert _fetchers.fetch_world_bank_indicator(
+                assert fetch_world_bank_indicator(
                     indicator_id="blablabla", directory=temp_dir
                 )
-                assert _fetchers.fetch_world_bank_indicator(
+                assert fetch_world_bank_indicator(
                     indicator_id="I don't exist",
                     directory=temp_dir,
                 )
 
             # Valid call
-            dataset = _fetchers.fetch_world_bank_indicator(
+            dataset = fetch_world_bank_indicator(
                 indicator_id=test_dataset["id"],
                 directory=temp_dir,
             )
@@ -92,7 +101,7 @@ def test_fetch_world_bank_indicator() -> None:
         # or queries the network again (it shouldn't).
         with mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
             # Same valid call as above
-            dataset_local = _fetchers.fetch_world_bank_indicator(
+            dataset_local = fetch_world_bank_indicator(
                 indicator_id=test_dataset["id"],
                 directory=temp_dir,
             )

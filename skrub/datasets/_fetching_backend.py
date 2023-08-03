@@ -1,10 +1,11 @@
 """
-Private API for dataset fetching.
+Implements the backend for fetching datasets.
+Used in `_fetching_functions.py`.
 """
 
 # Future notes:
 # - Watch out for ``fetch_openml()`` API modifications:
-# as of january 2021, the function is marked as experimental.
+# as of July 2023, the function is (still) marked as experimental.
 
 import urllib.request
 import warnings

@@ -1,5 +1,6 @@
 """
-Implements the public fetchers from the private API available in `_fetching.py`
+Implements the public fetching functions using the backend (private) API
+available in `_fetching_backend.py`.
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from typing import Literal
 
 import pandas as pd
 
-from skrub.datasets._fetching import (
+from skrub.datasets._fetching_backend import (
     _fetch_figshare,
     _fetch_openml_dataset,
     _fetch_world_bank_data,
