@@ -1,6 +1,6 @@
 """
-Joining across multiple columns
-===============================
+Spatial join for flight data: Joining across multiple columns
+================================================
 
 Joining tables may be difficult if one entry on one side does not have
 an exact match on the other side.
