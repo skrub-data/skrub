@@ -7,7 +7,7 @@ an exact match on the other side.
 
 This problem becomes even more complex when multiple columns
 are significant for the join. For instance, this is the case
-for **spatial joins** on two columns, usually
+for **spatial joins** on two columns, typically
 longitude and latitude.
 
 |joiner| is a scikit-learn compatible transformer that enables
