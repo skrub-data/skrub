@@ -155,10 +155,9 @@ class Joiner(TransformerMixin, BaseEstimator):
             Fitted Joiner instance (self).
         """
 
-        main_key = np.atleast_1d(self.main_key).tolist()
-        self.main_key_ = main_key
+        main_key_list = np.atleast_1d(self.main_key).tolist()
 
-        for col in self.main_key_:
+        for col in main_key_list:
             if col not in X.columns:
                 raise ValueError(
                     f"Main key {col!r} not found in columns of X:"
