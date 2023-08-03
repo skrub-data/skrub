@@ -17,10 +17,11 @@ In this notebook, we will explore the output and inner workings of the
 """
 
 ###############################################################################
-# The |GapEncoder| is more scalable and interpretable than the |SimilarityEncoder|,
-# which we will demonstrate now.
+# The |GapEncoder| is more scalable and interpretable than the
+# |SimilarityEncoder|, which we will demonstrate now.
 #
-# First, let's retrieve the `employee salaries dataset <https://www.openml.org/d/42125>`_:
+# First, let's retrieve the
+# `employee salaries dataset <https://www.openml.org/d/42125>`_:
 
 from skrub.datasets import fetch_employee_salaries
 
@@ -44,20 +45,26 @@ X.drop(labels=["underfilled_job_title"], axis="columns", inplace=True)
 X
 
 ###############################################################################
-# Let's look at the job titles, the dirty column we want to encode:
-
-X_dirty = X[["employee_position_title"]]
-X_dirty.head()
-
-###############################################################################
 # Encoding dirty job titles
 # -------------------------
 #
-# Then, we'll create an instance of the |GapEncoder| with 10 components. This means that the encoder will attempt to extract 10 latent topics from the input data:
+# Let's look at the job titles, the dirty column we want to encode:
+
+X_dirty = X[["employee_position_title"]]
+
+###############################################################################
+# Let's have a look at a sample of the job titles:
+
+X_dirty.str.contains("Fire").sample(10, random_state=0).head(10)
+
+###############################################################################
+# Then, we'll create an instance of the |GapEncoder| with 10 components.
+# This means that the encoder will attempt to extract 10 latent topics
+# from the input data:
 
 from skrub import GapEncoder
 
-enc = GapEncoder(n_components=10, random_state=42)
+enc = GapEncoder(n_components=10, random_state=1)
 
 ###############################################################################
 # Finally, we'll fit the model on the dirty categorical data and transform it
@@ -87,7 +94,7 @@ for k, labels in enumerate(topic_labels):
 # the labels "firefighter", "rescuer", "rescue" appear together in
 # "Firefighter/Rescuer III", or "Fire/Rescue Lieutenant".
 #
-# This enables us to understand the encoding of different samples.
+# We can now understand the encoding of different samples.
 
 import matplotlib.pyplot as plt
 
@@ -106,3 +113,10 @@ plt.show()
 # As we can see, each dirty category encodes on a small number of topics,
 # These can thus be reliably used to summarize each topic, which are in
 # effect latent categories captured from the data.
+#
+# Conclusion
+# ----------
+#
+# In this notebook, we have seen how to interpret the output of the
+# |GapEncoder|, and how it can be used to summarize categorical variables
+# as a set of latent topics
