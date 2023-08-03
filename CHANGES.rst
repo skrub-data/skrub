@@ -10,7 +10,7 @@ Ongoing development
 =====================
 
 Skrub has not been released yet. It is currently undergoing fast
-development and backward compatability is not ensured.
+development and backward compatibility is not ensured.
 
 Major changes
 -------------
@@ -106,6 +106,12 @@ Minor changes
 
 * :class:`TableVectorizer` doesn't fail anymore if an infered type doesn't work during transform.
   The new entries not matching the type are replaced by missing values. :pr:`666` by :user:`Leo Grinsztajn <LeoGrin>`
+
+- Dataset fetcher :func:`datasets.fetch_employee_salaries` now has a parameter
+  `overload_job_titles` to allow overloading the job titles
+  (`employee_position_title`) with the column `underfilled_job_title`,
+  which provides some more information about the job title.
+  :pr:`581` by :user:`Lilian Boulard <LilianBoulard>`
 
 Before skrub: dirty_cat
 ========================
