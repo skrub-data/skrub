@@ -32,7 +32,8 @@ pool of tables are combined for machine learning.
 # The following tables are at our disposal:
 
 ###############################################################################
-# The main table:
+# The main table: flights dataset
+# ...............................
 #     - The "flights" datasets. It contains all US flights date, origin
 #       and destination airports and flight time.
 #       Here, we consider only flights from 2008.
