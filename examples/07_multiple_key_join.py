@@ -74,8 +74,8 @@ weather = weather.sample(100_000, random_state=1, ignore_index=True)
 weather.head()
 
 ###############################################################################
-# Joining
-# -------
+# Joining: feature augmentation across tables
+# -------------------------------------------
 # First we join the stations with weather on the ID (exact join):
 
 aux = pd.merge(stations, weather, on="ID")
