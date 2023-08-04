@@ -262,3 +262,10 @@ def test_transform_deterministic() -> None:
     enc.transform(X_test)
     topics2 = enc.get_feature_names_out()
     assert topics1 == topics2
+
+
+def test_max_no_improvements_none() -> None:
+    """Test that max_no_improvements=None works"""
+    X = generate_data(300, random_state=0)
+    enc_none = GapEncoder(n_components=2, max_no_improvement=None, random_state=42)
+    enc_none.fit(X)
