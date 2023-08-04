@@ -55,7 +55,8 @@ airports = pd.read_parquet("https://figshare.com/ndownloader/files/41710257")
 airports.head()
 
 ########################################################################
-# Auxilliary tables provided by external sources:
+# Weather data: auxiliary tables from external sources
+# ....................................................
 #     - The "stations" dataset. Provides location of all the weather measurement
 #       stations in the US.
 
