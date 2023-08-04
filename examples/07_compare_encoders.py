@@ -51,16 +51,6 @@ employee_salaries.description
 X = employee_salaries.X
 y = employee_salaries.y
 
-###############################################################################
-# Let's carry out some basic preprocessing:
-
-# Overload `employee_position_title` with `underfilled_job_title`,
-# as the latter gives more accurate job titles when specified
-X["employee_position_title"] = X["underfilled_job_title"].fillna(
-    X["employee_position_title"]
-)
-X.drop(labels=["underfilled_job_title"], axis="columns", inplace=True)
-
 X
 
 ###############################################################################
@@ -89,17 +79,12 @@ sample
 # Next up: import the |OneHotEncoder| and apply it to our sample:
 
 from sklearn.preprocessing import OneHotEncoder
-import pandas as pd
 
 one_hot = OneHotEncoder(sparse_output=False)
+one_hot.set_output("pandas")
 sample_enc_ohe = one_hot.fit_transform(sample)
 
-# (make it look nice in Jupyter by wrapping the resulting array in a DataFrame)
-pd.DataFrame(
-    sample_enc_ohe,
-    columns=one_hot.categories_[0],
-    index=sample["employee_position_title"],
-)
+sample_enc_ohe
 
 ###############################################################################
 # The indices are the samples (the lines in the dataset) and the columns are
@@ -129,14 +114,10 @@ pd.DataFrame(
 from skrub import SimilarityEncoder
 
 sim_enc = SimilarityEncoder()
+sim_enc.set_output("pandas")
 sample_enc_sim = sim_enc.fit_transform(sample)
 
-# (make it look nice in Jupyter by wrapping the resulting array in a DataFrame)
-pd.DataFrame(
-    sample_enc_sim,
-    columns=sim_enc.categories_[0],
-    index=sample["employee_position_title"],
-)
+sample_enc_sim
 
 ###############################################################################
 # We can see that instead of having zeros where the categories don't exactly
@@ -162,8 +143,8 @@ heatmap(
 plt.tight_layout()
 
 ###############################################################################
-# While this is a cool result, it suffers from the high computational cost
-# of calculating the similarities.
+# While this is an interesting result, it suffers from the high computational
+# cost of calculating the similarities.
 # It really only addresses the independence of encoded values compared to
 # one-hot.
 #
@@ -208,8 +189,7 @@ ax.set_title("MDS representation of the similarity matrix")
 ###############################################################################
 # Thanks to this representation, we can clearly see the distance between
 # categories.
-
-###############################################################################
+#
 # The mechanism and output of the |SimilarityEncoder| are easy to understand,
 # which is why we introduce it first, but in practice,
 # it scales terribly to large datasets,
