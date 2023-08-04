@@ -31,7 +31,8 @@ Minor changes
 -------------
 
 * When possible, parallelism is done at the column level rather than the transformer level in :class:`TableVectorizer`.
-  This is the case for :class:`MinHashEncoder` and :class:`GapEncoder`. :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
+  This is the case for transformers with the tag `univariate` (right now :class:`MinHashEncoder` and :class:`GapEncoder`).
+  :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
