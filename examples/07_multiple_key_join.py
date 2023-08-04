@@ -46,7 +46,6 @@ import pandas as pd
 flights = pd.read_parquet("https://figshare.com/ndownloader/files/41771418")
 # Sampling for faster computation.
 flights = flights.sample(50_000, random_state=1, ignore_index=True)
-flights.drop(columns=["TailNum", "FlightNum"])
 flights.head()
 
 ############################################################################
@@ -107,6 +106,8 @@ joiner = Joiner(
     tables=[(aux_augmented, ["YEAR/MONTH/DAY", "iata"])],
     main_key=["Year_Month_DayofMonth", "Origin"],
 )
+
+flights.drop(columns=["TailNum", "FlightNum"])
 
 ###############################################################################
 # Training data is then passed through a |Pipeline|:

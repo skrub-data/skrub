@@ -221,6 +221,8 @@ def fuzzy_join(
     have greater probability of being matched together. The join is based on
     morphological similarities between strings.
 
+    Simultaneous joins on multiple columns (e.g. longitude, latitude) is supported.
+
     Joining on numerical columns is also possible based on
     the Euclidean distance.
 
