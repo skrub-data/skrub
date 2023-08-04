@@ -21,6 +21,9 @@ pool of tables are combined for machine learning.
 .. |fj| replace:: :func:`~skrub.fuzzy_join`
 
 .. |joiner| replace:: :func:`~skrub.Joiner`
+
+.. |Pipeline| replace::
+     :class:`~sklearn.pipeline.Pipeline`
 """
 
 ###############################################################################
@@ -57,13 +60,6 @@ airports.head()
 ########################################################################
 # Weather data: auxiliary tables from external sources
 # ....................................................
-#     - The "stations" dataset. Provides location of all the weather measurement
-#       stations in the US.
-
-stations = pd.read_parquet("https://figshare.com/ndownloader/files/41710524")
-stations.head()
-
-########################################################################
 #     - The "weather" table. Weather details by measurement station.
 #       Both tables are from the Global Historical Climatology Network.
 #       Here, we consider only weather measurements from 2008.
@@ -72,6 +68,13 @@ weather = pd.read_parquet("https://figshare.com/ndownloader/files/41771457")
 # Sampling for faster computation.
 weather = weather.sample(100_000, random_state=1, ignore_index=True)
 weather.head()
+
+########################################################################
+#     - The "stations" dataset. Provides location of all the weather
+#       measurement stations in the US.
+
+stations = pd.read_parquet("https://figshare.com/ndownloader/files/41710524")
+stations.head()
 
 ###############################################################################
 # Joining: feature augmentation across tables
@@ -97,21 +100,18 @@ aux_augmented.head()
 
 ###############################################################################
 # Joining airports with flights data:
-# Another multiple key join on the date and the airport
+# Let's instanciate another multiple key joiner on the date and the airport:
 
 joiner = Joiner(
     tables=[(aux_augmented, ["YEAR/MONTH/DAY", "iata"])],
     main_key=["Year_Month_DayofMonth", "Origin"],
 )
 
-main = joiner.fit_transform(flights)
-main.head()
-
 ###############################################################################
-# We now have combined all the information from our pool of tables into one.
-# We will use this main table to model the prediction of flight delay.
-# Training data is passed through a |Pipeline|:
-
+# Training data is then passed through a |Pipeline|:
+# - We will combine all the information from our pool of tables into "flights",
+# our main table.
+# - We will use this main table to model the prediction of flight delay.
 
 from skrub import TableVectorizer
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -120,13 +120,13 @@ from sklearn.pipeline import make_pipeline
 tv = TableVectorizer()
 hgb = HistGradientBoostingClassifier()
 
-pipeline_hgb = make_pipeline(tv, hgb)
+pipeline_hgb = make_pipeline(joiner, tv, hgb)
 
 ###############################################################################
 # We isolate our target variable and remove useless ID variables:
 
-y = main["ArrDelay"]
-X = main.drop(columns=["ArrDelay", "FlightNum", "TailNum", "ID", "iata"])
+y = flights["ArrDelay"]
+X = flights.drop(columns=["ArrDelay"])
 
 ###############################################################################
 # We want to frame this as a classification problem:

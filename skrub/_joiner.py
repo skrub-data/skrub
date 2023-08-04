@@ -32,8 +32,9 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    tables : list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
+    tables : list or list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
         List of (table, column name) tuples, the tables to join.
+        Can be a list if single table.
     main_key : str or list of str
         The key column names from the main table on which the join will
         be performed.
