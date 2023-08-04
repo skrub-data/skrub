@@ -11,7 +11,9 @@ from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
 
 
-def check_same_transformers(expected_transformers: dict, actual_transformers: list):
+def check_same_transformers(
+    expected_transformers: dict, actual_transformers: list
+) -> None:
     # Construct the dict from the actual transformers
     actual_transformers_dict = {name: cols for name, trans, cols in actual_transformers}
     assert actual_transformers_dict == expected_transformers
@@ -644,7 +646,7 @@ def test__infer_date_format() -> None:
     assert _infer_date_format(date_column) is None
 
 
-def test_mixed_types():
+def test_mixed_types() -> None:
     # TODO: datetime/str mixed types
     # don't work
     df = _get_mixed_types_dataframe()
@@ -717,7 +719,9 @@ def test_mixed_types():
         ),
     ],
 )
-def test_changing_types(X_fit, X_transform_original, X_transform_with_missing_original):
+def test_changing_types(
+    X_fit, X_transform_original, X_transform_with_missing_original
+) -> None:
     """
     Test that the TableVectorizer performs properly when the
     type inferred during fit does not match the type of the
@@ -747,7 +751,7 @@ def test_changing_types(X_fit, X_transform_original, X_transform_with_missing_or
         assert np.allclose(res, res_missing, equal_nan=True)
 
 
-def test_changing_types_int_float():
+def test_changing_types_int_float() -> None:
     # The TableVectorizer shouldn't cast floats to ints
     # even if only ints were seen during fit
     X_fit, X_transform = (
@@ -760,7 +764,7 @@ def test_changing_types_int_float():
     assert np.allclose(res, np.array([[1.0], [2.0], [3.3]]))
 
 
-def test_column_by_column():
+def test_column_by_column() -> None:
     X = _get_clean_dataframe()
     table_vec_all_cols = TableVectorizer(
         high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
@@ -781,118 +785,123 @@ def test_column_by_column():
 
 
 @skip_if_no_parallel
-def test_parallelism() -> None:
-    # Test that parallelism works
-    X = _get_clean_dataframe()
+@pytest.mark.parametrize(
+    "high_card_cat_transformer",
     # the gap encoder and the minhashencoder
     # should be parallelized on all columns
     # the one hot encoder should not be parallelized
-    for high_card_cat_transformer in [
-        lambda: GapEncoder(n_components=2, random_state=0),
-        OneHotEncoder,
-        lambda: MinHashEncoder(n_components=2),
-    ]:
-        table_vec_no_parallel = TableVectorizer(
-            high_card_cat_transformer=high_card_cat_transformer(),
-            cardinality_threshold=4,
-        )
-        X_trans = table_vec_no_parallel.fit_transform(X)
-        for joblib_backend in ["loky"]:
-            with joblib.parallel_backend(joblib_backend):
-                for n_jobs in [None, 2, -1]:
-                    table_vec = TableVectorizer(
-                        n_jobs=n_jobs,
-                        high_card_cat_transformer=high_card_cat_transformer(),
-                        cardinality_threshold=4,
-                    )
-                    X_trans_parallel = table_vec.fit_transform(X)
-                    assert_array_equal(X_trans, X_trans_parallel)
-                    assert table_vec.n_jobs == n_jobs
-                    # assert that all attributes are equal except for
-                    # the n_jobs attribute
-                    for attr in [
-                        "transformers_",
-                        "columns_",
-                        "types_",
-                        "imputed_columns_",
-                    ]:
-                        assert str(getattr(table_vec, attr)) == str(
-                            getattr(table_vec_no_parallel, attr)
-                        )
-                    # assert that get_feature_names_out gives the same result
-                    assert_array_equal(
-                        table_vec.get_feature_names_out(),
-                        table_vec_no_parallel.get_feature_names_out(),
-                    )
-                    # assert that get_params gives the same result expect for n_jobs
-                    # remove n_jobs from the dict
-                    params = table_vec.get_params()
-                    params.pop("n_jobs")
-                    params_no_parallel = table_vec_no_parallel.get_params()
-                    params_no_parallel.pop("n_jobs")
-                    assert str(params) == str(params_no_parallel)
-                    # assert that transform gives the same result
-                    assert_array_equal(
-                        table_vec.transform(X), table_vec_no_parallel.transform(X)
-                    )
-
-
-def test_split_and_merge_univariate_transformers():
+    [
+        GapEncoder(n_components=2, random_state=0),
+        OneHotEncoder(),
+        MinHashEncoder(n_components=2),
+    ],
+)
+def test_parallelism(high_card_cat_transformer) -> None:
+    # Test that parallelism works
     X = _get_clean_dataframe()
-    for high_card_cat_transformer in [
-        lambda: GapEncoder(n_components=2, random_state=0),
-        lambda: MinHashEncoder(n_components=2),
-    ]:
-        enc = TableVectorizer(
-            high_card_cat_transformer=high_card_cat_transformer(),
-            cardinality_threshold=4,
-            n_jobs=None,  # should disable the default splitting and merging
-        )
+    table_vec_no_parallel = TableVectorizer(
+        high_card_cat_transformer=high_card_cat_transformer,
+        cardinality_threshold=4,
+    )
+    X_trans = table_vec_no_parallel.fit_transform(X)
+    with joblib.parallel_backend("loky"):
+        for n_jobs in [None, 2, -1]:
+            table_vec = TableVectorizer(
+                n_jobs=n_jobs,
+                high_card_cat_transformer=high_card_cat_transformer,
+                cardinality_threshold=4,
+            )
+            X_trans_parallel = table_vec.fit_transform(X)
+            assert_array_equal(X_trans, X_trans_parallel)
+            assert table_vec.n_jobs == n_jobs
+            # assert that all attributes are equal except for
+            # the n_jobs attribute
+            assert str(table_vec.transformers_) == str(
+                table_vec_no_parallel.transformers_
+            )
+            assert (table_vec.columns_ == table_vec_no_parallel.columns_).all()
+            assert table_vec.types_ == table_vec_no_parallel.types_
+            assert table_vec.imputed_columns_ == table_vec_no_parallel.imputed_columns_
+            # assert that get_feature_names_out gives the same result
+            assert_array_equal(
+                table_vec.get_feature_names_out(),
+                table_vec_no_parallel.get_feature_names_out(),
+            )
+            # assert that get_params gives the same result expect for n_jobs
+            # remove n_jobs from the dict
+            params = table_vec.get_params()
+            params.pop("n_jobs")
+            params_no_parallel = table_vec_no_parallel.get_params()
+            params_no_parallel.pop("n_jobs")
+            assert str(params) == str(params_no_parallel)
+            # assert that transform gives the same result
+            assert_array_equal(
+                table_vec.transform(X), table_vec_no_parallel.transform(X)
+            )
 
-        enc.fit(X)
-        assert len(enc.transformers) == 3
 
-        enc_split = TableVectorizer(
-            high_card_cat_transformer=high_card_cat_transformer(),
-            cardinality_threshold=4,
-            n_jobs=None,
-        )
-        enc_split.fit(X)
-        # during actual use, this is done during fit
-        enc_split._split_univariate_transformers(split_fitted=False)
-        # check that the high_card_cat_transformer
-        # is split into 2 transformers
-        # the transformers_ attribute should not be modified
-        # because split_fitted is False
-        assert len(enc_split.transformers) == 4
-        assert len(enc_split.transformers_) == 3
-        enc_split._merge_univariate_transformers()
-        # check that the GapEncoder is merged into 1 transformer
-        assert len(enc_split.transformers) == 3
-        assert np.allclose(enc.transform(X), enc_split.transform(X))
-        # assert that the transformers attribute is the same as
-        # the one before splitting and merging
-        assert str(enc.transformers) == str(enc_split.transformers)
-        # check that you can refit the transformer
-        enc_split.fit(X)
+@pytest.mark.parametrize(
+    "high_card_cat_transformer",
+    [
+        GapEncoder(n_components=2, random_state=0),
+        MinHashEncoder(n_components=2),
+    ],
+)
+def test_split_and_merge_univariate_transformers(high_card_cat_transformer) -> None:
+    X = _get_clean_dataframe()
+    enc = TableVectorizer(
+        high_card_cat_transformer=high_card_cat_transformer,
+        cardinality_threshold=4,
+        n_jobs=None,  # should disable the default splitting and merging
+    )
 
-        # Now split the transformers_ attribute (split_fitted=True)
-        enc_split._split_univariate_transformers(split_fitted=True)
-        assert len(enc_split.transformers) == 3
-        assert len(enc_split.transformers_) == 4
-        # the fitted transformers should still work
-        assert_array_equal(enc.transform(X), enc_split.transform(X))
+    enc.fit(X)
+    assert len(enc.transformers) == 3
 
-        enc_split._merge_univariate_transformers()
-        # check that the GapEncoder is merged into 1 transformer
-        assert len(enc_split.transformers_) == 3
-        assert_array_equal(enc.transform(X), enc_split.transform(X))
+    enc_split = TableVectorizer(
+        high_card_cat_transformer=high_card_cat_transformer,
+        cardinality_threshold=4,
+        n_jobs=None,
+    )
+    enc_split.fit(X)
+    # during actual use, this is done during fit
+    enc_split._split_univariate_transformers(during_fit=True)
+    # check that the high_card_cat_transformer
+    # is split into 2 transformers
+    # the transformers_ attribute should not be modified
+    # because during_fit is True
+    assert len(enc_split.transformers) == 4
+    assert len(enc_split.transformers_) == 3
+    enc_split._merge_univariate_transformers()
+    # check that the GapEncoder is merged into 1 transformer
+    assert len(enc_split.transformers) == 3
+    assert np.allclose(enc.transform(X), enc_split.transform(X))
+    # assert that the transformers attribute is the same as
+    # the one before splitting and merging
+    assert str(enc.transformers) == str(enc_split.transformers)
+    # check that you can refit the transformer
+    enc_split.fit(X)
 
-        # assert that the transformers attribute is the same as
-        # the one before splitting and merging
-        assert str(enc.transformers_) == str(enc_split.transformers_)
+    # Now split the transformers_ attribute (during_fit=False)
+    enc_split._split_univariate_transformers(during_fit=False)
+    assert len(enc_split.transformers) == 3
+    assert len(enc_split.transformers_) == 4
+    # the fitted transformers should still work
+    assert_array_equal(enc.transform(X), enc_split.transform(X))
 
+    enc_split._merge_univariate_transformers()
+    # check that the GapEncoder is merged into 1 transformer
+    assert len(enc_split.transformers_) == 3
+    assert_array_equal(enc.transform(X), enc_split.transform(X))
+
+    # assert that the transformers attribute is the same as
+    # the one before splitting and merging
+    assert str(enc.transformers_) == str(enc_split.transformers_)
+
+
+def test_split_one_hot_encoder() -> None:
     # check that a OneHotEncoder is not split
+    X = _get_clean_dataframe()
     enc_one_hot = TableVectorizer(
         high_card_cat_transformer=OneHotEncoder(handle_unknown="error"),
         low_card_cat_transformer=OneHotEncoder(

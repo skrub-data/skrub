@@ -128,9 +128,6 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         # useful for parallelization in the TableVectorizer
         full_transformer = clone(transformers_list[0])
         capacity = transformers_list[0]._capacity
-        assert all(
-            transformer._capacity == capacity for transformer in transformers_list
-        )
         full_transformer.hash_dict_ = combine_lru_dicts(
             capacity, *[transformer.hash_dict_ for transformer in transformers_list]
         )

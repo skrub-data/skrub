@@ -471,7 +471,7 @@ class TableVectorizer(ColumnTransformer):
 
         # TODO: check that the provided transformers are valid
 
-    def _split_univariate_transformers(self, split_fitted: bool = False):
+    def _split_univariate_transformers(self, during_fit: bool = False):
         """
         Split univariate transformers into multiple transformers, one for each
         column. This is useful to use the inherited `ColumnTransformer` class
@@ -479,42 +479,13 @@ class TableVectorizer(ColumnTransformer):
 
         Parameters
         ----------
-        split_fitted : bool, default=False
-            Whether to split the self.transformers_ attribute (True) or the
-            self.transformers attribute (False). The former is used when
-            calling `transform` and the latter when calling `fit_transform`.
+        during_fit : bool, default=False
+            Whether the method is called during `fit_transform` (True) or
+            during `transform` (False). This is used to determine whether
+            to split the self.transformers_ attribute (when False) or the
+            self.transformers attribute (when True).
         """
-        if split_fitted:
-            check_is_fitted(self, attributes=["transformers_"])
-            self._transformers_fitted_original = self.transformers_
-            new_transformers_ = []
-            new_transformer_to_input_indices = {}
-            for name, trans, cols in self.transformers_:
-                if (
-                    trans.__class__.__name__ in UNIVARIATE_TRANSFORMERS
-                    and len(cols) > 1
-                ):
-                    splitted_transformers_ = trans._split()
-                    assert len(splitted_transformers_) == len(cols)
-                    for i, col in enumerate(cols):
-                        new_transformers_.append(
-                            (
-                                name + "_split_" + str(i),
-                                splitted_transformers_[i],
-                                [col],
-                            )
-                        )
-                        new_transformer_to_input_indices[name + "_split_" + str(i)] = [
-                            self._transformer_to_input_indices[name][i]
-                        ]
-                else:
-                    new_transformers_.append((name, trans, cols))
-                    new_transformer_to_input_indices[
-                        name
-                    ] = self._transformer_to_input_indices[name]
-            self.transformers_ = new_transformers_
-            self._transformer_to_input_indices = new_transformer_to_input_indices
-        else:
+        if during_fit:
             self._transformers_original = self.transformers
             new_transformers = []
             for name, trans, cols in self.transformers:
@@ -529,20 +500,47 @@ class TableVectorizer(ColumnTransformer):
                 else:
                     new_transformers.append((name, trans, cols))
             self.transformers = new_transformers
+        else:
+            check_is_fitted(self, attributes=["transformers_"])
+            self._transformers_fitted_original = self.transformers_
+            new_transformers_ = []
+            new_transformer_to_input_indices = {}
+            for name, trans, cols in self.transformers_:
+                if (
+                    trans.__class__.__name__ in UNIVARIATE_TRANSFORMERS
+                    and len(cols) > 1
+                ):
+                    splitted_transformers_ = trans._split()
+                    for i, (col, trans, trans_to_mapping) in enumerate(
+                        zip(
+                            cols,
+                            splitted_transformers_,
+                            self._transformer_to_input_indices[name],
+                        )
+                    ):
+                        name_split = f"{name}_split_{i}"
+                        new_transformers_.append((name_split, trans, [col]))
+                        new_transformer_to_input_indices[name_split] = [
+                            trans_to_mapping
+                        ]
+                else:
+                    new_transformers_.append((name, trans, cols))
+                    new_transformer_to_input_indices[
+                        name
+                    ] = self._transformer_to_input_indices[name]
+            self.transformers_ = new_transformers_
+            self._transformer_to_input_indices = new_transformer_to_input_indices
 
     def _merge_univariate_transformers(self):
         # merge back self.transformers if it was split
-        if hasattr(self, "_transformers_original"):
-            self.transformers = self._transformers_original
+        check_is_fitted(self, attributes=["transformers_"])
+        self.transformers = self._transformers_original
         # merge self.transformers_
         new_transformers_ = []
         new_transformer_to_input_indices = {}
-        # find all base names
-        base_names = []
-        for name, _, _ in self.transformers_:
-            base_name = name.split("_split_")[0]
-            if base_name not in base_names:
-                base_names.append(base_name)
+        base_names = pd.unique(
+            [name.split("_split_")[0] for name, _, _ in self.transformers_]
+        )
         for base_name in base_names:
             # merge all transformers with the same base name
             transformers, columns, names = [], [], []
@@ -876,7 +874,7 @@ class TableVectorizer(ColumnTransformer):
         # split the univariate transformers on each column
         # to be able to parallelize the encoding
         if self.is_parallelized:
-            self._split_univariate_transformers(split_fitted=False)
+            self._split_univariate_transformers(during_fit=True)
 
         X_enc = super().fit_transform(X, y)
 
@@ -924,7 +922,7 @@ class TableVectorizer(ColumnTransformer):
         # split the univariate transformers on each column
         # to be able to parallelize the encoding
         if self.is_parallelized:
-            self._split_univariate_transformers(split_fitted=True)
+            self._split_univariate_transformers(during_fit=False)
 
         res = super().transform(X)
 

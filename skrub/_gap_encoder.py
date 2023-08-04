@@ -654,7 +654,6 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         full_transformer = clone(transformers_list[0])
         # assert rho_ is the same for all transformers
         rho_ = transformers_list[0].rho_
-        assert all([transformers.rho_ == rho_ for transformers in transformers_list])
         full_transformer.rho_ = rho_
         full_transformer.fitted_models_ = []
         for transformers in transformers_list:
