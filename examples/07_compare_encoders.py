@@ -1,11 +1,11 @@
 """
 .. _example_compare_encoders
 
-============================================
-Understanding and comparing encoding methods
-============================================
+========================================================
+Understanding and comparing categorical encoding methods
+========================================================
 
-In this example, we will compare the mechanisms and use-cases of
+In this example, we compare various categorical encoders:
 a classical encoding method, the |OneHotEncoder|,
 and those implemented in *skrub*, that is, the |SimilarityEncoder|,
 the |GapEncoder| and the |MinHashEncoder|.
@@ -36,7 +36,7 @@ for illustration purposes.
 # Encoding dirty categorical variables
 # ------------------------------------
 #
-# As usual, let's first retrieve the dataset:
+# Let's first retrieve the dataset:
 
 from skrub.datasets import fetch_employee_salaries
 
