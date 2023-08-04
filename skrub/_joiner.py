@@ -165,7 +165,12 @@ class Joiner(TransformerMixin, BaseEstimator):
                     f" {X.columns.tolist()}. "
                 )
 
-        for table_idx, (df, cols) in enumerate(self.tables):
+        if not isinstance(self.tables[0], tuple):
+            self.tables_ = list()
+            self.tables_.append(tuple(self.tables))
+        else:
+            self.tables_ = self.tables
+        for table_idx, (df, cols) in enumerate(self.tables_):
             cols = np.atleast_1d(cols).tolist()
             for col in cols:
                 if col not in df.columns:
@@ -191,7 +196,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
 
-        for df, cols in self.tables:
+        for df, cols in self.tables_:
             aux_table = df
             X = fuzzy_join(
                 X,
