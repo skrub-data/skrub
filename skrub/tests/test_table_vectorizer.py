@@ -9,6 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
+from skrub.tests.utils import transformers_list_equal
 
 
 def check_same_transformers(
@@ -816,8 +817,8 @@ def test_parallelism(high_card_cat_transformer) -> None:
             assert table_vec.n_jobs == n_jobs
             # assert that all attributes are equal except for
             # the n_jobs attribute
-            assert str(table_vec.transformers_) == str(
-                table_vec_no_parallel.transformers_
+            assert transformers_list_equal(
+                table_vec.transformers_, table_vec_no_parallel.transformers_
             )
             assert (table_vec.columns_ == table_vec_no_parallel.columns_).all()
             assert table_vec.types_ == table_vec_no_parallel.types_
