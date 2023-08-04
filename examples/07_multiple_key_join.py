@@ -46,7 +46,8 @@ flights = flights.sample(50_000, random_state=1, ignore_index=True)
 flights.head()
 
 ############################################################################
-# Auxilliary tables provided in the same database:
+# Airport data: an auxiliary table from the same database
+# .......................................................
 #     - The "airports" dataset, with information such as their name
 #       and location (longitude, latitude).
 
