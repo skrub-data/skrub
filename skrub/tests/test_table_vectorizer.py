@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from sklearn.utils.validation import check_is_fitted
 
@@ -913,6 +913,7 @@ def test_split_one_hot_encoder() -> None:
     )
     enc_one_hot.fit(X)
     assert len(enc_one_hot.transformers) == 3
+
 
 def test_table_vectorizer_remainder_cloning():
     """Check that remainder is cloned when used."""
