@@ -962,6 +962,10 @@ class GapEncoder(TransformerMixin, BaseEstimator):
                 ),
                 "check_estimators_dtypes": "We only support string dtypes.",
             },
+            "univariate": True,  # whether the estimator is univariate and can be
+            # applied column by column. This is useful for the TableVectorizer,
+            # to decide whether to apply the transformer on each column separately
+            # and thus improve the parallelization when the transformer is slow enough.
         }
 
 

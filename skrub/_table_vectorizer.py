@@ -28,10 +28,6 @@ from skrub._utils import parse_astype_error_message
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
 
-# transformers which can be applied column-wise
-# and which are slow enough to be worth parallelizing over columns
-UNIVARIATE_TRANSFORMERS = ["GapEncoder", "MinHashEncoder"]
-
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
     """Infer the date format of a date column,
@@ -490,7 +486,8 @@ class TableVectorizer(ColumnTransformer):
             new_transformers = []
             for name, trans, cols in self.transformers:
                 if (
-                    trans.__class__.__name__ in UNIVARIATE_TRANSFORMERS
+                    (not type(trans) == str)
+                    and trans._get_tags().get("univariate", False)
                     and len(cols) > 1
                 ):
                     for i, col in enumerate(cols):
@@ -507,7 +504,8 @@ class TableVectorizer(ColumnTransformer):
             new_transformer_to_input_indices = {}
             for name, trans, cols in self.transformers_:
                 if (
-                    trans.__class__.__name__ in UNIVARIATE_TRANSFORMERS
+                    (not type(trans) == str)
+                    and trans._get_tags().get("univariate", False)
                     and len(cols) > 1
                 ):
                     splitted_transformers_ = trans._split()
