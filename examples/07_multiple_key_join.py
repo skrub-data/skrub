@@ -24,8 +24,8 @@ pool of tables are combined for machine learning.
 """
 
 ###############################################################################
-# The data
-# --------
+# Flight-delays data
+# ------------------
 # The goal is to predict flight delays.
 # We have a pool of tables that we will use to improve our prediction.
 #
