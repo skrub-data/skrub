@@ -186,8 +186,8 @@ def monitor(
 
             def product_map(iterables: Mapping[str, Any]):
                 """``itertools.product`` with mapping support."""
-                for pair in product(*iterables.values()):
-                    yield dict(zip(iterables.keys(), pair))
+                for combination in product(*iterables.values()):
+                    yield dict(zip(iterables.keys(), combination))
 
             def exec_func(**kwargs) -> pd.DataFrame:
                 """
