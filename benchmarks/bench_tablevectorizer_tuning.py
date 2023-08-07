@@ -22,7 +22,6 @@ from utils import (
     default_parser,
     find_result,
     get_classification_datasets,
-    get_dataset,
     get_regression_datasets,
     monitor,
 )
@@ -62,36 +61,27 @@ def benchmark(
         cardinality_threshold=tv_cardinality_threshold,
         high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components),
     )
-    regression_pipeline = Pipeline(
+
+    dataset = dataset_map[dataset_name]
+
+    if dataset_name in regression_datasets:
+        estimator = HistGradientBoostingRegressor(random_state=0)
+    elif dataset_name in classification_datasets:
+        estimator = HistGradientBoostingClassifier(random_state=0)
+
+    pipeline = Pipeline(
         [
             ("tv", tv),
-            ("estimator", HistGradientBoostingRegressor()),
+            ("estimator", estimator),
         ]
     )
-    classification_pipeline = Pipeline(
-        [
-            ("tv", tv),
-            ("estimator", HistGradientBoostingClassifier()),
-        ]
-    )
-    for pipeline, datasets in zip(
-        [
-            regression_pipeline,
-            classification_pipeline,
-        ],
-        [
-            get_regression_datasets(),
-            get_classification_datasets(),
-        ],
-    ):
-        for info, name in datasets:
-            if name == dataset_name:
-                X, y = get_dataset(info)
-                pipeline.fit(X, y)
-                scores = cross_val_score(pipeline, X, y, cv=3)
-                score = np.mean(scores)
-    res_dic = {"grid_search_results": score, "dataset_name": dataset_name}
-    return res_dic
+    pipeline.fit(dataset.X, dataset.y)
+    scores = cross_val_score(pipeline, dataset.X, dataset.y, cv=3)
+    score = np.mean(scores)
+    return {
+        "grid_search_results": score,
+        "dataset_name": dataset_name,
+    }
 
 
 def plot(df: pd.DataFrame):
@@ -133,6 +123,12 @@ if __name__ == "__main__":
     ).parse_args()
 
     if _args.run:
+        regression_datasets = get_regression_datasets()
+        classification_datasets = get_classification_datasets()
+        dataset_map = dict(
+            **regression_datasets,
+            **classification_datasets,
+        )
         benchmark()
     else:
         result_file = find_result(benchmark_name)
