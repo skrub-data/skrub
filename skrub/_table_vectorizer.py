@@ -498,7 +498,6 @@ class TableVectorizer(ColumnTransformer):
             self.transformers attribute (when True).
         """
         if during_fit:
-            self._transformers_original = self.transformers
             new_transformers = []
             for name, trans, cols in self.transformers:
                 if (
@@ -546,9 +545,31 @@ class TableVectorizer(ColumnTransformer):
             self._transformer_to_input_indices = new_transformer_to_input_indices
 
     def _merge_univariate_transformers(self):
-        # merge back self.transformers if it was split
+        # merge back self.transformers and self.transformers_
         check_is_fitted(self, attributes=["transformers_"])
-        self.transformers = self._transformers_original
+        # merge self.transformers
+        new_transformers = []
+        base_names = pd.unique(
+            [name.split("_split_")[0] for name, _, _ in self.transformers]
+        )
+        for base_name in base_names:
+            for name, trans, _ in self.transformers:
+                if name.startswith(base_name):
+                    new_trans = trans if isinstance(trans, str) else clone(trans)
+                    break
+            new_transformers.append(
+                (
+                    base_name,
+                    new_trans,
+                    [
+                        col
+                        for name, _, cols in self.transformers
+                        for col in cols
+                        if name.startswith(base_name)
+                    ],
+                )
+            )
+        self.transformers = new_transformers
         # merge self.transformers_
         new_transformers_ = []
         new_transformer_to_input_indices = {}
