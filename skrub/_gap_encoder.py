@@ -200,7 +200,27 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         return W, A, B
 
     def _minibatch_convergence(self, batch_size, batch_cost, n_samples, step, n_steps):
-        """Helper function to encapsulate the early stopping logic"""
+        """
+        Helper function to encapsulate the early stopping logic.
+
+        Parameters
+        ----------
+        batch_size : int
+            The size of the current batch.
+        batch_cost : float
+            The cost (KL score) of the current batch.
+        n_samples : int
+            The total number of samples in X.
+        step : int
+            The current step (for verbose mode).
+        n_steps : int
+            The total number of steps (for verbose mode).
+
+        Returns
+        -------
+        bool
+            Whether the algorithm should stop or not.
+        """
         # adapted from sklearn.decomposition.MiniBatchNMF
 
         # counts steps starting from 1 for user friendly verbose mode.
@@ -281,7 +301,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         del X
         # Get activations unq_H
         unq_H = self._get_H(unq_X)
-
+        converged = False
         for n_iter_ in range(self.max_iter):
             # Loop over batches
             for i, (unq_idx, idx) in enumerate(batch_lookup(lookup, n=self.batch_size)):
@@ -320,11 +340,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
                     step=n_iter_ * n_batch + i,
                     n_steps=self.max_iter * n_batch,
                 ):
+                    converged = True
                     break
-            else:
-                # only continue if no break occurred
-                continue
-            break
+            if converged:
+                break
 
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
