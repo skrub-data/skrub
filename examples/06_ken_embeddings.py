@@ -159,8 +159,8 @@ emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
 # column "Publisher"
 from skrub import Joiner
 
-fa1 = Joiner(tables=[embedding_games, "Entity"], main_key="Name")
-fa2 = Joiner(tables=[embedding_publisher, "Entity"], main_key="Publisher")
+fa1 = Joiner(tables=(embedding_games, "Entity"), main_key="Name")
+fa2 = Joiner(tables=(embedding_publisher, "Entity"), main_key="Publisher")
 
 X_full = fa1.fit_transform(X)
 X_full = fa2.fit_transform(X_full)

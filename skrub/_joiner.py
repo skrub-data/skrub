@@ -1,6 +1,6 @@
 """
-Implements the Joiner, a that allows chaining multiple fuzzy joins
-on a table.
+Implements the Joiner, a transformer that allows
+multiple fuzzy joins on a table.
 """
 
 from typing import Literal
@@ -32,9 +32,9 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    tables : list or list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
+    tables : 2-tuple or list of 2-tuple (:obj:`~pandas.DataFrame`, str)
         List of (table, column name) tuples, the tables to join.
-        Can be a list if single table.
+        Can be a tuple if only one table to join.
     main_key : str or list of str
         The key column names from the main table on which the join will
         be performed.
@@ -124,7 +124,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     def __init__(
         self,
-        tables: list[tuple[pd.DataFrame, str]],
+        tables: tuple[pd.DataFrame, str] | list[tuple[pd.DataFrame, str]],
         main_key: str | list[str],
         *,
         match_score: float = 0.0,
@@ -165,11 +165,12 @@ class Joiner(TransformerMixin, BaseEstimator):
                     f" {X.columns.tolist()}. "
                 )
 
-        if not isinstance(self.tables[0], tuple):
+        if isinstance(self.tables[0], tuple):
+            self.tables_ = self.tables
+        else:
             self.tables_ = list()
             self.tables_.append(tuple(self.tables))
-        else:
-            self.tables_ = self.tables
+
         for table_idx, (df, cols) in enumerate(self.tables_):
             cols = np.atleast_1d(cols).tolist()
             for col in cols:

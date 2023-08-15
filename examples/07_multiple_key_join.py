@@ -1,4 +1,6 @@
 """
+.. _example_multiple_key_join :
+
 Spatial join for flight data: Joining across multiple columns
 =============================================================
 
@@ -91,9 +93,7 @@ aux.head()
 
 from skrub import Joiner
 
-joiner = Joiner(
-    tables=[(airports, ["lat", "long"])], main_key=["LATITUDE", "LONGITUDE"]
-)
+joiner = Joiner(tables=(airports, ["lat", "long"]), main_key=["LATITUDE", "LONGITUDE"])
 
 aux_augmented = joiner.fit_transform(aux)
 
@@ -104,7 +104,7 @@ aux_augmented.head()
 # Let's instanciate another multiple key joiner on the date and the airport:
 
 joiner = Joiner(
-    tables=[(aux_augmented, ["YEAR/MONTH/DAY", "iata"])],
+    tables=(aux_augmented, ["YEAR/MONTH/DAY", "iata"]),
     main_key=["Year_Month_DayofMonth", "Origin"],
 )
 
