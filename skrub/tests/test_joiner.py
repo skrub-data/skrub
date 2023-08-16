@@ -1,10 +1,10 @@
 import pandas as pd
 import pytest
 
-from skrub import FeatureAugmenter
+from skrub import Joiner
 
 
-def test_feature_augmenter() -> None:
+def test_joiner() -> None:
     main_table = pd.DataFrame(
         [
             "France",
@@ -48,9 +48,9 @@ def test_feature_augmenter() -> None:
         (aux_table_3, "Countries"),
     ]
 
-    fa = FeatureAugmenter(tables=aux_tables, main_key="Country")
+    joiner = Joiner(tables=aux_tables, main_key="Country")
 
-    fa.fit(main_table)
+    joiner.fit(main_table)
 
     number_of_cols = tuple(
         map(
@@ -64,29 +64,55 @@ def test_feature_augmenter() -> None:
         )
     )[1]
 
-    big_table = fa.transform(main_table)
+    big_table = joiner.transform(main_table)
     assert big_table.shape == (main_table.shape[0], number_of_cols)
 
-    big_table = fa.fit_transform(main_table)
+    big_table = joiner.fit_transform(main_table)
     assert big_table.shape == (main_table.shape[0], number_of_cols)
 
-    false_fa = FeatureAugmenter(tables=aux_tables, main_key="Countryy")
+    false_joiner = Joiner(tables=aux_tables, main_key="Countryy")
 
     with pytest.raises(
         ValueError,
-        match=r"Got main_key",
+        match=r"Main key",
     ):
-        false_fa.fit(main_table)
+        false_joiner.fit(main_table)
 
     false_aux_tables = [
-        (aux_table_1, "Countrys"),
+        (aux_table_1, ["Countrys"]),
         (aux_table_2, "Country name"),
         (aux_table_3, "Countries"),
     ]
 
-    false_fa2 = FeatureAugmenter(tables=false_aux_tables, main_key="Country")
+    false_joiner2 = Joiner(tables=false_aux_tables, main_key="Country")
     with pytest.raises(
         ValueError,
-        match=r"Got column key",
+        match=r"Column key",
     ):
-        false_fa2.fit(main_table)
+        false_joiner2.fit(main_table)
+
+
+def test_multiple_keys():
+    df = pd.DataFrame(
+        [["France", "Paris"], ["Italia", "Roma"], ["Deutchland", "Berlin"]],
+        columns=["Co", "Ca"],
+    )
+    df2 = pd.DataFrame(
+        [["France", "Paris"], ["Italy", "Rome"], ["Germany", "Berlin"]],
+        columns=["CO", "CA"],
+    )
+    joiner_list = Joiner(tables=[(df2, ["CO", "CA"])], main_key=["Co", "Ca"])
+    result = joiner_list.fit_transform(df)
+    expected = pd.DataFrame(pd.concat([df, df2], axis=1))
+    pd.testing.assert_frame_equal(result, expected)
+
+    # Equivalent signature with tuples:
+    joiner_tuple = Joiner(tables=(df2, ["CO", "CA"]), main_key=["Co", "Ca"])
+    result = joiner_tuple.fit_transform(df)
+    expected = pd.DataFrame(pd.concat([df, df2], axis=1))
+    pd.testing.assert_frame_equal(result, expected)
+
+    joiner_list = Joiner(tables=(df2, "CA"), main_key="Ca")
+    result = joiner_list.fit_transform(df)
+    expected = pd.DataFrame(pd.concat([df, df2], axis=1))
+    pd.testing.assert_frame_equal(result, expected)

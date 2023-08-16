@@ -1,17 +1,18 @@
 """
-Implements the FeatureAugmenter, a that allows chaining multiple fuzzy joins
-on a table.
+Implements the Joiner, a transformer that allows
+multiple fuzzy joins on a table.
 """
 
 from typing import Literal
 
+import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from skrub._fuzzy_join import fuzzy_join
 
 
-class FeatureAugmenter(TransformerMixin, BaseEstimator):
+class Joiner(TransformerMixin, BaseEstimator):
     """Augment a main table by automatically joining multiple auxiliary tables on it.
 
     Given a list of tables and key column names,
@@ -21,21 +22,22 @@ class FeatureAugmenter(TransformerMixin, BaseEstimator):
 
     1. The main table and the key column name are provided at initialisation.
     2. The auxiliary tables are provided for fitting, and will be joined
-       sequentially when FeatureAugmenter.transform is called.
+       sequentially when Joiner.transform is called.
 
     It is advised to use hyperparameter tuning tools such as GridSearchCV
     to determine the best `match_score` parameter, as this can significantly
     improve your results.
-    (see example 'Fuzzy joining dirty tables with the FeatureAugmenter'
+    (see example 'Fuzzy joining dirty tables with the Joiner'
     for an illustration)
 
     Parameters
     ----------
-    tables : list of 2-tuples of (:obj:`~pandas.DataFrame`, str)
+    tables : 2-tuple or list of 2-tuple (:obj:`~pandas.DataFrame`, str)
         List of (table, column name) tuples, the tables to join.
-    main_key : str
-        The key column name in the main table (passed during fit) on which
-        the join will be performed.
+        Can be a tuple if only one table to join.
+    main_key : str or list of str
+        The key column names from the main table on which the join will
+        be performed.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. 1 means that only a perfect match will be
@@ -110,20 +112,20 @@ class FeatureAugmenter(TransformerMixin, BaseEstimator):
                       (aux_table_2, "Country name"),
                       (aux_table_3, "Countries")]
 
-    >>> fa = FeatureAugmenter(tables=aux_tables, main_key='Country')
+    >>> joiner = Joiner(tables=aux_tables, main_key='Country')
 
-    >>> augmented_table = fa.fit_transform(X)
+    >>> augmented_table = joiner.fit_transform(X)
     >>> augmented_table
         Country Country_aux  Population Country name  GDP (billion) Countries Capital
     0   France      France    68000000  French Republic       2937    France   Paris
-    1  Germany     Germany    84000000      Germany           4223   Germany  Berlin
-    2    Italy       Italy    59000000        Italy           2099    Italia    Rome
+    1   Germany     Germany   84000000      Germany           4223   Germany   Berlin
+    2    Italy       Italy    59000000        Italy           2099    Italia   Rome
     """
 
     def __init__(
         self,
-        tables: list[tuple[pd.DataFrame, str]],
-        main_key: str,
+        tables: tuple[pd.DataFrame, str] | list[tuple[pd.DataFrame, str]],
+        main_key: str | list[str],
         *,
         match_score: float = 0.0,
         analyzer: Literal["word", "char", "char_wb"] = "char_wb",
@@ -135,7 +137,7 @@ class FeatureAugmenter(TransformerMixin, BaseEstimator):
         self.analyzer = analyzer
         self.ngram_range = ngram_range
 
-    def fit(self, X: pd.DataFrame, y=None) -> "FeatureAugmenter":
+    def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
 
         In practice, just checks if the key columns in X,
@@ -150,21 +152,33 @@ class FeatureAugmenter(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        FeatureAugmenter
-            Fitted FeatureAugmenter instance (self).
+        Joiner
+            Fitted Joiner instance (self).
         """
 
-        if self.main_key not in X.columns:
-            raise ValueError(
-                f"Got main_key={self.main_key!r}, but column not in {list(X.columns)}."
-            )
+        main_key_list = np.atleast_1d(self.main_key).tolist()
 
-        for pairs in self.tables:
-            if pairs[1] not in pairs[0].columns:
+        for col in main_key_list:
+            if col not in X.columns:
                 raise ValueError(
-                    f"Got column key {pairs[1]!r}, "
-                    f"but column not in {pairs[0].columns}."
+                    f"Main key {col!r} not found in columns of X:"
+                    f" {X.columns.tolist()}. "
                 )
+
+        if isinstance(self.tables[0], tuple):
+            self.tables_ = self.tables
+        else:
+            self.tables_ = list()
+            self.tables_.append(tuple(self.tables))
+
+        for table_idx, (df, cols) in enumerate(self.tables_):
+            cols = np.atleast_1d(cols).tolist()
+            for col in cols:
+                if col not in df.columns:
+                    raise ValueError(
+                        f"Column key {col!r} not found in columns of "
+                        f"table index {table_idx}: {df.columns.tolist()}. "
+                    )
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
@@ -183,15 +197,13 @@ class FeatureAugmenter(TransformerMixin, BaseEstimator):
             The final joined table.
         """
 
-        for pairs in self.tables:
-            # TODO: Add an option to fuzzy_join on multiple columns at once
-            # (will be if len(inter_col)!=0)
-            aux_table = pairs[0]
+        for df, cols in self.tables_:
+            aux_table = df
             X = fuzzy_join(
                 X,
                 aux_table,
                 left_on=self.main_key,
-                right_on=pairs[1],
+                right_on=cols,
                 match_score=self.match_score,
                 analyzer=self.analyzer,
                 ngram_range=self.ngram_range,
