@@ -125,6 +125,14 @@ hgb = HistGradientBoostingClassifier()
 
 pipeline_hgb = make_pipeline(joiner, tv, hgb)
 
+
+###############################################################################
+# Let's look at the final pipeline:
+from sklearn import set_config
+
+set_config(display="diagram")
+
+pipeline_hgb
 ###############################################################################
 # We isolate our target variable and remove useless ID variables:
 
