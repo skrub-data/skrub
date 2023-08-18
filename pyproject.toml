@@ -56,7 +56,7 @@ dev = [
   "pre-commit",
 ]
 doc = [
-  "sphinx-gallery",
+  "sphinx-gallery@git+https://github.com/sphinx-gallery/sphinx-gallery",
   "pydata-sphinx-theme",
   "sphinxext-opengraph",
   "sphinx-copybutton",
