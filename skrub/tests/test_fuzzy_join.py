@@ -359,7 +359,7 @@ def test_datetime_column():
 
 def test_mixed_joins():
     """
-    Test fuzzy joining on mixed column types.
+    Test fuzzy joining on mixed and multiple column types.
     """
 
     left = pd.DataFrame(
