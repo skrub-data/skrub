@@ -124,7 +124,7 @@ def fetch_ken_types(
     unique_types_figshare_id = correspondence[
         correspondence["table"] == embedding_table_id
     ]["unique_types_figshare_id"].values[0]
-    unique_types = fetch_figshare(unique_types_figshare_id)
+    unique_types = fetch_figshare(str(unique_types_figshare_id))
     if search is None:
         search_result = unique_types.X
     else:
@@ -174,7 +174,7 @@ def fetch_ken_embeddings(
 
     Returns
     -------
-    :obj:`~pandas.DataFrame`
+    pd.DataFrame
         The embeddings of entities and the specified type from Wikipedia.
 
     See Also
@@ -254,35 +254,25 @@ def fetch_ken_embeddings(
         ]["type_figshare_id"].values[0]
     else:
         embeddings_id = embedding_table_id
-    emb_type = fetch_figshare(embedding_type_id).X
+    emb_type = fetch_figshare(str(embedding_type_id)).X
     if search_types is not None:
         emb_type = emb_type[emb_type["Type"].str.contains(search_types)]
     if exclude is not None:
         emb_type = emb_type[~emb_type["Type"].str.contains(exclude)]
     emb_type.drop_duplicates(subset=["Entity"], inplace=True)
-    emb_final = []
-    emb_full = fetch_figshare(embeddings_id)
-    for path in emb_full.path:
-        emb_extracts = pd.read_parquet(path)
-        emb_extracts = pd.merge(emb_type, emb_extracts, on="Entity")
-        emb_extracts.reset_index(drop=True, inplace=True)
-        if pca_components is not None:
-            pca_i = PCA(n_components=pca_components, random_state=0)
-            emb_columns = []
-            for j in range(pca_components):
-                name = "X" + str(j) + suffix
-                emb_columns.append(name)
-            pca_embeddings = pca_i.fit_transform(
+    dataset = fetch_figshare(str(embeddings_id), filters=[search_types])
+    emb_extracts = pd.merge(emb_type, dataset.X, on="Entity")
+    emb_extracts.reset_index(drop=True, inplace=True)
+
+    if pca_components is not None:
+        pca_embeddings = pd.DataFrame(
+            PCA(n_components=pca_components, random_state=0).fit_transform(
                 emb_extracts.drop(columns=["Entity", "Type"])
-            )
-            pca_embeddings = pd.DataFrame(pca_embeddings, columns=emb_columns)
-            emb_pca = pd.concat(
-                [emb_extracts[["Entity", "Type"]], pca_embeddings], axis=1
-            )
-            emb_final.append(emb_pca)
-        else:
-            emb_final.append(emb_extracts)
-    emb_df = pd.concat(emb_final)
+            ),
+            columns=[f"X{j}{suffix}" for j in range(pca_components)],
+        )
+        emb_df = pd.concat([emb_extracts[["Entity", "Type"]], pca_embeddings], axis=1)
+
     emb_df["Entity"] = emb_df["Entity"].str[1:-1]
     emb_df["Type"] = emb_df["Type"].str[1:-1]
     return emb_df.reset_index(drop=True)

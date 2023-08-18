@@ -84,15 +84,13 @@ def import_optional_dependency(name: str, extra: str = ""):
     maybe_module : Optional[ModuleType]
         The imported module when found.
     """
-
-    msg = (
-        f"Missing optional dependency '{name}'. {extra} "
-        f"Use pip or conda to install {name}."
-    )
     try:
         module = importlib.import_module(name)
     except ImportError as exc:
-        raise ImportError(msg) from exc
+        raise ImportError(
+            f"Missing optional dependency '{name}'. {extra} "
+            f"Use pip or conda to install {name}. "
+        ) from exc
 
     return module
 

@@ -378,6 +378,14 @@ def fetch_world_bank_indicator(
         directory, located in the user home folder, is used.
     download_if_missing : bool, default=True
         Whether to download the data from the Internet if not already on disk.
+        Will raise a ``FileNotFoundError`` if the data is not already on disk
+        and ``download_if_missing`` is False.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the data is not already on disk and ``download_if_missing``
+        is False.
 
     Returns
     -------
@@ -399,6 +407,7 @@ def fetch_world_bank_indicator(
 def fetch_figshare(
     figshare_id: str,
     *,
+    filters: str | None = None,
     directory: Path | str | None = None,
     download_if_missing: bool = True,
 ) -> Dataset:
@@ -409,11 +418,21 @@ def fetch_figshare(
     figshare_id : str
         ID of the table on figshare. The ID can be found in the URL of the
         table, e.g. https://figshare.com/articles/dataset/ID/1234567.
+    filters : str, optional
+        Filters to apply when reading the table with PyArrow.
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
     download_if_missing : bool, default=True
         Whether to download the data from the Internet if not already on disk.
+        Will raise a ``FileNotFoundError`` if the data is not already on disk
+        and ``download_if_missing`` is False.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the data is not already on disk and ``download_if_missing``
+        is False.
 
     Returns
     -------
@@ -428,5 +447,6 @@ def fetch_figshare(
             figshare_id=figshare_id,
             data_directory=_resolve_path(directory, suffix="figshare"),
             download_if_missing=download_if_missing,
+            filters=filters,
         ),
     )
