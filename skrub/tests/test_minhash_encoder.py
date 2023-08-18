@@ -327,9 +327,8 @@ def test_merge_transformers() -> None:
     for key in enc.hash_dict_.cache.keys():
         assert_array_equal(enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key])
     # check all attributes
-    attrs = ["_capacity", "n_features_in_"]
-    for attr in attrs:
-        assert getattr(enc_merged, attr) == getattr(enc, attr)
+    assert enc_merged._capacity == enc._capacity
+    assert enc_merged.n_features_in_ == enc.n_features_in_
     # check feature_names_in_
     assert_array_equal(enc_merged.feature_names_in_, enc.feature_names_in_)
 
@@ -372,9 +371,7 @@ def test_split_transformers() -> None:
         assert enc_list[i].n_features_in_ == 1
         index += transformed_X_i.shape[1]
         # check all attributes
-        attrs = ["_capacity"]
-        for attr in attrs:
-            assert getattr(enc_list[i], attr) == getattr(enc, attr)
+        assert enc_list[i]._capacity == enc._capacity
         # check hash_dict_
         # TODO: do we want the hash_dict_ to be the same?
         assert enc.hash_dict_.cache.keys() == enc_list[i].hash_dict_.cache.keys()
@@ -412,8 +409,7 @@ def test_split_and_merge_transformers() -> None:
     for key in enc.hash_dict_.cache.keys():
         assert_array_equal(enc.hash_dict_.cache[key], enc_merged.hash_dict_.cache[key])
     # check all attributes
-    attrs = ["_capacity", "n_features_in_"]
-    for attr in attrs:
-        assert getattr(enc_merged, attr) == getattr(enc, attr)
+    assert enc_merged._capacity == enc._capacity
+    assert enc_merged.n_features_in_ == enc.n_features_in_
     # check feature_names_in_
     assert_array_equal(enc_merged.feature_names_in_, enc.feature_names_in_)

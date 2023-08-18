@@ -297,9 +297,8 @@ def test_merge_transformers() -> None:
     # check score
     assert enc_merged.score(X) == enc.score(X)
     # check all attributes
-    attrs = ["rho_", "column_names_"]
-    for attr in attrs:
-        assert getattr(enc_merged, attr) == getattr(enc, attr)
+    enc_merged.rho_ == enc.rho_
+    enc_merged.column_names_ == enc.column_names_
 
 
 def test_split_transformers() -> None:
@@ -336,9 +335,7 @@ def test_split_transformers() -> None:
         )
         index += transformed_X_i.shape[1]
         # check all attributes
-        attrs = ["rho_"]
-        for attr in attrs:
-            assert getattr(enc_list[i], attr) == getattr(enc, attr)
+        assert enc_list[i].rho_ == enc.rho_
         assert enc_list[i].column_names_ == [f"col{i}"]
 
 
@@ -368,6 +365,5 @@ def test_split_and_merge_transformers() -> None:
     # check score
     assert enc_merged.score(X) == enc.score(X)
     # check all attributes
-    attrs = ["rho_", "column_names_"]
-    for attr in attrs:
-        assert getattr(enc_merged, attr) == getattr(enc, attr)
+    enc_merged.rho_ == enc.rho_
+    enc_merged.column_names_ == enc.column_names_
