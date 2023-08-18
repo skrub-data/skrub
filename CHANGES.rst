@@ -15,23 +15,29 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+* :class:`FeatureAugmenter` is renamed to :class:`Joiner`.
+  :pr:`674` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
   :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* :class:`Joiner` now supports joining on multiple column keys.
+  :pr:`674` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * The signatures of all encoders and functions have been revised to enforce
   cleaner calls. This means that some arguments that could previously be passed
   positionally now have to be passed as keywords.
   :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
 
-* Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
+* Parallelized the :class:`GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
 * Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
   and :user:`Lilian Boulard <LilianBoulard>`
 
-* Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`
-  and :func:`fetch_ken_types` have been renamed.
+* Functions :func:`datasets.fetch_ken_embeddings`, :func:`datasets.fetch_ken_table_aliases`
+  and :func:`datasets.fetch_ken_types` have been renamed.
   :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * Make `pyarrow` an optional dependencies to facilitate the integration
