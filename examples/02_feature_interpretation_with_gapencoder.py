@@ -6,7 +6,7 @@ Feature interpretation with the GapEncoder
 ==========================================
 
 In this notebook, we will explore the output and inner workings of the
-|GapEncoder|, one of the encoders provided by skrub.
+|GapEncoder|, one of the categorical encoders provided by skrub.
 
 
 .. |GapEncoder| replace::
@@ -17,8 +17,8 @@ In this notebook, we will explore the output and inner workings of the
 """
 
 ###############################################################################
-# The |GapEncoder| is more scalable and interpretable than the
-# |SimilarityEncoder|, which we will demonstrate now.
+# The |GapEncoder| is scalable and interpretable in terms of
+# finding latent categories, as we will show.
 #
 # First, let's retrieve the
 # `employee salaries dataset <https://www.openml.org/d/42125>`_:
@@ -58,7 +58,7 @@ X_dirty = X[["employee_position_title"]]
 X_dirty.str.contains("Fire").sample(10, random_state=0).head(10)
 
 ###############################################################################
-# Then, we'll create an instance of the |GapEncoder| with 10 components.
+# Then, we create an instance of the |GapEncoder| with 10 components.
 # This means that the encoder will attempt to extract 10 latent topics
 # from the input data:
 
@@ -67,7 +67,7 @@ from skrub import GapEncoder
 enc = GapEncoder(n_components=10, random_state=1)
 
 ###############################################################################
-# Finally, we'll fit the model on the dirty categorical data and transform it
+# Finally, we fit the model on the dirty categorical data and transform it
 # in order to obtain encoded vectors of size 10:
 
 X_enc = enc.fit_transform(X_dirty)
