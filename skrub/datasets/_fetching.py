@@ -357,7 +357,7 @@ def _fetch_figshare(
     file_paths = [
         file
         for file in data_directory.iterdir()
-        if file.name.startswith(f"figshare_{figshare_id}")
+        if str(file).startswith(f"figshare_{figshare_id}")
     ]
     if len(file_paths) > 0:
         if len(file_paths) == 1:
