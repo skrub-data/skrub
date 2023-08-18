@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
     -   id: check-yaml
         exclude: doc/
@@ -9,14 +9,14 @@ repos:
     -   id: trailing-whitespace
         exclude: doc/
 -   repo: https://github.com/psf/black
-    rev: 22.8.0
+    rev: 23.7.0
     hooks:
     -   id: black
         exclude: doc/
--   repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.285
     hooks:
-    -   id: flake8
+    -   id: ruff
         files: skrub/
         types: [file, python]
 -   repo: https://github.com/PyCQA/isort
@@ -25,3 +25,9 @@ repos:
     -   id: isort
         files: skrub/
         args: ["--profile", "black", "--filter-files"]
+-   repo: https://github.com/codespell-project/codespell
+    rev: v2.2.5
+    hooks:
+    -   id: codespell
+        additional_dependencies:
+        -   tomli
