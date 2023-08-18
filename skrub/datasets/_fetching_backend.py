@@ -218,7 +218,7 @@ def _fetch_world_bank_data(
 def _fetch_figshare(
     figshare_id: str,
     data_directory: Path | None,
-    download_if_missing: bool,  # TODO
+    download_if_missing: bool,
 ) -> dict[str, Any]:
     """Fetch a dataset from figshare using the download ID number.
 
@@ -231,7 +231,6 @@ def _fetch_figshare(
         By default, a subdirectory "figshare" in the skrub data directory.
     download_if_missing : bool
         Whether to download the data if it is not found locally.
-        FIXME: Currently not implemented.
 
     Returns
     -------
@@ -258,6 +257,10 @@ def _fetch_figshare(
         for file in data_directory.iterdir()
         if figshare_id in file.name and file.suffix == ".parquet"
     ]
+    if not existing_files and not download_if_missing:
+        raise FileNotFoundError(
+            f"Couldn't find content for figshare file {figshare_id!r} locally."
+        )
     if len(existing_files) > 0:
         if len(existing_files) == 1:
             parquet_paths = [str(existing_files[0].resolve())]
