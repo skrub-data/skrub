@@ -4,6 +4,7 @@ from unittest import mock
 from urllib.error import URLError
 
 import pytest
+from pandas.testing import assert_frame_equal
 
 from skrub.datasets import fetch_midwest_survey, fetch_world_bank_indicator
 from skrub.datasets._fetching_functions import (
@@ -106,4 +107,4 @@ def test_fetch_world_bank_indicator() -> None:
                 directory=temp_dir,
             )
             mock_urlretrieve.assert_not_called()
-            assert dataset_local == dataset
+            assert_frame_equal(dataset.X, dataset_local.X)
