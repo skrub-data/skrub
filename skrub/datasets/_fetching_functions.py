@@ -99,6 +99,7 @@ def fetch_employee_salaries(
     *,
     drop_linked: bool = True,
     drop_irrelevant: bool = True,
+    overload_job_titles: bool = True,
     directory: Path | str | None = None,
 ) -> Dataset:
     """Fetches the employee salaries dataset, available at https://openml.org/d/42125
@@ -116,6 +117,10 @@ def fetch_employee_salaries(
     drop_irrelevant : bool, default=True
         Drops column "full_name", which is usually irrelevant to the
         statistical analysis.
+    overload_job_titles : bool, default=True
+        Uses the column `underfilled_job_title` to enrich the
+        `employee_position_title` column, as it contains more detailed
+        information about the job title.
     directory : pathlib.Path or str, optional
         Directory where the data will be downloaded. If None, the default
         directory, located in the user home folder, is used.
@@ -139,8 +144,15 @@ def fetch_employee_salaries(
         dataset.X.drop(
             ["2016_gross_pay_received", "2016_overtime_pay"], axis=1, inplace=True
         )
+
     if drop_irrelevant:
         dataset.X.drop(["full_name"], axis=1, inplace=True)
+
+    if overload_job_titles:
+        dataset.X["employee_position_title"] = dataset.X[
+            "underfilled_job_title"
+        ].fillna(dataset.X["employee_position_title"])
+        dataset.X.drop(labels=["underfilled_job_title"], axis="columns", inplace=True)
 
     return dataset
 
