@@ -22,6 +22,7 @@ from sklearn.utils.metaestimators import _BaseComposition
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
+from skrub._utils import parse_astype_error_message
 
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
@@ -417,7 +418,11 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                 drop="if_binary", handle_unknown="infrequent_if_exist"
             )
         elif self.low_card_cat_transformer == "remainder":
-            self.low_card_cat_transformer_ = self.remainder
+            self.low_card_cat_transformer_ = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
         else:
             self.low_card_cat_transformer_ = self.low_card_cat_transformer
 
@@ -426,7 +431,11 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         elif self.high_card_cat_transformer is None:
             self.high_card_cat_transformer_ = GapEncoder(n_components=30)
         elif self.high_card_cat_transformer == "remainder":
-            self.high_card_cat_transformer_ = self.remainder
+            self.high_card_cat_transformer_ = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
         else:
             self.high_card_cat_transformer_ = self.high_card_cat_transformer
 
@@ -435,7 +444,11 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         elif self.numerical_transformer is None:
             self.numerical_transformer_ = "passthrough"
         elif self.numerical_transformer == "remainder":
-            self.numerical_transformer_ = self.remainder
+            self.numerical_transformer_ = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
         else:
             self.numerical_transformer_ = self.numerical_transformer
 
@@ -444,7 +457,11 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         elif self.datetime_transformer is None:
             self.datetime_transformer_ = DatetimeEncoder()
         elif self.datetime_transformer == "remainder":
-            self.datetime_transformer_ = self.remainder
+            self.datetime_transformer_ = (
+                self.remainder
+                if isinstance(self.remainder, str)
+                else clone(self.remainder)
+            )
         else:
             self.datetime_transformer_ = self.datetime_transformer
 
@@ -560,7 +577,34 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col] = dtype
-        X = X.astype(self.types_)
+        for col, dtype in self.types_.items():
+            try:
+                if pd.api.types.is_numeric_dtype(dtype):
+                    # we don't use astype because it can convert float to int
+                    X[col] = pd.to_numeric(X[col])
+                else:
+                    X[col] = X[col].astype(dtype)
+            except ValueError as e:
+                culprit = parse_astype_error_message(e)
+                if culprit is None:
+                    raise e
+                warnings.warn(
+                    f"Value '{culprit}' could not be converted to infered type"
+                    f" {dtype!s} in column '{col}'. Such values will be replaced"
+                    " by NaN.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                # if the inferred dtype is numerical or datetime,
+                # we want to ignore entries that cannot be converted
+                # to this dtype
+                if pd.api.types.is_numeric_dtype(dtype):
+                    X[col] = pd.to_numeric(X[col], errors="coerce")
+                elif pd.api.types.is_datetime64_any_dtype(dtype):
+                    X[col] = pd.to_datetime(X[col], errors="coerce")
+                else:
+                    # this should not happen
+                    raise e
         return X
 
     def _check_X(self, X, reset):

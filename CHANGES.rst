@@ -10,28 +10,34 @@ Ongoing development
 =====================
 
 Skrub has not been released yet. It is currently undergoing fast
-development and backward compatability is not ensured.
+development and backward compatibility is not ensured.
 
 Major changes
 -------------
 
+* :class:`FeatureAugmenter` is renamed to :class:`Joiner`.
+  :pr:`674` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 * :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on datetime columns.
   :pr:`552` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+* :class:`Joiner` now supports joining on multiple column keys.
+  :pr:`674` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * The signatures of all encoders and functions have been revised to enforce
   cleaner calls. This means that some arguments that could previously be passed
   positionally now have to be passed as keywords.
   :pr:`514` by :user:`Lilian Boulard <LilianBoulard>`.
 
-* Parallelized the `GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
+* Parallelized the :class:`GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
 * Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
   and :user:`Lilian Boulard <LilianBoulard>`
 
-* Functions :func:`fetch_ken_embeddings`, :func:`fetch_ken_table_aliases`
-  and :func:`fetch_ken_types` have been renamed.
+* Functions :func:`datasets.fetch_ken_embeddings`, :func:`datasets.fetch_ken_table_aliases`
+  and :func:`datasets.fetch_ken_types` have been renamed.
   :pr:`602` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * Make `pyarrow` an optional dependencies to facilitate the integration
@@ -53,6 +59,11 @@ Major changes
   2-D array (or a pandas DataFrame) with a single column instead. This change is for
   compliance with the scikit-learn API.
   :pr:`647` by :user:`Guillaume Lemaitre <glemaitre>`
+
+* Fixes a bug in :class:`TableVectorizer` with `remainder`: it is now cloned if it's
+  a transformer so that the same instance is not shared between different
+  transformers.
+  :pr:`678` by :user:`Guillaume Lemaitre <glemaitre>`
 
 Minor changes
 -------------
@@ -88,12 +99,25 @@ Minor changes
   by converting them to string before type inference.
   :pr:`623`by :user:`Leo Grinsztajn <LeoGrin>`
 
+* Moved the default storage location of data to the user's home folder.
+  :pr:`652` by :user:`Felix Lefebvre <flefebv>` and
+  :user:`Gael Varoquaux <GaelVaroquaux>`
+
 * Fixed bug when using :class:`TableVectorizer`'s `transform` method on
   categorical columns with missing values.
   :pr:`644` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * :class:`TableVectorizer` never output a sparse matrix by default. This can be changed by
   increasing the `sparse_threshold` parameter. :pr:`646` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* :class:`TableVectorizer` doesn't fail anymore if an infered type doesn't work during transform.
+  The new entries not matching the type are replaced by missing values. :pr:`666` by :user:`Leo Grinsztajn <LeoGrin>`
+
+- Dataset fetcher :func:`datasets.fetch_employee_salaries` now has a parameter
+  `overload_job_titles` to allow overloading the job titles
+  (`employee_position_title`) with the column `underfilled_job_title`,
+  which provides some more information about the job title.
+  :pr:`581` by :user:`Lilian Boulard <LilianBoulard>`
 
 Before skrub: dirty_cat
 ========================

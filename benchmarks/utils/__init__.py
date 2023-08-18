@@ -4,10 +4,9 @@ from ._various import (
     find_result,
     find_results,
     get_classification_datasets,
-    get_dataset,
     get_regression_datasets,
 )
-from .monitor import monitor, repr_func
+from .monitor import monitor
 
 __all__ = [
     "default_parser",
@@ -16,7 +15,5 @@ __all__ = [
     "find_results",
     "get_classification_datasets",
     "get_regression_datasets",
-    "get_dataset",
     "monitor",
-    "repr_func",
 ]

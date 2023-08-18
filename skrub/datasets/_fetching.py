@@ -152,15 +152,16 @@ def _fetch_openml_dataset(
     dataset_id: int,
     data_directory: Path | None = None,
 ) -> dict[str, Any]:
-    """Gets a dataset from OpenML (https://www.openml.org).
+    """
+    Gets a dataset from OpenML (https://www.openml.org).
 
     Parameters
     ----------
     dataset_id : int
         The ID of the dataset to fetch.
-    data_directory : Path, optional
-        A directory to save the data to.
-        By default, the skrub data directory.
+    data_directory : pathlib.Path, optional
+        The directory where the dataset is stored.
+        By default, a subdirectory "openml" in the skrub data directory.
 
     Returns
     -------
@@ -176,7 +177,7 @@ def _fetch_openml_dataset(
               saved as a CSV file.
     """
     if data_directory is None:
-        data_directory = get_data_dir()
+        data_directory = get_data_dir(name="openml")
 
     # Make path absolute
     data_directory = data_directory.resolve()
@@ -242,9 +243,9 @@ def _fetch_world_bank_data(
     ----------
     indicator_id : str
         The ID of the indicator's dataset to fetch.
-    data_directory : Path, optional
-        A directory to save the data to.
-        By default, the skrub data directory.
+    data_directory : pathlib.Path, optional
+        The directory where the dataset is stored.
+        By default, a subdirectory "world_bank" in the skrub data directory.
 
     Returns
     -------
@@ -260,7 +261,7 @@ def _fetch_world_bank_data(
               saved as a CSV file.
     """
     if data_directory is None:
-        data_directory = get_data_dir()
+        data_directory = get_data_dir(name="world_bank")
 
     csv_path = (data_directory / f"{indicator_id}.csv").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
@@ -326,8 +327,8 @@ def _fetch_figshare(
     figshare_id : str
         The ID of the dataset to fetch.
     data_directory : pathlib.Path, optional
-        A directory to save the data to.
-        By default, the skrub data directory.
+        The directory where the dataset is stored.
+        By default, a subdirectory "figshare" in the skrub data directory.
 
     Returns
     -------
@@ -347,7 +348,8 @@ def _fetch_figshare(
     pyarrow installed to run correctly.
     """
     if data_directory is None:
-        data_directory = get_data_dir()
+        data_directory = get_data_dir(name="figshare")
+
     parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
     data_directory.mkdir(parents=True, exist_ok=True)
     url = f"https://ndownloader.figshare.com/files/{figshare_id}"
@@ -666,7 +668,8 @@ def fetch_employee_salaries(
     load_dataframe: bool = True,
     drop_linked: bool = True,
     drop_irrelevant: bool = True,
-    directory: Path | str | None = None,
+    overload_job_titles: bool = True,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches the employee salaries dataset (regression), available at https://openml.org/d/42125
 
@@ -684,6 +687,14 @@ def fetch_employee_salaries(
     drop_irrelevant : bool, default=True
         Drops column "full_name", which is usually irrelevant to the
         statistical analysis.
+
+    overload_job_titles : bool, default=True
+        Uses the column `underfilled_job_title` to enrich the
+        `employee_position_title` column, as it contains more detailed
+        information about the job title.
+
+    data_directory: pathlib.Path or str, optional
+        The directory where the dataset is stored.
 
     Returns
     -------
@@ -704,7 +715,7 @@ def fetch_employee_salaries(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
     if load_dataframe:
         if drop_linked:
@@ -713,6 +724,13 @@ def fetch_employee_salaries(
             )
         if drop_irrelevant:
             dataset.X.drop(["full_name"], axis=1, inplace=True)
+        if overload_job_titles:
+            dataset.X["employee_position_title"] = dataset.X[
+                "underfilled_job_title"
+            ].fillna(dataset.X["employee_position_title"])
+            dataset.X.drop(
+                labels=["underfilled_job_title"], axis="columns", inplace=True
+            )
 
     return dataset
 
@@ -720,7 +738,7 @@ def fetch_employee_salaries(
 def fetch_road_safety(
     *,
     load_dataframe: bool = True,
-    directory: Path | str | None = None,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches the road safety dataset (classification), available at https://openml.org/d/42803
 
@@ -747,14 +765,14 @@ def fetch_road_safety(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
 
 
 def fetch_medical_charge(
     *,
     load_dataframe: bool = True,
-    directory: Path | str | None = None,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches the medical charge dataset (regression), available at https://openml.org/d/42720
 
@@ -786,14 +804,14 @@ def fetch_medical_charge(
             "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
 
 
 def fetch_midwest_survey(
     *,
     load_dataframe: bool = True,
-    directory: Path | str | None = None,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches the midwest survey dataset (classification), available at https://openml.org/d/42805
 
@@ -818,14 +836,14 @@ def fetch_midwest_survey(
             "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
 
 
 def fetch_open_payments(
     *,
     load_dataframe: bool = True,
-    directory: Path | str | None = None,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches the open payments dataset (classification), available at https://openml.org/d/42738
 
@@ -852,14 +870,14 @@ def fetch_open_payments(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
 
 
 def fetch_traffic_violations(
     *,
     load_dataframe: bool = True,
-    directory: Path | str | None = None,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches the traffic violations dataset (classification), available at https://openml.org/d/42132
 
@@ -888,14 +906,14 @@ def fetch_traffic_violations(
             "na_values": ["?"],
         },
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
 
 
 def fetch_drug_directory(
     *,
     load_dataframe: bool = True,
-    directory: Path | str | None = None,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches the drug directory dataset (classification), available at https://openml.org/d/43044
 
@@ -921,7 +939,7 @@ def fetch_drug_directory(
             "escapechar": "\\",
         },
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
 
 
@@ -929,7 +947,7 @@ def fetch_world_bank_indicator(
     indicator_id: str,
     *,
     load_dataframe: bool = True,
-    directory: Path | str | None = None,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches a dataset of an indicator from the World Bank open data platform.
 
@@ -952,7 +970,7 @@ def fetch_world_bank_indicator(
         dataset_id=indicator_id,
         target=None,
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )
 
 
@@ -960,7 +978,7 @@ def fetch_figshare(
     figshare_id: str,
     *,
     load_dataframe: bool = True,
-    directory: Path | str | None = None,
+    data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
     """Fetches a table of from figshare.
 
@@ -978,5 +996,5 @@ def fetch_figshare(
         dataset_id=figshare_id,
         target=None,
         load_dataframe=load_dataframe,
-        data_directory=directory,
+        data_directory=data_directory,
     )

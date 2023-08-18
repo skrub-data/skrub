@@ -1,6 +1,6 @@
 """
-Fuzzy joining dirty tables and the FeatureAugmenter
-=====================================================
+Fuzzy joining dirty tables with the Joiner
+==========================================
 
 Here we show how to combine data from different sources,
 with a vocabulary not well normalized.
@@ -16,7 +16,7 @@ To illustrate, we will join data from the
 provided in `the World Bank open data platform <https://data.worldbank.org/>`_
 in order to create a first prediction model.
 
-Moreover, the |fa| is a scikit-learn Transformer that makes it easy to
+Moreover, the |joiner| is a scikit-learn Transformer that makes it easy to
 use such fuzzy joining multiple tables to bring in information in a
 machine-learning pipeline. In particular, it enables tuning parameters of
 |fj| to find the matches that maximize prediction accuracy.
@@ -24,7 +24,7 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 
 .. |fj| replace:: :func:`~skrub.fuzzy_join`
 
-.. |fa| replace:: :func:`~skrub.FeatureAugmenter`
+.. |joiner| replace:: :func:`~skrub.Joiner`
 """
 
 ###############################################################################
@@ -35,7 +35,7 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 import pandas as pd
 
 df = pd.read_csv(
-    "https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv",  # noqa
+    "https://raw.githubusercontent.com/skrub-data/datasets/master/data/Happiness_report_2022.csv",  # noqa
     thousands=",",
 )
 df.drop(df.tail(1).index, inplace=True)
@@ -113,6 +113,8 @@ gdppc.sort_values(by="Country Name").tail(7)
 # We will ignore the warnings:
 import warnings
 
+warnings.filterwarnings("ignore")
+
 ###############################################################################
 # .. _example_fuzzy_join:
 #
@@ -121,8 +123,6 @@ import warnings
 #
 # To join them with skrub, we only need to do the following:
 from skrub import fuzzy_join
-
-warnings.filterwarnings("ignore")
 
 df1 = fuzzy_join(
     df,  # our table to join
@@ -347,16 +347,16 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # beating our result!
 
 #######################################################################
-# Using the |fa| to fuzzy join multiple tables
+# Using the |joiner| to fuzzy join multiple tables
 # --------------------------------------------
 # A faster way to merge different tables from the World Bank
-# to `X` is to use the |fa|.
+# to `X` is to use the |joiner|.
 #
-# The |fa| is a transformer that can easily chain joins of tables on
+# The |joiner| is a transformer that can easily chain joins of tables on
 # a main table.
 
 #######################################################################
-# .. _example_feature_augmenter:
+# .. _example_joiner:
 #
 # Instantiating the transformer
 # .............................
@@ -366,9 +366,9 @@ y = df["Happiness score"]
 # We gather the auxilliary tables into a
 # list of (tables, keys) for the `tables` parameter.
 # An instance of the transformer with the necessary information is:
-from skrub import FeatureAugmenter
+from skrub import Joiner
 
-fa = FeatureAugmenter(
+joiner = Joiner(
     tables=[
         (gdppc, "Country Name"),
         (life_exp, "Country Name"),
@@ -381,8 +381,8 @@ fa = FeatureAugmenter(
 # Fitting and transforming into the final table
 # .............................................
 # To get our final joined table we will fit and transform the main table (df)
-# with our create instance of the |fa|:
-df_final = fa.fit_transform(df)
+# with our create instance of the |joiner|:
+df_final = joiner.fit_transform(df)
 
 df_final.head(10)
 
@@ -406,7 +406,7 @@ encoder = make_column_transformer(
     remainder="drop",
 )
 
-pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
+pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the parameters of the |fj|.
@@ -416,7 +416,7 @@ pipeline = make_pipeline(fa, encoder, HistGradientBoostingRegressor())
 from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
-params = {"featureaugmenter__match_score": [0.2, 0.3, 0.4, 0.5]}
+params = {"joiner__match_score": [0.2, 0.3, 0.4, 0.5]}
 
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)

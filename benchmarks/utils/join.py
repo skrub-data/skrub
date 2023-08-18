@@ -1,12 +1,16 @@
 import pandas as pd
+from pathlib import Path
 
 from skrub.datasets._utils import get_data_dir
 
 
-def get_local_data(dataset_name: str, data_directory: str = None):
+def get_local_data(
+    dataset_name: str,
+    data_home: Path | str | None = None,
+    data_directory: str | None = None,
+):
     """Get the path to the local datasets."""
-    if data_directory is None:
-        data_directory = get_data_dir("benchmarks_data")
+    data_directory = get_data_dir(data_directory, data_home)
     left_path = str(data_directory) + f"/left_{dataset_name}.parquet"
     right_path = str(data_directory) + f"/right_{dataset_name}.parquet"
     gt_path = str(data_directory) + f"/gt_{dataset_name}.parquet"
@@ -21,7 +25,10 @@ def get_local_data(dataset_name: str, data_directory: str = None):
 
 
 def fetch_data(
-    dataset_name: str, save: bool = True
+    dataset_name: str,
+    save: bool = True,
+    data_home: Path | str | None = None,
+    data_directory: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Fetch datasets from https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark  # noqa
 
@@ -32,6 +39,13 @@ def fetch_data(
 
     save: bool, default=true
         Wheter to save the datasets locally.
+
+    data_home: Path or str, optional
+        The path to the root data directory.
+        By default, will point to the skrub data directory.
+
+    data_directory: str, optional
+        The name of the subdirectory in which data is stored.
 
     Returns
     -------
@@ -44,7 +58,9 @@ def fetch_data(
     gt: pd.DataFrame
         Ground truth dataset.
     """
-    left_path, right_path, gt_path, file_paths = get_local_data(dataset_name)
+    left_path, right_path, gt_path, file_paths = get_local_data(
+        dataset_name, data_home, data_directory
+    )
     if len(file_paths) == 0:
         repository = "Yeye-He/Auto-Join"
         dataset_name = dataset_name.replace(" ", "%20")
@@ -70,6 +86,8 @@ def fetch_big_data(
     dataset_name: str,
     data_type: str = "Dirty",
     save: bool = True,
+    data_home: Path | str | None = None,
+    data_directory: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Fetch datasets from https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md  # noqa
 
@@ -85,6 +103,13 @@ def fetch_big_data(
     save: bool, default=true
         Wheter to save the datasets locally.
 
+    data_home: Path or str, optional
+        The path to the root data directory.
+        By default, will point to the skrub data directory.
+
+    data_directory: str, optional
+        The name of the subdirectory in which data is stored.
+
     Returns
     -------
     left: pd.DataFrame
@@ -97,7 +122,9 @@ def fetch_big_data(
         Ground truth dataset.
     """
     link = "https://pages.cs.wisc.edu/~anhai/data1/deepmatcher_data/"
-    left_path, right_path, gt_path, file_paths = get_local_data(dataset_name)
+    left_path, right_path, gt_path, file_paths = get_local_data(
+        dataset_name, data_home, data_directory
+    )
     if len(file_paths) == 0:
         test_idx = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/test.csv")
         train_idx = pd.read_csv(f"{link}/{data_type}/{dataset_name}/exp_data/train.csv")
