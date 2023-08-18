@@ -589,9 +589,9 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                 if culprit is None:
                     raise e
                 warnings.warn(
-                    f"Value '{culprit}' could not be converted to infered type"
-                    f" {dtype!s} in column '{col}'. Such values will be replaced"
-                    " by NaN.",
+                    f"Value '{culprit}' could not be converted to inferred "
+                    f"type {dtype!s} in column '{col}'. Such values will be "
+                    "replaced by NaN.",
                     UserWarning,
                     stacklevel=2,
                 )
