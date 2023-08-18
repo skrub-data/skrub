@@ -104,7 +104,7 @@ pprint(tv.transformers_)
 # ``high_card_cat_transformer``, we use the syntax
 # ``tablevectorizer__high_card_cat_transformer__n_components``.
 #
-# We recommend using the 3-tuple syntax for the column-specific transformers, 
+# We recommend using the 3-tuple syntax for the column-specific transformers,
 # which allows us to give a name to the assignment (here ``mh_dep_name``).
 
 from sklearn.model_selection import GridSearchCV
