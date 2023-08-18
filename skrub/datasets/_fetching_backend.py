@@ -196,7 +196,8 @@ def _fetch_world_bank_data(
             raise URLError("No internet connection or the website is down.")
 
         # Read and modify the csv file
-        df = pd.read_csv(file, skiprows=3)  # FIXME: why three rows?
+        # Remove the first 3 rows, which are metadata
+        df = pd.read_csv(file, skiprows=3)
         indicator_name = df.iloc[0, 2]
         df[indicator_name] = df.stack().groupby(level=0).last()
         df = df[df[indicator_name] != indicator_id]
