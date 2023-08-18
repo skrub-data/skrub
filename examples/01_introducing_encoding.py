@@ -36,6 +36,9 @@ Let's dive right in!
 .. |MinHashEncoder| replace::
     :class:`~skrub.MinHashEncoder`
 
+.. |DatetimeEncoder| replace::
+    :class:`~skrub.DatetimeEncoder`
+
 .. |HGBR| replace::
     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 
@@ -48,13 +51,13 @@ Let's dive right in!
 # ----------------------------
 #
 # .. note::
-#     TLDR: use
+#   TLDR: use
 #
-#     .. code-block:: python
-#        pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
-#        pipline.fit(X, y)
+#   .. code-block:: python
+#      pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
+#      pipline.fit(X, y)
 #
-#     as a generic and robust pipeline for your tabular learning tasks.
+#   as a generic and robust pipeline for your tabular learning tasks.
 #
 # Let's first retrieve the dataset:
 
@@ -71,31 +74,10 @@ dataset.description
 X = dataset.X
 y = dataset.y
 
-###############################################################################
-# And carry out some basic preprocessing
-
-# Overload `employee_position_title` with 'underfilled_job_title',
-# as the latter gives more accurate job titles when specified
-
-X["employee_position_title"] = X["underfilled_job_title"].fillna(
-    X["employee_position_title"]
-)
-X.drop(labels=["underfilled_job_title"], axis="columns", inplace=True)
-
 X
 
 ###############################################################################
-# Let's extract a sample to have a more focused view: we'll limit our
-# search to employees with position title containing "Fire".
-
-sample = X[X["employee_position_title"].str.contains("Fire")].sample(
-    n=10, random_state=5
-)
-
-sample
-
-###############################################################################
-# We observe a few things:
+# We observe a few things from the dataset:
 # - We have diverse columns: binary ('gender'), numerical
 #   ('employee_annual_salary'), categorical ('department', 'department_name',
 #   'assignment_category'), datetime ('date_first_hired') and dirty categories
@@ -139,10 +121,73 @@ pprint(tv.transformers_)
 # categorical columns.
 # The |DatetimeEncoder| can encode datetime columns for machine learning.
 #
-# We will explore those in the next sections.
+# Next, we can have a look at the encoded feature names.
 #
+# Before encoding:
 
-# TODO
+X.columns.to_list()
+
+##############################################################################
+# After encoding (we only plot the first 8 feature names):
+
+feature_names = tv.get_feature_names_out()
+
+feature_names[:8]
+
+###############################################################################
+# As we can see, it gave us interpretable columns.
+# This is because we used the |GapEncoder| on the column ‘division’,
+# which was classified as a high cardinality string variable
+# (default values, see |TableVectorizer|’s docstring).
+#
+# In total, we have a reasonable number of encoded columns:
+
+len(feature_names)
+
+
+# Feature importances in the statistical model
+# --------------------------------------------
+#
+# In this section, we will train a regressor, and plot the feature importances.
+#
+# .. topic:: Note:
+#
+#   To minimize computation time, we use the feature importances computed by the
+#   |RandomForestRegressor|, but you should prefer |permutation importances|
+#   instead (which are less subject to biases).
+#
+# First, let's train the |RandomForestRegressor|:
+
+from sklearn.ensemble import RandomForestRegressor
+
+regressor = RandomForestRegressor()
+regressor.fit(X, y)
+
+###############################################################################
+# Retrieving the feature importances:
+
+import numpy as np
+
+importances = regressor.feature_importances_
+std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
+indices = np.argsort(importances)
+# Sort from least to most
+indices = list(reversed(indices))
+
+###############################################################################
+# Plotting the results:
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(12, 9))
+plt.title("Feature importances")
+n = 20
+n_indices = indices[:n]
+labels = np.array(feature_names)[n_indices]
+plt.barh(range(n), importances[n_indices], color="b", yerr=std[n_indices])
+plt.yticks(range(n), labels, size=15)
+plt.tight_layout(pad=1)
+plt.show()
 
 ###############################################################################
 # Conclusion
@@ -152,4 +197,7 @@ pprint(tv.transformers_)
 # pipeline, which we built using the |TableVectorizer| and a
 # |HistGradientBoostingRegressor|.
 #
-# We explored the main encoding features implemented in the *skrub* library.
+# We saw that by default, it works well on a heterogeneous dataset.
+#
+# To better understand our dataset, and without much effort, we were also able
+# to plot the feature importances.
