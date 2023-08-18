@@ -67,15 +67,20 @@ def test_analyzer(
 
 
 @pytest.mark.parametrize(
-    ["hashing", "init", "analyzer", "add_words"],
+    ["hashing", "init", "analyzer", "add_words", "verbose"],
     [
-        (False, "k-means++", "word", True),
-        (True, "random", "char", False),
-        (True, "k-means", "char_wb", True),
+        (False, "k-means++", "word", True, False),
+        (True, "random", "char", False, False),
+        (True, "k-means", "char_wb", True, True),
     ],
 )
 def test_gap_encoder(
-    hashing: bool, init: str, analyzer: str, add_words: bool, n_samples: int = 70
+    hashing: bool,
+    init: str,
+    analyzer: str,
+    add_words: bool,
+    verbose: bool,
+    n_samples: int = 70,
 ) -> None:
     X = generate_data(n_samples, random_state=0)
     n_components = 10
@@ -86,6 +91,7 @@ def test_gap_encoder(
         init=init,
         analyzer=analyzer,
         add_words=add_words,
+        verbose=verbose,
         random_state=42,
         rescale_W=True,
     )
