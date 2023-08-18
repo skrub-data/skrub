@@ -1,0 +1,317 @@
+---
+# Workflow to build the documentation. On pull requests, partial builds are run
+# except if "[full doc]" is defined in commit message. Full builds are
+# always run on "main". This is done every time there is a push on "main"
+# and every night.
+name: Documentation builder
+
+on:
+    push:
+        branches:
+        -   main
+    pull_request:
+        branches:
+        -   '*'
+    schedule:
+    -   cron: 0 6 * * *
+
+jobs:
+
+  # Make citation metadata from CITATION.cff is valid.
+  # as it is used in the documentation build.
+    validate_cff:
+        if: github.repository == 'nilearn/nilearn'
+        runs-on: ubuntu-latest
+        steps:
+        -   uses: actions/checkout@v3
+        -   name: Check whether the citation metadata from CITATION.cff is valid
+            uses: citation-file-format/cffconvert-github-action@2.0.0
+            with:
+                args: --validate
+
+  # Steps to build the documentation.
+    build_docs:
+        needs: validate_cff
+    # This prevents this workflow from running on a fork.
+    # To test this workflow on a fork, uncomment the following line.
+        if: github.repository == 'nilearn/nilearn'
+        runs-on: ubuntu-latest
+        timeout-minutes: 360
+        env:
+            BROWSER: /usr/bin/firefox
+            DISPLAY: :99.0
+            NILEARN_DATA: /home/runner/work/nilearn/nilearn/nilearn_data
+        defaults:
+            run:
+                shell: bash -el {0}
+        steps:
+        -   name: Source caching
+            uses: actions/cache@v3
+            with:
+                path: .git
+                key: source-cache-${{ runner.os }}-${{ github.run_id }}
+                restore-keys: |
+                    source-cache-${{ runner.os }}
+        -   name: Checkout nilearn
+            uses: actions/checkout@v3
+            with:
+          # If pull request, checkout HEAD commit with all commit history
+                ref: ${{ github.event.pull_request.head.sha }}
+                fetch-depth: 0
+        -   name: Complete checkout
+            run: |
+                set -x
+                if ! git remote -v | grep upstream; then
+                  git remote add upstream https://github.com/nilearn/nilearn.git
+                fi
+                git fetch upstream
+        -   name: Merge with upstream
+            run: |
+                set -x
+                echo $(git log -1 --pretty=%B) | tee gitlog.txt
+                echo "gitlog.txt = $(cat gitlog.txt)"
+                echo $GITHUB_REF_NAME | tee merge.txt
+                if [ "$GITHUB_REF_NAME" != "main" ]; then
+                    echo "Merging $(cat merge.txt)";
+                    git pull --ff-only upstream "refs/pull/$(cat merge.txt)";
+                fi
+
+      # Set up environment
+        -   name: Install apt packages
+            run: |
+                ./build_tools/github/build_docs_apt_dependencies.sh
+        -   name: Setup conda
+            uses: conda-incubator/setup-miniconda@v2
+            with:
+                auto-activate-base: true
+                activate-environment: ''
+                miniconda-version: latest
+                channels: conda-forge
+        -   name: Install packages in conda env
+            run: |
+                ./build_tools/github/build_docs_dependencies.sh
+
+      # Restore data from cache, or set up caching if data not found or
+      # [force download] is defined in commit message
+        -   name: Determine restore data
+            run: |
+                commit_msg=$(git log -2 --format=oneline);
+                echo $commit_msg;
+                if [[ $commit_msg == *"[force download]"* ]]; then
+                  echo "All datasets will be downloaded as requested (only for full builds).";
+                  echo "false" | tee restore.txt;
+                else
+                  echo "Data cache will be used if available.";
+                  echo "true" | tee restore.txt;
+                fi
+        -   name: Get cache key
+            id: cache-key
+            run: |
+                if [[ $(cat restore.txt) == "true" ]]; then
+                    date +%U > week_num;
+                    echo "restore=true" >> $GITHUB_OUTPUT
+                fi
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~48 MB
+            with:
+                path: |
+                    nilearn_data/basc_multiscale_2015
+                    nilearn_data/destrieux_surface
+                    nilearn_data/destrieux_2009
+                    nilearn_data/difumo_atlases
+                    nilearn_data/fsaverage
+                    nilearn_data/Megatrawls
+                    nilearn_data/msdl_atlas
+                    nilearn_data/neurovault
+                    nilearn_data/pauli_2017
+                    nilearn_data/yeo_2011
+                key: v1-small-cache-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~45 MB
+            with:
+                path: |
+                    nilearn_data/adhd
+                key: v1-adhd-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~32 MB
+            with:
+                path: |
+                    nilearn_data/allen_rsn_2011
+                key: v1-allen_rsn_2011-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~66 MB
+            with:
+                path: |
+                    nilearn_data/brainomics_localizer
+                key: v1-brainomics_localizer-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~373 MB
+            with:
+                path: |
+                    nilearn_data/development_fmri
+                key: v1-development_fmri-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~832 MB
+            with:
+                path: |
+                    nilearn_data/ds000030
+                key: v1-ds000030-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~82 MB
+            with:
+                path: |
+                    nilearn_data/fiac_nilearn.glm
+                key: v1-fiac_nilearn.glm-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~750 MB
+            with:
+                path: |
+                    nilearn_data/fMRI-language-localizer-demo-dataset
+                key: v1-fMRI-language-localizer-demo-dataset-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~30 MB
+            with:
+                path: |
+                    nilearn_data/fsl
+                key: v1-fsl-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~302 MB
+            with:
+                path: |
+                    nilearn_data/haxby2001
+                key: v1-haxby2001-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~63 MB
+            with:
+                path: |
+                    nilearn_data/icbm152_2009
+                key: v1-icbm152_2009-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~105 MB
+            with:
+                path: |
+                    nilearn_data/jimura_poldrack_2012_zmaps
+                key: v1-jimura_poldrack_2012_zmaps-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~35 MB
+            with:
+                path: |
+                    nilearn_data/localizer_first_level
+                key: v1-localizer_first_level-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~181 MB
+            with:
+                path: |
+                    nilearn_data/miyawaki2008
+                key: v1-miyawaki2008-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~85 MB
+            with:
+                path: |
+                    nilearn_data/nki_enhanced_surface
+                key: v1-nki_enhanced_surface-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~913 MB
+            with:
+                path: |
+                    nilearn_data/oasis1
+                key: v1-oasis1-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~171 MB
+            with:
+                path: |
+                    nilearn_data/smith_2009
+                key: v1-smith_2009-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~230 MB
+            with:
+                path: |
+                    nilearn_data/spm_auditory
+                key: v1-spm_auditory-${{ hashFiles('week_num') }}
+        -   name: Data caching
+            if: steps.cache-key.outputs.restore == 'true'
+            uses: actions/cache@v3
+        # ~227 MB
+            with:
+                path: |
+                    nilearn_data/spm_multimodal_fmri
+                key: v1-spm_multimodal_fmri-${{ hashFiles('week_num') }}
+
+      # Update the authors file and the names file
+      # in case a contributor has been added to citation.cff
+      # but did not run the maint_tools/citation_cff_maint.py script.
+        -   name: update AUTHORS.rst and doc/changes/names.rst
+            run: python maint_tools/citation_cff_maint.py
+
+      # Run the doc build. If no data is restored in previous steps, the data
+      # will be downloaded during the build (this only applies for full builds;
+      # no data is downloaded for partial builds).
+        -   name: Find build type
+            run: |
+                ./build_tools/github/build_type.sh
+            env:
+                COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+        -   name: Verify build type
+            run: |
+                echo "PATTERN = $(cat pattern.txt)"
+                echo "BUILD = $(cat build.txt)"
+      # Set up and launch a virtual browser needed for one example to run
+      # without stalling the job. The example launches an html in the browser.
+        -   name: Set up display server for virtual browser
+            run: |
+                Xvfb -ac :99 -screen 0 1280x1024x16 > /dev/null 2>&1 &
+        -   name: Build docs
+            run: |
+                source activate testenv
+                echo "Conda active env = $CONDA_DEFAULT_ENV";
+                cd doc;
+                set -o pipefail;
+                PATTERN=$(cat ../pattern.txt) make $(cat ../build.txt) 2>&1 | tee log.txt;
+        -   name: Upload documentation
+            uses: actions/upload-artifact@v3
+            with:
+                name: doc
+                path: doc/_build/html
+        -   name: Note about build
+            run: |
+                if [[ "$(cat build.txt)" != "html-strict" ]]; then
+                    echo "Partial build : No data is downloaded or cached";
+                else
+                    echo "Full build : Data is downloaded and cached if not restored from previous cache";
+                fi
