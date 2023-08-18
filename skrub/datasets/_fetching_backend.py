@@ -204,6 +204,8 @@ def _fetch_world_bank_data(
         df = df[["Country Name", indicator_name]]
 
         df.to_csv(csv_path, index=False)
+        # FIXME: make consistent across multiple calls w/o reading from disk
+        df = pd.read_csv(csv_path)
 
     return {
         "description": (
