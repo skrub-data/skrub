@@ -25,10 +25,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
   "Topic :: Software Development :: Libraries",
 ]
-urls = [
-  { Homepage = "https://skrub-data.org/" },
-  { Source = "https://github.com/skrub-data/skrub" }
-]
+
 dynamic = ["version"] # see [tool.setuptools.dynamic]
 requires-python = ">=3.10"
 dependencies = [
@@ -37,6 +34,10 @@ dependencies = [
   "scipy>=1.9.3",
   "pandas>=1.5.3",
 ]
+
+[project.urls]
+Homepage = "https://skrub-data.org/"
+Source = "https://github.com/skrub-data/skrub"
 
 [project.optional-dependencies]
 pyarrow = [
@@ -86,6 +87,9 @@ min-py310 = [
   "scipy==1.9.3",
   "pandas==1.5.3",
 ]
+
+[tool.setuptools]
+packages = ["skrub"]
 
 [tool.setuptools.dynamic]
 version = { file = "skrub/VERSION.txt" }
