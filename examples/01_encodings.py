@@ -1,5 +1,5 @@
 """
-.. _example_introducing_encoding:
+.. _example_encodings:
 
 ==========================================================================
 Encoding: turning any dataframe to a numerical matrix for machine learning
