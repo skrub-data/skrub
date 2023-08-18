@@ -30,18 +30,6 @@ dataset = fetch_employee_salaries()
 # Alias X and y
 X, y = dataset.X, dataset.y
 
-dataset.description
-
-###############################################################################
-# And carry out some basic preprocessing:
-
-# Overload `employee_position_title` with 'underfilled_job_title',
-# as the latter gives more accurate job titles when specified
-X["employee_position_title"] = X["underfilled_job_title"].fillna(
-    X["employee_position_title"]
-)
-X.drop(labels=["underfilled_job_title"], axis="columns", inplace=True)
-
 X
 
 ###############################################################################
