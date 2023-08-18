@@ -99,7 +99,7 @@ y = y[~mask]
 # representation:
 from sklearn.preprocessing import OneHotEncoder
 
-one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
+one_hot = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
 
 ###############################################################################
 # We assemble these to apply them to the relevant columns.
@@ -140,9 +140,7 @@ pipeline.fit(X, y)
 #
 # The |OneHotEncoder| is actually not well suited to the 'Employee
 # Position Title' column, as this column contains 400 different entries:
-import numpy as np
-
-np.unique(y)
+X['employee_position_title'].value_counts()
 
 ###############################################################################
 # .. _example_minhash_encoder:
@@ -261,6 +259,7 @@ pipeline = make_pipeline(
 # Let's perform a cross-validation to see how well this model predicts:
 
 from sklearn.model_selection import cross_val_score
+import numpy as np
 
 scores = cross_val_score(pipeline, X, y, scoring="r2")
 
