@@ -495,7 +495,7 @@ numpydoc_xref_aliases = {
     "fetch_ken_types": "skrub.datasets.fetch_ken_types",
     "fetch_ken_embeddings": "skrub.datasets.fetch_ken_embeddings",
     "fuzzy_join": "skrub.fuzzy_join",
-    "FeatureAugmenter": "skrub.FeatureAugmenter",
+    "Joiner": "skrub.Joiner",
     "GapEncoder": "skrub.GapEncoder",
     "MinHashEncoder": "skrub.MinHashEncoder",
     "SimilarityEncoder": "skrub.SimilarityEncoder",

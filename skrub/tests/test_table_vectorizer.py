@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
@@ -845,3 +845,22 @@ def test_changing_types_int_float():
     table_vec.fit_transform(X_fit)
     res = table_vec.transform(X_transform)
     assert np.allclose(res, np.array([[1.0], [2.0], [3.3]]))
+
+
+def test_table_vectorizer_remainder_cloning():
+    """Check that remainder is cloned when used."""
+    df1 = _get_clean_dataframe()
+    df2 = _get_datetimes_dataframe()
+    df = pd.concat([df1, df2], axis=1)
+    remainder = FunctionTransformer()
+    table_vectorizer = TableVectorizer(
+        low_card_cat_transformer="remainder",
+        high_card_cat_transformer="remainder",
+        numerical_transformer="remainder",
+        datetime_transformer="remainder",
+        remainder=remainder,
+    ).fit(df)
+    assert table_vectorizer.low_card_cat_transformer_ is not remainder
+    assert table_vectorizer.high_card_cat_transformer_ is not remainder
+    assert table_vectorizer.numerical_transformer_ is not remainder
+    assert table_vectorizer.datetime_transformer_ is not remainder

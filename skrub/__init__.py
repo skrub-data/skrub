@@ -16,9 +16,9 @@ except ModuleNotFoundError:
 
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
-from ._feature_augmenter import FeatureAugmenter
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
+from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import SuperVectorizer, TableVectorizer
@@ -30,7 +30,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 __all__ = [
     "DatetimeEncoder",
-    "FeatureAugmenter",
+    "Joiner",
     "fuzzy_join",
     "GapEncoder",
     "MinHashEncoder",
