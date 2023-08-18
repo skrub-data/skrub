@@ -5,7 +5,7 @@
 This folder contains benchmarks used by the skrub maintainers to:
 - Experiment on new algorithms
 - Validate decisions based on empirical evidence
-- Fine-tune (hyper)parameters in the library
+- Tune (hyper)parameters in the library
 
 These benchmarks do not aim at replacing the tests within skrub.
 
@@ -18,29 +18,41 @@ Check out other benchmarks to see how they are used.
 ## Launching a benchmark
 
 > Launching a benchmark is usually something you don't want to do as a user.
-  Benchmarks are long and expensive to run, and are here mainly for reproducibility.
+  Benchmarks are long and expensive to run. Their code is provided for reproducibility.
 
-Each one implements a standard command-line interface with the two commands
-``--run`` and ``--plot``.
+Each one implements a standard command-line interface with the at least the two
+commands ``--run`` and ``--plot``.
 
-For instance, for running a benchmark, we'll usually use
+Although, before launching, you should make sure the environment is properly setup.
+First, install the required packages -- we recommend installing the latest versions
+for everything (skip `--upgrade` if you don't want to):
+
+```bash
+pip install -e --upgrade .[benchmarks]
+```
+
+It has also been reported that Python >=3.9 is required.
+
+Then, if you're trying to reproduce the results of a benchmark, check the file's
+docstring to see if it requires any additional setup.
+Usually, you will find a date, which might be relevant, and sometimes, a commit
+hash. You can use it to checkout the code at the time the benchmark was run:
+
+```bash
+git checkout <commit_hash>
+```
+
+Finally, you can launch the benchmark with the ``--run`` command:
 
 ```bash
 python bench_tablevectorizer_tuning.py --run
 ```
 
-Package requirements required to launch benchmarks are listed in the project's
-setup, thus can be installed with
-
-```bash
-pip install -e .[benchmarks]
-```
-
-It has been reported that Python >=3.9 is required.
-
 ### Analyzing results
 
-The results of the benchmarks ran by maintainers are pushed in the `results/` folder.
+The results of the benchmarks ran by maintainers are pushed in the `results/`
+folder in a `parquet` format.
 
-As mentioned earlier, benchmarks implement a ``--plot`` parameter used
-to display the results visually. Using ``--plot`` without ``--run`` allows you to plot the results without re-running the benchmark.
+As mentioned earlier, benchmarks implement a ``--plot`` option used to display
+the results visually. Using ``--plot`` without ``--run`` allows you to plot
+the saved results without re-running the benchmark.

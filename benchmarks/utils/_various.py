@@ -11,7 +11,7 @@ from skrub.datasets import (
     fetch_road_safety,
     fetch_traffic_violations,
 )
-from skrub.datasets._fetching import DatasetAll
+from skrub.datasets import DatasetAll
 
 
 def find_result(bench_name: str) -> Path:
@@ -49,7 +49,7 @@ def choose_file(results: list[Path]) -> Path:
             if "iter" not in df.columns:
                 print(f"Invalid file {file.name!r}, skipping.")
                 continue
-            n_iter_per_xp = df["iter"].max() + 1
+            n_iter_per_xp = int(df["iter"].max()) + 1
             repeat = df.shape[0] // n_iter_per_xp
 
             bench_name, date = file.stem.split("-")
@@ -58,6 +58,7 @@ def choose_file(results: list[Path]) -> Path:
                 f"{date[:4]}-{date[4:6]}-{date[6:]} - "
                 f"{df.shape[0]}x{repeat} experiments "
             )
+        del df
         choice = input("Choose the result to display: ")
         if not choice.isnumeric() or (int(choice) - 1) not in range(len(results)):
             print(f"Invalid choice {choice!r}, exiting.")
@@ -65,24 +66,18 @@ def choose_file(results: list[Path]) -> Path:
         return results[int(choice) - 1]
 
 
-def get_classification_datasets() -> list[tuple[DatasetAll, str]]:
-    return [
-        (fetch_open_payments(), "open_payments"),
-        (fetch_drug_directory(), "drug_directory"),
-        (fetch_road_safety(), "road_safety"),
-        (fetch_midwest_survey(), "midwest_survey"),
-        (fetch_traffic_violations(), "traffic_violations"),
-    ]
+def get_classification_datasets() -> dict[str, DatasetAll]:
+    return {
+        "open_payments": fetch_open_payments(),
+        "drug_directory": fetch_drug_directory(),
+        "road_safety": fetch_road_safety(),
+        "midwest_survey": fetch_midwest_survey(),
+        "traffic_violations": fetch_traffic_violations(),
+    }
 
 
-def get_regression_datasets() -> list[tuple[DatasetAll, str]]:
-    return [
-        (fetch_medical_charge(), "medical_charge"),
-        (fetch_employee_salaries(), "employee_salaries"),
-    ]
-
-
-def get_dataset(info: tuple[DatasetAll, str]) -> tuple[pd.DataFrame, pd.Series]:
-    y = info.y
-    X = info.X
-    return X, y
+def get_regression_datasets() -> dict[str, DatasetAll]:
+    return {
+        "medical_charge": fetch_medical_charge(),
+        "employee_salaries": fetch_employee_salaries(),
+    }
