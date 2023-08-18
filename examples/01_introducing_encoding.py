@@ -1,12 +1,13 @@
 """
 .. _example_introducing_encoding:
 
-=======================================================
-Introducing skrub's encoding methods on a dirty dataset
-=======================================================
+==========================================================================
+Encoding: turning any dataframe to a numerical matrix for machine learning
+==========================================================================
 
-In this example, we want to predict wages using the
-`employee salaries <https://www.openml.org/d/42125>`_ dataset.
+This example demonstrates how to transform a somewhat complicated dataframe
+to a matrix well suited for machine-learning. We study the case of predicting wages
+using the `employee salaries <https://www.openml.org/d/42125>`_ dataset.
 
 Let's dive right in!
 
@@ -43,10 +44,10 @@ Let's dive right in!
 """
 
 ###############################################################################
-# Prediction
-# ----------
+# A simple prediction pipeline
+# ----------------------------
 #
-#  .. note::
+# .. note::
 #     TLDR: use
 #
 #     .. code-block:: python
