@@ -51,6 +51,20 @@ flights = fetch_figshare("41771418").X
 flights = flights.sample(50_000, random_state=1, ignore_index=True)
 flights.head()
 
+###############################################################################
+# Let us see the arrival delay of the flights in the dataset:
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set_theme(style="ticks")
+
+sns.histplot(data=flights, x="ArrDelay")
+plt.show()
+
+############################################################################
+# Interesting, most delays are relatively short (<100 min), but there
+# are some very long ones.
+
 ############################################################################
 # Airport data: an auxiliary table from the same database
 # .......................................................
@@ -125,14 +139,6 @@ hgb = HistGradientBoostingClassifier()
 
 pipeline_hgb = make_pipeline(joiner, tv, hgb)
 
-
-###############################################################################
-# Let's look at the final pipeline:
-from sklearn import set_config
-
-set_config(display="diagram")
-
-pipeline_hgb
 ###############################################################################
 # We isolate our target variable and remove useless ID variables:
 
