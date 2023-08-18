@@ -81,7 +81,7 @@ sample
 from sklearn.preprocessing import OneHotEncoder
 
 one_hot = OneHotEncoder(sparse_output=False)
-one_hot.set_output("pandas")
+one_hot.set_output(transform="pandas")
 sample_enc_ohe = one_hot.fit_transform(sample)
 
 sample_enc_ohe
@@ -114,10 +114,11 @@ sample_enc_ohe
 from skrub import SimilarityEncoder
 
 sim_enc = SimilarityEncoder()
-sim_enc.set_output("pandas")
+sim_enc.set_output(transform="pandas")
 sample_enc_sim = sim_enc.fit_transform(sample)
+import pandas as pd
 
-sample_enc_sim
+sample_enc_sim: pd.DataFrame
 
 ###############################################################################
 # We can see that instead of having zeros where the categories don't exactly
@@ -133,7 +134,7 @@ import matplotlib.pyplot as plt
 from seaborn import heatmap
 
 
-ax = plt.figure(figsize=(6, 6))
+_, ax = plt.subplots(figsize=(6, 6))
 heatmap(
     sample_enc_sim,
     xticklabels=sim_enc.categories_[0],
@@ -141,6 +142,7 @@ heatmap(
     ax=ax,
 )
 plt.tight_layout()
+plt.show()
 
 ###############################################################################
 # While this is an interesting result, it suffers from the high computational
@@ -158,30 +160,29 @@ from sklearn.manifold import MDS
 
 # The MDS works on square matrices, so we'll get the unique values in our
 # sample, and then compute the similarity matrix
-unique_values = sample.drop_duplicates()
-unique_values_enc = SimilarityEncoder().fit_transform(unique_values)
+unique_values = sample["employee_position_title"].sort_values().unique()
+unique_values_enc = SimilarityEncoder().fit_transform(unique_values.reshape(-1, 1))
 # Ensure the output is a square matrix
 assert unique_values_enc.shape[0] == unique_values_enc.shape[1]
 # Invert the similarity matrix (thus we get a dissimilarity matrix)
 dissimilarities = 1 - unique_values_enc
 
 mds = MDS(dissimilarity="precomputed", n_init=10, random_state=0)
-points = mds.fit_transform(dissimilarities)
+points = mds.fit_transform(1 - dissimilarities)
 
-print(f"{unique_values_enc.shape=}")
-print(f"{points.shape=}")
+f"{unique_values_enc.shape=} ; {points.shape=}"
 
 ###############################################################################
 # We can now plot the points:
 
-f, ax = plt.figure()
+_, ax = plt.subplots()
 ax.scatter(x=points[:, 0], y=points[:, 1])
 # Add the labels
 for i, (x, y) in enumerate(points):
     ax.text(
         x=x,
         y=y,
-        s=unique_values["employee_position_title"][x],
+        s=unique_values[i],
         fontsize=8,
     )
 ax.set_title("MDS representation of the similarity matrix")
@@ -197,7 +198,7 @@ ax.set_title("MDS representation of the similarity matrix")
 
 ###############################################################################
 # Fixing the remaining problems: the |GapEncoder|
-# .............................................
+# ...............................................
 #
 # The |GapEncoder| (Gamma-Poisson Encoder) has a different approach to the
 # problem.
@@ -211,7 +212,7 @@ from skrub import GapEncoder
 gap_enc = GapEncoder(n_components=10, random_state=0)
 
 # Fit it on all our data, not just our sample
-sample_enc_gap = gap_enc.fit_transform(X)
+sample_enc_gap = gap_enc.fit_transform(X[["employee_position_title"]])
 
 sample_enc_gap.shape
 
