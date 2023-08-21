@@ -11,7 +11,8 @@ except ModuleNotFoundError:
     import warnings
 
     warnings.warn(
-        "packaging is not available, dependencies versions will not be checked."
+        "the 'packaging' library is not available, dependencies versions will not be"
+        " checked."
     )
 
 from ._datetime_encoder import DatetimeEncoder
