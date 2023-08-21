@@ -55,9 +55,10 @@ Installation (WIP)
 There are currently no PiPy releases.
 You can still install the package from the GitHub repository with:
 
-```shell
-pip install git+https://github.com/skrub-data/skrub.git
-```
+.. code-block:: shell
+
+    pip install git+https://github.com/skrub-data/skrub.git
+
 
 Dependencies
 ~~~~~~~~~~~~
