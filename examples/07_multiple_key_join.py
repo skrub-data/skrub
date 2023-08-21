@@ -58,7 +58,7 @@ import seaborn as sns
 
 sns.set_theme(style="ticks")
 
-sns.histplot(data=flights, x="ArrDelay")
+sns.histplot(data=flights, x="ArrDelay", log_scale=(False, True))
 plt.show()
 
 ############################################################################
