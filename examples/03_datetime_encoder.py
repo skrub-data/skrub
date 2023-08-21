@@ -32,9 +32,6 @@ It is used by default in the |TableVectorizer|.
 .. |make_column_transformer| replace::
     :class:`~sklearn.compose.make_column_transformer`
 
-.. |TimeSeriesSplit| replace::
-    :class:`~sklearn.model_selection.TimeSeriesSplit`
-
 .. |HGBR| replace::
     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 """
