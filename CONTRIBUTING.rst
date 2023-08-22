@@ -44,13 +44,13 @@ exists. <https://github.com/skrub-data/skrub/issues?q=is%3Aissue>`__
 
 - If so...
 
-  - **and the issue is still open**: leave a 👍 on the original message to
+  - **Issue is still open**: leave a 👍 on the original message to
     let us know there are several users affected by this issue.
-  - **but issue has been closed**:
+  - **Issue has been closed**:
 
-    - **It has been closed by a merged pull request** (1) update your skrub version,
+    - **By a merged pull request** (1) update your skrub version,
       or (2) the fix has not been released yet.
-    - **It has been closed without pull request**, there might be a ``wontfix`` label, and/or a reason at the bottom of the conversation.
+    - **Without pull request**, there might be a ``wontfix`` label, and/or a reason at the bottom of the conversation.
 
 - Otherwise, `file a new issue <https://github.com/skrub-data/skrub/issues/new>`__.
 
