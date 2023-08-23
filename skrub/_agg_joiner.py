@@ -89,7 +89,7 @@ def check_missing_columns(X, main_key):
     missing_cols = set(main_keys) - set(X.columns)
     if len(missing_cols) > 0:
         raise ValueError(
-            f"Got main_key={main_key!r}, but column not in X.columns {list(X.columns)}."
+            f"Got {main_key=!r}, but column not in {X.columns=}."
         )
     return main_keys
 
@@ -104,7 +104,7 @@ def check_suffixes(suffixes, main_keys):
         if len(suffixes) != len(main_keys):
             raise ValueError(
                 "Suffixes must be None or match the "
-                f"number of tables, got: '{suffixes}'"
+                f"number of tables, got: {suffixes!r}"
             )
         suffixes = list(suffixes)
     else:
@@ -136,14 +136,14 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         dataframe : :obj:`~pandas.DataFrame` or str
             The auxiliary data to aggregate and join.
-            'X' can be provided as a string to perform self-aggregation on
-            the input data.
+            The placeholder string "X" can be provided to perform
+            self-aggregation on the input data.
 
         columns_to_join : str or array-like
             Select the columns from the auxiliary dataframe to use as keys during
             the join operation.
 
-        columns_to_agg : str or array-like. Optional, can be missing.
+        columns_to_agg : str or array-like, optional
             Select the columns from the auxiliary dataframe to use as values during
             the aggregation operations.
             If missing, use all columns except `columns_to_join`.
@@ -157,14 +157,14 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         Otherwise, if main_key is a list it must specify the key for each table
         to join.
 
-    agg_ops : str or list of str, default=None
+    agg_ops : str or list of str, optional
         Aggregation operations to perform on the auxiliary table.
 
         numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
 
         categorical : {"mode", "count", "value_counts"}
 
-        If set to None, ['mean', 'mode'] will be used.
+        If set to None (the default), ['mean', 'mode'] will be used.
 
     suffixes : list of str, default=None
         The suffixes that will be add to each table columns in case of
@@ -176,7 +176,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
     See Also
     --------
-    :class:`AggTarget` :
+    AggTarget :
         Aggregates the target `y` before joining its aggregation
         on the base dataframe.
     :class:`FeatureAugmenter` :
@@ -225,8 +225,8 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             Input data, based table on which to left join the
             auxiliary tables.
         y : array-like of shape (n_samples), default=None
-            Used to compute the correlation between the generated covariates
-            and the target for screening purposes.
+            Prediction target. Used to compute correlations between the
+            generated covariates and the target for screening purposes.
 
         Returns
         -------
@@ -314,8 +314,8 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         n_main_keys, n_tables = len(main_keys), len(self.tables)
         if (n_main_keys != 1) and (n_main_keys != n_tables):
             raise ValueError(
-                "The number of main keys must be either 1 or "
-                "match the number of tables."
+                f"The number of main keys ({n_main_keys}) must be either 1 "
+                f"or match the number of tables ({n_table}). "
             )
 
         # Ensure n_main_keys == n_tables
