@@ -67,8 +67,8 @@ print(X.shape)
 print(X.head())
 
 ###############################################################################
-# Encoding timestamp with TableVectorizer
-# ---------------------------------------
+# Encoding the timestamp with a TableVectorizer
+# ---------------------------------------------
 #
 # Our first step is to extract features from the timestamp, using the
 # |TableVectorizer|. Natively, it uses the |DatetimeEncoder| on datetime
@@ -84,7 +84,7 @@ X_date_encoded = table_vectorizer.fit_transform(X)
 print(X_date_encoded)
 
 ###############################################################################
-# This allows us to start making plot and gaining insight on our dataset.
+# We can now make a couple of plots and gain some insight on our dataset.
 from matplotlib import pyplot as plt
 import seaborn as sns
 
@@ -125,21 +125,21 @@ make_barplot(
 )
 
 ###############################################################################
-# AggJoiner: aggregation of auxiliary tables, then join
-# -----------------------------------------------------
+# AggJoiner: aggregate auxiliary tables, then join
+# ------------------------------------------------
 #
 # We now want to extract aggregated datetime features both about the users
-# and the movies. These features answer to questions like
+# and the movies. These features answer questions like
 # *"How many times has this user rated a movie in 2008?"* or
 # *"What is the most frequent hour for this movie to be rated?"*.
 #
 # Below, |AggJoiner| first performs the aggregations defined by ``agg_ops``,
 # on ``"userId"``, then on ``"movieId"``, before joining both results on
 # the main table.
-# The ``tables`` tuple indicates:
+# The ``tables`` tuple specifies:
 #
 # - the auxiliary tables on which to perform the aggregation
-# - the key used to group and to join
+# - the key used to group and join
 # - the columns to aggregate (``timestamp_cols``).
 #
 # Here, the auxiliary tables are the main table ``X_date_encoded`` itself.
@@ -171,8 +171,8 @@ print(X_transformed.shape)
 print(X_transformed.head())
 
 ###############################################################################
-# AggTarget: aggregation of y, then join
-# --------------------------------------
+# AggTarget: aggregate y, then join
+# ---------------------------------
 #
 # We just expanded our timestamp to create datetime features.
 #
@@ -206,7 +206,7 @@ print(X_transformed.head())
 
 ###############################################################################
 # Chaining everything together in a pipeline
-# ----------------------------------------
+# ------------------------------------------
 #
 # To perform cross-validation and enable hyper-parameter tuning, we gather
 # all elements into a scikit-learn |Pipeline| and use scikit-learn |HGBR|.
