@@ -1,5 +1,5 @@
 """
-.. _example_datetime_encoder
+.. _example_datetime_encoder :
 
 ===================================================
 Handling datetime features with the DatetimeEncoder
