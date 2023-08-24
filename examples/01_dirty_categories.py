@@ -75,6 +75,7 @@ y.name
 ###############################################################################
 # Now, let's carry out some basic preprocessing:
 import pandas as pd
+import numpy as np
 
 X["date_first_hired"] = pd.to_datetime(X["date_first_hired"])
 X["year_first_hired"] = X["date_first_hired"].apply(lambda x: x.year)
@@ -259,7 +260,6 @@ pipeline = make_pipeline(
 # Let's perform a cross-validation to see how well this model predicts:
 
 from sklearn.model_selection import cross_val_score
-import numpy as np
 
 scores = cross_val_score(pipeline, X, y, scoring="r2")
 
