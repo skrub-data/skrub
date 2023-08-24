@@ -980,7 +980,7 @@ def fetch_figshare(
     load_dataframe: bool = True,
     data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
-    """Fetches a table of from figshare.
+    """Fetches a table from figshare.com
 
     Returns
     -------

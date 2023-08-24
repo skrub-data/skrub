@@ -105,4 +105,5 @@ This page lists all available functions and classes of `skrub`.
    datasets.fetch_ken_table_aliases
    datasets.fetch_ken_types
    datasets.fetch_ken_embeddings
+   datasets.fetch_figshare
    datasets.make_deduplication_data
