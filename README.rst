@@ -6,8 +6,8 @@
    :width: 50 %
    :alt: skrub logo
 
-.. class:: center
-    |py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
+
+|py_ver| |pypi_var| |pypi_dl| |codecov| |circleci| |black|
 
 .. |py_ver| image:: https://img.shields.io/pypi/pyversions/skrub
 .. |pypi_var| image:: https://img.shields.io/pypi/v/skrub?color=informational
