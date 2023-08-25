@@ -54,7 +54,6 @@ def benchmark(
     max_no_improvement: int,
     random_state: int,
 ):
-    global ds
     X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
     y = ds.y
     # only keep the first max_rows rows
