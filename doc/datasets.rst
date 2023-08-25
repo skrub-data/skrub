@@ -9,7 +9,7 @@ Datasets
 skrub allows you to fetch different datasets used in
 examples and benchmarks.
 
-It consists of various methods to get generated and 'real world' data.
+It consists of various methods to get generated, embeddings and `real world` data.
 
 Real world datasets
 -------------------
