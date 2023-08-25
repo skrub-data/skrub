@@ -157,10 +157,10 @@ emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
 # The entities from the 'embedding_games' table will be merged along the
 # column "Name" and the ones from 'embedding_publisher' table with the
 # column "Publisher"
-from skrub import FeatureAugmenter
+from skrub import Joiner
 
-fa1 = FeatureAugmenter(tables=[(embedding_games, "Entity")], main_key="Name")
-fa2 = FeatureAugmenter(tables=[(embedding_publisher, "Entity")], main_key="Publisher")
+fa1 = Joiner(tables=(embedding_games, "Entity"), main_key="Name")
+fa2 = Joiner(tables=(embedding_publisher, "Entity"), main_key="Publisher")
 
 X_full = fa1.fit_transform(X)
 X_full = fa2.fit_transform(X_full)
