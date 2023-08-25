@@ -199,7 +199,14 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         B = A.copy()
         return W, A, B
 
-    def _minibatch_convergence(self, batch_size: int, batch_cost: float, n_samples: int, step: int, n_steps: int):
+    def _minibatch_convergence(
+        self,
+        batch_size: int,
+        batch_cost: float,
+        n_samples: int,
+        step: int,
+        n_steps: int,
+    ):
         """
         Helper function to encapsulate the early stopping logic.
 
