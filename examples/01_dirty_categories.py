@@ -141,7 +141,7 @@ pipeline.fit(X, y)
 #
 # The |OneHotEncoder| is actually not well suited to the 'Employee
 # Position Title' column, as this column contains 400 different entries:
-X['employee_position_title'].value_counts()
+X["employee_position_title"].value_counts()
 
 ###############################################################################
 # .. _example_minhash_encoder:
