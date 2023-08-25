@@ -199,7 +199,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         B = A.copy()
         return W, A, B
 
-    def _minibatch_convergence(self, batch_size, batch_cost, n_samples, step, n_steps):
+    def _minibatch_convergence(self, batch_size: int, batch_cost: float, n_samples: int, step: int, n_steps: int):
         """
         Helper function to encapsulate the early stopping logic.
 
@@ -652,7 +652,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         Maximum number of iterations to adjust the activations h at each step.
     max_no_improvement : int, default=5
         Control early stopping based on the consecutive number of mini batches
-        that does not yield an improvement on the smoothed cost function.
+        that do not yield an improvement on the smoothed cost function.
         To disable early stopping and run the process fully,
         set ``max_no_improvement=None``.
     handle_missing : {'error', 'empty_impute'}, default='empty_impute'

@@ -14,9 +14,9 @@ from skrub import GapEncoder
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-#########################################################
-# Benchmarking accuracy and speed on actual traffic_violations dataset
-#########################################################
+#######################################################
+# Benchmarking accuracy and speed on traffic_violations
+#######################################################
 
 benchmark_name = "gap_encoder_benchmark_hp"
 
@@ -54,7 +54,6 @@ def benchmark(
     random_state: int,
 ):
     global ds
-    print(f"Running benchmark")
     X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
     y = ds.y
     # only keep the first max_rows rows
@@ -107,8 +106,6 @@ def benchmark(
         "test_size": X_test.shape[0],
     }
 
-    print("Done")
-    print(res_dic)
 
     return res_dic
 
