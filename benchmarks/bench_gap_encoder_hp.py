@@ -13,7 +13,7 @@ from sklearn.metrics import roc_auc_score, balanced_accuracy_score
 from skrub import GapEncoder
 import seaborn as sns
 import matplotlib.pyplot as plt
-import loguru
+from loguru import logger
 
 #######################################################
 # Benchmarking accuracy and speed on traffic_violations
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     ds = fetch_traffic_violations()
 
     if _args.run:
-        loguru.logger.info("Running benchmark")
+        logger.info("Running benchmark")
         df = benchmark()
     else:
         result_file = find_result(benchmark_name)
