@@ -65,7 +65,6 @@ Major changes
   transformers.
   :pr:`678` by :user:`Guillaume Lemaitre <glemaitre>`
 
-* Improved :class:`GapEncoder`'s early stopping logic. The parameters `tol` and `min_iter`
 * :class:`GapEncoder` speedup :pr:`680` by :user:`Leo Grinsztajn <LeoGrin>`
 
   - Improved :class:`GapEncoder`'s early stopping logic. The parameters `tol` and `min_iter`
@@ -74,9 +73,9 @@ Major changes
   :pr:`663` by :user:`Simona Maggio <simonamaggio>`
   :pr:`593` by  :user:`Lilian Boulard <LilianBoulard>`
   :pr:`681` by  :user:`Leo Grinsztajn <LeoGrin>`
-  
+
   - Implementation improvement leading to a ~x5 speedup for each iteration.
-  
+
   - Better default hyperparameters: `batch_size` now defaults to 1024, and `max_iter_e_steps`
     to 1.
 
