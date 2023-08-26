@@ -501,13 +501,13 @@ class TableVectorizer(ColumnTransformer):
             new_transformers = []
             for name, trans, cols in self.transformers:
                 if (
-                    (not type(trans) == str)
+                    (not isinstance(trans, str))
                     and trans._get_tags().get("univariate", False)
                     and len(cols) > 1
                 ):
                     for i, col in enumerate(cols):
                         new_transformers.append(
-                            (name + "_split_" + str(i), clone(trans), [col])
+                            (f"{name}_split_{i}", clone(trans), [col])
                         )
                 else:
                     new_transformers.append((name, trans, cols))
