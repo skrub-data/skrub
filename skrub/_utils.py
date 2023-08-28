@@ -5,9 +5,23 @@ from collections.abc import Hashable
 from typing import Any
 
 import numpy as np
+import pandas as pd
 from numpy.typing import NDArray
 from sklearn.utils import parse_version  # noqa
 from sklearn.utils import check_array
+
+try:
+    import polars as pl
+
+    POLARS_SETUP = True
+except ImportError:
+    POLARS_SETUP = False
+
+DataFrameLike = pd.DataFrame
+SeriesLike = pd.Series
+if POLARS_SETUP:
+    DataFrameLike |= pl.DataFrame | pl.LazyFrame
+    SeriesLike |= pl.Series
 
 
 class LRUDict:

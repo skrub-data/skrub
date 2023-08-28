@@ -823,7 +823,11 @@ class TableVectorizer(ColumnTransformer):
         ct_feature_names = super().get_feature_names_out()
         all_trans_feature_names = []
 
-        for name, trans, cols, _ in self._iter(fitted=True):
+        for name, trans, cols, _ in self._iter(
+            fitted=True,
+            replace_strings=False,
+            column_as_strings=False,
+        ):
             if isinstance(trans, str):
                 if trans == "drop":
                     continue

@@ -3,11 +3,11 @@ Self-aggregation with MovieLens
 ===============================
 
 MovieLens is a famous movie dataset used for both explicit
-and implicit recommender system. It provides a main table,
+and implicit recommender systems. It provides a main table,
 "ratings", that can be viewed as logs or transactions, comprised
-of only 4 columns: userId, movieId, rating and timestamp.
+of only 4 columns: ``userId``, ``movieId``, ``rating`` and ``timestamp``.
 MovieLens also gives a contextual table "movies", including
-movieId, title and types, to enable content-based feature extraction.
+``movieId``, ``title`` and ``types``, to enable content-based feature extraction.
 
 In this notebook, we only deal with the main table "ratings".
 Our objective is **not to achieve state-of-the-art performance** on
@@ -32,11 +32,14 @@ rating per movies.
 .. |TargetEncoder| replace::
      :class:`~skrub.TargetEncoder`
 
+.. |make_pipeline| replace::
+     :class:`~sklearn.pipeline.make_pipeline`
+
 .. |Pipeline| replace::
      :class:`~sklearn.pipeline.Pipeline`
 
-.. |RandomizedSearchCV| replace::
-     :class:`~sklearn.model_selection.RandomizedSearchCV`
+.. |GridSearchCV| replace::
+     :class:`~sklearn.model_selection.GridSearchCV`
 
 .. |TimeSeriesSplit| replace::
      :class:`~sklearn.model_selection.TimeSeriesSplit`
@@ -95,13 +98,12 @@ def make_barplot(x, y, title):
     norm = plt.Normalize(y.min(), y.max())
     cmap = plt.get_cmap("magma")
 
-    ax = sns.barplot(
+    sns.barplot(
         x=x,
         y=y,
         palette=cmap(norm(y)),
     )
     plt.xticks(rotation=30)
-    plt.xlabel(title)
     plt.ylabel(None)
     plt.tight_layout()
 
@@ -128,24 +130,21 @@ make_barplot(
 # AggJoiner: aggregate auxiliary tables, then join
 # ------------------------------------------------
 #
-# We now want to extract aggregated datetime features both about the users
-# and the movies. These features answer questions like
-# *"How many times has this user rated a movie in 2008?"* or
-# *"What is the most frequent hour for this movie to be rated?"*.
+# We now want to extract aggregated datetime features about the users.
+# These features answer questions like
+# *"How many times has this user rated a movie in 2008?"*.
 #
-# Below, |AggJoiner| first performs the aggregations defined by ``agg_ops``,
-# on ``"userId"``, then on ``"movieId"``, before joining both results on
-# the main table.
+# Below, |AggJoiner| first performs the aggregations defined in ``operations``
+# by grouping the table on ``"userId"``. It then joins the result back on
+# the initial table, using respectively the same grouping keys (``"userId"``) and ``main_keys``.
+#
 # The ``tables`` tuple specifies:
 #
 # - the auxiliary tables on which to perform the aggregation
 # - the key used to group and join
 # - the columns to aggregate (``timestamp_cols``).
 #
-# Here, the auxiliary tables are the main table ``X_date_encoded`` itself.
-#
-# The ``main_key`` indicates the key of the main table to join each tuple of
-# ``tables``.
+# Here, the auxiliary table is the table ``X_date_encoded`` itself.
 from skrub import AggJoiner
 
 
@@ -156,16 +155,32 @@ timestamp_cols = [
     "timestamp_dayofweek",
 ]
 
-agg_joiner = AggJoiner(
+agg_joiner_user = AggJoiner(
     tables=[
         (X_date_encoded, "userId", timestamp_cols),
+    ],
+    main_keys="userId",
+    suffixes=["_user"],
+    operations=["value_counts"],
+)
+X_transformed = agg_joiner_user.fit_transform(X_date_encoded)
+
+print(X_transformed.shape)
+print(X_transformed.head())
+
+###############################################################################
+# In addition, we also want to extract *movies* timestamp features, to answer
+# questions like *"What is the most frequent hour for this movie to be rated?"*.
+agg_joiner_movie = AggJoiner(
+    tables=[
         (X_date_encoded, "movieId", timestamp_cols),
     ],
-    main_key=["userId", "movieId"],
-    suffixes=["_user", "_movie"],
-    agg_ops=["value_counts"],
+    main_keys="movieId",
+    suffixes="_movie",
+    operations=["value_counts"],
 )
-X_transformed = agg_joiner.fit_transform(X_date_encoded)
+
+X_transformed = agg_joiner_movie.fit_transform(X_date_encoded)
 
 print(X_transformed.shape)
 print(X_transformed.head())
@@ -176,28 +191,32 @@ print(X_transformed.head())
 #
 # We just expanded our timestamp to create datetime features.
 #
-# Let's now perform a similar expansion for the target ``y``. Of course,
-# the biggest risk of doing target expansion with multiple pandas operations
-# is to end up leaking the target.
+# Let's now perform a similar expansion for the target ``y``.
+# The biggest risk of doing target expansion with multiple dataframe
+# operations yourself is to end up leaking the target.
 #
-# Similarly to |AggJoiner|, the |AggTarget| transformer allows you to
+# To solve this, the |AggTarget| transformer allows you to
 # aggregate the target ``y`` before joining it on the main table, without
 # risk of leaking.
 #
-# You can think of it as a generalization of the |TargetEncoder|, which
+# This transformer is the natural extension of |AggJoiner| for the
+# target ``y``.
+#
+# You can also think of it as a generalization of the |TargetEncoder|, which
 # encodes categorical features based on the target.
 #
-# Here, we group the target by ``"userId"``, then by ``"movieId"``, and for
-# each group we compute the histogram of the target with 3 bins.
+# We only focus on aggregating the target by **users**, but later we will
+# also consider aggregating by **movies**.
 #
-# Finally, we join both user and movie aggregations back on the main table.
+# Here, we compute the histogram of the target with 3 bins, before joining it
+# back on the initial table.
 from skrub import AggTarget
 
 
 agg_target = AggTarget(
-    main_key=["userId", "movieId"],
-    suffixes=["_user", "_movie"],
-    agg_ops=["hist(3)"],
+    main_keys="userId",
+    suffixes="_user",
+    operations=["hist(3)"],
 )
 X_transformed = agg_target.fit_transform(X, y)
 
@@ -209,7 +228,8 @@ print(X_transformed.head())
 # ------------------------------------------
 #
 # To perform cross-validation and enable hyper-parameter tuning, we gather
-# all elements into a scikit-learn |Pipeline| and use scikit-learn |HGBR|.
+# all elements into a scikit-learn |Pipeline| by using |make_pipeline|,
+# and define a scikit-learn |HGBR|.
 #
 # Since the auxiliary tables of |AggJoiner| are the main table itself, we need
 # to use the output of the previous layer (here the |TableVectorizer|).
@@ -218,32 +238,51 @@ print(X_transformed.head())
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
-
+# Extracting datetime attributes from timestamps.
 table_vectorizer = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True)
 )
 table_vectorizer.set_output(transform="pandas")
 
-agg_joiner = AggJoiner(
+# Extracting features by aggregating datetime attributes.
+agg_joiner_user = AggJoiner(
     tables=[
         ("X", "userId", timestamp_cols),
+    ],
+    main_keys="userId",
+    suffixes="_user",
+    operations=["value_counts"],
+)
+
+agg_joiner_movie = AggJoiner(
+    tables=[
         ("X", "movieId", timestamp_cols),
     ],
-    main_key=["userId", "movieId"],
-    suffixes=["_user", "_movie"],
-    agg_ops=["value_counts"],
+    main_keys="movieId",
+    suffixes="_movie",
+    operations=["value_counts"],
 )
 
-agg_target = AggTarget(
-    main_key=["userId", "movieId"],
-    suffixes=["_user", "_movie"],
-    agg_ops=["value_counts"],
+# Extracting features by aggregating the target
+agg_target_user = AggTarget(
+    main_keys="userId",
+    suffixes="_user",
+    operations=["value_counts"],
 )
 
+agg_target_movie = AggTarget(
+    main_keys="movieId",
+    suffixes="_movie",
+    operations=["value_counts"],
+)
+
+# Chaining all operations together
 pipeline = make_pipeline(
     table_vectorizer,
-    agg_joiner,
-    agg_target,
+    agg_joiner_user,
+    agg_joiner_movie,
+    agg_target_user,
+    agg_target_movie,
     HistGradientBoostingRegressor(learning_rate=0.1, max_depth=4, max_iter=40),
 )
 
@@ -254,35 +293,48 @@ pipeline
 # --------------------------------------------
 #
 # We can finally create our hyper-parameter search space, and use a
-# |RandomizedSearchCV|. We select the cross validation splitter to be
+# |GridSearchCV|. We select the cross validation splitter to be
 # the |TimeSeriesSplit| to prevent leakage, since our data are timestamped
 # logs.
 #
+# Note that you need the name of the pipeline elements to assign them
+# hyper-parameters search.
+#
+# You can lookup the name of the pipeline elements by doing:
+list(pipeline.named_steps)
+
+###############################################################################
+# Alternatively, you can use scikit-learn |Pipeline| to name your transformers:
+# ``Pipeline([("agg_target_user", agg_target_user), ...])``
+#
+# We now perform the grid search over the ``AggTarget`` transformers to find the
+# operation maximizing our validation score.
+from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
+
+operations = ["mean", "hist(3)", "hist(5)", "hist(7)", "value_counts"]
+param_grid = [
+    {
+        f"aggtarget-1__operations": [op],
+        f"aggtarget-2__operations": [op],
+    }
+    for op in operations
+]
+
+cv = GridSearchCV(pipeline, param_grid, cv=TimeSeriesSplit(n_splits=10))
+cv.fit(X, y)
+
+results = pd.DataFrame(
+    np.vstack([cv.cv_results_[f"split{idx}_test_score"] for idx in range(10)]),
+    columns=cv.cv_results_["param_aggtarget-2__operations"],
+)
+
+###############################################################################
 # The score used in this regression task is the R2. Remember that the R2
 # evaluates the relative performance compared to the naive baseline consisting
 # in always predicting the mean value of ``y_test``.
 # Therefore, the R2 is 0 when ``y_pred = y_true.mean()`` and is upper bounded
 # to 1 when ``y_pred = y_true``.
-list(pipeline.named_steps)
-
-###############################################################################
-from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
-
-
-params = {
-    "aggjoiner__agg_ops": ["value_counts"],
-    "aggtarget__agg_ops": ["mean", "hist(3)", "hist(5)", "hist(7)", "value_counts"],
-}
-
-cv = GridSearchCV(pipeline, params, cv=TimeSeriesSplit(n_splits=10))
-cv.fit(X, y)
-
-results = pd.DataFrame(
-    np.vstack([cv.cv_results_[f"split{idx}_test_score"] for idx in range(10)]),
-    columns=cv.cv_results_["param_aggtarget__agg_ops"],
-)
-
-###############################################################################
+#
 # To get a better sense of the learning performances of our simple pipeline,
 # we also compute the average rating of each movie in the training set,
 # and uses this average to predict the ratings in the test set.
@@ -326,10 +378,10 @@ plt.tight_layout()
 #
 # It seems that using the ``"value_counts"`` as an aggregation operator for
 # |AggTarget| yields better performances than using the mean (which is
-# equivalent to the |TargetEncoder|).
+# equivalent to using the |TargetEncoder|).
 #
-# Here, the number of bins to encode the target is proportional to the
-# performance: computing the mean yields a single statistic, histograms yields
-# a density over a reduced set of bins and ``"value_counts"`` yields an
+# Here, the number of bins encoding the target is proportional to the
+# performance: computing the mean yields a single statistic, whereas histograms
+# yield a density over a reduced set of bins, and ``"value_counts"`` yields an
 # exhaustive histogram over all the possible values of ratings
 # (here 10 different values, from 0.5 to 5).
