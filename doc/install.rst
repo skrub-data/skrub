@@ -88,7 +88,7 @@ with the development requirements:
 .. code:: console
 
     $ cd skrub
-    $ pip install -e .[dev]
+    $ pip install -e '.[dev]'
 
 Next step, enable the pre-commit hooks:
 

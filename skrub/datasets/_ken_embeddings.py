@@ -185,7 +185,7 @@ def fetch_ken_embeddings(
         Helper function to search for entity types.
     fuzzy_join :
         Join two tables (dataframes) based on approximate column matching.
-    FeatureAugmenter :
+    Joiner :
         Transformer to enrich a given table via one or more fuzzy joins to
         external resources.
 

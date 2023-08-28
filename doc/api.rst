@@ -31,7 +31,7 @@ This page lists all available functions and classes of `skrub`.
    :template: class.rst
    :nosignatures:
 
-   FeatureAugmenter
+   Joiner
    AggJoiner
    AggTarget
 
