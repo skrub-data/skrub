@@ -6,10 +6,10 @@ Datasets
 
 .. currentmodule:: skrub
 
-skrub allows you to fetch different datasets used in
-examples and benchmarks.
+skrub provides fetching methods for datasets, 
+which are generally used in examples and benchmarks.
 
-It consists of various methods to get generated, embeddings and `real world` data.
+It consists of generated, embeddings and real world data.
 
 Real world datasets
 -------------------
