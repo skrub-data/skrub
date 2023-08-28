@@ -146,6 +146,19 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
+def _parallel_on_columns(trans: TransformerMixin, cols: list[str]):
+    """
+    Assert whether we want to parallelize the transformer over
+    the columns or not. We only want to parallelize if the transformer
+    is "univariate" (i.e. it can be duplicated for each column).
+    """
+    return (
+        (not type(trans) == str)
+        and trans._get_tags().get("univariate", False)
+        and len(cols) > 1
+    )
+
+
 OptionalTransformer = (
     TransformerMixin | Literal["drop", "remainder", "passthrough"] | None
 )
@@ -500,11 +513,7 @@ class TableVectorizer(ColumnTransformer):
         if during_fit:
             new_transformers = []
             for name, trans, cols in self.transformers:
-                if (
-                    (not type(trans) == str)
-                    and trans._get_tags().get("univariate", False)
-                    and len(cols) > 1
-                ):
+                if _parallel_on_columns(trans, cols):
                     for i, col in enumerate(cols):
                         new_transformers.append(
                             (name + "_split_" + str(i), clone(trans), [col])
@@ -518,11 +527,7 @@ class TableVectorizer(ColumnTransformer):
             new_transformers_ = []
             new_transformer_to_input_indices = {}
             for name, trans, cols in self.transformers_:
-                if (
-                    (not type(trans) == str)
-                    and trans._get_tags().get("univariate", False)
-                    and len(cols) > 1
-                ):
+                if _parallel_on_columns(trans, cols):
                     splitted_transformers_ = trans._split()
                     for i, (col, trans, trans_to_mapping) in enumerate(
                         zip(
