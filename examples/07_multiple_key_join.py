@@ -54,7 +54,7 @@ flights.head()
 ############################################################################
 # Airport data: an auxiliary table from the same database
 # .......................................................
-#     - The `airports` dataset, with information such as their name
+#     - The ``airports`` dataset, with information such as their name
 #       and location (longitude, latitude).
 
 airports = fetch_figshare("41710257").X
@@ -63,7 +63,7 @@ airports.head()
 ########################################################################
 # Weather data: auxiliary tables from external sources
 # ....................................................
-#     - The `weather` table. Weather details by measurement station.
+#     - The ``weather`` table. Weather details by measurement station.
 #       Both tables are from the Global Historical Climatology Network.
 #       Here, we consider only weather measurements from 2008.
 
