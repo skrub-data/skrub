@@ -14,8 +14,6 @@ It consists of generated, embeddings and real world data.
 Real world datasets
 -------------------
 
-From openml.org:
-
 * :func:`datasets.fetch_employee_salaries`
 * :func:`datasets.fetch_road_safety`
 * :func:`datasets.fetch_medical_charge`
@@ -23,9 +21,6 @@ From openml.org:
 * :func:`datasets.fetch_open_payments`
 * :func:`datasets.fetch_traffic_violations`
 * :func:`datasets.fetch_drug_directory`
-
-From other sources:
-
 * :func:`datasets.fetch_world_bank_indicator`
 * :func:`datasets.fetch_figshare`
 
