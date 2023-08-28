@@ -1,8 +1,8 @@
 .. _datasets:
 
-=========
+========
 Datasets
-=========
+========
 
 .. currentmodule:: skrub
 
