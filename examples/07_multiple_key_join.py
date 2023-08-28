@@ -73,7 +73,7 @@ weather = weather.sample(100_000, random_state=1, ignore_index=True)
 weather.head()
 
 ########################################################################
-#     - The `stations` dataset. Provides location of all the weather
+#     - The ``stations`` dataset. Provides location of all the weather
 #       measurement stations in the US.
 
 stations = fetch_figshare("41710524").X

@@ -31,7 +31,7 @@ jobs:
       - save_cache:
           key: data-cache
           paths:
-            - skrub/datasets
+            - ./skrub_data/datasets
 
   deploy:
     docker:
