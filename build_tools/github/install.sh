@@ -13,7 +13,7 @@ fi
 
 pip install --progress-bar off --only-binary :all: --no-binary liac-arff --upgrade ".[$DEPS_VERSION]"
 
-if [[ "$DEPS_VERSION" != *"pyarrow"* ]]; then
+if [[ "$DEPS_VERSION" != *"pyarrow"* ] && [ "$DEPS_VERSION" != *"polars"* ]]; then
     # Since pyarrow is a dependency of pandas, we need to uninstall it explicitly
     pip uninstall -y pyarrow
 fi
