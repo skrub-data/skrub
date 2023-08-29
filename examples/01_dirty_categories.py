@@ -75,6 +75,7 @@ y.name
 ###############################################################################
 # Now, let's carry out some basic preprocessing:
 import pandas as pd
+import numpy as np
 
 X["date_first_hired"] = pd.to_datetime(X["date_first_hired"])
 X["year_first_hired"] = X["date_first_hired"].apply(lambda x: x.year)
@@ -99,7 +100,7 @@ y = y[~mask]
 # representation:
 from sklearn.preprocessing import OneHotEncoder
 
-one_hot = OneHotEncoder(handle_unknown="ignore", sparse=False)
+one_hot = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
 
 ###############################################################################
 # We assemble these to apply them to the relevant columns.
@@ -140,9 +141,7 @@ pipeline.fit(X, y)
 #
 # The |OneHotEncoder| is actually not well suited to the 'Employee
 # Position Title' column, as this column contains 400 different entries:
-import numpy as np
-
-np.unique(y)
+X["employee_position_title"].value_counts()
 
 ###############################################################################
 # .. _example_minhash_encoder:
