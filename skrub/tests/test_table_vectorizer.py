@@ -915,6 +915,50 @@ def test_split_one_hot_encoder() -> None:
     assert len(enc_one_hot.transformers) == 3
 
 
+@pytest.mark.parametrize(
+    "low_card_cat_transformer",
+    [
+        # transformers that should be split
+        MinHashEncoder(n_components=2),
+        GapEncoder(n_components=2),
+    ],
+)
+@skip_if_no_parallel
+def test_modying_transformers(low_card_cat_transformer):
+    """Check that the splitting/merging mecanism doesn't
+    prevent resetting the transformers"""
+
+    # test that modifying a transformer before refitting works
+    # https://github.com/skrub-data/skrub/pull/592#discussion_r1284531301
+    tb = TableVectorizer(low_card_cat_transformer=low_card_cat_transformer, n_jobs=2)
+    X = _get_clean_dataframe()
+    tb.fit_transform(X)
+    tb.low_card_cat_transformer = "passthrough"
+    tb.fit_transform(X)
+    assert tb.low_card_cat_transformer_ == "passthrough"
+    assert tb.transformers[0][1] == "passthrough"
+    assert tb.transformers_[0][1] == "passthrough"
+    assert tb.transform(X).shape == (5, 6)
+
+    # test a failed fit_transform doesn't break the following fit_transform
+    # https://github.com/skrub-data/skrub/pull/592#discussion_r1278591301
+    tb = TableVectorizer(
+        low_card_cat_transformer=low_card_cat_transformer,
+        # to make ColumnTransformer fit_transform fail
+        numerical_transformer="not_applicable",
+        n_jobs=2,
+    )
+    with pytest.raises(TypeError):
+        tb.fit_transform(X)
+    assert len(tb.transformers) == 5  # the transformers should have been splitted
+    # but not merged
+    tb.numerical_transformer = "passthrough"
+    tb.fit_transform(X)
+    assert len(tb.transformers) == 2  # the transformers should have been splitted
+    # and merged correctly
+    assert len(tb.transformers_) == 2
+
+
 def test_table_vectorizer_remainder_cloning():
     """Check that remainder is cloned when used."""
     df1 = _get_clean_dataframe()
