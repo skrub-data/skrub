@@ -511,6 +511,10 @@ class TableVectorizer(ColumnTransformer):
             self.transformers attribute (when True).
         """
         if during_fit:
+            # split self.transformers, a list of 3-tuples (name, transformer, columns)
+            # containing the unfitted transformers (or strings) and the columns
+            # to be fitted on. This attribute is used by the `ColumnTransformer`
+            # when calling `fit` and `fit_transform`.
             new_transformers = []
             for name, trans, cols in self.transformers:
                 if _parallel_on_columns(trans, cols):
@@ -522,6 +526,10 @@ class TableVectorizer(ColumnTransformer):
                     new_transformers.append((name, trans, cols))
             self.transformers = new_transformers
         else:
+            # split self.transformers_, a list of 3-tuples (name, transformer, columns)
+            # containing the fitted transformers (or strings) and the columns
+            # they were fitted on. This attribute is used by the `ColumnTransformer`
+            # when calling `transform`.
             check_is_fitted(self, attributes=["transformers_"])
             self._transformers_fitted_original = self.transformers_
             new_transformers_ = []
