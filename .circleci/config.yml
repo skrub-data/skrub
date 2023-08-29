@@ -31,7 +31,7 @@ jobs:
       - save_cache:
           key: fetch-cache
           paths:
-            - ./skrub_data/
+            - /home/skrub_data/
 
   deploy:
     docker:
