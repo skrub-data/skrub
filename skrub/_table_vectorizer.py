@@ -153,7 +153,7 @@ def _parallel_on_columns(trans: TransformerMixin, cols: list[str]):
     is "univariate" (i.e. it can be duplicated for each column).
     """
     return (
-        (not type(trans) == str)
+        (not isinstance(trans, str))
         and trans._get_tags().get("univariate", False)
         and len(cols) > 1
     )
@@ -520,7 +520,7 @@ class TableVectorizer(ColumnTransformer):
                 if _parallel_on_columns(trans, cols):
                     for i, col in enumerate(cols):
                         new_transformers.append(
-                            (name + "_split_" + str(i), clone(trans), [col])
+                            (f"{name}_split_{i}", clone(trans), [col])
                         )
                 else:
                     new_transformers.append((name, trans, cols))
