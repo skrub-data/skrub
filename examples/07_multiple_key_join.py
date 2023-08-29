@@ -122,7 +122,7 @@ joiner = Joiner(
     main_key=["Year_Month_DayofMonth", "Origin"],
 )
 
-flights.drop(columns=["FlightNum", "TailNum"])
+flights.drop(columns=["TailNum", "FlightNum"])
 
 ###############################################################################
 # Training data is then passed through a |Pipeline|:
