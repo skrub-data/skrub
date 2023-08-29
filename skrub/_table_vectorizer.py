@@ -159,6 +159,63 @@ def _parallel_on_columns(trans: TransformerMixin, cols: list[str]):
     )
 
 
+def _merge_unfitted_transformers(
+    transformers: list[tuple[str, str | TransformerMixin, list[str]]]
+):
+    new_transformers = []
+    base_names = pd.unique([name.split("_split_")[0] for name, _, _ in transformers])
+    for base_name in base_names:
+        for name, trans, _ in transformers:
+            if name.startswith(base_name):
+                new_trans = trans if isinstance(trans, str) else clone(trans)
+                break
+        new_transformers.append(
+            (
+                base_name,
+                new_trans,
+                [
+                    col
+                    for name, _, cols in transformers
+                    for col in cols
+                    if name.startswith(base_name)
+                ],
+            )
+        )
+    return new_transformers
+
+
+def _merge_fitted_transformers(
+    transformers_: list[tuple[str, str | TransformerMixin, list[str]]],
+    _transformer_to_input_indices: dict[str, list[int]],
+):
+    new_transformers_ = []
+    new_transformer_to_input_indices = {}
+    base_names = pd.unique([name.split("_split_")[0] for name, _, _ in transformers_])
+    for base_name in base_names:
+        # merge all transformers with the same base name
+        transformers, columns, names = [], [], []
+        for name, trans, cols in transformers_:
+            if name.startswith(base_name):
+                columns.extend(cols)
+                transformers.append(trans)
+                names.append(name)
+        if len(transformers) == 1:
+            new_transformers_.append((base_name, transformers[0], columns))
+            new_transformer_to_input_indices[base_name] = list(
+                _transformer_to_input_indices[base_name]
+            )
+        else:
+            # merge transformers
+            new_transformers_.append(
+                (base_name, transformers[0].__class__._merge(transformers), columns)
+            )
+            new_transformer_to_input_indices[base_name] = list(
+                np.concatenate([_transformer_to_input_indices[name] for name in names])
+            )
+
+    return new_transformers_, new_transformer_to_input_indices
+
+
 OptionalTransformer = (
     TransformerMixin | Literal["drop", "remainder", "passthrough"] | None
 )
@@ -560,61 +617,13 @@ class TableVectorizer(ColumnTransformer):
     def _merge_univariate_transformers(self):
         # merge back self.transformers and self.transformers_
         check_is_fitted(self, attributes=["transformers_"])
-        # merge self.transformers
-        new_transformers = []
-        base_names = pd.unique(
-            [name.split("_split_")[0] for name, _, _ in self.transformers]
+        self.transformers = _merge_unfitted_transformers(self.transformers)
+        (
+            self.transformers_,
+            self._transformer_to_input_indices,
+        ) = _merge_fitted_transformers(
+            self.transformers_, self._transformer_to_input_indices
         )
-        for base_name in base_names:
-            for name, trans, _ in self.transformers:
-                if name.startswith(base_name):
-                    new_trans = trans if isinstance(trans, str) else clone(trans)
-                    break
-            new_transformers.append(
-                (
-                    base_name,
-                    new_trans,
-                    [
-                        col
-                        for name, _, cols in self.transformers
-                        for col in cols
-                        if name.startswith(base_name)
-                    ],
-                )
-            )
-        self.transformers = new_transformers
-        # merge self.transformers_
-        new_transformers_ = []
-        new_transformer_to_input_indices = {}
-        base_names = pd.unique(
-            [name.split("_split_")[0] for name, _, _ in self.transformers_]
-        )
-        for base_name in base_names:
-            # merge all transformers with the same base name
-            transformers, columns, names = [], [], []
-            for name, trans, cols in self.transformers_:
-                if name.startswith(base_name):
-                    columns.extend(cols)
-                    transformers.append(trans)
-                    names.append(name)
-            if len(transformers) == 1:
-                new_transformers_.append((base_name, transformers[0], columns))
-                new_transformer_to_input_indices[base_name] = list(
-                    self._transformer_to_input_indices[base_name]
-                )
-            else:
-                # merge transformers
-                new_transformers_.append(
-                    (base_name, transformers[0].__class__._merge(transformers), columns)
-                )
-                new_transformer_to_input_indices[base_name] = list(
-                    np.concatenate(
-                        [self._transformer_to_input_indices[name] for name in names]
-                    )
-                )
-
-        self.transformers_ = new_transformers_
-        self._transformer_to_input_indices = new_transformer_to_input_indices
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
         """Takes a dataframe and tries to convert its columns to their best possible data type.
