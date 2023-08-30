@@ -1,8 +1,10 @@
 .. _datasets:
 
-.. raw:: html
 
-   <h2>Data download and generation</h2>
+.. only:: indpage
+   ================
+   Example datasets
+   ================
 
 .. currentmodule:: skrub
 
