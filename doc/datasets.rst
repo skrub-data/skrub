@@ -1,8 +1,8 @@
 .. _datasets:
 
-================
-Example datasets
-================
+.. raw:: html
+
+   <h2>Data download and generation</h2>
 
 .. currentmodule:: skrub
 
