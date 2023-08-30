@@ -149,6 +149,7 @@ X = flights.drop(columns=["ArrDelay"])
 # We want to frame this as a classification problem:
 # suppose that your company is obliged to reimburse the ticket
 # price if the flight is delayed.
+#
 # We have a binary classification problem:
 # the flight was delayed (1) or not (0).
 
