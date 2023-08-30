@@ -52,7 +52,7 @@ def make_deduplication_data(
         # Randomly pick with which character to replace
         replacements = [
             string.ascii_lowercase[i]
-            for i in np.random.choice(np.arange(26), len(mis_idx)).astype(int)
+            for i in rng.choice(np.arange(26), len(mis_idx)).astype(int)
         ]
         # Introduce spelling mistakes at right examples and char locations per example
         str_as_list[mis_idx // len_ex, mis_idx % len_ex] = replacements
