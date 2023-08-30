@@ -250,7 +250,9 @@ def _merge_transformers(
     """
     new_transformers = []
     new_transformer_to_input_indices = {} if is_fitted else transformer_to_input_indices
-    base_names = pd.unique([name.split("_split_")[0] for name, _, _ in transformers])
+    base_names = pd.unique(
+        pd.Series([name.split("_split_")[0] for name, _, _ in transformers])
+    )
 
     for base_name in base_names:
         # merge all transformers with the same base name
