@@ -33,10 +33,22 @@ Real world datasets
 Generated dataset
 -----------------
 
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: Generated dataset
+
    datasets.make_deduplication_data
 
 Embeddings
------------
+----------
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: Embeddings
 
    datasets.fetch_ken_embeddings
    datasets.fetch_ken_types
