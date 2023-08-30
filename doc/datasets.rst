@@ -14,6 +14,7 @@ It consists of generated, embeddings and real world data.
 Real world datasets
 -------------------
 
+.. autosummary::
 * :func:`datasets.fetch_employee_salaries`
 * :func:`datasets.fetch_road_safety`
 * :func:`datasets.fetch_medical_charge`
