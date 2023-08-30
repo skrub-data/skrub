@@ -88,10 +88,4 @@ This page lists all available functions and classes of `skrub`.
 
    <h2>Data download and generation</h2>
 
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-   :nosignatures:
-   :caption: Data download and generation
-
-   :ref:`datasets`.
+:ref:`datasets`.
