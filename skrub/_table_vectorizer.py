@@ -149,7 +149,7 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
 def _parallel_on_columns(trans: TransformerMixin, cols: list[str]):
     """
     Assert whether we want to parallelize the transformer over
-    the columns or not. We only want to parallelize if the transformer
+    the columns or not. We only want to parallelize over columns if the transformer
     is "univariate" (i.e. it can be duplicated for each column).
     """
     return (
