@@ -20,10 +20,11 @@ typically with `scikit-learn <http://scikit-learn.org>`_ with its
 .. include:: includes/big_toc_css.rst
 
 .. toctree::
+  :maxdepth: 2
 
-   assembling
-   encoding
-   cleaning
-   datasets
-   development
+  assembling
+  encoding
+  cleaning
+  datasets
+  development
 
