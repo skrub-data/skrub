@@ -6,6 +6,7 @@ manually categorize them beforehand, or construct complex Pipelines.
 
 import re
 import warnings
+from itertools import chain
 from typing import Literal
 from warnings import warn
 
@@ -159,61 +160,121 @@ def _parallel_on_columns(trans: TransformerMixin, cols: list[str]):
     )
 
 
-def _merge_unfitted_transformers(
-    transformers: list[tuple[str, str | TransformerMixin, list[str]]]
+def _split_transformers(
+    transformers: list[tuple[str, str | TransformerMixin, list[str]]],
+    transformers_to_input_indices: dict[str, list[int]] | None = None,
+    during_fit: bool = False,
 ):
+    """
+    Split univariate transformers into multiple transformers, one for each
+    column. This is useful to use the inherited `ColumnTransformer` class
+    parallelism.
+
+    Parameters
+    ----------
+    transformers : list of 3-tuples (str, Transformer or str, list of str)
+        The collection of transformers to split, as tuples of
+        (name, transformer, column).
+    transformers_to_input_indices : dict of str to list of int, optional
+        The mapping of transformer names to the indices of the columns they were
+        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
+        Only used when `during_fit` is False.
+    during_fit : bool, default=False
+        Whether the method is called during `fit_transform` (True) or
+        during `transform` (False). This is used to determine if the
+        transformers in `transformers` are fitted or not, i.e. whether
+        the `transformers` argument corresponds to the `self.transformers_` attribute
+        (when False) or the `self.transformers` attribute (when True).
+    """
     new_transformers = []
-    base_names = pd.unique([name.split("_split_")[0] for name, _, _ in transformers])
-    for base_name in base_names:
-        for name, trans, _ in transformers:
-            if name.startswith(base_name):
-                new_trans = trans if isinstance(trans, str) else clone(trans)
-                break
-        new_transformers.append(
-            (
-                base_name,
-                new_trans,
-                [
-                    col
-                    for name, _, cols in transformers
-                    for col in cols
-                    if name.startswith(base_name)
-                ],
-            )
-        )
-    return new_transformers
-
-
-def _merge_fitted_transformers(
-    transformers_: list[tuple[str, str | TransformerMixin, list[str]]],
-    _transformer_to_input_indices: dict[str, list[int]],
-):
-    new_transformers_ = []
     new_transformer_to_input_indices = {}
-    base_names = pd.unique([name.split("_split_")[0] for name, _, _ in transformers_])
+    if during_fit:
+        # split a list of 3-tuples (name, transformer, columns)
+        # containing the unfitted transformers (or strings) and the columns
+        # to be fitted on.
+        for name, trans, cols in transformers:
+            if _parallel_on_columns(trans, cols):
+                for i, col in enumerate(cols):
+                    new_transformers.append((f"{name}_split_{i}", clone(trans), [col]))
+            else:
+                new_transformers.append((name, trans, cols))
+    else:
+        # split a list of 3-tuples (name, transformer, columns)
+        # containing the fitted transformers (or strings) and the columns
+        # they were fitted on.
+        for name, trans, cols in transformers:
+            if _parallel_on_columns(trans, cols):
+                splitted_transformers_ = trans._split()
+                for i, (col, trans, trans_to_mapping) in enumerate(
+                    zip(
+                        cols,
+                        splitted_transformers_,
+                        transformers_to_input_indices[name],
+                    )
+                ):
+                    name_split = f"{name}_split_{i}"
+                    new_transformers.append((name_split, trans, [col]))
+                    new_transformer_to_input_indices[name_split] = [trans_to_mapping]
+            else:
+                new_transformers.append((name, trans, cols))
+                new_transformer_to_input_indices[name] = transformers_to_input_indices[
+                    name
+                ]
+
+    return new_transformers, new_transformer_to_input_indices
+
+
+def _merge_transformers(
+    transformers: list[tuple[str, str | TransformerMixin, list[str]]],
+    is_fitted: bool,
+    transformer_to_input_indices: dict[str, list[int]] | None = None,
+) -> tuple[list[TransformerMixin], dict[str, list[int]] | None]:
+    """
+    Merge splitted transformers into a single transformer.
+
+    Parameters
+    ----------
+    transformers : list of 3-tuples (str, Transformer or str, list of str)
+        The collection of transformers to merge, as tuples of
+        (name, transformer, column).
+    is_fitted : bool
+        Whether the transformers are fitted or not, i.e. whether the
+        `transformers` argument corresponds to the `self.transformers_` attribute
+        (when True) or the `self.transformers` attribute (when False).
+    transformer_to_input_indices : dict of str to list of int, optional
+        The mapping of transformer names to the indices of the columns they were
+        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
+        Only used when `is_fitted` is True.
+    """
+    new_transformers = []
+    new_transformer_to_input_indices = {}
+    base_names = pd.unique([name.split("_split_")[0] for name, _, _ in transformers])
+
     for base_name in base_names:
         # merge all transformers with the same base name
-        transformers, columns, names = [], [], []
-        for name, trans, cols in transformers_:
+        transformers_base_name, names, columns = [], [], []
+        for name, trans, cols in transformers:
             if name.startswith(base_name):
                 columns.extend(cols)
-                transformers.append(trans)
+                transformers_base_name.append(trans)
                 names.append(name)
-        if len(transformers) == 1:
-            new_transformers_.append((base_name, transformers[0], columns))
-            new_transformer_to_input_indices[base_name] = list(
-                _transformer_to_input_indices[base_name]
-            )
-        else:
-            # merge transformers
-            new_transformers_.append(
-                (base_name, transformers[0].__class__._merge(transformers), columns)
-            )
-            new_transformer_to_input_indices[base_name] = list(
-                np.concatenate([_transformer_to_input_indices[name] for name in names])
-            )
 
-    return new_transformers_, new_transformer_to_input_indices
+        new_trans = transformers_base_name[0]
+        if not is_fitted:
+            if isinstance(new_trans, TransformerMixin):
+                new_trans = clone(new_trans)
+        else:
+            if len(transformers_base_name) > 1:
+                # merge transformers
+                new_trans = new_trans.__class__._merge(transformers_base_name)
+            new_transformer_to_input_indices[base_name] = list(
+                chain.from_iterable(
+                    [transformer_to_input_indices[name] for name in names]
+                )
+            )
+        new_transformers.append((base_name, new_trans, columns))
+
+    return new_transformers, new_transformer_to_input_indices
 
 
 OptionalTransformer = (
@@ -572,57 +633,36 @@ class TableVectorizer(ColumnTransformer):
             # containing the unfitted transformers (or strings) and the columns
             # to be fitted on. This attribute is used by the `ColumnTransformer`
             # when calling `fit` and `fit_transform`.
-            new_transformers = []
-            for name, trans, cols in self.transformers:
-                if _parallel_on_columns(trans, cols):
-                    for i, col in enumerate(cols):
-                        new_transformers.append(
-                            (f"{name}_split_{i}", clone(trans), [col])
-                        )
-                else:
-                    new_transformers.append((name, trans, cols))
-            self.transformers = new_transformers
+            self.transformers, _ = _split_transformers(
+                self.transformers, during_fit=True
+            )
         else:
             # split self.transformers_, a list of 3-tuples (name, transformer, columns)
             # containing the fitted transformers (or strings) and the columns
             # they were fitted on. This attribute is used by the `ColumnTransformer`
             # when calling `transform`.
             check_is_fitted(self, attributes=["transformers_"])
-            self._transformers_fitted_original = self.transformers_
-            new_transformers_ = []
-            new_transformer_to_input_indices = {}
-            for name, trans, cols in self.transformers_:
-                if _parallel_on_columns(trans, cols):
-                    splitted_transformers_ = trans._split()
-                    for i, (col, trans, trans_to_mapping) in enumerate(
-                        zip(
-                            cols,
-                            splitted_transformers_,
-                            self._transformer_to_input_indices[name],
-                        )
-                    ):
-                        name_split = f"{name}_split_{i}"
-                        new_transformers_.append((name_split, trans, [col]))
-                        new_transformer_to_input_indices[name_split] = [
-                            trans_to_mapping
-                        ]
-                else:
-                    new_transformers_.append((name, trans, cols))
-                    new_transformer_to_input_indices[
-                        name
-                    ] = self._transformer_to_input_indices[name]
-            self.transformers_ = new_transformers_
-            self._transformer_to_input_indices = new_transformer_to_input_indices
+            (
+                self.transformers_,
+                self._transformer_to_input_indices,
+            ) = _split_transformers(
+                self.transformers_,
+                during_fit=False,
+                transformers_to_input_indices=self._transformer_to_input_indices,
+            )
 
     def _merge_univariate_transformers(self):
-        # merge back self.transformers and self.transformers_
+        """
+        Merge splitted transformers into a single transformer.
+        To be used after `_split_univariate_transformers`.
+        """
+        # merge self.transformers and self.transformers_
         check_is_fitted(self, attributes=["transformers_"])
-        self.transformers = _merge_unfitted_transformers(self.transformers)
-        (
+        self.transformers, _ = _merge_transformers(self.transformers, is_fitted=False)
+        self.transformers_, self._transformer_to_input_indices = _merge_transformers(
             self.transformers_,
-            self._transformer_to_input_indices,
-        ) = _merge_fitted_transformers(
-            self.transformers_, self._transformer_to_input_indices
+            is_fitted=True,
+            transformer_to_input_indices=self._transformer_to_input_indices,
         )
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
