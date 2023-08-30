@@ -187,7 +187,9 @@ def _split_transformers(
         (when False) or the `self.transformers` attribute (when True).
     """
     new_transformers = []
-    new_transformer_to_input_indices = {}
+    new_transformer_to_input_indices = (
+        {} if not during_fit else transformers_to_input_indices
+    )
     if during_fit:
         # split a list of 3-tuples (name, transformer, columns)
         # containing the unfitted transformers (or strings) and the columns
@@ -247,7 +249,7 @@ def _merge_transformers(
         Only used when `is_fitted` is True.
     """
     new_transformers = []
-    new_transformer_to_input_indices = {}
+    new_transformer_to_input_indices = {} if is_fitted else transformer_to_input_indices
     base_names = pd.unique([name.split("_split_")[0] for name, _, _ in transformers])
 
     for base_name in base_names:
