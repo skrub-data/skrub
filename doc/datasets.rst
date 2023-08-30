@@ -1,10 +1,8 @@
 .. _datasets:
 
+.. raw:: html
 
-.. only:: indpage
-   ================
-   Example datasets
-   ================
+   <h1>Example datasets</h1>
 
 .. currentmodule:: skrub
 
@@ -16,10 +14,7 @@ It consists of generated, embeddings and real world data.
 Real world datasets
 -------------------
 
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-   :nosignatures:
+.. toctree::
    :caption: Real world datasets
 
    datasets.fetch_employee_salaries
@@ -35,21 +30,15 @@ Real world datasets
 Generated dataset
 -----------------
 
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-   :nosignatures:
-   :caption: Generated dataset
+.. toctree::
+   :caption: Generated datasets
 
    datasets.make_deduplication_data
 
 Embeddings
 ----------
 
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-   :nosignatures:
+.. toctree::
    :caption: Embeddings
 
    datasets.fetch_ken_embeddings
