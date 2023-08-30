@@ -89,7 +89,6 @@ This page lists all available functions and classes of `skrub`.
    <h2>Data download and generation</h2>
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Data download and generation
+   :maxdepth: 3
 
    datasets
