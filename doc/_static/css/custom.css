@@ -104,11 +104,6 @@
 
 /** Landing header *******************************/
 
-
-div.sidebar-primary-item nav.bd-docs-nav.bd-links div.bd-toc-item.navbar-nav ul.nav.bd-sidenav li.toctree-l1.has-children a.reference.internal {
-    font-weight: bold;
-}
-
 div.toctree-wrapper.compound p.caption span.caption-text {
     display: none;
 }
