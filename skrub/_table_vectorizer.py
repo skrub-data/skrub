@@ -286,10 +286,6 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    columns_ : pandas.Index
-        The fitted array's columns. They are applied to the data passed
-        to the `transform` method.
-
     types_ : dict mapping of str to type
         A mapping of inferred types per column.
         Key is the column name, value is the inferred dtype.
@@ -347,7 +343,6 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
     """
 
     transformers_: list[tuple[str, str | TransformerMixin, list[str]]]
-    columns_: pd.Index
     types_: dict[str, type]
     imputed_columns_: list[str]
 
@@ -650,6 +645,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                 " a minimum of 1 is required."
             )
         self._check_n_features(X, reset=reset)
+        self._check_feature_names(X, reset=reset)
 
         return X
 
@@ -710,14 +706,12 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         self._clone_transformers()
 
         X = self._check_X(X, reset=True)
-        self.columns_ = X.columns
 
         # We replace in all columns regardless of their type,
         # as we might have some false missing
         # in numerical columns for instance.
         X = _replace_false_missing(X)
 
-        ###
         # We need to check for duplicate column names.
         # It is checked by comparing the number of unique values
         # to the length of the column names
@@ -726,7 +720,6 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                 "Duplicate column names in the dataframe."
                 f"The column names are {X.columns}"
             )
-        ###
 
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
@@ -805,12 +798,15 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         # attribute contains the index instead of the column name,
         # so we convert the values to the appropriate column names
         # if there is less than 20 columns in the remainder.
+        # Note that this is only useful for observability and debugging.
         self.transformers_ = self._column_transformer.transformers_
         for i, (name, enc, cols) in enumerate(self.transformers_):
             if name == "remainder" and len(cols) < 20:
-                # In this case, "cols" is a list of ints (the indices)
-                cols: list[int]
-                self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
+                self.transformers_[i] = (
+                    name,
+                    enc,
+                    self.feature_names_in_[cols].tolist(),
+                )
 
         return X_enc
 
@@ -834,9 +830,6 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
         X = self._check_X(X, reset=False)
 
-        if (X.columns != self.columns_).all():
-            X.columns = self.columns_
-
         if self.auto_cast:
             X = self._apply_cast(X)
 
@@ -859,26 +852,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         list of str
             Feature names.
         """
-        ct_feature_names = self._column_transformer.get_feature_names_out()
-        all_trans_feature_names = []
-
-        for name, trans, cols, _ in self._column_transformer._iter(fitted=True):
-            if isinstance(trans, str):
-                if trans == "drop":
-                    continue
-                elif trans == "passthrough":
-                    if all(isinstance(col, int) for col in cols):
-                        cols = [self.columns_[i] for i in cols]
-                    all_trans_feature_names.extend(cols)
-                continue
-            trans_feature_names = trans.get_feature_names_out(cols)
-            all_trans_feature_names.extend(trans_feature_names)
-
-        if len(ct_feature_names) != len(all_trans_feature_names):
-            warn("Could not extract clean feature names; returning defaults. ")
-            return list(ct_feature_names)
-
-        return all_trans_feature_names
+        return self._column_transformer.get_feature_names_out()
 
     @property
     def named_transformers_(self):
