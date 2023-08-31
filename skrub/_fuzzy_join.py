@@ -506,9 +506,11 @@ def fuzzy_join(
     if drop_unmatched:
         df_joined.drop(columns=["fj_idx"], inplace=True)
     else:
-        idx = df_joined.index[df_joined["fj_nan"] == 1]
-        if len(idx) != 0:
-            df_joined.iloc[idx, df_joined.columns.get_loc("fj_idx") :] = np.NaN
+        mask_na = df_joined["fj_nan"] == 1
+        if mask_na.sum() > 0:
+            right_cols = df_joined.columns[df_joined.columns.get_loc("fj_idx") :]
+            df_joined[right_cols] = pd.DataFrame.convert_dtypes(df_joined[right_cols])
+            df_joined.loc[mask_na, right_cols] = pd.NA
         df_joined.drop(columns=["fj_idx", "fj_nan"], inplace=True)
 
     if return_score:
