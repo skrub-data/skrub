@@ -126,6 +126,7 @@ flights.drop(columns=["TailNum", "FlightNum"])
 
 ###############################################################################
 # Training data is then passed through a |Pipeline|:
+# 
 # - We will combine all the information from our pool of tables into "flights",
 # our main table.
 # - We will use this main table to model the prediction of flight delay.
