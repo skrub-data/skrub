@@ -53,7 +53,9 @@ Major changes
   - scikit-learn >= 1.2.1
   - pandas >= 1.5.3 :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
-* Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
+* You can now pass column-specific transformers to :class:`TableVectorizer`
+  using the `specific_transformers` argument.
+  :pr:`583` by :user:`Lilian Boulard <LilianBoulard>`.
 
 * Do not support 1-D array (and pandas Series) in :class:`TableVectorizer`. Pass a
   2-D array (or a pandas DataFrame) with a single column instead. This change is for
@@ -64,6 +66,20 @@ Major changes
   a transformer so that the same instance is not shared between different
   transformers.
   :pr:`678` by :user:`Guillaume Lemaitre <glemaitre>`
+
+* :class:`GapEncoder` speedup :pr:`680` by :user:`Leo Grinsztajn <LeoGrin>`
+
+  - Improved :class:`GapEncoder`'s early stopping logic. The parameters `tol` and `min_iter`
+    have been removed. The parameter `max_no_improvement` can now be used to control the
+    early stopping.
+    :pr:`663` by :user:`Simona Maggio <simonamaggio>`
+    :pr:`593` by  :user:`Lilian Boulard <LilianBoulard>`
+    :pr:`681` by  :user:`Leo Grinsztajn <LeoGrin>`
+
+  - Implementation improvement leading to a ~x5 speedup for each iteration.
+
+  - Better default hyperparameters: `batch_size` now defaults to 1024, and `max_iter_e_steps`
+    to 1.
 
 Minor changes
 -------------
@@ -94,6 +110,8 @@ Minor changes
 
 * Add `get_feature_names_out` method to :class:`MinHashEncoder`.
   :pr:`616` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* Removed `requests` from the requirements. :pr:`613` by :user:`Lilian Boulard <LilianBoulard>`
 
 * :class:`TableVectorizer` now handles mixed types columns without failing
   by converting them to string before type inference.
