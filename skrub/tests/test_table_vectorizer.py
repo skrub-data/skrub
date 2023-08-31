@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
@@ -371,23 +372,25 @@ def test_get_feature_names_out() -> None:
     vec_w_pass.fit(X)
 
     # In this test, order matters. If it doesn't, convert to set.
-    expected_feature_names_pass = [
-        "int",
-        "float",
-        "str1_public",
-        "str2_chef",
-        "str2_lawyer",
-        "str2_manager",
-        "str2_officer",
-        "str2_teacher",
-        "cat1_yes",
-        "cat2_20K+",
-        "cat2_30K+",
-        "cat2_40K+",
-        "cat2_50K+",
-        "cat2_60K+",
-    ]
-    assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
+    expected_feature_names_pass = np.array(
+        [
+            "int",
+            "float",
+            "str1_public",
+            "str2_chef",
+            "str2_lawyer",
+            "str2_manager",
+            "str2_officer",
+            "str2_teacher",
+            "cat1_yes",
+            "cat2_20K+",
+            "cat2_30K+",
+            "cat2_40K+",
+            "cat2_50K+",
+            "cat2_60K+",
+        ]
+    )
+    assert_array_equal(vec_w_pass.get_feature_names_out(), expected_feature_names_pass)
 
     vec_w_drop = TableVectorizer(remainder="drop")
     vec_w_drop.fit(X)
@@ -409,7 +412,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
+    assert_array_equal(vec_w_drop.get_feature_names_out(), expected_feature_names_drop)
 
 
 def test_fit() -> None:
@@ -726,7 +729,7 @@ def test_changing_types(X_fit, X_transform_original, X_transform_with_missing_or
     for new_category in ["a", "new category", "[test]"]:
         table_vec = TableVectorizer()
         table_vec.fit_transform(X_fit)
-        expected_dtype = table_vec.types_["col1"]
+        expected_dtype = table_vec.types_[0]
         # convert [ and ] to \\[ and \\] to avoid pytest warning
         expected_dtype = str(expected_dtype).replace("[", "\\[").replace("]", "\\]")
         new_category_regex = str(new_category).replace("[", "\\[").replace("]", "\\]")

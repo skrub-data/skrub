@@ -19,7 +19,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.deprecation import deprecated
 from sklearn.utils.metaestimators import _BaseComposition
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import _get_feature_names, check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
 from skrub._utils import parse_astype_error_message
@@ -365,6 +365,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         n_jobs: int = None,
         transformer_weights=None,
         verbose: bool = False,
+        verbose_feature_names_out: bool = False,
     ):
         self.cardinality_threshold = cardinality_threshold
         self.low_card_cat_transformer = low_card_cat_transformer
@@ -380,6 +381,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         self.n_jobs = n_jobs
         self.transformer_weights = transformer_weights
         self.verbose = verbose
+        self.verbose_feature_names_out = verbose_feature_names_out
 
     def _more_tags(self):
         """
@@ -495,7 +497,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
         # Convert to the best possible data type
         self.types_ = {}
-        for col in X.columns:
+        for idx, col in enumerate(X.columns):
             if not pd.api.types.is_datetime64_any_dtype(X[col]):
                 # we don't want to cast datetime64
                 try:
@@ -536,7 +538,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                     X[col] = X[col].astype(X[col].dtype.type, errors="ignore")
                 except (TypeError, ValueError):
                     pass
-            self.types_[col] = X[col].dtype
+            self.types_[idx] = X[col].dtype
         return X
 
     def _apply_cast(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -560,7 +562,8 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         object_cols = X.columns[X.dtypes == "object"]
         for col in object_cols:
             X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
-        for col, dtype in self.types_.items():
+        for idx_col, dtype in self.types_.items():
+            col = X.columns[idx_col]
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
             if isinstance(dtype, pd.CategoricalDtype):
@@ -571,8 +574,9 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                 dtype = pd.CategoricalDtype(
                     categories=known_categories.union(new_categories)
                 )
-                self.types_[col] = dtype
-        for col, dtype in self.types_.items():
+                self.types_[idx_col] = dtype
+        for idx_col, dtype in self.types_.items():
+            col = X.columns[idx_col]
             try:
                 if pd.api.types.is_numeric_dtype(dtype):
                     # we don't use astype because it can convert float to int
@@ -645,7 +649,19 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                 " a minimum of 1 is required."
             )
         self._check_n_features(X, reset=reset)
+        # TODO: _check_feature_names raises a warning when fitting on dataframe
+        # but transforming on a numpy array.
+        # In practice, this looks error-prone and we need to discuss
+        # whether to raise an error instead.
+        #
+        # Note that when fitting on a dataframe and transforming on
+        # the same dataframe with different column names,
+        # _check_feature_names will raise an error.
         self._check_feature_names(X, reset=reset)
+        feature_names = _get_feature_names(X)
+        feature_names_in = getattr(self, "feature_names_in_", None)
+        if feature_names is None and feature_names_in is not None:
+            X.columns = feature_names_in
 
         return X
 
@@ -791,6 +807,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             n_jobs=self.n_jobs,
             transformer_weights=self.transformer_weights,
             verbose=self.verbose,
+            verbose_feature_names_out=self.verbose_feature_names_out,
         )
         X_enc = self._column_transformer.fit_transform(X, y)
 
