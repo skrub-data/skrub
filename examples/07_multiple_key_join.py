@@ -39,7 +39,7 @@ pool of tables are combined for machine learning.
 ###############################################################################
 # The main table: flights dataset
 # ...............................
-#     - The "flights" datasets. It contains all US flights date, origin
+#     - The `flights` datasets. It contains all US flights date, origin
 #       and destination airports and flight time.
 #       Here, we consider only flights from 2008.
 
@@ -68,7 +68,7 @@ plt.show()
 ############################################################################
 # Airport data: an auxiliary table from the same database
 # .......................................................
-#     - The "airports" dataset, with information such as their name
+#     - The ``airports`` dataset, with information such as their name
 #       and location (longitude, latitude).
 
 airports = fetch_figshare("41710257").X
@@ -77,7 +77,7 @@ airports.head()
 ########################################################################
 # Weather data: auxiliary tables from external sources
 # ....................................................
-#     - The "weather" table. Weather details by measurement station.
+#     - The ``weather`` table. Weather details by measurement station.
 #       Both tables are from the Global Historical Climatology Network.
 #       Here, we consider only weather measurements from 2008.
 
@@ -87,7 +87,7 @@ weather = weather.sample(100_000, random_state=1, ignore_index=True)
 weather.head()
 
 ########################################################################
-#     - The "stations" dataset. Provides location of all the weather
+#     - The ``stations`` dataset. Provides location of all the weather
 #       measurement stations in the US.
 
 stations = fetch_figshare("41710524").X
@@ -149,6 +149,7 @@ X = flights.drop(columns=["ArrDelay"])
 # We want to frame this as a classification problem:
 # suppose that your company is obliged to reimburse the ticket
 # price if the flight is delayed.
+#
 # We have a binary classification problem:
 # the flight was delayed (1) or not (0).
 
