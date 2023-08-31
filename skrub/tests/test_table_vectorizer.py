@@ -689,7 +689,7 @@ def test_specific_transformers_unexpected_behavior():
 
     # Test that using tuple lengths other than 2 or 3 raises an error
     with pytest.raises(TypeError):
-        assert TableVectorizer(specific_transformers=[(StandardScaler(), )]).fit(X)
+        assert TableVectorizer(specific_transformers=[(StandardScaler(),)]).fit(X)
         assert TableVectorizer(
             specific_transformers=[("dummy", StandardScaler(), ["float"], 1)]
         ).fit(X)
