@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
@@ -869,3 +869,53 @@ def test_table_vectorizer_remainder_cloning():
     assert table_vectorizer.high_card_cat_transformer_ is not remainder
     assert table_vectorizer.numerical_transformer_ is not remainder
     assert table_vectorizer.datetime_transformer_ is not remainder
+
+
+def test_table_vectorizer_properties():
+    """Check properties, including:
+    - named_transformers_
+    - sparse_output_
+    - output_indices_
+    """
+    df = _get_clean_dataframe()
+    tv = TableVectorizer(
+        cardinality_threshold=4,
+        # we must have n_samples = 5 >= n_components
+        high_card_cat_transformer=GapEncoder(n_components=2),
+        numerical_transformer=StandardScaler(),
+    )
+    tv.fit_transform(df)
+
+    # named_transformers_
+    expected_name_transformers = {
+        "numeric": "StandardScaler",
+        "low_card_cat": "OneHotEncoder",
+        "high_card_cat": "GapEncoder",
+    }
+    for transformer_type, transformer_name in expected_name_transformers.items():
+        transformer = tv.named_transformers_[transformer_type]
+        assert transformer.__class__.__name__ == transformer_name
+
+    # output_indices_
+    expected_output_indices = {
+        "numeric": slice(0, 2, None),
+        "low_card_cat": slice(2, 4, None),
+        "high_card_cat": slice(4, 8, None),
+        "remainder": slice(0, 0, None),
+    }
+    assert tv.output_indices_ == expected_output_indices
+
+    # sparse_output_
+    assert not tv.sparse_output_
+
+    # this time with a higher sparse_threshold and
+    # OneHotEncoder set to sparse_output.
+    tv = TableVectorizer(
+        cardinality_threshold=30,
+        low_card_cat_transformer=OneHotEncoder(sparse_output=True),
+        # we must have n_samples = 5 >= n_components
+        numerical_transformer=StandardScaler(),
+        sparse_threshold=0.5,
+    )
+    tv.fit(df)
+    assert tv.sparse_output_

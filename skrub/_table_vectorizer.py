@@ -6,7 +6,6 @@ manually categorize them beforehand, or construct complex Pipelines.
 import warnings
 from collections import Counter
 from typing import Literal
-from warnings import warn
 
 import numpy as np
 import pandas as pd
