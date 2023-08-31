@@ -275,8 +275,8 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             Transformed input.
         """
         check_is_fitted(self, "hash_dict_")
-        X = check_input(X)
         self._check_feature_names(X, reset=False)
+        X = check_input(X)
         self._check_n_features(X, reset=False)
         if self.minmax_hash:
             if self.n_components % 2 != 0:

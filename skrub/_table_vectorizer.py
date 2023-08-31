@@ -4,6 +4,7 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 import warnings
+from collections import Counter
 from typing import Literal
 from warnings import warn
 
@@ -16,6 +17,7 @@ from pandas.core.dtypes.base import ExtensionDtype
 from scipy import sparse
 from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
+from sklearn.compose._column_transformer import _get_transformer_list
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.deprecation import deprecated
 from sklearn.utils.metaestimators import _BaseComposition
@@ -145,9 +147,7 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
-OptionalTransformer = (
-    TransformerMixin | Literal["drop", "remainder", "passthrough"] | None
-)
+Transformer = TransformerMixin | Literal["drop", "remainder", "passthrough"]
 
 
 class TableVectorizer(TransformerMixin, _BaseComposition):
@@ -220,7 +220,20 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    auto_cast : bool, optional, default=True
+    specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
+        On top of the default column type classification (see parameters above),
+        this parameter allows you to manually specify transformers for
+        specific columns.
+        This is equivalent to using a ColumnTransformer for assigning the
+        column-specific transformers, and passing the ``TableVectorizer``
+        as the ``remainder``.
+        This parameter can take two different formats, either:
+        - a list of 2-tuples (transformer, column names or indices)
+        - a list of 3-tuple (name, transformer, column names or indices)
+        In the latter format, you can specify the name of the assignment.
+        Mixing the two is not supported.
+
+    auto_cast : bool, default=True
         If set to `True`, will try to convert each column to the best possible
         data type (dtype).
 
@@ -345,6 +358,11 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
     transformers_: list[tuple[str, str | TransformerMixin, list[str]]]
     types_: dict[str, type]
     imputed_columns_: list[str]
+    low_card_cat_transformer_: Transformer
+    high_card_cat_transformer_: Transformer
+    numerical_transformer_: Transformer
+    datetime_transformer_: Transformer
+    specific_transformers_: list[tuple[str, Transformer, list[str, int]]]
 
     # Override required parameters
     _required_parameters = []
@@ -353,10 +371,15 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         self,
         *,
         cardinality_threshold: int = 40,
-        low_card_cat_transformer: OptionalTransformer = None,
-        high_card_cat_transformer: OptionalTransformer = None,
-        numerical_transformer: OptionalTransformer = None,
-        datetime_transformer: OptionalTransformer = None,
+        low_card_cat_transformer: Transformer | None = None,
+        high_card_cat_transformer: Transformer | None = None,
+        numerical_transformer: Transformer | None = None,
+        datetime_transformer: Transformer | None = None,
+        specific_transformers: list[
+            tuple[Transformer, list[str | int]]
+            | tuple[str, Transformer, list[str, int]]
+        ]
+        | None = None,
         auto_cast: bool = True,
         impute_missing: Literal["auto", "force", "skip"] = "auto",
         # The next parameters are inherited from ColumnTransformer
@@ -372,6 +395,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         self.high_card_cat_transformer = high_card_cat_transformer
         self.numerical_transformer = numerical_transformer
         self.datetime_transformer = datetime_transformer
+        self.specific_transformers = specific_transformers
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
 
@@ -383,7 +407,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         self.verbose = verbose
         self.verbose_feature_names_out = verbose_feature_names_out
 
-    def _more_tags(self):
+    def _more_tags(self) -> dict:
         """
         Used internally by sklearn to ease the estimator checks.
         """
@@ -395,7 +419,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             },
         }
 
-    def _clone_transformers(self):
+    def _clone_transformers(self) -> None:
         """
         For each of the different transformers that can be passed,
         create the corresponding variable name with a trailing underscore,
@@ -461,6 +485,41 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             )
         else:
             self.datetime_transformer_ = self.datetime_transformer
+
+        if (self.specific_transformers is None) or len(self.specific_transformers) == 0:
+            self.specific_transformers_ = []
+        else:
+            first_item_length = len(self.specific_transformers[0])
+            # Check all tuples are the same length
+            for i, tup in enumerate(self.specific_transformers):
+                if len(tup) != first_item_length:
+                    raise TypeError(
+                        "Expected `specific_transformers` to be a list of "
+                        "tuples with all the same length, got length "
+                        f"{len(tup)} at index {i} (elements at previous "
+                        f"indices have {first_item_length} in length). "
+                    )
+            if first_item_length == 2:
+                # Unnamed assignments, transform to named
+                named_specific_transformers = _get_transformer_list(
+                    self.specific_transformers
+                )
+            elif first_item_length == 3:
+                # Named assignments
+                named_specific_transformers = self.specific_transformers
+            else:
+                raise TypeError(
+                    "Expected `specific_transformers` to be a list of tuples "
+                    "of length 2 or 3, got a list of tuples of length "
+                    f"{first_item_length}. "
+                )
+
+            self.specific_transformers_ = [
+                (name, clone(transformer), cols)
+                if isinstance(transformer, sklearn.base.TransformerMixin)
+                else (name, transformer, cols)
+                for name, transformer, cols in named_specific_transformers
+            ]
 
         # TODO: check that the provided transformers are valid
 
@@ -554,10 +613,10 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                 X[col].fillna(value=np.nan, inplace=True)
         for col in self.imputed_columns_:
             X[col] = _replace_missing_in_cat_col(X[col])
-        # for object dtype columns, first convert to string to avoid mixed types
-        # we do it both in auto_cast and apply_cast because
-        # the type infered for string columns during auto_cast
-        # is not necessarily string, it can be object because
+        # for object dtype columns, first convert to string to avoid mixed
+        # types we do it both in auto_cast and apply_cast because
+        # the type inferred for string columns during auto_cast
+        # is not necessarily string, it can be an object because
         # of missing values
         object_cols = X.columns[X.dtypes == "object"]
         for col in object_cols:
@@ -728,13 +787,11 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         # in numerical columns for instance.
         X = _replace_false_missing(X)
 
-        # We need to check for duplicate column names.
-        # It is checked by comparing the number of unique values
-        # to the length of the column names
-        if len(set(X.columns)) != len(X.columns):
+        # Check for duplicate column names.
+        duplicate_columns = {k for k, v in Counter(X.columns).items() if v > 1}
+        if duplicate_columns:
             raise AssertionError(
-                "Duplicate column names in the dataframe."
-                f"The column names are {X.columns}"
+                f"Duplicate column names in the dataframe: {duplicate_columns}"
             )
 
         # If auto_cast is True, we'll find and apply the best possible type
@@ -743,12 +800,23 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         if self.auto_cast:
             X = self._auto_cast(X)
 
+        # We will filter X to keep only the columns that are not specified
+        # explicitly by the user.
+        X_filtered = X.drop(
+            columns=[
+                # We do this for loop as `self.specific_transformers_`
+                # might be empty.
+                col
+                for (_, _, columns) in self.specific_transformers_
+                for col in columns
+            ]
+        )
         # Select columns by dtype
-        numeric_columns = X.select_dtypes(include="number").columns.to_list()
-        categorical_columns = X.select_dtypes(
+        numeric_columns = X_filtered.select_dtypes(include="number").columns.to_list()
+        categorical_columns = X_filtered.select_dtypes(
             include=["string", "object", "category"]
         ).columns.to_list()
-        datetime_columns = X.select_dtypes(
+        datetime_columns = X_filtered.select_dtypes(
             include=["datetime", "datetimetz"]
         ).columns.to_list()
 
@@ -762,11 +830,12 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers: list[tuple[str, OptionalTransformer, list[str]]] = [
+        all_transformers: list[tuple[str, Transformer, list[str]]] = [
             ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
             ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
             ("high_card_cat", self.high_card_cat_transformer_, high_card_cat_columns),
+            *self.specific_transformers_,
         ]
         # We will now filter this list, by keeping only the ones with:
         # - at least one column

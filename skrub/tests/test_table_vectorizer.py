@@ -6,7 +6,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import GapEncoder, SuperVectorizer, TableVectorizer
+from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
 
 
@@ -645,6 +645,95 @@ def test__infer_date_format() -> None:
     # Test with a column containing more than two date formats
     date_column = pd.Series(["2022-01-01", "01/02/2022", "20220103", "2022-Jan-04"])
     assert _infer_date_format(date_column) is None
+
+
+@pytest.mark.parametrize(
+    ["specific_transformers", "expected_transformers_"],
+    [
+        (
+            (MinHashEncoder(), ["str1", "str2"]),
+            [
+                ("numeric", "passthrough", ["int", "float"]),
+                ("minhashencoder", "MinHashEncoder", ["str1", "str2"]),
+                ("low_card_cat", "OneHotEncoder", ["cat1", "cat2"]),
+            ],
+        ),
+        (
+            ("mh_cat1", MinHashEncoder(), ["cat1"]),
+            [
+                ("numeric", "passthrough", ["int", "float"]),
+                ("mh_cat1", "MinHashEncoder", ["cat1"]),
+                ("low_card_cat", "OneHotEncoder", ["str1", "str2", "cat2"]),
+            ],
+        ),
+    ],
+)
+def test_specifying_specific_column_transformer(
+    specific_transformers, expected_transformers_
+) -> None:
+    """
+    Test that specifying a specific transformer works as expected.
+    """
+    X = _get_dirty_dataframe()
+    tv = TableVectorizer(specific_transformers=[specific_transformers]).fit(X)
+    clean_transformers_ = [
+        (name, transformer.__class__.__name__, columns)
+        if not isinstance(transformer, str)
+        else (name, transformer, columns)
+        for name, transformer, columns in tv.transformers_
+    ]
+    # Sort to ignore order
+    assert sorted(clean_transformers_) == sorted(expected_transformers_)
+
+
+def test_specific_transformers_unexpected_behavior():
+    """
+    Tests a few cases of unsupported behavior when using `specific_transformers`.
+    """
+    X = _get_clean_dataframe()
+
+    # Test that using tuple lengths other than 2 or 3 raises an error
+    with pytest.raises(TypeError):
+        assert TableVectorizer(specific_transformers=[(StandardScaler(),)]).fit(X)
+        assert TableVectorizer(
+            specific_transformers=[("dummy", StandardScaler(), ["float"], 1)]
+        ).fit(X)
+
+    # Test that using mixed length tuples raises an error
+    with pytest.raises(TypeError):
+        assert TableVectorizer(
+            specific_transformers=[
+                (StandardScaler(), ["float"]),
+                ("dummy", StandardScaler(), ["float"]),
+            ]
+        ).fit(X)
+
+
+@pytest.mark.parametrize(
+    "pipeline",
+    [
+        TableVectorizer(),
+        TableVectorizer(
+            specific_transformers=[
+                (MinHashEncoder(), ["cat1", "cat2"]),
+            ],
+        ),
+        TableVectorizer(
+            low_card_cat_transformer=MinHashEncoder(),
+        ),
+    ],
+)
+def test_deterministic(pipeline) -> None:
+    """
+    Tests that running the same TableVectorizer multiple times with the same
+    (deterministic) components results in the same output.
+    """
+    X = _get_dirty_dataframe()
+    X_enc_prev = pipeline.fit_transform(X)
+    for _ in range(5):
+        X_enc = pipeline.fit_transform(X)
+        np.testing.assert_array_equal(X_enc, X_enc_prev)
+        X_enc_prev = X_enc
 
 
 def test_mixed_types():
