@@ -123,9 +123,11 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
     @classmethod
     def _merge(cls, transformers_list: list[MinHashEncoder]):
-        # merge MinHashEncoder fitted on different columns
-        # into a single MinHashEncoder
-        # useful for parallelization in the TableVectorizer
+        """
+        Merge MinHashEncoders fitted on different columns
+        into a single MinHashEncoder. This is useful for parallelization
+        over columns in the TableVectorizer.
+        """
         full_transformer = clone(transformers_list[0])
         capacity = transformers_list[0]._capacity
         full_transformer.hash_dict_ = combine_lru_dicts(
@@ -140,6 +142,12 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         return full_transformer
 
     def _split(self):
+        """
+        Split a MinHashEncoder fitted on multiple columns
+        into a list of MinHashEncoders (one for each column).
+        This is useful for parallelizing transform over columns
+        in the TableVectorizer.
+        """
         check_is_fitted(self)
         transformer_list = []
         for i in range(self.n_features_in_):

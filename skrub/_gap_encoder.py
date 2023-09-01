@@ -742,9 +742,11 @@ class GapEncoder(TransformerMixin, BaseEstimator):
 
     @classmethod
     def _merge(cls, transformers_list: list[GapEncoder]):
-        # merge GapEncoder fitted on different columns
-        # into a single GapEncoder
-        # useful for parallelization in the TableVectorizer
+        """
+        Merge GapEncoders fitted on different columns
+        into a single GapEncoder. This is useful for parallelization
+        over columns in the TableVectorizer.
+        """
         full_transformer = clone(transformers_list[0])
         # assert rho_ is the same for all transformers
         rho_ = transformers_list[0].rho_
@@ -759,6 +761,12 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         return full_transformer
 
     def _split(self):
+        """
+        Split a GapEncoder fitted on multiple columns
+        into a list of GapEncoders fitted on one column each.
+        This is useful for parallelizing transform over columns
+        in the TableVectorizer.
+        """
         check_is_fitted(self)
         transformers_list = []
         for i, model in enumerate(self.fitted_models_):
