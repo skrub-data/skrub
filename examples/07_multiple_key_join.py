@@ -48,7 +48,7 @@ from skrub.datasets import fetch_figshare
 
 flights = fetch_figshare("41771418").X
 # Sampling for faster computation.
-flights = flights.sample(50_000, random_state=1, ignore_index=True)
+flights = flights.sample(20_000, random_state=1, ignore_index=True)
 flights.head()
 
 ###############################################################################
@@ -126,6 +126,7 @@ flights.drop(columns=["TailNum", "FlightNum"])
 
 ###############################################################################
 # Training data is then passed through a |Pipeline|:
+#
 # - We will combine all the information from our pool of tables into "flights",
 # our main table.
 # - We will use this main table to model the prediction of flight delay.
@@ -172,4 +173,4 @@ scores.mean()
 # on imprecise and multiple-key correspondences.
 # This is made easy by skrub's |Joiner| transformer.
 #
-# Our final cross-validated accuracy score is 0.6.
+# Our final cross-validated accuracy score is 0.58.
