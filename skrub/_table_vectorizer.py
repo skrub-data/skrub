@@ -948,6 +948,72 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         """
         return self._column_transformer.get_feature_names_out()
 
+    def get_params(self, deep=True) -> dict:
+        """Get parameters for this estimator.
+
+        Returns the parameters given in the constructor as well as the
+        estimators contained within the `specific_transformers_` of the
+        `TableVectorizer`.
+
+        Parameters
+        ----------
+        deep : bool, default=True
+            If True, will return the parameters for this estimator and
+            contained subobjects that are estimators.
+
+        Returns
+        -------
+        params : dict
+            Parameter names mapped to their values.
+        """
+        return self._get_params("_specific_transformers", deep=deep)
+
+    def set_params(self, **kwargs) -> "TableVectorizer":
+        """Set the parameters of this estimator.
+
+        Valid parameter keys can be listed with ``get_params()``. Note that you
+        can directly set the parameters of the estimators contained in
+        `specific_transformers_` of `TableVectorizer`.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Estimator parameters.
+
+        Returns
+        -------
+        self : TableVectorizer
+            This estimator.
+        """
+        self._set_params("_specific_transformers", **kwargs)
+        return self
+
+    @property
+    def _specific_transformers(self) -> list[tuple[str, TransformerMixin]]:
+        """Accessor to specific_transformers, with elements of length 2.
+
+        Internal list of specific_transformers only containing the name and
+        transformers, dropping the columns. This is for the implementation
+        of get_params via BaseComposition._get_params which expects lists
+        of tuples of len 2.
+        """
+        try:
+            return [(name, trans) for name, trans, _ in self.specific_transformers]
+        except (TypeError, ValueError):
+            return self.specific_transformers
+
+    @_specific_transformers.setter
+    def _specific_transformers(self, value):
+        try:
+            self.specific_transformers = [
+                (name, trans, col)
+                for ((name, trans), (_, _, col)) in zip(
+                    value, self.specific_transformers
+                )
+            ]
+        except (TypeError, ValueError):
+            self.specific_transformers = value
+
     @property
     def named_transformers_(self) -> Bunch:
         """Map transformer names to transformer objects.
