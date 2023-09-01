@@ -109,7 +109,7 @@ pprint(tv.transformers_)
 
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import HistGradientBoostingRegressor
 from skrub import GapEncoder
 
 pipeline = make_pipeline(
@@ -119,7 +119,7 @@ pipeline = make_pipeline(
             ("mh_dep_name", MinHashEncoder(), ["department_name"]),
         ],
     ),
-    HistGradientBoostingClassifier(),
+    HistGradientBoostingRegressor(),
 )
 
 params = {
