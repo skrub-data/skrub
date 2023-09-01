@@ -855,6 +855,8 @@ def test_changing_types_int_float() -> None:
 
 
 def test_column_by_column() -> None:
+    # Test that the TableVectorizer gives the same result
+    # when applied column by column
     X = _get_clean_dataframe()
     table_vec_all_cols = TableVectorizer(
         high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
@@ -867,11 +869,21 @@ def test_column_by_column() -> None:
             cardinality_threshold=4,
         )
         table_vec_one_col.fit(X[[col]])
-        assert table_vec_one_col.get_feature_names_out() == [
+        features_from_col = [
             feat
             for feat in table_vec_all_cols.get_feature_names_out()
             if feat.startswith(col)
         ]
+        assert table_vec_one_col.get_feature_names_out() == features_from_col
+        indices_features_from_col = [
+            table_vec_all_cols.get_feature_names_out().index(feat)
+            for feat in features_from_col
+        ]
+        excepted_result = table_vec_all_cols.transform(X)[:, indices_features_from_col]
+        assert np.allclose(
+            table_vec_one_col.transform(X[[col]]),
+            excepted_result,
+        )
 
 
 @skip_if_no_parallel
