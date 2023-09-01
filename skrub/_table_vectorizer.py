@@ -18,6 +18,7 @@ from sklearn.base import TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.compose._column_transformer import _get_transformer_list
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils import Bunch
 from sklearn.utils.deprecation import deprecated
 from sklearn.utils.metaestimators import _BaseComposition
 from sklearn.utils.validation import _get_feature_names, check_is_fitted
@@ -283,6 +284,14 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
     verbose : bool, default=False
         If True, the time elapsed while fitting each transformer will be
         printed as it is completed.
+
+    verbose_feature_names_out : bool, default=False
+        If True, :meth:`TableVectorizer.get_feature_names_out` will prefix
+        all feature names with the name of the transformer that generated that
+        feature.
+        If False, :meth:`TableVectorizer.get_feature_names_out` will not
+        prefix any feature names and will error if feature names are not
+        unique.
 
     Attributes
     ----------
@@ -940,15 +949,34 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         return self._column_transformer.get_feature_names_out()
 
     @property
-    def named_transformers_(self):
+    def named_transformers_(self) -> Bunch:
+        """Map transformer names to transformer objects.
+
+        Read-only attribute to access any transformer by given name.
+        Keys are transformer names and values are the fitted transformer
+        objects.
+        """
         return self._column_transformer.named_transformers_
 
     @property
-    def sparse_output_(self):
+    def sparse_output_(self) -> bool:
+        """Whether the output of ``transform`` is sparse or dense.
+
+        Boolean flag indicating whether the output of ``transform`` is a
+        sparse matrix or a dense numpy array, which depends on the output
+        of the individual transformers and the `sparse_threshold` keyword.
+        """
         return self._column_transformer.sparse_output_
 
     @property
-    def output_indices_(self):
+    def output_indices_(self) -> dict[str, slice]:
+        """Map the transformer names to their input indices.
+
+        A dictionary from each transformer name to a slice, where the slice
+        corresponds to indices in the transformed output. This is useful to
+        inspect which transformer is responsible for which transformed
+        feature(s).
+        """
         return self._column_transformer.output_indices_
 
 
