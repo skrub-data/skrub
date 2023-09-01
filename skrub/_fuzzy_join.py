@@ -507,7 +507,7 @@ def fuzzy_join(
         df_joined.drop(columns=["fj_idx"], inplace=True)
     else:
         mask_na = df_joined["fj_nan"] == 1
-        if mask_na.sum() > 0:
+        if mask_na.any():
             right_cols = df_joined.columns[df_joined.columns.get_loc("fj_idx") :]
             df_joined[right_cols] = pd.DataFrame.convert_dtypes(df_joined[right_cols])
             df_joined.loc[mask_na, right_cols] = pd.NA
