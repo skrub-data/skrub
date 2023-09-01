@@ -1,3 +1,5 @@
+.. _api:
+
 #############
 API reference
 #############
@@ -86,10 +88,23 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <h2>Other</h2>
+   <a href="#data"><h2>Data download and generation</h2></a>
 
-.. toctree::
-   :maxdepth: 3
-   :caption: Other
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: Data download and generation
 
-   datasets
+   datasets.fetch_employee_salaries
+   datasets.fetch_medical_charge
+   datasets.fetch_midwest_survey
+   datasets.fetch_open_payments
+   datasets.fetch_road_safety
+   datasets.fetch_traffic_violations
+   datasets.fetch_drug_directory
+   datasets.fetch_world_bank_indicator
+   datasets.fetch_ken_embeddings
+   datasets.fetch_ken_table_aliases
+   datasets.fetch_ken_types
+   datasets.make_deduplication_data
