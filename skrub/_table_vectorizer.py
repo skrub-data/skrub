@@ -148,7 +148,10 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
-def _parallel_on_columns(trans: TransformerMixin, cols: list[str]) -> bool:
+Transformer = TransformerMixin | Literal["drop", "remainder", "passthrough"]
+
+
+def _parallel_on_columns(trans: Transformer, cols: list[str]) -> bool:
     """
     Assert whether we want to parallelize the transformer over
     the columns or not. We only want to parallelize over columns if the transformer
@@ -162,10 +165,10 @@ def _parallel_on_columns(trans: TransformerMixin, cols: list[str]) -> bool:
 
 
 def _split_transformers(
-    transformers: list[tuple[str, str | TransformerMixin, list[str]]],
+    transformers: list[tuple[str, Transformer, list[str]]],
     transformers_to_input_indices: dict[str, list[int]] | None = None,
     during_fit: bool = False,
-):
+) -> tuple[list[tuple[str, Transformer, list[str]]], dict[str, list[int]]]:
     """
     Split univariate transformers into multiple transformers, one for each
     column. This is useful to use the inherited `ColumnTransformer` class
@@ -228,10 +231,10 @@ def _split_transformers(
 
 
 def _merge_transformers(
-    transformers: list[tuple[str, str | TransformerMixin, list[str]]],
+    transformers: list[tuple[str, Transformer, list[str]]],
     is_fitted: bool,
     transformer_to_input_indices: dict[str, list[int]] | None = None,
-) -> tuple[list[TransformerMixin], dict[str, list[int]] | None]:
+) -> tuple[list[tuple[str, Transformer, list[str]]], dict[str, list[int]]]:
     """
     Merge splitted transformers into a single transformer.
 
@@ -280,9 +283,6 @@ def _merge_transformers(
         new_transformers.append((base_name, new_trans, columns))
 
     return new_transformers, new_transformer_to_input_indices
-
-
-Transformer = TransformerMixin | Literal["drop", "remainder", "passthrough"]
 
 
 class TableVectorizer(ColumnTransformer):
@@ -494,7 +494,7 @@ class TableVectorizer(ColumnTransformer):
     ]
     """
 
-    transformers_: list[tuple[str, str | TransformerMixin, list[str]]]
+    transformers_: list[tuple[str, Transformer, list[str]]]
     columns_: pd.Index
     types_: dict[str, type]
     imputed_columns_: list[str]
