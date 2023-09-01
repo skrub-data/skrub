@@ -104,10 +104,6 @@
 
 /** Landing header *******************************/
 
-div.toctree-wrapper.compound p.caption span.caption-text {
-    display: none;
-}
-
 div.sk-landing-container {
     max-width: 1400px;
     margin-top: 35px;
