@@ -411,6 +411,15 @@ class TableVectorizer(ColumnTransformer):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
 
+        self.transformers: list[tuple[str, Transformer, list[str]]] = [
+            ("numeric", self.numerical_transformer, []),
+            ("datetime", self.datetime_transformer, []),
+            ("low_card_cat", self.low_card_cat_transformer, []),
+            ("high_card_cat", self.high_card_cat_transformer, []),
+        ]
+        if self.specific_transformers is not None:
+            self.transformers.extend(self.specific_transformers)
+
     def _more_tags(self) -> dict:
         """
         Used internally by sklearn to ease the estimator checks.

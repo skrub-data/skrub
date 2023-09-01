@@ -1,12 +1,16 @@
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
+from skrub.tests.utils import generate_data
 
 
 def check_same_transformers(expected_transformers: dict, actual_transformers: list):
@@ -864,3 +868,38 @@ def test_table_vectorizer_remainder_cloning():
     assert table_vectorizer.high_card_cat_transformer_ is not remainder
     assert table_vectorizer.numerical_transformer_ is not remainder
     assert table_vectorizer.datetime_transformer_ is not remainder
+
+
+def test_grid_search() -> None:
+    """
+    Check that the TableVectorizer works with GridSearchCV,
+    especially when using specific_transformers.
+    """
+
+    # create a toy dataset
+    X = pd.DataFrame(
+        {
+            "col1": generate_data(100, sample_length=10).reshape(-1),
+            "col2": generate_data(100).reshape(-1),
+        }
+    )
+    y = np.random.rand(100)
+
+    pipeline = make_pipeline(
+        TableVectorizer(
+            high_card_cat_transformer=GapEncoder(),
+            specific_transformers=[
+                ("mh_dep_name", MinHashEncoder(), ["col2"]),
+            ],
+        ),
+        HistGradientBoostingRegressor(),
+    )
+
+    params = {
+        "tablevectorizer__high_card_cat_transformer__n_components": [10, 30, 50],
+        "tablevectorizer__mh_dep_name__n_components": [25, 50],
+    }
+
+    grid_search = GridSearchCV(pipeline, param_grid=params)
+
+    grid_search.fit(X, y)
