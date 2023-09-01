@@ -129,6 +129,10 @@ params = {
 
 grid_search = GridSearchCV(pipeline, param_grid=params)
 
+grid_search.fit(X, y)
+
+print(grid_search.best_params_)
+
 ###############################################################################
 # Conclusion
 # ----------
