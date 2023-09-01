@@ -137,6 +137,9 @@ Minor changes
   which provides some more information about the job title.
   :pr:`581` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Fix bug preventing to grid search parameters of transformers defined in
+  `specific_transformers` of :class:`TableVectorizer`. :pr:`731` by :user:`Leo Grinsztajn <LeoGrin>`
+
 Before skrub: dirty_cat
 ========================
 
