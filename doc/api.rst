@@ -16,7 +16,7 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <h2>Joining tables</h2>
+   <a href="#joining-tables"><h2>Joining tables</h2></a>
 
 .. autosummary::
    :toctree: generated/
@@ -35,7 +35,7 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <h2>Vectorizing a dataframe</h2>
+   <a href="#vectorizing-a-dataframe"><h2>Vectorizing a dataframe</h2></a>
 
 .. autosummary::
    :toctree: generated/
@@ -47,7 +47,7 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <h2>Dirty category encoders</h2>
+   <a href="#encoders"><h2>Dirty category encoders</h2></a>
 
 .. autosummary::
    :toctree: generated/
@@ -62,7 +62,7 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <h2>Other encoders</h2>
+   <a href="#other-encoders"><h2>Other encoders</h2></a>
 
 .. autosummary::
    :toctree: generated/
@@ -74,7 +74,7 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <h2>Deduplication: merging variants of the same entry</h2>
+   <a href="#deduplication"><h2>Deduplication: merging variants of the same entry</h2></a>
 
 .. autosummary::
    :toctree: generated/
@@ -86,7 +86,7 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <a href="#data"><h2>Data download and generation</h2></a>
+   <a href="#data-download-and-generation"><h2>Data download and generation</h2></a>
 
 .. autosummary::
    :toctree: generated/

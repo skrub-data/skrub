@@ -11,5 +11,5 @@ which are generally used in examples and benchmarks.
 
 It consists of generated, embeddings and real world data.
 
-See the `API reference page <https://skrub-data.org/stable/api.html#data>`_ for
+See the `API reference page <https://skrub-data.org/stable/api.html#data-download-and-generation>`_ for
 a full list of available methods.
