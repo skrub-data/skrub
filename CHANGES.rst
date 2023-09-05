@@ -15,6 +15,11 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+* :func:`dataframe.pd_join`, :func:`dataframe.pd_aggregate`,
+  :func:`dataframe.pl_join` and :func:`dataframe.pl_aggregate`
+  are now available in the dataframe submodule.
+  :pr:`??` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
 * :class:`FeatureAugmenter` is renamed to :class:`Joiner`.
   :pr:`674` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
