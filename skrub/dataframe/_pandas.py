@@ -20,7 +20,7 @@ def aggregate(
     categ_operations: str | Iterable[str] = ("mode",),
     suffix: str | None = None,
 ) -> pd.DataFrame:
-    """Aggregate a Pandas dataframe.
+    """Aggregates a :obj:`pandas.DataFrame`.
 
     This function uses the ``dataframe.groupby(key).agg`` method from Pandas.
 
@@ -112,7 +112,7 @@ def join(
     left_on: str | Iterable[str],
     right_on: str | Iterable[str],
 ) -> pd.DataFrame:
-    """Left join two Pandas dataframes.
+    """Left join two :obj:`pandas.DataFrame`.
 
     This function uses the ``dataframe.merge`` method from Pandas.
 

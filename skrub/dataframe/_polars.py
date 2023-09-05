@@ -22,7 +22,7 @@ def aggregate(
     categ_operations: str | Iterable[str] = ("mode",),
     suffix: str | None = None,
 ) -> DataFrameLike:
-    """Aggregate a Polars dataframe or lazyframe.
+    """Aggregate a :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
 
     This function uses the ``dataframe.group_by(key).agg`` method from Polars.
 
@@ -93,7 +93,7 @@ def join(
     left_on: str | Iterable[str],
     right_on: str | Iterable[str],
 ) -> DataFrameLike:
-    """Left join two Polars dataframes or lazyframes.
+    """Left join two :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
 
     This function uses the ``dataframe.join`` method from Polars.
 
