@@ -135,3 +135,10 @@ def parse_astype_error_message(e):
         if match:
             culprit = match.group(1)
     return culprit
+
+
+def atleast_1d_or_none(x):
+    """``np.atleast_1d`` helper returning an empty list when x is None"""
+    if x is None:
+        return []
+    return np.atleast_1d(x).tolist()

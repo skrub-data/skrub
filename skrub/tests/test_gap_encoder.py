@@ -67,15 +67,20 @@ def test_analyzer(
 
 
 @pytest.mark.parametrize(
-    ["hashing", "init", "analyzer", "add_words"],
+    ["hashing", "init", "analyzer", "add_words", "verbose"],
     [
-        (False, "k-means++", "word", True),
-        (True, "random", "char", False),
-        (True, "k-means", "char_wb", True),
+        (False, "k-means++", "word", True, False),
+        (True, "random", "char", False, False),
+        (True, "k-means", "char_wb", True, True),
     ],
 )
 def test_gap_encoder(
-    hashing: bool, init: str, analyzer: str, add_words: bool, n_samples: int = 70
+    hashing: bool,
+    init: str,
+    analyzer: str,
+    add_words: bool,
+    verbose: bool,
+    n_samples: int = 70,
 ) -> None:
     X = generate_data(n_samples, random_state=0)
     n_components = 10
@@ -86,6 +91,7 @@ def test_gap_encoder(
         init=init,
         analyzer=analyzer,
         add_words=add_words,
+        verbose=verbose,
         random_state=42,
         rescale_W=True,
     )
@@ -183,9 +189,7 @@ def test_overflow_error() -> None:
     np.seterr(over="raise", divide="raise")
     r = np.random.RandomState(0)
     X = r.randint(1e5, 1e6, size=(8000, 1)).astype(str)
-    enc = GapEncoder(
-        n_components=2, batch_size=1, min_iter=1, max_iter=1, random_state=0
-    )
+    enc = GapEncoder(n_components=2, batch_size=1, max_iter=1, random_state=0)
     enc.fit(X)
 
 
@@ -264,3 +268,10 @@ def test_transform_deterministic() -> None:
     enc.transform(X_test)
     topics2 = enc.get_feature_names_out()
     assert topics1 == topics2
+
+
+def test_max_no_improvements_none() -> None:
+    """Test that max_no_improvements=None works"""
+    X = generate_data(300, random_state=0)
+    enc_none = GapEncoder(n_components=2, max_no_improvement=None, random_state=42)
+    enc_none.fit(X)

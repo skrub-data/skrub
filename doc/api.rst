@@ -87,6 +87,46 @@ This page lists all available functions and classes of `skrub`.
 
    deduplicate
 
+.. raw:: html   
+
+   <h2>Dataframes operations</h2>
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: DataFrames operations
+
+   dataframe.get_df_namespace
+
+.. raw:: html
+
+   <h3>Pandas</h3>
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: DataFrames operations
+
+   dataframe.is_pandas
+   dataframe.pd_aggregate
+   dataframe.pd_join
+
+.. raw:: html
+
+   <h3>Polars</h3>
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: DataFrames operations
+
+   dataframe.is_polars
+   dataframe.pl_aggregate
+   dataframe.pl_join
+
 .. raw:: html
 
    <h2>Data download and generation</h2>
