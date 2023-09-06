@@ -104,7 +104,7 @@ This page lists all available functions and classes of `skrub`.
    :toctree: generated/
    :template: function.rst
    :nosignatures:
-   :caption: DataFrames operations
+   :caption: Pandas operations
 
    dataframe.is_pandas
    dataframe.pd_aggregate
@@ -118,7 +118,7 @@ This page lists all available functions and classes of `skrub`.
    :toctree: generated/
    :template: function.rst
    :nosignatures:
-   :caption: DataFrames operations
+   :caption: Polars operations
 
    dataframe.is_polars
    dataframe.pl_aggregate
