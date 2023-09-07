@@ -72,7 +72,7 @@ def check_missing_columns(
 
 
 class AggJoiner(BaseEstimator, TransformerMixin):
-    """Aggregates auxiliary dataframes before joining them on the base dataframe.
+    """Aggregate auxiliary dataframes before joining them on a base dataframe.
 
     Apply numerical and categorical aggregation operations on the columns
     to aggregate, selected by dtypes. See the list of supported operations
@@ -318,7 +318,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
                 if table != "X":
                     raise ValueError(
                         "If the dataframe is declared with a string, "
-                        f"it can only be 'X', got '{table}'."
+                        f"the only acceptable value is 'X', got {table!r}."
                     )
                 table = deepcopy(X)
                 tables[idx] = table
@@ -374,7 +374,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
 
 class AggTarget(BaseEstimator, TransformerMixin):
-    """Aggregates the target ``y`` before joining its aggregation on the base dataframe.
+    """Aggregate a target ``y`` before joining its aggregation on a base dataframe.
 
     Accepts :obj:`pandas.DataFrame` or :obj:`polars.DataFrame` inputs.
 
