@@ -2,26 +2,12 @@ import collections
 import importlib
 import re
 from collections.abc import Hashable
-from typing import Any
+from typing import Any, Iterable
 
 import numpy as np
-import pandas as pd
 from numpy.typing import NDArray
 from sklearn.utils import parse_version  # noqa
 from sklearn.utils import check_array
-
-try:
-    import polars as pl
-
-    POLARS_SETUP = True
-except ImportError:
-    POLARS_SETUP = False
-
-DataFrameLike = pd.DataFrame
-SeriesLike = pd.Series
-if POLARS_SETUP:
-    DataFrameLike |= pl.DataFrame | pl.LazyFrame
-    SeriesLike |= pl.Series
 
 
 class LRUDict:
@@ -138,7 +124,37 @@ def parse_astype_error_message(e):
 
 
 def atleast_1d_or_none(x):
-    """``np.atleast_1d`` helper returning an empty list when x is None"""
+    """``np.atleast_1d`` helper returning an empty list when x is None."""
     if x is None:
         return []
     return np.atleast_1d(x).tolist()
+
+
+def _is_array_like(x):
+    return isinstance(x, Iterable) and not isinstance(x, (str, bytes))
+
+
+def atleast_2d_or_none(x):
+    """``np.atleast_2d`` helper returning an empty list when x is None.
+
+    Note that we don't use ``np.atleast_2d`` because x could be a jagged array.
+    """
+    x = atleast_1d_or_none(x)
+    if len(x) == 0:
+        return [[]]
+
+    is_array_list = [_is_array_like(item) for item in x]
+
+    # 2d array
+    if all(is_array_list):
+        return [atleast_1d_or_none(item) for item in x]
+
+    # 1d array, mix of scalar and arrays
+    elif any(is_array_list):
+        raise ValueError(
+            f"Mix of array and scalar or string values not accepted, got {x=!r}"
+        )
+
+    # 1d array
+    else:
+        return [x]

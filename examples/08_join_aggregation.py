@@ -1,6 +1,6 @@
 """
-Self-aggregation with MovieLens
-===============================
+Self-aggregation on MovieLens
+=============================
 
 MovieLens is a famous movie dataset used for both explicit
 and implicit recommender systems. It provides a main table,
@@ -9,12 +9,20 @@ of only 4 columns: ``userId``, ``movieId``, ``rating`` and ``timestamp``.
 MovieLens also gives a contextual table "movies", including
 ``movieId``, ``title`` and ``types``, to enable content-based feature extraction.
 
+From the perspective of machine-learning pipelines, one challenge is to
+transform the transaction log into features that can be fed to supervised learning.
+
 In this notebook, we only deal with the main table "ratings".
 Our objective is **not to achieve state-of-the-art performance** on
 the explicit regression task, but rather to illustrate how to perform
 feature engineering in a simple way using |AggJoiner| and |AggTarget|.
 Note that our performance is higher than the baseline of using the mean
 rating per movies.
+
+The benefit of using  |AggJoiner| and |AggTarget| is that they readily
+provide a full pipeline, from the original tables to the prediction, that can
+be cross-validated or applied to new data to serve prediction. At the end of
+this example, we showcase hyper-parameter optimization on the whole pipeline.
 
 
 .. |AggJoiner| replace::
@@ -66,8 +74,9 @@ ratings["timestamp"] = pd.to_datetime(ratings["timestamp"], unit="s")
 
 X = ratings[["userId", "movieId", "timestamp"]]
 y = ratings["rating"]
-print(X.shape)
-print(X.head())
+X.shape, y.shape
+###############################################################################
+X.head()
 
 ###############################################################################
 # Encoding the timestamp with a TableVectorizer
@@ -84,7 +93,7 @@ table_vectorizer = TableVectorizer(
 )
 table_vectorizer.set_output(transform="pandas")
 X_date_encoded = table_vectorizer.fit_transform(X)
-print(X_date_encoded)
+X_date_encoded.head()
 
 ###############################################################################
 # We can now make a couple of plots and gain some insight on our dataset.
@@ -95,14 +104,8 @@ sns.set_style("darkgrid")
 
 
 def make_barplot(x, y, title):
-    norm = plt.Normalize(y.min(), y.max())
-    cmap = plt.get_cmap("magma")
-
-    sns.barplot(
-        x=x,
-        y=y,
-        palette=cmap(norm(y)),
-    )
+    sns.barplot(x=x, y=y, hue=y, palette="magma", legend=None)
+    plt.title(title)
     plt.xticks(rotation=30)
     plt.ylabel(None)
     plt.tight_layout()
@@ -113,7 +116,9 @@ def make_barplot(x, y, title):
 daily_volume = X_date_encoded["timestamp_dayofweek"].value_counts().sort_index()
 
 make_barplot(
-    x=daily_volume.index, y=daily_volume.values, title="Daily volume of ratings"
+    x=daily_volume.index,
+    y=daily_volume.values,
+    title="Daily volume of ratings",
 )
 
 ###############################################################################
@@ -156,34 +161,36 @@ timestamp_cols = [
 ]
 
 agg_joiner_user = AggJoiner(
-    tables=[
-        (X_date_encoded, "userId", timestamp_cols),
-    ],
-    main_keys="userId",
-    suffixes=["_user"],
-    operations=["value_counts"],
+    table=X_date_encoded,
+    foreign_key="userId",
+    cols=timestamp_cols,
+    main_key="userId",
+    suffix="_user",
+    operation="value_counts",
 )
 X_transformed = agg_joiner_user.fit_transform(X_date_encoded)
 
-print(X_transformed.shape)
-print(X_transformed.head())
+X_transformed.shape
+###############################################################################
+X_transformed.head()
 
 ###############################################################################
 # In addition, we also want to extract *movies* timestamp features, to answer
 # questions like *"What is the most frequent hour for this movie to be rated?"*.
 agg_joiner_movie = AggJoiner(
-    tables=[
-        (X_date_encoded, "movieId", timestamp_cols),
-    ],
-    main_keys="movieId",
-    suffixes="_movie",
-    operations=["value_counts"],
+    table=X_date_encoded,
+    foreign_key="movieId",
+    cols=timestamp_cols,
+    main_key="movieId",
+    suffix="_movie",
+    operation="value_counts",
 )
 
 X_transformed = agg_joiner_movie.fit_transform(X_date_encoded)
 
-print(X_transformed.shape)
-print(X_transformed.head())
+X_transformed.shape
+###############################################################################
+X_transformed.head()
 
 ###############################################################################
 # AggTarget: aggregate y, then join
@@ -213,15 +220,25 @@ print(X_transformed.head())
 from skrub import AggTarget
 
 
-agg_target = AggTarget(
-    main_keys="userId",
-    suffixes="_user",
-    operations=["hist(3)"],
+agg_target_user = AggTarget(
+    main_key="userId",
+    suffix="_user",
+    operation="hist(3)",
 )
-X_transformed = agg_target.fit_transform(X, y)
+X_transformed = agg_target_user.fit_transform(X, y)
 
-print(X_transformed.shape)
-print(X_transformed.head())
+X_transformed.shape
+###############################################################################
+X_transformed.head()
+
+###############################################################################
+# Similarly, we join on ``movieId`` instead of ``userId``.
+agg_target_movie = AggTarget(
+    main_key="movieId",
+    suffix="_movie",
+    operation="hist(3)",
+)
+X_transformed = agg_target_movie.fit_transform(X, y)
 
 ###############################################################################
 # Chaining everything together in a pipeline
@@ -238,45 +255,6 @@ print(X_transformed.head())
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
-# Extracting datetime attributes from timestamps.
-table_vectorizer = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True)
-)
-table_vectorizer.set_output(transform="pandas")
-
-# Extracting features by aggregating datetime attributes.
-agg_joiner_user = AggJoiner(
-    tables=[
-        ("X", "userId", timestamp_cols),
-    ],
-    main_keys="userId",
-    suffixes="_user",
-    operations=["value_counts"],
-)
-
-agg_joiner_movie = AggJoiner(
-    tables=[
-        ("X", "movieId", timestamp_cols),
-    ],
-    main_keys="movieId",
-    suffixes="_movie",
-    operations=["value_counts"],
-)
-
-# Extracting features by aggregating the target
-agg_target_user = AggTarget(
-    main_keys="userId",
-    suffixes="_user",
-    operations=["value_counts"],
-)
-
-agg_target_movie = AggTarget(
-    main_keys="movieId",
-    suffixes="_movie",
-    operations=["value_counts"],
-)
-
-# Chaining all operations together
 pipeline = make_pipeline(
     table_vectorizer,
     agg_joiner_user,
@@ -314,8 +292,7 @@ from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 operations = ["mean", "hist(3)", "hist(5)", "hist(7)", "value_counts"]
 param_grid = [
     {
-        f"aggtarget-1__operations": [op],
-        f"aggtarget-2__operations": [op],
+        f"aggtarget-2__operation": [op],
     }
     for op in operations
 ]
@@ -323,10 +300,11 @@ param_grid = [
 cv = GridSearchCV(pipeline, param_grid, cv=TimeSeriesSplit(n_splits=10))
 cv.fit(X, y)
 
-results = pd.DataFrame(
-    np.vstack([cv.cv_results_[f"split{idx}_test_score"] for idx in range(10)]),
-    columns=cv.cv_results_["param_aggtarget-2__operations"],
-)
+results = pd.DataFrame(cv.cv_results_)
+
+cols = [f"split{idx}_test_score" for idx in range(10)]
+results = results.set_index("param_aggtarget-2__operation")[cols].T
+results
 
 ###############################################################################
 # The score used in this regression task is the R2. Remember that the R2
@@ -369,7 +347,9 @@ results.insert(0, "naive mean estimator", all_baseline_r2)
 
 # we only keep the 5 out of 10 last results
 # because the initial size of the train set is rather small
-sns.boxplot(results.tail(5))
+sns.boxplot(results.tail(5), palette="magma")
+plt.ylabel("R2 score")
+plt.title("Hyper parameters grid-search results")
 plt.tight_layout()
 
 ###############################################################################
