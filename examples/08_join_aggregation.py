@@ -104,7 +104,7 @@ sns.set_style("darkgrid")
 
 
 def make_barplot(x, y, title):
-    sns.barplot(x=x, y=y, hue=y, palette="magma", legend=None)
+    sns.barplot(x=x, y=y, hue=y, palette="magma")
     plt.title(title)
     plt.xticks(rotation=30)
     plt.ylabel(None)
