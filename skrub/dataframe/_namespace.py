@@ -45,7 +45,9 @@ def is_polars(dataframe: DataFrameLike) -> bool:
     return isinstance(dataframe, (pl.DataFrame, pl.LazyFrame))
 
 
-def get_df_namespace(*dfs: list[DataFrameLike]) -> tuple[ModuleType, ModuleType]:
+def get_df_namespace(
+    *dfs: DataFrameLike | list[DataFrameLike],
+) -> tuple[ModuleType, ModuleType]:
     """Get the namespaces of dataframes.
 
     Introspects dataframes and returns their skrub namespace object
@@ -62,7 +64,7 @@ def get_df_namespace(*dfs: list[DataFrameLike]) -> tuple[ModuleType, ModuleType]
 
     Parameters
     ----------
-    dfs : list[DataFrameLike],
+    dfs : DataFrameLike | list[DataFrameLike],
         The dataframes to extract modules from.
 
     Returns
@@ -85,7 +87,7 @@ def get_df_namespace(*dfs: list[DataFrameLike]) -> tuple[ModuleType, ModuleType]
         ):
             return skrub_pl, pl
         else:
-            raise TypeError("Mixing polars lazyframes and dataframes is not supported.")
+            raise TypeError("Mixing Polars lazyframes and dataframes is not supported.")
 
     else:
         modules = [type(df).__module__ for df in dfs]

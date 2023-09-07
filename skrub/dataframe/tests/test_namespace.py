@@ -16,10 +16,11 @@ main = pd.DataFrame(
 
 
 def test_get_namespace_pandas():
-    skrub_px, _ = get_df_namespace(main, main)
+    skrub_px, px = get_df_namespace(main, main)
     assert skrub_px is skrub_pd
+    assert px is pd
 
-    with pytest.raises(TypeError, match=r"(?=.*Pandas or Polars)(?=.*supported)"):
+    with pytest.raises(TypeError, match=r"(?=.*Only Pandas or Polars)(?=.*supported)"):
         get_df_namespace(main, main.values)
 
 
@@ -27,11 +28,14 @@ def test_get_namespace_pandas():
 def test_get_namespace_polars():
     import polars as pl
 
-    skrub_px, _ = get_df_namespace(pl.DataFrame(main), pl.DataFrame(main))
+    skrub_px, px = get_df_namespace(pl.DataFrame(main), pl.DataFrame(main))
     assert skrub_px is skrub_pl
+    assert px is pl
 
-    with pytest.raises(TypeError, match=r"(?=.*Pandas)(?=.*Polars)"):
+    with pytest.raises(TypeError, match=r"(?=.*Mixing Pandas)(?=.*Polars)"):
         get_df_namespace(main, pl.DataFrame(main))
 
-    with pytest.raises(TypeError, match=r"(?=.*lazyframes)(?=.*dataframes)"):
+    with pytest.raises(
+        TypeError, match=r"(?=.*Mixing)(?=.*lazyframes)(?=.*dataframes)"
+    ):
         get_df_namespace(pl.DataFrame(main), pl.LazyFrame(main))
