@@ -232,20 +232,20 @@ the development version.
 
 Building the documentation requires installing some additional packages:
 
-.. prompt:: bash $
+.. code:: bash
 
     cd skrub
     pip install '.[doc]'
 
 To build the documentation, you need to be in the ``doc`` folder:
 
-.. prompt:: bash $
+.. code:: bash
 
     cd doc
 
 To generate the docs, including the example gallery, you can use:
 
-.. prompt:: bash $
+.. code:: bash
 
     make html
 
@@ -256,7 +256,7 @@ and are viewable in a web browser, for instance by opening the local
 This will run all the examples, which takes a while. If you only want to
 generate a few examples, you can use:
 
-.. prompt:: bash $
+.. code:: bash
 
     EXAMPLES_PATTERN=your_regex_goes_here make html
 
