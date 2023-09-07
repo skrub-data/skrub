@@ -104,7 +104,10 @@ sns.set_style("darkgrid")
 
 
 def make_barplot(x, y, title):
-    sns.barplot(x=x, y=y, hue=y, palette="magma")
+    norm = plt.Normalize(y.min(), y.max())
+    cmap = plt.get_cmap("magma")
+
+    sns.barplot(x=x, y=y, palette=cmap(norm(y)))
     plt.title(title)
     plt.xticks(rotation=30)
     plt.ylabel(None)
