@@ -224,7 +224,7 @@ Building the documentation
 ..
   Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
 
-**Before submitting a pull request check if your modifications have introduced
+**Before submitting a pull request, check if your modifications have introduced
 new sphinx warnings by building the documentation locally and try to fix them.**
 
 First, make sure you have `properly installed <https://skrub-data.org/stable/install.html>`__
