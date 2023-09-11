@@ -19,7 +19,7 @@ massive tables extracted from Wikipedia, we can instead use **embeddings**.
 Embeddings, or vectorial representations of entities, are a convenient way to
 capture and summarize the information related to an entity.
 We will use `KEN embeddings`, which are embeddings extracted from Wikipedia
-(`YAGO <https://yago-knowledge.org/>_`). [#]_
+using `YAGO <https://yago-knowledge.org/>`_. [#]_
 
 We will see how to use them in a tabular learning setting, and see whether
 they improve our model's accuracy (spoiler: they do).
@@ -42,8 +42,8 @@ they improve our model's accuracy (spoiler: they do).
 .. |MinHashEncoder| replace::
     :class:`~skrub.MinHashEncoder`
 
-.. |get_ken_embeddings| replace::
-    :class:`~skrub.datasets.get_ken_embeddings`
+.. |fetch_ken_embeddings| replace::
+    :class:`~skrub.datasets.fetch_ken_embeddings`
 
 .. |HGBR| replace::
     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
@@ -66,6 +66,8 @@ X = pd.read_csv(
     sep=";",
     on_bad_lines="skip",
 )
+# Shuffle the data
+X = X.sample(frac=1, random_state=11, ignore_index=True)
 X.head(3)
 
 ###############################################################################
@@ -106,10 +108,9 @@ y = y[~mask]
 # ----------------------------
 #
 # We will use a subset of the KEN embeddings -- specific to the video game
-# industry -- that we built in the example
-# `_example_create_ken_embedding_subset`.
+# industry -- that was extracted previously.
 #
-# We will start by checking out the available tables with
+# We will start by checking out the available subtables with
 # :class:`~skrub.datasets.fetch_ken_table_aliases`:
 
 from skrub.datasets import fetch_ken_table_aliases
@@ -146,7 +147,8 @@ embedding_games = fetch_ken_embeddings(
     exclude="companies|developer",
     embedding_table_id="games",
 )
-# TODO: dive deeper
+
+embedding_games.head()
 
 ###############################################################################
 # In a second table, we include all embeddings containing the type name
@@ -157,6 +159,9 @@ embedding_publisher = fetch_ken_embeddings(
     suffix="_aux",
 )
 
+embedding_publisher.head()
+
+###############################################################################
 # We keep the 200 embeddings column names in a list (for the |Pipeline|):
 n_dim = 200
 
