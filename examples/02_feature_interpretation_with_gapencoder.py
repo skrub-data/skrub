@@ -43,7 +43,7 @@ X_dirty = X[["employee_position_title"]]
 ###############################################################################
 # Let's have a look at a sample of the job titles:
 
-X_dirty.str.contains("Fire").sample(10, random_state=0).head(10)
+X_dirty.sort_values(by="employee_position_title").tail(15)
 
 ###############################################################################
 # Then, we create an instance of the |GapEncoder| with 10 components.
