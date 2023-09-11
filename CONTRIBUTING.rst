@@ -93,7 +93,7 @@ How do I submit an enhancement proposal?
 -  **If it exists elsewhere, link resources**.
 
 If the enhancement proposal is validated
-'''''''''''''''''''''''''''''''
+''''''''''''''''''''''''''''''''''''''''
 
 Let maintainers know whether:
 
@@ -217,3 +217,47 @@ actions are taken.
 
 Note that by default the documentation is built, but only the examples that are
 directly modified by the pull request are executed.
+
+Building the documentation
+--------------------------
+
+..
+  Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
+
+**Before submitting a pull request, check if your modifications have introduced
+new sphinx warnings by building the documentation locally and try to fix them.**
+
+First, make sure you have `properly installed <https://skrub-data.org/stable/install.html>`__
+the development version.
+
+Building the documentation requires installing some additional packages:
+
+.. code:: bash
+
+    cd skrub
+    pip install '.[doc]'
+
+To build the documentation, you need to be in the ``doc`` folder:
+
+.. code:: bash
+
+    cd doc
+
+To generate the docs, including the example gallery, you can use:
+
+.. code:: bash
+
+    make html
+
+The documentation will be generated in the ``_build/html/`` directory
+and are viewable in a web browser, for instance by opening the local
+``_build/html/index.html`` file.
+
+This will run all the examples, which takes a while. If you only want to
+generate a few examples, you can use:
+
+.. code:: bash
+
+    EXAMPLES_PATTERN=your_regex_goes_here make html
+
+This is particularly useful if you are modifying a few examples.
