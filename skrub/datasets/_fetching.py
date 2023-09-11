@@ -190,15 +190,6 @@ def _fetch_openml_dataset(
     if not details_gz_path.is_file() or not features_gz_path.is_file():
         # If the details file or the features file don't exist,
         # download the dataset.
-        warnings.warn(
-            f"Could not find the dataset {dataset_id!r} locally. "
-            "Downloading it from OpenML; this might take a while... "
-            "If it is interrupted, some files might be invalid/incomplete: "
-            "if on the following run, the fetching raises errors, you can try "
-            f"fixing this issue by deleting the directory {data_directory!s}.",
-            UserWarning,
-            stacklevel=2,
-        )
         _download_and_write_openml_dataset(
             dataset_id=dataset_id, data_directory=data_directory
         )

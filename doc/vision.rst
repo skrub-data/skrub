@@ -52,9 +52,7 @@ From shorter term to longer term:
 - Add a Join-aggregator object, to do feature augmentation on one-to-many
   correspondances
 
-- fuzzy joining on datetime values
-
-- Support polars?
+- Support polars
 
 - Support time series (eg in the aggregations)
 
