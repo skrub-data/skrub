@@ -32,4 +32,16 @@ __all__ = [
     "TargetEncoder",
     "deduplicate",
     "compute_ngram_distance",
+    "load_package_data",
 ]
+
+
+def load_package_data() -> str:
+    """Dummy function that loads some package data.
+
+    Returns
+    -------
+    data: str
+        Some data.
+    """
+    return _Path(__file__).parent.joinpath("data_file.txt").read_text("utf-8")
