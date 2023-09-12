@@ -9,41 +9,20 @@ This example demonstrates how to transform a somewhat complicated dataframe
 to a matrix well suited for machine-learning. We study the case of predicting wages
 using the `employee salaries <https://www.openml.org/d/42125>`_ dataset.
 
-Let's dive right in!
-
-
 .. |TableVectorizer| replace::
     :class:`~skrub.TableVectorizer`
 
 .. |Pipeline| replace::
     :class:`~sklearn.pipeline.Pipeline`
 
-.. |make_pipeline| replace::
-    :func:`~sklearn.pipeline.make_pipeline`
-
-.. |cross_validate| replace::
-    :func:`~sklearn.model_selection.cross_validate`
-
-.. |OneHotEncoder| replace::
-    :class:`~sklearn.preprocessing.OneHotEncoder`
-
-.. |ColumnTransformer| replace::
-    :class:`~sklearn.compose.ColumnTransformer`
-
 .. |GapEncoder| replace::
     :class:`~skrub.GapEncoder`
-
-.. |MinHashEncoder| replace::
-    :class:`~skrub.MinHashEncoder`
 
 .. |DatetimeEncoder| replace::
     :class:`~skrub.DatetimeEncoder`
 
 .. |HGBR| replace::
     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
-
-.. |SimilarityEncoder| replace::
-    :class:`~skrub.SimilarityEncoder`
 """
 
 ###############################################################################
@@ -93,7 +72,7 @@ pipeline.fit(X, y)
 
 from pprint import pprint
 
-# Recover the TableVectorizer from the pipeline
+# Recover the |TableVectorizer| from the |Pipeline|
 tv = pipeline.named_steps["tablevectorizer"]
 
 pprint(tv.transformers_)
@@ -135,7 +114,6 @@ feature_names[:8]
 
 len(feature_names)
 
-
 ###############################################################################
 # Feature importances in the statistical model
 # --------------------------------------------
@@ -153,7 +131,9 @@ len(feature_names)
 from sklearn.ensemble import RandomForestRegressor
 
 regressor = RandomForestRegressor()
-regressor.fit(X, y)
+
+pipeline = make_pipeline(TableVectorizer(), regressor)
+pipeline.fit(X, y)
 
 ###############################################################################
 # Retrieving the feature importances:
@@ -187,7 +167,7 @@ plt.show()
 #
 # In this example, we motivated the need for a simple machine learning
 # pipeline, which we built using the |TableVectorizer| and a
-# |HistGradientBoostingRegressor|.
+# |HGBR|.
 #
 # We saw that by default, it works well on a heterogeneous dataset.
 #
