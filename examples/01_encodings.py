@@ -55,7 +55,7 @@ Let's dive right in!
 #
 #   .. code-block:: python
 #      pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
-#      pipline.fit(X, y)
+#      pipeline.fit(X, y)
 #
 #   as a generic and robust pipeline for your tabular learning tasks.
 #
