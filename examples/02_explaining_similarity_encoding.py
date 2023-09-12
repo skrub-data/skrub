@@ -143,6 +143,6 @@ f2.tight_layout()
 # As shown in the previous plot, we see that the nearest neighbor of
 # "Communication Equipment Technician"
 # is "Telecommunication Technician", although it is also
-# very close to "Senior Supply Technician": therefore, we grasp the
+# very close to "Senior Supply Technician": therefore, the |SimilarityEncoder| grasps the
 # "Communication" part (not initially present in the category as a unique word)
 # as well as the "Technician" part of this category.
