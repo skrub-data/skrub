@@ -1,9 +1,9 @@
 """
 .. _example_encodings:
 
-==========================================================================
-Encoding: turning any dataframe to a numerical matrix for machine learning
-==========================================================================
+=====================================================================
+Encoding: from a dataframe to a numerical matrix for machine learning
+=====================================================================
 
 This example demonstrates how to transform a somewhat complicated dataframe
 to a matrix well suited for machine-learning. We study the case of predicting wages
@@ -15,6 +15,9 @@ using the `employee salaries <https://www.openml.org/d/42125>`_ dataset.
 .. |Pipeline| replace::
     :class:`~sklearn.pipeline.Pipeline`
 
+.. |OneHotEncoder| replace::
+     :class:`~sklearn.preprocessing.OneHotEncoder`
+
 .. |GapEncoder| replace::
     :class:`~skrub.GapEncoder`
 
@@ -23,6 +26,12 @@ using the `employee salaries <https://www.openml.org/d/42125>`_ dataset.
 
 .. |HGBR| replace::
     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
+
+.. |RandomForestRegressor| replace::
+     :class:`~sklearn.ensemble.RandomForestRegressor`
+
+.. |permutation importances| replace::
+     :func:`~sklearn.inspection.permutation_importance`
 """
 
 ###############################################################################
@@ -35,10 +44,8 @@ from skrub.datasets import fetch_employee_salaries
 
 dataset = fetch_employee_salaries()
 
-dataset.description
-
 ###############################################################################
-# Alias *X*, the descriptions of employees (our input data), and *y*,
+# We denote *X*, employees characteristics (our input data), and *y*,
 # the annual salary (our target column):
 
 X = dataset.X
@@ -47,13 +54,14 @@ y = dataset.y
 X
 
 ###############################################################################
-# We observe a few things from the dataset:
-# - We have diverse columns: binary ('gender'), numerical
-#   ('employee_annual_salary'), categorical ('department', 'department_name',
-#   'assignment_category'), datetime ('date_first_hired') and dirty categories
-#   ('employee_position_title', 'division').
+# We observe diverse columns in the dataset:
+# - binary ('gender'),
+# - numerical ('employee_annual_salary'),
+# - categorical ('department', 'department_name', 'assignment_category'),
+# - datetime ('date_first_hired')
+# - dirty categorical ('employee_position_title', 'division').
 #
-# Now, without much more investigation, we can already build a machine-learning
+# Using skrub's |TableVectorizer|, we can now already build a machine-learning
 # pipeline and train it:
 
 from sklearn.ensemble import HistGradientBoostingRegressor
@@ -64,10 +72,8 @@ pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
 pipeline.fit(X, y)
 
 ###############################################################################
-# What just happened there?
-# -------------------------
+# What just happened here?
 #
-# First, it did not raise any errors, yay!
 # Let's explore the internals of our encoder, the |TableVectorizer|:
 
 from pprint import pprint
@@ -79,40 +85,40 @@ pprint(tv.transformers_)
 
 ###############################################################################
 # We observe it has automatically assigned an appropriate encoder to
-# corresponding columns.
-# For example, it classified the columns 'gender', 'department',
-# 'department_name' and 'assignment_category' as low cardinality
-# string variables.
-# Two remarkable things:, it has affected a |GapEncoder| to the columns
-# `employee_position_title` and `division`, and a |DatetimeEncoder| to the
-# 'date_first_hired' column.
-#
-# The |GapEncoder| is a powerful encoder that can handle dirty
-# categorical columns.
-# The |DatetimeEncoder| can encode datetime columns for machine learning.
-#
-# Next, we can have a look at the encoded feature names.
-#
-# Before encoding:
+# corresponding columns:
 
-X.columns.to_list()
-
-##############################################################################
-# After encoding (we only plot the first 8 feature names):
+###############################################################################
+#     - The |OneHotEncoder| for low cardinality string variables, the columns 'gender', 'department','department_name' and 'assignment_category'.
 
 feature_names = tv.get_feature_names_out()
 
-feature_names[:8]
+feature_names[4:82]
 
 ###############################################################################
-# As we can see, it gave us interpretable columns.
-# This is because we used the |GapEncoder| on the column ‘division’,
-# which was classified as a high cardinality string variable
-# (default values, see |TableVectorizer|’s docstring).
+#     - The |GapEncoder| for high cardinality string columns, 'employee_position_title' and 'division'. The |GapEncoder| is a powerful encoder that can handle dirty categorical columns.
+
+feature_names[82:]
+
+###############################################################################
+#     - The |DatetimeEncoder| to the 'date_first_hired' column. The |DatetimeEncoder| can encode datetime columns for machine learning.
+
+feature_names[0:4]
+
+###############################################################################
+# As we can see, it gave us interpretable column names.
 #
 # In total, we have a reasonable number of encoded columns:
 
 len(feature_names)
+
+###############################################################################
+# Let's look at the cross-validated R2 score:
+
+from sklearn.model_selection import cross_val_score
+import numpy as np
+
+scores = cross_val_score(pipeline, X, y)
+print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
 
 ###############################################################################
 # Feature importances in the statistical model
@@ -138,12 +144,10 @@ pipeline.fit(X, y)
 ###############################################################################
 # Retrieving the feature importances:
 
-import numpy as np
-
 importances = regressor.feature_importances_
 std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
 indices = np.argsort(importances)
-# Sort from least to most
+# Sort from least to most valuable
 indices = list(reversed(indices))
 
 ###############################################################################
