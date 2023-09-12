@@ -50,15 +50,6 @@ Let's dive right in!
 # A simple prediction pipeline
 # ----------------------------
 #
-# .. note::
-#   TLDR: use
-#
-#   .. code-block:: python
-#      pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
-#      pipeline.fit(X, y)
-#
-#   as a generic and robust pipeline for your tabular learning tasks.
-#
 # Let's first retrieve the dataset:
 
 from skrub.datasets import fetch_employee_salaries
@@ -145,6 +136,7 @@ feature_names[:8]
 len(feature_names)
 
 
+###############################################################################
 # Feature importances in the statistical model
 # --------------------------------------------
 #
