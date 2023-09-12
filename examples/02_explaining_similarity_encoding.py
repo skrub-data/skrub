@@ -146,3 +146,5 @@ f2.tight_layout()
 # very close to "Senior Supply Technician": therefore, the |SimilarityEncoder| grasps the
 # "Communication" part (not initially present in the category as a unique word)
 # as well as the "Technician" part of this category.
+#
+# In conclusion, the |SimilarityEncoder| works as a generalized upgrade of the |OneHotEncoder|, that takes into account string similarities.
