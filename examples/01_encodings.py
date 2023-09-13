@@ -55,11 +55,11 @@ X
 
 ###############################################################################
 # We observe diverse columns in the dataset:
-# - binary ('gender'),
-# - numerical ('employee_annual_salary'),
-# - categorical ('department', 'department_name', 'assignment_category'),
-# - datetime ('date_first_hired')
-# - dirty categorical ('employee_position_title', 'division').
+#   - binary ('gender'),
+#   - numerical ('employee_annual_salary'),
+#   - categorical ('department', 'department_name', 'assignment_category'),
+#   - datetime ('date_first_hired')
+#   - dirty categorical ('employee_position_title', 'division').
 #
 # Using skrub's |TableVectorizer|, we can now already build a machine-learning
 # pipeline and train it:
@@ -73,6 +73,10 @@ pipeline.fit(X, y)
 
 ###############################################################################
 # What just happened here?
+# It did not raise any errors, yay!
+#
+# We actually gave our dataframe as an input to the |TableVectorizer| and it
+# returned an output useful for the scikit-learn model.
 #
 # Let's explore the internals of our encoder, the |TableVectorizer|:
 
@@ -88,7 +92,7 @@ pprint(tv.transformers_)
 # corresponding columns:
 
 ###############################################################################
-#     - The |OneHotEncoder| for low cardinality string variables, the columns 'gender', 'department','department_name' and 'assignment_category'.
+#     - The |OneHotEncoder| for low cardinality string variables, the columns 'gender', 'department', 'department_name' and 'assignment_category'.
 
 feature_names = tv.get_feature_names_out()
 
@@ -112,7 +116,7 @@ feature_names[0:4]
 len(feature_names)
 
 ###############################################################################
-# Let's look at the cross-validated R2 score:
+# Let's look at the cross-validated R2 score of our model:
 
 from sklearn.model_selection import cross_val_score
 import numpy as np
@@ -121,10 +125,13 @@ scores = cross_val_score(pipeline, X, y)
 print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
 
 ###############################################################################
+# The simple pipeline applied on this complex dataset gave us very good results.
+
+###############################################################################
 # Feature importances in the statistical model
 # --------------------------------------------
 #
-# In this section, we will train a regressor, and plot the feature importances.
+# In this section, after training a regressor, we will plot the feature importances.
 #
 # .. topic:: Note:
 #
@@ -132,7 +139,7 @@ print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
 #   |RandomForestRegressor|, but you should prefer |permutation importances|
 #   instead (which are less subject to biases).
 #
-# First, let's train the |RandomForestRegressor|:
+# First, let's train another scikit-learn regressor, the |RandomForestRegressor|:
 
 from sklearn.ensemble import RandomForestRegressor
 
@@ -142,7 +149,7 @@ pipeline = make_pipeline(TableVectorizer(), regressor)
 pipeline.fit(X, y)
 
 ###############################################################################
-# Retrieving the feature importances:
+# We are retrieving the feature importances:
 
 importances = regressor.feature_importances_
 std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
@@ -151,7 +158,7 @@ indices = np.argsort(importances)
 indices = list(reversed(indices))
 
 ###############################################################################
-# Plotting the results:
+# And plotting the results:
 
 import matplotlib.pyplot as plt
 
@@ -164,6 +171,11 @@ plt.barh(range(n), importances[n_indices], color="b", yerr=std[n_indices])
 plt.yticks(range(n), labels, size=15)
 plt.tight_layout(pad=1)
 plt.show()
+
+###############################################################################
+# We can deduce from this data that the three factors that define the most
+# the salary are: being hired for a long time, being a manager,
+# and having a permanent, full-time job.
 
 ###############################################################################
 # Conclusion
