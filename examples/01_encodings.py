@@ -55,11 +55,11 @@ X
 
 ###############################################################################
 # We observe diverse columns in the dataset:
-#   - binary ('gender'),
-#   - numerical ('employee_annual_salary'),
-#   - categorical ('department', 'department_name', 'assignment_category'),
-#   - datetime ('date_first_hired')
-#   - dirty categorical ('employee_position_title', 'division').
+#   - binary (``'gender'``),
+#   - numerical (``'employee_annual_salary'``),
+#   - categorical (``'department'``, ``'department_name'``, ``'assignment_category'``),
+#   - datetime (``'date_first_hired'``)
+#   - dirty categorical (``'employee_position_title'``, ``'division'``).
 #
 # Using skrub's |TableVectorizer|, we can now already build a machine-learning
 # pipeline and train it:
