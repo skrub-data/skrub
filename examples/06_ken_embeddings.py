@@ -93,8 +93,13 @@ ax.set(xlim=(0, 10), ylim=(0, 1000))
 plt.show()
 
 ###############################################################################
-# FIXME
-#
+# It seems better to take the log of sales rather than the absolute values:
+
+import numpy as np
+
+y = np.log(y)
+
+###############################################################################
 # Before going further, let's clean up our dataset a bit:
 
 # Get a mask of the rows with missing values in "Publisher" or "Global_Sales"
