@@ -163,13 +163,18 @@ indices = np.argsort(importances)[::-1]
 
 import matplotlib.pyplot as plt
 
+top_indices = indices[:20]
+labels = np.array(feature_names)[top_indices]
+
 plt.figure(figsize=(12, 9))
+plt.barh(
+    y=labels,
+    x=avg_importances[top_indices],
+    yerr=std_importances[top_indices],
+    color="b",
+)
+plt.yticks(fontsize=15)
 plt.title("Feature importances")
-n = 20
-n_indices = indices[:n]
-labels = np.array(feature_names)[n_indices]
-plt.barh(range(n), importances[n_indices], color="b", yerr=std[n_indices])
-plt.yticks(range(n), labels, size=15)
 plt.tight_layout(pad=1)
 plt.show()
 
