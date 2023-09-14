@@ -155,8 +155,10 @@ pipeline.fit(X, y)
 # We are retrieving the feature importances:
 
 avg_importances = regressor.feature_importances_
-std_importances = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
-indices = np.argsort(importances)[::-1]
+std_importances = np.std(
+    [tree.feature_importances_ for tree in regressor.estimators_], axis=0
+)
+indices = np.argsort(avg_importances)[::-1]
 
 ###############################################################################
 # And plotting the results:
