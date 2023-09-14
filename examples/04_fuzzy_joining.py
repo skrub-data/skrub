@@ -28,9 +28,6 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 .. |fuzzy_join| replace::
     :func:`~skrub.fuzzy_join`
 
-.. |FeatureAugmenter| replace::
-    :class:`~skrub.FeatureAugmenter`
-
 .. |joiner| replace::
     :func:`~skrub.Joiner`
 """
@@ -310,15 +307,124 @@ print(f"Mean R2 score is {cv_r2.mean():.2f} +- {cv_r2.std():.2f}")
 #################################################################
 # We have a satisfying first result: an R2 of 0.66!
 #
+# Let's look at a faster way to merge different tables from the World Bank
+# using the |joiner|.
+#
+
+###############################################################################
+# Fuzzy joining multiple tables: the Joiner
+# -----------------------------------------
+#
+# The |joiner| is a transformer that can easily chain joins of tables on
+# a main table.
+#
+# Instead of manually performing multiple fuzzy joins, like we
+# did previously, we can chain them using the |joiner|.
+#
+# We gather the auxiliary tables into a list of 2-tuples (tables, keys)
+# for the `tables` parameter.
+
+from skrub import Joiner
+
+fa = Joiner(
+    tables=[
+        (gdp_per_capita, "Country Name"),
+        (life_expectancy, "Country Name"),
+        (legal_rights, "Country Name"),
+    ],
+    main_key="Country",
+)
+
+###############################################################################
+# Notice we haven't passed the main table yet.
+# This is by design, as we want this encoder to be scikit-learn compatible.
+# We will instead pass it when calling the :func:`~skrub.Joiner.fit` method.
+#
+# To get our final joined table we will fit and transform the main table
+# with our instance of the |Joiner|:
+
+X = fa.fit_transform(df)
+X.head(10)
+
+###############################################################################
+# And that's it! We have the same result as in the previous section,
+# where we did it all manually.
+#
+# We now have a rich table ready for machine learning.
+# Let's create our machine learning pipeline
+# (the same as previously):
+
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.pipeline import make_pipeline
+from sklearn.compose import make_column_transformer
+
+# We include only the columns that will be pertinent for our regression:
+column_filter = make_column_transformer(
+    (
+        "passthrough",
+        [
+            "GDP per capita (current US$)",
+            "Life expectancy at birth, total (years)",
+            "Strength of legal rights index (0=weak to 12=strong)",
+        ],
+    ),
+    remainder="drop",
+)
+
+pipeline = make_pipeline(
+    fa,
+    column_filter,
+    HistGradientBoostingRegressor(),
+)
+
+###############################################################################
+# And maybe the best part is that we are now able to evaluate
+# the parameters of the |fuzzy_join|.
+#
+# For instance, the ``match_score`` was previously manually picked and can now
+# be tested using a grid search:
+
+from sklearn.model_selection import GridSearchCV
+
+y = df["Happiness score"]
+
+# We will test a few possible values of match_score
+params = {"joiner__match_score": [0.3, 0.4, 0.5, 0.6, 0.7]}
+
+grid = GridSearchCV(pipeline, param_grid=params)
+grid.fit(df, y)
+
+print(grid.best_params_)
+
+###############################################################################
+# We found the best ``match_score``!
+# Let's see how it affects our model's performance:
+
+print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
+
+###############################################################################
+#
+# .. topic:: Note:
+#
+#     Here, ``grid.score()`` takes directly the best model
+#     (with ``match_score=0.5``) that was found during the grid search.
+#     Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
+#     refitting the pipeline on the data.
+#
+#
+# Great, by evaluating the correct ``match_score`` we improved our
+# results significantly!
+#
+
+###############################################################################
 # Conclusion
 # ----------
+# Data transformation is often very costly in both time and ressources.
+# |joiner| is fast and easy-to-use.
 #
 # Data cleaning varies from dataset to dataset: there are as
-# many ways to clean a table as there are errors. The |fuzzy_join|
+# many ways to clean a table as there are errors. The |joiner|
 # method is generalizable across all datasets.
 #
-# Data transformation is also often very costly in both time and ressources.
-# |fuzzy_join| is fast and easy-to-use.
-#
-# **Now it's up to you: try improving our model by adding relevant
+# **Now it's up to you: try improving our model by adding new relevant
 # information into it and beat our result!**
