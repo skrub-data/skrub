@@ -107,4 +107,4 @@ plt.show()
 #
 # In this notebook, we have seen how to interpret the output of the
 # |GapEncoder|, and how it can be used to summarize categorical variables
-# as a set of latent topics
+# as a set of latent topics.
