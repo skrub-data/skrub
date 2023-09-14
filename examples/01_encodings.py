@@ -73,7 +73,6 @@ pipeline.fit(X, y)
 
 ###############################################################################
 # What just happened here?
-# It did not raise any errors, yay!
 #
 # We actually gave our dataframe as an input to the |TableVectorizer| and it
 # returned an output useful for the scikit-learn model.
