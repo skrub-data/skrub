@@ -81,7 +81,7 @@ pipeline.fit(X, y)
 
 from pprint import pprint
 
-# Recover the |TableVectorizer| from the |Pipeline|
+# Recover the TableVectorizer from the Pipeline
 tv = pipeline.named_steps["tablevectorizer"]
 
 pprint(tv.transformers_)
