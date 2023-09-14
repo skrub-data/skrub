@@ -156,9 +156,7 @@ pipeline.fit(X, y)
 
 importances = regressor.feature_importances_
 std = np.std([tree.feature_importances_ for tree in regressor.estimators_], axis=0)
-indices = np.argsort(importances)
-# Sort from least to most valuable
-indices = list(reversed(indices))
+indices = np.argsort(importances)[::-1]
 
 ###############################################################################
 # And plotting the results:
