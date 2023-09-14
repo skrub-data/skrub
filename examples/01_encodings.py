@@ -94,27 +94,27 @@ pprint(tv.transformers_)
 #     - The |OneHotEncoder| for low cardinality string variables, the columns
 #       'gender', 'department', 'department_name' and 'assignment_category'.
 
-feature_names = tv.get_feature_names_out()
-
-feature_names[4:82]
+tv.named_transformers_["low_card_cat"].get_feature_names_out()
 
 ###############################################################################
 #     - The |GapEncoder| for high cardinality string columns, 'employee_position_title'
 #       and 'division'. The |GapEncoder| is a powerful encoder that can handle dirty
 #       categorical columns.
 
-feature_names[82:]
+tv.named_transformers_["high_card_cat"].get_feature_names_out()
 
 ###############################################################################
 #     - The |DatetimeEncoder| to the 'date_first_hired' column. The |DatetimeEncoder|
 #       can encode datetime columns for machine learning.
 
-feature_names[0:4]
+tv.named_transformers_["datetime"].get_feature_names_out()
 
 ###############################################################################
 # As we can see, it gave us interpretable column names.
 #
 # In total, we have a reasonable number of encoded columns:
+
+feature_names = tv.get_feature_names_out()
 
 len(feature_names)
 
@@ -171,7 +171,7 @@ labels = np.array(feature_names)[top_indices]
 plt.figure(figsize=(12, 9))
 plt.barh(
     y=labels,
-    x=avg_importances[top_indices],
+    width=avg_importances[top_indices],
     yerr=std_importances[top_indices],
     color="b",
 )
