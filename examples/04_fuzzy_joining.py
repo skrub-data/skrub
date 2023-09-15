@@ -300,10 +300,10 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import KFold
 
 hgdb = HistGradientBoostingRegressor(random_state=0)
-cv = KFold(n_splits=2, shuffle=True, random_state=0)
+cv = KFold(n_splits=4, shuffle=True, random_state=0)
 
 #################################################################
-# To evaluate our model, we will apply a 2-fold cross-validation,
+# To evaluate our model, we will apply a 4-fold cross-validation,
 # and evaluate it using the `R2` score.
 #
 # Let's finally assess the results of our models:
@@ -317,7 +317,7 @@ cv_r2 = cv_results["test_score"]
 print(f"Mean R2 score is {cv_r2.mean():.2f} +- {cv_r2.std():.2f}")
 
 #################################################################
-# We have a satisfying first result: an R2 of 0.66!
+# We have a satisfying first result: an R2 of 0.70!
 #
 # Let's look at a faster way to merge different tables from the World Bank
 # using the |joiner|.
