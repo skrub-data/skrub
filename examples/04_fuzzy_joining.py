@@ -63,6 +63,10 @@ df.head(5)
 #
 # We now want to enrich our main table with additional explanatory factors.
 #
+
+df = df[["Country", "Happiness score"]]
+
+###############################################################################
 # Interesting tables can be found on `the World Bank open data platform
 # <https://data.worldbank.org/>`_, for which skrub has a download function:
 
@@ -179,7 +183,10 @@ df1 = fuzzy_join(
     match_score=0.65,
     drop_unmatched=True,
 )
+
 df1.drop(columns=["Country Name"], inplace=True)
+
+df1.head(5)
 
 ###############################################################################
 # We can now plot and look at the link between life expectancy
@@ -216,7 +223,10 @@ df2 = fuzzy_join(
     right_on="Country Name",
     match_score=0.65,
 )
-df2.head(5)
+
+df2.drop(columns=["Country Name"], inplace=True)
+
+df2.head(3)
 
 ###############################################################################
 # Let's take a look at the correspondance in a figure:
@@ -248,6 +258,10 @@ df3 = fuzzy_join(
     match_score=0.65,
 )
 
+df3.drop(columns=["Country Name"], inplace=True)
+
+df3.head(3)
+
 ###############################################################################
 # Let's take a look at the correspondance in a figure:
 
@@ -276,8 +290,8 @@ plt.show()
 #
 # We now separate our explanatory variables - X - from our target y.
 
-y = df2[["Happiness score"]]
-X = df2.drop("Happiness score", axis=1).select_dtypes(exclude=object)
+y = df3["Happiness score"]
+X = df3.drop("Happiness score", axis=1).select_dtypes(exclude=object)
 
 ###################################################################
 # Let us now define the model that will be used to predict the happiness score:
@@ -289,7 +303,7 @@ hgdb = HistGradientBoostingRegressor(random_state=0)
 cv = KFold(n_splits=2, shuffle=True, random_state=0)
 
 #################################################################
-# To evaluate our model, we will apply a 4-fold cross-validation,
+# To evaluate our model, we will apply a 2-fold cross-validation,
 # and evaluate it using the `R2` score.
 #
 # Let's finally assess the results of our models:
