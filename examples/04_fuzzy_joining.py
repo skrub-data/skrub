@@ -41,7 +41,7 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 import pandas as pd
 
 df = pd.read_csv(
-    "https://raw.githubusercontent.com/dirty-cat/datasets/master/data/Happiness_report_2022.csv",
+    "https://raw.githubusercontent.com/skrub-data/datasets/master/data/Happiness_report_2022.csv",  # noqa
     thousands=",",
 )
 # It contains a placeholder row at the end, that we remove:
@@ -76,19 +76,19 @@ from skrub.datasets import fetch_world_bank_indicator
 # Let's fetch a table containing the life expectancy by country:
 
 life_expectancy = fetch_world_bank_indicator("SP.DYN.LE00.IN").X
-life_expectancy.head(5)
+life_expectancy.head(3)
 
 ###############################################################################
 # We extract the table containing GDP per capita by country:
 
 gdp_per_capita = fetch_world_bank_indicator(indicator_id="NY.GDP.PCAP.CD").X
-gdp_per_capita.head(5)
+gdp_per_capita.head(3)
 
 ###############################################################################
 # And a table with legal rights strength by country:
 
 legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
-life_expectancy.head(5)
+life_expectancy.head(3)
 
 ###############################################################################
 # A correspondance problem
