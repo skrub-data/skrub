@@ -188,8 +188,6 @@ df1.drop(columns=["Country Name"], inplace=True)
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-sns.set_context("notebook")
-
 plt.figure(figsize=(4, 3))
 ax = sns.regplot(
     data=df1,
@@ -200,7 +198,7 @@ ax = sns.regplot(
 ax.set_ylabel("Happiness index")
 ax.set_title("Is higher life expectancy linked to happiness?")
 plt.tight_layout()
-plt.show(5)
+plt.show()
 
 ###############################################################################
 # It seems that happiness is correlated to life expectancy.
