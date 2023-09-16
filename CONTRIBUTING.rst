@@ -21,9 +21,9 @@ out! <https://github.com/skrub-data/skrub/discussions>`__
 What should I know before I get started?
 ----------------------------------------
 
-If you want to understand in more depth the incentives behind skrub,
-read our `vision statement! <https://skrub-data.org/stable/vision.html>`__
-If scientific literature doesn't scare you, we greatly
+To understand in more depth the incentives behind skrub,
+read our `vision statement. <https://skrub-data.org/stable/vision.html>`__
+Also, if scientific literature doesn't scare you, we greatly
 encourage you to read the two following papers:
 
 - `Similarity encoding for learning
@@ -37,22 +37,22 @@ How can I contribute?
 Reporting bugs
 ~~~~~~~~~~~~~~
 
-Even if we unit-test our code, using the library is the best way to
-discover new bugs and limitations.
+Using the library is the best way to discover new bugs and limitations.
 
-If you find one, please `check if a similar or identical issue already
+If you find one, please `check whether a similar issue already
 exists. <https://github.com/skrub-data/skrub/issues?q=is%3Aissue>`__
 
-- If yes:
+- If so...
 
-  - **The issue is still open**: leave the emote :+1: on the original message,
-    which will let us know there are several users affected by this issue.
-  - **The issue has been closed**:
+  - **Issue is still open**: leave a 👍 on the original message to
+    let us know there are several users affected by this issue.
+  - **Issue has been closed**:
 
-    - **It has been closed by a merged pull request** (1) update your skrub version,
-      or (2) the fix has not been released in a version yet.
-    - **Otherwise**, there might be a ``wontfix`` label, and / or a reason at the bottom of the conversation.
-- If not, `file a new issue <https://github.com/skrub-data/skrub/issues/new>`__.
+    - **By a merged pull request** (1) update your skrub version,
+      or (2) the fix has not been released yet.
+    - **Without pull request**, there might be a ``wontfix`` label, and/or a reason at the bottom of the conversation.
+
+- Otherwise, `file a new issue <https://github.com/skrub-data/skrub/issues/new>`__.
 
 How do I submit a bug report?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -64,14 +64,11 @@ additional details to help maintainers easily reproduce the problem:
 -  **Describe the result you expected**.
 -  **Add additional details to your description problem** such as
    situations where the bug should have appeared but didn't.
--  **Include a snippet of code that reproduces the error**, as it allows
+-  **Include a snippet of code that reproduces the error**, if any, as it allows
    maintainers to reproduce it in a matter of seconds!
 -  **Specify versions** of Python, skrub, and other dependencies
    which might be linked to the issue (e.g., scikit-learn, numpy,
    pandas, etc.).
-
-Some of these bullet points might not apply depending on the
-kind of error you're submitting.
 
 Suggesting enhancements
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,7 +76,7 @@ Suggesting enhancements
 This section will guide you through submitting a new enhancement for
 skrub, whether it is a small fix or a new feature.
 
-First, you should `check if the feature has not already been proposed or
+First, you should `check whether the feature has not already been proposed or
 implemented <https://github.com/skrub-data/skrub/pulls?q=is%3Apr>`__.
 
 If not, before writing any code, `submit a new
@@ -95,20 +92,17 @@ How do I submit an enhancement proposal?
    with as many details as possible.
 -  **If it exists elsewhere, link resources**.
 
-Of course, some of these bullet points might not apply depending on the
-kind of enhancement you're submitting.
+If the enhancement proposal is validated
+''''''''''''''''''''''''''''''''''''''''
 
-If the enhancement is validated
-'''''''''''''''''''''''''''''''
-
-Let maintainers know whether :
+Let maintainers know whether:
 
 - **You will write the code and submit a pull request (PR)**.
   Writing the feature yourself is the fastest way to getting it
   implemented in the library, and we'll help in that process if guidance
   is needed! To go further, refer to the section
   :ref:`writing-your-first-pull-request`.
-- **You won't be able to write the code**, in which case a
+- **You won't write the code**, in which case a
   developer can start working on it. Note however that maintainers
   are **volunteers**, and therefore cannot guarantee how much time
   it will take to implement the change.
@@ -139,8 +133,25 @@ See in the sections above for the right way to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For this process, please refer to the `installation process <https://skrub-data.org/stable/install.html#advanced-usage-for-contributors>`__,
-section *Advanced usage, for contributors*.
+First, `fork skrub on Github <https://github.com/skrub-data/skrub/fork>`__.
+
+That will enable you to push your commits to a branch *on your fork*.
+
+Then, clone the repo on your computer:
+
+.. code:: console
+
+   git clone https://github.com/<YOUR_NAME>/skrub
+
+It is advised to create a new branch every time you work on a new issue,
+to avoid confusion:
+
+.. code:: console
+
+   git switch -c branch_name
+
+Finally, install the dependencies by heading to the `installation process <https://skrub-data.org/stable/install.html#advanced-usage-for-contributors>`__,
+advanced usage section.
 
 Implementation
 ^^^^^^^^^^^^^^
@@ -168,19 +179,8 @@ There are a few specific project goals to keep in mind:
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
 
-First, you'll want to `fork skrub on Github <https://github.com/skrub-data/skrub/fork>`__.
-
-That will enable you to push your commits to a branch *on your fork*.
-It is advised to create a new branch every time you work on a new issue,
-to avoid confusion.
-Use the following command to create a branch:
-
-.. code:: console
-
-   git checkout -b branch_name
-
-Next, you can use the Github “Compare & pull request” button to submit
-your branch code as a PR.
+After pushing your commits to your remote repository, you can use the Github “Compare & pull request” button to submit
+your branch code as a PR targeting the skrub repository.
 
 Integration
 ^^^^^^^^^^^
@@ -217,3 +217,47 @@ actions are taken.
 
 Note that by default the documentation is built, but only the examples that are
 directly modified by the pull request are executed.
+
+Building the documentation
+--------------------------
+
+..
+  Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
+
+**Before submitting a pull request, check if your modifications have introduced
+new sphinx warnings by building the documentation locally and try to fix them.**
+
+First, make sure you have `properly installed <https://skrub-data.org/stable/install.html>`__
+the development version.
+
+Building the documentation requires installing some additional packages:
+
+.. code:: bash
+
+    cd skrub
+    pip install '.[doc]'
+
+To build the documentation, you need to be in the ``doc`` folder:
+
+.. code:: bash
+
+    cd doc
+
+To generate the docs, including the example gallery, you can use:
+
+.. code:: bash
+
+    make html
+
+The documentation will be generated in the ``_build/html/`` directory
+and are viewable in a web browser, for instance by opening the local
+``_build/html/index.html`` file.
+
+This will run all the examples, which takes a while. If you only want to
+generate a few examples, you can use:
+
+.. code:: bash
+
+    EXAMPLES_PATTERN=your_regex_goes_here make html
+
+This is particularly useful if you are modifying a few examples.
