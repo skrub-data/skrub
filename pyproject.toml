@@ -132,8 +132,6 @@ exclude = '''
 line-length = 88
 target-version = "py310"
 ignore = [
-    # check ignored by default in flake8. Meaning unclear.
-    "E24",
     # continuation line under-indented
     "E121",
     # closing bracket does not match indentation
