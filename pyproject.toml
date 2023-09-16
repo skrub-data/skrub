@@ -132,26 +132,9 @@ exclude = '''
 line-length = 88
 target-version = "py310"
 ignore = [
-    # continuation line under-indented
-    "E121",
-    # closing bracket does not match indentation
-    "E123",
-    # continuation line over-indented for hanging indent
-    "E126",
-    # space before : (needed for how black formats slicing)
-    "E203",
-    # missing whitespace around arithmetic operator
-    "E226",
-    # multiple statements on one line (def)
-    "E704",
-    # do not assign a lambda expression, use a def
-    "E731",
-    # do not use variables named 'l', 'O', or 'I'
-    "E741",
-    # line break before binary operator
-    "W503",
-    # line break after binary operator
-    "W504"
+  "E203", # space before : (needed for how black formats slicing)
+  "E226", # missing whitespace around arithmetic operator
+  "E501", # line too long
 ]
 extend-exclude = [
   ".git",
