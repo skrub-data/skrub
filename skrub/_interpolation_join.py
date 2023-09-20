@@ -8,8 +8,8 @@ from skrub._table_vectorizer import TableVectorizer
 class InterpolationJoin(base.BaseEstimator):
     """Join with a table augmented by machine-learning predictions.
 
-    This is similar to a usual inner join, but instead of looking for actual
-    rows in the right table that satisfy a join condition, we estimate what
+    This is similar to a usual equi-join, but instead of looking for actual
+    rows in the right table that satisfy the join condition, we estimate what
     those rows would contain if they existed in the table.
 
     Suppose we want to join a table ``buildings(latitude, longitude, n_stories)``
@@ -197,7 +197,7 @@ class InterpolationJoin(base.BaseEstimator):
 
         Returns
         -------
-        joined: DataFrame
+        join : DataFrame
             The result of the join between `left_table` and inferred rows from
             ``self.right_table``.
         """
@@ -220,7 +220,7 @@ class InterpolationJoin(base.BaseEstimator):
 
         Returns
         -------
-        joined: DataFrame
+        join : DataFrame
             The result of the join between `left_table` and inferred rows from
             ``self.right_table``.
         """
