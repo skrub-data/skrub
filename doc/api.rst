@@ -33,6 +33,13 @@ This page lists all available functions and classes of `skrub`.
 
    Joiner
 
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
+   InterpolationJoin
+
 .. raw:: html
 
    <h2>Vectorizing a dataframe</h2>
