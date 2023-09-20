@@ -19,7 +19,6 @@ WORD_TO_ALIAS: dict[str, str] = {
     "hour": "H",
     "minute": "min",
     "second": "S",
-    "millisecond": "ms",
     "microsecond": "us",
     "nanosecond": "N",
 }
@@ -31,7 +30,6 @@ AcceptedTimeValues = Literal[
     "hour",
     "minute",
     "second",
-    "millisecond",
     "microsecond",
     "nanosecond",
 ]
@@ -47,7 +45,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    extract_until : {'year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'}, default='hour'
+    extract_until : {'year', 'month', 'day', 'hour', 'minute', 'second', 'microsecond', 'nanosecond'}, default='hour'
         Extract up to this granularity.
         If all features have not been extracted, add the 'total_time' feature,
         which contains the time to epoch (in seconds).
@@ -145,8 +143,6 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             return pd.DatetimeIndex(date_series).minute.to_numpy()
         elif feature == "second":
             return pd.DatetimeIndex(date_series).second.to_numpy()
-        elif feature == "millisecond":
-            return pd.DatetimeIndex(date_series).millisecond.to_numpy()
         elif feature == "microsecond":
             return pd.DatetimeIndex(date_series).microsecond.to_numpy()
         elif feature == "nanosecond":
@@ -263,7 +259,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Feature names are formatted like: "<column_name>_<new_feature>"
         if the original data has column names, otherwise with format
         "<column_index>_<new_feature>" where `<new_feature>` is one of
-        {"year", "month", "day", "hour", "minute", "second", "millisecond",
+        {"year", "month", "day", "hour", "minute", "second",
         "microsecond", "nanosecond", "dayofweek"}.
 
         Parameters

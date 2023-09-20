@@ -32,16 +32,40 @@ def get_datetime_array() -> np.array:
     return np.array(
         [
             pd.to_datetime(
-                ["2020-01-01 10:12:01", "2020-01-02 10:23:00", "2020-01-03 10:00:00"]
+                [
+                    "2020-01-01 10:12:01",
+                    "2020-01-02 10:23:00",
+                    "2020-01-03 10:00:00",
+                    "2020-08-24 15:55:30.123456789",
+                ],
+                format="mixed",
             ),
             pd.to_datetime(
-                ["2021-02-03 12:45:23", "2020-02-04 22:12:00", "2021-02-05 12:00:00"]
+                [
+                    "2021-02-03 12:45:23",
+                    "2020-02-04 22:12:00",
+                    "2021-02-05 12:00:00",
+                    "2021-07-20 14:56:31.987654321",
+                ],
+                format="mixed",
             ),
             pd.to_datetime(
-                ["2022-01-01 23:23:43", "2020-12-25 11:12:00", "2022-01-03 11:00:00"]
+                [
+                    "2022-01-01 23:23:43",
+                    "2020-12-25 11:12:00",
+                    "2022-01-03 11:00:00",
+                    "2023-09-20 14:57:32.123987654",
+                ],
+                format="mixed",
             ),
             pd.to_datetime(
-                ["2023-02-03 11:12:12", "2020-02-04 08:32:00", "2023-02-05 23:00:00"]
+                [
+                    "2023-02-03 11:12:12",
+                    "2020-02-04 08:32:00",
+                    "2023-02-05 23:00:00",
+                    "2023-09-20 14:58:33.987123456",
+                ],
+                format="mixed",
             ),
         ]
     )
@@ -126,11 +150,15 @@ def test_fit() -> None:
         0: ["year", "month", "day", "hour", "dayofweek", "total_time"],
         1: ["month", "day", "hour", "dayofweek", "total_time"],
         2: ["year", "month", "day", "hour", "dayofweek"],
+        3: ["year", "month", "day", "hour", "dayofweek", "total_time"],
     }
     enc.fit(X)
     assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
 
+    # we check that the features are extracted until `extract_until`
+    # that constant feature are not extracted
+    # and that the total_time feature is extracted if needed
     X = get_datetime_array()
     enc = DatetimeEncoder(extract_until="minute")
     expected_to_extract = ["year", "month", "day", "hour", "minute"]
@@ -138,6 +166,46 @@ def test_fit() -> None:
         0: ["year", "month", "day", "hour", "minute", "total_time"],
         1: ["month", "day", "hour", "minute"],
         2: ["year", "month", "day", "hour"],
+        3: ["year", "month", "day", "hour", "minute", "total_time"],
+    }
+    enc.fit(X)
+    assert enc._to_extract == expected_to_extract
+    assert enc.features_per_column_ == expected_features_per_column_
+
+    # extract_until="nanosecond"
+    X = get_datetime_array()
+    enc = DatetimeEncoder(extract_until="nanosecond")
+    expected_to_extract = [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second",
+        "microsecond",
+        "nanosecond",
+    ]
+    expected_features_per_column_ = {
+        0: [
+            "year",
+            "month",
+            "day",
+            "hour",
+            "minute",
+            "second",
+        ],
+        1: ["month", "day", "hour", "minute"],
+        2: ["year", "month", "day", "hour"],
+        3: [
+            "year",
+            "month",
+            "day",
+            "hour",
+            "minute",
+            "second",
+            "microsecond",
+            "nanosecond",
+        ],
     }
     enc.fit(X)
     assert enc._to_extract == expected_to_extract
@@ -186,6 +254,12 @@ def test_fit() -> None:
         "2_day",
         "2_hour",
         "2_dayofweek",
+        "3_year",
+        "3_month",
+        "3_day",
+        "3_hour",
+        "3_dayofweek",
+        "3_total_time",
     ]
     enc.fit(X)
     assert enc.get_feature_names_out() == expected_feature_names
@@ -193,7 +267,7 @@ def test_fit() -> None:
     # With column names
     X = get_datetime_array()
     X = pd.DataFrame(X)
-    X.columns = ["col1", "col2", "col3"]
+    X.columns = ["col1", "col2", "col3", "col4"]
     enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_feature_names = [
         "col1_year",
@@ -212,6 +286,12 @@ def test_fit() -> None:
         "col3_day",
         "col3_hour",
         "col3_dayofweek",
+        "col4_year",
+        "col4_month",
+        "col4_day",
+        "col4_hour",
+        "col4_dayofweek",
+        "col4_total_time",
     ]
     enc.fit(X)
     assert enc.get_feature_names_out() == expected_feature_names
