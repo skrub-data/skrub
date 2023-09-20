@@ -138,7 +138,7 @@ Minor changes
   :pr:`581` by :user:`Lilian Boulard <LilianBoulard>`
 
 * Fix bug which was triggered when `extract_until` was smaller than `seconds`
-  in :class:`DatetimeEncoder`. :pr:`1526` by :user:`Leo Grinsztajn <LeoGrin>`
+  in :class:`DatetimeEncoder`. :pr:`743` by :user:`Leo Grinsztajn <LeoGrin>`
 
 Before skrub: dirty_cat
 ========================
