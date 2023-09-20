@@ -2,6 +2,7 @@
 Implements the MinHashEncoder, which encodes string categorical features by
 applying the MinHash method to n-gram decompositions of strings.
 """
+from __future__ import annotations
 
 from collections.abc import Callable, Collection
 from typing import Literal
@@ -9,13 +10,13 @@ from typing import Literal
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
 from numpy.typing import ArrayLike, NDArray
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils import gen_even_slices, murmurhash3_32
 from sklearn.utils.validation import _check_feature_names_in, check_is_fitted
 
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
-from ._utils import LRUDict, check_input
+from ._utils import LRUDict, check_input, combine_lru_dicts
 
 NoneType = type(None)
 
@@ -119,6 +120,47 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
     hash_dict_: LRUDict
 
     _capacity: int = 2**10
+
+    @classmethod
+    def _merge(cls, transformers_list: list[MinHashEncoder]):
+        """
+        Merge MinHashEncoders fitted on different columns
+        into a single MinHashEncoder. This is useful for parallelization
+        over columns in the TableVectorizer.
+        """
+        full_transformer = clone(transformers_list[0])
+        capacity = transformers_list[0]._capacity
+        full_transformer.hash_dict_ = combine_lru_dicts(
+            capacity, *[transformer.hash_dict_ for transformer in transformers_list]
+        )
+        full_transformer.n_features_in_ = sum(
+            transformer.n_features_in_ for transformer in transformers_list
+        )
+        full_transformer.feature_names_in_ = np.concatenate(
+            [transformer.feature_names_in_ for transformer in transformers_list]
+        )
+        return full_transformer
+
+    def _split(self):
+        """
+        Split a MinHashEncoder fitted on multiple columns
+        into a list of MinHashEncoders (one for each column).
+        This is useful for parallelizing transform over columns
+        in the TableVectorizer.
+        """
+        check_is_fitted(self)
+        transformer_list = []
+        for i in range(self.n_features_in_):
+            trans = clone(self)
+            attributes = ["hash_dict_", "_capacity"]
+            for a in attributes:
+                if hasattr(self, a):
+                    setattr(trans, a, getattr(self, a))
+                # TODO; do we want to deepcopy hash_dict_
+            trans.n_features_in_ = 1
+            trans.feature_names_in_ = np.array([self.feature_names_in_[i]])
+            transformer_list.append(trans)
+        return transformer_list
 
     def __init__(
         self,
@@ -395,4 +437,8 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
                 ),
                 "check_estimators_dtypes": "We only support string dtypes.",
             },
+            "univariate": True,  # whether the estimator is univariate and can be
+            # applied column by column. This is useful for the TableVectorizer,
+            # to decide whether to apply the transformer on each column separately
+            # and thus improve the parallelization when the transformer is slow enough.
         }

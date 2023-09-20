@@ -32,6 +32,13 @@ Major changes
 * Parallelized the :class:`GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
+
+Minor changes
+-------------
+
+* :class:`TableVectorizer` is now able to apply parallelism at the column level rather than the transformer level. This is the default for univariate transformers, like :class:`MinHashEncoder`, and :class:`GapEncoder`.
+  :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
+
 * Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
   and :user:`Lilian Boulard <LilianBoulard>`
@@ -173,6 +180,8 @@ Minor changes
   tries pandas default inference if it fails.
   :pr:`543` by :user:`Leo Grinsztajn <LeoGrin>`
   :pr:`587` by :user:`Leo Grinsztajn <LeoGrin>`
+
+
 
 Dirty-cat Release 0.4.0
 =========================
