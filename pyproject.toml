@@ -6,6 +6,109 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "skrub"
+description = "Prepping tables for machine learning"
+readme = "README.rst"
+authors = [
+  { name = "Patricio Cerda", email = "patricio.cerda@inria.fr"}
+]
+license = {file = "LICENSE.txt"}
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Software Development :: Libraries",
+]
+
+dynamic = ["version"] # see [tool.setuptools.dynamic]
+requires-python = ">=3.10"
+dependencies = [
+  "scikit-learn>=1.2.1",
+  "numpy>=1.23.5",
+  "scipy>=1.9.3",
+  "pandas>=1.5.3",
+  "packaging>=23.1",
+]
+
+[project.urls]
+Homepage = "https://skrub-data.org/"
+Source = "https://github.com/skrub-data/skrub"
+
+[project.optional-dependencies]
+pyarrow = [
+  "pyarrow"
+]
+dev = [
+  "pytest",
+  "pytest-cov",
+  # XXX: pin pytest-xdist to workaround:
+  # https://github.com/pytest-dev/pytest-xdist/issues/840
+  "pytest-xdist==2.5.0",
+  "pytest-xdist[psutil]",
+  "coverage",
+  "numpydoc",
+  "openml",
+  "pre-commit",
+]
+doc = [
+  "sphinx-gallery@git+https://github.com/sphinx-gallery/sphinx-gallery",
+  "pydata-sphinx-theme",
+  "sphinxext-opengraph",
+  "sphinx-copybutton",
+  "matplotlib",
+  "seaborn",
+  "statsmodels",
+  "numpydoc",
+  "jupyterlite-sphinx",
+  "jupyterlite-pyodide-kernel",
+  "pyarrow",
+]
+benchmarks = [
+  "numpy",
+  "pandas",
+  "matplotlib",
+  "seaborn",
+  "tqdm",
+  "thefuzz",
+  "autofj",
+  "pyarrow",
+  "loguru",
+]
+# Overwrite the previous install_requires for CI testing purposes
+# as defined in testing.yml.
+min-py310 = [
+  "scikit-learn==1.2.1",
+  "numpy==1.23.5",
+  "scipy==1.9.3",
+  "pandas==1.5.3",
+]
+
+[tool.setuptools]
+packages = ["skrub"]
+
+[tool.setuptools.dynamic]
+version = { file = "skrub/VERSION.txt" }
+
+[tool.pytest.ini_options]
+filterwarnings = [
+  # Turn deprecation warnings into errors
+  "error::FutureWarning",
+  "error::DeprecationWarning",
+  "error::numpy.VisibleDeprecationWarning",
+
+  # Ignore warning from np.in1d since the future behavior is already the desired
+  # behavior. TODO remove when numpy min version >= 1.25.
+  'ignore:elementwise\ comparison\ failed:FutureWarning',
+]
+
+# pre-commit tools configurations
+
 [tool.black]
 line-length = 88
 target_version = ['py310', 'py311']
@@ -24,17 +127,35 @@ exclude = '''
 )/
 '''
 
+[tool.ruff]
+# max line length for black
+line-length = 88
+target-version = "py310"
+ignore = [
+  "E203", # space before : (needed for how black formats slicing)
+  "E226", # missing whitespace around arithmetic operator
+  "E501", # line too long
+]
+extend-exclude = [
+  ".git",
+  "__pycache__",
+]
+
+[tool.ruff.per-file-ignores]
+# It's fine not to put the import at the top of the file in the examples
+# folder.
+"examples/*" = ["E402"]
+"doc/conf.py" = ["E402"]
+
 [tool.isort]
 profile = "black"
 
-[tool.pytest.ini_options]
-filterwarnings = [
-    # Turn deprecation warnings into errors
-    "error::FutureWarning",
-    "error::DeprecationWarning",
-    "error::numpy.VisibleDeprecationWarning",
+[tool.mypy]
+ignore_missing_imports = true
+allow_redefinition = true
 
-    # Ignore warning from np.in1d since the future behavior is already the desired
-    # behavior. TODO remove when numpy min version >= 1.25.
-    'ignore:elementwise\ comparison\ failed:FutureWarning',
+[tool.codespell]
+skip = [
+  "./.git",
+  "./.mypy_cache"
 ]
