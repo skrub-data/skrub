@@ -137,6 +137,9 @@ Minor changes
   which provides some more information about the job title.
   :pr:`581` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Fix bug which was triggered when `extract_until` was smaller than `seconds`
+  in :class:`DatetimeEncoder`. :pr:`1526` by :user:`Leo Grinsztajn <LeoGrin>`
+
 Before skrub: dirty_cat
 ========================
 
