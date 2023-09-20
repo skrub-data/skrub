@@ -11,7 +11,7 @@ from skrub.datasets import (
     fetch_road_safety,
     fetch_traffic_violations,
 )
-from skrub.datasets import DatasetAll
+from skrub.datasets import Dataset
 
 
 def find_result(bench_name: str) -> Path:
@@ -66,7 +66,7 @@ def choose_file(results: list[Path]) -> Path:
         return results[int(choice) - 1]
 
 
-def get_classification_datasets() -> dict[str, DatasetAll]:
+def get_classification_datasets() -> dict[str, Dataset]:
     return {
         "open_payments": fetch_open_payments(),
         "drug_directory": fetch_drug_directory(),
@@ -76,7 +76,7 @@ def get_classification_datasets() -> dict[str, DatasetAll]:
     }
 
 
-def get_regression_datasets() -> dict[str, DatasetAll]:
+def get_regression_datasets() -> dict[str, Dataset]:
     return {
         "medical_charge": fetch_medical_charge(),
         "employee_salaries": fetch_employee_salaries(),
