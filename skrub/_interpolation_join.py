@@ -54,6 +54,7 @@ class InterpolationJoin(base.BaseEstimator):
         must match those of the `left_on` columns in the left table. These
         columns provide the features for the estimators to be fitted. As for
         ``left_on``, it is possible to pass a string when using a single column.
+
     regressor : scikit-learn regressor
         Model used to predict the numerical columns of ``right_table``.
 
@@ -66,8 +67,7 @@ class InterpolationJoin(base.BaseEstimator):
         them to the scikit-learn estimators. This is useful if we are joining
         on columns that cannot be used directly, such as timestamps or strings
         representing high-cardinality categories. If None, no transformation is
-        applied and the columns are converted to Numpy arrays by calling
-        ``to_numpy``.
+        applied.
 
     n_jobs : int
         Number of joblib workers to use Depending on the estimators used and
