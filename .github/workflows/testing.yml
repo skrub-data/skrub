@@ -70,8 +70,10 @@ jobs:
         name: 'Install skrub'
         env:
           DEPS_VERSION: ${{ matrix.dependencies-version }}
-      - shell: bash
-        run: ${{ github.workspace }}/build_tools/github/test.sh
+      - run: |
+          cp ./build_tools/github/test.sh ${{ runner.temp }}
+      - shell: bash {0}
+        run: ./test.sh
         working-directory: ${{ runner.temp }}
         name: 'Run tests'
       - uses: codecov/codecov-action@v3
