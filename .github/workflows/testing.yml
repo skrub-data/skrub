@@ -72,8 +72,11 @@ jobs:
           DEPS_VERSION: ${{ matrix.dependencies-version }}
       - run: |
           cp ./build_tools/github/test.sh ${{ runner.temp }}
+          ls ${{ runner.temp }}
       - shell: bash {0}
-        run: ./test.sh
+        run: |
+          pwd
+          ls -a
         working-directory: ${{ runner.temp }}
         name: 'Run tests'
       - uses: codecov/codecov-action@v3
