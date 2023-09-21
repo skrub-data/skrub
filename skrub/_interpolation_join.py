@@ -27,7 +27,6 @@ class InterpolationJoin(base.BaseEstimator):
             buildings
         )
 
-
     Parameters
     ----------
     right_table : DataFrame
