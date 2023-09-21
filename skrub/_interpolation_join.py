@@ -23,11 +23,10 @@ class InterpolationJoin(base.BaseEstimator):
     table, in which rows for any (latitude, longitude) location are inferred,
     rather than retrieved, when requested. This is done with::
 
-        InterpolationJoin(
-            annual_avg_temp,
-            left_on=["latitude", "longitude"],
-            right_on=["latitude", "longitude"],
-        ).fit_transform(buildings)
+        InterpolationJoin(annual_avg_temp, on=["latitude", "longitude"]).fit_transform(
+            buildings
+        )
+
 
     Parameters
     ----------
@@ -54,6 +53,10 @@ class InterpolationJoin(base.BaseEstimator):
         must match those of the `left_on` columns in the left table. These
         columns provide the features for the estimators to be fitted. As for
         ``left_on``, it is possible to pass a string when using a single column.
+
+    on : list of str, or str
+        Column names to use both `left_on` and `right_on`, when they are the
+        same. Provide either `on` (only) or both `left_on` and `right_on`.
 
     regressor : scikit-learn regressor
         Model used to predict the numerical columns of ``right_table``.
@@ -110,20 +113,22 @@ class InterpolationJoin(base.BaseEstimator):
 
     >>> InterpolationJoin(
     ...     annual_avg_temp,
-    ...     left_on=["latitude", "longitude"],
-    ...     right_on=["latitude", "longitude"],
+    ...     on=["latitude", "longitude"],
     ...     regressor=KNeighborsRegressor(2),
     ... ).fit_transform(buildings)
        latitude  longitude  n_stories  avg_temp
     0       1.0        1.0          3      10.5
     1       2.0        2.0          7      15.5
+
     """
 
     def __init__(
         self,
         right_table,
-        left_on,
-        right_on,
+        *,
+        left_on=None,
+        right_on=None,
+        on=None,
         regressor=ensemble.HistGradientBoostingRegressor(),
         classifier=ensemble.HistGradientBoostingClassifier(),
         vectorizer=TableVectorizer(),
@@ -132,6 +137,7 @@ class InterpolationJoin(base.BaseEstimator):
         self.right_table = right_table
         self.left_on = left_on
         self.right_on = right_on
+        self.on = on
         self.regressor = regressor
         self.classifier = classifier
         self.vectorizer = vectorizer
@@ -177,12 +183,19 @@ class InterpolationJoin(base.BaseEstimator):
             self.vectorizer_ = compose.ColumnTransformer([], remainder="passthrough")
         else:
             self.vectorizer_ = base.clone(self.vectorizer)
-        self._left_on = (
-            [self.left_on] if isinstance(self.left_on, str) else list(self.left_on)
-        )
-        self._right_on = (
-            [self.right_on] if isinstance(self.right_on, str) else list(self.right_on)
-        )
+        self._check_condition()
+
+    def _check_condition(self):
+        if self.on is not None:
+            if self.right_on is not None or self.left_on is not None:
+                raise ValueError("Please provide EITHER on, OR (left_on AND right_on)")
+            left_on, right_on = self.on, self.on
+        else:
+            if self.right_on is None or self.left_on is None:
+                raise ValueError("Please provide EITHER on, OR (left_on AND right_on)")
+            left_on, right_on = self.left_on, self.right_on
+        self._left_on = [left_on] if isinstance(left_on, str) else list(left_on)
+        self._right_on = [right_on] if isinstance(right_on, str) else list(right_on)
 
     def transform(self, left_table):
         """Transform a table by joining inferred values to it.

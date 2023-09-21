@@ -42,9 +42,8 @@ right_table.head()
 
 from skrub import InterpolationJoin
 
-join_using = ["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"]
 interpolation_join = InterpolationJoin(
-    right_table, left_on=join_using, right_on=join_using
+    right_table, on=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"]
 ).fit()
 joined = interpolation_join.transform(left_table)
 joined.head()

@@ -51,6 +51,35 @@ def test_no_multioutput(buildings, annual_avg_temp):
     assert transformed.shape == (2, 4)
 
 
+def test_condition_choice():
+    left = pd.DataFrame({"A": [0, 1, 2]})
+    right = pd.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
+    join = InterpolationJoin(
+        right, on="A", regressor=KNeighborsRegressor(1)
+    ).fit_transform(left)
+    assert (join["C"].values == [10, 11, 12]).all()
+
+    join = InterpolationJoin(
+        right, left_on="A", right_on="rB", regressor=KNeighborsRegressor(1)
+    ).fit_transform(left)
+    assert (join["C"].values == [11, 12, 10]).all()
+
+    with pytest.raises(ValueError):
+        join = InterpolationJoin(
+            right, left_on="A", regressor=KNeighborsRegressor(1)
+        ).fit()
+
+    with pytest.raises(ValueError):
+        join = InterpolationJoin(
+            right, on="A", left_on="A", regressor=KNeighborsRegressor(1)
+        ).fit()
+
+    with pytest.raises(ValueError):
+        join = InterpolationJoin(
+            right, on="A", left_on="A", right_on="A", regressor=KNeighborsRegressor(1)
+        ).fit()
+
+
 # expected to fail until we have a way to get the timestamp (only) from a date
 # with the tablevectorizer
 @pytest.mark.xfail
