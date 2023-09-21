@@ -102,7 +102,7 @@ def test__create_spelling_correction(seed: int = 123) -> None:
 
 
 @cache
-def default_deduplicate(n: int = 500):
+def default_deduplicate(n: int = 500, random_state=0):
     """
     Create a default deduplication dataset.
     """
@@ -110,6 +110,7 @@ def default_deduplicate(n: int = 500):
         examples=["black", "white", "red"],
         entries_per_example=[n, n, n],
         prob_mistake_per_letter=0.3,
+        random_state=random_state,
     )
     y = deduplicate(X)
     return X, y
