@@ -71,11 +71,13 @@ jobs:
         env:
           DEPS_VERSION: ${{ matrix.dependencies-version }}
       - shell: bash {0}
-        run: ./build_tools/github/test.sh
+        run: ${{ github.workspace }}/build_tools/github/test.sh
+        working-directory: ${{ runner.temp }}
         name: 'Run tests'
       - uses: codecov/codecov-action@v3
         if: success()
         name: 'Upload coverage to CodeCov'
+        directory: ${{ runner.temp }}
 
   run_nightly:
     runs-on: ubuntu-latest
