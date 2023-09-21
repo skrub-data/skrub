@@ -80,6 +80,14 @@ def test_condition_choice():
         ).fit()
 
 
+def test_suffix():
+    df = pd.DataFrame({"A": [0, 1], "B": [0, 1]})
+    join = InterpolationJoin(
+        df, on="A", suffix="_right", regressor=KNeighborsRegressor(1)
+    ).fit_transform(df)
+    assert (join.columns == ["A", "B", "B_right"]).all()
+
+
 # expected to fail until we have a way to get the timestamp (only) from a date
 # with the tablevectorizer
 @pytest.mark.xfail

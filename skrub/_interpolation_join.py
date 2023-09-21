@@ -58,6 +58,10 @@ class InterpolationJoin(base.BaseEstimator):
         Column names to use both `left_on` and `right_on`, when they are the
         same. Provide either `on` (only) or both `left_on` and `right_on`.
 
+    suffix : str
+        Suffix to append to the ``right_table``'s column names. You can use it
+        to avoid duplicate column names in the join.
+
     regressor : scikit-learn regressor
         Model used to predict the numerical columns of ``right_table``.
 
@@ -129,6 +133,7 @@ class InterpolationJoin(base.BaseEstimator):
         left_on=None,
         right_on=None,
         on=None,
+        suffix="",
         regressor=ensemble.HistGradientBoostingRegressor(),
         classifier=ensemble.HistGradientBoostingClassifier(),
         vectorizer=TableVectorizer(),
@@ -138,6 +143,7 @@ class InterpolationJoin(base.BaseEstimator):
         self.left_on = left_on
         self.right_on = right_on
         self.on = on
+        self.suffix = suffix
         self.regressor = regressor
         self.classifier = classifier
         self.vectorizer = vectorizer
@@ -221,6 +227,7 @@ class InterpolationJoin(base.BaseEstimator):
             )
             for assignment in self.estimators_
         )
+        interpolated_parts = _add_column_name_suffix(interpolated_parts, self.suffix)
         return pd.concat([left_table] + interpolated_parts, axis=1)
 
     def fit_transform(self, left_table):
@@ -309,3 +316,12 @@ def _fit(X_values, right_table, target_columns, estimator):
 def _predict(X_values, columns, estimator):
     Y_values = estimator.predict(X_values)
     return pd.DataFrame(data=Y_values, columns=columns)
+
+
+def _add_column_name_suffix(dataframes, suffix):
+    if suffix == "":
+        return dataframes
+    renamed = []
+    for df in dataframes:
+        renamed.append(df.rename(columns={c: f"{c}{suffix}" for c in df.columns}))
+    return renamed
