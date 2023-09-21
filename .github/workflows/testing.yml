@@ -70,7 +70,7 @@ jobs:
         name: 'Install skrub'
         env:
           DEPS_VERSION: ${{ matrix.dependencies-version }}
-      - shell: bash {0}
+      - shell: bash
         run: ${{ github.workspace }}/build_tools/github/test.sh
         working-directory: ${{ runner.temp }}
         name: 'Run tests'
