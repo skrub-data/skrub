@@ -145,39 +145,33 @@ def test_fit() -> None:
     # Dates
     X = get_date_array()
     enc = DatetimeEncoder()
-    expected_to_extract = ["year", "month", "day", "hour"]
     expected_features_per_column_ = {
         0: ["year", "month", "day"],
         1: ["month", "day"],
         2: ["year", "month", "day"],
     }
     enc.fit(X)
-    assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
 
     X = get_date_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
-    expected_to_extract = ["year", "month", "day", "hour", "dayofweek"]
     expected_features_per_column_ = {
         0: ["year", "month", "day", "dayofweek"],
         1: ["month", "day", "dayofweek"],
         2: ["year", "month", "day", "dayofweek"],
     }
     enc.fit(X)
-    assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
 
     # Datetimes
     X = get_datetime_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
-    expected_to_extract = ["year", "month", "day", "hour", "dayofweek"]
     expected_features_per_column_ = {
-        0: ["year", "month", "day", "hour", "dayofweek", "total_time"],
-        1: ["month", "day", "hour", "dayofweek", "total_time"],
+        0: ["year", "month", "day", "hour", "total_time", "dayofweek"],
+        1: ["month", "day", "hour", "total_time", "dayofweek"],
         2: ["year", "month", "day", "hour", "dayofweek"],
     }
     enc.fit(X)
-    assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
 
     # we check that the features are extracted until `extract_until`
@@ -185,29 +179,17 @@ def test_fit() -> None:
     # and that the total_time feature is extracted if needed
     X = get_datetime_array()
     enc = DatetimeEncoder(extract_until="minute")
-    expected_to_extract = ["year", "month", "day", "hour", "minute"]
     expected_features_per_column_ = {
         0: ["year", "month", "day", "hour", "minute", "total_time"],
         1: ["month", "day", "hour", "minute"],
         2: ["year", "month", "day", "hour"],
     }
     enc.fit(X)
-    assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
 
     # extract_until="nanosecond"
     X = get_datetime_array_nanoseconds()
     enc = DatetimeEncoder(extract_until="nanosecond")
-    expected_to_extract = [
-        "year",
-        "month",
-        "day",
-        "hour",
-        "minute",
-        "second",
-        "microsecond",
-        "nanosecond",
-    ]
     expected_features_per_column_ = {
         # constant year and month
         # for first feature
@@ -231,29 +213,24 @@ def test_fit() -> None:
         ],
     }
     enc.fit(X)
-    assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
 
     # Dirty Datetimes
     X = get_dirty_datetime_array()
     enc = DatetimeEncoder()
-    expected_to_extract = ["year", "month", "day", "hour"]
     expected_features_per_column_ = {
         0: ["year", "month", "day", "hour", "total_time"],
         1: ["month", "day", "hour", "total_time"],
         2: ["year", "month", "day", "hour"],
     }
     enc.fit(X)
-    assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
 
     # Datetimes with TZ
     X = get_datetime_with_TZ_array()
     enc = DatetimeEncoder()
-    expected_to_extract = ["year", "month", "day", "hour"]
     expected_features_per_column_ = {0: ["year", "month", "day", "hour", "total_time"]}
     enc.fit(X)
-    assert enc._to_extract == expected_to_extract
     assert enc.features_per_column_ == expected_features_per_column_
 
     # Feature names
@@ -265,13 +242,13 @@ def test_fit() -> None:
         "0_month",
         "0_day",
         "0_hour",
-        "0_dayofweek",
         "0_total_time",
+        "0_dayofweek",
         "1_month",
         "1_day",
         "1_hour",
-        "1_dayofweek",
         "1_total_time",
+        "1_dayofweek",
         "2_year",
         "2_month",
         "2_day",
@@ -291,13 +268,13 @@ def test_fit() -> None:
         "col1_month",
         "col1_day",
         "col1_hour",
-        "col1_dayofweek",
         "col1_total_time",
+        "col1_dayofweek",
         "col2_month",
         "col2_day",
         "col2_hour",
-        "col2_dayofweek",
         "col2_total_time",
+        "col2_dayofweek",
         "col3_year",
         "col3_month",
         "col3_day",
@@ -353,14 +330,14 @@ def test_transform() -> None:
     # Check that the "total_time" feature is working
     expected_result = np.array(
         [
-            [2020, 1, 1, 10, 2, 0],
-            [2021, 2, 3, 12, 2, 0],
-            [2022, 1, 1, 23, 5, 0],
-            [2023, 2, 3, 11, 4, 0],
+            [2020, 1, 1, 10, 0, 2],
+            [2021, 2, 3, 12, 0, 2],
+            [2022, 1, 1, 23, 0, 5],
+            [2023, 2, 3, 11, 0, 4],
         ]
     ).astype(np.float64)
     # Time from epochs in seconds
-    expected_result[:, 5] = (X.astype("int64") // 1e9).astype(np.float64).reshape(-1)
+    expected_result[:, 4] = (X.astype("int64") // 1e9).astype(np.float64).reshape(-1)
 
     enc.fit(X)
     X_trans = enc.transform(X)
@@ -369,7 +346,7 @@ def test_transform() -> None:
     # Check if we find back the date from the time to epoch
     assert (
         (
-            pd.to_datetime(X_trans[:, 5], unit="s") - pd.to_datetime(X.reshape(-1))
+            pd.to_datetime(X_trans[:, 4], unit="s") - pd.to_datetime(X.reshape(-1))
         ).total_seconds()
         == 0
     ).all()
@@ -379,15 +356,15 @@ def test_transform() -> None:
     enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_result = np.array(
         [
-            [2020, 1, 1, 10, 2, 0],
+            [2020, 1, 1, 10, 0, 2],
             [np.nan] * 6,
-            [2022, 1, 1, 23, 5, 0],
-            [2023, 2, 3, 11, 4, 0],
+            [2022, 1, 1, 23, 0, 5],
+            [2023, 2, 3, 11, 0, 4],
         ]
     )
     # Time from epochs in seconds
-    expected_result[:, 5] = (X.astype("int64") // 1e9).astype(np.float64).reshape(-1)
-    expected_result[1, 5] = np.nan
+    expected_result[:, 4] = (X.astype("int64") // 1e9).astype(np.float64).reshape(-1)
+    expected_result[1, 4] = np.nan
     enc.fit(X)
     X_trans = enc.transform(X)
     assert np.allclose(X_trans, expected_result, equal_nan=True)
@@ -401,14 +378,14 @@ def test_transform() -> None:
     enc = DatetimeEncoder(add_day_of_the_week=True)
     expected_result = np.array(
         [
-            [2020, 1, 1, 10, 2, 0],
-            [2021, 2, 3, 12, 2, 0],
-            [2022, 1, 1, 23, 5, 0],
-            [2023, 2, 3, 11, 4, 0],
+            [2020, 1, 1, 10, 0, 2],
+            [2021, 2, 3, 12, 0, 2],
+            [2022, 1, 1, 23, 0, 5],
+            [2023, 2, 3, 11, 0, 4],
         ]
     ).astype(np.float64)
     # Time from epochs in seconds
-    expected_result[:, 5] = (
+    expected_result[:, 4] = (
         (X.iloc[:, 0].view(dtype="int64") // 1e9)
         .astype(np.float64)
         .to_numpy()
@@ -421,7 +398,7 @@ def test_transform() -> None:
     # Check if we find back the date from the time to epoch
     assert (
         (
-            pd.to_datetime(X_trans[:, 5], unit="s")
+            pd.to_datetime(X_trans[:, 4], unit="s")
             .tz_localize("utc")
             .tz_convert(X.iloc[:, 0][0].tz)
             - pd.DatetimeIndex(X.iloc[:, 0])
@@ -433,6 +410,49 @@ def test_transform() -> None:
     X = get_constant_date_array()
     enc = DatetimeEncoder(add_day_of_the_week=True)
     assert enc.fit_transform(X).shape[1] == 0
+
+
+@pytest.mark.parametrize(
+    "extract_until",
+    ["year", "month", "day", "hour", "minute", "second", "microsecond", "nanosecond"],
+)
+def test_extract_until(extract_until) -> None:
+    time_levels = [
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second",
+        "microsecond",
+        "nanosecond",
+    ]
+    X = get_datetime_array()
+    enc = DatetimeEncoder(extract_until=extract_until)
+    expected_features_per_column_ = {
+        # all features after seconds are constant
+        # we want total_time if we have not extracted all non-constant features
+        0: time_levels[
+            : min(time_levels.index(extract_until), time_levels.index("second")) + 1
+        ]
+        + (
+            ["total_time"]
+            if extract_until in ["year", "month", "day", "hour", "minute"]
+            else []
+        ),
+        # constant after minute + year constant
+        1: time_levels[
+            1 : min(time_levels.index(extract_until), time_levels.index("minute")) + 1
+        ]
+        + (["total_time"] if extract_until in ["year", "month", "day", "hour"] else []),
+        # constant after hour
+        2: time_levels[
+            : min(time_levels.index(extract_until), time_levels.index("hour")) + 1
+        ]
+        + (["total_time"] if extract_until in ["year", "month", "day"] else []),
+    }
+    enc.fit(X)
+    assert enc.features_per_column_ == expected_features_per_column_
 
 
 def test_check_fitted_datetime_encoder() -> None:

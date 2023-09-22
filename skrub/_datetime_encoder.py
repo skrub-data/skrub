@@ -180,11 +180,6 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             Fitted DatetimeEncoder instance (self).
         """
         self._validate_keywords()
-        # Columns to extract for each column,
-        # before taking into account constant columns
-        self._to_extract = TIME_LEVELS[: TIME_LEVELS.index(self.extract_until) + 1]
-        if self.add_day_of_the_week:
-            self._to_extract.append("dayofweek")
         if isinstance(X, pd.DataFrame):
             self.col_names_ = X.columns.to_list()
         else:
@@ -196,19 +191,26 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             self.features_per_column_[i] = []
         # Check which columns are constant
         for i in range(X.shape[1]):
-            for feature in self._to_extract:
+            for feature in TIME_LEVELS:
                 if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
-                    self.features_per_column_[i].append(feature)
-            # If some date features have not been extracted, then add the
-            # "total_time" feature, which contains the full time to epoch
-            remainder = (
-                pd.to_datetime(X[:, i])
-                - pd.to_datetime(
-                    pd.DatetimeIndex(X[:, i]).floor(WORD_TO_ALIAS[self.extract_until])
-                )
-            ).seconds.to_numpy()
-            if np.nanstd(remainder) > 0:
-                self.features_per_column_[i].append("total_time")
+                    if TIME_LEVELS.index(feature) <= TIME_LEVELS.index(
+                        self.extract_until
+                    ):
+                        self.features_per_column_[i].append(feature)
+                    # we add a total_time feature, which contains the full
+                    # time to epoch, if there is at least one
+                    # feature that has not been extracted and is not constant
+                    if TIME_LEVELS.index(feature) > TIME_LEVELS.index(
+                        self.extract_until
+                    ):
+                        self.features_per_column_[i].append("total_time")
+                        break
+            # Add day of the week feature if needed
+            if (
+                self.add_day_of_the_week
+                and np.nanstd(self._extract_from_date(X[:, i], "dayofweek")) > 0
+            ):
+                self.features_per_column_[i].append("dayofweek")
 
         self.n_features_in_ = X.shape[1]
         self.n_features_out_ = len(
