@@ -455,6 +455,33 @@ def test_extract_until(extract_until) -> None:
     assert enc.features_per_column_ == expected_features_per_column_
 
 
+def test_extract_until_none() -> None:
+    X = get_dirty_datetime_array()
+    enc = DatetimeEncoder(extract_until=None)
+    expected_features_per_column_ = {
+        # all features after seconds are constant
+        # we want total_time if we have not extracted all non-constant features
+        0: ["total_time"],
+        1: ["total_time"],
+        2: ["total_time"],
+    }
+    enc.fit(X)
+    assert enc.features_per_column_ == expected_features_per_column_
+
+    # check get_names_out
+    expected_feature_names = [
+        "0_total_time",
+        "1_total_time",
+        "2_total_time",
+    ]
+    assert enc.get_feature_names_out() == expected_feature_names
+
+    # check with constant datetimes
+    X = get_constant_date_array()
+    enc = DatetimeEncoder(extract_until=None)
+    assert enc.fit_transform(X).shape[1] == 0
+
+
 def test_check_fitted_datetime_encoder() -> None:
     """Test that calling transform before fit raises an error"""
     X = get_datetime_array()[:, 0].reshape(-1, 1)
