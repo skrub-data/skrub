@@ -88,6 +88,16 @@ def test_suffix():
     assert (join.columns == ["A", "B", "B_right"]).all()
 
 
+def test_mismatched_indexes():
+    left = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
+    right = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
+    join = InterpolationJoin(
+        right, on="A", regressor=KNeighborsRegressor(1)
+    ).fit_transform(left)
+    assert (join["B"].values == [10, 11]).all()
+    assert (join.index.values == [1, 0]).all()
+
+
 # expected to fail until we have a way to get the timestamp (only) from a date
 # with the tablevectorizer
 @pytest.mark.xfail

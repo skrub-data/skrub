@@ -226,7 +226,10 @@ class InterpolationJoin(base.BaseEstimator):
             for assignment in self.estimators_
         )
         interpolated_parts = _add_column_name_suffix(interpolated_parts, self.suffix)
-        return pd.concat([left_table] + interpolated_parts, axis=1)
+        original_index = left_table.index
+        return pd.concat(
+            [left_table.reset_index(drop=True)] + interpolated_parts, axis=1
+        ).set_index(original_index)
 
     def fit_transform(self, left_table):
         """Fit the estimators and perform the join.
