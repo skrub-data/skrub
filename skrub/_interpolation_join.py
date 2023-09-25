@@ -162,6 +162,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         ----------
         X : array-like
             Ignored.
+
         y : array-like
             Ignored.
 
@@ -179,8 +180,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         self.estimators_ = joblib.Parallel(self.n_jobs, verbose=3)(
             joblib.delayed(_fit)(
                 matching_columns_data,
-                self.right_table,
-                assignment["columns"],
+                self.right_table[assignment["columns"]],
                 assignment["estimator"],
             )
             for assignment in estimators
@@ -298,17 +298,17 @@ def _handles_multioutput(estimator):
     return getattr(estimator, "_get_tags")().get("multioutput", False)
 
 
-def _fit(matching_columns_data, right_table, target_columns, estimator):
+def _fit(matching_columns_data, target_table, estimator):
     estimator = clone(estimator)
-    kept_rows = right_table.loc[:, target_columns].notnull().all(axis=1).to_numpy()
+    kept_rows = target_table.notnull().all(axis=1).to_numpy()
     matching_columns_data = matching_columns_data[kept_rows]
-    right_table = right_table[kept_rows]
-    Y = right_table.loc[:, target_columns]
-    Y_values = Y.to_numpy()
-    if Y_values.shape[-1] == 1:
-        Y_values = Y_values.ravel()
-    estimator.fit(matching_columns_data, Y_values)
-    return {"columns": Y.columns, "estimator": estimator}
+    Y = target_table.to_numpy()[kept_rows]
+    # Estimators that expect a single output issue a DataConversionWarning if
+    # passing a column vector rather than a 1-D array
+    if Y.shape[-1] == 1:
+        Y = Y.ravel()
+    estimator.fit(matching_columns_data, Y)
+    return {"columns": target_table.columns, "estimator": estimator}
 
 
 def _predict(matching_columns_data, columns, estimator):
