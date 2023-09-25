@@ -6,6 +6,7 @@ from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
 )
+from sklearn.utils._tags import _safe_tags
 
 from skrub._table_vectorizer import TableVectorizer
 
@@ -306,7 +307,7 @@ def _get_assignments_for_estimator(table, estimator):
 
 
 def _handles_multioutput(estimator):
-    return getattr(estimator, "_get_tags")().get("multioutput", False)
+    return _safe_tags(estimator).get("multioutput", False)
 
 
 def _fit(matching_columns_data, target_table, estimator):
