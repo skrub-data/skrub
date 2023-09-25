@@ -192,9 +192,17 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
             self.vectorizer_ = ColumnTransformer([], remainder="passthrough")
         else:
             self.vectorizer_ = clone(self.vectorizer)
-        self._check_condition()
+        self._check_matching_column_names()
 
-    def _check_condition(self):
+    def _check_matching_column_names(self):
+        """Find the correct the matching column names.
+
+        They can be provided either as ``on`` when the names are the same in
+        both tables, or as ``left_on`` and ``right_on`` when they differ. This
+        function checks that only one of those options is used and sets
+        ``self._left_on`` and ``self._right_on`` which will be used for
+        joining.
+        """
         if self.on is not None:
             if self.right_on is not None or self.left_on is not None:
                 raise ValueError(
@@ -251,9 +259,10 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
         Regression and classification targets are always handled separately.
 
-        Any column with missing values is handled separately from the rest,
-        because missing values in Y have to be dropped and the corresponding
-        rows may have valid values in the other columns.
+        Any column with missing values is handled separately from the rest.
+        This is due to the fact that missing values in the columns we are
+        trying to predict have to be dropped, and the corresponding rows may
+        have valid values in the other columns.
 
         When the estimator does not handle multi-output, an estimator is fitted
         separately to each column.
@@ -278,6 +287,10 @@ def _get_assignments_for_estimator(table, estimator):
     """Get the groups of columns assigned to a single estimator.
 
     (which is either the regressor or the classifier)."""
+    # If the complete set of columns that have to be predicted with this
+    # estimator is empty (eg the estimator is the regressor and there are no
+    # numerical columns), return an empty list -- no columns are assigned to
+    # that estimator.
     if not table.shape[1]:
         return []
     if not _handles_multioutput(estimator):
