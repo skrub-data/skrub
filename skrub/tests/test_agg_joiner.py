@@ -35,16 +35,16 @@ def test_simple_fit_transform(use_X_placeholder, X, px, assert_frame_equal_):
     aux = X if not use_X_placeholder else "X"
 
     agg_join_user = AggJoiner(
-        table=aux,
-        foreign_key="userId",
+        aux_table=aux,
+        aux_key="userId",
         main_key="userId",
         cols=["rating", "genre"],
         suffix="_user",
     )
 
     agg_join_movie = AggJoiner(
-        table=aux,
-        foreign_key="movieId",
+        aux_table=aux,
+        aux_key="movieId",
         main_key="movieId",
         cols=["rating"],
         suffix="_movie",
@@ -70,8 +70,8 @@ def test_simple_fit_transform(use_X_placeholder, X, px, assert_frame_equal_):
 @pytest.mark.skipif(not POLARS_SETUP, reason="Polars is not available")
 def test_polars_unavailable_operation():
     agg_join = AggJoiner(
-        table="X",
-        foreign_key="movieId",
+        aux_table="X",
+        aux_key="movieId",
         cols="rating",
         main_key="userId",
         operation=["value_counts"],
@@ -82,8 +82,8 @@ def test_polars_unavailable_operation():
 
 def test_input_single_table():
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="userId",
+        aux_table=main,
+        aux_key="userId",
         cols="genre",
         main_key="userId",
     )
@@ -92,8 +92,8 @@ def test_input_single_table():
 
     # check too many main keys
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="userId",
+        aux_table=main,
+        aux_key="userId",
         cols=["rating", "genre"],
         main_key=["userId", "movieId"],
     )
@@ -102,8 +102,8 @@ def test_input_single_table():
 
     # check too many foreign keys
     agg_join = AggJoiner(
-        table=main,
-        foreign_key=["userId", "movieId"],
+        aux_table=main,
+        aux_key=["userId", "movieId"],
         cols=["rating", "genre"],
         main_key="userId",
     )
@@ -112,30 +112,30 @@ def test_input_single_table():
 
     # check multiple keys, same length
     agg_join = AggJoiner(
-        table=main,
-        foreign_key=["userId", "movieId"],
+        aux_table=main,
+        aux_key=["userId", "movieId"],
         cols=["rating", "genre"],
         main_key=["userId", "movieId"],
     )
     agg_join.check_input(main)
-    # foreign_key_ is 2d since we iterate over it
-    assert agg_join.foreign_key_ == [["userId", "movieId"]]
+    # aux_key_ is 2d since we iterate over it
+    assert agg_join.aux_key_ == [["userId", "movieId"]]
     assert agg_join.main_key_ == ["userId", "movieId"]
 
     # check no suffix with one table
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="userId",
+        aux_table=main,
+        aux_key="userId",
         cols=["rating", "genre"],
         main_key="userId",
     )
     agg_join.check_input(main)
-    assert agg_join.suffix_ == [""]
+    assert agg_join.suffix_ == ["_1"]
 
     # check inconsistent number of suffixes
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="movieId",
+        aux_table=main,
+        aux_key="movieId",
         cols="rating",
         main_key="userId",
         suffix=["_user", "_movie", "_tag"],
@@ -147,8 +147,8 @@ def test_input_single_table():
 
     # check missing cols
     agg_join = AggJoiner(
-        table=main,
-        foreign_key=["movieId", "userId"],
+        aux_table=main,
+        aux_key=["movieId", "userId"],
         main_key=["movieId", "userId"],
     )
     agg_join.check_input(main)
@@ -158,21 +158,20 @@ def test_input_single_table():
 def test_input_multiple_tables():
     # check foreign key are list of list
     agg_join = AggJoiner(
-        table=[main, main],
-        foreign_key=["userId", "userId"],
+        aux_table=[main, main],
+        aux_key=["userId", "userId"],
         cols=[["rating"], ["rating"]],
         main_key="userId",
     )
     error_msg = (
-        r"(?=.*number of tables)(?=.*number of foreign_key)"
-        r"(?=.*For multiple tables)"
+        r"(?=.*number of tables)(?=.*number of aux_key)" r"(?=.*For multiple tables)"
     )
     with pytest.raises(ValueError, match=error_msg):
         agg_join.fit_transform(main)
 
     agg_join = AggJoiner(
-        table=[main, main],
-        foreign_key=[["userId", "userId"]],
+        aux_table=[main, main],
+        aux_key=[["userId", "userId"]],
         cols=[["rating"], ["rating"]],
         main_key="userId",
     )
@@ -181,8 +180,8 @@ def test_input_multiple_tables():
 
     # check cols are list of list
     agg_join = AggJoiner(
-        table=[main, main],
-        foreign_key=[["userId"], ["userId"]],
+        aux_table=[main, main],
+        aux_key=[["userId"], ["userId"]],
         cols=["rating", "rating"],
         main_key="userId",
     )
@@ -193,8 +192,8 @@ def test_input_multiple_tables():
         agg_join.fit_transform(main)
 
     agg_join = AggJoiner(
-        table=[main, main],
-        foreign_key=[["userId"], ["userId"]],
+        aux_table=[main, main],
+        aux_key=[["userId"], ["userId"]],
         cols=[["rating", "rating"]],
         main_key="userId",
     )
@@ -203,8 +202,8 @@ def test_input_multiple_tables():
 
     # check suffixes with multiple tables
     agg_join = AggJoiner(
-        table=[main, main],
-        foreign_key=[["userId"], ["userId"]],
+        aux_table=[main, main],
+        aux_key=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
         main_key="userId",
     )
@@ -215,8 +214,8 @@ def test_input_multiple_tables():
 def test_wrong_key():
     # check main key missing
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="userId",
+        aux_table=main,
+        aux_key="userId",
         cols=["rating", "genre"],
         main_key="wrong_key",
     )
@@ -226,19 +225,19 @@ def test_wrong_key():
 
     # check main key missing
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="wrong_key",
+        aux_table=main,
+        aux_key="wrong_key",
         cols=["rating", "genre"],
         main_key="userId",
     )
-    match = r"(?=.*foreign_key)(?=.*table.column)"
+    match = r"(?=.*aux_key)(?=.*table.column)"
     with pytest.raises(ValueError, match=match):
         agg_join.check_input(main)
 
     # check missing agg or keys cols in tables
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="userId",
+        aux_table=main,
+        aux_key="userId",
         cols="wrong_key",
         main_key="userId",
     )
@@ -250,8 +249,8 @@ def test_wrong_key():
 def test_agg_join_default_operations():
     # check default operations
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="userId",
+        aux_table=main,
+        aux_key="userId",
         cols=["rating", "genre"],
         main_key="userId",
     )
@@ -260,8 +259,8 @@ def test_agg_join_default_operations():
 
     # check invariant operations input
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="userId",
+        aux_table=main,
+        aux_key="userId",
         cols=["rating", "genre"],
         main_key="userId",
         operation=["min", "max", "mode"],
@@ -271,8 +270,8 @@ def test_agg_join_default_operations():
 
     # check not supported operations
     agg_join = AggJoiner(
-        table=main,
-        foreign_key="userId",
+        aux_table=main,
+        aux_key="userId",
         cols=["rating", "genre"],
         main_key="userId",
         operation=["most_frequent", "mode"],
@@ -291,8 +290,8 @@ def test_agg_join_default_operations():
 
 def test_X_wrong_string_placeholder():
     agg_join = AggJoiner(
-        table="Y",
-        foreign_key="userId",
+        aux_table="Y",
+        aux_key="userId",
         main_key="userId",
         cols="genre",
     )
