@@ -152,17 +152,17 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         self.vectorizer = vectorizer
         self.n_jobs = n_jobs
 
-    def fit(self, data=None, targets=None):
+    def fit(self, X=None, y=None):
         """Fit estimators to the `right_table` provided during initialization.
 
-        `data` and `targets` are for scikit-learn compatibility and they are
+        `X` and `y` are for scikit-learn compatibility and they are
         ignored.
 
         Parameters
         ----------
-        data : array-like
+        X : array-like
             Ignored.
-        targets : array-like
+        y : array-like
             Ignored.
 
         Returns
@@ -170,15 +170,15 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         self : InterpolationJoin
             Returns self.
         """
-        del data, targets
+        del X, y
         self._check_inputs()
-        X_values = self.vectorizer_.fit_transform(
+        matching_columns_data = self.vectorizer_.fit_transform(
             self.right_table.loc[:, self._right_on]
         )
         estimators = self._get_estimator_assignments()
         self.estimators_ = joblib.Parallel(self.n_jobs, verbose=3)(
             joblib.delayed(_fit)(
-                X_values,
+                matching_columns_data,
                 self.right_table,
                 assignment["columns"],
                 assignment["estimator"],
@@ -211,7 +211,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         self._left_on = [left_on] if isinstance(left_on, str) else list(left_on)
         self._right_on = [right_on] if isinstance(right_on, str) else list(right_on)
 
-    def transform(self, left_table):
+    def transform(self, X):
         """Transform a table by joining inferred values to it.
 
         The values of the `left_on` columns in `left_table` are used to predict
@@ -219,19 +219,22 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        left_table : DataFrame
+        X : DataFrame
             The table to transform.
 
         Returns
         -------
         join : DataFrame
-            The result of the join between `left_table` and inferred rows from
+            The result of the join between `X` and inferred rows from
             ``self.right_table``.
         """
-        X_values = self.vectorizer_.transform(left_table.loc[:, self._left_on])
+        left_table = X
+        matching_columns_data = self.vectorizer_.transform(
+            left_table.loc[:, self._left_on]
+        )
         interpolated_parts = joblib.Parallel(self.n_jobs, verbose=3)(
             joblib.delayed(_predict)(
-                X_values, assignment["columns"], assignment["estimator"]
+                matching_columns_data, assignment["columns"], assignment["estimator"]
             )
             for assignment in self.estimators_
         )
@@ -295,21 +298,21 @@ def _handles_multioutput(estimator):
     return getattr(estimator, "_get_tags")().get("multioutput", False)
 
 
-def _fit(X_values, right_table, target_columns, estimator):
+def _fit(matching_columns_data, right_table, target_columns, estimator):
     estimator = clone(estimator)
     kept_rows = right_table.loc[:, target_columns].notnull().all(axis=1).to_numpy()
-    X_values = X_values[kept_rows]
+    matching_columns_data = matching_columns_data[kept_rows]
     right_table = right_table[kept_rows]
     Y = right_table.loc[:, target_columns]
     Y_values = Y.to_numpy()
     if Y_values.shape[-1] == 1:
         Y_values = Y_values.ravel()
-    estimator.fit(X_values, Y_values)
+    estimator.fit(matching_columns_data, Y_values)
     return {"columns": Y.columns, "estimator": estimator}
 
 
-def _predict(X_values, columns, estimator):
-    Y_values = estimator.predict(X_values)
+def _predict(matching_columns_data, columns, estimator):
+    Y_values = estimator.predict(matching_columns_data)
     return pd.DataFrame(data=Y_values, columns=columns)
 
 
