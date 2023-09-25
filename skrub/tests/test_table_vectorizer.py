@@ -1077,3 +1077,23 @@ def test_table_vectorizer_remainder_cloning():
     assert table_vectorizer.high_card_cat_transformer_ is not remainder
     assert table_vectorizer.numerical_transformer_ is not remainder
     assert table_vectorizer.datetime_transformer_ is not remainder
+
+
+def test_pandas_sparse_array():
+    df = pd.DataFrame(
+        dict(
+            a=[1, 2, 3, 4, 5],
+            b=[1, 0, 0, 0, 2],
+        )
+    )
+    df["b"] = pd.arrays.SparseArray(df["b"])
+
+    match = r"(?=.*sparse Pandas series)(?=.*'b')"
+    with pytest.raises(TypeError, match=match):
+        TableVectorizer().fit(df)
+
+    df = df.astype(pd.SparseDtype())
+
+    match = r"(?=.*sparse Pandas series)(?=.*'a', 'b')"
+    with pytest.raises(TypeError, match=match):
+        TableVectorizer().fit(df)
