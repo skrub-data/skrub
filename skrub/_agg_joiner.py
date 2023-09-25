@@ -17,6 +17,7 @@ from sklearn.utils.validation import check_is_fitted
 from skrub._utils import atleast_1d_or_none, atleast_2d_or_none
 from skrub.dataframe import DataFrameLike, SeriesLike
 from skrub.dataframe._namespace import get_df_namespace
+from skrub.dataframe._pandas import _parse_argument
 
 NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
 CATEG_OPERATIONS = ["mode", "count", "value_counts"]
@@ -39,7 +40,7 @@ def split_num_categ_operations(operations: list[str]) -> tuple[list[str], list[s
     num_operations, categ_operations = [], []
     for operation in operations:
         # hist(5) -> hist
-        op_root = operation.split("(")[0]
+        op_root, _ = _parse_argument(operation)
         if op_root in NUM_OPERATIONS:
             num_operations.append(operation)
         if op_root in CATEG_OPERATIONS:
@@ -90,7 +91,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
 
-    foreign_key : str or iterable of str
+    foreign_key : str, or iterable of str, or iterable of iterable of str
         Select the columns from the auxiliary dataframe to use as keys during
         the join operation.
 
@@ -99,7 +100,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         the join operation.
         If main_key is a list, we will perform a multi-column join.
 
-    cols : str or iterable of str, default=None
+    cols : str, or iterable of str, or iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
         If None, cols are all columns from table, except `foreign_key`.
