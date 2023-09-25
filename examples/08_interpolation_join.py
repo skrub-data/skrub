@@ -10,6 +10,7 @@ The ``InterpolationJoin`` is therefore a transformer that adds the outputs of on
 In this example we want our transformer to add weather data (temperature, rain, etc.) to the table it operates on.
 We have a table containing information about commercial flights, and we want to add information about the weather at the time and place where each flight took off.
 This could be useful to predict delays -- flights are often delayed by bad weather.
+
 We have a table of weather data containing, at many weather stations, measurements such as temperature, rain and snow at many time points.
 Unfortunately, our weather stations are not inside the airports, and the measurements are not timed according to the flight schedule.
 Therefore, a simple equi-join would not yield any matching pair of rows from our two tables.
@@ -30,8 +31,8 @@ import pandas as pd
 weather = fetch_figshare("41771457").X
 weather = weather.sample(100_000, random_state=0, ignore_index=True)
 stations = fetch_figshare("41710524").X
-weather = pd.merge(stations, weather, on="ID").loc[
-    :, ["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY", "TMAX", "PRCP", "SNOW"]
+weather = stations.merge(weather, on="ID")[
+    ["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY", "TMAX", "PRCP", "SNOW"]
 ]
 
 ######################################################################
@@ -79,9 +80,15 @@ join.head()
 from matplotlib import pyplot as plt
 
 join = join.sample(2000, random_state=0, ignore_index=True)
-for col in ["TMAX", "PRCP", "SNOW"]:
-    fig, ax = plt.subplots(figsize=(4, 4))
-    plt.scatter(
+fig, axes = plt.subplots(
+    3,
+    1,
+    figsize=(5, 9),
+    gridspec_kw={"height_ratios": [1.0, 0.5, 0.5]},
+    layout="compressed",
+)
+for ax, col in zip(axes.ravel(), ["TMAX", "PRCP", "SNOW"]):
+    ax.scatter(
         join[col].values,
         join[f"{col}_predicted"].values,
         alpha=0.1,
@@ -89,12 +96,12 @@ for col in ["TMAX", "PRCP", "SNOW"]:
     ax.set_aspect(1)
     ax.set_xlabel(f"true {col}")
     ax.set_ylabel(f"predicted {col}")
-    fig.tight_layout()
 
 ######################################################################
 # We see that in this case the interpolation join works well for the temperature, but not precipitation nor snow.
 # So we will only add the temperature to our flights table.
 
+right_table = right_table.drop(["PRCP", "SNOW"], axis=1)
 
 ######################################################################
 # Loading the flights table
@@ -102,14 +109,12 @@ for col in ["TMAX", "PRCP", "SNOW"]:
 # We load the flights table and join it to the airports table using the flights’ "Origin" which refers to the departure airport’s IATA code.
 # We use only a subset to speed up the example.
 
-flights = fetch_figshare("41771418").X.loc[
-    :, ["Year_Month_DayofMonth", "Origin", "ArrDelay"]
-]
+flights = fetch_figshare("41771418").X[["Year_Month_DayofMonth", "Origin", "ArrDelay"]]
 flights = flights.sample(20_000, random_state=0, ignore_index=True)
 airports = fetch_figshare("41710257").X.loc[
     :, ["iata", "airport", "state", "lat", "long"]
 ]
-flights = pd.merge(flights, airports, left_on="Origin", right_on="iata")
+flights = flights.merge(airports, left_on="Origin", right_on="iata")
 # printing the first row is more readable than the head() when we have many columns
 flights.iloc[0]
 
@@ -119,7 +124,7 @@ flights.iloc[0]
 # As before, we initialize our join transformer with the weather table.
 # Then, we use it to transform the flights table -- it adds a "TMAX" column containing the predicted maximum daily temperature.
 #
-right_table = right_table.drop(["PRCP", "SNOW"], axis=1),
+
 joiner = InterpolationJoin(
     right_table,
     left_on=["lat", "long", "Year_Month_DayofMonth"],
@@ -137,7 +142,7 @@ join.head()
 state_temperatures = join.groupby("state")["TMAX"].mean().sort_values()
 
 ######################################################################
-# states with the lowest average predicted temperatures: Alaska, Montana, Washington, Noth Dakota, Minnesota
+# states with the lowest average predicted temperatures: Alaska, Montana, North Dakota, Washington, Minnesota
 state_temperatures.head()
 
 ######################################################################
