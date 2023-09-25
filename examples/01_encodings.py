@@ -97,8 +97,8 @@ pprint(tv.transformers_)
 tv.named_transformers_["low_card_cat"].get_feature_names_out()
 
 ###############################################################################
-#     - The |GapEncoder| for high cardinality string columns, 'employee_position_title'
-#       and 'division'. The |GapEncoder| is a powerful encoder that can handle dirty
+#     - The |GapEncoder| for high cardinality string columns, ``'employee_position_title'``
+#       and ``'division'``. The |GapEncoder| is a powerful encoder that can handle dirty
 #       categorical columns.
 
 tv.named_transformers_["high_card_cat"].get_feature_names_out()
