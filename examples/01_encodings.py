@@ -92,7 +92,7 @@ pprint(tv.transformers_)
 
 ###############################################################################
 #     - The |OneHotEncoder| for low cardinality string variables, the columns
-#       'gender', 'department', 'department_name' and 'assignment_category'.
+#       ``'gender'``, ``'department'``, ``'department_name'`` and ``'assignment_category'``.
 
 tv.named_transformers_["low_card_cat"].get_feature_names_out()
 
