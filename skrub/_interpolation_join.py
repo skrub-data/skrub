@@ -178,7 +178,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
             self.right_table[self._right_on]
         )
         estimators = self._get_estimator_assignments()
-        self.estimators_ = joblib.Parallel(self.n_jobs, verbose=3)(
+        self.estimators_ = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_fit)(
                 matching_columns_data,
                 self.right_table[assignment["columns"]],
@@ -239,7 +239,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         """
         left_table = X
         matching_columns_data = self.vectorizer_.transform(left_table[self._left_on])
-        interpolated_parts = joblib.Parallel(self.n_jobs, verbose=3)(
+        interpolated_parts = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
                 matching_columns_data, assignment["columns"], assignment["estimator"]
             )
