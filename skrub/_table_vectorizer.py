@@ -679,16 +679,6 @@ class TableVectorizer(ColumnTransformer):
                 "X.toarray() to convert to a dense numpy array."
             )
 
-        # Check Pandas sparse arrays
-        is_sparse_col = [hasattr(X[col], "sparse") for col in X.columns]
-        if any(is_sparse_col):
-            sparse_cols = X.columns[is_sparse_col]
-            raise TypeError(
-                f"Columns {sparse_cols!r} are sparse Pandas series, but dense "
-                "data is required. Use df[col].sparse.to_dense() to convert "
-                "a series from sparse to dense."
-            )
-
         if not isinstance(X, pd.DataFrame):
             # check the dimension of X before to create a dataframe that always
             # `ndim == 2`
@@ -713,6 +703,16 @@ class TableVectorizer(ColumnTransformer):
         else:
             # Create a copy to avoid altering the original data.
             X = X.copy()
+
+        # Check Pandas sparse arrays
+        is_sparse_col = [hasattr(X[col], "sparse") for col in X.columns]
+        if any(is_sparse_col):
+            sparse_cols = X.columns[is_sparse_col]
+            raise TypeError(
+                f"Columns {sparse_cols!r} are sparse Pandas series, but dense "
+                "data is required. Use df[col].sparse.to_dense() to convert "
+                "a series from sparse to dense."
+            )
 
         if X.shape[0] < 1:
             raise ValueError(
