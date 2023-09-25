@@ -104,7 +104,7 @@ tv.named_transformers_["low_card_cat"].get_feature_names_out()
 tv.named_transformers_["high_card_cat"].get_feature_names_out()
 
 ###############################################################################
-#     - The |DatetimeEncoder| to the 'date_first_hired' column. The |DatetimeEncoder|
+#     - The |DatetimeEncoder| to the ``'date_first_hired'`` column. The |DatetimeEncoder|
 #       can encode datetime columns for machine learning.
 
 tv.named_transformers_["datetime"].get_feature_names_out()
