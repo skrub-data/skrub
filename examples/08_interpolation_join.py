@@ -119,13 +119,14 @@ flights.iloc[0]
 # As before, we initialize our join transformer with the weather table.
 # Then, we use it to transform the flights table -- it adds a "TMAX" column containing the predicted maximum daily temperature.
 #
+right_table = right_table.drop(["PRCP", "SNOW"], axis=1),
 joiner = InterpolationJoin(
-    right_table.drop(["PRCP", "SNOW"], axis=1),
+    right_table,
     left_on=["lat", "long", "Year_Month_DayofMonth"],
     right_on=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
-).fit()
-join = joiner.transform(flights)
-join.iloc[0]
+)
+join = joiner.fit_transform(flights)
+join.head()
 
 ######################################################################
 # Sanity checks

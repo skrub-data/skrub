@@ -192,11 +192,14 @@ class InterpolationJoin(base.BaseEstimator):
     def _check_condition(self):
         if self.on is not None:
             if self.right_on is not None or self.left_on is not None:
-                raise ValueError("Please provide EITHER on, OR (left_on AND right_on)")
+                raise ValueError(
+                     "Can only pass argument 'on' OR 'left_on' and "
+                     "'right_on', not a combination of both."
+                 )
             left_on, right_on = self.on, self.on
         else:
             if self.right_on is None or self.left_on is None:
-                raise ValueError("Please provide EITHER on, OR (left_on AND right_on)")
+                raise ValueError("Must pass EITHER 'on', OR ('left_on' AND 'right_on').")
             left_on, right_on = self.left_on, self.right_on
         self._left_on = [left_on] if isinstance(left_on, str) else list(left_on)
         self._right_on = [right_on] if isinstance(right_on, str) else list(right_on)
@@ -204,7 +207,7 @@ class InterpolationJoin(base.BaseEstimator):
     def transform(self, left_table):
         """Transform a table by joining inferred values to it.
 
-        the values of the `left_on` columns in `left_table` are used to predict
+        The values of the `left_on` columns in `left_table` are used to predict
         likely values for the contents of a matching row in `self.right_table`.
 
         Parameters
