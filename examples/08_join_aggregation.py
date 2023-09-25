@@ -142,15 +142,10 @@ make_barplot(
 # These features answer questions like
 # *"How many times has this user rated a movie in 2008?"*.
 #
-# Below, |AggJoiner| first performs the aggregations defined in ``operations``
-# by grouping the table on ``"userId"``. It then joins the result back on
-# the initial table, using respectively the same grouping keys (``"userId"``) and ``main_keys``.
-#
-# The ``tables`` tuple specifies:
-#
-# - the auxiliary tables on which to perform the aggregation
-# - the key used to group and join
-# - the columns to aggregate (``timestamp_cols``).
+# Below, |AggJoiner| run the aggregations defined in ``operations`` on the columns
+# ``timestamp_cols`` of the auxiliary table.
+# It does so by grouping by the auxiliary key ``"userId"``, before joining on ``"userId"`` the result
+# back on the main table.
 #
 # Here, the auxiliary table is the table ``X_date_encoded`` itself.
 from skrub import AggJoiner
@@ -164,8 +159,8 @@ timestamp_cols = [
 ]
 
 agg_joiner_user = AggJoiner(
-    table=X_date_encoded,
-    foreign_key="userId",
+    aux_table=X_date_encoded,
+    aux_key="userId",
     cols=timestamp_cols,
     main_key="userId",
     suffix="_user",
@@ -181,8 +176,8 @@ X_transformed.head()
 # In addition, we also want to extract *movies* timestamp features, to answer
 # questions like *"What is the most frequent hour for this movie to be rated?"*.
 agg_joiner_movie = AggJoiner(
-    table=X_date_encoded,
-    foreign_key="movieId",
+    aux_table=X_date_encoded,
+    aux_key="movieId",
     cols=timestamp_cols,
     main_key="movieId",
     suffix="_movie",
