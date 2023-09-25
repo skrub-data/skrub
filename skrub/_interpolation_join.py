@@ -1,11 +1,16 @@
 import joblib
 import pandas as pd
-from sklearn import base, compose, ensemble
+from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
 
 from skrub._table_vectorizer import TableVectorizer
 
 
-class InterpolationJoin(base.BaseEstimator):
+class InterpolationJoin(TransformerMixin, BaseEstimator):
     """Join with a table augmented by machine-learning predictions.
 
     This is similar to a usual equi-join, but instead of looking for actual
@@ -132,8 +137,8 @@ class InterpolationJoin(base.BaseEstimator):
         right_on=None,
         on=None,
         suffix="",
-        regressor=ensemble.HistGradientBoostingRegressor(),
-        classifier=ensemble.HistGradientBoostingClassifier(),
+        regressor=HistGradientBoostingRegressor(),
+        classifier=HistGradientBoostingClassifier(),
         vectorizer=TableVectorizer(),
         n_jobs=1,
     ):
@@ -184,22 +189,24 @@ class InterpolationJoin(base.BaseEstimator):
 
     def _check_inputs(self):
         if self.vectorizer is None:
-            self.vectorizer_ = compose.ColumnTransformer([], remainder="passthrough")
+            self.vectorizer_ = ColumnTransformer([], remainder="passthrough")
         else:
-            self.vectorizer_ = base.clone(self.vectorizer)
+            self.vectorizer_ = clone(self.vectorizer)
         self._check_condition()
 
     def _check_condition(self):
         if self.on is not None:
             if self.right_on is not None or self.left_on is not None:
                 raise ValueError(
-                     "Can only pass argument 'on' OR 'left_on' and "
-                     "'right_on', not a combination of both."
-                 )
+                    "Can only pass argument 'on' OR 'left_on' and "
+                    "'right_on', not a combination of both."
+                )
             left_on, right_on = self.on, self.on
         else:
             if self.right_on is None or self.left_on is None:
-                raise ValueError("Must pass EITHER 'on', OR ('left_on' AND 'right_on').")
+                raise ValueError(
+                    "Must pass EITHER 'on', OR ('left_on' AND 'right_on')."
+                )
             left_on, right_on = self.left_on, self.right_on
         self._left_on = [left_on] if isinstance(left_on, str) else list(left_on)
         self._right_on = [right_on] if isinstance(right_on, str) else list(right_on)
@@ -233,22 +240,6 @@ class InterpolationJoin(base.BaseEstimator):
         return pd.concat(
             [left_table.reset_index(drop=True)] + interpolated_parts, axis=1
         ).set_index(original_index)
-
-    def fit_transform(self, left_table):
-        """Fit the estimators and perform the join.
-
-        Parameters
-        ----------
-        left_table : DataFrame
-            The table to transform.
-
-        Returns
-        -------
-        join : DataFrame
-            The result of the join between `left_table` and inferred rows from
-            ``self.right_table``.
-        """
-        return self.fit().transform(left_table)
 
     def _get_estimator_assignments(self):
         """Identify column groups to be predicted together and assign them an estimator.
@@ -305,7 +296,7 @@ def _handles_multioutput(estimator):
 
 
 def _fit(X_values, right_table, target_columns, estimator):
-    estimator = base.clone(estimator)
+    estimator = clone(estimator)
     kept_rows = right_table.loc[:, target_columns].notnull().all(axis=1).to_numpy()
     X_values = X_values[kept_rows]
     right_table = right_table[kept_rows]
