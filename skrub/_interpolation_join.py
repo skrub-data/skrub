@@ -130,7 +130,6 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
        latitude  longitude  n_stories  avg_temp
     0       1.0        1.0          3      10.5
     1       2.0        2.0          7      15.5
-
     """
 
     def __init__(
