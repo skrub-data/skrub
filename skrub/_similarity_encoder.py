@@ -12,11 +12,11 @@ from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils import parse_version
 from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
 from ._string_distances import get_ngram_count, preprocess
-from ._utils import parse_version
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
@@ -224,7 +224,7 @@ class SimilarityEncoder(OneHotEncoder):
     -----
     The functionality of SimilarityEncoder is easy to explain and understand,
     but it is not scalable. It is useful only to capture links across a few categories
-    (eg eg: “west”, “north”, “north-west”), but not when there are many categories,
+    (eg eg: "west", "north", "north-west"), but not when there are many categories,
     as with open-ended entries.
     Instead, the GapEncoder is usually recommended.
 
