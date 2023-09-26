@@ -8,6 +8,7 @@ from sklearn.ensemble import (
 )
 from sklearn.utils._tags import _safe_tags
 
+from skrub import _utils
 from skrub._table_vectorizer import TableVectorizer
 
 
@@ -218,8 +219,8 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
                     "Must pass EITHER 'key', OR ('main_key' AND 'aux_key')."
                 )
             main_key, aux_key = self.main_key, self.aux_key
-        self._main_key = [main_key] if isinstance(main_key, str) else list(main_key)
-        self._aux_key = [aux_key] if isinstance(aux_key, str) else list(aux_key)
+        self._main_key = _utils.atleast_1d_or_none(main_key)
+        self._aux_key = _utils.atleast_1d_or_none(aux_key)
 
     def transform(self, X):
         """Transform a table by joining inferred values to it.
@@ -271,15 +272,13 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         """
         aux_table = self.aux_table.drop(self._aux_key, axis=1)
         assignments = []
-        regression_columns = aux_table.select_dtypes("number")
+        regression_table = aux_table.select_dtypes("number")
         assignments.extend(
-            _get_assignments_for_estimator(regression_columns, self.regressor)
+            _get_assignments_for_estimator(regression_table, self.regressor)
         )
-        classification_columns = aux_table.select_dtypes(
-            ["object", "string", "category"]
-        )
+        classification_table = aux_table.select_dtypes(["object", "string", "category"])
         assignments.extend(
-            _get_assignments_for_estimator(classification_columns, self.classifier)
+            _get_assignments_for_estimator(classification_table, self.classifier)
         )
         return assignments
 
@@ -293,7 +292,7 @@ def _get_assignments_for_estimator(table, estimator):
     # estimator is empty (eg the estimator is the regressor and there are no
     # numerical columns), return an empty list -- no columns are assigned to
     # that estimator.
-    if not table.shape[1]:
+    if table.empty:
         return []
     if not _handles_multioutput(estimator):
         return [{"columns": [col], "estimator": estimator} for col in table.columns]
@@ -319,7 +318,7 @@ def _fit(key_values, target_table, estimator):
 
     # Estimators that expect a single output issue a DataConversionWarning if
     # passing a column vector rather than a 1-D array
-    if Y.shape[-1] == 1:
+    if len(target_table.columns) == 1:
         Y = Y.ravel()
 
     estimator.fit(key_values, Y)

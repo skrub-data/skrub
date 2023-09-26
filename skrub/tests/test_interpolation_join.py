@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 from sklearn.neighbors import KNeighborsRegressor
 
 from skrub import InterpolationJoin
@@ -38,7 +39,7 @@ def test_interpolation_join(
         regressor=KNeighborsRegressor(2),
         **params,
     ).fit_transform(buildings)
-    assert (transformed["avg_temp"].values == [10.5, 15.5]).all()
+    assert_array_equal(transformed["avg_temp"].values, [10.5, 15.5])
 
 
 def test_no_multioutput(buildings, annual_avg_temp):
@@ -56,24 +57,24 @@ def test_condition_choice():
     join = InterpolationJoin(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert (join["C"].values == [10, 11, 12]).all()
+    assert_array_equal(join["C"].values, [10, 11, 12])
 
     join = InterpolationJoin(
         aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert (join["C"].values == [11, 12, 10]).all()
+    assert_array_equal(join["C"].values, [11, 12, 10])
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Must pass EITHER"):
         join = InterpolationJoin(
             aux, main_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Can only pass"):
         join = InterpolationJoin(
             aux, key="A", main_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Can only pass"):
         join = InterpolationJoin(
             aux, key="A", main_key="A", aux_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
@@ -84,7 +85,7 @@ def test_suffix():
     join = InterpolationJoin(
         df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
-    assert (join.columns == ["A", "B", "B_aux"]).all()
+    assert_array_equal(join.columns, ["A", "B", "B_aux"])
 
 
 def test_mismatched_indexes():
@@ -93,8 +94,8 @@ def test_mismatched_indexes():
     join = InterpolationJoin(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert (join["B"].values == [10, 11]).all()
-    assert (join.index.values == [1, 0]).all()
+    assert_array_equal(join["B"].values, [10, 11])
+    assert_array_equal(join.index.values, [1, 0])
 
 
 # expected to fail until we have a way to get the timestamp (only) from a date
@@ -114,4 +115,4 @@ def test_join_on_date(with_vectorizer):
         regressor=KNeighborsRegressor(1),
         **params,
     ).fit_transform(sales)
-    assert (transformed["temp"].values == [-10, 10]).all()
+    assert_array_equal(transformed["temp"].values, [-10, 10])
