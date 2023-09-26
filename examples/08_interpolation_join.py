@@ -154,7 +154,7 @@ state_temperatures.tail()
 fig, ax = plt.subplots()
 ax.scatter(join["lat"], join["TMAX"])
 ax.set_xlabel("Latitude (higher is farther north)")
-ax.set_ylabel("TMAX")
+ax.set_ylabel("TMAX");
 
 ######################################################################
 # Winter months are colder than spring -- in the north hemisphere January is colder than April
