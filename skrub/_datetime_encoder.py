@@ -124,7 +124,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         }
 
     def _validate_keywords(self):
-        if self.extract_until not in TIME_LEVELS and not self.extract_until is None:
+        if self.extract_until not in TIME_LEVELS and self.extract_until is not None:
             raise ValueError(
                 f'"extract_until" should be one of {TIME_LEVELS}, '
                 f"got {self.extract_until}. "
