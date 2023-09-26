@@ -6,7 +6,6 @@ from typing import Any, Iterable
 
 import numpy as np
 from numpy.typing import NDArray
-from sklearn.utils import parse_version  # noqa
 from sklearn.utils import check_array
 
 
