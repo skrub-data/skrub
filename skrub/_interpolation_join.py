@@ -248,10 +248,9 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
             for assignment in self.estimators_
         )
         interpolated_parts = _add_column_name_suffix(interpolated_parts, self.suffix)
-        original_index = main_table.index
-        return pd.concat(
-            [main_table.reset_index(drop=True)] + interpolated_parts, axis=1
-        ).set_index(original_index)
+        for part in interpolated_parts:
+            part.index = main_table.index
+        return pd.concat([main_table] + interpolated_parts, axis=1)
 
     def _get_estimator_assignments(self):
         """Identify column groups to be predicted together and assign them an estimator.
