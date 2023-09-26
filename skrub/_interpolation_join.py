@@ -11,7 +11,7 @@ from skrub import _utils
 from skrub._table_vectorizer import TableVectorizer
 
 
-class InterpolationJoin(TransformerMixin, BaseEstimator):
+class InterpolationJoiner(TransformerMixin, BaseEstimator):
     """Join with a table augmented by machine-learning predictions.
 
     This is similar to a usual equi-join, but instead of looking for actual
@@ -29,9 +29,9 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
     table, in which rows for any (latitude, longitude) location are inferred,
     rather than retrieved, when requested. This is done with::
 
-        InterpolationJoin(annual_avg_temp, on=["latitude", "longitude"]).fit_transform(
-            buildings
-        )
+        InterpolationJoiner(
+            annual_avg_temp, on=["latitude", "longitude"]
+        ).fit_transform(buildings)
 
     Parameters
     ----------
@@ -122,7 +122,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
     3       1.7        1.8      16.0
     4       5.0        5.0      20.0
 
-    >>> InterpolationJoin(
+    >>> InterpolationJoiner(
     ...     annual_avg_temp,
     ...     key=["latitude", "longitude"],
     ...     regressor=KNeighborsRegressor(2),
@@ -169,7 +169,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : InterpolationJoin
+        self : InterpolationJoiner
             Returns self.
         """
         del X, y

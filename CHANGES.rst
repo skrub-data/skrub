@@ -15,7 +15,7 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
-* :class:`InterpolationJoin` was added to join two tables by using
+* :class:`InterpolationJoiner` was added to join two tables by using
   machine-learning to infer the matching rows from the second table.
   :pr:`742` by :user:`Jérôme Dockès <jeromedockes>`.
 

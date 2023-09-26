@@ -2,10 +2,10 @@
 Interpolation join: infer missing rows when joining two tables
 ==============================================================
 
-We illustrate the ``InterpolationJoin``, which is a type of join where values from the second table are inferred with machine-learning, rather than looked up in the table.
+We illustrate the ``InterpolationJoiner``, which is a type of join where values from the second table are inferred with machine-learning, rather than looked up in the table.
 It is useful when exact matches are not available but we have rows that are close enough to make an educated guess -- in this sense it is a generalization of a ``fuzzy_join``.
 
-The ``InterpolationJoin`` is therefore a transformer that adds the outputs of one or more machine-learning models as new columns to the table it operates on.
+The ``InterpolationJoiner`` is therefore a transformer that adds the outputs of one or more machine-learning models as new columns to the table it operates on.
 
 In this example we want our transformer to add weather data (temperature, rain, etc.) to the table it operates on.
 We have a table containing information about commercial flights, and we want to add information about the weather at the time and place where each flight took off.
@@ -14,7 +14,7 @@ This could be useful to predict delays -- flights are often delayed by bad weath
 We have a table of weather data containing, at many weather stations, measurements such as temperature, rain and snow at many time points.
 Unfortunately, our weather stations are not inside the airports, and the measurements are not timed according to the flight schedule.
 Therefore, a simple equi-join would not yield any matching pair of rows from our two tables.
-Instead, we use the ``InterpolationJoin`` to *infer* the temperature at the airport at take-off time.
+Instead, we use the ``InterpolationJoiner`` to *infer* the temperature at the airport at take-off time.
 We train supervised machine-learning models using the weather table, then query them with the times and locations in the flights table.
 
 """
@@ -42,9 +42,9 @@ weather = stations.merge(weather, on="ID")[
 weather["TMAX"] /= 10
 
 ######################################################################
-# InterpolationJoin with a ground truth: joining the weather table on itself
+# InterpolationJoiner with a ground truth: joining the weather table on itself
 # --------------------------------------------------------------------------
-# As a first simple example, we apply the ``InterpolationJoin`` in a situation where the ground truth is known.
+# As a first simple example, we apply the ``InterpolationJoiner`` in a situation where the ground truth is known.
 # We split the weather table in half and join the second half on the first half.
 # Thus, the values from the right side table of the join are inferred, whereas the corresponding columns from the left side contain the ground truth and we can compare them.
 
@@ -60,12 +60,12 @@ aux_table.head()
 ######################################################################
 # Joining the tables
 # ------------------
-# Now we join our two tables and check how well the ``InterpolationJoin`` can reconstruct the matching rows that are missing from the right side table.
+# Now we join our two tables and check how well the ``InterpolationJoiner`` can reconstruct the matching rows that are missing from the right side table.
 # To avoid clashes in the column names, we use the ``suffix`` parameter to append "predicted" to the right side table column names.
 
-from skrub import InterpolationJoin
+from skrub import InterpolationJoiner
 
-joiner = InterpolationJoin(
+joiner = InterpolationJoiner(
     aux_table,
     key=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
     suffix="_predicted",
@@ -125,7 +125,7 @@ flights.iloc[0]
 # Then, we use it to transform the flights table -- it adds a "TMAX" column containing the predicted maximum daily temperature.
 #
 
-joiner = InterpolationJoin(
+joiner = InterpolationJoiner(
     aux_table,
     main_key=["lat", "long", "Year_Month_DayofMonth"],
     aux_key=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
@@ -154,7 +154,7 @@ state_temperatures.tail()
 fig, ax = plt.subplots()
 ax.scatter(join["lat"], join["TMAX"])
 ax.set_xlabel("Latitude (higher is farther north)")
-ax.set_ylabel("TMAX");
+ax.set_ylabel("TMAX")
 
 ######################################################################
 # Winter months are colder than spring -- in the north hemisphere January is colder than April
@@ -168,12 +168,12 @@ sns.barplot(data=join.sort_values(by="month"), y="month", x="TMAX")
 
 ######################################################################
 # Of course these checks do not guarantee that the inferred values in our ``join`` table’s ``TMAX`` column are accurate.
-# But at least the ``InterpolationJoin`` seems to have learned a few reasonable trends from its training table.
+# But at least the ``InterpolationJoiner`` seems to have learned a few reasonable trends from its training table.
 
 
 ######################################################################
 # Conclusion
 # ----------
-# We have seen how to fit an ``InterpolationJoin`` transformer: we give it a table (the weather data) and a set of matching columns (here date, latitude, longitude) and it learns to predict the other columns’ values  (such as the max daily temperature).
+# We have seen how to fit an ``InterpolationJoiner`` transformer: we give it a table (the weather data) and a set of matching columns (here date, latitude, longitude) and it learns to predict the other columns’ values  (such as the max daily temperature).
 # Then, it transforms tables by *predicting* values that a matching row would contain, rather than by searching for an actual match.
-# It is a generalization of the ``fuzzy_join``, as ``fuzzy_join`` is the same thing as an ``InterpolationJoin`` where the estimators are 1-nearest-neighbor estimators.
+# It is a generalization of the ``fuzzy_join``, as ``fuzzy_join`` is the same thing as an ``InterpolationJoiner`` where the estimators are 1-nearest-neighbor estimators.

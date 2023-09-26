@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
-from skrub import InterpolationJoin
+from skrub import InterpolationJoiner
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def annual_avg_temp():
 def test_interpolation_join(buildings, annual_avg_temp, key, with_nulls):
     if not with_nulls:
         annual_avg_temp = annual_avg_temp.fillna(0.0)
-    transformed = InterpolationJoin(
+    transformed = InterpolationJoiner(
         annual_avg_temp,
         key=key,
         regressor=KNeighborsRegressor(2),
@@ -41,7 +41,7 @@ def test_interpolation_join(buildings, annual_avg_temp, key, with_nulls):
 
 
 def test_no_multioutput(buildings, annual_avg_temp):
-    transformed = InterpolationJoin(
+    transformed = InterpolationJoiner(
         annual_avg_temp,
         main_key=("latitude", "longitude"),
         aux_key=("latitude", "longitude"),
@@ -52,35 +52,35 @@ def test_no_multioutput(buildings, annual_avg_temp):
 def test_condition_choice():
     main = pd.DataFrame({"A": [0, 1, 2]})
     aux = pd.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
-    join = InterpolationJoin(
+    join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
     assert_array_equal(join["C"].values, [10, 11, 12])
 
-    join = InterpolationJoin(
+    join = InterpolationJoiner(
         aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
     assert_array_equal(join["C"].values, [11, 12, 10])
 
     with pytest.raises(ValueError, match="Must pass EITHER"):
-        join = InterpolationJoin(
+        join = InterpolationJoiner(
             aux, main_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
 
     with pytest.raises(ValueError, match="Can only pass"):
-        join = InterpolationJoin(
+        join = InterpolationJoiner(
             aux, key="A", main_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
 
     with pytest.raises(ValueError, match="Can only pass"):
-        join = InterpolationJoin(
+        join = InterpolationJoiner(
             aux, key="A", main_key="A", aux_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
 
 
 def test_suffix():
     df = pd.DataFrame({"A": [0, 1], "B": [0, 1]})
-    join = InterpolationJoin(
+    join = InterpolationJoiner(
         df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
     assert_array_equal(join.columns, ["A", "B", "B_aux"])
@@ -89,7 +89,7 @@ def test_suffix():
 def test_mismatched_indexes():
     main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
     aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
-    join = InterpolationJoin(
+    join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
     assert_array_equal(join["B"].values, [10, 11])
@@ -104,7 +104,7 @@ def test_join_on_date():
     temp = pd.DataFrame(
         {"date": ["2023-09-09", "2023-10-01", "2024-09-21"], "temp": [-10, 10, 30]}
     )
-    transformed = InterpolationJoin(
+    transformed = InterpolationJoiner(
         temp,
         main_key="date",
         aux_key="date",
