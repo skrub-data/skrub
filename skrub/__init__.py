@@ -8,7 +8,7 @@ from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
-from ._interpolation_join import InterpolationJoiner
+from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
 from ._similarity_encoder import SimilarityEncoder

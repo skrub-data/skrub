@@ -38,7 +38,7 @@ This page lists all available functions and classes of `skrub`.
    :template: class.rst
    :nosignatures:
 
-   InterpolationJoin
+   InterpolationJoiner
 
 .. raw:: html
 
