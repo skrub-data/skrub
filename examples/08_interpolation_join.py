@@ -2,10 +2,10 @@
 Interpolation join: infer missing rows when joining two tables
 ==============================================================
 
-We illustrate the ``InterpolationJoiner``, which is a type of join where values from the second table are inferred with machine-learning, rather than looked up in the table.
-It is useful when exact matches are not available but we have rows that are close enough to make an educated guess -- in this sense it is a generalization of a ``fuzzy_join``.
+We illustrate the :class:`~skrub.InterpolationJoiner`, which is a type of join where values from the second table are inferred with machine-learning, rather than looked up in the table.
+It is useful when exact matches are not available but we have rows that are close enough to make an educated guess -- in this sense it is a generalization of a :func:`~skrub.fuzzy_join`.
 
-The ``InterpolationJoiner`` is therefore a transformer that adds the outputs of one or more machine-learning models as new columns to the table it operates on.
+The :class:`~skrub.InterpolationJoiner` is therefore a transformer that adds the outputs of one or more machine-learning models as new columns to the table it operates on.
 
 In this example we want our transformer to add weather data (temperature, rain, etc.) to the table it operates on.
 We have a table containing information about commercial flights, and we want to add information about the weather at the time and place where each flight took off.
@@ -14,7 +14,7 @@ This could be useful to predict delays -- flights are often delayed by bad weath
 We have a table of weather data containing, at many weather stations, measurements such as temperature, rain and snow at many time points.
 Unfortunately, our weather stations are not inside the airports, and the measurements are not timed according to the flight schedule.
 Therefore, a simple equi-join would not yield any matching pair of rows from our two tables.
-Instead, we use the ``InterpolationJoiner`` to *infer* the temperature at the airport at take-off time.
+Instead, we use the :class:`~skrub.InterpolationJoiner` to *infer* the temperature at the airport at take-off time.
 We train supervised machine-learning models using the weather table, then query them with the times and locations in the flights table.
 
 """
@@ -26,7 +26,6 @@ We train supervised machine-learning models using the weather table, then query 
 # We subsample these large tables for the example to run faster.
 
 from skrub.datasets import fetch_figshare
-import pandas as pd
 
 weather = fetch_figshare("41771457").X
 weather = weather.sample(100_000, random_state=0, ignore_index=True)
@@ -36,15 +35,15 @@ weather = stations.merge(weather, on="ID")[
 ]
 
 ######################################################################
-# The TMAX is in tenths of degree Celsius -- a TMAX of 297 means the maximum temperature that day was 29.7℃.
+# The ``'TMAX'`` is in tenths of degree Celsius -- a ``'TMAX'`` of 297 means the maximum temperature that day was 29.7℃.
 # We convert it to degrees for readability
 
 weather["TMAX"] /= 10
 
 ######################################################################
 # InterpolationJoiner with a ground truth: joining the weather table on itself
-# --------------------------------------------------------------------------
-# As a first simple example, we apply the ``InterpolationJoiner`` in a situation where the ground truth is known.
+# ----------------------------------------------------------------------------
+# As a first simple example, we apply the :class:`~skrub.InterpolationJoiner` in a situation where the ground truth is known.
 # We split the weather table in half and join the second half on the first half.
 # Thus, the values from the right side table of the join are inferred, whereas the corresponding columns from the left side contain the ground truth and we can compare them.
 
@@ -60,8 +59,8 @@ aux_table.head()
 ######################################################################
 # Joining the tables
 # ------------------
-# Now we join our two tables and check how well the ``InterpolationJoiner`` can reconstruct the matching rows that are missing from the right side table.
-# To avoid clashes in the column names, we use the ``suffix`` parameter to append "predicted" to the right side table column names.
+# Now we join our two tables and check how well the :class:`~skrub.InterpolationJoiner` can reconstruct the matching rows that are missing from the right side table.
+# To avoid clashes in the column names, we use the ``suffix`` parameter to append ``"predicted"`` to the right side table column names.
 
 from skrub import InterpolationJoiner
 
@@ -106,7 +105,7 @@ aux_table = aux_table.drop(["PRCP", "SNOW"], axis=1)
 ######################################################################
 # Loading the flights table
 # -------------------------
-# We load the flights table and join it to the airports table using the flights’ "Origin" which refers to the departure airport’s IATA code.
+# We load the flights table and join it to the airports table using the flights’ ``'Origin'`` which refers to the departure airport’s IATA code.
 # We use only a subset to speed up the example.
 
 flights = fetch_figshare("41771418").X[["Year_Month_DayofMonth", "Origin", "ArrDelay"]]
@@ -122,7 +121,7 @@ flights.iloc[0]
 # Joining the flights and weather data
 # ------------------------------------
 # As before, we initialize our join transformer with the weather table.
-# Then, we use it to transform the flights table -- it adds a "TMAX" column containing the predicted maximum daily temperature.
+# Then, we use it to transform the flights table -- it adds a ``'TMAX'`` column containing the predicted maximum daily temperature.
 #
 
 joiner = InterpolationJoiner(
@@ -142,11 +141,11 @@ join.head()
 state_temperatures = join.groupby("state")["TMAX"].mean().sort_values()
 
 ######################################################################
-# states with the lowest average predicted temperatures: Alaska, Montana, North Dakota, Washington, Minnesota
+# States with the lowest average predicted temperatures: Alaska, Montana, North Dakota, Washington, Minnesota.
 state_temperatures.head()
 
 ######################################################################
-# states with the highest predicted temperatures: Puerto Rico, Virgin Islands, Hawaii, Florida, Louisiana
+# States with the highest predicted temperatures: Puerto Rico, Virgin Islands, Hawaii, Florida, Louisiana.
 state_temperatures.tail()
 
 ######################################################################
@@ -163,17 +162,17 @@ ax.set_ylabel("TMAX")
 import seaborn as sns
 
 join["month"] = join["Year_Month_DayofMonth"].dt.strftime("%m %B")
-plt.figure()
+plt.figure(layout="constrained")
 sns.barplot(data=join.sort_values(by="month"), y="month", x="TMAX")
 
 ######################################################################
-# Of course these checks do not guarantee that the inferred values in our ``join`` table’s ``TMAX`` column are accurate.
-# But at least the ``InterpolationJoiner`` seems to have learned a few reasonable trends from its training table.
+# Of course these checks do not guarantee that the inferred values in our ``join`` table’s ````'TMAX'```` column are accurate.
+# But at least the :class:`~skrub.InterpolationJoiner` seems to have learned a few reasonable trends from its training table.
 
 
 ######################################################################
 # Conclusion
 # ----------
-# We have seen how to fit an ``InterpolationJoiner`` transformer: we give it a table (the weather data) and a set of matching columns (here date, latitude, longitude) and it learns to predict the other columns’ values  (such as the max daily temperature).
+# We have seen how to fit an :class:`~skrub.InterpolationJoiner` transformer: we give it a table (the weather data) and a set of matching columns (here date, latitude, longitude) and it learns to predict the other columns’ values  (such as the max daily temperature).
 # Then, it transforms tables by *predicting* values that a matching row would contain, rather than by searching for an actual match.
-# It is a generalization of the ``fuzzy_join``, as ``fuzzy_join`` is the same thing as an ``InterpolationJoiner`` where the estimators are 1-nearest-neighbor estimators.
+# It is a generalization of the :func:`~skrub.fuzzy_join`, as :func:`~skrub.fuzzy_join` is the same thing as an :class:`~skrub.InterpolationJoiner` where the estimators are 1-nearest-neighbor estimators.
