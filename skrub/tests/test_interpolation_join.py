@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
-from sklearn.neighbors import KNeighborsRegressor
+from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from skrub import InterpolationJoin
 
@@ -20,26 +20,24 @@ def annual_avg_temp():
             "latitude": [1.2, 0.9, 1.9, 1.7, 5.0, 5.0],
             "longitude": [0.8, 1.1, 1.8, 1.8, 5.0, 5.0],
             "avg_temp": [10.0, 11.0, 15.0, 16.0, 20.0, None],
+            "climate": ["A", "A", "B", "B", "C", "C"],
         }
     )
 
 
 @pytest.mark.parametrize("key", [["latitude", "longitude"], "latitude"])
 @pytest.mark.parametrize("with_nulls", [False, True])
-@pytest.mark.parametrize("with_vectorizer", [False, True])
-def test_interpolation_join(
-    buildings, annual_avg_temp, key, with_nulls, with_vectorizer
-):
+def test_interpolation_join(buildings, annual_avg_temp, key, with_nulls):
     if not with_nulls:
         annual_avg_temp = annual_avg_temp.fillna(0.0)
-    params = {} if with_vectorizer else {"vectorizer": None}
     transformed = InterpolationJoin(
         annual_avg_temp,
         key=key,
         regressor=KNeighborsRegressor(2),
-        **params,
+        classifier=KNeighborsClassifier(2),
     ).fit_transform(buildings)
     assert_array_equal(transformed["avg_temp"].values, [10.5, 15.5])
+    assert_array_equal(transformed["climate"].values, ["A", "B"])
 
 
 def test_no_multioutput(buildings, annual_avg_temp):
@@ -48,7 +46,7 @@ def test_no_multioutput(buildings, annual_avg_temp):
         main_key=("latitude", "longitude"),
         aux_key=("latitude", "longitude"),
     ).fit_transform(buildings)
-    assert transformed.shape == (2, 4)
+    assert transformed.shape == (2, 5)
 
 
 def test_condition_choice():
@@ -101,18 +99,15 @@ def test_mismatched_indexes():
 # expected to fail until we have a way to get the timestamp (only) from a date
 # with the tablevectorizer
 @pytest.mark.xfail
-@pytest.mark.parametrize("with_vectorizer", [False, True])
-def test_join_on_date(with_vectorizer):
+def test_join_on_date():
     sales = pd.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
     temp = pd.DataFrame(
         {"date": ["2023-09-09", "2023-10-01", "2024-09-21"], "temp": [-10, 10, 30]}
     )
-    params = {} if with_vectorizer else {"vectorizer": None}
     transformed = InterpolationJoin(
         temp,
         main_key="date",
         aux_key="date",
         regressor=KNeighborsRegressor(1),
-        **params,
     ).fit_transform(sales)
     assert_array_equal(transformed["temp"].values, [-10, 10])

@@ -1,7 +1,6 @@
 import joblib
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
-from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
@@ -70,19 +69,15 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         Suffix to append to the ``aux_table``'s column names. You can use it
         to avoid duplicate column names in the join.
 
-    regressor : scikit-learn regressor
-        Model used to predict the numerical columns of ``aux_table``.
+    regressor : scikit-learn regressor or None
+        Model used to predict the numerical columns of ``aux_table``. If
+        ``None``, a ``HistGradientBoostingRegressor`` with default parameters
+        is used.
 
-    classifier : scikit-learn classifier
+    classifier : scikit-learn classifier or None
         Model used to predict the categorical (string) columns of
-        ``aux_table``.
-
-    vectorizer : scikit-learn transformer that can operate on a DataFrame or None
-        If provided, it is used to transform the feature columns before passing
-        them to the scikit-learn estimators. This is useful if we are joining
-        on columns that cannot be used directly, such as timestamps or strings
-        representing high-cardinality categories. If None, no transformation is
-        applied.
+        ``aux_table``. If ``None``, a ``HistGradientBoostingRegressor`` with
+        default parameters is used.
 
     n_jobs : int
         Number of joblib workers to use Depending on the estimators used and
@@ -95,7 +90,10 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
     Attributes
     ----------
     vectorizer_ : scikit-learn transformer
-        The transformer used to vectorize the feature columns.
+        The transformer used to vectorize the feature columns before passing
+        them to the scikit-learn estimators. These transformations are
+        necessary when we are joining on columns that cannot be used directly,
+        such as timestamps or strings representing high-cardinality categories.
 
     estimators_ : list of dicts
         The estimators used to infer values to be joined. Each entry in this
@@ -132,6 +130,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
        latitude  longitude  n_stories  avg_temp
     0       1.0        1.0          3      10.5
     1       2.0        2.0          7      15.5
+
     """
 
     def __init__(
@@ -142,9 +141,8 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         aux_key=None,
         key=None,
         suffix="",
-        regressor=HistGradientBoostingRegressor(),
-        classifier=HistGradientBoostingClassifier(),
-        vectorizer=TableVectorizer(),
+        regressor=None,
+        classifier=None,
         n_jobs=1,
     ):
         self.aux_table = aux_table
@@ -154,7 +152,6 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         self.suffix = suffix
         self.regressor = regressor
         self.classifier = classifier
-        self.vectorizer = vectorizer
         self.n_jobs = n_jobs
 
     def fit(self, X=None, y=None):
@@ -191,10 +188,18 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         return self
 
     def _check_inputs(self):
-        if self.vectorizer is None:
-            self.vectorizer_ = ColumnTransformer([], remainder="passthrough")
+        self.vectorizer_ = TableVectorizer()
+
+        if self.classifier is None:
+            self.classifier_ = HistGradientBoostingClassifier()
         else:
-            self.vectorizer_ = clone(self.vectorizer)
+            self.classifier_ = clone(self.classifier)
+
+        if self.regressor is None:
+            self.regressor_ = HistGradientBoostingRegressor()
+        else:
+            self.regressor_ = clone(self.regressor)
+
         self._check_key()
 
     def _check_key(self):
@@ -274,11 +279,11 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         assignments = []
         regression_table = aux_table.select_dtypes("number")
         assignments.extend(
-            _get_assignments_for_estimator(regression_table, self.regressor)
+            _get_assignments_for_estimator(regression_table, self.regressor_)
         )
         classification_table = aux_table.select_dtypes(["object", "string", "category"])
         assignments.extend(
-            _get_assignments_for_estimator(classification_table, self.classifier)
+            _get_assignments_for_estimator(classification_table, self.classifier_)
         )
         return assignments
 
