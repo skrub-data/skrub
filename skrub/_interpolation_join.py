@@ -35,44 +35,46 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    right_table : DataFrame
-        The table to be joined to the argument of ``transform``.
-        ``right_table`` is used to train a model that takes as inputs the
-        contents of the columns listed in ``right_on``, and predicts the contents
-        of the other columns. In the example above, we want our transformer to
-        add temperature data to the table it is operating on. Therefore,
-        ``right_table`` is the ``annual_avg_temp`` table.
+    aux_table : DataFrame
+        The (auxiliary) table to be joined to the `main_table` (which is the
+        argument of ``transform``). ``aux_table`` is used to train a model that
+        takes as inputs the contents of the columns listed in ``aux_key``, and
+        predicts the contents of the other columns. In the example above, we
+        want our transformer to add temperature data to the table it is
+        operating on. Therefore, ``aux_table`` is the ``annual_avg_temp``
+        table.
 
-    left_on : list of str, or str
-        The columns in the left table used for joining. The left table is the
+    main_key : list of str, or str
+        The columns in the main table used for joining. The main table is the
         argument of ``transform``, to which we add information inferred using
-        ``right_table``. The column names listed in ``left_on`` will provide the
+        ``aux_table``. The column names listed in ``main_key`` will provide the
         inputs (features) of the interpolators at prediction (joining) time. In
-        the example above, ``left_on`` is ``["latitude", "longitude"]``, which
+        the example above, ``main_key`` is ``["latitude", "longitude"]``, which
         refer to columns in the ``buildings`` table. When joining on a single
         column, we can pass its name rather than a list: ``"latitude"`` is
         equivalent to ``["latitude"]``.
 
-    right_on : list of str, or str
-        The columns in ``right_table`` used for joining. Their number and types
-        must match those of the `left_on` columns in the left table. These
+    aux_key : list of str, or str
+        The columns in ``aux_table`` used for joining. Their number and types
+        must match those of the ``main_key`` columns in the main table. These
         columns provide the features for the estimators to be fitted. As for
-        ``left_on``, it is possible to pass a string when using a single column.
+        ``main_key``, it is possible to pass a string when using a single
+        column.
 
-    on : list of str, or str
-        Column names to use both `left_on` and `right_on`, when they are the
-        same. Provide either `on` (only) or both `left_on` and `right_on`.
+    key : list of str, or str
+        Column names to use for both `main_key` and `aux_key`, when they are
+        the same. Provide either `key` (only) or both `main_key` and `aux_key`.
 
     suffix : str
-        Suffix to append to the ``right_table``'s column names. You can use it
+        Suffix to append to the ``aux_table``'s column names. You can use it
         to avoid duplicate column names in the join.
 
     regressor : scikit-learn regressor
-        Model used to predict the numerical columns of ``right_table``.
+        Model used to predict the numerical columns of ``aux_table``.
 
     classifier : scikit-learn classifier
         Model used to predict the categorical (string) columns of
-        ``right_table``.
+        ``aux_table``.
 
     vectorizer : scikit-learn transformer that can operate on a DataFrame or None
         If provided, it is used to transform the feature columns before passing
@@ -83,7 +85,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
     n_jobs : int
         Number of joblib workers to use Depending on the estimators used and
-        the contents of ``right_table``, several estimators may need to be
+        the contents of ``aux_table``, several estimators may need to be
         fitted -- for example one for continuous outputs (regressor) and one
         for categorical outputs (classifier), or one for each column when the
         provided estimators do not support multi-output tasks. Fitting and
@@ -96,14 +98,15 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
     estimators_ : list of dicts
         The estimators used to infer values to be joined. Each entry in this
-        list is a dictionary with keys ``"estimator"`` (the fitted estimator) and
-        ``"columns"`` (the list of columns that it is trained to predict).
+        list is a dictionary with keys ``"estimator"`` (the fitted estimator)
+        and ``"columns"`` (the list of columns in ``aux_table`` that it is
+        trained to predict).
 
     See Also
     --------
     Joiner :
         Works in a similar way but instead of inferring values, picks the
-        closest row from the right table.
+        closest row from the auxiliary table.
 
     Examples
     --------
@@ -122,7 +125,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
     >>> InterpolationJoin(
     ...     annual_avg_temp,
-    ...     on=["latitude", "longitude"],
+    ...     key=["latitude", "longitude"],
     ...     regressor=KNeighborsRegressor(2),
     ... ).fit_transform(buildings)
        latitude  longitude  n_stories  avg_temp
@@ -132,21 +135,21 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
     def __init__(
         self,
-        right_table,
+        aux_table,
         *,
-        left_on=None,
-        right_on=None,
-        on=None,
+        main_key=None,
+        aux_key=None,
+        key=None,
         suffix="",
         regressor=HistGradientBoostingRegressor(),
         classifier=HistGradientBoostingClassifier(),
         vectorizer=TableVectorizer(),
         n_jobs=1,
     ):
-        self.right_table = right_table
-        self.left_on = left_on
-        self.right_on = right_on
-        self.on = on
+        self.aux_table = aux_table
+        self.main_key = main_key
+        self.aux_key = aux_key
+        self.key = key
         self.suffix = suffix
         self.regressor = regressor
         self.classifier = classifier
@@ -154,7 +157,7 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         self.n_jobs = n_jobs
 
     def fit(self, X=None, y=None):
-        """Fit estimators to the `right_table` provided during initialization.
+        """Fit estimators to the `aux_table` provided during initialization.
 
         `X` and `y` are for scikit-learn compatibility and they are
         ignored.
@@ -174,14 +177,12 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
         """
         del X, y
         self._check_inputs()
-        matching_columns_data = self.vectorizer_.fit_transform(
-            self.right_table[self._right_on]
-        )
+        key_values = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
         estimators = self._get_estimator_assignments()
         self.estimators_ = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_fit)(
-                matching_columns_data,
-                self.right_table[assignment["columns"]],
+                key_values,
+                self.aux_table[assignment["columns"]],
                 assignment["estimator"],
             )
             for assignment in estimators
@@ -193,62 +194,63 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
             self.vectorizer_ = ColumnTransformer([], remainder="passthrough")
         else:
             self.vectorizer_ = clone(self.vectorizer)
-        self._check_matching_column_names()
+        self._check_key()
 
-    def _check_matching_column_names(self):
-        """Find the correct the matching column names.
+    def _check_key(self):
+        """Find the correct main and auxiliary keys (matching column names).
 
-        They can be provided either as ``on`` when the names are the same in
-        both tables, or as ``left_on`` and ``right_on`` when they differ. This
+        They can be provided either as ``key`` when the names are the same in
+        both tables, or as ``main_key`` and ``aux_key`` when they differ. This
         function checks that only one of those options is used and sets
-        ``self._left_on`` and ``self._right_on`` which will be used for
+        ``self._main_key`` and ``self._aux_key`` which will be used for
         joining.
         """
-        if self.on is not None:
-            if self.right_on is not None or self.left_on is not None:
+        if self.key is not None:
+            if self.aux_key is not None or self.main_key is not None:
                 raise ValueError(
-                    "Can only pass argument 'on' OR 'left_on' and "
-                    "'right_on', not a combination of both."
+                    "Can only pass argument 'key' OR 'main_key' and "
+                    "'aux_key', not a combination of both."
                 )
-            left_on, right_on = self.on, self.on
+            main_key, aux_key = self.key, self.key
         else:
-            if self.right_on is None or self.left_on is None:
+            if self.aux_key is None or self.main_key is None:
                 raise ValueError(
-                    "Must pass EITHER 'on', OR ('left_on' AND 'right_on')."
+                    "Must pass EITHER 'key', OR ('main_key' AND 'aux_key')."
                 )
-            left_on, right_on = self.left_on, self.right_on
-        self._left_on = [left_on] if isinstance(left_on, str) else list(left_on)
-        self._right_on = [right_on] if isinstance(right_on, str) else list(right_on)
+            main_key, aux_key = self.main_key, self.aux_key
+        self._main_key = [main_key] if isinstance(main_key, str) else list(main_key)
+        self._aux_key = [aux_key] if isinstance(aux_key, str) else list(aux_key)
 
     def transform(self, X):
         """Transform a table by joining inferred values to it.
 
-        The values of the `left_on` columns in `left_table` are used to predict
-        likely values for the contents of a matching row in `self.right_table`.
+        The values of the `main_key` columns in `X` (the main table) are used
+        to predict likely values for the contents of a matching row in
+        `self.aux_table` (the auxiliary table).
 
         Parameters
         ----------
         X : DataFrame
-            The table to transform.
+            The (main) table to transform.
 
         Returns
         -------
         join : DataFrame
             The result of the join between `X` and inferred rows from
-            ``self.right_table``.
+            ``self.aux_table``.
         """
-        left_table = X
-        matching_columns_data = self.vectorizer_.transform(left_table[self._left_on])
+        main_table = X
+        key_values = self.vectorizer_.transform(main_table[self._main_key])
         interpolated_parts = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
-                matching_columns_data, assignment["columns"], assignment["estimator"]
+                key_values, assignment["columns"], assignment["estimator"]
             )
             for assignment in self.estimators_
         )
         interpolated_parts = _add_column_name_suffix(interpolated_parts, self.suffix)
-        original_index = left_table.index
+        original_index = main_table.index
         return pd.concat(
-            [left_table.reset_index(drop=True)] + interpolated_parts, axis=1
+            [main_table.reset_index(drop=True)] + interpolated_parts, axis=1
         ).set_index(original_index)
 
     def _get_estimator_assignments(self):
@@ -267,15 +269,14 @@ class InterpolationJoin(TransformerMixin, BaseEstimator):
 
         When the estimator does not handle multi-output, an estimator is fitted
         separately to each column.
-
         """
-        right_table = self.right_table.drop(self._right_on, axis=1)
+        aux_table = self.aux_table.drop(self._aux_key, axis=1)
         assignments = []
-        regression_columns = right_table.select_dtypes("number")
+        regression_columns = aux_table.select_dtypes("number")
         assignments.extend(
             _get_assignments_for_estimator(regression_columns, self.regressor)
         )
-        classification_columns = right_table.select_dtypes(
+        classification_columns = aux_table.select_dtypes(
             ["object", "string", "category"]
         )
         assignments.extend(
@@ -288,6 +289,7 @@ def _get_assignments_for_estimator(table, estimator):
     """Get the groups of columns assigned to a single estimator.
 
     (which is either the regressor or the classifier)."""
+
     # If the complete set of columns that have to be predicted with this
     # estimator is empty (eg the estimator is the regressor and there are no
     # numerical columns), return an empty list -- no columns are assigned to
@@ -310,21 +312,23 @@ def _handles_multioutput(estimator):
     return _safe_tags(estimator).get("multioutput", False)
 
 
-def _fit(matching_columns_data, target_table, estimator):
+def _fit(key_values, target_table, estimator):
     estimator = clone(estimator)
     kept_rows = target_table.notnull().all(axis=1).to_numpy()
-    matching_columns_data = matching_columns_data[kept_rows]
+    key_values = key_values[kept_rows]
     Y = target_table.to_numpy()[kept_rows]
+
     # Estimators that expect a single output issue a DataConversionWarning if
     # passing a column vector rather than a 1-D array
     if Y.shape[-1] == 1:
         Y = Y.ravel()
-    estimator.fit(matching_columns_data, Y)
+
+    estimator.fit(key_values, Y)
     return {"columns": target_table.columns, "estimator": estimator}
 
 
-def _predict(matching_columns_data, columns, estimator):
-    Y_values = estimator.predict(matching_columns_data)
+def _predict(key_values, columns, estimator):
+    Y_values = estimator.predict(key_values)
     return pd.DataFrame(data=Y_values, columns=columns)
 
 

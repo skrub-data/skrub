@@ -23,19 +23,18 @@ def annual_avg_temp():
     )
 
 
-@pytest.mark.parametrize("join_on", [["latitude", "longitude"], "latitude"])
+@pytest.mark.parametrize("key", [["latitude", "longitude"], "latitude"])
 @pytest.mark.parametrize("with_nulls", [False, True])
 @pytest.mark.parametrize("with_vectorizer", [False, True])
 def test_interpolation_join(
-    buildings, annual_avg_temp, join_on, with_nulls, with_vectorizer
+    buildings, annual_avg_temp, key, with_nulls, with_vectorizer
 ):
     if not with_nulls:
         annual_avg_temp = annual_avg_temp.fillna(0.0)
     params = {} if with_vectorizer else {"vectorizer": None}
     transformed = InterpolationJoin(
         annual_avg_temp,
-        left_on=join_on,
-        right_on=join_on,
+        key=key,
         regressor=KNeighborsRegressor(2),
         **params,
     ).fit_transform(buildings)
@@ -45,55 +44,55 @@ def test_interpolation_join(
 def test_no_multioutput(buildings, annual_avg_temp):
     transformed = InterpolationJoin(
         annual_avg_temp,
-        left_on=("latitude", "longitude"),
-        right_on=("latitude", "longitude"),
+        main_key=("latitude", "longitude"),
+        aux_key=("latitude", "longitude"),
     ).fit_transform(buildings)
     assert transformed.shape == (2, 4)
 
 
 def test_condition_choice():
-    left = pd.DataFrame({"A": [0, 1, 2]})
-    right = pd.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
+    main = pd.DataFrame({"A": [0, 1, 2]})
+    aux = pd.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
     join = InterpolationJoin(
-        right, on="A", regressor=KNeighborsRegressor(1)
-    ).fit_transform(left)
+        aux, key="A", regressor=KNeighborsRegressor(1)
+    ).fit_transform(main)
     assert (join["C"].values == [10, 11, 12]).all()
 
     join = InterpolationJoin(
-        right, left_on="A", right_on="rB", regressor=KNeighborsRegressor(1)
-    ).fit_transform(left)
+        aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
+    ).fit_transform(main)
     assert (join["C"].values == [11, 12, 10]).all()
 
     with pytest.raises(ValueError):
         join = InterpolationJoin(
-            right, left_on="A", regressor=KNeighborsRegressor(1)
+            aux, main_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
 
     with pytest.raises(ValueError):
         join = InterpolationJoin(
-            right, on="A", left_on="A", regressor=KNeighborsRegressor(1)
+            aux, key="A", main_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
 
     with pytest.raises(ValueError):
         join = InterpolationJoin(
-            right, on="A", left_on="A", right_on="A", regressor=KNeighborsRegressor(1)
+            aux, key="A", main_key="A", aux_key="A", regressor=KNeighborsRegressor(1)
         ).fit()
 
 
 def test_suffix():
     df = pd.DataFrame({"A": [0, 1], "B": [0, 1]})
     join = InterpolationJoin(
-        df, on="A", suffix="_right", regressor=KNeighborsRegressor(1)
+        df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
-    assert (join.columns == ["A", "B", "B_right"]).all()
+    assert (join.columns == ["A", "B", "B_aux"]).all()
 
 
 def test_mismatched_indexes():
-    left = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
-    right = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
+    main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
+    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
     join = InterpolationJoin(
-        right, on="A", regressor=KNeighborsRegressor(1)
-    ).fit_transform(left)
+        aux, key="A", regressor=KNeighborsRegressor(1)
+    ).fit_transform(main)
     assert (join["B"].values == [10, 11]).all()
     assert (join.index.values == [1, 0]).all()
 
@@ -110,8 +109,8 @@ def test_join_on_date(with_vectorizer):
     params = {} if with_vectorizer else {"vectorizer": None}
     transformed = InterpolationJoin(
         temp,
-        left_on="date",
-        right_on="date",
+        main_key="date",
+        aux_key="date",
         regressor=KNeighborsRegressor(1),
         **params,
     ).fit_transform(sales)

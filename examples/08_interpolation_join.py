@@ -48,13 +48,13 @@ weather["TMAX"] /= 10
 # We split the weather table in half and join the second half on the first half.
 # Thus, the values from the right side table of the join are inferred, whereas the corresponding columns from the left side contain the ground truth and we can compare them.
 
-n_left = weather.shape[0] // 2
-left_table = weather.iloc[:n_left]
-left_table.head()
+n_main = weather.shape[0] // 2
+main_table = weather.iloc[:n_main]
+main_table.head()
 
 ######################################################################
-right_table = weather.iloc[n_left:]
-right_table.head()
+aux_table = weather.iloc[n_main:]
+aux_table.head()
 
 
 ######################################################################
@@ -66,11 +66,11 @@ right_table.head()
 from skrub import InterpolationJoin
 
 joiner = InterpolationJoin(
-    right_table,
-    on=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
+    aux_table,
+    key=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
     suffix="_predicted",
 ).fit()
-join = joiner.transform(left_table)
+join = joiner.transform(main_table)
 join.head()
 
 ######################################################################
@@ -101,7 +101,7 @@ for ax, col in zip(axes.ravel(), ["TMAX", "PRCP", "SNOW"]):
 # We see that in this case the interpolation join works well for the temperature, but not precipitation nor snow.
 # So we will only add the temperature to our flights table.
 
-right_table = right_table.drop(["PRCP", "SNOW"], axis=1)
+aux_table = aux_table.drop(["PRCP", "SNOW"], axis=1)
 
 ######################################################################
 # Loading the flights table
@@ -126,9 +126,9 @@ flights.iloc[0]
 #
 
 joiner = InterpolationJoin(
-    right_table,
-    left_on=["lat", "long", "Year_Month_DayofMonth"],
-    right_on=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
+    aux_table,
+    main_key=["lat", "long", "Year_Month_DayofMonth"],
+    aux_key=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
 )
 join = joiner.fit_transform(flights)
 join.head()
