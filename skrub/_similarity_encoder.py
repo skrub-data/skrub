@@ -224,7 +224,7 @@ class SimilarityEncoder(OneHotEncoder):
     -----
     The functionality of SimilarityEncoder is easy to explain and understand,
     but it is not scalable. It is useful only to capture links across a few categories
-    (eg eg: “west”, “north”, “north-west”), but not when there are many categories,
+    (eg eg: "west", "north", "north-west"), but not when there are many categories,
     as with open-ended entries.
     Instead, the GapEncoder is usually recommended.
 
