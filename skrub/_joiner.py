@@ -5,24 +5,24 @@ multiple fuzzy joins on a table.
 
 from typing import Literal
 
-import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from skrub import _join_utils
 from skrub._fuzzy_join import fuzzy_join
 
 
 class Joiner(TransformerMixin, BaseEstimator):
-    """Augment a main table by automatically joining multiple auxiliary tables on it.
+    """Augment a main table by automatically joining an auxiliary table to it.
 
-    Given a list of tables and key column names,
-    fuzzy join them to the main table.
+    Given an auxiliary tables and matching column names,
+    fuzzy join it to the main table.
 
     The principle is as follows:
 
-    1. The main table and the key column name are provided at initialisation.
-    2. The auxiliary tables are provided for fitting, and will be joined
-       sequentially when Joiner.transform is called.
+    1. The auxiliary table and the matching column names are provided at initialisation.
+    2. The main table is provided for fitting, and will be joined
+       when Joiner.transform is called.
 
     It is advised to use hyperparameter tuning tools such as GridSearchCV
     to determine the best `match_score` parameter, as this can significantly
@@ -32,12 +32,21 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    tables : 2-tuple or list of 2-tuple (:obj:`~pandas.DataFrame`, str)
-        List of (table, column name) tuples, the tables to join.
-        Can be a tuple if only one table to join.
-    main_key : str or list of str
-        The key column names from the main table on which the join will
-        be performed.
+    aux_table : :obj:`~pandas.DataFrame`
+        The auxiliary table, which will be fuzzy-joined to the main table when
+        calling ``transform``.
+    main_key : str or list of str or None
+        The column names in the main table on which the join will
+        be performed. Can be a string if joining on a single column.
+    aux_key : str or list of str or None
+        The column names in the auxiliary table on which the join will
+        be performed. Can be a string if joining on a single column.
+    key : str or list of str or None
+        The column names to use for both ``main_key`` and ``aux_key`` when they
+        are the same. Pass either ``key`` or both ``main_key`` and ``aux_key``.
+    suffix : str
+        Suffix to append to the ``aux_table``'s column names. You can use it
+        to avoid duplicate column names in the join.
     match_score : float, default=0
         Distance score between the closest matches that will be accepted.
         In a [0, 1] interval. 1 means that only a perfect match will be
@@ -76,63 +85,43 @@ class Joiner(TransformerMixin, BaseEstimator):
     1  Germany
     2    Italy
 
-    >>> aux_table_1 = pd.DataFrame([['Germany', 84_000_000],
-                                    ['France', 68_000_000],
-                                    ['Italy', 59_000_000]],
-                                    columns=['Country', 'Population'])
-    >>> aux_table_1
+    >>> aux_table = pd.DataFrame([['germany', 84_000_000],
+                                  ['france', 68_000_000],
+                                  ['italy', 59_000_000]],
+                                  columns=['Country', 'Population'])
+    >>> aux_table
        Country  Population
     0  Germany    84000000
     1   France    68000000
     2    Italy    59000000
 
-    >>> aux_table_2 = pd.DataFrame([['French Republic', 2937],
-                                    ['Italy', 2099],
-                                    ['Germany', 4223],
-                                    ['UK', 3186]],
-                                    columns=['Country name', 'GDP (billion)'])
-    >>> aux_table_2
-        Country name  GDP (billion)
-    0   French Republic      2937
-    1        Italy           2099
-    2      Germany           4223
-    3           UK           3186
-
-    >>> aux_table_3 = pd.DataFrame([['France', 'Paris'],
-                                    ['Italia', 'Rome'],
-                                    ['Germany', 'Berlin']],
-                                    columns=['Countries', 'Capital'])
-    >>> aux_table_3
-      Countries Capital
-    0    France   Paris
-    1     Italia   Rome
-    2   Germany  Berlin
-
-    >>> aux_tables = [(aux_table_1, "Country"),
-                      (aux_table_2, "Country name"),
-                      (aux_table_3, "Countries")]
-
-    >>> joiner = Joiner(tables=aux_tables, main_key='Country')
+    >>> joiner = Joiner(aux_table, key='Country', suffix='_aux')
 
     >>> augmented_table = joiner.fit_transform(X)
     >>> augmented_table
-        Country Country_aux  Population Country name  GDP (billion) Countries Capital
-    0   France      France    68000000  French Republic       2937    France   Paris
-    1   Germany     Germany   84000000      Germany           4223   Germany   Berlin
-    2    Italy       Italy    59000000        Italy           2099    Italia   Rome
+        Country Country_aux  Population
+    0   France      france    68000000
+    1   Germany     germany   84000000
+    2    Italy       italy    59000000
     """
 
     def __init__(
         self,
-        tables: tuple[pd.DataFrame, str] | list[tuple[pd.DataFrame, str]],
-        main_key: str | list[str],
+        aux_table: pd.DataFrame,
         *,
+        main_key: str | list[str] | None = None,
+        aux_key: str | list[str] | None = None,
+        key: str | list[str] | None = None,
+        suffix: str = "",
         match_score: float = 0.0,
         analyzer: Literal["word", "char", "char_wb"] = "char_wb",
         ngram_range: tuple[int, int] = (2, 4),
     ):
-        self.tables = tables
+        self.aux_table = aux_table
         self.main_key = main_key
+        self.aux_key = aux_key
+        self.key = key
+        self.suffix = suffix
         self.match_score = match_score
         self.analyzer = analyzer
         self.ngram_range = ngram_range
@@ -155,30 +144,23 @@ class Joiner(TransformerMixin, BaseEstimator):
         Joiner
             Fitted Joiner instance (self).
         """
+        self._main_key, self._aux_key = _join_utils.check_key(
+            self.main_key, self.aux_key, self.key
+        )
 
-        main_key_list = np.atleast_1d(self.main_key).tolist()
-
-        for col in main_key_list:
+        for col in self._main_key:
             if col not in X.columns:
                 raise ValueError(
                     f"Main key {col!r} not found in columns of X:"
                     f" {X.columns.tolist()}. "
                 )
 
-        if isinstance(self.tables[0], tuple):
-            self.tables_ = self.tables
-        else:
-            self.tables_ = list()
-            self.tables_.append(tuple(self.tables))
-
-        for table_idx, (df, cols) in enumerate(self.tables_):
-            cols = np.atleast_1d(cols).tolist()
-            for col in cols:
-                if col not in df.columns:
-                    raise ValueError(
-                        f"Column key {col!r} not found in columns of "
-                        f"table index {table_idx}: {df.columns.tolist()}. "
-                    )
+        for col in self._aux_key:
+            if col not in self.aux_table.columns:
+                raise ValueError(
+                    f"Column key {col!r} not found in columns of "
+                    f"auxiliary table: {self.aux_table.columns.tolist()}. "
+                )
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
@@ -197,16 +179,14 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
 
-        for df, cols in self.tables_:
-            aux_table = df
-            X = fuzzy_join(
-                X,
-                aux_table,
-                left_on=self.main_key,
-                right_on=cols,
-                match_score=self.match_score,
-                analyzer=self.analyzer,
-                ngram_range=self.ngram_range,
-                suffixes=("", "_aux"),
-            )
+        X = fuzzy_join(
+            X,
+            self.aux_table,
+            left_on=self._main_key,
+            right_on=self._aux_key,
+            match_score=self.match_score,
+            analyzer=self.analyzer,
+            ngram_range=self.ngram_range,
+            suffixes=("", self.suffix),
+        )
         return X

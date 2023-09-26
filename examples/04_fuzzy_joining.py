@@ -362,27 +362,28 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # .............................
 
 y = df["Happiness score"]
-#######################################################################
-# We gather the auxilliary tables into a
-# list of (tables, keys) for the `tables` parameter.
-# An instance of the transformer with the necessary information is:
-from skrub import Joiner
 
-joiner = Joiner(
-    tables=[
-        (gdppc, "Country Name"),
-        (life_exp, "Country Name"),
-        (legal_rights, "Country Name"),
-    ],
-    main_key="Country",
-)
 
 #################################################################
 # Fitting and transforming into the final table
 # .............................................
 # To get our final joined table we will fit and transform the main table (df)
 # with our create instance of the |joiner|:
-df_final = joiner.fit_transform(df)
+from skrub import Joiner
+
+all_joiners = []
+for aux_table, aux_name in [(gdppc, "GDP"), (life_exp, "DYN"), (legal_rights, "LGL")]:
+    joiner = Joiner(
+        aux_table,
+        main_key="Country",
+        aux_key="Country Name",
+        suffix=f"_{aux_name}",
+    )
+    all_joiners.append((aux_name, joiner))
+
+df_final = df
+for joiner_name, joiner in all_joiners:
+    df_final = joiner.fit_transform(df_final)
 
 df_final.head(10)
 
@@ -391,7 +392,7 @@ df_final.head(10)
 # ready for machine learning.
 # Let's create our machine learning pipeline:
 from sklearn.compose import make_column_transformer
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline
 
 # We include only the columns that will be pertinent for our regression:
 encoder = make_column_transformer(
@@ -406,7 +407,9 @@ encoder = make_column_transformer(
     remainder="drop",
 )
 
-pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
+pipeline = Pipeline(
+    all_joiners + [("encoder", encoder), ("regressor", HistGradientBoostingRegressor())]
+)
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the parameters of the |fj|.
@@ -416,7 +419,13 @@ pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
-params = {"joiner__match_score": [0.2, 0.3, 0.4, 0.5]}
+param_grid = []
+for match_score in [0.2, 0.3, 0.4, 0.5]:
+    params = {
+        f"{joiner_name}__match_score": [match_score]
+        for (joiner_name, joiner) in all_joiners
+    }
+    param_grid.append(params)
 
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)
