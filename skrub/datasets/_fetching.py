@@ -25,8 +25,9 @@ import pandas as pd
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 from sklearn.datasets._base import _sha256
+from sklearn.utils import parse_version
 
-from skrub._utils import import_optional_dependency, parse_version
+from skrub._utils import import_optional_dependency
 from skrub.datasets._utils import get_data_dir
 
 # Ignore lines too long, first docstring lines can't be cut

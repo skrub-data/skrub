@@ -6,7 +6,6 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
-from sklearn.utils import parse_version  # noqa
 from sklearn.utils import check_array
 
 
@@ -37,6 +36,14 @@ class LRUDict:
 
     def __contains__(self, key: Hashable):
         return key in self.cache
+
+
+def combine_lru_dicts(capacity: int, *lru_dicts: LRUDict) -> LRUDict:
+    combined_lru_dict = LRUDict(capacity)
+    for lru_dict in lru_dicts:
+        for key, value in lru_dict.cache.items():
+            combined_lru_dict[key] = value
+    return combined_lru_dict
 
 
 def check_input(X) -> NDArray:
@@ -121,3 +128,10 @@ def parse_astype_error_message(e):
         if match:
             culprit = match.group(1)
     return culprit
+
+
+def atleast_1d_or_none(x):
+    """``np.atleast_1d`` helper returning an empty list when x is None"""
+    if x is None:
+        return []
+    return np.atleast_1d(x).tolist()
