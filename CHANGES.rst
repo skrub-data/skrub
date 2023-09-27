@@ -15,6 +15,11 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+* Some parameters of :class:`Joiner` have changed. The goal is to harmonize
+  parameters across all estimator that perform join(-like) operations, as
+  discussed in `#751 <https://github.com/skrub-data/skrub/discussions/751>`_.
+  :pr:`757` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * :func:`dataframe.pd_join`, :func:`dataframe.pd_aggregate`,
   :func:`dataframe.pl_join` and :func:`dataframe.pl_aggregate`
   are now available in the dataframe submodule.
