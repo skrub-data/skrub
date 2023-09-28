@@ -79,6 +79,13 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         ``aux_table``. If ``None``, a ``HistGradientBoostingRegressor`` with
         default parameters is used.
 
+    vectorizer : scikit-learn transformer that can operate on a DataFrame or None
+        Used to transform the feature columns before passing them to the
+        scikit-learn estimators. This is useful if we are joining on columns
+        that cannot be used directly, such as timestamps or strings
+        representing high-cardinality categories. If ``None``, a
+        ``TableVectorizer`` is used.
+
     n_jobs : int
         Number of joblib workers to use Depending on the estimators used and
         the contents of ``aux_table``, several estimators may need to be
@@ -90,10 +97,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     Attributes
     ----------
     vectorizer_ : scikit-learn transformer
-        The transformer used to vectorize the feature columns before passing
-        them to the scikit-learn estimators. These transformations are
-        necessary when we are joining on columns that cannot be used directly,
-        such as timestamps or strings representing high-cardinality categories.
+        The transformer used to vectorize the feature columns.
 
     estimators_ : list of dicts
         The estimators used to infer values to be joined. Each entry in this
@@ -142,6 +146,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         suffix="",
         regressor=None,
         classifier=None,
+        vectorizer=None,
         n_jobs=1,
     ):
         self.aux_table = aux_table
@@ -151,6 +156,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self.suffix = suffix
         self.regressor = regressor
         self.classifier = classifier
+        self.vectorizer = vectorizer
         self.n_jobs = n_jobs
 
     def fit(self, X=None, y=None):
@@ -187,7 +193,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         return self
 
     def _check_inputs(self):
-        self.vectorizer_ = TableVectorizer()
+        if self.vectorizer is None:
+            self.vectorizer_ = TableVectorizer()
+        else:
+            self.vectorizer_ = clone(self.vectorizer)
 
         if self.classifier is None:
             self.classifier_ = HistGradientBoostingClassifier()

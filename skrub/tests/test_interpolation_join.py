@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from skrub import InterpolationJoiner
@@ -38,6 +39,26 @@ def test_interpolation_join(buildings, annual_avg_temp, key, with_nulls):
     ).fit_transform(buildings)
     assert_array_equal(transformed["avg_temp"].values, [10.5, 15.5])
     assert_array_equal(transformed["climate"].values, ["A", "B"])
+
+
+def test_vectorizer():
+    main = pd.DataFrame({"A": [0, 1]})
+    aux = pd.DataFrame({"A": [11, 110], "B": [1, 0]})
+
+    class Vectorizer(TransformerMixin, BaseEstimator):
+        def fit(self, X):
+            return self
+
+        def transform(self, X):
+            return X % 10
+
+    join = InterpolationJoiner(
+        aux,
+        key="A",
+        regressor=KNeighborsRegressor(1),
+        vectorizer=Vectorizer(),
+    ).fit_transform(main)
+    assert_array_equal(join["B"], [0, 1])
 
 
 def test_no_multioutput(buildings, annual_avg_temp):
