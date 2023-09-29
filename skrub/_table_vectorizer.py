@@ -27,9 +27,6 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import DatetimeEncoder, GapEncoder
 from skrub._utils import parse_astype_error_message
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
-
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
     """Infer the date format of a date column,
@@ -78,8 +75,9 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | Non
             if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
                 warnings.warn(
                     f"""
-                    Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
-                    formats for the dates in column '{date_column.name}'.
+                    Both {date_format_monthfirst.iloc[0]} and
+                    {date_format_dayfirst.iloc[0]} are valid formats for the dates in
+                    column '{date_column.name}'.
                     Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
@@ -181,8 +179,8 @@ def _split_transformers(
         (name, transformer, column).
     transformers_to_input_indices : dict of str to list of int, optional
         The mapping of transformer names to the indices of the columns they were
-        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
-        Only used when `during_fit` is False.
+        fitted on. Should correspond to the `self._transformer_to_input_indices`
+        attribute. Only used when `during_fit` is False.
     during_fit : bool, default=False
         Whether the method is called during `fit_transform` (True) or
         during `transform` (False). This is used to determine if the
@@ -249,8 +247,8 @@ def _merge_transformers(
         (when True) or the `self.transformers` attribute (when False).
     transformer_to_input_indices : dict of str to list of int, optional
         The mapping of transformer names to the indices of the columns they were
-        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
-        Only used when `is_fitted` is True.
+        fitted on. Should correspond to the `self._transformer_to_input_indices`
+        attribute. Only used when `is_fitted` is True.
     """
     new_transformers = []
     new_transformer_to_input_indices = {} if is_fitted else transformer_to_input_indices
@@ -308,7 +306,8 @@ class TableVectorizer(ColumnTransformer):
         Note: currently, missing values are counted as a single unique value
         (so they count in the cardinality).
 
-    low_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    low_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer,
+        optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. OneHotEncoder),
@@ -321,7 +320,8 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    high_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    high_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer,
+        optional
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
@@ -333,7 +333,8 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    numerical_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    numerical_transformer : {'drop', 'remainder', 'passthrough'} or Transformer,
+        optional
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. StandardScaler),
         a Pipeline containing the preprocessing steps,
@@ -355,7 +356,9 @@ class TableVectorizer(ColumnTransformer):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
+    specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or
+        Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'}
+        or Transformer, list of str or int), optional
         On top of the default column type classification (see parameters above),
         this parameter allows you to manually specify transformers for
         specific columns.
@@ -449,7 +452,8 @@ class TableVectorizer(ColumnTransformer):
     See Also
     --------
     GapEncoder :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics with
+        continuous encoding.
     MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
     SimilarityEncoder :
@@ -492,7 +496,7 @@ class TableVectorizer(ColumnTransformer):
          ['division', 'employee_position_title', 'underfilled_job_title']),
         ('remainder', 'passthrough', ['year_first_hired'])
     ]
-    """
+    """  # noqa: E501
 
     transformers_: list[tuple[str, Transformer, list[str]]]
     columns_: pd.Index
@@ -668,9 +672,11 @@ class TableVectorizer(ColumnTransformer):
                 )
 
             self.specific_transformers_ = [
-                (name, clone(transformer), cols)
-                if isinstance(transformer, sklearn.base.TransformerMixin)
-                else (name, transformer, cols)
+                (
+                    (name, clone(transformer), cols)
+                    if isinstance(transformer, sklearn.base.TransformerMixin)
+                    else (name, transformer, cols)
+                )
                 for name, transformer, cols in named_specific_transformers
             ]
 
@@ -728,7 +734,8 @@ class TableVectorizer(ColumnTransformer):
         )
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Takes a dataframe and tries to convert its columns to their best possible data type.
+        """Takes a dataframe and tries to convert its columns to their best possible
+        data type.
 
         Parameters
         ----------
