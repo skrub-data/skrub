@@ -8,9 +8,6 @@ from sklearn.utils.validation import check_is_fitted
 
 from skrub._utils import check_input
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
-
 
 WORD_TO_ALIAS: dict[str, str] = {
     "year": "Y",
@@ -38,7 +35,8 @@ AcceptedTimeValues = Literal[
 
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
-    """Transforms each datetime column into several numeric columns for temporal features (e.g year, month, day...).
+    """Transform each datetime column into several numeric columns
+    for temporal features (e.g. "year", "month", "day"...).
 
     Constant extracted features are dropped; for instance, if the year is
     always the same in a feature, the extracted "year" column won't be added.
@@ -47,12 +45,13 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    extract_until : {'year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'}, default='hour'
+    extract_until : {"year", "month", "day", "hour", "minute", "second",
+        "millisecond", "microsecond", "nanosecond"}, default="hour"
         Extract up to this granularity.
-        If all features have not been extracted, add the 'total_time' feature,
+        If all features have not been extracted, add the "total_time" feature,
         which contains the time to epoch (in seconds).
-        For instance, if you specify 'day', only 'year', 'month', 'day' and
-        'total_time' features will be created.
+        For instance, if you specify "day", only "year", "month", "day" and
+        "total_time" features will be created.
     add_day_of_the_week : bool, default=False
         Add day of the week feature (if day is extracted).
         This is a numerical feature from 0 (Monday) to 6 (Sunday).
@@ -73,7 +72,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     See Also
     --------
     GapEncoder :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encode dirty categories (strings) by constructing
+        latent topics with continuous encoding.
     MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
     SimilarityEncoder :
@@ -91,7 +91,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     DatetimeEncoder()
 
     The encoder will output a transformed array
-    with four columns (year, month, day and hour):
+    with four columns ("year", "month", "day" and "hour"):
 
     >>> enc.transform(X)
     array([[2022.,   10.,   15.,    0.],
@@ -167,13 +167,13 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 ) // pd.Timedelta("1s")
 
     def fit(self, X: ArrayLike, y=None) -> "DatetimeEncoder":
-        """Fit the instance to X.
+        """Fit the instance to ``X``.
 
         In practice, just stores which extracted features are not constant.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
+        X : array-like, shape (``n_samples``, ``n_features``)
             Data where each column is a datetime feature.
         y : None
             Unused, only here for compatibility.
@@ -222,18 +222,19 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: ArrayLike, y=None) -> NDArray:
-        """Transform `X` by replacing each datetime column with corresponding numerical features.
+        """Transform ``X`` by replacing each datetime column with
+        corresponding numerical features.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
+        X : array-like, shape (``n_samples``, ``n_features``)
             The data to transform, where each column is a datetime feature.
         y : None
             Unused, only here for compatibility.
 
         Returns
         -------
-        ndarray, shape (n_samples, `n_features_out_`)
+        ndarray, shape (``n_samples``, ``n_features_out_``)
             Transformed input.
         """
         check_is_fitted(
