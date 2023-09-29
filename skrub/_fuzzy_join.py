@@ -19,9 +19,6 @@ from sklearn.feature_extraction.text import (
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
-
 
 def _numeric_encoding(
     main: pd.DataFrame,
@@ -208,7 +205,8 @@ def fuzzy_join(
     sort: bool = False,
     suffixes: tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
-    """Join two tables based on approximate matching using the appropriate similarity metric.
+    """Join two tables based on approximate matching using the appropriate similarity
+    metric.
 
     The principle is as follows:
 
@@ -217,8 +215,8 @@ def fuzzy_join(
        closest neighbor and establish a match.
     3. We match the tables using the previous information.
 
-    For string columns, categories from the two tables that share many sub-strings (n-grams)
-    have greater probability of being matched together. The join is based on
+    For string columns, categories from the two tables that share many sub-strings
+    (n-grams) have greater probability of being matched together. The join is based on
     morphological similarities between strings.
 
     Simultaneous joins on multiple columns (e.g. longitude, latitude) is supported.
