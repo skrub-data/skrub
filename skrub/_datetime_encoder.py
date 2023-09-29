@@ -8,10 +8,6 @@ from sklearn.utils.validation import check_is_fitted
 
 from skrub._utils import check_input
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
-
-
 WORD_TO_ALIAS: dict[str, str] = {
     "year": "Y",
     "month": "M",
@@ -38,7 +34,8 @@ AcceptedTimeValues = Literal[
 
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
-    """Transforms each datetime column into several numeric columns for temporal features (e.g year, month, day...).
+    """Transforms each datetime column into several numeric columns for temporal
+    features (e.g year, month, day...).
 
     Constant extracted features are dropped; for instance, if the year is
     always the same in a feature, the extracted "year" column won't be added.
@@ -47,7 +44,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    extract_until : {'year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'}, default='hour'
+    extract_until : {'year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond',
+        'microsecond', 'nanosecond'}, default='hour'
         Extract up to this granularity.
         If all features have not been extracted, add the 'total_time' feature,
         which contains the time to epoch (in seconds).
@@ -73,7 +71,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     See Also
     --------
     GapEncoder :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics with
+        continuous encoding.
     MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
     SimilarityEncoder :
@@ -222,7 +221,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: ArrayLike, y=None) -> NDArray:
-        """Transform `X` by replacing each datetime column with corresponding numerical features.
+        """Transform `X` by replacing each datetime column with corresponding
+        numerical features.
 
         Parameters
         ----------
