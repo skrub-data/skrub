@@ -1,4 +1,7 @@
+import warnings
+
 import joblib
+import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.ensemble import (
@@ -94,6 +97,17 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         provided estimators do not support multi-output tasks. Fitting and
         querying these estimators can be done in parallel.
 
+    on_estimator_failure : "warn", "raise" or "pass"
+        How to handle exceptions raised when fitting one of the estimators
+        (regressors and classifiers) or querying them for a prediction. If
+        "raise", exceptions are propagated. If "pass" (i) if an exception is
+        raised during ``fit`` the corresponding columns are ignored -- they
+        will not appear in the join and (ii) if an exception is raised during
+        ``transform``, the corresponding column will be filled with nulls.
+        Columns are filled with nulls during ``transform`` rather than dropped
+        so that the output always has the same shape. If "warn" (the default),
+        behave like "pass" but issue a warning.
+
     Attributes
     ----------
     vectorizer_ : scikit-learn transformer
@@ -148,6 +162,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         classifier=None,
         vectorizer=None,
         n_jobs=1,
+        on_estimator_failure="warn",
     ):
         self.aux_table = aux_table
         self.main_key = main_key
@@ -158,6 +173,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self.classifier = classifier
         self.vectorizer = vectorizer
         self.n_jobs = n_jobs
+        self.on_estimator_failure = on_estimator_failure
 
     def fit(self, X=None, y=None):
         """Fit estimators to the `aux_table` provided during initialization.
@@ -182,14 +198,19 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self._check_inputs()
         key_values = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
         estimators = self._get_estimator_assignments()
-        self.estimators_ = joblib.Parallel(self.n_jobs)(
+        fit_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_fit)(
                 key_values,
                 self.aux_table[assignment["columns"]],
                 assignment["estimator"],
+                propagate_exceptions=(self.on_estimator_failure == "raise"),
             )
             for assignment in estimators
         )
+        fit_results = self._check_fit_results(fit_results)
+        for res in fit_results:
+            del res["failed"]
+        self.estimators_ = fit_results
         return self
 
     def _check_inputs(self):
@@ -235,6 +256,22 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self._main_key = _utils.atleast_1d_or_none(main_key)
         self._aux_key = _utils.atleast_1d_or_none(aux_key)
 
+    def _check_fit_results(self, results):
+        successful_results = [res for res in results if not res["failed"]]
+        if self.on_estimator_failure == "pass":
+            return successful_results
+        failed_columns = []
+        for res in results:
+            if res["failed"]:
+                failed_columns.extend(res["columns"])
+        if not failed_columns:
+            return successful_results
+        warnings.warn(
+            "Estimators failed to be fitted for the following"
+            f" columns:\n{failed_columns}"
+        )
+        return successful_results
+
     def transform(self, X):
         """Transform a table by joining inferred values to it.
 
@@ -255,16 +292,51 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         """
         main_table = X
         key_values = self.vectorizer_.transform(main_table[self._main_key])
-        interpolated_parts = joblib.Parallel(self.n_jobs)(
+        prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
-                key_values, assignment["columns"], assignment["estimator"]
+                key_values,
+                assignment["columns"],
+                assignment["estimator"],
+                propagate_exceptions=(self.on_estimator_failure == "raise"),
             )
             for assignment in self.estimators_
         )
-        interpolated_parts = _add_column_name_suffix(interpolated_parts, self.suffix)
-        for part in interpolated_parts:
+        prediction_results = self._check_prediction_results(prediction_results)
+        predictions = [res["predictions"] for res in prediction_results]
+        predictions = _add_column_name_suffix(predictions, self.suffix)
+        for part in predictions:
             part.index = main_table.index
-        return pd.concat([main_table] + interpolated_parts, axis=1)
+        return pd.concat([main_table] + predictions, axis=1)
+
+    def _check_prediction_results(self, results):
+        checked_results = []
+        failed_columns = []
+        for res in results:
+            new_res = dict(**res)
+            if res["failed"]:
+                if set(res["columns"]).issubset(
+                    self.aux_table.select_dtypes("number").columns.values
+                ):
+                    dtype = float
+                else:
+                    dtype = object
+                pred = pd.DataFrame(
+                    columns=res["columns"],
+                    index=np.arange(res["shape"][0]),
+                    dtype=dtype,
+                )
+                new_res["predictions"] = pred
+                failed_columns.extend(res["columns"])
+            checked_results.append(new_res)
+        if not failed_columns:
+            return checked_results
+        if self.on_estimator_failure == "pass":
+            return checked_results
+        warnings.warn(
+            "Prediction failed for the following columns; output will be filled with"
+            f" nulls:\n{failed_columns}"
+        )
+        return checked_results
 
     def _get_estimator_assignments(self):
         """Identify column groups to be predicted together and assign them an estimator.
@@ -323,7 +395,7 @@ def _handles_multioutput(estimator):
     return _safe_tags(estimator).get("multioutput", False)
 
 
-def _fit(key_values, target_table, estimator):
+def _fit(key_values, target_table, estimator, propagate_exceptions):
     estimator = clone(estimator)
     kept_rows = target_table.notnull().all(axis=1).to_numpy()
     key_values = key_values[kept_rows]
@@ -333,14 +405,35 @@ def _fit(key_values, target_table, estimator):
     # passing a column vector rather than a 1-D array
     if len(target_table.columns) == 1:
         Y = Y.ravel()
+    failed = False
+    try:
+        estimator.fit(key_values, Y)
+    except Exception:
+        if propagate_exceptions:
+            raise
+        failed = True
+        estimator = None
+    return {"columns": target_table.columns, "estimator": estimator, "failed": failed}
 
-    estimator.fit(key_values, Y)
-    return {"columns": target_table.columns, "estimator": estimator}
 
-
-def _predict(key_values, columns, estimator):
-    Y_values = estimator.predict(key_values)
-    return pd.DataFrame(data=Y_values, columns=columns)
+def _predict(key_values, columns, estimator, propagate_exceptions):
+    failed = False
+    try:
+        Y_values = estimator.predict(key_values)
+    except Exception:
+        if propagate_exceptions:
+            raise
+        failed = True
+    if failed:
+        predictions = None
+    else:
+        predictions = pd.DataFrame(data=Y_values, columns=columns)
+    return {
+        "predictions": predictions,
+        "failed": failed,
+        "columns": columns,
+        "shape": (key_values.shape[0], len(columns)),
+    }
 
 
 def _add_column_name_suffix(dataframes, suffix):

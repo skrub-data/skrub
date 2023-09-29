@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from skrub import InterpolationJoiner
@@ -15,7 +16,7 @@ def buildings():
 
 
 @pytest.fixture
-def annual_avg_temp():
+def weather():
     return pd.DataFrame(
         {
             "latitude": [1.2, 0.9, 1.9, 1.7, 5.0, 5.0],
@@ -28,11 +29,11 @@ def annual_avg_temp():
 
 @pytest.mark.parametrize("key", [["latitude", "longitude"], "latitude"])
 @pytest.mark.parametrize("with_nulls", [False, True])
-def test_interpolation_join(buildings, annual_avg_temp, key, with_nulls):
+def test_interpolation_join(buildings, weather, key, with_nulls):
     if not with_nulls:
-        annual_avg_temp = annual_avg_temp.fillna(0.0)
+        weather = weather.fillna(0.0)
     transformed = InterpolationJoiner(
-        annual_avg_temp,
+        weather,
         key=key,
         regressor=KNeighborsRegressor(2),
         classifier=KNeighborsClassifier(2),
@@ -61,9 +62,9 @@ def test_vectorizer():
     assert_array_equal(join["B"], [0, 1])
 
 
-def test_no_multioutput(buildings, annual_avg_temp):
+def test_no_multioutput(buildings, weather):
     transformed = InterpolationJoiner(
-        annual_avg_temp,
+        weather,
         main_key=("latitude", "longitude"),
         aux_key=("latitude", "longitude"),
     ).fit_transform(buildings)
@@ -132,3 +133,114 @@ def test_join_on_date():
         regressor=KNeighborsRegressor(1),
     ).fit_transform(sales)
     assert_array_equal(transformed["temp"].values, [-10, 10])
+
+
+class FailFit(DummyClassifier):
+    def fit(self, X, y):
+        raise ValueError("FailFit failed")
+
+
+def test_fit_failures(buildings, weather):
+    weather["climate"] = "A"
+    joiner = InterpolationJoiner(
+        weather,
+        key=["latitude", "longitude"],
+        regressor=KNeighborsRegressor(2),
+        classifier=FailFit(),
+        on_estimator_failure="pass",
+    )
+    join = joiner.fit_transform(buildings)
+    assert_array_equal(join["avg_temp"].values, [10.5, 15.5])
+    assert join.shape == (2, 4)
+
+    joiner = InterpolationJoiner(
+        weather,
+        key=["latitude", "longitude"],
+        regressor=KNeighborsRegressor(2),
+        classifier=FailFit(),
+        on_estimator_failure="warn",
+    )
+    with pytest.warns(UserWarning, match="(?s)Estimators failed.*climate"):
+        join = joiner.fit_transform(buildings)
+    assert_array_equal(join["avg_temp"].values, [10.5, 15.5])
+    assert join.shape == (2, 4)
+
+    joiner = InterpolationJoiner(
+        weather,
+        key=["latitude", "longitude"],
+        regressor=KNeighborsRegressor(2),
+        classifier=FailFit(),
+        on_estimator_failure="raise",
+    )
+    with pytest.raises(ValueError, match="FailFit failed"):
+        join = joiner.fit_transform(buildings)
+
+
+class FailPredict(DummyClassifier):
+    def predict(self, X):
+        raise ValueError("FailPredict failed")
+
+
+def test_transform_failures(buildings, weather):
+    joiner = InterpolationJoiner(
+        weather,
+        key=["latitude", "longitude"],
+        regressor=KNeighborsRegressor(2),
+        classifier=FailPredict(),
+        on_estimator_failure="pass",
+    )
+    join = joiner.fit_transform(buildings)
+    assert_array_equal(join["avg_temp"].values, [10.5, 15.5])
+    assert join["climate"].isnull().all()
+    assert join["climate"].dtype == object
+    assert join.shape == (2, 5)
+
+    joiner = InterpolationJoiner(
+        weather,
+        key=["latitude", "longitude"],
+        regressor=KNeighborsRegressor(2),
+        classifier=FailPredict(),
+        on_estimator_failure="warn",
+    )
+    with pytest.warns(UserWarning, match="(?s)Prediction failed.*climate"):
+        join = joiner.fit_transform(buildings)
+    assert_array_equal(join["avg_temp"].values, [10.5, 15.5])
+    assert join["climate"].isnull().all()
+    assert join["climate"].dtype == object
+    assert join.shape == (2, 5)
+
+    joiner = InterpolationJoiner(
+        weather,
+        key=["latitude", "longitude"],
+        regressor=KNeighborsRegressor(2),
+        classifier=FailPredict(),
+        on_estimator_failure="raise",
+    )
+    with pytest.raises(Exception, match="FailPredict failed"):
+        join = joiner.fit_transform(buildings)
+
+
+def test_transform_failures_dtype(buildings, weather):
+    joiner = InterpolationJoiner(
+        weather,
+        key=["latitude", "longitude"],
+        regressor=FailPredict(),
+        classifier=DummyClassifier(),
+        on_estimator_failure="pass",
+    )
+    join = joiner.fit_transform(buildings)
+    assert join["avg_temp"].isnull().all()
+    assert join["avg_temp"].dtype == "float64"
+    assert join.shape == (2, 5)
+
+    joiner = InterpolationJoiner(
+        weather,
+        key=["latitude", "longitude"],
+        regressor=DummyRegressor(),
+        classifier=FailPredict(),
+        on_estimator_failure="pass",
+    )
+    join = joiner.fit_transform(buildings)
+    assert join["climate"].isnull().all()
+    assert join["climate"].dtype == object
+    assert join.shape == (2, 5)
