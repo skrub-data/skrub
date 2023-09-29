@@ -89,13 +89,15 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         representing high-cardinality categories. If ``None``, a
         ``TableVectorizer`` is used.
 
-    n_jobs : int
-        Number of joblib workers to use Depending on the estimators used and
-        the contents of ``aux_table``, several estimators may need to be
-        fitted -- for example one for continuous outputs (regressor) and one
-        for categorical outputs (classifier), or one for each column when the
-        provided estimators do not support multi-output tasks. Fitting and
-        querying these estimators can be done in parallel.
+    n_jobs : int or None
+        Number of jobs to run in parallel. ``None`` means 1 unless in a
+        ``joblib.parallel_backend`` context. -1 means using all processors.
+        Depending on the estimators used and the contents of ``aux_table``,
+        several estimators may need to be fitted -- for example one for
+        continuous outputs (regressor) and one for categorical outputs
+        (classifier), or one for each column when the provided estimators do
+        not support multi-output tasks. Fitting and querying these estimators
+        can be done in parallel.
 
     on_estimator_failure : "warn", "raise" or "pass"
         How to handle exceptions raised when fitting one of the estimators
@@ -161,7 +163,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         regressor=None,
         classifier=None,
         vectorizer=None,
-        n_jobs=1,
+        n_jobs=None,
         on_estimator_failure="warn",
     ):
         self.aux_table = aux_table
