@@ -6,8 +6,8 @@ Feature interpretation with the GapEncoder
 ==========================================
 
 In this notebook, we will explore the output and inner workings of the
-|GapEncoder|, one of the categorical encoders provided by skrub.
-
+|GapEncoder|, one of the `high cardinality categorical encoders <https://inria.hal.science/hal-02171256v4>`_
+provided by skrub.
 
 .. |GapEncoder| replace::
      :class:`~skrub.GapEncoder`
@@ -33,10 +33,17 @@ X, y = dataset.X, dataset.y
 X
 
 ###############################################################################
-# Encoding dirty job titles
-# -------------------------
+# Encoding job titles
+# -------------------
 #
-# Let's look at the job titles, the dirty column we want to encode:
+# Let's look at the job titles, the column containing dirty data we want to encode:
+#
+# .. topic:: Note:
+#
+#   Dirty data, as opposed to clean, are all non-curated categorical
+#   columns with variations such as typos, abbreviations, duplications,
+#   alternate naming conventions etc.
+#
 
 X_dirty = X[["employee_position_title"]]
 
