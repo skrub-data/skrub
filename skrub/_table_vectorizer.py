@@ -8,7 +8,6 @@ import warnings
 from collections import Counter, defaultdict
 from itertools import chain
 from typing import Literal
-from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -28,9 +27,6 @@ from sklearn.utils.validation import _get_feature_names, check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
 from skrub._utils import parse_astype_error_message
-
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
 
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
@@ -80,8 +76,9 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | Non
             if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
                 warnings.warn(
                     f"""
-                    Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
-                    formats for the dates in column '{date_column.name}'.
+                    Both {date_format_monthfirst.iloc[0]} and
+                    {date_format_dayfirst.iloc[0]} are valid formats for the dates in
+                    column '{date_column.name}'.
                     Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
@@ -239,9 +236,9 @@ def _merge_transformers(
                 (original_name, *transformers_dict[original_name])
             )
         else:
-            transformers_to_merge, columns = zip(*[
-                transformers_dict[new_name] for new_name in new_names
-            ])
+            transformers_to_merge, columns = zip(
+                *[transformers_dict[new_name] for new_name in new_names]
+            )
             columns = list(chain.from_iterable(columns))
             merged_transformers.append(
                 (
@@ -464,7 +461,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
          ['division', 'employee_position_title', 'underfilled_job_title']),
         ('remainder', 'passthrough', ['year_first_hired'])
     ]
-    """
+    """  # noqa: E501
 
     transformers_: list[tuple[str, Transformer, list[str]]]
     types_: dict[str, type]
@@ -646,7 +643,8 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         # TODO: check that the provided transformers are valid
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Takes a dataframe and tries to convert its columns to their best possible data type.
+        """Takes a dataframe and tries to convert its columns to their best possible
+        data type.
 
         Parameters
         ----------
