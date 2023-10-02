@@ -198,7 +198,7 @@ def _test_possibilities(X) -> None:
         "high_card_cat": ["str2", "cat2"],
     }
     vectorizer_base.fit_transform(X)
-    check_same_transformers(expected_transformers_df, vectorizer_base.transformers)
+    check_same_transformers(expected_transformers_df, vectorizer_base.transformers_)
 
     # Test with higher cardinality threshold and no numeric transformer
     expected_transformers_2 = {
@@ -207,7 +207,7 @@ def _test_possibilities(X) -> None:
     }
     vectorizer_default = TableVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
-    check_same_transformers(expected_transformers_2, vectorizer_default.transformers)
+    check_same_transformers(expected_transformers_2, vectorizer_default.transformers_)
 
     # Test with a numpy array
     arr = X.to_numpy()
@@ -219,7 +219,7 @@ def _test_possibilities(X) -> None:
     }
     vectorizer_base.fit_transform(arr)
     check_same_transformers(
-        expected_transformers_np_no_cast, vectorizer_base.transformers
+        expected_transformers_np_no_cast, vectorizer_base.transformers_
     )
 
     # Test with single column dataframe
@@ -227,7 +227,7 @@ def _test_possibilities(X) -> None:
         "low_card_cat": ["cat1"],
     }
     vectorizer_base.fit_transform(X[["cat1"]])
-    check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
+    check_same_transformers(expected_transformers_series, vectorizer_base.transformers_)
 
     # Test casting values
     vectorizer_cast = TableVectorizer(
@@ -244,7 +244,7 @@ def _test_possibilities(X) -> None:
         "numeric": ["int", "float"],
     }
     vectorizer_cast.fit_transform(X_str)
-    check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers)
+    check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers_)
     # With numpy
     expected_transformers_np_cast = {
         "numeric": [0, 1],
@@ -252,7 +252,9 @@ def _test_possibilities(X) -> None:
         "high_card_cat": [3, 5],
     }
     vectorizer_cast.fit_transform(X_str.to_numpy())
-    check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
+    check_same_transformers(
+        expected_transformers_np_cast, vectorizer_cast.transformers_
+    )
 
 
 def test_duplicate_column_names() -> None:
@@ -360,11 +362,11 @@ def test_with_arrays() -> None:
 
     X = _get_numpy_array()
     vectorizer.fit_transform(X)
-    check_same_transformers(expected_transformers, vectorizer.transformers)
+    check_same_transformers(expected_transformers, vectorizer.transformers_)
 
     X = _get_list_of_lists()
     vectorizer.fit_transform(X)
-    check_same_transformers(expected_transformers, vectorizer.transformers)
+    check_same_transformers(expected_transformers, vectorizer.transformers_)
 
 
 def test_get_feature_names_out() -> None:
@@ -390,7 +392,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
+    assert vec_w_pass.get_feature_names_out().tolist() == expected_feature_names_pass
 
     vec_w_drop = TableVectorizer(remainder="drop")
     vec_w_drop.fit(X)
@@ -412,7 +414,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
+    assert vec_w_drop.get_feature_names_out().tolist() == expected_feature_names_drop
 
 
 def test_fit() -> None:
@@ -748,7 +750,7 @@ def test_mixed_types() -> None:
         "numeric": ["int_str", "float_str", "int_float"],
         "low_card_cat": ["bool_str"],
     }
-    check_same_transformers(expected_transformers_df, table_vec.transformers)
+    check_same_transformers(expected_transformers_df, table_vec.transformers_)
 
     X = _get_mixed_types_array()
     table_vec = TableVectorizer()
@@ -759,7 +761,7 @@ def test_mixed_types() -> None:
         "numeric": [0, 1, 2],
         "low_card_cat": [3],
     }
-    check_same_transformers(expected_transformers_array, table_vec.transformers)
+    check_same_transformers(expected_transformers_array, table_vec.transformers_)
 
 
 @pytest.mark.parametrize(
@@ -820,7 +822,7 @@ def test_changing_types(
     for new_category in ["a", "new category", "[test]"]:
         table_vec = TableVectorizer()
         table_vec.fit_transform(X_fit)
-        expected_dtype = table_vec.types_["col1"]
+        expected_dtype = table_vec.types_[0]
         # convert [ and ] to \\[ and \\] to avoid pytest warning
         expected_dtype = str(expected_dtype).replace("[", "\\[").replace("]", "\\]")
         new_category_regex = str(new_category).replace("[", "\\[").replace("]", "\\]")
@@ -874,9 +876,9 @@ def test_column_by_column() -> None:
             for feat in table_vec_all_cols.get_feature_names_out()
             if feat.startswith(col)
         ]
-        assert table_vec_one_col.get_feature_names_out() == features_from_col
+        assert table_vec_one_col.get_feature_names_out().tolist() == features_from_col
         indices_features_from_col = [
-            table_vec_all_cols.get_feature_names_out().index(feat)
+            table_vec_all_cols.get_feature_names_out().tolist().index(feat)
             for feat in features_from_col
         ]
         excepted_result = table_vec_all_cols.transform(X)[:, indices_features_from_col]
@@ -1013,7 +1015,7 @@ def test_split_one_hot_encoder() -> None:
         n_jobs=None,
     )
     enc_one_hot.fit(X)
-    assert len(enc_one_hot.transformers) == 3
+    assert len(enc_one_hot.transformers_) == 3
 
 
 @pytest.mark.parametrize(
