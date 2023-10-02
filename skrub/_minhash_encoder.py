@@ -22,7 +22,7 @@ NoneType = type(None)
 
 
 class MinHashEncoder(TransformerMixin, BaseEstimator):
-    """Encode string categorical features by applying the MinHash method to n-gram
+    """Encode string categorical features by applying the MinHash method to n-gram \
     decompositions of strings.
 
     The principle is as follows:
