@@ -339,7 +339,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         # Handle missing values
         missing_mask = (
             ~(X == X)  # Find np.nan
-            | (X is None)  # Find None. Note: `X is None` doesn't work.
+            | (X == None)  # Find None. Note: `X is None` doesn't work.
             | (X == "")  # Find empty strings
         )
 
