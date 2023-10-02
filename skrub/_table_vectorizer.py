@@ -1065,6 +1065,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
     @property
     def transformers_(self):
+        """Transformers applied to the different columns."""
         # TODO: to backward compatibility
         # # For the "remainder" columns, the `ColumnTransformer` `transformers_`
         # # attribute contains the index instead of the column name,
@@ -1088,6 +1089,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
     @property
     def named_transformers_(self) -> Bunch:
         """Map transformer names to transformer objects.
+
         Read-only attribute to access any transformer by given name.
         Keys are transformer names and values are the fitted transformer
         objects.
@@ -1097,6 +1099,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
     @property
     def sparse_output_(self) -> bool:
         """Whether the output of ``transform`` is sparse or dense.
+
         Boolean flag indicating whether the output of ``transform`` is a
         sparse matrix or a dense numpy array, which depends on the output
         of the individual transformers and the `sparse_threshold` keyword.
@@ -1106,6 +1109,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
     @property
     def output_indices_(self) -> dict[str, slice]:
         """Map the transformer names to their input indices.
+
         A dictionary from each transformer name to a slice, where the slice
         corresponds to indices in the transformed output. This is useful to
         inspect which transformer is responsible for which transformed
