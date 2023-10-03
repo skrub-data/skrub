@@ -14,9 +14,6 @@ from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
 
-# Ignore lines too long, docstring parameter definition can't be cut
-# flake8: noqa: E501
-
 
 def compute_ngram_distance(
     unique_words: Sequence[str] | NDArray,
@@ -168,7 +165,8 @@ def deduplicate(
         word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    method : {`single`, `complete`, `average`, `centroid`, `median`, `ward`}, default=`average`
+    method : {`single`, `complete`, `average`, `centroid`, `median`, `ward`},
+        default=`average`
         Linkage method parameter to use for merging clusters via
         :func:`scipy.cluster.hierarchy.linkage`.
         Option `average` calculates the distance between two clusters as the

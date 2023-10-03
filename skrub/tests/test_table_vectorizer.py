@@ -72,7 +72,8 @@ def _get_dirty_dataframe(categorical_dtype="object") -> pd.DataFrame:
                 dtype=categorical_dtype,
             ),
             "str2": pd.Series(
-                ["officer", "manager", None, "chef", "teacher"], dtype=categorical_dtype
+                ["officer", "manager", None, "chef", "teacher"],
+                dtype=categorical_dtype,
             ),
             "cat1": pd.Series(
                 [np.nan, "yes", "no", "yes", "no"], dtype=categorical_dtype
@@ -198,7 +199,7 @@ def _test_possibilities(X) -> None:
         "high_card_cat": ["str2", "cat2"],
     }
     vectorizer_base.fit_transform(X)
-    check_same_transformers(expected_transformers_df, vectorizer_base.transformers)
+    check_same_transformers(expected_transformers_df, vectorizer_base.transformers_)
 
     # Test with higher cardinality threshold and no numeric transformer
     expected_transformers_2 = {
@@ -207,7 +208,7 @@ def _test_possibilities(X) -> None:
     }
     vectorizer_default = TableVectorizer()  # Using default values
     vectorizer_default.fit_transform(X)
-    check_same_transformers(expected_transformers_2, vectorizer_default.transformers)
+    check_same_transformers(expected_transformers_2, vectorizer_default.transformers_)
 
     # Test with a numpy array
     arr = X.to_numpy()
@@ -219,7 +220,7 @@ def _test_possibilities(X) -> None:
     }
     vectorizer_base.fit_transform(arr)
     check_same_transformers(
-        expected_transformers_np_no_cast, vectorizer_base.transformers
+        expected_transformers_np_no_cast, vectorizer_base.transformers_
     )
 
     # Test with single column dataframe
@@ -227,7 +228,7 @@ def _test_possibilities(X) -> None:
         "low_card_cat": ["cat1"],
     }
     vectorizer_base.fit_transform(X[["cat1"]])
-    check_same_transformers(expected_transformers_series, vectorizer_base.transformers)
+    check_same_transformers(expected_transformers_series, vectorizer_base.transformers_)
 
     # Test casting values
     vectorizer_cast = TableVectorizer(
@@ -244,7 +245,7 @@ def _test_possibilities(X) -> None:
         "numeric": ["int", "float"],
     }
     vectorizer_cast.fit_transform(X_str)
-    check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers)
+    check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers_)
     # With numpy
     expected_transformers_np_cast = {
         "numeric": [0, 1],
@@ -252,7 +253,9 @@ def _test_possibilities(X) -> None:
         "high_card_cat": [3, 5],
     }
     vectorizer_cast.fit_transform(X_str.to_numpy())
-    check_same_transformers(expected_transformers_np_cast, vectorizer_cast.transformers)
+    check_same_transformers(
+        expected_transformers_np_cast, vectorizer_cast.transformers_
+    )
 
 
 def test_duplicate_column_names() -> None:
@@ -360,11 +363,11 @@ def test_with_arrays() -> None:
 
     X = _get_numpy_array()
     vectorizer.fit_transform(X)
-    check_same_transformers(expected_transformers, vectorizer.transformers)
+    check_same_transformers(expected_transformers, vectorizer.transformers_)
 
     X = _get_list_of_lists()
     vectorizer.fit_transform(X)
-    check_same_transformers(expected_transformers, vectorizer.transformers)
+    check_same_transformers(expected_transformers, vectorizer.transformers_)
 
 
 def test_get_feature_names_out() -> None:
@@ -390,7 +393,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    assert vec_w_pass.get_feature_names_out() == expected_feature_names_pass
+    assert vec_w_pass.get_feature_names_out().tolist() == expected_feature_names_pass
 
     vec_w_drop = TableVectorizer(remainder="drop")
     vec_w_drop.fit(X)
@@ -412,7 +415,7 @@ def test_get_feature_names_out() -> None:
         "cat2_50K+",
         "cat2_60K+",
     ]
-    assert vec_w_drop.get_feature_names_out() == expected_feature_names_drop
+    assert vec_w_drop.get_feature_names_out().tolist() == expected_feature_names_drop
 
 
 def test_fit() -> None:
@@ -626,7 +629,12 @@ def test__infer_date_format() -> None:
         assert _infer_date_format(date_column) == "%m-%d-%Y %H:%M"
 
     date_column = pd.Series(
-        ["01-01-2022 12:00", "13-01-2019 12:00", "01-03-2022 12:00", "01-13-2019 12:00"]
+        [
+            "01-01-2022 12:00",
+            "13-01-2019 12:00",
+            "01-03-2022 12:00",
+            "01-13-2019 12:00",
+        ]
     )
     assert _infer_date_format(date_column) is None
 
@@ -677,9 +685,11 @@ def test_specifying_specific_column_transformer(
     X = _get_dirty_dataframe()
     tv = TableVectorizer(specific_transformers=[specific_transformers]).fit(X)
     clean_transformers_ = [
-        (name, transformer.__class__.__name__, columns)
-        if not isinstance(transformer, str)
-        else (name, transformer, columns)
+        (
+            (name, transformer.__class__.__name__, columns)
+            if not isinstance(transformer, str)
+            else (name, transformer, columns)
+        )
         for name, transformer, columns in tv.transformers_
     ]
     # Sort to ignore order
@@ -748,7 +758,7 @@ def test_mixed_types() -> None:
         "numeric": ["int_str", "float_str", "int_float"],
         "low_card_cat": ["bool_str"],
     }
-    check_same_transformers(expected_transformers_df, table_vec.transformers)
+    check_same_transformers(expected_transformers_df, table_vec.transformers_)
 
     X = _get_mixed_types_array()
     table_vec = TableVectorizer()
@@ -759,7 +769,7 @@ def test_mixed_types() -> None:
         "numeric": [0, 1, 2],
         "low_card_cat": [3],
     }
-    check_same_transformers(expected_transformers_array, table_vec.transformers)
+    check_same_transformers(expected_transformers_array, table_vec.transformers_)
 
 
 @pytest.mark.parametrize(
@@ -820,7 +830,7 @@ def test_changing_types(
     for new_category in ["a", "new category", "[test]"]:
         table_vec = TableVectorizer()
         table_vec.fit_transform(X_fit)
-        expected_dtype = table_vec.types_["col1"]
+        expected_dtype = table_vec.types_[0]
         # convert [ and ] to \\[ and \\] to avoid pytest warning
         expected_dtype = str(expected_dtype).replace("[", "\\[").replace("]", "\\]")
         new_category_regex = str(new_category).replace("[", "\\[").replace("]", "\\]")
@@ -874,9 +884,9 @@ def test_column_by_column() -> None:
             for feat in table_vec_all_cols.get_feature_names_out()
             if feat.startswith(col)
         ]
-        assert table_vec_one_col.get_feature_names_out() == features_from_col
+        assert table_vec_one_col.get_feature_names_out().tolist() == features_from_col
         indices_features_from_col = [
-            table_vec_all_cols.get_feature_names_out().index(feat)
+            table_vec_all_cols.get_feature_names_out().tolist().index(feat)
             for feat in features_from_col
         ]
         excepted_result = table_vec_all_cols.transform(X)[:, indices_features_from_col]
@@ -921,7 +931,9 @@ def test_parallelism(high_card_cat_transformer) -> None:
             assert transformers_list_equal(
                 table_vec.transformers_, table_vec_no_parallel.transformers_
             )
-            assert (table_vec.columns_ == table_vec_no_parallel.columns_).all()
+            assert (
+                table_vec.feature_names_in_ == table_vec_no_parallel.feature_names_in_
+            ).all()
             assert table_vec.types_ == table_vec_no_parallel.types_
             assert table_vec.imputed_columns_ == table_vec_no_parallel.imputed_columns_
             # assert that get_feature_names_out gives the same result
@@ -958,47 +970,20 @@ def test_split_and_merge_univariate_transformers(high_card_cat_transformer) -> N
     )
 
     enc.fit(X)
-    assert len(enc.transformers) == 3
+    assert len(enc._column_transformer.transformers_) == 3
+    assert len(enc.transformers_) == 3
 
     enc_split = TableVectorizer(
         high_card_cat_transformer=high_card_cat_transformer,
         cardinality_threshold=4,
-        n_jobs=None,
+        n_jobs=2,
     )
     enc_split.fit(X)
-    # during actual use, this is done during fit
-    enc_split._split_univariate_transformers(during_fit=True)
-    # check that the high_card_cat_transformer
-    # is split into 2 transformers
-    # the transformers_ attribute should not be modified
-    # because during_fit is True
-    assert len(enc_split.transformers) == 4
+
+    assert len(enc_split._column_transformer.transformers_) == 4
     assert len(enc_split.transformers_) == 3
-    enc_split._merge_univariate_transformers()
-    # check that the GapEncoder is merged into 1 transformer
-    assert len(enc_split.transformers) == 3
-    assert np.allclose(enc.transform(X), enc_split.transform(X))
-    # assert that the transformers attribute is the same as
-    # the one before splitting and merging
-    assert str(enc.transformers) == str(enc_split.transformers)
-    # check that you can refit the transformer
-    enc_split.fit(X)
 
-    # Now split the transformers_ attribute (during_fit=False)
-    enc_split._split_univariate_transformers(during_fit=False)
-    assert len(enc_split.transformers) == 3
-    assert len(enc_split.transformers_) == 4
-    # the fitted transformers should still work
     assert_array_equal(enc.transform(X), enc_split.transform(X))
-
-    enc_split._merge_univariate_transformers()
-    # check that the GapEncoder is merged into 1 transformer
-    assert len(enc_split.transformers_) == 3
-    assert_array_equal(enc.transform(X), enc_split.transform(X))
-
-    # assert that the transformers attribute is the same as
-    # the one before splitting and merging
-    assert str(enc.transformers_) == str(enc_split.transformers_)
 
 
 def test_split_one_hot_encoder() -> None:
@@ -1013,7 +998,7 @@ def test_split_one_hot_encoder() -> None:
         n_jobs=None,
     )
     enc_one_hot.fit(X)
-    assert len(enc_one_hot.transformers) == 3
+    assert len(enc_one_hot.transformers_) == 3
 
 
 @pytest.mark.parametrize(
@@ -1037,7 +1022,7 @@ def test_modying_transformers(low_card_cat_transformer):
     tb.low_card_cat_transformer = "passthrough"
     tb.fit_transform(X)
     assert tb.low_card_cat_transformer_ == "passthrough"
-    assert tb.transformers[0][1] == "passthrough"
+    assert tb._column_transformer.transformers[0][1] == "passthrough"
     assert tb.transformers_[0][1] == "passthrough"
     assert tb.transform(X).shape == (5, 6)
 
@@ -1051,11 +1036,15 @@ def test_modying_transformers(low_card_cat_transformer):
     )
     with pytest.raises(TypeError):
         tb.fit_transform(X)
-    assert len(tb.transformers) == 5  # the transformers should have been splitted
+    assert (
+        len(tb._column_transformer.transformers) == 5
+    )  # the transformers should have been splitted
     # but not merged
     tb.numerical_transformer = "passthrough"
     tb.fit_transform(X)
-    assert len(tb.transformers) == 2  # the transformers should have been splitted
+    assert (
+        len(tb._column_transformer.transformers) == 5
+    )  # the transformers should have been splitted
     # and merged correctly
     assert len(tb.transformers_) == 2
 
