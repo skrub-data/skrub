@@ -27,9 +27,6 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import DatetimeEncoder, GapEncoder
 from skrub._utils import parse_astype_error_message
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
-
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
     """Infer the date format of a date column,
@@ -78,8 +75,9 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | Non
             if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
                 warnings.warn(
                     f"""
-                    Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
-                    formats for the dates in column '{date_column.name}'.
+                    Both {date_format_monthfirst.iloc[0]} and
+                    {date_format_dayfirst.iloc[0]} are valid formats for the dates in
+                    column '{date_column.name}'.
                     Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
@@ -181,8 +179,8 @@ def _split_transformers(
         (name, transformer, column).
     transformers_to_input_indices : dict of str to list of int, optional
         The mapping of transformer names to the indices of the columns they were
-        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
-        Only used when `during_fit` is False.
+        fitted on. Should correspond to the `self._transformer_to_input_indices`
+        attribute. Only used when `during_fit` is False.
     during_fit : bool, default=False
         Whether the method is called during `fit_transform` (True) or
         during `transform` (False). This is used to determine if the
@@ -249,8 +247,8 @@ def _merge_transformers(
         (when True) or the `self.transformers` attribute (when False).
     transformer_to_input_indices : dict of str to list of int, optional
         The mapping of transformer names to the indices of the columns they were
-        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
-        Only used when `is_fitted` is True.
+        fitted on. Should correspond to the `self._transformer_to_input_indices`
+        attribute. Only used when `is_fitted` is True.
     """
     new_transformers = []
     new_transformer_to_input_indices = {} if is_fitted else transformer_to_input_indices
@@ -492,7 +490,7 @@ class TableVectorizer(ColumnTransformer):
          ['division', 'employee_position_title', 'underfilled_job_title']),
         ('remainder', 'passthrough', ['year_first_hired'])
     ]
-    """
+    """  # noqa: E501
 
     transformers_: list[tuple[str, Transformer, list[str]]]
     columns_: pd.Index
@@ -668,9 +666,11 @@ class TableVectorizer(ColumnTransformer):
                 )
 
             self.specific_transformers_ = [
-                (name, clone(transformer), cols)
-                if isinstance(transformer, sklearn.base.TransformerMixin)
-                else (name, transformer, cols)
+                (
+                    (name, clone(transformer), cols)
+                    if isinstance(transformer, sklearn.base.TransformerMixin)
+                    else (name, transformer, cols)
+                )
                 for name, transformer, cols in named_specific_transformers
             ]
 
@@ -728,7 +728,8 @@ class TableVectorizer(ColumnTransformer):
         )
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Takes a dataframe and tries to convert its columns to their best possible data type.
+        """Takes a dataframe and tries to convert its columns to their best possible
+        data type.
 
         Parameters
         ----------
