@@ -8,7 +8,6 @@ from sklearn.utils.validation import check_is_fitted
 
 from skrub._utils import check_input
 
-
 WORD_TO_ALIAS: dict[str, str] = {
     "year": "Y",
     "month": "M",
@@ -35,7 +34,7 @@ AcceptedTimeValues = Literal[
 
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
-    """Transform each datetime column into several numeric columns
+    """Transform each datetime column into several numeric columns \
     for temporal features (e.g. "year", "month", "day"...).
 
     Constant extracted features are dropped; for instance, if the year is
@@ -222,7 +221,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: ArrayLike, y=None) -> NDArray:
-        """Transform ``X`` by replacing each datetime column with
+        """Transform ``X`` by replacing each datetime column with \
         corresponding numerical features.
 
         Parameters
