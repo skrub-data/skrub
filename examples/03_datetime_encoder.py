@@ -100,13 +100,11 @@ print(encoder.get_feature_names_out())
 # As mentioned earlier, the |TableVectorizer| makes use of the
 # |DatetimeEncoder| by default.
 
-from pprint import pprint
-
 from skrub import TableVectorizer
 
 table_vec = TableVectorizer()
 table_vec.fit_transform(X)
-pprint(table_vec.get_feature_names_out())
+print(*table_vec.get_feature_names_out(), sep="\n")
 
 ###############################################################################
 # If we want to customize the |DatetimeEncoder| inside the |TableVectorizer|,
@@ -118,7 +116,7 @@ table_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
 table_vec.fit_transform(X)
-table_vec.get_feature_names_out()
+print(*table_vec.get_feature_names_out(), sep="\n")
 
 ###############################################################################
 # .. note:
@@ -127,7 +125,7 @@ table_vec.get_feature_names_out()
 #
 # Inspecting the |TableVectorizer| further, we can check that the
 # |DatetimeEncoder| is used on the correct column(s).
-pprint(table_vec.transformers_)
+print(*table_vec.transformers_, sep="\n")
 
 ###############################################################################
 # Prediction with datetime features
