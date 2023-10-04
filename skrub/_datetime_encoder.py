@@ -8,10 +8,6 @@ from sklearn.utils.validation import check_is_fitted
 
 from skrub._utils import check_input
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
-
-
 WORD_TO_ALIAS: dict[str, str] = {
     "year": "Y",
     "month": "M",
@@ -19,7 +15,6 @@ WORD_TO_ALIAS: dict[str, str] = {
     "hour": "H",
     "minute": "min",
     "second": "S",
-    "millisecond": "ms",
     "microsecond": "us",
     "nanosecond": "N",
 }
@@ -31,14 +26,14 @@ AcceptedTimeValues = Literal[
     "hour",
     "minute",
     "second",
-    "millisecond",
     "microsecond",
     "nanosecond",
 ]
 
 
 class DatetimeEncoder(BaseEstimator, TransformerMixin):
-    """Transforms each datetime column into several numeric columns for temporal features (e.g year, month, day...).
+    """Transform each datetime column into several numeric columns \
+    for temporal features (e.g. "year", "month", "day"...).
 
     Constant extracted features are dropped; for instance, if the year is
     always the same in a feature, the extracted "year" column won't be added.
@@ -47,12 +42,14 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    extract_until : {'year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond'}, default='hour'
+    extract_until : {"year", "month", "day", "hour", "minute", "second",
+        "microsecond", "nanosecond", None}, default="hour"
         Extract up to this granularity.
-        If all features have not been extracted, add the 'total_time' feature,
-        which contains the time to epoch (in seconds).
-        For instance, if you specify 'day', only 'year', 'month', 'day' and
-        'total_time' features will be created.
+        If all non-constant features have not been extracted,
+        add the "total_time" feature, which contains the time to epoch (in seconds).
+        For instance, if you specify "day", only "year", "month", "day" and
+        "total_time" features will be created.
+        If None, only the "total_time" feature will be created.
     add_day_of_the_week : bool, default=False
         Add day of the week feature (if day is extracted).
         This is a numerical feature from 0 (Monday) to 6 (Sunday).
@@ -73,7 +70,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     See Also
     --------
     GapEncoder :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encode dirty categories (strings) by constructing
+        latent topics with continuous encoding.
     MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
     SimilarityEncoder :
@@ -91,7 +89,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     DatetimeEncoder()
 
     The encoder will output a transformed array
-    with four columns (year, month, day and hour):
+    with four columns ("year", "month", "day" and "hour"):
 
     >>> enc.transform(X)
     array([[2022.,   10.,   15.,    0.],
@@ -108,7 +106,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         *,
-        extract_until: AcceptedTimeValues = "hour",
+        extract_until: AcceptedTimeValues | None = "hour",
         add_day_of_the_week: bool = False,
     ):
         self.extract_until = extract_until
@@ -125,7 +123,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         }
 
     def _validate_keywords(self):
-        if self.extract_until not in TIME_LEVELS:
+        if self.extract_until not in TIME_LEVELS and self.extract_until is not None:
             raise ValueError(
                 f'"extract_until" should be one of {TIME_LEVELS}, '
                 f"got {self.extract_until}. "
@@ -145,8 +143,6 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             return pd.DatetimeIndex(date_series).minute.to_numpy()
         elif feature == "second":
             return pd.DatetimeIndex(date_series).second.to_numpy()
-        elif feature == "millisecond":
-            return pd.DatetimeIndex(date_series).millisecond.to_numpy()
         elif feature == "microsecond":
             return pd.DatetimeIndex(date_series).microsecond.to_numpy()
         elif feature == "nanosecond":
@@ -167,13 +163,14 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 ) // pd.Timedelta("1s")
 
     def fit(self, X: ArrayLike, y=None) -> "DatetimeEncoder":
-        """Fit the instance to X.
+        """Fit the instance to ``X``.
 
-        In practice, just stores which extracted features are not constant.
+        In practice, just check keywords and input validity,
+        and stores which extracted features are not constant.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
+        X : array-like, shape (``n_samples``, ``n_features``)
             Data where each column is a datetime feature.
         y : None
             Unused, only here for compatibility.
@@ -184,11 +181,6 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             Fitted DatetimeEncoder instance (self).
         """
         self._validate_keywords()
-        # Columns to extract for each column,
-        # before taking into account constant columns
-        self._to_extract = TIME_LEVELS[: TIME_LEVELS.index(self.extract_until) + 1]
-        if self.add_day_of_the_week:
-            self._to_extract.append("dayofweek")
         if isinstance(X, pd.DataFrame):
             self.col_names_ = X.columns.to_list()
         else:
@@ -200,19 +192,30 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             self.features_per_column_[i] = []
         # Check which columns are constant
         for i in range(X.shape[1]):
-            for feature in self._to_extract:
-                if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
-                    self.features_per_column_[i].append(feature)
-            # If some date features have not been extracted, then add the
-            # "total_time" feature, which contains the full time to epoch
-            remainder = (
-                pd.to_datetime(X[:, i])
-                - pd.to_datetime(
-                    pd.DatetimeIndex(X[:, i]).floor(WORD_TO_ALIAS[self.extract_until])
-                )
-            ).seconds.to_numpy()
-            if np.nanstd(remainder) > 0:
-                self.features_per_column_[i].append("total_time")
+            if self.extract_until is None:
+                if np.nanstd(self._extract_from_date(X[:, i], "total_time")) > 0:
+                    self.features_per_column_[i].append("total_time")
+            else:
+                for feature in TIME_LEVELS:
+                    if np.nanstd(self._extract_from_date(X[:, i], feature)) > 0:
+                        if TIME_LEVELS.index(feature) <= TIME_LEVELS.index(
+                            self.extract_until
+                        ):
+                            self.features_per_column_[i].append(feature)
+                        # we add a total_time feature, which contains the full
+                        # time to epoch, if there is at least one
+                        # feature that has not been extracted and is not constant
+                        if TIME_LEVELS.index(feature) > TIME_LEVELS.index(
+                            self.extract_until
+                        ):
+                            self.features_per_column_[i].append("total_time")
+                            break
+                # Add day of the week feature if needed
+                if (
+                    self.add_day_of_the_week
+                    and np.nanstd(self._extract_from_date(X[:, i], "dayofweek")) > 0
+                ):
+                    self.features_per_column_[i].append("dayofweek")
 
         self.n_features_in_ = X.shape[1]
         self.n_features_out_ = len(
@@ -222,18 +225,19 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X: ArrayLike, y=None) -> NDArray:
-        """Transform `X` by replacing each datetime column with corresponding numerical features.
+        """Transform ``X`` by replacing each datetime column with \
+        corresponding numerical features.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
+        X : array-like, shape (``n_samples``, ``n_features``)
             The data to transform, where each column is a datetime feature.
         y : None
             Unused, only here for compatibility.
 
         Returns
         -------
-        ndarray, shape (n_samples, `n_features_out_`)
+        ndarray, shape (``n_samples``, ``n_features_out_``)
             Transformed input.
         """
         check_is_fitted(
@@ -263,7 +267,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         Feature names are formatted like: "<column_name>_<new_feature>"
         if the original data has column names, otherwise with format
         "<column_index>_<new_feature>" where `<new_feature>` is one of
-        {"year", "month", "day", "hour", "minute", "second", "millisecond",
+        {"year", "month", "day", "hour", "minute", "second",
         "microsecond", "nanosecond", "dayofweek"}.
 
         Parameters
