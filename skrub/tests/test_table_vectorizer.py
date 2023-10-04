@@ -997,7 +997,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
     assert table_vectorizer.named_transformers_["numeric"].n_jobs == 2
     assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs == 2
 
-    # 2. Case where `TableVectorizer.n_jobs` is not `None` and we should not propagate
+    # 3. Case where `TableVectorizer.n_jobs` is not `None` and we should not propagate
     # when the underlying transformer `n_jobs` is set explicitly.
     table_vectorizer = TableVectorizer(
         numerical_transformer=DummyTransformerWithJobs(n_jobs=4),
