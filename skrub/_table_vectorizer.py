@@ -429,13 +429,6 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             },
         }
 
-    @property
-    def _is_parallelized(self) -> bool:
-        """
-        Returns True if the transformers are parallelized over columns, False otherwise.
-        """
-        return self.n_jobs not in (None, 1)
-
     def _propagate_n_jobs(self, transformer):
         if self.n_jobs is not None and (
             hasattr(transformer, "n_jobs") and transformer.n_jobs is None
