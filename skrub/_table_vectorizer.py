@@ -1010,18 +1010,11 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         if self.verbose:
             print(f"[TableVectorizer] Assigned transformers: {transformers}")
 
-        # split the univariate transformers on each column
-        # to be able to parallelize the encoding
-        if self._is_parallelized:
-            transformers, self._map_from_to_expanded_transformers = _split_transformers(
-                transformers
-            )
-
         self._column_transformer = ColumnTransformer(
             transformers=transformers,
             remainder=self.remainder,
             sparse_threshold=self.sparse_threshold,
-            n_jobs=self.n_jobs,
+            n_jobs=1,  # we don't parallelize the outer loop
             transformer_weights=self.transformer_weights,
             verbose=self.verbose,
             verbose_feature_names_out=self.verbose_feature_names_out,
@@ -1078,25 +1071,21 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
     @property
     def transformers_(self):
         """Transformers applied to the different columns."""
-        # TODO: to backward compatibility
-        # # For the "remainder" columns, the `ColumnTransformer` `transformers_`
-        # # attribute contains the index instead of the column name,
-        # # so we convert the values to the appropriate column names
-        # # if there is less than 20 columns in the remainder.
-        # self.transformers_ = self._column_transformer.transformers_
-        # for i, (name, transformer, columns) in enumerate(self.transformers_):
-        #     if name == "remainder" and len(columns) < 20:
-        #         # In this case, "columns" is a list of ints (the indices)
-        #         columns: list[int]
-        #         self.transformers_[i] = (
-        #             name, transformer, self.feature_names_in_[columns].tolist()
-        #         )
-        if self._is_parallelized:
-            return _merge_transformers(
-                self._column_transformer.transformers_,
-                self._map_from_to_expanded_transformers,
-            )
-        return self._column_transformer.transformers_
+        # For the "remainder" columns, the `ColumnTransformer` `transformers_`
+        # attribute contains the index instead of the column name,
+        # so we convert the values to the appropriate column names
+        # if there is less than 20 columns in the remainder.
+        transformers = self._column_transformer.transformers_
+        for i, (name, transformer, columns) in enumerate(transformers):
+            if name == "remainder" and len(columns) < 20:
+                # In this case, "columns" is a list of ints (the indices)
+                columns: list[int]
+                transformers[i] = (
+                    name,
+                    transformer,
+                    self.feature_names_in_[columns].tolist(),
+                )
+        return transformers
 
     @property
     def named_transformers_(self) -> Bunch:
