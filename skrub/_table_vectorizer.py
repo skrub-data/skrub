@@ -370,13 +370,14 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
 
-    n_jobs : int, optional
-        Number of jobs to run in parallel.
-        ``None`` (the default) means 1 unless in a
-        joblib.parallel_backend context.
-        ``-1`` means using all processors.
+    n_jobs : int, default=None
+        Number of jobs to run in parallel. This number of jobs will be dispatched to
+        the underlying transformers, if those support parallelization and they do not
+        set specifically `n_jobs`.
+        ``None`` (the default) means 1 unless in a :fund:`joblib.parallel_config`
+        context. ``-1`` means using all processors.
 
-    transformer_weights : dict, optional
+    transformer_weights : dict, default=None
         Multiplicative weights for features per transformer. The output of the
         transformer is multiplied by these weights. Keys are transformer names,
         values the weights.
@@ -536,6 +537,13 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         """
         return self.n_jobs not in (None, 1)
 
+    def _propagate_n_jobs(self, transformer):
+        if self.n_jobs is not None and (
+            hasattr(transformer, "n_jobs") and transformer.n_jobs is None
+        ):
+            transformer.set_params(n_jobs=self.n_jobs)
+        return transformer
+
     def _clone_transformers(self) -> None:
         """
         For each of the different transformers that can be passed,
@@ -563,6 +571,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             )
         else:
             self.low_card_cat_transformer_ = self.low_card_cat_transformer
+        self._propagate_n_jobs(self.low_card_cat_transformer_)
 
         if isinstance(self.high_card_cat_transformer, sklearn.base.TransformerMixin):
             self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
@@ -576,6 +585,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             )
         else:
             self.high_card_cat_transformer_ = self.high_card_cat_transformer
+        self._propagate_n_jobs(self.high_card_cat_transformer_)
 
         if isinstance(self.numerical_transformer, sklearn.base.TransformerMixin):
             self.numerical_transformer_ = clone(self.numerical_transformer)
@@ -589,6 +599,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             )
         else:
             self.numerical_transformer_ = self.numerical_transformer
+        self._propagate_n_jobs(self.numerical_transformer_)
 
         if isinstance(self.datetime_transformer, sklearn.base.TransformerMixin):
             self.datetime_transformer_ = clone(self.datetime_transformer)
@@ -602,6 +613,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             )
         else:
             self.datetime_transformer_ = self.datetime_transformer
+        self._propagate_n_jobs(self.datetime_transformer_)
 
         if (self.specific_transformers is None) or len(self.specific_transformers) == 0:
             self.specific_transformers_ = []
@@ -633,7 +645,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
             self.specific_transformers_ = [
                 (
-                    (name, clone(transformer), cols)
+                    (name, self._propagate_n_jobs(clone(transformer)), cols)
                     if isinstance(transformer, sklearn.base.TransformerMixin)
                     else (name, transformer, cols)
                 )

@@ -929,7 +929,9 @@ def test_parallelism(high_card_cat_transformer) -> None:
             # assert that all attributes are equal except for
             # the n_jobs attribute
             assert transformers_list_equal(
-                table_vec.transformers_, table_vec_no_parallel.transformers_
+                table_vec.transformers_,
+                table_vec_no_parallel.transformers_,
+                ignore_params=("n_jobs",),
             )
             assert (
                 table_vec.feature_names_in_ == table_vec_no_parallel.feature_names_in_
@@ -952,6 +954,58 @@ def test_parallelism(high_card_cat_transformer) -> None:
             assert_array_equal(
                 table_vec.transform(X), table_vec_no_parallel.transform(X)
             )
+
+
+def test_table_vectorizer_policy_propagate_n_jobs():
+    """Check the propagation policy of `n_jobs` to the underlying transformers.
+
+    We need to check that when `TableVectorizer.n_jobs` is set, then all underlying
+    transformers `n_jobs` will be set to this value, except if the user provide a
+    transformer in the constructor with the value `n_jobs` already set.
+    """
+    X = _get_clean_dataframe()
+
+    # 1. Case where `TableVectorizer.n_jobs` is `None` and we should not propagate
+    class DummyTransformerWithJobs(FunctionTransformer):
+        def __init__(self, n_jobs=None):
+            super().__init__()
+            self.n_jobs = n_jobs
+
+    table_vectorizer = TableVectorizer(
+        numerical_transformer=DummyTransformerWithJobs(n_jobs=None),
+        low_card_cat_transformer=DummyTransformerWithJobs(n_jobs=None),
+        n_jobs=None,
+    ).fit(X)
+    assert table_vectorizer.named_transformers_["numeric"].n_jobs is None
+    assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs is None
+
+    table_vectorizer = TableVectorizer(
+        numerical_transformer=DummyTransformerWithJobs(n_jobs=2),
+        low_card_cat_transformer=DummyTransformerWithJobs(n_jobs=None),
+        n_jobs=None,
+    ).fit(X)
+    assert table_vectorizer.named_transformers_["numeric"].n_jobs == 2
+    assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs is None
+
+    # 2. Case where `TableVectorizer.n_jobs` is not `None` and we should propagate
+    # when the underlying transformer `n_jobs` is not set explicitly.
+    table_vectorizer = TableVectorizer(
+        numerical_transformer=DummyTransformerWithJobs(n_jobs=None),
+        low_card_cat_transformer=DummyTransformerWithJobs(n_jobs=None),
+        n_jobs=2,
+    ).fit(X)
+    assert table_vectorizer.named_transformers_["numeric"].n_jobs == 2
+    assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs == 2
+
+    # 2. Case where `TableVectorizer.n_jobs` is not `None` and we should not propagate
+    # when the underlying transformer `n_jobs` is set explicitly.
+    table_vectorizer = TableVectorizer(
+        numerical_transformer=DummyTransformerWithJobs(n_jobs=4),
+        low_card_cat_transformer=DummyTransformerWithJobs(n_jobs=None),
+        n_jobs=2,
+    ).fit(X)
+    assert table_vectorizer.named_transformers_["numeric"].n_jobs == 4
+    assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs == 2
 
 
 @pytest.mark.parametrize(
