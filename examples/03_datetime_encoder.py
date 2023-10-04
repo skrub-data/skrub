@@ -45,6 +45,8 @@ It is used by default in the |TableVectorizer|.
 # In this setting, we want to predict the NO2 air concentration, based
 # on the location, date and time of measurement.
 
+from pprint import pprint
+
 import pandas as pd
 
 data = pd.read_csv(
@@ -83,7 +85,7 @@ encoder = make_column_transformer(
 )
 
 X_enc = encoder.fit_transform(X)
-print(encoder.get_feature_names_out())
+pprint(encoder.get_feature_names_out())
 
 ###############################################################################
 # We see that the encoder is working as expected: the "date.utc" column has
@@ -104,7 +106,7 @@ from skrub import TableVectorizer
 
 table_vec = TableVectorizer()
 table_vec.fit_transform(X)
-print(*table_vec.get_feature_names_out(), sep="\n")
+pprint(table_vec.get_feature_names_out())
 
 ###############################################################################
 # If we want to customize the |DatetimeEncoder| inside the |TableVectorizer|,
@@ -116,7 +118,7 @@ table_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
 table_vec.fit_transform(X)
-print(*table_vec.get_feature_names_out(), sep="\n")
+pprint(table_vec.get_feature_names_out())
 
 ###############################################################################
 # .. note:
@@ -125,7 +127,7 @@ print(*table_vec.get_feature_names_out(), sep="\n")
 #
 # Inspecting the |TableVectorizer| further, we can check that the
 # |DatetimeEncoder| is used on the correct column(s).
-print(*table_vec.transformers_, sep="\n")
+pprint(table_vec.transformers_)
 
 ###############################################################################
 # Prediction with datetime features
