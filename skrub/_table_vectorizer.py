@@ -5,8 +5,7 @@ manually categorize them beforehand, or construct complex Pipelines.
 """
 
 import warnings
-from collections import Counter, defaultdict
-from itertools import chain
+from collections import Counter
 from typing import Literal
 
 import numpy as np
@@ -148,106 +147,6 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
 
 
 Transformer = TransformerMixin | Literal["drop", "remainder", "passthrough"]
-
-
-def _parallel_on_columns(trans: Transformer, cols: list[str]) -> bool:
-    """
-    Assert whether we want to parallelize the transformer over
-    the columns or not. We only want to parallelize over columns if the transformer
-    is "univariate" (i.e. it can be duplicated for each column).
-    """
-    return (
-        (not isinstance(trans, str))
-        and trans._get_tags().get("univariate", False)
-        and len(cols) > 1
-    )
-
-
-def _split_transformers(
-    transformers: list[tuple[str, Transformer, list[str]]]
-) -> tuple[list[tuple[str, Transformer, list[str]]], dict[str, list[str]]]:
-    """
-    Split univariate transformers into multiple transformers, one for each
-    column. This is useful to use the inherited `ColumnTransformer` class
-    parallelism.
-
-    Parameters
-    ----------
-    transformers : list of 3-tuples (str, Transformer or str, list of str)
-        The collection of transformers to split, as tuples of
-        (name, transformer, column).
-
-    Returns
-    -------
-    new_transformers : list of 3-tuples (str, Transformer or str, list of str)
-        The collection of transformers, with some newly univariate transformers.
-
-    map_from_to_expanded_transformers : dict of str to list of str
-        The mapping between the original transformer names and the name of the newly
-        expanded transformers.
-    """
-    new_transformers = []
-    map_from_to_expanded_transformers = defaultdict(list)
-    # split a list of 3-tuples (name, transformer, columns)
-    # containing the unfitted transformers (or strings) and the columns
-    # to be fitted on.
-    for name, trans, cols in transformers:
-        if _parallel_on_columns(trans, cols):
-            for i, col in enumerate(cols):
-                new_transformer_name = f"{name}_split_{i}"
-                map_from_to_expanded_transformers[name].append(new_transformer_name)
-                new_transformers.append((new_transformer_name, clone(trans), [col]))
-        else:
-            map_from_to_expanded_transformers[name].append(name)
-            new_transformers.append((name, trans, cols))
-    return new_transformers, map_from_to_expanded_transformers
-
-
-def _merge_transformers(
-    transformers: list[tuple[str, Transformer, list[str]]],
-    map_from_to_expanded_transformers: dict[str, list[str]],
-) -> tuple[list[tuple[str, Transformer, list[str]]], dict[str, list[int]]]:
-    """
-    Merge splitted transformers into a single transformer.
-
-    Parameters
-    ----------
-    transformers : list of 3-tuples (str, Transformer or str, list of str)
-        The collection of transformers to merge, as tuples of
-        (name, transformer, column).
-    map_from_to_expanded_transformers : dict of str to list of str
-        A correspondence between the original transformers and the expanded ones used
-        in the `ColumnTransformer`.
-
-    Returns
-    -------
-    merged_transformers : list of 3-tuples (str, Transformer or str, list of str)
-        The collection of transformers, that corresponds to the original transformer
-        names before splitting.
-    """
-    transformers_dict = {
-        transformer[0]: (transformer[1], transformer[2]) for transformer in transformers
-    }
-
-    merged_transformers = []
-    for original_name, new_names in map_from_to_expanded_transformers.items():
-        if len(new_names) == 1:
-            merged_transformers.append(
-                (original_name, *transformers_dict[original_name])
-            )
-        else:
-            transformers_to_merge, columns = zip(
-                *[transformers_dict[new_name] for new_name in new_names]
-            )
-            columns = list(chain.from_iterable(columns))
-            merged_transformers.append(
-                (
-                    original_name,
-                    transformers_to_merge[0].__class__._merge(transformers_to_merge),
-                    columns,
-                )
-            )
-    return merged_transformers
 
 
 class TableVectorizer(TransformerMixin, _BaseComposition):
