@@ -23,7 +23,7 @@ def is_datetime_parsable(X):
     """
     Parameters
     ----------
-    X : numpy ndarray
+    X : np.ndarray of shape (n_sample,)
     """
     np_dtypes_candidates = [np.object_, np.str_, np.datetime64]
     if any(np.issubdtype(X.dtype, np_dtype) for np_dtype in np_dtypes_candidates):
@@ -32,6 +32,18 @@ def is_datetime_parsable(X):
             return True
         except (pd.errors.ParserError, ValueError):
             pass
+    return False
+
+
+def is_date_only(X):
+    """
+    Parameters
+    ----------
+    X : np.ndarray of shape (n_sample,)
+    """
+    if is_datetime_parsable(X):
+        X_t = pd.to_datetime(X)
+        return np.all(X_t == X_t.normalize())
     return False
 
 
@@ -107,7 +119,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         *,
         extract_until="hour",
         add_day_of_the_week=False,
-        add_total_second=False,
+        add_total_second=True,
         errors="coerce",
     ):
         self.extract_until = extract_until
@@ -147,7 +159,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         self._check_feature_names(X, reset=True)
         self._check_n_features(X, reset=True)
-        X = check_array(X, ensure_2d=True, force_all_finite=False)
+        X = check_array(X, ensure_2d=True, force_all_finite=False, dtype=None)
 
         self._parse_datetime_cols(X)
 
@@ -166,13 +178,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         if self.extract_until is None:
             levels = []
-            require_total_second = False
         else:
             idx_level = TIME_LEVELS.index(self.extract_until)
-            levels = TIME_LEVELS[:idx_level]
-            require_total_second = TIME_LEVELS == levels
-
-        self.add_total_second_ = self.add_total_second or require_total_second
+            levels = TIME_LEVELS[: idx_level + 1]
 
         columns = getattr(self, "feature_names_in_", list(range(X.shape[1])))
         for col_idx, col in enumerate(columns):
@@ -180,14 +188,21 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
             if is_datetime_parsable(X_col):
                 # Pandas use the first non-null item of the array to infer the format.
-                mask_notnull = X_col == X_col
+                X_dt = pd.to_datetime(X_col)
+                mask_notnull = X_dt == X_dt
                 self.format_per_column_[col] = X_col[mask_notnull][0]
+
+                if is_date_only(X_col):
+                    # Keep only date attributes
+                    levels = [
+                        level for level in levels if level in ["year", "month", "day"]
+                    ]
 
                 self.features_per_column_[col] += levels
                 self.n_features_out_ += len(levels)
 
-                if self.add_total_second_:
-                    self.features_per_column_[col].append("total_time")
+                if self.add_total_second:
+                    self.features_per_column_[col].append("total_second")
                     self.n_features_out_ += 1
 
                 if self.add_day_of_the_week:
@@ -213,27 +228,33 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         check_is_fitted(self)
         self._check_n_features(X, reset=False)
         self._check_feature_names(X, reset=False)
-        X = check_array(X, ensure_2d=True, force_all_finite=False)
+        X = check_array(X, ensure_2d=True, force_all_finite=False, dtype=None)
 
         columns = getattr(self, "feature_names_in_", list(range(X.shape[1])))
+        # X_out must be of dtype float64 to handle np.nan
         X_out = np.empty((X.shape[0], self.n_features_out_), dtype=np.float64)
         offset_idx = 0
         for col_idx, col in enumerate(columns):
             if col in self.features_per_column_:
                 # X_j is a DatetimeIndex
-                X_j = pd.to_datetime(X[:, col_idx], errors=self.errors)
+                X_col = pd.to_datetime(X[:, col_idx], errors=self.errors)
 
                 features = self.features_per_column_[col]
                 for feat_idx, feature in enumerate(features):
-                    if feature == "total_time":
-                        if X_j.tz is not None:
-                            X_j = X_j.tz_convert("utc")
+                    if feature == "total_second":
+                        if X_col.tz is not None:
+                            X_col = X_col.tz_convert("utc")
                         # Total seconds since epoch
-                        X_feature = (X_j.astype("int64") // 1e9).to_numpy()
+                        mask_notnull = X_col == X_col
+                        X_feature = np.where(
+                            mask_notnull,
+                            X_col.astype("int64") // 1e9,
+                            np.nan,
+                        )
                     else:
-                        X_feature = getattr(X_j, feature).to_numpy()
-
+                        X_feature = getattr(X_col, feature).to_numpy()
                     X_out[:, offset_idx + feat_idx] = X_feature
+
                 offset_idx += len(features)
 
         return X_out
