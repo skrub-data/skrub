@@ -90,11 +90,8 @@ encoder.get_feature_names_out()
 
 ###############################################################################
 # We see that the encoder is working as expected: the "date.utc" column has
-# been replaced by features extracting the month, day, hour, and day of the
-# week information.
-#
-# Note the year and minute features are not present, this is because they
-# have been removed by the encoder as they are constant the whole period.
+# been replaced by features extracting the month, day, hour, minute, day of the
+# week and total second since Epoch information.
 
 ###############################################################################
 # One-liner with the |TableVectorizer|
@@ -148,14 +145,9 @@ pprint(table_vec.transformers_)
 #    ```py
 #    from sklearn.experimental import enable_hist_gradient_boosting
 #    ```
-
-import numpy as np
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
-table_vec = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
-)
 pipeline = make_pipeline(table_vec, HistGradientBoostingRegressor())
 
 ###############################################################################
@@ -168,6 +160,7 @@ pipeline = make_pipeline(table_vec, HistGradientBoostingRegressor())
 #
 # Instead, we can use the |TimeSeriesSplit|,
 # which ensures that the test set is always in the future.
+import numpy as np
 
 X["date.utc"] = pd.to_datetime(X["date.utc"])
 sorted_indices = np.argsort(X["date.utc"])
