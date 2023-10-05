@@ -20,11 +20,19 @@ TIME_LEVELS = list(WORD_TO_ALIAS)
 
 
 def is_datetime_parsable(X):
-    """
+    """Check whether a 1d vector can be converted into a \
+    :class:`~pandas.core.indexes.datetimes.DatetimeIndex`.
+
     Parameters
     ----------
-    X : np.ndarray of shape (n_sample,)
+    X : array-like of shape ``(n_sample,)``
+
+    Returns
+    -------
+    is_dt_parsable : bool
     """
+    if len(X.shape) > 1:
+        raise ValueError(f"X must be 1d, got shape: {X.shape}.")
     np_dtypes_candidates = [np.object_, np.str_, np.datetime64]
     if any(np.issubdtype(X.dtype, np_dtype) for np_dtype in np_dtypes_candidates):
         try:
@@ -36,10 +44,18 @@ def is_datetime_parsable(X):
 
 
 def is_date_only(X):
-    """
+    """Check whether a 1d vector only contains dates.
+
+    Note that ``is_date_only`` being True implies ``is_datetime_parsable`` is True,
+    but not the contrary.
+
     Parameters
     ----------
-    X : np.ndarray of shape (n_sample,)
+    X : array-like of shape ``(n_sample,)``
+
+    Returns
+    -------
+    is_date : bool
     """
     if is_datetime_parsable(X):
         X_t = pd.to_datetime(X)
@@ -61,35 +77,44 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     extract_until : {"year", "month", "day", "hour", "minute", "second",
         "microsecond", "nanosecond", None}, default="hour"
         Extract up to this granularity.
-        If all non-constant features have not been extracted,
-        add the "total_time" feature, which contains the time to epoch (in seconds).
         For instance, if you specify "day", only "year", "month", "day" and
-        "total_time" features will be created.
-        If None, only the "total_time" feature will be created.
+        features will be created.
+        If ``None``, no feature will be created.
+
     add_day_of_the_week : bool, default=False
         Add day of the week feature (if day is extracted).
         This is a numerical feature from 0 (Monday) to 6 (Sunday).
 
+    add_total_second : bool, default=True
+        Add the total number of seconds since Epoch.
+
+    errors: {"coerce", "raise"}, default="coerce"
+        During transform:
+        - If ``"coerce"``, then invalid parsing will be set as ``NaT``.
+        - If ``"raise"``, then invalid parsing will raise an exception
+
     Attributes
     ----------
-    n_features_in_ : int
-        Number of features in the data seen during fit.
     n_features_out_ : int
         Number of features of the transformed data.
-    features_per_column_ : mapping of int to list of str
-        Dictionary mapping the index of the original columns
-        to the list of features extracted for each column.
-    col_names_ : None or list of str
-        List of the names of the features of the input data,
-        if input data was a pandas DataFrame, otherwise None.
+
+    features_per_column_ : dict[str, list[str]] or dict[int, list[str]]
+        Dictionary mapping the column names to the list of features extracted
+        for each column.
+
+    format_per_column_ : dict[str, str] or dict[int, str]
+        Dictionary mapping the column names to the first non-null example.
+        This is how Pandas infer the datetime format.
 
     See Also
     --------
     GapEncoder :
         Encode dirty categories (strings) by constructing
         latent topics with continuous encoding.
+
     MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
+
     SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 
@@ -124,8 +149,8 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     ):
         self.extract_until = extract_until
         self.add_day_of_the_week = add_day_of_the_week
-        self.add_total_second = add_total_second  # TODO doc
-        self.errors = errors  # TODO doc
+        self.add_total_second = add_total_second
+        self.errors = errors
 
     def fit(self, X, y=None):
         """Fit the instance to X.
@@ -135,7 +160,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : array-like, shape (``n_samples``, ``n_features``)
+        X : array-like, shape ``(n_samples, n_features)``
             Data where each column is a datetime feature.
         y : None
             Unused, only here for compatibility.
@@ -161,12 +186,16 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         self._check_n_features(X, reset=True)
         X = check_array(X, ensure_2d=True, force_all_finite=False, dtype=None)
 
-        self._parse_datetime_cols(X)
+        self._select_datetime_cols(X)
 
         return self
 
-    def _parse_datetime_cols(self, X):
-        """
+    def _select_datetime_cols(self, X):
+        """Select datetime-like columns and infer features to be parsed.
+
+        If the input only contains dates (and no datetimes), only the features
+        ["year", "month", "day"] will be filtered with extract_until.
+
         Parameters
         ----------
         X : array-like of shape (n_samples, n_features)
@@ -215,14 +244,14 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : array-like, shape (``n_samples``, ``n_features``)
+        X : array-like of shape ``(n_samples, n_features)``
             The data to transform, where each column is a datetime feature.
         y : None
             Unused, only here for compatibility.
 
         Returns
         -------
-        ndarray, shape (``n_samples``, ``n_features_out_``)
+        X_out : ndarray of shape ``(n_samples, n_features_out_)``
             Transformed input.
         """
         check_is_fitted(self)
@@ -260,13 +289,13 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         return X_out
 
     def get_feature_names_out(self, input_features=None):
-        """Return clean feature names.
+        """Get output feature names for transformation.
 
         Feature names are formatted like: "<column_name>_<new_feature>"
         if the original data has column names, otherwise with format
         "<column_index>_<new_feature>" where `<new_feature>` is one of
         {"year", "month", "day", "hour", "minute", "second",
-        "microsecond", "nanosecond", "dayofweek"}.
+        "microsecond", "nanosecond", "day_of_week"}.
 
         Parameters
         ----------
@@ -275,7 +304,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        list of str
+        feature_names : list of str
             List of feature names.
         """
         check_is_fitted(self, "features_per_column_")
