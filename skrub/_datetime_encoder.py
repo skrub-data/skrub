@@ -259,6 +259,19 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         self._check_feature_names(X, reset=False)
         X = check_array(X, ensure_2d=True, force_all_finite=False, dtype=None)
 
+        return self._parse_datetime_cols(X)
+
+    def _parse_datetime_cols(self, X):
+        """Extract datetime features from the selected columns.
+
+        Parameters
+        ----------
+        X : ndarray of shape ``(n_samples, n_features)``
+
+        Returns
+        -------
+        X_out : ndarray of shape ``(n_samples, n_features_out_)``
+        """
         columns = getattr(self, "feature_names_in_", list(range(X.shape[1])))
         # X_out must be of dtype float64 to handle np.nan
         X_out = np.empty((X.shape[0], self.n_features_out_), dtype=np.float64)
