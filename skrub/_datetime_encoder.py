@@ -278,7 +278,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         offset_idx = 0
         for col_idx, col in enumerate(columns):
             if col in self.features_per_column_:
-                # X_j is a DatetimeIndex
+                # X_col is a DatetimeIndex
                 X_col = pd.to_datetime(X[:, col_idx], errors=self.errors)
 
                 features = self.features_per_column_[col]
