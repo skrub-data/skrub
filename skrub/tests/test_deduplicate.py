@@ -14,7 +14,32 @@ from skrub._deduplicate import (
     compute_ngram_distance,
     deduplicate,
 )
+from skrub.dataframe.tests.test_polars import POLARS_MISSING_MSG, POLARS_SETUP
 from skrub.datasets import make_deduplication_data
+
+
+@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
+def test_polars_input():
+    import polars as pl
+
+    pl_series = pl.Series(
+        [
+            "blacn",
+            "black",
+            "black",
+            "black",
+            "black",
+            "hvite",
+            "white",
+            "white",
+            "white",
+            "white",
+        ]
+    )
+    try:
+        deduplicate(pl_series)
+    except Exception as exc_info:
+        pytest.fail(f"Unexpected exception raised: {exc_info}")
 
 
 @pytest.mark.parametrize(
