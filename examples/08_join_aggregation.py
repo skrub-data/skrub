@@ -63,7 +63,6 @@ this example, we showcase hyper-parameter optimization on the whole pipeline.
 # We begin with loading the ratings table from MovieLens.
 # Note that we use the light version (100k rows).
 import pandas as pd
-import numpy as np
 
 from skrub.datasets import fetch_movielens
 
@@ -134,87 +133,31 @@ make_barplot(
     title="Distribution of ratings given to movies",
 )
 
-###############################################################################
-# AggJoiner: aggregate auxiliary tables, then join
-# ------------------------------------------------
-#
-# We now want to extract aggregated datetime features about the users.
-# These features answer questions like
-# *"How many times has this user rated a movie in 2008?"*.
-#
-# Below, |AggJoiner| run the aggregations defined in ``operations`` on the columns
-# ``timestamp_cols`` of the auxiliary table.
-# It does so by grouping by the auxiliary key ``"userId"``, before joining on ``"userId"`` the result
-# back on the main table.
-#
-# Here, the auxiliary table is the table ``X_date_encoded`` itself.
-from skrub import AggJoiner
-
-
-timestamp_cols = [
-    "timestamp_year",
-    "timestamp_month",
-    "timestamp_hour",
-    "timestamp_dayofweek",
-]
-
-agg_joiner_user = AggJoiner(
-    aux_table=X_date_encoded,
-    aux_key="userId",
-    cols=timestamp_cols,
-    main_key="userId",
-    suffix="_user",
-    operation="value_counts",
-)
-X_transformed = agg_joiner_user.fit_transform(X_date_encoded)
-
-X_transformed.shape
-###############################################################################
-X_transformed.head()
-
-###############################################################################
-# In addition, we also want to extract *movies* timestamp features, to answer
-# questions like *"What is the most frequent hour for this movie to be rated?"*.
-agg_joiner_movie = AggJoiner(
-    aux_table=X_date_encoded,
-    aux_key="movieId",
-    cols=timestamp_cols,
-    main_key="movieId",
-    suffix="_movie",
-    operation="value_counts",
-)
-
-X_transformed = agg_joiner_movie.fit_transform(X_date_encoded)
-
-X_transformed.shape
-###############################################################################
-X_transformed.head()
 
 ###############################################################################
 # AggTarget: aggregate y, then join
 # ---------------------------------
 #
-# We just expanded our timestamp to create datetime features.
+# We have just extracted datetime features from timestamps.
 #
-# Let's now perform a similar expansion for the target ``y``.
-# The biggest risk of doing target expansion with multiple dataframe
-# operations yourself is to end up leaking the target.
+# Let's now perform an expansion for the target ``y``, by aggregating it before
+# joining it back on the main table. The biggest risk of doing target expansion
+# with multiple dataframe operations yourself is to end up leaking the target.
 #
 # To solve this, the |AggTarget| transformer allows you to
 # aggregate the target ``y`` before joining it on the main table, without
-# risk of leaking.
-#
-# This transformer is the natural extension of |AggJoiner| for the
-# target ``y``.
+# risk of leaking. Note that to perform aggregation then joining on the features
+# ``X``, you need to use |AggJoiner| instead.
 #
 # You can also think of it as a generalization of the |TargetEncoder|, which
 # encodes categorical features based on the target.
 #
 # We only focus on aggregating the target by **users**, but later we will
-# also consider aggregating by **movies**.
+# also consider aggregating by **movies**. Here, we compute the histogram of the
+# target with 3 bins, before joining it back on the initial table.
 #
-# Here, we compute the histogram of the target with 3 bins, before joining it
-# back on the initial table.
+# This feature answer questions like
+# *"How many times has this user given a bad, medium or good rate to movies?"*.
 from skrub import AggTarget
 
 
@@ -231,12 +174,18 @@ X_transformed.head()
 
 ###############################################################################
 # Similarly, we join on ``movieId`` instead of ``userId``.
+#
+# This feature answer questions like
+# *"How many times has this movie received a bad, medium or good rate from users?"*.
 agg_target_movie = AggTarget(
     main_key="movieId",
     suffix="_movie",
     operation="hist(3)",
 )
 X_transformed = agg_target_movie.fit_transform(X, y)
+X_transformed.shape
+###############################################################################
+X_transformed.head()
 
 ###############################################################################
 # Chaining everything together in a pipeline
@@ -245,18 +194,11 @@ X_transformed = agg_target_movie.fit_transform(X, y)
 # To perform cross-validation and enable hyper-parameter tuning, we gather
 # all elements into a scikit-learn |Pipeline| by using |make_pipeline|,
 # and define a scikit-learn |HGBR|.
-#
-# Since the auxiliary tables of |AggJoiner| are the main table itself, we need
-# to use the output of the previous layer (here the |TableVectorizer|).
-# We enable this behaviour by **using the placeholder** ``"X"`` **instead of a
-# dataframe** in the ``tables`` tuple.
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
 pipeline = make_pipeline(
     table_vectorizer,
-    agg_joiner_user,
-    agg_joiner_movie,
     agg_target_user,
     agg_target_movie,
     HistGradientBoostingRegressor(learning_rate=0.1, max_depth=4, max_iter=40),
