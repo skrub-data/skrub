@@ -134,7 +134,8 @@ def get_datetime_with_TZ_array() -> pd.DataFrame:
             pd.to_datetime(["2021-02-03 12:45:23"]),
             pd.to_datetime(["2022-01-01 23:23:43"]),
             pd.to_datetime(["2023-02-03 11:12:12"]),
-        ]
+        ],
+        columns=["0"],
     )
     for col in res.columns:
         res[col] = pd.DatetimeIndex(res[col]).tz_localize("Asia/Kolkata")
@@ -227,7 +228,7 @@ def test_fit() -> None:
     assert enc.features_per_column_ == expected_features_per_column_
 
     # Datetimes with TZ
-    X = get_datetime_with_TZ_array()
+    X = get_datetime_with_TZ_array().rename(columns={0: "0"})
     enc = DatetimeEncoder()
     expected_features_per_column_ = {0: ["year", "month", "day", "hour", "total_time"]}
     enc.fit(X)
