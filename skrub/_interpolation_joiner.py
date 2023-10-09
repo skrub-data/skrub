@@ -11,6 +11,7 @@ from sklearn.ensemble import (
 from sklearn.utils._tags import _safe_tags
 
 from skrub import _utils
+from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import TableVectorizer
 
 
@@ -87,7 +88,8 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         scikit-learn estimators. This is useful if we are joining on columns
         that cannot be used directly, such as timestamps or strings
         representing high-cardinality categories. If ``None``, a
-        ``TableVectorizer`` is used.
+        ``TableVectorizer`` with is used, with a ``MinHashEncoder`` for
+        encoding high-cardinality strings.
 
     n_jobs : int or None
         Number of jobs to run in parallel. ``None`` means 1 unless in a
@@ -217,7 +219,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
 
     def _check_inputs(self):
         if self.vectorizer is None:
-            self.vectorizer_ = TableVectorizer()
+            self.vectorizer_ = TableVectorizer(
+                high_card_cat_transformer=MinHashEncoder()
+            )
         else:
             self.vectorizer_ = clone(self.vectorizer)
 
