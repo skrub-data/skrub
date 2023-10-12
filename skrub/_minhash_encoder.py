@@ -100,7 +100,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
     >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['London']]
 
     >>> enc.fit(X)
-    MinHashEncoder()
+    MinHashEncoder(n_components=5)
 
     The encoded data with 5 components are:
 
