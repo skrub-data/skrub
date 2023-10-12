@@ -22,7 +22,7 @@ from skrub.datasets import make_deduplication_data
 def test_polars_input():
     import polars as pl
 
-    data = [
+    duplicated_data = [
         "blacn",
         "black",
         "black",
@@ -35,15 +35,10 @@ def test_polars_input():
         "white",
     ]
 
-    try:
-        pl_output = deduplicate(pl.Series(data))
-    except Exception as exc_info:
-        pytest.xfail(f"Polars not supported yet, deduplicate raised {exc_info}.")
+    pl_output = deduplicate(pl.Series(duplicated_data))
+    pd_output = deduplicate(pd.Series(duplicated_data))
 
-    pd_output = deduplicate(pd.Series(data))
-
-    if not all(pl_output == pd_output):
-        pytest.xfail("Polars and Pandas outputs don't match.")
+    assert_array_equal(pl_output, pd_output)
 
 
 @pytest.mark.parametrize(
