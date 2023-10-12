@@ -702,15 +702,15 @@ class GapEncoder(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    >>> enc = GapEncoder(n_components=2)
+    >>> enc = GapEncoder(n_components=2, random_state=0)
 
     Let's encode the following non-normalized data:
 
     >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['Paris, France'],
-             ['london'], ['London, England'], ['London'], ['Pqris']]
+    ...      ['london'], ['London, England'], ['London'], ['Pqris']]
 
     >>> enc.fit(X)
-    GapEncoder(n_components=2)
+    GapEncoder(n_components=2, random_state=0)
 
     The GapEncoder has found the following two topics:
 
@@ -724,14 +724,14 @@ class GapEncoder(TransformerMixin, BaseEstimator):
     activation of each topic for each category:
 
     >>> enc.transform(X)
-    array([[ 0.05202843, 10.54797156],
-          [ 0.05000118,  4.54999882],
-          [12.04734788,  0.05265212],
-          [ 0.05263068, 16.54736932],
-          [ 6.04999624,  0.05000376],
-          [19.546716  ,  0.053284  ],
-          [ 6.04999623,  0.05000376],
-          [ 0.05002016,  4.54997983]])
+    array([[ 0.05181645, 10.54818355],
+           [ 0.05013363,  4.54986637],
+           [12.04651708,  0.05348292],
+           [ 0.05227038, 16.54772961],
+           [ 6.04996972,  0.05003028],
+           [19.54522669,  0.0547733 ],
+           [ 6.04996972,  0.05003028],
+           [ 0.06011992,  4.53988008]])
 
     The higher the value, the bigger the correspondance with the topic.
     """
