@@ -262,8 +262,8 @@ def _to_datetime_2d(
     X_split : list of 1d array of length n_features
         The 2d input, chunked into a list of array. This format allows us
         to treat each column individually and preserve their dtype, because
-        dataframe.to_numpy() casts all columns to object is any column dtype
-        is object.
+        dataframe.to_numpy() casts all columns to object when at least one
+        column dtype is object.
 
     indices : list of int, default=None
         Indices of the parsable columns to convert.
