@@ -323,6 +323,7 @@ def _get_datetime_column_indices(X_split):
         X_col = X_col[pd.notnull(X_col)]
         if _is_column_datetime_parsable(X_col):
             indices.append(col_idx)
+            # TODO: pass require_dayfirst to _guess_datetime_format
             indice_to_format[col_idx] = _guess_datetime_format(X_col)
 
     return indices, indice_to_format
