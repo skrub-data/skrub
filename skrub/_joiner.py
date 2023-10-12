@@ -59,6 +59,9 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     See Also
     --------
+    AggJoiner :
+        Aggregate auxiliary dataframes before joining them on a base dataframe.
+
     fuzzy_join :
         Join two tables (dataframes) based on approximate column matching.
 

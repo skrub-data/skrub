@@ -124,10 +124,10 @@ def join(
     right : pd.DataFrame,
         The right dataframe to left-join.
 
-    left_on : str or Iterable[str],
+    left_on : str or Iterable[str]
         Left keys to merge on.
 
-    right_on : str or Iterable[str],
+    right_on : str or Iterable[str]
         Right keys to merge on.
 
     Returns
