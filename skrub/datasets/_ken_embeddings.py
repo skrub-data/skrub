@@ -96,8 +96,8 @@ def fetch_ken_types(
     --------
     To get all the existing KEN types of entities:
 
-    >>> embedding_types = fetch_ken_types()
-    >>> embedding_types.head()
+    >>> embedding_types = fetch_ken_types()  # doctest: +SKIP
+    >>> embedding_types.head() # doctest: +SKIP
                                                     Type
     0                 wikicat_italian_male_screenwriters
     1  wikicat_21st-century_roman_catholic_archbishop...
@@ -107,8 +107,8 @@ def fetch_ken_types(
 
     Let's search for all KEN types with the strings "dance" or "music":
 
-    >>> embedding_filtered_types = fetch_ken_types(search="dance|music")
-    >>> embedding_filtered_types.head()
+    >>> embedding_filtered_types = fetch_ken_types(search="dance|music") # doctest: +SKIP
+    >>> embedding_filtered_types.head() # doctest: +SKIP
                                                     Type
     0                  wikicat_music_festivals_in_france
     1  wikicat_films_scored_by_bharadwaj_(music_direc...
@@ -216,8 +216,8 @@ def fetch_ken_embeddings(
     you are interested in. For instance, if we are interested in
     video games:
 
-    >>> games_embedding = fetch_ken_embeddings(search_types="video_games")
-    >>> games_embedding.head()
+    >>> games_embedding = fetch_ken_embeddings(search_types="video_games") # doctest: +SKIP
+    >>> games_embedding.head() # doctest: +SKIP
                              Entity  ...      X199
     0             A_Little_Princess  ...  0.041250
     1                 The_Dark_Half  ... -0.005336
@@ -233,8 +233,8 @@ def fetch_ken_embeddings(
     Some tables are available pre-filtered for us using the
     `embedding_table_id` parameter:
 
-    >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games")
-    >>> games_embedding_fast.head()
+    >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games") # doctest: +SKIP
+    >>> games_embedding_fast.head() # doctest: +SKIP
                          Entity  ...      X199
     0              R-Type_Delta  ...  0.040006
     1  Just_Add_Water_(company)  ... -0.025676
