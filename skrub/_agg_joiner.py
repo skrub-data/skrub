@@ -135,27 +135,28 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> main = pd.DataFrame({
-            "airportId": [1, 2],
-            "airportName": ["Paris CDG", "NY JFK"],
-        })
+    ...     "airportId": [1, 2],
+    ...     "airportName": ["Paris CDG", "NY JFK"],
+    ... })
     >>> aux = pd.DataFrame({
-            "flightId": range(1, 7),
-            "from_airport": [1, 1, 1, 2, 2, 2],
-            "total_passengers": [90, 120, 100, 70, 80, 90],
-            "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
-        })
+    ...     "flightId": range(1, 7),
+    ...     "from_airport": [1, 1, 1, 2, 2, 2],
+    ...     "total_passengers": [90, 120, 100, 70, 80, 90],
+    ...     "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
+    ... })
     >>> join_agg = AggJoiner(
-            aux_table=aux,
-            aux_key="from_airport",
-            main_key="airportId",
-            cols=["total_passengers", "company"],
-            operation=["mean", "mode"],
-        )
+    ...     aux_table=aux,
+    ...     aux_key="from_airport",
+    ...     main_key="airportId",
+    ...     cols=["total_passengers", "company"],
+    ...     operation=["mean", "mode"],
+    ... )
     >>> join_agg.fit_transform(main)
-        airportId airportName company_mode  total_passengers_mean
-    0          1   Paris CDG           AF             103.333333
-    1          2      NY JFK           DL              80.000000
+       airportId airportName company_mode_1  total_passengers_mean_1
+    0          1   Paris CDG             AF               103.333333
+    1          2      NY JFK             DL                80.000000
     """  # noqa: E501
 
     def __init__(
@@ -417,25 +418,28 @@ class AggTarget(BaseEstimator, TransformerMixin):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> X = pd.DataFrame({
-            "flightId": range(1, 7),
-            "from_airport": [1, 1, 1, 2, 2, 2],
-            "total_passengers": [90, 120, 100, 70, 80, 90],
-            "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
-        })
+    ...     "flightId": range(1, 7),
+    ...     "from_airport": [1, 1, 1, 2, 2, 2],
+    ...     "total_passengers": [90, 120, 100, 70, 80, 90],
+    ...     "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
+    ... })
     >>> y = np.array([1, 1, 0, 0, 1, 1])
     >>> join_agg = AggTarget(
-            main_key="company",
-            operation=["mean", "max"],
-        )
+    ...     main_key="company",
+    ...     operation=["mean", "max"],
+    ... )
     >>> join_agg.fit_transform(X, y)
-        flightId  from_airport  total_passengers company  y_0_max   y_0_mean
-    0         1             1                90      DL       1  0.666667
-    1         2             1               120      AF       1  0.500000
-    2         3             1               100      AF       1  0.500000
-    3         4             2                70      DL       1  0.666667
-    4         5             2                80      DL       1  0.666667
-    5         6             2                90      TR       1  1.000000
+       flightId  from_airport  ...  y_0_max_target y_0_mean_target
+    0         1             1  ...               1        0.666667
+    1         2             1  ...               1        0.500000
+    2         3             1  ...               1        0.500000
+    3         4             2  ...               1        0.666667
+    4         5             2  ...               1        0.666667
+    5         6             2  ...               1        1.000000
+    <BLANKLINE>
+    [6 rows x 6 columns]
     """
 
     def __init__(
