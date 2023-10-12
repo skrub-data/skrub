@@ -275,7 +275,7 @@ def _to_datetime_2d(
         pd.to_datetime.
 
         If indices is None, indices_to_format is computed using the current input X.
-        If format is not None, all values of indices_to_format are format
+        If format is not None, all values of indices_to_format are format.
 
     format : str, default=None
         Here for compatibility with ``pandas.to_datetime`` API.
