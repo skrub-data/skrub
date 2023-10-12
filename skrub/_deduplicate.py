@@ -201,24 +201,24 @@ def deduplicate(
     --------
     >>> from skrub.datasets import make_deduplication_data
     >>> duplicated = make_deduplication_data(examples=['black', 'white'],
-                                             entries_per_example=[5, 5],
-                                             prob_mistake_per_letter=0.3,
-                                             random_state=42)
+    ...                                      entries_per_example=[5, 5],
+    ...                                      prob_mistake_per_letter=0.3,
+    ...                                      random_state=42)
 
     >>> duplicated
-    ['blacn', 'black', 'black', 'black', 'black',
-     'hvite', 'white', 'white', 'white', 'white']
+    ['blacs', 'black', 'black', 'black', 'black', \
+'uhibe', 'white', 'white', 'white', 'white']
 
     To deduplicate the data, we can build a correspondance matrix:
 
     >>> deduplicate_correspondence = deduplicate(duplicated)
     >>> deduplicate_correspondence
-    blacn    black
+    blacs    black
     black    black
     black    black
     black    black
     black    black
-    hvite    white
+    uhibe    white
     white    white
     white    white
     white    white
@@ -231,8 +231,8 @@ def deduplicate(
 
     >>> deduplicated = list(deduplicate_correspondence)
     >>> deduplicated
-    ['black', 'black', 'black', 'black', 'black',
-    'white', 'white', 'white', 'white', 'white']
+    ['black', 'black', 'black', 'black', 'black', \
+'white', 'white', 'white', 'white', 'white']
 
     We have our dirty categories deduplicated.
     """
