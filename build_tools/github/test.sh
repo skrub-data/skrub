@@ -1,3 +1,3 @@
 #!/bin/bash -x
 
-pytest --pyargs skrub --cov=skrub -n auto
+pytest --pyargs skrub --cov=skrub -n auto --doctest-modules
