@@ -15,6 +15,10 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+* :func:`to_datetime` is now available to support pandas.to_datetime
+  over dataframes and 2d arrays.
+  :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
 * :func:`dataframe.pd_join`, :func:`dataframe.pd_aggregate`,
   :func:`dataframe.pl_join` and :func:`dataframe.pl_aggregate`
   are now available in the dataframe submodule.
@@ -40,6 +44,11 @@ Major changes
 
 Minor changes
 -------------
+* :class:`DatetimeEncoder` doesn't remove constant features anymore.
+  It also supports an 'errors' argument to raise or coerce errors during
+  transform, and a 'add_total_seconds' argument to include the number of
+  seconds since Epoch.
+  :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
 * :class:`TableVectorizer` is now able to apply parallelism at the column level rather than the transformer level. This is the default for univariate transformers, like :class:`MinHashEncoder`, and :class:`GapEncoder`.
   :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`

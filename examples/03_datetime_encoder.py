@@ -80,7 +80,7 @@ from sklearn.compose import make_column_transformer
 
 encoder = make_column_transformer(
     (OneHotEncoder(handle_unknown="ignore"), ["city"]),
-    (DatetimeEncoder(add_day_of_the_week=True, extract_until="minute"), ["date.utc"]),
+    (DatetimeEncoder(add_day_of_the_week=True, resolution="minute"), ["date.utc"]),
     remainder="drop",
 )
 

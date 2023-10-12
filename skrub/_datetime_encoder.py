@@ -1,10 +1,15 @@
+import warnings
 from collections import defaultdict
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
+from pandas._libs.tslibs.parsing import guess_datetime_format
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
+
+from .dataframe._namespace import get_df_namespace
 
 WORD_TO_ALIAS = {
     "year": "Y",
@@ -19,92 +24,480 @@ WORD_TO_ALIAS = {
 TIME_LEVELS = list(WORD_TO_ALIAS)
 
 
-def is_datetime_parsable(X):
-    """Check whether a 1d vector can be converted into a \
-    :class:`~pandas.core.indexes.datetimes.DatetimeIndex`.
+def to_datetime(
+    X,
+    errors="coerce",
+    **kwargs,
+):
+    """
+    Convert argument to datetime.
+
+    Augment :func:`pandas.to_datetime` by supporting dataframes
+    and 2d arrays inputs. It converts compatible columns to datetime, and
+    pass incompatible columns unchanged.
+
+    With 2d arrays, numerical columns will also be passed unchanged.
+
+    int, float, str, datetime, list, tuple, 1d array, and Series are defered to
+    pandas.to_datetime directly.
 
     Parameters
     ----------
-    X : array-like of shape ``(n_sample,)``
+    arg : int, float, str, datetime, list, tuple, nd array, Series, DataFrame/dict-like
+        The object to convert to a datetime.
+    errors : {'ignore', 'raise', 'coerce'}, default 'coerce'
+        - If :const:`'raise'`, then invalid parsing will raise an exception.
+        - If :const:`'coerce'`, then invalid parsing will be set as :const:`NaT`.
+        - If :const:`'ignore'`, then invalid parsing will return the input.
+    dayfirst : bool, default False
+        Specify a date parse order if `arg` is str or is list-like.
+        If :const:`True`, parses dates with the day first, e.g. :const:`"10/11/12"`
+        is parsed as :const:`2012-11-10`.
+
+        .. warning::
+
+            ``dayfirst=True`` is not strict, but will prefer to parse
+            with day first.
+
+    yearfirst : bool, default False
+        Specify a date parse order if `arg` is str or is list-like.
+
+        - If :const:`True` parses dates with the year first, e.g.
+          :const:`"10/11/12"` is parsed as :const:`2010-11-12`.
+        - If both `dayfirst` and `yearfirst` are :const:`True`, `yearfirst` is
+          preceded (same as :mod:`dateutil`).
+
+        .. warning::
+
+            ``yearfirst=True`` is not strict, but will prefer to parse
+            with year first.
+
+    utc : bool, default False
+        Control timezone-related parsing, localization and conversion.
+
+        - If :const:`True`, the function *always* returns a timezone-aware
+          UTC-localized :class:`Timestamp`, :class:`Series` or
+          :class:`DatetimeIndex`. To do this, timezone-naive inputs are
+          *localized* as UTC, while timezone-aware inputs are *converted* to UTC.
+
+        - If :const:`False` (default), inputs will not be coerced to UTC.
+          Timezone-naive inputs will remain naive, while timezone-aware ones
+          will keep their time offsets. Limitations exist for mixed
+          offsets (typically, daylight savings), see :ref:`Examples
+          <to_datetime_tz_examples>` section for details.
+
+        See also: pandas general documentation about `timezone conversion and
+        localization
+        <https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
+        #time-zone-handling>`_.
+
+    format : str, default None
+        The strftime to parse time, e.g. :const:`"%d/%m/%Y"`. See
+        `strftime documentation
+        <https://docs.python.org/3/library/datetime.html
+        #strftime-and-strptime-behavior>`_ for more information on choices, though
+        note that :const:`"%f"` will parse all the way up to nanoseconds.
+        You can also pass:
+
+        - "ISO8601", to parse any `ISO8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+          time string (not necessarily in exactly the same format);
+        - "mixed", to infer the format for each element individually. This is risky,
+          and you should probably use it along with `dayfirst`.
+
+    exact : bool, default True
+        Control how `format` is used:
+
+        - If :const:`True`, require an exact `format` match.
+        - If :const:`False`, allow the `format` to match anywhere in the target
+          string.
+
+        Cannot be used alongside ``format='ISO8601'`` or ``format='mixed'``.
+    unit : str, default 'ns'
+        The unit of the arg (D,s,ms,us,ns) denote the unit, which is an
+        integer or float number. This will be based off the origin.
+        Example, with ``unit='ms'`` and ``origin='unix'``, this would calculate
+        the number of milliseconds to the unix epoch start.
+    origin : scalar, default 'unix'
+        Define the reference date. The numeric values would be parsed as number
+        of units (defined by `unit`) since this reference date.
+
+        - If :const:`'unix'` (or POSIX) time; origin is set to 1970-01-01.
+        - If :const:`'julian'`, unit must be :const:`'D'`, and origin is set to
+          beginning of Julian Calendar. Julian day number :const:`0` is assigned
+          to the day starting at noon on January 1, 4713 BC.
+        - If Timestamp convertible (Timestamp, dt.datetime, np.datetimt64 or date
+          string), origin is set to Timestamp identified by origin.
+        - If a float or integer, origin is the millisecond difference
+          relative to 1970-01-01.
+    cache : bool, default True
+        If :const:`True`, use a cache of unique, converted dates to apply the
+        datetime conversion. May produce significant speed-up when parsing
+        duplicate date strings, especially ones with timezone offsets. The cache
+        is only used when there are at least 50 values. The presence of
+        out-of-bounds values will render the cache unusable and may slow down
+        parsing.
+
+    Returns
+    -------
+    datetime
+        If parsing succeeded.
+        Return type depends on input (types in parenthesis correspond to
+        fallback in case of unsuccessful timezone or out-of-range timestamp
+        parsing):
+
+        - scalar: :class:`Timestamp` (or :class:`datetime.datetime`)
+        - array-like: :class:`DatetimeIndex` (or :class:`Series` with
+          :class:`object` dtype containing :class:`datetime.datetime`)
+        - Series: :class:`Series` of :class:`datetime64` dtype (or
+          :class:`Series` of :class:`object` dtype containing
+          :class:`datetime.datetime`)
+        - DataFrame: :class:`Series` of :class:`datetime64` dtype (or
+          :class:`Series` of :class:`object` dtype containing
+          :class:`datetime.datetime`)
+
+    Raises
+    ------
+    ParserError
+        When parsing a date from string fails.
+    ValueError
+        When another datetime conversion error happens. For example when one
+        of 'year', 'month', day' columns is missing in a :class:`DataFrame`, or
+        when a Timezone-aware :class:`datetime.datetime` is found in an array-like
+        of mixed time offsets, and ``utc=False``.
+
+    See Also
+    --------
+    :func:`pandas.to_datetime`
+    """
+    kwargs["errors"] = errors
+
+    # dataframe
+    if hasattr(X, "__dataframe__"):
+        return _to_datetime_dataframe(X, **kwargs)
+
+    # series, this attribute is available since Pandas 2.1.0
+    elif hasattr(X, "__column_consortium_standard__"):
+        return _to_datetime_series(X, **kwargs)
+
+    # 2d array
+    elif isinstance(X, Iterable) and np.asarray(X).ndim == 2:
+        X = _to_datetime_2d_array(np.asarray(X), **kwargs)
+        return np.vstack(X).T
+
+    # scalar or unknown type
+    return pd.to_datetime(X, **kwargs)
+
+
+def _to_datetime_dataframe(X, **kwargs):
+    """Dataframe specialization of ``_to_datetime_2d``.
+
+    Parameters
+    ----------
+    X : Pandas or Polars dataframe
+
+    Returns
+    -------
+    X : Pandas or Polars dataframe
+    """
+    _, px = get_df_namespace(X)
+    index = getattr(X, "index", None)
+    X_split = [X[col].to_numpy() for col in X.columns]
+    X_split = _to_datetime_2d(X_split, **kwargs)
+    X_split = {col: X_split[col_idx] for col_idx, col in enumerate(X.columns)}
+    X = pd.DataFrame(X_split, index=index)
+    # conversion is px is Polars, no-op if Pandas
+    return px.DataFrame(X)
+
+
+def _to_datetime_series(X, **kwargs):
+    """Series specialization of :func:`pandas.to_datetime`.
+
+    Parameters
+    ----------
+    X : Pandas or Polars series
+
+    Returns
+    -------
+    X : Pandas or Polars series
+    """
+    _, px = get_df_namespace(X.to_frame())
+    index = getattr(X, "index", None)
+    name = X.name
+    X = pd.to_datetime(X, **kwargs)
+    X = pd.Series(X, index=index, name=name)
+    # conversion is px is Polars, no-op if Pandas
+    return px.Series(X)
+
+
+def _to_datetime_2d_array(X, **kwargs):
+    """2d array specialization of ``_to_datetime_2d``.
+
+    Parameters
+    ----------
+    X : ndarray of shape ``(n_samples, n_features)``
+
+    Returns
+    -------
+    X_split : list of array, of shape ``n_features``
+    """
+    X_split = np.hsplit(X, X.shape[1])
+    X_split = [X_col.ravel() for X_col in X_split]
+    return _to_datetime_2d(X_split, **kwargs)
+
+
+def _to_datetime_2d(
+    X_split,
+    indices=None,
+    indice_to_format=None,
+    format=None,
+    **kwargs,
+):
+    """Convert datetime parsable columns from a 2d array or dataframe \
+        to datetime format.
+
+    The conversion is done inplace.
+
+    Parameters
+    ----------
+    X : list of 1d array of length n_features
+        The 2d input, chunked into a list of array. This format allows us
+        to treat each column individually and preserve their dtype, because
+        dataframe.to_numpy() casts all columns to object is any column dtype
+        is object.
+
+    indices : list of int, default=None
+        Indices of the parsable columns to convert.
+        If None, indices are computed using the current input X.
+
+    indice_to_format : mapping of int to str, default=None
+        Dictionary mapping column indices to their datetime format.
+        It defines the format parameter for each column when calling
+        pd.to_datetime.
+
+        If indices is None, indices_to_format is computed using the current input X.
+        If format is not None, all values of indices_to_format are format
+
+    format : str, default=None
+        Here for compatibility with ``pandas.to_datetime`` API.
+        When format is not None, it overwrites the values in indices_to_format.
+
+    Returns
+    -------
+    X_split : list of 1d array of length n_features
+    """
+    if indices is None:
+        indices, indice_to_format = _get_datetime_column_indices(X_split)
+
+    # format overwrite indices_to_format
+    if format is not None or indice_to_format is None:
+        indice_to_format = {col_idx: format for col_idx in indices}
+
+    for col_idx in indices:
+        X_split[col_idx] = pd.to_datetime(
+            X_split[col_idx], format=indice_to_format[col_idx], **kwargs
+        )
+
+    return X_split
+
+
+def _get_datetime_column_indices(X_split):
+    """Select the datetime parsable columns by their indices \
+    and return their datetime format.
+
+    Parameters
+    ----------
+    X_split : list of 1d array of length n_features
+
+    Returns
+    -------
+    datetime_indices : list of int
+        List of parsable column, identified by their indices.
+
+    indice_to_format: mapping of int to str
+        Dictionary mapping parsable column indices to their datetime format.
+    """
+    indices = []
+    indice_to_format = {}
+
+    for col_idx, X_col in enumerate(X_split):
+        X_col = X_col[pd.notnull(X_col)]
+        if _is_column_datetime_parsable(X_col):
+            indices.append(col_idx)
+            indice_to_format[col_idx] = _guess_datetime_format(X_col)
+
+    return indices, indice_to_format
+
+
+def _is_column_datetime_parsable(X_col):
+    """Check whether a 1d array can be converted into a \
+    :class:`pandas.DatetimeIndex`.
+
+    Parameters
+    ----------
+    X_col : array-like of shape ``(n_samples,)``
 
     Returns
     -------
     is_dt_parsable : bool
     """
-    if len(X.shape) > 1:
-        raise ValueError(f"X must be 1d, got shape: {X.shape}.")
+    # Remove columns of int, float or bool casted as object.
+    try:
+        if np.array_equal(X_col, X_col.astype(np.float64)):
+            return False
+    except ValueError:
+        pass
+
     np_dtypes_candidates = [np.object_, np.str_, np.datetime64]
-    if any(np.issubdtype(X.dtype, np_dtype) for np_dtype in np_dtypes_candidates):
+    is_type_datetime_compatible = any(
+        np.issubdtype(X_col.dtype, np_dtype) for np_dtype in np_dtypes_candidates
+    )
+    if is_type_datetime_compatible:
         try:
-            _ = pd.to_datetime(X)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=UserWarning)
+                # format=mixed parses entries individually,
+                # avoiding ValueError when both date and datetime formats
+                # are present.
+                # At this stage, the format itself doesn't matter.
+                _ = pd.to_datetime(X_col, format="mixed")
             return True
         except (pd.errors.ParserError, ValueError):
             pass
     return False
 
 
-def is_date_only(X):
-    """Check whether a 1d vector only contains dates.
+def _guess_datetime_format(X_col, require_dayfirst=True):
+    """
+    Parameters
+    ----------
+    X_col : ndarray of shape ``(n_samples,)``
 
-    Note that ``is_date_only`` being True implies ``is_datetime_parsable`` is True,
-    but not the contrary.
+    require_dayfirst : bool, default True
+        Whether to return the dayfirst format when both dayfirst
+        and monthfirst are valid.
+
+    Returns
+    -------
+    format : str
+    """
+    X_col = X_col.astype(np.object_)
+    vfunc = np.vectorize(guess_datetime_format)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        month_first_formats = np.unique(vfunc(X_col, dayfirst=False))
+        day_first_formats = np.unique(vfunc(X_col, dayfirst=True))
+
+    if pd.isnull(month_first_formats).any() or pd.isnull(day_first_formats).any():
+        return None
+
+    elif (
+        len(month_first_formats) == 1
+        and len(day_first_formats) == 1
+        and month_first_formats[0] != day_first_formats[0]
+    ):
+        if require_dayfirst:
+            return str(day_first_formats[0])
+        else:
+            return str(month_first_formats[0])
+
+    elif len(month_first_formats) == 1:
+        return str(month_first_formats[0])
+
+    elif len(day_first_formats) == 1:
+        return str(day_first_formats[0])
+
+    # special heuristic: when both date and datetime formats are
+    # present, allow the format to be mixed.
+    elif (
+        len(month_first_formats) == 2
+        and len(day_first_formats) == 2
+        and len(month_first_formats[0]) != len(month_first_formats[1])
+    ):
+        return "mixed"
+
+    else:
+        return None
+
+
+def _is_column_date_only(X_col):
+    """Check whether a :obj:`pandas.DatetimeIndex` only contains dates.
 
     Parameters
     ----------
-    X : array-like of shape ``(n_sample,)``
+    X_col : pandas.DatetimeIndex of shape ``(n_samples,)``
 
     Returns
     -------
     is_date : bool
     """
-    if is_datetime_parsable(X):
-        X_t = pd.to_datetime(X)
-        return np.all(X_t == X_t.normalize())
-    return False
+    return np.array_equal(X_col, X_col.normalize())
+
+
+def _datetime_to_total_seconds(X_col):
+    """
+    Parameters
+    ----------
+    X_col : DatetimeIndex of shape (n_samples,)
+
+    Returns
+    -------
+    X_col : ndarray of shape (n_samples)
+    """
+    if X_col.tz is not None:
+        X_col = X_col.tz_convert("utc")
+
+    # Total seconds since epoch
+    mask_notnull = X_col == X_col
+
+    return np.where(
+        mask_notnull,
+        X_col.astype("int64") / 1e9,
+        np.nan,
+    )
 
 
 class DatetimeEncoder(TransformerMixin, BaseEstimator):
     """Transforms each datetime column into several numeric columns \
     for temporal features (e.g year, month, day...).
 
-    Constant extracted features are dropped; for instance, if the year is
-    always the same in a feature, the extracted "year" column won't be added.
     If the dates are timezone aware, all the features extracted will correspond
     to the provided timezone.
 
     Parameters
     ----------
-    extract_until : {"year", "month", "day", "hour", "minute", "second",
+    resolution : {"year", "month", "day", "hour", "minute", "second",
         "microsecond", "nanosecond", None}, default="hour"
-        Extract up to this granularity.
-        For instance, if you specify "day", only "year", "month", "day" and
-        features will be created.
+        Extract up to this resolution.
+        E.g., ``resolution="day"`` generates the features "year", "month",
+        "day" only.
         If ``None``, no feature will be created.
 
     add_day_of_the_week : bool, default=False
-        Add day of the week feature (if day is extracted).
-        This is a numerical feature from 0 (Monday) to 6 (Sunday).
+        Add day of the week feature as a numerical feature
+        from 0 (Monday) to 6 (Sunday).
 
-    add_total_second : bool, default=True
+    add_total_seconds : bool, default=True
         Add the total number of seconds since Epoch.
 
     errors: {"coerce", "raise"}, default="coerce"
         During transform:
-        - If ``"coerce"``, then invalid parsing will be set as ``NaT``.
-        - If ``"raise"``, then invalid parsing will raise an exception
+        - If ``"coerce"``, then invalid parsing will be set as ``pd.NaT``.
+        - If ``"raise"``, then invalid parsing will raise an exception.
 
     Attributes
     ----------
+    column_indices_ : list of int
+        Indices of the datetime-parsable columns.
+
+    indice_to_format_ : dict[int, str]
+        Mapping from column indices to their datetime formats.
+
+    indice_to_features_ : dict[int, list[str]]
+        Dictionary mapping the column names to the list of datetime
+        features extracted for each column.
+
     n_features_out_ : int
         Number of features of the transformed data.
-
-    features_per_column_ : dict[str, list[str]] or dict[int, list[str]]
-        Dictionary mapping the column names to the list of features extracted
-        for each column.
-
-    format_per_column_ : dict[str, str] or dict[int, str]
-        Dictionary mapping the column names to the first non-null example.
-        This is how Pandas infer the datetime format.
 
     See Also
     --------
@@ -130,38 +523,40 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     DatetimeEncoder()
 
     The encoder will output a transformed array
-    with four columns ("year", "month", "day" and "hour"):
+    with five columns ("year", "month", "day", "hour" and "total_seconds"):
 
     >>> enc.transform(X)
-    array([[2022.,   10.,   15.,    0.],
-           [2021.,   12.,   25.,    0.],
-           [2020.,    5.,   18.,    0.],
-           [2019.,   10.,   15.,   12.]])
+    array([[2022.,   10.,   15.,    0.,    1.6657920e+09],
+           [2021.,   12.,   25.,    0.,    1.6403904e+09],
+           [2020.,    5.,   18.,    0.,    1.5897600e+09],
+           [2019.,   10.,   15.,   12.,    1.5711408e+09]])
     """
 
     def __init__(
         self,
         *,
-        extract_until="hour",
+        resolution="hour",
         add_day_of_the_week=False,
-        add_total_second=True,
+        add_total_seconds=True,
         errors="coerce",
     ):
-        self.extract_until = extract_until
+        self.resolution = resolution
         self.add_day_of_the_week = add_day_of_the_week
-        self.add_total_second = add_total_second
+        self.add_total_seconds = add_total_seconds
         self.errors = errors
 
     def fit(self, X, y=None):
         """Fit the instance to X.
 
-        In practice, just check keywords and input validity,
-        and stores which extracted features are not constant.
+        Select datetime-parsable columns and generate the list of
+        datetime feature to extract.
 
         Parameters
         ----------
         X : array-like, shape ``(n_samples, n_features)``
-            Data where each column is a datetime feature.
+            Input data. Columns that can't be converted into
+            `pandas.DatetimeIndex` and numerical values will
+            be dropped.
         y : None
             Unused, only here for compatibility.
 
@@ -170,10 +565,9 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         DatetimeEncoder
             Fitted DatetimeEncoder instance (self).
         """
-        if self.extract_until not in TIME_LEVELS and self.extract_until is not None:
+        if self.resolution not in TIME_LEVELS and self.resolution is not None:
             raise ValueError(
-                f"'extract_until' options are {TIME_LEVELS}, "
-                f"got {self.extract_until!r}."
+                f"'resolution' options are {TIME_LEVELS}, got {self.resolution!r}."
             )
 
         errors_options = ["coerce", "raise"]
@@ -184,62 +578,61 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         self._check_feature_names(X, reset=True)
         self._check_n_features(X, reset=True)
-        X = check_array(X, ensure_2d=True, force_all_finite=False, dtype=None)
+        X = check_array(
+            X, ensure_2d=True, force_all_finite=False, dtype=None, copy=False
+        )
 
         self._select_datetime_cols(X)
 
         return self
 
     def _select_datetime_cols(self, X):
-        """Select datetime-like columns and infer features to be parsed.
+        """Select datetime-parsable columns and generate the list of
+        datetime feature to extract.
 
         If the input only contains dates (and no datetimes), only the features
-        ["year", "month", "day"] will be filtered with extract_until.
+        ["year", "month", "day"] will be filtered with resolution.
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : array-like of shape ``(n_samples, n_features)``
         """
-        # Features to extract for each column, after removing constant features
-        self.features_per_column_ = defaultdict(list)
-        self.format_per_column_ = dict()
-        self.n_features_out_ = 0
-
-        if self.extract_until is None:
+        if self.resolution is None:
             levels = []
         else:
-            idx_level = TIME_LEVELS.index(self.extract_until)
+            idx_level = TIME_LEVELS.index(self.resolution)
             levels = TIME_LEVELS[: idx_level + 1]
 
-        columns = getattr(self, "feature_names_in_", list(range(X.shape[1])))
-        for col_idx, col in enumerate(columns):
-            X_col = X[:, col_idx]
+        X_split = np.hsplit(X, X.shape[1])
+        self.column_indices_, self.indice_to_format_ = _get_datetime_column_indices(
+            X_split
+        )
+        del X_split
 
-            if is_datetime_parsable(X_col):
-                # Pandas use the first non-null item of the array to infer the format.
-                X_dt = pd.to_datetime(X_col)
-                mask_notnull = X_dt == X_dt
-                self.format_per_column_[col] = X_col[mask_notnull][0]
+        self.indice_to_features_ = defaultdict(list)
+        self.n_features_out_ = 0
 
-                if is_date_only(X_col):
-                    # Keep only date attributes
-                    levels = [
-                        level for level in levels if level in ["year", "month", "day"]
-                    ]
+        for col_idx in self.column_indices_:
+            X_col = pd.DatetimeIndex(X[:, col_idx])
+            if _is_column_date_only(X_col):
+                # Keep only date attributes
+                levels = [
+                    level for level in levels if level in ["year", "month", "day"]
+                ]
 
-                self.features_per_column_[col] += levels
-                self.n_features_out_ += len(levels)
+            self.indice_to_features_[col_idx] += levels
+            self.n_features_out_ += len(levels)
 
-                if self.add_total_second:
-                    self.features_per_column_[col].append("total_second")
-                    self.n_features_out_ += 1
+            if self.add_total_seconds:
+                self.indice_to_features_[col_idx].append("total_seconds")
+                self.n_features_out_ += 1
 
-                if self.add_day_of_the_week:
-                    self.features_per_column_[col].append("day_of_week")
-                    self.n_features_out_ += 1
+            if self.add_day_of_the_week:
+                self.indice_to_features_[col_idx].append("day_of_week")
+                self.n_features_out_ += 1
 
     def transform(self, X, y=None):
-        """Transform `X` by replacing each datetime column with \
+        """Transform ``X`` by replacing each datetime column with \
         corresponding numerical features.
 
         Parameters
@@ -257,47 +650,49 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         check_is_fitted(self)
         self._check_n_features(X, reset=False)
         self._check_feature_names(X, reset=False)
-        X = check_array(X, ensure_2d=True, force_all_finite=False, dtype=None)
 
-        return self._parse_datetime_cols(X)
+        X = check_array(
+            X,
+            ensure_2d=True,
+            force_all_finite=False,
+            dtype=None,
+            copy=False,
+        )
+        X_split = _to_datetime_2d_array(
+            X,
+            indices=self.column_indices_,
+            indice_to_format=self.indice_to_format_,
+            errors=self.errors,
+        )
 
-    def _parse_datetime_cols(self, X):
+        return self._extract_features(X_split)
+
+    def _extract_features(self, X_split):
         """Extract datetime features from the selected columns.
 
         Parameters
         ----------
-        X : ndarray of shape ``(n_samples, n_features)``
+        X_split : list of 1d array of length n_features
 
         Returns
         -------
         X_out : ndarray of shape ``(n_samples, n_features_out_)``
         """
-        columns = getattr(self, "feature_names_in_", list(range(X.shape[1])))
-        # X_out must be of dtype float64 to handle np.nan
-        X_out = np.empty((X.shape[0], self.n_features_out_), dtype=np.float64)
+        # X_out must be of dtype float64 otherwise np.nan will overflow
+        # to large negative numbers.
+        X_out = np.empty((X_split[0].shape[0], self.n_features_out_), dtype=np.float64)
         offset_idx = 0
-        for col_idx, col in enumerate(columns):
-            if col in self.features_per_column_:
-                # X_col is a DatetimeIndex
-                X_col = pd.to_datetime(X[:, col_idx], errors=self.errors)
+        for col_idx in self.column_indices_:
+            X_col = X_split[col_idx]
+            features = self.indice_to_features_[col_idx]
+            for feat_idx, feature in enumerate(features):
+                if feature == "total_seconds":
+                    X_feature = _datetime_to_total_seconds(X_col)
+                else:
+                    X_feature = getattr(X_col, feature).to_numpy()
+                X_out[:, offset_idx + feat_idx] = X_feature
 
-                features = self.features_per_column_[col]
-                for feat_idx, feature in enumerate(features):
-                    if feature == "total_second":
-                        if X_col.tz is not None:
-                            X_col = X_col.tz_convert("utc")
-                        # Total seconds since epoch
-                        mask_notnull = X_col == X_col
-                        X_feature = np.where(
-                            mask_notnull,
-                            X_col.astype("int64") // 1e9,
-                            np.nan,
-                        )
-                    else:
-                        X_feature = getattr(X_col, feature).to_numpy()
-                    X_out[:, offset_idx + feat_idx] = X_feature
-
-                offset_idx += len(features)
+            offset_idx += len(features)
 
         return X_out
 
@@ -320,9 +715,11 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         feature_names : list of str
             List of feature names.
         """
-        check_is_fitted(self, "features_per_column_")
+        check_is_fitted(self, "indice_to_features_")
         feature_names = []
-        for column, features in self.features_per_column_.items():
+        columns = getattr(self, "feature_names_in_", list(range(self.n_features_in_)))
+        for col_idx, features in self.indice_to_features_.items():
+            column = columns[col_idx]
             feature_names += [f"{column}_{feat}" for feat in features]
         return feature_names
 

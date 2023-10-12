@@ -108,28 +108,28 @@ def get_tz_datetime(as_array=False):
     "add_total_second, add_day_of_the_week",
     list(product([True, False], [True, False])),
 )
-@pytest.mark.parametrize("extract_until", TIME_LEVELS)
+@pytest.mark.parametrize("resolution", TIME_LEVELS)
 def test_fit(
     as_array,
     get_data_func,
     features,
     add_total_second,
     add_day_of_the_week,
-    extract_until,
+    resolution,
 ):
     X = get_data_func(as_array=as_array)
     enc = DatetimeEncoder(
         add_day_of_the_week=add_day_of_the_week,
         add_total_second=add_total_second,
-        extract_until=extract_until,
+        resolution=resolution,
     )
     enc.fit(X)
 
     total_second = ["total_second"] if add_total_second else []
     day_of_week = ["day_of_week"] if add_day_of_the_week else []
 
-    if extract_until in features:
-        features_ = features[: features.index(extract_until) + 1]
+    if resolution in features:
+        features_ = features[: features.index(resolution) + 1]
     else:
         features_ = deepcopy(features)
 
@@ -170,10 +170,10 @@ def test_format_nz():
     assert enc.format_per_column_ == {0: "2020-01-01 10:12:01+05:30"}
 
 
-def test_extract_until_none():
+def test_resolution_none():
     X = get_datetime()
     enc = DatetimeEncoder(
-        extract_until=None,
+        resolution=None,
         add_total_second=False,
     )
     enc.fit(X)
@@ -205,7 +205,7 @@ def test_transform_date():
 def test_transform_datetime():
     X = get_datetime()
     enc = DatetimeEncoder(
-        extract_until="second",
+        resolution="second",
         add_total_second=False,
     )
     X_trans = enc.fit_transform(X)
