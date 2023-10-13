@@ -20,9 +20,9 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     The principle is as follows:
 
-    1. The main table and the key column name are provided at initialisation.
-    2. The auxiliary tables are provided for fitting, and will be joined
-       sequentially when Joiner.transform is called.
+    1. The auxiliary tables and the key column names are provided at initialisation.
+    2. The main table is provided for fitting, and the auxiliary tables will be joined
+       to the main table sequentially when `Joiner.transform` is called.
 
     It is advised to use hyperparameter tuning tools such as GridSearchCV
     to determine the best `match_score` parameter, as this can significantly

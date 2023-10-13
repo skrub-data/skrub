@@ -181,9 +181,10 @@ plt.tight_layout(pad=1)
 plt.show()
 
 ###############################################################################
-# We can deduce from this data that the three factors that define the most
-# the salary are: being hired for a long time, being a manager,
-# and having a permanent, full-time job.
+# We can see that features such the time elapsed since being hired, having a full-time employment, and the position, seem to be the most informative for prediction.
+# However, feature importances must not be over-interpreted -- they capture statistical associations `rather than causal effects <https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation>`_.
+# Moreover, the fast feature importance method used here suffers from biases favouring features with larger cardinality, as illustrated in a scikit-learn `example <https://scikit-learn.org/dev/auto_examples/inspection/plot_permutation_importance.html#sphx-glr-auto-examples-inspection-plot-permutation-importance-py>`_.
+# In general we should prefer |permutation importances|, but it is a slower method.
 
 ###############################################################################
 # Conclusion

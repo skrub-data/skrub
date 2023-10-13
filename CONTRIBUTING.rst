@@ -103,8 +103,7 @@ Let maintainers know whether:
   is needed! To go further, refer to the section
   :ref:`writing-your-first-pull-request`.
 - **You won't write the code**, in which case a
-  developer can start working on it. Note however that maintainers
-  are **volunteers**, and therefore cannot guarantee how much time
+  developer can start working on it. Note however that we cannot guarantee how much time
   it will take to implement the change.
 
 If the enhancement is refused
