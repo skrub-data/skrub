@@ -5,8 +5,57 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 from sklearn.feature_extraction.text import HashingVectorizer
+from sklearn.utils._testing import assert_array_equal
 
 from skrub import fuzzy_join
+from skrub.dataframe.tests.test_polars import (
+    POLARS_MISSING_MSG,
+    POLARS_SETUP,
+    XFAIL_POLARS,
+)
+
+
+@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
+@pytest.mark.xfail(
+    "fuzzy_join" in XFAIL_POLARS, reason="Polars not supported for fuzzy_join yet."
+)
+@pytest.mark.parametrize(
+    "analyzer",
+    ["char", "char_wb", "word"],
+)
+def test_polars_input(analyzer: Literal["char", "char_wb", "word"]) -> None:
+    import polars as pl
+
+    fuzzy_data_1 = {"a1": ["ana", "lala", "nana et sana", np.NaN]}
+    fuzzy_data_2 = {"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]}
+
+    df1_pl = pl.DataFrame(fuzzy_data_1)
+    df2_pl = pl.DataFrame(fuzzy_data_2)
+
+    df_joined_pl = fuzzy_join(
+        left=df1_pl,
+        right=df2_pl,
+        left_on="a1",
+        right_on="a2",
+        match_score=0.45,
+        return_score=True,
+        analyzer=analyzer,
+    )
+
+    df1_pd = pd.DataFrame(fuzzy_data_1)
+    df2_pd = pd.DataFrame(fuzzy_data_2)
+
+    df_joined_pd = fuzzy_join(
+        left=df1_pd,
+        right=df2_pd,
+        left_on="a1",
+        right_on="a2",
+        match_score=0.45,
+        return_score=True,
+        analyzer=analyzer,
+    )
+
+    assert_array_equal(df_joined_pl, df_joined_pd)
 
 
 @pytest.mark.parametrize(
