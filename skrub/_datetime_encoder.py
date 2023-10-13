@@ -36,138 +36,35 @@ def to_datetime(
     and 2d arrays inputs. It converts compatible columns to datetime, and
     pass incompatible columns unchanged.
 
-    With 2d arrays, numerical columns will also be passed unchanged.
-
     int, float, str, datetime, list, tuple, 1d array, and Series are defered to
-    pandas.to_datetime directly.
+    :func:`pandas.to_datetime` directly.
 
     Parameters
     ----------
-    arg : int, float, str, datetime, list, tuple, nd array, Series, DataFrame/dict-like
+    X : int, float, str, datetime, list, tuple, nd array, Series, DataFrame/dict-like
         The object to convert to a datetime.
+
     errors : {'ignore', 'raise', 'coerce'}, default 'coerce'
-        - If :const:`'raise'`, then invalid parsing will raise an exception.
-        - If :const:`'coerce'`, then invalid parsing will be set as :const:`NaT`.
-        - If :const:`'ignore'`, then invalid parsing will return the input.
-    dayfirst : bool, default False
-        Specify a date parse order if `arg` is str or is list-like.
-        If :const:`True`, parses dates with the day first, e.g. :const:`"10/11/12"`
-        is parsed as :const:`2012-11-10`.
+        - If ``'raise'``, then invalid parsing will raise an exception.
+        - If ``'coerce'``, then invalid parsing will be set as ``NaT``.
+        Note that ``'ignore'`` is not used for dataframes, 2d arrays,
+        and series, and is used otherwise as in ``pd.to_datetime``.
 
-        .. warning::
-
-            ``dayfirst=True`` is not strict, but will prefer to parse
-            with day first.
-
-    yearfirst : bool, default False
-        Specify a date parse order if `arg` is str or is list-like.
-
-        - If :const:`True` parses dates with the year first, e.g.
-          :const:`"10/11/12"` is parsed as :const:`2010-11-12`.
-        - If both `dayfirst` and `yearfirst` are :const:`True`, `yearfirst` is
-          preceded (same as :mod:`dateutil`).
-
-        .. warning::
-
-            ``yearfirst=True`` is not strict, but will prefer to parse
-            with year first.
-
-    utc : bool, default False
-        Control timezone-related parsing, localization and conversion.
-
-        - If :const:`True`, the function *always* returns a timezone-aware
-          UTC-localized :class:`Timestamp`, :class:`Series` or
-          :class:`DatetimeIndex`. To do this, timezone-naive inputs are
-          *localized* as UTC, while timezone-aware inputs are *converted* to UTC.
-
-        - If :const:`False` (default), inputs will not be coerced to UTC.
-          Timezone-naive inputs will remain naive, while timezone-aware ones
-          will keep their time offsets. Limitations exist for mixed
-          offsets (typically, daylight savings), see :ref:`Examples
-          <to_datetime_tz_examples>` section for details.
-
-        See also: pandas general documentation about `timezone conversion and
-        localization
-        <https://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html
-        #time-zone-handling>`_.
-
-    format : str, default None
-        The strftime to parse time, e.g. :const:`"%d/%m/%Y"`. See
-        `strftime documentation
-        <https://docs.python.org/3/library/datetime.html
-        #strftime-and-strptime-behavior>`_ for more information on choices, though
-        note that :const:`"%f"` will parse all the way up to nanoseconds.
-        You can also pass:
-
-        - "ISO8601", to parse any `ISO8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
-          time string (not necessarily in exactly the same format);
-        - "mixed", to infer the format for each element individually. This is risky,
-          and you should probably use it along with `dayfirst`.
-
-    exact : bool, default True
-        Control how `format` is used:
-
-        - If :const:`True`, require an exact `format` match.
-        - If :const:`False`, allow the `format` to match anywhere in the target
-          string.
-
-        Cannot be used alongside ``format='ISO8601'`` or ``format='mixed'``.
-    unit : str, default 'ns'
-        The unit of the arg (D,s,ms,us,ns) denote the unit, which is an
-        integer or float number. This will be based off the origin.
-        Example, with ``unit='ms'`` and ``origin='unix'``, this would calculate
-        the number of milliseconds to the unix epoch start.
-    origin : scalar, default 'unix'
-        Define the reference date. The numeric values would be parsed as number
-        of units (defined by `unit`) since this reference date.
-
-        - If :const:`'unix'` (or POSIX) time; origin is set to 1970-01-01.
-        - If :const:`'julian'`, unit must be :const:`'D'`, and origin is set to
-          beginning of Julian Calendar. Julian day number :const:`0` is assigned
-          to the day starting at noon on January 1, 4713 BC.
-        - If Timestamp convertible (Timestamp, dt.datetime, np.datetimt64 or date
-          string), origin is set to Timestamp identified by origin.
-        - If a float or integer, origin is the millisecond difference
-          relative to 1970-01-01.
-    cache : bool, default True
-        If :const:`True`, use a cache of unique, converted dates to apply the
-        datetime conversion. May produce significant speed-up when parsing
-        duplicate date strings, especially ones with timezone offsets. The cache
-        is only used when there are at least 50 values. The presence of
-        out-of-bounds values will render the cache unusable and may slow down
-        parsing.
+    **kwargs : key, value mappings
+        Other keyword arguments are passed down to
+        :func:`pandas.to_datetime`.
 
     Returns
     -------
     datetime
-        If parsing succeeded.
-        Return type depends on input (types in parenthesis correspond to
-        fallback in case of unsuccessful timezone or out-of-range timestamp
-        parsing):
-
-        - scalar: :class:`Timestamp` (or :class:`datetime.datetime`)
-        - array-like: :class:`DatetimeIndex` (or :class:`Series` with
-          :class:`object` dtype containing :class:`datetime.datetime`)
-        - Series: :class:`Series` of :class:`datetime64` dtype (or
-          :class:`Series` of :class:`object` dtype containing
-          :class:`datetime.datetime`)
-        - DataFrame: :class:`Series` of :class:`datetime64` dtype (or
-          :class:`Series` of :class:`object` dtype containing
-          :class:`datetime.datetime`)
-
-    Raises
-    ------
-    ParserError
-        When parsing a date from string fails.
-    ValueError
-        When another datetime conversion error happens. For example when one
-        of 'year', 'month', day' columns is missing in a :class:`DataFrame`, or
-        when a Timezone-aware :class:`datetime.datetime` is found in an array-like
-        of mixed time offsets, and ``utc=False``.
+        Return type depends on input.
+        - dataframes, series and 2d arrays return the same type
+        - otherwise return the same output as :func:`pandas.to_datetime`.
 
     See Also
     --------
     :func:`pandas.to_datetime`
+        Convert argument to datetime.
     """
     kwargs["errors"] = errors
 
@@ -223,8 +120,9 @@ def _to_datetime_series(X, **kwargs):
     _, px = get_df_namespace(X.to_frame())
     index = getattr(X, "index", None)
     name = X.name
-    X = pd.to_datetime(X, **kwargs)
-    X = pd.Series(X, index=index, name=name)
+    X_split = [X.to_numpy()]
+    X_split = _to_datetime_2d(X_split)
+    X = pd.Series(X_split[0], index=index, name=name)
     # conversion is px is Polars, no-op if Pandas
     return px.Series(X)
 
@@ -321,6 +219,11 @@ def _get_datetime_column_indices(X_split):
 
     for col_idx, X_col in enumerate(X_split):
         X_col = X_col[pd.notnull(X_col)]
+
+        # convert pd.TimeStamp to np.datetime64
+        if all(isinstance(val, pd.Timestamp) for val in X_col):
+            X_col = X_col.astype("datetime64")
+
         if _is_column_datetime_parsable(X_col):
             indices.append(col_idx)
             # TODO: pass require_dayfirst to _guess_datetime_format
@@ -367,7 +270,7 @@ def _is_column_datetime_parsable(X_col):
     return False
 
 
-def _guess_datetime_format(X_col, require_dayfirst=True):
+def _guess_datetime_format(X_col, require_dayfirst=False):
     """
     Parameters
     ----------
@@ -381,6 +284,11 @@ def _guess_datetime_format(X_col, require_dayfirst=True):
     -------
     format : str
     """
+    if np.issubdtype(X_col.dtype, np.datetime64):
+        # We don't need to specify a parsing format
+        # for columns that are already of type datetime64.
+        return None
+
     X_col = X_col.astype(np.object_)
     vfunc = np.vectorize(guess_datetime_format)
     with warnings.catch_warnings():
@@ -480,7 +388,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     add_total_seconds : bool, default=True
         Add the total number of seconds since Epoch.
 
-    errors: {"coerce", "raise"}, default="coerce"
+    errors : {'coerce', 'raise'}, default="coerce"
         During transform:
         - If ``"coerce"``, then invalid parsing will be set as ``pd.NaT``.
         - If ``"raise"``, then invalid parsing will raise an exception.
