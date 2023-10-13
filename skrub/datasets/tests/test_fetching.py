@@ -1,3 +1,4 @@
+import re
 from tempfile import TemporaryDirectory
 from unittest import mock
 from urllib.error import URLError
@@ -156,6 +157,61 @@ def test_fetch_world_bank_indicator():
             # Same valid call as above
             disk_loaded_info = _fetching.fetch_world_bank_indicator(
                 indicator_id=test_dataset["id"],
+                data_directory=temp_dir,
+            )
+            mock_urlretrieve.assert_not_called()
+            assert disk_loaded_info == returned_info
+
+
+def test_fetch_movielens():
+    """
+    Tests the ``fetch_movielens()`` function in a real environment.
+    """
+    test_dataset = {
+        "id": "ratings",
+        "desc_start": "Summary\n=======\n\nThis dataset (ml-latest-small)",
+        "url": "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip",  # noqa
+        "dataset_columns_count": 4,
+    }
+
+    with TemporaryDirectory() as temp_dir:
+        try:
+            # First, we want to purposefully test ValueError exceptions.
+            msg = "dataset_id options are ['movies', 'ratings'], got 'wrong_name'."
+            with pytest.raises(ValueError, match=re.escape(msg)):
+                assert _fetching.fetch_movielens(
+                    dataset_id="wrong_name", data_directory=temp_dir
+                )
+
+            # Valid call
+            returned_info = _fetching.fetch_movielens(
+                dataset_id="ratings",
+                data_directory=temp_dir,
+            )
+
+        except (ConnectionError, URLError):
+            pytest.skip(
+                "Exception: Skipping this test because we encountered an "
+                "issue probably related to an Internet connection problem. "
+            )
+            return
+
+        assert returned_info.description.startswith(test_dataset["desc_start"])
+        assert returned_info.source == test_dataset["url"]
+        assert returned_info.path.is_file()
+
+        dataset = pd.read_csv(returned_info.path)
+
+        assert dataset.columns[0] == "userId"
+        assert dataset.shape[1] == test_dataset["dataset_columns_count"]
+
+        # Now that we have verified the file is on disk, we want to test
+        # whether calling the function again reads it from disk (it should)
+        # or queries the network again (it shouldn't).
+        with mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
+            # Same valid call as above
+            disk_loaded_info = _fetching.fetch_movielens(
+                dataset_id=test_dataset["id"],
                 data_directory=temp_dir,
             )
             mock_urlretrieve.assert_not_called()
