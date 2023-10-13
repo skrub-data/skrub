@@ -29,12 +29,12 @@ def test_polars_input(analyzer: Literal["char", "char_wb", "word"]) -> None:
     fuzzy_data_1 = {"a1": ["ana", "lala", "nana et sana", np.NaN]}
     fuzzy_data_2 = {"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]}
 
-    df1_pl = pl.DataFrame(fuzzy_data_1)
-    df2_pl = pl.DataFrame(fuzzy_data_2)
+    pl_df1 = pl.DataFrame(fuzzy_data_1)
+    pl_df2 = pl.DataFrame(fuzzy_data_2)
 
-    df_joined_pl = fuzzy_join(
-        left=df1_pl,
-        right=df2_pl,
+    pl_df_joined = fuzzy_join(
+        left=pl_df1,
+        right=pl_df2,
         left_on="a1",
         right_on="a2",
         match_score=0.45,
@@ -42,12 +42,12 @@ def test_polars_input(analyzer: Literal["char", "char_wb", "word"]) -> None:
         analyzer=analyzer,
     )
 
-    df1_pd = pd.DataFrame(fuzzy_data_1)
-    df2_pd = pd.DataFrame(fuzzy_data_2)
+    pd_df1 = pd.DataFrame(fuzzy_data_1)
+    pd_df2 = pd.DataFrame(fuzzy_data_2)
 
-    df_joined_pd = fuzzy_join(
-        left=df1_pd,
-        right=df2_pd,
+    pd_df_joined = fuzzy_join(
+        left=pd_df1,
+        right=pd_df2,
         left_on="a1",
         right_on="a2",
         match_score=0.45,
@@ -55,7 +55,7 @@ def test_polars_input(analyzer: Literal["char", "char_wb", "word"]) -> None:
         analyzer=analyzer,
     )
 
-    assert_array_equal(df_joined_pl, df_joined_pd)
+    assert_array_equal(pl_df_joined, pd_df_joined)
 
 
 @pytest.mark.parametrize(

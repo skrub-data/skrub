@@ -40,37 +40,37 @@ def test_polars_input() -> None:
         "Capital": ["Paris", "Rome", "Berlin"],
     }
 
-    main_table_pd = pd.DataFrame(main_data)
-    aux_table_1_pd = pd.DataFrame(aux_1_data)
-    aux_table_2_pd = pd.DataFrame(aux_2_data)
-    aux_table_3_pd = pd.DataFrame(aux_3_data)
+    pl_main_table = pl.DataFrame(main_data)
+    pl_aux_table_1 = pl.DataFrame(aux_1_data)
+    pl_aux_table_2 = pl.DataFrame(aux_2_data)
+    pl_aux_table_3 = pl.DataFrame(aux_3_data)
 
-    aux_tables_pd = [
-        (aux_table_1_pd, "Country"),
-        (aux_table_2_pd, "Country name"),
-        (aux_table_3_pd, "Countries"),
+    pl_aux_tables = [
+        (pl_aux_table_1, "Country"),
+        (pl_aux_table_2, "Country name"),
+        (pl_aux_table_3, "Countries"),
     ]
 
-    main_table_pl = pl.DataFrame(main_data)
-    aux_table_1_pl = pl.DataFrame(aux_1_data)
-    aux_table_2_pl = pl.DataFrame(aux_2_data)
-    aux_table_3_pl = pl.DataFrame(aux_3_data)
+    pl_joiner = Joiner(tables=pl_aux_tables, main_key="Country")
+    pl_joiner.fit(pl_main_table)
+    pl_big_table = pl_joiner.transform(pl_main_table)
 
-    aux_tables_pl = [
-        (aux_table_1_pl, "Country"),
-        (aux_table_2_pl, "Country name"),
-        (aux_table_3_pl, "Countries"),
+    pd_main_table = pd.DataFrame(main_data)
+    pd_aux_table_1 = pd.DataFrame(aux_1_data)
+    pd_aux_table_2 = pd.DataFrame(aux_2_data)
+    pd_aux_table_3 = pd.DataFrame(aux_3_data)
+
+    pd_aux_tables = [
+        (pd_aux_table_1, "Country"),
+        (pd_aux_table_2, "Country name"),
+        (pd_aux_table_3, "Countries"),
     ]
 
-    joiner = Joiner(tables=aux_tables_pd, main_key="Country")
-    joiner.fit(main_table_pd)
-    big_table_pd = joiner.transform(main_table_pd)
+    pd_joiner = Joiner(tables=pd_aux_tables, main_key="Country")
+    pd_joiner.fit(pd_main_table)
+    pd_big_table = pd_joiner.transform(pd_main_table)
 
-    joiner = Joiner(tables=aux_tables_pl, main_key="Country")
-    joiner.fit(main_table_pl)
-    big_table_pl = joiner.transform(main_table_pl)
-
-    assert_array_equal(big_table_pd, big_table_pl)
+    assert_array_equal(pl_big_table, pd_big_table)
 
 
 def test_joiner() -> None:
