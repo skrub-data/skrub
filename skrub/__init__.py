@@ -3,6 +3,7 @@ skrub: Prepping tables for machine learning.
 """
 from pathlib import Path as _Path
 
+from ._agg_joiner import AggJoiner, AggTarget
 from ._check_dependencies import check_dependencies
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
@@ -34,4 +35,6 @@ __all__ = [
     "TargetEncoder",
     "deduplicate",
     "compute_ngram_distance",
+    "AggJoiner",
+    "AggTarget",
 ]
