@@ -738,7 +738,6 @@ class GapEncoder(TransformerMixin, BaseEstimator):
           [ 0.05002016,  4.54997983]])
 
     The higher the value, the bigger the correspondence with the topic.
-
     """
 
     rho_: float
