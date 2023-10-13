@@ -100,10 +100,10 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
 
     >>> enc.transform(X2)
     array([[3.        ],
-        [3.        ],
-        [3.54545455],
-        [2.72727273],
-        [3.54545455]])
+           [3.        ],
+           [3.5...],
+           [2.7...],
+           [3.5...]])
 
     As expected, they were encoded according to their influence on y.
     The unknown categories were assigned the mean of the target variable.

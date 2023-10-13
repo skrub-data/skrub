@@ -214,8 +214,7 @@ def _parse_argument(operation: str) -> tuple[str, int | None]:
     Examples
     --------
     >>> _parse_argument("hist(10)")
-    "hist", 10
-
+    ('hist', 10)
     """
     split = re.split("\\(.+\\)", operation)
     op_root = split[0]
