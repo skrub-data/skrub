@@ -152,15 +152,15 @@ def test_fit(
     features_ += total_seconds + day_of_week
     columns = range(X.shape[1])
 
-    expected_indice_to_features = {col: features_ for col in columns}
-    expected_indice_to_format = {col: format for col in columns}
+    expected_index_to_features = {col: features_ for col in columns}
+    expected_index_to_format = {col: format for col in columns}
     expected_n_features_out = len(features_) * X.shape[1]
     expected_feature_names = [
         f"{col}_{feature}" for col in columns for feature in features_
     ]
 
-    assert enc.indice_to_features_ == expected_indice_to_features
-    assert enc.indice_to_format_ == expected_indice_to_format
+    assert enc.index_to_features_ == expected_index_to_features
+    assert enc.index_to_format_ == expected_index_to_format
     assert enc.n_features_out_ == expected_n_features_out
     assert enc.get_feature_names_out() == expected_feature_names
 
@@ -168,18 +168,18 @@ def test_fit(
 def test_format_nan():
     X = get_nan_datetime()
     enc = DatetimeEncoder().fit(X)
-    expected_indice_to_format = {
+    expected_index_to_format = {
         0: "%Y-%m-%d %H:%M:%S",
         1: "%Y-%m-%d %H:%M:%S",
         2: "%Y-%m-%d %H:%M:%S",
     }
-    assert enc.indice_to_format_ == expected_indice_to_format
+    assert enc.index_to_format_ == expected_index_to_format
 
 
 def test_format_nz():
     X = get_tz_datetime()
     enc = DatetimeEncoder().fit(X)
-    assert enc.indice_to_format_ == {0: "%Y-%m-%d %H:%M:%S%z"}
+    assert enc.index_to_format_ == {0: "%Y-%m-%d %H:%M:%S%z"}
 
 
 def test_resolution_none():
@@ -190,7 +190,7 @@ def test_resolution_none():
     )
     enc.fit(X)
 
-    assert enc.indice_to_features_ == {0: [], 1: [], 2: []}
+    assert enc.index_to_features_ == {0: [], 1: [], 2: []}
     assert enc.n_features_out_ == 0
     assert enc.get_feature_names_out() == []
 
@@ -316,7 +316,7 @@ def test_transform_nan():
 def test_mixed_type_dataframe():
     X = get_mixed_type_dataframe()
     enc = DatetimeEncoder().fit(X)
-    assert enc.indice_to_format_ == {0: "%Y-%m-%d", 4: "%d/%m/%Y"}
+    assert enc.index_to_format_ == {0: "%Y-%m-%d", 4: "%d/%m/%Y"}
 
     X_dt = to_datetime(X)
     expected_dtypes = [

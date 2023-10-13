@@ -138,15 +138,14 @@ def _to_datetime_2d_array(X, **kwargs):
     -------
     X_split : list of array, of shape ``n_features``
     """
-    X_split = np.hsplit(X, X.shape[1])
-    X_split = [X_col.ravel() for X_col in X_split]
+    X_split = list(X.T)
     return _to_datetime_2d(X_split, **kwargs)
 
 
 def _to_datetime_2d(
     X_split,
     indices=None,
-    indice_to_format=None,
+    index_to_format=None,
     format=None,
     **kwargs,
 ):
@@ -167,7 +166,7 @@ def _to_datetime_2d(
         Indices of the parsable columns to convert.
         If None, indices are computed using the current input X.
 
-    indice_to_format : mapping of int to str, default=None
+    index_to_format : mapping of int to str, default=None
         Dictionary mapping column indices to their datetime format.
         It defines the format parameter for each column when calling
         pd.to_datetime.
@@ -184,15 +183,15 @@ def _to_datetime_2d(
     X_split : list of 1d array of length n_features
     """
     if indices is None:
-        indices, indice_to_format = _get_datetime_column_indices(X_split)
+        indices, index_to_format = _get_datetime_column_indices(X_split)
 
     # format overwrite indices_to_format
-    if format is not None or indice_to_format is None:
-        indice_to_format = {col_idx: format for col_idx in indices}
+    if format is not None:
+        index_to_format = {col_idx: format for col_idx in indices}
 
     for col_idx in indices:
         X_split[col_idx] = pd.to_datetime(
-            X_split[col_idx], format=indice_to_format[col_idx], **kwargs
+            X_split[col_idx], format=index_to_format[col_idx], **kwargs
         )
 
     return X_split
@@ -211,11 +210,11 @@ def _get_datetime_column_indices(X_split):
     datetime_indices : list of int
         List of parsable column, identified by their indices.
 
-    indice_to_format: mapping of int to str
+    index_to_format: mapping of int to str
         Dictionary mapping parsable column indices to their datetime format.
     """
     indices = []
-    indice_to_format = {}
+    index_to_format = {}
 
     for col_idx, X_col in enumerate(X_split):
         X_col = X_col[pd.notnull(X_col)]
@@ -227,9 +226,9 @@ def _get_datetime_column_indices(X_split):
         if _is_column_datetime_parsable(X_col):
             indices.append(col_idx)
             # TODO: pass require_dayfirst to _guess_datetime_format
-            indice_to_format[col_idx] = _guess_datetime_format(X_col)
+            index_to_format[col_idx] = _guess_datetime_format(X_col)
 
-    return indices, indice_to_format
+    return indices, index_to_format
 
 
 def _is_column_datetime_parsable(X_col):
@@ -398,10 +397,10 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     column_indices_ : list of int
         Indices of the datetime-parsable columns.
 
-    indice_to_format_ : dict[int, str]
+    index_to_format_ : dict[int, str]
         Mapping from column indices to their datetime formats.
 
-    indice_to_features_ : dict[int, list[str]]
+    index_to_features_ : dict[int, list[str]]
         Dictionary mapping the column names to the list of datetime
         features extracted for each column.
 
@@ -513,12 +512,12 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
             levels = TIME_LEVELS[: idx_level + 1]
 
         X_split = np.hsplit(X, X.shape[1])
-        self.column_indices_, self.indice_to_format_ = _get_datetime_column_indices(
+        self.column_indices_, self.index_to_format_ = _get_datetime_column_indices(
             X_split
         )
         del X_split
 
-        self.indice_to_features_ = defaultdict(list)
+        self.index_to_features_ = defaultdict(list)
         self.n_features_out_ = 0
 
         for col_idx in self.column_indices_:
@@ -529,15 +528,15 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
                     level for level in levels if level in ["year", "month", "day"]
                 ]
 
-            self.indice_to_features_[col_idx] += levels
+            self.index_to_features_[col_idx] += levels
             self.n_features_out_ += len(levels)
 
             if self.add_total_seconds:
-                self.indice_to_features_[col_idx].append("total_seconds")
+                self.index_to_features_[col_idx].append("total_seconds")
                 self.n_features_out_ += 1
 
             if self.add_day_of_the_week:
-                self.indice_to_features_[col_idx].append("day_of_week")
+                self.index_to_features_[col_idx].append("day_of_week")
                 self.n_features_out_ += 1
 
     def transform(self, X, y=None):
@@ -570,7 +569,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         X_split = _to_datetime_2d_array(
             X,
             indices=self.column_indices_,
-            indice_to_format=self.indice_to_format_,
+            index_to_format=self.index_to_format_,
             errors=self.errors,
         )
 
@@ -593,7 +592,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         offset_idx = 0
         for col_idx in self.column_indices_:
             X_col = X_split[col_idx]
-            features = self.indice_to_features_[col_idx]
+            features = self.index_to_features_[col_idx]
             for feat_idx, feature in enumerate(features):
                 if feature == "total_seconds":
                     X_feature = _datetime_to_total_seconds(X_col)
@@ -624,10 +623,10 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         feature_names : list of str
             List of feature names.
         """
-        check_is_fitted(self, "indice_to_features_")
+        check_is_fitted(self, "index_to_features_")
         feature_names = []
         columns = getattr(self, "feature_names_in_", list(range(self.n_features_in_)))
-        for col_idx, features in self.indice_to_features_.items():
+        for col_idx, features in self.index_to_features_.items():
             column = columns[col_idx]
             feature_names += [f"{column}_{feat}" for feat in features]
         return feature_names
