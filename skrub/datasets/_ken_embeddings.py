@@ -219,11 +219,11 @@ def fetch_ken_embeddings(
     >>> games_embedding = fetch_ken_embeddings(search_types="video_games") # doctest: +SKIP
     >>> games_embedding.head() # doctest: +SKIP
                              Entity  ...      X199
-    0             A_Little_Princess  ...  0.041250
-    1                 The_Dark_Half  ... -0.005336
-    2                  Frankenstein  ... -0.112716
-    3                 Albert_Wesker  ... -0.162613
-    4  Harukanaru_Toki_no_Naka_de_3  ...  0.140566
+    0             A_Little_Princess  ...  0.04...
+    1                 The_Dark_Half  ... -0.00...
+    2                  Frankenstein  ... -0.11...
+    3                 Albert_Wesker  ... -0.16...
+    4  Harukanaru_Toki_no_Naka_de_3  ...  0.14...
     <BLANKLINE>
     [5 rows x 202 columns]
 
@@ -236,11 +236,11 @@ def fetch_ken_embeddings(
     >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games") # doctest: +SKIP
     >>> games_embedding_fast.head() # doctest: +SKIP
                          Entity  ...      X199
-    0              R-Type_Delta  ...  0.040006
-    1  Just_Add_Water_(company)  ... -0.025676
-    2                 Li_Xiayan  ...  0.003485
-    3             Vampire_Night  ... -0.145383
-    4               Shatterhand  ...  0.197820
+    0              R-Type_Delta  ...  0.04...
+    1  Just_Add_Water_(company)  ... -0.02...
+    2                 Li_Xiayan  ...  0.00...
+    3             Vampire_Night  ... -0.14...
+    4               Shatterhand  ...  0.19...
     <BLANKLINE>
     [5 rows x 202 columns]
 

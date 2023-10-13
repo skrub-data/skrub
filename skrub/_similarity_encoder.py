@@ -251,8 +251,8 @@ class SimilarityEncoder(OneHotEncoder):
     instead of a discrete one based on exact matches:
 
     >>> enc.transform([['Female', 1], ['Male', 4]])
-    array([[1.        , 0.42857143, 1.        , 0.        , 0.        ],
-           [0.42857143, 1.        , 0.        , 0.        , 0.        ]])
+    array([[1.        , 0.42..., 1.        , 0.        , 0.        ],
+           [0.42..., 1.        , 0.        , 0.        , 0.        ]])
 
     >>> enc.get_feature_names_out(['gender', 'group'])
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'],
