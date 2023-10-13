@@ -1,7 +1,76 @@
 import pandas as pd
 import pytest
+from sklearn.utils._testing import assert_array_equal
 
 from skrub import Joiner
+from skrub.dataframe.tests.test_polars import (
+    POLARS_MISSING_MSG,
+    POLARS_SETUP,
+    XFAIL_POLARS,
+)
+
+
+@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
+@pytest.mark.xfail(
+    "joiner" in XFAIL_POLARS, reason="Polars not supported for joiner yet."
+)
+def test_polars_input() -> None:
+    import polars as pl
+
+    main_data = {
+        "Country": [
+            "France",
+            "Germany",
+            "Italy",
+        ]
+    }
+
+    aux_1_data = {
+        "Country": ["Germany", "French Republic", "Italia"],
+        "Population": [84_000_000, 68_000_000, 59_000_000],
+    }
+
+    aux_2_data = {
+        "Country name": ["France", "Italy", "Germany", "UK"],
+        "GDP (billion):": [2937, 2099, 4223, 3186],
+    }
+
+    aux_3_data = {
+        "Countries": ["La France", "Italy", "Germany"],
+        "Capital": ["Paris", "Rome", "Berlin"],
+    }
+
+    main_table_pd = pd.DataFrame(main_data)
+    aux_table_1_pd = pd.DataFrame(aux_1_data)
+    aux_table_2_pd = pd.DataFrame(aux_2_data)
+    aux_table_3_pd = pd.DataFrame(aux_3_data)
+
+    aux_tables_pd = [
+        (aux_table_1_pd, "Country"),
+        (aux_table_2_pd, "Country name"),
+        (aux_table_3_pd, "Countries"),
+    ]
+
+    main_table_pl = pl.DataFrame(main_data)
+    aux_table_1_pl = pl.DataFrame(aux_1_data)
+    aux_table_2_pl = pl.DataFrame(aux_2_data)
+    aux_table_3_pl = pl.DataFrame(aux_3_data)
+
+    aux_tables_pl = [
+        (aux_table_1_pl, "Country"),
+        (aux_table_2_pl, "Country name"),
+        (aux_table_3_pl, "Countries"),
+    ]
+
+    joiner = Joiner(tables=aux_tables_pd, main_key="Country")
+    joiner.fit(main_table_pd)
+    big_table_pd = joiner.transform(main_table_pd)
+
+    joiner = Joiner(tables=aux_tables_pl, main_key="Country")
+    joiner.fit(main_table_pl)
+    big_table_pl = joiner.transform(main_table_pl)
+
+    assert_array_equal(big_table_pd, big_table_pl)
 
 
 def test_joiner() -> None:

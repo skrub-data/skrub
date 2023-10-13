@@ -19,7 +19,7 @@ if POLARS_SETUP:
 
 POLARS_MISSING_MSG = "Polars is not available"
 
-XFAIL_POLARS = ["fuzzy_join"]
+XFAIL_POLARS = ["fuzzy_join", "joiner"]
 
 
 @pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
