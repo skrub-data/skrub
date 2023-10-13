@@ -7,6 +7,7 @@ import pandas as pd
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
+from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from .dataframe._namespace import get_df_namespace
@@ -22,6 +23,15 @@ WORD_TO_ALIAS = {
     "nanosecond": "N",
 }
 TIME_LEVELS = list(WORD_TO_ALIAS)
+
+
+def _is_pandas_format_mixed_available():
+    pandas_version = pd.__version__
+    min_pandas_version = "2.0.0"
+    return parse_version(min_pandas_version) < parse_version(pandas_version)
+
+
+MIXED_FORMAT = "mixed" if _is_pandas_format_mixed_available() else None
 
 
 def to_datetime(
@@ -262,7 +272,7 @@ def _is_column_datetime_parsable(X_col):
                 # avoiding ValueError when both date and datetime formats
                 # are present.
                 # At this stage, the format itself doesn't matter.
-                _ = pd.to_datetime(X_col, format="mixed")
+                _ = pd.to_datetime(X_col, format=MIXED_FORMAT)
             return True
         except (pd.errors.ParserError, ValueError):
             pass
@@ -292,10 +302,11 @@ def _guess_datetime_format(X_col, require_dayfirst=False):
     vfunc = np.vectorize(guess_datetime_format)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
-        month_first_formats = np.unique(vfunc(X_col, dayfirst=False))
-        day_first_formats = np.unique(vfunc(X_col, dayfirst=True))
+        # pd.unique handles None
+        month_first_formats = pd.unique(vfunc(X_col, dayfirst=False))
+        day_first_formats = pd.unique(vfunc(X_col, dayfirst=True))
 
-    if pd.isnull(month_first_formats).any() or pd.isnull(day_first_formats).any():
+    if None in month_first_formats or None in day_first_formats:
         return None
 
     elif (
@@ -321,7 +332,7 @@ def _guess_datetime_format(X_col, require_dayfirst=False):
         and len(day_first_formats) == 2
         and len(month_first_formats[0]) != len(month_first_formats[1])
     ):
-        return "mixed"
+        return MIXED_FORMAT
 
     else:
         return None

@@ -7,7 +7,16 @@ import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from skrub._datetime_encoder import TIME_LEVELS, DatetimeEncoder, to_datetime
+from skrub._datetime_encoder import (
+    TIME_LEVELS,
+    DatetimeEncoder,
+    _is_pandas_format_mixed_available,
+    to_datetime,
+)
+
+NANOSECONDS_FORMAT = (
+    "%Y-%m-%d %H:%M:%S.%f" if _is_pandas_format_mixed_available() else None
+)
 
 
 def get_date(as_array=False):
@@ -57,7 +66,7 @@ def get_nan_datetime(as_array=False):
         [
             ["2020-01-01 10:12:01", None, "2020-01-03 10:00:00"],
             [np.nan, "2020-02-04 22:12:00", "2021-02-05 12:00:00"],
-            ["2022-01-01 23:23:43", "2020-12-25 11:12:00", pd.NaT],
+            ["2022-01-01 23:23:43", "2020-12-25 11:12:00", pd.NA],
         ],
     )
     if as_array:
@@ -116,7 +125,7 @@ def get_mixed_datetime_format(as_array=False):
         (get_date, TIME_LEVELS[: TIME_LEVELS.index("day") + 1], "%Y-%m-%d"),
         (get_datetime, TIME_LEVELS, "%Y-%m-%d %H:%M:%S"),
         (get_tz_datetime, TIME_LEVELS, "%Y-%m-%d %H:%M:%S%z"),
-        (get_nanoseconds, TIME_LEVELS, "%Y-%m-%d %H:%M:%S.%f"),
+        (get_nanoseconds, TIME_LEVELS, NANOSECONDS_FORMAT),
     ],
 )
 @pytest.mark.parametrize(
@@ -354,6 +363,13 @@ def test_mixed_datetime_format():
     assert_series_equal(ser_dt, expected_ser_dt)
 
 
+@pytest.mark.skipif(
+    not _is_pandas_format_mixed_available(),
+    reason=(
+        "DeprecationWarning is already handled as a ValueError         in the latest"
+        " pandas version."
+    ),
+)
 def test_indempotency():
     df = get_mixed_datetime_format()
     df_dt = to_datetime(df)
