@@ -6,6 +6,7 @@ manually categorize them beforehand, or construct complex Pipelines.
 
 import warnings
 from collections import Counter
+from itertools import chain
 from typing import Literal
 from warnings import warn
 
@@ -25,9 +26,6 @@ from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
 from skrub._utils import parse_astype_error_message
-
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
 
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
@@ -77,8 +75,9 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | Non
             if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
                 warnings.warn(
                     f"""
-                    Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
-                    formats for the dates in column '{date_column.name}'.
+                    Both {date_format_monthfirst.iloc[0]} and
+                    {date_format_dayfirst.iloc[0]} are valid formats for the dates in
+                    column '{date_column.name}'.
                     Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
@@ -148,6 +147,140 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
 
 
 Transformer = TransformerMixin | Literal["drop", "remainder", "passthrough"]
+
+
+def _parallel_on_columns(trans: Transformer, cols: list[str]) -> bool:
+    """
+    Assert whether we want to parallelize the transformer over
+    the columns or not. We only want to parallelize over columns if the transformer
+    is "univariate" (i.e. it can be duplicated for each column).
+    """
+    return (
+        (not isinstance(trans, str))
+        and trans._get_tags().get("univariate", False)
+        and len(cols) > 1
+    )
+
+
+def _split_transformers(
+    transformers: list[tuple[str, Transformer, list[str]]],
+    transformers_to_input_indices: dict[str, list[int]] | None = None,
+    during_fit: bool = False,
+) -> tuple[list[tuple[str, Transformer, list[str]]], dict[str, list[int]]]:
+    """
+    Split univariate transformers into multiple transformers, one for each
+    column. This is useful to use the inherited `ColumnTransformer` class
+    parallelism.
+
+    Parameters
+    ----------
+    transformers : list of 3-tuples (str, Transformer or str, list of str)
+        The collection of transformers to split, as tuples of
+        (name, transformer, column).
+    transformers_to_input_indices : dict of str to list of int, optional
+        The mapping of transformer names to the indices of the columns they were
+        fitted on. Should correspond to the `self._transformer_to_input_indices`
+        attribute. Only used when `during_fit` is False.
+    during_fit : bool, default=False
+        Whether the method is called during `fit_transform` (True) or
+        during `transform` (False). This is used to determine if the
+        transformers in `transformers` are fitted or not, i.e. whether
+        the `transformers` argument corresponds to the `self.transformers_` attribute
+        (when False) or the `self.transformers` attribute (when True).
+    """
+    new_transformers = []
+    new_transformer_to_input_indices = (
+        {} if not during_fit else transformers_to_input_indices
+    )
+    if during_fit:
+        # split a list of 3-tuples (name, transformer, columns)
+        # containing the unfitted transformers (or strings) and the columns
+        # to be fitted on.
+        for name, trans, cols in transformers:
+            if _parallel_on_columns(trans, cols):
+                for i, col in enumerate(cols):
+                    new_transformers.append((f"{name}_split_{i}", clone(trans), [col]))
+            else:
+                new_transformers.append((name, trans, cols))
+    else:
+        # split a list of 3-tuples (name, transformer, columns)
+        # containing the fitted transformers (or strings) and the columns
+        # they were fitted on.
+        for name, trans, cols in transformers:
+            if _parallel_on_columns(trans, cols):
+                splitted_transformers_ = trans._split()
+                for i, (col, trans, trans_to_mapping) in enumerate(
+                    zip(
+                        cols,
+                        splitted_transformers_,
+                        transformers_to_input_indices[name],
+                    )
+                ):
+                    name_split = f"{name}_split_{i}"
+                    new_transformers.append((name_split, trans, [col]))
+                    new_transformer_to_input_indices[name_split] = [trans_to_mapping]
+            else:
+                new_transformers.append((name, trans, cols))
+                new_transformer_to_input_indices[name] = transformers_to_input_indices[
+                    name
+                ]
+
+    return new_transformers, new_transformer_to_input_indices
+
+
+def _merge_transformers(
+    transformers: list[tuple[str, Transformer, list[str]]],
+    is_fitted: bool,
+    transformer_to_input_indices: dict[str, list[int]] | None = None,
+) -> tuple[list[tuple[str, Transformer, list[str]]], dict[str, list[int]]]:
+    """
+    Merge splitted transformers into a single transformer.
+
+    Parameters
+    ----------
+    transformers : list of 3-tuples (str, Transformer or str, list of str)
+        The collection of transformers to merge, as tuples of
+        (name, transformer, column).
+    is_fitted : bool
+        Whether the transformers are fitted or not, i.e. whether the
+        `transformers` argument corresponds to the `self.transformers_` attribute
+        (when True) or the `self.transformers` attribute (when False).
+    transformer_to_input_indices : dict of str to list of int, optional
+        The mapping of transformer names to the indices of the columns they were
+        fitted on. Should correspond to the `self._transformer_to_input_indices`
+        attribute. Only used when `is_fitted` is True.
+    """
+    new_transformers = []
+    new_transformer_to_input_indices = {} if is_fitted else transformer_to_input_indices
+    base_names = pd.unique(
+        pd.Series([name.split("_split_")[0] for name, _, _ in transformers])
+    )
+
+    for base_name in base_names:
+        # merge all transformers with the same base name
+        transformers_base_name, names, columns = [], [], []
+        for name, trans, cols in transformers:
+            if name.startswith(base_name):
+                columns.extend(cols)
+                transformers_base_name.append(trans)
+                names.append(name)
+
+        new_trans = transformers_base_name[0]
+        if not is_fitted:
+            if isinstance(new_trans, TransformerMixin):
+                new_trans = clone(new_trans)
+        else:
+            if len(transformers_base_name) > 1:
+                # merge transformers
+                new_trans = new_trans.__class__._merge(transformers_base_name)
+            new_transformer_to_input_indices[base_name] = list(
+                chain.from_iterable(
+                    [transformer_to_input_indices[name] for name in names]
+                )
+            )
+        new_transformers.append((base_name, new_trans, columns))
+
+    return new_transformers, new_transformer_to_input_indices
 
 
 class TableVectorizer(ColumnTransformer):
@@ -357,9 +490,9 @@ class TableVectorizer(ColumnTransformer):
          ['division', 'employee_position_title', 'underfilled_job_title']),
         ('remainder', 'passthrough', ['year_first_hired'])
     ]
-    """
+    """  # noqa: E501
 
-    transformers_: list[tuple[str, str | TransformerMixin, list[str]]]
+    transformers_: list[tuple[str, Transformer, list[str]]]
     columns_: pd.Index
     types_: dict[str, type]
     imputed_columns_: list[str]
@@ -368,6 +501,8 @@ class TableVectorizer(ColumnTransformer):
     numerical_transformer_: Transformer
     datetime_transformer_: Transformer
     specific_transformers_: list[tuple[str, Transformer, list[str, int]]]
+
+    _transformer_to_input_indices: dict[str, list[int]]
 
     # Override required parameters
     _required_parameters = []
@@ -427,6 +562,13 @@ class TableVectorizer(ColumnTransformer):
                 ),
             },
         }
+
+    @property
+    def is_parallelized(self) -> bool:
+        """
+        Returns True if the transformers are parallelized over columns, False otherwise.
+        """
+        return self.n_jobs not in (None, 1)
 
     def _clone_transformers(self) -> None:
         """
@@ -524,16 +666,70 @@ class TableVectorizer(ColumnTransformer):
                 )
 
             self.specific_transformers_ = [
-                (name, clone(transformer), cols)
-                if isinstance(transformer, sklearn.base.TransformerMixin)
-                else (name, transformer, cols)
+                (
+                    (name, clone(transformer), cols)
+                    if isinstance(transformer, sklearn.base.TransformerMixin)
+                    else (name, transformer, cols)
+                )
                 for name, transformer, cols in named_specific_transformers
             ]
 
         # TODO: check that the provided transformers are valid
 
+    def _split_univariate_transformers(self, during_fit: bool = False):
+        """
+        Split univariate transformers into multiple transformers, one for each
+        column. This is useful to use the inherited `ColumnTransformer` class
+        parallelism.
+
+        Parameters
+        ----------
+        during_fit : bool, default=False
+            Whether the method is called during `fit_transform` (True) or
+            during `transform` (False). This is used to determine whether
+            to split the self.transformers_ attribute (when False) or the
+            self.transformers attribute (when True).
+        """
+        if during_fit:
+            # split self.transformers, a list of 3-tuples (name, transformer, columns)
+            # containing the unfitted transformers (or strings) and the columns
+            # to be fitted on. This attribute is used by the `ColumnTransformer`
+            # when calling `fit` and `fit_transform`.
+            self.transformers, _ = _split_transformers(
+                self.transformers, during_fit=True
+            )
+        else:
+            # split self.transformers_, a list of 3-tuples (name, transformer, columns)
+            # containing the fitted transformers (or strings) and the columns
+            # they were fitted on. This attribute is used by the `ColumnTransformer`
+            # when calling `transform`.
+            check_is_fitted(self, attributes=["transformers_"])
+            (
+                self.transformers_,
+                self._transformer_to_input_indices,
+            ) = _split_transformers(
+                self.transformers_,
+                during_fit=False,
+                transformers_to_input_indices=self._transformer_to_input_indices,
+            )
+
+    def _merge_univariate_transformers(self):
+        """
+        Merge splitted transformers into a single transformer.
+        To be used after `_split_univariate_transformers`.
+        """
+        # merge self.transformers and self.transformers_
+        check_is_fitted(self, attributes=["transformers_"])
+        self.transformers, _ = _merge_transformers(self.transformers, is_fitted=False)
+        self.transformers_, self._transformer_to_input_indices = _merge_transformers(
+            self.transformers_,
+            is_fitted=True,
+            transformer_to_input_indices=self._transformer_to_input_indices,
+        )
+
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Takes a dataframe and tries to convert its columns to their best possible data type.
+        """Takes a dataframe and tries to convert its columns to their best possible
+        data type.
 
         Parameters
         ----------
@@ -704,6 +900,16 @@ class TableVectorizer(ColumnTransformer):
             # Create a copy to avoid altering the original data.
             X = X.copy()
 
+        # Check Pandas sparse arrays
+        is_sparse_col = [hasattr(X[col], "sparse") for col in X.columns]
+        if any(is_sparse_col):
+            sparse_cols = X.columns[is_sparse_col]
+            raise TypeError(
+                f"Columns {sparse_cols!r} are sparse Pandas series, but dense "
+                "data is required. Use df[col].sparse.to_dense() to convert "
+                "a series from sparse to dense."
+            )
+
         if X.shape[0] < 1:
             raise ValueError(
                 f"Found array with {X.shape[0]} sample(s) (shape={X.shape}) while a"
@@ -842,6 +1048,11 @@ class TableVectorizer(ColumnTransformer):
         if self.verbose:
             print(f"[TableVectorizer] Assigned transformers: {self.transformers}")
 
+        # split the univariate transformers on each column
+        # to be able to parallelize the encoding
+        if self.is_parallelized:
+            self._split_univariate_transformers(during_fit=True)
+
         X_enc = super().fit_transform(X, y)
 
         # For the "remainder" columns, the `ColumnTransformer` `transformers_`
@@ -853,6 +1064,9 @@ class TableVectorizer(ColumnTransformer):
                 # In this case, "cols" is a list of ints (the indices)
                 cols: list[int]
                 self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
+
+        if self.is_parallelized:
+            self._merge_univariate_transformers()
 
         return X_enc
 
@@ -882,7 +1096,17 @@ class TableVectorizer(ColumnTransformer):
         if self.auto_cast:
             X = self._apply_cast(X)
 
-        return super().transform(X)
+        # split the univariate transformers on each column
+        # to be able to parallelize the encoding
+        if self.is_parallelized:
+            self._split_univariate_transformers(during_fit=False)
+
+        res = super().transform(X)
+
+        if self.is_parallelized:
+            self._merge_univariate_transformers()
+
+        return res
 
     def get_feature_names_out(self, input_features=None) -> list[str]:
         """Return clean feature names.

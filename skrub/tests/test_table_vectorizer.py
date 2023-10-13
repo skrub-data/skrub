@@ -1,15 +1,20 @@
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
+from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
 from skrub._table_vectorizer import _infer_date_format
+from skrub.tests.utils import transformers_list_equal
 
 
-def check_same_transformers(expected_transformers: dict, actual_transformers: list):
+def check_same_transformers(
+    expected_transformers: dict, actual_transformers: list
+) -> None:
     # Construct the dict from the actual transformers
     actual_transformers_dict = {name: cols for name, trans, cols in actual_transformers}
     assert actual_transformers_dict == expected_transformers
@@ -731,7 +736,7 @@ def test_deterministic(pipeline) -> None:
         X_enc_prev = X_enc
 
 
-def test_mixed_types():
+def test_mixed_types() -> None:
     # TODO: datetime/str mixed types
     # don't work
     df = _get_mixed_types_dataframe()
@@ -804,7 +809,9 @@ def test_mixed_types():
         ),
     ],
 )
-def test_changing_types(X_fit, X_transform_original, X_transform_with_missing_original):
+def test_changing_types(
+    X_fit, X_transform_original, X_transform_with_missing_original
+) -> None:
     """
     Test that the TableVectorizer performs properly when the
     type inferred during fit does not match the type of the
@@ -834,7 +841,7 @@ def test_changing_types(X_fit, X_transform_original, X_transform_with_missing_or
         assert np.allclose(res, res_missing, equal_nan=True)
 
 
-def test_changing_types_int_float():
+def test_changing_types_int_float() -> None:
     # The TableVectorizer shouldn't cast floats to ints
     # even if only ints were seen during fit
     X_fit, X_transform = (
@@ -845,6 +852,212 @@ def test_changing_types_int_float():
     table_vec.fit_transform(X_fit)
     res = table_vec.transform(X_transform)
     assert np.allclose(res, np.array([[1.0], [2.0], [3.3]]))
+
+
+def test_column_by_column() -> None:
+    # Test that the TableVectorizer gives the same result
+    # when applied column by column
+    X = _get_clean_dataframe()
+    table_vec_all_cols = TableVectorizer(
+        high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
+        cardinality_threshold=4,
+    )
+    table_vec_all_cols.fit(X)
+    for col in X.columns:
+        table_vec_one_col = TableVectorizer(
+            high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
+            cardinality_threshold=4,
+        )
+        table_vec_one_col.fit(X[[col]])
+        features_from_col = [
+            feat
+            for feat in table_vec_all_cols.get_feature_names_out()
+            if feat.startswith(col)
+        ]
+        assert table_vec_one_col.get_feature_names_out() == features_from_col
+        indices_features_from_col = [
+            table_vec_all_cols.get_feature_names_out().index(feat)
+            for feat in features_from_col
+        ]
+        excepted_result = table_vec_all_cols.transform(X)[:, indices_features_from_col]
+        assert np.allclose(
+            table_vec_one_col.transform(X[[col]]),
+            excepted_result,
+        )
+
+
+@skip_if_no_parallel
+@pytest.mark.parametrize(
+    "high_card_cat_transformer",
+    # the gap encoder and the minhashencoder
+    # should be parallelized on all columns
+    # the one hot encoder should not be parallelized
+    [
+        GapEncoder(n_components=2, random_state=0),
+        OneHotEncoder(),
+        MinHashEncoder(n_components=2),
+    ],
+)
+def test_parallelism(high_card_cat_transformer) -> None:
+    # Test that parallelism works
+    X = _get_clean_dataframe()
+    table_vec_no_parallel = TableVectorizer(
+        high_card_cat_transformer=high_card_cat_transformer,
+        cardinality_threshold=4,
+    )
+    X_trans = table_vec_no_parallel.fit_transform(X)
+    with joblib.parallel_backend("loky"):
+        for n_jobs in [None, 2, -1]:
+            table_vec = TableVectorizer(
+                n_jobs=n_jobs,
+                high_card_cat_transformer=high_card_cat_transformer,
+                cardinality_threshold=4,
+            )
+            X_trans_parallel = table_vec.fit_transform(X)
+            assert_array_equal(X_trans, X_trans_parallel)
+            assert table_vec.n_jobs == n_jobs
+            # assert that all attributes are equal except for
+            # the n_jobs attribute
+            assert transformers_list_equal(
+                table_vec.transformers_, table_vec_no_parallel.transformers_
+            )
+            assert (table_vec.columns_ == table_vec_no_parallel.columns_).all()
+            assert table_vec.types_ == table_vec_no_parallel.types_
+            assert table_vec.imputed_columns_ == table_vec_no_parallel.imputed_columns_
+            # assert that get_feature_names_out gives the same result
+            assert_array_equal(
+                table_vec.get_feature_names_out(),
+                table_vec_no_parallel.get_feature_names_out(),
+            )
+            # assert that get_params gives the same result expect for n_jobs
+            # remove n_jobs from the dict
+            params = table_vec.get_params()
+            params.pop("n_jobs")
+            params_no_parallel = table_vec_no_parallel.get_params()
+            params_no_parallel.pop("n_jobs")
+            assert str(params) == str(params_no_parallel)
+            # assert that transform gives the same result
+            assert_array_equal(
+                table_vec.transform(X), table_vec_no_parallel.transform(X)
+            )
+
+
+@pytest.mark.parametrize(
+    "high_card_cat_transformer",
+    [
+        GapEncoder(n_components=2, random_state=0),
+        MinHashEncoder(n_components=2),
+    ],
+)
+def test_split_and_merge_univariate_transformers(high_card_cat_transformer) -> None:
+    X = _get_clean_dataframe()
+    enc = TableVectorizer(
+        high_card_cat_transformer=high_card_cat_transformer,
+        cardinality_threshold=4,
+        n_jobs=None,  # should disable the default splitting and merging
+    )
+
+    enc.fit(X)
+    assert len(enc.transformers) == 3
+
+    enc_split = TableVectorizer(
+        high_card_cat_transformer=high_card_cat_transformer,
+        cardinality_threshold=4,
+        n_jobs=None,
+    )
+    enc_split.fit(X)
+    # during actual use, this is done during fit
+    enc_split._split_univariate_transformers(during_fit=True)
+    # check that the high_card_cat_transformer
+    # is split into 2 transformers
+    # the transformers_ attribute should not be modified
+    # because during_fit is True
+    assert len(enc_split.transformers) == 4
+    assert len(enc_split.transformers_) == 3
+    enc_split._merge_univariate_transformers()
+    # check that the GapEncoder is merged into 1 transformer
+    assert len(enc_split.transformers) == 3
+    assert np.allclose(enc.transform(X), enc_split.transform(X))
+    # assert that the transformers attribute is the same as
+    # the one before splitting and merging
+    assert str(enc.transformers) == str(enc_split.transformers)
+    # check that you can refit the transformer
+    enc_split.fit(X)
+
+    # Now split the transformers_ attribute (during_fit=False)
+    enc_split._split_univariate_transformers(during_fit=False)
+    assert len(enc_split.transformers) == 3
+    assert len(enc_split.transformers_) == 4
+    # the fitted transformers should still work
+    assert_array_equal(enc.transform(X), enc_split.transform(X))
+
+    enc_split._merge_univariate_transformers()
+    # check that the GapEncoder is merged into 1 transformer
+    assert len(enc_split.transformers_) == 3
+    assert_array_equal(enc.transform(X), enc_split.transform(X))
+
+    # assert that the transformers attribute is the same as
+    # the one before splitting and merging
+    assert str(enc.transformers_) == str(enc_split.transformers_)
+
+
+def test_split_one_hot_encoder() -> None:
+    # check that a OneHotEncoder is not split
+    X = _get_clean_dataframe()
+    enc_one_hot = TableVectorizer(
+        high_card_cat_transformer=OneHotEncoder(handle_unknown="error"),
+        low_card_cat_transformer=OneHotEncoder(
+            handle_unknown="ignore"
+        ),  # change the default to have a different transformer
+        cardinality_threshold=4,
+        n_jobs=None,
+    )
+    enc_one_hot.fit(X)
+    assert len(enc_one_hot.transformers) == 3
+
+
+@pytest.mark.parametrize(
+    "low_card_cat_transformer",
+    [
+        # transformers that should be split
+        MinHashEncoder(n_components=2),
+        GapEncoder(n_components=2),
+    ],
+)
+@skip_if_no_parallel
+def test_modying_transformers(low_card_cat_transformer):
+    """Check that the splitting/merging mecanism doesn't
+    prevent resetting the transformers"""
+
+    # test that modifying a transformer before refitting works
+    # https://github.com/skrub-data/skrub/pull/592#discussion_r1284531301
+    tb = TableVectorizer(low_card_cat_transformer=low_card_cat_transformer, n_jobs=2)
+    X = _get_clean_dataframe()
+    tb.fit_transform(X)
+    tb.low_card_cat_transformer = "passthrough"
+    tb.fit_transform(X)
+    assert tb.low_card_cat_transformer_ == "passthrough"
+    assert tb.transformers[0][1] == "passthrough"
+    assert tb.transformers_[0][1] == "passthrough"
+    assert tb.transform(X).shape == (5, 6)
+
+    # test a failed fit_transform doesn't break the following fit_transform
+    # https://github.com/skrub-data/skrub/pull/592#discussion_r1278591301
+    tb = TableVectorizer(
+        low_card_cat_transformer=low_card_cat_transformer,
+        # to make ColumnTransformer fit_transform fail
+        numerical_transformer="not_applicable",
+        n_jobs=2,
+    )
+    with pytest.raises(TypeError):
+        tb.fit_transform(X)
+    assert len(tb.transformers) == 5  # the transformers should have been splitted
+    # but not merged
+    tb.numerical_transformer = "passthrough"
+    tb.fit_transform(X)
+    assert len(tb.transformers) == 2  # the transformers should have been splitted
+    # and merged correctly
+    assert len(tb.transformers_) == 2
 
 
 def test_table_vectorizer_remainder_cloning():
@@ -864,3 +1077,23 @@ def test_table_vectorizer_remainder_cloning():
     assert table_vectorizer.high_card_cat_transformer_ is not remainder
     assert table_vectorizer.numerical_transformer_ is not remainder
     assert table_vectorizer.datetime_transformer_ is not remainder
+
+
+def test_pandas_sparse_array():
+    df = pd.DataFrame(
+        dict(
+            a=[1, 2, 3, 4, 5],
+            b=[1, 0, 0, 0, 2],
+        )
+    )
+    df["b"] = pd.arrays.SparseArray(df["b"])
+
+    match = r"(?=.*sparse Pandas series)(?=.*'b')"
+    with pytest.raises(TypeError, match=match):
+        TableVectorizer().fit(df)
+
+    df = df.astype(pd.SparseDtype())
+
+    match = r"(?=.*sparse Pandas series)(?=.*'a', 'b')"
+    with pytest.raises(TypeError, match=match):
+        TableVectorizer().fit(df)

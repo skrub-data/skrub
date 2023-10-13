@@ -52,6 +52,8 @@ jobs:
               - dependencies-version: "dev"
               - dependencies-version: "dev, pyarrow"
                 python-version: "3.11"
+              - dependencies-version: "dev, polars"
+                python-version: "3.11"
               - dependencies-version: "dev, min-py310"
                 python-version: "3.10"
                 dependencies-version-type: "minimal"
@@ -71,9 +73,12 @@ jobs:
         env:
           DEPS_VERSION: ${{ matrix.dependencies-version }}
       - shell: bash {0}
-        run: ./build_tools/github/test.sh
+        run: $GITHUB_WORKSPACE/build_tools/github/test.sh
+        working-directory: ${{ runner.temp }}
         name: 'Run tests'
       - uses: codecov/codecov-action@v3
+        with:
+          directory: ${{ runner.temp }}
         if: success()
         name: 'Upload coverage to CodeCov'
 
