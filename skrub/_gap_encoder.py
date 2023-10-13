@@ -605,9 +605,9 @@ class GapEncoder(TransformerMixin, BaseEstimator):
        with the Kullback-Leibler divergence as loss, and a Gamma prior on `H`.
        We thus optimize `H` and `W` with the multiplicative update method.
 
-    "Gap" stands for "Gamma-Poisson", the families of distributions used in the
-    topic model to model the importance of topics in a document (Gamma), and
-    the term frequencies in a document (Poisson).
+    "Gap" stands for "Gamma-Poisson", the families of distributions that are
+    used to model the importance of topics in a document (Gamma), and the term
+    frequencies in a document (Poisson).
 
     Parameters
     ----------
@@ -736,7 +736,8 @@ class GapEncoder(TransformerMixin, BaseEstimator):
           [ 6.04999623,  0.05000376],
           [ 0.05002016,  4.54997983]])
 
-    The higher the value, the bigger the correspondance with the topic.
+    The higher the value, the bigger the correspondence with the topic.
+
     """
 
     rho_: float
