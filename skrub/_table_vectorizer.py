@@ -967,16 +967,13 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         # attribute contains the index instead of the column name,
         # so we convert the values to the appropriate column names
         # if there is less than 20 columns in the remainder.
-        transformers = self._column_transformer.transformers_
-        for i, (name, transformer, columns) in enumerate(transformers):
+        transformers = []
+        for i, (name, transformer, columns) in enumerate(
+            self._column_transformer.transformers_
+        ):
             if name == "remainder" and len(columns) < 20:
-                # In this case, "columns" is a list of ints (the indices)
-                columns: list[int]
-                transformers[i] = (
-                    name,
-                    transformer,
-                    self.feature_names_in_[columns].tolist(),
-                )
+                columns = self.feature_names_in_[columns].tolist()
+            transformers.append((name, transformer, columns))
         return transformers
 
     @property
