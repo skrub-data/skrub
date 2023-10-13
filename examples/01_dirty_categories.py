@@ -387,7 +387,8 @@ plt.show()
 # We can see that features such the time elapsed since being hired, having a
 # full-time employment, and the position, seem to be the most informative for
 # prediction. However, feature importances must not be over-interpreted -- they
-# capture statistical associations `rather than causal effects <https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation>`_.
+# capture statistical associations `rather than causal effects
+# <https://en.wikipedia.org/wiki/Correlation_does_not_imply_causation>`_.
 # Moreover, the fast feature importance method used here is less reliable than
 # the slower |permutation importances|.
 #

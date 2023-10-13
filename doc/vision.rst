@@ -50,7 +50,7 @@ From shorter term to longer term:
   the sense of hyper-parameter tuning)
 
 - Add a Join-aggregator object, to do feature augmentation on one-to-many
-  correspondances
+  correspondences
 
 - Support polars
 
