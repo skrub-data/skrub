@@ -12,7 +12,7 @@ Good analytics requires including as much information as possible,
 often from different sources.
 
 skrub allows you to join tables on keys of different types
-(string, numerical, datetime) with imprecise correspondance.
+(string, numerical, datetime) with imprecise correspondence.
 
 Fuzzy joining tables
 ---------------------

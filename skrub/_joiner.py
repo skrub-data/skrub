@@ -20,9 +20,9 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     The principle is as follows:
 
-    1. The main table and the key column name are provided at initialisation.
-    2. The auxiliary tables are provided for fitting, and will be joined
-       sequentially when Joiner.transform is called.
+    1. The auxiliary tables and the key column names are provided at initialisation.
+    2. The main table is provided for fitting, and the auxiliary tables will be joined
+       to the main table sequentially when `Joiner.transform` is called.
 
     It is advised to use hyperparameter tuning tools such as GridSearchCV
     to determine the best `match_score` parameter, as this can significantly
@@ -71,18 +71,17 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'],
-                         columns=['Country'])
+    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
     >>> X
-    Country
+       Country
     0   France
     1  Germany
     2    Italy
 
     >>> aux_table_1 = pd.DataFrame([['Germany', 84_000_000],
-                                    ['France', 68_000_000],
-                                    ['Italy', 59_000_000]],
-                                    columns=['Country', 'Population'])
+    ...                             ['France', 68_000_000],
+    ...                             ['Italy', 59_000_000]],
+    ...                             columns=['Country', 'Population'])
     >>> aux_table_1
        Country  Population
     0  Germany    84000000
@@ -90,39 +89,41 @@ class Joiner(TransformerMixin, BaseEstimator):
     2    Italy    59000000
 
     >>> aux_table_2 = pd.DataFrame([['French Republic', 2937],
-                                    ['Italy', 2099],
-                                    ['Germany', 4223],
-                                    ['UK', 3186]],
-                                    columns=['Country name', 'GDP (billion)'])
+    ...                             ['Italy', 2099],
+    ...                             ['Germany', 4223],
+    ...                             ['UK', 3186]],
+    ...                             columns=['Country name', 'GDP (billion)'])
     >>> aux_table_2
-        Country name  GDP (billion)
-    0   French Republic      2937
-    1        Italy           2099
-    2      Germany           4223
-    3           UK           3186
+          Country name  GDP (billion)
+    0  French Republic           2937
+    1            Italy           2099
+    2          Germany           4223
+    3               UK           3186
 
     >>> aux_table_3 = pd.DataFrame([['France', 'Paris'],
-                                    ['Italia', 'Rome'],
-                                    ['Germany', 'Berlin']],
-                                    columns=['Countries', 'Capital'])
+    ...                             ['Italia', 'Rome'],
+    ...                             ['Germany', 'Berlin']],
+    ...                             columns=['Countries', 'Capital'])
     >>> aux_table_3
       Countries Capital
     0    France   Paris
-    1     Italia   Rome
+    1    Italia    Rome
     2   Germany  Berlin
 
     >>> aux_tables = [(aux_table_1, "Country"),
-                      (aux_table_2, "Country name"),
-                      (aux_table_3, "Countries")]
+    ...               (aux_table_2, "Country name"),
+    ...               (aux_table_3, "Countries")]
 
     >>> joiner = Joiner(tables=aux_tables, main_key='Country')
 
     >>> augmented_table = joiner.fit_transform(X)
     >>> augmented_table
-        Country Country_aux  Population Country name  GDP (billion) Countries Capital
-    0   France      France    68000000  French Republic       2937    France   Paris
-    1   Germany     Germany   84000000      Germany           4223   Germany   Berlin
-    2    Italy       Italy    59000000        Italy           2099    Italia   Rome
+       Country Country_aux  Population  ... GDP (billion)  Countries Capital
+    0   France      France    68000000  ...          2937     France   Paris
+    1  Germany     Germany    84000000  ...          4223    Germany  Berlin
+    2    Italy       Italy    59000000  ...          2099     Italia    Rome
+    <BLANKLINE>
+    [3 rows x 7 columns]
     """
 
     def __init__(
