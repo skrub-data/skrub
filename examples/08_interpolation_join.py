@@ -95,6 +95,7 @@ for ax, col in zip(axes.ravel(), ["TMAX", "PRCP", "SNOW"]):
     ax.set_aspect(1)
     ax.set_xlabel(f"true {col}")
     ax.set_ylabel(f"predicted {col}")
+plt.show()
 
 ######################################################################
 # We see that in this case the interpolation join works well for the temperature, but not precipitation nor snow.
@@ -154,6 +155,7 @@ fig, ax = plt.subplots()
 ax.scatter(join["lat"], join["TMAX"])
 ax.set_xlabel("Latitude (higher is farther north)")
 ax.set_ylabel("TMAX")
+plt.show()
 
 ######################################################################
 # Winter months are colder than spring -- in the north hemisphere January is colder than April
@@ -164,6 +166,7 @@ import seaborn as sns
 join["month"] = join["Year_Month_DayofMonth"].dt.strftime("%m %B")
 plt.figure(layout="constrained")
 sns.barplot(data=join.sort_values(by="month"), y="month", x="TMAX")
+plt.show()
 
 ######################################################################
 # Of course these checks do not guarantee that the inferred values in our ``join`` table’s ````'TMAX'```` column are accurate.
