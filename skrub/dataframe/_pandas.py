@@ -13,6 +13,21 @@ from skrub._utils import atleast_1d_or_none
 
 
 def make_dataframe(X, index):
+    """Convert an dictionary of columns into a Pandas dataframe.
+
+    Parameters
+    ----------
+    X : mapping from column name to 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        The index of the dataframe.
+
+    Returns
+    -------
+    X : Pandas dataframe
+        Converted output.
+    """
     if not isinstance(X, dict) or not all(
         (isinstance(X_col, Iterable) and np.asarray(X_col).ndim == 1)
         for X_col in X.values()
