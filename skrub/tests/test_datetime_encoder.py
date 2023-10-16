@@ -366,8 +366,8 @@ def test_mixed_datetime_format():
 @pytest.mark.skipif(
     not _is_pandas_format_mixed_available(),
     reason=(
-        "DeprecationWarning is already handled as a ValueError         in the latest"
-        " pandas version."
+        "DeprecationWarning is already handled as a ValueError "
+        "in the latest pandas version."
     ),
 )
 def test_indempotency():
@@ -379,3 +379,17 @@ def test_indempotency():
     X_trans = DatetimeEncoder().fit_transform(df)
     X_trans_2 = DatetimeEncoder().fit_transform(df_dt)
     assert_array_equal(X_trans, X_trans_2)
+
+
+@pytest.mark.parametrize(
+    "X", [True, "a", ["a", "b"], ("a", "b"), 1, [1, 2], np.array([1, 2])]
+)
+def test_to_datetime_incorrect_skip(X):
+    assert_array_equal(to_datetime(X), X)
+
+
+def test_to_datetime_type_error():
+    # 3d tensor
+    X = [[["2021-01-01"]]]
+    with pytest.raises(TypeError):
+        to_datetime(X)

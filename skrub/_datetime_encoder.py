@@ -37,10 +37,11 @@ MIXED_FORMAT = "mixed" if _is_pandas_format_mixed_available() else None
 def to_datetime(
     X,
     errors="coerce",
+    unit=None,
     **kwargs,
 ):
     """
-    Convert argument to datetime.
+    Convert argument to datetime. Return the input if not datetime-parsable.
 
     Augment :func:`pandas.to_datetime` by supporting dataframes
     and 2d arrays inputs. It converts compatible columns to datetime, and
@@ -60,6 +61,9 @@ def to_datetime(
         Note that ``'ignore'`` is not used for dataframes, 2d arrays,
         and series, and is used otherwise as in ``pd.to_datetime``.
 
+    unit : str, default None
+        Unused. Here for compatibility with :func:`pandas.to_datetime`.
+
     **kwargs : key, value mappings
         Other keyword arguments are passed down to
         :func:`pandas.to_datetime`.
@@ -75,6 +79,13 @@ def to_datetime(
     --------
     :func:`pandas.to_datetime`
         Convert argument to datetime.
+
+    Examples
+    --------
+    >>> X = pd.DataFrame(dict(a=[1, 2], b=["2021-01-01", "2021-02-02"]))
+    >>> X = to_datetime(X)
+    >>> X.dtypes.to_list()
+    [dtype('int64'), dtype('<M8[ns]')]
     """
     kwargs["errors"] = errors
 
@@ -91,8 +102,19 @@ def to_datetime(
         X = _to_datetime_2d_array(np.asarray(X), **kwargs)
         return np.vstack(X).T
 
+    # 1d array
+    elif isinstance(X, Iterable) and np.asarray(X).ndim == 1:
+        return _to_datetime_1d_array(np.asarray(X), **kwargs)
+
     # scalar or unknown type
-    return pd.to_datetime(X, **kwargs)
+    elif np.asarray(X).ndim == 0:
+        return _to_datetime_scalar(X, **kwargs)
+
+    else:
+        raise TypeError(
+            "X must be a string, datetime, list, tuple, 1-d array, Series, "
+            f"2-d array or dataframe. Got {X=!r}."
+        )
 
 
 def _to_datetime_dataframe(X, **kwargs):
@@ -131,7 +153,7 @@ def _to_datetime_series(X, **kwargs):
     index = getattr(X, "index", None)
     name = X.name
     X_split = [X.to_numpy()]
-    X_split = _to_datetime_2d(X_split)
+    X_split = _to_datetime_2d(X_split, **kwargs)
     X = pd.Series(X_split[0], index=index, name=name)
     # conversion is px is Polars, no-op if Pandas
     return px.Series(X)
@@ -150,6 +172,18 @@ def _to_datetime_2d_array(X, **kwargs):
     """
     X_split = list(X.T)
     return _to_datetime_2d(X_split, **kwargs)
+
+
+def _to_datetime_1d_array(X, **kwargs):
+    X_split = [X]
+    X_split = _to_datetime_2d(X_split, **kwargs)
+    return np.asarray(X_split[0])
+
+
+def _to_datetime_scalar(X, **kwargs):
+    X_split = [np.atleast_1d(X)]
+    X_split = _to_datetime_2d(X_split, **kwargs)
+    return X_split[0][0]
 
 
 def _to_datetime_2d(
@@ -285,7 +319,7 @@ def _guess_datetime_format(X_col, require_dayfirst=False):
     ----------
     X_col : ndarray of shape ``(n_samples,)``
 
-    require_dayfirst : bool, default True
+    require_dayfirst : bool, default False
         Whether to return the dayfirst format when both dayfirst
         and monthfirst are valid.
 
