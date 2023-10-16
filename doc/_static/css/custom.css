@@ -40,6 +40,10 @@
     text-align: left;
 }
 
+.sd-card  {
+    margin-block-end: 1.0rem;
+}
+
 .schema-container {
     display: flex;
     justify-content: center;

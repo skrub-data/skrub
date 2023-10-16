@@ -27,9 +27,6 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import DatetimeEncoder, GapEncoder
 from skrub._utils import parse_astype_error_message
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
-
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
     """Infer the date format of a date column,
@@ -78,8 +75,9 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | Non
             if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
                 warnings.warn(
                     f"""
-                    Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
-                    formats for the dates in column '{date_column.name}'.
+                    Both {date_format_monthfirst.iloc[0]} and
+                    {date_format_dayfirst.iloc[0]} are valid formats for the dates in
+                    column '{date_column.name}'.
                     Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
@@ -181,8 +179,8 @@ def _split_transformers(
         (name, transformer, column).
     transformers_to_input_indices : dict of str to list of int, optional
         The mapping of transformer names to the indices of the columns they were
-        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
-        Only used when `during_fit` is False.
+        fitted on. Should correspond to the `self._transformer_to_input_indices`
+        attribute. Only used when `during_fit` is False.
     during_fit : bool, default=False
         Whether the method is called during `fit_transform` (True) or
         during `transform` (False). This is used to determine if the
@@ -249,8 +247,8 @@ def _merge_transformers(
         (when True) or the `self.transformers` attribute (when False).
     transformer_to_input_indices : dict of str to list of int, optional
         The mapping of transformer names to the indices of the columns they were
-        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
-        Only used when `is_fitted` is True.
+        fitted on. Should correspond to the `self._transformer_to_input_indices`
+        attribute. Only used when `is_fitted` is True.
     """
     new_transformers = []
     new_transformer_to_input_indices = {} if is_fitted else transformer_to_input_indices
@@ -473,26 +471,26 @@ class TableVectorizer(ColumnTransformer):
     >>> from skrub.datasets import fetch_employee_salaries
     >>> ds = fetch_employee_salaries()
     >>> ds.X.head(3)
-      gender department                          department_name                                           division assignment_category      employee_position_title underfilled_job_title date_first_hired  year_first_hired
-    0      F        POL                     Department of Police  MSB Information Mgmt and Tech Division Records...    Fulltime-Regular  Office Services Coordinator                   NaN       09/22/1986              1986
-    1      M        POL                     Department of Police         ISB Major Crimes Division Fugitive Section    Fulltime-Regular        Master Police Officer                   NaN       09/12/1988              1988
-    2      F        HHS  Department of Health and Human Services      Adult Protective and Case Management Services    Fulltime-Regular             Social Worker IV                   NaN       11/19/1989              1989
+      gender department  ... date_first_hired year_first_hired
+    0      F        POL  ...       09/22/1986             1986
+    1      M        POL  ...       09/12/1988             1988
+    2      F        HHS  ...       11/19/1989             1989
+    <BLANKLINE>
+    [3 rows x 8 columns]
 
     >>> tv = TableVectorizer()
     >>> tv.fit(ds.X)
+    TableVectorizer()
 
     Now, we can inspect the transformers assigned to each column:
 
     >>> tv.transformers_
-    [
-        ('datetime', DatetimeEncoder(), ['date_first_hired']),
-        ('low_card_cat', OneHotEncoder(drop='if_binary', handle_unknown='ignore'),
-         ['gender', 'department', 'department_name', 'assignment_category']),
-        ('high_card_cat', GapEncoder(n_components=30),
-         ['division', 'employee_position_title', 'underfilled_job_title']),
-        ('remainder', 'passthrough', ['year_first_hired'])
-    ]
-    """
+    [('numeric', 'passthrough', ['year_first_hired']), \
+('datetime', DatetimeEncoder(), ['date_first_hired']), \
+('low_card_cat', OneHotEncoder(drop='if_binary', handle_unknown='infrequent_if_exist'), \
+['gender', 'department', 'department_name', 'assignment_category']), \
+('high_card_cat', GapEncoder(n_components=30), ['division', 'employee_position_title'])]
+    """  # noqa: E501
 
     transformers_: list[tuple[str, Transformer, list[str]]]
     columns_: pd.Index
@@ -668,9 +666,11 @@ class TableVectorizer(ColumnTransformer):
                 )
 
             self.specific_transformers_ = [
-                (name, clone(transformer), cols)
-                if isinstance(transformer, sklearn.base.TransformerMixin)
-                else (name, transformer, cols)
+                (
+                    (name, clone(transformer), cols)
+                    if isinstance(transformer, sklearn.base.TransformerMixin)
+                    else (name, transformer, cols)
+                )
                 for name, transformer, cols in named_specific_transformers
             ]
 
@@ -728,7 +728,8 @@ class TableVectorizer(ColumnTransformer):
         )
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Takes a dataframe and tries to convert its columns to their best possible data type.
+        """Takes a dataframe and tries to convert its columns to their best possible
+        data type.
 
         Parameters
         ----------

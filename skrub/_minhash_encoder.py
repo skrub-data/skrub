@@ -21,12 +21,9 @@ from ._utils import LRUDict, check_input, combine_lru_dicts
 NoneType = type(None)
 
 
-# Ignore lines too long, first docstring lines can't be cut
-# flake8: noqa: E501
-
-
 class MinHashEncoder(TransformerMixin, BaseEstimator):
-    """Encode string categorical features by applying the MinHash method to n-gram decompositions of strings.
+    """Encode string categorical features by applying the MinHash method to n-gram \
+    decompositions of strings.
 
     The principle is as follows:
 
@@ -81,7 +78,8 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
     See Also
     --------
     GapEncoder
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics with
+        continuous encoding.
     SimilarityEncoder
         Encode string columns as a numeric array with n-gram string similarity.
     deduplicate
@@ -102,7 +100,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
     >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['London']]
 
     >>> enc.fit(X)
-    MinHashEncoder()
+    MinHashEncoder(n_components=5)
 
     The encoded data with 5 components are:
 
@@ -341,7 +339,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         # Handle missing values
         missing_mask = (
             ~(X == X)  # Find np.nan
-            | (X == None)  # Find None. Note: `X is None` doesn't work.
+            | (X == None)  # noqa: E711 Find None. Note: `X is None` doesn't work.
             | (X == "")  # Find empty strings
         )
 

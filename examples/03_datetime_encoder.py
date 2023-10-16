@@ -36,9 +36,6 @@ It is used by default in the |TableVectorizer|.
     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 """
 
-import warnings
-
-warnings.filterwarnings("ignore")
 
 ###############################################################################
 # A problem with relevant datetime features
@@ -47,6 +44,8 @@ warnings.filterwarnings("ignore")
 # We will use a dataset of air quality measurements in different cities.
 # In this setting, we want to predict the NO2 air concentration, based
 # on the location, date and time of measurement.
+
+from pprint import pprint
 
 import pandas as pd
 
@@ -86,7 +85,7 @@ encoder = make_column_transformer(
 )
 
 X_enc = encoder.fit_transform(X)
-encoder.get_feature_names_out()
+pprint(encoder.get_feature_names_out())
 
 ###############################################################################
 # We see that the encoder is working as expected: the "date.utc" column has
@@ -104,9 +103,6 @@ encoder.get_feature_names_out()
 # |DatetimeEncoder| by default.
 
 from skrub import TableVectorizer
-from pprint import pprint
-
-from skrub import TableVectorizer
 
 table_vec = TableVectorizer()
 table_vec.fit_transform(X)
@@ -122,7 +118,7 @@ table_vec = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
 )
 table_vec.fit_transform(X)
-table_vec.get_feature_names_out()
+pprint(table_vec.get_feature_names_out())
 
 ###############################################################################
 # .. note:
@@ -169,7 +165,6 @@ pipeline = make_pipeline(table_vec, HistGradientBoostingRegressor())
 # Instead, we can use the |TimeSeriesSplit|,
 # which ensures that the test set is always in the future.
 
-X["date.utc"] = pd.to_datetime(X["date.utc"])
 sorted_indices = np.argsort(X["date.utc"])
 X = X.iloc[sorted_indices]
 y = y.iloc[sorted_indices]
@@ -228,8 +223,8 @@ plt.show()
 ###############################################################################
 # Let's zoom on a few days:
 
-X_zoomed = X[X["date.utc"] <= "2019-06-04"][X["date.utc"] >= "2019-06-01"]
-y_zoomed = y[X["date.utc"] <= "2019-06-04"][X["date.utc"] >= "2019-06-01"]
+X_zoomed = X[(X["date.utc"] <= "2019-06-04") & (X["date.utc"] >= "2019-06-01")]
+y_zoomed = y[(X["date.utc"] <= "2019-06-04") & (X["date.utc"] >= "2019-06-01")]
 
 X_train_zoomed = X_zoomed[X_zoomed["date.utc"] < "2019-06-03"]
 X_test_zoomed = X_zoomed[X_zoomed["date.utc"] >= "2019-06-03"]

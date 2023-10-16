@@ -42,6 +42,13 @@ Major changes
 * Parallelized the :class:`GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Introducing :class:`AggJoiner`, a transformer performing
+  aggregation on auxiliary tables followed by left-joining on a base table.
+  :pr:`600` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+* Introducing :class:`AggTarget`, a transformer performing
+  aggregation on the target y, followed by left-joining on a base table.
+  :pr:`600` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 Minor changes
 -------------
@@ -154,6 +161,10 @@ Minor changes
   which provides some more information about the job title.
   :pr:`581` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Fix bugs which was triggered when `extract_until` was "year", "month", "microseconds"
+  or "nanoseconds", and add the option to set it to `None` to only extract `total_time`,
+  the time from epoch. :class:`DatetimeEncoder`. :pr:`743` by :user:`Leo Grinsztajn <LeoGrin>`
+
 Before skrub: dirty_cat
 ========================
 
@@ -206,7 +217,7 @@ Major changes
   :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
 
 * New experimental feature: :class:`FeatureAugmenter`, a transformer
-  that augments with :func:`fuzzy_join` the number of features in a main table by using information from auxilliary tables.
+  that augments with :func:`fuzzy_join` the number of features in a main table by using information from auxiliary tables.
   :pr:`409` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * Unnecessary API has been made private: everything (files, functions, classes)

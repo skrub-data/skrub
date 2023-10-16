@@ -21,7 +21,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     1. The auxiliary table and the matching column names are provided at initialisation.
     2. The main table is provided for fitting, and will be joined
-       when Joiner.transform is called.
+       when ``Joiner.transform`` is called.
 
     It is advised to use hyperparameter tuning tools such as GridSearchCV
     to determine the best `match_score` parameter, as this can significantly
@@ -67,6 +67,9 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     See Also
     --------
+    AggJoiner :
+        Aggregate auxiliary dataframes before joining them on a base dataframe.
+
     fuzzy_join :
         Join two tables (dataframes) based on approximate column matching.
 
@@ -76,31 +79,30 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'],
-                         columns=['Country'])
+    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
     >>> X
-    Country
+       Country
     0   France
     1  Germany
     2    Italy
 
     >>> aux_table = pd.DataFrame([['germany', 84_000_000],
-                                  ['france', 68_000_000],
-                                  ['italy', 59_000_000]],
-                                  columns=['Country', 'Population'])
+    ...                         ['france', 68_000_000],
+    ...                         ['italy', 59_000_000]],
+    ...                         columns=['Country', 'Population'])
     >>> aux_table
        Country  Population
-    0  Germany    84000000
-    1   France    68000000
-    2    Italy    59000000
+    0  germany    84000000
+    1   france    68000000
+    2    italy    59000000
 
     >>> joiner = Joiner(aux_table, key='Country', suffix='_aux')
 
     >>> augmented_table = joiner.fit_transform(X)
     >>> augmented_table
-        Country Country_aux  Population
+       Country Country_aux  Population
     0   France      france    68000000
-    1   Germany     germany   84000000
+    1  Germany     germany    84000000
     2    Italy       italy    59000000
     """
 
