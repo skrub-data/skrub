@@ -2,11 +2,11 @@ import collections
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder
 from sklearn.utils import check_array
-from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import _check_y, check_is_fitted
 
 from skrub._utils import check_input
@@ -162,7 +162,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 "any of {'error', ''}. "
             )
 
-        mask = _object_dtype_isnan(X)
+        mask = pd.isna(X)
         if mask.any():
             if self.handle_missing == "error":
                 raise ValueError(
@@ -253,7 +253,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
                 "does not match the number of features "
                 f"seen during fit ({self.n_features_in_})."
             )
-        mask = _object_dtype_isnan(X)
+        mask = pd.isna(X)
         if mask.any():
             if self.handle_missing == "error":
                 raise ValueError(
