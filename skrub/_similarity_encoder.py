@@ -197,6 +197,8 @@ class SimilarityEncoder(OneHotEncoder):
         during fit_transform, the resulting encoded columns for this feature
         will be all zeros. In the inverse transform, the missing category
         will be denoted as None.
+        "Missing values" are any value for which ``pandas.isna`` returns
+        ``True``, such as ``numpy.nan`` or ``None``.
     hashing_dim : int, optional
         If `None`, the base vectorizer is a CountVectorizer, otherwise it is a
         HashingVectorizer with a number of features equal to `hashing_dim`.

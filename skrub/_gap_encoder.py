@@ -671,6 +671,8 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         values (NaN) are present during GapEncoder.fit (default is to impute).
         In GapEncoder.inverse_transform, the missing categories will
         be denoted as `None`.
+        "Missing values" are any value for which ``pandas.isna`` returns
+        ``True``, such as ``numpy.nan`` or ``None``.
     n_jobs : int, optional
         The number of jobs to run in parallel.
         The process is parallelized column-wise,

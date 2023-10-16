@@ -53,6 +53,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         When this parameter is set to '', and a missing value is encountered
         during TargetEncoder.fit_transform, the resulting encoded
         columns for this feature will be all zeros.
+        "Missing values" are any value for which ``pandas.isna`` returns
+        ``True``, such as ``numpy.nan`` or ``None``.
 
     Attributes
     ----------
