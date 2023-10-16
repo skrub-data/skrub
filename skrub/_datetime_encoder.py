@@ -432,23 +432,19 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    >>> enc = DatetimeEncoder()
-
-    Let's encode the following dates:
-
+    >>> enc = DatetimeEncoder(add_total_seconds=False)
     >>> X = [['2022-10-15'], ['2021-12-25'], ['2020-05-18'], ['2019-10-15 12:00:00']]
-
     >>> enc.fit(X)
-    DatetimeEncoder()
+    DatetimeEncoder(add_total_seconds=False)
 
     The encoder will output a transformed array
-    with five columns ("year", "month", "day", "hour" and "total_seconds"):
+    with four columns ("year", "month", "day", "hour"):
 
     >>> enc.transform(X)
-    array([[2022.,   10.,   15.,    0.,    1.6657920e+09],
-           [2021.,   12.,   25.,    0.,    1.6403904e+09],
-           [2020.,    5.,   18.,    0.,    1.5897600e+09],
-           [2019.,   10.,   15.,   12.,    1.5711408e+09]])
+    array([[2022.,   10.,   15.,    0.],
+           [2021.,   12.,   25.,    0.],
+           [2020.,    5.,   18.,    0.],
+           [2019.,   10.,   15.,   12.]])
     """
 
     def __init__(
