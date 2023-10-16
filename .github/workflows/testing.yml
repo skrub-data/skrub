@@ -77,7 +77,8 @@ jobs:
         working-directory: ${{ runner.temp }}
         name: 'Run tests'
       - uses: codecov/codecov-action@v3
-        working-directory: ${{ runner.temp }}
+        with:
+          directory: ${{ runner.temp }}
         if: success()
         name: 'Upload coverage to CodeCov'
 
