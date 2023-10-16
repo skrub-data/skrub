@@ -6,6 +6,7 @@ which encodes similarity instead of equality of values.
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 import sklearn
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
@@ -13,7 +14,6 @@ from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import parse_version
-from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
 from ._string_distances import get_ngram_count, preprocess
@@ -329,7 +329,7 @@ class SimilarityEncoder(OneHotEncoder):
             X = np.asarray(X, dtype=object)
 
         if hasattr(X, "dtype"):
-            mask = _object_dtype_isnan(X)
+            mask = pd.isna(X)
             if X.dtype.kind == "O" and mask.any():
                 if self.handle_missing == "error":
                     raise ValueError(
@@ -447,7 +447,7 @@ class SimilarityEncoder(OneHotEncoder):
             X = np.asarray(X, dtype=object)
 
         if hasattr(X, "dtype"):
-            mask = _object_dtype_isnan(X)
+            mask = pd.isna(X)
             if X.dtype.kind == "O" and mask.any():
                 if self.handle_missing == "error":
                     raise ValueError(
