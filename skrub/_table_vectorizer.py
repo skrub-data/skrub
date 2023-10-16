@@ -292,8 +292,6 @@ class TableVectorizer(ColumnTransformer):
     It provides a simplified interface for the ColumnTransformer ;
     more documentation of attributes and functions are available in its doc.
 
-    .. versionadded:: 0.2.0
-
     Parameters
     ----------
     cardinality_threshold : int, default=40
