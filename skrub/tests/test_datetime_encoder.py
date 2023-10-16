@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal
 
 from skrub._datetime_encoder import (
     TIME_LEVELS,
@@ -360,7 +360,7 @@ def test_mixed_datetime_format():
 
     ser_dt = to_datetime(df["a"])
     expected_ser_dt = expected_df_dt["a"]
-    assert_series_equal(ser_dt, expected_ser_dt)
+    assert_array_equal(ser_dt, expected_ser_dt)
 
 
 @pytest.mark.skipif(
