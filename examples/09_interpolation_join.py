@@ -111,9 +111,7 @@ aux_table = aux_table.drop(["PRCP", "SNOW"], axis=1)
 
 flights = fetch_figshare("41771418").X[["Year_Month_DayofMonth", "Origin", "ArrDelay"]]
 flights = flights.sample(20_000, random_state=0, ignore_index=True)
-airports = fetch_figshare("41710257").X.loc[
-    :, ["iata", "airport", "state", "lat", "long"]
-]
+airports = fetch_figshare("41710257").X[["iata", "airport", "state", "lat", "long"]]
 flights = flights.merge(airports, left_on="Origin", right_on="iata")
 # printing the first row is more readable than the head() when we have many columns
 flights.iloc[0]
@@ -169,7 +167,7 @@ sns.barplot(data=join.sort_values(by="month"), y="month", x="TMAX")
 plt.show()
 
 ######################################################################
-# Of course these checks do not guarantee that the inferred values in our ``join`` table’s ````'TMAX'```` column are accurate.
+# Of course these checks do not guarantee that the inferred values in our ``join`` table’s ``'TMAX'`` column are accurate.
 # But at least the :class:`~skrub.InterpolationJoiner` seems to have learned a few reasonable trends from its training table.
 
 
