@@ -15,9 +15,8 @@ from skrub._fuzzy_join import fuzzy_join
 class Joiner(TransformerMixin, BaseEstimator):
     """Augment a main table by automatically joining an auxiliary table to it.
 
-    Given an auxiliary tables and matching column names,
-    fuzzy join it to the main table.
-
+    Given an auxiliary table and matching column names, fuzzy join it to the main
+    table.
     The principle is as follows:
 
     1. The auxiliary table and the matching column names are provided at initialisation.
@@ -35,16 +34,16 @@ class Joiner(TransformerMixin, BaseEstimator):
     aux_table : :obj:`~pandas.DataFrame`
         The auxiliary table, which will be fuzzy-joined to the main table when
         calling ``transform``.
-    main_key : str or list of str or None
+    main_key : str, list of str or None
         The column names in the main table on which the join will
         be performed. Can be a string if joining on a single column.
-    aux_key : str or list of str or None
+    aux_key : str or list of str, default=None
         The column names in the auxiliary table on which the join will
         be performed. Can be a string if joining on a single column.
-    key : str or list of str or None
+    key : str or list of str, default=None
         The column names to use for both ``main_key`` and ``aux_key`` when they
         are the same. Pass either ``key`` or both ``main_key`` and ``aux_key``.
-    suffix : str
+    suffix : str, default=""
         Suffix to append to the ``aux_table``'s column names. You can use it
         to avoid duplicate column names in the join.
     match_score : float, default=0
@@ -179,7 +178,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
 
-        X = fuzzy_join(
+        return fuzzy_join(
             X,
             self.aux_table,
             left_on=self._main_key,
@@ -189,4 +188,3 @@ class Joiner(TransformerMixin, BaseEstimator):
             ngram_range=self.ngram_range,
             suffixes=("", self.suffix),
         )
-        return X

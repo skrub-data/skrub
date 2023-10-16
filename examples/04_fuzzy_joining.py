@@ -423,7 +423,7 @@ param_grid = []
 for match_score in [0.2, 0.3, 0.4, 0.5]:
     params = {
         f"{joiner_name}__match_score": [match_score]
-        for (joiner_name, joiner) in all_joiners
+        for (joiner_name, _) in all_joiners
     }
     param_grid.append(params)
 
