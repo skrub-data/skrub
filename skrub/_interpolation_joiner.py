@@ -131,6 +131,17 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> buildings = pd.DataFrame(
+    ...     {"latitude": [1.0, 2.0], "longitude": [1.0, 2.0], "n_stories": [3, 7]}
+    ... )
+    >>> annual_avg_temp = pd.DataFrame(
+    ...     {
+    ...         "latitude": [1.2, 0.9, 1.9, 1.7, 5.0],
+    ...         "longitude": [0.8, 1.1, 1.8, 1.8, 5.0],
+    ...         "avg_temp": [10.0, 11.0, 15.0, 16.0, 20.0],
+    ...     }
+    ... )
+
     >>> buildings
        latitude  longitude  n_stories
     0       1.0        1.0          3
@@ -143,6 +154,8 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     2       1.9        1.8      15.0
     3       1.7        1.8      16.0
     4       5.0        5.0      20.0
+
+    >>> from sklearn.neighbors import KNeighborsRegressor
 
     >>> InterpolationJoiner(
     ...     annual_avg_temp,
