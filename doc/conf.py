@@ -506,6 +506,7 @@ numpydoc_xref_aliases = {
     "DatasetAll": "skrub.datasets._fetching.DatasetAll",
     "_replace_false_missing": "skrub._table_vectorizer._replace_false_missing",
 }
+numpydoc_xref_ignore = "all"
 
 # -- sphinx.ext.autodoc configuration -----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html

@@ -19,9 +19,6 @@ from sklearn.feature_extraction.text import (
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
-
 
 def _numeric_encoding(
     main: pd.DataFrame,
@@ -208,7 +205,8 @@ def fuzzy_join(
     sort: bool = False,
     suffixes: tuple[str, str] = ("_x", "_y"),
 ) -> pd.DataFrame:
-    """Join two tables based on approximate matching using the appropriate similarity metric.
+    """Join two tables based on approximate matching using the appropriate similarity \
+    metric.
 
     The principle is as follows:
 
@@ -217,8 +215,8 @@ def fuzzy_join(
        closest neighbor and establish a match.
     3. We match the tables using the previous information.
 
-    For string columns, categories from the two tables that share many sub-strings (n-grams)
-    have greater probability of being matched together. The join is based on
+    For string columns, categories from the two tables that share many sub-strings
+    (n-grams) have greater probability of being matched together. The join is based on
     morphological similarities between strings.
 
     Simultaneous joins on multiple columns (e.g. longitude, latitude) is supported.
@@ -324,34 +322,34 @@ def fuzzy_join(
     >>> df2 = pd.DataFrame({'a': ['anna', 'lala', 'ana', 'nnana'], 'c': [5, 6, 7, 8]})
 
     >>> df1
-        a  b
+          a  b
     0   ana  1
     1  lala  2
     2  nana  3
 
     >>> df2
-        a    c
-    0  anna  5
-    1  lala  6
-    2  ana   7
-    3  nnana 8
+           a  c
+    0   anna  5
+    1   lala  6
+    2    ana  7
+    3  nnana  8
 
     To do a simple join based on the nearest match:
 
     >>> fuzzy_join(df1, df2, on='a')
-        a_x  b   a_y    c
-    0   ana  1   ana    7
-    1  lala  2  lala    6
-    2  nana  3  nnana   8
+        a_x  b    a_y  c
+    0   ana  1    ana  7
+    1  lala  2   lala  6
+    2  nana  3  nnana  8
 
     When we want to accept only a certain match precision,
     we can use the `match_score` argument:
 
     >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
-        a_x  b   a_y    c  matching_score
-    0   ana  1   ana  7.0  1.000000
-    1  lala  2  lala  6.0  1.000000
-    2  nana  3   NaN  NaN  0.532717
+        a_x  b   a_y     c  matching_score
+    0   ana  1   ana     7             1.0
+    1  lala  2  lala     6             1.0
+    2  nana  3  <NA>  <NA>             0.5
 
     As expected, the category "nana" has no exact match (`match_score=1`).
     """

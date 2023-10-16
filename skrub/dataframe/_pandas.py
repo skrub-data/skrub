@@ -124,10 +124,10 @@ def join(
     right : pd.DataFrame,
         The right dataframe to left-join.
 
-    left_on : str or Iterable[str],
+    left_on : str or Iterable[str]
         Left keys to merge on.
 
-    right_on : str or Iterable[str],
+    right_on : str or Iterable[str]
         Right keys to merge on.
 
     Returns
@@ -214,8 +214,7 @@ def _parse_argument(operation: str) -> tuple[str, int | None]:
     Examples
     --------
     >>> _parse_argument("hist(10)")
-    "hist", 10
-
+    ('hist', 10)
     """
     split = re.split("\\(.+\\)", operation)
     op_root = split[0]
