@@ -35,8 +35,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         The auxiliary table, which will be fuzzy-joined to the main table when
         calling ``transform``.
     main_key : str, list of str or None
-        The column names in the main table on which the join will
-        be performed. Can be a string if joining on a single column.
+        The column names in the main table on which the join will be performed.
+        Can be a string if joining on a single column.
     aux_key : str or list of str, default=None
         The column names in the auxiliary table on which the join will
         be performed. Can be a string if joining on a single column.
@@ -149,19 +149,6 @@ class Joiner(TransformerMixin, BaseEstimator):
             self.main_key, self.aux_key, self.key
         )
 
-        for col in self._main_key:
-            if col not in X.columns:
-                raise ValueError(
-                    f"Main key {col!r} not found in columns of X:"
-                    f" {X.columns.tolist()}. "
-                )
-
-        for col in self._aux_key:
-            if col not in self.aux_table.columns:
-                raise ValueError(
-                    f"Column key {col!r} not found in columns of "
-                    f"auxiliary table: {self.aux_table.columns.tolist()}. "
-                )
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:

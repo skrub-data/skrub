@@ -29,7 +29,8 @@ def test_joiner() -> None:
     big_table = joiner.transform(main_table)
     assert big_table.shape == (main_table.shape[0], 3)
     assert_array_equal(
-        big_table["Population"].values, aux_table["Population"].values[[1, 0, 2]]
+        big_table["Population"].to_numpy(),
+        aux_table["Population"].to_numpy()[[1, 0, 2]],
     )
 
     false_joiner = Joiner(aux_table=aux_table, main_key="Countryy", aux_key="country")
