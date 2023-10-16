@@ -122,7 +122,6 @@ class Joiner(TransformerMixin, BaseEstimator):
     0   France      France    68000000  ...          2937     France   Paris
     1  Germany     Germany    84000000  ...          4223    Germany  Berlin
     2    Italy       Italy    59000000  ...          2099     Italia    Rome
-    <BLANKLINE>
     [3 rows x 7 columns]
     """
 
