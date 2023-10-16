@@ -3,6 +3,8 @@ Polars specialization of the aggregate and join operations.
 """
 from typing import Iterable
 
+import numpy as np
+
 from skrub.dataframe._types import POLARS_SETUP, DataFrameLike
 
 if POLARS_SETUP:
@@ -12,6 +14,54 @@ if POLARS_SETUP:
 from itertools import product
 
 from skrub._utils import atleast_1d_or_none
+
+
+def make_dataframe(X, index=None):
+    """Convert an dictionary of columns into a Polars dataframe.
+
+    Parameters
+    ----------
+    X : mapping from column name to 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        Unused since polars doesn't use index.
+        Only here for compatibility with Pandas.
+
+    Returns
+    -------
+    X : Polars dataframe
+        Converted output.
+    """
+    if not isinstance(X, dict) or not all(
+        (isinstance(X_col, Iterable) and np.asarray(X_col).ndim == 1)
+        for X_col in X.values()
+    ):
+        raise TypeError(f"X must be a dictionary of 1d array. Got {X=!r}.")
+    return pl.DataFrame(X)
+
+
+def make_series(X, index=None, name=None):
+    """Convert an 1d array into a Polars series.
+
+    Parameters
+    ----------
+    X : 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        Unused since polars doesn't use index.
+        Only here for compatibility with Pandas.
+
+    name : str, default=None
+        The name of the series.
+
+    Returns
+    -------
+    X : Polars series
+        Converted output.
+    """
+    return pl.Series(values=X, name=name)
 
 
 def aggregate(

@@ -12,6 +12,37 @@ import pandas as pd
 from skrub._utils import atleast_1d_or_none
 
 
+def make_dataframe(X, index):
+    if not isinstance(X, dict) or not all(
+        (isinstance(X_col, Iterable) and np.asarray(X_col).ndim == 1)
+        for X_col in X.values()
+    ):
+        raise TypeError(f"X must be a dictionary of 1d array. Got {X=!r}.")
+    return pd.DataFrame(X, index=index)
+
+
+def make_series(X, index=None, name=None):
+    """Convert an 1d array into a Pandas series.
+
+    Parameters
+    ----------
+    X : 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        The index of the series.
+
+    name : str, default=None
+        The name of the series.
+
+    Returns
+    -------
+    X : Pandas series
+        Converted output.
+    """
+    return pd.Series(X, index=index, name=name)
+
+
 def aggregate(
     table: pd.DataFrame,
     key: str | Iterable[str],

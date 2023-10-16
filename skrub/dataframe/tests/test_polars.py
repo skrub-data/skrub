@@ -2,11 +2,11 @@ import pandas as pd
 import pytest
 
 from skrub.dataframe import POLARS_SETUP
-from skrub.dataframe._polars import aggregate, join
+from skrub.dataframe._polars import aggregate, join, make_dataframe, make_series
 
 if POLARS_SETUP:
     import polars as pl
-    from polars.testing import assert_frame_equal
+    from polars.testing import assert_frame_equal, assert_series_equal
 
     main = pl.DataFrame(
         {
@@ -71,3 +71,20 @@ def test_incorrect_dataframe_inputs():
             cols_to_agg="rating",
             num_operations="mean",
         )
+
+
+def test_make_dataframe():
+    X = dict(a=[1, 2], b=["z", "e"])
+    expected_df = pl.DataFrame(dict(a=[1, 2], b=["z", "e"]))
+    assert_frame_equal(make_dataframe(X, index=[1, 2]), expected_df)
+
+    X = [[1, 2], ["z", "e"]]
+    with pytest.raises(TypeError):
+        make_dataframe(X)
+
+
+@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
+def test_make_series():
+    X = [1, 2, 3]
+    expected_series = pl.Series(X)
+    assert_series_equal(make_series(X, index=[0, 1, 2]), expected_series)

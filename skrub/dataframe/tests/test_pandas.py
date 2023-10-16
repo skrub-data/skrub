@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 
-from skrub.dataframe._pandas import aggregate, join
+from skrub.dataframe._pandas import aggregate, join, make_dataframe, make_series
 
 main = pd.DataFrame(
     {
@@ -95,3 +95,19 @@ def test_no_agg_operation():
             num_operations=None,
             categ_operations=None,
         )
+
+
+def test_make_dataframe():
+    X = dict(a=[1, 2], b=["z", "e"])
+    expected_df = pd.DataFrame(dict(a=[1, 2], b=["z", "e"]))
+    assert_frame_equal(make_dataframe(X, index=[0, 1]), expected_df)
+
+    X = [[1, 2], ["z", "e"]]
+    with pytest.raises(TypeError):
+        make_dataframe(X)
+
+
+def test_make_series():
+    X = [1, 2, 3]
+    expected_series = pd.Series(X)
+    assert_series_equal(make_series(X, index=[0, 1, 2]), expected_series)
