@@ -68,7 +68,7 @@ def test_parameters() -> None:
 
 
 def _test_missing_values(input_type: str, missing: str) -> None:
-    observations = [["a", "b"], ["b", "a"], ["b", np.nan], ["a", "c"], [np.nan, "a"]]
+    observations = [["a", "b"], ["b", "a"], ["b", None], ["a", "c"], [np.nan, "a"]]
     encoded = np.array(
         [
             [0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
@@ -103,7 +103,7 @@ def _test_missing_values_transform(input_type: str, missing: str) -> None:
     test_observations = [
         ["a", "b"],
         ["b", "a"],
-        ["b", np.nan],
+        ["b", None],
         ["a", "c"],
         [np.nan, "a"],
     ]

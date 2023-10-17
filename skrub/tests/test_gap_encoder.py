@@ -216,8 +216,8 @@ def test_missing_values(missing: str) -> None:
     """Test what happens when missing values are in the data"""
     observations = [
         ["alice", "bob"],
-        ["bob", "alice"],
-        ["bob", np.nan],
+        [pd.NA, "alice"],
+        ["bob", None],
         ["alice", "charlie"],
         [np.nan, "alice"],
     ]
