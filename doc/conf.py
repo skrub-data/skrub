@@ -237,6 +237,8 @@ html_js_files = []
 # Project logo, to place at the top of the sidebar.
 html_logo = "_static/skrub.svg"
 
+# Icon to put in the browser tab.
+html_favicon = "_static/skrub.svg"
 
 # Modify the title to get good social-media links
 html_title = "skrub"
