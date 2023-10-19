@@ -183,9 +183,11 @@ def _nearest_matches(
     neigh.fit(aux_array)
     distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
     idx_closest = np.ravel(neighbors)
-    distance = distance / np.max(distance)
-    # Normalizing distance between 0 and 1:
-    matching_score = 1 - (distance / 2)
+    distance -= distance.min()
+    max_dist = distance.max()
+    if max_dist != 0:
+        distance /= max_dist
+    matching_score = 1 - distance
     return idx_closest, matching_score
 
 
@@ -349,7 +351,7 @@ def fuzzy_join(
         a_x  b   a_y     c  matching_score
     0   ana  1   ana     7             1.0
     1  lala  2  lala     6             1.0
-    2  nana  3  <NA>  <NA>             0.5
+    2  nana  3  <NA>  <NA>             0.0
 
     As expected, the category "nana" has no exact match (`match_score=1`).
     """

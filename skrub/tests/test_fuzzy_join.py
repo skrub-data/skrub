@@ -26,7 +26,7 @@ def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]) -> None:
         right=df2,
         left_on="a1",
         right_on="a2",
-        match_score=0.45,
+        match_score=0.0,
         return_score=True,
         analyzer=analyzer,
     )
@@ -41,7 +41,7 @@ def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]) -> None:
         how="left",
         left_on="a2",
         right_on="a1",
-        match_score=0.35,
+        match_score=0.0,
         return_score=True,
         analyzer=analyzer,
     )
@@ -54,7 +54,7 @@ def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]) -> None:
         how="right",
         right_on=["a2"],
         left_on=["a1"],
-        match_score=0.35,
+        match_score=0.0,
         return_score=True,
         analyzer=analyzer,
     )
@@ -78,6 +78,15 @@ def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]) -> None:
         suffixes=("l", "r"),
     )
     assert ("a1l" and "a1r") in df.columns
+
+
+def test_match_score():
+    left = pd.DataFrame({"A": ["aa", "bb"]})
+    right = pd.DataFrame({"A": ["aa", "ba"], "B": [1, 2]})
+    join = fuzzy_join(left, right, on="A", suffixes=("l", "r"))
+    assert join["B"].to_list() == [1, 2]
+    join = fuzzy_join(left, right, on="A", suffixes=("l", "r"), match_score=0.5)
+    assert join["B"].fillna(-1).to_list() == [1, -1]
 
 
 def test_fuzzy_join_dtypes() -> None:
@@ -301,7 +310,7 @@ def test_numerical_column() -> None:
         left,
         right,
         on="int",
-        match_score=0.8,
+        match_score=0.4,
         drop_unmatched=True,
     )
     assert fj_num3.shape == (2, n_cols)
