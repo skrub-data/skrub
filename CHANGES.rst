@@ -48,6 +48,8 @@ Major changes
 Minor changes
 -------------
 
+* ``inverse_transform`` in :class:`SimilarityEncoder` now works as expected; it used to raise an exception. :pr:`801` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * :class:`TableVectorizer` is now able to apply parallelism at the column level rather than the transformer level. This is the default for univariate transformers, like :class:`MinHashEncoder`, and :class:`GapEncoder`.
   :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
 
