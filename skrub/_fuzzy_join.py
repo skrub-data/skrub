@@ -183,7 +183,6 @@ def _nearest_matches(
     neigh.fit(aux_array)
     distance, neighbors = neigh.kneighbors(main_array, return_distance=True)
     idx_closest = np.ravel(neighbors)
-    distance -= distance.min()
     max_dist = distance.max()
     if max_dist != 0:
         distance /= max_dist
