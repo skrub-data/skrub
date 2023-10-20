@@ -1,3 +1,4 @@
+import warnings
 from typing import Literal
 
 import numpy as np
@@ -87,6 +88,16 @@ def test_match_score():
     assert join["B"].to_list() == [1, 2]
     join = fuzzy_join(left, right, on="A", suffixes=("l", "r"), match_score=0.5)
     assert join["B"].fillna(-1).to_list() == [1, -1]
+
+
+def test_perfect_matches():
+    # non-regression test for https://github.com/skrub-data/skrub/issues/764
+    # fuzzy_join when all rows had a perfect match used to trigger a division by 0
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        warnings.filterwarnings("ignore", message="This feature is still experimental")
+        df = pd.DataFrame({"A": [0, 1]})
+        fuzzy_join(df, df, on="A", return_score=True)
 
 
 def test_fuzzy_join_dtypes() -> None:
