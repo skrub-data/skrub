@@ -4,6 +4,7 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 from sklearn.feature_extraction.text import HashingVectorizer
 
@@ -93,11 +94,12 @@ def test_match_score():
 def test_perfect_matches():
     # non-regression test for https://github.com/skrub-data/skrub/issues/764
     # fuzzy_join when all rows had a perfect match used to trigger a division by 0
+    df = pd.DataFrame({"A": [0, 1]})
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         warnings.filterwarnings("ignore", message="This feature is still experimental")
-        df = pd.DataFrame({"A": [0, 1]})
-        fuzzy_join(df, df, on="A", return_score=True)
+        join = fuzzy_join(df, df, on="A", return_score=True)
+    assert_array_equal(join["matching_score"].to_numpy(), [1.0, 1.0])
 
 
 def test_fuzzy_join_dtypes() -> None:
