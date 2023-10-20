@@ -48,7 +48,7 @@ Major changes
 Minor changes
 -------------
 
-* Scaling of ``matching_score`` in :func:`fuzzy_join` is now between 0 and 1; it used to be between 0.5 and 1. :pr:`802` by :user:`Jérôme Dockès <jeromedockes>`.
+* Scaling of ``matching_score`` in :func:`fuzzy_join` is now between 0 and 1; it used to be between 0.5 and 1. Moreover, the division by 0 error that occurred when all rows had a perfect match has been fixed. :pr:`802` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * :class:`TableVectorizer` is now able to apply parallelism at the column level rather than the transformer level. This is the default for univariate transformers, like :class:`MinHashEncoder`, and :class:`GapEncoder`.
   :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
