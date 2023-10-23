@@ -22,7 +22,7 @@ class SelectCols(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    cols: list of str
+    cols : list of str
         The columns to select.
 
     Examples
@@ -41,17 +41,45 @@ class SelectCols(TransformerMixin, BaseEstimator):
     Traceback (most recent call last):
         ...
     ValueError: The following columns were not found in the input DataFrame: {'X'}
-
     """
 
     def __init__(self, cols):
         self.cols = cols
 
     def fit(self, X, y=None):
+        """Fit the transformer.
+
+        Parameters
+        ----------
+        X : DataFrame or None
+            If `X` is a DataFrame, the transformer checks that all the column
+            names provided in ``self.cols`` can be found in `X`.
+
+        y : None
+            Unused.
+
+        Returns
+        -------
+        SelectCols
+            The transformer itself.
+        """
         _check_columns(X, self.cols)
         return self
 
     def transform(self, X):
+        """Transform a dataframe by selecting columns.
+
+        Parameters
+        ----------
+        X : DataFrame
+            The DataFrame on which to apply the selection.
+
+        Returns
+        -------
+        DataFrame
+            The input DataFrame ``X`` after selecting only the columns listed
+            in ``self.cols`` (in the provided order).
+        """
         _check_columns(X, self.cols)
         namespace, _ = get_df_namespace(X)
         return namespace.select(X, self.cols)
@@ -65,7 +93,7 @@ class DropCols(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    cols: list of str
+    cols : list of str
         The columns to drop.
 
     Examples
@@ -84,17 +112,45 @@ class DropCols(TransformerMixin, BaseEstimator):
     Traceback (most recent call last):
         ...
     ValueError: The following columns were not found in the input DataFrame: {'X'}
-
     """
 
     def __init__(self, cols):
         self.cols = cols
 
     def fit(self, X, y=None):
+        """Fit the transformer.
+
+        Parameters
+        ----------
+        X : DataFrame or None
+            If `X` is a DataFrame, the transformer checks that all the column
+            names provided in ``self.cols`` can be found in `X`.
+
+        y : None
+            Unused.
+
+        Returns
+        -------
+        DropCols
+            The transformer itself.
+        """
         _check_columns(X, self.cols)
         return self
 
     def transform(self, X):
+        """Transform a dataframe by dropping columns.
+
+        Parameters
+        ----------
+        X : DataFrame
+            The DataFrame on which to apply the selection.
+
+        Returns
+        -------
+        DataFrame
+            The input DataFrame ``X`` after dropping the columns listed in
+            ``self.cols``.
+        """
         _check_columns(X, self.cols)
         namespace, _ = get_df_namespace(X)
         return namespace.select(X, [c for c in X.columns if c not in self.cols])
