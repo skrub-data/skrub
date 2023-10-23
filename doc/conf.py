@@ -237,6 +237,8 @@ html_js_files = []
 # Project logo, to place at the top of the sidebar.
 html_logo = "_static/skrub.svg"
 
+# Icon to put in the browser tab.
+html_favicon = "_static/skrub.svg"
 
 # Modify the title to get good social-media links
 html_title = "skrub"
@@ -506,6 +508,7 @@ numpydoc_xref_aliases = {
     "DatasetAll": "skrub.datasets._fetching.DatasetAll",
     "_replace_false_missing": "skrub._table_vectorizer._replace_false_missing",
 }
+numpydoc_xref_ignore = "all"
 
 # -- sphinx.ext.autodoc configuration -----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html

@@ -83,7 +83,7 @@ legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
 legal_rights.head(3)
 
 ###############################################################################
-# A correspondance problem
+# A correspondence problem
 # ------------------------
 #
 # Alas, the entries for countries do not perfectly match between our
@@ -99,11 +99,11 @@ gdppc.sort_values(by="Country Name").tail(7)
 # We can see that Yemen is written "Yemen*" on one side, and
 # "Yemen, Rep." on the other.
 #
-# We also have entries that probably do not have correspondances: "World"
+# We also have entries that probably do not have correspondences: "World"
 # on one side, whereas the other table only has country-level data.
 
 ###############################################################################
-# Joining tables with imperfect correspondance
+# Joining tables with imperfect correspondence
 # --------------------------------------------
 #
 # We will now join our initial table, df, with the 3 additional ones that
@@ -281,7 +281,7 @@ df3.drop(columns=["Country Name"], inplace=True)
 df3.head(3)
 
 ###############################################################################
-# Let's take a look at their correspondance in a figure:
+# Let's take a look at their correspondence in a figure:
 plt.figure(figsize=(4, 3))
 fig = sns.regplot(
     data=df3,

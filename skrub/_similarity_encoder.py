@@ -6,6 +6,7 @@ which encodes similarity instead of equality of values.
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 import sklearn
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
@@ -13,7 +14,6 @@ from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import parse_version
-from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
 from ._string_distances import get_ngram_count, preprocess
@@ -197,6 +197,8 @@ class SimilarityEncoder(OneHotEncoder):
         during fit_transform, the resulting encoded columns for this feature
         will be all zeros. In the inverse transform, the missing category
         will be denoted as None.
+        "Missing values" are any value for which ``pandas.isna`` returns
+        ``True``, such as ``numpy.nan`` or ``None``.
     hashing_dim : int, optional
         If `None`, the base vectorizer is a CountVectorizer, otherwise it is a
         HashingVectorizer with a number of features equal to `hashing_dim`.
@@ -251,17 +253,12 @@ class SimilarityEncoder(OneHotEncoder):
     instead of a discrete one based on exact matches:
 
     >>> enc.transform([['Female', 1], ['Male', 4]])
-    array([[1., 0.42857143, 1., 0., 0.],
-           [0.42857143, 1., 0. , 0. , 0.]])
-
-    >>> enc.inverse_transform(
-    >>>     [[1., 0.42857143, 1., 0., 0.], [0.42857143, 1., 0. , 0. , 0.]]
-    >>> )
-    array([['Female', 1],
-           ['Male', None]], dtype=object)
+    array([[1.        , 0.42..., 1.        , 0.        , 0.        ],
+           [0.42..., 1.        , 0.        , 0.        , 0.        ]])
 
     >>> enc.get_feature_names_out(['gender', 'group'])
-    array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
+    array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'],
+          dtype=object)
     """
 
     categories_: list[NDArray]
@@ -334,7 +331,7 @@ class SimilarityEncoder(OneHotEncoder):
             X = np.asarray(X, dtype=object)
 
         if hasattr(X, "dtype"):
-            mask = _object_dtype_isnan(X)
+            mask = pd.isna(X)
             if X.dtype.kind == "O" and mask.any():
                 if self.handle_missing == "error":
                     raise ValueError(
@@ -452,7 +449,7 @@ class SimilarityEncoder(OneHotEncoder):
             X = np.asarray(X, dtype=object)
 
         if hasattr(X, "dtype"):
-            mask = _object_dtype_isnan(X)
+            mask = pd.isna(X)
             if X.dtype.kind == "O" and mask.any():
                 if self.handle_missing == "error":
                     raise ValueError(

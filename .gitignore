@@ -21,6 +21,8 @@ var/
 *.egg
 *.pkl
 
+.pytest_cache/
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -61,6 +63,7 @@ doc/generated
 doc/CHANGES.rst
 doc/RELEASE_PROCESS.rst
 doc/CONTRIBUTING.rst
+doc/sg_execution_times.rst
 .DS_Store
 
 # Pkl files for benchmarks

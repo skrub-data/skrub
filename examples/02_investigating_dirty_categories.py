@@ -93,7 +93,9 @@ transformed_values = similarity_encoder.fit_transform(sorted_values.reshape(-1, 
 
 from sklearn.manifold import MDS
 
-mds = MDS(dissimilarity="precomputed", n_init=10, random_state=42)
+mds = MDS(
+    dissimilarity="precomputed", n_init=10, random_state=42, normalized_stress=False
+)
 two_dim_data = mds.fit_transform(1 - transformed_values)
 # transformed values lie in the 0-1 range,
 # so 1-transformed_value yields a positive dissimilarity matrix
