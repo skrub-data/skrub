@@ -362,7 +362,7 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # .............................
 
 y = df["Happiness score"]
-df = df.drop("Happines score")
+df = df.drop("Happiness score", axis=1)
 
 from skrub import Joiner, SelectCols, DropCols
 from sklearn.pipeline import Pipeline
