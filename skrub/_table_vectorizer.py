@@ -22,7 +22,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import Bunch
 from sklearn.utils.deprecation import deprecated
 from sklearn.utils.metaestimators import _BaseComposition
-from sklearn.utils.validation import _get_feature_names, check_is_fitted
+from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
 from skrub._utils import parse_astype_error_message
@@ -687,7 +687,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                     raise e
         return X
 
-    def _check_X(self, X, reset):
+    def _check_X(self, X):
         if sparse.isspmatrix(X):
             raise TypeError(
                 "A sparse matrix was passed, but dense data is required. Use "
@@ -714,7 +714,8 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                     "your data has a single feature or array.reshape(1, -1) "
                     "if it contains a single sample."
                 )
-            X = pd.DataFrame(X_array)
+            feature_names = getattr(self, "feature_names_in_", None)
+            X = pd.DataFrame(X_array, columns=feature_names)
         else:
             # Create a copy to avoid altering the original data.
             X = X.copy()
@@ -739,21 +740,6 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
                 f"Found array with {X.shape[1]} feature(s) (shape={X.shape}) while"
                 " a minimum of 1 is required."
             )
-        self._check_n_features(X, reset=reset)
-        # TODO: _check_feature_names raises a warning when fitting on dataframe
-        # but transforming on a numpy array.
-        # In practice, this looks error-prone and we need to discuss
-        # whether to raise an error instead.
-        #
-        # Note that when fitting on a dataframe and transforming on
-        # the same dataframe with different column names,
-        # _check_feature_names will raise an error.
-        self._check_feature_names(X, reset=reset)
-        feature_names = _get_feature_names(X)
-        feature_names_in = getattr(self, "feature_names_in_", None)
-        if feature_names is None and feature_names_in is not None:
-            X.columns = feature_names_in
-
         return X
 
     def fit(self, X: ArrayLike, y: ArrayLike = None) -> "TableVectorizer":
@@ -812,7 +798,9 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
         self._clone_transformers()
 
-        X = self._check_X(X, reset=True)
+        self._check_feature_names(X, reset=True)
+        X = self._check_X(X)
+        self._check_n_features(X, reset=True)
 
         # We replace in all columns regardless of their type,
         # as we might have some false missing
@@ -932,7 +920,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         """
         check_is_fitted(self, attributes=["_column_transformer"])
 
-        X = self._check_X(X, reset=False)
+        X = self._check_X(X)
 
         if self.auto_cast:
             X = self._apply_cast(X)
@@ -966,9 +954,9 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         # so we convert the values to the appropriate column names
         # if there is less than 20 columns in the remainder.
         transformers = []
-        for i, (name, transformer, columns) in enumerate(
-            self._column_transformer.transformers_
-        ):
+        for name, transformer, columns in self._column_transformer.transformers_:
+            # TODO: potentially remove when
+            # https://github.com/scikit-learn/scikit-learn/issues/27533 is resolved.
             if name == "remainder" and len(columns) < 20:
                 columns = self.feature_names_in_[columns].tolist()
             transformers.append((name, transformer, columns))
