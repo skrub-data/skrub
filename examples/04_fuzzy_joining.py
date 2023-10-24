@@ -365,31 +365,28 @@ y = df["Happiness score"]
 df = df.drop("Happiness score", axis=1)
 
 from skrub import Joiner, SelectCols, DropCols
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import make_pipeline
 
-steps = [
-    ("gdppc", Joiner((gdppc, "Country Name"), "Country")),
-    ("gdppc-drop", DropCols(["Country Name"])),
-    ("life_exp", Joiner((life_exp, "Country Name"), "Country")),
-    ("life_exp_drop", DropCols(["Country Name"])),
-    ("legal_rights", Joiner((legal_rights, "Country Name"), "Country")),
-]
+# We create a selector that we will insert at the end of our pipeline, to
+# project on the relevant attributes before fitting the regressor
 
-# At the end of our pipeline, we project on the relevant attributes and finally
-# fit our regressor
-
-select = SelectCols(
+selector = SelectCols(
     [
         "GDP per capita (current US$)",
         "Life expectancy at birth, total (years)",
         "Strength of legal rights index (0=weak to 12=strong)",
     ]
 )
-steps = steps + [
-    ("select", select),
-    ("regressor", HistGradientBoostingRegressor()),
-]
-pipeline = Pipeline(steps)
+pipeline = make_pipeline(
+    Joiner((gdppc, "Country Name"), "Country"),
+    DropCols(["Country Name"]),
+    Joiner((life_exp, "Country Name"), "Country"),
+    DropCols(["Country Name"]),
+    Joiner((legal_rights, "Country Name"), "Country"),
+    selector,
+    HistGradientBoostingRegressor(),
+)
+
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the parameters of the |fj|.
@@ -400,14 +397,15 @@ from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
 params = {
-    f"{joiner}__match_score": [0.2, 0.9]
-    for joiner in ["gdppc", "life_exp", "legal_rights"]
+    "joiner-1__match_score": [0.2, 0.9],
+    "joiner-2__match_score": [0.2, 0.9],
+    "joiner-3__match_score": [0.2, 0.9],
 }
 
-grid = GridSearchCV(pipeline, param_grid=params, error_score="raise")
+grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)
 
-print(grid.best_params_)
+print(grid.cv_results_)
 ##########################################################################
 # The grid searching gave us the best value of 0.5 for the parameter
 # ``match_score``. Let's use this value in our regression:
