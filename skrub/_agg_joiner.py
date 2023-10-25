@@ -375,7 +375,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 class AggTarget(BaseEstimator, TransformerMixin):
     """Aggregate a target ``y`` before joining its aggregation on a base dataframe.
 
-    Accepts :obj:`pandas.DataFrame` or :class:`polars.DataFrame` inputs.
+    Accepts :obj:`pandas.DataFrame` or :obj:`polars.DataFrame` inputs.
 
     Parameters
     ----------
