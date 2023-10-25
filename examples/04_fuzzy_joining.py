@@ -379,9 +379,9 @@ selector = SelectCols(
 )
 pipeline = make_pipeline(
     Joiner((gdppc, "Country Name"), "Country"),
-    DropCols(["Country Name"]),
+    DropCols("Country Name"),
     Joiner((life_exp, "Country Name"), "Country"),
-    DropCols(["Country Name"]),
+    DropCols("Country Name"),
     Joiner((legal_rights, "Country Name"), "Country"),
     selector,
     HistGradientBoostingRegressor(),
