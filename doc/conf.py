@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#  -*- coding: utf-8 -*-
 #
 # skrub documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar 13 14:34:47 2018.
@@ -317,6 +317,7 @@ intersphinx_mapping = {
     "mayavi": ("http://docs.enthought.com/mayavi/mayavi", None),
     "statsmodels": ("http://www.statsmodels.org/stable", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable", None),
+    "polars": ("https://pola-rs.github.io/polars/py-polars/html", None),
     "seaborn": ("http://seaborn.pydata.org", None),
 }
 
