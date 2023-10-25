@@ -37,6 +37,8 @@ class SelectCols(TransformerMixin, BaseEstimator):
     A ``ValueError`` is raised if any of the provided column names are not in
     the dataframe.
 
+    Accepts :obj:`pandas.DataFrame` and :obj:`polars.DataFrame` inputs.
+
     Parameters
     ----------
     cols : list of str or str
@@ -108,6 +110,8 @@ class DropCols(TransformerMixin, BaseEstimator):
 
     The other columns are kept in their original order. A ``ValueError`` is
     raised if any of the provided column names are not in the dataframe.
+
+    Accepts :obj:`pandas.DataFrame` and :obj:`polars.DataFrame` inputs.
 
     Parameters
     ----------

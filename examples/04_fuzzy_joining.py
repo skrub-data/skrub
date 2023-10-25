@@ -405,7 +405,8 @@ params = {
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)
 
-print(grid.cv_results_)
+print(grid.best_params_)
+
 ##########################################################################
 # The grid searching gave us the best value of 0.5 for the parameter
 # ``match_score``. Let's use this value in our regression:
