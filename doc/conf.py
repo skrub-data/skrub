@@ -1,4 +1,4 @@
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 # skrub documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar 13 14:34:47 2018.
@@ -309,13 +309,13 @@ texinfo_documents = [
 # Configuration for intersphinx
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "numpy": ("https://docs.scipy.org/doc/numpy", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
-    "matplotlib": ("https://matplotlib.org", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
     "sklearn": ("https://scikit-learn.org/stable", None),
-    "skimage": ("http://scikit-image.org/docs/stable", None),
+    "skimage": ("https://scikit-image.org/docs/stable", None),
     "mayavi": ("http://docs.enthought.com/mayavi/mayavi", None),
-    "statsmodels": ("http://www.statsmodels.org/stable", None),
+    "statsmodels": ("https://www.statsmodels.org/stable", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable", None),
     "polars": ("https://pola-rs.github.io/polars/py-polars/html", None),
     "seaborn": ("http://seaborn.pydata.org", None),
