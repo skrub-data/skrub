@@ -368,7 +368,7 @@ from skrub import Joiner, SelectCols, DropCols
 from sklearn.pipeline import make_pipeline
 
 # We create a selector that we will insert at the end of our pipeline, to
-# project on the relevant attributes before fitting the regressor
+# select the relevant columns before fitting the regressor
 
 selector = SelectCols(
     [
