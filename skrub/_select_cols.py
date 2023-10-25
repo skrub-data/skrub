@@ -15,11 +15,13 @@ def _check_columns(df, columns):
     example ``selector = SelectCols(["A", "B"]).fit(None)``, as the fit data is
     not used for anything else than this check.
     """
+    if isinstance(columns, str):
+        columns = [columns]
     if not hasattr(df, "columns"):
-        return
+        return columns
     diff = set(columns) - set(df.columns)
     if not diff:
-        return
+        return columns
     raise ValueError(
         f"The following columns were not found in the input DataFrame: {diff}"
     )
@@ -33,8 +35,10 @@ class SelectCols(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    cols : list of str
-        The columns to select.
+    cols : list of str or str
+        The columns to select. A single column name can be passed as a ``str``:
+        ``"col_name"`` is the same as ``["col_name"]``
+
 
     Examples
     --------
@@ -91,9 +95,9 @@ class SelectCols(TransformerMixin, BaseEstimator):
             The input DataFrame ``X`` after selecting only the columns listed
             in ``self.cols`` (in the provided order).
         """
-        _check_columns(X, self.cols)
+        cols = _check_columns(X, self.cols)
         namespace, _ = get_df_namespace(X)
-        return namespace.select(X, self.cols)
+        return namespace.select(X, cols)
 
 
 class DropCols(TransformerMixin, BaseEstimator):
@@ -104,8 +108,9 @@ class DropCols(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    cols : list of str
-        The columns to drop.
+    cols : list of str or str
+        The columns to drop. A single column name can be passed as a ``str``:
+        ``"col_name"`` is the same as ``["col_name"]``.
 
     Examples
     --------
@@ -162,6 +167,6 @@ class DropCols(TransformerMixin, BaseEstimator):
             The input DataFrame ``X`` after dropping the columns listed in
             ``self.cols``.
         """
-        _check_columns(X, self.cols)
+        cols = _check_columns(X, self.cols)
         namespace, _ = get_df_namespace(X)
-        return namespace.select(X, [c for c in X.columns if c not in self.cols])
+        return namespace.select(X, [c for c in X.columns if c not in cols])
