@@ -4,19 +4,23 @@ from .dataframe import get_df_namespace
 
 
 def _check_columns(df, columns):
-    """Check that the provided columns exist in the dataframe.
+    """Check that provided columns exist in the dataframe and return them in a list.
 
     Checking this ourselves allows having the same exception for both pandas
     and polars dataframes.
 
     If `df` is not a dataframe (does not have a ``columns`` attribute), skip
-    this check. As the transformers in this module are basically stateless,
+    the check. As the transformers in this module are basically stateless,
     this allows getting an operational transformer without fit data; for
     example ``selector = SelectCols(["A", "B"]).fit(None)``, as the fit data is
     not used for anything else than this check.
+
+    If ``columns`` is a ``str`` (a single column name), the return value wraps
+    it in a list (of length 1).
     """
     if isinstance(columns, str):
         columns = [columns]
+    columns = list(columns)
     if not hasattr(df, "columns"):
         return columns
     diff = set(columns) - set(df.columns)
