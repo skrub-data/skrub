@@ -37,8 +37,7 @@ class SelectCols(TransformerMixin, BaseEstimator):
     ----------
     cols : list of str or str
         The columns to select. A single column name can be passed as a ``str``:
-        ``"col_name"`` is the same as ``["col_name"]``
-
+        ``"col_name"`` is the same as ``["col_name"]``.
 
     Examples
     --------
