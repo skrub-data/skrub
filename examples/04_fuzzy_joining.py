@@ -110,11 +110,6 @@ gdppc.sort_values(by="Country Name").tail(7)
 # we have extracted.
 #
 
-# We will ignore the warnings:
-import warnings
-
-warnings.filterwarnings("ignore")
-
 ###############################################################################
 # .. _example_fuzzy_join:
 #
@@ -253,8 +248,8 @@ fig = sns.regplot(
     y="Happiness score",
     lowess=True,
 )
-fig.set_ylabel("Happiness index")
-fig.set_title("Is a higher life expectancy linked to happiness?")
+fig.set_ylabel("Happiness Index")
+fig.set_title("Effect of Life Expectancy on Happiness")
 plt.tight_layout()
 plt.show()
 
@@ -289,8 +284,8 @@ fig = sns.regplot(
     y="Happiness score",
     lowess=True,
 )
-fig.set_ylabel("Happiness index")
-fig.set_title("Does a country's legal rights strength lead to happiness?")
+fig.set_ylabel("Happiness Index")
+fig.set_title("Effect of a Country's Strength of Legal Rights on Happiness")
 plt.tight_layout()
 plt.show()
 
