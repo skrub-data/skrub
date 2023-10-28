@@ -110,11 +110,6 @@ gdppc.sort_values(by="Country Name").tail(7)
 # we have extracted.
 #
 
-# We will ignore the warnings:
-import warnings
-
-warnings.filterwarnings("ignore")
-
 ###############################################################################
 # .. _example_fuzzy_join:
 #
