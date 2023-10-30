@@ -50,6 +50,11 @@ Major changes
   aggregation on the target y, followed by left-joining on a base table.
   :pr:`600` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+* Added the :class:`SelectCols` and :class:`DropCols` transformers that allow
+  selecting a subset of a dataframe's columns inside of a pipeline. :pr:`804` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+
+
 Minor changes
 -------------
 

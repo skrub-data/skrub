@@ -110,11 +110,6 @@ gdppc.sort_values(by="Country Name").tail(7)
 # we have extracted.
 #
 
-# We will ignore the warnings:
-import warnings
-
-warnings.filterwarnings("ignore")
-
 ###############################################################################
 # .. _example_fuzzy_join:
 #
@@ -309,7 +304,7 @@ plt.show()
 # We now separate our covariates (X), from the target (or exogenous)
 # variables: y
 X = df3.drop("Happiness score", axis=1).select_dtypes(exclude=object)
-y = df3[["Happiness score"]]
+y = df3["Happiness score"]
 
 ###################################################################
 # Let us now define the model that will be used to predict the happiness score:
@@ -362,54 +357,30 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # .............................
 
 y = df["Happiness score"]
+df = df.drop("Happiness score", axis=1)
 
+from skrub import Joiner, SelectCols, DropCols
+from sklearn.pipeline import make_pipeline
 
-#################################################################
-# Fitting and transforming into the final table
-# .............................................
-# To get our final joined table we will fit and transform the main table (df)
-# with our create instance of the |joiner|:
-from skrub import Joiner
+# We create a selector that we will insert at the end of our pipeline, to
+# select the relevant columns before fitting the regressor
 
-all_joiners = []
-for aux_table, aux_name in [(gdppc, "GDP"), (life_exp, "DYN"), (legal_rights, "LGL")]:
-    joiner = Joiner(
-        aux_table,
-        main_key="Country",
-        aux_key="Country Name",
-        suffix=f"_{aux_name}",
-    )
-    all_joiners.append((aux_name, joiner))
-
-df_final = df
-for joiner_name, joiner in all_joiners:
-    df_final = joiner.fit_transform(df_final)
-
-df_final.head(10)
-
-##########################################################################
-# And that's it! As previously, we now have a big table
-# ready for machine learning.
-# Let's create our machine learning pipeline:
-from sklearn.compose import make_column_transformer
-from sklearn.pipeline import Pipeline
-
-# We include only the columns that will be pertinent for our regression:
-encoder = make_column_transformer(
-    (
-        "passthrough",
+pipeline = make_pipeline(
+    Joiner(gdppc, main_key="Country", aux_key="Country Name"),
+    DropCols("Country Name"),
+    Joiner(life_exp, main_key="Country", aux_key="Country Name"),
+    DropCols("Country Name"),
+    Joiner(legal_rights, main_key="Country", aux_key="Country Name"),
+    SelectCols(
         [
             "GDP per capita (current US$)",
             "Life expectancy at birth, total (years)",
             "Strength of legal rights index (0=weak to 12=strong)",
-        ],
+        ]
     ),
-    remainder="drop",
+    HistGradientBoostingRegressor(),
 )
 
-pipeline = Pipeline(
-    all_joiners + [("encoder", encoder), ("regressor", HistGradientBoostingRegressor())]
-)
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the parameters of the |fj|.
@@ -419,17 +390,17 @@ pipeline = Pipeline(
 from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
-param_grid = []
-for match_score in [0.2, 0.3, 0.4, 0.5]:
-    params = {
-        f"{joiner_name}__match_score": [match_score] for (joiner_name, _) in all_joiners
-    }
-    param_grid.append(params)
+params = {
+    "joiner-1__match_score": [0.2, 0.9],
+    "joiner-2__match_score": [0.2, 0.9],
+    "joiner-3__match_score": [0.2, 0.9],
+}
 
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)
 
 print(grid.best_params_)
+
 ##########################################################################
 # The grid searching gave us the best value of 0.5 for the parameter
 # ``match_score``. Let's use this value in our regression:
