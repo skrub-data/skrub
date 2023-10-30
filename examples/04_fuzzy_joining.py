@@ -110,11 +110,6 @@ gdppc.sort_values(by="Country Name").tail(7)
 # we have extracted.
 #
 
-# We will ignore the warnings:
-import warnings
-
-warnings.filterwarnings("ignore")
-
 ###############################################################################
 # .. _example_fuzzy_join:
 #
@@ -309,7 +304,7 @@ plt.show()
 # We now separate our covariates (X), from the target (or exogenous)
 # variables: y
 X = df3.drop("Happiness score", axis=1).select_dtypes(exclude=object)
-y = df3[["Happiness score"]]
+y = df3["Happiness score"]
 
 ###################################################################
 # Let us now define the model that will be used to predict the happiness score:
