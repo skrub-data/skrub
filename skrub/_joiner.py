@@ -13,7 +13,7 @@ from skrub._fuzzy_join import fuzzy_join
 
 
 class Joiner(TransformerMixin, BaseEstimator):
-    """Augment a main table by automatically joining an auxiliary table to it.
+    """Augment a main table by fuzzy joining an auxiliary table to it.
 
     Given an auxiliary table and matching column names, fuzzy join it to the main
     table.
