@@ -8,6 +8,7 @@ from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
+from skrub._utils import check_input
 if TYPE_CHECKING:
     from dataframe_api import Column
 
@@ -149,22 +150,18 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         elif feature == "microsecond":
             return date_series.microsecond()
         elif feature == "nanosecond":
-            return date_series.microsecond() * 1000
+            if hasattr(date_series, 'nanosecond'):
+                return date_series.nanosecond()
+            else:
+                raise AttributeError(
+                    f"`nanosecond` is not part of the DataFrame API and so support is not guaranteed across all libraries. "
+                    "In particular, it is not supported for {date_series.__class__.__name__}"
+                )
         elif feature == "dayofweek":
             return date_series.iso_weekday() - 1
         elif feature == "total_time":
-            # tz = pd.DatetimeIndex(date_series).tz
             # Compute the time in seconds from the epoch time UTC
             return date_series.unix_timestamp()  # type: ignore
-            # if tz is None:
-            #     return (
-            #         pd.to_datetime(date_series) - pd.Timestamp("1970-01-01")
-            #     ) // pd.Timedelta("1s")
-            # else:
-            #     return (
-            #         pd.DatetimeIndex(date_series).tz_convert("utc")
-            #         - pd.Timestamp("1970-01-01", tz="utc")
-            #     ) // pd.Timedelta("1s")
 
     def fit(self, X: ArrayLike, y=None) -> "DatetimeEncoder":
         """Fit the instance to ``X``.
@@ -185,28 +182,19 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             Fitted DatetimeEncoder instance (self).
         """
         self._validate_keywords()
-        if hasattr(X, "__dataframe_consortium_standard__"):
-            X = X.__dataframe_consortium_standard__().collect()
-            self.col_names_ = X.column_names
-            shape = X.shape()
-            is_df = True
-        else:
-            self.col_names_ = None
-            shape = X.shape
-            is_df = False
-        # X = check_input(X)
+        if not hasattr(X, "__dataframe_consortium_standard__"):
+            X = check_input(X)
+            X = pd.DataFrame(X, columns=[str(i) for i in range(X.shape[1])])
+        X = X.__dataframe_consortium_standard__().collect()
+        n_colums = len(X.column_names)
+        self.col_names_ = X.column_names
         # Features to extract for each column, after removing constant features
         self.features_per_column_ = {}
-        for i in range(shape[1]):
+        for i in range(n_colums):
             self.features_per_column_[i] = []
         # Check which columns are constant
-        for i in range(shape[1]):
-            if is_df:
-                column = X.col(X.column_names[i])
-            else:
-                column = pd.Series(
-                    pd.to_datetime(X[:, i]), name=str(i)
-                ).__column_consortium_standard__()
+        for i in range(n_colums):
+            column = X.col(X.column_names[i])
             if self.extract_until is None:
                 if float(self._extract_from_date(column, "total_time").std()) > 0:
                     self.features_per_column_[i].append("total_time")
@@ -232,7 +220,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 ):
                     self.features_per_column_[i].append("dayofweek")
 
-        self.n_features_in_ = shape[1]
+        self.n_features_in_ = n_colums
         self.n_features_out_ = len(
             np.concatenate(list(self.features_per_column_.values()))
         )
@@ -256,17 +244,18 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             Transformed input.
         """
         if not hasattr(X, "__dataframe_consortium_standard__"):
+            X = check_input(X)
             X = pd.DataFrame(X, columns=[str(i) for i in range(X.shape[1])])
         X = X.__dataframe_consortium_standard__()
-        namespace = X.__dataframe_namespace__()
+        n_columns = len(X.column_names)
         check_is_fitted(
             self,
             attributes=["n_features_in_", "n_features_out_", "features_per_column_"],
         )
         # X = check_input(X)
-        if len(X.column_names) != self.n_features_in_:
+        if n_columns != self.n_features_in_:
             raise ValueError(
-                f"The number of features in the input data ({X.shape[1]}) "
+                f"The number of features in the input data ({n_columns}) "
                 "does not match the number of features "
                 f"seen during fit ({self.n_features_in_}). "
             )
@@ -275,7 +264,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         # X_ = np.empty((X.shape()[0], self.n_features_out_), dtype=np.float64)
         features_to_select = []
         idx = 0
-        for i in range(len(X.column_names)):
+        for i in range(n_columns):
             column = X.col(X.column_names[i])
             for j, feature in enumerate(self.features_per_column_[i]):
                 features_to_select.append(
