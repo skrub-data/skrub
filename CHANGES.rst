@@ -53,8 +53,10 @@ Major changes
 Minor changes
 -------------
 
-* :class:`TableVectorizer` is now able to apply parallelism at the column level rather than the transformer level. This is the default for univariate transformers, like :class:`MinHashEncoder`, and :class:`GapEncoder`.
-  :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
+* :class:`TableVectorizer` propagate the `n_jobs` parameter to the underlying
+  transformers except if the underlying transformer already set explicitly `n_jobs`.
+  :pr:`761` by :user:`Leo Grinsztajn <LeoGrin>`, :user:`Guillaume Lemaitre <glemaitre>`,
+  and :user:`Jerome Dockes <jeromedockes>`.
 
 * Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
