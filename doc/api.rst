@@ -32,6 +32,23 @@ This page lists all available functions and classes of `skrub`.
    :nosignatures:
 
    Joiner
+   AggJoiner
+   AggTarget
+
+
+.. raw:: html
+
+   <h2>Column selection in a pipeline</h2>
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+   :caption: Column selection in a pipeline
+
+   SelectCols
+   DropCols
+
 
 .. raw:: html
 
@@ -142,6 +159,7 @@ This page lists all available functions and classes of `skrub`.
    datasets.fetch_traffic_violations
    datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
+   datasets.fetch_movielens
    datasets.fetch_ken_table_aliases
    datasets.fetch_ken_types
    datasets.fetch_ken_embeddings

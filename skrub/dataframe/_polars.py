@@ -216,3 +216,7 @@ def split_num_categ_cols(table):
     categ_cols = table.select(cs.string()).columns
 
     return num_cols, categ_cols
+
+
+def select(dataframe, columns):
+    return dataframe.select(columns)
