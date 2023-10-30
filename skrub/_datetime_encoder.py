@@ -254,7 +254,6 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             self,
             attributes=["n_features_in_", "n_features_out_", "features_per_column_"],
         )
-        # X = check_input(X)
         if n_columns != self.n_features_in_:
             raise ValueError(
                 f"The number of features in the input data ({n_columns}) "
@@ -263,7 +262,6 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             )
         # Create a new array with the extracted features,
         # choosing only features that weren't constant during fit
-        # X_ = np.empty((X.shape()[0], self.n_features_out_), dtype=np.float64)
         features_to_select = []
         idx = 0
         for i in range(n_columns):
