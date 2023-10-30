@@ -1,10 +1,15 @@
-from typing import Literal
+from __future__ import annotations
+
+from typing import Literal, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
+
+if TYPE_CHECKING:
+    from dataframe_api import Column
 
 WORD_TO_ALIAS: dict[str, str] = {
     "year": "Y",
@@ -128,29 +133,29 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
             )
 
     @staticmethod
-    def _extract_from_date(date_series: pd.Series, feature: str):
+    def _extract_from_date(date_series: Column, feature: str):
         if feature == "year":
-            return date_series.dt.year()
+            return date_series.year()
         elif feature == "month":
-            return date_series.dt.month()
+            return date_series.month()
         elif feature == "day":
-            return date_series.dt.day()
+            return date_series.day()
         elif feature == "hour":
-            return date_series.dt.hour()
+            return date_series.hour()
         elif feature == "minute":
-            return date_series.dt.minute()
+            return date_series.minute()
         elif feature == "second":
-            return date_series.dt.second()
+            return date_series.second()
         elif feature == "microsecond":
-            return date_series.dt.microsecond()
+            return date_series.microsecond()
         elif feature == "nanosecond":
-            return date_series.dt.microsecond() * 1000
+            return date_series.microsecond() * 1000
         elif feature == "dayofweek":
-            return date_series.dt.iso_weekday() - 1
+            return date_series.iso_weekday() - 1
         elif feature == "total_time":
             # tz = pd.DatetimeIndex(date_series).tz
             # Compute the time in seconds from the epoch time UTC
-            return date_series.dt.unix_timestamp()
+            return date_series.unix_timestamp()  # type: ignore
             # if tz is None:
             #     return (
             #         pd.to_datetime(date_series) - pd.Timestamp("1970-01-01")
@@ -197,17 +202,17 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         # Check which columns are constant
         for i in range(shape[1]):
             if is_df:
-                column = X.get_column_by_name(X.column_names[i])
+                column = X.col(X.column_names[i])
             else:
                 column = pd.Series(
                     pd.to_datetime(X[:, i]), name=str(i)
                 ).__column_consortium_standard__()
             if self.extract_until is None:
-                if self._extract_from_date(column, "total_time").std() > 0:
+                if float(self._extract_from_date(column, "total_time").std()) > 0:
                     self.features_per_column_[i].append("total_time")
             else:
                 for feature in TIME_LEVELS:
-                    if self._extract_from_date(column, feature).std() > 0:
+                    if float(self._extract_from_date(column, feature).std()) > 0:
                         if TIME_LEVELS.index(feature) <= TIME_LEVELS.index(
                             self.extract_until
                         ):
@@ -223,7 +228,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 # Add day of the week feature if needed
                 if (
                     self.add_day_of_the_week
-                    and self._extract_from_date(column, "dayofweek").std() > 0
+                    and float(self._extract_from_date(column, "dayofweek").std()) > 0
                 ):
                     self.features_per_column_[i].append("dayofweek")
 
@@ -271,13 +276,14 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         features_to_select = []
         idx = 0
         for i in range(len(X.column_names)):
-            column = namespace.col(X.column_names[i])
+            column = X.col(X.column_names[i])
             for j, feature in enumerate(self.features_per_column_[i]):
                 features_to_select.append(
                     self._extract_from_date(column, feature).rename(f"{feature}_{i}")
                 )
             idx += len(self.features_per_column_[i])
-        return X.select(*features_to_select).collect().to_array_object("float64")
+        X = X.assign(*features_to_select).select(*(feature.name for feature in features_to_select))
+        return X.collect().to_array("float64")
 
     def get_feature_names_out(self, input_features=None) -> list[str]:
         """Return clean feature names.
