@@ -362,51 +362,31 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # .............................
 
 y = df["Happiness score"]
-#######################################################################
-# We gather the auxilliary tables into a
-# list of (tables, keys) for the `tables` parameter.
-# An instance of the transformer with the necessary information is:
-from skrub import Joiner
+df = df.drop("Happiness score", axis=1)
 
-joiner = Joiner(
-    tables=[
-        (gdppc, "Country Name"),
-        (life_exp, "Country Name"),
-        (legal_rights, "Country Name"),
-    ],
-    main_key="Country",
-)
-
-#################################################################
-# Fitting and transforming into the final table
-# .............................................
-# To get our final joined table we will fit and transform the main table (df)
-# with our create instance of the |joiner|:
-df_final = joiner.fit_transform(df)
-
-df_final.head(10)
-
-##########################################################################
-# And that's it! As previously, we now have a big table
-# ready for machine learning.
-# Let's create our machine learning pipeline:
-from sklearn.compose import make_column_transformer
+from skrub import Joiner, SelectCols, DropCols
 from sklearn.pipeline import make_pipeline
 
-# We include only the columns that will be pertinent for our regression:
-encoder = make_column_transformer(
-    (
-        "passthrough",
-        [
-            "GDP per capita (current US$)",
-            "Life expectancy at birth, total (years)",
-            "Strength of legal rights index (0=weak to 12=strong)",
-        ],
-    ),
-    remainder="drop",
+# We create a selector that we will insert at the end of our pipeline, to
+# select the relevant columns before fitting the regressor
+
+selector = SelectCols(
+    [
+        "GDP per capita (current US$)",
+        "Life expectancy at birth, total (years)",
+        "Strength of legal rights index (0=weak to 12=strong)",
+    ]
+)
+pipeline = make_pipeline(
+    Joiner((gdppc, "Country Name"), "Country"),
+    DropCols("Country Name"),
+    Joiner((life_exp, "Country Name"), "Country"),
+    DropCols("Country Name"),
+    Joiner((legal_rights, "Country Name"), "Country"),
+    selector,
+    HistGradientBoostingRegressor(),
 )
 
-pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the parameters of the |fj|.
@@ -416,12 +396,17 @@ pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
-params = {"joiner__match_score": [0.2, 0.3, 0.4, 0.5]}
+params = {
+    "joiner-1__match_score": [0.2, 0.9],
+    "joiner-2__match_score": [0.2, 0.9],
+    "joiner-3__match_score": [0.2, 0.9],
+}
 
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)
 
 print(grid.best_params_)
+
 ##########################################################################
 # The grid searching gave us the best value of 0.5 for the parameter
 # ``match_score``. Let's use this value in our regression:
