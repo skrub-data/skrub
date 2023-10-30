@@ -180,7 +180,7 @@ df1 = fuzzy_join(
     gdppc,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.35,
+    match_score=0.1,
     return_score=True,
 )
 df1.sort_values("matching_score").head(4)
@@ -194,7 +194,7 @@ df1 = fuzzy_join(
     gdppc,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.35,
+    match_score=0.1,
     drop_unmatched=True,
 )
 
@@ -237,7 +237,7 @@ df2 = fuzzy_join(
     life_exp,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
+    match_score=0.1,
 )
 
 df2.drop(columns=["Country Name"], inplace=True)
@@ -273,7 +273,7 @@ df3 = fuzzy_join(
     legal_rights,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
+    match_score=0.1,
 )
 
 df3.drop(columns=["Country Name"], inplace=True)
@@ -397,9 +397,9 @@ from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
 params = {
-    "joiner-1__match_score": [0.2, 0.9],
-    "joiner-2__match_score": [0.2, 0.9],
-    "joiner-3__match_score": [0.2, 0.9],
+    "joiner-1__match_score": [0.1, 0.9],
+    "joiner-2__match_score": [0.1, 0.9],
+    "joiner-3__match_score": [0.1, 0.9],
 }
 
 grid = GridSearchCV(pipeline, param_grid=params)
