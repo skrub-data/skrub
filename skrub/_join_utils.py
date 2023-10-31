@@ -48,6 +48,19 @@ def check_key(main_key, aux_key, key):
 
 
 def check_missing_columns(table, key, table_name):
+    """Check that all the columns in `key` can be found in `table`.
+
+    Parameters
+    ----------
+    table : DataFrame
+        The table that should contain the columns listed in `key`.
+
+    key : list of str
+        List of column names, all of which must be found in `table`.
+
+    table_name : str
+        Name by which to refer to `table` in the error message if necessary.
+    """
     missing_columns = set(key) - set(table.columns)
     if not missing_columns:
         return
