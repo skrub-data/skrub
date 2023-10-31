@@ -16,18 +16,17 @@ if POLARS_SETUP:
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
         }
     )
+else:
+    polars_missing_msg = "Polars is not available"
+    pytest.skip(reason=polars_missing_msg, allow_module_level=True)
 
-POLARS_MISSING_MSG = "Polars is not available"
 
-
-@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
 def test_join():
     joined = join(left=main, right=main, left_on="movieId", right_on="movieId")
     expected = main.join(main, on="movieId", how="left")
     assert_frame_equal(joined, expected)
 
 
-@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
 def test_simple_agg():
     aggregated = aggregate(
         table=main,
@@ -42,7 +41,6 @@ def test_simple_agg():
     assert_frame_equal(aggregated, expected, check_row_order=False)
 
 
-@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
 def test_mode_agg():
     aggregated = aggregate(
         table=main,
@@ -59,7 +57,6 @@ def test_mode_agg():
     assert_frame_equal(aggregated, expected, check_row_order=False)
 
 
-@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
 def test_incorrect_dataframe_inputs():
     with pytest.raises(TypeError, match=r"(?=.*polars dataframes)(?=.*pandas)"):
         join(left=pd.DataFrame(main), right=main, left_on="movieId", right_on="movieId")
@@ -76,15 +73,20 @@ def test_incorrect_dataframe_inputs():
 def test_make_dataframe():
     X = dict(a=[1, 2], b=["z", "e"])
     expected_df = pl.DataFrame(dict(a=[1, 2], b=["z", "e"]))
-    assert_frame_equal(make_dataframe(X, index=[1, 2]), expected_df)
+    assert_frame_equal(make_dataframe(X), expected_df)
 
     X = [[1, 2], ["z", "e"]]
     with pytest.raises(TypeError):
         make_dataframe(X)
 
+    with pytest.raises(ValueError, match=r"(?=.*Polars dataframe)(?=.*index)"):
+        make_dataframe(X, index=[0, 1])
 
-@pytest.mark.skipif(not POLARS_SETUP, reason=POLARS_MISSING_MSG)
+
 def test_make_series():
     X = [1, 2, 3]
     expected_series = pl.Series(X)
-    assert_series_equal(make_series(X, index=[0, 1, 2]), expected_series)
+    assert_series_equal(make_series(X, index=None), expected_series)
+
+    with pytest.raises(ValueError, match=r"(?=.*Polars series)(?=.*index)"):
+        make_series(X, index=[0, 1])

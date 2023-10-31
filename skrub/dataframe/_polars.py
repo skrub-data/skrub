@@ -33,6 +33,11 @@ def make_dataframe(X, index=None):
     X : Polars dataframe
         Converted output.
     """
+    if index is not None:
+        raise ValueError(
+            "Polars dataframes don't have an index, but "
+            f"the Polars dataframe maker was called with {index=!r}."
+        )
     if not isinstance(X, dict) or not all(
         (isinstance(X_col, Iterable) and np.asarray(X_col).ndim == 1)
         for X_col in X.values()
@@ -61,6 +66,11 @@ def make_series(X, index=None, name=None):
     X : Polars series
         Converted output.
     """
+    if index is not None:
+        raise ValueError(
+            "Polars series don't have an index, but "
+            f"the Polars series maker was called with {index=!r}."
+        )
     return pl.Series(values=X, name=name)
 
 

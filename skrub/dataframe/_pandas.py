@@ -12,7 +12,7 @@ import pandas as pd
 from skrub._utils import atleast_1d_or_none
 
 
-def make_dataframe(X, index):
+def make_dataframe(X, index=None):
     """Convert an dictionary of columns into a Pandas dataframe.
 
     Parameters
