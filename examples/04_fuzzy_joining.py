@@ -110,11 +110,6 @@ gdppc.sort_values(by="Country Name").tail(7)
 # we have extracted.
 #
 
-# We will ignore the warnings:
-import warnings
-
-warnings.filterwarnings("ignore")
-
 ###############################################################################
 # .. _example_fuzzy_join:
 #
@@ -133,7 +128,7 @@ df1 = fuzzy_join(
 )
 
 df1.tail(20)
-# We merged the first WB table to our initial one.
+# We merged the first Word Bank table to our initial one.
 
 ###############################################################################
 # .. topic:: Note:
@@ -308,8 +303,8 @@ plt.show()
 #
 # We now separate our covariates (X), from the target (or exogenous)
 # variables: y
-X = df3.drop("Happiness score", axis=1).select_dtypes(exclude=object)
-y = df3[["Happiness score"]]
+y = df3["Happiness score"]
+X = df3.drop(["Happiness score", "Country"], axis=1)
 
 ###################################################################
 # Let us now define the model that will be used to predict the happiness score:
@@ -318,10 +313,10 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import KFold
 
 hgdb = HistGradientBoostingRegressor(random_state=0)
-cv = KFold(n_splits=2, shuffle=True, random_state=0)
+cv = KFold(n_splits=5, shuffle=True, random_state=0)
 
 #################################################################
-# To evaluate our model, we will apply a `4-fold cross-validation`.
+# To evaluate our model, we will apply a `5-fold cross-validation`.
 # We evaluate our model using the `R2` score.
 #
 # Let's finally assess the results of our models:
@@ -331,10 +326,10 @@ cv_results_t = cross_validate(hgdb, X, y, cv=cv, scoring="r2")
 
 cv_r2_t = cv_results_t["test_score"]
 
-print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
+print(f"Mean R² score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 
 #################################################################
-# We have a satisfying first result: an R2 of 0.66!
+# We have a satisfying first result: an R² of 0.63!
 #
 # Data cleaning varies from dataset to dataset: there are as
 # many ways to clean a table as there are errors. |fj|
@@ -402,28 +397,18 @@ params = {
     "joiner-3__match_score": [0.1, 0.9],
 }
 
-grid = GridSearchCV(pipeline, param_grid=params)
+grid = GridSearchCV(pipeline, param_grid=params, cv=cv)
 grid.fit(df, y)
 
-print(grid.best_params_)
+print("Best parameters:", grid.best_params_)
+print(f"Mean R² score of best parameters: {grid.best_score_:.2f}")
 
-##########################################################################
-# The grid searching gave us the best value of 0.5 for the parameter
-# ``match_score``. Let's use this value in our regression:
-#
+# The gridsearch selects a stricter threshold on the matching_score than what
+# we had set manually for the GDP and legal rights joins. To see if the grid
+# search improves the score, we need to cross-validate the ``GridSearchCV``
+# itself (otherwise we may be overfitting the hyperparameter selection). We
+# don't do it in this example to make the example run fast, but actually the
+# score does not improve.
 
-print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
-
-##########################################################################
-#
-# .. topic:: Note:
-#
-#    Here, ``grid.score()`` takes directly the best model
-#    (with ``match_score=0.5``) that was found during the grid search.
-#    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
-#    refitting the pipeline on the data.
-#
-#
-# Great, by evaluating the correct ``match_score`` we improved our
-# results significantly!
-#
+res = cross_validate(pipeline, df, y, cv=cv, scoring="r2")
+print(res["test_score"].mean(), res["test_score"].std())
