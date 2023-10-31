@@ -2,9 +2,6 @@
 Implements the Joiner, a transformer that allows
 multiple fuzzy joins on a table.
 """
-
-from typing import Literal
-
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -110,15 +107,15 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     def __init__(
         self,
-        aux_table: pd.DataFrame,
+        aux_table,
         *,
-        main_key: str | list[str] | None = None,
-        aux_key: str | list[str] | None = None,
-        key: str | list[str] | None = None,
-        suffix: str = "",
-        match_score: float = 0.0,
-        analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-        ngram_range: tuple[int, int] = (2, 4),
+        main_key=None,
+        aux_key=None,
+        key=None,
+        suffix="",
+        match_score=0.0,
+        analyzer="char_wb",
+        ngram_range=(2, 4),
     ):
         self.aux_table = aux_table
         self.main_key = main_key
@@ -150,20 +147,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
-
-        for col in self._main_key:
-            if col not in X.columns:
-                raise ValueError(
-                    f"Main key {col!r} not found in columns of X:"
-                    f" {X.columns.tolist()}. "
-                )
-
-        for col in self._aux_key:
-            if col not in self.aux_table.columns:
-                raise ValueError(
-                    f"Column key {col!r} not found in columns of "
-                    f"auxiliary table: {self.aux_table.columns.tolist()}. "
-                )
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
@@ -181,7 +166,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         :obj:`~pandas.DataFrame`
             The final joined table.
         """
-
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         return fuzzy_join(
             X,
             self.aux_table,

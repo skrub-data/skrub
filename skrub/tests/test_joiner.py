@@ -37,14 +37,14 @@ def test_joiner() -> None:
 
     with pytest.raises(
         ValueError,
-        match=r"Main key",
+        match="do not exist in 'X'",
     ):
         false_joiner.fit(main_table)
 
     false_joiner2 = Joiner(aux_table=aux_table, main_key="Country", aux_key="bad")
     with pytest.raises(
         ValueError,
-        match=r"Column key",
+        match="do not exist in 'aux_table'",
     ):
         false_joiner2.fit(main_table)
 

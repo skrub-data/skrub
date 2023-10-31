@@ -3,33 +3,6 @@
 from skrub import _utils
 
 
-def add_column_name_suffix(dataframes, suffix):
-    """Add a suffix to all column names in a list of dataframes.
-
-    This function does not modify the provided dataframes; it returns a list of
-    new dataframes (but it does not copy the underlying data).
-
-    Parameters
-    ----------
-    dataframes : list of DataFrames
-        The dataframes whose columns must be renamed.
-
-    suffix : str
-        The suffix to add to all column names.
-
-    Returns
-    -------
-    renamed : list of DataFrames
-        The same dataframes, with their columns renamed.
-    """
-    if suffix == "":
-        return dataframes
-    renamed = []
-    for df in dataframes:
-        renamed.append(df.rename(columns={c: f"{c}{suffix}" for c in df.columns}))
-    return renamed
-
-
 def check_key(main_key, aux_key, key):
     """Find the correct main and auxiliary keys (matching column names).
 
@@ -72,3 +45,13 @@ def check_key(main_key, aux_key, key):
     main_key = _utils.atleast_1d_or_none(main_key)
     aux_key = _utils.atleast_1d_or_none(aux_key)
     return main_key, aux_key
+
+
+def check_missing_columns(table, key, table_name):
+    missing_columns = set(key) - set(table.columns)
+    if not missing_columns:
+        return
+    raise ValueError(
+        "The following columns cannot be used for joining because they do not exist"
+        f" in {table_name}:\n{missing_columns}"
+    )
