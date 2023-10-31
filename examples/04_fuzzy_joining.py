@@ -401,7 +401,6 @@ grid = GridSearchCV(pipeline, param_grid=params, cv=cv)
 grid.fit(df, y)
 
 print("Best parameters:", grid.best_params_)
-print(f"Mean R² score of best parameters: {grid.best_score_:.2f}")
 
 # The gridsearch selects a stricter threshold on the matching_score than what
 # we had set manually for the GDP and legal rights joins. To see if the grid
@@ -410,5 +409,7 @@ print(f"Mean R² score of best parameters: {grid.best_score_:.2f}")
 # don't do it in this example to make the example run fast, but actually the
 # score does not improve.
 
-res = cross_validate(pipeline, df, y, cv=cv, scoring="r2")
-print(res["test_score"].mean(), res["test_score"].std())
+# res = cross_validate(pipeline, df, y, cv=cv, scoring="r2")["test_score"]
+# print(f"GridSearchCV R² mean: {res.mean():.2f}, std: {res.std():.2f}")
+# prints:
+# GridSearchCV R² mean: 0.64, std: 0.07
