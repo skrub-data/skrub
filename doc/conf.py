@@ -504,6 +504,7 @@ numpydoc_xref_aliases = {
     "SimilarityEncoder": "skrub.SimilarityEncoder",
     "DatetimeEncoder": "skrub.DatetimeEncoder",
     "deduplicate": "skrub.deduplicate",
+    "to_datetime": "skrub.to_datetime",
     "TableVectorizer": "skrub.TableVectorizer",
     "DatasetInfoOnly": "skrub.datasets._fetching.DatasetInfoOnly",
     "DatasetAll": "skrub.datasets._fetching.DatasetAll",
