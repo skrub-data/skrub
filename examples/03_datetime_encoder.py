@@ -180,7 +180,7 @@ cross_val_score(
 # visually the prediction of our model with the actual values.
 
 import matplotlib.pyplot as plt
-from matplotlib.dates import ConciseDateFormatter
+from matplotlib.dates import AutoDateFormatter, AutoDateLocator
 
 X_train = X[X["date.utc"] < "2019-06-01"]
 X_test = X[X["date.utc"] >= "2019-06-01"]
@@ -193,6 +193,7 @@ pipeline.fit(X_train, y_train)
 all_cities = X_test["city"].unique()
 
 fig, axs = plt.subplots(nrows=len(all_cities), ncols=1, figsize=(12, 9))
+fig.subplots_adjust(hspace=0.5)
 
 for i, city in enumerate(all_cities):
     axs[i].plot(
@@ -207,9 +208,10 @@ for i, city in enumerate(all_cities):
     )
     axs[i].set_title(city)
     axs[i].set_ylabel("NO2")
-    axs[i].xaxis.set_major_formatter(
-        ConciseDateFormatter(axs[i].xaxis.get_major_locator())
-    )
+    xtick_locator = AutoDateLocator(maxticks=8)
+    xtick_formatter = AutoDateFormatter(xtick_locator)
+    axs[i].xaxis.set_major_locator(xtick_locator)
+    axs[i].xaxis.set_major_formatter(xtick_formatter)
     axs[i].legend()
 plt.show()
 
@@ -228,6 +230,7 @@ y_test_zoomed = y[X["date.utc"] >= "2019-06-03"]
 zoomed_cities = X_test_zoomed["city"].unique()
 
 fig, axs = plt.subplots(nrows=len(zoomed_cities), ncols=1, figsize=(12, 9))
+fig.subplots_adjust(hspace=0.5)
 
 for i, city in enumerate(zoomed_cities):
     axs[i].plot(
@@ -242,9 +245,12 @@ for i, city in enumerate(zoomed_cities):
     )
     axs[i].set_title(city)
     axs[i].set_ylabel("NO2")
-    axs[i].xaxis.set_major_formatter(
-        ConciseDateFormatter(axs[i].xaxis.get_major_locator())
-    )
+
+    xtick_locator = AutoDateLocator(maxticks=8)
+    xtick_formatter = AutoDateFormatter(xtick_locator)
+    axs[i].xaxis.set_major_locator(xtick_locator)
+    axs[i].xaxis.set_major_formatter(xtick_formatter)
+
     axs[i].legend()
 plt.show()
 
