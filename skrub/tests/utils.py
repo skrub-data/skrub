@@ -56,7 +56,7 @@ def is_valid_attribute(attribute):
         return isinstance(attribute, valid_types)
 
 
-def transformers_equal(transformer1, transformer2):
+def transformers_equal(transformer1, transformer2, ignore_params=None):
     # Check if the transformers are of the same type
     if type(transformer1) != type(transformer2):
         return False
@@ -66,8 +66,23 @@ def transformers_equal(transformer1, transformer2):
         return transformer1 == transformer2
 
     # Compare hyperparameters
-    if transformer1.get_params() != transformer2.get_params():
+    transformer_1_params = transformer1.get_params()
+    transformer_2_params = transformer2.get_params()
+    if ignore_params is None and transformer_1_params != transformer_2_params:
         return False
+    else:
+        transformer_1_params = {
+            key: value
+            for key, value in transformer_1_params.items()
+            if key not in ignore_params
+        }
+        transformer_2_params = {
+            key: value
+            for key, value in transformer_2_params.items()
+            if key not in ignore_params
+        }
+        if transformer_1_params != transformer_2_params:
+            return False
 
     # Compare fitted attributes
     for attribute in transformer1.__dict__:
@@ -84,12 +99,11 @@ def transformers_equal(transformer1, transformer2):
                     getattr(transformer1, attribute), getattr(transformer2, attribute)
                 ):
                     return False
-
     return True
 
 
-def transformers_list_equal(transformers_list1, transformers_list2):
-    # check equaility for list of 3-tuples (name, transformer, columns)
+def transformers_list_equal(transformers_list1, transformers_list2, ignore_params=None):
+    # check equality for list of 3-tuples (name, transformer, columns)
     # used in the TableVectorizer
     if len(transformers_list1) != len(transformers_list2):
         return False
@@ -100,6 +114,8 @@ def transformers_list_equal(transformers_list1, transformers_list2):
             return False
         if columns1 != columns2:
             return False
-        if not transformers_equal(transformer1, transformer2):
+        if not transformers_equal(
+            transformer1, transformer2, ignore_params=ignore_params
+        ):
             return False
     return True

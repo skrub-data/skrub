@@ -355,8 +355,6 @@ def fuzzy_join(
     As expected, the category "nana" has no exact match (`match_score=1`).
     """
 
-    warnings.warn("This feature is still experimental.")
-
     if analyzer not in ["char", "word", "char_wb"]:
         raise ValueError(
             f"analyzer should be either 'char', 'word' or 'char_wb', got {analyzer!r}",
