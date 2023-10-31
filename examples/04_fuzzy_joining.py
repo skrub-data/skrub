@@ -409,7 +409,7 @@ print("Best parameters:", grid.best_params_)
 # don't do it in this example to make the example run fast, but actually the
 # score does not improve.
 
-# res = cross_validate(pipeline, df, y, cv=cv, scoring="r2")["test_score"]
+# res = cross_validate(grid, df, y, cv=cv, scoring="r2")["test_score"]
 # print(f"GridSearchCV R² mean: {res.mean():.2f}, std: {res.std():.2f}")
 # prints:
-# GridSearchCV R² mean: 0.64, std: 0.07
+# GridSearchCV R² mean: 0.68, std: 0.06
