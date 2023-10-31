@@ -1,21 +1,6 @@
-import pandas as pd
 import pytest
 
 from skrub import _join_utils
-
-
-def test_add_column_name_suffix():
-    dataframes = [
-        pd.DataFrame(columns=["id", "col 1"]),
-        pd.DataFrame(columns=["col 2"]),
-        pd.DataFrame(),
-    ]
-    renamed = _join_utils.add_column_name_suffix(dataframes, "")
-    assert pd.concat(dataframes).columns.tolist() == ["id", "col 1", "col 2"]
-    assert pd.concat(renamed).columns.tolist() == ["id", "col 1", "col 2"]
-    renamed = _join_utils.add_column_name_suffix(dataframes, "_x")
-    assert pd.concat(dataframes).columns.tolist() == ["id", "col 1", "col 2"]
-    assert pd.concat(renamed).columns.tolist() == ["id_x", "col 1_x", "col 2_x"]
 
 
 @pytest.mark.parametrize(
