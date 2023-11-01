@@ -198,11 +198,11 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         for i in range(n_colums):
             column = X.col(X.column_names[i])
             if self.extract_until is None:
-                if float(self._extract_from_date(column, "total_time").std()) > 0:
+                if self._extract_from_date(column, "total_time").std() > 0:
                     self.features_per_column_[i].append("total_time")
             else:
                 for feature in TIME_LEVELS:
-                    if float(self._extract_from_date(column, feature).std()) > 0:
+                    if self._extract_from_date(column, feature).std() > 0:
                         if TIME_LEVELS.index(feature) <= TIME_LEVELS.index(
                             self.extract_until
                         ):
