@@ -128,7 +128,7 @@ df1 = fuzzy_join(
 )
 
 df1.tail(20)
-# We merged the first Word Bank table to our initial one.
+# We merged the first World Bank table to our initial one.
 
 ###############################################################################
 # .. topic:: Note:
