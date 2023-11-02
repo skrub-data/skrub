@@ -87,17 +87,17 @@ def test_condition_choice():
     with pytest.raises(ValueError, match="Must pass EITHER"):
         join = InterpolationJoiner(
             aux, main_key="A", regressor=KNeighborsRegressor(1)
-        ).fit()
+        ).fit(None)
 
     with pytest.raises(ValueError, match="Can only pass"):
         join = InterpolationJoiner(
             aux, key="A", main_key="A", regressor=KNeighborsRegressor(1)
-        ).fit()
+        ).fit(None)
 
     with pytest.raises(ValueError, match="Can only pass"):
         join = InterpolationJoiner(
             aux, key="A", main_key="A", aux_key="A", regressor=KNeighborsRegressor(1)
-        ).fit()
+        ).fit(None)
 
 
 def test_suffix():

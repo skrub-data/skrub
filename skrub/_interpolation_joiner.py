@@ -10,7 +10,7 @@ from sklearn.ensemble import (
 )
 from sklearn.utils._tags import _safe_tags
 
-from skrub import _utils
+from skrub import _join_utils
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import TableVectorizer
 
@@ -192,7 +192,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.on_estimator_failure = on_estimator_failure
 
-    def fit(self, X=None, y=None):
+    def fit(self, X, y=None):
         """Fit estimators to the `aux_table` provided during initialization.
 
         `X` and `y` are for scikit-learn compatibility and they are
@@ -211,8 +211,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self : InterpolationJoiner
             Returns self.
         """
-        del X, y
+        del y
         self._check_inputs()
+        if X is not None:
+            _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         key_values = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
         estimators = self._get_estimator_assignments()
         fit_results = joblib.Parallel(self.n_jobs)(
@@ -248,32 +250,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         else:
             self.regressor_ = clone(self.regressor)
 
-        self._check_key()
-
-    def _check_key(self):
-        """Find the correct main and auxiliary keys (matching column names).
-
-        They can be provided either as ``key`` when the names are the same in
-        both tables, or as ``main_key`` and ``aux_key`` when they differ. This
-        function checks that only one of those options is used and sets
-        ``self._main_key`` and ``self._aux_key`` which will be used for
-        joining.
-        """
-        if self.key is not None:
-            if self.aux_key is not None or self.main_key is not None:
-                raise ValueError(
-                    "Can only pass argument 'key' OR 'main_key' and "
-                    "'aux_key', not a combination of both."
-                )
-            main_key, aux_key = self.key, self.key
-        else:
-            if self.aux_key is None or self.main_key is None:
-                raise ValueError(
-                    "Must pass EITHER 'key', OR ('main_key' AND 'aux_key')."
-                )
-            main_key, aux_key = self.main_key, self.aux_key
-        self._main_key = _utils.atleast_1d_or_none(main_key)
-        self._aux_key = _utils.atleast_1d_or_none(aux_key)
+        self._main_key, self._aux_key = _join_utils.check_key(
+            self.main_key, self.aux_key, self.key
+        )
+        _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
 
     def _check_fit_results(self, results):
         successful_results = [res for res in results if not res["failed"]]
@@ -310,6 +290,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             ``self.aux_table``.
         """
         main_table = X
+        _join_utils.check_missing_columns(
+            main_table, self._main_key, "'X' (the main table)"
+        )
         key_values = self.vectorizer_.transform(
             main_table[self._main_key].set_axis(self._aux_key, axis="columns")
         )
