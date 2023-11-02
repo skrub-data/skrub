@@ -1,27 +1,80 @@
 """
 Polars specialization of the aggregate and join operations.
 """
-from typing import Iterable
-
-from skrub.dataframe._types import POLARS_SETUP, DataFrameLike
-
-if POLARS_SETUP:
+try:
     import polars as pl
     import polars.selectors as cs
+
+    POLARS_SETUP = True
+except ImportError:
+    POLARS_SETUP = False
 
 from itertools import product
 
 from skrub._utils import atleast_1d_or_none
 
 
+def make_dataframe(X, index=None):
+    """Convert an dictionary of columns into a Polars dataframe.
+
+    Parameters
+    ----------
+    X : mapping from column name to 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        Unused since polars doesn't use index.
+        Only here for compatibility with Pandas.
+
+    Returns
+    -------
+    X : Polars dataframe
+        Converted output.
+    """
+    if index is not None:
+        raise ValueError(
+            "Polars dataframes don't have an index, but "
+            f"the Polars dataframe maker was called with {index=!r}."
+        )
+    return pl.DataFrame(X)
+
+
+def make_series(X, index=None, name=None):
+    """Convert an 1d array into a Polars series.
+
+    Parameters
+    ----------
+    X : 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        Unused since polars doesn't use index.
+        Only here for compatibility with Pandas.
+
+    name : str, default=None
+        The name of the series.
+
+    Returns
+    -------
+    X : Polars series
+        Converted output.
+    """
+    if index is not None:
+        raise ValueError(
+            "Polars series don't have an index, but "
+            f"the Polars series maker was called with {index=!r}."
+        )
+    return pl.Series(values=X, name=name)
+
+
 def aggregate(
-    table: DataFrameLike,
-    key: str | Iterable[str],
-    cols_to_agg: str | Iterable[str],
-    num_operations: str | Iterable[str] = ("mean",),
-    categ_operations: str | Iterable[str] = ("mode",),
-    suffix: str | None = None,
-) -> DataFrameLike:
+    table,
+    key,
+    cols_to_agg,
+    num_operations=("mean",),
+    categ_operations=("mode",),
+    suffix=None,
+):
     """Aggregate a :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
 
     This function uses the ``dataframe.group_by(key).agg`` method from Polars.
@@ -87,12 +140,7 @@ def aggregate(
     return table.select(sorted_cols)
 
 
-def join(
-    left: DataFrameLike,
-    right: DataFrameLike,
-    left_on: str | Iterable[str],
-    right_on: str | Iterable[str],
-) -> DataFrameLike:
+def join(left, right, left_on, right_on):
     """Left join two :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
 
     This function uses the ``dataframe.join`` method from Polars.
@@ -137,10 +185,7 @@ def join(
         )
 
 
-def get_aggfuncs(
-    cols: list[str],
-    operations: list[str],
-) -> tuple[list, list]:
+def get_aggfuncs(cols, operations):
     """List Polars aggregation functions.
 
     The list is used as input for the ``dataframe.group_by().agg()`` method from Polars.

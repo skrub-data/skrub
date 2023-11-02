@@ -9,15 +9,13 @@ from copy import deepcopy
 from typing import Iterable
 
 import numpy as np
-from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
+from skrub._dataframe._namespace import get_df_namespace
+from skrub._dataframe._pandas import _parse_argument
 from skrub._utils import atleast_1d_or_none, atleast_2d_or_none
-from skrub.dataframe import DataFrameLike, SeriesLike
-from skrub.dataframe._namespace import get_df_namespace
-from skrub.dataframe._pandas import _parse_argument
 
 NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
 CATEG_OPERATIONS = ["mode", "count", "value_counts"]
@@ -52,10 +50,10 @@ def split_num_categ_operations(operations: list[str]) -> tuple[list[str], list[s
 
 
 def check_missing_columns(
-    X: DataFrameLike,
-    columns: list[str],
-    error_msg: str,
-) -> None:
+    X,
+    columns,
+    error_msg,
+):
     """All elements of main_key must belong to the columns of X.
 
     Parameters
@@ -161,13 +159,13 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        aux_table: DataFrameLike | Iterable[DataFrameLike] | str | Iterable[str],
+        aux_table,
         *,
-        aux_key: str | Iterable[str],
-        main_key: str | Iterable[str],
-        cols: str | Iterable[str] | None = None,
-        operation: str | Iterable[str] | None = None,
-        suffix: str | Iterable[str] | None = None,
+        aux_key,
+        main_key,
+        cols=None,
+        operation=None,
+        suffix=None,
     ):
         self.aux_table = aux_table
         self.aux_key = aux_key
@@ -176,11 +174,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         self.operation = operation
         self.suffix = suffix
 
-    def fit(
-        self,
-        X: DataFrameLike,
-        y: ArrayLike | SeriesLike | None = None,
-    ) -> "AggJoiner":
+    def fit(self, X, y=None):
         """Aggregate auxiliary tables based on the main keys.
 
         Parameters
@@ -221,7 +215,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: DataFrameLike) -> DataFrameLike:
+    def transform(self, X):
         """Left-join pre-aggregated tables on `X`.
 
         Parameters
@@ -248,18 +242,14 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         return X
 
-    def _screen(
-        self,
-        aux_table: DataFrameLike,
-        y: DataFrameLike | SeriesLike | ArrayLike,
-    ) -> DataFrameLike:
+    def _screen(self, aux_table, y):
         """Only keep aggregated features which correlation with
         y is above some threshold.
         """
         # TODO: Add logic
         return aux_table
 
-    def check_input(self, X: DataFrameLike) -> None:
+    def check_input(self, X):
         """Perform a check on column names data type and suffixes.
 
         Parameters
@@ -452,11 +442,7 @@ class AggTarget(BaseEstimator, TransformerMixin):
         self.operation = operation
         self.suffix = suffix
 
-    def fit(
-        self,
-        X: DataFrameLike,
-        y: DataFrameLike | SeriesLike | ArrayLike,
-    ) -> "AggTarget":
+    def fit(self, X, y):
         """Aggregate the target ``y`` based on keys from ``X``.
 
         Parameters
@@ -501,7 +487,7 @@ class AggTarget(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: DataFrameLike) -> DataFrameLike:
+    def transform(self, X):
         """Left-join pre-aggregated tables on `X`.
 
         Parameters
@@ -524,11 +510,7 @@ class AggTarget(BaseEstimator, TransformerMixin):
             right_on=self.main_key_,
         )
 
-    def check_input(
-        self,
-        X: DataFrameLike,
-        y: DataFrameLike | SeriesLike | ArrayLike,
-    ) -> DataFrameLike:
+    def check_input(self, X, y):
         """Perform a check on column names data type and suffixes.
 
         Parameters
