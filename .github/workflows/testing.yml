@@ -81,6 +81,7 @@ jobs:
       - uses: codecov/codecov-action@v3
         with:
           directory: ${{ runner.temp }}
+          verbose: true
         if: success()
         name: 'Upload coverage to CodeCov'
 

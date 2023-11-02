@@ -6,6 +6,7 @@ which encodes similarity instead of equality of values.
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 import sklearn
 from joblib import Parallel, delayed
 from numpy.typing import ArrayLike, NDArray
@@ -13,7 +14,6 @@ from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import parse_version
-from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import check_is_fitted
 
 from ._string_distances import get_ngram_count, preprocess
@@ -197,6 +197,8 @@ class SimilarityEncoder(OneHotEncoder):
         during fit_transform, the resulting encoded columns for this feature
         will be all zeros. In the inverse transform, the missing category
         will be denoted as None.
+        "Missing values" are any value for which ``pandas.isna`` returns
+        ``True``, such as ``numpy.nan`` or ``None``.
     hashing_dim : int, optional
         If `None`, the base vectorizer is a CountVectorizer, otherwise it is a
         HashingVectorizer with a number of features equal to `hashing_dim`.
@@ -329,7 +331,7 @@ class SimilarityEncoder(OneHotEncoder):
             X = np.asarray(X, dtype=object)
 
         if hasattr(X, "dtype"):
-            mask = _object_dtype_isnan(X)
+            mask = pd.isna(X)
             if X.dtype.kind == "O" and mask.any():
                 if self.handle_missing == "error":
                     raise ValueError(
@@ -417,6 +419,7 @@ class SimilarityEncoder(OneHotEncoder):
         else:
             self.drop_idx_ = self._compute_drop_idx()
 
+        self._n_features_outs = list(map(len, self.categories_))
         return self
 
     def transform(self, X: ArrayLike, fast: bool = True) -> NDArray:
@@ -447,7 +450,7 @@ class SimilarityEncoder(OneHotEncoder):
             X = np.asarray(X, dtype=object)
 
         if hasattr(X, "dtype"):
-            mask = _object_dtype_isnan(X)
+            mask = pd.isna(X)
             if X.dtype.kind == "O" and mask.any():
                 if self.handle_missing == "error":
                     raise ValueError(
