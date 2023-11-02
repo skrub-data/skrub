@@ -10,7 +10,7 @@ from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
-from .dataframe._namespace import get_df_namespace
+from ._dataframe._namespace import get_df_namespace
 
 WORD_TO_ALIAS = {
     "year": "Y",
