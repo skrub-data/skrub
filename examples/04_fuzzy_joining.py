@@ -403,13 +403,4 @@ grid.fit(df, y)
 print("Best parameters:", grid.best_params_)
 
 # The gridsearch selects a stricter threshold on the matching_score than what
-# we had set manually for the GDP and legal rights joins. To see if the grid
-# search improves the score, we need to cross-validate the ``GridSearchCV``
-# itself (otherwise we may be overfitting the hyperparameter selection). We
-# don't do it in this example to make the example run fast, but if we did we
-# would note a slight improvement of the R² score.
-
-# res = cross_validate(grid, df, y, cv=cv, scoring="r2")["test_score"]
-# print(f"GridSearchCV R² mean: {res.mean():.2f}, std: {res.std():.2f}")
-# prints:
-# GridSearchCV R² mean: 0.68, std: 0.06
+# we had set manually for the GDP and legal rights joins.
