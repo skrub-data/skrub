@@ -1,6 +1,6 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from .dataframe import get_df_namespace
+from ._dataframe._namespace import get_df_namespace
 
 
 def _check_columns(df, columns):
