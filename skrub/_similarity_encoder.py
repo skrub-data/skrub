@@ -419,6 +419,7 @@ class SimilarityEncoder(OneHotEncoder):
         else:
             self.drop_idx_ = self._compute_drop_idx()
 
+        self._n_features_outs = list(map(len, self.categories_))
         return self
 
     def transform(self, X: ArrayLike, fast: bool = True) -> NDArray:

@@ -53,6 +53,9 @@ Major changes
 Minor changes
 -------------
 
+
+* ``inverse_transform`` in :class:`SimilarityEncoder` now works as expected; it used to raise an exception. :pr:`801` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * :class:`TableVectorizer` propagate the `n_jobs` parameter to the underlying
   transformers except if the underlying transformer already set explicitly `n_jobs`.
   :pr:`761` by :user:`Leo Grinsztajn <LeoGrin>`, :user:`Guillaume Lemaitre <glemaitre>`,
