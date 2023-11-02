@@ -195,16 +195,17 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     def fit(self, X, y=None):
         """Fit estimators to the `aux_table` provided during initialization.
 
-        `X` and `y` are for scikit-learn compatibility and they are
-        ignored.
+        `X` and `y` are mostly for scikit-learn compatibility.
 
         Parameters
         ----------
-        X : array-like
-            Ignored.
+        X : array-like or None
+            The main table to which ``self.aux_table`` could be joined. If `X`
+            is not ``None``, an error is raised if any of the matching columns
+            listed in ``self.main_key`` (or ``self.key``) is missing from `X`.
 
         y : array-like
-            Ignored.
+            Ignored; only exists for compatibility with scikit-learn.
 
         Returns
         -------

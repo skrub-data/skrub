@@ -68,7 +68,7 @@ joiner = InterpolationJoiner(
     aux_table,
     key=["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY"],
     suffix="_predicted",
-).fit()
+).fit(main_table)
 join = joiner.transform(main_table)
 join.head()
 
