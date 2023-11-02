@@ -310,7 +310,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             ``self.aux_table``.
         """
         main_table = X
-        key_values = self.vectorizer_.transform(main_table[self._main_key])
+        key_values = self.vectorizer_.transform(
+            main_table[self._main_key].set_axis(self._aux_key, axis="columns")
+        )
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
                 key_values,
