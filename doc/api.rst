@@ -38,6 +38,20 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
+   <h2>Column selection in a pipeline</h2>
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+   :caption: Column selection in a pipeline
+
+   SelectCols
+   DropCols
+
+
+.. raw:: html
+
    <h2>Vectorizing a dataframe</h2>
 
 .. autosummary::

@@ -80,7 +80,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     The grouping columns used during the aggregation are the columns used
     as keys for joining.
 
-    Accepts :obj:`pandas.DataFrame` and :obj:`polars.DataFrame` inputs.
+    Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
 
     Parameters
     ----------
@@ -365,7 +365,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 class AggTarget(BaseEstimator, TransformerMixin):
     """Aggregate a target ``y`` before joining its aggregation on a base dataframe.
 
-    Accepts :obj:`pandas.DataFrame` or :obj:`polars.DataFrame` inputs.
+    Accepts :obj:`pandas.DataFrame` or :class:`polars.DataFrame` inputs.
 
     Parameters
     ----------
