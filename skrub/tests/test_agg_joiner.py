@@ -3,7 +3,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 from sklearn.pipeline import make_pipeline
 
-from skrub.dataframe import POLARS_SETUP
+from skrub._dataframe._polars import POLARS_SETUP
 
 if POLARS_SETUP:
     import polars as pl
