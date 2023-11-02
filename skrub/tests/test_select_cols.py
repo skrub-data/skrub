@@ -3,7 +3,7 @@ import pandas.testing
 import pytest
 
 from skrub import DropCols, SelectCols
-from skrub.dataframe import POLARS_SETUP
+from skrub._dataframe._polars import POLARS_SETUP
 
 DATAFRAME_MODULES = [pandas]
 if POLARS_SETUP:
