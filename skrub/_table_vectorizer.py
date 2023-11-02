@@ -6,26 +6,30 @@ manually categorize them beforehand, or construct complex Pipelines.
 
 import warnings
 from collections import Counter
-from typing import Literal
 
 import numpy as np
 import pandas as pd
 import sklearn
-from numpy.typing import ArrayLike
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
 from scipy import sparse
-from sklearn.base import TransformerMixin, clone
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.compose._column_transformer import _get_transformer_list
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import Bunch
-from sklearn.utils.deprecation import deprecated
-from sklearn.utils.metaestimators import _BaseComposition
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
 from skrub._utils import parse_astype_error_message
+
+HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
+    sparse_output=False,
+    handle_unknown="ignore",
+    drop="if_binary",
+)
+DATETIME_TRANSFORMER = DatetimeEncoder()
 
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
@@ -146,10 +150,72 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
-Transformer = TransformerMixin | Literal["drop", "remainder", "passthrough"]
+def _clone_if_default(transformer, DEFAULT_TRANSFORMER):
+    return clone(transformer) if transformer is DEFAULT_TRANSFORMER else transformer
 
 
-class TableVectorizer(TransformerMixin, _BaseComposition):
+def _clone_during_fit(transformer, remainder, n_jobs):
+    if isinstance(transformer, sklearn.base.TransformerMixin):
+        return _propagate_n_jobs(clone(transformer), n_jobs)
+    elif transformer is None:
+        return "passthrough"
+    elif transformer == "remainder":
+        return remainder if isinstance(remainder, str) else clone(remainder)
+    elif transformer == "passthrough":
+        return transformer
+    else:
+        raise ValueError(
+            "'transformer' must be an instance of sklearn.base.TransformerMixin, "
+            f"None, 'remainder' or 'passthrough'. Got {transformer=!r}."
+        )
+
+
+def _check_specific_transformers(specific_transformers, n_jobs):
+    if (specific_transformers is None) or len(specific_transformers) == 0:
+        return []
+    else:
+        first_item_length = len(specific_transformers[0])
+        # Check that all tuples have the same length
+        for idx, tuple_ in enumerate(specific_transformers):
+            if len(tuple_) != first_item_length:
+                raise TypeError(
+                    "Expected `specific_transformers` to be a list of "
+                    "tuples with all the same length, got length "
+                    f"{len(tuple_)} at index {idx} (elements at previous "
+                    f"indices have {first_item_length} in length). "
+                )
+        if first_item_length == 2:
+            # Unnamed assignments, transform to named
+            specific_transformers = _get_transformer_list(specific_transformers)
+        elif first_item_length == 3:
+            # Named assignments, no-op
+            pass
+        else:
+            raise TypeError(
+                "Expected `specific_transformers` to be a list of tuples "
+                "of length 2 or 3, got a list of tuples of length "
+                f"{first_item_length}. "
+            )
+
+        return [
+            (
+                (name, _propagate_n_jobs(clone(transformer), n_jobs), cols)
+                if isinstance(transformer, sklearn.base.TransformerMixin)
+                else (name, transformer, cols)
+            )
+            for name, transformer, cols in specific_transformers
+        ]
+
+
+def _propagate_n_jobs(transformer, n_jobs):
+    if n_jobs is not None and (
+        hasattr(transformer, "n_jobs") and transformer.n_jobs is None
+    ):
+        transformer.set_params(n_jobs=n_jobs)
+    return transformer
+
+
+class TableVectorizer(TransformerMixin, BaseEstimator):
     """Automatically transform a heterogeneous dataframe to a numerical array.
 
     Easily transforms a heterogeneous data table
@@ -165,12 +231,12 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         under this value, the low cardinality categorical features, and above or
         equal, the high cardinality categorical features.
         Different transformers will be applied to these two groups,
-        defined by the parameters `low_card_cat_transformer` and
-        `high_card_cat_transformer` respectively.
+        defined by the parameters `low_cardinality_transformer` and
+        `high_cardinality_transformer` respectively.
         Note: currently, missing values are counted as a single unique value
         (so they count in the cardinality).
 
-    low_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    low_cardinality_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. OneHotEncoder),
@@ -183,7 +249,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    high_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    high_cardinality_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
@@ -361,48 +427,36 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 ('high_card_cat', GapEncoder(n_components=30), ['division', 'employee_position_title'])]
     """  # noqa: E501
 
-    transformers_: list[tuple[str, Transformer, list[str]]]
-    types_: dict[str, type]
-    imputed_columns_: list[str]
-    low_card_cat_transformer_: Transformer
-    high_card_cat_transformer_: Transformer
-    numerical_transformer_: Transformer
-    datetime_transformer_: Transformer
-    specific_transformers_: list[tuple[str, Transformer, list[str, int]]]
-
-    _transformer_to_input_indices: dict[str, list[int]]
-
-    # Override required parameters
-    _required_parameters = []
-
     def __init__(
         self,
         *,
-        cardinality_threshold: int = 40,
-        low_card_cat_transformer: Transformer | None = None,
-        high_card_cat_transformer: Transformer | None = None,
-        numerical_transformer: Transformer | None = None,
-        datetime_transformer: Transformer | None = None,
-        specific_transformers: list[
-            tuple[Transformer, list[str | int]]
-            | tuple[str, Transformer, list[str, int]]
-        ]
-        | None = None,
-        auto_cast: bool = True,
-        impute_missing: Literal["auto", "force", "skip"] = "auto",
+        cardinality_threshold=40,
+        low_cardinality_transformer=LOW_CARDINALITY_TRANSFORMER,
+        high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
+        datetime_transformer=DATETIME_TRANSFORMER,
+        numerical_transformer=None,
+        specific_transformers=None,
+        auto_cast=True,
+        impute_missing="auto",
         # The next parameters are inherited from ColumnTransformer
-        remainder: Literal["drop", "passthrough"] | TransformerMixin = "passthrough",
-        sparse_threshold: float = 0.0,
-        n_jobs: int = None,
+        remainder="passthrough",
+        sparse_threshold=0.0,
+        n_jobs=None,
         transformer_weights=None,
-        verbose: bool = False,
-        verbose_feature_names_out: bool = False,
+        verbose=False,
+        verbose_feature_names_out=False,
     ):
         self.cardinality_threshold = cardinality_threshold
-        self.low_card_cat_transformer = low_card_cat_transformer
-        self.high_card_cat_transformer = high_card_cat_transformer
+        self.low_cardinality_transformer = _clone_if_default(
+            low_cardinality_transformer, LOW_CARDINALITY_TRANSFORMER
+        )
+        self.high_cardinality_transformer = _clone_if_default(
+            high_cardinality_transformer, HIGH_CARDINALITY_TRANSFORMER
+        )
+        self.datetime_transformer = _clone_if_default(
+            datetime_transformer, DATETIME_TRANSFORMER
+        )
         self.numerical_transformer = numerical_transformer
-        self.datetime_transformer = datetime_transformer
         self.specific_transformers = specific_transformers
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
@@ -415,26 +469,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         self.verbose = verbose
         self.verbose_feature_names_out = verbose_feature_names_out
 
-    def _more_tags(self) -> dict:
-        """
-        Used internally by sklearn to ease the estimator checks.
-        """
-        return {
-            "X_types": ["2darray", "string"],
-            "allow_nan": [True],
-            "_xfail_checks": {
-                "check_complex_data": "Passthrough complex columns as-is.",
-            },
-        }
-
-    def _propagate_n_jobs(self, transformer):
-        if self.n_jobs is not None and (
-            hasattr(transformer, "n_jobs") and transformer.n_jobs is None
-        ):
-            transformer.set_params(n_jobs=self.n_jobs)
-        return transformer
-
-    def _clone_transformers(self) -> None:
+    def _clone_transformers(self):
         """
         For each of the different transformers that can be passed,
         create the corresponding variable name with a trailing underscore,
@@ -444,105 +479,23 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         Note: typos are not detected here, they are left in and are detected
         down the line in ColumnTransformer.fit_transform.
         """
-        if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
-            self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
-        elif self.low_card_cat_transformer is None:
-            # sklearn is lenient and lets us use both
-            # `handle_unknown="infrequent_if_exist"` and `drop="if_binary"`
-            # at the same time
-            self.low_card_cat_transformer_ = OneHotEncoder(
-                drop="if_binary", handle_unknown="infrequent_if_exist"
+        for transformer_name in [
+            "high_cardinality_transformer",
+            "low_cardinality_transformer",
+            "datetime_transformer",
+            "numerical_transformer",
+        ]:
+            transformer = _clone_during_fit(
+                getattr(self, transformer_name),
+                remainder=self.remainder,
+                n_jobs=self.n_jobs,
             )
-        elif self.low_card_cat_transformer == "remainder":
-            self.low_card_cat_transformer_ = (
-                self.remainder
-                if isinstance(self.remainder, str)
-                else clone(self.remainder)
-            )
-        else:
-            self.low_card_cat_transformer_ = self.low_card_cat_transformer
-        self._propagate_n_jobs(self.low_card_cat_transformer_)
+            setattr(self, f"{transformer_name}_", transformer)
 
-        if isinstance(self.high_card_cat_transformer, sklearn.base.TransformerMixin):
-            self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
-        elif self.high_card_cat_transformer is None:
-            self.high_card_cat_transformer_ = GapEncoder(n_components=30)
-        elif self.high_card_cat_transformer == "remainder":
-            self.high_card_cat_transformer_ = (
-                self.remainder
-                if isinstance(self.remainder, str)
-                else clone(self.remainder)
-            )
-        else:
-            self.high_card_cat_transformer_ = self.high_card_cat_transformer
-        self._propagate_n_jobs(self.high_card_cat_transformer_)
-
-        if isinstance(self.numerical_transformer, sklearn.base.TransformerMixin):
-            self.numerical_transformer_ = clone(self.numerical_transformer)
-        elif self.numerical_transformer is None:
-            self.numerical_transformer_ = "passthrough"
-        elif self.numerical_transformer == "remainder":
-            self.numerical_transformer_ = (
-                self.remainder
-                if isinstance(self.remainder, str)
-                else clone(self.remainder)
-            )
-        else:
-            self.numerical_transformer_ = self.numerical_transformer
-        self._propagate_n_jobs(self.numerical_transformer_)
-
-        if isinstance(self.datetime_transformer, sklearn.base.TransformerMixin):
-            self.datetime_transformer_ = clone(self.datetime_transformer)
-        elif self.datetime_transformer is None:
-            self.datetime_transformer_ = DatetimeEncoder()
-        elif self.datetime_transformer == "remainder":
-            self.datetime_transformer_ = (
-                self.remainder
-                if isinstance(self.remainder, str)
-                else clone(self.remainder)
-            )
-        else:
-            self.datetime_transformer_ = self.datetime_transformer
-        self._propagate_n_jobs(self.datetime_transformer_)
-
-        if (self.specific_transformers is None) or len(self.specific_transformers) == 0:
-            self.specific_transformers_ = []
-        else:
-            first_item_length = len(self.specific_transformers[0])
-            # Check all tuples are the same length
-            for i, tup in enumerate(self.specific_transformers):
-                if len(tup) != first_item_length:
-                    raise TypeError(
-                        "Expected `specific_transformers` to be a list of "
-                        "tuples with all the same length, got length "
-                        f"{len(tup)} at index {i} (elements at previous "
-                        f"indices have {first_item_length} in length). "
-                    )
-            if first_item_length == 2:
-                # Unnamed assignments, transform to named
-                named_specific_transformers = _get_transformer_list(
-                    self.specific_transformers
-                )
-            elif first_item_length == 3:
-                # Named assignments
-                named_specific_transformers = self.specific_transformers
-            else:
-                raise TypeError(
-                    "Expected `specific_transformers` to be a list of tuples "
-                    "of length 2 or 3, got a list of tuples of length "
-                    f"{first_item_length}. "
-                )
-
-            self.specific_transformers_ = [
-                (
-                    (name, self._propagate_n_jobs(clone(transformer)), cols)
-                    if isinstance(transformer, sklearn.base.TransformerMixin)
-                    else (name, transformer, cols)
-                )
-                for name, transformer, cols in named_specific_transformers
-            ]
-
-        # TODO: check that the provided transformers are valid
+        self.specific_transformers_ = _check_specific_transformers(
+            self.specific_transformers,
+            self.n_jobs,
+        )
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
         """Takes a dataframe and tries to convert its columns to their best possible
@@ -742,7 +695,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
             )
         return X
 
-    def fit(self, X: ArrayLike, y: ArrayLike = None) -> "TableVectorizer":
+    def fit(self, X, y=None):
         """Fit all transformers using X.
 
         Parameters
@@ -764,7 +717,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         self.fit_transform(X, y=y)
         return self
 
-    def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
+    def fit_transform(self, X, y=None):
         """Fit all transformers, transform the data, and concatenate the results.
 
         In practice, it (1) converts features to their best possible types
@@ -850,11 +803,15 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers: list[tuple[str, Transformer, list[str]]] = [
+        all_transformers = [
             ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
-            ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
-            ("high_card_cat", self.high_card_cat_transformer_, high_card_cat_columns),
+            ("low_card_cat", self.low_cardinality_transformer_, low_card_cat_columns),
+            (
+                "high_card_cat",
+                self.high_cardinality_transformer_,
+                high_card_cat_columns,
+            ),
             *self.specific_transformers_,
         ]
         # We will now filter this list, by keeping only the ones with:
@@ -902,7 +859,7 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
 
         return X_enc
 
-    def transform(self, X: ArrayLike) -> ArrayLike:
+    def transform(self, X):
         """Transform `X` by applying the fitted transformers on the columns.
 
         Parameters
@@ -993,9 +950,14 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
         """
         return self._column_transformer.output_indices_
 
-
-@deprecated("Use TableVectorizer instead.")
-class SuperVectorizer(TableVectorizer):
-    """Deprecated name of TableVectorizer."""
-
-    pass
+    def _more_tags(self) -> dict:
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {
+            "X_types": ["2darray", "string"],
+            "allow_nan": [True],
+            "_xfail_checks": {
+                "check_complex_data": "Passthrough complex columns as-is.",
+            },
+        }
