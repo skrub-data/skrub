@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 
 from skrub import Joiner
 
@@ -14,80 +15,36 @@ def test_joiner() -> None:
         columns=["Country"],
     )
 
-    aux_table_1 = pd.DataFrame(
+    aux_table = pd.DataFrame(
         [
             ["Germany", 84_000_000],
             ["French Republic", 68_000_000],
             ["Italia", 59_000_000],
         ],
-        columns=["Country", "Population"],
+        columns=["country", "Population"],
     )
-
-    aux_table_2 = pd.DataFrame(
-        [
-            ["France", 2937],
-            ["Italy", 2099],
-            ["Germany", 4223],
-            ["UK", 3186],
-        ],
-        columns=["Country name", "GDP (billion)"],
-    )
-
-    aux_table_3 = pd.DataFrame(
-        [
-            ["La France", "Paris"],
-            ["Italy", "Rome"],
-            ["Germany", "Berlin"],
-        ],
-        columns=["Countries", "Capital"],
-    )
-
-    aux_tables = [
-        (aux_table_1, "Country"),
-        (aux_table_2, "Country name"),
-        (aux_table_3, "Countries"),
-    ]
-
-    joiner = Joiner(tables=aux_tables, main_key="Country")
+    joiner = Joiner(aux_table=aux_table, main_key="Country", aux_key="country")
 
     joiner.fit(main_table)
-
-    number_of_cols = tuple(
-        map(
-            sum,
-            zip(
-                main_table.shape,
-                aux_table_1.shape,
-                aux_table_2.shape,
-                aux_table_3.shape,
-            ),
-        )
-    )[1]
-
     big_table = joiner.transform(main_table)
-    assert big_table.shape == (main_table.shape[0], number_of_cols)
+    assert big_table.shape == (main_table.shape[0], 3)
+    assert_array_equal(
+        big_table["Population"].to_numpy(),
+        aux_table["Population"].to_numpy()[[1, 0, 2]],
+    )
 
-    big_table = joiner.fit_transform(main_table)
-    assert big_table.shape == (main_table.shape[0], number_of_cols)
-
-    false_joiner = Joiner(tables=aux_tables, main_key="Countryy")
+    false_joiner = Joiner(aux_table=aux_table, main_key="Countryy", aux_key="country")
 
     with pytest.raises(
         ValueError,
-        match=r"Main key",
+        match="do not exist in 'X'",
     ):
         false_joiner.fit(main_table)
 
-    false_aux_tables = [
-        (aux_table_1, ["Countrys"]),
-        (aux_table_2, "Country name"),
-        (aux_table_3, "Countries"),
-    ]
-
-    false_joiner2 = Joiner(tables=false_aux_tables, main_key="Country")
+    false_joiner2 = Joiner(aux_table=aux_table, main_key="Country", aux_key="bad")
     with pytest.raises(
         ValueError,
-        match=r"Column key",
+        match="do not exist in 'aux_table'",
     ):
         false_joiner2.fit(main_table)
 
@@ -101,18 +58,12 @@ def test_multiple_keys():
         [["France", "Paris"], ["Italy", "Rome"], ["Germany", "Berlin"]],
         columns=["CO", "CA"],
     )
-    joiner_list = Joiner(tables=[(df2, ["CO", "CA"])], main_key=["Co", "Ca"])
+    joiner_list = Joiner(aux_table=df2, aux_key=["CO", "CA"], main_key=["Co", "Ca"])
     result = joiner_list.fit_transform(df)
     expected = pd.DataFrame(pd.concat([df, df2], axis=1))
     pd.testing.assert_frame_equal(result, expected)
 
-    # Equivalent signature with tuples:
-    joiner_tuple = Joiner(tables=(df2, ["CO", "CA"]), main_key=["Co", "Ca"])
-    result = joiner_tuple.fit_transform(df)
-    expected = pd.DataFrame(pd.concat([df, df2], axis=1))
-    pd.testing.assert_frame_equal(result, expected)
-
-    joiner_list = Joiner(tables=(df2, "CA"), main_key="Ca")
+    joiner_list = Joiner(aux_table=df2, aux_key="CA", main_key="Ca")
     result = joiner_list.fit_transform(df)
     expected = pd.DataFrame(pd.concat([df, df2], axis=1))
     pd.testing.assert_frame_equal(result, expected)

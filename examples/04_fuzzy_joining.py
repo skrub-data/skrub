@@ -365,20 +365,19 @@ from sklearn.pipeline import make_pipeline
 # We create a selector that we will insert at the end of our pipeline, to
 # select the relevant columns before fitting the regressor
 
-selector = SelectCols(
-    [
-        "GDP per capita (current US$)",
-        "Life expectancy at birth, total (years)",
-        "Strength of legal rights index (0=weak to 12=strong)",
-    ]
-)
 pipeline = make_pipeline(
-    Joiner((gdppc, "Country Name"), "Country"),
+    Joiner(gdppc, main_key="Country", aux_key="Country Name"),
     DropCols("Country Name"),
-    Joiner((life_exp, "Country Name"), "Country"),
+    Joiner(life_exp, main_key="Country", aux_key="Country Name"),
     DropCols("Country Name"),
-    Joiner((legal_rights, "Country Name"), "Country"),
-    selector,
+    Joiner(legal_rights, main_key="Country", aux_key="Country Name"),
+    SelectCols(
+        [
+            "GDP per capita (current US$)",
+            "Life expectancy at birth, total (years)",
+            "Strength of legal rights index (0=weak to 12=strong)",
+        ]
+    ),
     HistGradientBoostingRegressor(),
 )
 

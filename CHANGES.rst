@@ -19,6 +19,11 @@ Major changes
   over dataframes and 2d arrays.
   :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
+* Some parameters of :class:`Joiner` have changed. The goal is to harmonize
+  parameters across all estimator that perform join(-like) operations, as
+  discussed in `#751 <https://github.com/skrub-data/skrub/discussions/751>`_.
+  :pr:`757` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * :func:`dataframe.pd_join`, :func:`dataframe.pd_aggregate`,
   :func:`dataframe.pl_join` and :func:`dataframe.pl_aggregate`
   are now available in the dataframe submodule.
@@ -61,6 +66,9 @@ Minor changes
   transform, and a 'add_total_seconds' argument to include the number of
   seconds since Epoch.
   :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
+
+* ``inverse_transform`` in :class:`SimilarityEncoder` now works as expected; it used to raise an exception. :pr:`801` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * :class:`TableVectorizer` propagate the `n_jobs` parameter to the underlying
   transformers except if the underlying transformer already set explicitly `n_jobs`.
