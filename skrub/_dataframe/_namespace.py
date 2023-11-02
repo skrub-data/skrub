@@ -1,14 +1,12 @@
 import sys
-from types import ModuleType
 
 import pandas as pd
 
-import skrub.dataframe._pandas as skrub_pd
-import skrub.dataframe._polars as skrub_pl
-from skrub.dataframe._types import DataFrameLike
+import skrub._dataframe._pandas as skrub_pd
+import skrub._dataframe._polars as skrub_pl
 
 
-def is_pandas(dataframe: DataFrameLike) -> bool:
+def is_pandas(dataframe):
     """Check whether the input is a Pandas dataframe.
 
     Parameters
@@ -24,7 +22,7 @@ def is_pandas(dataframe: DataFrameLike) -> bool:
     return isinstance(dataframe, pd.DataFrame)
 
 
-def is_polars(dataframe: DataFrameLike) -> bool:
+def is_polars(dataframe):
     """Check whether the input is a Polars dataframe or lazyframe.
 
     Parameters
@@ -45,9 +43,7 @@ def is_polars(dataframe: DataFrameLike) -> bool:
     return isinstance(dataframe, (pl.DataFrame, pl.LazyFrame))
 
 
-def get_df_namespace(
-    *dfs: DataFrameLike | list[DataFrameLike],
-) -> tuple[ModuleType, ModuleType]:
+def get_df_namespace(*dfs):
     """Get the namespaces of dataframes.
 
     Introspects dataframes and returns their skrub namespace object

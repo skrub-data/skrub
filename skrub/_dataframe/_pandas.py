@@ -2,9 +2,7 @@
 Pandas specialization of the aggregate and join operation.
 """
 import re
-from collections.abc import Callable
 from itertools import product
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -12,14 +10,55 @@ import pandas as pd
 from skrub._utils import atleast_1d_or_none
 
 
+def make_dataframe(X, index=None):
+    """Convert an dictionary of columns into a Pandas dataframe.
+
+    Parameters
+    ----------
+    X : mapping from column name to 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        The index of the dataframe.
+
+    Returns
+    -------
+    X : Pandas dataframe
+        Converted output.
+    """
+    return pd.DataFrame(X, index=index)
+
+
+def make_series(X, index=None, name=None):
+    """Convert an 1d array into a Pandas series.
+
+    Parameters
+    ----------
+    X : 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        The index of the series.
+
+    name : str, default=None
+        The name of the series.
+
+    Returns
+    -------
+    X : Pandas series
+        Converted output.
+    """
+    return pd.Series(X, index=index, name=name)
+
+
 def aggregate(
-    table: pd.DataFrame,
-    key: str | Iterable[str],
-    cols_to_agg: str | Iterable[str],
-    num_operations: str | Iterable[str] = ("mean",),
-    categ_operations: str | Iterable[str] = ("mode",),
-    suffix: str | None = None,
-) -> pd.DataFrame:
+    table,
+    key,
+    cols_to_agg,
+    num_operations=("mean",),
+    categ_operations=("mode",),
+    suffix=None,
+):
     """Aggregates a :obj:`pandas.DataFrame`.
 
     This function uses the ``dataframe.groupby(key).agg`` method from Pandas.
@@ -107,11 +146,11 @@ def aggregate(
 
 
 def join(
-    left: pd.DataFrame,
-    right: pd.DataFrame,
-    left_on: str | Iterable[str],
-    right_on: str | Iterable[str],
-) -> pd.DataFrame:
+    left,
+    right,
+    left_on,
+    right_on,
+):
     """Left join two :obj:`pandas.DataFrame`.
 
     This function uses the ``dataframe.merge`` method from Pandas.
@@ -148,9 +187,7 @@ def join(
     )
 
 
-def get_named_agg(
-    table: pd.DataFrame, cols: list[str], operations: list[str]
-) -> tuple[dict, dict]:
+def get_named_agg(table, cols, operations):
     """Map aggregation tuples to their output key.
 
     The dictionary has the form: output_key = (column, aggfunc).
@@ -195,7 +232,7 @@ def get_named_agg(
     return named_agg, value_counts
 
 
-def _parse_argument(operation: str) -> tuple[str, int | None]:
+def _parse_argument(operation):
     """Split a text input into a function name and its argument.
 
     Parameters
@@ -237,9 +274,7 @@ PANDAS_OPS_MAPPING = {
 }
 
 
-def _get_aggfunc(
-    serie: pd.Series, op_root: str, n_bins: int
-) -> tuple[str | Callable, dict]:
+def _get_aggfunc(serie, op_root, n_bins):
     """Map operation roots to their pandas agg functions.
 
     When args is provided for histogram or value_counts,
