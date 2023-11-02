@@ -37,7 +37,6 @@ MIXED_FORMAT = "mixed" if _is_pandas_format_mixed_available() else None
 def to_datetime(
     X,
     errors="coerce",
-    unit=None,
     **kwargs,
 ):
     """
@@ -58,15 +57,13 @@ def to_datetime(
     errors : {'ignore', 'raise', 'coerce'}, default 'coerce'
         - If ``'raise'``, then invalid parsing will raise an exception.
         - If ``'coerce'``, then invalid parsing will be set as ``NaT``.
-        Note that ``'ignore'`` is not used for dataframes, 2d arrays,
-        and series, and is used otherwise as in ``pd.to_datetime``.
-
-    unit : str, default None
-        Unused. Here for compatibility with :func:`pandas.to_datetime`.
+        Note that ``'ignore'`` is not used and will raise an error.
 
     **kwargs : key, value mappings
-        Other keyword arguments are passed down to
-        :func:`pandas.to_datetime`.
+        Other keyword arguments are passed down to :func:`pandas.to_datetime`.
+        Raise an error if 'unit' is set to any value. This is because, in
+        `pandas.to_datetime`, unit is specific to timestamps, whereas in
+        `skru`.to_datetime` we don't attempt to parse numeric columns.
 
     Returns
     -------
@@ -87,7 +84,13 @@ def to_datetime(
     >>> X.dtypes.to_list()
     [dtype('int64'), dtype('<M8[ns]')]
     """
+    errors_options = ["coerce", "raise"]
+    if errors not in errors_options:
+        raise ValueError(f"errors options are {errors_options!r}, got {errors!r}.")
     kwargs["errors"] = errors
+
+    if kwargs.get("unit", None) is not None:
+        raise ValueError("unit ")
 
     # dataframe
     if hasattr(X, "__dataframe__"):
@@ -128,14 +131,12 @@ def _to_datetime_dataframe(X, **kwargs):
     -------
     X : Pandas or Polars dataframe
     """
-    _, px = get_df_namespace(X)
+    skrub_px, _ = get_df_namespace(X)
     index = getattr(X, "index", None)
     X_split = [X[col].to_numpy() for col in X.columns]
     X_split = _to_datetime_2d(X_split, **kwargs)
     X_split = {col: X_split[col_idx] for col_idx, col in enumerate(X.columns)}
-    X = pd.DataFrame(X_split, index=index)
-    # conversion is px is Polars, no-op if Pandas
-    return px.DataFrame(X)
+    return skrub_px.make_dataframe(X_split, index=index)
 
 
 def _to_datetime_series(X, **kwargs):
@@ -149,14 +150,12 @@ def _to_datetime_series(X, **kwargs):
     -------
     X : Pandas or Polars series
     """
-    _, px = get_df_namespace(X.to_frame())
+    skrub_px, _ = get_df_namespace(X.to_frame())
     index = getattr(X, "index", None)
     name = X.name
     X_split = [X.to_numpy()]
     X_split = _to_datetime_2d(X_split, **kwargs)
-    X = pd.Series(X_split[0], index=index, name=name)
-    # conversion is px is Polars, no-op if Pandas
-    return px.Series(X)
+    return skrub_px.make_series(X_split[0], index=index, name=name)
 
 
 def _to_datetime_2d_array(X, **kwargs):
