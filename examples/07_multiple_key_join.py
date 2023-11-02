@@ -107,7 +107,7 @@ aux.head()
 
 from skrub import Joiner
 
-joiner = Joiner(tables=(airports, ["lat", "long"]), main_key=["LATITUDE", "LONGITUDE"])
+joiner = Joiner(airports, aux_key=["lat", "long"], main_key=["LATITUDE", "LONGITUDE"])
 
 aux_augmented = joiner.fit_transform(aux)
 
@@ -118,7 +118,8 @@ aux_augmented.head()
 # Let's instanciate another multiple key joiner on the date and the airport:
 
 joiner = Joiner(
-    tables=(aux_augmented, ["YEAR/MONTH/DAY", "iata"]),
+    aux_augmented,
+    aux_key=["YEAR/MONTH/DAY", "iata"],
     main_key=["Year_Month_DayofMonth", "Origin"],
 )
 

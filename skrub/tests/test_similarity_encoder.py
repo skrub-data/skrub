@@ -2,6 +2,7 @@ from collections.abc import Callable
 
 import numpy as np
 import numpy.testing
+import pandas as pd
 import pytest
 from sklearn.exceptions import NotFittedError
 
@@ -319,3 +320,20 @@ def test_check_fitted_super_vectorizer() -> None:
         sim_enc.transform(X)
     sim_enc.fit(X)
     sim_enc.transform(X)
+
+
+def test_inverse_transform():
+    encoder = SimilarityEncoder()
+    encoder.set_output(transform="pandas")
+    X = pd.DataFrame({"A": ["aaa", "aax", "xxx"], "B": ["bbb", "bby", "yyy"]})
+    encoder.fit(X)
+    assert encoder.get_feature_names_out().tolist() == [
+        "x0_aaa",
+        "x0_aax",
+        "x0_xxx",
+        "x1_bbb",
+        "x1_bby",
+        "x1_yyy",
+    ]
+    inverse = encoder.inverse_transform([[1, 0, 0, 1, 0, 0]])
+    numpy.testing.assert_array_equal(inverse, [["aaa", "bbb"]])
