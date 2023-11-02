@@ -83,7 +83,7 @@ legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
 legal_rights.head(3)
 
 ###############################################################################
-# A correspondance problem
+# A correspondence problem
 # ------------------------
 #
 # Alas, the entries for countries do not perfectly match between our
@@ -99,21 +99,16 @@ gdppc.sort_values(by="Country Name").tail(7)
 # We can see that Yemen is written "Yemen*" on one side, and
 # "Yemen, Rep." on the other.
 #
-# We also have entries that probably do not have correspondances: "World"
+# We also have entries that probably do not have correspondences: "World"
 # on one side, whereas the other table only has country-level data.
 
 ###############################################################################
-# Joining tables with imperfect correspondance
+# Joining tables with imperfect correspondence
 # --------------------------------------------
 #
 # We will now join our initial table, df, with the 3 additional ones that
 # we have extracted.
 #
-
-# We will ignore the warnings:
-import warnings
-
-warnings.filterwarnings("ignore")
 
 ###############################################################################
 # .. _example_fuzzy_join:
@@ -281,7 +276,7 @@ df3.drop(columns=["Country Name"], inplace=True)
 df3.head(3)
 
 ###############################################################################
-# Let's take a look at their correspondance in a figure:
+# Let's take a look at their correspondence in a figure:
 plt.figure(figsize=(4, 3))
 fig = sns.regplot(
     data=df3,
@@ -309,7 +304,7 @@ plt.show()
 # We now separate our covariates (X), from the target (or exogenous)
 # variables: y
 X = df3.drop("Happiness score", axis=1).select_dtypes(exclude=object)
-y = df3[["Happiness score"]]
+y = df3["Happiness score"]
 
 ###################################################################
 # Let us now define the model that will be used to predict the happiness score:
@@ -362,51 +357,30 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # .............................
 
 y = df["Happiness score"]
-#######################################################################
-# We gather the auxilliary tables into a
-# list of (tables, keys) for the `tables` parameter.
-# An instance of the transformer with the necessary information is:
-from skrub import Joiner
+df = df.drop("Happiness score", axis=1)
 
-joiner = Joiner(
-    tables=[
-        (gdppc, "Country Name"),
-        (life_exp, "Country Name"),
-        (legal_rights, "Country Name"),
-    ],
-    main_key="Country",
-)
-
-#################################################################
-# Fitting and transforming into the final table
-# .............................................
-# To get our final joined table we will fit and transform the main table (df)
-# with our create instance of the |joiner|:
-df_final = joiner.fit_transform(df)
-
-df_final.head(10)
-
-##########################################################################
-# And that's it! As previously, we now have a big table
-# ready for machine learning.
-# Let's create our machine learning pipeline:
-from sklearn.compose import make_column_transformer
+from skrub import Joiner, SelectCols, DropCols
 from sklearn.pipeline import make_pipeline
 
-# We include only the columns that will be pertinent for our regression:
-encoder = make_column_transformer(
-    (
-        "passthrough",
+# We create a selector that we will insert at the end of our pipeline, to
+# select the relevant columns before fitting the regressor
+
+pipeline = make_pipeline(
+    Joiner(gdppc, main_key="Country", aux_key="Country Name"),
+    DropCols("Country Name"),
+    Joiner(life_exp, main_key="Country", aux_key="Country Name"),
+    DropCols("Country Name"),
+    Joiner(legal_rights, main_key="Country", aux_key="Country Name"),
+    SelectCols(
         [
             "GDP per capita (current US$)",
             "Life expectancy at birth, total (years)",
             "Strength of legal rights index (0=weak to 12=strong)",
-        ],
+        ]
     ),
-    remainder="drop",
+    HistGradientBoostingRegressor(),
 )
 
-pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the parameters of the |fj|.
@@ -416,12 +390,17 @@ pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
-params = {"joiner__match_score": [0.2, 0.3, 0.4, 0.5]}
+params = {
+    "joiner-1__match_score": [0.2, 0.9],
+    "joiner-2__match_score": [0.2, 0.9],
+    "joiner-3__match_score": [0.2, 0.9],
+}
 
 grid = GridSearchCV(pipeline, param_grid=params)
 grid.fit(df, y)
 
 print(grid.best_params_)
+
 ##########################################################################
 # The grid searching gave us the best value of 0.5 for the parameter
 # ``match_score``. Let's use this value in our regression:

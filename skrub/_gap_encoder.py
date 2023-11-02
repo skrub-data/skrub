@@ -14,14 +14,13 @@ from joblib import Parallel, delayed
 from numpy.random import RandomState
 from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.cluster import KMeans, kmeans_plusplus
 from sklearn.decomposition._nmf import _beta_divergence
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
-from sklearn.utils.fixes import _object_dtype_isnan
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from ._utils import check_input
@@ -606,6 +605,10 @@ class GapEncoder(TransformerMixin, BaseEstimator):
        with the Kullback-Leibler divergence as loss, and a Gamma prior on `H`.
        We thus optimize `H` and `W` with the multiplicative update method.
 
+    "Gap" stands for "Gamma-Poisson", the families of distributions that are
+    used to model the importance of topics in a document (Gamma), and the term
+    frequencies in a document (Poisson).
+
     Parameters
     ----------
     n_components : int, optional, default=10
@@ -668,6 +671,8 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         values (NaN) are present during GapEncoder.fit (default is to impute).
         In GapEncoder.inverse_transform, the missing categories will
         be denoted as `None`.
+        "Missing values" are any value for which ``pandas.isna`` returns
+        ``True``, such as ``numpy.nan`` or ``None``.
     n_jobs : int, optional
         The number of jobs to run in parallel.
         The process is parallelized column-wise,
@@ -702,15 +707,15 @@ class GapEncoder(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    >>> enc = GapEncoder(n_components=2)
+    >>> enc = GapEncoder(n_components=2, random_state=0)
 
     Let's encode the following non-normalized data:
 
     >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['Paris, France'],
-             ['london'], ['London, England'], ['London'], ['Pqris']]
+    ...      ['london'], ['London, England'], ['London'], ['Pqris']]
 
     >>> enc.fit(X)
-    GapEncoder(n_components=2)
+    GapEncoder(n_components=2, random_state=0)
 
     The GapEncoder has found the following two topics:
 
@@ -724,58 +729,21 @@ class GapEncoder(TransformerMixin, BaseEstimator):
     activation of each topic for each category:
 
     >>> enc.transform(X)
-    array([[ 0.05202843, 10.54797156],
-          [ 0.05000118,  4.54999882],
-          [12.04734788,  0.05265212],
-          [ 0.05263068, 16.54736932],
-          [ 6.04999624,  0.05000376],
-          [19.546716  ,  0.053284  ],
-          [ 6.04999623,  0.05000376],
-          [ 0.05002016,  4.54997983]])
+    array([[ 0.051..., 10.548...],
+           [ 0.050...,  4.549...],
+           [12.046...,  0.053...],
+           [ 0.052..., 16.547...],
+           [ 6.049...,  0.050...],
+           [19.545...,  0.054...],
+           [ 6.049...,  0.050...],
+           [ 0.060...,  4.539...]])
 
-    The higher the value, the bigger the correspondance with the topic.
+    The higher the value, the bigger the correspondence with the topic.
     """
 
     rho_: float
     fitted_models_: list[GapEncoderColumn]
     column_names_: list[str]
-
-    @classmethod
-    def _merge(cls, transformers_list: list[GapEncoder]):
-        """
-        Merge GapEncoders fitted on different columns
-        into a single GapEncoder. This is useful for parallelization
-        over columns in the TableVectorizer.
-        """
-        full_transformer = clone(transformers_list[0])
-        # assert rho_ is the same for all transformers
-        rho_ = transformers_list[0].rho_
-        full_transformer.rho_ = rho_
-        full_transformer.fitted_models_ = []
-        for transformers in transformers_list:
-            full_transformer.fitted_models_.extend(transformers.fitted_models_)
-        if hasattr(transformers_list[0], "column_names_"):
-            full_transformer.column_names_ = []
-            for transformers in transformers_list:
-                full_transformer.column_names_.extend(transformers.column_names_)
-        return full_transformer
-
-    def _split(self):
-        """
-        Split a GapEncoder fitted on multiple columns
-        into a list of GapEncoders fitted on one column each.
-        This is useful for parallelizing transform over columns
-        in the TableVectorizer.
-        """
-        check_is_fitted(self)
-        transformers_list = []
-        for i, model in enumerate(self.fitted_models_):
-            transformer = clone(self)
-            transformer.rho_ = model.rho_
-            transformer.fitted_models_ = [model]
-            transformer.column_names_ = [self.column_names_[i]]
-            transformers_list.append(transformer)
-        return transformers_list
 
     def __init__(
         self,
@@ -857,7 +825,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
                 f"'zero_impute', got {self.handle_missing!r}. "
             )
 
-        missing_mask = _object_dtype_isnan(X)
+        missing_mask = pd.isna(X)
 
         if missing_mask.any():
             if self.handle_missing == "error":

@@ -214,8 +214,7 @@ def _parse_argument(operation: str) -> tuple[str, int | None]:
     Examples
     --------
     >>> _parse_argument("hist(10)")
-    "hist", 10
-
+    ('hist', 10)
     """
     split = re.split("\\(.+\\)", operation)
     op_root = split[0]
@@ -292,3 +291,7 @@ def split_num_categ_cols(table):
     categ_cols = table.select_dtypes(["object", "string", "category"]).columns
 
     return num_cols, categ_cols
+
+
+def select(dataframe, columns):
+    return dataframe[columns]

@@ -15,9 +15,15 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+
 * :class:`InterpolationJoiner` was added to join two tables by using
   machine-learning to infer the matching rows from the second table.
   :pr:`742` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Some parameters of :class:`Joiner` have changed. The goal is to harmonize
+  parameters across all estimator that perform join(-like) operations, as
+  discussed in `#751 <https://github.com/skrub-data/skrub/discussions/751>`_.
+  :pr:`757` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * :func:`dataframe.pd_join`, :func:`dataframe.pd_aggregate`,
   :func:`dataframe.pl_join` and :func:`dataframe.pl_aggregate`
@@ -49,11 +55,21 @@ Major changes
   aggregation on the target y, followed by left-joining on a base table.
   :pr:`600` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+* Added the :class:`SelectCols` and :class:`DropCols` transformers that allow
+  selecting a subset of a dataframe's columns inside of a pipeline. :pr:`804` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+
+
 Minor changes
 -------------
 
-* :class:`TableVectorizer` is now able to apply parallelism at the column level rather than the transformer level. This is the default for univariate transformers, like :class:`MinHashEncoder`, and :class:`GapEncoder`.
-  :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* ``inverse_transform`` in :class:`SimilarityEncoder` now works as expected; it used to raise an exception. :pr:`801` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* :class:`TableVectorizer` propagate the `n_jobs` parameter to the underlying
+  transformers except if the underlying transformer already set explicitly `n_jobs`.
+  :pr:`761` by :user:`Leo Grinsztajn <LeoGrin>`, :user:`Guillaume Lemaitre <glemaitre>`,
+  and :user:`Jerome Dockes <jeromedockes>`.
 
 * Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
