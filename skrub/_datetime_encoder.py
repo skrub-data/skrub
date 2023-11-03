@@ -39,31 +39,44 @@ def to_datetime(
     errors="coerce",
     **kwargs,
 ):
-    """
-    Convert argument to datetime. Return the input if not datetime-parsable.
+    """Convert the columns of a dataframe or 2d array into a datetime representation.
 
-    Augment :func:`pandas.to_datetime` by supporting dataframes
-    and 2d arrays inputs. It converts compatible columns to datetime, and
-    pass incompatible columns unchanged.
-
-    int, float, str, datetime, list, tuple, 1d array, and Series are defered to
-    :func:`pandas.to_datetime` directly.
+    This function augments :func:`pandas.to_datetime` by supporting dataframes
+    and 2d array inputs. It only attempts to convert columns whose dtype are
+    object or string. Numeric columns are skip and preserved in the output.
 
     Parameters
     ----------
-    X : int, float, str, datetime, list, tuple, nd array, Series, DataFrame/dict-like
+    X : Pandas or Polars dataframe, 2d-array or any input accepted \
+        by ``pd.to_datetime``.
         The object to convert to a datetime.
 
-    errors : {'ignore', 'raise', 'coerce'}, default 'coerce'
-        - If ``'raise'``, then invalid parsing will raise an exception.
-        - If ``'coerce'``, then invalid parsing will be set as ``NaT``.
-        Note that ``'ignore'`` is not used and will raise an error.
+    errors : {'coerce', 'raise'}, default 'coerce'
+        When set to 'raise', errors will be raised only when the following conditions
+        are satisfied, for each column ``X_col``:
+        - After converting to numpy, the column dtype is np.object_ or np.str_
+        - Each entry of the column is datetime-parsable, i.e.
+          ``pd.to_datetime(X_col, format="mixed")`` doesn't raise an error.
+          This step is conservative, because e.g.
+          ``["2020-01-01", "hello", "2020-01-01"]``
+          is not considered datetime-parsable (so we won't attempt to convert it).
+        - The column as a whole is not datetime-parsable, due to a clash of datetime
+          format, e.g. '2020/01/01' and '2020-01-01'.
+
+        When set to ``'coerce'``, the entries of ``X_col`` that should have raised
+        an error are set to ``NaT`` instead.
+        You can choose which format to use with the keyword argument ``format``, as with
+        ``pd.to_datetime``, e.g. ``to_datetime(X_col, format='%Y/%m/%d')``.
+        Combined with ``error='coerce'``, this will convert all entries that don't
+        match this format to ``NaT``.
+
+        Note that the ``'ignore'`` option is not used and will raise an error.
 
     **kwargs : key, value mappings
         Other keyword arguments are passed down to :func:`pandas.to_datetime`.
         Raise an error if 'unit' is set to any value. This is because, in
         `pandas.to_datetime`, unit is specific to timestamps, whereas in
-        `skru`.to_datetime` we don't attempt to parse numeric columns.
+        `skrub`.to_datetime` we don't attempt to parse numeric columns.
 
     Returns
     -------
@@ -80,7 +93,14 @@ def to_datetime(
     Examples
     --------
     >>> X = pd.DataFrame(dict(a=[1, 2], b=["2021-01-01", "2021-02-02"]))
-    >>> X = to_datetime(X)
+    >>> X
+        a           b
+    0  1  31/01/2021
+    1  2  01/02/2022
+    >>> to_datetime(X)
+        a          b
+    0  1  2021-01-31
+    1  2  2022-02-01
     >>> X.dtypes.to_list()
     [dtype('int64'), dtype('<M8[ns]')]
     """
@@ -89,8 +109,11 @@ def to_datetime(
         raise ValueError(f"errors options are {errors_options!r}, got {errors!r}.")
     kwargs["errors"] = errors
 
-    if kwargs.get("unit", None) is not None:
-        raise ValueError("unit ")
+    if "unit" in kwargs:
+        raise ValueError(
+            "'unit' is not a parameter of skrub.to_datetime; it is only meaningful "
+            "when applying pandas.to_datetime to a numerical column"
+        )
 
     # dataframe
     if hasattr(X, "__dataframe__"):
@@ -115,8 +138,8 @@ def to_datetime(
 
     else:
         raise TypeError(
-            "X must be a string, datetime, list, tuple, 1-d array, Series, "
-            f"2-d array or dataframe. Got {X=!r}."
+            "X must be a Dataframe, series, 2d array or any "
+            f"valid input for ``pd.to_datetime``. Got {X=!r}."
         )
 
 
@@ -214,11 +237,12 @@ def _to_datetime_2d(
         It defines the format parameter for each column when calling
         pd.to_datetime.
 
-        If indices is None, indices_to_format is computed using the current input X.
-        If format is not None, all values of indices_to_format are format.
+        If indices is None, ``indices_to_format`` is computed using the
+        current input X.
+        If format is not None, all values of ``indices_to_format`` are set
+        to format.
 
     format : str, default=None
-        Here for compatibility with ``pandas.to_datetime`` API.
         When format is not None, it overwrites the values in indices_to_format.
 
     Returns
@@ -240,7 +264,7 @@ def _to_datetime_2d(
     return X_split
 
 
-def _get_datetime_column_indices(X_split):
+def _get_datetime_column_indices(X_split, dayfirst=True):
     """Select the datetime parsable columns by their indices \
     and return their datetime format.
 
@@ -312,7 +336,7 @@ def _is_column_datetime_parsable(X_col):
     return False
 
 
-def _guess_datetime_format(X_col, require_dayfirst=False):
+def _guess_datetime_format(X_col):
     """
     Parameters
     ----------
@@ -339,20 +363,7 @@ def _guess_datetime_format(X_col, require_dayfirst=False):
         month_first_formats = pd.unique(vfunc(X_col, dayfirst=False))
         day_first_formats = pd.unique(vfunc(X_col, dayfirst=True))
 
-    if None in month_first_formats or None in day_first_formats:
-        return None
-
-    elif (
-        len(month_first_formats) == 1
-        and len(day_first_formats) == 1
-        and month_first_formats[0] != day_first_formats[0]
-    ):
-        if require_dayfirst:
-            return str(day_first_formats[0])
-        else:
-            return str(month_first_formats[0])
-
-    elif len(month_first_formats) == 1:
+    if len(month_first_formats) == 1:
         return str(month_first_formats[0])
 
     elif len(day_first_formats) == 1:
@@ -503,7 +514,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         ----------
         X : array-like, shape ``(n_samples, n_features)``
             Input data. Columns that can't be converted into
-            `pandas.DatetimeIndex` and numerical values will
+            ``pandas.DatetimeIndex`` and numerical values will
             be dropped.
         y : None
             Unused, only here for compatibility.
@@ -521,7 +532,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         errors_options = ["coerce", "raise"]
         if self.errors not in errors_options:
             raise ValueError(
-                f"errors options are {errors_options!r}, got {self.errors!r}."
+                f"'errors' options are {errors_options!r}, got {self.errors!r}."
             )
 
         self._check_feature_names(X, reset=True)
