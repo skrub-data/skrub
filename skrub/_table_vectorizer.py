@@ -236,7 +236,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Note: currently, missing values are counted as a single unique value
         (so they count in the cardinality).
 
-    low_cardinality_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    low_cardinality_transformer : {'drop', 'remainder', 'passthrough'} \
+        or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. OneHotEncoder),
@@ -249,7 +250,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    high_cardinality_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    high_cardinality_transformer : {'drop', 'remainder', 'passthrough'} \
+        or Transformer, optional
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
@@ -261,7 +263,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    numerical_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    numerical_transformer : {'drop', 'remainder', 'passthrough'} \
+        or Transformer, optional
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. StandardScaler),
         a Pipeline containing the preprocessing steps,
@@ -283,7 +286,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
+    specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or \
+        Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} \
+            or Transformer, list of str or int), optional
         On top of the default column type classification (see parameters above),
         this parameter allows you to manually specify transformers for
         specific columns.
@@ -382,7 +387,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     See Also
     --------
     GapEncoder :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics with \
+            continuous encoding.
     MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
     SimilarityEncoder :
@@ -425,7 +431,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 sparse_output=False), \
 ['gender', 'department', 'department_name', 'assignment_category']), \
 ('high_card_cat', GapEncoder(n_components=30), ['division', 'employee_position_title'])]
-    """  # noqa: E501
+    """
 
     def __init__(
         self,
