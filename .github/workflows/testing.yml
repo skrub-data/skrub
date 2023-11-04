@@ -73,7 +73,9 @@ jobs:
         env:
           DEPS_VERSION: ${{ matrix.dependencies-version }}
       - shell: bash {0}
-        run: $GITHUB_WORKSPACE/build_tools/github/test.sh
+        run: |
+          cp $GITHUB_WORKSPACE/pyproject.toml .
+          $GITHUB_WORKSPACE/build_tools/github/test.sh
         working-directory: ${{ runner.temp }}
         name: 'Run tests'
       - uses: codecov/codecov-action@v3
