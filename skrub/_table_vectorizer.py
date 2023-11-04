@@ -344,7 +344,6 @@ class TableVectorizer(TransformerMixin, _BaseComposition):
     0      F        POL  ...       09/22/1986             1986
     1      M        POL  ...       09/12/1988             1988
     2      F        HHS  ...       11/19/1989             1989
-    <BLANKLINE>
     [3 rows x 8 columns]
 
     >>> tv = TableVectorizer()

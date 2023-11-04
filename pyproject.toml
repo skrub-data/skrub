@@ -39,3 +39,4 @@ filterwarnings = [
     'ignore:elementwise\ comparison\ failed:FutureWarning',
 ]
 addopts = "--doctest-modules"
+doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
