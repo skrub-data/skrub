@@ -94,15 +94,13 @@ def to_datetime(
     --------
     >>> X = pd.DataFrame(dict(a=[1, 2], b=["2021-01-01", "2021-02-02"]))
     >>> X
-        a           b
-    0  1  31/01/2021
-    1  2  01/02/2022
+       a          b
+    0  1 2021-01-01
+    1  2 2021-02-02
     >>> to_datetime(X)
-        a          b
-    0  1  2021-01-31
-    1  2  2022-02-01
-    >>> X.dtypes.to_list()
-    [dtype('int64'), dtype('<M8[ns]')]
+       a          b
+    0  1 2021-01-01
+    1  2 2021-02-02
     """
     errors_options = ["coerce", "raise"]
     if errors not in errors_options:
