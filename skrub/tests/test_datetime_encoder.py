@@ -17,6 +17,7 @@ from skrub._datetime_encoder import (
 NANOSECONDS_FORMAT = (
     "%Y-%m-%d %H:%M:%S.%f" if _is_pandas_format_mixed_available() else None
 )
+MSG_MIN_PANDAS_SKIP = "Pandas format=mixed is not available"
 
 
 def get_date(as_array=False):
@@ -344,10 +345,7 @@ def test_mixed_type_dataframe():
 
 @pytest.mark.skipif(
     not _is_pandas_format_mixed_available(),
-    reason=(
-        "DeprecationWarning is already handled as a ValueError "
-        "in the latest pandas version."
-    ),
+    reason=MSG_MIN_PANDAS_SKIP,
 )
 def test_indempotency():
     df = get_mixed_datetime_format()
@@ -382,7 +380,12 @@ def test_datetime_encoder_invalid_params():
         1,
         [1, 2],
         np.array([1, 2]),
-        pd.Timestamp(2020, 1, 1),
+        pytest.param(
+            pd.Timestamp(2020, 1, 1),
+            marks=pytest.mark.skipif(
+                not _is_pandas_format_mixed_available(), reason=MSG_MIN_PANDAS_SKIP
+            ),
+        ),
         np.array(["2020-01-01", "hello", "2020-01-02"]),
     ],
 )
@@ -405,6 +408,10 @@ def test_to_datetime_invalid_params():
         to_datetime(2020, unit="second")
 
 
+@pytest.mark.skipif(
+    not _is_pandas_format_mixed_available(),
+    reason=MSG_MIN_PANDAS_SKIP,
+)
 def test_to_datetime_format_param():
     X_col = ["2021-01-01", "2021/01/01"]
 

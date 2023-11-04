@@ -361,10 +361,10 @@ def _guess_datetime_format(X_col):
         month_first_formats = pd.unique(vfunc(X_col, dayfirst=False))
         day_first_formats = pd.unique(vfunc(X_col, dayfirst=True))
 
-    if len(month_first_formats) == 1:
+    if len(month_first_formats) == 1 and month_first_formats[0] is not None:
         return str(month_first_formats[0])
 
-    elif len(day_first_formats) == 1:
+    elif len(day_first_formats) == 1 and day_first_formats[0] is not None:
         return str(day_first_formats[0])
 
     # special heuristic: when both date and datetime formats are
