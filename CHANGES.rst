@@ -15,6 +15,10 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+* Pipelines including :class:`TableVectorizer` can now be grid-searched, since
+  we can now call `set_params` on the default transformers of :class:`TableVectorizer`.
+  :pr:`814` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
 * Some parameters of :class:`Joiner` have changed. The goal is to harmonize
   parameters across all estimator that perform join(-like) operations, as
   discussed in `#751 <https://github.com/skrub-data/skrub/discussions/751>`_.
