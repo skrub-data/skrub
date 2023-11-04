@@ -48,7 +48,7 @@ def to_datetime(
     Parameters
     ----------
     X : Pandas or Polars dataframe, 2d-array or any input accepted \
-        by ``pd.to_datetime``.
+    by ``pd.to_datetime``
         The object to convert to a datetime.
 
     errors : {'coerce', 'raise'}, default 'coerce'
