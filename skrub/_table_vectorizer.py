@@ -421,7 +421,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     >>> tv.transformers_
     [('numeric', 'passthrough', ['year_first_hired']), \
 ('datetime', DatetimeEncoder(), ['date_first_hired']), \
-('low_card_cat', OneHotEncoder(drop='if_binary', handle_unknown='infrequent_if_exist'), \
+('low_card_cat', OneHotEncoder(drop='if_binary', handle_unknown='ignore', \
+sparse_output=False), \
 ['gender', 'department', 'department_name', 'assignment_category']), \
 ('high_card_cat', GapEncoder(n_components=30), ['division', 'employee_position_title'])]
     """  # noqa: E501
