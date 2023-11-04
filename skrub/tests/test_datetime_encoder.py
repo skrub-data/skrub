@@ -343,10 +343,6 @@ def test_mixed_type_dataframe():
     assert X_dt.dtype == np.object_
 
 
-@pytest.mark.skipif(
-    not _is_pandas_format_mixed_available(),
-    reason=MSG_MIN_PANDAS_SKIP,
-)
 def test_indempotency():
     df = get_mixed_datetime_format()
     df_dt = to_datetime(df)
@@ -380,12 +376,7 @@ def test_datetime_encoder_invalid_params():
         1,
         [1, 2],
         np.array([1, 2]),
-        pytest.param(
-            pd.Timestamp(2020, 1, 1),
-            marks=pytest.mark.skipif(
-                not _is_pandas_format_mixed_available(), reason=MSG_MIN_PANDAS_SKIP
-            ),
-        ),
+        pd.Timestamp(2020, 1, 1),
         np.array(["2020-01-01", "hello", "2020-01-02"]),
     ],
 )

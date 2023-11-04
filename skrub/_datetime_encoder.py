@@ -1,5 +1,6 @@
 import warnings
 from collections import defaultdict
+from contextlib import nullcontext
 from typing import Iterable
 
 import numpy as np
@@ -309,11 +310,19 @@ def _is_column_datetime_parsable(X_col):
     is_dt_parsable : bool
     """
     # Remove columns of int, float or bool casted as object.
-    try:
-        if np.array_equal(X_col, X_col.astype(np.float64)):
-            return False
-    except ValueError:
-        pass
+    # Pandas < 2.0.0 raise a deprecation warning instead of an error.
+    with (
+        warnings.catch_warnings()
+        if not _is_pandas_format_mixed_available()
+        else nullcontext()
+    ):
+        if not _is_pandas_format_mixed_available():
+            warnings.simplefilter("ignore", category=DeprecationWarning)
+        try:
+            if np.array_equal(X_col, X_col.astype(np.float64)):
+                return False
+        except ValueError:
+            pass
 
     np_dtypes_candidates = [np.object_, np.str_, np.datetime64]
     is_type_datetime_compatible = any(
