@@ -150,8 +150,8 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
-def _clone_if_default(transformer, DEFAULT_TRANSFORMER):
-    return clone(transformer) if transformer is DEFAULT_TRANSFORMER else transformer
+def _clone_if_default(transformer, default_transformer):
+    return clone(transformer) if transformer is default_transformer else transformer
 
 
 def _clone_during_fit(transformer, remainder, n_jobs):
