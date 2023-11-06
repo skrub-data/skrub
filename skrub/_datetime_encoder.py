@@ -440,7 +440,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         Extract up to this resolution.
         E.g., ``resolution="day"`` generates the features "year", "month",
         "day" only.
-        If ``None``, no feature will be created.
+        If ``None``, no such feature will be created (but day of the week and total seconds may still be extracted, see below).
 
     add_day_of_the_week : bool, default=False
         Add day of the week feature as a numerical feature
