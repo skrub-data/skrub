@@ -1,6 +1,5 @@
 import warnings
 from collections import defaultdict
-from contextlib import nullcontext
 from typing import Iterable
 
 import numpy as np
@@ -46,6 +45,9 @@ def to_datetime(
     and 2d array inputs. It only attempts to convert columns whose dtype are
     object or string. Numeric columns are skip and preserved in the output.
 
+    Use the 'format' keyword to force a specific datetime format. See more details in
+    the parameters section.
+
     Parameters
     ----------
     X : Pandas or Polars dataframe, 2d-array or any input accepted \
@@ -60,7 +62,7 @@ def to_datetime(
           ``pd.to_datetime(X_col, format="mixed")`` doesn't raise an error.
           This step is conservative, because e.g.
           ``["2020-01-01", "hello", "2020-01-01"]``
-          is not considered datetime-parsable (so we won't attempt to convert it).
+          is not considered datetime-parsable, so we won't attempt to convert it).
         - The column as a whole is not datetime-parsable, due to a clash of datetime
           format, e.g. '2020/01/01' and '2020-01-01'.
 
@@ -75,9 +77,16 @@ def to_datetime(
 
     **kwargs : key, value mappings
         Other keyword arguments are passed down to :func:`pandas.to_datetime`.
-        Raise an error if 'unit' is set to any value. This is because, in
-        `pandas.to_datetime`, unit is specific to timestamps, whereas in
-        `skrub`.to_datetime` we don't attempt to parse numeric columns.
+
+        One notable argument is 'format'. Setting a format overwrites
+        the datetime format guessing behavior of this function for all columns.
+
+        Note that we don't encourage you to use dayfirst or monthfirst argument, since
+        their behavior is ambiguous and might not be applied at all.
+
+        Moreover, this function raises an error if 'unit' is set to any value.
+        This is because, in ``pandas.to_datetime``, 'unit' is specific to timestamps,
+        whereas in ``skrub.to_datetime`` we don't attempt to parse numeric columns.
 
     Returns
     -------
@@ -291,8 +300,15 @@ def _get_datetime_column_indices(X_split, dayfirst=True):
 
         if _is_column_datetime_parsable(X_col):
             indices.append(col_idx)
-            # TODO: pass require_dayfirst to _guess_datetime_format
-            index_to_format[col_idx] = _guess_datetime_format(X_col)
+
+            if np.issubdtype(X_col.dtype, np.datetime64):
+                # We don't need to specify a parsing format
+                # for columns that are already of type datetime64.
+                datetime_format = None
+            else:
+                datetime_format = _guess_datetime_format(X_col)
+
+            index_to_format[col_idx] = datetime_format
 
     return indices, index_to_format
 
@@ -311,13 +327,8 @@ def _is_column_datetime_parsable(X_col):
     """
     # Remove columns of int, float or bool casted as object.
     # Pandas < 2.0.0 raise a deprecation warning instead of an error.
-    with (
-        warnings.catch_warnings()
-        if not _is_pandas_format_mixed_available()
-        else nullcontext()
-    ):
-        if not _is_pandas_format_mixed_available():
-            warnings.simplefilter("ignore", category=DeprecationWarning)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
         try:
             if np.array_equal(X_col, X_col.astype(np.float64)):
                 return False
@@ -344,24 +355,27 @@ def _is_column_datetime_parsable(X_col):
 
 
 def _guess_datetime_format(X_col):
-    """
+    """Infer the format of a 1d array.
+
+    This functions uses Pandas ``guess_datetime_format`` routine for both
+    dayfirst and monthfirst case, and select either format when using one
+    give a unify format on the array.
+
+    When both dayfirst and monthfirst format are possible, we select
+    monthfirst by default.
+
+    You can overwrite this behaviour by setting a format of the caller function.
+    Setting a format always take precedence over infering it using
+    ``_guess_datetime_format``.
+
     Parameters
     ----------
     X_col : ndarray of shape ``(n_samples,)``
 
-    require_dayfirst : bool, default False
-        Whether to return the dayfirst format when both dayfirst
-        and monthfirst are valid.
-
     Returns
     -------
-    format : str
+    datetime_format : str or None
     """
-    if np.issubdtype(X_col.dtype, np.datetime64):
-        # We don't need to specify a parsing format
-        # for columns that are already of type datetime64.
-        return None
-
     X_col = X_col.astype(np.object_)
     vfunc = np.vectorize(guess_datetime_format)
     with warnings.catch_warnings():
@@ -440,7 +454,8 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         Extract up to this resolution.
         E.g., ``resolution="day"`` generates the features "year", "month",
         "day" only.
-        If ``None``, no such feature will be created (but day of the week and total seconds may still be extracted, see below).
+        If ``None``, no such feature will be created (but day of the week and \
+            total seconds may still be extracted, see below).
 
     add_day_of_the_week : bool, default=False
         Add day of the week feature as a numerical feature
@@ -573,7 +588,6 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         self.column_indices_, self.index_to_format_ = _get_datetime_column_indices(
             X_split
         )
-        del X_split
 
         self.index_to_features_ = defaultdict(list)
         self.n_features_out_ = 0
