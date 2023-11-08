@@ -217,10 +217,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     """Automatically transform a heterogeneous dataframe to a numerical array.
 
     Easily transforms a heterogeneous data table
-    (such as a :obj:`~pandas.DataFrame`) to a numerical array for machine
-    learning. For this it transforms each column depending on its data type.
-    It provides a simplified interface for the ColumnTransformer ;
-    more documentation of attributes and functions are available in its doc.
+    (such as a :obj:`pandas.DataFrame`) to a numerical array for machine
+    learning. To do so, the TableVectorizer transforms each column depending
+    on its data type.
 
     Parameters
     ----------
@@ -242,9 +241,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer
-        (OneHotEncoder(handle_unknown="ignore", drop="if_binary")).
+        'passthrough' to return the unencoded columns.
+        The default transformer is \
+            (OneHotEncoder(handle_unknown="ignore", drop="if_binary")).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -256,8 +255,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         (e.g. GapEncoder), a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (GapEncoder(n_components=30)).
+        or 'passthrough' to return the unencoded columns.
+        The default transformer is (GapEncoder(n_components=30)).
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -268,8 +267,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (here nothing, so 'passthrough').
+        or 'passthrough' to return the unencoded columns (default).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -339,8 +337,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     n_jobs : int, default=None
         Number of jobs to run in parallel. This number of jobs will be dispatched to
         the underlying transformers, if those support parallelization and they do not
-        set specifically `n_jobs`.
-        ``None`` (the default) means 1 unless in a :fund:`joblib.parallel_config`
+        set specifically ``n_jobs``.
+        ``None`` (the default) means 1 unless in a :func:`joblib.parallel_config`
         context. ``-1`` means using all processors.
 
     transformer_weights : dict, default=None
@@ -396,12 +394,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     -----
     The column order of the input data is not guaranteed to be the same
     as the output data (returned by TableVectorizer.transform).
-    This is a due to the way the ColumnTransformer works.
+    This is a due to the way the underlying ColumnTransformer works.
     However, the output column order will always be the same for different
-    calls to TableVectorizer.transform on a same fitted TableVectorizer instance.
+    calls to ``TableVectorize.transform`` on a same fitted TableVectorizer instance.
     For example, if input data has columns ['name', 'job', 'year'], then output
     columns might be shuffled, e.g. ['job', 'year', 'name'], but every call
-    to TableVectorizer.transform on this instance will return this order.
+    to ``TableVectorizer.transform`` on this instance will return this order.
 
     Examples
     --------
@@ -437,7 +435,7 @@ sparse_output=False), \
         cardinality_threshold=40,
         low_cardinality_transformer=LOW_CARDINALITY_TRANSFORMER,
         high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
-        numerical_transformer=None,
+        numerical_transformer="passthrough",
         datetime_transformer=DATETIME_TRANSFORMER,
         specific_transformers=None,
         auto_cast=True,
