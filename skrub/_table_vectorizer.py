@@ -157,8 +157,6 @@ def _clone_if_default(transformer, default_transformer):
 def _clone_during_fit(transformer, remainder, n_jobs):
     if isinstance(transformer, sklearn.base.TransformerMixin):
         return _propagate_n_jobs(clone(transformer), n_jobs)
-    elif transformer is None:
-        return "passthrough"
     elif transformer == "remainder":
         return remainder if isinstance(remainder, str) else clone(remainder)
     elif transformer == "passthrough":
@@ -166,7 +164,7 @@ def _clone_during_fit(transformer, remainder, n_jobs):
     else:
         raise ValueError(
             "'transformer' must be an instance of sklearn.base.TransformerMixin, "
-            f"None, 'remainder' or 'passthrough'. Got {transformer=!r}."
+            f"'remainder' or 'passthrough'. Got {transformer=!r}."
         )
 
 
