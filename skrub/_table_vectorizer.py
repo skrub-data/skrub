@@ -326,7 +326,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    types_ : dict mapping of int to type
+    type_per_column_ : dict mapping of int to type
         A mapping of inferred types per column.
         Key is the index of a column, value is the inferred dtype.
         Exists only if `auto_cast=True`.
@@ -490,7 +490,7 @@ sparse_output=False), \
         X = to_numeric(X)
 
         # Convert to the best possible data type
-        self.types_ = {}
+        self.type_per_column_ = {}
         for col_idx, col in enumerate(X.columns):
             # Cast pandas dtypes to numpy dtypes
             # for earlier versions of sklearn. FIXME: which ?
@@ -499,7 +499,7 @@ sparse_output=False), \
                     X[col] = X[col].astype(X[col].dtype.type, errors="ignore")
                 except (TypeError, ValueError):
                     pass
-            self.types_[col_idx] = X[col].dtype
+            self.type_per_column_[col_idx] = X[col].dtype
         return X
 
     def _apply_cast(self, X):
@@ -523,7 +523,7 @@ sparse_output=False), \
         object_cols = X.columns[X.dtypes == "object"]
         for col in object_cols:
             X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
-        for col_idx, dtype in self.types_.items():
+        for col_idx, dtype in self.type_per_column_.items():
             col = X.columns[col_idx]
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
@@ -535,9 +535,9 @@ sparse_output=False), \
                 dtype = pd.CategoricalDtype(
                     categories=known_categories.union(new_categories)
                 )
-                self.types_[col_idx] = dtype
+                self.type_per_column_[col_idx] = dtype
 
-        for col_idx, dtype in self.types_.items():
+        for col_idx, dtype in self.type_per_column_.items():
             col = X.columns[col_idx]
             try:
                 if pd.api.types.is_numeric_dtype(dtype):

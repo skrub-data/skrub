@@ -751,7 +751,7 @@ def test_changing_types(
     for new_category in ["a", "new category", "[test]"]:
         table_vec = TableVectorizer()
         table_vec.fit_transform(X_fit)
-        expected_dtype = table_vec.types_[0]
+        expected_dtype = table_vec.type_per_column_[0]
         # convert [ and ] to \\[ and \\] to avoid pytest warning
         expected_dtype = str(expected_dtype).replace("[", "\\[").replace("]", "\\]")
         new_category_regex = str(new_category).replace("[", "\\[").replace("]", "\\]")
@@ -857,7 +857,7 @@ def test_parallelism(high_cardinality_transformer) -> None:
             assert (
                 table_vec.feature_names_in_ == table_vec_no_parallel.feature_names_in_
             ).all()
-            assert table_vec.types_ == table_vec_no_parallel.types_
+            assert table_vec.type_per_column_ == table_vec_no_parallel.type_per_column_
             assert table_vec.imputed_columns_ == table_vec_no_parallel.imputed_columns_
             # assert that get_feature_names_out gives the same result
             assert_array_equal(
