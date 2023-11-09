@@ -377,10 +377,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     >>> tv.transformers_
     [('numeric', 'passthrough', ['year_first_hired']), \
 ('datetime', DatetimeEncoder(), ['date_first_hired']), \
-('low_card_cat', OneHotEncoder(drop='if_binary', handle_unknown='ignore', \
+('low_cardinality', OneHotEncoder(drop='if_binary', handle_unknown='ignore', \
 sparse_output=False), \
 ['gender', 'department', 'department_name', 'assignment_category']), \
-('high_card_cat', GapEncoder(n_components=30), ['division', 'employee_position_title'])]
+('high_cardinality', GapEncoder(n_components=30), ['division', 'employee_position_title'])]
     """
 
     def __init__(
@@ -721,23 +721,23 @@ sparse_output=False), \
         ).columns.to_list()
 
         # Classify categorical columns by cardinality
-        low_card_cat_columns, high_card_cat_columns = [], []
+        low_cardinality_columns, high_cardinality_columns = [], []
         for col in categorical_columns:
             if X[col].nunique() < self.cardinality_threshold:
-                low_card_cat_columns.append(col)
+                low_cardinality_columns.append(col)
             else:
-                high_card_cat_columns.append(col)
+                high_cardinality_columns.append(col)
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
         all_transformers = [
             ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
-            ("low_card_cat", self.low_cardinality_transformer_, low_card_cat_columns),
+            ("low_cardinality", self.low_cardinality_transformer_, low_cardinality_columns),
             (
-                "high_card_cat",
+                "high_cardinality",
                 self.high_cardinality_transformer_,
-                high_card_cat_columns,
+                high_cardinality_columns,
             ),
             *self.specific_transformers_,
         ]

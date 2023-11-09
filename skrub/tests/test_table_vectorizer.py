@@ -197,15 +197,15 @@ def _test_possibilities(X) -> None:
     # Warning: order-dependant
     expected_transformers_df = {
         "numeric": ["int", "float"],
-        "low_card_cat": ["str1", "cat1"],
-        "high_card_cat": ["str2", "cat2"],
+        "low_cardinality": ["str1", "cat1"],
+        "high_cardinality": ["str2", "cat2"],
     }
     vectorizer_base.fit_transform(X)
     check_same_transformers(expected_transformers_df, vectorizer_base.transformers_)
 
     # Test with higher cardinality threshold and no numeric transformer
     expected_transformers_2 = {
-        "low_card_cat": ["str1", "str2", "cat1", "cat2"],
+        "low_cardinality": ["str1", "str2", "cat1", "cat2"],
         "numeric": ["int", "float"],
     }
     vectorizer_default = TableVectorizer()  # Using default values
@@ -216,8 +216,8 @@ def _test_possibilities(X) -> None:
     arr = X.to_numpy()
     # Instead of the columns names, we'll have the column indices.
     expected_transformers_np_no_cast = {
-        "low_card_cat": [2, 4],
-        "high_card_cat": [3, 5],
+        "low_cardinality": [2, 4],
+        "high_cardinality": [3, 5],
         "numeric": [0, 1],
     }
     vectorizer_base.fit_transform(arr)
@@ -227,7 +227,7 @@ def _test_possibilities(X) -> None:
 
     # Test with single column dataframe
     expected_transformers_series = {
-        "low_card_cat": ["cat1"],
+        "low_cardinality": ["cat1"],
     }
     vectorizer_base.fit_transform(X[["cat1"]])
     check_same_transformers(expected_transformers_series, vectorizer_base.transformers_)
@@ -242,8 +242,8 @@ def _test_possibilities(X) -> None:
     X_str = X.astype("object")
     # With pandas
     expected_transformers_plain = {
-        "high_card_cat": ["str2", "cat2"],
-        "low_card_cat": ["str1", "cat1"],
+        "high_cardinality": ["str2", "cat2"],
+        "low_cardinality": ["str1", "cat1"],
         "numeric": ["int", "float"],
     }
     vectorizer_cast.fit_transform(X_str)
@@ -251,8 +251,8 @@ def _test_possibilities(X) -> None:
     # With numpy
     expected_transformers_np_cast = {
         "numeric": [0, 1],
-        "low_card_cat": [2, 4],
-        "high_card_cat": [3, 5],
+        "low_cardinality": [2, 4],
+        "high_cardinality": [3, 5],
     }
     vectorizer_cast.fit_transform(X_str.to_numpy())
     check_same_transformers(
@@ -353,8 +353,8 @@ def test_with_arrays() -> None:
     """
     expected_transformers = {
         "numeric": [0, 1],
-        "low_card_cat": [2, 4],
-        "high_card_cat": [3, 5],
+        "low_cardinality": [2, 4],
+        "high_cardinality": [3, 5],
     }
     vectorizer = TableVectorizer(
         cardinality_threshold=4,
@@ -580,7 +580,7 @@ def test_handle_unknown() -> None:
             [
                 ("numeric", "passthrough", ["int", "float"]),
                 ("minhashencoder", "MinHashEncoder", ["str1", "str2"]),
-                ("low_card_cat", "OneHotEncoder", ["cat1", "cat2"]),
+                ("low_cardinality", "OneHotEncoder", ["cat1", "cat2"]),
             ],
         ),
         (
@@ -588,7 +588,7 @@ def test_handle_unknown() -> None:
             [
                 ("numeric", "passthrough", ["int", "float"]),
                 ("mh_cat1", "MinHashEncoder", ["cat1"]),
-                ("low_card_cat", "OneHotEncoder", ["str1", "str2", "cat2"]),
+                ("low_cardinality", "OneHotEncoder", ["str1", "str2", "cat2"]),
             ],
         ),
     ],
@@ -673,7 +673,7 @@ def test_mixed_types() -> None:
     table_vec.fit_transform(df)
     expected_transformers_df = {
         "numeric": ["int_str", "float_str", "int_float"],
-        "low_card_cat": ["bool_str"],
+        "low_cardinality": ["bool_str"],
     }
     check_same_transformers(expected_transformers_df, table_vec.transformers_)
 
@@ -684,7 +684,7 @@ def test_mixed_types() -> None:
     table_vec.fit_transform(X)
     expected_transformers_array = {
         "numeric": [0, 1, 2],
-        "low_card_cat": [3],
+        "low_cardinality": [3],
     }
     check_same_transformers(expected_transformers_array, table_vec.transformers_)
 
@@ -898,7 +898,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
         n_jobs=None,
     ).fit(X)
     assert table_vectorizer.named_transformers_["numeric"].n_jobs is None
-    assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs is None
+    assert table_vectorizer.named_transformers_["low_cardinality"].n_jobs is None
 
     table_vectorizer = TableVectorizer(
         numerical_transformer=DummyTransformerWithJobs(n_jobs=2),
@@ -906,7 +906,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
         n_jobs=None,
     ).fit(X)
     assert table_vectorizer.named_transformers_["numeric"].n_jobs == 2
-    assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs is None
+    assert table_vectorizer.named_transformers_["low_cardinality"].n_jobs is None
 
     # 2. Case where `TableVectorizer.n_jobs` is not `None` and we should propagate
     # when the underlying transformer `n_jobs` is not set explicitly.
@@ -916,7 +916,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
         n_jobs=2,
     ).fit(X)
     assert table_vectorizer.named_transformers_["numeric"].n_jobs == 2
-    assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs == 2
+    assert table_vectorizer.named_transformers_["low_cardinality"].n_jobs == 2
 
     # 3. Case where `TableVectorizer.n_jobs` is not `None` and we should not propagate
     # when the underlying transformer `n_jobs` is set explicitly.
@@ -926,7 +926,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
         n_jobs=2,
     ).fit(X)
     assert table_vectorizer.named_transformers_["numeric"].n_jobs == 4
-    assert table_vectorizer.named_transformers_["low_card_cat"].n_jobs == 2
+    assert table_vectorizer.named_transformers_["low_cardinality"].n_jobs == 2
 
 
 def test_table_vectorizer_remainder_cloning():

@@ -94,14 +94,14 @@ pprint(tv.transformers_)
 #     - The |OneHotEncoder| for low cardinality string variables, the columns
 #       ``'gender'``, ``'department'``, ``'department_name'`` and ``'assignment_category'``.
 
-tv.named_transformers_["low_card_cat"].get_feature_names_out()
+tv.named_transformers_["low_cardinality"].get_feature_names_out()
 
 ###############################################################################
 #     - The |GapEncoder| for high cardinality string columns, ``'employee_position_title'``
 #       and ``'division'``. The |GapEncoder| is a powerful encoder that can handle dirty
 #       categorical columns.
 
-tv.named_transformers_["high_card_cat"].get_feature_names_out()
+tv.named_transformers_["high_cardinality"].get_feature_names_out()
 
 ###############################################################################
 #     - The |DatetimeEncoder| to the ``'date_first_hired'`` column. The |DatetimeEncoder|
