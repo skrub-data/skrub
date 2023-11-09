@@ -371,6 +371,7 @@ def _guess_datetime_format(X_col):
     Parameters
     ----------
     X_col : ndarray of shape ``(n_samples,)``
+        X_col must only contains string objects without any missing value.
 
     Returns
     -------

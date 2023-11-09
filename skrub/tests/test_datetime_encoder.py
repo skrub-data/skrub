@@ -439,11 +439,13 @@ def test_mixed_datetime_format():
 
 
 def test_mix_of_unambiguous():
-    X_col = ["2021/10/15", "2021/13/01"]
-
-    # no format (default), no-op
+    X_col = ["2021/10/15", "01/14/2021"]
     out = to_datetime(X_col)
-    assert_array_equal(out, X_col)
+    expected_out = np.array(
+        [np.datetime64("2021-10-15"), np.datetime64("NaT")],
+        dtype="datetime64[ns]",
+    )
+    assert_array_equal(out, expected_out)
 
 
 def test_only_ambiguous():
