@@ -209,4 +209,12 @@ class Joiner(TransformerMixin, BaseEstimator):
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
         match_result = self.matching_.match(main)
-        return match_result
+        aux_table = (
+            self.aux_table.rename(
+                columns={c: f"{c}{self.suffix}" for c in self.aux_table.columns}
+            )
+            .iloc[match_result["indices"]]
+            .set_axis(X.index, axis="index")
+        )
+        join = pd.concat([X, aux_table], axis=1)
+        return join
