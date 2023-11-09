@@ -115,7 +115,7 @@ def make_barplot(x, y, title):
 
 # O is Monday, 6 is Sunday
 
-daily_volume = X_date_encoded["timestamp_dayofweek"].value_counts().sort_index()
+daily_volume = X_date_encoded["timestamp_day_of_week"].value_counts().sort_index()
 
 make_barplot(
     x=daily_volume.index,
