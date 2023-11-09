@@ -4,9 +4,30 @@ multiple fuzzy joins on a table.
 """
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.compose import make_column_selector, make_column_transformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import make_pipeline
 
 from skrub import _join_utils
+from skrub._datetime_encoder import DatetimeEncoder
 from skrub._fuzzy_join import fuzzy_join
+
+# from skrub._matching import TargetNeighborhood
+
+# DEFAULT_MATCHING = TargetNeighborhood()
+DEFAULT_MATCHING = 0
+
+
+def _make_vectorizer(table):
+    transformers = [
+        (TfidfVectorizer(), c)
+        for c in table.select_dtypes(include=["string", "category", "object"]).columns
+    ]
+    transformers += [
+        ("passthrough", table.select_dtypes(include="number").columns),
+        (DatetimeEncoder()),
+    ]
+    return make_pipeline(make_column_transformer([]))
 
 
 class Joiner(TransformerMixin, BaseEstimator):
@@ -113,7 +134,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         aux_key=None,
         key=None,
         suffix="",
-        match_score=0.0,
+        matching=DEFAULT_MATCHING,
         analyzer="char_wb",
         ngram_range=(2, 4),
     ):
@@ -122,7 +143,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.aux_key = aux_key
         self.key = key
         self.suffix = suffix
-        self.match_score = match_score
+        self.matching = matching
         self.analyzer = analyzer
         self.ngram_range = ngram_range
 
@@ -149,6 +170,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
+        self.vectorizer_ = _make_vectorizer()
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
