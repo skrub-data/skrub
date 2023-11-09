@@ -133,6 +133,12 @@ class Joiner(TransformerMixin, BaseEstimator):
     2    Italy       italy    59000000
     """
 
+    _match_info_keys = ["nearest_neighbor_distance", "match_accepted"]
+    _match_info_key_renaming = {
+        k: f"skrub.Joiner.matching.{k}" for k in _match_info_keys
+    }
+    match_info_columns = list(_match_info_key_renaming.values())
+
     def __init__(
         self,
         aux_table,
@@ -143,6 +149,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         suffix="",
         matching=DEFAULT_MATCHING,
         string_encoder=DEFAULT_STRING_ENCODER,
+        insert_match_info=False,
     ):
         self.aux_table = aux_table
         self.main_key = main_key
@@ -155,6 +162,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             if string_encoder is DEFAULT_STRING_ENCODER
             else string_encoder
         )
+        self.insert_match_info = insert_match_info
 
     def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
@@ -212,8 +220,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         aux_table = self.aux_table.rename(
             columns={c: f"{c}{self.suffix}" for c in self.aux_table.columns}
         )
-        matching_col = match_result["indices"].copy()
-        matching_col[~match_result["accept"]] = -1
+        matching_col = match_result["nearest_neighbor_index"].copy()
+        matching_col[~match_result["match_accepted"]] = -1
         join = pd.merge(
             X,
             aux_table,
@@ -222,5 +230,10 @@ class Joiner(TransformerMixin, BaseEstimator):
             suffixes=("", ""),
             how="left",
         )
-        join["skrub.Joiner.matching.distance"] = match_result["distances"]
+        if self.insert_match_info:
+            # TODO maybe let the matching strategy decide which keys to insert
+            # (eg number of competitors in neighborhood, distance to closest
+            # competitor etc)
+            for info_col_name, info_key in self._match_info_key_renaming.items():
+                join[info_col_name] = match_result[info_key]
         return join

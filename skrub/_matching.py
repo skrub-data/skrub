@@ -16,9 +16,9 @@ class Threshold(BaseEstimator):
         distances, indices = self._neighbors.kneighbors(main, return_distance=True)
         distances, indices = distances.ravel(), indices.ravel()
         return {
-            "indices": indices,
-            "distances": distances,
-            "accept": distances <= self.threshold,
+            "nearest_neighbor_index": indices,
+            "nearest_neighbor_distance": distances,
+            "match_accepted": distances <= self.threshold,
         }
 
     def fit_match(self, aux, main):
@@ -48,7 +48,11 @@ class TargetNeighborhood(BaseEstimator):
         )
         competing_distances = competing_distances[:, -1]
         accept = distances * self.radius < competing_distances.ravel()
-        return {"indices": indices, "distances": distances, "accept": accept}
+        return {
+            "nearest_neighbor_index": indices,
+            "nearest_neighbor_distance": distances,
+            "match_accepted": accept,
+        }
 
     def fit_match(self, aux, main):
         return self.fit(aux, main).match(main)
@@ -71,7 +75,11 @@ class QueryNeighborhood(BaseEstimator):
         competing_distances = distances[:, -1]
         distances, indices = distances[:, 0], indices[:, 0]
         accept = distances * self.radius < competing_distances
-        return {"indices": indices, "distances": distances, "accept": accept}
+        return {
+            "nearest_neighbor_index": indices,
+            "nearest_neighbor_distance": distances,
+            "match_accepted": accept,
+        }
 
     def fit_match(self, aux, main):
         return self.fit(aux, main).match(main)
@@ -93,9 +101,9 @@ class MaxDistRescale(BaseEstimator):
         if self.max_dist_ != 0:
             distances /= self.max_dist_
         return {
-            "indices": indices,
-            "distances": distances,
-            "accept": distances <= self.threshold,
+            "nearest_neighbor_index": indices,
+            "nearest_neighbor_distance": distances,
+            "match_accepted": distances <= self.threshold,
         }
 
     def match(self, main):
@@ -106,7 +114,7 @@ class MaxDistRescale(BaseEstimator):
         else:
             distances[distances != 0] = np.inf
         return {
-            "indices": indices,
-            "distances": distances,
-            "accept": distances <= self.threshold,
+            "nearest_neighbor_index": indices,
+            "nearest_neighbor_distance": distances,
+            "match_accepted": distances <= self.threshold,
         }
