@@ -79,7 +79,7 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <h2>Other encoders</h2>
+   <h2>Dealing with dates</h2>
 
 .. autosummary::
    :toctree: generated/
@@ -88,6 +88,14 @@ This page lists all available functions and classes of `skrub`.
    :caption: Other encoders
 
    DatetimeEncoder
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: Converting datetime columns in a table
+
+   to_datetime
 
 .. raw:: html
 
