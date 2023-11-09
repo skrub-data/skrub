@@ -391,9 +391,9 @@ from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
 params = {
-    "joiner-1__match_score": [0.1, 0.9],
-    "joiner-2__match_score": [0.1, 0.9],
-    "joiner-3__match_score": [0.1, 0.9],
+    "joiner-1__matching__radius": [1.0, 1000],
+    "joiner-2__matching__radius": [1.0, 1000],
+    "joiner-3__matching__radius": [1.0, 1000],
 }
 
 grid = GridSearchCV(pipeline, param_grid=params, cv=cv)
