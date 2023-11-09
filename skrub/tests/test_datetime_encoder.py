@@ -438,6 +438,7 @@ def test_mixed_datetime_format():
     assert_array_equal(series_dt, expected_series_dt)
 
 
+@pytest.mark.skipif(not _is_pandas_format_mixed_available(), reason=MSG_MIN_PANDAS_SKIP)
 def test_mix_of_unambiguous():
     X_col = ["2021/10/15", "01/14/2021"]
     out = to_datetime(X_col)
