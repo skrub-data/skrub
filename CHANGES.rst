@@ -15,6 +15,10 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+* :func:`to_datetime` is now available to support pandas.to_datetime
+  over dataframes and 2d arrays.
+  :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
 * Some parameters of :class:`Joiner` have changed. The goal is to harmonize
   parameters across all estimator that perform join(-like) operations, as
   discussed in `#751 <https://github.com/skrub-data/skrub/discussions/751>`_.
@@ -57,6 +61,11 @@ Major changes
 
 Minor changes
 -------------
+* :class:`DatetimeEncoder` doesn't remove constant features anymore.
+  It also supports an 'errors' argument to raise or coerce errors during
+  transform, and a 'add_total_seconds' argument to include the number of
+  seconds since Epoch.
+  :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
 * Scaling of ``matching_score`` in :func:`fuzzy_join` is now between 0 and 1; it used to be between 0.5 and 1. Moreover, the division by 0 error that occurred when all rows had a perfect match has been fixed. :pr:`802` by :user:`Jérôme Dockès <jeromedockes>`.
 
