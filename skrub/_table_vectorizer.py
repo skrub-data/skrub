@@ -380,7 +380,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 ('low_cardinality', OneHotEncoder(drop='if_binary', handle_unknown='ignore', \
 sparse_output=False), \
 ['gender', 'department', 'department_name', 'assignment_category']), \
-('high_cardinality', GapEncoder(n_components=30), ['division', 'employee_position_title'])]
+('high_cardinality', GapEncoder(n_components=30), \
+    ['division', 'employee_position_title'])]
     """
 
     def __init__(
@@ -487,7 +488,7 @@ sparse_output=False), \
 
         X = to_datetime(X)
         X = to_numeric(X)
-        
+
         # Convert to the best possible data type
         self.types_ = {}
         for col_idx, col in enumerate(X.columns):
@@ -535,7 +536,7 @@ sparse_output=False), \
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col_idx] = dtype
-        
+
         for col_idx, dtype in self.types_.items():
             col = X.columns[col_idx]
             try:
@@ -733,7 +734,11 @@ sparse_output=False), \
         all_transformers = [
             ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
-            ("low_cardinality", self.low_cardinality_transformer_, low_cardinality_columns),
+            (
+                "low_cardinality",
+                self.low_cardinality_transformer_,
+                low_cardinality_columns,
+            ),
             (
                 "high_cardinality",
                 self.high_cardinality_transformer_,
