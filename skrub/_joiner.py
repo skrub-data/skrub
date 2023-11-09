@@ -3,19 +3,17 @@ Implements the Joiner, a transformer that allows
 multiple fuzzy joins on a table.
 """
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.compose import make_column_selector, make_column_transformer
+from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 from skrub import _join_utils
 from skrub._datetime_encoder import DatetimeEncoder
-from skrub._fuzzy_join import fuzzy_join
+from skrub._matching import TargetNeighborhood
 
-# from skrub._matching import TargetNeighborhood
-
-# DEFAULT_MATCHING = TargetNeighborhood()
-DEFAULT_MATCHING = 0
+DEFAULT_MATCHING = TargetNeighborhood()
 
 
 def _make_vectorizer(table):
@@ -25,9 +23,12 @@ def _make_vectorizer(table):
     ]
     transformers += [
         ("passthrough", table.select_dtypes(include="number").columns),
-        (DatetimeEncoder()),
+        (
+            DatetimeEncoder(resolution=None, add_total_seconds=True),
+            table.select_dtypes("datetime").columns,
+        ),
     ]
-    return make_pipeline(make_column_transformer([]))
+    return make_pipeline(make_column_transformer(*transformers), StandardScaler())
 
 
 class Joiner(TransformerMixin, BaseEstimator):
@@ -143,7 +144,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.aux_key = aux_key
         self.key = key
         self.suffix = suffix
-        self.matching = matching
+        self.matching = clone(matching) if matching is DEFAULT_MATCHING else matching
         self.analyzer = analyzer
         self.ngram_range = ngram_range
 
@@ -170,7 +171,12 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
-        self.vectorizer_ = _make_vectorizer()
+        self.vectorizer_ = _make_vectorizer(self.aux_table[self._aux_key])
+        aux = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
+        main = self.vectorizer_.transform(
+            X[self._main_key].set_axis(self._aux_key, axis="columns")
+        )
+        self.matching_ = clone(self.matching).fit(aux, main)
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
@@ -189,13 +195,8 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        return fuzzy_join(
-            X,
-            self.aux_table,
-            left_on=self._main_key,
-            right_on=self._aux_key,
-            match_score=self.match_score,
-            analyzer=self.analyzer,
-            ngram_range=self.ngram_range,
-            suffixes=("", self.suffix),
+        main = self.vectorizer_.transform(
+            X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
+        match_result = self.matching_.match(main)
+        return match_result
