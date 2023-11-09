@@ -18,7 +18,7 @@ Major changes
 * Pipelines including :class:`TableVectorizer` can now be grid-searched, since
   we can now call `set_params` on the default transformers of :class:`TableVectorizer`.
   :pr:`814` by :user:`Vincent Maladiere <Vincent-Maladiere>`
-  
+
 * :func:`to_datetime` is now available to support pandas.to_datetime
   over dataframes and 2d arrays.
   :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
