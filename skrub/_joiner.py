@@ -5,7 +5,7 @@ multiple fuzzy joins on a table.
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -14,21 +14,27 @@ from skrub._datetime_encoder import DatetimeEncoder
 from skrub._matching import TargetNeighborhood
 
 DEFAULT_MATCHING = TargetNeighborhood()
+DEFAULT_STRING_ENCODER = make_pipeline(
+    HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)), TfidfTransformer()
+)
+_DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
 
 
-def _make_vectorizer(table):
+def _make_vectorizer(table, string_encoder):
     transformers = [
-        (TfidfVectorizer(), c)
+        (clone(string_encoder), c)
         for c in table.select_dtypes(include=["string", "category", "object"]).columns
     ]
-    transformers += [
-        ("passthrough", table.select_dtypes(include="number").columns),
-        (
-            DatetimeEncoder(resolution=None, add_total_seconds=True),
-            table.select_dtypes("datetime").columns,
-        ),
-    ]
-    return make_pipeline(make_column_transformer(*transformers), StandardScaler())
+    num_columns = table.select_dtypes(include="number").columns
+    if not num_columns.empty:
+        transformers.append((StandardScaler(), num_columns))
+    dt_columns = table.select_dtypes("datetime").columns
+    if not dt_columns.empty:
+        transformers.append(
+            (make_pipeline(clone(_DATETIME_ENCODER), StandardScaler()), dt_columns)
+        )
+
+    return make_column_transformer(*transformers, sparse_threshold=1.0)
 
 
 class Joiner(TransformerMixin, BaseEstimator):
@@ -136,8 +142,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         key=None,
         suffix="",
         matching=DEFAULT_MATCHING,
-        analyzer="char_wb",
-        ngram_range=(2, 4),
+        string_encoder=DEFAULT_STRING_ENCODER,
     ):
         self.aux_table = aux_table
         self.main_key = main_key
@@ -145,8 +150,11 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.key = key
         self.suffix = suffix
         self.matching = clone(matching) if matching is DEFAULT_MATCHING else matching
-        self.analyzer = analyzer
-        self.ngram_range = ngram_range
+        self.string_encoder = (
+            clone(string_encoder)
+            if string_encoder is DEFAULT_STRING_ENCODER
+            else string_encoder
+        )
 
     def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
@@ -171,7 +179,9 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
-        self.vectorizer_ = _make_vectorizer(self.aux_table[self._aux_key])
+        self.vectorizer_ = _make_vectorizer(
+            self.aux_table[self._aux_key], self.string_encoder
+        )
         aux = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
