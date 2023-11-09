@@ -8,8 +8,11 @@ from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, MinHashEncoder, TableVectorizer
+from skrub._datetime_encoder import _is_pandas_format_mixed_available
 from skrub._table_vectorizer import _infer_date_format
 from skrub.tests.utils import transformers_list_equal
+
+MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
 
 def check_same_transformers(
@@ -787,7 +790,7 @@ def test_mixed_types() -> None:
             pd.DataFrame({"col1": [1.0, 2.0, np.nan]}),
         ),
         # All datetimes during fit, 1 category during transform
-        (
+        pytest.param(
             pd.DataFrame(
                 {
                     "col1": [
@@ -814,6 +817,10 @@ def test_mixed_types() -> None:
                         np.nan,
                     ]
                 }
+            ),
+            marks=pytest.mark.skipif(
+                not _is_pandas_format_mixed_available(),
+                reason=MSG_PANDAS_DEPRECATED_WARNING,
             ),
         ),
     ],
