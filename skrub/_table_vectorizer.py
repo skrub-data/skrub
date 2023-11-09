@@ -10,7 +10,6 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 import sklearn
-from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -20,7 +19,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import Bunch
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import DatetimeEncoder, GapEncoder
+from skrub import DatetimeEncoder, GapEncoder, to_datetime
 from skrub._utils import parse_astype_error_message
 
 HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
@@ -30,71 +29,6 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     drop="if_binary",
 )
 DATETIME_TRANSFORMER = DatetimeEncoder()
-
-
-def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
-    """Infer the date format of a date column,
-    by finding a format which should work for all dates in the column.
-
-    Parameters
-    ----------
-    date_column : Series
-        A column of dates, as strings.
-    n_trials : int, default=100
-        Number of rows to use to infer the date format.
-
-    Returns
-    -------
-    str or None
-        The date format inferred from the column.
-        If no format could be inferred, returns None.
-    """
-    if len(date_column) == 0:
-        return
-    date_column_sample = date_column.dropna().sample(
-        frac=min(n_trials / len(date_column), 1), random_state=42
-    )
-    # try to infer the date format
-    # see if either dayfirst or monthfirst works for all the rows
-    with warnings.catch_warnings():
-        # pandas warns when dayfirst is not strictly applied
-        warnings.simplefilter("ignore")
-        date_format_monthfirst = date_column_sample.apply(
-            lambda x: guess_datetime_format(x)
-        )
-        date_format_dayfirst = date_column_sample.apply(
-            lambda x: guess_datetime_format(x, dayfirst=True),
-        )
-    # if one row could not be parsed, return None
-    if date_format_monthfirst.isnull().any() or date_format_dayfirst.isnull().any():
-        return
-    # even with dayfirst=True, monthfirst format can be inferred
-    # so we need to check if the format is the same for all the rows
-    elif date_format_monthfirst.nunique() == 1:
-        # one monthfirst format works for all the rows
-        # check if another format works for all the rows
-        # if so, raise a warning
-        if date_format_dayfirst.nunique() == 1:
-            # check if monthfirst and dayfirst haven't found the same format
-            if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
-                warnings.warn(
-                    f"""
-                    Both {date_format_monthfirst.iloc[0]} and
-                    {date_format_dayfirst.iloc[0]} are valid formats for the dates in
-                    column '{date_column.name}'.
-                    Format {date_format_monthfirst.iloc[0]} will be used.
-                    """,
-                    UserWarning,
-                    stacklevel=2,
-                )
-        return date_format_monthfirst.iloc[0]
-    elif date_format_dayfirst.nunique() == 1:
-        # only this format works for all the rows
-        return date_format_dayfirst.iloc[0]
-    else:
-        # more than two different formats were found
-        # TODO: maybe we could deal with this case
-        return
 
 
 def _has_missing_values(df: pd.DataFrame | pd.Series) -> bool:
@@ -211,6 +145,26 @@ def _propagate_n_jobs(transformer, n_jobs):
     ):
         transformer.set_params(n_jobs=n_jobs)
     return transformer
+
+
+def to_numeric(X):
+    """Convert the columns of a dataframe into a numeric representation.
+
+    Parameters
+    ----------
+    X : pandas.DataFrame
+
+    Returns
+    -------
+    X : pandas.DataFrame
+    """
+    columns = X.columns
+    X_out = X.copy()
+    for column in columns:
+        X_col = X[column]
+        if not np.issubdtype(X_col.dtype, np.datetime64):
+            X_out[column] = pd.to_numeric(X_col, errors="ignore")
+    return X_out
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
@@ -499,7 +453,7 @@ sparse_output=False), \
             self.n_jobs,
         )
 
-    def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
+    def _auto_cast(self, X):
         """Takes a dataframe and tries to convert its columns to their best possible
         data type.
 
@@ -531,42 +485,12 @@ sparse_output=False), \
         for col in object_cols:
             X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
 
+        X = to_datetime(X)
+        X = to_numeric(X)
+        
         # Convert to the best possible data type
         self.types_ = {}
         for col_idx, col in enumerate(X.columns):
-            if not pd.api.types.is_datetime64_any_dtype(X[col]):
-                # we don't want to cast datetime64
-                try:
-                    X[col] = pd.to_numeric(X[col], errors="raise")
-                except (ValueError, TypeError):
-                    # Only try to convert to datetime
-                    # if the variable isn't numeric.
-                    # try to find the best format
-                    format = _infer_date_format(X[col])
-                    # if a format is found, try to apply to the whole column
-                    # if no format is found, pandas will try to parse each row
-                    # with a different engine, which can understand weirder formats
-                    try:
-                        # catch the warnings raised by pandas
-                        # in case the conversion fails
-                        with warnings.catch_warnings(record=True) as w:
-                            X[col] = pd.to_datetime(
-                                X[col], errors="raise", format=format
-                            )
-                        # if the conversion worked, raise pandas warnings
-                        for warning in w:
-                            with warnings.catch_warnings():
-                                # otherwise the warning is considered a duplicate
-                                warnings.simplefilter("always")
-                                warnings.warn(
-                                    "Warning raised by pandas when converting column"
-                                    f" '{col}' to datetime: "
-                                    + str(warning.message),
-                                    UserWarning,
-                                    stacklevel=2,
-                                )
-                    except (ValueError, TypeError):
-                        pass
             # Cast pandas dtypes to numpy dtypes
             # for earlier versions of sklearn. FIXME: which ?
             if issubclass(X[col].dtype.__class__, ExtensionDtype):
@@ -577,7 +501,7 @@ sparse_output=False), \
             self.types_[col_idx] = X[col].dtype
         return X
 
-    def _apply_cast(self, X: pd.DataFrame) -> pd.DataFrame:
+    def _apply_cast(self, X):
         """Takes a dataframe, and applies the best data types learnt during fitting.
 
         Does the same thing as `_auto_cast`, but applies learnt info.
@@ -611,6 +535,7 @@ sparse_output=False), \
                     categories=known_categories.union(new_categories)
                 )
                 self.types_[col_idx] = dtype
+        
         for col_idx, dtype in self.types_.items():
             col = X.columns[col_idx]
             try:
@@ -636,7 +561,7 @@ sparse_output=False), \
                 if pd.api.types.is_numeric_dtype(dtype):
                     X[col] = pd.to_numeric(X[col], errors="coerce")
                 elif pd.api.types.is_datetime64_any_dtype(dtype):
-                    X[col] = pd.to_datetime(X[col], errors="coerce")
+                    X[col] = to_datetime(X[col])
                 else:
                     # this should not happen
                     raise e
