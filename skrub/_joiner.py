@@ -209,12 +209,18 @@ class Joiner(TransformerMixin, BaseEstimator):
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
         match_result = self.matching_.match(main)
-        aux_table = (
-            self.aux_table.rename(
-                columns={c: f"{c}{self.suffix}" for c in self.aux_table.columns}
-            )
-            .iloc[match_result["indices"]]
-            .set_axis(X.index, axis="index")
+        aux_table = self.aux_table.rename(
+            columns={c: f"{c}{self.suffix}" for c in self.aux_table.columns}
         )
-        join = pd.concat([X, aux_table], axis=1)
+        matching_col = match_result["indices"].copy()
+        matching_col[~match_result["accept"]] = -1
+        join = pd.merge(
+            X,
+            aux_table,
+            left_on=matching_col,
+            right_index=True,
+            suffixes=("", ""),
+            how="left",
+        )
+        join["skrub.Joiner.matching.distance"] = match_result["distances"]
         return join
