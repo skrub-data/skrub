@@ -86,8 +86,15 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     vectorizer : scikit-learn transformer that can operate on a DataFrame
         Used to transform the feature columns before passing them to the
         scikit-learn estimators. This is useful if we are joining on columns
-        that cannot be used directly, such as timestamps or strings
-        representing high-cardinality categories.
+        that need some transformation, such as dates or strings representing
+        high-cardinality categories. By default we use a ``MinHashEncoder`` to
+        vectorize text columns. This is because the ``MinHashEncoder`` is very
+        fast and usually gives good results with downstream learners based on
+        trees like the gradient-boosted trees used by default for ``regressor``
+        and ``classifier``. If you replace the default regressor and classifier
+        with models such as nearest-neighbors or linear models, consider
+        passing ``vectorizer=TableVectorizer()`` which will encode text with a
+        ``GapEncoder`` rather than a ``MinHashEncoder``.
 
     n_jobs : int or None
         Number of jobs to run in parallel. ``None`` means 1 unless in a
