@@ -15,10 +15,17 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
-
 * :class:`InterpolationJoiner` was added to join two tables by using
   machine-learning to infer the matching rows from the second table.
   :pr:`742` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Pipelines including :class:`TableVectorizer` can now be grid-searched, since
+  we can now call `set_params` on the default transformers of :class:`TableVectorizer`.
+  :pr:`814` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
+* :func:`to_datetime` is now available to support pandas.to_datetime
+  over dataframes and 2d arrays.
+  :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
 * Some parameters of :class:`Joiner` have changed. The goal is to harmonize
   parameters across all estimator that perform join(-like) operations, as
@@ -62,7 +69,16 @@ Major changes
 
 Minor changes
 -------------
+* :class:`DatetimeEncoder` doesn't remove constant features anymore.
+  It also supports an 'errors' argument to raise or coerce errors during
+  transform, and a 'add_total_seconds' argument to include the number of
+  seconds since Epoch.
+  :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
+* Scaling of ``matching_score`` in :func:`fuzzy_join` is now between 0 and 1; it used to be between 0.5 and 1. Moreover, the division by 0 error that occurred when all rows had a perfect match has been fixed. :pr:`802` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* :class:`TableVectorizer` is now able to apply parallelism at the column level rather than the transformer level. This is the default for univariate transformers, like :class:`MinHashEncoder`, and :class:`GapEncoder`.
+  :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
 
 * ``inverse_transform`` in :class:`SimilarityEncoder` now works as expected; it used to raise an exception. :pr:`801` by :user:`Jérôme Dockès <jeromedockes>`.
 
@@ -70,6 +86,7 @@ Minor changes
   transformers except if the underlying transformer already set explicitly `n_jobs`.
   :pr:`761` by :user:`Leo Grinsztajn <LeoGrin>`, :user:`Guillaume Lemaitre <glemaitre>`,
   and :user:`Jerome Dockes <jeromedockes>`.
+
 
 * Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`

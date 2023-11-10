@@ -7,9 +7,12 @@ from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardSc
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import GapEncoder, MinHashEncoder, SuperVectorizer, TableVectorizer
+from skrub import GapEncoder, MinHashEncoder, TableVectorizer
+from skrub._datetime_encoder import _is_pandas_format_mixed_available
 from skrub._table_vectorizer import _infer_date_format
 from skrub.tests.utils import transformers_list_equal
+
+MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
 
 def check_same_transformers(
@@ -189,7 +192,7 @@ def _test_possibilities(X) -> None:
     vectorizer_base = TableVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
-        high_card_cat_transformer=GapEncoder(n_components=2),
+        high_cardinality_transformer=GapEncoder(n_components=2),
         numerical_transformer=StandardScaler(),
     )
     # Warning: order-dependant
@@ -234,7 +237,7 @@ def _test_possibilities(X) -> None:
     vectorizer_cast = TableVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
-        high_card_cat_transformer=GapEncoder(n_components=2),
+        high_cardinality_transformer=GapEncoder(n_components=2),
         numerical_transformer=StandardScaler(),
     )
     X_str = X.astype("object")
@@ -357,7 +360,7 @@ def test_with_arrays() -> None:
     vectorizer = TableVectorizer(
         cardinality_threshold=4,
         # we must have n_samples = 5 >= n_components
-        high_card_cat_transformer=GapEncoder(n_components=2),
+        high_cardinality_transformer=GapEncoder(n_components=2),
         numerical_transformer=StandardScaler(),
     )
 
@@ -377,23 +380,28 @@ def test_get_feature_names_out() -> None:
     vec_w_pass.fit(X)
 
     # In this test, order matters. If it doesn't, convert to set.
-    expected_feature_names_pass = [
-        "int",
-        "float",
-        "str1_public",
-        "str2_chef",
-        "str2_lawyer",
-        "str2_manager",
-        "str2_officer",
-        "str2_teacher",
-        "cat1_yes",
-        "cat2_20K+",
-        "cat2_30K+",
-        "cat2_40K+",
-        "cat2_50K+",
-        "cat2_60K+",
-    ]
-    assert vec_w_pass.get_feature_names_out().tolist() == expected_feature_names_pass
+    expected_feature_names_pass = np.array(
+        [
+            "int",
+            "float",
+            "str1_public",
+            "str2_chef",
+            "str2_lawyer",
+            "str2_manager",
+            "str2_officer",
+            "str2_teacher",
+            "cat1_yes",
+            "cat2_20K+",
+            "cat2_30K+",
+            "cat2_40K+",
+            "cat2_50K+",
+            "cat2_60K+",
+        ]
+    )
+    assert_array_equal(
+        vec_w_pass.get_feature_names_out(),
+        expected_feature_names_pass,
+    )
 
     vec_w_drop = TableVectorizer(remainder="drop")
     vec_w_drop.fit(X)
@@ -477,8 +485,8 @@ def test_passthrough() -> None:
     X_clean = _get_clean_dataframe()
 
     tv = TableVectorizer(
-        low_card_cat_transformer="passthrough",
-        high_card_cat_transformer="passthrough",
+        low_cardinality_transformer="passthrough",
+        high_cardinality_transformer="passthrough",
         datetime_transformer="passthrough",
         numerical_transformer="passthrough",
         impute_missing="skip",
@@ -512,12 +520,6 @@ def test_check_fitted_table_vectorizer() -> None:
     # Test that calling transform after fit works
     tv.fit(X)
     tv.transform(X)
-
-
-def test_check_name_change() -> None:
-    """Test that using SuperVectorizer raises a deprecation warning"""
-    with pytest.warns(FutureWarning):
-        SuperVectorizer()
 
 
 def test_handle_unknown() -> None:
@@ -729,7 +731,7 @@ def test_specific_transformers_unexpected_behavior():
             ],
         ),
         TableVectorizer(
-            low_card_cat_transformer=MinHashEncoder(),
+            low_cardinality_transformer=MinHashEncoder(),
         ),
     ],
 )
@@ -788,7 +790,7 @@ def test_mixed_types() -> None:
             pd.DataFrame({"col1": [1.0, 2.0, np.nan]}),
         ),
         # All datetimes during fit, 1 category during transform
-        (
+        pytest.param(
             pd.DataFrame(
                 {
                     "col1": [
@@ -815,6 +817,10 @@ def test_mixed_types() -> None:
                         np.nan,
                     ]
                 }
+            ),
+            marks=pytest.mark.skipif(
+                not _is_pandas_format_mixed_available(),
+                reason=MSG_PANDAS_DEPRECATED_WARNING,
             ),
         ),
     ],
@@ -869,13 +875,13 @@ def test_column_by_column() -> None:
     # when applied column by column
     X = _get_clean_dataframe()
     table_vec_all_cols = TableVectorizer(
-        high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
+        high_cardinality_transformer=GapEncoder(n_components=2, random_state=0),
         cardinality_threshold=4,
     )
     table_vec_all_cols.fit(X)
     for col in X.columns:
         table_vec_one_col = TableVectorizer(
-            high_card_cat_transformer=GapEncoder(n_components=2, random_state=0),
+            high_cardinality_transformer=GapEncoder(n_components=2, random_state=0),
             cardinality_threshold=4,
         )
         table_vec_one_col.fit(X[[col]])
@@ -898,7 +904,7 @@ def test_column_by_column() -> None:
 
 @skip_if_no_parallel
 @pytest.mark.parametrize(
-    "high_card_cat_transformer",
+    "high_cardinality_transformer",
     # the gap encoder and the minhashencoder
     # should be parallelized on all columns
     # the one hot encoder should not be parallelized
@@ -908,11 +914,11 @@ def test_column_by_column() -> None:
         MinHashEncoder(n_components=2),
     ],
 )
-def test_parallelism(high_card_cat_transformer) -> None:
+def test_parallelism(high_cardinality_transformer) -> None:
     # Test that parallelism works
     X = _get_clean_dataframe()
     table_vec_no_parallel = TableVectorizer(
-        high_card_cat_transformer=high_card_cat_transformer,
+        high_cardinality_transformer=high_cardinality_transformer,
         cardinality_threshold=4,
     )
     X_trans = table_vec_no_parallel.fit_transform(X)
@@ -920,7 +926,7 @@ def test_parallelism(high_card_cat_transformer) -> None:
         for n_jobs in [None, 2, -1]:
             table_vec = TableVectorizer(
                 n_jobs=n_jobs,
-                high_card_cat_transformer=high_card_cat_transformer,
+                high_cardinality_transformer=high_cardinality_transformer,
                 cardinality_threshold=4,
             )
             X_trans_parallel = table_vec.fit_transform(X)
@@ -973,7 +979,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
 
     table_vectorizer = TableVectorizer(
         numerical_transformer=DummyTransformerWithJobs(n_jobs=None),
-        low_card_cat_transformer=DummyTransformerWithJobs(n_jobs=None),
+        low_cardinality_transformer=DummyTransformerWithJobs(n_jobs=None),
         n_jobs=None,
     ).fit(X)
     assert table_vectorizer.named_transformers_["numeric"].n_jobs is None
@@ -981,7 +987,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
 
     table_vectorizer = TableVectorizer(
         numerical_transformer=DummyTransformerWithJobs(n_jobs=2),
-        low_card_cat_transformer=DummyTransformerWithJobs(n_jobs=None),
+        low_cardinality_transformer=DummyTransformerWithJobs(n_jobs=None),
         n_jobs=None,
     ).fit(X)
     assert table_vectorizer.named_transformers_["numeric"].n_jobs == 2
@@ -991,7 +997,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
     # when the underlying transformer `n_jobs` is not set explicitly.
     table_vectorizer = TableVectorizer(
         numerical_transformer=DummyTransformerWithJobs(n_jobs=None),
-        low_card_cat_transformer=DummyTransformerWithJobs(n_jobs=None),
+        low_cardinality_transformer=DummyTransformerWithJobs(n_jobs=None),
         n_jobs=2,
     ).fit(X)
     assert table_vectorizer.named_transformers_["numeric"].n_jobs == 2
@@ -1001,7 +1007,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
     # when the underlying transformer `n_jobs` is set explicitly.
     table_vectorizer = TableVectorizer(
         numerical_transformer=DummyTransformerWithJobs(n_jobs=4),
-        low_card_cat_transformer=DummyTransformerWithJobs(n_jobs=None),
+        low_cardinality_transformer=DummyTransformerWithJobs(n_jobs=None),
         n_jobs=2,
     ).fit(X)
     assert table_vectorizer.named_transformers_["numeric"].n_jobs == 4
@@ -1015,14 +1021,14 @@ def test_table_vectorizer_remainder_cloning():
     df = pd.concat([df1, df2], axis=1)
     remainder = FunctionTransformer()
     table_vectorizer = TableVectorizer(
-        low_card_cat_transformer="remainder",
-        high_card_cat_transformer="remainder",
+        low_cardinality_transformer="remainder",
+        high_cardinality_transformer="remainder",
         numerical_transformer="remainder",
         datetime_transformer="remainder",
         remainder=remainder,
     ).fit(df)
-    assert table_vectorizer.low_card_cat_transformer_ is not remainder
-    assert table_vectorizer.high_card_cat_transformer_ is not remainder
+    assert table_vectorizer.low_cardinality_transformer_ is not remainder
+    assert table_vectorizer.high_cardinality_transformer_ is not remainder
     assert table_vectorizer.numerical_transformer_ is not remainder
     assert table_vectorizer.datetime_transformer_ is not remainder
 

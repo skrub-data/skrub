@@ -155,7 +155,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
        airportId airportName company_mode_1  total_passengers_mean_1
     0          1   Paris CDG             AF               103.33...
     1          2      NY JFK             DL                80.00...
-    """  # noqa: E501
+    """
 
     def __init__(
         self,
@@ -416,18 +416,18 @@ class AggTarget(BaseEstimator, TransformerMixin):
     ...     "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
     ... })
     >>> y = np.array([1, 1, 0, 0, 1, 1])
-    >>> join_agg = AggTarget(
+    >>> agg_target = AggTarget(
     ...     main_key="company",
     ...     operation=["mean", "max"],
     ... )
-    >>> join_agg.fit_transform(X, y)
+    >>> agg_target.fit_transform(X, y)
        flightId  from_airport  ...  y_0_max_target y_0_mean_target
-    0         1             1  ...               1        0.66...
-    1         2             1  ...               1        0.50...
-    2         3             1  ...               1        0.50...
-    3         4             2  ...               1        0.66...
-    4         5             2  ...               1        0.66...
-    5         6             2  ...               1        1.00...
+    0         1             1  ...               1        0.666667
+    1         2             1  ...               1        0.500000
+    2         3             1  ...               1        0.500000
+    3         4             2  ...               1        0.666667
+    4         5             2  ...               1        0.666667
+    5         6             2  ...               1        1.000000
     <BLANKLINE>
     [6 rows x 6 columns]
     """
