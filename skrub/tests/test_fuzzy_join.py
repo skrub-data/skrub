@@ -9,19 +9,29 @@ from pandas.testing import assert_frame_equal
 from sklearn.feature_extraction.text import HashingVectorizer
 
 from skrub import fuzzy_join
+from skrub._dataframe._polars import POLARS_SETUP
+
+ASSERT_TUPLES = [pd]
+
+if POLARS_SETUP:
+    import polars as pl
+
+    ASSERT_TUPLES.append(pl)
 
 
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
 @pytest.mark.parametrize(
     "analyzer",
     ["char", "char_wb", "word"],
 )
-def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]) -> None:
+def test_fuzzy_join(px, analyzer: Literal["char", "char_wb", "word"]):
     """
     Testing if fuzzy_join results are as expected.
     """
-
-    df1 = pd.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
-    df2 = pd.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]})
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    df1 = px.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
+    df2 = px.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]})
 
     df_joined = fuzzy_join(
         left=df1,
@@ -82,19 +92,25 @@ def test_fuzzy_join(analyzer: Literal["char", "char_wb", "word"]) -> None:
     assert ("a1l" and "a1r") in df.columns
 
 
-def test_match_score():
-    left = pd.DataFrame({"A": ["aa", "bb"]})
-    right = pd.DataFrame({"A": ["aa", "ba"], "B": [1, 2]})
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_match_score(px):
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    left = px.DataFrame({"A": ["aa", "bb"]})
+    right = px.DataFrame({"A": ["aa", "ba"], "B": [1, 2]})
     join = fuzzy_join(left, right, on="A", suffixes=("l", "r"))
     assert join["B"].to_list() == [1, 2]
     join = fuzzy_join(left, right, on="A", suffixes=("l", "r"), match_score=0.5)
     assert join["B"].fillna(-1).to_list() == [1, -1]
 
 
-def test_perfect_matches():
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_perfect_matches(px):
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     # non-regression test for https://github.com/skrub-data/skrub/issues/764
     # fuzzy_join when all rows had a perfect match used to trigger a division by 0
-    df = pd.DataFrame({"A": [0, 1]})
+    df = px.DataFrame({"A": [0, 1]})
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         warnings.filterwarnings("ignore", message="This feature is still experimental")
@@ -102,18 +118,22 @@ def test_perfect_matches():
     assert_array_equal(join["matching_score"].to_numpy(), [1.0, 1.0])
 
 
-def test_fuzzy_join_dtypes() -> None:
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_fuzzy_join_dtypes(px):
     """
     Test that the dtypes of dataframes are maintained after join
     """
-    a = pd.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
-    b = pd.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    a = px.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
+    b = px.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
     c = fuzzy_join(a, b, on="col1")
     assert a.dtypes["col2"].kind == "i"
     assert c.dtypes["col2"] == a.dtypes["col2"]
     assert c.dtypes["col3"] == b.dtypes["col3"]
 
 
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
 @pytest.mark.parametrize(
     ["analyzer", "on", "how"],
     [
@@ -121,12 +141,12 @@ def test_fuzzy_join_dtypes() -> None:
         (1, 3, "right"),
     ],
 )
-def test_parameters_error(analyzer, on, how) -> None:
+def test_parameters_error(px, analyzer, on, how) -> None:
     """
     Testing if correct errors are raised when wrong parameter values are given.
     """
-    df1 = pd.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
-    df2 = pd.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
+    df1 = px.DataFrame({"a": ["ana", "lala", "nana"], "b": [1, 2, 3]})
+    df2 = px.DataFrame({"a": ["anna", "lala", "ana", "sana"], "c": [5, 6, 7, 8]})
     with pytest.raises(
         ValueError,
         match=(
@@ -146,25 +166,31 @@ def test_parameters_error(analyzer, on, how) -> None:
         fuzzy_join(df1, df2, on="a", match_score="blabla")
 
 
-def test_missing_keys() -> None:
-    a = pd.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
-    b = pd.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_missing_keys(px):
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    a = px.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
+    b = px.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
     with pytest.raises(
         KeyError,
         match=r"Required parameter missing",
     ):
         fuzzy_join(a, b, left_on="col1")
-    left = pd.DataFrame({"a": ["aa", np.NaN, "bb"], "b": [1, 2, np.NaN]})
-    right = pd.DataFrame(
+    left = px.DataFrame({"a": ["aa", np.NaN, "bb"], "b": [1, 2, np.NaN]})
+    right = px.DataFrame(
         {"a": ["aa", "bb", np.NaN, "cc", "dd"], "c": [5, 6, 7, 8, np.NaN]}
     )
     output = fuzzy_join(left, right, on="a")
     assert output.shape == (3, 4)
 
 
-def test_drop_unmatched() -> None:
-    a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
-    b = pd.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_drop_unmatched(px):
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    a = px.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
+    b = px.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
 
     c1 = fuzzy_join(a, b, on="col1", match_score=0.1, drop_unmatched=True)
     assert c1.shape == (2, 4)
@@ -179,13 +205,16 @@ def test_drop_unmatched() -> None:
     assert c4.shape == (2, 4)
 
 
-def test_how_param() -> None:
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_how_param(px):
     """
     Test correct shape of left and right joins.
     Also test if an error is raised when an incorrect parameter value is passed.
     """
-    a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
-    b = pd.DataFrame(
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    a = px.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
+    b = px.DataFrame(
         {
             "col2": ["aaa_", "bbb_", "ccc", "ddd", "eee", "fff"],
             "col3": [1, 2, 3, 4, 5, 6],
@@ -205,7 +234,7 @@ def test_how_param() -> None:
         c = fuzzy_join(a, b, how="inner")
 
 
-def test_fuzzy_join_pandas_comparison() -> None:
+def test_fuzzy_join_pandas_comparison():
     """
     Tests if fuzzy_join's output is as similar as
     possible with `pandas.merge`.
@@ -253,10 +282,13 @@ def test_fuzzy_join_pandas_comparison() -> None:
     pd.testing.assert_frame_equal(result_s, result_s_fj)
 
 
-def test_correct_encoder() -> None:
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_correct_encoder(px):
     """
     Test that the encoder error checking is working as intended.
     """
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
 
     class TestVectorizer(HashingVectorizer):
         """
@@ -268,7 +300,7 @@ def test_correct_encoder() -> None:
         def fit(self, X):
             raise AssertionError("Custom vectorizer was called as intended.")
 
-    left = pd.DataFrame(
+    left = px.DataFrame(
         {
             "key": ["K0", "K1", "K2", "K3"],
             "A": ["A0", "A1", "A2", "A3"],
@@ -276,7 +308,7 @@ def test_correct_encoder() -> None:
         }
     )
 
-    right = pd.DataFrame(
+    right = px.DataFrame(
         {
             "key": ["K0", "K1", "K2", "K3"],
             "C": ["C0", "C1", "C2", "C3"],
@@ -297,13 +329,15 @@ def test_correct_encoder() -> None:
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
 
 
-def test_numerical_column() -> None:
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_numerical_column(px):
     """
     Testing that fuzzy_join works with numerical columns.
     """
-
-    left = pd.DataFrame({"str1": ["aa", "a", "bb"], "int": [10, 2, 5]})
-    right = pd.DataFrame(
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    left = px.DataFrame({"str1": ["aa", "a", "bb"], "int": [10, 2, 5]})
+    right = px.DataFrame(
         {
             "str2": ["aa", "bb", "a", "cc", "dd"],
             "int": [55, 6, 2, 15, 6],
@@ -329,21 +363,23 @@ def test_numerical_column() -> None:
     assert fj_num3.shape == (2, n_cols)
 
 
-def test_datetime_column():
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_datetime_column(px):
     """
     Testing that fuzzy_join works with datetime columns.
     """
-
-    left = pd.DataFrame(
+    if px is pl:
+        pytest.xfail(reason="Module 'polars' has no attribute 'to_datetime'")
+    left = px.DataFrame(
         {
             "str1": ["aa", "a", "bb"],
-            "date": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
+            "date": px.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
         }
     )
-    right = pd.DataFrame(
+    right = px.DataFrame(
         {
             "str2": ["aa", "bb", "a", "cc", "dd"],
-            "date": pd.to_datetime(
+            "date": px.to_datetime(
                 ["09/10/2022", "12/24/2021", "09/25/2010", "11/05/2025", "02/21/2000"]
             ),
         }
@@ -351,12 +387,12 @@ def test_datetime_column():
 
     fj_time = fuzzy_join(left, right, on="date")
 
-    fj_time_expected = pd.DataFrame(
+    fj_time_expected = px.DataFrame(
         {
             "str1": ["aa", "a", "bb"],
-            "date_x": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
+            "date_x": px.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
             "str2": ["aa", "bb", "a"],
-            "date_y": pd.to_datetime(["09/10/2022", "12/24/2021", "09/25/2010"]),
+            "date_y": px.to_datetime(["09/10/2022", "12/24/2021", "09/25/2010"]),
         }
     )
     assert_frame_equal(fj_time, fj_time_expected)
@@ -379,27 +415,29 @@ def test_datetime_column():
     assert fj_time3.shape == (2, n_cols)
 
 
-def test_mixed_joins():
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_mixed_joins(px):
     """
     Test fuzzy joining on mixed and multiple column types.
     """
-
-    left = pd.DataFrame(
+    if px is pl:
+        pytest.xfail(reason="Module 'polars' has no attribute 'to_datetime'")
+    left = px.DataFrame(
         {
             "str1": ["Paris", "Paris", "Paris"],
             "str2": ["Texas", "France", "Greek God"],
             "int1": [10, 2, 5],
             "int2": [103, 250, 532],
-            "date": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
+            "date": px.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
         }
     )
-    right = pd.DataFrame(
+    right = px.DataFrame(
         {
             "str_1": ["Paris", "Paris", "Paris", "cc", "dd"],
             "str_2": ["TX", "FR", "GR Mytho", "cc", "dd"],
             "int1": [55, 6, 2, 15, 6],
             "int2": [554, 146, 32, 215, 612],
-            "date": pd.to_datetime(
+            "date": px.to_datetime(
                 ["09/10/2022", "12/24/2021", "09/25/2010", "11/05/2025", "02/21/2000"]
             ),
         }
@@ -408,18 +446,18 @@ def test_mixed_joins():
     # On multiple numeric keys
     fj_num = fuzzy_join(left, right, on=["int1", "int2"])
 
-    expected_fj_num = pd.DataFrame(
+    expected_fj_num = px.DataFrame(
         {
             "str1": ["Paris", "Paris", "Paris"],
             "str2": ["Texas", "France", "Greek God"],
             "int1_x": [10, 2, 5],
             "int2_x": [103, 250, 532],
-            "date_x": pd.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
+            "date_x": px.to_datetime(["10/10/2022", "12/11/2021", "09/25/2011"]),
             "str_1": ["Paris", "Paris", "dd"],
             "str_2": ["FR", "FR", "dd"],
             "int1_y": [6, 6, 6],
             "int2_y": [146, 146, 612],
-            "date_y": pd.to_datetime(["12/24/2021", "12/24/2021", "02/21/2000"]),
+            "date_y": px.to_datetime(["12/24/2021", "12/24/2021", "02/21/2000"]),
         }
     )
     assert_frame_equal(fj_num, expected_fj_num)
@@ -433,18 +471,18 @@ def test_mixed_joins():
         right_on=["str_1", "str_2"],
     )
 
-    expected_fj_str = pd.DataFrame(
+    expected_fj_str = px.DataFrame(
         {
             "str1": ["Paris", "Paris", "Paris"],
             "str2": ["Texas", "France", "Greek God"],
             "int1_x": [10, 2, 5],
             "int2_x": [103, 250, 532],
-            "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
+            "date_x": px.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
             "str_1": ["Paris", "Paris", "Paris"],
             "str_2": ["TX", "FR", "GR Mytho"],
             "int1_y": [55, 6, 2],
             "int2_y": [554, 146, 32],
-            "date_y": pd.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
+            "date_y": px.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
         }
     )
     assert_frame_equal(fj_str, expected_fj_str)
@@ -457,18 +495,18 @@ def test_mixed_joins():
         left_on=["str1", "str2", "int2"],
         right_on=["str_1", "str_2", "int2"],
     )
-    expected_fj_mixed = pd.DataFrame(
+    expected_fj_mixed = px.DataFrame(
         {
             "str1": ["Paris", "Paris", "Paris"],
             "str2": ["Texas", "France", "Greek God"],
             "int1_x": [10, 2, 5],
             "int2_x": [103, 250, 532],
-            "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
+            "date_x": px.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
             "str_1": ["Paris", "Paris", "Paris"],
             "str_2": ["FR", "FR", "TX"],
             "int1_y": [6, 6, 55],
             "int2_y": [146, 146, 554],
-            "date_y": pd.to_datetime(["2021-12-24", "2021-12-24", "2022-09-10"]),
+            "date_y": px.to_datetime(["2021-12-24", "2021-12-24", "2022-09-10"]),
         }
     )
     assert_frame_equal(fj_mixed, expected_fj_mixed)
@@ -481,18 +519,18 @@ def test_mixed_joins():
         left_on=["str1", "date"],
         right_on=["str_1", "date"],
     )
-    expected_fj_mixed2 = pd.DataFrame(
+    expected_fj_mixed2 = px.DataFrame(
         {
             "str1": ["Paris", "Paris", "Paris"],
             "str2": ["Texas", "France", "Greek God"],
             "int1_x": [10, 2, 5],
             "int2_x": [103, 250, 532],
-            "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
+            "date_x": px.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
             "str_1": ["Paris", "Paris", "Paris"],
             "str_2": ["TX", "FR", "GR Mytho"],
             "int1_y": [55, 6, 2],
             "int2_y": [554, 146, 32],
-            "date_y": pd.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
+            "date_y": px.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
         }
     )
     assert_frame_equal(fj_mixed2, expected_fj_mixed2)
@@ -505,32 +543,35 @@ def test_mixed_joins():
         left_on=["int1", "date"],
         right_on=["int1", "date"],
     )
-    expected_fj_mixed3 = pd.DataFrame(
+    expected_fj_mixed3 = px.DataFrame(
         {
             "str1": ["Paris", "Paris", "Paris"],
             "str2": ["Texas", "France", "Greek God"],
             "int1_x": [10, 2, 5],
             "int2_x": [103, 250, 532],
-            "date_x": pd.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
+            "date_x": px.to_datetime(["2022-10-10", "2021-12-11", "2011-09-25"]),
             "str_1": ["Paris", "Paris", "Paris"],
             "str_2": ["FR", "FR", "GR Mytho"],
             "int1_y": [6, 6, 2],
             "int2_y": [146, 146, 32],
-            "date_y": pd.to_datetime(["2021-12-24", "2021-12-24", "2010-09-25"]),
+            "date_y": px.to_datetime(["2021-12-24", "2021-12-24", "2010-09-25"]),
         }
     )
     assert_frame_equal(fj_mixed3, expected_fj_mixed3)
     assert fj_mixed3.shape == (3, 10)
 
 
-def test_iterable_input() -> None:
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_iterable_input(px):
     """
     Test if iterable input: list, set, dictionary or tuple works.
     """
-    df1 = pd.DataFrame(
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    df1 = px.DataFrame(
         {"a": ["ana", "lala", "nana"], "str2": ["Texas", "France", "Greek God"]}
     )
-    df2 = pd.DataFrame(
+    df2 = px.DataFrame(
         {"a": ["anna", "lala", "ana", "nnana"], "str_2": ["TX", "FR", "GR Mytho", "dd"]}
     )
     assert fuzzy_join(df1, df2, on=["a"]).shape == (3, 4)
@@ -545,12 +586,15 @@ def test_iterable_input() -> None:
     ).shape == (3, 4)
 
 
-def test_missing_values() -> None:
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_missing_values(px):
     """
     Test fuzzy joining on missing values.
     """
-    a = pd.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
-    b = pd.DataFrame({"col3": [np.NaN, "bbb", "ddd dd"], "col4": [1, 2, 3]})
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    a = px.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
+    b = px.DataFrame({"col3": [np.NaN, "bbb", "ddd dd"], "col4": [1, 2, 3]})
 
     with pytest.warns(UserWarning, match=r"merging on missing values"):
         c = fuzzy_join(a, b, left_on="col1", right_on="col3", how="right")
