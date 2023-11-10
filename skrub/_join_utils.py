@@ -3,7 +3,7 @@
 from skrub import _utils
 
 
-def check_key(main_key, aux_key, key):
+def check_key(main_key, aux_key, key, key_names={}):
     """Find the correct main and auxiliary keys (matching column names).
 
     They can be provided either as `key` when the names are the same in
@@ -25,6 +25,8 @@ def check_key(main_key, aux_key, key):
         Can be provided in place of `main_key` and `aux_key` when they are the
         same. We must provide non-``None`` values for either `key` or both
         `main_key` and `aux_key`.
+    key_names : dict[str, str]
+        How to refer to the parameters in the error message(if any).
 
     Returns
     -------
@@ -32,16 +34,23 @@ def check_key(main_key, aux_key, key):
         The correct sets of matching columns to use, each provided as a list of
         column names.
     """
+    key_names = {**{k: k for k in ["main_key", "aux_key", "key"]}, **key_names}
+    main_key_name = key_names["main_key"]
+    aux_key_name = key_names["aux_key"]
+    key_name = key_names["key"]
     if key is not None:
         if aux_key is not None or main_key is not None:
             raise ValueError(
-                "Can only pass argument 'key' OR 'main_key' and "
-                "'aux_key', not a combination of both."
+                f"Can only pass argument '{key_name}' OR '{main_key_name}' and "
+                f"'{aux_key_name}', not a combination of both."
             )
         main_key, aux_key = key, key
     else:
         if aux_key is None or main_key is None:
-            raise ValueError("Must pass EITHER 'key', OR ('main_key' AND 'aux_key').")
+            raise ValueError(
+                f"Must pass EITHER '{key_name}', OR ('{main_key_name}' AND"
+                f" '{aux_key_name}')."
+            )
     main_key = _utils.atleast_1d_or_none(main_key)
     aux_key = _utils.atleast_1d_or_none(aux_key)
     return main_key, aux_key

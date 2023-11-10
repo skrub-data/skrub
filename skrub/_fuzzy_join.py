@@ -5,6 +5,7 @@ Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 
 import pandas as pd
 
+from skrub import _join_utils
 from skrub._joiner import DEFAULT_MATCHING, DEFAULT_STRING_ENCODER, Joiner
 
 
@@ -47,11 +48,6 @@ def fuzzy_join(
         A table to merge.
     right : :obj:`~pandas.DataFrame`
         A table used to merge with.
-    how : {'left', 'right'}, default='left'
-        Type of merge to be performed. Note that unlike pandas.merge,
-        only "left" and "right" are supported so far, as the fuzzy-join comes
-        with its own mechanism to resolve lack of correspondence between
-        left and right tables.
     left_on : str or list of str, optional
         Name of left table column(s) to join.
     right_on : str or list of str, optional
@@ -61,54 +57,24 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    encoder : vectorizer instance, optional
+    string_encoder : vectorizer instance, optional
         Encoder parameter for the Vectorizer.
         By default, uses a HashingVectorizer.
         It is possible to pass a vectorizer instance inheriting
         _VectorizerMixin to tweak the parameters of the encoder.
-    analyzer : {'word', 'char', 'char_wb'}, default='char_wb'
-        Analyzer parameter for the HashingVectorizer
-        passed to the encoder and used for the string similarities.
-        Describes whether the matrix `V` to factorize should be made of
-        word counts or character n-gram counts.
-        Option `char_wb` creates character n-grams only from text inside word
-        boundaries; n-grams at the edges of words are padded with space.
-    ngram_range : 2-tuple of int, default=(2, 4)
-        The lower and upper boundaries of the range of n-values for different
-        n-grams used in the string similarity. All values of `n` such
-        that ``min_n <= n <= max_n`` will be used.
-    return_score : bool, default=True
-        Whether to return matching score based on the distance between
-        the nearest matched categories.
-    match_score : float, default=0.0
-        Distance score between the closest matches that will be accepted.
-        In a [0, 1] interval. 1 means that only a perfect match will be
-        accepted, and zero means that the closest match will be accepted,
-        no matter how distant.
-        For numerical joins, this defines the maximum Euclidean distance
-        between the matches.
     drop_unmatched : bool, default=False
         Remove categories for which a match was not found in the two tables.
-    sort : bool, default=False
-        Sort the join keys lexicographically in the resulting :obj:`~pandas.DataFrame`.
-        If False, the order of the join keys depends on the join type
-        (`how` keyword).
-    suffixes : 2-tuple of str, default=('_x', '_y')
-        A list of strings indicating the suffix to add when overlaping
-        column names.
+    suffix: str, default=""
 
     Returns
     -------
     df_joined : :obj:`~pandas.DataFrame`
-        The joined table returned as a :obj:`~pandas.DataFrame`.
-        If `return_score=True`, another column will be added
-        to the DataFrame containing the matching scores.
+        The joined table.
 
     See Also
     --------
     Joiner
-        Transformer to enrich a given table via one or more fuzzy joins to
-        external resources.
+        fuzzy_join implemented as a scikit-learn transformer.
 
     Notes
     -----
@@ -168,7 +134,18 @@ def fuzzy_join(
 
     As expected, the category "nana" has no exact match (`match_score=1`).
     """
-    return Joiner(
+    # duplicate the key checks performed by the Joiner so we can get better
+    # names in error messages
+    left_key, right_key = _join_utils.check_key(
+        left_on,
+        right_on,
+        on,
+        key_names={"main_key": "left_on", "aux_key": "right_on", "key": "on"},
+    )
+    _join_utils.check_missing_columns(left, left_key, "'left' (the left table)")
+    _join_utils.check_missing_columns(right, right_key, "'right' (the right table)")
+
+    join = Joiner(
         aux_table=right,
         main_key=left_on,
         aux_key=right_on,
@@ -176,4 +153,10 @@ def fuzzy_join(
         suffix=suffix,
         matching=matching,
         string_encoder=string_encoder,
+        insert_match_info=True,
     ).fit_transform(left)
+    if drop_unmatched:
+        join = join[join["skrub.Joiner.matching.match_accepted"]]
+    if not insert_match_info:
+        join = join.drop(Joiner.match_info_columns, axis=1)
+    return join

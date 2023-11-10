@@ -234,6 +234,6 @@ class Joiner(TransformerMixin, BaseEstimator):
             # TODO maybe let the matching strategy decide which keys to insert
             # (eg number of competitors in neighborhood, distance to closest
             # competitor etc)
-            for info_col_name, info_key in self._match_info_key_renaming.items():
+            for info_key, info_col_name in self._match_info_key_renaming.items():
                 join[info_col_name] = match_result[info_key]
         return join
