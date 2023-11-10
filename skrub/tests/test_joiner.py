@@ -3,25 +3,35 @@ import pytest
 from numpy.testing import assert_array_equal
 
 from skrub import Joiner
+from skrub._dataframe._polars import POLARS_SETUP
+
+ASSERT_TUPLES = [pd]
+
+if POLARS_SETUP:
+    import polars as pl
+
+    ASSERT_TUPLES.append(pl)
 
 
-def test_joiner() -> None:
-    main_table = pd.DataFrame(
-        [
-            "France",
-            "Germany",
-            "Italy",
-        ],
-        columns=["Country"],
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_joiner(px):
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    main_table = px.DataFrame(
+        {
+            "Country": [
+                "France",
+                "Germany",
+                "Italy",
+            ]
+        }
     )
 
-    aux_table = pd.DataFrame(
-        [
-            ["Germany", 84_000_000],
-            ["French Republic", 68_000_000],
-            ["Italia", 59_000_000],
-        ],
-        columns=["country", "Population"],
+    aux_table = px.DataFrame(
+        {
+            "country": ["Germany", "French Republic", "Italia"],
+            "Population": [84_000_000, 68_000_000, 59_000_000],
+        }
     )
     joiner = Joiner(aux_table=aux_table, main_key="Country", aux_key="country")
 
@@ -49,21 +59,22 @@ def test_joiner() -> None:
         false_joiner2.fit(main_table)
 
 
-def test_multiple_keys():
-    df = pd.DataFrame(
-        [["France", "Paris"], ["Italia", "Roma"], ["Deutchland", "Berlin"]],
-        columns=["Co", "Ca"],
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_multiple_keys(px):
+    if px is pl:
+        pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
+    df = px.DataFrame(
+        {"Co": ["France", "Italia", "Deutchland"], "Ca": ["Paris", "Roma", "Berlin"]}
     )
-    df2 = pd.DataFrame(
-        [["France", "Paris"], ["Italy", "Rome"], ["Germany", "Berlin"]],
-        columns=["CO", "CA"],
+    df2 = px.DataFrame(
+        {"CO": ["France", "Italy", "Germany"], "CA": ["Paris", "Rome", "Berlin"]}
     )
     joiner_list = Joiner(aux_table=df2, aux_key=["CO", "CA"], main_key=["Co", "Ca"])
     result = joiner_list.fit_transform(df)
-    expected = pd.DataFrame(pd.concat([df, df2], axis=1))
-    pd.testing.assert_frame_equal(result, expected)
+    expected = px.DataFrame(px.concat([df, df2], axis=1))
+    px.testing.assert_frame_equal(result, expected)
 
     joiner_list = Joiner(aux_table=df2, aux_key="CA", main_key="Ca")
     result = joiner_list.fit_transform(df)
-    expected = pd.DataFrame(pd.concat([df, df2], axis=1))
-    pd.testing.assert_frame_equal(result, expected)
+    expected = px.DataFrame(px.concat([df, df2], axis=1))
+    px.testing.assert_frame_equal(result, expected)
