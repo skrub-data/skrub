@@ -10,8 +10,18 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils._testing import skip_if_no_parallel
 
 from skrub import MinHashEncoder
+from skrub._dataframe._polars import POLARS_SETUP
 
 from .utils import generate_data
+
+ASSERT_TUPLES = [pd]
+INPUT_TYPE = ["numpy", "pandas"]
+
+if POLARS_SETUP:
+    import polars as pl
+
+    ASSERT_TUPLES.append(pl)
+    INPUT_TYPE.append("polars")
 
 
 @pytest.mark.parametrize(
@@ -22,7 +32,7 @@ from .utils import generate_data
         ("murmur", False),
     ],
 )
-def test_minhash_encoder(hashing, minmax_hash) -> None:
+def test_minhash_encoder(hashing, minmax_hash):
     X = np.array(["al ice", "b ob", "bob and alice", "alice and bob"])[:, None]
     # Test output shape
     encoder = MinHashEncoder(n_components=2, hashing=hashing)
@@ -47,20 +57,18 @@ def test_minhash_encoder(hashing, minmax_hash) -> None:
         np.testing.assert_array_less(y - y_substring, 0.001)
 
 
-def test_multiple_columns() -> None:
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_multiple_columns(px):
     """
     This test aims at verifying that fitting multiple columns
     with the MinHashEncoder will not produce an error, and will
     encode the column independently.
     """
-    X = pd.DataFrame(
-        [
-            ("bird", "parrot"),
-            ("bird", "nightingale"),
-            ("mammal", "monkey"),
-            ("mammal", np.nan),
-        ],
-        columns=("class", "type"),
+    X = px.DataFrame(
+        {
+            "class": ["bird", "bird", "mammal", "mammal"],
+            "type": ["parrot", "nightingale", "monkey", np.nan],
+        }
     )
     X1 = X[["class"]]
     X2 = X[["type"]]
@@ -70,7 +78,7 @@ def test_multiple_columns() -> None:
     assert_array_equal(np.array([fit[:, :30], fit[:, 30:60]]), np.array([fit1, fit2]))
 
 
-def test_input_type() -> None:
+def test_input_type():
     # Numpy array
     X = np.array(["alice", "bob"])[:, None]
     enc = MinHashEncoder(n_components=2)
@@ -89,7 +97,7 @@ def test_input_type() -> None:
         ("murmur", False),
     ],
 )
-def test_encoder_params(hashing, minmax_hash) -> None:
+def test_encoder_params(hashing, minmax_hash):
     X = generate_data(n_samples=20)
     enc = MinHashEncoder(
         n_components=50, hashing=hashing, minmax_hash=minmax_hash, ngram_range=(3, 3)
@@ -102,10 +110,10 @@ def test_encoder_params(hashing, minmax_hash) -> None:
     assert y2.shape == (len(X2), 50)
 
 
-@pytest.mark.parametrize("input_type", ["numpy", "pandas"])
+@pytest.mark.parametrize("input_type", INPUT_TYPE)
 @pytest.mark.parametrize("missing", ["error", "zero_impute", "aaa"])
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
-def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
+def test_missing_values(input_type: str, missing: str, hashing: str):
     X = ["Red", np.nan, "green", "blue", "green", "green", "blue", float("nan")]
     n = 3
     z = np.zeros(n)
@@ -114,6 +122,8 @@ def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
         X = np.array(X, dtype=object)[:, None]
     elif input_type == "pandas":
         X = pd.DataFrame(X)
+    elif input_type == "polars":
+        X = pl.DataFrame(X)
 
     encoder = MinHashEncoder(
         n_components=n, hashing=hashing, minmax_hash=False, handle_missing=missing
@@ -139,7 +149,7 @@ def test_missing_values(input_type: str, missing: str, hashing: str) -> None:
     return
 
 
-def test_missing_values_none() -> None:
+def test_missing_values_none():
     # Test that "None" is also understood as a missing value
     a = np.array([["a", "b", None, "c"]], dtype=object).T
 
@@ -152,7 +162,7 @@ def test_missing_values_none() -> None:
     assert_array_equal(f[2], 0)
 
 
-def test_cache_overflow() -> None:
+def test_cache_overflow():
     # Regression test for cache overflow resulting in -1s in encoding
     def get_random_string(length):
         letters = ascii_lowercase
@@ -169,7 +179,7 @@ def test_cache_overflow() -> None:
 
 
 @skip_if_no_parallel
-def test_parallelism() -> None:
+def test_parallelism():
     # Test that parallelism works
     encoder = MinHashEncoder(n_components=3, n_jobs=1)
     X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
@@ -211,7 +221,7 @@ joblib.register_parallel_backend("testing", DummyBackend)
 
 
 @skip_if_no_parallel
-def test_backend_respected() -> None:
+def test_backend_respected():
     """
     Test that the joblib backend is used.
     Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
@@ -226,7 +236,7 @@ def test_backend_respected() -> None:
     assert ba.count > 0
 
 
-def test_correct_arguments() -> None:
+def test_correct_arguments():
     # Test that the correct arguments are passed to the hashing function
     X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
     # Write an incorrect value for the `hashing` argument
@@ -250,7 +260,7 @@ def test_correct_arguments() -> None:
         encoder.fit_transform(X)
 
 
-def test_check_fitted_minhash_encoder() -> None:
+def test_check_fitted_minhash_encoder():
     """Test that calling transform before fit raises an error"""
     encoder = MinHashEncoder(n_components=3)
     X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
@@ -273,10 +283,11 @@ def test_deterministic():
     assert_array_equal(encoded1, encoded2)
 
 
-def test_get_feature_names_out():
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
+def test_get_feature_names_out(px):
     """Test that get_feature_names_out returns the correct feature names"""
     encoder = MinHashEncoder(n_components=4)
-    X = pd.DataFrame(
+    X = px.DataFrame(
         {
             "col1": ["a", "b", "c", "d", "e", "f", "g", "h"],
             "col2": ["a", "b", "c", "d", "e", "f", "g", "h"],
