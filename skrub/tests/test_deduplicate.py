@@ -8,6 +8,7 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
+from skrub._dataframe._polars import POLARS_SETUP
 from skrub._deduplicate import (
     _create_spelling_correction,
     _guess_clusters,
@@ -16,16 +17,29 @@ from skrub._deduplicate import (
 )
 from skrub.datasets import make_deduplication_data
 
+ASSERT_TUPLES = [pd]
 
+if POLARS_SETUP:
+    import polars as pl
+
+    ASSERT_TUPLES.append(pl)
+
+
+@pytest.mark.parametrize("px", ASSERT_TUPLES)
 @pytest.mark.parametrize(
-    ["entries_per_category", "prob_mistake_per_letter"],
-    [[[500, 100, 1500], 0.05], [[100, 100], 0.02], [[200, 50, 30, 200, 800], 0.01]],
+    "entries_per_category, prob_mistake_per_letter",
+    [([500, 100, 1500], 0.05), ([100, 100], 0.02), ([200, 50, 30, 200, 800], 0.01)],
 )
 def test_deduplicate(
+    px,
     entries_per_category: list[int],
     prob_mistake_per_letter: float,
     seed: int = 123,
-) -> None:
+):
+    if px is pl:
+        pytest.xfail(
+            reason="Polars Series.__init__() got an unexpected keyword argument 'index'"
+        )
     rng = np.random.RandomState(seed)
 
     # hard coded to fix ground truth string similarities
@@ -47,7 +61,7 @@ def test_deduplicate(
     assert recovered_categories.shape[0] == n_clusters
     assert np.isin(clean_categories, recovered_categories).all()
     deduplicated_data = deduplicate(data, n_clusters=n_clusters)
-    translation_table = pd.Series(deduplicated_data, index=data)
+    translation_table = px.Series(deduplicated_data, index=data)
     translation_table = translation_table[
         ~translation_table.index.duplicated(keep="first")
     ]
@@ -60,7 +74,7 @@ def test_deduplicate(
     assert np.isin(unique_other_analyzer, recovered_categories).all()
 
 
-def test_compute_ngram_distance() -> None:
+def test_compute_ngram_distance():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
     distance = compute_ngram_distance(words)
     distance = squareform(distance)
@@ -70,7 +84,7 @@ def test_compute_ngram_distance() -> None:
         assert np.allclose(distance[words == un_word][:, words == un_word], 0)
 
 
-def test__guess_clusters() -> None:
+def test__guess_clusters():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
     distance = compute_ngram_distance(words)
     Z = linkage(distance, method="average")
@@ -78,7 +92,7 @@ def test__guess_clusters() -> None:
     assert n_clusters == len(np.unique(words))
 
 
-def test__create_spelling_correction(seed: int = 123) -> None:
+def test__create_spelling_correction(seed: int = 123):
     rng = np.random.RandomState(seed)
     n_clusters = 3
     samples_per_cluster = 10
@@ -116,7 +130,7 @@ def default_deduplicate(n: int = 500, random_state=0):
     return X, y
 
 
-def test_parallelism() -> None:
+def test_parallelism():
     """Tests that parallelism works with different backends and n_jobs."""
 
     X, y = default_deduplicate(n=200)
