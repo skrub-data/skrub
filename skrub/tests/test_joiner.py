@@ -1,16 +1,20 @@
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from pandas.testing import assert_frame_equal
 
 from skrub import Joiner
 from skrub._dataframe._polars import POLARS_SETUP
 
 MODULES = [pd]
+ASSERT_FRAME_EQUAL = {"pandas": assert_frame_equal}
 
 if POLARS_SETUP:
     import polars as pl
+    from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
     MODULES.append(pl)
+    ASSERT_FRAME_EQUAL["polars"] = assert_frame_equal_pl
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -72,9 +76,9 @@ def test_multiple_keys(px):
     joiner_list = Joiner(aux_table=df2, aux_key=["CO", "CA"], main_key=["Co", "Ca"])
     result = joiner_list.fit_transform(df)
     expected = px.DataFrame(px.concat([df, df2], axis=1))
-    px.testing.assert_frame_equal(result, expected)
+    ASSERT_FRAME_EQUAL[px.__name__](result, expected)
 
     joiner_list = Joiner(aux_table=df2, aux_key="CA", main_key="Ca")
     result = joiner_list.fit_transform(df)
     expected = px.DataFrame(px.concat([df, df2], axis=1))
-    px.testing.assert_frame_equal(result, expected)
+    ASSERT_FRAME_EQUAL[px.__name__](result, expected)

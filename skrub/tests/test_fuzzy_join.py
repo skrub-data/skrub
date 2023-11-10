@@ -12,11 +12,14 @@ from skrub import fuzzy_join
 from skrub._dataframe._polars import POLARS_SETUP
 
 ASSERT_TUPLES = [pd]
+ASSERT_FRAME_EQUAL = {"pandas": assert_frame_equal}
 
 if POLARS_SETUP:
     import polars as pl
+    from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
     ASSERT_TUPLES.append(pl)
+    ASSERT_FRAME_EQUAL["polars"] = assert_frame_equal_pl
 
 
 @pytest.mark.parametrize("px", ASSERT_TUPLES)
@@ -261,7 +264,7 @@ def test_fuzzy_join_pandas_comparison():
     result_fj.drop(columns=["key_y"], inplace=True)
     result_fj.rename(columns={"key_x": "key"}, inplace=True)
 
-    pd.testing.assert_frame_equal(result, result_fj)
+    assert_frame_equal(result, result_fj)
 
     result_r = pd.merge(left, right, on="key", how="right")
     result_r_fj = fuzzy_join(left, right, on="key", how="right")
@@ -269,7 +272,7 @@ def test_fuzzy_join_pandas_comparison():
     result_r_fj.drop(columns=["key_y"], inplace=True)
     result_r_fj.rename(columns={"key_x": "key"}, inplace=True)
 
-    pd.testing.assert_frame_equal(result_r, result_r_fj)
+    assert_frame_equal(result_r, result_r_fj)
 
     left = left.sample(frac=1, random_state=0)
     right = right.sample(frac=1, random_state=0)
@@ -279,7 +282,7 @@ def test_fuzzy_join_pandas_comparison():
     result_s_fj.drop(columns=["key_y"], inplace=True)
     result_s_fj.rename(columns={"key_x": "key"}, inplace=True)
 
-    pd.testing.assert_frame_equal(result_s, result_s_fj)
+    assert_frame_equal(result_s, result_s_fj)
 
 
 @pytest.mark.parametrize("px", ASSERT_TUPLES)
@@ -395,7 +398,7 @@ def test_datetime_column(px):
             "date_y": px.to_datetime(["09/10/2022", "12/24/2021", "09/25/2010"]),
         }
     )
-    assert_frame_equal(fj_time, fj_time_expected)
+    ASSERT_FRAME_EQUAL[px.__name__](fj_time, fj_time_expected)
 
     n_cols = left.shape[1] + right.shape[1]
     n_samples = len(left)
@@ -460,7 +463,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["12/24/2021", "12/24/2021", "02/21/2000"]),
         }
     )
-    assert_frame_equal(fj_num, expected_fj_num)
+    ASSERT_FRAME_EQUAL[px.__name__](fj_num, expected_fj_num)
     assert fj_num.shape == (3, 10)
 
     # On multiple string keys
@@ -485,7 +488,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
         }
     )
-    assert_frame_equal(fj_str, expected_fj_str)
+    ASSERT_FRAME_EQUAL[px.__name__](fj_str, expected_fj_str)
     assert fj_str.shape == (3, 10)
 
     # On mixed, numeric and string keys
@@ -509,7 +512,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["2021-12-24", "2021-12-24", "2022-09-10"]),
         }
     )
-    assert_frame_equal(fj_mixed, expected_fj_mixed)
+    ASSERT_FRAME_EQUAL[px.__name__](fj_mixed, expected_fj_mixed)
     assert fj_mixed.shape == (3, 10)
 
     # On mixed time and string keys
@@ -533,7 +536,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
         }
     )
-    assert_frame_equal(fj_mixed2, expected_fj_mixed2)
+    ASSERT_FRAME_EQUAL[px.__name__](fj_mixed2, expected_fj_mixed2)
     assert fj_mixed2.shape == (3, 10)
 
     # On mixed time and numbers keys
@@ -557,7 +560,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["2021-12-24", "2021-12-24", "2010-09-25"]),
         }
     )
-    assert_frame_equal(fj_mixed3, expected_fj_mixed3)
+    ASSERT_FRAME_EQUAL[px.__name__](fj_mixed3, expected_fj_mixed3)
     assert fj_mixed3.shape == (3, 10)
 
 
