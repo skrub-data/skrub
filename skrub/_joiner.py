@@ -11,9 +11,9 @@ from sklearn.preprocessing import StandardScaler
 
 from skrub import _join_utils
 from skrub._datetime_encoder import DatetimeEncoder
-from skrub._matching import TargetNeighborhood
+from skrub._matching import TargetNeighbor
 
-DEFAULT_MATCHING = TargetNeighborhood()
+DEFAULT_MATCHING = TargetNeighbor()
 DEFAULT_STRING_ENCODER = make_pipeline(
     HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)), TfidfTransformer()
 )
@@ -133,10 +133,8 @@ class Joiner(TransformerMixin, BaseEstimator):
     2    Italy       italy    59000000
     """
 
-    _match_info_keys = ["nearest_neighbor_distance", "match_accepted"]
-    _match_info_key_renaming = {
-        k: f"skrub.Joiner.matching.{k}" for k in _match_info_keys
-    }
+    _match_info_keys = ["distance", "rescaled_distance", "match_accepted"]
+    _match_info_key_renaming = {k: f"skrub.Joiner.{k}" for k in _match_info_keys}
     match_info_columns = list(_match_info_key_renaming.values())
 
     def __init__(
@@ -147,6 +145,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         aux_key=None,
         key=None,
         suffix="",
+        max_dist=1.0,
         matching=DEFAULT_MATCHING,
         string_encoder=DEFAULT_STRING_ENCODER,
         insert_match_info=False,
@@ -156,6 +155,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.aux_key = aux_key
         self.key = key
         self.suffix = suffix
+        self.max_dist = max_dist
         self.matching = clone(matching) if matching is DEFAULT_MATCHING else matching
         self.string_encoder = (
             clone(string_encoder)
@@ -190,6 +190,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.vectorizer_ = _make_vectorizer(
             self.aux_table[self._aux_key], self.string_encoder
         )
+        # TODO: fast path if max_dist == 0 and not return_matching_info, don't
+        # vectorize nor fit matching just do normal equijoin
         aux = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
@@ -216,11 +218,11 @@ class Joiner(TransformerMixin, BaseEstimator):
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
-        match_result = self.matching_.match(main)
+        match_result = self.matching_.match(main, self.max_dist)
         aux_table = self.aux_table.rename(
             columns={c: f"{c}{self.suffix}" for c in self.aux_table.columns}
         )
-        matching_col = match_result["nearest_neighbor_index"].copy()
+        matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1
         join = pd.merge(
             X,

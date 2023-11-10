@@ -3,118 +3,73 @@ from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
 
 
-class Threshold(BaseEstimator):
-    def __init__(self, threshold=1.0):
-        self.threshold = threshold
+class Matching(BaseEstimator):
+    def __init__(self):
+        pass
 
     def fit(self, aux, main):
         del main
-        self._neighbors = NearestNeighbors(n_neighbors=1).fit(aux)
+        self.aux_ = aux
+        self.neighbors_ = NearestNeighbors(n_neighbors=1).fit(aux)
         return self
 
-    def match(self, main):
-        distances, indices = self._neighbors.kneighbors(main, return_distance=True)
+    def match(self, main, max_dist):
+        distances, indices = self.neighbors_.kneighbors(main, return_distance=True)
         distances, indices = distances.ravel(), indices.ravel()
+        reference_distances = self._get_reference_distances(main, indices, distances)
+        rescaled_distances = self._rescale_distances(distances, reference_distances)
         return {
-            "nearest_neighbor_index": indices,
-            "nearest_neighbor_distance": distances,
-            "match_accepted": distances <= self.threshold,
+            "index": indices,
+            "distance": distances,
+            "rescaled_distance": rescaled_distances,
+            "match_accepted": rescaled_distances <= max_dist,
         }
 
-    def fit_match(self, aux, main):
-        return self.fit(aux, main).match(main)
+    def _get_reference_distances(self, main, indices, distances):
+        del main, indices, distances
+        return 1.0
 
-
-class TargetNeighborhood(BaseEstimator):
-    def __init__(self, radius=1.0, tolerated_neighbors=0):
-        self.radius = radius
-        self.tolerated_neighbors = tolerated_neighbors
-
-    def fit(self, aux, main):
-        del main
-        self._aux = aux
-        self._neighbors = NearestNeighbors(
-            n_neighbors=self.tolerated_neighbors + 2
-        ).fit(self._aux)
-        return self
-
-    def match(self, main):
-        distances, indices = self._neighbors.kneighbors(
-            main, return_distance=True, n_neighbors=1
+    def _rescale_distances(self, distances, reference_distances):
+        reference_distances = np.asarray(reference_distances)
+        ref_is_zero = reference_distances == 0.0
+        rescaled_distances = np.zeros_like(distances)
+        rescaled_distances[~ref_is_zero] = (
+            distances[~ref_is_zero] / reference_distances[~ref_is_zero]
         )
-        distances, indices = distances.ravel(), indices.ravel()
-        competing_distances, _ = self._neighbors.kneighbors(
-            self._aux[indices], return_distance=True
+        rescaled_distances[ref_is_zero] = np.inf
+        rescaled_distances[distances == 0] = 0.0
+        return rescaled_distances
+
+
+class TargetNeighbor(Matching):
+    def __init__(self, reference_neighbor=1):
+        self.reference_neighbor = reference_neighbor
+
+    def _get_reference_distances(self, main, distances, indices):
+        del main, distances
+        reference_distances, _ = self.neighbors_.kneighbors(
+            self.aux_[indices],
+            return_distance=True,
+            n_neighbors=self.reference_neighbor + 1,
         )
-        competing_distances = competing_distances[:, -1]
-        accept = distances * self.radius < competing_distances.ravel()
-        return {
-            "nearest_neighbor_index": indices,
-            "nearest_neighbor_distance": distances,
-            "match_accepted": accept,
-        }
-
-    def fit_match(self, aux, main):
-        return self.fit(aux, main).match(main)
+        reference_distances = reference_distances[:, -1]
+        return reference_distances
 
 
-class QueryNeighborhood(BaseEstimator):
-    def __init__(self, radius=1.0, tolerated_neighbors=0):
-        self.radius = radius
-        self.tolerated_neighbors = tolerated_neighbors
+class QueryNeighbor(Matching):
+    def __init__(self, reference_neighbor=1):
+        self.reference_neighbor = reference_neighbor
 
-    def fit(self, aux, main):
-        del main
-        self._neighbors = NearestNeighbors(
-            n_neighbors=self.tolerated_neighbors + 2
-        ).fit(aux)
-        return self
-
-    def match(self, main):
-        distances, indices = self._neighbors.kneighbors(main, return_distance=True)
-        competing_distances = distances[:, -1]
-        distances, indices = distances[:, 0], indices[:, 0]
-        accept = distances * self.radius < competing_distances
-        return {
-            "nearest_neighbor_index": indices,
-            "nearest_neighbor_distance": distances,
-            "match_accepted": accept,
-        }
-
-    def fit_match(self, aux, main):
-        return self.fit(aux, main).match(main)
+    def _get_reference_distances(self, main, indices, distances):
+        del indices, distances
+        reference_distances, _ = self.neighbors_.kneighbors(
+            main, return_distance=True, n_neighbors=self.reference_neighbor + 1
+        )
+        reference_distances = reference_distances[:, -1]
+        return reference_distances
 
 
-class MaxDistRescale(BaseEstimator):
-    def __init__(self, threshold=1.0):
-        self.threshold = threshold
-
-    def fit(self, aux, main):
-        self.fit_match(aux, main)
-        return self
-
-    def fit_match(self, aux, main):
-        self._neighbors = NearestNeighbors(n_neighbors=1).fit(aux)
-        distances, indices = self._neighbors.kneighbors(main, return_distance=True)
-        distances, indices = distances.ravel(), indices.ravel()
-        self.max_dist_ = distances.max()
-        if self.max_dist_ != 0:
-            distances /= self.max_dist_
-        return {
-            "nearest_neighbor_index": indices,
-            "nearest_neighbor_distance": distances,
-            "match_accepted": distances <= self.threshold,
-        }
-
-    def match(self, main):
-        distances, indices = self._neighbors.kneighbors(main, return_distance=True)
-        distances, indices = distances.ravel(), indices.ravel()
-        if self.max_dist_ != 0:
-            distances /= self.max_dist_
-        else:
-            distances[distances != 0] = np.inf
-        return {
-            "nearest_neighbor_index": indices,
-            "nearest_neighbor_distance": distances,
-            "match_accepted": distances <= self.threshold,
-        }
+class MaxDist(Matching):
+    def _get_reference_distances(self, main, indices, distances):
+        del main, indices
+        return distances.max()

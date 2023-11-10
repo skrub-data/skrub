@@ -16,6 +16,7 @@ def fuzzy_join(
     right_on=None,
     on=None,
     suffix="",
+    max_dist=1.0,
     insert_match_info=False,
     drop_unmatched=False,
     string_encoder=DEFAULT_STRING_ENCODER,
@@ -151,12 +152,13 @@ def fuzzy_join(
         aux_key=right_on,
         key=on,
         suffix=suffix,
+        max_dist=max_dist,
         matching=matching,
         string_encoder=string_encoder,
         insert_match_info=True,
     ).fit_transform(left)
     if drop_unmatched:
-        join = join[join["skrub.Joiner.matching.match_accepted"]]
+        join = join[join["skrub.Joiner.match_accepted"]]
     if not insert_match_info:
         join = join.drop(Joiner.match_info_columns, axis=1)
     return join
