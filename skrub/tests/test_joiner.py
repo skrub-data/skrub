@@ -5,15 +5,15 @@ from numpy.testing import assert_array_equal
 from skrub import Joiner
 from skrub._dataframe._polars import POLARS_SETUP
 
-ASSERT_TUPLES = [pd]
+MODULES = [pd]
 
 if POLARS_SETUP:
     import polars as pl
 
-    ASSERT_TUPLES.append(pl)
+    MODULES.append(pl)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_joiner(px):
     if px is pl:
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
@@ -59,7 +59,7 @@ def test_joiner(px):
         false_joiner2.fit(main_table)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_multiple_keys(px):
     if px is pl:
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")

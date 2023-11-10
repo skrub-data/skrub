@@ -14,13 +14,13 @@ from skrub._dataframe._polars import POLARS_SETUP
 
 from .utils import generate_data
 
-ASSERT_TUPLES = [pd]
+MODULES = [pd]
 INPUT_TYPE = ["numpy", "pandas"]
 
 if POLARS_SETUP:
     import polars as pl
 
-    ASSERT_TUPLES.append(pl)
+    MODULES.append(pl)
     INPUT_TYPE.append("polars")
 
 
@@ -57,7 +57,7 @@ def test_minhash_encoder(hashing, minmax_hash):
         np.testing.assert_array_less(y - y_substring, 0.001)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_multiple_columns(px):
     """
     This test aims at verifying that fitting multiple columns
@@ -283,7 +283,7 @@ def test_deterministic():
     assert_array_equal(encoded1, encoded2)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_get_feature_names_out(px):
     """Test that get_feature_names_out returns the correct feature names"""
     encoder = MinHashEncoder(n_components=4)

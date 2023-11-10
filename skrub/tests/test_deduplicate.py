@@ -17,15 +17,15 @@ from skrub._deduplicate import (
 )
 from skrub.datasets import make_deduplication_data
 
-ASSERT_TUPLES = [pd]
+MODULES = [pd]
 
 if POLARS_SETUP:
     import polars as pl
 
-    ASSERT_TUPLES.append(pl)
+    MODULES.append(pl)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize(
     "entries_per_category, prob_mistake_per_letter",
     [([500, 100, 1500], 0.05), ([100, 100], 0.02), ([200, 50, 30, 200, 800], 0.01)],
