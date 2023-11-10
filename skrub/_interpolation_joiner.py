@@ -11,14 +11,10 @@ from sklearn.ensemble import (
 from sklearn.utils._tags import _safe_tags
 
 from skrub import _join_utils, _utils
-from skrub._datetime_encoder import DatetimeEncoder
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import TableVectorizer
 
-DEFAULT_VECTORIZER = TableVectorizer(
-    high_cardinality_transformer=MinHashEncoder(),
-    datetime_transformer=DatetimeEncoder(resolution=None, add_total_seconds=True),
-)
+DEFAULT_VECTORIZER = TableVectorizer(high_cardinality_transformer=MinHashEncoder())
 DEFAULT_REGRESSOR = HistGradientBoostingRegressor()
 DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
 

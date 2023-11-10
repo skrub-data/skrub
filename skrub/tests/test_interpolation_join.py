@@ -123,12 +123,16 @@ def test_join_on_date():
     temp = pd.DataFrame(
         {"date": ["2023-09-09", "2023-10-01", "2024-09-21"], "temp": [-10, 10, 30]}
     )
-    transformed = InterpolationJoiner(
-        temp,
-        main_key="date",
-        aux_key="date",
-        regressor=KNeighborsRegressor(1),
-    ).fit_transform(sales)
+    transformed = (
+        InterpolationJoiner(
+            temp,
+            main_key="date",
+            aux_key="date",
+            regressor=KNeighborsRegressor(1),
+        )
+        .set_params(vectorizer__datetime_transformer__resolution=None)
+        .fit_transform(sales)
+    )
     assert_array_equal(transformed["temp"].values, [-10, 10])
 
 
