@@ -118,6 +118,18 @@ def test_mismatched_indexes():
     assert_array_equal(join.index.values, [1, 0])
 
 
+def test_fit_on_none():
+    # X is hardly used in fit so it should be ok to fit without a main table
+    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
+    joiner = InterpolationJoiner(aux, key="A", regressor=KNeighborsRegressor(1)).fit(
+        None
+    )
+    main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
+    join = joiner.transform(main)
+    assert_array_equal(join["B"].values, [10, 11])
+    assert_array_equal(join.index.values, [1, 0])
+
+
 def test_join_on_date():
     sales = pd.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
     temp = pd.DataFrame(
