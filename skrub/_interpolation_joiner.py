@@ -10,9 +10,17 @@ from sklearn.ensemble import (
 )
 from sklearn.utils._tags import _safe_tags
 
-from skrub import _join_utils
+from skrub import _join_utils, _utils
+from skrub._datetime_encoder import DatetimeEncoder
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import TableVectorizer
+
+DEFAULT_VECTORIZER = TableVectorizer(
+    high_cardinality_transformer=MinHashEncoder(),
+    datetime_transformer=DatetimeEncoder(resolution=None, add_total_seconds=True),
+)
+DEFAULT_REGRESSOR = HistGradientBoostingRegressor()
+DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
 
 
 class InterpolationJoiner(TransformerMixin, BaseEstimator):
@@ -73,23 +81,17 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         Suffix to append to the ``aux_table``'s column names. You can use it
         to avoid duplicate column names in the join.
 
-    regressor : scikit-learn regressor or None
-        Model used to predict the numerical columns of ``aux_table``. If
-        ``None``, a ``HistGradientBoostingRegressor`` with default parameters
-        is used.
+    regressor : scikit-learn regressor
+        Model used to predict the numerical columns of ``aux_table``.
 
-    classifier : scikit-learn classifier or None
-        Model used to predict the categorical (string) columns of
-        ``aux_table``. If ``None``, a ``HistGradientBoostingRegressor`` with
-        default parameters is used.
+    classifier : scikit-learn classifier
+        Model used to predict the categorical (string) columns of ``aux_table``.
 
-    vectorizer : scikit-learn transformer that can operate on a DataFrame or None
+    vectorizer : scikit-learn transformer that can operate on a DataFrame
         Used to transform the feature columns before passing them to the
         scikit-learn estimators. This is useful if we are joining on columns
         that cannot be used directly, such as timestamps or strings
-        representing high-cardinality categories. If ``None``, a
-        ``TableVectorizer`` with is used, with a ``MinHashEncoder`` for
-        encoding high-cardinality strings.
+        representing high-cardinality categories.
 
     n_jobs : int or None
         Number of jobs to run in parallel. ``None`` means 1 unless in a
@@ -175,9 +177,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         aux_key=None,
         key=None,
         suffix="",
-        regressor=None,
-        classifier=None,
-        vectorizer=None,
+        regressor=DEFAULT_REGRESSOR,
+        classifier=DEFAULT_CLASSIFIER,
+        vectorizer=DEFAULT_VECTORIZER,
         n_jobs=None,
         on_estimator_failure="warn",
     ):
@@ -186,9 +188,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self.aux_key = aux_key
         self.key = key
         self.suffix = suffix
-        self.regressor = regressor
-        self.classifier = classifier
-        self.vectorizer = vectorizer
+        self.regressor = _utils.clone_if_default(regressor, DEFAULT_REGRESSOR)
+        self.classifier = _utils.clone_if_default(classifier, DEFAULT_CLASSIFIER)
+        self.vectorizer = _utils.clone_if_default(vectorizer, DEFAULT_VECTORIZER)
         self.n_jobs = n_jobs
         self.on_estimator_failure = on_estimator_failure
 
@@ -234,23 +236,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         return self
 
     def _check_inputs(self):
-        if self.vectorizer is None:
-            self.vectorizer_ = TableVectorizer(
-                high_card_cat_transformer=MinHashEncoder()
-            )
-        else:
-            self.vectorizer_ = clone(self.vectorizer)
-
-        if self.classifier is None:
-            self.classifier_ = HistGradientBoostingClassifier()
-        else:
-            self.classifier_ = clone(self.classifier)
-
-        if self.regressor is None:
-            self.regressor_ = HistGradientBoostingRegressor()
-        else:
-            self.regressor_ = clone(self.regressor)
-
+        self.vectorizer_ = clone(self.vectorizer)
+        self.classifier_ = clone(self.classifier)
+        self.regressor_ = clone(self.regressor)
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )

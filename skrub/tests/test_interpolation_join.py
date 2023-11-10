@@ -118,9 +118,6 @@ def test_mismatched_indexes():
     assert_array_equal(join.index.values, [1, 0])
 
 
-# expected to fail until we have a way to get the timestamp (only) from a date
-# with the tablevectorizer
-@pytest.mark.xfail
 def test_join_on_date():
     sales = pd.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
     temp = pd.DataFrame(

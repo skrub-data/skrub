@@ -21,7 +21,7 @@ from sklearn.utils import Bunch
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
-from skrub._utils import parse_astype_error_message
+from skrub._utils import clone_if_default, parse_astype_error_message
 
 HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
@@ -148,10 +148,6 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
         ser = ser.cat.add_categories([value])
     ser = ser.fillna(value=value)
     return ser
-
-
-def _clone_if_default(transformer, default_transformer):
-    return clone(transformer) if transformer is default_transformer else transformer
 
 
 def _clone_during_fit(transformer, remainder, n_jobs):
@@ -449,13 +445,13 @@ sparse_output=False), \
         verbose_feature_names_out=False,
     ):
         self.cardinality_threshold = cardinality_threshold
-        self.low_cardinality_transformer = _clone_if_default(
+        self.low_cardinality_transformer = clone_if_default(
             low_cardinality_transformer, LOW_CARDINALITY_TRANSFORMER
         )
-        self.high_cardinality_transformer = _clone_if_default(
+        self.high_cardinality_transformer = clone_if_default(
             high_cardinality_transformer, HIGH_CARDINALITY_TRANSFORMER
         )
-        self.datetime_transformer = _clone_if_default(
+        self.datetime_transformer = clone_if_default(
             datetime_transformer, DATETIME_TRANSFORMER
         )
         self.numerical_transformer = numerical_transformer
