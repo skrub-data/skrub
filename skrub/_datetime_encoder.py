@@ -185,9 +185,8 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         if not hasattr(X, "__dataframe_consortium_standard__"):
             X = check_input(X)
             X = pd.DataFrame(X, columns=[str(i) for i in range(X.shape[1])])
-        X = X.__dataframe_consortium_standard__()
-        if hasattr(X, 'collect'):
-            X = X.collect()
+        X = X.__dataframe_consortium_standard__(api_version='2023.11-beta')
+        X = X.persist()
         n_colums = len(X.column_names)
         self.col_names_ = X.column_names
         # Features to extract for each column, after removing constant features
@@ -248,7 +247,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
         if not hasattr(X, "__dataframe_consortium_standard__"):
             X = check_input(X)
             X = pd.DataFrame(X, columns=[str(i) for i in range(X.shape[1])])
-        X = X.__dataframe_consortium_standard__()
+        X = X.__dataframe_consortium_standard__(api_version='2023.11-beta')
         n_columns = len(X.column_names)
         check_is_fitted(
             self,
@@ -272,8 +271,7 @@ class DatetimeEncoder(BaseEstimator, TransformerMixin):
                 )
             idx += len(self.features_per_column_[i])
         X = X.assign(*features_to_select).select(*(feature.name for feature in features_to_select))
-        if hasattr(X, 'collect'):
-            X = X.collect()
+        X = X.persist()
         return X.to_array("float64")
 
     def get_feature_names_out(self, input_features=None) -> list[str]:
