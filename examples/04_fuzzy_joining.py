@@ -124,7 +124,7 @@ df1 = fuzzy_join(
     gdppc,  # the table to join with
     left_on="Country",  # the first join key column
     right_on="Country Name",  # the second join key column
-    return_score=True,
+    insert_match_info=True,
 )
 
 df1.tail(20)
@@ -156,29 +156,15 @@ df1.tail(20)
 # Let's do some more inspection of the merging done.
 
 ###############################################################################
-# Let's print the four worst matches, which will give
+# Let's print the worst matches, which will give
 # us an overview of the situation:
 
-df1.sort_values("matching_score").head(4)
+df1.sort_values("skrub.Joiner.rescaled_distance").tail(10)
 
 ###############################################################################
 # We see that some matches were unsuccesful
 # (e.g "Palestinian Territories*" and "Palau"),
 # because there is simply no match in the two tables.
-
-###############################################################################
-# In this case, it is better to use the threshold parameter
-# so as to include only precise-enough matches:
-#
-df1 = fuzzy_join(
-    df,
-    gdppc,
-    left_on="Country",
-    right_on="Country Name",
-    match_score=0.1,
-    return_score=True,
-)
-df1.sort_values("matching_score").head(4)
 
 ###############################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
@@ -189,7 +175,6 @@ df1 = fuzzy_join(
     gdppc,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.1,
     drop_unmatched=True,
 )
 
@@ -232,7 +217,6 @@ df2 = fuzzy_join(
     life_exp,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.1,
 )
 
 df2.drop(columns=["Country Name"], inplace=True)
@@ -268,7 +252,6 @@ df3 = fuzzy_join(
     legal_rights,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.1,
 )
 
 df3.drop(columns=["Country Name"], inplace=True)
@@ -344,10 +327,10 @@ print(f"Mean R² score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 #######################################################################
 # Using the |joiner| to fuzzy join multiple tables
 # --------------------------------------------
-# A faster way to merge different tables from the World Bank
-# to `X` is to use the |joiner|.
+# A convenient way to merge different tables from the World Bank
+# to `X` in a scikit-learn Pipeline and tune the parameters is to use the |joiner|.
 #
-# The |joiner| is a transformer that can easily chain joins of tables on
+# The |joiner| is a transformer that can fuzzy-join a table on
 # a main table.
 
 #######################################################################
@@ -366,16 +349,16 @@ from sklearn.pipeline import make_pipeline
 # select the relevant columns before fitting the regressor
 
 pipeline = make_pipeline(
-    Joiner(gdppc, main_key="Country", aux_key="Country Name"),
-    DropCols("Country Name"),
-    Joiner(life_exp, main_key="Country", aux_key="Country Name"),
-    DropCols("Country Name"),
-    Joiner(legal_rights, main_key="Country", aux_key="Country Name"),
+    Joiner(gdppc, main_key="Country", aux_key="Country Name", suffix=" gdppc"),
+    Joiner(life_exp, main_key="Country", aux_key="Country Name", suffix=" life_exp"),
+    Joiner(
+        legal_rights, main_key="Country", aux_key="Country Name", suffix=" legal_rights"
+    ),
     SelectCols(
         [
-            "GDP per capita (current US$)",
-            "Life expectancy at birth, total (years)",
-            "Strength of legal rights index (0=weak to 12=strong)",
+            "GDP per capita (current US$) gdppc",
+            "Life expectancy at birth, total (years) life_exp",
+            "Strength of legal rights index (0=weak to 12=strong) legal_rights",
         ]
     ),
     HistGradientBoostingRegressor(),
@@ -389,17 +372,15 @@ pipeline = make_pipeline(
 
 from sklearn.model_selection import GridSearchCV
 
-# We will test four possible values of match_score:
+# We will test 3 possible values of max_dist:
 params = {
-    "joiner-1__matching__radius": [1.0, 1000],
-    "joiner-2__matching__radius": [1.0, 1000],
-    "joiner-3__matching__radius": [1.0, 1000],
+    "joiner-1__max_dist": [0.0, 1.0, float("inf")],
+    "joiner-2__max_dist": [0.0, 1.0, float("inf")],
+    "joiner-3__max_dist": [0.0, 1.0, float("inf")],
 }
+# float('inf') is the same as 'inf' or None: it means accept all matches
 
 grid = GridSearchCV(pipeline, param_grid=params, cv=cv)
 grid.fit(df, y)
 
 print("Best parameters:", grid.best_params_)
-
-# The gridsearch selects a stricter threshold on the matching_score than what
-# we had set manually for the GDP and legal rights joins.
