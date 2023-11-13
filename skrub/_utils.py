@@ -6,6 +6,7 @@ from typing import Any, Iterable
 
 import numpy as np
 from numpy.typing import NDArray
+from sklearn.base import clone
 from sklearn.utils import check_array
 
 
@@ -157,3 +158,7 @@ def atleast_2d_or_none(x):
     # 1d array
     else:
         return [x]
+
+
+def clone_if_default(estimator, default_estimator):
+    return clone(estimator) if estimator is default_estimator else estimator
