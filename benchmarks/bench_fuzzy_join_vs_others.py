@@ -106,14 +106,12 @@ def benchmark(
         joined_fj = fuzzy_join(
             left_table,
             right_table,
-            how="left",
-            left_on="title",
-            right_on="title",
-            suffixes=("_l", "_r"),
+            on="title",
+            suffix="_r",
         )
         end_time = perf_counter()
         pr, re, f1 = evaluate(
-            list(zip(joined_fj["title_l"], joined_fj["title_r"])),
+            list(zip(joined_fj["title"], joined_fj["title_r"])),
             list(zip(gt["title_l"], gt["title_r"])),
         )
     elif join == "autofj":
