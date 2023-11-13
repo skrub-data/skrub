@@ -198,7 +198,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns.
         The default transformer is \
-            (OneHotEncoder(handle_unknown="ignore", drop="if_binary")).
+            ``OneHotEncoder(handle_unknown="ignore", drop="if_binary")``.
 
     high_cardinality_transformer : {'drop', 'remainder', 'passthrough'} \
         or Transformer, optional
@@ -209,7 +209,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         or 'passthrough' to return the unencoded columns.
-        The default transformer is (GapEncoder(n_components=30)).
+        The default transformer is ``GapEncoder(n_components=30)``
 
     numerical_transformer : {'drop', 'remainder', 'passthrough'} \
         or Transformer, optional
@@ -226,8 +226,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (DatetimeEncoder()).
+        'passthrough' to return the unencoded columns.
+        The default transformer is ``DatetimeEncoder()``.
 
     specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or \
         Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} \
