@@ -1,6 +1,7 @@
 """
 The Joiner provides fuzzy joining as a scikit-learn transformer.
 """
+import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
@@ -76,6 +77,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         is rescaled so that a value between 0 and 1 is typically a good choice,
         although rescaled distances can be greater than 1. See the description
         of ``maching`` for details on available rescaling strategies.
+        ``None`` or ``"inf"`` is interpreted as ``float("inf")``.
     matching : fuzzy matching and distance rescaling strategy
         TODO this could also be chosen by providing a string?
         TODO expand description.
@@ -148,6 +150,16 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         self.insert_match_info = insert_match_info
 
+    def _check_max_dist(self):
+        if (
+            self.max_dist is None
+            or isinstance(self.max_dist, str)
+            and self.max_dist == "inf"
+        ):
+            self._max_dist = np.inf
+        else:
+            self._max_dist = self.max_dist
+
     def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
 
@@ -166,11 +178,13 @@ class Joiner(TransformerMixin, BaseEstimator):
         Joiner
             Fitted Joiner instance (self).
         """
+        del y
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
+        self._check_max_dist()
         self.vectorizer_ = _make_vectorizer(
             self.aux_table[self._aux_key], self.string_encoder
         )
@@ -198,11 +212,12 @@ class Joiner(TransformerMixin, BaseEstimator):
         :obj:`~pandas.DataFrame`
             The final joined table.
         """
+        del y
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
-        match_result = self.matching_.match(main, self.max_dist)
+        match_result = self.matching_.match(main, self._max_dist)
         aux_table = self.aux_table.rename(
             columns={c: f"{c}{self.suffix}" for c in self.aux_table.columns}
         )
