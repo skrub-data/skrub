@@ -4,7 +4,7 @@ Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 import pandas as pd
 
 from skrub import _join_utils
-from skrub._joiner import DEFAULT_MATCHING, DEFAULT_STRING_ENCODER, Joiner
+from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER, Joiner
 
 
 def fuzzy_join(
@@ -18,7 +18,7 @@ def fuzzy_join(
     insert_match_info=False,
     drop_unmatched=False,
     string_encoder=DEFAULT_STRING_ENCODER,
-    matching=DEFAULT_MATCHING,
+    ref_dist=DEFAULT_REF_DIST,
 ) -> pd.DataFrame:
     """Join two tables based on approximate matching using the appropriate metric.
 
@@ -162,7 +162,7 @@ def fuzzy_join(
         key=on,
         suffix=suffix,
         max_dist=max_dist,
-        matching=matching,
+        ref_dist=ref_dist,
         string_encoder=string_encoder,
         insert_match_info=True,
     ).fit_transform(left)

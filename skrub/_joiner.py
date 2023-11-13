@@ -24,7 +24,7 @@ _MATCHERS = {
     "worst_match": _matching.MaxDist,
     "raw_distance": _matching.Matching,
 }
-DEFAULT_MATCHING = "second_neighbor"
+DEFAULT_REF_DIST = "second_neighbor"
 
 
 def _make_vectorizer(table, string_encoder):
@@ -85,7 +85,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         although rescaled distances can be greater than 1. See the description
         of ``maching`` for details on available rescaling strategies.
         ``None`` or ``"inf"`` is interpreted as ``float("inf")``.
-    matching : fuzzy matching and distance rescaling strategy
+    ref_dist : reference distance for rescaling, default = "second_neighbor"
         TODO this could also be chosen by providing a string?
         TODO expand description.
     string_encoder : scikit-learn transformer for text
@@ -139,7 +139,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         key=None,
         suffix="",
         max_dist=1.0,
-        matching=DEFAULT_MATCHING,
+        ref_dist=DEFAULT_REF_DIST,
         string_encoder=DEFAULT_STRING_ENCODER,
         insert_match_info=False,
     ):
@@ -149,7 +149,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.key = key
         self.suffix = suffix
         self.max_dist = max_dist
-        self.matching = matching
+        self.ref_dist = ref_dist
         self.string_encoder = (
             clone(string_encoder)
             if string_encoder is DEFAULT_STRING_ENCODER
@@ -167,8 +167,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         else:
             self._max_dist = self.max_dist
 
-    def _check_matching(self):
-        self.matching_ = _MATCHERS[self.matching]()
+    def _check_ref_dist(self):
+        self.matching_ = _MATCHERS[self.ref_dist]()
 
     def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
@@ -206,7 +206,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
-        self._check_matching()
+        self._check_ref_dist()
         self.matching_.fit(aux, main)
         return self
 
