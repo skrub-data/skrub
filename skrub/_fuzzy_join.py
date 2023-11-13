@@ -1,8 +1,6 @@
 """
 Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 """
-
-
 import pandas as pd
 
 from skrub import _join_utils
@@ -22,8 +20,7 @@ def fuzzy_join(
     string_encoder=DEFAULT_STRING_ENCODER,
     matching=DEFAULT_MATCHING,
 ) -> pd.DataFrame:
-    """Join two tables based on approximate matching using the appropriate similarity \
-    metric.
+    """Join two tables based on approximate matching using the appropriate metric.
 
     The principle is as follows:
 
@@ -82,58 +79,63 @@ def fuzzy_join(
     For regular joins, the output of fuzzy_join is identical
     to pandas.merge, except that both key columns are returned.
 
-    Joining on indexes and multiple columns is not supported.
+    Joining on indexes is not supported.
 
-    When `return_score=True`, the returned :obj:`~pandas.DataFrame` gives
-    the distances between the closest matches in a [0, 1] interval.
-    0 corresponds to no matching n-grams, while 1 is a
-    perfect match.
+    When `insert_match_info=True`, the returned :obj:`~pandas.DataFrame` contains
+    additional columns which provide information about the match.
 
-    When we use `match_score=0`, the function will be forced to impute the
+    When we use `max_dist=np.inf`, the function will be forced to impute the
     nearest match (of the left table category) across all possible matching
     options in the right table column.
 
-    When the neighbors are distant, we may use the `match_score` parameter
-    with a value bigger than 0 to define the minimal level of matching
-    score tolerated. If it is not reached, matches will be
-    considered as not found and NaN values will be imputed.
+    When the neighbors are distant, we may use the `max_dist` parameter
+    define the maximal (rescaled) distance between 2 rows for them to match.
+    If it is not reached, matches will be considered as not found and NaN values
+    will be imputed.
 
     Examples
     --------
-    >>> df1 = pd.DataFrame({'a': ['ana', 'lala', 'nana'], 'b': [1, 2, 3]})
-    >>> df2 = pd.DataFrame({'a': ['anna', 'lala', 'ana', 'nnana'], 'c': [5, 6, 7, 8]})
-
-    >>> df1
-          a  b
-    0   ana  1
-    1  lala  2
-    2  nana  3
-
-    >>> df2
-           a  c
-    0   anna  5
-    1   lala  6
-    2    ana  7
-    3  nnana  8
-
-    To do a simple join based on the nearest match:
-
-    >>> fuzzy_join(df1, df2, on='a')
-        a_x  b    a_y  c
-    0   ana  1    ana  7
-    1  lala  2   lala  6
-    2  nana  3  nnana  8
-
-    When we want to accept only a certain match precision,
-    we can use the `match_score` argument:
-
-    >>> fuzzy_join(df1, df2, on='a', match_score=1, return_score=True)
-        a_x  b   a_y     c  matching_score
-    0   ana  1   ana     7             1.0
-    1  lala  2  lala     6             1.0
-    2  nana  3  <NA>  <NA>             0.0
-
-    As expected, the category "nana" has no exact match (`match_score=1`).
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
+    >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
+    ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
+    >>> main_table
+      Country
+    0  France
+    1  Italia
+    2   Spain
+    >>> aux_table
+       Country Capital
+    0  Germany  Berlin
+    1   France   Paris
+    2    Italy    Rome
+    >>> fuzzy_join(main_table, aux_table, on="Country", suffix="_capitals")
+      Country Country_capitals Capital_capitals
+    0  France           France            Paris
+    1  Italia            Italy             Rome
+    2   Spain              NaN              NaN
+    >>> fuzzy_join(
+    ...     main_table,
+    ...     aux_table,
+    ...     on="Country",
+    ...     suffix="_capitals",
+    ...     drop_unmatched=True,
+    ... )
+      Country Country_capitals Capital_capitals
+    0  France           France            Paris
+    1  Italia            Italy             Rome
+    >>> fuzzy_join(
+    ...     main_table,
+    ...     aux_table,
+    ...     on="Country",
+    ...     suffix="_capitals",
+    ...     max_dist=np.inf,
+    ... )
+      Country Country_capitals Capital_capitals
+    0  France           France            Paris
+    1  Italia            Italy             Rome
+    2   Spain          Germany           Berlin
     """
     # duplicate the key checks performed by the Joiner so we can get better
     # names in error messages
