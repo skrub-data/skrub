@@ -128,6 +128,21 @@ df1 = fuzzy_join(
 )
 
 df1.tail(20)
+
+###############################################################################
+# In this case, it is better to use the threshold parameter
+# so as to include only precise-enough matches:
+#
+df1 = fuzzy_join(
+    df,
+    gdppc,
+    left_on="Country",
+    right_on="Country Name",
+    max_dist=0.9,
+    insert_match_info=True,
+)
+df1.sort_values("skrub.Joiner.rescaled_distance", ascending=False).head()
+
 # We merged the first World Bank table to our initial one.
 
 ###############################################################################
@@ -176,6 +191,7 @@ df1 = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     drop_unmatched=True,
+    max_dist=0.9,
 )
 
 df1.drop(columns=["Country Name"], inplace=True)
@@ -217,6 +233,7 @@ df2 = fuzzy_join(
     life_exp,
     left_on="Country",
     right_on="Country Name",
+    max_dist=0.9,
 )
 
 df2.drop(columns=["Country Name"], inplace=True)
@@ -252,6 +269,7 @@ df3 = fuzzy_join(
     legal_rights,
     left_on="Country",
     right_on="Country Name",
+    max_dist=0.9,
 )
 
 df3.drop(columns=["Country Name"], inplace=True)
@@ -374,11 +392,10 @@ from sklearn.model_selection import GridSearchCV
 
 # We will test 3 possible values of max_dist:
 params = {
-    "joiner-1__max_dist": [0.0, 1.0, float("inf")],
-    "joiner-2__max_dist": [0.0, 1.0, float("inf")],
-    "joiner-3__max_dist": [0.0, 1.0, float("inf")],
+    "joiner-1__max_dist": [0.0, 0.9, 1.0],
+    "joiner-2__max_dist": [0.0, 0.9, 1.0],
+    "joiner-3__max_dist": [0.0, 0.9, 1.0],
 }
-# float('inf') is the same as 'inf' or None: it means accept all matches
 
 grid = GridSearchCV(pipeline, param_grid=params, cv=cv)
 grid.fit(df, y)
