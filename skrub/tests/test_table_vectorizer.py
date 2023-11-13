@@ -8,7 +8,7 @@ from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import GapEncoder, MinHashEncoder, TableVectorizer
-from skrub._datetime_encoder import _is_pandas_format_mixed_available
+from skrub._datetime_encoder import DatetimeEncoder, _is_pandas_format_mixed_available
 from skrub.tests.utils import transformers_list_equal
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -310,7 +310,7 @@ def test_auto_cast() -> None:
         "ymd/_hms:": "datetime64[ns]",
         "mm/dd/yy": "datetime64[ns]",
     }
-    X_trans = vectorizer._auto_cast(X)
+    X_trans = vectorizer._auto_cast(X, reset=True)
     for col in X_trans.columns:
         assert expected_types_datetimes[col] == X_trans[col].dtype
 
@@ -326,7 +326,7 @@ def test_auto_cast() -> None:
     }
 
     X = _get_clean_dataframe()
-    X_trans = vectorizer._auto_cast(X)
+    X_trans = vectorizer._auto_cast(X, reset=True)
     for col in X_trans.columns:
         assert type_equality(expected_types_clean_dataframe[col], X_trans[col].dtype)
 
@@ -341,7 +341,7 @@ def test_auto_cast() -> None:
     }
 
     X = _get_dirty_dataframe()
-    X_trans = vectorizer._auto_cast(X)
+    X_trans = vectorizer._auto_cast(X, reset=True)
     for col in X_trans.columns:
         assert type_equality(expected_types_dirty_dataframe[col], X_trans[col].dtype)
 
@@ -690,19 +690,19 @@ def test_mixed_types() -> None:
 
 
 @pytest.mark.parametrize(
-    "X_fit, X_transform_original, X_transform_with_missing_original",
+    "X_train, X_test, expected_X_out",
     [
         # All nans during fit, 1 category during transform
         (
             pd.DataFrame({"col1": [np.nan, np.nan, np.nan]}),
             pd.DataFrame({"col1": [np.nan, np.nan, "placeholder"]}),
-            pd.DataFrame({"col1": [np.nan, np.nan, np.nan]}),
+            np.array([[np.nan], [np.nan], ["placeholder"]], dtype="object"),
         ),
         # All floats during fit, 1 category during transform
         (
             pd.DataFrame({"col1": [1.0, 2.0, 3.0]}),
             pd.DataFrame({"col1": [1.0, 2.0, "placeholder"]}),
-            pd.DataFrame({"col1": [1.0, 2.0, np.nan]}),
+            np.array([["1.0"], ["2.0"], ["placeholder"]]),
         ),
         # All datetimes during fit, 1 category during transform
         pytest.param(
@@ -724,15 +724,7 @@ def test_mixed_types() -> None:
                     ]
                 }
             ),
-            pd.DataFrame(
-                {
-                    "col1": [
-                        pd.Timestamp("2019-01-01"),
-                        pd.Timestamp("2019-01-02"),
-                        np.nan,
-                    ]
-                }
-            ),
+            np.array([[1.5463008e09], [1.5463872e09], [np.nan]]),
             marks=pytest.mark.skipif(
                 not _is_pandas_format_mixed_available(),
                 reason=MSG_PANDAS_DEPRECATED_WARNING,
@@ -740,45 +732,27 @@ def test_mixed_types() -> None:
         ),
     ],
 )
-def test_changing_types(
-    X_fit, X_transform_original, X_transform_with_missing_original
-) -> None:
+def test_changing_types(X_train, X_test, expected_X_out):
     """
     Test that the TableVectorizer performs properly when the
     type inferred during fit does not match the type of the
     data during transform.
     """
-    for new_category in ["a", "new category", "[test]"]:
-        table_vec = TableVectorizer()
-        table_vec.fit_transform(X_fit)
-        expected_dtype = table_vec.type_per_column_[0]
-        # convert [ and ] to \\[ and \\] to avoid pytest warning
-        expected_dtype = str(expected_dtype).replace("[", "\\[").replace("]", "\\]")
-        new_category_regex = str(new_category).replace("[", "\\[").replace("]", "\\]")
-        expected_warning_msg = (
-            f".*'{new_category_regex}'.*could not be converted.*{expected_dtype}.*"
-        )
-
-        # replace "placeholder" with the new category
-        X_transform = X_transform_original.replace("placeholder", new_category)
-        X_transform_with_missing = X_transform_with_missing_original.replace(
-            "placeholder", new_category
-        )
-        with pytest.warns(UserWarning, match=expected_warning_msg):
-            res = table_vec.transform(X_transform)
-        # the TableVectorizer should behave as if the new entry
-        # with the wrong type was missing
-        res_missing = table_vec.transform(X_transform_with_missing)
-        assert np.allclose(res, res_missing, equal_nan=True)
+    table_vec = TableVectorizer(
+        # only extract the total seconds
+        datetime_transformer=DatetimeEncoder(resolution=None)
+    )
+    table_vec.fit(X_train)
+    X_out = table_vec.transform(X_test)
+    mask_nan = X_out == X_out
+    assert_array_equal(X_out[mask_nan], expected_X_out[mask_nan])
 
 
 def test_changing_types_int_float() -> None:
     # The TableVectorizer shouldn't cast floats to ints
     # even if only ints were seen during fit
-    X_fit, X_transform = (
-        pd.DataFrame(pd.Series([1, 2, 3])),
-        pd.DataFrame(pd.Series([1, 2, 3.3])),
-    )
+    X_fit = pd.DataFrame([[1], [2], [3]])
+    X_transform = pd.DataFrame([[1], [2], [3.3]])
     table_vec = TableVectorizer()
     table_vec.fit_transform(X_fit)
     res = table_vec.transform(X_transform)

@@ -4,13 +4,11 @@ transformers/encoders to different types of data, without the need to
 manually categorize them beforehand, or construct complex Pipelines.
 """
 
-import warnings
 from collections import Counter
 
 import numpy as np
 import pandas as pd
-import sklearn
-from pandas.core.dtypes.base import ExtensionDtype
+from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype, is_object_dtype
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
@@ -20,7 +18,6 @@ from sklearn.utils import Bunch
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder, to_datetime
-from skrub._utils import parse_astype_error_message
 
 HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
@@ -31,14 +28,34 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
 DATETIME_TRANSFORMER = DatetimeEncoder()
 
 
-def _has_missing_values(df: pd.DataFrame | pd.Series) -> bool:
+def to_numeric(X):
+    """Convert the columns of a dataframe into a numeric representation.
+
+    Parameters
+    ----------
+    X : pandas.DataFrame
+
+    Returns
+    -------
+    X : pandas.DataFrame
+    """
+    columns = X.columns
+    X_out = X.copy()
+    for column in columns:
+        X_col = X[column]
+        if not is_datetime64_any_dtype(X_col):
+            X_out[column] = pd.to_numeric(X_col, errors="ignore")
+    return X_out
+
+
+def _has_missing_values(df):
     """
     Returns True if `array` contains missing values, False otherwise.
     """
-    return any(df.isnull())
+    return df.isna().any()
 
 
-def _replace_false_missing(df: pd.DataFrame | pd.Series) -> pd.DataFrame | pd.Series:
+def _replace_false_missing(df):
     """
     Takes a DataFrame or a Series, and replaces the "false missing", that is,
     strings that designate a missing value, but do not have the corresponding
@@ -66,22 +83,14 @@ def _replace_false_missing(df: pd.DataFrame | pd.Series) -> pd.DataFrame | pd.Se
         "N/A",
         "#N/A",
         "NaN",
+        None,
+        "?",
+        "...",
     ]  # taken from pandas.io.parsers (version 1.1.4)
-    df = df.replace(STR_NA_VALUES + [None, "?", "..."], np.nan)
-    df = df.replace(r"^\s+$", np.nan, regex=True)  # Replace whitespaces
+    df = df.replace(STR_NA_VALUES, np.nan).replace(
+        r"^\s+$", np.nan, regex=True
+    )  # Replace whitespaces
     return df
-
-
-def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Series:
-    """
-    Takes a Series with string data,
-    replaces the missing values, and returns it.
-    """
-    ser = _replace_false_missing(ser)
-    if isinstance(ser.dtype, pd.CategoricalDtype) and (value not in ser.cat.categories):
-        ser = ser.cat.add_categories([value])
-    ser = ser.fillna(value=value)
-    return ser
 
 
 def _clone_if_default(transformer, default_transformer):
@@ -89,7 +98,7 @@ def _clone_if_default(transformer, default_transformer):
 
 
 def _clone_during_fit(transformer, remainder, n_jobs):
-    if isinstance(transformer, sklearn.base.TransformerMixin):
+    if isinstance(transformer, TransformerMixin):
         return _propagate_n_jobs(clone(transformer), n_jobs)
     elif transformer == "remainder":
         return remainder if isinstance(remainder, str) else clone(remainder)
@@ -132,7 +141,7 @@ def _check_specific_transformers(specific_transformers, n_jobs):
         return [
             (
                 (name, _propagate_n_jobs(clone(transformer), n_jobs), cols)
-                if isinstance(transformer, sklearn.base.TransformerMixin)
+                if isinstance(transformer, TransformerMixin)
                 else (name, transformer, cols)
             )
             for name, transformer, cols in specific_transformers
@@ -147,24 +156,19 @@ def _propagate_n_jobs(transformer, n_jobs):
     return transformer
 
 
-def to_numeric(X):
-    """Convert the columns of a dataframe into a numeric representation.
+def _fillna_category(series, value="missing"):
+    """Fill the missing values from a categorical series."""
+    if value not in series.cat.categories:
+        series = series.cat.add_categories([value])
+    return series.fillna(value=value)
 
-    Parameters
-    ----------
-    X : pandas.DataFrame
 
-    Returns
-    -------
-    X : pandas.DataFrame
-    """
-    columns = X.columns
-    X_out = X.copy()
-    for column in columns:
-        X_col = X[column]
-        if not np.issubdtype(X_col.dtype, np.datetime64):
-            X_out[column] = pd.to_numeric(X_col, errors="ignore")
-    return X_out
+def _union_category(X_col, dtype):
+    """Update a categorical dtype with new entries."""
+    known_categories = dtype.categories
+    new_categories = pd.unique(X_col.loc[X_col.notnull()])
+    dtype = pd.CategoricalDtype(categories=known_categories.union(new_categories))
+    return dtype
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
@@ -394,7 +398,7 @@ sparse_output=False), \
         datetime_transformer=DATETIME_TRANSFORMER,
         specific_transformers=None,
         auto_cast=True,
-        impute_missing="auto",
+        impute_missing=False,
         # The next parameters are inherited from ColumnTransformer
         remainder="passthrough",
         sparse_threshold=0.0,
@@ -454,9 +458,8 @@ sparse_output=False), \
             self.n_jobs,
         )
 
-    def _auto_cast(self, X):
-        """Takes a dataframe and tries to convert its columns to their best possible
-        data type.
+    def _auto_cast(self, X, reset):
+        """Cast a dataframe to numpy dtype and handle categories update.
 
         Parameters
         ----------
@@ -466,106 +469,61 @@ sparse_output=False), \
         Returns
         -------
         :obj:`~pandas.DataFrame`
-            The same :obj:`~pandas.DataFrame`, with its columns cast to their
-            best possible data type.
+            The same :obj:`~pandas.DataFrame`, with its columns cast.
         """
-        # Handle missing values
         for col in X.columns:
+            X[col] = _replace_false_missing(X[col])
             # Convert pandas' NaN value (pd.NA) to numpy NaN value (np.nan)
             # because the former tends to raise all kind of issues when dealing
             # with scikit-learn (as of version 0.24).
             if _has_missing_values(X[col]):
                 # Some numerical dtypes like Int64 or Float64 only support
                 # pd.NA, so they must be converted to np.float64 before.
-                if pd.api.types.is_numeric_dtype(X[col]):
+                if is_numeric_dtype(X[col]):
                     X[col] = X[col].astype(np.float64)
+                # We replace in all columns regardless of their type,
+                # as we might have some false missing
+                # in numerical columns for instance.
                 X[col].fillna(value=np.nan, inplace=True)
 
-        # for object dtype columns, first convert to string to avoid mixed types
-        object_cols = X.columns[X.dtypes == "object"]
-        for col in object_cols:
-            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
+            # Cast pandas dtypes to numpy dtypes for earlier versions of sklearn
+            if hasattr(X[col].dtype, "numpy_dtype"):
+                dtype = X[col].dtype.numpy_dtype
+                X[col] = X[col].astype(dtype, errors="ignore")
+
+            # For object dtype columns, convert to string to avoid mixed types
+            if is_object_dtype(X[col]):
+                X.loc[X[col].notnull(), col] = X[col].astype(str)
 
         X = to_datetime(X)
         X = to_numeric(X)
 
-        # Convert to the best possible data type
-        self.type_per_column_ = {}
-        for col_idx, col in enumerate(X.columns):
-            # Cast pandas dtypes to numpy dtypes
-            # for earlier versions of sklearn. FIXME: which ?
-            if issubclass(X[col].dtype.__class__, ExtensionDtype):
-                try:
-                    X[col] = X[col].astype(X[col].dtype.type, errors="ignore")
-                except (TypeError, ValueError):
-                    pass
-            self.type_per_column_[col_idx] = X[col].dtype
-        return X
+        categorical_columns = X.select_dtypes("category").columns
+        if reset:
+            self.imputed_columns_ = []
+            for col in categorical_columns:
+                if self.impute_missing and _has_missing_values(X[col]):
+                    X[col] = _fillna_category(X[col])
+                    self.imputed_columns_.append(col)
+            self.type_per_column_ = X.dtypes.to_dict()
 
-    def _apply_cast(self, X):
-        """Takes a dataframe, and applies the best data types learnt during fitting.
+        else:
+            error_msg = (
+                "This %(name)s instance is not fitted yet. "
+                "Please run auto_cast(X, reset=True) first."
+            )
+            check_is_fitted(
+                self, ["imputed_columns_", "type_per_column_"], msg=error_msg
+            )
+            if self.impute_missing:
+                for col in self.imputed_columns_:
+                    X[col] = _fillna_category(X[col])
+            for col in categorical_columns:
+                dtype = self.type_per_column_[col]
+                dtype = _union_category(X[col], dtype)
+                self.type_per_column_[col] = dtype
+                X[col] = X[col].astype(dtype)
 
-        Does the same thing as `_auto_cast`, but applies learnt info.
-        """
-        for col in X.columns:
-            X[col] = _replace_false_missing(X[col])
-            if _has_missing_values(X[col]):
-                if pd.api.types.is_numeric_dtype(X[col]):
-                    X[col] = X[col].astype(np.float64)
-                X[col].fillna(value=np.nan, inplace=True)
-        for col in self.imputed_columns_:
-            X[col] = _replace_missing_in_cat_col(X[col])
-        # for object dtype columns, first convert to string to avoid mixed
-        # types we do it both in auto_cast and apply_cast because
-        # the type inferred for string columns during auto_cast
-        # is not necessarily string, it can be an object because
-        # of missing values
-        object_cols = X.columns[X.dtypes == "object"]
-        for col in object_cols:
-            X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
-        for col_idx, dtype in self.type_per_column_.items():
-            col = X.columns[col_idx]
-            # if categorical, add the new categories to prevent
-            # them to be encoded as nan
-            if isinstance(dtype, pd.CategoricalDtype):
-                known_categories = dtype.categories
-                new_categories = pd.unique(X[col])
-                # remove nan from new_categories
-                new_categories = new_categories[~pd.isnull(new_categories)]
-                dtype = pd.CategoricalDtype(
-                    categories=known_categories.union(new_categories)
-                )
-                self.type_per_column_[col_idx] = dtype
-
-        for col_idx, dtype in self.type_per_column_.items():
-            col = X.columns[col_idx]
-            try:
-                if pd.api.types.is_numeric_dtype(dtype):
-                    # we don't use astype because it can convert float to int
-                    X[col] = pd.to_numeric(X[col])
-                else:
-                    X[col] = X[col].astype(dtype)
-            except ValueError as e:
-                culprit = parse_astype_error_message(e)
-                if culprit is None:
-                    raise e
-                warnings.warn(
-                    f"Value '{culprit}' could not be converted to inferred type"
-                    f" {dtype!s} in column '{col}'. Such values will be replaced"
-                    " by NaN.",
-                    UserWarning,
-                    stacklevel=2,
-                )
-                # if the inferred dtype is numerical or datetime,
-                # we want to ignore entries that cannot be converted
-                # to this dtype
-                if pd.api.types.is_numeric_dtype(dtype):
-                    X[col] = pd.to_numeric(X[col], errors="coerce")
-                elif pd.api.types.is_datetime64_any_dtype(dtype):
-                    X[col] = to_datetime(X[col])
-                else:
-                    # this should not happen
-                    raise e
         return X
 
     def _check_X(self, X):
@@ -600,6 +558,13 @@ sparse_output=False), \
         else:
             # Create a copy to avoid altering the original data.
             X = X.copy()
+
+        # Check for duplicate column names.
+        duplicate_columns = {k for k, v in Counter(X.columns).items() if v > 1}
+        if len(duplicate_columns) > 0:
+            raise AssertionError(
+                f"Duplicate column names in the dataframe: {duplicate_columns}"
+            )
 
         # Check Pandas sparse arrays
         is_sparse_col = [hasattr(X[col], "sparse") for col in X.columns]
@@ -670,36 +635,17 @@ sparse_output=False), \
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
         """
-        if self.impute_missing not in ("skip", "force", "auto"):
-            raise ValueError(
-                "Invalid value for `impute_missing`, expected any of "
-                "{'auto', 'force', 'skip'}, "
-                f"got {self.impute_missing!r}. "
-            )
-
         self._clone_transformers()
 
         self._check_feature_names(X, reset=True)
         X = self._check_X(X)
         self._check_n_features(X, reset=True)
 
-        # We replace in all columns regardless of their type,
-        # as we might have some false missing
-        # in numerical columns for instance.
-        X = _replace_false_missing(X)
-
-        # Check for duplicate column names.
-        duplicate_columns = {k for k, v in Counter(X.columns).items() if v > 1}
-        if duplicate_columns:
-            raise AssertionError(
-                f"Duplicate column names in the dataframe: {duplicate_columns}"
-            )
-
         # If auto_cast is True, we'll find and apply the best possible type
         # to each column.
         # We'll keep the results in order to apply the types in `transform`.
         if self.auto_cast:
-            X = self._auto_cast(X)
+            X = self._auto_cast(X, reset=True)
 
         # We will filter X to keep only the columns that are not specified
         # explicitly by the user.
@@ -754,26 +700,6 @@ sparse_output=False), \
             if len(columns) > 0 and transformer is not None:
                 transformers.append((name, transformer, columns))
 
-        self.imputed_columns_ = []
-        if self.impute_missing != "skip":
-            # Impute if suiting
-            if _has_missing_values(X):
-                if self.impute_missing == "force":
-                    # Only impute categorical columns
-                    for col in categorical_columns:
-                        X[col] = _replace_missing_in_cat_col(X[col])
-                        self.imputed_columns_.append(col)
-
-                elif self.impute_missing == "auto":
-                    # Add special cases when we should impute.
-                    pass
-
-        # If there was missing values imputation, we cast the DataFrame again,
-        # as pandas gives different types depending on whether a column has
-        # missing values or not.
-        if self.imputed_columns_ and self.auto_cast:
-            X = self._auto_cast(X)
-
         if self.verbose:
             print(f"[TableVectorizer] Assigned transformers: {transformers}")
 
@@ -812,7 +738,7 @@ sparse_output=False), \
         X = self._check_X(X)
 
         if self.auto_cast:
-            X = self._apply_cast(X)
+            X = self._auto_cast(X, reset=False)
 
         return self._column_transformer.transform(X)
 
