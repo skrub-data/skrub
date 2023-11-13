@@ -153,7 +153,7 @@ def _propagate_n_jobs(transformer, n_jobs):
     return transformer
 
 
-def _fillna_category(series, value="missing"):
+def _impute_missing_category(series, value="missing"):
     """Fill the missing values from a categorical series."""
     if value not in series.cat.categories:
         series = series.cat.add_categories([value])
@@ -199,8 +199,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         'passthrough' to return the unencoded columns.
         The default transformer is \
             (OneHotEncoder(handle_unknown="ignore", drop="if_binary")).
-        Features classified under this category are imputed based on the
-        strategy defined with `impute_missing`.
 
     high_cardinality_transformer : {'drop', 'remainder', 'passthrough'} \
         or Transformer, optional
@@ -212,8 +210,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         'remainder' for applying `remainder`,
         or 'passthrough' to return the unencoded columns.
         The default transformer is (GapEncoder(n_components=30)).
-        Features classified under this category are imputed based on the
-        strategy defined with `impute_missing`.
 
     numerical_transformer : {'drop', 'remainder', 'passthrough'} \
         or Transformer, optional
@@ -223,8 +219,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         or 'passthrough' to return the unencoded columns (default).
-        Features classified under this category are not imputed at all
-        (regardless of `impute_missing`).
 
     datetime_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
         Transformer used on datetime features.
@@ -234,8 +228,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns,
         or `None` to use the default transformer (DatetimeEncoder()).
-        Features classified under this category are not imputed at all
-        (regardless of `impute_missing`).
 
     specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or \
         Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} \
@@ -253,18 +245,24 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Mixing the two is not supported.
 
     auto_cast : bool, default=True
-        If set to `True`, will try to convert each column to the best possible
-        data type (dtype).
+        If set to ``True``, calling fit or transform will try to convert each column
+        to the "optimal" dtype for scikit-learn estimators.
+        The main heuristics are the following:
+        - pandas extension dtypes conversion to numpy dtype
+        - datetime conversion using ``skrub.to_datetime``
+        - numeric conversion using ``pandas.to_numeric``
+        - numeric columns with missing values are converted to float to input np.nan
+        - categorical columns with missing values are imputed with 'missing' if
+          ``impute_missing_categories`` is ``True``.
+        - categorical columns dtypes are updated with the new entries (if any)
+          during transform.
 
-    impute_missing : {'auto', 'force', 'skip'}, default='auto'
+    impute_missing_categories : bool, default=True
         When to impute missing values in categorical (textual) columns.
-        'auto' will impute missing values if it is considered appropriate
-        (we are using an encoder that does not support missing values and/or
-        specific versions of pandas, numpy and scikit-learn).
-        'force' will impute missing values in all categorical columns.
-        'skip' will not impute at all.
-        When imputed, missing values are replaced by the string 'missing'
-        before being encoded.
+        If set to ``True``, calling fit or transform will replace missing
+        values in all categorical columns by the string 'missing', before using
+        these values for encoding.
+        If set to ``False``, no fill operation is performed.
         As imputation logic for numerical features can be quite intricate,
         it is left to the user to manage.
         See also attribute :attr:`~skrub.TableVectorizer.imputed_columns_`.
@@ -273,19 +271,19 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         By default, all remaining columns that were not specified in `transformers`
         will be automatically passed through. This subset of columns is concatenated
         with the output of the transformers. (default 'passthrough').
-        By specifying `remainder='drop'`, only the specified columns
+        By specifying ``remainder='drop'``, only the specified columns
         in `transformers` are transformed and combined in the output, and the
         non-specified columns are dropped.
         By setting `remainder` to be an estimator, the remaining
         non-specified columns will use the `remainder` estimator. The
-        estimator must support :term:`fit` and :term:`transform`.
+        estimator must support ``fit`` and ``transform``.
         Note that using this feature requires that the DataFrame columns
-        input at :term:`fit` and :term:`transform` have identical order.
+        input at ``fit`` and ``transform`` have identical order.
 
     sparse_threshold : float, default=0.0
         If the output of the different transformers contains sparse matrices,
         these will be stacked as a sparse matrix if the overall density is
-        lower than this value. Use `sparse_threshold=0` to always return dense.
+        lower than this value. Use ``sparse_threshold=0`` to always return dense.
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
 
@@ -395,8 +393,7 @@ sparse_output=False), \
         datetime_transformer=DATETIME_TRANSFORMER,
         specific_transformers=None,
         auto_cast=True,
-        impute_missing=False,
-        # The next parameters are inherited from ColumnTransformer
+        impute_missing_categories=True,
         remainder="passthrough",
         sparse_threshold=0.0,
         n_jobs=None,
@@ -417,7 +414,7 @@ sparse_output=False), \
         self.numerical_transformer = numerical_transformer
         self.specific_transformers = specific_transformers
         self.auto_cast = auto_cast
-        self.impute_missing = impute_missing
+        self.impute_missing_categories = impute_missing_categories
 
         # Parameter from `ColumnTransformer`
         self.remainder = remainder
@@ -456,16 +453,39 @@ sparse_output=False), \
         )
 
     def _auto_cast(self, X, reset):
-        """Cast a dataframe to numpy dtype and handle categories update.
+        """Convert each column of a dataframe to the "optimal" dtype
+        for scikit-learn estimators.
+
+        The main heuristics are the following:
+        - pandas extension dtypes conversion to numpy dtype
+        - datetime conversion using ``skrub.to_datetime``
+        - numeric conversion using ``pandas.to_numeric``
+        - numeric columns with missing values are converted to float to input np.nan
+        - categorical columns with missing values are filled with 'missing' if
+          ``impute_missing_categories`` is ``True``.
+        - categorical columns dtypes are updated with the new entries (if any)
+          during transform.
 
         Parameters
         ----------
         X : :obj:`~pandas.DataFrame` of shape (n_samples, n_features)
             The data to be transformed.
 
+        reset : bool
+            If set to ``True`` (during fit):
+            - create ``imputed_columns_`` the list of categorical columns
+              with missing values to impute.
+            - create ``type_per_columns_``, the mapping between columns of
+              the training dataframe and their types.
+            If set to ``False`` (during transform):
+            - read ``imputed_columns_``, the list of categorical columns
+              with missing values.
+            - update ``type_per_columns_`` for the categorical columns with
+              the new categories seen during transform.
+
         Returns
         -------
-        :obj:`~pandas.DataFrame`
+        X : :obj:`~pandas.DataFrame`
             The same :obj:`~pandas.DataFrame`, with its columns cast.
         """
         for col in X.columns:
@@ -499,8 +519,8 @@ sparse_output=False), \
         if reset:
             self.imputed_columns_ = []
             for col in categorical_columns:
-                if self.impute_missing and _has_missing_values(X[col]):
-                    X[col] = _fillna_category(X[col])
+                if self.impute_missing_categories and _has_missing_values(X[col]):
+                    X[col] = _impute_missing_category(X[col])
                     self.imputed_columns_.append(col)
             self.type_per_column_ = X.dtypes.to_dict()
 
@@ -512,9 +532,9 @@ sparse_output=False), \
             check_is_fitted(
                 self, ["imputed_columns_", "type_per_column_"], msg=error_msg
             )
-            if self.impute_missing:
+            if self.impute_missing_categories:
                 for col in self.imputed_columns_:
-                    X[col] = _fillna_category(X[col])
+                    X[col] = _impute_missing_category(X[col])
             for col in categorical_columns:
                 dtype = self.type_per_column_[col]
                 dtype = _union_category(X[col], dtype)

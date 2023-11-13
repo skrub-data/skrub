@@ -488,7 +488,7 @@ def test_passthrough() -> None:
         high_cardinality_transformer="passthrough",
         datetime_transformer="passthrough",
         numerical_transformer="passthrough",
-        impute_missing="skip",
+        impute_missing_categories=False,
         auto_cast=False,
     )
 
