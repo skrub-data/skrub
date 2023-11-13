@@ -7,13 +7,20 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
 
 from skrub import _join_utils, _matching
 from skrub._datetime_encoder import DatetimeEncoder
 
+
+def _as_str(column):
+    return column.fillna("").astype(str)
+
+
 DEFAULT_STRING_ENCODER = make_pipeline(
-    HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)), TfidfTransformer()
+    FunctionTransformer(_as_str),
+    HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)),
+    TfidfTransformer(),
 )
 _DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
 
@@ -27,18 +34,26 @@ _MATCHERS = {
 DEFAULT_REF_DIST = "second_neighbor"
 
 
-def _make_vectorizer(table, string_encoder):
+def _make_vectorizer(table, string_encoder, rescale):
     transformers = [
         (clone(string_encoder), c)
         for c in table.select_dtypes(include=["string", "category", "object"]).columns
     ]
     num_columns = table.select_dtypes(include="number").columns
     if not num_columns.empty:
-        transformers.append((StandardScaler(), num_columns))
+        transformers.append(
+            (StandardScaler() if rescale else "passthrough", num_columns)
+        )
     dt_columns = table.select_dtypes("datetime").columns
     if not dt_columns.empty:
         transformers.append(
-            (make_pipeline(clone(_DATETIME_ENCODER), StandardScaler()), dt_columns)
+            (
+                make_pipeline(
+                    clone(_DATETIME_ENCODER),
+                    StandardScaler() if rescale else "passthrough",
+                ),
+                dt_columns,
+            )
         )
     return make_column_transformer(*transformers)
 
@@ -192,7 +207,9 @@ class Joiner(TransformerMixin, BaseEstimator):
         _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
         self._check_max_dist()
         self.vectorizer_ = _make_vectorizer(
-            self.aux_table[self._aux_key], self.string_encoder
+            self.aux_table[self._aux_key],
+            self.string_encoder,
+            rescale=self.ref_dist != "raw_distance",
         )
         # TODO: fast path if max_dist == 0 and not return_matching_info, don't
         # vectorize nor fit matching just do normal equijoin
