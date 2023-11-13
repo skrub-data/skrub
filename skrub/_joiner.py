@@ -86,7 +86,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         of ``maching`` for details on available rescaling strategies.
         ``None`` or ``"inf"`` is interpreted as ``float("inf")``.
     ref_dist : reference distance for rescaling, default = "second_neighbor"
-        TODO this could also be chosen by providing a string?
         TODO expand description.
     string_encoder : scikit-learn transformer for text
         By default a ``HashingVectorizer`` combined with a ``TfidfTransforme``
@@ -173,9 +172,6 @@ class Joiner(TransformerMixin, BaseEstimator):
     def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
 
-        In practice, just checks if the key columns in X,
-        the main table, and in the auxiliary tables exist.
-
         Parameters
         ----------
         X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
@@ -245,9 +241,6 @@ class Joiner(TransformerMixin, BaseEstimator):
             how="left",
         )
         if self.insert_match_info:
-            # TODO maybe let the matching strategy decide which keys to insert
-            # (eg number of competitors in neighborhood, distance to closest
-            # competitor etc)
             for info_key, info_col_name in self._match_info_key_renaming.items():
                 join[info_col_name] = match_result[info_key]
         return join
