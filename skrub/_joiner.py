@@ -9,15 +9,22 @@ from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-from skrub import _join_utils
+from skrub import _join_utils, _matching
 from skrub._datetime_encoder import DatetimeEncoder
-from skrub._matching import TargetNeighbor
 
-DEFAULT_MATCHING = TargetNeighbor()
 DEFAULT_STRING_ENCODER = make_pipeline(
     HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)), TfidfTransformer()
 )
 _DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
+
+
+_MATCHERS = {
+    "second_neighbor": _matching.QueryNeighbor,
+    "self_join_neighbor": _matching.TargetNeighbor,
+    "worst_match": _matching.MaxDist,
+    "raw_distance": _matching.Matching,
+}
+DEFAULT_MATCHING = "second_neighbor"
 
 
 def _make_vectorizer(table, string_encoder):
@@ -111,7 +118,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     0  Germany  Berlin
     1   France   Paris
     2    Italy    Rome
-    >>> joiner = Joiner(aux_table, key="Country", suffix="_capitals")
+    >>> joiner = Joiner(aux_table, key="Country", suffix="_capitals", max_dist=0.9)
     >>> joiner.fit_transform(main_table)
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -142,7 +149,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.key = key
         self.suffix = suffix
         self.max_dist = max_dist
-        self.matching = clone(matching) if matching is DEFAULT_MATCHING else matching
+        self.matching = matching
         self.string_encoder = (
             clone(string_encoder)
             if string_encoder is DEFAULT_STRING_ENCODER
@@ -159,6 +166,9 @@ class Joiner(TransformerMixin, BaseEstimator):
             self._max_dist = np.inf
         else:
             self._max_dist = self.max_dist
+
+    def _check_matching(self):
+        self.matching_ = _MATCHERS[self.matching]()
 
     def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
@@ -196,7 +206,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
-        self.matching_ = clone(self.matching).fit(aux, main)
+        self._check_matching()
+        self.matching_.fit(aux, main)
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
