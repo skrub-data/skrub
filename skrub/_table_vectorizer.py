@@ -239,7 +239,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         'remainder' for applying `remainder`,
         'passthrough' to return the unencoded columns.
         The default transformer is \
-            (OneHotEncoder(handle_unknown="ignore", drop="if_binary")).
+            ``OneHotEncoder(handle_unknown="ignore", drop="if_binary")``.
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -252,7 +252,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
         or 'passthrough' to return the unencoded columns.
-        The default transformer is (GapEncoder(n_components=30)).
+        The default transformer is ``GapEncoder(n_components=30)``.
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
@@ -273,8 +273,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (DatetimeEncoder()).
+        'passthrough' to return the unencoded columns.
+        The default transformer is ``DatetimeEncoder()``.
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
