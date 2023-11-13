@@ -1,6 +1,5 @@
 """
-Implements the Joiner, a transformer that allows
-multiple fuzzy joins on a table.
+The Joiner provides fuzzy joining as a scikit-learn transformer.
 """
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -33,8 +32,7 @@ def _make_vectorizer(table, string_encoder):
         transformers.append(
             (make_pipeline(clone(_DATETIME_ENCODER), StandardScaler()), dt_columns)
         )
-
-    return make_column_transformer(*transformers, sparse_threshold=1.0)
+    return make_column_transformer(*transformers)
 
 
 class Joiner(TransformerMixin, BaseEstimator):
@@ -49,10 +47,8 @@ class Joiner(TransformerMixin, BaseEstimator):
        when ``Joiner.transform`` is called.
 
     It is advised to use hyperparameter tuning tools such as GridSearchCV
-    to determine the best `match_score` parameter, as this can significantly
-    improve your results.
-    (see example 'Fuzzy joining dirty tables with the Joiner'
-    for an illustration)
+    to determine the best `max_dist` parameter, as this can significantly
+    improve results.
 
     Parameters
     ----------
@@ -73,24 +69,19 @@ class Joiner(TransformerMixin, BaseEstimator):
     suffix : str, default=""
         Suffix to append to the ``aux_table``'s column names. You can use it
         to avoid duplicate column names in the join.
-    match_score : float, default=0
-        Distance score between the closest matches that will be accepted.
-        In a [0, 1] interval. 1 means that only a perfect match will be
-        accepted, and zero means that the closest match will be accepted,
-        no matter how distant.
-        For numerical joins, this defines the maximum Euclidean distance
-        between the matches.
-    analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
-        Analyzer parameter for the CountVectorizer used for
-        the string similarities.
-        Describes whether the matrix `V` to factorize should be made of
-        word counts or character n-gram counts.
-        Option `char_wb` creates character n-grams only from text inside word
-        boundaries; n-grams at the edges of words are padded with space.
-    ngram_range : 2-tuple of int, default=(2, 4)
-        The lower and upper boundaries of the range of n-values for different
-         n-grams used in the string similarity. All values of `n` such
-         that ``min_n <= n <= max_n`` will be used.
+    max_dist : float, default=1.0
+        Maximum acceptable (rescaled) distance between a row in the
+        ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
+        are farther apart are not considered to match. By default, the distance
+        is rescaled so that a value between 0 and 1 is typically a good choice,
+        although rescaled distances can be greater than 1. See the description
+        of ``maching`` for details on available rescaling strategies.
+    matching : fuzzy matching and distance rescaling strategy
+        TODO this could also be chosen by providing a string?
+        TODO expand description.
+    string_encoder : scikit-learn transformer for text
+        By default a ``HashingVectorizer`` combined with a ``TfidfTransforme``
+        is used.
 
     See Also
     --------
@@ -98,39 +89,32 @@ class Joiner(TransformerMixin, BaseEstimator):
         Aggregate auxiliary dataframes before joining them on a base dataframe.
 
     fuzzy_join :
-        Join two tables (dataframes) based on approximate column matching.
-
-    get_ken_embeddings :
-        Download vector embeddings for many common entities (cities,
-        places, people...).
+        Join two tables (dataframes) based on approximate column matching. This
+        is the same functionality as provided by the ``Joiner`` but exposed as
+        a function rather than a transformer.
 
     Examples
     --------
-    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
-    >>> X
-       Country
-    0   France
-    1  Germany
-    2    Italy
-
-    >>> aux_table = pd.DataFrame([['germany', 84_000_000],
-    ...                         ['france', 68_000_000],
-    ...                         ['italy', 59_000_000]],
-    ...                         columns=['Country', 'Population'])
+    >>> import pandas as pd
+    >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
+    >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
+    ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
+    >>> main_table
+      Country
+    0  France
+    1  Italia
+    2   Spain
     >>> aux_table
-       Country  Population
-    0  germany    84000000
-    1   france    68000000
-    2    italy    59000000
-
-    >>> joiner = Joiner(aux_table, key='Country', suffix='_aux')
-
-    >>> augmented_table = joiner.fit_transform(X)
-    >>> augmented_table
-       Country Country_aux  Population
-    0   France      france    68000000
-    1  Germany     germany    84000000
-    2    Italy       italy    59000000
+       Country Capital
+    0  Germany  Berlin
+    1   France   Paris
+    2    Italy    Rome
+    >>> joiner = Joiner(aux_table, key="Country", suffix="_capitals")
+    >>> joiner.fit_transform(main_table)
+      Country Country_capitals Capital_capitals
+    0  France           France            Paris
+    1  Italia            Italy             Rome
+    2   Spain              NaN              NaN
     """
 
     _match_info_keys = ["distance", "rescaled_distance", "match_accepted"]
