@@ -16,15 +16,15 @@ from skrub._datetime_encoder import (
 )
 
 MODULES = [pd]
+ASSERT_TUPLES = [(pd, assert_frame_equal)]
 NULL = {"pandas": pd.NA}
-ASSERT_FRAME_EQUAL = {"pandas": assert_frame_equal}
 
 if POLARS_SETUP:
     import polars as pl
     from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
     MODULES.append(pl)
-    ASSERT_FRAME_EQUAL["polars"] = assert_frame_equal_pl
+    ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
     NULL["polars"] = pl.Null
 
 NANOSECONDS_FORMAT = (
@@ -34,6 +34,7 @@ MSG_MIN_PANDAS_SKIP = "Pandas format=mixed is not available"
 
 
 def get_date(px, as_array=False):
+    """px should either be the Pandas or Polars module."""
     df = px.DataFrame(
         [
             ["2020-01-01", "2020-01-02", "2020-01-03"],
@@ -48,6 +49,7 @@ def get_date(px, as_array=False):
 
 
 def get_datetime(px, as_array=False):
+    """px should either be the Pandas or Polars module."""
     df = px.DataFrame(
         [
             ["2020-01-01 10:12:01", "2020-01-02 10:23:00", "2020-01-03 10:00:00"],
@@ -62,6 +64,7 @@ def get_datetime(px, as_array=False):
 
 
 def get_nanoseconds(px, as_array=False):
+    """px should either be the Pandas or Polars module."""
     df = px.DataFrame(
         [
             ["2020-08-24 15:55:30.123456789", "2020-08-24 15:55:30.123456789"],
@@ -76,6 +79,7 @@ def get_nanoseconds(px, as_array=False):
 
 
 def get_nan_datetime(px, as_array=False):
+    """px should either be the Pandas or Polars module."""
     df = px.DataFrame(
         [
             ["2020-01-01 10:12:01", None, "2020-01-03 10:00:00"],
@@ -89,6 +93,7 @@ def get_nan_datetime(px, as_array=False):
 
 
 def get_tz_datetime(px, as_array=False):
+    """px should either be the Pandas or Polars module."""
     # The equivalent dtype is "datetime64[ns, Asia/Kolkata]"
     df = px.DataFrame(
         [
@@ -104,6 +109,7 @@ def get_tz_datetime(px, as_array=False):
 
 
 def get_mixed_type_dataframe(px):
+    """px should either be the Pandas or Polars module."""
     return px.DataFrame(
         dict(
             a=["2020-01-01", "2020-02-04", "2021-02-05"],
@@ -117,6 +123,7 @@ def get_mixed_type_dataframe(px):
 
 
 def get_mixed_datetime_format(px, as_array=False):
+    """px should either be the Pandas or Polars module."""
     df = px.DataFrame(
         dict(
             a=[
@@ -382,12 +389,12 @@ def test_mixed_type_dataframe(px):
     assert X_dt.dtype == np.object_
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_indempotency(px):
+@pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
+def test_indempotency(px, assert_frame_equal_):
     df = get_mixed_datetime_format(px)
     df_dt = to_datetime(df)
     df_dt_2 = to_datetime(df_dt)
-    ASSERT_FRAME_EQUAL[px.__name__](df_dt, df_dt_2)
+    assert_frame_equal_(df_dt, df_dt_2)
 
     X_trans = DatetimeEncoder().fit_transform(df)
     X_trans_2 = DatetimeEncoder().fit_transform(df_dt)
@@ -458,10 +465,11 @@ def test_to_datetime_format_param():
     assert_array_equal(out, expected_out)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_mixed_datetime_format(px):
+@pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
+def test_mixed_datetime_format(px, assert_frame_equal_):
     if px is pl:
         pytest.xfail(reason="Polars is not supported yet")
+
     df = get_mixed_datetime_format(px)
 
     df_dt = to_datetime(df)
@@ -475,7 +483,7 @@ def test_mixed_datetime_format(px):
             ]
         )
     )
-    ASSERT_FRAME_EQUAL[px.__name__](df_dt, expected_df_dt)
+    assert_frame_equal_(df_dt, expected_df_dt)
 
     series_dt = to_datetime(df["a"])
     expected_series_dt = expected_df_dt["a"]

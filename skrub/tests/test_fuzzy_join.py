@@ -11,18 +11,18 @@ from sklearn.feature_extraction.text import HashingVectorizer
 from skrub import fuzzy_join
 from skrub._dataframe._polars import POLARS_SETUP
 
-ASSERT_TUPLES = [pd]
-ASSERT_FRAME_EQUAL = {"pandas": assert_frame_equal}
+MODULES = [pd]
+ASSERT_TUPLES = [(pd, assert_frame_equal)]
 
 if POLARS_SETUP:
     import polars as pl
     from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
-    ASSERT_TUPLES.append(pl)
-    ASSERT_FRAME_EQUAL["polars"] = assert_frame_equal_pl
+    MODULES.append(pl)
+    ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize(
     "analyzer",
     ["char", "char_wb", "word"],
@@ -95,7 +95,7 @@ def test_fuzzy_join(px, analyzer: Literal["char", "char_wb", "word"]):
     assert ("a1l" and "a1r") in df.columns
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_match_score(px):
     if px is pl:
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
@@ -107,7 +107,7 @@ def test_match_score(px):
     assert join["B"].fillna(-1).to_list() == [1, -1]
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_perfect_matches(px):
     if px is pl:
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
@@ -121,7 +121,7 @@ def test_perfect_matches(px):
     assert_array_equal(join["matching_score"].to_numpy(), [1.0, 1.0])
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_fuzzy_join_dtypes(px):
     """
     Test that the dtypes of dataframes are maintained after join
@@ -136,7 +136,7 @@ def test_fuzzy_join_dtypes(px):
     assert c.dtypes["col3"] == b.dtypes["col3"]
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize(
     ["analyzer", "on", "how"],
     [
@@ -169,7 +169,7 @@ def test_parameters_error(px, analyzer, on, how) -> None:
         fuzzy_join(df1, df2, on="a", match_score="blabla")
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_missing_keys(px):
     if px is pl:
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
@@ -188,7 +188,7 @@ def test_missing_keys(px):
     assert output.shape == (3, 4)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_drop_unmatched(px):
     if px is pl:
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
@@ -208,7 +208,7 @@ def test_drop_unmatched(px):
     assert c4.shape == (2, 4)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_how_param(px):
     """
     Test correct shape of left and right joins.
@@ -285,7 +285,7 @@ def test_fuzzy_join_pandas_comparison():
     assert_frame_equal(result_s, result_s_fj)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_correct_encoder(px):
     """
     Test that the encoder error checking is working as intended.
@@ -332,7 +332,7 @@ def test_correct_encoder(px):
         fuzzy_join(left, right, on="key", how="left", encoder="awrongencoder")
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_numerical_column(px):
     """
     Testing that fuzzy_join works with numerical columns.
@@ -366,8 +366,8 @@ def test_numerical_column(px):
     assert fj_num3.shape == (2, n_cols)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
-def test_datetime_column(px):
+@pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
+def test_datetime_column(px, assert_frame_equal_):
     """
     Testing that fuzzy_join works with datetime columns.
     """
@@ -398,7 +398,7 @@ def test_datetime_column(px):
             "date_y": px.to_datetime(["09/10/2022", "12/24/2021", "09/25/2010"]),
         }
     )
-    ASSERT_FRAME_EQUAL[px.__name__](fj_time, fj_time_expected)
+    assert_frame_equal_(fj_time, fj_time_expected)
 
     n_cols = left.shape[1] + right.shape[1]
     n_samples = len(left)
@@ -418,8 +418,8 @@ def test_datetime_column(px):
     assert fj_time3.shape == (2, n_cols)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
-def test_mixed_joins(px):
+@pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
+def test_mixed_joins(px, assert_frame_equal_):
     """
     Test fuzzy joining on mixed and multiple column types.
     """
@@ -463,7 +463,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["12/24/2021", "12/24/2021", "02/21/2000"]),
         }
     )
-    ASSERT_FRAME_EQUAL[px.__name__](fj_num, expected_fj_num)
+    assert_frame_equal_(fj_num, expected_fj_num)
     assert fj_num.shape == (3, 10)
 
     # On multiple string keys
@@ -488,7 +488,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
         }
     )
-    ASSERT_FRAME_EQUAL[px.__name__](fj_str, expected_fj_str)
+    assert_frame_equal_(fj_str, expected_fj_str)
     assert fj_str.shape == (3, 10)
 
     # On mixed, numeric and string keys
@@ -512,7 +512,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["2021-12-24", "2021-12-24", "2022-09-10"]),
         }
     )
-    ASSERT_FRAME_EQUAL[px.__name__](fj_mixed, expected_fj_mixed)
+    assert_frame_equal_(fj_mixed, expected_fj_mixed)
     assert fj_mixed.shape == (3, 10)
 
     # On mixed time and string keys
@@ -536,7 +536,7 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["2022-09-10", "2021-12-24", "2010-09-25"]),
         }
     )
-    ASSERT_FRAME_EQUAL[px.__name__](fj_mixed2, expected_fj_mixed2)
+    assert_frame_equal_(fj_mixed2, expected_fj_mixed2)
     assert fj_mixed2.shape == (3, 10)
 
     # On mixed time and numbers keys
@@ -560,11 +560,11 @@ def test_mixed_joins(px):
             "date_y": px.to_datetime(["2021-12-24", "2021-12-24", "2010-09-25"]),
         }
     )
-    ASSERT_FRAME_EQUAL[px.__name__](fj_mixed3, expected_fj_mixed3)
+    assert_frame_equal_(fj_mixed3, expected_fj_mixed3)
     assert fj_mixed3.shape == (3, 10)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_iterable_input(px):
     """
     Test if iterable input: list, set, dictionary or tuple works.
@@ -589,7 +589,7 @@ def test_iterable_input(px):
     ).shape == (3, 4)
 
 
-@pytest.mark.parametrize("px", ASSERT_TUPLES)
+@pytest.mark.parametrize("px", MODULES)
 def test_missing_values(px):
     """
     Test fuzzy joining on missing values.

@@ -7,14 +7,14 @@ from skrub import Joiner
 from skrub._dataframe._polars import POLARS_SETUP
 
 MODULES = [pd]
-ASSERT_FRAME_EQUAL = {"pandas": assert_frame_equal}
+ASSERT_TUPLES = [(pd, assert_frame_equal)]
 
 if POLARS_SETUP:
     import polars as pl
     from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
     MODULES.append(pl)
-    ASSERT_FRAME_EQUAL["polars"] = assert_frame_equal_pl
+    ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -63,8 +63,8 @@ def test_joiner(px):
         false_joiner2.fit(main_table)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_multiple_keys(px):
+@pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
+def test_multiple_keys(px, assert_frame_equal_):
     if px is pl:
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     df = px.DataFrame(
@@ -76,9 +76,9 @@ def test_multiple_keys(px):
     joiner_list = Joiner(aux_table=df2, aux_key=["CO", "CA"], main_key=["Co", "Ca"])
     result = joiner_list.fit_transform(df)
     expected = px.DataFrame(px.concat([df, df2], axis=1))
-    ASSERT_FRAME_EQUAL[px.__name__](result, expected)
+    assert_frame_equal_(result, expected)
 
     joiner_list = Joiner(aux_table=df2, aux_key="CA", main_key="Ca")
     result = joiner_list.fit_transform(df)
     expected = px.DataFrame(px.concat([df, df2], axis=1))
-    ASSERT_FRAME_EQUAL[px.__name__](result, expected)
+    assert_frame_equal_(result, expected)
