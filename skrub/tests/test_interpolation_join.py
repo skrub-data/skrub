@@ -6,6 +6,14 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from skrub import InterpolationJoiner
+from skrub._dataframe._polars import POLARS_SETUP
+
+MODULES = [pd]
+
+if POLARS_SETUP:
+    import polars as pl
+
+    MODULES.append(pl)
 
 
 @pytest.fixture
@@ -27,11 +35,23 @@ def weather():
     )
 
 
+@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize("key", [["latitude", "longitude"], "latitude"])
 @pytest.mark.parametrize("with_nulls", [False, True])
-def test_interpolation_join(buildings, weather, key, with_nulls):
+def test_interpolation_join(px, buildings, weather, key, with_nulls):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+        weather = pl.DataFrame(weather)
+        buildings = pl.DataFrame(buildings)
     if not with_nulls:
-        weather = weather.fillna(0.0)
+        if px is pd:
+            weather = weather.fillna(0.0)
+        elif px is pl:
+            weather = weather.fill_nan(0.0)
     transformed = InterpolationJoiner(
         weather,
         key=key,
@@ -42,9 +62,16 @@ def test_interpolation_join(buildings, weather, key, with_nulls):
     assert_array_equal(transformed["climate"].values, ["A", "B"])
 
 
-def test_vectorizer():
-    main = pd.DataFrame({"A": [0, 1]})
-    aux = pd.DataFrame({"A": [11, 110], "B": [1, 0]})
+@pytest.mark.parametrize("px", MODULES)
+def test_vectorizer(px):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+    main = px.DataFrame({"A": [0, 1]})
+    aux = px.DataFrame({"A": [11, 110], "B": [1, 0]})
 
     class Vectorizer(TransformerMixin, BaseEstimator):
         def fit(self, X):
@@ -62,7 +89,16 @@ def test_vectorizer():
     assert_array_equal(join["B"], [0, 1])
 
 
-def test_no_multioutput(buildings, weather):
+@pytest.mark.parametrize("px", MODULES)
+def test_no_multioutput(px, buildings, weather):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+        weather = pl.DataFrame(weather)
+        buildings = pl.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         main_key=("latitude", "longitude"),
@@ -71,9 +107,16 @@ def test_no_multioutput(buildings, weather):
     assert transformed.shape == (2, 5)
 
 
-def test_condition_choice():
-    main = pd.DataFrame({"A": [0, 1, 2]})
-    aux = pd.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
+@pytest.mark.parametrize("px", MODULES)
+def test_condition_choice(px):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+    main = px.DataFrame({"A": [0, 1, 2]})
+    aux = px.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
@@ -100,17 +143,31 @@ def test_condition_choice():
         ).fit(None)
 
 
-def test_suffix():
-    df = pd.DataFrame({"A": [0, 1], "B": [0, 1]})
+@pytest.mark.parametrize("px", MODULES)
+def test_suffix(px):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+    df = px.DataFrame({"A": [0, 1], "B": [0, 1]})
     join = InterpolationJoiner(
         df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
     assert_array_equal(join.columns, ["A", "B", "B_aux"])
 
 
-def test_mismatched_indexes():
-    main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
-    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
+@pytest.mark.parametrize("px", MODULES)
+def test_mismatched_indexes(px):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+    main = px.DataFrame({"A": [0, 1]}, index=[1, 0])
+    aux = px.DataFrame({"A": [0, 1], "B": [10, 11]})
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
@@ -118,21 +175,35 @@ def test_mismatched_indexes():
     assert_array_equal(join.index.values, [1, 0])
 
 
-def test_fit_on_none():
+@pytest.mark.parametrize("px", MODULES)
+def test_fit_on_none(px):
     # X is hardly used in fit so it should be ok to fit without a main table
-    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+    aux = px.DataFrame({"A": [0, 1], "B": [10, 11]})
     joiner = InterpolationJoiner(aux, key="A", regressor=KNeighborsRegressor(1)).fit(
         None
     )
-    main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
+    main = px.DataFrame({"A": [0, 1]}, index=[1, 0])
     join = joiner.transform(main)
     assert_array_equal(join["B"].values, [10, 11])
     assert_array_equal(join.index.values, [1, 0])
 
 
-def test_join_on_date():
-    sales = pd.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
-    temp = pd.DataFrame(
+@pytest.mark.parametrize("px", MODULES)
+def test_join_on_date(px):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+    sales = px.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
+    temp = px.DataFrame(
         {"date": ["2023-09-09", "2023-10-01", "2024-09-21"], "temp": [-10, 10, 30]}
     )
     transformed = (
@@ -153,7 +224,16 @@ class FailFit(DummyClassifier):
         raise ValueError("FailFit failed")
 
 
-def test_fit_failures(buildings, weather):
+@pytest.mark.parametrize("px", MODULES)
+def test_fit_failures(px, buildings, weather):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+        weather = pl.DataFrame(weather)
+        buildings = pl.DataFrame(buildings)
     weather["climate"] = "A"
     joiner = InterpolationJoiner(
         weather,
@@ -194,7 +274,16 @@ class FailPredict(DummyClassifier):
         raise ValueError("FailPredict failed")
 
 
-def test_transform_failures(buildings, weather):
+@pytest.mark.parametrize("px", MODULES)
+def test_transform_failures(px, buildings, weather):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+        weather = pl.DataFrame(weather)
+        buildings = pl.DataFrame(buildings)
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
@@ -233,7 +322,16 @@ def test_transform_failures(buildings, weather):
         join = joiner.fit_transform(buildings)
 
 
-def test_transform_failures_dtype(buildings, weather):
+@pytest.mark.parametrize("px", MODULES)
+def test_transform_failures_dtype(px, buildings, weather):
+    if px is pl:
+        pytest.xfail(
+            reason=(
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+            )
+        )
+        weather = pl.DataFrame(weather)
+        buildings = pl.DataFrame(buildings)
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
