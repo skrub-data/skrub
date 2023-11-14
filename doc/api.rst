@@ -36,6 +36,13 @@ This page lists all available functions and classes of `skrub`.
    AggTarget
 
 
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
+   InterpolationJoiner
+
 .. raw:: html
 
    <h2>Column selection in a pipeline</h2>
