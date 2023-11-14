@@ -15,6 +15,10 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+* :class:`InterpolationJoiner` was added to join two tables by using
+  machine-learning to infer the matching rows from the second table.
+  :pr:`742` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * Pipelines including :class:`TableVectorizer` can now be grid-searched, since
   we can now call `set_params` on the default transformers of :class:`TableVectorizer`.
   :pr:`814` by :user:`Vincent Maladiere <Vincent-Maladiere>`
