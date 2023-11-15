@@ -125,8 +125,8 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     estimators_ : list of dicts
         The estimators used to infer values to be joined. Each entry in this
         list is a dictionary with keys ``"estimator"`` (the fitted estimator)
-        and ``"columns"`` (the list of columns in ``aux_table`` that it is
-        trained to predict).
+        and ``"schema"`` (the names and data types of columns in ``aux_table``
+        that it is trained to predict).
 
     See Also
     --------
@@ -230,7 +230,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         fit_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_fit)(
                 key_values,
-                aux_table.select(*assignment["columns"]).dataframe,
+                aux_table.select(*assignment["schema"].keys()).dataframe,
                 assignment["estimator"],
                 propagate_exceptions=(self.on_estimator_failure == "raise"),
             )
@@ -258,7 +258,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         failed_columns = []
         for res in results:
             if res["failed"]:
-                failed_columns.extend(res["columns"])
+                failed_columns.extend(res["schema"].keys())
         if not failed_columns:
             return successful_results
         warnings.warn(
@@ -301,7 +301,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
                 key_values,
-                assignment["columns"],
+                assignment["schema"],
                 assignment["estimator"],
                 propagate_exceptions=(self.on_estimator_failure == "raise"),
                 ns=get_df_namespace(self.aux_table)[0],
@@ -330,10 +330,13 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
                 # else:
                 #     dtype = object
                 pred = ns.make_dataframe(
-                    {c: [None for _ in range(res["shape"][0])] for c in res["columns"]},
+                    {
+                        c: [None for _ in range(res["shape"][0])]
+                        for c in res["schema"].keys()
+                    },
                 )
                 new_res["predictions"] = pred
-                failed_columns.extend(res["columns"])
+                failed_columns.extend(res["schema"].keys())
             checked_results.append(new_res)
         if not failed_columns:
             return checked_results
@@ -350,7 +353,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
 
         In many cases, a single estimator cannot handle all the target columns.
         This function groups columns that can be handled together and returns a
-        list of dictionaries, each with keys "columns" and "estimator".
+        list of dictionaries, each with keys "schema" and "estimator".
 
         Regression and classification targets are always handled separately.
 
@@ -392,16 +395,23 @@ def _get_assignments_for_estimator(table, estimator):
         return []
     if not _handles_multioutput(estimator):
         return [
-            {"columns": [col], "estimator": estimator} for col in table.column_names
+            {"schema": {col: table.schema[col]}, "estimator": estimator}
+            for col in table.column_names
         ]
     table = table.persist()
     columns_with_nulls = [c for c in table.column_names if table.col(c).is_null().any()]
     assignments = [
-        {"columns": [col], "estimator": estimator} for col in columns_with_nulls
+        {"schema": {col: table.schema[col]}, "estimator": estimator}
+        for col in columns_with_nulls
     ]
     columns_without_nulls = list(set(table.column_names).difference(columns_with_nulls))
     if columns_without_nulls:
-        assignments.append({"columns": columns_without_nulls, "estimator": estimator})
+        assignments.append(
+            {
+                "schema": {c: table.schema[c] for c in columns_without_nulls},
+                "estimator": estimator,
+            }
+        )
     return assignments
 
 
@@ -435,13 +445,13 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
         failed = True
         estimator = None
     return {
-        "columns": target_table.column_names,
+        "schema": target_table.schema,
         "estimator": estimator,
         "failed": failed,
     }
 
 
-def _predict(key_values, columns, estimator, propagate_exceptions, ns):
+def _predict(key_values, schema, estimator, propagate_exceptions, ns):
     failed = False
     try:
         Y_values = estimator.predict(key_values)
@@ -452,14 +462,15 @@ def _predict(key_values, columns, estimator, propagate_exceptions, ns):
     if failed:
         predictions = None
     else:
+        # TODO use schema
         predictions = ns.make_dataframe(
-            dict(zip(columns, np.atleast_2d(Y_values.T).T.T))
+            dict(zip(schema.keys(), np.atleast_2d(Y_values.T).T.T))
         )
     return {
         "predictions": predictions,
         "failed": failed,
-        "columns": columns,
-        "shape": (key_values.shape[0], len(columns)),
+        "schema": schema,
+        "shape": (key_values.shape[0], len(schema)),
     }
 
 
