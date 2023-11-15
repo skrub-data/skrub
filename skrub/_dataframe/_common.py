@@ -7,3 +7,14 @@ class Selector(enum.Enum):
     NUMERIC = enum.auto()
     CATEGORICAL = enum.auto()
     STRING = enum.auto()
+
+
+def std(obj):
+    try:
+        return obj.__dataframe_consortium_standard__()
+    except AttributeError:
+        return obj.__column_consortium_standard__()
+
+
+def stdns(dataframe):
+    return dataframe.__dataframe_consortium_standard__().__dataframe_namespace__()

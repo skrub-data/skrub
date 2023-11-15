@@ -97,3 +97,8 @@ def get_df_namespace(*dfs):
                 "Only Pandas or Polars dataframes are currently supported, "
                 f"got {modules=!r}."
             )
+
+
+def skrubns(*dataframes):
+    ns, _ = get_df_namespace(*dataframes)
+    return ns

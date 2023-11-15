@@ -1,7 +1,7 @@
+import itertools
 import warnings
 
 import joblib
-import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
@@ -10,7 +10,7 @@ from sklearn.ensemble import (
 from sklearn.utils._tags import _safe_tags
 
 from skrub import _join_utils, _utils
-from skrub._dataframe import get_df_namespace
+from skrub._dataframe import skrubns, std, stdns
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import TableVectorizer
 
@@ -221,9 +221,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self._check_inputs()
         if X is not None:
             _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        aux_table = self.aux_table.__dataframe_consortium_standard__()
+        aux_table = std(self.aux_table)
         # TODO avoid conversion to pandas when TableVectorizer supports it
-        ns, _ = get_df_namespace(self.aux_table)
+        ns = skrubns(self.aux_table)
         df = ns.to_pandas(aux_table.select(*self._aux_key).dataframe)
         key_values = self.vectorizer_.fit_transform(df)
         estimators = self._get_estimator_assignments()
@@ -285,7 +285,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             The result of the join between `X` and inferred rows from
             ``self.aux_table``.
         """
-        main_table = X.__dataframe_consortium_standard__()
+        main_table = std(X)
         _join_utils.check_missing_columns(
             main_table.dataframe, self._main_key, "'X' (the main table)"
         )
@@ -295,8 +295,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             .dataframe
         )
         # TODO avoid conversion to pandas when vectorizer supports it
-        ns, _ = get_df_namespace(df)
-        df = ns.to_pandas(df)
+        df = skrubns(df).to_pandas(df)
         key_values = self.vectorizer_.transform(df)
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
@@ -304,36 +303,29 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
                 assignment["schema"],
                 assignment["estimator"],
                 propagate_exceptions=(self.on_estimator_failure == "raise"),
-                ns=get_df_namespace(self.aux_table)[0],
+                api_ns=stdns(self.aux_table),
             )
             for assignment in self.estimators_
         )
         prediction_results = self._check_prediction_results(prediction_results)
         predictions = [res["predictions"] for res in prediction_results]
         predictions = _add_column_name_suffix(predictions, self.suffix)
-        ns, _ = get_df_namespace(self.aux_table)
-        return ns.concatenate(main_table.dataframe, *predictions)
+        return skrubns(self.aux_table).concatenate(main_table.dataframe, *predictions)
 
     def _check_prediction_results(self, results):
         checked_results = []
         failed_columns = []
-        ns, _ = get_df_namespace(self.aux_table)
+        api_ns = stdns(self.aux_table)
         for res in results:
             new_res = dict(**res)
             if res["failed"]:
-                # TODO
-                # numeric_cols = list(
-                #     ns.select(self.aux_table, ns.Selector.NUMERIC).columns
-                # )
-                # if set(res["columns"]).issubset(numeric_cols):
-                #     dtype = float
-                # else:
-                #     dtype = object
-                pred = ns.make_dataframe(
-                    {
-                        c: [None for _ in range(res["shape"][0])]
-                        for c in res["schema"].keys()
-                    },
+                pred = api_ns.dataframe_from_columns(
+                    *[
+                        api_ns.column_from_sequence(
+                            itertools.repeat(None, res["shape"][0]), name=c, dtype=dt
+                        )
+                        for c, dt in res["schema"].items()
+                    ],
                 )
                 new_res["predictions"] = pred
                 failed_columns.extend(res["schema"].keys())
@@ -365,10 +357,8 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         When the estimator does not handle multi-output, an estimator is fitted
         separately to each column.
         """
-        aux_table = self.aux_table.__dataframe_consortium_standard__().drop_columns(
-            *self._aux_key
-        )
-        ns, _ = get_df_namespace(aux_table.dataframe)
+        aux_table = std(self.aux_table).drop_columns(*self._aux_key)
+        ns = skrubns(aux_table.dataframe)
         assignments = []
         regression_table = ns.select(aux_table.dataframe, ns.Selector.NUMERIC)
         assignments.extend(
@@ -390,7 +380,7 @@ def _get_assignments_for_estimator(table, estimator):
     # estimator is empty (eg the estimator is the regressor and there are no
     # numerical columns), return an empty list -- no columns are assigned to
     # that estimator.
-    table = table.__dataframe_consortium_standard__()
+    table = std(table)
     if not len(table.column_names):
         return []
     if not _handles_multioutput(estimator):
@@ -420,14 +410,10 @@ def _handles_multioutput(estimator):
 
 
 def _fit(key_values, target_table, estimator, propagate_exceptions):
-    target_table = target_table.__dataframe_consortium_standard__()
+    target_table = std(target_table)
     estimator = clone(estimator)
-    ns, _ = get_df_namespace(target_table.dataframe)
-    kept_rows = ~(
-        ns.any_rowwise(target_table.is_null().dataframe)
-        .__column_consortium_standard__()
-        .to_array()
-    )
+    ns = skrubns(target_table.dataframe)
+    kept_rows = ~(std(ns.any_rowwise(target_table.is_null().dataframe)).to_array())
     key_values = key_values[kept_rows]
     target_table = target_table.persist()
     Y = target_table.to_array(None)[kept_rows]
@@ -451,7 +437,7 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
     }
 
 
-def _predict(key_values, schema, estimator, propagate_exceptions, ns):
+def _predict(key_values, schema, estimator, propagate_exceptions, api_ns):
     failed = False
     try:
         Y_values = estimator.predict(key_values)
@@ -462,10 +448,13 @@ def _predict(key_values, schema, estimator, propagate_exceptions, ns):
     if failed:
         predictions = None
     else:
-        # TODO use schema
-        predictions = ns.make_dataframe(
-            dict(zip(schema.keys(), np.atleast_2d(Y_values.T).T.T))
-        )
+        if Y_values.ndim == 1:
+            Y_values = Y_values[:, None]
+        cols = [
+            api_ns.column_from_1d_array(y.astype(type(y[0])), name=c, dtype=dt)
+            for y, (c, dt) in zip(Y_values.T, schema.items())
+        ]
+        predictions = api_ns.dataframe_from_columns(*cols).dataframe
     return {
         "predictions": predictions,
         "failed": failed,
@@ -479,7 +468,7 @@ def _add_column_name_suffix(dataframes, suffix):
         return dataframes
     renamed = []
     for df in dataframes:
-        df = df.__dataframe_consortium_standard__()
+        df = std(df)
         renamed.append(
             df.rename_columns({c: f"{c}{suffix}" for c in df.column_names}).dataframe
         )
