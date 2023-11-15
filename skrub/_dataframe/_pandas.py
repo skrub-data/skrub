@@ -35,6 +35,8 @@ def make_dataframe(X, index=None, dtypes=None):
     """
     df = pd.DataFrame(X, index=index)
     if dtypes is not None:
+        # 'df.astype(None)' might raise a ValueError because
+        # it tries to cast all columns to floats.
         df = df.astype(dtypes)
     return df
 
