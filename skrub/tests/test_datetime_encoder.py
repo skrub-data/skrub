@@ -377,6 +377,8 @@ def test_datetime_encoder_invalid_params():
         [1, 2],
         np.array([1, 2]),
         pd.Timestamp(2020, 1, 1),
+        np.array([pd.Timestamp(2020, 1, 1), "hello"]),
+        np.array(["2020-01-01", {"hello"}]),
         np.array(["2020-01-01", "hello", "2020-01-02"]),
     ],
 )
