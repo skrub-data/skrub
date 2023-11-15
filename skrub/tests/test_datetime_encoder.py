@@ -464,3 +464,12 @@ def test_monthfirst_only():
     out = to_datetime(X_col)
     expected_out = np.array(["2021-02-02", "2021-01-15"], dtype="datetime64[ns]")
     assert_array_equal(out, expected_out)
+
+
+def test_preserve_dtypes():
+    X = get_mixed_type_dataframe()
+    X["b"] = X["b"].astype("category")
+    non_datetime_columns = ["b", "c", "f"]
+
+    X_trans = to_datetime(X)
+    assert_frame_equal(X_trans[non_datetime_columns], X[non_datetime_columns])

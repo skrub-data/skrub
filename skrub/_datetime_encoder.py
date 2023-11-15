@@ -164,10 +164,21 @@ def _to_datetime_dataframe(X, **kwargs):
     """
     skrub_px, _ = get_df_namespace(X)
     index = getattr(X, "index", None)
+
     X_split = [X[col].to_numpy() for col in X.columns]
     X_split = _to_datetime_2d(X_split, **kwargs)
+
+    # TODO: Temporary work-around. Maps back the original non-converted dtypes.
+    # Remove this when removing the 'to_numpy()' conversion above.
+    datetime_indices, _ = _get_datetime_column_indices(X_split)
+    non_datetime_indices = list(set(range(len(X_split))).difference(datetime_indices))
+    non_datetime_columns = np.asarray(X.columns)[non_datetime_indices]
+    non_datetime_dtypes = np.asarray(X.dtypes)[non_datetime_indices]
+    name_to_dtype = dict(zip(non_datetime_columns, non_datetime_dtypes))
+
     X_split = {col: X_split[col_idx] for col_idx, col in enumerate(X.columns)}
-    return skrub_px.make_dataframe(X_split, index=index)
+
+    return skrub_px.make_dataframe(X_split, index=index, dtypes=name_to_dtype)
 
 
 def _to_datetime_series(X, **kwargs):
@@ -186,7 +197,16 @@ def _to_datetime_series(X, **kwargs):
     name = X.name
     X_split = [X.to_numpy()]
     X_split = _to_datetime_2d(X_split, **kwargs)
-    return skrub_px.make_series(X_split[0], index=index, name=name)
+
+    # TODO: Temporary work-around. Maps back the original non-converted dtype.
+    # Remove this when removing the 'to_numpy()' conversion above.
+    datetime_indices, _ = _get_datetime_column_indices(X_split)
+    if len(datetime_indices) == 1:  # either 1 or 0
+        dtype = None
+    else:
+        dtype = X.dtype
+
+    return skrub_px.make_series(X_split[0], index=index, name=name, dtype=dtype)
 
 
 def _to_datetime_2d_array(X, **kwargs):
