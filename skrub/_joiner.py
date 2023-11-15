@@ -78,6 +78,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> X = pd.DataFrame(['France', 'Germany', 'Italy'], columns=['Country'])
     >>> X
        Country

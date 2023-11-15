@@ -136,6 +136,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> buildings = pd.DataFrame(
     ...     {"latitude": [1.0, 2.0], "longitude": [1.0, 2.0], "n_stories": [3, 7]}
     ... )
