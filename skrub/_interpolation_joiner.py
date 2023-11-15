@@ -310,7 +310,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         prediction_results = self._check_prediction_results(prediction_results)
         predictions = [res["predictions"] for res in prediction_results]
         predictions = _add_column_name_suffix(predictions, self.suffix)
-        return skrubns(self.aux_table).concatenate(main_table.dataframe, *predictions)
+        return skrubns(self.aux_table).concatenate(X, *predictions)
 
     def _check_prediction_results(self, results):
         checked_results = []
@@ -326,7 +326,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
                         )
                         for c, dt in res["schema"].items()
                     ],
-                )
+                ).dataframe
                 new_res["predictions"] = pred
                 failed_columns.extend(res["schema"].keys())
             checked_results.append(new_res)
