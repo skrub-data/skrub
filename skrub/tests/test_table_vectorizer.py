@@ -2,10 +2,11 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.exceptions import NotFittedError
+from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_raises
+from pandas.testing import assert_frame_equal
+from scipy.sparse import csr_matrix
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
-from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils._testing import skip_if_no_parallel
 
 from skrub import GapEncoder, MinHashEncoder, TableVectorizer
 from skrub._datetime_encoder import DatetimeEncoder, _is_pandas_format_mixed_available
@@ -14,15 +15,19 @@ from skrub.tests.utils import transformers_list_equal
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
 
-def check_same_transformers(
-    expected_transformers: dict, actual_transformers: list
-) -> None:
+def check_same_transformers(expected_transformers, actual_transformers):
+    """
+    Parameters
+    ----------
+    expected_transformers : dict
+    actual_transformers : list of tuple
+    """
     # Construct the dict from the actual transformers
     actual_transformers_dict = {name: cols for name, trans, cols in actual_transformers}
     assert actual_transformers_dict == expected_transformers
 
 
-def type_equality(expected_type, actual_type) -> bool:
+def type_equality(expected_type, actual_type):
     """
     Checks that the expected type is equal to the actual type,
     assuming object and str types are equivalent
@@ -36,7 +41,7 @@ def type_equality(expected_type, actual_type) -> bool:
         return expected_type == actual_type
 
 
-def _get_clean_dataframe() -> pd.DataFrame:
+def _get_clean_dataframe():
     """
     Creates a simple DataFrame with various types of data,
     and without missing values.
@@ -59,7 +64,7 @@ def _get_clean_dataframe() -> pd.DataFrame:
     )
 
 
-def _get_dirty_dataframe(categorical_dtype="object") -> pd.DataFrame:
+def _get_dirty_dataframe(categorical_dtype="object"):
     """
     Creates a simple DataFrame with some missing values.
     We'll use different types of missing values (np.nan, pd.NA, None)
@@ -87,7 +92,7 @@ def _get_dirty_dataframe(categorical_dtype="object") -> pd.DataFrame:
     )
 
 
-def _get_mixed_types_dataframe() -> pd.DataFrame:
+def _get_mixed_types_dataframe():
     return pd.DataFrame(
         {
             "int_str": ["1", "2", 3, "3", 5],
@@ -98,7 +103,7 @@ def _get_mixed_types_dataframe() -> pd.DataFrame:
     )
 
 
-def _get_mixed_types_array() -> np.ndarray:
+def _get_mixed_types_array():
     return np.array(
         [
             ["1", "2", 3, "3", 5],
@@ -109,24 +114,7 @@ def _get_mixed_types_array() -> np.ndarray:
     ).T
 
 
-def _get_numpy_array() -> np.ndarray:
-    return np.array(
-        [
-            ["15", "56", pd.NA, "12", ""],
-            ["?", "2.4", "6.2", "10.45", np.nan],
-            ["public", np.nan, "private", "private", pd.NA],
-            ["officer", "manager", None, "chef", "teacher"],
-            [np.nan, "yes", "no", "yes", "no"],
-            ["20K+", "40K+", "60K+", "30K+", np.nan],
-        ]
-    ).T
-
-
-def _get_list_of_lists() -> list:
-    return _get_numpy_array().tolist()
-
-
-def _get_datetimes_dataframe() -> pd.DataFrame:
+def _get_datetimes_dataframe():
     """
     Creates a DataFrame with various date formats,
     already converted or to be converted.
@@ -154,11 +142,6 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
                 "13-02-2000",
                 "10-11-2001",
             ],
-            # "mdy-": ['11-13-2013',
-            #          '02-12-2012',
-            #          '11-31-2012',
-            #          '05-02-2000',
-            #          '10-11-2001'],
             "ymd/": [
                 "2014/12/31",
                 "2001/11/23",
@@ -181,86 +164,48 @@ def _get_datetimes_dataframe() -> pd.DataFrame:
     )
 
 
-def _test_possibilities(X) -> None:
-    """
-    Do a bunch of tests with the TableVectorizer.
-    We take some expected transformers results as argument. They're usually
-    lists or dictionaries.
-    """
+inputs = [
+    _get_clean_dataframe(),
+    _get_dirty_dataframe(categorical_dtype="object"),
+    _get_dirty_dataframe(categorical_dtype="category"),
+]
+
+params = [
     # Test with low cardinality and a StandardScaler for the numeric columns
-    vectorizer_base = TableVectorizer(
-        cardinality_threshold=4,
-        # we must have n_samples = 5 >= n_components
-        high_cardinality_transformer=GapEncoder(n_components=2),
-        numerical_transformer=StandardScaler(),
-    )
-    # Warning: order-dependant
-    expected_transformers_df = {
-        "numeric": ["int", "float"],
-        "low_cardinality": ["str1", "cat1"],
-        "high_cardinality": ["str2", "cat2"],
-    }
-    vectorizer_base.fit_transform(X)
-    check_same_transformers(expected_transformers_df, vectorizer_base.transformers_)
-
+    (
+        dict(
+            cardinality_threshold=4,
+            # we must have n_samples = 5 >= n_components
+            high_cardinality_transformer=GapEncoder(n_components=2),
+            numerical_transformer=StandardScaler(),
+        ),
+        # Warning: order-dependant
+        dict(
+            numeric=["int", "float"],
+            low_cardinality=["str1", "cat1"],
+            high_cardinality=["str2", "cat2"],
+        ),
+    ),
     # Test with higher cardinality threshold and no numeric transformer
-    expected_transformers_2 = {
-        "low_cardinality": ["str1", "str2", "cat1", "cat2"],
-        "numeric": ["int", "float"],
-    }
-    vectorizer_default = TableVectorizer()  # Using default values
-    vectorizer_default.fit_transform(X)
-    check_same_transformers(expected_transformers_2, vectorizer_default.transformers_)
-
-    # Test with a numpy array
-    arr = X.to_numpy()
-    # Instead of the columns names, we'll have the column indices.
-    expected_transformers_np_no_cast = {
-        "low_cardinality": [2, 4],
-        "high_cardinality": [3, 5],
-        "numeric": [0, 1],
-    }
-    vectorizer_base.fit_transform(arr)
-    check_same_transformers(
-        expected_transformers_np_no_cast, vectorizer_base.transformers_
-    )
-
-    # Test with single column dataframe
-    expected_transformers_series = {
-        "low_cardinality": ["cat1"],
-    }
-    vectorizer_base.fit_transform(X[["cat1"]])
-    check_same_transformers(expected_transformers_series, vectorizer_base.transformers_)
-
-    # Test casting values
-    vectorizer_cast = TableVectorizer(
-        cardinality_threshold=4,
-        # we must have n_samples = 5 >= n_components
-        high_cardinality_transformer=GapEncoder(n_components=2),
-        numerical_transformer=StandardScaler(),
-    )
-    X_str = X.astype("object")
-    # With pandas
-    expected_transformers_plain = {
-        "high_cardinality": ["str2", "cat2"],
-        "low_cardinality": ["str1", "cat1"],
-        "numeric": ["int", "float"],
-    }
-    vectorizer_cast.fit_transform(X_str)
-    check_same_transformers(expected_transformers_plain, vectorizer_cast.transformers_)
-    # With numpy
-    expected_transformers_np_cast = {
-        "numeric": [0, 1],
-        "low_cardinality": [2, 4],
-        "high_cardinality": [3, 5],
-    }
-    vectorizer_cast.fit_transform(X_str.to_numpy())
-    check_same_transformers(
-        expected_transformers_np_cast, vectorizer_cast.transformers_
-    )
+    (
+        dict(),
+        dict(
+            low_cardinality=["str1", "str2", "cat1", "cat2"],
+            numeric=["int", "float"],
+        ),
+    ),
+]
 
 
-def test_duplicate_column_names() -> None:
+@pytest.mark.parametrize("X", inputs)
+@pytest.mark.parametrize("params, expected_transformers", params)
+def test_fit_transform(X, params, expected_transformers):
+    vectorizer = TableVectorizer(**params)
+    vectorizer.fit_transform(X)
+    check_same_transformers(expected_transformers, vectorizer.transformers_)
+
+
+def test_duplicate_column_names():
     """
     Test to check if the tablevectorizer raises an error with
     duplicate column names
@@ -274,112 +219,62 @@ def test_duplicate_column_names() -> None:
         tablevectorizer.fit_transform(X_dup_col_names)
 
 
-def test_with_clean_data() -> None:
-    """
-    Defines the expected returns of the vectorizer in different settings,
-    and runs the tests with a clean dataset.
-    """
-    _test_possibilities(_get_clean_dataframe())
+X = _get_datetimes_dataframe()
+# Add weird index to test that it's not used
+X.index = [10, 3, 4, 2, 5]
+
+X_tuples = [
+    (
+        X,
+        {
+            "pd_datetime": "datetime64[ns]",
+            "np_datetime": "datetime64[ns]",
+            "dmy-": "datetime64[ns]",
+            "ymd/": "datetime64[ns]",
+            "ymd/_hms:": "datetime64[ns]",
+            "mm/dd/yy": "datetime64[ns]",
+        },
+    ),
+    # Test other types detection
+    (
+        _get_clean_dataframe(),
+        {
+            "int": "int64",
+            "float": "float64",
+            "str1": "object",
+            "str2": "object",
+            "cat1": "object",
+            "cat2": "object",
+        },
+    ),
+    (
+        _get_dirty_dataframe(),
+        {
+            "int": "float64",  # int type doesn't support nans
+            "float": "float64",
+            "str1": "object",
+            "str2": "object",
+            "cat1": "object",
+            "cat2": "object",
+        },
+    ),
+]
 
 
-def test_with_dirty_data() -> None:
-    """
-    Defines the expected returns of the vectorizer in different settings,
-    and runs the tests with a dataset containing missing values.
-    """
-    _test_possibilities(_get_dirty_dataframe(categorical_dtype="object"))
-    _test_possibilities(_get_dirty_dataframe(categorical_dtype="category"))
-
-
-def test_auto_cast() -> None:
+@pytest.mark.parametrize("X, dict_expected_types", X_tuples)
+def test_auto_cast(X, dict_expected_types):
     """
     Tests that the TableVectorizer automatic type detection works as expected.
     """
     vectorizer = TableVectorizer()
-
-    # Test datetime detection
-    X = _get_datetimes_dataframe()
-    # Add weird index to test that it's not used
-    X.index = [10, 3, 4, 2, 5]
-
-    expected_types_datetimes = {
-        "pd_datetime": "datetime64[ns]",
-        "np_datetime": "datetime64[ns]",
-        "dmy-": "datetime64[ns]",
-        "ymd/": "datetime64[ns]",
-        "ymd/_hms:": "datetime64[ns]",
-        "mm/dd/yy": "datetime64[ns]",
-    }
     X_trans = vectorizer._auto_cast(X, reset=True)
     for col in X_trans.columns:
-        assert expected_types_datetimes[col] == X_trans[col].dtype
-
-    # Test other types detection
-
-    expected_types_clean_dataframe = {
-        "int": "int64",
-        "float": "float64",
-        "str1": "object",
-        "str2": "object",
-        "cat1": "object",
-        "cat2": "object",
-    }
-
-    X = _get_clean_dataframe()
-    X_trans = vectorizer._auto_cast(X, reset=True)
-    for col in X_trans.columns:
-        assert type_equality(expected_types_clean_dataframe[col], X_trans[col].dtype)
-
-    # Test that missing values don't prevent type detection
-    expected_types_dirty_dataframe = {
-        "int": "float64",  # int type doesn't support nans
-        "float": "float64",
-        "str1": "object",
-        "str2": "object",
-        "cat1": "object",
-        "cat2": "object",
-    }
-
-    X = _get_dirty_dataframe()
-    X_trans = vectorizer._auto_cast(X, reset=True)
-    for col in X_trans.columns:
-        assert type_equality(expected_types_dirty_dataframe[col], X_trans[col].dtype)
+        assert dict_expected_types[col] == X_trans[col].dtype
 
 
-def test_with_arrays() -> None:
-    """
-    Check that the TableVectorizer works if we input
-    a list of lists or a numpy array.
-    """
-    expected_transformers = {
-        "numeric": [0, 1],
-        "low_cardinality": [2, 4],
-        "high_cardinality": [3, 5],
-    }
-    vectorizer = TableVectorizer(
-        cardinality_threshold=4,
-        # we must have n_samples = 5 >= n_components
-        high_cardinality_transformer=GapEncoder(n_components=2),
-        numerical_transformer=StandardScaler(),
-    )
-
-    X = _get_numpy_array()
-    vectorizer.fit_transform(X)
-    check_same_transformers(expected_transformers, vectorizer.transformers_)
-
-    X = _get_list_of_lists()
-    vectorizer.fit_transform(X)
-    check_same_transformers(expected_transformers, vectorizer.transformers_)
-
-
-def test_get_feature_names_out() -> None:
-    X = _get_clean_dataframe()
-
-    vec_w_pass = TableVectorizer(remainder="passthrough")
-    vec_w_pass.fit(X)
-
-    # In this test, order matters. If it doesn't, convert to set.
-    expected_feature_names_pass = np.array(
+assert_tuples = [
+    (
+        dict(remainder="passthrough"),
         [
             "int",
             "float",
@@ -395,95 +290,96 @@ def test_get_feature_names_out() -> None:
             "cat2_40K+",
             "cat2_50K+",
             "cat2_60K+",
+        ],
+    ),
+    (
+        dict(remainder="drop"),
+        [
+            "int",
+            "float",
+            "str1_public",
+            "str2_chef",
+            "str2_lawyer",
+            "str2_manager",
+            "str2_officer",
+            "str2_teacher",
+            "cat1_yes",
+            "cat2_20K+",
+            "cat2_30K+",
+            "cat2_40K+",
+            "cat2_50K+",
+            "cat2_60K+",
+        ],
+    ),
+]
+
+
+@pytest.mark.parametrize("params, expected_features", assert_tuples)
+def test_get_feature_names_out(params, expected_features):
+    X = _get_clean_dataframe()
+    vectorizer = TableVectorizer(**params).fit(X)
+    assert_array_equal(
+        vectorizer.get_feature_names_out(),
+        expected_features,
+    )
+
+
+def test_transform():
+    X = _get_clean_dataframe()
+    table_vec = TableVectorizer().fit(X)
+    x = pd.DataFrame(
+        [
+            {
+                "int": 34,
+                "float": 5.5,
+                "str1": "private",
+                "str2": "manager",
+                "cat1": "yes",
+                "cat2": "60K+",
+            }
         ]
     )
-    assert_array_equal(
-        vec_w_pass.get_feature_names_out(),
-        expected_feature_names_pass,
-    )
-
-    vec_w_drop = TableVectorizer(remainder="drop")
-    vec_w_drop.fit(X)
-
-    # In this test, order matters. If it doesn't, convert to set.
-    expected_feature_names_drop = [
-        "int",
-        "float",
-        "str1_public",
-        "str2_chef",
-        "str2_lawyer",
-        "str2_manager",
-        "str2_officer",
-        "str2_teacher",
-        "cat1_yes",
-        "cat2_20K+",
-        "cat2_30K+",
-        "cat2_40K+",
-        "cat2_50K+",
-        "cat2_60K+",
-    ]
-    assert vec_w_drop.get_feature_names_out().tolist() == expected_feature_names_drop
-
-
-def test_fit() -> None:
-    # Simply checks sklearn's `check_is_fitted` function raises an error if
-    # the TableVectorizer is instantiated but not fitted.
-    # See GH#193
-    table_vec = TableVectorizer()
-    with pytest.raises(NotFittedError):
-        assert check_is_fitted(table_vec)
-
-
-def test_transform() -> None:
-    X = _get_clean_dataframe()
-    table_vec = TableVectorizer()
-    table_vec.fit(X)
-    s = [34, 5.5, "private", "manager", "yes", "60K+"]
-    x = np.array(s).reshape(1, -1)
     x_trans = table_vec.transform(x)
-    assert x_trans.tolist() == [
+    expected_x_trans = [
         [34.0, 5.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     ]
-    # To understand the list above:
-    # print(dict(zip(table_vec.get_feature_names_out(), x_trans.tolist()[0])))
+    assert_array_equal(x_trans, expected_x_trans)
 
 
-def test_fit_transform_equiv() -> None:
+inputs = [
+    _get_clean_dataframe(),
+    _get_dirty_dataframe(categorical_dtype="object"),
+    _get_dirty_dataframe(categorical_dtype="category"),
+    _get_mixed_types_dataframe(),
+    _get_mixed_types_array(),
+]
+
+
+@pytest.mark.parametrize("X", inputs)
+def test_fit_transform_equiv(X):
+    # TODO: this check is probably already performed in test_sklearn
     """
     We will test the equivalence between using `.fit_transform(X)`
     and `.fit(X).transform(X).`
     """
-    for X in [
-        _get_clean_dataframe(),
-        _get_dirty_dataframe(categorical_dtype="object"),
-        _get_dirty_dataframe(categorical_dtype="category"),
-        _get_mixed_types_dataframe(),
-        _get_mixed_types_array(),
-    ]:
-        enc1_x1 = TableVectorizer().fit_transform(X)
-        enc2_x1 = TableVectorizer().fit(X).transform(X)
-
-        assert np.allclose(enc1_x1, enc2_x1, rtol=0, atol=0, equal_nan=True)
+    X_trans_1 = TableVectorizer().fit_transform(X)
+    X_trans_2 = TableVectorizer().fit(X).transform(X)
+    assert_array_equal(X_trans_1, X_trans_2)
 
 
-def _is_equal(elements: tuple[any, any]) -> bool:
-    """
-    Fixture for values that return false when compared with `==`.
-    """
-    elem1, elem2 = elements  # Unpack
-    return pd.isna(elem1) and pd.isna(elem2) or elem1 == elem2
+inputs = [
+    _get_dirty_dataframe(),
+    _get_clean_dataframe(),
+]
 
 
-def test_passthrough() -> None:
+@pytest.mark.parametrize("X", inputs)
+def test_passthrough(X):
     """
     Tests that when passed no encoders, the TableVectorizer
     returns the dataset as-is.
     """
-
-    X_dirty = _get_dirty_dataframe()
-    X_clean = _get_clean_dataframe()
-
-    tv = TableVectorizer(
+    vectorizer = TableVectorizer(
         low_cardinality_transformer="passthrough",
         high_cardinality_transformer="passthrough",
         datetime_transformer="passthrough",
@@ -491,48 +387,17 @@ def test_passthrough() -> None:
         impute_missing_categories=False,
         auto_cast=False,
     )
+    vectorizer.set_output(transform="pandas")
+    X_trans = vectorizer.fit_transform(X)
 
-    X_enc_dirty = pd.DataFrame(
-        tv.fit_transform(X_dirty), columns=tv.get_feature_names_out()
-    )
-    X_enc_clean = pd.DataFrame(
-        tv.fit_transform(X_clean), columns=tv.get_feature_names_out()
-    )
-    # Reorder encoded arrays' columns
-    # (see TableVectorizer's doc "Notes" section as to why)
-    X_enc_dirty = X_enc_dirty[X_dirty.columns]
-    X_enc_clean = X_enc_clean[X_clean.columns]
-
-    dirty_flat_df = X_dirty.to_numpy().ravel().tolist()
-    dirty_flat_trans_df = X_enc_dirty.to_numpy().ravel().tolist()
-    assert all(map(_is_equal, zip(dirty_flat_df, dirty_flat_trans_df)))
-    assert (X_clean.to_numpy() == X_enc_clean.to_numpy()).all()
+    assert_frame_equal(X.astype("object"), X_trans)
 
 
-def test_check_fitted_table_vectorizer() -> None:
-    """Test that calling transform before fit raises an error"""
+def test_handle_unknown_category():
     X = _get_clean_dataframe()
-    tv = TableVectorizer()
-    with pytest.raises(NotFittedError):
-        tv.transform(X)
-
-    # Test that calling transform after fit works
-    tv.fit(X)
-    tv.transform(X)
-
-
-def test_handle_unknown() -> None:
-    """
-    Test that new categories encountered in the test set
-    are handled correctly.
-    """
-    X = _get_clean_dataframe()
-    # Test with low cardinality and a StandardScaler for the numeric columns
-    table_vec = TableVectorizer(
-        cardinality_threshold=6,  # treat all columns as low cardinality
-    )
-    table_vec.fit(X)
-    x_unknown = pd.DataFrame(
+    # Treat all columns as low cardinality
+    table_vec = TableVectorizer(cardinality_threshold=6).fit(X)
+    X_unknown = pd.DataFrame(
         {
             "int": pd.Series([3, 1], dtype="int"),
             "float": pd.Series([2.1, 4.3], dtype="float"),
@@ -542,7 +407,7 @@ def test_handle_unknown() -> None:
             "cat2": pd.Series(["70K+", "20K+"], dtype="category"),
         }
     )
-    x_known = pd.DataFrame(
+    X_known = pd.DataFrame(
         {
             "int": pd.Series([1, 4], dtype="int"),
             "float": pd.Series([4.3, 3.3], dtype="float"),
@@ -555,20 +420,21 @@ def test_handle_unknown() -> None:
 
     # Default behavior is "handle_unknown='ignore'",
     # so unknown categories are encoded as all zeros
-    x_trans_unknown = table_vec.transform(x_unknown)
-    x_trans_known = table_vec.transform(x_known)
+    X_trans_unknown = table_vec.transform(X_unknown)
+    X_trans_known = table_vec.transform(X_known)
 
-    assert x_trans_unknown.shape == x_trans_known.shape
-    n_zeroes = (
-        X["str2"].nunique() + X["cat2"].nunique() + 2
-    )  # 2 for binary columns which get one
-    # cateogry dropped
-    assert np.allclose(
-        x_trans_unknown[0, 2:n_zeroes], np.zeros_like(x_trans_unknown[0, 2:n_zeroes])
+    assert X_trans_unknown.shape == X_trans_known.shape
+
+    # +2 for binary columns which get one category dropped
+    n_zeroes = X["str2"].nunique() + X["cat2"].nunique() + 2
+    assert_array_equal(
+        X_trans_unknown[0, 2:n_zeroes], np.zeros_like(X_trans_unknown[0, 2:n_zeroes])
     )
-    assert x_trans_unknown[0, 0] != 0
-    assert not np.allclose(
-        x_trans_known[0, :n_zeroes], np.zeros_like(x_trans_known[0, :n_zeroes])
+    assert_raises(
+        AssertionError,
+        assert_array_equal,
+        X_trans_known[0, :n_zeroes],
+        np.zeros_like(X_trans_known[0, :n_zeroes]),
     )
 
 
@@ -595,10 +461,7 @@ def test_handle_unknown() -> None:
 )
 def test_specifying_specific_column_transformer(
     specific_transformers, expected_transformers_
-) -> None:
-    """
-    Test that specifying a specific transformer works as expected.
-    """
+):
     X = _get_dirty_dataframe()
     tv = TableVectorizer(specific_transformers=[specific_transformers]).fit(X)
     clean_transformers_ = [
@@ -613,27 +476,34 @@ def test_specifying_specific_column_transformer(
     assert sorted(clean_transformers_) == sorted(expected_transformers_)
 
 
-def test_specific_transformers_unexpected_behavior():
+error_tuples = [
+    (
+        [(StandardScaler(),)],
+        r"(?=.*got a list of tuples of length 1)",
+    ),
+    (
+        [("dummy", StandardScaler(), ["float"], 1)],
+        r"(?=.*got a list of tuples of length 4)",
+    ),
+    (
+        [
+            (StandardScaler(), ["float"]),
+            ("dummy", StandardScaler(), ["float"]),
+        ],
+        r"(?=.*got length 3 at index 1)",
+    ),
+]
+
+
+@pytest.mark.parametrize("specific_transformers, error_msg", error_tuples)
+def test_specific_transformers_unexpected_behavior(specific_transformers, error_msg):
     """
-    Tests a few cases of unsupported behavior when using `specific_transformers`.
+    Test that using tuple lengths other than 2 or 3 raises an error
     """
     X = _get_clean_dataframe()
 
-    # Test that using tuple lengths other than 2 or 3 raises an error
-    with pytest.raises(TypeError):
-        assert TableVectorizer(specific_transformers=[(StandardScaler(),)]).fit(X)
-        assert TableVectorizer(
-            specific_transformers=[("dummy", StandardScaler(), ["float"], 1)]
-        ).fit(X)
-
-    # Test that using mixed length tuples raises an error
-    with pytest.raises(TypeError):
-        assert TableVectorizer(
-            specific_transformers=[
-                (StandardScaler(), ["float"]),
-                ("dummy", StandardScaler(), ["float"]),
-            ]
-        ).fit(X)
+    with pytest.raises(TypeError, match=error_msg):
+        TableVectorizer(specific_transformers=specific_transformers).fit(X)
 
 
 @pytest.mark.parametrize(
@@ -650,43 +520,29 @@ def test_specific_transformers_unexpected_behavior():
         ),
     ],
 )
-def test_deterministic(pipeline) -> None:
+def test_deterministic(pipeline):
     """
     Tests that running the same TableVectorizer multiple times with the same
     (deterministic) components results in the same output.
     """
     X = _get_dirty_dataframe()
-    X_enc_prev = pipeline.fit_transform(X)
-    for _ in range(5):
-        X_enc = pipeline.fit_transform(X)
-        np.testing.assert_array_equal(X_enc, X_enc_prev)
-        X_enc_prev = X_enc
+    X_trans_1 = pipeline.fit_transform(X)
+    X_trans_2 = pipeline.fit_transform(X)
+    assert_array_equal(X_trans_1, X_trans_2)
 
 
-def test_mixed_types() -> None:
-    # TODO: datetime/str mixed types
-    # don't work
-    df = _get_mixed_types_dataframe()
-    table_vec = TableVectorizer()
-    table_vec.fit_transform(df)
-    # check that the types are correctly inferred
-    table_vec.fit_transform(df)
-    expected_transformers_df = {
+def test_mixed_types():
+    """
+    Check that the types are correctly inferred.
+    """
+    X = _get_mixed_types_dataframe()
+    vectorizer = TableVectorizer()
+    vectorizer.fit(X)
+    expected_transformers = {
         "numeric": ["int_str", "float_str", "int_float"],
         "low_cardinality": ["bool_str"],
     }
-    check_same_transformers(expected_transformers_df, table_vec.transformers_)
-
-    X = _get_mixed_types_array()
-    table_vec = TableVectorizer()
-    table_vec.fit_transform(X)
-    # check that the types are correctly inferred
-    table_vec.fit_transform(X)
-    expected_transformers_array = {
-        "numeric": [0, 1, 2],
-        "low_cardinality": [3],
-    }
-    check_same_transformers(expected_transformers_array, table_vec.transformers_)
+    check_same_transformers(expected_transformers, vectorizer.transformers_)
 
 
 @pytest.mark.parametrize(
@@ -749,105 +605,80 @@ def test_changing_types(X_train, X_test, expected_X_out):
 
 
 def test_changing_types_int_float() -> None:
-    # The TableVectorizer shouldn't cast floats to ints
-    # even if only ints were seen during fit
-    X_fit = pd.DataFrame([[1], [2], [3]])
-    X_transform = pd.DataFrame([[1], [2], [3.3]])
-    table_vec = TableVectorizer()
-    table_vec.fit_transform(X_fit)
-    res = table_vec.transform(X_transform)
-    assert np.allclose(res, np.array([[1.0], [2.0], [3.3]]))
+    """
+    The TableVectorizer shouldn't cast floats to ints
+    even if only ints were seen during fit
+    """
+    X_train = pd.DataFrame([[1], [2], [3]])
+    X_test = pd.DataFrame([[1], [2], [3.3]])
+    vectorizer = TableVectorizer().fit(X_train)
+    X_trans = vectorizer.transform(X_test)
+    expected_X_trans = np.array([[1.0], [2.0], [3.3]])
+    assert_array_almost_equal(X_trans, expected_X_trans)
 
 
-def test_column_by_column() -> None:
-    # Test that the TableVectorizer gives the same result
-    # when applied column by column
+def test_column_by_column():
+    """
+    Test that the TableVectorizer gives the same result
+    when applied column by column.
+    """
     X = _get_clean_dataframe()
-    table_vec_all_cols = TableVectorizer(
+    vectorizer = TableVectorizer(
         high_cardinality_transformer=GapEncoder(n_components=2, random_state=0),
         cardinality_threshold=4,
     )
-    table_vec_all_cols.fit(X)
+    vectorizer.set_output(transform="pandas")
+    X_trans = vectorizer.fit_transform(X)
+    feature_names = vectorizer.get_feature_names_out()
     for col in X.columns:
-        table_vec_one_col = TableVectorizer(
-            high_cardinality_transformer=GapEncoder(n_components=2, random_state=0),
-            cardinality_threshold=4,
-        )
-        table_vec_one_col.fit(X[[col]])
-        features_from_col = [
-            feat
-            for feat in table_vec_all_cols.get_feature_names_out()
-            if feat.startswith(col)
+        X_trans_col = vectorizer.fit_transform(X[[col]])
+        feature_names_filtered = [
+            feat for feat in feature_names if feat.startswith(col)
         ]
-        assert table_vec_one_col.get_feature_names_out().tolist() == features_from_col
-        indices_features_from_col = [
-            table_vec_all_cols.get_feature_names_out().tolist().index(feat)
-            for feat in features_from_col
-        ]
-        excepted_result = table_vec_all_cols.transform(X)[:, indices_features_from_col]
-        assert np.allclose(
-            table_vec_one_col.transform(X[[col]]),
-            excepted_result,
-        )
+        feature_names_col = vectorizer.get_feature_names_out()
+        assert_array_equal(feature_names_col, feature_names_filtered)
+        assert_array_equal(X_trans_col, X_trans[feature_names_col])
 
 
 @skip_if_no_parallel
 @pytest.mark.parametrize(
     "high_cardinality_transformer",
-    # the gap encoder and the minhashencoder
-    # should be parallelized on all columns
-    # the one hot encoder should not be parallelized
+    # The GapEncoder and the MinHashEncoder should be parallelized on all columns.
+    # The OneHotEncoder should not be parallelized.
     [
         GapEncoder(n_components=2, random_state=0),
         OneHotEncoder(),
         MinHashEncoder(n_components=2),
     ],
 )
-def test_parallelism(high_cardinality_transformer) -> None:
-    # Test that parallelism works
+def test_parallelism(high_cardinality_transformer):
     X = _get_clean_dataframe()
-    table_vec_no_parallel = TableVectorizer(
+    params = dict(
         high_cardinality_transformer=high_cardinality_transformer,
         cardinality_threshold=4,
     )
-    X_trans = table_vec_no_parallel.fit_transform(X)
+    vectorizer = TableVectorizer(**params)
+    X_trans = vectorizer.fit_transform(X)
+
     with joblib.parallel_backend("loky"):
         for n_jobs in [None, 2, -1]:
-            table_vec = TableVectorizer(
-                n_jobs=n_jobs,
-                high_cardinality_transformer=high_cardinality_transformer,
-                cardinality_threshold=4,
-            )
-            X_trans_parallel = table_vec.fit_transform(X)
+            parallel_vectorizer = TableVectorizer(n_jobs=n_jobs, **params)
+            X_trans_parallel = parallel_vectorizer.fit_transform(X)
+
             assert_array_equal(X_trans, X_trans_parallel)
-            assert table_vec.n_jobs == n_jobs
+            assert parallel_vectorizer.n_jobs == n_jobs
+
             # assert that all attributes are equal except for
             # the n_jobs attribute
             assert transformers_list_equal(
-                table_vec.transformers_,
-                table_vec_no_parallel.transformers_,
-                ignore_params=("n_jobs",),
+                parallel_vectorizer.transformers_,
+                vectorizer.transformers_,
+                ignore_params="n_jobs",
             )
-            assert (
-                table_vec.feature_names_in_ == table_vec_no_parallel.feature_names_in_
-            ).all()
-            assert table_vec.type_per_column_ == table_vec_no_parallel.type_per_column_
-            assert table_vec.imputed_columns_ == table_vec_no_parallel.imputed_columns_
             # assert that get_feature_names_out gives the same result
             assert_array_equal(
-                table_vec.get_feature_names_out(),
-                table_vec_no_parallel.get_feature_names_out(),
-            )
-            # assert that get_params gives the same result expect for n_jobs
-            # remove n_jobs from the dict
-            params = table_vec.get_params()
-            params.pop("n_jobs")
-            params_no_parallel = table_vec_no_parallel.get_params()
-            params_no_parallel.pop("n_jobs")
-            assert str(params) == str(params_no_parallel)
-            # assert that transform gives the same result
-            assert_array_equal(
-                table_vec.transform(X), table_vec_no_parallel.transform(X)
+                vectorizer.get_feature_names_out(),
+                parallel_vectorizer.get_feature_names_out(),
             )
 
 
@@ -940,3 +771,26 @@ def test_pandas_sparse_array():
     match = r"(?=.*sparse Pandas series)(?=.*'a', 'b')"
     with pytest.raises(TypeError, match=match):
         TableVectorizer().fit(df)
+
+
+@pytest.mark.parametrize("invalid_transformer", [None, "drop"])
+def test_wrong_transformer(invalid_transformer):
+    X = _get_clean_dataframe()
+    with pytest.raises(ValueError):
+        TableVectorizer(high_cardinality_transformer=invalid_transformer).fit(X)
+
+
+invalid_tuples = [
+    (1, ValueError, r"(?=.*got scalar array)"),
+    (np.array([1]), ValueError, r"(?=.*got 1D array)"),
+    (pd.DataFrame([], columns=["a", "b"]), ValueError, r"(?=.*0 sample)"),
+    (pd.DataFrame([], index=[0, 1]), ValueError, r"(?=.*0 feature)"),
+    (pd.DataFrame([1], dtype="Sparse[int]"), TypeError, r"(?=.*sparse Pandas series)"),
+    (csr_matrix([1]), TypeError, r"(?=.*A sparse matrix was passed)"),
+]
+
+
+@pytest.mark.parametrize("invalid_X, error, msg", invalid_tuples)
+def test_invalid_X(invalid_X, error, msg):
+    with pytest.raises(error, match=msg):
+        TableVectorizer().fit(invalid_X)

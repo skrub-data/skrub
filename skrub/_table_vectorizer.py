@@ -584,9 +584,10 @@ sparse_output=False), \
             )
 
         # Check Pandas sparse arrays
-        is_sparse_col = [hasattr(X[col], "sparse") for col in X.columns]
-        if any(is_sparse_col):
-            sparse_cols = X.columns[is_sparse_col]
+        sparse_cols = [
+            col for col in X.columns if isinstance(X[col].dtype, pd.SparseDtype)
+        ]
+        if len(sparse_cols) > 0:
             raise TypeError(
                 f"Columns {sparse_cols!r} are sparse Pandas series, but dense "
                 "data is required. Use df[col].sparse.to_dense() to convert "
