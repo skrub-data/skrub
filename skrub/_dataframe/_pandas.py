@@ -10,7 +10,7 @@ import pandas as pd
 from skrub._utils import atleast_1d_or_none
 
 
-def make_dataframe(X, index=None):
+def make_dataframe(X, index=None, dtypes=None):
     """Convert an dictionary of columns into a Pandas dataframe.
 
     Parameters
@@ -21,15 +21,27 @@ def make_dataframe(X, index=None):
     index : 1d array-like, default=None
         The index of the dataframe.
 
+    dtypes : str, data type, Series or Mapping of column name -> data type, default=None
+        Use a str, numpy.dtype, pandas.ExtensionDtype or Python type to
+        cast entire pandas object to the same type. Alternatively, use a
+        mapping, e.g. {col: dtype, ...}, where col is a column label and dtype is
+        a numpy.dtype or Python type to cast one or more of the DataFrame's
+        columns to column-specific types
+
     Returns
     -------
     X : Pandas dataframe
         Converted output.
     """
-    return pd.DataFrame(X, index=index)
+    df = pd.DataFrame(X, index=index)
+    if dtypes is not None:
+        # 'df.astype(None)' might raise a ValueError because
+        # it tries to cast all columns to floats.
+        df = df.astype(dtypes)
+    return df
 
 
-def make_series(X, index=None, name=None):
+def make_series(X, index=None, name=None, dtype=None):
     """Convert an 1d array into a Pandas series.
 
     Parameters
@@ -43,12 +55,16 @@ def make_series(X, index=None, name=None):
     name : str, default=None
         The name of the series.
 
+    dtype : str, numpy.dtype, or ExtensionDtype, default=None
+        Data type for the output Series.
+
     Returns
     -------
     X : Pandas series
         Converted output.
     """
-    return pd.Series(X, index=index, name=name)
+    series = pd.Series(X, index=index, name=name, dtype=dtype)
+    return series
 
 
 def aggregate(

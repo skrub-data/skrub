@@ -14,7 +14,7 @@ from itertools import product
 from skrub._utils import atleast_1d_or_none
 
 
-def make_dataframe(X, index=None):
+def make_dataframe(X, index=None, dtypes=None):
     """Convert an dictionary of columns into a Polars dataframe.
 
     Parameters
@@ -26,6 +26,10 @@ def make_dataframe(X, index=None):
         Unused since polars doesn't use index.
         Only here for compatibility with Pandas.
 
+    dtypes : DataType or mapping of column names to DataType, default=None
+        Mapping of column names (or selector) to dtypes, or a single dtype
+        to which all columns will be cast.
+
     Returns
     -------
     X : Polars dataframe
@@ -36,10 +40,13 @@ def make_dataframe(X, index=None):
             "Polars dataframes don't have an index, but "
             f"the Polars dataframe maker was called with {index=!r}."
         )
-    return pl.DataFrame(X)
+    df = pl.DataFrame(X)
+    if dtypes is not None:
+        df = df.cast(dtypes)
+    return df
 
 
-def make_series(X, index=None, name=None):
+def make_series(X, index=None, name=None, dtype=None):
     """Convert an 1d array into a Polars series.
 
     Parameters
@@ -54,6 +61,9 @@ def make_series(X, index=None, name=None):
     name : str, default=None
         The name of the series.
 
+    dtype : DataType, default=None
+        Polars dtype of the Series data.
+
     Returns
     -------
     X : Polars series
@@ -64,7 +74,8 @@ def make_series(X, index=None, name=None):
             "Polars series don't have an index, but "
             f"the Polars series maker was called with {index=!r}."
         )
-    return pl.Series(values=X, name=name)
+    series = pl.Series(values=X, name=name, dtype=dtype)
+    return series
 
 
 def aggregate(

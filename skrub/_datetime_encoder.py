@@ -164,10 +164,21 @@ def _to_datetime_dataframe(X, **kwargs):
     """
     skrub_px, _ = get_df_namespace(X)
     index = getattr(X, "index", None)
+
     X_split = [X[col].to_numpy() for col in X.columns]
     X_split = _to_datetime_2d(X_split, **kwargs)
+
+    # TODO: Temporary work-around. Maps back the original non-converted dtypes.
+    # Remove this when removing the 'to_numpy()' conversion above.
+    datetime_indices, _ = _get_datetime_column_indices(X_split)
+    non_datetime_indices = list(set(range(len(X_split))).difference(datetime_indices))
+    non_datetime_columns = np.asarray(X.columns)[non_datetime_indices]
+    non_datetime_dtypes = np.asarray(X.dtypes)[non_datetime_indices]
+    name_to_dtype = dict(zip(non_datetime_columns, non_datetime_dtypes))
+
     X_split = {col: X_split[col_idx] for col_idx, col in enumerate(X.columns)}
-    return skrub_px.make_dataframe(X_split, index=index)
+
+    return skrub_px.make_dataframe(X_split, index=index, dtypes=name_to_dtype)
 
 
 def _to_datetime_series(X, **kwargs):
@@ -186,7 +197,16 @@ def _to_datetime_series(X, **kwargs):
     name = X.name
     X_split = [X.to_numpy()]
     X_split = _to_datetime_2d(X_split, **kwargs)
-    return skrub_px.make_series(X_split[0], index=index, name=name)
+
+    # TODO: Temporary work-around. Maps back the original non-converted dtype.
+    # Remove this when removing the 'to_numpy()' conversion above.
+    datetime_indices, _ = _get_datetime_column_indices(X_split)
+    if len(datetime_indices) == 1:  # either 1 or 0
+        dtype = None
+    else:
+        dtype = X.dtype
+
+    return skrub_px.make_series(X_split[0], index=index, name=name, dtype=dtype)
 
 
 def _to_datetime_2d_array(X, **kwargs):
@@ -292,21 +312,21 @@ def _get_datetime_column_indices(X_split, dayfirst=True):
     index_to_format = {}
 
     for col_idx, X_col in enumerate(X_split):
-        X_col = X_col[pd.notnull(X_col)]
-
-        # convert pd.TimeStamp to np.datetime64
-        if all(isinstance(val, pd.Timestamp) for val in X_col):
-            X_col = X_col.astype("datetime64")
+        X_col = X_col[pd.notnull(X_col)]  # X_col is a numpy array
 
         if _is_column_datetime_parsable(X_col):
             indices.append(col_idx)
 
-            if np.issubdtype(X_col.dtype, np.datetime64):
+            # _guess_datetime_format only accept string columns.
+            # We need to filter out columns of object dtype that
+            # contains e.g., datetime.datetime or pd.Timestamp.
+            X_col_str = X_col.astype(str)
+            if np.array_equal(X_col, X_col_str):
+                datetime_format = _guess_datetime_format(X_col)
+            else:
                 # We don't need to specify a parsing format
                 # for columns that are already of type datetime64.
                 datetime_format = None
-            else:
-                datetime_format = _guess_datetime_format(X_col)
 
             index_to_format[col_idx] = datetime_format
 
@@ -332,7 +352,7 @@ def _is_column_datetime_parsable(X_col):
         try:
             if np.array_equal(X_col, X_col.astype(np.float64)):
                 return False
-        except ValueError:
+        except (ValueError, TypeError):
             pass
 
     np_dtypes_candidates = [np.object_, np.str_, np.datetime64]
@@ -349,7 +369,7 @@ def _is_column_datetime_parsable(X_col):
                 # At this stage, the format itself doesn't matter.
                 _ = pd.to_datetime(X_col, format=MIXED_FORMAT)
             return True
-        except (pd.errors.ParserError, ValueError):
+        except (pd.errors.ParserError, ValueError, TypeError):
             pass
     return False
 
@@ -377,7 +397,10 @@ def _guess_datetime_format(X_col):
     -------
     datetime_format : str or None
     """
-    X_col = X_col.astype(np.object_)
+    # Passing numpy.str_ (i.e. dtype '<U10') to 'guess_datetime_format'
+    # raises a TypeError.
+    # We have to convert these to the object dtype first.
+    X_col = X_col.astype("object")
     vfunc = np.vectorize(guess_datetime_format)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)

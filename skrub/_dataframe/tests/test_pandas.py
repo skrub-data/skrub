@@ -97,13 +97,21 @@ def test_no_agg_operation():
         )
 
 
-def test_make_dataframe():
+@pytest.mark.parametrize("dtypes", [None, {"a": "int64", "b": "category"}])
+def test_make_dataframe(dtypes):
     X = dict(a=[1, 2], b=["z", "e"])
+
     expected_df = pd.DataFrame(dict(a=[1, 2], b=["z", "e"]))
-    assert_frame_equal(make_dataframe(X, index=[0, 1]), expected_df)
+    if dtypes is not None:
+        expected_df = expected_df.astype(dtypes)
+
+    df = make_dataframe(X, index=[0, 1], dtypes=dtypes)
+    assert_frame_equal(df, expected_df)
 
 
-def test_make_series():
-    X = [1, 2, 3]
-    expected_series = pd.Series(X)
-    assert_series_equal(make_series(X, index=[0, 1, 2]), expected_series)
+@pytest.mark.parametrize("dtype", [None, "category"])
+def test_make_series(dtype):
+    X = ["1", "2", "3"]
+    expected_series = pd.Series(X, dtype=dtype)
+    series = make_series(X, index=[0, 1, 2], dtype=dtype)
+    assert_series_equal(series, expected_series)
