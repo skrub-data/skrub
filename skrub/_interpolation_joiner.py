@@ -2,7 +2,6 @@ import warnings
 
 import joblib
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
@@ -11,6 +10,7 @@ from sklearn.ensemble import (
 from sklearn.utils._tags import _safe_tags
 
 from skrub import _join_utils, _utils
+from skrub._dataframe import get_df_namespace
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import TableVectorizer
 
@@ -221,12 +221,16 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self._check_inputs()
         if X is not None:
             _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        key_values = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
+        aux_table = self.aux_table.__dataframe_consortium_standard__()
+        # TODO avoid conversion to pandas when TableVectorizer supports it
+        ns, _ = get_df_namespace(self.aux_table)
+        df = ns.to_pandas(aux_table.select(*self._aux_key).dataframe)
+        key_values = self.vectorizer_.fit_transform(df)
         estimators = self._get_estimator_assignments()
         fit_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_fit)(
                 key_values,
-                self.aux_table[assignment["columns"]],
+                aux_table.select(*assignment["columns"]).dataframe,
                 assignment["estimator"],
                 propagate_exceptions=(self.on_estimator_failure == "raise"),
             )
@@ -281,45 +285,52 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             The result of the join between `X` and inferred rows from
             ``self.aux_table``.
         """
-        main_table = X
+        main_table = X.__dataframe_consortium_standard__()
         _join_utils.check_missing_columns(
-            main_table, self._main_key, "'X' (the main table)"
+            main_table.dataframe, self._main_key, "'X' (the main table)"
         )
-        key_values = self.vectorizer_.transform(
-            main_table[self._main_key].set_axis(self._aux_key, axis="columns")
+        df = (
+            main_table.select(*self._main_key)
+            .rename_columns(dict(zip(main_table.column_names, self._aux_key)))
+            .dataframe
         )
+        # TODO avoid conversion to pandas when vectorizer supports it
+        ns, _ = get_df_namespace(df)
+        df = ns.to_pandas(df)
+        key_values = self.vectorizer_.transform(df)
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
                 key_values,
                 assignment["columns"],
                 assignment["estimator"],
                 propagate_exceptions=(self.on_estimator_failure == "raise"),
+                ns=get_df_namespace(self.aux_table)[0],
             )
             for assignment in self.estimators_
         )
         prediction_results = self._check_prediction_results(prediction_results)
         predictions = [res["predictions"] for res in prediction_results]
         predictions = _add_column_name_suffix(predictions, self.suffix)
-        for part in predictions:
-            part.index = main_table.index
-        return pd.concat([main_table] + predictions, axis=1)
+        ns, _ = get_df_namespace(self.aux_table)
+        return ns.concatenate(main_table.dataframe, *predictions)
 
     def _check_prediction_results(self, results):
         checked_results = []
         failed_columns = []
+        ns, _ = get_df_namespace(self.aux_table)
         for res in results:
             new_res = dict(**res)
             if res["failed"]:
-                if set(res["columns"]).issubset(
-                    self.aux_table.select_dtypes("number").columns.values
-                ):
-                    dtype = float
-                else:
-                    dtype = object
-                pred = pd.DataFrame(
-                    columns=res["columns"],
-                    index=np.arange(res["shape"][0]),
-                    dtype=dtype,
+                # TODO
+                # numeric_cols = list(
+                #     ns.select(self.aux_table, ns.Selector.NUMERIC).columns
+                # )
+                # if set(res["columns"]).issubset(numeric_cols):
+                #     dtype = float
+                # else:
+                #     dtype = object
+                pred = ns.make_dataframe(
+                    {c: [None for _ in range(res["shape"][0])] for c in res["columns"]},
                 )
                 new_res["predictions"] = pred
                 failed_columns.extend(res["columns"])
@@ -351,13 +362,16 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         When the estimator does not handle multi-output, an estimator is fitted
         separately to each column.
         """
-        aux_table = self.aux_table.drop(self._aux_key, axis=1)
+        aux_table = self.aux_table.__dataframe_consortium_standard__().drop_columns(
+            *self._aux_key
+        )
+        ns, _ = get_df_namespace(aux_table.dataframe)
         assignments = []
-        regression_table = aux_table.select_dtypes("number")
+        regression_table = ns.select(aux_table.dataframe, ns.Selector.NUMERIC)
         assignments.extend(
             _get_assignments_for_estimator(regression_table, self.regressor_)
         )
-        classification_table = aux_table.select_dtypes(["object", "string", "category"])
+        classification_table = ns.select(aux_table.dataframe, ns.Selector.CATEGORICAL)
         assignments.extend(
             _get_assignments_for_estimator(classification_table, self.classifier_)
         )
@@ -373,15 +387,19 @@ def _get_assignments_for_estimator(table, estimator):
     # estimator is empty (eg the estimator is the regressor and there are no
     # numerical columns), return an empty list -- no columns are assigned to
     # that estimator.
-    if table.empty:
+    table = table.__dataframe_consortium_standard__()
+    if not len(table.column_names):
         return []
     if not _handles_multioutput(estimator):
-        return [{"columns": [col], "estimator": estimator} for col in table.columns]
-    columns_with_nulls = table.columns[table.isnull().any()]
+        return [
+            {"columns": [col], "estimator": estimator} for col in table.column_names
+        ]
+    table = table.persist()
+    columns_with_nulls = [c for c in table.column_names if table.col(c).is_null().any()]
     assignments = [
         {"columns": [col], "estimator": estimator} for col in columns_with_nulls
     ]
-    columns_without_nulls = list(set(table.columns).difference(columns_with_nulls))
+    columns_without_nulls = list(set(table.column_names).difference(columns_with_nulls))
     if columns_without_nulls:
         assignments.append({"columns": columns_without_nulls, "estimator": estimator})
     return assignments
@@ -392,14 +410,21 @@ def _handles_multioutput(estimator):
 
 
 def _fit(key_values, target_table, estimator, propagate_exceptions):
+    target_table = target_table.__dataframe_consortium_standard__()
     estimator = clone(estimator)
-    kept_rows = target_table.notnull().all(axis=1).to_numpy()
+    ns, _ = get_df_namespace(target_table.dataframe)
+    kept_rows = ~(
+        ns.any_rowwise(target_table.is_null().dataframe)
+        .__column_consortium_standard__()
+        .to_array()
+    )
     key_values = key_values[kept_rows]
-    Y = target_table.to_numpy()[kept_rows]
+    target_table = target_table.persist()
+    Y = target_table.to_array(None)[kept_rows]
 
     # Estimators that expect a single output issue a DataConversionWarning if
     # passing a column vector rather than a 1-D array
-    if len(target_table.columns) == 1:
+    if len(target_table.column_names) == 1:
         Y = Y.ravel()
     failed = False
     try:
@@ -409,10 +434,14 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
             raise
         failed = True
         estimator = None
-    return {"columns": target_table.columns, "estimator": estimator, "failed": failed}
+    return {
+        "columns": target_table.column_names,
+        "estimator": estimator,
+        "failed": failed,
+    }
 
 
-def _predict(key_values, columns, estimator, propagate_exceptions):
+def _predict(key_values, columns, estimator, propagate_exceptions, ns):
     failed = False
     try:
         Y_values = estimator.predict(key_values)
@@ -423,7 +452,9 @@ def _predict(key_values, columns, estimator, propagate_exceptions):
     if failed:
         predictions = None
     else:
-        predictions = pd.DataFrame(data=Y_values, columns=columns)
+        predictions = ns.make_dataframe(
+            dict(zip(columns, np.atleast_2d(Y_values.T).T.T))
+        )
     return {
         "predictions": predictions,
         "failed": failed,
@@ -437,5 +468,8 @@ def _add_column_name_suffix(dataframes, suffix):
         return dataframes
     renamed = []
     for df in dataframes:
-        renamed.append(df.rename(columns={c: f"{c}{suffix}" for c in df.columns}))
+        df = df.__dataframe_consortium_standard__()
+        renamed.append(
+            df.rename_columns({c: f"{c}{suffix}" for c in df.column_names}).dataframe
+        )
     return renamed

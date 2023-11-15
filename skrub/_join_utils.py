@@ -61,7 +61,8 @@ def check_missing_columns(table, key, table_name):
     table_name : str
         Name by which to refer to `table` in the error message if necessary.
     """
-    missing_columns = set(key) - set(table.columns)
+    table = table.__dataframe_consortium_standard__()
+    missing_columns = set(key) - set(table.column_names)
     if not missing_columns:
         return
     raise ValueError(

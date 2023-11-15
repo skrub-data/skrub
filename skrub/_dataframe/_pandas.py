@@ -9,6 +9,24 @@ import pandas as pd
 
 from skrub._utils import atleast_1d_or_none
 
+from ._common import Selector
+
+__all__ = [
+    "make_dataframe",
+    "make_series",
+    "aggregate",
+    "join",
+    "split_num_categ_cols",
+    "select",
+    "drop",
+    "Selector",
+    "concatenate",
+    "any_rowwise",
+    "collect",
+    "to_numpy",
+    "to_pandas",
+]
+
 
 def make_dataframe(X, index=None):
     """Convert an dictionary of columns into a Pandas dataframe.
@@ -329,4 +347,44 @@ def split_num_categ_cols(table):
 
 
 def select(dataframe, columns):
-    return dataframe[columns]
+    if not isinstance(columns, Selector):
+        return dataframe[columns]
+    if columns is Selector.ALL:
+        return dataframe
+    elif columns is Selector.NONE:
+        return dataframe[[]]
+    elif columns is Selector.NUMERIC:
+        return dataframe.select_dtypes("number")
+    elif columns is Selector.CATEGORICAL:
+        return dataframe.select_dtypes(["object", "string", "category"])
+    elif columns is Selector.STRING:
+        return dataframe.select_dtypes(["string"])
+    # we have covered all items in the enumeration
+    assert False
+
+
+def drop(dataframe, columns):
+    return dataframe.drop(select(dataframe, columns).columns.values)
+
+
+def any_rowwise(dataframe):
+    return dataframe.any(axis=1)
+
+
+def concatenate(dataframe, *other_dataframes):
+    other_dataframes = [
+        df.set_axis(dataframe.index, axis="index") for df in other_dataframes
+    ]
+    return pd.concat([dataframe] + list(other_dataframes), axis=1)
+
+
+def collect(dataframe):
+    return dataframe
+
+
+def to_pandas(dataframe):
+    return dataframe
+
+
+def to_numpy(dataframe):
+    return dataframe.to_numpy()
