@@ -269,6 +269,7 @@ def test_auto_cast_missing_categories():
     }
     assert vectorizer.type_per_column_ == expected_type_per_column
 
+    X = _get_dirty_dataframe("category")
     X_train = X.head(3).reset_index(drop=True)
     X_test = X.tail(2).reset_index(drop=True)
     _ = vectorizer._auto_cast(X_train, reset=True)
