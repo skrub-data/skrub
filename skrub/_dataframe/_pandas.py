@@ -23,7 +23,6 @@ __all__ = [
     "concatenate",
     "any_rowwise",
     "collect",
-    "to_numpy",
     "to_pandas",
 ]
 
@@ -384,7 +383,3 @@ def collect(dataframe):
 
 def to_pandas(dataframe):
     return dataframe
-
-
-def to_numpy(dataframe):
-    return dataframe.to_numpy()

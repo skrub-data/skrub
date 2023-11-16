@@ -28,7 +28,6 @@ __all__ = [
     "concatenate",
     "any_rowwise",
     "collect",
-    "to_numpy",
     "to_pandas",
 ]
 
@@ -328,9 +327,3 @@ def to_pandas(dataframe):
     if hasattr(dataframe, "collect"):
         dataframe = dataframe.collect()
     return dataframe.to_pandas()
-
-
-def to_numpy(dataframe):
-    if hasattr(dataframe, "to_numpy"):
-        return dataframe.to_numpy()
-    return dataframe.collect().to_numpy()
