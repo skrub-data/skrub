@@ -515,26 +515,21 @@ sparse_output=False), \
         X = to_datetime(X)
         X = to_numeric(X)
 
+        # Replace missing categories
         categorical_columns = X.select_dtypes("category").columns
-        if reset:
-            self.imputed_columns_ = []
-            for col in categorical_columns:
-                if self.impute_missing_categories and _has_missing_values(X[col]):
-                    X[col] = _impute_missing_category(X[col])
-                    self.imputed_columns_.append(col)
-            self.type_per_column_ = X.dtypes.to_dict()
+        for col in categorical_columns:
+            if self.impute_missing_categories and _has_missing_values(X[col]):
+                X[col] = _impute_missing_category(X[col])
 
+        # Update categorical dtype
+        if reset:
+            self.type_per_column_ = X.dtypes.to_dict()
         else:
             error_msg = (
                 "This %(name)s instance is not fitted yet. "
                 "Please run auto_cast(X, reset=True) first."
             )
-            check_is_fitted(
-                self, ["imputed_columns_", "type_per_column_"], msg=error_msg
-            )
-            if self.impute_missing_categories:
-                for col in self.imputed_columns_:
-                    X[col] = _impute_missing_category(X[col])
+            check_is_fitted(self, ["type_per_column_"], msg=error_msg)
             for col in categorical_columns:
                 dtype = self.type_per_column_[col]
                 dtype = _union_category(X[col], dtype)

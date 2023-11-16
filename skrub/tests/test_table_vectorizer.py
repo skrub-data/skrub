@@ -8,23 +8,13 @@ from scipy.sparse import csr_matrix
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils._testing import skip_if_no_parallel
 
-from skrub import GapEncoder, MinHashEncoder, TableVectorizer
 from skrub._datetime_encoder import DatetimeEncoder, _is_pandas_format_mixed_available
+from skrub._gap_encoder import GapEncoder
+from skrub._minhash_encoder import MinHashEncoder
+from skrub._table_vectorizer import LOW_CARDINALITY_TRANSFORMER, TableVectorizer
 from skrub.tests.utils import transformers_list_equal
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
-
-
-def check_same_transformers(expected_transformers, actual_transformers):
-    """
-    Parameters
-    ----------
-    expected_transformers : dict
-    actual_transformers : list of tuple
-    """
-    # Construct the dict from the actual transformers
-    actual_transformers_dict = {name: cols for name, trans, cols in actual_transformers}
-    assert actual_transformers_dict == expected_transformers
 
 
 def type_equality(expected_type, actual_type):
@@ -164,45 +154,29 @@ def _get_datetimes_dataframe():
     )
 
 
-inputs = [
-    _get_clean_dataframe(),
-    _get_dirty_dataframe(categorical_dtype="object"),
-    _get_dirty_dataframe(categorical_dtype="category"),
-]
+def test_fit_default_transform():
+    X = _get_clean_dataframe()
+    vectorizer = TableVectorizer()
+    vectorizer.fit(X)
 
-params = [
-    # Test with low cardinality and a StandardScaler for the numeric columns
-    (
-        dict(
-            cardinality_threshold=4,
-            # we must have n_samples = 5 >= n_components
-            high_cardinality_transformer=GapEncoder(n_components=2),
-            numerical_transformer=StandardScaler(),
-        ),
-        # Warning: order-dependant
-        dict(
-            numeric=["int", "float"],
-            low_cardinality=["str1", "cat1"],
-            high_cardinality=["str2", "cat2"],
-        ),
-    ),
-    # Test with higher cardinality threshold and no numeric transformer
-    (
-        dict(),
-        dict(
-            low_cardinality=["str1", "str2", "cat1", "cat2"],
-            numeric=["int", "float"],
-        ),
-    ),
-]
+    low_cardinality_cols = ["str1", "str2", "cat1", "cat2"]
+    low_cardinality_transformer = LOW_CARDINALITY_TRANSFORMER.fit(
+        X[low_cardinality_cols]
+    )
+    expected_transformers = [
+        ("numeric", "passthrough", ["int", "float"]),
+        ("low_cardinality", low_cardinality_transformer, low_cardinality_cols),
+    ]
 
-
-@pytest.mark.parametrize("X", inputs)
-@pytest.mark.parametrize("params, expected_transformers", params)
-def test_fit_transform(X, params, expected_transformers):
-    vectorizer = TableVectorizer(**params)
-    vectorizer.fit_transform(X)
-    check_same_transformers(expected_transformers, vectorizer.transformers_)
+    assert transformers_list_equal(
+        expected_transformers,
+        vectorizer.transformers_,
+        ignore_params=["categories_"],  # list of array of different lengths
+    )
+    categories = vectorizer.transformers_[1][1].categories_
+    expected_categories = low_cardinality_transformer.categories_
+    for categories_, expected_categories_ in zip(categories, expected_categories):
+        assert_array_equal(categories_, expected_categories_)
 
 
 def test_duplicate_column_names():
@@ -241,21 +215,21 @@ X_tuples = [
         {
             "int": "int64",
             "float": "float64",
-            "str1": "object",
-            "str2": "object",
-            "cat1": "object",
-            "cat2": "object",
+            "str1": "string",
+            "str2": "string",
+            "cat1": "category",
+            "cat2": "category",
         },
     ),
     (
-        _get_dirty_dataframe(),
+        _get_dirty_dataframe("category"),
         {
             "int": "float64",  # int type doesn't support nans
             "float": "float64",
-            "str1": "object",
-            "str2": "object",
-            "cat1": "object",
-            "cat2": "object",
+            "str1": "category",
+            "str2": "category",
+            "cat1": "category",
+            "cat2": "category",
         },
     ),
 ]
@@ -270,6 +244,37 @@ def test_auto_cast(X, dict_expected_types):
     X_trans = vectorizer._auto_cast(X, reset=True)
     for col in X_trans.columns:
         assert dict_expected_types[col] == X_trans[col].dtype
+
+
+def test_auto_cast_missing_categories():
+    X = _get_dirty_dataframe("category")
+    vectorizer = TableVectorizer()
+    _ = vectorizer._auto_cast(X, reset=True)
+
+    expected_type_per_column = {
+        "int": np.dtype("float64"),
+        "float": np.dtype("float64"),
+        "str1": pd.CategoricalDtype(
+            categories=["private", "public", "missing"],
+        ),
+        "str2": pd.CategoricalDtype(
+            categories=["chef", "manager", "officer", "teacher", "missing"],
+        ),
+        "cat1": pd.CategoricalDtype(
+            categories=["no", "yes", "missing"],
+        ),
+        "cat2": pd.CategoricalDtype(
+            categories=["20K+", "30K+", "40K+", "60K+", "missing"],
+        ),
+    }
+    assert vectorizer.type_per_column_ == expected_type_per_column
+
+    X_train = X.head(3).reset_index(drop=True)
+    X_test = X.tail(2).reset_index(drop=True)
+    _ = vectorizer._auto_cast(X_train, reset=True)
+    _ = vectorizer._auto_cast(X_test, reset=False)
+
+    assert vectorizer.type_per_column_ == expected_type_per_column
 
 
 assert_tuples = [
@@ -538,11 +543,12 @@ def test_mixed_types():
     X = _get_mixed_types_dataframe()
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
-    expected_transformers = {
+    expected_name_to_columns = {
         "numeric": ["int_str", "float_str", "int_float"],
         "low_cardinality": ["bool_str"],
     }
-    check_same_transformers(expected_transformers, vectorizer.transformers_)
+    name_to_columns = {name: columns for name, _, columns in vectorizer.transformers_}
+    assert expected_name_to_columns == name_to_columns
 
 
 @pytest.mark.parametrize(
