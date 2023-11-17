@@ -10,13 +10,11 @@ from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data
 
 MODULES = [pd]
-NULL = {"pandas": pd.NA}
 
 if POLARS_SETUP:
     import polars as pl
 
     MODULES.append(pl)
-    NULL["polars"] = pl.Null
 
 
 @pytest.mark.parametrize(
@@ -145,7 +143,7 @@ def test_input_type(px):
     X = np.array([["alice", "charlie"], ["bob", "delta"]])
     enc = GapEncoder(n_components=2, random_state=42)
     X_enc_array = enc.fit_transform(X)
-    # Pandas dataframe with two columns
+    # Dataframe with two columns
     df = px.DataFrame(X)
     enc = GapEncoder(n_components=2, random_state=42)
     X_enc_df = enc.fit_transform(df)
@@ -153,13 +151,15 @@ def test_input_type(px):
     np.testing.assert_array_equal(X_enc_array, X_enc_df)
 
 
+@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize(
     "add_words",
     [True, False],
 )
-def test_partial_fit(add_words: bool, n_samples: int = 70):
+def test_partial_fit(px, add_words: bool, n_samples: int = 70):
     X = generate_data(n_samples, random_state=0)
     X2 = pd.DataFrame(generate_data(n_samples - 10, random_state=1))
+    X2 = px.DataFrame(X2)
     X3 = generate_data(n_samples - 10, random_state=2)
     # Gap encoder with fit on one batch
     enc = GapEncoder(
@@ -232,7 +232,7 @@ def test_missing_values(px, missing: str):
         )
     observations = [
         ["alice", "bob"],
-        [NULL[px.__name__], "alice"],
+        [pd.NA, "alice"],
         ["bob", None],
         ["alice", "charlie"],
         [np.nan, "alice"],
