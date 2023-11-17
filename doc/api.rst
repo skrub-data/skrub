@@ -82,7 +82,6 @@ This page lists all available functions and classes of `skrub`.
    GapEncoder
    MinHashEncoder
    SimilarityEncoder
-   TargetEncoder
 
 .. raw:: html
 
