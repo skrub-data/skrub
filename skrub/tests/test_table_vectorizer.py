@@ -38,8 +38,8 @@ def _get_clean_dataframe():
     """
     return pd.DataFrame(
         {
-            "int": pd.Series([15, 56, 63, 12, 44], dtype="int"),
-            "float": pd.Series([5.2, 2.4, 6.2, 10.45, 9.0], dtype="float"),
+            "int": pd.Series([15, 56, 63, 12, 44], dtype="int64"),
+            "float": pd.Series([5.2, 2.4, 6.2, 10.45, 9.0], dtype="float64"),
             "str1": pd.Series(
                 ["public", "private", "private", "private", "public"], dtype="string"
             ),
