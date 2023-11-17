@@ -30,14 +30,14 @@ def test_drop(df):
     assert list(ns.drop(df, Selector.CATEGORICAL).columns) == ["ID", "temp"]
 
 
-def test_concatenate(df):
+def test_concat_horizontal(df):
     ns = skrubns(df)
     df1 = (
         df.__dataframe_consortium_standard__()
         .rename_columns({c: f"{c}_1" for c in df.columns})
         .dataframe
     )
-    out = ns.concatenate(df)
+    out = ns.concat_horizontal(df)
     assert list(out.columns) == list(df.columns)
-    out = ns.concatenate(df, df1)
+    out = ns.concat_horizontal(df, df1)
     assert list(out.columns) == list(df.columns) + list(df1.columns)

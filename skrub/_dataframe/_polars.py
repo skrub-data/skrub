@@ -25,7 +25,7 @@ __all__ = [
     "select",
     "drop",
     "Selector",
-    "concatenate",
+    "concat_horizontal",
     "any_rowwise",
     "to_pandas",
 ]
@@ -307,7 +307,7 @@ def any_rowwise(dataframe):
     return _collect(dataframe.select(pl.any_horizontal(pl.all()))).get_column("any")
 
 
-def concatenate(dataframe, *other_dataframes):
+def concat_horizontal(dataframe, *other_dataframes):
     return pl.concat(
         [_collect(dataframe)] + [_collect(df) for df in other_dataframes],
         how="horizontal",

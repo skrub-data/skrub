@@ -20,7 +20,7 @@ __all__ = [
     "select",
     "drop",
     "Selector",
-    "concatenate",
+    "concat_horizontal",
     "any_rowwise",
     "to_pandas",
 ]
@@ -367,7 +367,7 @@ def any_rowwise(dataframe):
     return dataframe.any(axis=1)
 
 
-def concatenate(dataframe, *other_dataframes):
+def concat_horizontal(dataframe, *other_dataframes):
     other_dataframes = [
         df.set_axis(dataframe.index, axis="index") for df in other_dataframes
     ]
