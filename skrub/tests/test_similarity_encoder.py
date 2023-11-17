@@ -341,12 +341,11 @@ def test_check_fitted_super_vectorizer():
 
 @pytest.mark.parametrize("px", MODULES)
 def test_inverse_transform(px):
+    if px is pl:
+        pytest.xfail(reason="Setting output to polars is not possible yet.")
     encoder = SimilarityEncoder()
-    if px is pd:
-        encoder.set_output(transform="pandas")
-    elif px is pl:
-        encoder.set_output(transform="polars")
-    X = px.DataFrame({"A": ["aaa", "aax", "xxx"], "B": ["bbb", "bby", "yyy"]})
+    encoder.set_output(transform="pandas")
+    X = pd.DataFrame({"A": ["aaa", "aax", "xxx"], "B": ["bbb", "bby", "yyy"]})
     encoder.fit(X)
     assert encoder.get_feature_names_out().tolist() == [
         "x0_aaa",
