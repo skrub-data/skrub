@@ -15,5 +15,8 @@ def std(obj):
         return obj.__column_consortium_standard__()
 
 
-def stdns(dataframe):
-    return dataframe.__dataframe_consortium_standard__().__dataframe_namespace__()
+def stdns(obj):
+    try:
+        return obj.__dataframe_consortium_standard__().__dataframe_namespace__()
+    except AttributeError:
+        return obj.__column_consortium_standard__().__column_namespace__()
