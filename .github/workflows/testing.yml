@@ -75,6 +75,7 @@ jobs:
       - shell: bash {0}
         run: |
           cp $GITHUB_WORKSPACE/pyproject.toml .
+          cp $GITHUB_WORKSPACE/conftest.py .
           $GITHUB_WORKSPACE/build_tools/github/test.sh
         working-directory: ${{ runner.temp }}
         name: 'Run tests'

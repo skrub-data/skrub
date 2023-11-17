@@ -27,7 +27,6 @@ __all__ = [
     "Selector",
     "concatenate",
     "any_rowwise",
-    "collect",
     "to_pandas",
 ]
 
@@ -292,8 +291,6 @@ def _check_selector(columns):
         return cs.numeric()
     elif columns is Selector.CATEGORICAL:
         return cs.string(include_categorical=True)
-    elif columns is Selector.STRING:
-        return cs.string()
     # we have covered all items in the enumeration
     assert False
 
@@ -307,17 +304,17 @@ def drop(dataframe, columns):
 
 
 def any_rowwise(dataframe):
-    return collect(dataframe.select(pl.any_horizontal(pl.all()))).get_column("any")
+    return _collect(dataframe.select(pl.any_horizontal(pl.all()))).get_column("any")
 
 
 def concatenate(dataframe, *other_dataframes):
     return pl.concat(
-        [collect(dataframe)] + [collect(df) for df in other_dataframes],
+        [_collect(dataframe)] + [_collect(df) for df in other_dataframes],
         how="horizontal",
     )
 
 
-def collect(dataframe):
+def _collect(dataframe):
     if hasattr(dataframe, "collect"):
         dataframe = dataframe.collect()
     return dataframe

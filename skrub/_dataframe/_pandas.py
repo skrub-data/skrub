@@ -22,7 +22,6 @@ __all__ = [
     "Selector",
     "concatenate",
     "any_rowwise",
-    "collect",
     "to_pandas",
 ]
 
@@ -356,14 +355,12 @@ def select(dataframe, columns):
         return dataframe.select_dtypes("number")
     elif columns is Selector.CATEGORICAL:
         return dataframe.select_dtypes(["object", "string", "category"])
-    elif columns is Selector.STRING:
-        return dataframe.select_dtypes(["string"])
     # we have covered all items in the enumeration
     assert False
 
 
 def drop(dataframe, columns):
-    return dataframe.drop(select(dataframe, columns).columns.values)
+    return dataframe.drop(select(dataframe, columns).columns.values, axis=1)
 
 
 def any_rowwise(dataframe):
@@ -375,10 +372,6 @@ def concatenate(dataframe, *other_dataframes):
         df.set_axis(dataframe.index, axis="index") for df in other_dataframes
     ]
     return pd.concat([dataframe] + list(other_dataframes), axis=1)
-
-
-def collect(dataframe):
-    return dataframe
 
 
 def to_pandas(dataframe):
