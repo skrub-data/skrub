@@ -45,13 +45,9 @@ def test_interpolation_join(px, buildings, weather, key, with_nulls):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-        weather = pl.DataFrame(weather)
-        buildings = pl.DataFrame(buildings)
-    if not with_nulls:
-        if px is pd:
-            weather = weather.fillna(0.0)
-        elif px is pl:
-            weather = weather.fill_nan(0.0)
+    weather = weather.fillna(0.0)
+    weather = px.DataFrame(weather)
+    buildings = px.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         key=key,
@@ -97,8 +93,8 @@ def test_no_multioutput(px, buildings, weather):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-        weather = pl.DataFrame(weather)
-        buildings = pl.DataFrame(buildings)
+    weather = px.DataFrame(weather)
+    buildings = px.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         main_key=("latitude", "longitude"),
@@ -115,8 +111,10 @@ def test_condition_choice(px):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-    main = px.DataFrame({"A": [0, 1, 2]})
-    aux = px.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
+    main = pd.DataFrame({"A": [0, 1, 2]})
+    main = px.DataFrame(main)
+    aux = pd.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
+    aux = px.DataFrame(aux)
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
@@ -151,7 +149,8 @@ def test_suffix(px):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-    df = px.DataFrame({"A": [0, 1], "B": [0, 1]})
+    df = pd.DataFrame({"A": [0, 1], "B": [0, 1]})
+    df = px.DataFrame(df)
     join = InterpolationJoiner(
         df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
@@ -166,8 +165,10 @@ def test_mismatched_indexes(px):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-    main = px.DataFrame({"A": [0, 1]}, index=[1, 0])
-    aux = px.DataFrame({"A": [0, 1], "B": [10, 11]})
+    main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
+    main = px.DataFrame(main)
+    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
+    aux = px.DataFrame(aux)
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
@@ -184,11 +185,13 @@ def test_fit_on_none(px):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-    aux = px.DataFrame({"A": [0, 1], "B": [10, 11]})
+    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
+    aux = px.DataFrame(aux)
     joiner = InterpolationJoiner(aux, key="A", regressor=KNeighborsRegressor(1)).fit(
         None
     )
-    main = px.DataFrame({"A": [0, 1]}, index=[1, 0])
+    main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
+    main = px.DataFrame(main)
     join = joiner.transform(main)
     assert_array_equal(join["B"].values, [10, 11])
     assert_array_equal(join.index.values, [1, 0])
@@ -202,10 +205,12 @@ def test_join_on_date(px):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-    sales = px.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
-    temp = px.DataFrame(
+    sales = pd.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
+    sales = px.DataFrame(sales)
+    temp = pd.DataFrame(
         {"date": ["2023-09-09", "2023-10-01", "2024-09-21"], "temp": [-10, 10, 30]}
     )
+    temp = px.DataFrame(temp)
     transformed = (
         InterpolationJoiner(
             temp,
@@ -232,8 +237,8 @@ def test_fit_failures(px, buildings, weather):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-        weather = pl.DataFrame(weather)
-        buildings = pl.DataFrame(buildings)
+    weather = px.DataFrame(weather)
+    buildings = px.DataFrame(buildings)
     weather["climate"] = "A"
     joiner = InterpolationJoiner(
         weather,
@@ -282,8 +287,8 @@ def test_transform_failures(px, buildings, weather):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-        weather = pl.DataFrame(weather)
-        buildings = pl.DataFrame(buildings)
+    weather = px.DataFrame(weather)
+    buildings = px.DataFrame(buildings)
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
@@ -330,8 +335,8 @@ def test_transform_failures_dtype(px, buildings, weather):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
             )
         )
-        weather = pl.DataFrame(weather)
-        buildings = pl.DataFrame(buildings)
+    weather = px.DataFrame(weather)
+    buildings = px.DataFrame(buildings)
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
