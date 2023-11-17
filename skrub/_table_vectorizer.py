@@ -29,7 +29,7 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
 DATETIME_TRANSFORMER = DatetimeEncoder()
 
 
-def to_numeric(X):
+def _to_numeric(X):
     """Convert the columns of a dataframe into a numeric representation.
 
     Parameters
@@ -45,7 +45,14 @@ def to_numeric(X):
     for column in columns:
         X_col = X[column]
         if not is_datetime64_any_dtype(X_col):
-            X_out[column] = pd.to_numeric(X_col, errors="ignore")
+            # We don't use errors="ignore" because it casts string
+            # and categories to object dtype in Pandas < 2.0.
+            # TODO: replace 'raise' by 'ignore' and remove the exception
+            # catching when the minimum pandas version of skrub is 2.0.
+            try:
+                X_out[column] = pd.to_numeric(X_col, errors="raise")
+            except (ValueError, TypeError):
+                pass
     return X_out
 
 
@@ -513,7 +520,7 @@ sparse_output=False), \
                 X.loc[X[col].notnull(), col] = X[col].astype(str)
 
         X = to_datetime(X)
-        X = to_numeric(X)
+        X = _to_numeric(X)
 
         # Replace missing categories
         categorical_columns = X.select_dtypes("category").columns
