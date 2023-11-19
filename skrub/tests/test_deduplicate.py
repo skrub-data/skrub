@@ -8,7 +8,6 @@ from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 
-from skrub._dataframe._polars import POLARS_SETUP
 from skrub._deduplicate import (
     _create_spelling_correction,
     _guess_clusters,
@@ -16,13 +15,6 @@ from skrub._deduplicate import (
     deduplicate,
 )
 from skrub.datasets import make_deduplication_data
-
-MODULES = [pd]
-
-if POLARS_SETUP:
-    import polars as pl
-
-    MODULES.append(pl)
 
 
 @pytest.mark.parametrize(
