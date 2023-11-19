@@ -17,7 +17,6 @@ from skrub._datetime_encoder import (
 
 MODULES = [pd]
 ASSERT_TUPLES = [(pd, assert_frame_equal)]
-NULL = {"pandas": pd.NA}
 
 if POLARS_SETUP:
     import polars as pl
@@ -25,7 +24,6 @@ if POLARS_SETUP:
 
     MODULES.append(pl)
     ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
-    NULL["polars"] = pl.Null
 
 NANOSECONDS_FORMAT = (
     "%Y-%m-%d %H:%M:%S.%f" if _is_pandas_format_mixed_available() else None
@@ -33,9 +31,8 @@ NANOSECONDS_FORMAT = (
 MSG_MIN_PANDAS_SKIP = "Pandas format=mixed is not available"
 
 
-def get_date(px, as_array=False):
-    """px should either be the Pandas or Polars module."""
-    df = px.DataFrame(
+def get_date(as_array=False):
+    df = pd.DataFrame(
         [
             ["2020-01-01", "2020-01-02", "2020-01-03"],
             ["2021-02-03", "2020-02-04", "2021-02-05"],
@@ -48,9 +45,8 @@ def get_date(px, as_array=False):
     return df
 
 
-def get_datetime(px, as_array=False):
-    """px should either be the Pandas or Polars module."""
-    df = px.DataFrame(
+def get_datetime(as_array=False):
+    df = pd.DataFrame(
         [
             ["2020-01-01 10:12:01", "2020-01-02 10:23:00", "2020-01-03 10:00:00"],
             ["2021-02-03 12:45:23", "2020-02-04 22:12:00", "2021-02-05 12:00:00"],
@@ -63,9 +59,8 @@ def get_datetime(px, as_array=False):
     return df
 
 
-def get_nanoseconds(px, as_array=False):
-    """px should either be the Pandas or Polars module."""
-    df = px.DataFrame(
+def get_nanoseconds(as_array=False):
+    df = pd.DataFrame(
         [
             ["2020-08-24 15:55:30.123456789", "2020-08-24 15:55:30.123456789"],
             ["2020-08-20 14:56:31.987654321", "2021-07-20 14:56:31.987654321"],
@@ -78,13 +73,12 @@ def get_nanoseconds(px, as_array=False):
     return df
 
 
-def get_nan_datetime(px, as_array=False):
-    """px should either be the Pandas or Polars module."""
-    df = px.DataFrame(
+def get_nan_datetime(as_array=False):
+    df = pd.DataFrame(
         [
             ["2020-01-01 10:12:01", None, "2020-01-03 10:00:00"],
             [np.nan, "2020-02-04 22:12:00", "2021-02-05 12:00:00"],
-            ["2022-01-01 23:23:43", "2020-12-25 11:12:00", NULL[px.__name__]],
+            ["2022-01-01 23:23:43", "2020-12-25 11:12:00", pd.NA],
         ],
     )
     if as_array:
@@ -92,10 +86,9 @@ def get_nan_datetime(px, as_array=False):
     return df
 
 
-def get_tz_datetime(px, as_array=False):
-    """px should either be the Pandas or Polars module."""
+def get_tz_datetime(as_array=False):
     # The equivalent dtype is "datetime64[ns, Asia/Kolkata]"
-    df = px.DataFrame(
+    df = pd.DataFrame(
         [
             ["2020-01-01 10:12:01+05:30"],
             ["2021-02-03 12:45:23+05:30"],
@@ -108,9 +101,8 @@ def get_tz_datetime(px, as_array=False):
     return df
 
 
-def get_mixed_type_dataframe(px):
-    """px should either be the Pandas or Polars module."""
-    return px.DataFrame(
+def get_mixed_type_dataframe():
+    return pd.DataFrame(
         dict(
             a=["2020-01-01", "2020-02-04", "2021-02-05"],
             b=["yo", "ya", "yu"],
@@ -122,9 +114,8 @@ def get_mixed_type_dataframe(px):
     )
 
 
-def get_mixed_datetime_format(px, as_array=False):
-    """px should either be the Pandas or Polars module."""
-    df = px.DataFrame(
+def get_mixed_datetime_format(as_array=False):
+    df = pd.DataFrame(
         dict(
             a=[
                 "2022-10-15",
@@ -165,9 +156,7 @@ def test_fit(
     add_day_of_the_week,
     resolution,
 ):
-    if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-    X = get_data_func(px, as_array=as_array)
+    X = get_data_func(as_array=as_array)
     enc = DatetimeEncoder(
         add_day_of_the_week=add_day_of_the_week,
         add_total_seconds=add_total_seconds,
@@ -201,7 +190,8 @@ def test_fit(
 
 @pytest.mark.parametrize("px", MODULES)
 def test_format_nan(px):
-    X = get_nan_datetime(px)
+    X = get_nan_datetime()
+    X = px.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
     expected_index_to_format = {
         0: "%Y-%m-%d %H:%M:%S",
@@ -213,18 +203,16 @@ def test_format_nan(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_format_nz(px):
-    if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-    X = get_tz_datetime(px)
+    X = get_tz_datetime()
+    X = px.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
     assert enc.index_to_format_ == {0: "%Y-%m-%d %H:%M:%S%z"}
 
 
 @pytest.mark.parametrize("px", MODULES)
 def test_resolution_none(px):
-    if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-    X = get_datetime(px)
+    X = get_datetime()
+    px.DataFrame(X)
     enc = DatetimeEncoder(
         resolution=None,
         add_total_seconds=False,
@@ -238,9 +226,8 @@ def test_resolution_none(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_transform_date(px):
-    if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-    X = get_date(px)
+    X = get_date()
+    X = px.DataFrame(X)
     enc = DatetimeEncoder(
         add_total_seconds=False,
     )
@@ -260,9 +247,8 @@ def test_transform_date(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_transform_datetime(px):
-    if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-    X = get_datetime(px)
+    X = get_datetime()
+    X = px.DataFrame(X)
     enc = DatetimeEncoder(
         resolution="second",
         add_total_seconds=False,
@@ -281,9 +267,8 @@ def test_transform_datetime(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_transform_tz(px):
-    if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-    X = get_tz_datetime(px)
+    X = get_tz_datetime()
+    X = px.DataFrame(X)
     enc = DatetimeEncoder(
         add_total_seconds=True,
     )
@@ -301,9 +286,8 @@ def test_transform_tz(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_transform_nan(px):
-    if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-    X = get_nan_datetime(px)
+    X = get_nan_datetime()
+    X = px.DataFrame(X)
     enc = DatetimeEncoder(
         add_total_seconds=True,
     )
@@ -369,8 +353,14 @@ def test_transform_nan(px):
 @pytest.mark.parametrize("px", MODULES)
 def test_mixed_type_dataframe(px):
     if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-    X = get_mixed_type_dataframe(px)
+        pytest.xfail(
+            reason=(
+                "to_datetime(X) raises polars.exceptions.ComputeError: cannot cast"
+                " 'Object' type"
+            )
+        )
+    X = get_mixed_type_dataframe()
+    X = px.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
     assert enc.index_to_format_ == {0: "%Y-%m-%d", 4: "%d/%m/%Y"}
 
@@ -391,7 +381,8 @@ def test_mixed_type_dataframe(px):
 
 @pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
 def test_indempotency(px, assert_frame_equal_):
-    df = get_mixed_datetime_format(px)
+    df = get_mixed_datetime_format()
+    df = px.DataFrame(df)
     df_dt = to_datetime(df)
     df_dt_2 = to_datetime(df_dt)
     assert_frame_equal_(df_dt, df_dt_2)
@@ -403,7 +394,8 @@ def test_indempotency(px, assert_frame_equal_):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_datetime_encoder_invalid_params(px):
-    X = get_datetime(px)
+    X = get_datetime()
+    X = px.DataFrame(X)
 
     with pytest.raises(ValueError, match=r"(?=.*'resolution' options)"):
         DatetimeEncoder(resolution="hello").fit(X)
@@ -469,10 +461,8 @@ def test_to_datetime_format_param():
 
 @pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
 def test_mixed_datetime_format(px, assert_frame_equal_):
-    if px is pl:
-        pytest.xfail(reason="Polars is not supported yet")
-
-    df = get_mixed_datetime_format(px)
+    df = get_mixed_datetime_format()
+    df = px.DataFrame(df)
 
     df_dt = to_datetime(df)
     expected_df_dt = pd.DataFrame(
@@ -485,6 +475,7 @@ def test_mixed_datetime_format(px, assert_frame_equal_):
             ]
         )
     )
+    expected_df_dt = px.DataFrame(expected_df_dt)
     assert_frame_equal_(df_dt, expected_df_dt)
 
     series_dt = to_datetime(df["a"])
