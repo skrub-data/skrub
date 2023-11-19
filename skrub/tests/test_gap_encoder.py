@@ -158,8 +158,7 @@ def test_input_type(px):
 )
 def test_partial_fit(px, add_words: bool, n_samples: int = 70):
     X = generate_data(n_samples, random_state=0)
-    X2 = pd.DataFrame(generate_data(n_samples - 10, random_state=1))
-    X2 = px.DataFrame(X2)
+    X2 = px.DataFrame(generate_data(n_samples - 10, random_state=1))
     X3 = generate_data(n_samples - 10, random_state=2)
     # Gap encoder with fit on one batch
     enc = GapEncoder(

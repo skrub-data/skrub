@@ -25,21 +25,15 @@ if POLARS_SETUP:
     MODULES.append(pl)
 
 
-@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize(
     "entries_per_category, prob_mistake_per_letter",
     [([500, 100, 1500], 0.05), ([100, 100], 0.02), ([200, 50, 30, 200, 800], 0.01)],
 )
 def test_deduplicate(
-    px,
     entries_per_category: list[int],
     prob_mistake_per_letter: float,
     seed: int = 123,
 ):
-    if px is pl:
-        pytest.xfail(
-            reason="Polars Series.__init__() got an unexpected keyword argument 'index'"
-        )
     rng = np.random.RandomState(seed)
 
     # hard coded to fix ground truth string similarities
@@ -61,7 +55,7 @@ def test_deduplicate(
     assert recovered_categories.shape[0] == n_clusters
     assert np.isin(clean_categories, recovered_categories).all()
     deduplicated_data = deduplicate(data, n_clusters=n_clusters)
-    translation_table = px.Series(deduplicated_data, index=data)
+    translation_table = pd.Series(deduplicated_data, index=data)
     translation_table = translation_table[
         ~translation_table.index.duplicated(keep="first")
     ]
