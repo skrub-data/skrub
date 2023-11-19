@@ -75,19 +75,27 @@ def test_incorrect_dataframe_inputs():
         )
 
 
-def test_make_dataframe():
+@pytest.mark.parametrize("dtypes", [None, {"a": pl.Int64, "b": pl.Utf8}])
+def test_make_dataframe(dtypes):
     X = dict(a=[1, 2], b=["z", "e"])
+
     expected_df = pl.DataFrame(dict(a=[1, 2], b=["z", "e"]))
-    assert_frame_equal(make_dataframe(X), expected_df)
+    if dtypes is not None:
+        expected_df = expected_df.cast(dtypes)
+
+    df = make_dataframe(X, dtypes=dtypes)
+    assert_frame_equal(df, expected_df)
 
     with pytest.raises(ValueError, match=r"(?=.*Polars dataframe)(?=.*index)"):
         make_dataframe(X, index=[0, 1])
 
 
-def test_make_series():
+@pytest.mark.parametrize("dtype", [None, pl.Int64])
+def test_make_series(dtype):
     X = [1, 2, 3]
-    expected_series = pl.Series(X)
-    assert_series_equal(make_series(X, index=None), expected_series)
+    expected_series = pl.Series(X, dtype=dtype)
+    series = make_series(X, index=None, dtype=dtype)
+    assert_series_equal(series, expected_series)
 
     with pytest.raises(ValueError, match=r"(?=.*Polars series)(?=.*index)"):
         make_series(X, index=[0, 1])
