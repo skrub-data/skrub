@@ -41,6 +41,29 @@ class Matching(BaseEstimator):
         return rescaled_distances
 
 
+def _sample_pairs(n, n_pairs, random_state):
+    assert n > 1
+    assert n_pairs > 0
+    rng = np.random.default_rng(random_state)
+    parts = []
+    n_found = 0
+    while n_found < n_pairs:
+        new_part = rng.integers(n, size=(n_pairs, 2))
+        new_part = new_part[new_part[:, 0] != new_part[:, 1]]
+        parts.append(new_part)
+        n_found += new_part.shape[0]
+    return np.concatenate(parts, axis=0)[:n_pairs]
+
+
+class Percentile(Matching):
+    def __init__(self, n_sampled_pairs=500):
+        self.n_sampled_pairs = n_sampled_pairs
+
+    def _get_reference_distances(self, main, indices, distances):
+        del main, indices, distances
+        n_rows = self.aux_.shape[0]
+
+
 class TargetNeighbor(Matching):
     def __init__(self, reference_neighbor=1):
         self.reference_neighbor = reference_neighbor
