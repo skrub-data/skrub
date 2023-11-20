@@ -341,7 +341,7 @@ def test_check_fitted_super_vectorizer():
 
 @pytest.mark.parametrize("px", MODULES)
 def test_inverse_transform(px):
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Setting output to polars is not possible yet.")
     encoder = SimilarityEncoder()
     encoder.set_output(transform="pandas")

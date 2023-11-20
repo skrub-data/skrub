@@ -19,7 +19,7 @@ if POLARS_SETUP:
 
 @pytest.mark.parametrize("px", MODULES)
 def test_joiner(px):
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     main_table = px.DataFrame(
         {
@@ -65,7 +65,7 @@ def test_joiner(px):
 
 @pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
 def test_multiple_keys(px, assert_frame_equal_):
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     df = px.DataFrame(
         {"Co": ["France", "Italia", "Deutchland"], "Ca": ["Paris", "Roma", "Berlin"]}

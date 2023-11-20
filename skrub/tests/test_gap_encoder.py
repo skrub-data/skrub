@@ -222,7 +222,7 @@ def test_score(n_samples: int = 70):
 )
 def test_missing_values(px, missing: str):
     """Test what happens when missing values are in the data"""
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(
             reason=(
                 "'TypeError: '<' not supported between instances of 'DataTypeClass' and"

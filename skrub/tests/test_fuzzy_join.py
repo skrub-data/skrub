@@ -31,7 +31,7 @@ def test_fuzzy_join(px, analyzer: Literal["char", "char_wb", "word"]):
     """
     Testing if fuzzy_join results are as expected.
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     df1 = px.DataFrame({"a1": ["ana", "lala", "nana et sana", np.NaN]})
     df2 = px.DataFrame({"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]})
@@ -97,7 +97,7 @@ def test_fuzzy_join(px, analyzer: Literal["char", "char_wb", "word"]):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_match_score(px):
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     left = px.DataFrame({"A": ["aa", "bb"]})
     right = px.DataFrame({"A": ["aa", "ba"], "B": [1, 2]})
@@ -109,7 +109,7 @@ def test_match_score(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_perfect_matches(px):
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     # non-regression test for https://github.com/skrub-data/skrub/issues/764
     # fuzzy_join when all rows had a perfect match used to trigger a division by 0
@@ -126,7 +126,7 @@ def test_fuzzy_join_dtypes(px):
     """
     Test that the dtypes of dataframes are maintained after join
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     a = px.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
     b = px.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
@@ -171,7 +171,7 @@ def test_parameters_error(px, analyzer, on, how) -> None:
 
 @pytest.mark.parametrize("px", MODULES)
 def test_missing_keys(px):
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     a = px.DataFrame({"col1": ["aaa", "bbb"], "col2": [1, 2]})
     b = px.DataFrame({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
@@ -190,7 +190,7 @@ def test_missing_keys(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_drop_unmatched(px):
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     a = px.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = px.DataFrame({"col1": ["aaa_", "bbb_", "cc ccc"], "col3": [1, 2, 3]})
@@ -214,7 +214,7 @@ def test_how_param(px):
     Test correct shape of left and right joins.
     Also test if an error is raised when an incorrect parameter value is passed.
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     a = px.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = px.DataFrame(
@@ -290,7 +290,7 @@ def test_correct_encoder(px):
     """
     Test that the encoder error checking is working as intended.
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
 
     class TestVectorizer(HashingVectorizer):
@@ -337,7 +337,7 @@ def test_numerical_column(px):
     """
     Testing that fuzzy_join works with numerical columns.
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     left = px.DataFrame({"str1": ["aa", "a", "bb"], "int": [10, 2, 5]})
     right = px.DataFrame(
@@ -371,7 +371,7 @@ def test_datetime_column(px, assert_frame_equal_):
     """
     Testing that fuzzy_join works with datetime columns.
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Module 'polars' has no attribute 'to_datetime'")
     left = px.DataFrame(
         {
@@ -423,7 +423,7 @@ def test_mixed_joins(px, assert_frame_equal_):
     """
     Test fuzzy joining on mixed and multiple column types.
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Module 'polars' has no attribute 'to_datetime'")
     left = px.DataFrame(
         {
@@ -569,7 +569,7 @@ def test_iterable_input(px):
     """
     Test if iterable input: list, set, dictionary or tuple works.
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     df1 = px.DataFrame(
         {"a": ["ana", "lala", "nana"], "str2": ["Texas", "France", "Greek God"]}
@@ -594,7 +594,7 @@ def test_missing_values(px):
     """
     Test fuzzy joining on missing values.
     """
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'")
     a = px.DataFrame({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
     b = px.DataFrame({"col3": [np.NaN, "bbb", "ddd dd"], "col4": [1, 2, 3]})

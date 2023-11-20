@@ -352,7 +352,7 @@ def test_transform_nan(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_mixed_type_dataframe(px):
-    if px is pl:
+    if px.__name__ == "polars":
         pytest.xfail(
             reason=(
                 "to_datetime(X) raises polars.exceptions.ComputeError: cannot cast"
