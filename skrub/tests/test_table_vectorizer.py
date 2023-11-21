@@ -357,7 +357,6 @@ inputs = [
     _get_dirty_dataframe(categorical_dtype="object"),
     _get_dirty_dataframe(categorical_dtype="category"),
     _get_mixed_types_dataframe(),
-    _get_mixed_types_array(),
 ]
 
 
@@ -371,6 +370,12 @@ def test_fit_transform_equiv(X):
     X_trans_1 = TableVectorizer().fit_transform(X)
     X_trans_2 = TableVectorizer().fit(X).transform(X)
     assert_array_equal(X_trans_1, X_trans_2)
+
+
+def test_numpy_array_input_raise_errors():
+    X = _get_mixed_types_array()
+    with pytest.raises(TypeError, match=r"(?=.*Expected a dataframe)"):
+        TableVectorizer().fit(X)
 
 
 inputs = [
@@ -788,12 +793,12 @@ def test_wrong_transformer(invalid_transformer):
 
 
 invalid_tuples = [
-    (1, ValueError, r"(?=.*got scalar array)"),
-    (np.array([1]), ValueError, r"(?=.*got 1D array)"),
-    (pd.DataFrame([], columns=["a", "b"]), ValueError, r"(?=.*0 sample)"),
+    (1, TypeError, r"(?=.*got <class 'int'>)"),
+    (np.array([1]), TypeError, r"(?=.*got <class 'numpy.ndarray'>)"),
+    (pd.DataFrame([], columns=["a", ""]), ValueError, r"(?=.*0 sample)"),
     (pd.DataFrame([], index=[0, 1]), ValueError, r"(?=.*0 feature)"),
     (pd.DataFrame([1], dtype="Sparse[int]"), TypeError, r"(?=.*sparse Pandas series)"),
-    (csr_matrix([1]), TypeError, r"(?=.*A sparse matrix was passed)"),
+    (csr_matrix([1]), TypeError, r"(?=.*got <class 'scipy.sparse._csr.csr_matrix'>)"),
 ]
 
 

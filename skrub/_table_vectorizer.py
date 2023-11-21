@@ -9,7 +9,6 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype, is_object_dtype
-from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.compose._column_transformer import _get_transformer_list
@@ -178,10 +177,10 @@ def _union_category(X_col, dtype):
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Automatically transform a heterogeneous dataframe to a numerical array.
 
-    Easily transforms a heterogeneous data table
-    (such as a :obj:`pandas.DataFrame`) to a numerical array for machine
-    learning. To do so, the TableVectorizer transforms each column depending
-    on its data type.
+    Easily transforms a heterogeneous data table, such as a
+    :obj:`pandas.DataFrame` or :obj:`polars.DataFrame`, to a numerical array
+    for machine learning.
+    To do so, the TableVectorizer transforms each column depending on its data type.
 
     Parameters
     ----------
@@ -546,34 +545,12 @@ sparse_output=False), \
         return X
 
     def _check_X(self, X):
-        if sparse.isspmatrix(X):
-            raise TypeError(
-                "A sparse matrix was passed, but dense data is required. Use "
-                "X.toarray() to convert to a dense numpy array."
-            )
+        # The dataframe exchange API has been available since Pandas 1.5.2.
+        if not hasattr(X, "__dataframe__"):
+            raise TypeError(f"Expected a dataframe, got {type(X)}.")
 
         if not isinstance(X, pd.DataFrame):
-            # check the dimension of X before to create a dataframe that always
-            # `ndim == 2`
-            # unfortunately, we need to call `asarray` before to call `ndim`
-            # in case that the container implement `__array_function__`
-            X_array = np.asarray(X)
-            if X_array.ndim == 0:
-                raise ValueError(
-                    f"Expected 2D array, got scalar array instead:\narray={X}.\n"
-                    "Reshape your data either using array.reshape(-1, 1) if "
-                    "your data has a single feature or array.reshape(1, -1) "
-                    "if it contains a single sample."
-                )
-            if X_array.ndim == 1:
-                raise ValueError(
-                    f"Expected 2D array, got 1D array instead:\narray={X}.\n"
-                    "Reshape your data either using array.reshape(-1, 1) if "
-                    "your data has a single feature or array.reshape(1, -1) "
-                    "if it contains a single sample."
-                )
-            feature_names = getattr(self, "feature_names_in_", None)
-            X = pd.DataFrame(X_array, columns=feature_names)
+            X = pd.DataFrame(X)
         else:
             # Create a copy to avoid altering the original data.
             X = X.copy()
@@ -611,11 +588,16 @@ sparse_output=False), \
     def fit(self, X, y=None):
         """Fit all transformers using X.
 
+        In practice, it:
+        - makes basic dtype casting and missing categories imputing
+        - creates sets of column names whose columns have homogeneous data type
+        - fits transformers matching each data type group
+
         Parameters
         ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
-            Input data, of which specified subsets are used to fit the
-            transformers.
+        X : Pandas and Polars dataframes of shape (n_samples, n_features)
+            Input dataframe used to fit the transformers.
+            Polars dataframes will be converted to Pandas first.
 
         y : array-like of shape (n_samples, ...), default=None
             Targets for supervised learning.
@@ -633,17 +615,17 @@ sparse_output=False), \
     def fit_transform(self, X, y=None):
         """Fit all transformers, transform the data, and concatenate the results.
 
-        In practice, it (1) converts features to their best possible types
-        if `auto_cast=True`, (2) classify columns based on their data type,
-        (3) replaces "false missing" (see _replace_false_missing),
-        and imputes categorical columns depending on `impute_missing`, and
-        finally, transforms `X`.
+        In practice, it:
+        - makes basic dtype casting and missing categories imputing
+        - creates sets of column names whose columns have homogeneous data type
+        - fits transformers matching each data type group
+        - transforms X using the fitted transformers
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
-            Input data, of which specified subsets are used to fit the
-            transformers.
+        X : Pandas or Polars dataframe of shape (n_samples, n_features)
+            Input dataframe used to fit the transformers.
+            Polars dataframes will be converted to Pandas first.
         y : array-like of shape (n_samples,), optional
             Targets for supervised learning.
 
@@ -657,8 +639,8 @@ sparse_output=False), \
         """
         self._clone_transformers()
 
-        self._check_feature_names(X, reset=True)
         X = self._check_X(X)
+        self._check_feature_names(X, reset=True)
         self._check_n_features(X, reset=True)
 
         # If auto_cast is True, we'll find and apply the best possible type
@@ -742,8 +724,9 @@ sparse_output=False), \
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : Pandas or Polars dataframe of shape (n_samples, n_features)
             The data to be transformed.
+            Polars dataframes will be converted to Pandas first.
 
         Returns
         -------
