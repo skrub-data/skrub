@@ -5,7 +5,7 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 from pandas._libs.tslibs.parsing import guess_datetime_format
-from pandas.api.types import is_datetime64_any_dtype
+from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
@@ -315,7 +315,10 @@ def _get_datetime_column_indices(X_split, dayfirst=True):
     for col_idx, X_col in enumerate(X_split):
         X_col = X_col[pd.notnull(X_col)]  # X_col is a numpy array
 
-        if is_datetime64_any_dtype(X_col):
+        if is_numeric_dtype(X_col):
+            continue
+
+        elif is_datetime64_any_dtype(X_col):
             indices.append(col_idx)
             index_to_format[col_idx] = None
 
@@ -344,7 +347,7 @@ def _is_column_datetime_parsable(X_col):
 
     Parameters
     ----------
-    X_col : array-like of shape ``(n_samples,)``
+    X_col : array-like of shape ``(n_samples,)``, of dtype str or object.
 
     Returns
     -------
@@ -360,23 +363,17 @@ def _is_column_datetime_parsable(X_col):
         except (ValueError, TypeError):
             pass
 
-    np_dtypes_candidates = [np.object_, np.str_, np.datetime64]
-    is_type_datetime_compatible = any(
-        np.issubdtype(X_col.dtype, np_dtype) for np_dtype in np_dtypes_candidates
-    )
-    if is_type_datetime_compatible:
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", category=UserWarning)
-                # format=mixed parses entries individually,
-                # avoiding ValueError when both date and datetime formats
-                # are present.
-                # At this stage, the format itself doesn't matter.
-                _ = pd.to_datetime(X_col, format=MIXED_FORMAT)
-            return True
-        except (pd.errors.ParserError, ValueError, TypeError):
-            pass
-    return False
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            # format=mixed parses entries individually,
+            # avoiding ValueError when both date and datetime formats
+            # are present.
+            # At this stage, the format itself doesn't matter.
+            _ = pd.to_datetime(X_col, format=MIXED_FORMAT)
+        return True
+    except (pd.errors.ParserError, ValueError, TypeError):
+        return False
 
 
 def _guess_datetime_format(X_col):
