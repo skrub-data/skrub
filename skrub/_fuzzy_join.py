@@ -16,10 +16,10 @@ def fuzzy_join(
     on=None,
     suffix="",
     max_dist=np.inf,
-    insert_match_info=False,
-    drop_unmatched=False,
     string_encoder=DEFAULT_STRING_ENCODER,
     ref_dist=DEFAULT_REF_DIST,
+    insert_match_info=False,
+    drop_unmatched=False,
 ) -> pd.DataFrame:
     """Join two tables based on approximate matching using the appropriate metric.
 
@@ -58,14 +58,29 @@ def fuzzy_join(
         Name of common left and right table join key columns.
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
-    string_encoder : vectorizer instance, optional
-        Encoder parameter for the Vectorizer.
-        By default, uses a HashingVectorizer.
-        It is possible to pass a vectorizer instance inheriting
-        _VectorizerMixin to tweak the parameters of the encoder.
+    suffix : str, default=""
+        Suffix to add to column names from the right table
+    max_dist : float, default=np.inf
+        Maximum acceptable (rescaled) distance between a row in the
+        ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
+        are farther apart are not considered to match. By default, the distance
+        is rescaled so that a value between 0 and 1 is typically a good choice,
+        although rescaled distances can be greater than 1 for some choices of
+        ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
+        mean that no matches are rejected.
+    ref_dist : reference distance for rescaling, default = 'aux_percentile'
+        To facilitate the choice of ``max_dist``, distances between rows in
+        ``main_table`` and their nearest neighbor in ``aux_table`` will be
+        rescaled by this reference distance.
+    string_encoder : scikit-learn transformer used to vectorize text columns
+        By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
+        is used.
+    insert_match_info : bool, default=False
+        Insert some columns whose names start with `skrub.Joiner` containing
+        the distance, rescaled distance and whether the rescaled distance is
+        above the threshold.
     drop_unmatched : bool, default=False
         Remove categories for which a match was not found in the two tables.
-    suffix: str, default=""
 
     Returns
     -------
@@ -74,8 +89,8 @@ def fuzzy_join(
 
     See Also
     --------
-    Joiner
-        fuzzy_join implemented as a scikit-learn transformer.
+    Joiner :
+        Same as fuzzy_join but as a scikit-learn transformer.
 
     Notes
     -----
