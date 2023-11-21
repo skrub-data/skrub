@@ -85,7 +85,8 @@ Additional resources
 --------------------
 
 * `Introductory video (YouTube) <https://youtu.be/_GNaaeEI2tg>`_
-* `Overview poster for EuroSciPy 2023 (Dropbox) <https://www.dropbox.com/scl/fi/89tapbshxtw0kh5uzx8dc/Poster-Euroscipy-2023.pdf?rlkey=u4ycpiyftk7rzttrjll9qlrkx&dl=0>`_
+* `JupyterCon 2023 talk (YouTube) <https://youtu.be/lvDN0wgTpeI>`_
+* `EuroSciPy 2023 poster (Dropbox) <https://www.dropbox.com/scl/fi/89tapbshxtw0kh5uzx8dc/Poster-Euroscipy-2023.pdf?rlkey=u4ycpiyftk7rzttrjll9qlrkx&dl=0>`_
 
 References
 ----------
