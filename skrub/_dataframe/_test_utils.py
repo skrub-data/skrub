@@ -1,6 +1,6 @@
-def is_namespace_pandas(px):
+def is_module_pandas(px):
     return px.__name__ == "pandas"
 
 
-def is_namespace_polars(px):
+def is_module_polars(px):
     return px.__name__ == "polars"

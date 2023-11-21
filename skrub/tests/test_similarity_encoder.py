@@ -8,7 +8,7 @@ from sklearn.exceptions import NotFittedError
 
 from skrub import SimilarityEncoder
 from skrub._dataframe._polars import POLARS_SETUP
-from skrub._dataframe._test_utils import is_namespace_polars
+from skrub._dataframe._test_utils import is_module_polars
 from skrub._similarity_encoder import ngram_similarity_matrix
 from skrub._string_distances import ngram_similarity
 
@@ -342,7 +342,7 @@ def test_check_fitted_super_vectorizer():
 
 @pytest.mark.parametrize("px", MODULES)
 def test_inverse_transform(px):
-    if is_namespace_polars(px):
+    if is_module_polars(px):
         pytest.xfail(reason="Setting output to polars is not possible yet.")
     encoder = SimilarityEncoder()
     encoder.set_output(transform="pandas")
