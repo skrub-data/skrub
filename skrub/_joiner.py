@@ -26,12 +26,13 @@ _DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
 
 
 _MATCHERS = {
+    "aux_percentile": _matching.Percentile,
     "second_neighbor": _matching.QueryNeighbor,
     "self_join_neighbor": _matching.TargetNeighbor,
     "worst_match": _matching.MaxDist,
     "raw_distance": _matching.Matching,
 }
-DEFAULT_REF_DIST = "second_neighbor"
+DEFAULT_REF_DIST = "aux_percentile"
 
 
 def _make_vectorizer(table, string_encoder, rescale):

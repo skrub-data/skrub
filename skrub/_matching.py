@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import sparse
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
 
@@ -56,12 +57,33 @@ def _sample_pairs(n, n_pairs, random_state):
 
 
 class Percentile(Matching):
-    def __init__(self, n_sampled_pairs=500):
+    def __init__(self, percentile=25.0, n_sampled_pairs=500, random_state=0):
+        self.percentile = percentile
         self.n_sampled_pairs = n_sampled_pairs
+        self.random_state = random_state
 
     def _get_reference_distances(self, main, indices, distances):
         del main, indices, distances
+        self._check_inputs()
         n_rows = self.aux_.shape[0]
+        pairs = _sample_pairs(n_rows, self.n_sampled_pairs, self.random_state)
+        left = self.aux_[pairs[:, 0]]
+        right = self.aux_[pairs[:, 1]]
+        if sparse.issparse(self.aux_):
+            left = sparse.csr_array(left)
+            right = sparse.csr_array(right)
+        distances = np.sqrt(((left - right) ** 2).sum(axis=1))
+        return np.percentile(distances, self.percentile)
+
+    def _check_inputs(self):
+        if self.n_sampled_pairs <= 0:
+            raise ValueError("n_sampled_pairs must be a positive integer")
+        n_rows = self.aux_.shape[0]
+        if n_rows <= 1:
+            raise ValueError(
+                "Cannot estimate the distribution of distances between rows  of a"
+                f" table with only {n_rows} rows"
+            )
 
 
 class TargetNeighbor(Matching):
