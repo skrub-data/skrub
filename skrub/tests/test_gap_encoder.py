@@ -5,8 +5,8 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
 from skrub import GapEncoder
-from skrub._dataframe._namespace import is_namespace_polars
 from skrub._dataframe._polars import POLARS_SETUP
+from skrub._utils import is_namespace_polars
 from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data
 

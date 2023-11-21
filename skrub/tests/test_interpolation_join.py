@@ -6,8 +6,8 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from skrub import InterpolationJoiner
-from skrub._dataframe._namespace import is_namespace_polars
 from skrub._dataframe._polars import POLARS_SETUP
+from skrub._utils import is_namespace_polars
 
 MODULES = [pd]
 

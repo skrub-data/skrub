@@ -7,10 +7,10 @@ import pytest
 from sklearn.exceptions import NotFittedError
 
 from skrub import SimilarityEncoder
-from skrub._dataframe._namespace import is_namespace_polars
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub._similarity_encoder import ngram_similarity_matrix
 from skrub._string_distances import ngram_similarity
+from skrub._utils import is_namespace_polars
 
 MODULES = [pd]
 INPUT_TYPES = ["list", "numpy", "pandas"]
