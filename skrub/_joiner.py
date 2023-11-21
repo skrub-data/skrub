@@ -142,7 +142,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         To facilitate the choice of ``max_dist``, distances between rows in
         ``main_table`` and their nearest neighbor in ``aux_table`` will be
         rescaled by this reference distance.
-    string_encoder : scikit-learn transformer for text
+    string_encoder : scikit-learn transformer used to vectorize text columns
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
         is used.
 

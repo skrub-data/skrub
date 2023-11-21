@@ -96,7 +96,6 @@ def fuzzy_join(
     Examples
     --------
     >>> import pandas as pd
-    >>> import numpy as np
     >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
     >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
     ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
@@ -115,7 +114,6 @@ def fuzzy_join(
     ...     aux_table,
     ...     on="Country",
     ...     suffix="_capitals",
-    ...     max_dist=0.9,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -127,7 +125,6 @@ def fuzzy_join(
     ...     on="Country",
     ...     suffix="_capitals",
     ...     drop_unmatched=True,
-    ...     max_dist=0.9,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -137,7 +134,7 @@ def fuzzy_join(
     ...     aux_table,
     ...     on="Country",
     ...     suffix="_capitals",
-    ...     max_dist=1.0,
+    ...     max_dist=float("inf"),
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
