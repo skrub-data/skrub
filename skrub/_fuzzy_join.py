@@ -16,8 +16,8 @@ def fuzzy_join(
     on=None,
     suffix="",
     max_dist=np.inf,
-    string_encoder=DEFAULT_STRING_ENCODER,
     ref_dist=DEFAULT_REF_DIST,
+    string_encoder=DEFAULT_STRING_ENCODER,
     insert_match_info=False,
     drop_unmatched=False,
 ) -> pd.DataFrame:
@@ -59,7 +59,7 @@ def fuzzy_join(
         Must be found in both DataFrames. Use only if `left_on`
         and `right_on` parameters are not specified.
     suffix : str, default=""
-        Suffix to add to column names from the right table
+        Suffix to add to column names from the right table.
     max_dist : float, default=np.inf
         Maximum acceptable (rescaled) distance between a row in the
         ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
