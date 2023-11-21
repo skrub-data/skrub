@@ -204,10 +204,10 @@ def test_numerical_column() -> None:
         left,
         right,
         on="int",
-        max_dist=1.0,
+        max_dist=0.1,
         drop_unmatched=True,
         suffix="r",
-        ref_dist="raw_distance",
+        ref_dist="no_rescaling",
     )
     assert fj_num3.shape == (2, n_cols)
 
