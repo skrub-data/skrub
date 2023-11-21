@@ -130,7 +130,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     suffix : str, default=""
         Suffix to append to the ``aux_table``'s column names. You can use it
         to avoid duplicate column names in the join.
-    max_dist : float, default=1.0
+    max_dist : float, default=np.inf
         Maximum acceptable (rescaled) distance between a row in the
         ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
         are farther apart are not considered to match. By default, the distance
@@ -192,7 +192,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         aux_key=None,
         key=None,
         suffix="",
-        max_dist=1.0,
+        max_dist=np.inf,
         ref_dist=DEFAULT_REF_DIST,
         string_encoder=DEFAULT_STRING_ENCODER,
         insert_match_info=False,

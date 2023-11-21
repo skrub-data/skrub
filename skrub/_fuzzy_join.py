@@ -1,6 +1,7 @@
 """
 Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 """
+import numpy as np
 import pandas as pd
 
 from skrub import _join_utils
@@ -14,13 +15,15 @@ def fuzzy_join(
     right_on=None,
     on=None,
     suffix="",
-    max_dist=1.0,
+    max_dist=np.inf,
     insert_match_info=False,
     drop_unmatched=False,
     string_encoder=DEFAULT_STRING_ENCODER,
     ref_dist=DEFAULT_REF_DIST,
 ) -> pd.DataFrame:
     """Join two tables based on approximate matching using the appropriate metric.
+
+    TODO update this docstring once the reviews on the Joiner docstring have converged
 
     The principle is as follows:
 
@@ -114,6 +117,7 @@ def fuzzy_join(
     ...     aux_table,
     ...     on="Country",
     ...     suffix="_capitals",
+    ...     max_dist=1.0,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -125,6 +129,7 @@ def fuzzy_join(
     ...     on="Country",
     ...     suffix="_capitals",
     ...     drop_unmatched=True,
+    ...     max_dist=1.0,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
