@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import HashingVectorizer
 
 from skrub import fuzzy_join
 from skrub._dataframe._polars import POLARS_SETUP
-from skrub._utils import is_namespace_polars
+from skrub._dataframe._test_utils import is_namespace_polars
 
 MODULES = [pd]
 ASSERT_TUPLES = [(pd, assert_frame_equal)]

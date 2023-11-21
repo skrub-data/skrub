@@ -8,13 +8,13 @@ from numpy.testing import assert_allclose, assert_array_equal
 from pandas.testing import assert_frame_equal
 
 from skrub._dataframe._polars import POLARS_SETUP
+from skrub._dataframe._test_utils import is_namespace_polars
 from skrub._datetime_encoder import (
     TIME_LEVELS,
     DatetimeEncoder,
     _is_pandas_format_mixed_available,
     to_datetime,
 )
-from skrub._utils import is_namespace_polars
 
 MODULES = [pd]
 ASSERT_TUPLES = [(pd, assert_frame_equal)]

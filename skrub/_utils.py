@@ -162,11 +162,3 @@ def atleast_2d_or_none(x):
 
 def clone_if_default(estimator, default_estimator):
     return clone(estimator) if estimator is default_estimator else estimator
-
-
-def is_namespace_pandas(px):
-    return px.__name__ == "pandas"
-
-
-def is_namespace_polars(px):
-    return px.__name__ == "polars"
