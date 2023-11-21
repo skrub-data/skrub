@@ -5,6 +5,7 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 from pandas._libs.tslibs.parsing import guess_datetime_format
+from pandas.api.types import is_datetime64_any_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
@@ -314,7 +315,11 @@ def _get_datetime_column_indices(X_split, dayfirst=True):
     for col_idx, X_col in enumerate(X_split):
         X_col = X_col[pd.notnull(X_col)]  # X_col is a numpy array
 
-        if _is_column_datetime_parsable(X_col):
+        if is_datetime64_any_dtype(X_col):
+            indices.append(col_idx)
+            index_to_format[col_idx] = None
+
+        elif _is_column_datetime_parsable(X_col):
             indices.append(col_idx)
 
             # _guess_datetime_format only accept string columns.
