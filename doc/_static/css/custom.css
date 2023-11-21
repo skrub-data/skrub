@@ -17,7 +17,6 @@
 .bd-main .bd-content {
     display: flex;
     height: 100%;
-    justify-content: flex-end;
     gap: 60px;
     /* margin: 0 20px; */
 }
@@ -38,6 +37,10 @@
 
 .card-body p {
     text-align: left;
+}
+
+.sd-card  {
+    margin-block-end: 1.0rem;
 }
 
 .schema-container {
@@ -151,7 +154,7 @@ div.sk-landing-bg-more-info {
     font-size: 3.2rem;
     margin-bottom: 5px;
 }
-  
+
 .sk-landing-subheader {
     letter-spacing: 0.17rem;
     margin-top: 5px;
@@ -171,7 +174,8 @@ div.sk-landing-footer {
  * affine formula to have a continuous function during the switch */
 @media (min-width: 1200px) {
     .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
-	width: calc(min(100vw, 90vw + 120px));
+    width: calc(min(100vw, 90vw + 120px));
+    }
 }
 
 @media (min-width: 1200px) {
@@ -197,5 +201,3 @@ div.sk-landing-footer {
 	max-width: 60rem;
     }
 }
-
-

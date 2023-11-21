@@ -38,3 +38,5 @@ filterwarnings = [
     # behavior. TODO remove when numpy min version >= 1.25.
     'ignore:elementwise\ comparison\ failed:FutureWarning',
 ]
+addopts = "--doctest-modules"
+doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"

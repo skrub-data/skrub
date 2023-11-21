@@ -12,7 +12,7 @@ Good analytics requires including as much information as possible,
 often from different sources.
 
 skrub allows you to join tables on keys of different types
-(string, numerical, datetime) with imprecise correspondance.
+(string, numerical, datetime) with imprecise correspondence.
 
 Fuzzy joining tables
 ---------------------
@@ -32,17 +32,34 @@ has no need for pre-cleaning.
 Joining external tables for machine learning
 --------------------------------------------
 
-Joining is pretty straigthforward for two tables: you only need to identify
+Joining is straigthforward for two tables because you only need to identify
 the common key.
 
-However, for more complex analysis, merging multiple tables is necessary.
-skrub provides the :class:`Joiner` as a convenient solution:
-multiple fuzzy joins can be performed at the same time, given a set of 
-input tables and key columns.
+In addition, skrub also enable more advanced analysis:
 
-An advantage is the scikit-learn compatibility of this class:
-easily introduced into machine learning pipelines.
+- :class:`Joiner`: fuzzy-join multiple external tables using a scikit-learn 
+  transformer, which can be used in a scikit-learn :class:`~sklearn.pipeline.Pipeline`.
+  Pipelines are useful for cross-validation and hyper-parameter search, but also
+  for model deployment.
 
+- :class:`AggJoiner`: instead of performing 1:1 joins like Joiner, AggJoiner performs 1:N 
+  joins. It aggregate external tables first, then join them on the main table.
+
+- :class:`AggTarget`: in some settings, one can derive powerful features from 
+  the target `y` itself. AggTarget aggregates the target without risking data 
+  leakage, then join the result back on the main table, similar to AggJoiner.
+
+
+Column selection inside a pipeline
+----------------------------------
+
+Besides joins, another common operation on a dataframe is to select a subset of its columns (also known as a projection).
+We sometimes need to perform such a selection in the middle of a pipeline, for example if we need a column for a join (with :class:`Joiner`), but in a subsequent step we want to drop that column before fitting an estimator.
+
+skrub provides transformers to perform such an operation:
+
+- :class:`SelectCols` allows specifying the columns we want to keep.
+- Conversely :class:`DropCols` allows specifying the columns we want to discard.
 
 Going further: embeddings for better analytics
 ----------------------------------------------

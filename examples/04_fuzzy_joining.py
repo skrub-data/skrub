@@ -83,7 +83,7 @@ legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
 legal_rights.head(3)
 
 ###############################################################################
-# A correspondance problem
+# A correspondence problem
 # ------------------------
 #
 # Alas, the entries for countries do not perfectly match between our
@@ -99,21 +99,16 @@ gdppc.sort_values(by="Country Name").tail(7)
 # We can see that Yemen is written "Yemen*" on one side, and
 # "Yemen, Rep." on the other.
 #
-# We also have entries that probably do not have correspondances: "World"
+# We also have entries that probably do not have correspondences: "World"
 # on one side, whereas the other table only has country-level data.
 
 ###############################################################################
-# Joining tables with imperfect correspondance
+# Joining tables with imperfect correspondence
 # --------------------------------------------
 #
 # We will now join our initial table, df, with the 3 additional ones that
 # we have extracted.
 #
-
-# We will ignore the warnings:
-import warnings
-
-warnings.filterwarnings("ignore")
 
 ###############################################################################
 # .. _example_fuzzy_join:
@@ -133,7 +128,7 @@ df1 = fuzzy_join(
 )
 
 df1.tail(20)
-# We merged the first WB table to our initial one.
+# We merged the first World Bank table to our initial one.
 
 ###############################################################################
 # .. topic:: Note:
@@ -180,7 +175,7 @@ df1 = fuzzy_join(
     gdppc,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.35,
+    match_score=0.1,
     return_score=True,
 )
 df1.sort_values("matching_score").head(4)
@@ -194,7 +189,7 @@ df1 = fuzzy_join(
     gdppc,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.35,
+    match_score=0.1,
     drop_unmatched=True,
 )
 
@@ -237,7 +232,7 @@ df2 = fuzzy_join(
     life_exp,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
+    match_score=0.1,
 )
 
 df2.drop(columns=["Country Name"], inplace=True)
@@ -273,7 +268,7 @@ df3 = fuzzy_join(
     legal_rights,
     left_on="Country",
     right_on="Country Name",
-    match_score=0.45,
+    match_score=0.1,
 )
 
 df3.drop(columns=["Country Name"], inplace=True)
@@ -281,7 +276,7 @@ df3.drop(columns=["Country Name"], inplace=True)
 df3.head(3)
 
 ###############################################################################
-# Let's take a look at their correspondance in a figure:
+# Let's take a look at their correspondence in a figure:
 plt.figure(figsize=(4, 3))
 fig = sns.regplot(
     data=df3,
@@ -308,8 +303,8 @@ plt.show()
 #
 # We now separate our covariates (X), from the target (or exogenous)
 # variables: y
-X = df3.drop("Happiness score", axis=1).select_dtypes(exclude=object)
-y = df3[["Happiness score"]]
+y = df3["Happiness score"]
+X = df3.drop(["Happiness score", "Country"], axis=1)
 
 ###################################################################
 # Let us now define the model that will be used to predict the happiness score:
@@ -318,10 +313,10 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import KFold
 
 hgdb = HistGradientBoostingRegressor(random_state=0)
-cv = KFold(n_splits=2, shuffle=True, random_state=0)
+cv = KFold(n_splits=5, shuffle=True, random_state=0)
 
 #################################################################
-# To evaluate our model, we will apply a `4-fold cross-validation`.
+# To evaluate our model, we will apply a `5-fold cross-validation`.
 # We evaluate our model using the `R2` score.
 #
 # Let's finally assess the results of our models:
@@ -331,10 +326,10 @@ cv_results_t = cross_validate(hgdb, X, y, cv=cv, scoring="r2")
 
 cv_r2_t = cv_results_t["test_score"]
 
-print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
+print(f"Mean R² score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 
 #################################################################
-# We have a satisfying first result: an R2 of 0.66!
+# We have a satisfying first result: an R² of 0.63!
 #
 # Data cleaning varies from dataset to dataset: there are as
 # many ways to clean a table as there are errors. |fj|
@@ -362,51 +357,30 @@ print(f"Mean R2 score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # .............................
 
 y = df["Happiness score"]
-#######################################################################
-# We gather the auxilliary tables into a
-# list of (tables, keys) for the `tables` parameter.
-# An instance of the transformer with the necessary information is:
-from skrub import Joiner
+df = df.drop("Happiness score", axis=1)
 
-joiner = Joiner(
-    tables=[
-        (gdppc, "Country Name"),
-        (life_exp, "Country Name"),
-        (legal_rights, "Country Name"),
-    ],
-    main_key="Country",
-)
-
-#################################################################
-# Fitting and transforming into the final table
-# .............................................
-# To get our final joined table we will fit and transform the main table (df)
-# with our create instance of the |joiner|:
-df_final = joiner.fit_transform(df)
-
-df_final.head(10)
-
-##########################################################################
-# And that's it! As previously, we now have a big table
-# ready for machine learning.
-# Let's create our machine learning pipeline:
-from sklearn.compose import make_column_transformer
+from skrub import Joiner, SelectCols, DropCols
 from sklearn.pipeline import make_pipeline
 
-# We include only the columns that will be pertinent for our regression:
-encoder = make_column_transformer(
-    (
-        "passthrough",
+# We create a selector that we will insert at the end of our pipeline, to
+# select the relevant columns before fitting the regressor
+
+pipeline = make_pipeline(
+    Joiner(gdppc, main_key="Country", aux_key="Country Name"),
+    DropCols("Country Name"),
+    Joiner(life_exp, main_key="Country", aux_key="Country Name"),
+    DropCols("Country Name"),
+    Joiner(legal_rights, main_key="Country", aux_key="Country Name"),
+    SelectCols(
         [
             "GDP per capita (current US$)",
             "Life expectancy at birth, total (years)",
             "Strength of legal rights index (0=weak to 12=strong)",
-        ],
+        ]
     ),
-    remainder="drop",
+    HistGradientBoostingRegressor(),
 )
 
-pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 
 ##########################################################################
 # And the best part is that we are now able to evaluate the parameters of the |fj|.
@@ -416,29 +390,16 @@ pipeline = make_pipeline(joiner, encoder, HistGradientBoostingRegressor())
 from sklearn.model_selection import GridSearchCV
 
 # We will test four possible values of match_score:
-params = {"joiner__match_score": [0.2, 0.3, 0.4, 0.5]}
+params = {
+    "joiner-1__match_score": [0.1, 0.9],
+    "joiner-2__match_score": [0.1, 0.9],
+    "joiner-3__match_score": [0.1, 0.9],
+}
 
-grid = GridSearchCV(pipeline, param_grid=params)
+grid = GridSearchCV(pipeline, param_grid=params, cv=cv)
 grid.fit(df, y)
 
-print(grid.best_params_)
-##########################################################################
-# The grid searching gave us the best value of 0.5 for the parameter
-# ``match_score``. Let's use this value in our regression:
-#
+print("Best parameters:", grid.best_params_)
 
-print(f"Mean R2 score with pipeline is {grid.score(df, y):.2f}")
-
-##########################################################################
-#
-# .. topic:: Note:
-#
-#    Here, ``grid.score()`` takes directly the best model
-#    (with ``match_score=0.5``) that was found during the grid search.
-#    Thus, it is equivalent to fixing the ``match_score`` to 0.5 and
-#    refitting the pipeline on the data.
-#
-#
-# Great, by evaluating the correct ``match_score`` we improved our
-# results significantly!
-#
+# The gridsearch selects a stricter threshold on the matching_score than what
+# we had set manually for the GDP and legal rights joins.

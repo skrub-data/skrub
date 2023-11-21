@@ -15,6 +15,23 @@ development and backward compatibility is not ensured.
 Major changes
 -------------
 
+* :class:`InterpolationJoiner` was added to join two tables by using
+  machine-learning to infer the matching rows from the second table.
+  :pr:`742` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Pipelines including :class:`TableVectorizer` can now be grid-searched, since
+  we can now call `set_params` on the default transformers of :class:`TableVectorizer`.
+  :pr:`814` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
+* :func:`to_datetime` is now available to support pandas.to_datetime
+  over dataframes and 2d arrays.
+  :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
+* Some parameters of :class:`Joiner` have changed. The goal is to harmonize
+  parameters across all estimator that perform join(-like) operations, as
+  discussed in `#751 <https://github.com/skrub-data/skrub/discussions/751>`_.
+  :pr:`757` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * :func:`dataframe.pd_join`, :func:`dataframe.pd_aggregate`,
   :func:`dataframe.pl_join` and :func:`dataframe.pl_aggregate`
   are now available in the dataframe submodule.
@@ -37,12 +54,39 @@ Major changes
 * Parallelized the :class:`GapEncoder` column-wise. Parameters `n_jobs` and `verbose`
   added to the signature. :pr:`582` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Introducing :class:`AggJoiner`, a transformer performing
+  aggregation on auxiliary tables followed by left-joining on a base table.
+  :pr:`600` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+* Introducing :class:`AggTarget`, a transformer performing
+  aggregation on the target y, followed by left-joining on a base table.
+  :pr:`600` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+* Added the :class:`SelectCols` and :class:`DropCols` transformers that allow
+  selecting a subset of a dataframe's columns inside of a pipeline. :pr:`804` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Minor changes
 -------------
+* :class:`DatetimeEncoder` doesn't remove constant features anymore.
+  It also supports an 'errors' argument to raise or coerce errors during
+  transform, and a 'add_total_seconds' argument to include the number of
+  seconds since Epoch.
+  :pr:`784` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
+* Scaling of ``matching_score`` in :func:`fuzzy_join` is now between 0 and 1; it used to be between 0.5 and 1. Moreover, the division by 0 error that occurred when all rows had a perfect match has been fixed. :pr:`802` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * :class:`TableVectorizer` is now able to apply parallelism at the column level rather than the transformer level. This is the default for univariate transformers, like :class:`MinHashEncoder`, and :class:`GapEncoder`.
   :pr:`592` by :user:`Leo Grinsztajn <LeoGrin>`
+
+* ``inverse_transform`` in :class:`SimilarityEncoder` now works as expected; it used to raise an exception. :pr:`801` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* :class:`TableVectorizer` propagate the `n_jobs` parameter to the underlying
+  transformers except if the underlying transformer already set explicitly `n_jobs`.
+  :pr:`761` by :user:`Leo Grinsztajn <LeoGrin>`, :user:`Guillaume Lemaitre <glemaitre>`,
+  and :user:`Jerome Dockes <jeromedockes>`.
+
 
 * Parallelized the :func:`deduplicate` function. Parameter `n_jobs`
   added to the signature. :pr:`618` by :user:`Jovan Stojanovic <jovan-stojanovic>`
@@ -149,6 +193,10 @@ Minor changes
   which provides some more information about the job title.
   :pr:`581` by :user:`Lilian Boulard <LilianBoulard>`
 
+* Fix bugs which was triggered when `extract_until` was "year", "month", "microseconds"
+  or "nanoseconds", and add the option to set it to `None` to only extract `total_time`,
+  the time from epoch. :class:`DatetimeEncoder`. :pr:`743` by :user:`Leo Grinsztajn <LeoGrin>`
+
 Before skrub: dirty_cat
 ========================
 
@@ -201,7 +249,7 @@ Major changes
   :pr:`291` by :user:`Jovan Stojanovic <jovan-stojanovic>` and :user:`Leo Grinsztajn <LeoGrin>`
 
 * New experimental feature: :class:`FeatureAugmenter`, a transformer
-  that augments with :func:`fuzzy_join` the number of features in a main table by using information from auxilliary tables.
+  that augments with :func:`fuzzy_join` the number of features in a main table by using information from auxiliary tables.
   :pr:`409` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * Unnecessary API has been made private: everything (files, functions, classes)

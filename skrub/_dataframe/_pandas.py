@@ -2,9 +2,7 @@
 Pandas specialization of the aggregate and join operation.
 """
 import re
-from collections.abc import Callable
 from itertools import product
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -12,14 +10,71 @@ import pandas as pd
 from skrub._utils import atleast_1d_or_none
 
 
+def make_dataframe(X, index=None, dtypes=None):
+    """Convert an dictionary of columns into a Pandas dataframe.
+
+    Parameters
+    ----------
+    X : mapping from column name to 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        The index of the dataframe.
+
+    dtypes : str, data type, Series or Mapping of column name -> data type, default=None
+        Use a str, numpy.dtype, pandas.ExtensionDtype or Python type to
+        cast entire pandas object to the same type. Alternatively, use a
+        mapping, e.g. {col: dtype, ...}, where col is a column label and dtype is
+        a numpy.dtype or Python type to cast one or more of the DataFrame's
+        columns to column-specific types
+
+    Returns
+    -------
+    X : Pandas dataframe
+        Converted output.
+    """
+    df = pd.DataFrame(X, index=index)
+    if dtypes is not None:
+        # 'df.astype(None)' might raise a ValueError because
+        # it tries to cast all columns to floats.
+        df = df.astype(dtypes)
+    return df
+
+
+def make_series(X, index=None, name=None, dtype=None):
+    """Convert an 1d array into a Pandas series.
+
+    Parameters
+    ----------
+    X : 1d iterable
+        Input data to convert.
+
+    index : 1d array-like, default=None
+        The index of the series.
+
+    name : str, default=None
+        The name of the series.
+
+    dtype : str, numpy.dtype, or ExtensionDtype, default=None
+        Data type for the output Series.
+
+    Returns
+    -------
+    X : Pandas series
+        Converted output.
+    """
+    series = pd.Series(X, index=index, name=name, dtype=dtype)
+    return series
+
+
 def aggregate(
-    table: pd.DataFrame,
-    key: str | Iterable[str],
-    cols_to_agg: str | Iterable[str],
-    num_operations: str | Iterable[str] = ("mean",),
-    categ_operations: str | Iterable[str] = ("mode",),
-    suffix: str | None = None,
-) -> pd.DataFrame:
+    table,
+    key,
+    cols_to_agg,
+    num_operations=("mean",),
+    categ_operations=("mode",),
+    suffix=None,
+):
     """Aggregates a :obj:`pandas.DataFrame`.
 
     This function uses the ``dataframe.groupby(key).agg`` method from Pandas.
@@ -107,11 +162,11 @@ def aggregate(
 
 
 def join(
-    left: pd.DataFrame,
-    right: pd.DataFrame,
-    left_on: str | Iterable[str],
-    right_on: str | Iterable[str],
-) -> pd.DataFrame:
+    left,
+    right,
+    left_on,
+    right_on,
+):
     """Left join two :obj:`pandas.DataFrame`.
 
     This function uses the ``dataframe.merge`` method from Pandas.
@@ -124,10 +179,10 @@ def join(
     right : pd.DataFrame,
         The right dataframe to left-join.
 
-    left_on : str or Iterable[str],
+    left_on : str or Iterable[str]
         Left keys to merge on.
 
-    right_on : str or Iterable[str],
+    right_on : str or Iterable[str]
         Right keys to merge on.
 
     Returns
@@ -148,9 +203,7 @@ def join(
     )
 
 
-def get_named_agg(
-    table: pd.DataFrame, cols: list[str], operations: list[str]
-) -> tuple[dict, dict]:
+def get_named_agg(table, cols, operations):
     """Map aggregation tuples to their output key.
 
     The dictionary has the form: output_key = (column, aggfunc).
@@ -195,7 +248,7 @@ def get_named_agg(
     return named_agg, value_counts
 
 
-def _parse_argument(operation: str) -> tuple[str, int | None]:
+def _parse_argument(operation):
     """Split a text input into a function name and its argument.
 
     Parameters
@@ -214,8 +267,7 @@ def _parse_argument(operation: str) -> tuple[str, int | None]:
     Examples
     --------
     >>> _parse_argument("hist(10)")
-    "hist", 10
-
+    ('hist', 10)
     """
     split = re.split("\\(.+\\)", operation)
     op_root = split[0]
@@ -238,9 +290,7 @@ PANDAS_OPS_MAPPING = {
 }
 
 
-def _get_aggfunc(
-    serie: pd.Series, op_root: str, n_bins: int
-) -> tuple[str | Callable, dict]:
+def _get_aggfunc(serie, op_root, n_bins):
     """Map operation roots to their pandas agg functions.
 
     When args is provided for histogram or value_counts,
@@ -292,3 +342,7 @@ def split_num_categ_cols(table):
     categ_cols = table.select_dtypes(["object", "string", "category"]).columns
 
     return num_cols, categ_cols
+
+
+def select(dataframe, columns):
+    return dataframe[columns]

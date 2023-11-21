@@ -218,7 +218,7 @@ def test_missing_values_transform(input_type, missing) -> None:
         ["green", "female"],
         ["green", "female"],
         ["blue", "female"],
-        [np.nan, np.nan],
+        [np.nan, None],
     ]
 
     if input_type == "numpy":

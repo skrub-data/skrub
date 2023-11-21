@@ -32,6 +32,30 @@ This page lists all available functions and classes of `skrub`.
    :nosignatures:
 
    Joiner
+   AggJoiner
+   AggTarget
+
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+
+   InterpolationJoiner
+
+.. raw:: html
+
+   <h2>Column selection in a pipeline</h2>
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+   :caption: Column selection in a pipeline
+
+   SelectCols
+   DropCols
+
 
 .. raw:: html
 
@@ -62,7 +86,7 @@ This page lists all available functions and classes of `skrub`.
 
 .. raw:: html
 
-   <h2>Other encoders</h2>
+   <h2>Dealing with dates</h2>
 
 .. autosummary::
    :toctree: generated/
@@ -71,6 +95,14 @@ This page lists all available functions and classes of `skrub`.
    :caption: Other encoders
 
    DatetimeEncoder
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: Converting datetime columns in a table
+
+   to_datetime
 
 .. raw:: html
 
@@ -83,46 +115,6 @@ This page lists all available functions and classes of `skrub`.
    :caption: Deduplication: merging variants of the same entry
 
    deduplicate
-
-.. raw:: html   
-
-   <h2>Dataframes operations</h2>
-
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-   :nosignatures:
-   :caption: DataFrames operations
-
-   dataframe.get_df_namespace
-
-.. raw:: html
-
-   <h3>Pandas</h3>
-
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-   :nosignatures:
-   :caption: Pandas operations
-
-   dataframe.is_pandas
-   dataframe.pd_aggregate
-   dataframe.pd_join
-
-.. raw:: html
-
-   <h3>Polars</h3>
-
-.. autosummary::
-   :toctree: generated/
-   :template: function.rst
-   :nosignatures:
-   :caption: Polars operations
-
-   dataframe.is_polars
-   dataframe.pl_aggregate
-   dataframe.pl_join
 
 .. raw:: html
 
@@ -142,6 +134,7 @@ This page lists all available functions and classes of `skrub`.
    datasets.fetch_traffic_violations
    datasets.fetch_drug_directory
    datasets.fetch_world_bank_indicator
+   datasets.fetch_movielens
    datasets.fetch_ken_table_aliases
    datasets.fetch_ken_types
    datasets.fetch_ken_embeddings

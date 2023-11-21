@@ -6,29 +6,30 @@ manually categorize them beforehand, or construct complex Pipelines.
 
 import warnings
 from collections import Counter
-from itertools import chain
-from typing import Literal
-from warnings import warn
 
 import numpy as np
 import pandas as pd
 import sklearn
-from numpy.typing import ArrayLike
 from pandas._libs.tslibs.parsing import guess_datetime_format
 from pandas.core.dtypes.base import ExtensionDtype
 from scipy import sparse
-from sklearn.base import TransformerMixin, clone
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.compose._column_transformer import _get_transformer_list
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.deprecation import deprecated
+from sklearn.utils import Bunch
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder
-from skrub._utils import parse_astype_error_message
+from skrub._utils import clone_if_default, parse_astype_error_message
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
+HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
+    sparse_output=False,
+    handle_unknown="ignore",
+    drop="if_binary",
+)
+DATETIME_TRANSFORMER = DatetimeEncoder()
 
 
 def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | None:
@@ -78,8 +79,9 @@ def _infer_date_format(date_column: pd.Series, n_trials: int = 100) -> str | Non
             if date_format_monthfirst.iloc[0] != date_format_dayfirst.iloc[0]:
                 warnings.warn(
                     f"""
-                    Both {date_format_monthfirst.iloc[0]} and {date_format_dayfirst.iloc[0]} are valid
-                    formats for the dates in column '{date_column.name}'.
+                    Both {date_format_monthfirst.iloc[0]} and
+                    {date_format_dayfirst.iloc[0]} are valid formats for the dates in
+                    column '{date_column.name}'.
                     Format {date_format_monthfirst.iloc[0]} will be used.
                     """,
                     UserWarning,
@@ -148,153 +150,72 @@ def _replace_missing_in_cat_col(ser: pd.Series, value: str = "missing") -> pd.Se
     return ser
 
 
-Transformer = TransformerMixin | Literal["drop", "remainder", "passthrough"]
-
-
-def _parallel_on_columns(trans: Transformer, cols: list[str]) -> bool:
-    """
-    Assert whether we want to parallelize the transformer over
-    the columns or not. We only want to parallelize over columns if the transformer
-    is "univariate" (i.e. it can be duplicated for each column).
-    """
-    return (
-        (not isinstance(trans, str))
-        and trans._get_tags().get("univariate", False)
-        and len(cols) > 1
-    )
-
-
-def _split_transformers(
-    transformers: list[tuple[str, Transformer, list[str]]],
-    transformers_to_input_indices: dict[str, list[int]] | None = None,
-    during_fit: bool = False,
-) -> tuple[list[tuple[str, Transformer, list[str]]], dict[str, list[int]]]:
-    """
-    Split univariate transformers into multiple transformers, one for each
-    column. This is useful to use the inherited `ColumnTransformer` class
-    parallelism.
-
-    Parameters
-    ----------
-    transformers : list of 3-tuples (str, Transformer or str, list of str)
-        The collection of transformers to split, as tuples of
-        (name, transformer, column).
-    transformers_to_input_indices : dict of str to list of int, optional
-        The mapping of transformer names to the indices of the columns they were
-        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
-        Only used when `during_fit` is False.
-    during_fit : bool, default=False
-        Whether the method is called during `fit_transform` (True) or
-        during `transform` (False). This is used to determine if the
-        transformers in `transformers` are fitted or not, i.e. whether
-        the `transformers` argument corresponds to the `self.transformers_` attribute
-        (when False) or the `self.transformers` attribute (when True).
-    """
-    new_transformers = []
-    new_transformer_to_input_indices = (
-        {} if not during_fit else transformers_to_input_indices
-    )
-    if during_fit:
-        # split a list of 3-tuples (name, transformer, columns)
-        # containing the unfitted transformers (or strings) and the columns
-        # to be fitted on.
-        for name, trans, cols in transformers:
-            if _parallel_on_columns(trans, cols):
-                for i, col in enumerate(cols):
-                    new_transformers.append((f"{name}_split_{i}", clone(trans), [col]))
-            else:
-                new_transformers.append((name, trans, cols))
+def _clone_during_fit(transformer, remainder, n_jobs):
+    if isinstance(transformer, sklearn.base.TransformerMixin):
+        return _propagate_n_jobs(clone(transformer), n_jobs)
+    elif transformer == "remainder":
+        return remainder if isinstance(remainder, str) else clone(remainder)
+    elif transformer == "passthrough":
+        return transformer
     else:
-        # split a list of 3-tuples (name, transformer, columns)
-        # containing the fitted transformers (or strings) and the columns
-        # they were fitted on.
-        for name, trans, cols in transformers:
-            if _parallel_on_columns(trans, cols):
-                splitted_transformers_ = trans._split()
-                for i, (col, trans, trans_to_mapping) in enumerate(
-                    zip(
-                        cols,
-                        splitted_transformers_,
-                        transformers_to_input_indices[name],
-                    )
-                ):
-                    name_split = f"{name}_split_{i}"
-                    new_transformers.append((name_split, trans, [col]))
-                    new_transformer_to_input_indices[name_split] = [trans_to_mapping]
-            else:
-                new_transformers.append((name, trans, cols))
-                new_transformer_to_input_indices[name] = transformers_to_input_indices[
-                    name
-                ]
-
-    return new_transformers, new_transformer_to_input_indices
+        raise ValueError(
+            "'transformer' must be an instance of sklearn.base.TransformerMixin, "
+            f"'remainder' or 'passthrough'. Got {transformer=!r}."
+        )
 
 
-def _merge_transformers(
-    transformers: list[tuple[str, Transformer, list[str]]],
-    is_fitted: bool,
-    transformer_to_input_indices: dict[str, list[int]] | None = None,
-) -> tuple[list[tuple[str, Transformer, list[str]]], dict[str, list[int]]]:
-    """
-    Merge splitted transformers into a single transformer.
-
-    Parameters
-    ----------
-    transformers : list of 3-tuples (str, Transformer or str, list of str)
-        The collection of transformers to merge, as tuples of
-        (name, transformer, column).
-    is_fitted : bool
-        Whether the transformers are fitted or not, i.e. whether the
-        `transformers` argument corresponds to the `self.transformers_` attribute
-        (when True) or the `self.transformers` attribute (when False).
-    transformer_to_input_indices : dict of str to list of int, optional
-        The mapping of transformer names to the indices of the columns they were
-        fitted on. Should correspond to the `self._transformer_to_input_indices` attribute.
-        Only used when `is_fitted` is True.
-    """
-    new_transformers = []
-    new_transformer_to_input_indices = {} if is_fitted else transformer_to_input_indices
-    base_names = pd.unique(
-        pd.Series([name.split("_split_")[0] for name, _, _ in transformers])
-    )
-
-    for base_name in base_names:
-        # merge all transformers with the same base name
-        transformers_base_name, names, columns = [], [], []
-        for name, trans, cols in transformers:
-            if name.startswith(base_name):
-                columns.extend(cols)
-                transformers_base_name.append(trans)
-                names.append(name)
-
-        new_trans = transformers_base_name[0]
-        if not is_fitted:
-            if isinstance(new_trans, TransformerMixin):
-                new_trans = clone(new_trans)
-        else:
-            if len(transformers_base_name) > 1:
-                # merge transformers
-                new_trans = new_trans.__class__._merge(transformers_base_name)
-            new_transformer_to_input_indices[base_name] = list(
-                chain.from_iterable(
-                    [transformer_to_input_indices[name] for name in names]
+def _check_specific_transformers(specific_transformers, n_jobs):
+    if (specific_transformers is None) or len(specific_transformers) == 0:
+        return []
+    else:
+        first_item_length = len(specific_transformers[0])
+        # Check that all tuples have the same length
+        for idx, tuple_ in enumerate(specific_transformers):
+            if len(tuple_) != first_item_length:
+                raise TypeError(
+                    "Expected `specific_transformers` to be a list of "
+                    "tuples with all the same length, got length "
+                    f"{len(tuple_)} at index {idx} (elements at previous "
+                    f"indices have {first_item_length} in length). "
                 )
+        if first_item_length == 2:
+            # Unnamed assignments, transform to named
+            specific_transformers = _get_transformer_list(specific_transformers)
+        elif first_item_length == 3:
+            # Named assignments, no-op
+            pass
+        else:
+            raise TypeError(
+                "Expected `specific_transformers` to be a list of tuples "
+                "of length 2 or 3, got a list of tuples of length "
+                f"{first_item_length}. "
             )
-        new_transformers.append((base_name, new_trans, columns))
 
-    return new_transformers, new_transformer_to_input_indices
+        return [
+            (
+                (name, _propagate_n_jobs(clone(transformer), n_jobs), cols)
+                if isinstance(transformer, sklearn.base.TransformerMixin)
+                else (name, transformer, cols)
+            )
+            for name, transformer, cols in specific_transformers
+        ]
 
 
-class TableVectorizer(ColumnTransformer):
+def _propagate_n_jobs(transformer, n_jobs):
+    if n_jobs is not None and (
+        hasattr(transformer, "n_jobs") and transformer.n_jobs is None
+    ):
+        transformer.set_params(n_jobs=n_jobs)
+    return transformer
+
+
+class TableVectorizer(TransformerMixin, BaseEstimator):
     """Automatically transform a heterogeneous dataframe to a numerical array.
 
     Easily transforms a heterogeneous data table
-    (such as a :obj:`~pandas.DataFrame`) to a numerical array for machine
-    learning. For this it transforms each column depending on its data type.
-    It provides a simplified interface for the ColumnTransformer ;
-    more documentation of attributes and functions are available in its doc.
-
-    .. versionadded:: 0.2.0
+    (such as a :obj:`pandas.DataFrame`) to a numerical array for machine
+    learning. To do so, the TableVectorizer transforms each column depending
+    on its data type.
 
     Parameters
     ----------
@@ -303,44 +224,46 @@ class TableVectorizer(ColumnTransformer):
         under this value, the low cardinality categorical features, and above or
         equal, the high cardinality categorical features.
         Different transformers will be applied to these two groups,
-        defined by the parameters `low_card_cat_transformer` and
-        `high_card_cat_transformer` respectively.
+        defined by the parameters `low_cardinality_transformer` and
+        `high_cardinality_transformer` respectively.
         Note: currently, missing values are counted as a single unique value
         (so they count in the cardinality).
 
-    low_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    low_cardinality_transformer : {'drop', 'remainder', 'passthrough'} \
+        or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance (e.g. OneHotEncoder),
         a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer
-        (OneHotEncoder(handle_unknown="ignore", drop="if_binary")).
+        'passthrough' to return the unencoded columns.
+        The default transformer is \
+            ``OneHotEncoder(handle_unknown="ignore", drop="if_binary")``.
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    high_card_cat_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    high_cardinality_transformer : {'drop', 'remainder', 'passthrough'} \
+        or Transformer, optional
         Transformer used on categorical/string features with high cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a transformer object instance
         (e.g. GapEncoder), a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (GapEncoder(n_components=30)).
+        or 'passthrough' to return the unencoded columns.
+        The default transformer is ``GapEncoder(n_components=30)``.
         Features classified under this category are imputed based on the
         strategy defined with `impute_missing`.
 
-    numerical_transformer : {'drop', 'remainder', 'passthrough'} or Transformer, optional
+    numerical_transformer : {'drop', 'remainder', 'passthrough'} \
+        or Transformer, optional
         Transformer used on numerical features.
         Can either be a transformer object instance (e.g. StandardScaler),
         a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (here nothing, so 'passthrough').
+        or 'passthrough' to return the unencoded columns (default).
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
@@ -350,12 +273,14 @@ class TableVectorizer(ColumnTransformer):
         a Pipeline containing the preprocessing steps,
         'drop' for dropping the columns,
         'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns,
-        or `None` to use the default transformer (DatetimeEncoder()).
+        'passthrough' to return the unencoded columns.
+        The default transformer is ``DatetimeEncoder()``.
         Features classified under this category are not imputed at all
         (regardless of `impute_missing`).
 
-    specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} or Transformer, list of str or int), optional
+    specific_transformers : list of tuples ({'drop', 'remainder', 'passthrough'} or \
+        Transformer, list of str or int) or (str, {'drop', 'remainder', 'passthrough'} \
+            or Transformer, list of str or int), optional
         On top of the default column type classification (see parameters above),
         this parameter allows you to manually specify transformers for
         specific columns.
@@ -405,13 +330,14 @@ class TableVectorizer(ColumnTransformer):
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
 
-    n_jobs : int, optional
-        Number of jobs to run in parallel.
-        ``None`` (the default) means 1 unless in a
-        joblib.parallel_backend context.
-        ``-1`` means using all processors.
+    n_jobs : int, default=None
+        Number of jobs to run in parallel. This number of jobs will be dispatched to
+        the underlying transformers, if those support parallelization and they do not
+        set specifically ``n_jobs``.
+        ``None`` (the default) means 1 unless in a :func:`joblib.parallel_config`
+        context. ``-1`` means using all processors.
 
-    transformer_weights : dict, optional
+    transformer_weights : dict, default=None
         Multiplicative weights for features per transformer. The output of the
         transformer is multiplied by these weights. Keys are transformer names,
         values the weights.
@@ -419,6 +345,14 @@ class TableVectorizer(ColumnTransformer):
     verbose : bool, default=False
         If True, the time elapsed while fitting each transformer will be
         printed as it is completed.
+
+    verbose_feature_names_out : bool, default=False
+        If True, :meth:`TableVectorizer.get_feature_names_out` will prefix
+        all feature names with the name of the transformer that generated that
+        feature.
+        If False, :meth:`TableVectorizer.get_feature_names_out` will not
+        prefix any feature names and will error if feature names are not
+        unique.
 
     Attributes
     ----------
@@ -434,13 +368,9 @@ class TableVectorizer(ColumnTransformer):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    columns_ : pandas.Index
-        The fitted array's columns. They are applied to the data passed
-        to the `transform` method.
-
-    types_ : dict mapping of str to type
+    types_ : dict mapping of int to type
         A mapping of inferred types per column.
-        Key is the column name, value is the inferred dtype.
+        Key is the index of a column, value is the inferred dtype.
         Exists only if `auto_cast=True`.
 
     imputed_columns_ : list of str
@@ -449,7 +379,8 @@ class TableVectorizer(ColumnTransformer):
     See Also
     --------
     GapEncoder :
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics with \
+            continuous encoding.
     MinHashEncoder :
         Encode string columns as a numeric array with the minhash method.
     SimilarityEncoder :
@@ -459,12 +390,12 @@ class TableVectorizer(ColumnTransformer):
     -----
     The column order of the input data is not guaranteed to be the same
     as the output data (returned by TableVectorizer.transform).
-    This is a due to the way the ColumnTransformer works.
+    This is a due to the way the underlying ColumnTransformer works.
     However, the output column order will always be the same for different
-    calls to TableVectorizer.transform on a same fitted TableVectorizer instance.
+    calls to ``TableVectorize.transform`` on a same fitted TableVectorizer instance.
     For example, if input data has columns ['name', 'job', 'year'], then output
     columns might be shuffled, e.g. ['job', 'year', 'name'], but every call
-    to TableVectorizer.transform on this instance will return this order.
+    to ``TableVectorizer.transform`` on this instance will return this order.
 
     Examples
     --------
@@ -473,106 +404,70 @@ class TableVectorizer(ColumnTransformer):
     >>> from skrub.datasets import fetch_employee_salaries
     >>> ds = fetch_employee_salaries()
     >>> ds.X.head(3)
-      gender department                          department_name                                           division assignment_category      employee_position_title underfilled_job_title date_first_hired  year_first_hired
-    0      F        POL                     Department of Police  MSB Information Mgmt and Tech Division Records...    Fulltime-Regular  Office Services Coordinator                   NaN       09/22/1986              1986
-    1      M        POL                     Department of Police         ISB Major Crimes Division Fugitive Section    Fulltime-Regular        Master Police Officer                   NaN       09/12/1988              1988
-    2      F        HHS  Department of Health and Human Services      Adult Protective and Case Management Services    Fulltime-Regular             Social Worker IV                   NaN       11/19/1989              1989
+      gender department  ... date_first_hired year_first_hired
+    0      F        POL  ...       09/22/1986             1986
+    1      M        POL  ...       09/12/1988             1988
+    2      F        HHS  ...       11/19/1989             1989
+    [3 rows x 8 columns]
 
     >>> tv = TableVectorizer()
     >>> tv.fit(ds.X)
+    TableVectorizer()
 
     Now, we can inspect the transformers assigned to each column:
 
     >>> tv.transformers_
-    [
-        ('datetime', DatetimeEncoder(), ['date_first_hired']),
-        ('low_card_cat', OneHotEncoder(drop='if_binary', handle_unknown='ignore'),
-         ['gender', 'department', 'department_name', 'assignment_category']),
-        ('high_card_cat', GapEncoder(n_components=30),
-         ['division', 'employee_position_title', 'underfilled_job_title']),
-        ('remainder', 'passthrough', ['year_first_hired'])
-    ]
+    [('numeric', 'passthrough', ['year_first_hired']), \
+('datetime', DatetimeEncoder(), ['date_first_hired']), \
+('low_card_cat', OneHotEncoder(drop='if_binary', handle_unknown='ignore', \
+sparse_output=False), \
+['gender', 'department', 'department_name', 'assignment_category']), \
+('high_card_cat', GapEncoder(n_components=30), ['division', 'employee_position_title'])]
     """
-
-    transformers_: list[tuple[str, Transformer, list[str]]]
-    columns_: pd.Index
-    types_: dict[str, type]
-    imputed_columns_: list[str]
-    low_card_cat_transformer_: Transformer
-    high_card_cat_transformer_: Transformer
-    numerical_transformer_: Transformer
-    datetime_transformer_: Transformer
-    specific_transformers_: list[tuple[str, Transformer, list[str, int]]]
-
-    _transformer_to_input_indices: dict[str, list[int]]
-
-    # Override required parameters
-    _required_parameters = []
 
     def __init__(
         self,
         *,
-        cardinality_threshold: int = 40,
-        low_card_cat_transformer: Transformer | None = None,
-        high_card_cat_transformer: Transformer | None = None,
-        numerical_transformer: Transformer | None = None,
-        datetime_transformer: Transformer | None = None,
-        specific_transformers: list[
-            tuple[Transformer, list[str | int]]
-            | tuple[str, Transformer, list[str, int]]
-        ]
-        | None = None,
-        auto_cast: bool = True,
-        impute_missing: Literal["auto", "force", "skip"] = "auto",
+        cardinality_threshold=40,
+        low_cardinality_transformer=LOW_CARDINALITY_TRANSFORMER,
+        high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
+        numerical_transformer="passthrough",
+        datetime_transformer=DATETIME_TRANSFORMER,
+        specific_transformers=None,
+        auto_cast=True,
+        impute_missing="auto",
         # The next parameters are inherited from ColumnTransformer
-        remainder: Literal["drop", "passthrough"] | TransformerMixin = "passthrough",
-        sparse_threshold: float = 0.0,
-        n_jobs: int = None,
+        remainder="passthrough",
+        sparse_threshold=0.0,
+        n_jobs=None,
         transformer_weights=None,
-        verbose: bool = False,
+        verbose=False,
+        verbose_feature_names_out=False,
     ):
-        super().__init__(transformers=[])
-
         self.cardinality_threshold = cardinality_threshold
-        self.low_card_cat_transformer = low_card_cat_transformer
-        self.high_card_cat_transformer = high_card_cat_transformer
+        self.low_cardinality_transformer = clone_if_default(
+            low_cardinality_transformer, LOW_CARDINALITY_TRANSFORMER
+        )
+        self.high_cardinality_transformer = clone_if_default(
+            high_cardinality_transformer, HIGH_CARDINALITY_TRANSFORMER
+        )
+        self.datetime_transformer = clone_if_default(
+            datetime_transformer, DATETIME_TRANSFORMER
+        )
         self.numerical_transformer = numerical_transformer
-        self.datetime_transformer = datetime_transformer
         self.specific_transformers = specific_transformers
         self.auto_cast = auto_cast
         self.impute_missing = impute_missing
 
+        # Parameter from `ColumnTransformer`
         self.remainder = remainder
         self.sparse_threshold = sparse_threshold
         self.n_jobs = n_jobs
         self.transformer_weights = transformer_weights
         self.verbose = verbose
+        self.verbose_feature_names_out = verbose_feature_names_out
 
-    def _more_tags(self) -> dict:
-        """
-        Used internally by sklearn to ease the estimator checks.
-        """
-        return {
-            "X_types": ["2darray", "string"],
-            "allow_nan": [True],
-            "_xfail_checks": {
-                "check_complex_data": "Passthrough complex columns as-is.",
-                "check_dont_overwrite_parameters": (
-                    "`transformers` is modified during fit but it is not pass by the"
-                    " user. We need to create an instance of ColumnTransformer instead"
-                    " but the current behaviour is not leading to a bug."
-                ),
-            },
-        }
-
-    @property
-    def is_parallelized(self) -> bool:
-        """
-        Returns True if the transformers are parallelized over columns, False otherwise.
-        """
-        return self.n_jobs not in (None, 1)
-
-    def _clone_transformers(self) -> None:
+    def _clone_transformers(self):
         """
         For each of the different transformers that can be passed,
         create the corresponding variable name with a trailing underscore,
@@ -582,153 +477,27 @@ class TableVectorizer(ColumnTransformer):
         Note: typos are not detected here, they are left in and are detected
         down the line in ColumnTransformer.fit_transform.
         """
-        if isinstance(self.low_card_cat_transformer, sklearn.base.TransformerMixin):
-            self.low_card_cat_transformer_ = clone(self.low_card_cat_transformer)
-        elif self.low_card_cat_transformer is None:
-            # sklearn is lenient and lets us use both
-            # `handle_unknown="infrequent_if_exist"` and `drop="if_binary"`
-            # at the same time
-            self.low_card_cat_transformer_ = OneHotEncoder(
-                drop="if_binary", handle_unknown="infrequent_if_exist"
+        for transformer_name in [
+            "high_cardinality_transformer",
+            "low_cardinality_transformer",
+            "datetime_transformer",
+            "numerical_transformer",
+        ]:
+            transformer = _clone_during_fit(
+                getattr(self, transformer_name),
+                remainder=self.remainder,
+                n_jobs=self.n_jobs,
             )
-        elif self.low_card_cat_transformer == "remainder":
-            self.low_card_cat_transformer_ = (
-                self.remainder
-                if isinstance(self.remainder, str)
-                else clone(self.remainder)
-            )
-        else:
-            self.low_card_cat_transformer_ = self.low_card_cat_transformer
+            setattr(self, f"{transformer_name}_", transformer)
 
-        if isinstance(self.high_card_cat_transformer, sklearn.base.TransformerMixin):
-            self.high_card_cat_transformer_ = clone(self.high_card_cat_transformer)
-        elif self.high_card_cat_transformer is None:
-            self.high_card_cat_transformer_ = GapEncoder(n_components=30)
-        elif self.high_card_cat_transformer == "remainder":
-            self.high_card_cat_transformer_ = (
-                self.remainder
-                if isinstance(self.remainder, str)
-                else clone(self.remainder)
-            )
-        else:
-            self.high_card_cat_transformer_ = self.high_card_cat_transformer
-
-        if isinstance(self.numerical_transformer, sklearn.base.TransformerMixin):
-            self.numerical_transformer_ = clone(self.numerical_transformer)
-        elif self.numerical_transformer is None:
-            self.numerical_transformer_ = "passthrough"
-        elif self.numerical_transformer == "remainder":
-            self.numerical_transformer_ = (
-                self.remainder
-                if isinstance(self.remainder, str)
-                else clone(self.remainder)
-            )
-        else:
-            self.numerical_transformer_ = self.numerical_transformer
-
-        if isinstance(self.datetime_transformer, sklearn.base.TransformerMixin):
-            self.datetime_transformer_ = clone(self.datetime_transformer)
-        elif self.datetime_transformer is None:
-            self.datetime_transformer_ = DatetimeEncoder()
-        elif self.datetime_transformer == "remainder":
-            self.datetime_transformer_ = (
-                self.remainder
-                if isinstance(self.remainder, str)
-                else clone(self.remainder)
-            )
-        else:
-            self.datetime_transformer_ = self.datetime_transformer
-
-        if (self.specific_transformers is None) or len(self.specific_transformers) == 0:
-            self.specific_transformers_ = []
-        else:
-            first_item_length = len(self.specific_transformers[0])
-            # Check all tuples are the same length
-            for i, tup in enumerate(self.specific_transformers):
-                if len(tup) != first_item_length:
-                    raise TypeError(
-                        "Expected `specific_transformers` to be a list of "
-                        "tuples with all the same length, got length "
-                        f"{len(tup)} at index {i} (elements at previous "
-                        f"indices have {first_item_length} in length). "
-                    )
-            if first_item_length == 2:
-                # Unnamed assignments, transform to named
-                named_specific_transformers = _get_transformer_list(
-                    self.specific_transformers
-                )
-            elif first_item_length == 3:
-                # Named assignments
-                named_specific_transformers = self.specific_transformers
-            else:
-                raise TypeError(
-                    "Expected `specific_transformers` to be a list of tuples "
-                    "of length 2 or 3, got a list of tuples of length "
-                    f"{first_item_length}. "
-                )
-
-            self.specific_transformers_ = [
-                (name, clone(transformer), cols)
-                if isinstance(transformer, sklearn.base.TransformerMixin)
-                else (name, transformer, cols)
-                for name, transformer, cols in named_specific_transformers
-            ]
-
-        # TODO: check that the provided transformers are valid
-
-    def _split_univariate_transformers(self, during_fit: bool = False):
-        """
-        Split univariate transformers into multiple transformers, one for each
-        column. This is useful to use the inherited `ColumnTransformer` class
-        parallelism.
-
-        Parameters
-        ----------
-        during_fit : bool, default=False
-            Whether the method is called during `fit_transform` (True) or
-            during `transform` (False). This is used to determine whether
-            to split the self.transformers_ attribute (when False) or the
-            self.transformers attribute (when True).
-        """
-        if during_fit:
-            # split self.transformers, a list of 3-tuples (name, transformer, columns)
-            # containing the unfitted transformers (or strings) and the columns
-            # to be fitted on. This attribute is used by the `ColumnTransformer`
-            # when calling `fit` and `fit_transform`.
-            self.transformers, _ = _split_transformers(
-                self.transformers, during_fit=True
-            )
-        else:
-            # split self.transformers_, a list of 3-tuples (name, transformer, columns)
-            # containing the fitted transformers (or strings) and the columns
-            # they were fitted on. This attribute is used by the `ColumnTransformer`
-            # when calling `transform`.
-            check_is_fitted(self, attributes=["transformers_"])
-            (
-                self.transformers_,
-                self._transformer_to_input_indices,
-            ) = _split_transformers(
-                self.transformers_,
-                during_fit=False,
-                transformers_to_input_indices=self._transformer_to_input_indices,
-            )
-
-    def _merge_univariate_transformers(self):
-        """
-        Merge splitted transformers into a single transformer.
-        To be used after `_split_univariate_transformers`.
-        """
-        # merge self.transformers and self.transformers_
-        check_is_fitted(self, attributes=["transformers_"])
-        self.transformers, _ = _merge_transformers(self.transformers, is_fitted=False)
-        self.transformers_, self._transformer_to_input_indices = _merge_transformers(
-            self.transformers_,
-            is_fitted=True,
-            transformer_to_input_indices=self._transformer_to_input_indices,
+        self.specific_transformers_ = _check_specific_transformers(
+            self.specific_transformers,
+            self.n_jobs,
         )
 
     def _auto_cast(self, X: pd.DataFrame) -> pd.DataFrame:
-        """Takes a dataframe and tries to convert its columns to their best possible data type.
+        """Takes a dataframe and tries to convert its columns to their best possible
+        data type.
 
         Parameters
         ----------
@@ -760,7 +529,7 @@ class TableVectorizer(ColumnTransformer):
 
         # Convert to the best possible data type
         self.types_ = {}
-        for col in X.columns:
+        for col_idx, col in enumerate(X.columns):
             if not pd.api.types.is_datetime64_any_dtype(X[col]):
                 # we don't want to cast datetime64
                 try:
@@ -801,7 +570,7 @@ class TableVectorizer(ColumnTransformer):
                     X[col] = X[col].astype(X[col].dtype.type, errors="ignore")
                 except (TypeError, ValueError):
                     pass
-            self.types_[col] = X[col].dtype
+            self.types_[col_idx] = X[col].dtype
         return X
 
     def _apply_cast(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -825,7 +594,8 @@ class TableVectorizer(ColumnTransformer):
         object_cols = X.columns[X.dtypes == "object"]
         for col in object_cols:
             X[col] = np.where(X[col].isna(), X[col], X[col].astype(str))
-        for col, dtype in self.types_.items():
+        for col_idx, dtype in self.types_.items():
+            col = X.columns[col_idx]
             # if categorical, add the new categories to prevent
             # them to be encoded as nan
             if isinstance(dtype, pd.CategoricalDtype):
@@ -836,8 +606,9 @@ class TableVectorizer(ColumnTransformer):
                 dtype = pd.CategoricalDtype(
                     categories=known_categories.union(new_categories)
                 )
-                self.types_[col] = dtype
-        for col, dtype in self.types_.items():
+                self.types_[col_idx] = dtype
+        for col_idx, dtype in self.types_.items():
+            col = X.columns[col_idx]
             try:
                 if pd.api.types.is_numeric_dtype(dtype):
                     # we don't use astype because it can convert float to int
@@ -849,7 +620,7 @@ class TableVectorizer(ColumnTransformer):
                 if culprit is None:
                     raise e
                 warnings.warn(
-                    f"Value '{culprit}' could not be converted to infered type"
+                    f"Value '{culprit}' could not be converted to inferred type"
                     f" {dtype!s} in column '{col}'. Such values will be replaced"
                     " by NaN.",
                     UserWarning,
@@ -867,7 +638,7 @@ class TableVectorizer(ColumnTransformer):
                     raise e
         return X
 
-    def _check_X(self, X, reset):
+    def _check_X(self, X):
         if sparse.isspmatrix(X):
             raise TypeError(
                 "A sparse matrix was passed, but dense data is required. Use "
@@ -894,7 +665,8 @@ class TableVectorizer(ColumnTransformer):
                     "your data has a single feature or array.reshape(1, -1) "
                     "if it contains a single sample."
                 )
-            X = pd.DataFrame(X_array)
+            feature_names = getattr(self, "feature_names_in_", None)
+            X = pd.DataFrame(X_array, columns=feature_names)
         else:
             # Create a copy to avoid altering the original data.
             X = X.copy()
@@ -919,11 +691,31 @@ class TableVectorizer(ColumnTransformer):
                 f"Found array with {X.shape[1]} feature(s) (shape={X.shape}) while"
                 " a minimum of 1 is required."
             )
-        self._check_n_features(X, reset=reset)
-
         return X
 
-    def fit_transform(self, X: ArrayLike, y: ArrayLike = None) -> ArrayLike:
+    def fit(self, X, y=None):
+        """Fit all transformers using X.
+
+        Parameters
+        ----------
+        X : {array-like, dataframe} of shape (n_samples, n_features)
+            Input data, of which specified subsets are used to fit the
+            transformers.
+
+        y : array-like of shape (n_samples, ...), default=None
+            Targets for supervised learning.
+
+        Returns
+        -------
+        self : TableVectorizer
+            This estimator.
+        """
+        # we use fit_transform to make sure to set sparse_output_ (for which we
+        # need the transformed data) to have consistent output type in predict
+        self.fit_transform(X, y=y)
+        return self
+
+    def fit_transform(self, X, y=None):
         """Fit all transformers, transform the data, and concatenate the results.
 
         In practice, it (1) converts features to their best possible types
@@ -957,9 +749,9 @@ class TableVectorizer(ColumnTransformer):
 
         self._clone_transformers()
 
-        X = self._check_X(X, reset=True)
-
-        self.columns_ = X.columns
+        self._check_feature_names(X, reset=True)
+        X = self._check_X(X)
+        self._check_n_features(X, reset=True)
 
         # We replace in all columns regardless of their type,
         # as we might have some false missing
@@ -1009,20 +801,24 @@ class TableVectorizer(ColumnTransformer):
 
         # Next part: construct the transformers
         # Create the list of all the transformers.
-        all_transformers: list[tuple[str, Transformer, list[str]]] = [
+        all_transformers = [
             ("numeric", self.numerical_transformer_, numeric_columns),
             ("datetime", self.datetime_transformer_, datetime_columns),
-            ("low_card_cat", self.low_card_cat_transformer_, low_card_cat_columns),
-            ("high_card_cat", self.high_card_cat_transformer_, high_card_cat_columns),
+            ("low_card_cat", self.low_cardinality_transformer_, low_card_cat_columns),
+            (
+                "high_card_cat",
+                self.high_cardinality_transformer_,
+                high_card_cat_columns,
+            ),
             *self.specific_transformers_,
         ]
-        # We will now filter this list,
-        # by keeping only the ones with at least one column.
-        self.transformers = []
-        for trans in all_transformers:
-            name, enc, cols = trans  # Unpack
-            if len(cols) > 0 and enc is not None:
-                self.transformers.append(trans)
+        # We will now filter this list, by keeping only the ones with:
+        # - at least one column
+        # - a valid encoder or string (filter out if None)
+        transformers = []
+        for name, transformer, columns in all_transformers:
+            if len(columns) > 0 and transformer is not None:
+                transformers.append((name, transformer, columns))
 
         self.imputed_columns_ = []
         if self.impute_missing != "skip":
@@ -1045,31 +841,23 @@ class TableVectorizer(ColumnTransformer):
             X = self._auto_cast(X)
 
         if self.verbose:
-            print(f"[TableVectorizer] Assigned transformers: {self.transformers}")
+            print(f"[TableVectorizer] Assigned transformers: {transformers}")
 
-        # split the univariate transformers on each column
-        # to be able to parallelize the encoding
-        if self.is_parallelized:
-            self._split_univariate_transformers(during_fit=True)
+        self._column_transformer = ColumnTransformer(
+            transformers=transformers,
+            remainder=self.remainder,
+            sparse_threshold=self.sparse_threshold,
+            n_jobs=1,  # we don't parallelize the outer loop
+            transformer_weights=self.transformer_weights,
+            verbose=self.verbose,
+            verbose_feature_names_out=self.verbose_feature_names_out,
+        )
 
-        X_enc = super().fit_transform(X, y)
-
-        # For the "remainder" columns, the `ColumnTransformer` `transformers_`
-        # attribute contains the index instead of the column name,
-        # so we convert the values to the appropriate column names
-        # if there is less than 20 columns in the remainder.
-        for i, (name, enc, cols) in enumerate(self.transformers_):
-            if name == "remainder" and len(cols) < 20:
-                # In this case, "cols" is a list of ints (the indices)
-                cols: list[int]
-                self.transformers_[i] = (name, enc, [self.columns_[j] for j in cols])
-
-        if self.is_parallelized:
-            self._merge_univariate_transformers()
+        X_enc = self._column_transformer.fit_transform(X, y=y)
 
         return X_enc
 
-    def transform(self, X: ArrayLike) -> ArrayLike:
+    def transform(self, X):
         """Transform `X` by applying the fitted transformers on the columns.
 
         Parameters
@@ -1085,27 +873,14 @@ class TableVectorizer(ColumnTransformer):
             any result is a sparse matrix, everything will be converted to
             sparse matrices.
         """
-        check_is_fitted(self, attributes=["transformers_"])
+        check_is_fitted(self, attributes=["_column_transformer"])
 
-        X = self._check_X(X, reset=False)
-
-        if (X.columns != self.columns_).all():
-            X.columns = self.columns_
+        X = self._check_X(X)
 
         if self.auto_cast:
             X = self._apply_cast(X)
 
-        # split the univariate transformers on each column
-        # to be able to parallelize the encoding
-        if self.is_parallelized:
-            self._split_univariate_transformers(during_fit=False)
-
-        res = super().transform(X)
-
-        if self.is_parallelized:
-            self._merge_univariate_transformers()
-
-        return res
+        return self._column_transformer.transform(X)
 
     def get_feature_names_out(self, input_features=None) -> list[str]:
         """Return clean feature names.
@@ -1124,32 +899,63 @@ class TableVectorizer(ColumnTransformer):
         list of str
             Feature names.
         """
-        ct_feature_names = super().get_feature_names_out()
-        all_trans_feature_names = []
+        return self._column_transformer.get_feature_names_out(input_features)
 
-        for name, trans, cols, _ in self._iter(
-            fitted=True, replace_strings=False, column_as_strings=False
-        ):
-            if isinstance(trans, str):
-                if trans == "drop":
-                    continue
-                elif trans == "passthrough":
-                    if all(isinstance(col, int) for col in cols):
-                        cols = [self.columns_[i] for i in cols]
-                    all_trans_feature_names.extend(cols)
-                continue
-            trans_feature_names = trans.get_feature_names_out(cols)
-            all_trans_feature_names.extend(trans_feature_names)
+    @property
+    def transformers_(self):
+        """Transformers applied to the different columns."""
+        # For the "remainder" columns, the `ColumnTransformer` `transformers_`
+        # attribute contains the index instead of the column name,
+        # so we convert the values to the appropriate column names
+        # if there is less than 20 columns in the remainder.
+        transformers = []
+        for name, transformer, columns in self._column_transformer.transformers_:
+            # TODO: potentially remove when
+            # https://github.com/scikit-learn/scikit-learn/issues/27533 is resolved.
+            if name == "remainder" and len(columns) < 20:
+                columns = self.feature_names_in_[columns].tolist()
+            transformers.append((name, transformer, columns))
+        return transformers
 
-        if len(ct_feature_names) != len(all_trans_feature_names):
-            warn("Could not extract clean feature names; returning defaults. ")
-            return list(ct_feature_names)
+    @property
+    def named_transformers_(self) -> Bunch:
+        """Map transformer names to transformer objects.
 
-        return all_trans_feature_names
+        Read-only attribute to access any transformer by given name.
+        Keys are transformer names and values are the fitted transformer
+        objects.
+        """
+        return self._column_transformer.named_transformers_
 
+    @property
+    def sparse_output_(self) -> bool:
+        """Whether the output of ``transform`` is sparse or dense.
 
-@deprecated("Use TableVectorizer instead.")
-class SuperVectorizer(TableVectorizer):
-    """Deprecated name of TableVectorizer."""
+        Boolean flag indicating whether the output of ``transform`` is a
+        sparse matrix or a dense numpy array, which depends on the output
+        of the individual transformers and the `sparse_threshold` keyword.
+        """
+        return self._column_transformer.sparse_output_
 
-    pass
+    @property
+    def output_indices_(self) -> dict[str, slice]:
+        """Map the transformer names to their input indices.
+
+        A dictionary from each transformer name to a slice, where the slice
+        corresponds to indices in the transformed output. This is useful to
+        inspect which transformer is responsible for which transformed
+        feature(s).
+        """
+        return self._column_transformer.output_indices_
+
+    def _more_tags(self) -> dict:
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {
+            "X_types": ["2darray", "string"],
+            "allow_nan": [True],
+            "_xfail_checks": {
+                "check_complex_data": "Passthrough complex columns as-is.",
+            },
+        }

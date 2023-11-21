@@ -42,8 +42,8 @@ def fetch_ken_table_aliases() -> set[str]:
     --------
     Let's see what are the current KEN subtables available
     for download:
-    >>> fetch_ken_table_aliases()
-    {'games', 'companies', 'schools', 'albums', 'all_entities', 'movies'}
+    >>> sorted(fetch_ken_table_aliases())
+    ['albums', 'all_entities', 'companies', 'games', 'movies', 'schools']
     """
     correspondence = pd.read_csv(_correspondence_table_url)
     return set(["all_entities"] + list(correspondence["table"].values))
@@ -96,9 +96,9 @@ def fetch_ken_types(
     --------
     To get all the existing KEN types of entities:
 
-    >>> embedding_types = fetch_ken_types()
-    >>> embedding_types.head()
-                                Type
+    >>> embedding_types = fetch_ken_types()  # doctest: +SKIP
+    >>> embedding_types.head() # doctest: +SKIP
+                                                    Type
     0                 wikicat_italian_male_screenwriters
     1  wikicat_21st-century_roman_catholic_archbishop...
     2                 wikicat_2000s_romantic_drama_films
@@ -107,10 +107,10 @@ def fetch_ken_types(
 
     Let's search for all KEN types with the strings "dance" or "music":
 
-    >>> embedding_filtered_types = fetch_ken_types(search="dance|music")
-    >>> embedding_filtered_types.head()
-                                    Type
-    0                    wikicat_music_festivals_in_france
+    >>> embedding_filtered_types = fetch_ken_types(search="dance|music") # doctest: +SKIP
+    >>> embedding_filtered_types.head() # doctest: +SKIP
+                                                    Type
+    0                  wikicat_music_festivals_in_france
     1  wikicat_films_scored_by_bharadwaj_(music_direc...
     2                  wikicat_english_music_journalists
     3       wikicat_20th-century_american_male_musicians
@@ -216,14 +216,15 @@ def fetch_ken_embeddings(
     you are interested in. For instance, if we are interested in
     video games:
 
-    >>> games_embedding = fetch_ken_embeddings(search_types="video_games")
-    >>> games_embedding.head()
-                    Entity                       Type                       ...      X198      X199
-    0       The_Mysterious_Island  wikicat_novels_adapted_into_video_games  ... -0.072814 -0.156973
-    1    Storyteller_(video_game)             wikicat_upcoming_video_games  ...  0.059816  0.021077
-    2  Skull_&_Bones_(video_game)        wikicat_video_games_about_pirates  ... -0.141682  0.024204
-    3               Ethan_Winters   wikicat_male_characters_in_video_games  ... -0.107913 -0.089531
-    4                     Cruis'n               wikicat_racing_video_games  ... -0.260757  0.060700
+    >>> games_embedding = fetch_ken_embeddings(search_types="video_games") # doctest: +SKIP
+    >>> games_embedding.head() # doctest: +SKIP
+                             Entity  ...      X199
+    0             A_Little_Princess  ...  0.04...
+    1                 The_Dark_Half  ... -0.00...
+    2                  Frankenstein  ... -0.11...
+    3                 Albert_Wesker  ... -0.16...
+    4  Harukanaru_Toki_no_Naka_de_3  ...  0.14...
+    [5 rows x 202 columns]
 
     Extracts all embeddings with the "games" type.
     For the list of existing types see fetch_ken_types.
@@ -231,14 +232,15 @@ def fetch_ken_embeddings(
     Some tables are available pre-filtered for us using the
     `embedding_table_id` parameter:
 
-    >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games")
-    >>> games_embedding_fast.head()
-                     Entity                               Type                      ...      X198      X199
-    0              R-Type_Delta                                 wikicat_irem_games  ... -0.125806  0.040006
-    1  Just_Add_Water_(company)  wikicat_video_game_companies_of_the_united_kin...  ...  0.067210 -0.025676
-    2                 Li_Xiayan          wikicat_asian_games_medalists_in_swimming  ... -0.104818  0.003485
-    3             Vampire_Night                        wikicat_vampire_video_games  ... -0.118209 -0.145383
-    4               Shatterhand                             wikicat_platform_games  ... -0.138462  0.197820
+    >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games") # doctest: +SKIP
+    >>> games_embedding_fast.head() # doctest: +SKIP
+                         Entity  ...      X199
+    0              R-Type_Delta  ...  0.04...
+    1  Just_Add_Water_(company)  ... -0.02...
+    2                 Li_Xiayan  ...  0.00...
+    3             Vampire_Night  ... -0.14...
+    4               Shatterhand  ...  0.19...
+    [5 rows x 202 columns]
 
     It takes less time to load the wanted output, and is more precise as the
     types have been carefully filtered out.
