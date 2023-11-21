@@ -30,7 +30,7 @@ _MATCHERS = {
     "second_neighbor": _matching.QueryNeighbor,
     "self_join_neighbor": _matching.TargetNeighbor,
     "worst_match": _matching.MaxDist,
-    "raw_distance": _matching.Matching,
+    "no_rescaling": _matching.Matching,
 }
 DEFAULT_REF_DIST = "aux_percentile"
 
@@ -60,19 +60,56 @@ def _make_vectorizer(table, string_encoder, rescale):
 
 
 class Joiner(TransformerMixin, BaseEstimator):
-    """Augment a main table by fuzzy joining an auxiliary table to it.
+    """Augment features in a main table by fuzzy-joining an auxiliary table to it.
 
-    Given an auxiliary table and matching column names, fuzzy join it to the main
-    table.
-    The principle is as follows:
+    This transformer is initialized with an auxiliary table ``aux_table``. It
+    transforms a main table by joining it, with approximate ("fuzzy") matching,
+    to the auxiliary table. The output of ``transform`` has the same rows as
+    the main table (ie as the argument passed to ``transform``), but each row
+    is augmented with values from the best match in the auxiliary table.
 
-    1. The auxiliary table and the matching column names are provided at initialisation.
-    2. The main table is provided for fitting, and will be joined
-       when ``Joiner.transform`` is called.
+    To identify the best match for each row, values from the matching columns
+    (``main_key`` and ``aux_key``) are vectorized, ie represented by vectors of
+    continuous values. Then, the Euclidean distances between these vectors are
+    computed to find, for each main table row, its nearest neighbor within the
+    auxiliary table.
 
-    It is advised to use hyperparameter tuning tools such as GridSearchCV
-    to determine the best `max_dist` parameter, as this can significantly
-    improve results.
+    Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
+    between vectors that are separated by a distance (strictly) greater than
+    ``max_dist`` will be rejected. We will consider that main table rows that
+    are farther than ``max_dist`` from their nearest neighbor do not have a
+    matching row in the auxiliary table, and the output will contain nulls for
+    the entries that would normally have come from the auxiliary table (as in a
+    traditional left join).
+
+    To make it easier to set a ``max_dist`` threshold, the distances are
+    rescaled by dividing them by a reference distance, which can be chosen with
+    ``ref_dist``. The default is ``'aux_percentile'``. The possible choices are:
+
+    'aux_percentile'
+        Pairs of rows are sampled randomly from the auxiliary table and their
+        distance is computed. The reference distance is the first quartile of
+        those distances.
+
+    'second_neighbor'
+        The reference distance is the distance to the *second* nearest neighbor
+        in the auxiliary table.
+
+    'self_join_neighbor'
+        Once the match candidate (ie the nearest neigbor from the auxiliary
+        table) has been found, we find its nearest neighbor in the auxiliary
+        table (excluding itself). The reference distance is the distance that
+        separates those 2 auxiliary rows.
+
+    'worst_match'
+        The reference distance is the maximum, over all rows in the main table,
+        of the distance between each row and its nearest neighbor in the
+        auxiliary table (ie its candidate match). This means that the worst
+        match will have a rescaled distance of 1.0.
+
+    'no_rescaling'
+        The reference distance is 1.0, ie no rescaling of the distances is
+        applied.
 
     Parameters
     ----------
@@ -98,13 +135,15 @@ class Joiner(TransformerMixin, BaseEstimator):
         ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
         are farther apart are not considered to match. By default, the distance
         is rescaled so that a value between 0 and 1 is typically a good choice,
-        although rescaled distances can be greater than 1. See the description
-        of ``maching`` for details on available rescaling strategies.
-        ``None`` or ``"inf"`` is interpreted as ``float("inf")``.
-    ref_dist : reference distance for rescaling, default = "second_neighbor"
-        TODO expand description.
+        although rescaled distances can be greater than 1 for some choices of
+        ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
+        mean that no matches are rejected.
+    ref_dist : reference distance for rescaling, default = 'aux_percentile'
+        To facilitate the choice of ``max_dist``, distances between rows in
+        ``main_table`` and their nearest neighbor in ``aux_table`` will be
+        rescaled by this reference distance.
     string_encoder : scikit-learn transformer for text
-        By default a ``HashingVectorizer`` combined with a ``TfidfTransforme``
+        By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
         is used.
 
     See Also
