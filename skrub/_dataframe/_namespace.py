@@ -43,6 +43,19 @@ def is_polars(dataframe):
     return isinstance(dataframe, (pl.DataFrame, pl.LazyFrame))
 
 
+def is_namespace_pandas(px):
+    return px is pd
+
+
+def is_namespace_polars(px):
+    if "polars" not in sys.modules:
+        return False
+
+    import polars as pl
+
+    return px is pl
+
+
 def get_df_namespace(*dfs):
     """Get the namespaces of dataframes.
 

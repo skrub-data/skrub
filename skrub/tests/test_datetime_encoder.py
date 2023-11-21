@@ -7,6 +7,7 @@ import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from pandas.testing import assert_frame_equal
 
+from skrub._dataframe._namespace import is_namespace_polars
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub._datetime_encoder import (
     TIME_LEVELS,
@@ -352,7 +353,7 @@ def test_transform_nan(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_mixed_type_dataframe(px):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "to_datetime(X) raises polars.exceptions.ComputeError: cannot cast"

@@ -6,6 +6,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from skrub import InterpolationJoiner
+from skrub._dataframe._namespace import is_namespace_polars
 from skrub._dataframe._polars import POLARS_SETUP
 
 MODULES = [pd]
@@ -39,7 +40,7 @@ def weather():
 @pytest.mark.parametrize("key", [["latitude", "longitude"], "latitude"])
 @pytest.mark.parametrize("with_nulls", [False, True])
 def test_interpolation_join(px, buildings, weather, key, with_nulls):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -60,7 +61,7 @@ def test_interpolation_join(px, buildings, weather, key, with_nulls):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_vectorizer(px):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -87,7 +88,7 @@ def test_vectorizer(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_no_multioutput(px, buildings, weather):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -105,7 +106,7 @@ def test_no_multioutput(px, buildings, weather):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_condition_choice(px):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -143,7 +144,7 @@ def test_condition_choice(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_suffix(px):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -159,7 +160,7 @@ def test_suffix(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_mismatched_indexes(px):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -179,7 +180,7 @@ def test_mismatched_indexes(px):
 @pytest.mark.parametrize("px", MODULES)
 def test_fit_on_none(px):
     # X is hardly used in fit so it should be ok to fit without a main table
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -199,7 +200,7 @@ def test_fit_on_none(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_join_on_date(px):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -231,7 +232,7 @@ class FailFit(DummyClassifier):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_fit_failures(px, buildings, weather):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -281,7 +282,7 @@ class FailPredict(DummyClassifier):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_transform_failures(px, buildings, weather):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
@@ -329,7 +330,7 @@ def test_transform_failures(px, buildings, weather):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_transform_failures_dtype(px, buildings, weather):
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"

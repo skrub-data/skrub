@@ -5,6 +5,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
 from skrub import GapEncoder
+from skrub._dataframe._namespace import is_namespace_polars
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data
@@ -222,7 +223,7 @@ def test_score(n_samples: int = 70):
 )
 def test_missing_values(px, missing: str):
     """Test what happens when missing values are in the data"""
-    if px.__name__ == "polars":
+    if is_namespace_polars(px):
         pytest.xfail(
             reason=(
                 "'TypeError: '<' not supported between instances of 'DataTypeClass' and"
