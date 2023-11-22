@@ -145,7 +145,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     string_encoder : scikit-learn transformer used to vectorize text columns
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
         is used.
-    insert_match_info : bool, default=False
+    insert_match_info : bool, default=True
         Insert some columns whose names start with `skrub.Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
         above the threshold.
@@ -199,7 +199,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         max_dist=np.inf,
         ref_dist=DEFAULT_REF_DIST,
         string_encoder=DEFAULT_STRING_ENCODER,
-        insert_match_info=False,
+        insert_match_info=True,
     ):
         self.aux_table = aux_table
         self.main_key = main_key

@@ -23,7 +23,12 @@ def test_joiner() -> None:
         ],
         columns=["country", "Population"],
     )
-    joiner = Joiner(aux_table=aux_table, main_key="Country", aux_key="country")
+    joiner = Joiner(
+        aux_table=aux_table,
+        main_key="Country",
+        aux_key="country",
+        insert_match_info=False,
+    )
 
     joiner.fit(main_table)
     big_table = joiner.transform(main_table)
@@ -58,12 +63,19 @@ def test_multiple_keys():
         [["France", "Paris"], ["Italy", "Rome"], ["Germany", "Berlin"]],
         columns=["CO", "CA"],
     )
-    joiner_list = Joiner(aux_table=df2, aux_key=["CO", "CA"], main_key=["Co", "Ca"])
+    joiner_list = Joiner(
+        aux_table=df2,
+        aux_key=["CO", "CA"],
+        main_key=["Co", "Ca"],
+        insert_match_info=False,
+    )
     result = joiner_list.fit_transform(df)
     expected = pd.DataFrame(pd.concat([df, df2], axis=1))
     pd.testing.assert_frame_equal(result, expected)
 
-    joiner_list = Joiner(aux_table=df2, aux_key="CA", main_key="Ca")
+    joiner_list = Joiner(
+        aux_table=df2, aux_key="CA", main_key="Ca", insert_match_info=False
+    )
     result = joiner_list.fit_transform(df)
     expected = pd.DataFrame(pd.concat([df, df2], axis=1))
     pd.testing.assert_frame_equal(result, expected)

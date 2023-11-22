@@ -124,7 +124,6 @@ df1 = fuzzy_join(
     gdppc,  # the table to join with
     left_on="Country",  # the first join key column
     right_on="Country Name",  # the second join key column
-    insert_match_info=True,
 )
 
 df1.tail(20)
@@ -139,7 +138,6 @@ df1 = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     max_dist=0.9,
-    insert_match_info=True,
 )
 df1.sort_values("skrub.Joiner.rescaled_distance", ascending=False).head()
 
@@ -390,11 +388,11 @@ pipeline = make_pipeline(
 
 from sklearn.model_selection import GridSearchCV
 
-# We will test 3 possible values of max_dist:
+# We will test 2 possible values of max_dist:
 params = {
-    "joiner-1__max_dist": [0.0, 0.9, 1.0],
-    "joiner-2__max_dist": [0.0, 0.9, 1.0],
-    "joiner-3__max_dist": [0.0, 0.9, 1.0],
+    "joiner-1__max_dist": [0.1, 0.9],
+    "joiner-2__max_dist": [0.1, 0.9],
+    "joiner-3__max_dist": [0.1, 0.9],
 }
 
 grid = GridSearchCV(pipeline, param_grid=params, cv=cv)
