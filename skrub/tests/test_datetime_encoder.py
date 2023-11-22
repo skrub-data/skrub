@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
+from pandas.api.types import is_datetime64_any_dtype
 from pandas.testing import assert_frame_equal
 
 from skrub._dataframe._polars import POLARS_SETUP
@@ -187,6 +188,26 @@ def test_fit(
     assert enc.index_to_format_ == expected_index_to_format
     assert enc.n_features_out_ == expected_n_features_out
     assert enc.get_feature_names_out() == expected_feature_names
+
+
+@pytest.mark.parametrize("px", MODULES)
+@pytest.mark.parametrize(
+    "get_data_func, expected_datetime_columns",
+    [
+        (get_date, [0, 1, 2]),
+        (get_datetime, [0, 1, 2]),
+        (get_tz_datetime, [0]),
+        (get_mixed_type_dataframe, ["a", "e"]),
+    ],
+)
+def test_to_datetime(px, get_data_func, expected_datetime_columns):
+    if is_module_polars(px):
+        pytest.xfail(reason="AssertionError is raised when using Polars.")
+    X = get_data_func()
+    X = to_datetime(X)
+    X = px.DataFrame(X)
+    datetime_columns = [col for col in X.columns if is_datetime64_any_dtype(X[col])]
+    assert_array_equal(datetime_columns, expected_datetime_columns)
 
 
 @pytest.mark.parametrize("px", MODULES)

@@ -15,7 +15,6 @@ from ._minhash_encoder import MinHashEncoder
 from ._select_cols import DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import TableVectorizer
-from ._target_encoder import TargetEncoder
 
 check_dependencies()
 
@@ -32,7 +31,6 @@ __all__ = [
     "MinHashEncoder",
     "SimilarityEncoder",
     "TableVectorizer",
-    "TargetEncoder",
     "deduplicate",
     "compute_ngram_distance",
     "to_datetime",
