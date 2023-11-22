@@ -312,6 +312,10 @@ def _get_datetime_column_indices(X_split, random_state=None):
     ----------
     X_split : list of 1d array of length n_features
 
+    random_state : int, RandomState instance or None, default=None
+        Determines random number generation for the subsampling during
+        datetime guessing. Use an int to make the randomness deterministic.
+
     Returns
     -------
     datetime_indices : list of int
@@ -405,6 +409,10 @@ def _guess_datetime_format(X_col, random_state=None):
     ----------
     X_col : ndarray of shape ``(n_samples,)``
         X_col must only contains string objects without any missing value.
+
+    random_state : int, RandomState instance or None, default=None
+        Determines random number generation for the subsampling during
+        datetime guessing. Use an int to make the randomness deterministic.
 
     Returns
     -------
