@@ -67,12 +67,11 @@ class Percentile(Matching):
         self._check_inputs()
         n_rows = self.aux_.shape[0]
         pairs = _sample_pairs(n_rows, self.n_sampled_pairs, self.random_state)
-        left = self.aux_[pairs[:, 0]]
-        right = self.aux_[pairs[:, 1]]
+        diff = self.aux_[pairs[:, 0]] - self.aux_[pairs[:, 1]]
         if sparse.issparse(self.aux_):
-            left = sparse.csr_array(left)
-            right = sparse.csr_array(right)
-        distances = np.sqrt(((left - right) ** 2).sum(axis=1))
+            distances = np.asarray(np.sqrt(diff.multiply(diff).sum(axis=1))).ravel()
+        else:
+            distances = np.sqrt(((diff) ** 2).sum(axis=1))
         return np.percentile(distances, self.percentile)
 
     def _check_inputs(self):
