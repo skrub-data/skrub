@@ -185,9 +185,10 @@ def test_fit(
         (get_mixed_type_dataframe, ["a", "e"]),
     ],
 )
-def test_to_datetime(get_data_func, expected_datetime_columns):
+@pytest.mark.parametrize("random_state", np.arange(20))
+def test_to_datetime(get_data_func, expected_datetime_columns, random_state):
     X = get_data_func()
-    X = to_datetime(X)
+    X = to_datetime(X, random_state=random_state)
     X = pd.DataFrame(X)
     datetime_columns = [col for col in X.columns if is_datetime64_any_dtype(X[col])]
     assert_array_equal(datetime_columns, expected_datetime_columns)
