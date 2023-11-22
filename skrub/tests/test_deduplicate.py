@@ -18,14 +18,14 @@ from skrub.datasets import make_deduplication_data
 
 
 @pytest.mark.parametrize(
-    ["entries_per_category", "prob_mistake_per_letter"],
-    [[[500, 100, 1500], 0.05], [[100, 100], 0.02], [[200, 50, 30, 200, 800], 0.01]],
+    "entries_per_category, prob_mistake_per_letter",
+    [([500, 100, 1500], 0.05), ([100, 100], 0.02), ([200, 50, 30, 200, 800], 0.01)],
 )
 def test_deduplicate(
     entries_per_category: list[int],
     prob_mistake_per_letter: float,
     seed: int = 123,
-) -> None:
+):
     rng = np.random.RandomState(seed)
 
     # hard coded to fix ground truth string similarities
@@ -60,7 +60,7 @@ def test_deduplicate(
     assert np.isin(unique_other_analyzer, recovered_categories).all()
 
 
-def test_compute_ngram_distance() -> None:
+def test_compute_ngram_distance():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
     distance = compute_ngram_distance(words)
     distance = squareform(distance)
@@ -70,7 +70,7 @@ def test_compute_ngram_distance() -> None:
         assert np.allclose(distance[words == un_word][:, words == un_word], 0)
 
 
-def test__guess_clusters() -> None:
+def test__guess_clusters():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
     distance = compute_ngram_distance(words)
     Z = linkage(distance, method="average")
@@ -78,7 +78,7 @@ def test__guess_clusters() -> None:
     assert n_clusters == len(np.unique(words))
 
 
-def test__create_spelling_correction(seed: int = 123) -> None:
+def test__create_spelling_correction(seed: int = 123):
     rng = np.random.RandomState(seed)
     n_clusters = 3
     samples_per_cluster = 10
@@ -116,7 +116,7 @@ def default_deduplicate(n: int = 500, random_state=0):
     return X, y
 
 
-def test_parallelism() -> None:
+def test_parallelism():
     """Tests that parallelism works with different backends and n_jobs."""
 
     X, y = default_deduplicate(n=200)

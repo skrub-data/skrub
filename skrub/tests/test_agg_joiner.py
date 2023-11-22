@@ -21,15 +21,15 @@ main = pd.DataFrame(
 )
 
 
-assert_tuples = [(main, pd, assert_frame_equal)]
+ASSERT_TUPLES = [(main, pd, assert_frame_equal)]
 if POLARS_SETUP:
-    assert_tuples.append((pl.DataFrame(main), pl, assert_frame_equal_pl))
+    ASSERT_TUPLES.append((pl.DataFrame(main), pl, assert_frame_equal_pl))
 
 
 @pytest.mark.parametrize("use_X_placeholder", [False, True])
 @pytest.mark.parametrize(
     "X, px, assert_frame_equal_",
-    assert_tuples,
+    ASSERT_TUPLES,
 )
 def test_simple_fit_transform(use_X_placeholder, X, px, assert_frame_equal_):
     aux = X if not use_X_placeholder else "X"
