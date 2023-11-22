@@ -3,18 +3,11 @@ import pandas.testing
 import pytest
 
 from skrub import DropCols, SelectCols
-from skrub._dataframe._polars import POLARS_SETUP
-
-DATAFRAME_MODULES = [pandas]
-if POLARS_SETUP:
-    import polars
-
-    DATAFRAME_MODULES.append(polars)
 
 
-@pytest.fixture(params=DATAFRAME_MODULES)
-def df(request):
-    return request.param.DataFrame({"A": [1, 2], "B": [10, 20], "C": ["x", "y"]})
+@pytest.fixture
+def df(px):
+    return px.DataFrame({"A": [1, 2], "B": [10, 20], "C": ["x", "y"]})
 
 
 def test_select_cols(df):

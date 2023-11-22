@@ -13,6 +13,23 @@ from itertools import product
 
 from skrub._utils import atleast_1d_or_none
 
+from ._common import Selector
+
+__all__ = [
+    "POLARS_SETUP",
+    "make_dataframe",
+    "make_series",
+    "aggregate",
+    "join",
+    "split_num_categ_cols",
+    "select",
+    "drop",
+    "Selector",
+    "concat_horizontal",
+    "any_rowwise",
+    "to_pandas",
+]
+
 
 def make_dataframe(X, index=None, dtypes=None):
     """Convert an dictionary of columns into a Polars dataframe.
@@ -274,5 +291,47 @@ def split_num_categ_cols(table):
     return num_cols, categ_cols
 
 
+def _check_selector(columns):
+    if not isinstance(columns, Selector):
+        return columns
+    if columns is Selector.ALL:
+        return cs.all()
+    elif columns is Selector.NONE:
+        return []
+    elif columns is Selector.NUMERIC:
+        return cs.numeric()
+    elif columns is Selector.CATEGORICAL:
+        return cs.string(include_categorical=True)
+    # we have covered all items in the enumeration
+    assert False
+
+
 def select(dataframe, columns):
-    return dataframe.select(columns)
+    return dataframe.select(_check_selector(columns))
+
+
+def drop(dataframe, columns):
+    return dataframe.drop(_check_selector(columns))
+
+
+def any_rowwise(dataframe):
+    return _collect(dataframe.select(pl.any_horizontal(pl.all()))).get_column("any")
+
+
+def concat_horizontal(dataframe, *other_dataframes):
+    return pl.concat(
+        [_collect(dataframe)] + [_collect(df) for df in other_dataframes],
+        how="horizontal",
+    )
+
+
+def _collect(dataframe):
+    if hasattr(dataframe, "collect"):
+        dataframe = dataframe.collect()
+    return dataframe
+
+
+def to_pandas(dataframe):
+    if hasattr(dataframe, "collect"):
+        dataframe = dataframe.collect()
+    return dataframe.to_pandas()
