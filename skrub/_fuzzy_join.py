@@ -133,6 +133,7 @@ def fuzzy_join(
     ...     on="Country",
     ...     suffix="_capitals",
     ...     max_dist=1.0,
+    ...     insert_match_info=False,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -145,6 +146,7 @@ def fuzzy_join(
     ...     suffix="_capitals",
     ...     drop_unmatched=True,
     ...     max_dist=1.0,
+    ...     insert_match_info=False,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -155,6 +157,7 @@ def fuzzy_join(
     ...     on="Country",
     ...     suffix="_capitals",
     ...     max_dist=float("inf"),
+    ...     insert_match_info=False,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris

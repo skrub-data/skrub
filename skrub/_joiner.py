@@ -176,7 +176,13 @@ class Joiner(TransformerMixin, BaseEstimator):
     0  Germany  Berlin
     1   France   Paris
     2    Italy    Rome
-    >>> joiner = Joiner(aux_table, key="Country", suffix="_capitals", max_dist=0.9)
+    >>> joiner = Joiner(
+    ...     aux_table,
+    ...     key="Country",
+    ...     suffix="_capitals",
+    ...     max_dist=0.9,
+    ...     insert_match_info=False,
+    ... )
     >>> joiner.fit_transform(main_table)
       Country Country_capitals Capital_capitals
     0  France           France            Paris
