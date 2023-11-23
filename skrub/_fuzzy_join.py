@@ -18,7 +18,7 @@ def fuzzy_join(
     max_dist=np.inf,
     ref_dist=DEFAULT_REF_DIST,
     string_encoder=DEFAULT_STRING_ENCODER,
-    insert_match_info=True,
+    insert_match_info=False,
     drop_unmatched=False,
 ) -> pd.DataFrame:
     """Join two tables based on approximate matching using the appropriate metric.
@@ -75,7 +75,7 @@ def fuzzy_join(
     string_encoder : scikit-learn transformer used to vectorize text columns
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
         is used.
-    insert_match_info : bool, default=True
+    insert_match_info : bool, default=False
         Insert some columns whose names start with `skrub.Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
         above the threshold.

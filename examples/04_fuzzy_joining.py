@@ -124,6 +124,7 @@ df1 = fuzzy_join(
     gdppc,  # the table to join with
     left_on="Country",  # the first join key column
     right_on="Country Name",  # the second join key column
+    insert_match_info=True,
 )
 
 df1.tail(20)
@@ -138,6 +139,7 @@ df1 = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     max_dist=0.9,
+    insert_match_info=True,
 )
 df1.sort_values("skrub.Joiner.rescaled_distance", ascending=False).head()
 
@@ -190,6 +192,7 @@ df1 = fuzzy_join(
     right_on="Country Name",
     drop_unmatched=True,
     max_dist=0.9,
+    insert_match_info=True,
 )
 
 df1.drop(columns=["Country Name"], inplace=True)
@@ -232,6 +235,7 @@ df2 = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     max_dist=0.9,
+    insert_match_info=True,
 )
 
 df2.drop(columns=["Country Name"], inplace=True)
@@ -268,6 +272,7 @@ df3 = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     max_dist=0.9,
+    insert_match_info=True,
 )
 
 df3.drop(columns=["Country Name"], inplace=True)
