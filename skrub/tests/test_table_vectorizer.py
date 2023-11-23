@@ -215,8 +215,8 @@ X_tuples = [
         {
             "int": "int64",
             "float": "float64",
-            "str1": "string",
-            "str2": "string",
+            "str1": "object",
+            "str2": "object",
             "cat1": "category",
             "cat2": "category",
         },
@@ -559,7 +559,7 @@ def test_mixed_types():
         (
             pd.DataFrame({"col1": [np.nan, np.nan, np.nan]}),
             pd.DataFrame({"col1": [np.nan, np.nan, "placeholder"]}),
-            np.array([[np.nan], [np.nan], ["placeholder"]], dtype="object"),
+            np.array([["missing"], ["missing"], ["placeholder"]], dtype="object"),
         ),
         # All floats during fit, 1 category during transform
         (
