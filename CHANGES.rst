@@ -14,6 +14,8 @@ development and backward compatibility is not ensured.
 
 Major changes
 -------------
+* :class:`TargetEncoder` has been removed in favor of
+  :class:`sklearn.preprocessing.TargetEncoder`, available since scikit-learn 1.3.
 
 * :class:`Joiner` and :func:`fuzzy_join` support several ways of rescaling
   distances; ``match_score`` has been replaced by ``max_dist``; bugs which

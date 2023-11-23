@@ -38,7 +38,7 @@ this example, we showcase hyper-parameter optimization on the whole pipeline.
      :class:`~skrub.DatetimeEncoder`
 
 .. |TargetEncoder| replace::
-     :class:`~skrub.TargetEncoder`
+     :class:`~sklearn.preprocessing.TargetEncoder`
 
 .. |make_pipeline| replace::
      :class:`~sklearn.pipeline.make_pipeline`

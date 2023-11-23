@@ -13,7 +13,6 @@ from skrub import (  # isort:skip
     MinHashEncoder,
     SimilarityEncoder,
     TableVectorizer,
-    # TargetEncoder,
 )
 
 
@@ -68,7 +67,6 @@ def _tested_estimators():
         MinHashEncoder,
         SimilarityEncoder,
         TableVectorizer,
-        # TargetEncoder,  # will be tested in scikit-learn
     ]:
         yield Estimator()
 
