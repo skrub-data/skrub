@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_array_equal
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
@@ -286,7 +287,7 @@ def test_transform_deterministic():
     topics1 = enc.get_feature_names_out()
     enc.transform(X_test)
     topics2 = enc.get_feature_names_out()
-    assert topics1 == topics2
+    assert_array_equal(topics1, topics2)
 
 
 def test_max_no_improvements_none():

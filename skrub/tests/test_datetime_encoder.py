@@ -187,7 +187,7 @@ def test_fit(
     assert enc.index_to_features_ == expected_index_to_features
     assert enc.index_to_format_ == expected_index_to_format
     assert enc.n_features_out_ == expected_n_features_out
-    assert enc.get_feature_names_out() == expected_feature_names
+    assert_array_equal(enc.get_feature_names_out(), expected_feature_names)
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -243,7 +243,7 @@ def test_resolution_none(px):
 
     assert enc.index_to_features_ == {0: [], 1: [], 2: []}
     assert enc.n_features_out_ == 0
-    assert enc.get_feature_names_out() == []
+    assert_array_equal(enc.get_feature_names_out(), [])
 
 
 @pytest.mark.parametrize("px", MODULES)
