@@ -727,7 +727,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         for col_idx, features in self.index_to_features_.items():
             column = columns[col_idx]
             feature_names += [f"{column}_{feat}" for feat in features]
-        return np.asarray(feature_names)
+        return np.asarray(feature_names, dtype=object)
 
     def _more_tags(self):
         """

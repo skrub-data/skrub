@@ -378,7 +378,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             for i in range(self.n_components):
                 feature_names.append(f"{feature}_{i}")
 
-        return np.asarray(feature_names)
+        return np.asarray(feature_names, dtype=object)
 
     def _more_tags(self):
         """

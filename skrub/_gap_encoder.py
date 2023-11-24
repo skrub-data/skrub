@@ -989,7 +989,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         for k, enc in enumerate(self.fitted_models_):
             col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
             labels.extend(col_labels)
-        return np.asarray(labels)
+        return np.asarray(labels, dtype=object)
 
     def score(self, X: ArrayLike, y=None) -> float:
         """Score this instance on `X`.
