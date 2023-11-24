@@ -534,9 +534,9 @@ sparse_output=False), \
         X = _to_numeric(X)
 
         # Replace missing non numeric.
-        non_numeric_dtypes = ["category", "string", "object"]
-        non_numeric_columns = X.select_dtypes(non_numeric_dtypes).columns
-        for col in non_numeric_columns:
+        category_dtypes = ["category", "string", "object"]
+        category_columns = X.select_dtypes(category_dtypes).columns
+        for col in category_columns:
             if self.impute_missing_categories and X[col].isna().any():
                 X[col] = _impute_missing_category(X[col])
 
