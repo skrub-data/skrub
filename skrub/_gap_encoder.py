@@ -720,7 +720,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
     The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names_out()
-    array(['england, london, uk', 'france, paris, pqris'], dtype='<U20')
+    array(['england, london, uk', 'france, paris, pqris'], dtype=object)
 
     It got it right, reccuring topics are "London" and "England" on the
     one side and "Paris" and "France" on the other.
