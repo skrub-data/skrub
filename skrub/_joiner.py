@@ -36,6 +36,13 @@ DEFAULT_REF_DIST = "aux_percentile"
 
 
 def _make_vectorizer(table, string_encoder, rescale):
+    """Construct the transformer used to vectorize joining columns.
+
+    The resulting ColumnTransformer applies TFIDF transformation to string
+    columns, DatetimeEncoder to datetimes and passthrough to numeric columns.
+    In addition if ``rescale`` is ``True``, a StandardScaler is applied to
+    numeric and datetime columns.
+    """
     transformers = [
         (clone(string_encoder), c)
         for c in table.select_dtypes(include=["string", "category", "object"]).columns
@@ -45,7 +52,7 @@ def _make_vectorizer(table, string_encoder, rescale):
         transformers.append(
             (StandardScaler() if rescale else "passthrough", num_columns)
         )
-    dt_columns = table.select_dtypes("datetime").columns
+    dt_columns = table.select_dtypes(["datetime", "datetimetz"]).columns
     if not dt_columns.empty:
         transformers.append(
             (
@@ -138,17 +145,24 @@ class Joiner(TransformerMixin, BaseEstimator):
         although rescaled distances can be greater than 1 for some choices of
         ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
         mean that no matches are rejected.
+
     ref_dist : reference distance for rescaling, default = 'aux_percentile'
-        To facilitate the choice of ``max_dist``, distances between rows in
-        ``main_table`` and their nearest neighbor in ``aux_table`` will be
-        rescaled by this reference distance.
+        Options are {"aux_percentile", "second_neighbor", "self_join_neighbor",
+        "worst_match", "no_rescaling"}. See above for a description of each
+        option. To facilitate the choice of ``max_dist``, distances between
+        rows in ``main_table`` and their nearest neighbor in ``aux_table`` will
+        be rescaled by this reference distance.
+
     string_encoder : scikit-learn transformer used to vectorize text columns
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
         is used.
+
     insert_match_info : bool, default=True
-        Insert some columns whose names start with `skrub.Joiner` containing
+        Insert some columns whose names start with `skrub_Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
-        above the threshold.
+        above the threshold. Those values can be helpful for an estimator that
+        uses the joined features, or to inspect the result of the join and set
+        a ``max_dist`` threshold.
 
     See Also
     --------
@@ -191,7 +205,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     """
 
     _match_info_keys = ["distance", "rescaled_distance", "match_accepted"]
-    _match_info_key_renaming = {k: f"skrub.Joiner.{k}" for k in _match_info_keys}
+    _match_info_key_renaming = {k: f"skrub_Joiner_{k}" for k in _match_info_keys}
     match_info_columns = list(_match_info_key_renaming.values())
 
     def __init__(

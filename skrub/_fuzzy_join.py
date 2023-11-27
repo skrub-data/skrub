@@ -76,7 +76,7 @@ def fuzzy_join(
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
         is used.
     insert_match_info : bool, default=False
-        Insert some columns whose names start with `skrub.Joiner` containing
+        Insert some columns whose names start with `skrub_Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
         above the threshold.
     drop_unmatched : bool, default=False
@@ -187,7 +187,7 @@ def fuzzy_join(
         insert_match_info=True,
     ).fit_transform(left)
     if drop_unmatched:
-        join = join[join["skrub.Joiner.match_accepted"]]
+        join = join[join["skrub_Joiner_match_accepted"]]
     if not insert_match_info:
         join = join.drop(Joiner.match_info_columns, axis=1)
     return join

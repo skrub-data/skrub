@@ -90,7 +90,7 @@ def test_perfect_matches(px):
         warnings.simplefilter("error")
         warnings.filterwarnings("ignore", message="This feature is still experimental")
         join = fuzzy_join(df, df, on="A", suffix="r", insert_match_info=True)
-    assert_array_equal(join["skrub.Joiner.rescaled_distance"].to_numpy(), [0.0, 0.0])
+    assert_array_equal(join["skrub_Joiner_rescaled_distance"].to_numpy(), [0.0, 0.0])
 
 
 @pytest.mark.parametrize("px", MODULES)

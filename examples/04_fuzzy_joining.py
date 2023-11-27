@@ -141,7 +141,7 @@ augmented_df = fuzzy_join(
     max_dist=0.9,
     insert_match_info=True,
 )
-augmented_df.sort_values("skrub.Joiner.rescaled_distance", ascending=False).head()
+augmented_df.sort_values("skrub_Joiner_rescaled_distance", ascending=False).head()
 
 # We merged the first World Bank table to our initial one.
 
@@ -174,7 +174,7 @@ augmented_df.sort_values("skrub.Joiner.rescaled_distance", ascending=False).head
 # Let's print the worst matches, which will give
 # us an overview of the situation:
 
-augmented_df.sort_values("skrub.Joiner.rescaled_distance").tail(10)
+augmented_df.sort_values("skrub_Joiner_rescaled_distance").tail(10)
 
 ###############################################################################
 # We see that some matches were unsuccesful
