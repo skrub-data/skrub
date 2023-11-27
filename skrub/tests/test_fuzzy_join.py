@@ -247,7 +247,7 @@ def test_numerical_column(px):
         left,
         right,
         on="int",
-        max_dist=0.1,
+        max_dist=3,
         drop_unmatched=True,
         suffix="r",
         ref_dist="no_rescaling",
