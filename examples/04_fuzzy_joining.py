@@ -69,8 +69,8 @@ from skrub.datasets import fetch_world_bank_indicator
 
 ###############################################################################
 # We extract the table containing GDP per capita by country:
-gdppc = fetch_world_bank_indicator(indicator_id="NY.GDP.PCAP.CD").X
-gdppc.head(3)
+gdp_per_capita = fetch_world_bank_indicator(indicator_id="NY.GDP.PCAP.CD").X
+gdp_per_capita.head(3)
 
 ###############################################################################
 # Then another table, with life expectancy by country:
@@ -88,12 +88,12 @@ legal_rights.head(3)
 #
 # Alas, the entries for countries do not perfectly match between our
 # original table (df), and those that we downloaded from the worldbank
-# (gdppc):
+# (gdp_per_capita):
 
 df.sort_values(by="Country").tail(7)
 
 ###############################################################################
-gdppc.sort_values(by="Country Name").tail(7)
+gdp_per_capita.sort_values(by="Country Name").tail(7)
 
 ###############################################################################
 # We can see that Yemen is written "Yemen*" on one side, and
@@ -119,29 +119,29 @@ gdppc.sort_values(by="Country Name").tail(7)
 # To join them with skrub, we only need to do the following:
 from skrub import fuzzy_join
 
-df1 = fuzzy_join(
+augmented_df = fuzzy_join(
     df,  # our table to join
-    gdppc,  # the table to join with
+    gdp_per_capita,  # the table to join with
     left_on="Country",  # the first join key column
     right_on="Country Name",  # the second join key column
     insert_match_info=True,
 )
 
-df1.tail(20)
+augmented_df.tail(20)
 
 ###############################################################################
 # In this case, it is better to use the threshold parameter
 # so as to include only precise-enough matches:
 #
-df1 = fuzzy_join(
+augmented_df = fuzzy_join(
     df,
-    gdppc,
+    gdp_per_capita,
     left_on="Country",
     right_on="Country Name",
     max_dist=0.9,
     insert_match_info=True,
 )
-df1.sort_values("skrub.Joiner.rescaled_distance", ascending=False).head()
+augmented_df.sort_values("skrub.Joiner.rescaled_distance", ascending=False).head()
 
 # We merged the first World Bank table to our initial one.
 
@@ -174,7 +174,7 @@ df1.sort_values("skrub.Joiner.rescaled_distance", ascending=False).head()
 # Let's print the worst matches, which will give
 # us an overview of the situation:
 
-df1.sort_values("skrub.Joiner.rescaled_distance").tail(10)
+augmented_df.sort_values("skrub.Joiner.rescaled_distance").tail(10)
 
 ###############################################################################
 # We see that some matches were unsuccesful
@@ -185,9 +185,9 @@ df1.sort_values("skrub.Joiner.rescaled_distance").tail(10)
 # Matches that are not available (or precise enough) are marked as `NaN`.
 # We will remove them using the drop_unmatched parameter:
 
-df1 = fuzzy_join(
+augmented_df = fuzzy_join(
     df,
-    gdppc,
+    gdp_per_capita,
     left_on="Country",
     right_on="Country Name",
     drop_unmatched=True,
@@ -195,7 +195,7 @@ df1 = fuzzy_join(
     insert_match_info=True,
 )
 
-df1.drop(columns=["Country Name"], inplace=True)
+augmented_df.drop(columns=["Country Name"], inplace=True)
 
 ###############################################################################
 # We can finally plot and look at the link between GDP per capital
@@ -207,7 +207,7 @@ sns.set_context("notebook")
 
 plt.figure(figsize=(4, 3))
 ax = sns.regplot(
-    data=df1,
+    data=augmented_df,
     x="GDP per capita (current US$)",
     y="Happiness score",
     lowess=True,
@@ -229,8 +229,8 @@ plt.show()
 #
 # Now let's include other information that may be relevant, such as in the
 # life_exp table:
-df2 = fuzzy_join(
-    df1,
+augmented_df = fuzzy_join(
+    augmented_df,
     life_exp,
     left_on="Country",
     right_on="Country Name",
@@ -238,15 +238,15 @@ df2 = fuzzy_join(
     insert_match_info=True,
 )
 
-df2.drop(columns=["Country Name"], inplace=True)
+augmented_df.drop(columns=["Country Name"], inplace=True)
 
-df2.head(3)
+augmented_df.head(3)
 
 ###############################################################################
 # Let's plot this relation:
 plt.figure(figsize=(4, 3))
 fig = sns.regplot(
-    data=df2,
+    data=augmented_df,
     x="Life expectancy at birth, total (years)",
     y="Happiness score",
     lowess=True,
@@ -266,8 +266,8 @@ plt.show()
 # ......................................
 #
 # And the table with a measure of legal rights strength in the country:
-df3 = fuzzy_join(
-    df2,
+augmented_df = fuzzy_join(
+    augmented_df,
     legal_rights,
     left_on="Country",
     right_on="Country Name",
@@ -275,15 +275,15 @@ df3 = fuzzy_join(
     insert_match_info=True,
 )
 
-df3.drop(columns=["Country Name"], inplace=True)
+augmented_df.drop(columns=["Country Name"], inplace=True)
 
-df3.head(3)
+augmented_df.head(3)
 
 ###############################################################################
 # Let's take a look at their correspondence in a figure:
 plt.figure(figsize=(4, 3))
 fig = sns.regplot(
-    data=df3,
+    data=augmented_df,
     x="Strength of legal rights index (0=weak to 12=strong)",
     y="Happiness score",
     lowess=True,
@@ -307,8 +307,8 @@ plt.show()
 #
 # We now separate our covariates (X), from the target (or exogenous)
 # variables: y
-y = df3["Happiness score"]
-X = df3.drop(["Happiness score", "Country"], axis=1)
+y = augmented_df["Happiness score"]
+X = augmented_df.drop(["Happiness score", "Country"], axis=1)
 
 ###################################################################
 # Let us now define the model that will be used to predict the happiness score:
@@ -370,14 +370,14 @@ from sklearn.pipeline import make_pipeline
 # select the relevant columns before fitting the regressor
 
 pipeline = make_pipeline(
-    Joiner(gdppc, main_key="Country", aux_key="Country Name", suffix=" gdppc"),
+    Joiner(gdp_per_capita, main_key="Country", aux_key="Country Name", suffix=" gdp"),
     Joiner(life_exp, main_key="Country", aux_key="Country Name", suffix=" life_exp"),
     Joiner(
         legal_rights, main_key="Country", aux_key="Country Name", suffix=" legal_rights"
     ),
     SelectCols(
         [
-            "GDP per capita (current US$) gdppc",
+            "GDP per capita (current US$) gdp",
             "Life expectancy at birth, total (years) life_exp",
             "Strength of legal rights index (0=weak to 12=strong) legal_rights",
         ]
