@@ -1,4 +1,5 @@
 """Utilities specific to the JOIN operations."""
+from collections import Counter
 
 from skrub import _utils
 
@@ -83,3 +84,56 @@ def check_missing_columns(table, key, table_name):
         "The following columns cannot be used for joining because they do not exist"
         f" in {table_name}:\n{missing_columns}"
     )
+
+
+def check_column_name_duplicates(main_columns, aux_columns, suffix, table_names={}):
+    """Check that there are no duplicate column names.
+
+    The suffix is provided to be displayed in the possible error message, but
+    it is not applied to the aux_columns by this function. We assume it has
+    been applied to aux_columns by the caller.
+
+    Parameters
+    ----------
+    main_columns : list of str
+        Names of all columns in the main table.
+
+    aux_columns : list of str
+        Names of all columns in the auxiliary table.
+
+    suffix : str
+        The suffix that was provided by the user and has already been appended
+        to the auxiliary column names to produce `aux_columns`.
+
+    table_names : dict[str, str]
+        Mapping with keys in {"main", "aux"} to indicate how those tables
+        should be referred to in any error message. If not provided "main" and
+        "aux" are used.
+
+    Raises
+    ------
+    ValueError
+        If any of the table has duplicate column names, or if there are column
+        names that are used in both tables.
+    """
+    main_table_name = table_names.get("main", "main")
+    aux_table_name = table_names.get("aux", "aux")
+    for columns, table_name in [
+        (main_columns, main_table_name),
+        (aux_columns, aux_table_name),
+    ]:
+        counts = Counter(columns)
+        duplicates = [k for k, v in counts.items() if v > 1]
+        if duplicates:
+            raise ValueError(
+                f"Table '{table_name}' has duplicate column names: {duplicates}."
+                " Please make sure column names are unique."
+            )
+    overlap = list(set(main_columns).intersection(aux_columns))
+    if overlap:
+        raise ValueError(
+            f"After applying the suffix {suffix!r} to column names, the following"
+            f" column names are found in both tables '{main_table_name}' and"
+            f" '{aux_table_name}': {overlap}. Please make sure column names do not"
+            " overlap by renaming some columns or choosing a different suffix."
+        )

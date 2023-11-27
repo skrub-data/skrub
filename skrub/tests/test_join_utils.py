@@ -41,3 +41,15 @@ def test_check_key_length_mismatch():
         _join_utils.check_key(
             "AB", ["A", "B"], None, {"main_key": "left", "aux_key": "right"}
         )
+
+
+def test_check_column_name_duplicates():
+    _join_utils.check_column_name_duplicates(["A", "B"], ["C"], "")
+    # suffix is applied by caller, not by this function
+    _join_utils.check_column_name_duplicates(["AX", "B"], ["A"], "X")
+    with pytest.raises(ValueError, match="Table 'left' has duplicate"):
+        _join_utils.check_column_name_duplicates(
+            ["A", "A"], ["C"], "", {"main": "left"}
+        )
+    with pytest.raises(ValueError, match=".*suffix '_right'.*['A']"):
+        _join_utils.check_column_name_duplicates(["A", "B"], ["A"], "_right")
