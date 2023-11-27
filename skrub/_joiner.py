@@ -155,7 +155,11 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     string_encoder : scikit-learn transformer used to vectorize text columns
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
-        is used.
+        is used. Here we use raw TF-IDF features rather than transforming them
+        for example with ``GapEncoder`` or ``MinHashEncoder`` because it is
+        faster, these features are only used to find nearest neighbors and not
+        used by downstream estimators, and distances between TF-IDF vectors
+        have a somewhat simpler interpretation.
 
     insert_match_info : bool, default=True
         Insert some columns whose names start with `skrub_Joiner` containing
