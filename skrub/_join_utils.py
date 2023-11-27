@@ -2,6 +2,7 @@
 from collections import Counter
 
 from skrub import _utils
+from skrub._dataframe._namespace import get_df_namespace
 
 
 def check_key(main_key, aux_key, key, key_names={}):
@@ -137,3 +138,8 @@ def check_column_name_duplicates(main_columns, aux_columns, suffix, table_names=
             f" '{aux_table_name}': {overlap}. Please make sure column names do not"
             " overlap by renaming some columns or choosing a different suffix."
         )
+
+
+def add_column_name_suffix(dataframe, suffix):
+    ns, _ = get_df_namespace(dataframe)
+    return ns.rename_columns(dataframe, f"{{}}{suffix}".format)

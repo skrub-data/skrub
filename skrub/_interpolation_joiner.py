@@ -299,7 +299,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         )
         prediction_results = self._check_prediction_results(prediction_results)
         predictions = [res["predictions"] for res in prediction_results]
-        predictions = _add_column_name_suffix(predictions, self.suffix)
+        predictions = _multi_add_column_name_suffix(predictions, self.suffix)
         for part in predictions:
             part.index = main_table.index
         return pd.concat([main_table] + predictions, axis=1)
@@ -432,10 +432,5 @@ def _predict(key_values, columns, estimator, propagate_exceptions):
     }
 
 
-def _add_column_name_suffix(dataframes, suffix):
-    if suffix == "":
-        return dataframes
-    renamed = []
-    for df in dataframes:
-        renamed.append(df.rename(columns={c: f"{c}{suffix}" for c in df.columns}))
-    return renamed
+def _multi_add_column_name_suffix(dataframes, suffix):
+    return [_join_utils.add_column_name_suffix(df, suffix) for df in dataframes]

@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 from skrub import _join_utils
@@ -53,3 +54,11 @@ def test_check_column_name_duplicates():
         )
     with pytest.raises(ValueError, match=".*suffix '_right'.*['A']"):
         _join_utils.check_column_name_duplicates(["A", "B"], ["A"], "_right")
+
+
+def test_add_column_name_suffix():
+    df = pd.DataFrame(columns=["one", "two three", "x"])
+    df = _join_utils.add_column_name_suffix(df, "")
+    assert list(df.columns) == ["one", "two three", "x"]
+    df = _join_utils.add_column_name_suffix(df, "_y")
+    assert list(df.columns) == ["one_y", "two three_y", "x_y"]
