@@ -26,13 +26,13 @@ _DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
 
 
 _MATCHERS = {
-    "aux_percentile": _matching.Percentile,
+    "aux_quartile": _matching.Percentile,
     "second_neighbor": _matching.QueryNeighbor,
     "self_join_neighbor": _matching.TargetNeighbor,
     "worst_match": _matching.MaxDist,
     "no_rescaling": _matching.Matching,
 }
-DEFAULT_REF_DIST = "aux_percentile"
+DEFAULT_REF_DIST = "aux_quartile"
 
 
 def _make_vectorizer(table, string_encoder, rescale):
@@ -91,9 +91,9 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     To make it easier to set a ``max_dist`` threshold, the distances are
     rescaled by dividing them by a reference distance, which can be chosen with
-    ``ref_dist``. The default is ``'aux_percentile'``. The possible choices are:
+    ``ref_dist``. The default is ``'aux_quartile'``. The possible choices are:
 
-    'aux_percentile'
+    'aux_quartile'
         Pairs of rows are sampled randomly from the auxiliary table and their
         distance is computed. The reference distance is the first quartile of
         those distances.
@@ -146,8 +146,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
         mean that no matches are rejected.
 
-    ref_dist : reference distance for rescaling, default = 'aux_percentile'
-        Options are {"aux_percentile", "second_neighbor", "self_join_neighbor",
+    ref_dist : reference distance for rescaling, default = 'aux_quartile'
+        Options are {"aux_quartile", "second_neighbor", "self_join_neighbor",
         "worst_match", "no_rescaling"}. See above for a description of each
         option. To facilitate the choice of ``max_dist``, distances between
         rows in ``main_table`` and their nearest neighbor in ``aux_table`` will

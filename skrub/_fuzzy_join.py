@@ -68,7 +68,7 @@ def fuzzy_join(
         although rescaled distances can be greater than 1 for some choices of
         ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
         mean that no matches are rejected.
-    ref_dist : reference distance for rescaling, default = 'aux_percentile'
+    ref_dist : reference distance for rescaling, default = 'aux_quartile'
         To facilitate the choice of ``max_dist``, distances between rows in
         ``main_table`` and their nearest neighbor in ``aux_table`` will be
         rescaled by this reference distance.
