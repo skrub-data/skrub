@@ -129,27 +129,14 @@ augmented_df = fuzzy_join(
 
 augmented_df.tail(20)
 
-###############################################################################
-# In this case, it is better to use the threshold parameter
-# so as to include only precise-enough matches:
-#
-augmented_df = fuzzy_join(
-    df,
-    gdp_per_capita,
-    left_on="Country",
-    right_on="Country Name",
-    max_dist=0.9,
-    insert_match_info=True,
-)
-augmented_df.sort_values("skrub_Joiner_rescaled_distance", ascending=False).head()
-
 # We merged the first World Bank table to our initial one.
 
 ###############################################################################
 # .. topic:: Note:
 #
-#    We fix the ``return_score`` parameter to `True` so as to keep the matching
-#    score, that we will use later to show what are the worst matches.
+#    We set the ``insert_match_info`` parameter to `True` to show distances
+#    between the rows that have been matched, that we will use later to show
+#    what are the worst matches.
 
 ###############################################################################
 #
@@ -162,7 +149,7 @@ augmented_df.sort_values("skrub_Joiner_rescaled_distance", ascending=False).head
 # .. topic:: Note:
 #
 #    This would all be missed out if we were using other methods such as
-#    `pandas.merge <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.merge.html>`_,  # noqa
+#    `pandas.merge <https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.merge.html>`_,
 #    which can only find exact matches.
 #    In this case, to reach the best result, we would have to `manually` clean
 #    the data (e.g. remove the * after country name) and look
@@ -180,6 +167,20 @@ augmented_df.sort_values("skrub_Joiner_rescaled_distance").tail(10)
 # We see that some matches were unsuccesful
 # (e.g "Palestinian Territories*" and "Palau"),
 # because there is simply no match in the two tables.
+
+###############################################################################
+# In this case, it is better to use the threshold parameter
+# so as to include only precise-enough matches:
+#
+augmented_df = fuzzy_join(
+    df,
+    gdp_per_capita,
+    left_on="Country",
+    right_on="Country Name",
+    max_dist=0.9,
+    insert_match_info=True,
+)
+augmented_df.sort_values("skrub_Joiner_rescaled_distance", ascending=False).head()
 
 ###############################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
