@@ -18,7 +18,7 @@ def fuzzy_join(
     max_dist=np.inf,
     ref_dist=DEFAULT_REF_DIST,
     string_encoder=DEFAULT_STRING_ENCODER,
-    insert_match_info=False,
+    add_match_info=False,
     drop_unmatched=False,
 ) -> pd.DataFrame:
     """Join two tables based on approximate matching using the appropriate metric.
@@ -75,7 +75,7 @@ def fuzzy_join(
     string_encoder : scikit-learn transformer used to vectorize text columns
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
         is used.
-    insert_match_info : bool, default=False
+    add_match_info : bool, default=False
         Insert some columns whose names start with `skrub_Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
         above the threshold.
@@ -99,7 +99,7 @@ def fuzzy_join(
 
     Joining on indexes is not supported.
 
-    When `insert_match_info=True`, the returned :obj:`~pandas.DataFrame` contains
+    When `add_match_info=True`, the returned :obj:`~pandas.DataFrame` contains
     additional columns which provide information about the match.
 
     When we use `max_dist=np.inf`, the function will be forced to impute the
@@ -133,7 +133,7 @@ def fuzzy_join(
     ...     on="Country",
     ...     suffix="_capitals",
     ...     max_dist=1.0,
-    ...     insert_match_info=False,
+    ...     add_match_info=False,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -146,7 +146,7 @@ def fuzzy_join(
     ...     suffix="_capitals",
     ...     drop_unmatched=True,
     ...     max_dist=1.0,
-    ...     insert_match_info=False,
+    ...     add_match_info=False,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -157,7 +157,7 @@ def fuzzy_join(
     ...     on="Country",
     ...     suffix="_capitals",
     ...     max_dist=float("inf"),
-    ...     insert_match_info=False,
+    ...     add_match_info=False,
     ... )
       Country Country_capitals Capital_capitals
     0  France           France            Paris
@@ -184,10 +184,10 @@ def fuzzy_join(
         max_dist=max_dist,
         ref_dist=ref_dist,
         string_encoder=string_encoder,
-        insert_match_info=True,
+        add_match_info=True,
     ).fit_transform(left)
     if drop_unmatched:
         join = join[join["skrub_Joiner_match_accepted"]]
-    if not insert_match_info:
+    if not add_match_info:
         join = join.drop(Joiner.match_info_columns, axis=1)
     return join

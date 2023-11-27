@@ -42,7 +42,7 @@ def test_joiner(px):
         aux_table=aux_table,
         main_key="Country",
         aux_key="country",
-        insert_match_info=False,
+        add_match_info=False,
     )
 
     joiner.fit(main_table)
@@ -83,14 +83,14 @@ def test_multiple_keys(px, assert_frame_equal_):
         aux_table=df2,
         aux_key=["CO", "CA"],
         main_key=["Co", "Ca"],
-        insert_match_info=False,
+        add_match_info=False,
     )
     result = joiner_list.fit_transform(df)
     expected = px.DataFrame(px.concat([df, df2], axis=1))
     assert_frame_equal_(result, expected)
 
     joiner_list = Joiner(
-        aux_table=df2, aux_key="CA", main_key="Ca", insert_match_info=False
+        aux_table=df2, aux_key="CA", main_key="Ca", add_match_info=False
     )
     result = joiner_list.fit_transform(df)
     expected = px.DataFrame(px.concat([df, df2], axis=1))

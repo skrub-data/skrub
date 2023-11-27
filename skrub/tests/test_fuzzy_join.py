@@ -43,7 +43,7 @@ def test_fuzzy_join(px, analyzer: Literal["char", "char_wb", "word"]):
         left_on="a1",
         right_on="a2",
         max_dist=1.0,
-        insert_match_info=True,
+        add_match_info=True,
     )
 
     n_cols = df1.shape[1] + df2.shape[1] + 3
@@ -56,7 +56,7 @@ def test_fuzzy_join(px, analyzer: Literal["char", "char_wb", "word"]):
         left_on="a2",
         right_on="a1",
         max_dist=1.0,
-        insert_match_info=True,
+        add_match_info=True,
     )
     # Joining is always done on the left table and thus takes it shape:
     assert df_joined2.shape == (len(df2), n_cols)
@@ -89,7 +89,7 @@ def test_perfect_matches(px):
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         warnings.filterwarnings("ignore", message="This feature is still experimental")
-        join = fuzzy_join(df, df, on="A", suffix="r", insert_match_info=True)
+        join = fuzzy_join(df, df, on="A", suffix="r", add_match_info=True)
     assert_array_equal(join["skrub_Joiner_rescaled_distance"].to_numpy(), [0.0, 0.0])
 
 
@@ -118,12 +118,12 @@ def test_missing_keys(px):
         ValueError,
         match=r"Must pass",
     ):
-        fuzzy_join(a, b, left_on="col1", suffix="r", insert_match_info=False)
+        fuzzy_join(a, b, left_on="col1", suffix="r", add_match_info=False)
     left = px.DataFrame({"a": ["aa", np.NaN, "bb"], "b": [1, 2, np.NaN]})
     right = px.DataFrame(
         {"a": ["aa", "bb", np.NaN, "cc", "dd"], "c": [5, 6, 7, 8, np.NaN]}
     )
-    output = fuzzy_join(left, right, on="a", suffix="r", insert_match_info=False)
+    output = fuzzy_join(left, right, on="a", suffix="r", add_match_info=False)
     assert output.shape == (3, 4)
 
 
@@ -141,10 +141,10 @@ def test_drop_unmatched(px):
         max_dist=0.9,
         drop_unmatched=True,
         suffix="r",
-        insert_match_info=False,
+        add_match_info=False,
     )
     assert c1.shape == (2, 4)
-    c2 = fuzzy_join(a, b, on="col1", max_dist=0.9, suffix="r", insert_match_info=False)
+    c2 = fuzzy_join(a, b, on="col1", max_dist=0.9, suffix="r", add_match_info=False)
     assert sum(c2["col3r"].isna()) > 0
 
 
@@ -171,7 +171,7 @@ def test_fuzzy_join_pandas_comparison():
 
     result = pd.merge(left, right, left_on="key", right_on="key_")
     result_fj = fuzzy_join(
-        left, right, left_on="key", right_on="key_", insert_match_info=False
+        left, right, left_on="key", right_on="key_", add_match_info=False
     )
 
     assert_frame_equal(result, result_fj)
@@ -216,7 +216,7 @@ def test_correct_encoder(px):
     with pytest.raises(
         AssertionError, match=r"Custom vectorizer was called as intended."
     ):
-        fuzzy_join(left, right, on="key", string_encoder=enc, insert_match_info=False)
+        fuzzy_join(left, right, on="key", string_encoder=enc, add_match_info=False)
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -234,13 +234,13 @@ def test_numerical_column(px):
         }
     )
 
-    fj_num = fuzzy_join(left, right, on="int", suffix="r", insert_match_info=False)
+    fj_num = fuzzy_join(left, right, on="int", suffix="r", add_match_info=False)
     n_cols = left.shape[1] + right.shape[1]
     n_samples = len(left)
 
     assert fj_num.shape == (n_samples, n_cols)
 
-    fj_num2 = fuzzy_join(left, right, on="int", insert_match_info=True, suffix="r")
+    fj_num2 = fuzzy_join(left, right, on="int", add_match_info=True, suffix="r")
     assert fj_num2.shape == (n_samples, n_cols + 3)
 
     fj_num3 = fuzzy_join(
@@ -251,7 +251,7 @@ def test_numerical_column(px):
         drop_unmatched=True,
         suffix="r",
         ref_dist="no_rescaling",
-        insert_match_info=False,
+        add_match_info=False,
     )
     assert fj_num3.shape == (2, n_cols)
 
@@ -278,7 +278,7 @@ def test_datetime_column(px, assert_frame_equal_):
         }
     )
 
-    fj_time = fuzzy_join(left, right, on="date", suffix="r", insert_match_info=False)
+    fj_time = fuzzy_join(left, right, on="date", suffix="r", add_match_info=False)
 
     fj_time_expected = px.DataFrame(
         {
@@ -295,7 +295,7 @@ def test_datetime_column(px, assert_frame_equal_):
 
     assert fj_time.shape == (n_samples, n_cols)
 
-    fj_time2 = fuzzy_join(left, right, on="date", insert_match_info=True, suffix="r")
+    fj_time2 = fuzzy_join(left, right, on="date", add_match_info=True, suffix="r")
     assert fj_time2.shape == (n_samples, n_cols + 3)
 
     fj_time3 = fuzzy_join(
@@ -305,7 +305,7 @@ def test_datetime_column(px, assert_frame_equal_):
         max_dist=0.1,
         drop_unmatched=True,
         suffix="r",
-        insert_match_info=False,
+        add_match_info=False,
     )
     assert fj_time3.shape == (2, n_cols)
 
@@ -340,7 +340,7 @@ def test_mixed_joins(px, assert_frame_equal_):
 
     # On multiple numeric keys
     fj_num = fuzzy_join(
-        left, right, on=["int1", "int2"], suffix="r", insert_match_info=False
+        left, right, on=["int1", "int2"], suffix="r", add_match_info=False
     )
 
     expected_fj_num = px.DataFrame(
@@ -367,7 +367,7 @@ def test_mixed_joins(px, assert_frame_equal_):
         left_on=["str1", "str2"],
         right_on=["str_1", "str_2"],
         suffix="r",
-        insert_match_info=False,
+        add_match_info=False,
     )
 
     expected_fj_str = px.DataFrame(
@@ -394,7 +394,7 @@ def test_mixed_joins(px, assert_frame_equal_):
         left_on=["str1", "str2", "int2"],
         right_on=["str_1", "str_2", "int2"],
         suffix="r",
-        insert_match_info=False,
+        add_match_info=False,
     )
     expected_fj_mixed = px.DataFrame(
         {
@@ -420,7 +420,7 @@ def test_mixed_joins(px, assert_frame_equal_):
         left_on=["str1", "date"],
         right_on=["str_1", "date"],
         suffix="r",
-        insert_match_info=False,
+        add_match_info=False,
     )
     expected_fj_mixed2 = px.DataFrame(
         {
@@ -446,7 +446,7 @@ def test_mixed_joins(px, assert_frame_equal_):
         left_on=["int1", "date"],
         right_on=["int1", "date"],
         suffix="r",
-        insert_match_info=False,
+        add_match_info=False,
     )
     expected_fj_mixed3 = px.DataFrame(
         {
@@ -482,10 +482,11 @@ def test_iterable_input(px):
             "str_2": ["TX", "FR", "GR Mytho", "dd"],
         }
     )
-    assert fuzzy_join(
-        df1, df2, on=["a"], suffix="r", insert_match_info=False
-    ).shape == (3, 4)
-    assert fuzzy_join(df1, df2, on="a", suffix="r", insert_match_info=False).shape == (
+    assert fuzzy_join(df1, df2, on=["a"], suffix="r", add_match_info=False).shape == (
+        3,
+        4,
+    )
+    assert fuzzy_join(df1, df2, on="a", suffix="r", add_match_info=False).shape == (
         3,
         4,
     )
@@ -496,7 +497,7 @@ def test_iterable_input(px):
         left_on=["a", "str2"],
         right_on=("a", "str_2"),
         suffix="r",
-        insert_match_info=False,
+        add_match_info=False,
     ).shape == (3, 4)
     assert fuzzy_join(
         df1,
@@ -504,7 +505,7 @@ def test_iterable_input(px):
         left_on=("a", "str2"),
         right_on=np.asarray(("a", "str_2")),
         suffix="r",
-        insert_match_info=False,
+        add_match_info=False,
     ).shape == (3, 4)
 
 
@@ -520,9 +521,9 @@ def test_missing_values(px):
     b = px.DataFrame({"col3": [np.NaN, "bbb", "ddd dd"], "col4": [1, 2, 3]})
 
     with pytest.warns(UserWarning, match=r"merging on missing values"):
-        c = fuzzy_join(a, b, left_on="col1", right_on="col3", insert_match_info=False)
+        c = fuzzy_join(a, b, left_on="col1", right_on="col3", add_match_info=False)
     assert c.shape[0] == len(b)
 
     with pytest.warns(UserWarning, match=r"merging on missing values"):
-        c = fuzzy_join(b, a, left_on="col3", right_on="col1", insert_match_info=True)
+        c = fuzzy_join(b, a, left_on="col3", right_on="col1", add_match_info=True)
     assert c.shape[0] == len(b)

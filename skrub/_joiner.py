@@ -159,7 +159,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         faster, these features are only used to find nearest neighbors and not
         used by downstream estimators, and distances between TF-IDF vectors
         have a somewhat simpler interpretation.
-    insert_match_info : bool, default=True
+    add_match_info : bool, default=True
         Insert some columns whose names start with `skrub_Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
         above the threshold. Those values can be helpful for an estimator that
@@ -197,7 +197,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     ...     key="Country",
     ...     suffix="_capitals",
     ...     max_dist=0.9,
-    ...     insert_match_info=False,
+    ...     add_match_info=False,
     ... )
     >>> joiner.fit_transform(main_table)
       Country Country_capitals Capital_capitals
@@ -221,7 +221,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         max_dist=np.inf,
         ref_dist=DEFAULT_REF_DIST,
         string_encoder=DEFAULT_STRING_ENCODER,
-        insert_match_info=True,
+        add_match_info=True,
     ):
         self.aux_table = aux_table
         self.main_key = main_key
@@ -235,7 +235,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             if string_encoder is DEFAULT_STRING_ENCODER
             else string_encoder
         )
-        self.insert_match_info = insert_match_info
+        self.add_match_info = add_match_info
 
     def _check_max_dist(self):
         if (
@@ -324,7 +324,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             suffixes=("", ""),
             how="left",
         )
-        if self.insert_match_info:
+        if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
                 join[info_col_name] = match_result[info_key]
         return join

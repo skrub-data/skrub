@@ -124,7 +124,7 @@ augmented_df = fuzzy_join(
     gdp_per_capita,  # the table to join with
     left_on="Country",  # the first join key column
     right_on="Country Name",  # the second join key column
-    insert_match_info=True,
+    add_match_info=True,
 )
 
 augmented_df.tail(20)
@@ -134,7 +134,7 @@ augmented_df.tail(20)
 ###############################################################################
 # .. topic:: Note:
 #
-#    We set the ``insert_match_info`` parameter to `True` to show distances
+#    We set the ``add_match_info`` parameter to `True` to show distances
 #    between the rows that have been matched, that we will use later to show
 #    what are the worst matches.
 
@@ -178,7 +178,7 @@ augmented_df = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     max_dist=0.9,
-    insert_match_info=True,
+    add_match_info=True,
 )
 augmented_df.sort_values("skrub_Joiner_rescaled_distance", ascending=False).head()
 
@@ -193,7 +193,7 @@ augmented_df = fuzzy_join(
     right_on="Country Name",
     drop_unmatched=True,
     max_dist=0.9,
-    insert_match_info=True,
+    add_match_info=True,
 )
 
 augmented_df.drop(columns=["Country Name"], inplace=True)
@@ -236,7 +236,7 @@ augmented_df = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     max_dist=0.9,
-    insert_match_info=True,
+    add_match_info=True,
 )
 
 augmented_df.drop(columns=["Country Name"], inplace=True)
@@ -273,7 +273,7 @@ augmented_df = fuzzy_join(
     left_on="Country",
     right_on="Country Name",
     max_dist=0.9,
-    insert_match_info=True,
+    add_match_info=True,
 )
 
 augmented_df.drop(columns=["Country Name"], inplace=True)
