@@ -9,7 +9,6 @@ class Matching(BaseEstimator):
         pass
 
     def fit(self, aux, main):
-        del main
         self.aux_ = aux
         self.neighbors_ = NearestNeighbors(n_neighbors=1).fit(aux)
         return self
@@ -17,7 +16,7 @@ class Matching(BaseEstimator):
     def match(self, main, max_dist):
         distances, indices = self.neighbors_.kneighbors(main, return_distance=True)
         distances, indices = distances.ravel(), indices.ravel()
-        reference_distances = self._get_reference_distances(main, indices, distances)
+        reference_distances = self._get_reference_distances(main, indices)
         rescaled_distances = self._rescale_distances(distances, reference_distances)
         return {
             "index": indices,
@@ -26,8 +25,11 @@ class Matching(BaseEstimator):
             "match_accepted": rescaled_distances <= max_dist,
         }
 
-    def _get_reference_distances(self, main, indices, distances):
-        del main, indices, distances
+    def _get_reference_distances(self, main, indices):
+        # Here we do no rescaling so the parameters are there because
+        # subclasses overriding this function might need them but we do not use
+        # them.
+        del main, indices
         return 1.0
 
     def _rescale_distances(self, distances, reference_distances):
@@ -62,8 +64,10 @@ class Percentile(Matching):
         self.n_sampled_pairs = n_sampled_pairs
         self.random_state = random_state
 
-    def _get_reference_distances(self, main, indices, distances):
-        del main, indices, distances
+    def _get_reference_distances(self, main, indices):
+        # Only the self.aux_ table is needed for this distance; the parameters
+        # are there for compatibility and unused.
+        del main, indices
         self._check_inputs()
         n_rows = self.aux_.shape[0]
         pairs = _sample_pairs(n_rows, self.n_sampled_pairs, self.random_state)
@@ -89,8 +93,10 @@ class TargetNeighbor(Matching):
     def __init__(self, reference_neighbor=1):
         self.reference_neighbor = reference_neighbor
 
-    def _get_reference_distances(self, main, distances, indices):
-        del main, distances
+    def _get_reference_distances(self, main, indices):
+        # these parameters are there for compatibility with other distances but
+        # are unused here
+        del main
         reference_distances, _ = self.neighbors_.kneighbors(
             self.aux_[indices],
             return_distance=True,
@@ -104,8 +110,10 @@ class QueryNeighbor(Matching):
     def __init__(self, reference_neighbor=1):
         self.reference_neighbor = reference_neighbor
 
-    def _get_reference_distances(self, main, indices, distances):
-        del indices, distances
+    def _get_reference_distances(self, main, indices):
+        # these parameters are there for compatibility with other distances but
+        # are unused here
+        del indices
         reference_distances, _ = self.neighbors_.kneighbors(
             main, return_distance=True, n_neighbors=self.reference_neighbor + 1
         )
@@ -114,6 +122,14 @@ class QueryNeighbor(Matching):
 
 
 class MaxDist(Matching):
-    def _get_reference_distances(self, main, indices, distances):
+    def fit(self, aux, main):
+        super().fit(aux, main)
+        distances, _ = self.neighbors_.kneighbors(main, return_distance=True)
+        self.ref_dist_ = distances.max()
+        return self
+
+    def _get_reference_distances(self, main, indices):
+        # these parameters are there for compatibility with other distances but
+        # are unused here
         del main, indices
-        return distances.max()
+        return self.ref_dist_

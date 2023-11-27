@@ -284,8 +284,6 @@ class Joiner(TransformerMixin, BaseEstimator):
             self.string_encoder,
             rescale=self.ref_dist != "no_rescaling",
         )
-        # TODO: fast path if max_dist == 0 and not return_matching_info, don't
-        # vectorize nor fit matching just do normal equijoin
         aux = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
         # TODO: add a fit_transform to avoid vectorizing main twice; also maybe
         # skip in fit if the matching does not need it
