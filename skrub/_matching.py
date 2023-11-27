@@ -169,11 +169,11 @@ class QueryNeighbor(Matching):
 
 
 class MaxDist(Matching):
-    """Fuzzy joining rescaling by worse match on the main table provided to ``fit``.
+    """Fuzzy joining rescaling by worst match on the main table provided to ``fit``.
 
     During fit, we compute matching distances (of each main row to its nearest
     neighbor in the aux table). The rescaling distance is the max of those
-    distances (ie the worse match would get a rescaled distance of 1.0).
+    distances (ie the worst match would get a rescaled distance of 1.0).
     """
 
     def fit(self, aux, main):

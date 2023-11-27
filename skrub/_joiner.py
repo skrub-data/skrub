@@ -109,10 +109,11 @@ class Joiner(TransformerMixin, BaseEstimator):
         separates those 2 auxiliary rows.
 
     'worst_match'
-        The reference distance is the maximum, over all rows in the main table,
-        of the distance between each row and its nearest neighbor in the
-        auxiliary table (ie its candidate match). This means that the worst
-        match will have a rescaled distance of 1.0.
+        The reference distance is the maximum, over all rows in the main table
+        provided to ``fit`` (ie ``X`` in ``fit(X)``), of the distance between
+        each row and its nearest neighbor in the auxiliary table (ie its
+        candidate match). This means that the worst match will have a rescaled
+        distance of 1.0.
 
     'no_rescaling'
         The reference distance is 1.0, ie no rescaling of the distances is
@@ -145,14 +146,12 @@ class Joiner(TransformerMixin, BaseEstimator):
         although rescaled distances can be greater than 1 for some choices of
         ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
         mean that no matches are rejected.
-
     ref_dist : reference distance for rescaling, default = 'aux_quartile'
         Options are {"aux_quartile", "second_neighbor", "self_join_neighbor",
         "worst_match", "no_rescaling"}. See above for a description of each
         option. To facilitate the choice of ``max_dist``, distances between
         rows in ``main_table`` and their nearest neighbor in ``aux_table`` will
         be rescaled by this reference distance.
-
     string_encoder : scikit-learn transformer used to vectorize text columns
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
         is used. Here we use raw TF-IDF features rather than transforming them
@@ -160,7 +159,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         faster, these features are only used to find nearest neighbors and not
         used by downstream estimators, and distances between TF-IDF vectors
         have a somewhat simpler interpretation.
-
     insert_match_info : bool, default=True
         Insert some columns whose names start with `skrub_Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
@@ -285,8 +283,6 @@ class Joiner(TransformerMixin, BaseEstimator):
             rescale=self.ref_dist != "no_rescaling",
         )
         aux = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
-        # TODO: add a fit_transform to avoid vectorizing main twice; also maybe
-        # skip in fit if the matching does not need it
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
