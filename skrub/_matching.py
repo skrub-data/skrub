@@ -5,10 +5,23 @@ from sklearn.neighbors import NearestNeighbors
 
 
 class Matching(BaseEstimator):
+    """Base class for fuzzy-join matching & distance rescaling.
+
+    This class is a helper for the ``Joiner`` and ``fuzzy_join``. It is
+    provided with the main and auxiliary tables to join. It computes for each
+    row in the main table its nearest neighbor in the auxiliary table. It also
+    computes a reference distance, by which distances between a row and its
+    nearest match are rescaled. This base class does not apply any rescaling:
+    the reference distance is 1.0. Subclasses can override
+    ``_get_reference_distances`` to modify the rescaling behavior.
+    """
+
     def __init__(self):
         pass
 
     def fit(self, aux, main):
+        # Used by some subclasses but not here
+        del main
         self.aux_ = aux
         self.neighbors_ = NearestNeighbors(n_neighbors=1).fit(aux)
         return self
@@ -59,15 +72,20 @@ def _sample_pairs(n_items, n_pairs, random_state):
 
 
 class Percentile(Matching):
+    """Fuzzy joining with rescaling by 1st quartile distance of random auxiliary rows.
+
+    Pairs of (different) rows are sampled randomly from the auxiliary table,
+    and the distance that separates each pair is computed. The reference
+    distance is a percentile (by default 25%) of the resulting distances.
+    """
+
     def __init__(self, percentile=25.0, n_sampled_pairs=500, random_state=0):
         self.percentile = percentile
         self.n_sampled_pairs = n_sampled_pairs
         self.random_state = random_state
 
-    def _get_reference_distances(self, main, indices):
-        # Only the self.aux_ table is needed for this distance; the parameters
-        # are there for compatibility and unused.
-        del main, indices
+    def fit(self, aux, main):
+        super().fit(aux, main)
         self._check_inputs()
         n_rows = self.aux_.shape[0]
         pairs = _sample_pairs(n_rows, self.n_sampled_pairs, self.random_state)
@@ -76,7 +94,13 @@ class Percentile(Matching):
             distances = sparse.linalg.norm(diff, axis=1)
         else:
             distances = np.linalg.norm(diff, axis=1)
-        return np.percentile(distances, self.percentile)
+        self.ref_dist_ = np.percentile(distances, self.percentile)
+
+    def _get_reference_distances(self, main, indices):
+        # Only the self.aux_ table is needed for this distance; the parameters
+        # are there for compatibility and unused.
+        del main, indices
+        return self.ref_dist_
 
     def _check_inputs(self):
         if self.n_sampled_pairs <= 0:
@@ -90,6 +114,18 @@ class Percentile(Matching):
 
 
 class TargetNeighbor(Matching):
+    """Fuzzy joining rescaling by nearest neighbor to the aux row within the aux table.
+
+    For each match, we take the auxiliary table row (the target of the match)
+    and compute its nearest neighbor (excluding itself) within its own table
+    (the auxiliary table). This is the reference distance (note that unlike
+    some other rescaling strategies the reference distance differs for each
+    pair of matching rows).
+
+    Instead of the nearest neighbor, another (more distant neighbor) can be
+    chosen by setting ``reference_neighbor``.
+    """
+
     def __init__(self, reference_neighbor=1):
         self.reference_neighbor = reference_neighbor
 
@@ -107,6 +143,17 @@ class TargetNeighbor(Matching):
 
 
 class QueryNeighbor(Matching):
+    """Fuzzy joining rescaling by nearest neighbor to the main row within the aux table.
+
+    For each match, we rescale by the distance of the main (query) row to its
+    _second_ nearest neighbor in the auxiliary table (the first being the
+    actual match candidate). Note that unlike some other rescaling strategies
+    the reference distance differs for each pair of matching rows
+
+    Instead of the nearest neighbor, another (more distant neighbor) can be
+    chosen by setting ``reference_neighbor``.
+    """
+
     def __init__(self, reference_neighbor=1):
         self.reference_neighbor = reference_neighbor
 
@@ -122,6 +169,13 @@ class QueryNeighbor(Matching):
 
 
 class MaxDist(Matching):
+    """Fuzzy joining rescaling by worse match on the main table provided to ``fit``.
+
+    During fit, we compute matching distances (of each main row to its nearest
+    neighbor in the aux table). The rescaling distance is the max of those
+    distances (ie the worse match would get a rescaled distance of 1.0).
+    """
+
     def fit(self, aux, main):
         super().fit(aux, main)
         distances, _ = self.neighbors_.kneighbors(main, return_distance=True)
