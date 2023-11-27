@@ -264,6 +264,11 @@ class Joiner(TransformerMixin, BaseEstimator):
             Fitted Joiner instance (self).
         """
         del y
+        if self.ref_dist not in _MATCHERS:
+            raise ValueError(
+                f"ref_dist should be one of {list(_MATCHERS.keys())}, got"
+                f" {self.ref_dist!r:}"
+            )
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
@@ -273,7 +278,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         self.vectorizer_ = _make_vectorizer(
             self.aux_table[self._aux_key],
             self.string_encoder,
-            rescale=self.ref_dist != "raw_distance",
+            rescale=self.ref_dist != "no_rescaling",
         )
         # TODO: fast path if max_dist == 0 and not return_matching_info, don't
         # vectorize nor fit matching just do normal equijoin

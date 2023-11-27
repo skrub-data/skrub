@@ -95,3 +95,10 @@ def test_multiple_keys(px, assert_frame_equal_):
     result = joiner_list.fit_transform(df)
     expected = px.DataFrame(px.concat([df, df2], axis=1))
     assert_frame_equal_(result, expected)
+
+
+def test_bad_ref_dist():
+    table = pd.DataFrame({"A": [1, 2]})
+    joiner = Joiner(table, key="A", ref_dist="bad")
+    with pytest.raises(ValueError, match="got 'bad'"):
+        joiner.fit(table)
