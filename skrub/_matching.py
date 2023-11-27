@@ -42,14 +42,14 @@ class Matching(BaseEstimator):
         return rescaled_distances
 
 
-def _sample_pairs(n, n_pairs, random_state):
-    assert n > 1
+def _sample_pairs(n_items, n_pairs, random_state):
+    assert n_items > 1
     assert n_pairs > 0
     rng = np.random.default_rng(random_state)
     parts = []
     n_found = 0
     while n_found < n_pairs:
-        new_part = rng.integers(n, size=(n_pairs, 2))
+        new_part = rng.integers(n_items, size=(n_pairs, 2))
         new_part = new_part[new_part[:, 0] != new_part[:, 1]]
         parts.append(new_part)
         n_found += new_part.shape[0]
@@ -69,9 +69,9 @@ class Percentile(Matching):
         pairs = _sample_pairs(n_rows, self.n_sampled_pairs, self.random_state)
         diff = self.aux_[pairs[:, 0]] - self.aux_[pairs[:, 1]]
         if sparse.issparse(self.aux_):
-            distances = np.asarray(np.sqrt(diff.multiply(diff).sum(axis=1))).ravel()
+            distances = sparse.linalg.norm(diff, axis=1)
         else:
-            distances = np.sqrt(((diff) ** 2).sum(axis=1))
+            distances = np.linalg.norm(diff, axis=1)
         return np.percentile(distances, self.percentile)
 
     def _check_inputs(self):
