@@ -401,9 +401,12 @@ def _guess_datetime_format(X_col, random_state=None):
     When both dayfirst and monthfirst format are possible, we select
     monthfirst by default.
 
-    You can overwrite this behaviour by setting a format of the caller function.
+    You can overwrite this behaviour by setting a format in the caller function.
     Setting a format always take precedence over infering it using
     ``_guess_datetime_format``.
+
+    For computational effiency, we only subsample ``n_samples`` rows of ``X_col``.
+    ``n_samples`` is currently set to 30.
 
     Parameters
     ----------
@@ -424,7 +427,8 @@ def _guess_datetime_format(X_col, random_state=None):
     X_col = X_col.astype("object")
 
     # Subsample samples for fast format estimation
-    size = min(X_col.shape[0], 10)
+    n_samples = 30
+    size = min(X_col.shape[0], n_samples)
     rng = check_random_state(random_state)
     X_col = rng.choice(X_col, size=size, replace=False)
 
