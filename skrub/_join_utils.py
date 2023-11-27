@@ -53,6 +53,12 @@ def check_key(main_key, aux_key, key, key_names={}):
             )
     main_key = _utils.atleast_1d_or_none(main_key)
     aux_key = _utils.atleast_1d_or_none(aux_key)
+    if len(main_key) != len(aux_key):
+        raise ValueError(
+            f"'{main_key_name}' and '{aux_key_name}' keys have different lengths"
+            f" ({len(main_key)} and {len(aux_key)}). Cannot join on different numbers"
+            " of columns."
+        )
     return main_key, aux_key
 
 

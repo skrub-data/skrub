@@ -32,3 +32,12 @@ def test_check_too_few_keys_errors(main_key, aux_key):
 )
 def test_check_key(main_key, aux_key, key, result):
     assert _join_utils.check_key(main_key, aux_key, key) == result
+
+
+def test_check_key_length_mismatch():
+    with pytest.raises(
+        ValueError, match=r"'left' and 'right' keys.*different lengths \(1 and 2\)"
+    ):
+        _join_utils.check_key(
+            "AB", ["A", "B"], None, {"main_key": "left", "aux_key": "right"}
+        )
