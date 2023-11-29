@@ -27,7 +27,6 @@ from ._utils import check_input
 
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
-
     """GapEncoder for encoding a single column.
 
     Do not use directly, this is an internal object.
@@ -384,7 +383,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         except ValueError:
             # The vectorizer failed to find words, we need to switch to
             # char-level representation
-            vectorizer = CountVectorizer(analyzer='char_wb')
+            vectorizer = CountVectorizer(analyzer="char_wb")
             vectorizer.fit(list(self.H_dict_.keys()))
         vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self.transform(np.array(vocabulary).reshape(-1))
