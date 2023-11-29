@@ -379,7 +379,13 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         """
 
         vectorizer = CountVectorizer()
-        vectorizer.fit(list(self.H_dict_.keys()))
+        try:
+            vectorizer.fit(list(self.H_dict_.keys()))
+        except ValueError:
+            # The vectorizer failed to find words, we need to switch to
+            # char-level representation
+            vectorizer = CountVectorizer(analyzer='char_wb')
+            vectorizer.fit(list(self.H_dict_.keys()))
         vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self.transform(np.array(vocabulary).reshape(-1))
         encoding = abs(encoding)

@@ -196,6 +196,20 @@ def test_get_feature_names_out(n_samples=70):
     return
 
 
+def test_get_feature_names_out_no_words():
+    enc = GapEncoder(random_state=42)
+    # A dataframe with words too short
+    df = pd.DataFrame(
+        20 * [["a b c d", ], ],
+    )
+
+    enc.fit(df)
+    # The difficulty here is that, in this specific case short words
+    # should not be filtered out
+    enc.get_feature_names_out()
+    return
+
+
 def test_overflow_error():
     np.seterr(over="raise", divide="raise")
     r = np.random.RandomState(0)
