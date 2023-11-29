@@ -4,7 +4,7 @@ import pytest
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
-from skrub import GapEncoder
+from skrub import GapEncoder, TableVectorizer
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub._dataframe._test_utils import is_module_polars
 from skrub.datasets import fetch_midwest_survey
@@ -197,6 +197,7 @@ def test_get_feature_names_out(n_samples=70):
 
 
 def test_get_feature_names_out_no_words():
+    # Test the GapEncoder get_feature_names_out when there are no words
     enc = GapEncoder(random_state=42)
     # A dataframe with words too short
     df = pd.DataFrame(
@@ -208,6 +209,21 @@ def test_get_feature_names_out_no_words():
     # should not be filtered out
     enc.get_feature_names_out()
     return
+
+
+def test_get_feature_names_out_redundent():
+    enc = GapEncoder(random_state=42)
+    # With the following dataframe, the GapEncoder produces feature names
+    # that have the same name, which leads duplicated features names,
+    # which themselves lead to errors in the TableVectorizer
+    # get_feature_names_out() method.
+    df = pd.DataFrame(
+        40 * [["aaa bbb cccc ddd", ], ],
+    )
+
+    tv = TableVectorizer(cardinality_threshold=1)
+    tv.fit(df)
+    tv.get_feature_names_out()
 
 
 def test_overflow_error():

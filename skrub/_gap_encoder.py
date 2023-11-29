@@ -395,8 +395,12 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         for i in range(n_components):
             x = encoding[:, i]
             labels = vocabulary[np.argsort(-x)[:n_labels]]
-            topic_labels.append(labels)
-        topic_labels = [prefix + ", ".join(label) for label in topic_labels]
+            label = ", ".join(labels)
+            # Avoid having twice the same name for the different features
+            if label in topic_labels:
+                label += ', {:}'.format(i)
+            topic_labels.append(label)
+        topic_labels = [prefix + label for label in topic_labels]
         return topic_labels
 
     def score(self, X: ArrayLike) -> float:
