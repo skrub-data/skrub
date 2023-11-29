@@ -201,7 +201,12 @@ def test_get_feature_names_out_no_words():
     enc = GapEncoder(random_state=42)
     # A dataframe with words too short
     df = pd.DataFrame(
-        20 * [["a b c d", ], ],
+        20
+        * [
+            [
+                "a b c d",
+            ],
+        ],
     )
 
     enc.fit(df)
@@ -212,13 +217,17 @@ def test_get_feature_names_out_no_words():
 
 
 def test_get_feature_names_out_redundent():
-    enc = GapEncoder(random_state=42)
     # With the following dataframe, the GapEncoder produces feature names
     # that have the same name, which leads duplicated features names,
     # which themselves lead to errors in the TableVectorizer
     # get_feature_names_out() method.
     df = pd.DataFrame(
-        40 * [["aaa bbb cccc ddd", ], ],
+        40
+        * [
+            [
+                "aaa bbb cccc ddd",
+            ],
+        ],
     )
 
     tv = TableVectorizer(cardinality_threshold=1)
