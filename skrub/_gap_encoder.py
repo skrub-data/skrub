@@ -398,7 +398,7 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             label = ", ".join(labels)
             # Avoid having twice the same name for the different features
             if label in topic_labels:
-                label += ', {:}'.format(i)
+                label += ", {:}".format(i)
             topic_labels.append(label)
         topic_labels = [prefix + label for label in topic_labels]
         return topic_labels
