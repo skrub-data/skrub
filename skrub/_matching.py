@@ -17,11 +17,14 @@ class Matching(BaseEstimator):
     ``_get_reference_distances`` to modify the rescaling behavior.
     """
 
-    def __init__(self):
-        pass
-
     def fit(self, aux, main):
-        # Used by some subclasses but not here
+        """Fit to the vectorized auxiliary and main matching columns.
+
+        Some strategies do not need the vectorized main columns. Client code
+        can attempt to call ``fit`` with ``main=None`` as an optimization.
+        Subclasses that require a value for ``main`` should raise a
+        ``TypeError`` in this case.
+        """
         del main
         self.aux_ = aux
         self.neighbors_ = NearestNeighbors(n_neighbors=1).fit(aux)
@@ -178,6 +181,11 @@ class WorstMatch(Matching):
     """
 
     def fit(self, aux, main):
+        if main is None:
+            raise TypeError(
+                f"{self.__class__.__name__} needs the vectorized main table matching"
+                " columns for fit()."
+            )
         super().fit(aux, main)
         distances, _ = self.neighbors_.kneighbors(main, return_distance=True)
         self.ref_dist_ = distances.max()

@@ -214,7 +214,6 @@ class Joiner(TransformerMixin, BaseEstimator):
     0  France           France            Paris
     1  Italia            Italy             Rome
     2   Spain              NaN              NaN
-
     """
 
     _match_info_keys = ["distance", "rescaled_distance", "match_accepted"]
@@ -294,11 +293,18 @@ class Joiner(TransformerMixin, BaseEstimator):
             rescale=self.ref_dist != "no_rescaling",
         )
         aux = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
-        main = self.vectorizer_.transform(
-            X[self._main_key].set_axis(self._aux_key, axis="columns")
-        )
         self._check_ref_dist()
-        self._matching.fit(aux, main)
+        try:
+            # Some matching strategies do not need the vectorized main columns
+            # so we try without to save computation time and only compute them
+            # if we get a TypeError. TODO: when support for WorstMatch is
+            # removed we can simplify this and never vectorize main.
+            self._matching.fit(aux, None)
+        except TypeError:
+            main = self.vectorizer_.transform(
+                X[self._main_key].set_axis(self._aux_key, axis="columns")
+            )
+            self._matching.fit(aux, main)
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
