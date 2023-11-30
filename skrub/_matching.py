@@ -113,7 +113,7 @@ class Percentile(Matching):
             )
 
 
-class TargetNeighbor(Matching):
+class SelfJoinNeighbor(Matching):
     """Fuzzy joining rescaling by nearest neighbor to the aux row within the aux table.
 
     For each match, we take the auxiliary table row (the target of the match)
@@ -142,7 +142,7 @@ class TargetNeighbor(Matching):
         return reference_distances
 
 
-class QueryNeighbor(Matching):
+class OtherNeighbor(Matching):
     """Fuzzy joining rescaling by nearest neighbor to the main row within the aux table.
 
     For each match, we rescale by the distance of the main (query) row to its
@@ -168,7 +168,7 @@ class QueryNeighbor(Matching):
         return reference_distances
 
 
-class MaxDist(Matching):
+class WorstMatch(Matching):
     """Fuzzy joining rescaling by worst match on the main table provided to ``fit``.
 
     During fit, we compute matching distances (of each main row to its nearest

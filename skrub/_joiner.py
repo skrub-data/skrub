@@ -27,9 +27,9 @@ _DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
 
 _MATCHERS = {
     "aux_quartile": _matching.Percentile,
-    "second_neighbor": _matching.QueryNeighbor,
-    "self_join_neighbor": _matching.TargetNeighbor,
-    "worst_match": _matching.MaxDist,
+    "second_neighbor": _matching.OtherNeighbor,
+    "self_join_neighbor": _matching.SelfJoinNeighbor,
+    "worst_match": _matching.WorstMatch,
     "no_rescaling": _matching.Matching,
 }
 DEFAULT_REF_DIST = "aux_quartile"
