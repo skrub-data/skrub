@@ -395,10 +395,10 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
             x = encoding[:, i]
             labels = vocabulary[np.argsort(-x)[:n_labels]]
             label = ", ".join(labels)
+            label = prefix + label
             # Avoid having twice the same name for the different features
             if label in topic_labels:
                 label += " ({:})".format(i)
-            label = prefix + label
             topic_labels.append(label)
         return topic_labels
 
