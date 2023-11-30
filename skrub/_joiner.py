@@ -166,6 +166,16 @@ class Joiner(TransformerMixin, BaseEstimator):
         uses the joined features, or to inspect the result of the join and set
         a ``max_dist`` threshold.
 
+    Attributes
+    ----------
+    max_dist_ : the maximum distance for a match to be accepted
+        Equal to the parameter ``max_dist`` except that ``"inf"`` and ``None``
+        are mapped to ``np.inf`` (ie accept all matches).
+
+    vectorizer_ : scikit-learn ColumnTransformer
+        The fitted transformer used to transform the matching columns into
+        numerical vectors.
+
     See Also
     --------
     AggJoiner :
@@ -204,6 +214,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     0  France           France            Paris
     1  Italia            Italy             Rome
     2   Spain              NaN              NaN
+
     """
 
     _match_info_keys = ["distance", "rescaled_distance", "match_accepted"]
@@ -243,12 +254,12 @@ class Joiner(TransformerMixin, BaseEstimator):
             or isinstance(self.max_dist, str)
             and self.max_dist == "inf"
         ):
-            self._max_dist = np.inf
+            self.max_dist_ = np.inf
         else:
-            self._max_dist = self.max_dist
+            self.max_dist_ = self.max_dist
 
     def _check_ref_dist(self):
-        self.matching_ = _MATCHERS[self.ref_dist]()
+        self._matching = _MATCHERS[self.ref_dist]()
 
     def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
         """Fit the instance to the main table.
@@ -287,7 +298,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
         self._check_ref_dist()
-        self.matching_.fit(aux, main)
+        self._matching.fit(aux, main)
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
@@ -310,7 +321,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
-        match_result = self.matching_.match(main, self._max_dist)
+        match_result = self._matching.match(main, self.max_dist_)
         aux_table = _join_utils.add_column_name_suffix(self.aux_table, self.suffix)
         matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1
