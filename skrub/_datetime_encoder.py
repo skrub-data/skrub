@@ -718,7 +718,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        feature_names : list of str
+        feature_names : ndarray of str
             List of feature names.
         """
         check_is_fitted(self, "index_to_features_")
@@ -727,7 +727,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         for col_idx, features in self.index_to_features_.items():
             column = columns[col_idx]
             feature_names += [f"{column}_{feat}" for feat in features]
-        return feature_names
+        return np.asarray(feature_names, dtype=object)
 
     def _more_tags(self):
         """

@@ -720,7 +720,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
     The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names_out()
-    ['england, london, uk', 'france, paris, pqris']
+    array(['england, london, uk', 'france, paris, pqris'], dtype=object)
 
     It got it right, reccuring topics are "London" and "England" on the
     one side and "Paris" and "France" on the other.
@@ -989,7 +989,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         for k, enc in enumerate(self.fitted_models_):
             col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
             labels.extend(col_labels)
-        return labels
+        return np.asarray(labels, dtype=object)
 
     def score(self, X: ArrayLike, y=None) -> float:
         """Score this instance on `X`.
