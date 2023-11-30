@@ -217,7 +217,7 @@ def test_get_feature_names_out_no_words():
 
 
 def test_get_feature_names_out_redundent():
-    # With the following dataframe, the GapEncoder produces feature names
+    # With the following dataframe, the GapEncoder can produce feature names
     # that have the same name, which leads duplicated features names,
     # which themselves lead to errors in the TableVectorizer
     # get_feature_names_out() method.
