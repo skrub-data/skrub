@@ -2,6 +2,7 @@ import numpy as np
 from scipy import sparse
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import NearestNeighbors
+from sklearn.utils import check_random_state
 
 
 class Matching(BaseEstimator):
@@ -60,11 +61,10 @@ class Matching(BaseEstimator):
 def _sample_pairs(n_items, n_pairs, random_state):
     assert n_items > 1
     assert n_pairs > 0
-    rng = np.random.default_rng(random_state)
     parts = []
     n_found = 0
     while n_found < n_pairs:
-        new_part = rng.integers(n_items, size=(n_pairs, 2))
+        new_part = random_state.randint(n_items, size=(n_pairs, 2))
         new_part = new_part[new_part[:, 0] != new_part[:, 1]]
         parts.append(new_part)
         n_found += new_part.shape[0]
@@ -88,7 +88,7 @@ class Percentile(Matching):
         super().fit(aux, main)
         self._check_inputs()
         n_rows = self.aux_.shape[0]
-        pairs = _sample_pairs(n_rows, self.n_sampled_pairs, self.random_state)
+        pairs = _sample_pairs(n_rows, self.n_sampled_pairs, self.random_state_)
         diff = self.aux_[pairs[:, 0]] - self.aux_[pairs[:, 1]]
         if sparse.issparse(self.aux_):
             distances = sparse.linalg.norm(diff, axis=1)
@@ -111,6 +111,7 @@ class Percentile(Matching):
                 "Cannot estimate the distribution of distances between rows  of a"
                 f" table with only {n_rows} rows"
             )
+        self.random_state_ = check_random_state(self.random_state)
 
 
 class SelfJoinNeighbor(Matching):
