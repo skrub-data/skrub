@@ -90,6 +90,7 @@ class Percentile(Matching):
         else:
             distances = np.linalg.norm(diff, axis=1)
         self.ref_dist_ = np.percentile(distances, self.percentile)
+        return self
 
     def _get_reference_distances(self, main, indices):
         # Only the self.aux_ table is needed for this distance; the parameters
