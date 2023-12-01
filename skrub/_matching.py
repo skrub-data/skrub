@@ -66,7 +66,7 @@ def _sample_pairs(n_items, n_pairs, random_state):
     return np.concatenate(parts, axis=0)[:n_pairs]
 
 
-class Percentile(Matching):
+class RandomPairs(Matching):
     """Fuzzy joining with rescaling by 1st quartile distance of random auxiliary rows.
 
     Pairs of (different) rows are sampled randomly from the auxiliary table,

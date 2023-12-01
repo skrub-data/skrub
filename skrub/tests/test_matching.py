@@ -10,7 +10,7 @@ from skrub import _matching
         (_matching.Matching, 2.0),
         (_matching.OtherNeighbor, 0.5),
         (_matching.SelfJoinNeighbor, 1.0),
-        (_matching.Percentile, 1.0),
+        (_matching.RandomPairs, 1.0),
     ],
 )
 def test_matching_rescaled_distance(strategy, expected):
@@ -22,6 +22,6 @@ def test_matching_rescaled_distance(strategy, expected):
 
 def test_percentile_bad_params():
     with pytest.raises(ValueError, match="must be a positive integer"):
-        _matching.Percentile(n_sampled_pairs=0).fit(np.zeros((3, 1)))
+        _matching.RandomPairs(n_sampled_pairs=0).fit(np.zeros((3, 1)))
     with pytest.raises(ValueError, match="with only 1 rows"):
-        _matching.Percentile().fit(np.zeros((1, 1)))
+        _matching.RandomPairs().fit(np.zeros((1, 1)))
