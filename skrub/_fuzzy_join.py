@@ -21,115 +21,133 @@ def fuzzy_join(
     add_match_info=False,
     drop_unmatched=False,
 ) -> pd.DataFrame:
-    """Join two tables based on approximate matching using the appropriate metric.
+    """Fuzzy (approximate) join.
 
-    TODO update this docstring once the reviews on the Joiner docstring have converged
+    Rows in the left table are joined to their closest match from the right
+    table. The resulting table has the same rows (in the same order) as the
+    left table, unless ``drop_unmatched`` is ``True``, in which case rows that
+    are too far from their closest match will not appear in the result. Each
+    row from the left table appears at most once in the result; if there are
+    several equally good matching rows in the right table one of them will be
+    used; which one is unspecified.
 
-    The principle is as follows:
+    To identify the best match for each row, values from the matching columns
+    (``left_key`` and ``right_key``) are vectorized, ie represented by vectors of
+    continuous values. Then, the Euclidean distances between these vectors are
+    computed to find, for each left table row, its nearest neighbor within the
+    right table.
 
-    1. We embed and transform the key string, numerical or datetime columns.
-    2. For each category, we use the nearest neighbor method to find its
-       closest neighbor and establish a match.
-    3. We match the tables using the previous information.
+    Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
+    between vectors that are separated by a distance (strictly) greater than
+    ``max_dist`` will be rejected. We will consider that left table rows that
+    are farther than ``max_dist`` from their nearest neighbor do not have a
+    matching row in the right table, and the output will contain nulls for
+    the entries that would normally have come from the right table (as in a
+    traditional left join).
 
-    For string columns, categories from the two tables that share many sub-strings
-    (n-grams) have greater probability of being matched together. The join is based on
-    morphological similarities between strings.
+    To make it easier to set a ``max_dist`` threshold, the distances are
+    rescaled by dividing them by a reference distance, which can be chosen with
+    ``ref_dist``. The default is ``'aux_quartile'``. The possible choices are:
 
-    Simultaneous joins on multiple columns (e.g. longitude, latitude) is supported.
+    'aux_quartile'
+        Pairs of rows are sampled randomly from the right table and their
+        distance is computed. The reference distance is the first quartile of
+        those distances.
 
-    Joining on numerical columns is also possible based on
-    the Euclidean distance.
+    'second_neighbor'
+        The reference distance is the distance to the *second* nearest neighbor
+        in the right table.
 
-    Joining on datetime columns is based on the time difference.
+    'self_join_neighbor'
+        Once the match candidate (ie the nearest neigbor from the right
+        table) has been found, we find its nearest neighbor in the right
+        table (excluding itself). The reference distance is the distance that
+        separates those 2 right rows.
+
+    'no_rescaling'
+        The reference distance is 1.0, ie no rescaling of the distances is
+        applied.
 
     Parameters
     ----------
     left : :obj:`~pandas.DataFrame`
-        A table to merge.
+        Left operand of the join.
     right : :obj:`~pandas.DataFrame`
-        A table used to merge with.
-    left_on : str or list of str, optional
-        Name of left table column(s) to join.
-    right_on : str or list of str, optional
-        Name of right table key column(s) to join
-        with left table key column(s).
-    on : str or list of str or int, optional
-        Name of common left and right table join key columns.
-        Must be found in both DataFrames. Use only if `left_on`
-        and `right_on` parameters are not specified.
+        Right operand of the join.
+    left_on : str or list of str, default=None
+        The column names in the left table on which the join will be performed.
+        Can be a string if joining on a single column.
+        If ``None``, `right_on` must also be ``None`` and `on` must be provided.
+    right_on : str or list of str, default=None
+        The column names in the right table on which the join will
+        be performed. Can be a string if joining on a single column.
+        If ``None``, `left_on` must also be ``None`` and `on` must be provided.
+    on : str or list of str, default=None
+        The column names to use for both ``left_on`` and ``right_on`` when they
+        are the same. Provide either ``on`` or both ``left_on`` and ``right_on``.
     suffix : str, default=""
-        Suffix to add to column names from the right table.
+        Suffix to append to the ``right`` table's column names. You can use it
+        to avoid duplicate column names in the join.
     max_dist : float, default=np.inf
         Maximum acceptable (rescaled) distance between a row in the
-        ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
+        ``left`` table and its nearest neighbor in the ``right`` table. Rows that
         are farther apart are not considered to match. By default, the distance
         is rescaled so that a value between 0 and 1 is typically a good choice,
         although rescaled distances can be greater than 1 for some choices of
         ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
         mean that no matches are rejected.
     ref_dist : reference distance for rescaling, default = 'aux_quartile'
-        To facilitate the choice of ``max_dist``, distances between rows in
-        ``main_table`` and their nearest neighbor in ``aux_table`` will be
+        Options are {"aux_quartile", "second_neighbor", "self_join_neighbor",
+        "no_rescaling"}. See above for a description of each option. To
+        facilitate the choice of ``max_dist``, distances between rows in
+        ``left`` table and their nearest neighbor in ``right`` table will be
         rescaled by this reference distance.
     string_encoder : scikit-learn transformer used to vectorize text columns
         By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
-        is used.
+        is used. Here we use raw TF-IDF features rather than transforming them
+        for example with ``GapEncoder`` or ``MinHashEncoder`` because it is
+        faster, these features are only used to find nearest neighbors and not
+        used by downstream estimators, and distances between TF-IDF vectors
+        have a somewhat simpler interpretation.
     add_match_info : bool, default=False
         Insert some columns whose names start with `skrub_Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
-        above the threshold.
+        above the threshold. Those values can be helpful for an estimator that
+        uses the joined features, or to inspect the result of the join and set
+        a ``max_dist`` threshold.
     drop_unmatched : bool, default=False
-        Remove categories for which a match was not found in the two tables.
+        Remove rows for which a match was not found in the right table (ie for
+        which the nearest neighbor is further than `max_dist`).
 
     Returns
     -------
-    df_joined : :obj:`~pandas.DataFrame`
-        The joined table.
+    :obj:`~pandas.DataFrame`
+        The joined tables.
 
     See Also
     --------
     Joiner :
         Same as fuzzy_join but as a scikit-learn transformer.
 
-    Notes
-    -----
-    For regular joins, the output of fuzzy_join is identical
-    to pandas.merge, except that both key columns are returned.
-
-    Joining on indexes is not supported.
-
-    When `add_match_info=True`, the returned :obj:`~pandas.DataFrame` contains
-    additional columns which provide information about the match.
-
-    When we use `max_dist=np.inf`, the function will be forced to impute the
-    nearest match (of the left table category) across all possible matching
-    options in the right table column.
-
-    When the neighbors are distant, we may use the `max_dist` parameter
-    define the maximal (rescaled) distance between 2 rows for them to match.
-    If it is not reached, matches will be considered as not found and NaN values
-    will be imputed.
-
     Examples
     --------
     >>> import pandas as pd
-    >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
-    >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
+    >>> left_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
+    >>> right_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
     ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
-    >>> main_table
+    >>> left_table
       Country
     0  France
     1  Italia
     2   Spain
-    >>> aux_table
+    >>> right_table
        Country Capital
     0  Germany  Berlin
     1   France   Paris
     2    Italy    Rome
     >>> fuzzy_join(
-    ...     main_table,
-    ...     aux_table,
+    ...     left_table,
+    ...     right_table,
     ...     on="Country",
     ...     suffix="_capitals",
     ...     max_dist=1.0,
@@ -140,8 +158,8 @@ def fuzzy_join(
     1  Italia            Italy             Rome
     2   Spain              NaN              NaN
     >>> fuzzy_join(
-    ...     main_table,
-    ...     aux_table,
+    ...     left_table,
+    ...     right_table,
     ...     on="Country",
     ...     suffix="_capitals",
     ...     drop_unmatched=True,
@@ -152,8 +170,8 @@ def fuzzy_join(
     0  France           France            Paris
     1  Italia            Italy             Rome
     >>> fuzzy_join(
-    ...     main_table,
-    ...     aux_table,
+    ...     left_table,
+    ...     right_table,
     ...     on="Country",
     ...     suffix="_capitals",
     ...     max_dist=float("inf"),
