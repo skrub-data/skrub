@@ -299,7 +299,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         )
         prediction_results = self._check_prediction_results(prediction_results)
         predictions = [res["predictions"] for res in prediction_results]
-        predictions = _multi_add_column_name_suffix(predictions, self.suffix)
+        predictions = [
+            _join_utils.add_column_name_suffix(df, self.suffix) for df in predictions
+        ]
         for part in predictions:
             part.index = main_table.index
         return pd.concat([main_table] + predictions, axis=1)
@@ -430,7 +432,3 @@ def _predict(key_values, columns, estimator, propagate_exceptions):
         "columns": columns,
         "shape": (key_values.shape[0], len(columns)),
     }
-
-
-def _multi_add_column_name_suffix(dataframes, suffix):
-    return [_join_utils.add_column_name_suffix(df, suffix) for df in dataframes]
