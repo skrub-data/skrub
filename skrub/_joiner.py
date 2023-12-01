@@ -29,7 +29,6 @@ _MATCHERS = {
     "aux_quartile": _matching.Percentile,
     "second_neighbor": _matching.OtherNeighbor,
     "self_join_neighbor": _matching.SelfJoinNeighbor,
-    "worst_match": _matching.WorstMatch,
     "no_rescaling": _matching.Matching,
 }
 DEFAULT_REF_DIST = "aux_quartile"
@@ -108,13 +107,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         table (excluding itself). The reference distance is the distance that
         separates those 2 auxiliary rows.
 
-    'worst_match'
-        The reference distance is the maximum, over all rows in the main table
-        provided to ``fit`` (ie ``X`` in ``fit(X)``), of the distance between
-        each row and its nearest neighbor in the auxiliary table (ie its
-        candidate match). This means that the worst match will have a rescaled
-        distance of 1.0.
-
     'no_rescaling'
         The reference distance is 1.0, ie no rescaling of the distances is
         applied.
@@ -148,18 +140,17 @@ class Joiner(TransformerMixin, BaseEstimator):
         mean that no matches are rejected.
     ref_dist : reference distance for rescaling, default = 'aux_quartile'
         Options are {"aux_quartile", "second_neighbor", "self_join_neighbor",
-        "worst_match", "no_rescaling"}. See above for a description of each
-        option. To facilitate the choice of ``max_dist``, distances between
-        rows in ``main_table`` and their nearest neighbor in ``aux_table`` will
-        be rescaled by this reference distance.
-    string_encoder : scikit-learn transformer used to vectorize text columns
-        By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
-        is used. Here we use raw TF-IDF features rather than transforming them
-        for example with ``GapEncoder`` or ``MinHashEncoder`` because it is
-        faster, these features are only used to find nearest neighbors and not
-        used by downstream estimators, and distances between TF-IDF vectors
-        have a somewhat simpler interpretation.
-    add_match_info : bool, default=True
+        "no_rescaling"}. See above for a description of each option. To
+        facilitate the choice of ``max_dist``, distances between rows in
+        ``main_table`` and their nearest neighbor in ``aux_table`` will be
+        rescaled by this reference distance. string_encoder : scikit-learn
+        transformer used to vectorize text columns By default a
+        ``HashingVectorizer`` combined with a ``TfidfTransformer`` is used.
+        Here we use raw TF-IDF features rather than transforming them for
+        example with ``GapEncoder`` or ``MinHashEncoder`` because it is faster,
+        these features are only used to find nearest neighbors and not used by
+        downstream estimators, and distances between TF-IDF vectors have a
+        somewhat simpler interpretation. add_match_info : bool, default=True
         Insert some columns whose names start with `skrub_Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
         above the threshold. Those values can be helpful for an estimator that
@@ -294,17 +285,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         aux = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
         self._check_ref_dist()
-        try:
-            # Some matching strategies do not need the vectorized main columns
-            # so we try without to save computation time and only compute them
-            # if we get a TypeError. TODO: when support for WorstMatch is
-            # removed we can simplify this and never vectorize main.
-            self._matching.fit(aux, None)
-        except TypeError:
-            main = self.vectorizer_.transform(
-                X[self._main_key].set_axis(self._aux_key, axis="columns")
-            )
-            self._matching.fit(aux, main)
+        self._matching.fit(aux)
         return self
 
     def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:

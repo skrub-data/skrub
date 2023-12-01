@@ -17,15 +17,7 @@ class Matching(BaseEstimator):
     ``_get_reference_distances`` to modify the rescaling behavior.
     """
 
-    def fit(self, aux, main):
-        """Fit to the vectorized auxiliary and main matching columns.
-
-        Some strategies do not need the vectorized main columns. Client code
-        can attempt to call ``fit`` with ``main=None`` as an optimization.
-        Subclasses that require a value for ``main`` should raise a
-        ``TypeError`` in this case.
-        """
-        del main
+    def fit(self, aux):
         self.aux_ = aux
         self.neighbors_ = NearestNeighbors(n_neighbors=1).fit(aux)
         return self
@@ -87,8 +79,8 @@ class Percentile(Matching):
         self.n_sampled_pairs = n_sampled_pairs
         self.random_state = random_state
 
-    def fit(self, aux, main):
-        super().fit(aux, main)
+    def fit(self, aux):
+        super().fit(aux)
         self._check_inputs()
         n_rows = self.aux_.shape[0]
         pairs = _sample_pairs(n_rows, self.n_sampled_pairs, self.random_state_)
@@ -170,29 +162,3 @@ class OtherNeighbor(Matching):
         )
         reference_distances = reference_distances[:, -1]
         return reference_distances
-
-
-class WorstMatch(Matching):
-    """Fuzzy joining rescaling by worst match on the main table provided to ``fit``.
-
-    During fit, we compute matching distances (of each main row to its nearest
-    neighbor in the aux table). The rescaling distance is the max of those
-    distances (ie the worst match would get a rescaled distance of 1.0).
-    """
-
-    def fit(self, aux, main):
-        if main is None:
-            raise TypeError(
-                f"{self.__class__.__name__} needs the vectorized main table matching"
-                " columns for fit()."
-            )
-        super().fit(aux, main)
-        distances, _ = self.neighbors_.kneighbors(main, return_distance=True)
-        self.ref_dist_ = distances.max()
-        return self
-
-    def _get_reference_distances(self, main, indices):
-        # these parameters are there for compatibility with other distances but
-        # are unused here
-        del main, indices
-        return self.ref_dist_
