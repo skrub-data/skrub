@@ -312,7 +312,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         match_result = self._matching.match(main, self.max_dist_)
         aux_table = _join_utils.add_column_name_suffix(
             self.aux_table, self.suffix
-        ).set_axis(np.arange(self.aux_table.shape[0]), axis="index")
+        ).reset_index(drop=True)
         matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1
         join = pd.merge(
