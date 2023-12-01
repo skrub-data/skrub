@@ -145,7 +145,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         ``main_table`` and their nearest neighbor in ``aux_table`` will be
         rescaled by this reference distance.
     string_encoder : scikit-learn
-        transformer used to vectorize text columns By default a
+        Transformer used to vectorize text columns. By default a
         ``HashingVectorizer`` combined with a ``TfidfTransformer`` is used.
         Here we use raw TF-IDF features rather than transforming them for
         example with ``GapEncoder`` or ``MinHashEncoder`` because it is faster,
