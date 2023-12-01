@@ -98,6 +98,25 @@ def test_multiple_keys(px, assert_frame_equal_):
     assert_frame_equal_(result, expected)
 
 
+def test_pandas_aux_table_index():
+    main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
+    aux_table = pd.DataFrame(
+        {
+            "Country": ["Germany", "France", "Italy"],
+            "Capital": ["Berlin", "Paris", "Rome"],
+        }
+    )
+    aux_table.index = [2, 1, 0]
+
+    joiner = Joiner(
+        aux_table,
+        key="Country",
+        suffix="_capitals",
+    )
+    join = joiner.fit_transform(main_table)
+    assert join["Country_capitals"].tolist() == ["France", "Italy", "Germany"]
+
+
 def test_bad_ref_dist():
     table = pd.DataFrame({"A": [1, 2]})
     joiner = Joiner(table, key="A", ref_dist="bad")
