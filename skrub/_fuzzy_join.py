@@ -2,7 +2,6 @@
 Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 """
 import numpy as np
-import pandas as pd
 
 from skrub import _join_utils
 from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER, Joiner
@@ -20,7 +19,7 @@ def fuzzy_join(
     string_encoder=DEFAULT_STRING_ENCODER,
     add_match_info=False,
     drop_unmatched=False,
-) -> pd.DataFrame:
+):
     """Fuzzy (approximate) join.
 
     Rows in the left table are joined to their closest match from the right

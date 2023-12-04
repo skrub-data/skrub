@@ -252,7 +252,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     def _check_ref_dist(self):
         self._matching = _MATCHERS[self.ref_dist]()
 
-    def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
+    def fit(self, X, y=None):
         """Fit the instance to the main table.
 
         Parameters
@@ -292,7 +292,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         self._matching.fit(aux)
         return self
 
-    def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
+    def transform(self, X, y=None):
         """Transform `X` using the specified encoding scheme.
 
         Parameters
