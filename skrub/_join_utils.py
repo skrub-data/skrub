@@ -87,38 +87,39 @@ def check_missing_columns(table, key, table_name):
     )
 
 
-def check_column_name_duplicates(main_columns, aux_columns, suffix, table_names={}):
-    """Check that there are no duplicate column names.
+def check_column_name_duplicates(
+    main_table,
+    aux_table,
+    suffix,
+    main_table_name="main_table",
+    aux_table_name="aux_table",
+):
+    """Check that there are no duplicate column names after applying a suffix.
 
-    The suffix is provided to be displayed in the possible error message, but
-    it is not applied to the aux_columns by this function. We assume it has
-    been applied to aux_columns by the caller.
+    The suffix is applied to (a copy of) `aux_columns` before checking for
+    duplicates.
 
     Parameters
     ----------
-    main_columns : list of str
-        Names of all columns in the main table.
-
-    aux_columns : list of str
-        Names of all columns in the auxiliary table.
-
+    main_table : dataframe
+        The main table to join.
+    aux_table : dataframe
+        The auxiliary table to join.
     suffix : str
-        The suffix that was provided by the user and has already been appended
-        to the auxiliary column names to produce `aux_columns`.
-
-    table_names : dict[str, str]
-        Mapping with keys in {"main", "aux"} to indicate how those tables
-        should be referred to in any error message. If not provided "main" and
-        "aux" are used.
-
+        The suffix that was provided by the user and will be appended to the
+        auxiliary column names.
+    main_table_name : str
+        How to refer to ``main_table`` in error messages.
+    aux_table_name : str
+        How to refer to ``aux_table`` in error messages.
     Raises
     ------
     ValueError
         If any of the table has duplicate column names, or if there are column
         names that are used in both tables.
     """
-    main_table_name = table_names.get("main", "main")
-    aux_table_name = table_names.get("aux", "aux")
+    main_columns = list(main_table.columns)
+    aux_columns = [f"{col}{suffix}" for col in aux_table.columns]
     for columns, table_name in [
         (main_columns, main_table_name),
         (aux_columns, aux_table_name),

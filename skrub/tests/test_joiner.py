@@ -127,5 +127,5 @@ def test_bad_ref_dist():
 @pytest.mark.parametrize("max_dist", [np.inf, float("inf"), "inf", None])
 def test_max_dist(max_dist):
     table = pd.DataFrame({"A": [1, 2]})
-    joiner = Joiner(table, key="A", max_dist=max_dist).fit(table)
+    joiner = Joiner(table, key="A", max_dist=max_dist, suffix="_").fit(table)
     assert joiner.max_dist_ == np.inf

@@ -216,7 +216,9 @@ def test_correct_encoder(px):
     with pytest.raises(
         AssertionError, match=r"Custom vectorizer was called as intended."
     ):
-        fuzzy_join(left, right, on="key", string_encoder=enc, add_match_info=False)
+        fuzzy_join(
+            left, right, on="key", suffix="_", string_encoder=enc, add_match_info=False
+        )
 
 
 @pytest.mark.parametrize("px", MODULES)

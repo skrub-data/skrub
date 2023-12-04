@@ -45,15 +45,25 @@ def test_check_key_length_mismatch():
 
 
 def test_check_column_name_duplicates():
-    _join_utils.check_column_name_duplicates(["A", "B"], ["C"], "")
-    # suffix is applied by caller, not by this function
-    _join_utils.check_column_name_duplicates(["AX", "B"], ["A"], "X")
+    left = pd.DataFrame(columns=["A", "B"])
+    right = pd.DataFrame(columns=["C"])
+    _join_utils.check_column_name_duplicates(left, right, "")
+
+    left = pd.DataFrame(columns=["A", "B"])
+    right = pd.DataFrame(columns=["B"])
+    _join_utils.check_column_name_duplicates(left, right, "_right")
+
+    left = pd.DataFrame(columns=["A", "B_right"])
+    right = pd.DataFrame(columns=["B"])
+    with pytest.raises(ValueError, match=".*suffix '_right'.*['B_right']"):
+        _join_utils.check_column_name_duplicates(left, right, "_right")
+
+    left = pd.DataFrame(columns=["A", "A"])
+    right = pd.DataFrame(columns=["B"])
     with pytest.raises(ValueError, match="Table 'left' has duplicate"):
         _join_utils.check_column_name_duplicates(
-            ["A", "A"], ["C"], "", {"main": "left"}
+            left, right, "", main_table_name="left"
         )
-    with pytest.raises(ValueError, match=".*suffix '_right'.*['A']"):
-        _join_utils.check_column_name_duplicates(["A", "B"], ["A"], "_right")
 
 
 def test_add_column_name_suffix():

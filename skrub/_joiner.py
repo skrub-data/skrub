@@ -278,6 +278,9 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
+        _join_utils.check_column_name_duplicates(
+            X, self.aux_table, self.suffix, main_table_name="X"
+        )
         self._check_max_dist()
         self.vectorizer_ = _make_vectorizer(
             self.aux_table[self._aux_key],
@@ -306,6 +309,9 @@ class Joiner(TransformerMixin, BaseEstimator):
         """
         del y
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        _join_utils.check_column_name_duplicates(
+            X, self.aux_table, self.suffix, main_table_name="X"
+        )
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
