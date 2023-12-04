@@ -5,7 +5,14 @@ from skrub import _utils
 from skrub._dataframe._namespace import get_df_namespace
 
 
-def check_key(main_key, aux_key, key, key_names={}):
+def check_key(
+    main_key,
+    aux_key,
+    key,
+    main_key_name="main_key",
+    aux_key_name="aux_key",
+    key_name="key",
+):
     """Find the correct main and auxiliary keys (matching column names).
 
     They can be provided either as `key` when the names are the same in
@@ -27,19 +34,18 @@ def check_key(main_key, aux_key, key, key_names={}):
         Can be provided in place of `main_key` and `aux_key` when they are the
         same. We must provide non-``None`` values for either `key` or both
         `main_key` and `aux_key`.
-    key_names : dict[str, str]
-        How to refer to the parameters in the error message(if any).
-
+    main_key_name : str
+        How to refer to `main_key` in error messages.
+    aux_key_name : str
+        How to refer to `aux_key` in error messages.
+    key_name : str
+        How to refer to `key` in error messages.
     Returns
     -------
     main_key, aux_key : pair (tuple) of lists of str
         The correct sets of matching columns to use, each provided as a list of
         column names.
     """
-    key_names = {**{k: k for k in ["main_key", "aux_key", "key"]}, **key_names}
-    main_key_name = key_names["main_key"]
-    aux_key_name = key_names["aux_key"]
-    key_name = key_names["key"]
     if key is not None:
         if aux_key is not None or main_key is not None:
             raise ValueError(

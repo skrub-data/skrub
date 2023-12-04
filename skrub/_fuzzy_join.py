@@ -188,7 +188,9 @@ def fuzzy_join(
         left_on,
         right_on,
         on,
-        key_names={"main_key": "left_on", "aux_key": "right_on", "key": "on"},
+        main_key_name="left_on",
+        aux_key_name="right_on",
+        key_name="on",
     )
     _join_utils.check_missing_columns(left, left_key, "'left' (the left table)")
     _join_utils.check_missing_columns(right, right_key, "'right' (the right table)")

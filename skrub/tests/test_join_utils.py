@@ -40,7 +40,7 @@ def test_check_key_length_mismatch():
         ValueError, match=r"'left' and 'right' keys.*different lengths \(1 and 2\)"
     ):
         _join_utils.check_key(
-            "AB", ["A", "B"], None, {"main_key": "left", "aux_key": "right"}
+            "AB", ["A", "B"], None, main_key_name="left", aux_key_name="right"
         )
 
 
