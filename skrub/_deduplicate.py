@@ -3,7 +3,6 @@ Implements deduplication based on clustering string distance matrices.
 """
 
 from collections.abc import Sequence
-from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -132,16 +131,14 @@ def _create_spelling_correction(
 
 
 def deduplicate(
-    data: Sequence[str],
+    X,
     *,
-    n_clusters: int | None = None,
-    ngram_range: tuple[int, int] = (2, 4),
-    analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    method: Literal[
-        "single", "complete", "average", "centroid", "median", "ward"
-    ] = "average",
-    n_jobs: int | None = None,
-) -> list[str]:
+    n_clusters=None,
+    ngram_range=(2, 4),
+    analyzer="char_wb",
+    method="average",
+    n_jobs=None,
+):
     """Deduplicate categorical data by hierarchically clustering similar strings.
 
     This works best if there is a number of underlying categories that
@@ -149,29 +146,29 @@ def deduplicate(
 
     Parameters
     ----------
-    data : sequence of str
+    X : sequence of str
         The data to be deduplicated.
-    n_clusters : int, optional
+    n_clusters : int, default=None
         Number of clusters to use for hierarchical clustering, if `None` use the
         number of clusters that lead to the lowest silhouette score.
     ngram_range : 2-tuple of int, default=(2, 4)
         The lower and upper boundaries of the range of n-values for different
         n-grams used in the string similarity. All values of `n` such
         that ``min_n <= n <= max_n`` will be used.
-    analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
+    analyzer : {'word', 'char', 'char_wb'}, default='char_wb'
         Analyzer parameter for the CountVectorizer
         used for the string similarities.
         Describes whether the matrix `V` to factorize should be made of
         word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    method : {`single`, `complete`, `average`, `centroid`, `median`, `ward`},
-        default=`average`
+    method : {'single', 'complete', 'average', 'centroid', 'median', 'ward'},
+        default='average'
         Linkage method parameter to use for merging clusters via
         :func:`scipy.cluster.hierarchy.linkage`.
-        Option `average` calculates the distance between two clusters as the
+        Option 'average' calculates the distance between two clusters as the
         average distance between data points in the first and second cluster.
-    n_jobs : int, optional
+    n_jobs : int, default=None
         The number of jobs to run in parallel.
 
     Returns
@@ -233,10 +230,8 @@ def deduplicate(
     >>> deduplicated
     ['black', 'black', 'black', 'black', 'black', \
 'white', 'white', 'white', 'white', 'white']
-
-    We have our dirty categories deduplicated.
     """
-    unique_words, counts = np.unique(data, return_counts=True)
+    unique_words, counts = np.unique(X, return_counts=True)
     distance_mat = compute_ngram_distance(
         unique_words, ngram_range=ngram_range, analyzer=analyzer
     )
@@ -247,5 +242,5 @@ def deduplicate(
     clusters = fcluster(Z, n_clusters, criterion="maxclust")
 
     translation_table = _create_spelling_correction(unique_words, counts, clusters)
-    unrolled_corrections = translation_table[data]
+    unrolled_corrections = translation_table[X]
     return unrolled_corrections
