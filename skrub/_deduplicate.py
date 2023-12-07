@@ -136,7 +136,7 @@ def deduplicate(
     n_clusters=None,
     ngram_range=(2, 4),
     analyzer="char_wb",
-    method="average",
+    linkage_method="average",
     n_jobs=None,
 ):
     """Deduplicate categorical data by hierarchically clustering similar strings.
@@ -162,7 +162,7 @@ def deduplicate(
         word counts or character n-gram counts.
         Option `char_wb` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-    method : {'single', 'complete', 'average', 'centroid', 'median', 'ward'},
+    linkage_method : {'single', 'complete', 'average', 'centroid', 'median', 'ward'},
         default='average'
         Linkage method parameter to use for merging clusters via
         :func:`scipy.cluster.hierarchy.linkage`.
@@ -236,7 +236,7 @@ def deduplicate(
         unique_words, ngram_range=ngram_range, analyzer=analyzer
     )
 
-    Z = linkage(distance_mat, method=method, optimal_ordering=True)
+    Z = linkage(distance_mat, method=linkage_method, optimal_ordering=True)
     if n_clusters is None:
         n_clusters = _guess_clusters(Z, distance_mat, n_jobs)
     clusters = fcluster(Z, n_clusters, criterion="maxclust")
