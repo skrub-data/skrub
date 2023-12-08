@@ -241,15 +241,11 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         self.add_match_info = add_match_info
 
-    def _check_dataframe(self, dataframe, in_transform=False):
-        # TODO: add support for polars
+    def _check_dataframe(self, dataframe):
+        # TODO: add support for polars, ATM we just convert to pandas
         if is_polars(dataframe):
-            if in_transform:
-                self._input_was_polars = True
             return dataframe.to_pandas()
         if is_pandas(dataframe):
-            if in_transform:
-                self._input_was_polars = False
             return dataframe
         raise TypeError(
             f"{self.__class__.__qualname__} only operates on Pandas or Polars"
@@ -267,6 +263,11 @@ class Joiner(TransformerMixin, BaseEstimator):
             self.max_dist_ = self.max_dist
 
     def _check_ref_dist(self):
+        if self.ref_dist not in _MATCHERS:
+            raise ValueError(
+                f"ref_dist should be one of {list(_MATCHERS.keys())}, got"
+                f" {self.ref_dist!r}"
+            )
         self._matching = _MATCHERS[self.ref_dist]()
 
     def fit(self, X, y=None):
@@ -287,11 +288,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         del y
         X = self._check_dataframe(X)
         self._aux_table = self._check_dataframe(self.aux_table)
-        if self.ref_dist not in _MATCHERS:
-            raise ValueError(
-                f"ref_dist should be one of {list(_MATCHERS.keys())}, got"
-                f" {self.ref_dist!r}"
-            )
+        self._check_ref_dist()
+        self._check_max_dist()
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
@@ -300,14 +298,12 @@ class Joiner(TransformerMixin, BaseEstimator):
         _join_utils.check_column_name_duplicates(
             X, self._aux_table, self.suffix, main_table_name="X"
         )
-        self._check_max_dist()
         self.vectorizer_ = _make_vectorizer(
             self._aux_table[self._aux_key],
             self.string_encoder,
             rescale=self.ref_dist != "no_rescaling",
         )
         aux = self.vectorizer_.fit_transform(self._aux_table[self._aux_key])
-        self._check_ref_dist()
         self._matching.fit(aux)
         return self
 
@@ -327,7 +323,8 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
         del y
-        X = self._check_dataframe(X, in_transform=True)
+        input_is_polars = is_polars(X)
+        X = self._check_dataframe(X)
         check_is_fitted(self, "vectorizer_")
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_column_name_duplicates(
@@ -353,7 +350,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
                 join[info_col_name] = match_result[info_key]
-        if self._input_was_polars:
+        if input_is_polars:
             import polars as pl
 
             join = pl.from_pandas(join)
