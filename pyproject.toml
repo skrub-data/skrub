@@ -39,6 +39,10 @@ filterwarnings = [
     'ignore:elementwise\ comparison\ failed:FutureWarning',
     # TODO remove when pandas min version >= 2.2.0
     'ignore:.*utcfromtimestamp\(\) is deprecated.*:DeprecationWarning',
+    # TODO remove when fixed in joblib
+    'ignore:.*ast\.Num is deprecated.*:DeprecationWarning',
+    # TODO remove when fixed in joblib
+    'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
