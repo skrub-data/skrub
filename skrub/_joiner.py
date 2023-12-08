@@ -8,8 +8,10 @@ from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.utils.validation import check_is_fitted
 
 from skrub import _join_utils, _matching
+from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._datetime_encoder import DatetimeEncoder
 
 
@@ -239,6 +241,21 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         self.add_match_info = add_match_info
 
+    def _check_dataframe(self, dataframe, in_transform=False):
+        # TODO: add support for polars
+        if is_polars(dataframe):
+            if in_transform:
+                self._input_was_polars = True
+            return dataframe.to_pandas()
+        if is_pandas(dataframe):
+            if in_transform:
+                self._input_was_polars = False
+            return dataframe
+        raise TypeError(
+            f"{self.__class__.__qualname__} only operates on Pandas or Polars"
+            " dataframes."
+        )
+
     def _check_max_dist(self):
         if (
             self.max_dist is None
@@ -268,26 +285,28 @@ class Joiner(TransformerMixin, BaseEstimator):
             Fitted Joiner instance (self).
         """
         del y
+        X = self._check_dataframe(X)
+        self._aux_table = self._check_dataframe(self.aux_table)
         if self.ref_dist not in _MATCHERS:
             raise ValueError(
                 f"ref_dist should be one of {list(_MATCHERS.keys())}, got"
-                f" {self.ref_dist!r:}"
+                f" {self.ref_dist!r}"
             )
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
+        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
         _join_utils.check_column_name_duplicates(
-            X, self.aux_table, self.suffix, main_table_name="X"
+            X, self._aux_table, self.suffix, main_table_name="X"
         )
         self._check_max_dist()
         self.vectorizer_ = _make_vectorizer(
-            self.aux_table[self._aux_key],
+            self._aux_table[self._aux_key],
             self.string_encoder,
             rescale=self.ref_dist != "no_rescaling",
         )
-        aux = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
+        aux = self.vectorizer_.fit_transform(self._aux_table[self._aux_key])
         self._check_ref_dist()
         self._matching.fit(aux)
         return self
@@ -308,16 +327,18 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
         del y
+        X = self._check_dataframe(X, in_transform=True)
+        check_is_fitted(self, "vectorizer_")
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_column_name_duplicates(
-            X, self.aux_table, self.suffix, main_table_name="X"
+            X, self._aux_table, self.suffix, main_table_name="X"
         )
         main = self.vectorizer_.transform(
             X[self._main_key].set_axis(self._aux_key, axis="columns")
         )
         match_result = self._matching.match(main, self.max_dist_)
         aux_table = _join_utils.add_column_name_suffix(
-            self.aux_table, self.suffix
+            self._aux_table, self.suffix
         ).reset_index(drop=True)
         matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1
@@ -332,4 +353,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
                 join[info_col_name] = match_result[info_key]
+        if self._input_was_polars:
+            import polars as pl
+
+            join = pl.from_pandas(join)
         return join
