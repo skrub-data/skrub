@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 88
-target_version = ['py310', 'py311']
+target_version = ['py310', 'py311', 'py312']
 preview = true
 # Exclude irrelevant directories for formatting
 exclude = '''
@@ -37,6 +37,7 @@ filterwarnings = [
     # Ignore warning from np.in1d since the future behavior is already the desired
     # behavior. TODO remove when numpy min version >= 1.25.
     'ignore:elementwise\ comparison\ failed:FutureWarning',
+    'ignore:.*utcfromtimestamp\(\) is deprecated.*:DeprecationWarning',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
