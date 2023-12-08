@@ -8,9 +8,10 @@ from scipy.sparse import csr_matrix
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils._testing import skip_if_no_parallel
 
-from skrub._datetime_encoder import DatetimeEncoder, _is_pandas_format_mixed_available
+from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
+from skrub._parser import _is_pandas_format_mixed_available
 from skrub._table_vectorizer import LOW_CARDINALITY_TRANSFORMER, TableVectorizer
 from skrub.tests.utils import transformers_list_equal
 

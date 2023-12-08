@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import (
     CategoricalDtype,
-    is_datetime64_any_dtype,
     is_extension_array_dtype,
     is_numeric_dtype,
     is_object_dtype,
@@ -23,7 +22,9 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import Bunch
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import DatetimeEncoder, GapEncoder, to_datetime
+from skrub._datetime_encoder import DatetimeEncoder
+from skrub._gap_encoder import GapEncoder
+from skrub._parser import _CategoryParser, _DatetimeParser, _NumericParser
 from skrub._utils import clone_if_default
 
 HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
@@ -33,33 +34,6 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     drop="if_binary",
 )
 DATETIME_TRANSFORMER = DatetimeEncoder()
-
-
-def _to_numeric(X):
-    """Convert the columns of a dataframe into a numeric representation.
-
-    Parameters
-    ----------
-    X : pandas.DataFrame
-
-    Returns
-    -------
-    X : pandas.DataFrame
-    """
-    X_out = dict()
-    for col in X.columns:
-        if not is_datetime64_any_dtype(X[col]):
-            # We don't use errors="ignore" because it casts string
-            # and categories to object dtype in Pandas < 2.0.
-            # TODO: replace 'raise' by 'ignore' and remove the exception
-            # catching when the minimum pandas version of skrub is 2.0.
-            try:
-                X_out[col] = pd.to_numeric(X[col], errors="raise")
-                continue
-            except (ValueError, TypeError):
-                pass
-        X_out[col] = X[col]
-    return pd.DataFrame(X_out, index=X.index)
 
 
 def _replace_missing_indicators(column):
@@ -100,14 +74,6 @@ def _replace_missing_indicators(column):
     # Also replaces the whitespaces
     column = column.replace(STR_NA_VALUES, np.nan).replace(r"^\s+$", np.nan, regex=True)
     return column
-
-
-def _union_category(X_col, dtype):
-    """Update a categorical dtype with new entries."""
-    known_categories = dtype.categories
-    new_categories = pd.unique(X_col.loc[X_col.notnull()])
-    dtype = pd.CategoricalDtype(categories=known_categories.union(new_categories))
-    return dtype
 
 
 def _clone_during_fit(transformer, remainder, n_jobs):
@@ -260,13 +226,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     auto_cast : bool, default=True
         If set to ``True``, calling ``fit``, ``transform`` or ``fit_transform``
-        will call ``_auto_cast`` to convert each column to the "optimal" dtype
+        will convert each column to the "optimal" dtype
         for scikit-learn estimators.
         The main heuristics are the following:
         - pandas extension dtypes conversion to numpy dtype
         - datetime conversion using ``skrub.to_datetime``
         - numeric conversion using ``pandas.to_numeric``
-        - numeric columns with missing values are converted to float to input np.nan
+        - numeric columns with missing values are converted to float to impute np.nan
         - categorical columns dtypes are updated with the new entries (if any)
           during transform.
 
@@ -449,94 +415,80 @@ sparse_output=False), \
             self.n_jobs,
         )
 
-    def _auto_cast(self, X, reset=True):
+    def _auto_cast(self, X, reset):
         """Convert each column of a dataframe to the "optimal" dtype \
             for scikit-learn estimators.
 
+        Columns with dtype that is different between fit (reset=True)
+        and predict (reset=False) will be casted to their dtype seen during fit.
+
         The main heuristics are the following:
         - pandas extension dtypes conversion to numpy dtype
-        - datetime conversion using ``skrub.to_datetime``
-        - numeric conversion using ``pandas.to_numeric``
         - numeric columns with missing values are converted to float to input np.nan
+        - datetime conversion using _DatetimeParser
+        - numeric conversion using _NumericParser
         - categorical columns dtypes are updated with the new entries (if any)
-          during transform.
+          during transform, using _CategoricalParser
 
         Parameters
         ----------
-        X : :obj:`~pandas.DataFrame` of shape (n_samples, n_features)
+        X : pandas.DataFrame of shape (n_samples, n_features)
             The data to be transformed.
 
-        reset : bool, default=True
-            If set to ``True`` (during fit), creates ``inferred_column_types_``,
-            the mapping between columns of the training dataframe and their types.
-            If set to ``False`` (during transform), updates ``inferred_column_types_``
-            for the categorical columns with the new categories seen during transform.
+        reset : bool
+            If set to ``True`` (during fit), creates ``inferred_column_types_``
+            and fit _DatetimeParser, _NumericParser and _CategoricalParser with X.
+            If set to ``False`` (during transform), uses fitted instances of
+            _DatetimeParser, _NumericParser and _Categorical to transform X.
 
         Returns
         -------
-        X : :obj:`~pandas.DataFrame`
-            The same :obj:`~pandas.DataFrame`, with its columns cast.
+        X : pandas.DataFrame of shape (n_samples, n_features)
+            The same pandas dataFrame, with its columns cast.
         """
-        for col in X.columns:
-            X[col] = _replace_missing_indicators(X[col])
-
-            # Some numerical dtypes like Int64 or Float64 only support
-            # pd.NA, so they must be converted to np.float64 before imputing
-            # with np.nan.
-            if is_numeric_dtype(X[col]) and X[col].isna().any():
-                X[col] = X[col].astype(np.float64)
-
-            # Cast pandas dtypes to numpy dtypes for earlier versions of sklearn.
-            # Categorical dtypes don't need to be casted.
-            # Note that 'is_category_dtype' is deprecated.
-            if is_extension_array_dtype(X[col]) and not isinstance(
-                X[col].dtype, CategoricalDtype
-            ):
-                dtype = X[col].dtype.type
-                X[col] = X[col].astype(dtype)
-
-                # When converting string to object, <NA> values becomes '<NA>'
-                # so we need to replace false missing values once more.
+        if self.auto_cast:
+            for col in X.columns:
                 X[col] = _replace_missing_indicators(X[col])
 
-            # For object dtype columns, convert to string to avoid mixed types.
-            if is_object_dtype(X[col]):
-                mask = X[col].notnull()
-                X.loc[mask, col] = X.loc[mask, col].astype(str)
+                # Missing numeric values has to be handled with np.nan
+                # using float representation.
+                if is_numeric_dtype(X[col]) and X[col].isna().any():
+                    X[col] = X[col].astype("float64")
+
+                # Cast pandas dtypes to numpy dtypes for earlier versions of sklearn.
+                # Categorical dtypes don't need to be casted.
+                # Note that 'pandas.api.types.is_category_dtype' is deprecated.
+                if is_extension_array_dtype(X[col]) and not isinstance(
+                    X[col].dtype, CategoricalDtype
+                ):
+                    dtype = X[col].dtype.type
+                    X[col] = X[col].astype(dtype)
+
+                    # When converting string to object, pandas.NA becomes '<NA>'
+                    # so we need to replace false missing values once more.
+                    X[col] = _replace_missing_indicators(X[col])
+
+                # For object dtype columns, convert to string to avoid mixed types.
+                if is_object_dtype(X[col]):
+                    mask = X[col].notnull()
+                    X.loc[mask, col] = X.loc[mask, col].astype(str)
 
         if reset:
-            X = to_datetime(X)
-            X = _to_numeric(X)
+            self._datetime_parser = _DatetimeParser()
+            X = self._datetime_parser.fit_transform(X)
+
+            self._numeric_parser = _NumericParser()
+            X = self._numeric_parser.fit_transform(X)
+
+            self._category_parser = _CategoryParser()
+            X = self._category_parser.fit_transform(X)
+
             self.inferred_column_types_ = X.dtypes.to_dict()
 
         else:
-            # Update categorical dtype.
-            error_msg = (
-                "This %(name)s instance is not fitted yet. "
-                "Please run auto_cast(X, reset=True) first."
-            )
-            check_is_fitted(self, ["inferred_column_types_"], msg=error_msg)
-            category_columns = X.select_dtypes("category").columns
-            for col in category_columns:
-                dtype = self.inferred_column_types_[col]
-                dtype = _union_category(X[col], dtype)
-                self.inferred_column_types_[col] = dtype
-                X[col] = X[col].astype(dtype)
-
-            # Enforce dtypes conversion using the dtypes seen during fit.
-            # As this behavior is more aggressive than skrub's to_datetime
-            # or _to_numeric and only makes sense for the TableVectorizer, we
-            # define it here rather than within these two functions.
-            # See: https://github.com/skrub-data/skrub/issues/837
-            for column, dtype in self.inferred_column_types_.items():
-                if is_numeric_dtype(dtype):
-                    X[column] = pd.to_numeric(X[column], errors="coerce")
-
-                elif is_datetime64_any_dtype(dtype):
-                    X[column] = pd.to_datetime(X[column], errors="coerce")
-
-                else:
-                    X[column] = X[column].astype(dtype, errors="ignore")
+            X = self._datetime_parser.transform(X)
+            X = self._numeric_parser.transform(X)
+            X = self._category_parser.transform(X)
 
         return X
 
@@ -630,10 +582,10 @@ sparse_output=False), \
 
         In practice, it:
         - Converts features to their best possible types for scikit-learn estimators
-          if ``auto_cast=True`` (see ``auto_cast`` docstring).
+          if ``auto_cast=True``.
         - Classify columns based on their data types and match them to each
           dtype-specific transformers.
-        - Use scikit-learn ColumnTransformert to fit_transform all transformers.
+        - Use scikit-learn ColumnTransformer to fit_transform all transformers.
 
         Parameters
         ----------
@@ -657,8 +609,7 @@ sparse_output=False), \
         X = self._check_X(X)
         self._check_n_features(X, reset=True)
 
-        if self.auto_cast:
-            X = self._auto_cast(X, reset=True)
+        X = self._auto_cast(X, reset=True)
 
         # Filter ``X`` to keep only the columns that are not specified
         # explicitly by the user.
@@ -745,9 +696,7 @@ sparse_output=False), \
         check_is_fitted(self, attributes=["_column_transformer"])
 
         X = self._check_X(X)
-
-        if self.auto_cast:
-            X = self._auto_cast(X, reset=False)
+        X = self._auto_cast(X, reset=False)
 
         return self._column_transformer.transform(X)
 

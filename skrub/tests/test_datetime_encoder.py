@@ -10,12 +10,8 @@ from pandas.testing import assert_frame_equal
 
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub._dataframe._test_utils import is_module_polars
-from skrub._datetime_encoder import (
-    TIME_LEVELS,
-    DatetimeEncoder,
-    _is_pandas_format_mixed_available,
-    to_datetime,
-)
+from skrub._datetime_encoder import TIME_LEVELS, DatetimeEncoder, to_datetime
+from skrub._parser import _is_pandas_format_mixed_available
 
 MODULES = [pd]
 ASSERT_TUPLES = [(pd, assert_frame_equal)]
