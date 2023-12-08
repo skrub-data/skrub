@@ -54,6 +54,8 @@ jobs:
                 python-version: "3.11"
               - dependencies-version: "dev, polars"
                 python-version: "3.11"
+              - dependencies-version: "dev, polars"
+                python-version: "3.12"
               - dependencies-version: "dev, min-py310"
                 python-version: "3.10"
                 dependencies-version-type: "minimal"
