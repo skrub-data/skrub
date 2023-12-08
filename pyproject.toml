@@ -42,6 +42,8 @@ filterwarnings = [
     # TODO remove when fixed in joblib
     'ignore:.*ast\.Num is deprecated.*:DeprecationWarning',
     # TODO remove when fixed in joblib
+    'ignore:.*ast\.NamedConstant is deprecated.*:DeprecationWarning',
+    # TODO remove when fixed in joblib
     'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
 ]
 addopts = "--doctest-modules"
