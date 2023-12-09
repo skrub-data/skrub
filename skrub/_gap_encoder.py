@@ -27,7 +27,6 @@ from ._utils import check_input
 
 
 class GapEncoderColumn(BaseEstimator, TransformerMixin):
-
     """GapEncoder for encoding a single column.
 
     Do not use directly, this is an internal object.
@@ -379,7 +378,13 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         """
 
         vectorizer = CountVectorizer()
-        vectorizer.fit(list(self.H_dict_.keys()))
+        try:
+            vectorizer.fit(list(self.H_dict_.keys()))
+        except ValueError:
+            # The vectorizer failed to find words, we need to switch to
+            # char-level representation
+            vectorizer = CountVectorizer(analyzer="char_wb")
+            vectorizer.fit(list(self.H_dict_.keys()))
         vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self.transform(np.array(vocabulary).reshape(-1))
         encoding = abs(encoding)
@@ -389,8 +394,12 @@ class GapEncoderColumn(BaseEstimator, TransformerMixin):
         for i in range(n_components):
             x = encoding[:, i]
             labels = vocabulary[np.argsort(-x)[:n_labels]]
-            topic_labels.append(labels)
-        topic_labels = [prefix + ", ".join(label) for label in topic_labels]
+            label = ", ".join(labels)
+            label = prefix + label
+            # Avoid having twice the same name for the different features
+            if label in topic_labels:
+                label += " ({:})".format(i)
+            topic_labels.append(label)
         return topic_labels
 
     def score(self, X: ArrayLike) -> float:
@@ -720,7 +729,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
     The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names_out()
-    ['england, london, uk', 'france, paris, pqris']
+    array(['england, london, uk', 'france, paris, pqris'], dtype=object)
 
     It got it right, reccuring topics are "London" and "England" on the
     one side and "Paris" and "France" on the other.
@@ -989,7 +998,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
         for k, enc in enumerate(self.fitted_models_):
             col_labels = enc.get_feature_names_out(n_labels, prefixes[k])
             labels.extend(col_labels)
-        return labels
+        return np.asarray(labels, dtype=object)
 
     def score(self, X: ArrayLike, y=None) -> float:
         """Score this instance on `X`.

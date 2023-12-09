@@ -22,8 +22,8 @@ if POLARS_SETUP:
         }
     )
 else:
-    polars_missing_msg = "Polars is not available"
-    pytest.skip(reason=polars_missing_msg, allow_module_level=True)
+    POLARS_MISSING_MSG = "Polars is not available"
+    pytest.skip(reason=POLARS_MISSING_MSG, allow_module_level=True)
 
 
 def test_join():

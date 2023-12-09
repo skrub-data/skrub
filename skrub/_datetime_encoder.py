@@ -5,10 +5,11 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 from pandas._libs.tslibs.parsing import guess_datetime_format
+from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, check_random_state
 
 from ._dataframe._namespace import get_df_namespace
 
@@ -37,6 +38,7 @@ MIXED_FORMAT = "mixed" if _is_pandas_format_mixed_available() else None
 def to_datetime(
     X,
     errors="coerce",
+    random_state=None,
     **kwargs,
 ):
     """Convert the columns of a dataframe or 2d array into a datetime representation.
@@ -74,6 +76,10 @@ def to_datetime(
         match this format to ``NaT``.
 
         Note that the ``'ignore'`` option is not used and will raise an error.
+
+    random_state : int, RandomState instance or None, default=None
+        Determines random number generation for the subsampling during
+        datetime guessing. Use an int to make the randomness deterministic.
 
     **kwargs : key, value mappings
         Other keyword arguments are passed down to :func:`pandas.to_datetime`.
@@ -116,6 +122,7 @@ def to_datetime(
     if errors not in errors_options:
         raise ValueError(f"errors options are {errors_options!r}, got {errors!r}.")
     kwargs["errors"] = errors
+    kwargs["random_state"] = random_state
 
     if "unit" in kwargs:
         raise ValueError(
@@ -241,6 +248,7 @@ def _to_datetime_2d(
     indices=None,
     index_to_format=None,
     format=None,
+    random_state=None,
     **kwargs,
 ):
     """Convert datetime parsable columns from a 2d array or dataframe \
@@ -270,6 +278,10 @@ def _to_datetime_2d(
         If format is not None, all values of ``indices_to_format`` are set
         to format.
 
+    random_state : int, RandomState instance or None, default=None
+        Determines random number generation for the subsampling during
+        datetime guessing. Use an int to make the randomness deterministic.
+
     format : str, default=None
         When format is not None, it overwrites the values in indices_to_format.
 
@@ -278,7 +290,7 @@ def _to_datetime_2d(
     X_split : list of 1d array of length n_features
     """
     if indices is None:
-        indices, index_to_format = _get_datetime_column_indices(X_split)
+        indices, index_to_format = _get_datetime_column_indices(X_split, random_state)
 
     # format overwrite indices_to_format
     if format is not None:
@@ -292,13 +304,17 @@ def _to_datetime_2d(
     return X_split
 
 
-def _get_datetime_column_indices(X_split, dayfirst=True):
+def _get_datetime_column_indices(X_split, random_state=None):
     """Select the datetime parsable columns by their indices \
     and return their datetime format.
 
     Parameters
     ----------
     X_split : list of 1d array of length n_features
+
+    random_state : int, RandomState instance or None, default=None
+        Determines random number generation for the subsampling during
+        datetime guessing. Use an int to make the randomness deterministic.
 
     Returns
     -------
@@ -314,7 +330,14 @@ def _get_datetime_column_indices(X_split, dayfirst=True):
     for col_idx, X_col in enumerate(X_split):
         X_col = X_col[pd.notnull(X_col)]  # X_col is a numpy array
 
-        if _is_column_datetime_parsable(X_col):
+        if is_numeric_dtype(X_col):
+            continue
+
+        elif is_datetime64_any_dtype(X_col):
+            indices.append(col_idx)
+            index_to_format[col_idx] = None
+
+        elif _is_column_datetime_parsable(X_col):
             indices.append(col_idx)
 
             # _guess_datetime_format only accept string columns.
@@ -322,7 +345,7 @@ def _get_datetime_column_indices(X_split, dayfirst=True):
             # contains e.g., datetime.datetime or pd.Timestamp.
             X_col_str = X_col.astype(str)
             if np.array_equal(X_col, X_col_str):
-                datetime_format = _guess_datetime_format(X_col)
+                datetime_format = _guess_datetime_format(X_col, random_state)
             else:
                 # We don't need to specify a parsing format
                 # for columns that are already of type datetime64.
@@ -339,7 +362,7 @@ def _is_column_datetime_parsable(X_col):
 
     Parameters
     ----------
-    X_col : array-like of shape ``(n_samples,)``
+    X_col : array-like of shape ``(n_samples,)``, of dtype str or object.
 
     Returns
     -------
@@ -355,26 +378,20 @@ def _is_column_datetime_parsable(X_col):
         except (ValueError, TypeError):
             pass
 
-    np_dtypes_candidates = [np.object_, np.str_, np.datetime64]
-    is_type_datetime_compatible = any(
-        np.issubdtype(X_col.dtype, np_dtype) for np_dtype in np_dtypes_candidates
-    )
-    if is_type_datetime_compatible:
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", category=UserWarning)
-                # format=mixed parses entries individually,
-                # avoiding ValueError when both date and datetime formats
-                # are present.
-                # At this stage, the format itself doesn't matter.
-                _ = pd.to_datetime(X_col, format=MIXED_FORMAT)
-            return True
-        except (pd.errors.ParserError, ValueError, TypeError):
-            pass
-    return False
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            # format=mixed parses entries individually,
+            # avoiding ValueError when both date and datetime formats
+            # are present.
+            # At this stage, the format itself doesn't matter.
+            _ = pd.to_datetime(X_col, format=MIXED_FORMAT)
+        return True
+    except (pd.errors.ParserError, ValueError, TypeError):
+        return False
 
 
-def _guess_datetime_format(X_col):
+def _guess_datetime_format(X_col, random_state=None):
     """Infer the format of a 1d array.
 
     This functions uses Pandas ``guess_datetime_format`` routine for both
@@ -384,14 +401,21 @@ def _guess_datetime_format(X_col):
     When both dayfirst and monthfirst format are possible, we select
     monthfirst by default.
 
-    You can overwrite this behaviour by setting a format of the caller function.
+    You can overwrite this behaviour by setting a format in the caller function.
     Setting a format always take precedence over infering it using
     ``_guess_datetime_format``.
+
+    For computational effiency, we only subsample ``n_samples`` rows of ``X_col``.
+    ``n_samples`` is currently set to 30.
 
     Parameters
     ----------
     X_col : ndarray of shape ``(n_samples,)``
         X_col must only contains string objects without any missing value.
+
+    random_state : int, RandomState instance or None, default=None
+        Determines random number generation for the subsampling during
+        datetime guessing. Use an int to make the randomness deterministic.
 
     Returns
     -------
@@ -401,6 +425,13 @@ def _guess_datetime_format(X_col):
     # raises a TypeError.
     # We have to convert these to the object dtype first.
     X_col = X_col.astype("object")
+
+    # Subsample samples for fast format estimation
+    n_samples = 30
+    size = min(X_col.shape[0], n_samples)
+    rng = check_random_state(random_state)
+    X_col = rng.choice(X_col, size=size, replace=False)
+
     vfunc = np.vectorize(guess_datetime_format)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
@@ -716,7 +747,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        feature_names : list of str
+        feature_names : ndarray of str
             List of feature names.
         """
         check_is_fitted(self, "index_to_features_")
@@ -725,7 +756,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         for col_idx, features in self.index_to_features_.items():
             column = columns[col_idx]
             feature_names += [f"{column}_{feat}" for feat in features]
-        return feature_names
+        return np.asarray(feature_names, dtype=object)
 
     def _more_tags(self):
         """

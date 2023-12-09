@@ -166,7 +166,7 @@ indices = np.argsort(avg_importances)[::-1]
 import matplotlib.pyplot as plt
 
 top_indices = indices[:20]
-labels = np.array(feature_names)[top_indices]
+labels = feature_names[top_indices]
 
 plt.figure(figsize=(12, 9))
 plt.barh(

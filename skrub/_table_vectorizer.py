@@ -751,7 +751,7 @@ sparse_output=False), \
 
         return self._column_transformer.transform(X)
 
-    def get_feature_names_out(self, input_features=None) -> list[str]:
+    def get_feature_names_out(self, input_features=None):
         """Return clean feature names.
 
         Feature names are formatted like:
@@ -765,7 +765,7 @@ sparse_output=False), \
 
         Returns
         -------
-        list of str
+        feature_names : ndarray of str
             Feature names.
         """
         return self._column_transformer.get_feature_names_out(input_features)

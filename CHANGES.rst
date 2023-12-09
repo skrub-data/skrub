@@ -14,6 +14,8 @@ development and backward compatibility is not ensured.
 
 Major changes
 -------------
+* :class:`TargetEncoder` has been removed in favor of
+  :class:`sklearn.preprocessing.TargetEncoder`, available since scikit-learn 1.3.
 
 * :class:`InterpolationJoiner` was added to join two tables by using
   machine-learning to infer the matching rows from the second table.
