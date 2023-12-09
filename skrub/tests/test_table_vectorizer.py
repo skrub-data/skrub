@@ -241,7 +241,7 @@ def test_auto_cast(X, dict_expected_types):
     Tests that the TableVectorizer automatic type detection works as expected.
     """
     vectorizer = TableVectorizer()
-    X_trans = vectorizer.auto_cast(X, reset=True)
+    X_trans = vectorizer._auto_cast(X, reset=True)
     for col in X_trans.columns:
         assert dict_expected_types[col] == X_trans[col].dtype
 
@@ -249,7 +249,7 @@ def test_auto_cast(X, dict_expected_types):
 def test_auto_cast_missing_categories():
     X = _get_dirty_dataframe("category")
     vectorizer = TableVectorizer()
-    _ = vectorizer.auto_cast(X, reset=True)
+    _ = vectorizer._auto_cast(X, reset=True)
 
     expected_type_per_column = {
         "int": np.dtype("float64"),
@@ -267,15 +267,15 @@ def test_auto_cast_missing_categories():
             categories=["20K+", "30K+", "40K+", "60K+"],
         ),
     }
-    assert vectorizer.type_per_column_ == expected_type_per_column
+    assert vectorizer.inferred_column_types_ == expected_type_per_column
 
     X = _get_dirty_dataframe("category")
     X_train = X.head(3).reset_index(drop=True)
     X_test = X.tail(2).reset_index(drop=True)
-    _ = vectorizer.auto_cast(X_train, reset=True)
-    _ = vectorizer.auto_cast(X_test, reset=False)
+    _ = vectorizer._auto_cast(X_train, reset=True)
+    _ = vectorizer._auto_cast(X_test, reset=False)
 
-    assert vectorizer.type_per_column_ == expected_type_per_column
+    assert vectorizer.inferred_column_types_ == expected_type_per_column
 
 
 assert_tuples = [
@@ -390,7 +390,7 @@ def test_passthrough(X):
         high_cardinality_transformer="passthrough",
         datetime_transformer="passthrough",
         numerical_transformer="passthrough",
-        activate_auto_cast=False,
+        auto_cast=False,
     )
     vectorizer.set_output(transform="pandas")
     X_trans = vectorizer.fit_transform(X)

@@ -62,15 +62,18 @@ def _to_numeric(X):
     return pd.DataFrame(X_out, index=X.index)
 
 
-def _replace_false_missing(df):
+def _replace_missing_indicators(column):
+    """Replace missing indicators, e.g., #NA, with np.nan and returns a copy.
+
+    Parameters
+    ----------
+    column : pandas.Series
+
+    Returns
+    -------
+    column : pandas.Series
     """
-    Takes a DataFrame or a Series, and replaces the "false missing", that is,
-    strings that designate a missing value, but do not have the corresponding
-    type. We convert these strings to np.nan.
-    Also replaces `None` to np.nan.
-    """
-    # Should not replace "missing" (the string used for imputation in
-    # categorical features).
+    # Taken from pandas.io.parsers (version 1.1.4)
     STR_NA_VALUES = [
         "null",
         "",
@@ -93,11 +96,10 @@ def _replace_false_missing(df):
         None,
         "?",
         "...",
-    ]  # taken from pandas.io.parsers (version 1.1.4)
-    df = df.replace(STR_NA_VALUES, np.nan).replace(
-        r"^\s+$", np.nan, regex=True
-    )  # Replace whitespaces
-    return df
+    ]
+    # Also replaces the whitespaces
+    column = column.replace(STR_NA_VALUES, np.nan).replace(r"^\s+$", np.nan, regex=True)
+    return column
 
 
 def _union_category(X_col, dtype):
@@ -191,13 +193,26 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         or Transformer, optional
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
-        Can either be a transformer object instance (e.g. OneHotEncoder),
-        a Pipeline containing the preprocessing steps,
-        'drop' for dropping the columns,
-        'remainder' for applying `remainder`,
-        'passthrough' to return the unencoded columns.
-        The default transformer is \
-            ``OneHotEncoder(handle_unknown="ignore", drop="if_binary")``.
+        Can either be a:
+        - transformer object instance (e.g. OneHotEncoder)
+        - a Pipeline containing the preprocessing steps
+        - 'drop' for dropping the columns
+        - 'remainder' for applying `remainder`
+        - 'passthrough' to return the unencoded columns
+
+        The default transformer is
+            ```
+            OneHotEncoder(
+                handle_unknown='ignore',
+                drop='if_binary',
+                sparse_output=False,
+            )
+            ```
+
+        When the downstream estimator is a tree-based model
+        (e.g., scikit-learn HistGradientBoostingRegressor), the OneHotEncoder
+        may lead to lower performances than other transformers,
+        such as the OrdinalEncoder.
 
     high_cardinality_transformer : {'drop', 'remainder', 'passthrough'} \
         or Transformer, optional
@@ -243,9 +258,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         In the latter format, you can specify the name of the assignment.
         Mixing the two is not supported.
 
-    activate_auto_cast : bool, default=True
+    auto_cast : bool, default=True
         If set to ``True``, calling ``fit``, ``transform`` or ``fit_transform``
-        will call ``auto_cast`` to convert each column to the "optimal" dtype
+        will call ``_auto_cast`` to convert each column to the "optimal" dtype
         for scikit-learn estimators.
         The main heuristics are the following:
         - pandas extension dtypes conversion to numpy dtype
@@ -274,6 +289,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         lower than this value. Use ``sparse_threshold=0`` to always return dense.
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
+        Note that the default encoders, the output will never be sparse.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel. This number of jobs will be dispatched to
@@ -313,10 +329,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         ``len(transformers_)==len(transformers)+1``, otherwise
         ``len(transformers_)==len(transformers)``.
 
-    type_per_column_ : dict mapping of int to type
+    inferred_column_types_ : dict mapping of int to type
         A mapping of inferred types per column.
-        Key is the index of a column, value is the inferred dtype.
-        Exists only if ``activate_auto_cast=True``.
 
     See Also
     --------
@@ -377,7 +391,7 @@ sparse_output=False), \
         numerical_transformer="passthrough",
         datetime_transformer=DATETIME_TRANSFORMER,
         specific_transformers=None,
-        activate_auto_cast=True,
+        auto_cast=True,
         remainder="passthrough",
         sparse_threshold=0.0,
         n_jobs=None,
@@ -397,7 +411,7 @@ sparse_output=False), \
         )
         self.numerical_transformer = numerical_transformer
         self.specific_transformers = specific_transformers
-        self.activate_auto_cast = activate_auto_cast
+        self.auto_cast = auto_cast
 
         # Parameter from `ColumnTransformer`
         self.remainder = remainder
@@ -435,7 +449,7 @@ sparse_output=False), \
             self.n_jobs,
         )
 
-    def auto_cast(self, X, reset=True):
+    def _auto_cast(self, X, reset=True):
         """Convert each column of a dataframe to the "optimal" dtype \
             for scikit-learn estimators.
 
@@ -453,9 +467,9 @@ sparse_output=False), \
             The data to be transformed.
 
         reset : bool, default=True
-            If set to ``True`` (during fit), creates ``type_per_column_``,
+            If set to ``True`` (during fit), creates ``inferred_column_types_``,
             the mapping between columns of the training dataframe and their types.
-            If set to ``False`` (during transform), updates ``type_per_column_``
+            If set to ``False`` (during transform), updates ``inferred_column_types_``
             for the categorical columns with the new categories seen during transform.
 
         Returns
@@ -464,20 +478,13 @@ sparse_output=False), \
             The same :obj:`~pandas.DataFrame`, with its columns cast.
         """
         for col in X.columns:
-            # Convert pd.NA to np.nan because the former tends to raise all
-            # kind of issues when dealing with scikit-learn.
-            X[col] = _replace_false_missing(X[col])
+            X[col] = _replace_missing_indicators(X[col])
 
-            if X[col].isna().any():
-                # Some numerical dtypes like Int64 or Float64 only support
-                # pd.NA, so they must be converted to np.float64 before imputing
-                # with np.nan.
-                if is_numeric_dtype(X[col]):
-                    X[col] = X[col].astype(np.float64)
-
-                # We impute with np.nan in all columns regardless of their type,
-                # as we might have some false missing in numerical columns for instance.
-                X[col].fillna(value=np.nan, inplace=True)
+            # Some numerical dtypes like Int64 or Float64 only support
+            # pd.NA, so they must be converted to np.float64 before imputing
+            # with np.nan.
+            if is_numeric_dtype(X[col]) and X[col].isna().any():
+                X[col] = X[col].astype(np.float64)
 
             # Cast pandas dtypes to numpy dtypes for earlier versions of sklearn.
             # Categorical dtypes don't need to be casted.
@@ -490,16 +497,17 @@ sparse_output=False), \
 
                 # When converting string to object, <NA> values becomes '<NA>'
                 # so we need to replace false missing values once more.
-                X[col] = _replace_false_missing(X[col])
+                X[col] = _replace_missing_indicators(X[col])
 
             # For object dtype columns, convert to string to avoid mixed types.
             if is_object_dtype(X[col]):
-                X.loc[X[col].notnull(), col] = X[col].astype(str)
+                mask = X[col].notnull()
+                X.loc[mask, col] = X.loc[mask, col].astype(str)
 
         if reset:
             X = to_datetime(X)
             X = _to_numeric(X)
-            self.type_per_column_ = X.dtypes.to_dict()
+            self.inferred_column_types_ = X.dtypes.to_dict()
 
         else:
             # Update categorical dtype.
@@ -507,12 +515,12 @@ sparse_output=False), \
                 "This %(name)s instance is not fitted yet. "
                 "Please run auto_cast(X, reset=True) first."
             )
-            check_is_fitted(self, ["type_per_column_"], msg=error_msg)
+            check_is_fitted(self, ["inferred_column_types_"], msg=error_msg)
             category_columns = X.select_dtypes("category").columns
             for col in category_columns:
-                dtype = self.type_per_column_[col]
+                dtype = self.inferred_column_types_[col]
                 dtype = _union_category(X[col], dtype)
-                self.type_per_column_[col] = dtype
+                self.inferred_column_types_[col] = dtype
                 X[col] = X[col].astype(dtype)
 
             # Enforce dtypes conversion using the dtypes seen during fit.
@@ -520,7 +528,7 @@ sparse_output=False), \
             # or _to_numeric and only makes sense for the TableVectorizer, we
             # define it here rather than within these two functions.
             # See: https://github.com/skrub-data/skrub/issues/837
-            for column, dtype in self.type_per_column_.items():
+            for column, dtype in self.inferred_column_types_.items():
                 if is_numeric_dtype(dtype):
                     X[column] = pd.to_numeric(X[column], errors="coerce")
 
@@ -622,7 +630,7 @@ sparse_output=False), \
 
         In practice, it:
         - Converts features to their best possible types for scikit-learn estimators
-          if ``activate_auto_cast=True`` (see ``auto_cast`` docstring).
+          if ``auto_cast=True`` (see ``auto_cast`` docstring).
         - Classify columns based on their data types and match them to each
           dtype-specific transformers.
         - Use scikit-learn ColumnTransformert to fit_transform all transformers.
@@ -649,8 +657,8 @@ sparse_output=False), \
         X = self._check_X(X)
         self._check_n_features(X, reset=True)
 
-        if self.activate_auto_cast:
-            X = self.auto_cast(X, reset=True)
+        if self.auto_cast:
+            X = self._auto_cast(X, reset=True)
 
         # Filter ``X`` to keep only the columns that are not specified
         # explicitly by the user.
@@ -738,8 +746,8 @@ sparse_output=False), \
 
         X = self._check_X(X)
 
-        if self.activate_auto_cast:
-            X = self.auto_cast(X, reset=False)
+        if self.auto_cast:
+            X = self._auto_cast(X, reset=False)
 
         return self._column_transformer.transform(X)
 
