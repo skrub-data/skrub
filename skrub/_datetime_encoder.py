@@ -146,7 +146,8 @@ def to_datetime(
 
 
 def _to_datetime_dataframe(X, **kwargs):
-    """Dataframe specialization of ``_to_datetime_2d``.
+    """Convert the columns of a Pandas or Polars dataframe into \
+        datetime representation.
 
     Parameters
     ----------
@@ -161,7 +162,7 @@ def _to_datetime_dataframe(X, **kwargs):
 
 
 def _to_datetime_series(X, **kwargs):
-    """Series specialization of :func:`pandas.to_datetime`.
+    """Convert a Pandas or Polars series into datetime representation.
 
     Parameters
     ----------
@@ -171,22 +172,24 @@ def _to_datetime_series(X, **kwargs):
     -------
     X : Pandas or Polars series
     """
+    X = X.to_frame()
     datetime_parser = _DatetimeParser(**kwargs)
     X = datetime_parser.fit_transform(X)
     return X[X.columns[0]]
 
 
 def _to_datetime_2d_array(X, **kwargs):
-    """2d array specialization of ``_to_datetime_2d``.
+    """Convert a 2d-array into datetime representation.
 
     Parameters
     ----------
-    X : ndarray of shape ``(n_samples, n_features)``
+    X : ndarray of shape (n_samples, n_features)
 
     Returns
     -------
-    X_split : list of array, of shape ``n_features``
+    X : ndarray of shape (n_samples, n_features)
     """
+    X = pd.DataFrame(X)
     datetime_parser = _DatetimeParser(**kwargs)
     X = datetime_parser.fit_transform(X)
     return X.to_numpy()
@@ -200,7 +203,7 @@ def _to_datetime_1d_array(X, **kwargs):
 
 
 def _to_datetime_scalar(X, **kwargs):
-    X = [np.atleast_1d(X)]
+    X = pd.DataFrame([np.atleast_1d(X)])
     datetime_parser = _DatetimeParser(**kwargs)
     X = datetime_parser.fit_transform(X)
     return X[0][0]
@@ -363,6 +366,10 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         self._check_feature_names(X, reset=True)
         self._check_n_features(X, reset=True)
 
+        # TODO: remove this line and perform dataframes operations only
+        # across this class.
+        if not hasattr(X, "__dataframe__"):
+            X = pd.DataFrame(X)
         self._datetime_parser = _DatetimeParser(errors=self.errors).fit(X)
 
         X = check_array(
@@ -431,6 +438,11 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         check_is_fitted(self)
         self._check_n_features(X, reset=False)
         self._check_feature_names(X, reset=False)
+
+        # TODO: remove this line and perform dataframes operations only
+        # across this class.
+        if not hasattr(X, "__dataframe__"):
+            X = pd.DataFrame(X)
 
         X = self._datetime_parser.transform(X)
 

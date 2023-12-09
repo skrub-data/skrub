@@ -8,7 +8,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_random_state
 
-from ._dataframe import _pandas as skrub_pandas
 from ._dataframe._namespace import get_df_namespace
 
 
@@ -22,15 +21,16 @@ MIXED_FORMAT = "mixed" if _is_pandas_format_mixed_available() else None
 
 
 class _BaseParser(TransformerMixin, BaseEstimator):
-    """Base class to define parsers.
+    """Base class to define parsers on dataframes.
 
     This class is a helper for type parsing operations, used
     in TableVectorizer and DatetimeEncoder. The goal of parsing is to
-    uniformize columns types automatically to improve the downstream analytics or
-    learning task.
+    apply the columns types seen during fit automatically during transform,
+    and improve the downstream analytics or learning task.
 
-    During fit, each columns are parsed against a specific dtype, and
-    the mapping between columns and inferred dtype are saved in inferred_column_types_.
+    During fit, each columns are parsed against a specific dtype
+    matching a subclass implementation, and the mapping between columns
+    and inferred dtype are saved in inferred_column_types_.
     During transform, columns are casted to the dtype seen during fit.
 
     Subclasses of this estimator overwrite _infer and _parse methods.
@@ -38,10 +38,10 @@ class _BaseParser(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     errors : {'coerce', 'raise'}, default='coerce'
-    During transform:
-    - If 'coerce', then invalid column values will be set as ``pd.NaT``
-      or ``np.nan``, depending on the parser.
-    - If 'raise', then invalid parsing will raise an exception.
+        During transform:
+        - If 'coerce', then invalid column values will be set as ``pd.NaT``
+        or ``np.nan``, depending on the parser.
+        - If 'raise', then invalid parsing will raise an exception.
 
     Attributes
     ----------
@@ -57,7 +57,7 @@ class _BaseParser(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {polars, pandas}.DataFrame or ndarray of shape (n_samples, n_features).
+        X : {polars, pandas}.DataFrame of shape (n_samples, n_features).
             The input is converted into a Pandas dataframe.
         y : None
             Unused, here for compatibility with scikit-learn.
@@ -69,6 +69,10 @@ class _BaseParser(TransformerMixin, BaseEstimator):
         """
         del y
 
+        if not hasattr(X, "__dataframe__"):
+            raise TypeError(f"X must be a dataframe, got {type(X)}")
+
+        # TODO: remove this line and enable Polars operations.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
 
@@ -90,7 +94,7 @@ class _BaseParser(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {pandas, polars}.DataFrame or ndarray of shape (n_samples, n_features)
+        X : {pandas, polars}.DataFrame of shape (n_samples, n_features)
             The input is converted into a Pandas dataframe.
         y : None
             Unused, here for compatibility with scikit-learn.
@@ -102,11 +106,13 @@ class _BaseParser(TransformerMixin, BaseEstimator):
         """
         del y
 
-        if hasattr(X, "__dataframe__"):
-            skrub_px, _ = get_df_namespace(X)
-        else:
-            skrub_px = skrub_pandas
+        if not hasattr(X, "__dataframe__"):
+            raise TypeError(f"X must be a dataframe, got {type(X)}")
 
+        skrub_px, _ = get_df_namespace(X)
+        index = getattr(X, "index", None)
+
+        # TODO: remove this line and enable Polars operations.
         if not isinstance(X, pd.DataFrame):
             X = pd.DataFrame(X)
 
@@ -120,22 +126,45 @@ class _BaseParser(TransformerMixin, BaseEstimator):
             else:
                 X_out[col] = X[col]
 
-        # TODO: should we return a numpy array
-        # and simply use set_output(transform={"pandas", "polars"})
-        # like scikit-learn would?
-        return skrub_px.make_dataframe(X_out, index=X.index)
+        return skrub_px.make_dataframe(X_out, index=index)
 
     def _infer(self, column_name, column):
-        """Method to overwrite in a subclass.
+        """Infer the dtype of a column.
 
-        Parse and save in  columns matching a specific dtype.
+        This method is overwritten in subclasses.
 
         Parameters
         ----------
+        column_name : str
+            The name of the input column.
+        column : {pandas, polars}.Series
+            The column whose dtype is inferred against a specific dtype.
+
+        Returns
+        -------
+        dtype : dtype or None
+            The inferred dtype. The output is None if the column couldn't
+            be parsed.
         """
         raise NotImplementedError()
 
     def _parse(self, column_name, column):
+        """Parse a column against its dtype seen during _infer.
+
+        This method is overwritten in subclasses.
+
+        Parameters
+        ----------
+        column_name : str
+            The name of the input column.
+        column : {pandas, polars}.Series
+            The input column to be parsed.
+
+        Returns
+        -------
+        column : {pandas, polars}.Series
+            The input column converted to the dtype seen during _infer.
+        """
         raise NotImplementedError()
 
 
