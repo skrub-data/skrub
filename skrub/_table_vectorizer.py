@@ -289,7 +289,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         lower than this value. Use ``sparse_threshold=0`` to always return dense.
         When the transformed output consists of all dense data, the stacked
         result will be dense, and this keyword will be ignored.
-        Note that the default encoders, the output will never be sparse.
+        Note that with the default encoders, the output will never be sparse.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel. This number of jobs will be dispatched to
@@ -633,7 +633,7 @@ sparse_output=False), \
           if ``auto_cast=True`` (see ``auto_cast`` docstring).
         - Classify columns based on their data types and match them to each
           dtype-specific transformers.
-        - Use scikit-learn ColumnTransformert to fit_transform all transformers.
+        - Use scikit-learn ColumnTransformer to run fit_transform on all transformers.
 
         Parameters
         ----------
