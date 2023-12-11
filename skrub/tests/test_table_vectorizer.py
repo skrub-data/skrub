@@ -800,3 +800,9 @@ invalid_tuples = [
 def test_invalid_X(invalid_X, error, msg):
     with pytest.raises(error, match=msg):
         TableVectorizer().fit(invalid_X)
+
+
+def test_vectorize_datetime():
+    X = pd.DataFrame({"A": [pd.Timestamp("2023-01-01", tz="UTC")]}).convert_dtypes()
+    out = TableVectorizer().fit_transform(X)
+    assert int(out[0, 0]) == 2023
