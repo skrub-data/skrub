@@ -490,8 +490,10 @@ sparse_output=False), \
                 # Cast pandas dtypes to numpy dtypes for earlier versions of sklearn.
                 # Categorical dtypes don't need to be casted.
                 # Note that 'is_category_dtype' is deprecated.
-                if is_extension_array_dtype(X[col]) and not isinstance(
-                    X[col].dtype, CategoricalDtype
+                if (
+                    is_extension_array_dtype(X[col])
+                    and not isinstance(X[col].dtype, CategoricalDtype)
+                    and not is_datetime64_any_dtype(X[col])
                 ):
                     dtype = X[col].dtype.type
                     X[col] = X[col].astype(dtype)
