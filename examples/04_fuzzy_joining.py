@@ -143,8 +143,8 @@ augmented_df.tail(20)
 # We see that our |fj| succesfully identified the countries,
 # even though some country names differ between tables.
 #
-# For instance, "Czechia" is well identified as "Czech Republic" and
-# "Luxembourg*" as "Luxembourg".
+# For instance, "Egypt" and "Egypt, Arab Rep." are correctly matched, as are
+# "Lesotho*" and "Lesotho".
 #
 # .. topic:: Note:
 #
@@ -369,20 +369,22 @@ from sklearn.pipeline import make_pipeline
 
 # We create a selector that we will insert at the end of our pipeline, to
 # select the relevant columns before fitting the regressor
+selector = SelectCols(
+    [
+        "GDP per capita (current US$) gdp",
+        "Life expectancy at birth, total (years) life_exp",
+        "Strength of legal rights index (0=weak to 12=strong) legal_rights",
+    ]
+)
 
+# And we can now put together the pipeline
 pipeline = make_pipeline(
     Joiner(gdp_per_capita, main_key="Country", aux_key="Country Name", suffix=" gdp"),
     Joiner(life_exp, main_key="Country", aux_key="Country Name", suffix=" life_exp"),
     Joiner(
         legal_rights, main_key="Country", aux_key="Country Name", suffix=" legal_rights"
     ),
-    SelectCols(
-        [
-            "GDP per capita (current US$) gdp",
-            "Life expectancy at birth, total (years) life_exp",
-            "Strength of legal rights index (0=weak to 12=strong) legal_rights",
-        ]
-    ),
+    selector,
     HistGradientBoostingRegressor(),
 )
 
