@@ -208,7 +208,7 @@ def benchmark(max_iter_e_step: int, dataset_name: str):
                 (
                     "encoding",
                     TableVectorizer(
-                        high_card_cat_transformer=ModifiedGapEncoder(
+                        high_cardinality_transformer=ModifiedGapEncoder(
                             min_iter=5,
                             max_iter=5,
                             max_iter_e_step=max_iter_e_step,
@@ -234,7 +234,7 @@ def benchmark(max_iter_e_step: int, dataset_name: str):
     results = []
     for pipeline, (_, cv_results) in zip(pipelines, cv_df.iterrows()):
         for modified_gap_encoder in (
-            pipeline["encoding"].named_transformers_["high_card_cat"].fitted_models_
+            pipeline["encoding"].named_transformers_["high_cardinality"].fitted_models_
         ):
             for gap_iter, inner_results in enumerate(
                 modified_gap_encoder.benchmark_results_

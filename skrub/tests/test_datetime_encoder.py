@@ -187,7 +187,7 @@ def test_fit(
     assert enc.index_to_features_ == expected_index_to_features
     assert enc.index_to_format_ == expected_index_to_format
     assert enc.n_features_out_ == expected_n_features_out
-    assert enc.get_feature_names_out() == expected_feature_names
+    assert_array_equal(enc.get_feature_names_out(), expected_feature_names)
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -200,11 +200,12 @@ def test_fit(
         (get_mixed_type_dataframe, ["a", "e"]),
     ],
 )
-def test_to_datetime(px, get_data_func, expected_datetime_columns):
+@pytest.mark.parametrize("random_state", np.arange(20))
+def test_to_datetime(px, get_data_func, expected_datetime_columns, random_state):
     if is_module_polars(px):
         pytest.xfail(reason="AssertionError is raised when using Polars.")
     X = get_data_func()
-    X = to_datetime(X)
+    X = to_datetime(X, random_state=random_state)
     X = px.DataFrame(X)
     datetime_columns = [col for col in X.columns if is_datetime64_any_dtype(X[col])]
     assert_array_equal(datetime_columns, expected_datetime_columns)
@@ -243,7 +244,7 @@ def test_resolution_none(px):
 
     assert enc.index_to_features_ == {0: [], 1: [], 2: []}
     assert enc.n_features_out_ == 0
-    assert enc.get_feature_names_out() == []
+    assert_array_equal(enc.get_feature_names_out(), [])
 
 
 @pytest.mark.parametrize("px", MODULES)

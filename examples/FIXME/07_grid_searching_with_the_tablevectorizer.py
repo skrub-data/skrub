@@ -62,7 +62,7 @@ pprint(tv.transformers_)
 from skrub import MinHashEncoder
 
 tv = TableVectorizer(
-    high_card_cat_transformer=MinHashEncoder(),
+    high_cardinality_transformer=MinHashEncoder(),
 )
 tv.fit(X)
 
@@ -101,8 +101,8 @@ pprint(tv.transformers_)
 # For that, we use the dunder separator, which indicates a nesting layer.
 # That means that for tuning the parameter ``n_components`` of the
 # |GapEncoder| saved in the |TableVectorizer| attribute
-# ``high_card_cat_transformer``, we use the syntax
-# ``tablevectorizer__high_card_cat_transformer__n_components``.
+# ``high_cardinality_transformer``, we use the syntax
+# ``tablevectorizer__high_cardinality_transformer__n_components``.
 #
 # We recommend using the 3-tuple syntax for the column-specific transformers,
 # which allows us to give a name to the assignment (here ``mh_dep_name``).
@@ -114,7 +114,7 @@ from skrub import GapEncoder
 
 pipeline = make_pipeline(
     TableVectorizer(
-        high_card_cat_transformer=GapEncoder(),
+        high_cardinality_transformer=GapEncoder(),
         specific_transformers=[
             ("mh_dep_name", MinHashEncoder(), ["department_name"]),
         ],
@@ -123,7 +123,7 @@ pipeline = make_pipeline(
 )
 
 params = {
-    "tablevectorizer__high_card_cat_transformer__n_components": [10, 30, 50],
+    "tablevectorizer__high_cardinality_transformer__n_components": [10, 30, 50],
     "tablevectorizer__mh_dep_name__n_components": [25, 50],
 }
 
