@@ -10,12 +10,8 @@ from pandas.testing import assert_frame_equal
 
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub._dataframe._test_utils import is_module_polars
-from skrub._datetime_encoder import (
-    TIME_LEVELS,
-    DatetimeEncoder,
-    _is_pandas_format_mixed_available,
-    to_datetime,
-)
+from skrub._datetime_encoder import TIME_LEVELS, DatetimeEncoder, to_datetime
+from skrub._parser import _is_pandas_format_mixed_available
 
 MODULES = [pd]
 ASSERT_TUPLES = [(pd, assert_frame_equal)]
@@ -290,6 +286,14 @@ def test_transform_datetime(px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_transform_tz(px):
+    if is_module_polars(px):
+        pytest.xfail(
+            reason=(
+                "Unable to parse time zone: '+05:30'. "
+                "Please check the Time Zone Database for a "
+                "list of available time zones."
+            )
+        )
     X = get_tz_datetime()
     X = px.DataFrame(X)
     enc = DatetimeEncoder(
@@ -484,9 +488,15 @@ def test_to_datetime_format_param():
 
 @pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
 def test_mixed_datetime_format(px, assert_frame_equal_):
+    if is_module_polars(px):
+        pytest.xfail(
+            reason=(
+                "Polars to Pandas conversion resets the column names."
+                "See Pandas issue: https://github.com/pandas-dev/pandas/issues/56433."
+            )
+        )
     df = get_mixed_datetime_format()
     df = px.DataFrame(df)
-
     df_dt = to_datetime(df)
     expected_df_dt = pd.DataFrame(
         dict(

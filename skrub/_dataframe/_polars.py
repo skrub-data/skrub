@@ -40,6 +40,14 @@ def make_dataframe(X, index=None, dtypes=None):
             "Polars dataframes don't have an index, but "
             f"the Polars dataframe maker was called with {index=!r}."
         )
+
+    # Polars doesn't support building a dataframe from a mapping with
+    # non-str keys.
+    keys = list(X.keys())
+    for key in keys:
+        if not isinstance(key, str):
+            X[str(key)] = X.pop(key)
+
     df = pl.DataFrame(X)
     if dtypes is not None:
         df = df.cast(dtypes)
