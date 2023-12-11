@@ -68,7 +68,11 @@ def transformers_equal(transformer1, transformer2, ignore_params=None):
     # Compare hyperparameters
     transformer_1_params = transformer1.get_params()
     transformer_2_params = transformer2.get_params()
-    if ignore_params is None and transformer_1_params != transformer_2_params:
+
+    if ignore_params is None:
+        ignore_params = []
+
+    if len(ignore_params) == 0 and transformer_1_params != transformer_2_params:
         return False
     else:
         transformer_1_params = {
@@ -86,7 +90,7 @@ def transformers_equal(transformer1, transformer2, ignore_params=None):
 
     # Compare fitted attributes
     for attribute in transformer1.__dict__:
-        if attribute.endswith("_"):
+        if attribute.endswith("_") and attribute not in ignore_params:
             if not is_valid_attribute(getattr(transformer1, attribute)):
                 # check that the type is the same
                 if not isinstance(
