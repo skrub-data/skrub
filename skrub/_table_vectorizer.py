@@ -477,32 +477,33 @@ sparse_output=False), \
         X : :obj:`~pandas.DataFrame`
             The same :obj:`~pandas.DataFrame`, with its columns cast.
         """
-        for col in X.columns:
-            X[col] = _replace_missing_indicators(X[col])
-
-            # Some numerical dtypes like Int64 or Float64 only support
-            # pd.NA, so they must be converted to np.float64 before imputing
-            # with np.nan.
-            if is_numeric_dtype(X[col]) and X[col].isna().any():
-                X[col] = X[col].astype(np.float64)
-
-            # Cast pandas dtypes to numpy dtypes for earlier versions of sklearn.
-            # Categorical dtypes don't need to be casted.
-            # Note that 'is_category_dtype' is deprecated.
-            if is_extension_array_dtype(X[col]) and not isinstance(
-                X[col].dtype, CategoricalDtype
-            ):
-                dtype = X[col].dtype.type
-                X[col] = X[col].astype(dtype)
-
-                # When converting string to object, <NA> values becomes '<NA>'
-                # so we need to replace false missing values once more.
+        if self.auto_cast:
+            for col in X.columns:
                 X[col] = _replace_missing_indicators(X[col])
 
-            # For object dtype columns, convert to string to avoid mixed types.
-            if is_object_dtype(X[col]):
-                mask = X[col].notnull()
-                X.loc[mask, col] = X.loc[mask, col].astype(str)
+                # Some numerical dtypes like Int64 or Float64 only support
+                # pd.NA, so they must be converted to np.float64 before imputing
+                # with np.nan.
+                if is_numeric_dtype(X[col]) and X[col].isna().any():
+                    X[col] = X[col].astype(np.float64)
+
+                # Cast pandas dtypes to numpy dtypes for earlier versions of sklearn.
+                # Categorical dtypes don't need to be casted.
+                # Note that 'is_category_dtype' is deprecated.
+                if is_extension_array_dtype(X[col]) and not isinstance(
+                    X[col].dtype, CategoricalDtype
+                ):
+                    dtype = X[col].dtype.type
+                    X[col] = X[col].astype(dtype)
+
+                    # When converting string to object, <NA> values becomes '<NA>'
+                    # so we need to replace false missing values once more.
+                    X[col] = _replace_missing_indicators(X[col])
+
+                # For object dtype columns, convert to string to avoid mixed types.
+                if is_object_dtype(X[col]):
+                    mask = X[col].notnull()
+                    X.loc[mask, col] = X.loc[mask, col].astype(str)
 
         if reset:
             X = to_datetime(X)
@@ -510,12 +511,6 @@ sparse_output=False), \
             self.inferred_column_types_ = X.dtypes.to_dict()
 
         else:
-            # Update categorical dtype.
-            error_msg = (
-                "This %(name)s instance is not fitted yet. "
-                "Please run auto_cast(X, reset=True) first."
-            )
-            check_is_fitted(self, ["inferred_column_types_"], msg=error_msg)
             category_columns = X.select_dtypes("category").columns
             for col in category_columns:
                 dtype = self.inferred_column_types_[col]
@@ -657,8 +652,7 @@ sparse_output=False), \
         X = self._check_X(X)
         self._check_n_features(X, reset=True)
 
-        if self.auto_cast:
-            X = self._auto_cast(X, reset=True)
+        X = self._auto_cast(X, reset=True)
 
         # Filter ``X`` to keep only the columns that are not specified
         # explicitly by the user.
@@ -746,8 +740,7 @@ sparse_output=False), \
 
         X = self._check_X(X)
 
-        if self.auto_cast:
-            X = self._auto_cast(X, reset=False)
+        X = self._auto_cast(X, reset=False)
 
         return self._column_transformer.transform(X)
 
