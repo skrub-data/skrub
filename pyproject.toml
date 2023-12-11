@@ -37,6 +37,14 @@ filterwarnings = [
     # Ignore warning from np.in1d since the future behavior is already the desired
     # behavior. TODO remove when numpy min version >= 1.25.
     'ignore:elementwise\ comparison\ failed:FutureWarning',
+    # TODO remove when pandas min version >= 2.2.0
+    'ignore:.*utcfromtimestamp\(\) is deprecated.*:DeprecationWarning',
+    # TODO remove when joblib min version >= 1.4.0
+    'ignore:.*ast\.Num is deprecated.*:DeprecationWarning',
+    # TODO remove when joblib min version >= 1.4.0
+    'ignore:.*ast\.NameConstant is deprecated.*:DeprecationWarning',
+    # TODO remove when joblib min version >= 1.4.0
+    'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
