@@ -109,7 +109,7 @@ def fuzzy_join(
         used by downstream estimators, and distances between TF-IDF vectors
         have a somewhat simpler interpretation.
     add_match_info : bool, default=False
-        Insert some columns whose names start with `skrub_Joiner` containing
+        Insert columns whose names start with `skrub_Joiner` containing
         the distance, rescaled distance and whether the rescaled distance is
         above the threshold. Those values can be helpful for an estimator that
         uses the joined features, or to inspect the result of the join and set

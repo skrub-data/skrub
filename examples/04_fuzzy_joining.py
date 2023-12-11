@@ -169,7 +169,7 @@ augmented_df.sort_values("skrub_Joiner_rescaled_distance").tail(10)
 # because there is simply no match in the two tables.
 
 ###############################################################################
-# In this case, it is better to use the threshold parameter
+# In this case, it is better to use the threshold parameter (``max_dist``)
 # so as to include only precise-enough matches:
 #
 augmented_df = fuzzy_join(
@@ -184,7 +184,7 @@ augmented_df.sort_values("skrub_Joiner_rescaled_distance", ascending=False).head
 
 ###############################################################################
 # Matches that are not available (or precise enough) are marked as `NaN`.
-# We will remove them using the drop_unmatched parameter:
+# We will remove them using the ``drop_unmatched`` parameter:
 
 augmented_df = fuzzy_join(
     df,
@@ -307,7 +307,7 @@ plt.show()
 # ----------------
 #
 # We now separate our covariates (X), from the target (or exogenous)
-# variables: y
+# variables: y.
 y = augmented_df["Happiness score"]
 X = augmented_df.drop(["Happiness score", "Country"], axis=1)
 
