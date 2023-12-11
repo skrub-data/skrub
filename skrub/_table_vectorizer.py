@@ -603,7 +603,7 @@ sparse_output=False), \
 
         Parameters
         ----------
-        X : {array-like, dataframe} of shape (n_samples, n_features)
+        X : dataframe of shape (n_samples, n_features)
             Input data, of which specified subsets are used to fit the
             transformers.
 
@@ -632,7 +632,7 @@ sparse_output=False), \
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : dataframe of shape (n_samples, n_features)
             Input data, of which specified subsets are used to fit the
             transformers.
         y : array-like of shape (n_samples,), optional
@@ -725,7 +725,7 @@ sparse_output=False), \
 
         Parameters
         ----------
-        X : array-like of shape (n_samples, n_features)
+        X : dataframe of shape (n_samples, n_features)
             The data to be transformed.
 
         Returns
