@@ -27,7 +27,7 @@ Installing
 
 .. code:: console
 
-    $ pip install skrub
+    $ pip install skrub -U
 
 .. raw:: html
 
@@ -37,7 +37,7 @@ Installing
 
 .. code:: console
 
-    $ conda install skrub
+    $ conda install -c conda-forge skrub
 
 .. raw:: html
 
@@ -47,7 +47,7 @@ Installing
 
 .. code:: console
 
-    $ mamba install skrub
+    $ mamba install -c conda-forge skrub
 
 .. raw:: html
 
