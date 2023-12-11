@@ -9,8 +9,8 @@ Changes
 Ongoing development
 =====================
 
-Skrub has not been released yet. It is currently undergoing fast
-development and backward compatibility is not ensured.
+Skrub is a very recent package.
+It is currently undergoing fast development and backward compatibility is not ensured.
 
 Major changes
 -------------
