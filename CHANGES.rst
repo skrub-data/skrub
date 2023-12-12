@@ -17,6 +17,12 @@ Major changes
 * :class:`TargetEncoder` has been removed in favor of
   :class:`sklearn.preprocessing.TargetEncoder`, available since scikit-learn 1.3.
 
+* :class:`Joiner` and :func:`fuzzy_join` support several ways of rescaling
+  distances; ``match_score`` has been replaced by ``max_dist``; bugs which
+  prevented the Joiner to consistently vectorize inputs and accept or reject
+  matches across calls to transform have been fixed. :pr:`821` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
 * :class:`InterpolationJoiner` was added to join two tables by using
   machine-learning to infer the matching rows from the second table.
   :pr:`742` by :user:`Jérôme Dockès <jeromedockes>`.

@@ -2,7 +2,13 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from skrub._dataframe._pandas import aggregate, join, make_dataframe, make_series
+from skrub._dataframe._pandas import (
+    aggregate,
+    join,
+    make_dataframe,
+    make_series,
+    rename_columns,
+)
 
 main = pd.DataFrame(
     {
@@ -115,3 +121,9 @@ def test_make_series(dtype):
     expected_series = pd.Series(X, dtype=dtype)
     series = make_series(X, index=[0, 1, 2], dtype=dtype)
     assert_series_equal(series, expected_series)
+
+
+def test_rename_columns():
+    df = pd.DataFrame({"a column": [1], "another": [1]})
+    df = rename_columns(df, str.swapcase)
+    assert list(df.columns) == ["A COLUMN", "ANOTHER"]

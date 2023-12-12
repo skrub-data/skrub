@@ -276,3 +276,7 @@ def split_num_categ_cols(table):
 
 def select(dataframe, columns):
     return dataframe.select(columns)
+
+
+def rename_columns(dataframe, renaming_function):
+    return dataframe.rename({c: renaming_function(c) for c in dataframe.columns})
