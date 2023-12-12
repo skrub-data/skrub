@@ -12,6 +12,10 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+skrub release 0.5.0
+===================
+
+
 Major changes
 -------------
 * :class:`TargetEncoder` has been removed in favor of
@@ -144,9 +148,6 @@ Minor changes
 
   - Better default hyperparameters: `batch_size` now defaults to 1024, and `max_iter_e_steps`
     to 1.
-
-Minor changes
--------------
 
 * Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`.
   These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`
