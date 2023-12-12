@@ -21,8 +21,8 @@ typically with `scikit-learn <http://scikit-learn.org>`_ with its
 
 .. toctree::
 
-   assembling
    encoding
+   assembling
    cleaning
    development
 
