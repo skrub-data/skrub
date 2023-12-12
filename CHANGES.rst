@@ -12,6 +12,12 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+Major changes
+-------------
+
+Minor changes
+-------------
+
 skrub release 0.5.0
 ===================
 
