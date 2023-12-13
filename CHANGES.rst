@@ -18,7 +18,7 @@ Major changes
 Minor changes
 -------------
 
-skrub release 0.5.0
+skrub release 0.1.0
 ===================
 
 
