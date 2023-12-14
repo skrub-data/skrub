@@ -34,6 +34,7 @@ Installing
     </div>
           <div class="tab-pane fade" id="conda-tab-pane" role="tabpanel" aria-labelledby="conda-tab" tabindex="0">
             <hr />
+    <strong>This will not work yet!</strong> The package is still waiting to be published on conda-forge. You can follow progress <a href="https://github.com/conda-forge/staged-recipes/pull/24766">here</a>.
 
 .. code:: console
 
@@ -44,6 +45,7 @@ Installing
         </div>
         <div class="tab-pane fade" id="mamba-tab-pane" role="tabpanel" aria-labelledby="mamba-tab" tabindex="0">
             <hr />
+        <strong>This will not work yet!</strong> The package is still waiting to be published on conda-forge. You can follow progress <a href="https://github.com/conda-forge/staged-recipes/pull/24766">here</a>.
 
 .. code:: console
 
