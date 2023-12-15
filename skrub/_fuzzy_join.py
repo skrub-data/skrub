@@ -148,11 +148,11 @@ def fuzzy_join(
     ...     left_table,
     ...     right_table,
     ...     on="Country",
-    ...     suffix="_capitals",
+    ...     suffix="_right",
     ...     max_dist=1.0,
     ...     add_match_info=False,
     ... )
-      Country Country_capitals Capital_capitals
+      Country Country_right Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
     2   Spain              NaN              NaN
@@ -160,23 +160,23 @@ def fuzzy_join(
     ...     left_table,
     ...     right_table,
     ...     on="Country",
-    ...     suffix="_capitals",
+    ...     suffix="_right",
     ...     drop_unmatched=True,
     ...     max_dist=1.0,
     ...     add_match_info=False,
     ... )
-      Country Country_capitals Capital_capitals
+      Country Country_right Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
     >>> fuzzy_join(
     ...     left_table,
     ...     right_table,
     ...     on="Country",
-    ...     suffix="_capitals",
+    ...     suffix="_right",
     ...     max_dist=float("inf"),
     ...     add_match_info=False,
     ... )
-      Country Country_capitals Capital_capitals
+      Country Country_right Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
     2   Spain          Germany           Berlin

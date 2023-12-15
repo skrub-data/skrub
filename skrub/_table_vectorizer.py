@@ -201,13 +201,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         - 'passthrough' to return the unencoded columns
 
         The default transformer is
-            ```
+
+        .. code-block::
+
             OneHotEncoder(
                 handle_unknown='ignore',
                 drop='if_binary',
                 sparse_output=False,
             )
-            ```
 
         When the downstream estimator is a tree-based model
         (e.g., scikit-learn HistGradientBoostingRegressor), the OneHotEncoder
@@ -267,7 +268,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         - datetime conversion using ``skrub.to_datetime``
         - numeric conversion using ``pandas.to_numeric``
         - numeric columns with missing values are converted to float to input np.nan
-        - categorical columns dtypes are updated with the new entries (if any)
+        - categorical columns dtypes are updated with the new entries (if any) \
           during transform.
 
     remainder : {'drop', 'passthrough'} or Transformer, default='passthrough'
