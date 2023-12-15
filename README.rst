@@ -49,15 +49,25 @@ For a detailed description of the problem of encoding dirty categorical data, se
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
 and `Encoding high-cardinality string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
 
-Installation (WIP)
-------------------
+Installation
+------------
 
-There are currently no PiPy releases.
-You can still install the package from the GitHub repository with:
+The easiest way to install skrub is via `pip`:
 
 .. code-block:: shell
 
-    pip install git+https://github.com/skrub-data/skrub.git
+    pip install skrub -U
+
+
+or `conda`:
+
+.. code-block:: shell
+
+    conda install -c conda-forge skrub
+
+
+The documentation includes more detailed `installation instructions <https://skrub-data.github.io/install.html>`_.
+
 
 
 Dependencies
