@@ -69,7 +69,7 @@ Create a virtual environment, here for example, using `conda <https://docs.conda
 
 .. code:: console
 
-    $ conda create -n skrub python=3.10 # or any later python version
+    $ conda create -n skrub python=3.8 # or any later python version
     $ conda activate skrub
 
 Then, install the local package in editable mode,
