@@ -1,5 +1,4 @@
 import pandas as pd
-from pathlib import Path
 
 from skrub.datasets._utils import get_data_dir
 

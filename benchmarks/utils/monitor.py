@@ -2,14 +2,13 @@ import tracemalloc
 import os
 
 from collections import defaultdict
-from collections.abc import Callable, Collection, Mapping
+from collections.abc import Mapping
 from datetime import datetime
 from itertools import product
 from pathlib import Path
 from random import choice
 from string import ascii_letters, digits
 from time import perf_counter, time as get_time
-from typing import Any
 from warnings import warn
 
 import pandas as pd

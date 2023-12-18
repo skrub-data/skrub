@@ -10,7 +10,6 @@ should also remove their corresponding references from the list.
 
 import inspect
 import re
-from collections.abc import Callable
 from importlib import import_module
 
 import pytest

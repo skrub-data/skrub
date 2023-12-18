@@ -3,16 +3,12 @@ Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 from __future__ import annotations
 
-from collections.abc import Generator
 from copy import deepcopy
-from typing import Literal
 
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 from joblib import Parallel, delayed
-from numpy.random import RandomState
-from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.cluster import KMeans, kmeans_plusplus

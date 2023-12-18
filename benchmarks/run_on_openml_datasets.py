@@ -178,7 +178,7 @@ for type_id, problem, pipeline, metric in [
             errors[task_id] = str(e)
             continue
 
-logger.info(f"Finished! ")
+logger.info("Finished! ")
 logger.error(f"{len(errors)} tasks with errors: {set(errors.keys())}")
 # print all unique errors
 errors_counter = Counter(errors.values())

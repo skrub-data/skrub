@@ -14,7 +14,6 @@ Date: December 2022
 import math
 from argparse import ArgumentParser
 from time import perf_counter
-from typing import Literal, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np

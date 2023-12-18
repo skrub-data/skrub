@@ -3,13 +3,11 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
-from typing import Literal
 
 import numpy as np
 import pandas as pd
 import sklearn
 from joblib import Parallel, delayed
-from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder

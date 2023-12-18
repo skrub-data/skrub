@@ -1,5 +1,3 @@
-from collections.abc import Callable
-
 import numpy as np
 import numpy.testing
 import pandas as pd

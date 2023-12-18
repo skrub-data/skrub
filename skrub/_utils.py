@@ -1,11 +1,9 @@
 import collections
 import importlib
 import re
-from collections.abc import Hashable
-from typing import Any, Iterable
+from typing import Iterable
 
 import numpy as np
-from numpy.typing import NDArray
 from sklearn.base import clone
 from sklearn.utils import check_array
 

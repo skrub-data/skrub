@@ -6,7 +6,6 @@ Both classes aggregate the auxiliary tables first, then join these grouped
 tables with the base table.
 """
 from copy import deepcopy
-from typing import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin

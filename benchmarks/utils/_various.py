@@ -11,7 +11,6 @@ from skrub.datasets import (
     fetch_road_safety,
     fetch_traffic_violations,
 )
-from skrub.datasets import DatasetAll
 
 
 def find_result(bench_name):

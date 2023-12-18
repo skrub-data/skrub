@@ -20,7 +20,6 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.compose._column_transformer import _get_transformer_list
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils import Bunch
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder, to_datetime

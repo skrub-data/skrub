@@ -2,12 +2,10 @@
 Implements deduplication based on clustering string distance matrices.
 """
 
-from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from numpy.typing import NDArray
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer

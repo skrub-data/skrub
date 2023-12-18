@@ -9,9 +9,7 @@ Date: February 2023
 
 import pickle
 from argparse import ArgumentParser
-from collections.abc import Callable, Collection
 from pathlib import Path
-from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
