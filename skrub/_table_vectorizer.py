@@ -782,7 +782,7 @@ sparse_output=False), \
         return transformers
 
     @property
-    def named_transformers_(self) -> Bunch:
+    def named_transformers_(self):
         """Map transformer names to transformer objects.
 
         Read-only attribute to access any transformer by given name.
@@ -792,7 +792,7 @@ sparse_output=False), \
         return self._column_transformer.named_transformers_
 
     @property
-    def sparse_output_(self) -> bool:
+    def sparse_output_(self):
         """Whether the output of ``transform`` is sparse or dense.
 
         Boolean flag indicating whether the output of ``transform`` is a
@@ -802,7 +802,7 @@ sparse_output=False), \
         return self._column_transformer.sparse_output_
 
     @property
-    def output_indices_(self) -> dict[str, slice]:
+    def output_indices_(self):
         """Map the transformer names to their input indices.
 
         A dictionary from each transformer name to a slice, where the slice
@@ -812,7 +812,7 @@ sparse_output=False), \
         """
         return self._column_transformer.output_indices_
 
-    def _more_tags(self) -> dict:
+    def _more_tags(self):
         """
         Used internally by sklearn to ease the estimator checks.
         """

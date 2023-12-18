@@ -28,7 +28,7 @@ if POLARS_SETUP:
     "analyzer",
     ["char", "char_wb", "word"],
 )
-def test_fuzzy_join(px, analyzer: Literal["char", "char_wb", "word"]):
+def test_fuzzy_join(px, analyzer):
     """
     Testing if fuzzy_join results are as expected.
     """

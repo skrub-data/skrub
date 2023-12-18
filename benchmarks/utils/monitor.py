@@ -18,13 +18,13 @@ from tqdm import tqdm
 
 def monitor(
     *,
-    parametrize: Collection[Mapping[Any]] | Mapping[str, Collection[Any]] | None = None,
-    save_as: str | None = None,
-    memory: bool = True,
-    time: bool = True,
-    repeat: int = 1,
-    hot_load: str | None = None,
-) -> Callable[..., Callable[..., pd.DataFrame]]:
+    parametrize=None,
+    save_as=None,
+    memory=True,
+    time=True,
+    repeat=1,
+    hot_load=None,
+):
     """Decorator used to monitor the execution of a function.
 
     The decorated function should return either:
@@ -128,9 +128,7 @@ def monitor(
 
     reserved_column_names = {"iter", "time", "memory"}
 
-    def decorator(
-        func: Callable[..., Mapping[str, Any] | list[Mapping[str, Any]] | None]
-    ):
+    def decorator(func):
         """
         Catches the decorated function.
 
@@ -140,7 +138,7 @@ def monitor(
             The decorated function callable object.
         """
 
-        def wrapper(*call_args, **call_kwargs) -> pd.DataFrame:
+        def wrapper(*call_args, **call_kwargs):
             """
             Catches the decorated function's call arguments.
 
@@ -162,7 +160,7 @@ def monitor(
                     f"positional values: {call_args!r}"
                 )
 
-            def get_random_file_name() -> str:
+            def get_random_file_name():
                 """
                 Returns a random file name, used by hot-loading.
                 Format is ``{time}-{random_string}.parquet``.
@@ -171,7 +169,7 @@ def monitor(
                 time = int(get_time())
                 return f"{time}-{name}.parquet"
 
-            def load_intermediate_results(file_name: str) -> pd.DataFrame:
+            def load_intermediate_results(file_name):
                 """
                 Loads the results from the file passed.
                 If the file is not found, and to avoid unexpected behavior,
@@ -184,12 +182,12 @@ def monitor(
 
                 return pd.read_parquet(file_name)
 
-            def product_map(iterables: Mapping[str, Any]):
+            def product_map(iterables):
                 """``itertools.product`` with mapping support."""
                 for combination in product(*iterables.values()):
                     yield dict(zip(iterables.keys(), combination))
 
-            def exec_func(**kwargs) -> pd.DataFrame:
+            def exec_func(**kwargs):
                 """
                 Wraps the decorated function call with a single set of
                 parameters, and pre-process the returned values.
@@ -274,7 +272,7 @@ def monitor(
 
                 return df_results
 
-            parametrization: list[Mapping]
+            # parametrization: list[Mapping]
             if parametrize is None:
                 # Use the parameters passed by the call
                 parametrization = [call_kwargs]

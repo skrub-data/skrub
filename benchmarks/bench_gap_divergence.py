@@ -56,10 +56,10 @@ from utils import (
 
 
 class ModifiedGapEncoderColumn(GapEncoderColumn):
-    def __init__(self, *args, column_name: str = "MISSING COLUMN", **kwargs):
+    def __init__(self, *args, column_name="MISSING COLUMN", **kwargs):
         super().__init__(*args, **kwargs)
         self.column_name = column_name
-        self.benchmark_results_: list[dict[str, np.ndarray | float]] = []
+        self.benchmark_results_ = []
 
     def fit(self, X, y=None):
         # Copy parameter rho
@@ -124,9 +124,9 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 
 
 class ModifiedGapEncoder(GapEncoder):
-    fitted_models_: list[ModifiedGapEncoderColumn]
+    # fitted_models_: list[ModifiedGapEncoderColumn]
 
-    def _create_column_gap_encoder(self, column_name: str):
+    def _create_column_gap_encoder(self, column_name):
         return ModifiedGapEncoderColumn(
             column_name=column_name,
             ngram_range=self.ngram_range,
@@ -187,7 +187,7 @@ benchmark_name = Path(__file__).stem
     },
     save_as=benchmark_name,
 )
-def benchmark(max_iter_e_step: int, dataset_name: str):
+def benchmark(max_iter_e_step, dataset_name):
     """
     Cross-validate a pipeline with a modified `GapEncoder` instance for the
     high cardinality column. The rest of the columns are passed to a
@@ -261,7 +261,7 @@ def benchmark(max_iter_e_step: int, dataset_name: str):
     return results
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     # Keep only the last outer iteration
     df = df[df["gap_iter"] == 5]
 

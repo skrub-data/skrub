@@ -610,7 +610,7 @@ def test_changing_types(X_train, X_test, expected_X_out):
     assert_array_equal(X_out[mask_nan], expected_X_out[mask_nan])
 
 
-def test_changing_types_int_float() -> None:
+def test_changing_types_int_float():
     """
     The TableVectorizer shouldn't cast floats to ints
     even if only ints were seen during fit

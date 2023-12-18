@@ -115,19 +115,19 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             -1.45918266e+09, -1.58098831e+09]])
     """
 
-    hash_dict_: LRUDict
+    # hash_dict_: LRUDict
 
-    _capacity: int = 2**10
+    _capacity = 2**10
 
     def __init__(
         self,
         *,
-        n_components: int = 30,
-        ngram_range: tuple[int, int] = (2, 4),
-        hashing: Literal["fast", "murmur"] = "fast",
-        minmax_hash: bool = False,
-        handle_missing: Literal["error", "zero_impute"] = "zero_impute",
-        n_jobs: int = None,
+        n_components=30,
+        ngram_range=(2, 4),
+        hashing="fast",
+        minmax_hash=False,
+        handle_missing="zero_impute",
+        n_jobs=None,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -136,7 +136,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
 
-    def _get_murmur_hash(self, string: str) -> NDArray:
+    def _get_murmur_hash(self, string):
         """
         Encode a string using murmur hashing function.
 
@@ -164,7 +164,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
-    def _get_fast_hash(self, string: str) -> NDArray:
+    def _get_fast_hash(self, string):
         """Encode a string with fast hashing function.
 
         Fast hashing supports both min_hash and minmax_hash encoding.
@@ -194,9 +194,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
                 ]
             )
 
-    def _compute_hash_batched(
-        self, batch: Collection[str], hash_func: Callable[[str], NDArray]
-    ) -> NDArray:
+    def _compute_hash_batched(self, batch, hash_func):
         """Function called to compute the hashes of a batch of strings.
 
         Check if the string is in the hash dictionary, if not, compute the hash
@@ -224,7 +222,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             res[i] = self.hash_dict_[string]
         return res
 
-    def fit(self, X: ArrayLike, y=None) -> "MinHashEncoder":
+    def fit(self, X, y=None):
         """Fit the MinHashEncoder to `X`.
 
         In practice, just initializes a dictionary
@@ -259,7 +257,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
 
-    def transform(self, X: ArrayLike) -> NDArray:
+    def transform(self, X):
         """
         Transform `X` using specified encoding scheme.
 
@@ -342,9 +340,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
         return X_out.astype(np.float64)  # The output is an int32 before conversion
 
-    def get_feature_names_out(
-        self, input_features: ArrayLike | str | None = None
-    ) -> NDArray[np.str_]:
+    def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
 
         The output feature names look like:

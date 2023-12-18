@@ -28,12 +28,12 @@ if POLARS_SETUP:
     ],
 )
 def test_analyzer(
-    hashing: bool,
-    init: str,
-    rescale_W: bool,
-    add_words: bool,
-    rescale_rho: bool,
-    n_samples: int = 70,
+    hashing,
+    init,
+    rescale_W,
+    add_words,
+    rescale_rho,
+    n_samples=70,
 ):
     """
     Test if the output is different when the analyzer is 'word' or 'char'.
@@ -85,12 +85,12 @@ def test_analyzer(
     ],
 )
 def test_gap_encoder(
-    hashing: bool,
-    init: str,
-    analyzer: str,
-    add_words: bool,
-    verbose: bool,
-    n_samples: int = 70,
+    hashing,
+    init,
+    analyzer,
+    add_words,
+    verbose,
+    n_samples=70,
 ):
     X = generate_data(n_samples, random_state=0)
     n_components = 10
@@ -158,7 +158,7 @@ def test_input_type(px):
     "add_words",
     [True, False],
 )
-def test_partial_fit(px, add_words: bool, n_samples: int = 70):
+def test_partial_fit(px, add_words, n_samples=70):
     X = generate_data(n_samples, random_state=0)
     X2 = px.DataFrame(generate_data(n_samples - 10, random_state=1))
     X3 = generate_data(n_samples - 10, random_state=2)
@@ -244,7 +244,7 @@ def test_overflow_error():
     enc.fit(X)
 
 
-def test_score(n_samples: int = 70):
+def test_score(n_samples=70):
     X1 = generate_data(n_samples, random_state=0)
     X2 = np.hstack([X1, X1])
     enc = GapEncoder(random_state=42)
@@ -261,7 +261,7 @@ def test_score(n_samples: int = 70):
     "missing",
     ["zero_impute", "error", "aaa"],
 )
-def test_missing_values(px, missing: str):
+def test_missing_values(px, missing):
     """Test what happens when missing values are in the data"""
     if is_module_polars(px):
         pytest.xfail(
