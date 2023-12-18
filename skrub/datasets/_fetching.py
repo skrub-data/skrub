@@ -17,7 +17,7 @@ import warnings
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Any, Literal, TextIO
+from typing import Any
 from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
@@ -41,24 +41,24 @@ from skrub.datasets._utils import get_data_dir
 # ``Experimental`` so the structure might change in future releases.
 # This path will be concatenated to the skrub data directory,
 # available via the function ``get_data_dir()``.
-DETAILS_DIRECTORY      = "openml/openml.org/api/v1/json/data/"
+DETAILS_DIRECTORY = "openml/openml.org/api/v1/json/data/"
 
 # Same as above; for the datasets features location.
-FEATURES_DIRECTORY      = "openml/openml.org/api/v1/json/data/features/"
+FEATURES_DIRECTORY = "openml/openml.org/api/v1/json/data/features/"
 
 # Same as above; for the datasets data location.
-DATA_DIRECTORY      = "openml/openml.org/data/v1/download/"
+DATA_DIRECTORY = "openml/openml.org/data/v1/download/"
 
 # The IDs of the datasets, from OpenML.
 # For each dataset, its URL is constructed as follows:
-openml_url      = "https://www.openml.org/d/{ID}"
-ROAD_SAFETY_ID      = 42803
-OPEN_PAYMENTS_ID      = 42738
-MIDWEST_SURVEY_ID      = 42805
-MEDICAL_CHARGE_ID      = 42720
-EMPLOYEE_SALARIES_ID      = 42125
-TRAFFIC_VIOLATIONS_ID      = 42132
-DRUG_DIRECTORY_ID      = 43044
+openml_url = "https://www.openml.org/d/{ID}"
+ROAD_SAFETY_ID = 42803
+OPEN_PAYMENTS_ID = 42738
+MIDWEST_SURVEY_ID = 42805
+MEDICAL_CHARGE_ID = 42720
+EMPLOYEE_SALARIES_ID = 42125
+TRAFFIC_VIOLATIONS_ID = 42132
+DRUG_DIRECTORY_ID = 43044
 
 MOVIELENS_URL = "https://files.grouplens.org/datasets/movielens/{zip_directory}.zip"
 
@@ -112,7 +112,7 @@ class DatasetAll:
     path: Path
     read_csv_kwargs: dict[str, Any]
 
-    def __eq__(self, other            )        :
+    def __eq__(self, other):
         """
         Implemented for the tests to work without bloating the code.
         The main reason for which it's needed is that equality between
@@ -152,9 +152,9 @@ class DatasetInfoOnly:
 
 
 def _fetch_openml_dataset(
-    dataset_id     ,
-    data_directory              = None,
-)                  :
+    dataset_id,
+    data_directory=None,
+):
     """
     Gets a dataset from OpenML (https://www.openml.org).
 
@@ -228,9 +228,9 @@ def _fetch_openml_dataset(
 
 
 def _fetch_world_bank_data(
-    indicator_id     ,
-    data_directory              = None,
-)                  :
+    indicator_id,
+    data_directory=None,
+):
     """Gets a dataset from World Bank open data platform (https://data.worldbank.org/).
 
     Parameters
@@ -311,9 +311,9 @@ def _fetch_world_bank_data(
 
 
 def _fetch_figshare(
-    figshare_id     ,
-    data_directory              = None,
-)                  :
+    figshare_id,
+    data_directory=None,
+):
     """Fetch a dataset from figshare using the download ID number.
 
     Parameters
@@ -424,7 +424,7 @@ def _fetch_figshare(
             raise URLError("No internet connection or the website is down.")
 
 
-def _fetch_movielens(dataset_id     , data_directory              = None)             :
+def _fetch_movielens(dataset_id, data_directory=None):
     """Downloads a subset of the Movielens dataset.
 
     Parameters
@@ -488,7 +488,7 @@ def _download_and_write_movielens_dataset(dataset_id, data_directory, zip_direct
         raise
 
 
-def _download_and_write_openml_dataset(dataset_id     , data_directory      )        :
+def _download_and_write_openml_dataset(dataset_id, data_directory):
     """Downloads a dataset from OpenML, taking care of creating the directories.
 
     Parameters
@@ -532,7 +532,7 @@ def _download_and_write_openml_dataset(dataset_id     , data_directory      )   
     )
 
 
-def _read_json_from_gz(compressed_dir_path      )        :
+def _read_json_from_gz(compressed_dir_path):
     """Opens a gzip file, reads its content (JSON expected), and returns a dictionary.
 
     Parameters
@@ -557,7 +557,7 @@ def _read_json_from_gz(compressed_dir_path      )        :
     return details_json
 
 
-def _get_details(compressed_dir_path      )           :
+def _get_details(compressed_dir_path):
     """Gets useful details from the details file.
 
     Parameters
@@ -581,7 +581,7 @@ def _get_details(compressed_dir_path      )           :
     )
 
 
-def _get_features(compressed_dir_path      )            :
+def _get_features(compressed_dir_path):
     """Gets features that can be inserted in the CSV file.
 
     The most important feature are the column names.
@@ -603,9 +603,7 @@ def _get_features(compressed_dir_path      )            :
     return Features(names=[column["name"] for column in raw_features["feature"]])
 
 
-def _export_gz_data_to_csv(
-    compressed_dir_path      , destination_file      , features          
-)        :
+def _export_gz_data_to_csv(compressed_dir_path, destination_file, features):
     """Reads a gzip file containing ARFF data, and writes it to a CSV file.
 
     Parameters
@@ -620,7 +618,7 @@ def _export_gz_data_to_csv(
     atdata_found = False
     with destination_file.open(mode="w", encoding="utf8") as csv:
         with gzip.open(compressed_dir_path, mode="rt", encoding="utf8") as gz:
-            #gz: TextIO  # Clarify for IDEs
+            # gz: TextIO  # Clarify for IDEs
             csv.write(_features_to_csv_format(features))
             csv.write("\n")
             # We will look at each line of the file until we find
@@ -633,19 +631,19 @@ def _export_gz_data_to_csv(
                     csv.write(line)
 
 
-def _features_to_csv_format(features          )       :
+def _features_to_csv_format(features):
     return ",".join(features.names)
 
 
 def _fetch_dataset_as_dataclass(
-    source                                             ,
-    dataset_name     ,
-    dataset_id           ,
-    target            ,
-    load_dataframe      ,
-    data_directory                    = None,
-    read_csv_kwargs              = None,
-)                                :
+    source,
+    dataset_name,
+    dataset_id,
+    target,
+    load_dataframe,
+    data_directory=None,
+    read_csv_kwargs=None,
+):
     """Fetches a dataset from a source, and returns it as a dataclass.
 
     Takes a dataset identifier, a target column name (if applicable),
@@ -725,12 +723,12 @@ def _fetch_dataset_as_dataclass(
 
 def fetch_employee_salaries(
     *,
-    load_dataframe       = True,
-    drop_linked       = True,
-    drop_irrelevant       = True,
-    overload_job_titles       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    drop_linked=True,
+    drop_irrelevant=True,
+    overload_job_titles=True,
+    data_directory=None,
+):
     """Fetches the employee salaries dataset (regression), available at https://openml.org/d/42125
 
     Description of the dataset:
@@ -797,9 +795,9 @@ def fetch_employee_salaries(
 
 def fetch_road_safety(
     *,
-    load_dataframe       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches the road safety dataset (classification), available at https://openml.org/d/42803
 
     Description of the dataset:
@@ -831,9 +829,9 @@ def fetch_road_safety(
 
 def fetch_medical_charge(
     *,
-    load_dataframe       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches the medical charge dataset (regression), available at https://openml.org/d/42720
 
     Description of the dataset:
@@ -870,9 +868,9 @@ def fetch_medical_charge(
 
 def fetch_midwest_survey(
     *,
-    load_dataframe       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches the midwest survey dataset (classification), available at https://openml.org/d/42805
 
     Description of the dataset:
@@ -902,9 +900,9 @@ def fetch_midwest_survey(
 
 def fetch_open_payments(
     *,
-    load_dataframe       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches the open payments dataset (classification), available at https://openml.org/d/42738
 
     Description of the dataset:
@@ -936,9 +934,9 @@ def fetch_open_payments(
 
 def fetch_traffic_violations(
     *,
-    load_dataframe       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches the traffic violations dataset (classification), available at https://openml.org/d/42132
 
     Description of the dataset:
@@ -972,9 +970,9 @@ def fetch_traffic_violations(
 
 def fetch_drug_directory(
     *,
-    load_dataframe       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches the drug directory dataset (classification), available at https://openml.org/d/43044
 
     Description of the dataset:
@@ -1004,11 +1002,11 @@ def fetch_drug_directory(
 
 
 def fetch_world_bank_indicator(
-    indicator_id     ,
+    indicator_id,
     *,
-    load_dataframe       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches a dataset of an indicator from the World Bank open data platform.
 
     Description of the dataset:
@@ -1035,11 +1033,11 @@ def fetch_world_bank_indicator(
 
 
 def fetch_figshare(
-    figshare_id     ,
+    figshare_id,
     *,
-    load_dataframe       = True,
-    data_directory                    = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches a table of from figshare.
 
     Returns
@@ -1061,11 +1059,11 @@ def fetch_figshare(
 
 
 def fetch_movielens(
-    dataset_id      = "ratings",
+    dataset_id="ratings",
     *,
-    load_dataframe       = True,
-    data_directory              = None,
-)                                :
+    load_dataframe=True,
+    data_directory=None,
+):
     """Fetches a dataset from Movielens.
 
     Parameters
