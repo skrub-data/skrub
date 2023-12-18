@@ -1,5 +1,3 @@
-from functools import cache
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -101,7 +99,6 @@ def test__create_spelling_correction(seed=123):
         ).all()
 
 
-@cache
 def default_deduplicate(n=500, random_state=0):
     """
     Create a default deduplication dataset.
