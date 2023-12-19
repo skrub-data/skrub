@@ -204,7 +204,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     ...     add_match_info=False,
     ... )
     >>> joiner.fit_transform(main_table)
-      Country Country_aux Capital_aux
+      Country      Country_aux      Capital_aux
     0  France           France            Paris
     1  Italia            Italy             Rome
     2   Spain              NaN              NaN
