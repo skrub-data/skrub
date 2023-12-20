@@ -194,20 +194,22 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a:
-        - transformer object instance (e.g. OneHotEncoder)
-        - a Pipeline containing the preprocessing steps
-        - 'drop' for dropping the columns
-        - 'remainder' for applying `remainder`
-        - 'passthrough' to return the unencoded columns
 
-        The default transformer is
-            ```
+        * transformer object instance (e.g. ``OneHotEncoder``)
+        * a Pipeline containing the preprocessing steps
+        * 'drop' for dropping the columns
+        * 'remainder' for applying `remainder`
+        * 'passthrough' to return the unencoded columns
+
+        The default transformer is:
+
+        .. code-block::
+
             OneHotEncoder(
                 handle_unknown='ignore',
                 drop='if_binary',
                 sparse_output=False,
             )
-            ```
 
         When the downstream estimator is a tree-based model
         (e.g., scikit-learn HistGradientBoostingRegressor), the OneHotEncoder
@@ -253,8 +255,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         column-specific transformers, and passing the ``TableVectorizer``
         as the ``remainder``.
         This parameter can take two different formats, either:
-        - a list of 2-tuples (transformer, column names or indices)
-        - a list of 3-tuple (name, transformer, column names or indices)
+
+        * a list of 2-tuples (transformer, column names or indices)
+        * a list of 3-tuple (name, transformer, column names or indices)
         In the latter format, you can specify the name of the assignment.
         Mixing the two is not supported.
 
@@ -263,11 +266,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         will call ``_auto_cast`` to convert each column to the "optimal" dtype
         for scikit-learn estimators.
         The main heuristics are the following:
-        - pandas extension dtypes conversion to numpy dtype
-        - datetime conversion using ``skrub.to_datetime``
-        - numeric conversion using ``pandas.to_numeric``
-        - numeric columns with missing values are converted to float to input np.nan
-        - categorical columns dtypes are updated with the new entries (if any)
+
+        * pandas extension dtypes conversion to numpy dtype
+        * datetime conversion using ``skrub.to_datetime``
+        * numeric conversion using ``pandas.to_numeric``
+        * numeric columns with missing values are converted to float to input np.nan
+        * categorical columns dtypes are updated with the new entries (if any) \
           during transform.
 
     remainder : {'drop', 'passthrough'} or Transformer, default='passthrough'

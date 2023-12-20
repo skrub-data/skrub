@@ -504,7 +504,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    resolution : {"year", "month", "day", "hour", "minute", "second",
+    resolution : {"year", "month", "day", "hour", "minute", "second", \
         "microsecond", "nanosecond", None}, default="hour"
         Extract up to this resolution.
         E.g., ``resolution="day"`` generates the features "year", "month",

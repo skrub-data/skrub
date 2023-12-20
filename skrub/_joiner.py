@@ -199,12 +199,12 @@ class Joiner(TransformerMixin, BaseEstimator):
     >>> joiner = Joiner(
     ...     aux_table,
     ...     key="Country",
-    ...     suffix="_capitals",
+    ...     suffix="_aux",
     ...     max_dist=0.9,
     ...     add_match_info=False,
     ... )
     >>> joiner.fit_transform(main_table)
-      Country Country_capitals Capital_capitals
+      Country      Country_aux      Capital_aux
     0  France           France            Paris
     1  Italia            Italy             Rome
     2   Spain              NaN              NaN

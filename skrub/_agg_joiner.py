@@ -75,7 +75,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
     Apply numerical and categorical aggregation operations on the columns
     to aggregate, selected by dtypes. See the list of supported operations
-    at the parameter `agg_ops`.
+    at the parameter `operation`.
 
     The grouping columns used during the aggregation are the columns used
     as keys for joining.
@@ -107,7 +107,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         Aggregation operations to perform on the auxiliary table.
 
         numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-            'hist' and 'value_counts' accepts an integer argument to parametrize
+            'hist' and 'value_counts' accept an integer argument to parametrize
             the binning.
 
         categorical : {"mode", "count", "value_counts"}
@@ -383,8 +383,8 @@ class AggTarget(BaseEstimator, TransformerMixin):
     operation : str or iterable of str, optional
         Aggregation operations to perform on the auxiliary table.
 
-        numerical : {"sum", "mean", "std", "min", "max", "hist(3)", "value_counts"}
-            'hist' and 'value_counts' accepts an integer argument to parametrize
+        numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
+            'hist' and 'value_counts' accept an integer argument to parametrize
             the binning.
 
         categorical : {"mode", "count", "value_counts"}
