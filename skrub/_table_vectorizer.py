@@ -195,7 +195,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         (threshold is defined by `cardinality_threshold`).
         Can either be a:
 
-        * transformer object instance (e.g. OneHotEncoder)
+        * transformer object instance (e.g. ``OneHotEncoder``)
         * a Pipeline containing the preprocessing steps
         * 'drop' for dropping the columns
         * 'remainder' for applying `remainder`

@@ -152,7 +152,7 @@ def fuzzy_join(
     ...     max_dist=1.0,
     ...     add_match_info=False,
     ... )
-      Country Country_right Capital_right
+      Country    Country_right    Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
     2   Spain              NaN              NaN
@@ -165,7 +165,7 @@ def fuzzy_join(
     ...     max_dist=1.0,
     ...     add_match_info=False,
     ... )
-      Country Country_right Capital_right
+      Country    Country_right    Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
     >>> fuzzy_join(
@@ -176,7 +176,7 @@ def fuzzy_join(
     ...     max_dist=float("inf"),
     ...     add_match_info=False,
     ... )
-      Country Country_right Capital_right
+      Country    Country_right    Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
     2   Spain          Germany           Berlin
