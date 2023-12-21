@@ -113,7 +113,7 @@ def test_encoder_params(hashing, minmax_hash):
 @pytest.mark.parametrize("input_type", INPUT_TYPE)
 @pytest.mark.parametrize("missing", ["error", "zero_impute", "aaa"])
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
-def test_missing_values(input_type: str, missing: str, hashing: str):
+def test_missing_values(input_type, missing, hashing):
     X = ["Red", np.nan, "green", "blue", "green", "green", "blue", float("nan")]
     n = 3
     z = np.zeros(n)

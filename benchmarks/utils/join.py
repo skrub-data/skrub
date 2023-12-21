@@ -1,13 +1,12 @@
 import pandas as pd
-from pathlib import Path
 
 from skrub.datasets._utils import get_data_dir
 
 
 def get_local_data(
-    dataset_name: str,
-    data_home: Path | str | None = None,
-    data_directory: str | None = None,
+    dataset_name,
+    data_home=None,
+    data_directory=None,
 ):
     """Get the path to the local datasets."""
     data_directory = get_data_dir(data_directory, data_home)
@@ -25,11 +24,11 @@ def get_local_data(
 
 
 def fetch_data(
-    dataset_name: str,
-    save: bool = True,
-    data_home: Path | str | None = None,
-    data_directory: str | None = None,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    dataset_name,
+    save=True,
+    data_home=None,
+    data_directory=None,
+):
     """Fetch datasets from https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark  # noqa
 
     Parameters
@@ -83,12 +82,12 @@ def fetch_data(
 
 
 def fetch_big_data(
-    dataset_name: str,
-    data_type: str = "Dirty",
-    save: bool = True,
-    data_home: Path | str | None = None,
-    data_directory: str | None = None,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    dataset_name,
+    data_type="Dirty",
+    save=True,
+    data_home=None,
+    data_directory=None,
+):
     """Fetch datasets from https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md  # noqa
 
     Parameters

@@ -96,8 +96,8 @@ benchmark_name = "bench_fuzzy_join_vs_others"
     repeat=5,
 )
 def benchmark(
-    dataset_name: str,
-    join: str,
+    dataset_name,
+    join,
 ):
     left_table, right_table, gt = load_data(dataset_name)
 
@@ -151,7 +151,7 @@ def benchmark(
     return res_dic
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     sns.set_theme(style="ticks", palette="pastel")
 
     n_datasets = len(np.unique(df["dataset_name"]))

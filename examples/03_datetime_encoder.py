@@ -178,7 +178,6 @@ cross_val_score(
 #
 # The mean squared error is not obvious to interpret, so we compare
 # visually the prediction of our model with the actual values.
-import numpy as np
 import matplotlib.pyplot as plt
 
 mask_train = X["date.utc"] < "2019-06-01"

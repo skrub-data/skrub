@@ -14,7 +14,6 @@ Date: December 2022
 import math
 from argparse import ArgumentParser
 from time import perf_counter
-from typing import Literal, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,21 +33,21 @@ from utils.join import evaluate
 
 # Function kept for reference
 def fuzzy_join(
-    left: pd.DataFrame,
-    right: pd.DataFrame,
-    how: Literal["left", "right"] = "left",
-    left_on: Union[str, None] = None,
-    right_on: Union[str, None] = None,
-    on: Union[str, None] = None,
-    encoder: Literal["count", "hash"] = "count",
-    analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    ngram_range: Tuple[int, int] = (2, 4),
-    return_score: bool = False,
-    match_score: float = 0,
-    drop_unmatched: bool = False,
-    sort: bool = False,
-    suffixes: Tuple[str, str] = ("_x", "_y"),
-) -> pd.DataFrame:
+    left,
+    right,
+    how="left",
+    left_on=None,
+    right_on=None,
+    on=None,
+    encoder="count",
+    analyzer="char_wb",
+    ngram_range=(2, 4),
+    return_score=False,
+    match_score=0,
+    drop_unmatched=False,
+    sort=False,
+    suffixes=("_x", "_y"),
+):
     """
     Join two tables categorical string columns based on approximate
     matching and using morphological similarity.
@@ -317,10 +316,10 @@ benchmark_name = "bench_fuzzy_join_count_vs_hash"
     repeat=10,
 )
 def benchmark(
-    encoder: Literal["hash", "count"],
-    dataset_name: str,
-    analyzer: Literal["char_wb", "char", "word"],
-    ngram_range: tuple,
+    encoder,
+    dataset_name,
+    analyzer,
+    ngram_range,
 ):
     left_table, right_table, gt = load_data(dataset_name)
 
@@ -352,7 +351,7 @@ def benchmark(
     return res_dic
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     sns.set_theme(style="ticks", palette="pastel")
 
     n_datasets = len(np.unique(df["dataset_name"]))

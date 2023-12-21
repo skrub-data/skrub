@@ -232,7 +232,7 @@ from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 operations = ["mean", "hist(3)", "hist(5)", "hist(7)", "value_counts"]
 param_grid = [
     {
-        f"aggtarget-2__operation": [op],
+        "aggtarget-2__operation": [op],
     }
     for op in operations
 ]

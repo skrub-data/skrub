@@ -81,7 +81,7 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 
         return False
 
-    def fit(self, X, y=None) -> "GapEncoderColumn":
+    def fit(self, X, y=None):
         """
         Fit the GapEncoder on `X`.
 
@@ -163,7 +163,7 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 
 
 class ModifiedGapEncoder(GapEncoder):
-    fitted_models_: list[ModifiedGapEncoderColumn]
+    # fitted_models_: list[ModifiedGapEncoderColumn]
 
     def _create_column_gap_encoder(self):
         return ModifiedGapEncoderColumn(
@@ -218,9 +218,9 @@ benchmark_name = "gap_encoder_benchmark_es_score"
     repeat=2,
 )
 def benchmark(
-    high_card_feature: str,
-    max_rows: int,
-    modif: bool,
+    high_card_feature,
+    max_rows,
+    modif,
 ):
     ds = fetch_traffic_violations()
     X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
@@ -276,7 +276,7 @@ def benchmark(
     return res_dic
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     sns.lineplot(
         x="train_size", y="time_fit", data=df, hue="high_card_feature", style="modif"
     )

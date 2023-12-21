@@ -1,5 +1,3 @@
-from functools import cache
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -22,9 +20,9 @@ from skrub.datasets import make_deduplication_data
     [([500, 100, 1500], 0.05), ([100, 100], 0.02), ([200, 50, 30, 200, 800], 0.01)],
 )
 def test_deduplicate(
-    entries_per_category: list[int],
-    prob_mistake_per_letter: float,
-    seed: int = 123,
+    entries_per_category,
+    prob_mistake_per_letter,
+    seed=123,
 ):
     rng = np.random.RandomState(seed)
 
@@ -78,7 +76,7 @@ def test__guess_clusters():
     assert n_clusters == len(np.unique(words))
 
 
-def test__create_spelling_correction(seed: int = 123):
+def test__create_spelling_correction(seed=123):
     rng = np.random.RandomState(seed)
     n_clusters = 3
     samples_per_cluster = 10
@@ -101,8 +99,7 @@ def test__create_spelling_correction(seed: int = 123):
         ).all()
 
 
-@cache
-def default_deduplicate(n: int = 500, random_state=0):
+def default_deduplicate(n=500, random_state=0):
     """
     Create a default deduplication dataset.
     """

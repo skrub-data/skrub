@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def get_data_home(data_home: Path | str | None = None) -> Path:
+def get_data_home(data_home=None):
     """Returns the path of the skrub data directory.
 
     This folder is used by some large dataset loaders to avoid downloading the
@@ -35,7 +35,7 @@ def get_data_home(data_home: Path | str | None = None) -> Path:
     return data_home
 
 
-def get_data_dir(name: str | None = None, data_home: Path | str | None = None) -> Path:
+def get_data_dir(name=None, data_home=None):
     """
     Returns the directory in which skrub looks for data.
 

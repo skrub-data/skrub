@@ -6,7 +6,6 @@ Both classes aggregate the auxiliary tables first, then join these grouped
 tables with the base table.
 """
 from copy import deepcopy
-from typing import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -22,7 +21,7 @@ CATEG_OPERATIONS = ["mode", "count", "value_counts"]
 ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
 
 
-def split_num_categ_operations(operations: list[str]) -> tuple[list[str], list[str]]:
+def split_num_categ_operations(operations):
     """Separate aggregagor operators input by their type.
 
     Parameters
@@ -434,9 +433,9 @@ class AggTarget(BaseEstimator, TransformerMixin):
 
     def __init__(
         self,
-        main_key: str | Iterable[str],
-        operation: str | Iterable[str] | None = None,
-        suffix: str | None = None,
+        main_key,
+        operation=None,
+        suffix=None,
     ):
         self.main_key = main_key
         self.operation = operation
