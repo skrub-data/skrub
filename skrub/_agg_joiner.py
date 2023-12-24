@@ -1,9 +1,9 @@
 """
-Implement AggJoiner and AggTarget to join a main table to its auxiliary tables,
+Implement AggJoiner and AggTarget to join a main table to an auxiliary table,
 with one-to-many relationships.
 
-Both classes aggregate the auxiliary tables first, then join these grouped
-tables with the base table.
+Both classes aggregate the auxiliary table first, then join this grouped
+table with the main table.
 """
 from copy import deepcopy
 from typing import Iterable
@@ -13,6 +13,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
+from skrub import _join_utils
 from skrub._dataframe._namespace import get_df_namespace
 from skrub._dataframe._pandas import _parse_argument
 from skrub._utils import atleast_1d_or_none, atleast_2d_or_none
@@ -71,7 +72,7 @@ def check_missing_columns(
 
 
 class AggJoiner(BaseEstimator, TransformerMixin):
-    """Aggregate auxiliary dataframes before joining them on a base dataframe.
+    """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
     Apply numerical and categorical aggregation operations on the columns
     to aggregate, selected by dtypes. See the list of supported operations
@@ -84,21 +85,25 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    aux_table : DataFrameLike or str or iterable
+    aux_table : DataFrameLike or str
         Auxiliary dataframe to aggregate then join on the base table.
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
 
-    aux_key : str, or iterable of str, or iterable of iterable of str
-        Select the columns from the auxiliary dataframe to use as keys during
-        the join operation.
+    key : str, default=None
+        The column names to use for both ``main_key`` and ``aux_key`` when they
+        are the same. Provide either ``key`` or both ``main_key`` and ``aux_key``.
 
-    main_key : str or iterable of str
+    main_key : str or iterable of str, default=None
         Select the columns from the main table to use as keys during
         the join operation.
         If main_key is a list, we will perform a multi-column join.
 
-    cols : str, or iterable of str, or iterable of iterable of str, default=None
+    aux_key : str or iterable of str, default=None
+        Select the columns from the auxiliary dataframe to use as keys during
+        the join operation.
+
+    cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
         If None, cols are all columns from table, except `aux_key`.
@@ -161,21 +166,23 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         self,
         aux_table,
         *,
-        aux_key,
+        key,
         main_key,
+        aux_key,
         cols=None,
         operation=None,
         suffix=None,
     ):
         self.aux_table = aux_table
+        self.key = key
+        self.main_key = main_key
         self.aux_key = aux_key
         self.cols = cols
-        self.main_key = main_key
         self.operation = operation
         self.suffix = suffix
 
     def fit(self, X, y=None):
-        """Aggregate auxiliary tables based on the main keys.
+        """Aggregate auxiliary table based on the main keys.
 
         Parameters
         ----------
@@ -192,6 +199,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         AggJoiner
             Fitted :class:`AggJoiner` instance (self).
         """
+
         self.check_input(X)
         skrub_px, _ = get_df_namespace(*self.aux_table_)
 
@@ -216,7 +224,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        """Left-join pre-aggregated tables on `X`.
+        """Left-join pre-aggregated table on `X`.
 
         Parameters
         ----------
@@ -261,6 +269,9 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         if not hasattr(X, "__dataframe__"):
             raise TypeError(f"X must be a dataframe, got {type(X)}.")
 
+        self._main_key, self._aux_key = _join_utils.check_key(
+            self.main_key, self.aux_key, self.key
+        )
         self.main_key_ = atleast_1d_or_none(self.main_key)
         self.suffix_ = atleast_1d_or_none(self.suffix)
         self.aux_key_ = atleast_2d_or_none(self.aux_key)
@@ -488,7 +499,7 @@ class AggTarget(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        """Left-join pre-aggregated tables on `X`.
+        """Left-join pre-aggregated table on `X`.
 
         Parameters
         ----------
