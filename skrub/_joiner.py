@@ -73,11 +73,11 @@ class Joiner(TransformerMixin, BaseEstimator):
     This transformer is initialized with an auxiliary table ``aux_table``. It
     transforms a main table by joining it, with approximate ("fuzzy") matching,
     to the auxiliary table. The output of ``transform`` has the same rows as
-    the main table (ie as the argument passed to ``transform``), but each row
+    the main table (i.e. as the argument passed to ``transform``), but each row
     is augmented with values from the best match in the auxiliary table.
 
     To identify the best match for each row, values from the matching columns
-    (``main_key`` and ``aux_key``) are vectorized, ie represented by vectors of
+    (``main_key`` and ``aux_key``) are vectorized, i.e. represented by vectors of
     continuous values. Then, the Euclidean distances between these vectors are
     computed to find, for each main table row, its nearest neighbor within the
     auxiliary table.
@@ -104,13 +104,13 @@ class Joiner(TransformerMixin, BaseEstimator):
         in the auxiliary table.
 
     'self_join_neighbor'
-        Once the match candidate (ie the nearest neigbor from the auxiliary
+        Once the match candidate (i.e. the nearest neigbor from the auxiliary
         table) has been found, we find its nearest neighbor in the auxiliary
         table (excluding itself). The reference distance is the distance that
         separates those 2 auxiliary rows.
 
     'no_rescaling'
-        The reference distance is 1.0, ie no rescaling of the distances is
+        The reference distance is 1.0, i.e. no rescaling of the distances is
         applied.
 
     Parameters
@@ -164,7 +164,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     ----------
     max_dist_ : the maximum distance for a match to be accepted
         Equal to the parameter ``max_dist`` except that ``"inf"`` and ``None``
-        are mapped to ``np.inf`` (ie accept all matches).
+        are mapped to ``np.inf`` (i.e. accept all matches).
 
     vectorizer_ : scikit-learn ColumnTransformer
         The fitted transformer used to transform the matching columns into

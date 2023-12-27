@@ -11,9 +11,10 @@ from sklearn.utils import check_array
 
 
 class LRUDict:
-    """dict with limited capacity
+    """Dict with limited capacity.
 
-    Using LRU eviction avoids memorizing a full dataset"""
+    Using LRU eviction avoids memorizing a full dataset.
+    """
 
     def __init__(self, capacity: int):
         self.capacity = capacity
@@ -40,8 +41,8 @@ class LRUDict:
 
 
 def check_input(X) -> NDArray:
-    """
-    Check input with sklearn standards.
+    """Check input with sklearn standards.
+
     Also converts X to a numpy array if not already.
     """
     # TODO check for weird type of input to pass scikit learn tests
@@ -98,9 +99,7 @@ def import_optional_dependency(name: str, extra: str = ""):
 
 
 def parse_astype_error_message(e):
-    """
-    Parse the error message from a failed df.astype or pd.to_numeric call.
-    """
+    """Parse the error message from a failed df.astype or pd.to_numeric call."""
     culprit = None
     if str(e).startswith("Given date string"):
         match = re.search(r"Given date string (.*?) not likely", str(e))
