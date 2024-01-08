@@ -183,6 +183,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     Examples
     --------
     >>> import pandas as pd
+    >>> from skrub import Joiner
     >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
     >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
     ...                            "Capital": ["Berlin", "Paris", "Rome"]} )

@@ -716,13 +716,13 @@ class GapEncoder(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> from skrub import GapEncoder
     >>> enc = GapEncoder(n_components=2, random_state=0)
 
     Let's encode the following non-normalized data:
 
     >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['Paris, France'],
     ...      ['london'], ['London, England'], ['London'], ['Pqris']]
-
     >>> enc.fit(X)
     GapEncoder(n_components=2, random_state=0)
 
