@@ -5,7 +5,6 @@ with one-to-many relationships.
 Both classes aggregate the auxiliary table first, then join this grouped
 table with the main table.
 """
-from copy import deepcopy
 from typing import Iterable
 
 import numpy as np
@@ -16,7 +15,7 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import _join_utils
 from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
 from skrub._dataframe._pandas import _parse_argument
-from skrub._utils import atleast_1d_or_none, atleast_2d_or_none
+from skrub._utils import atleast_1d_or_none
 
 NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
 CATEG_OPERATIONS = ["mode", "count", "value_counts"]
@@ -98,12 +97,9 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         If set to None (the default), ['mean', 'mode'] will be used.
 
-    suffix : str or iterable of str, default=None
-        The suffixes that will be added to each table columns in case of
-        duplicate column names.
-        If set to None, the table index in 'aux_table' are used,
-        e.g. for a duplicate columns: price (main table),
-        price_1 (auxiliary table 1), price_2 (auxiliary table 2), etc.
+    suffix : str or iterable of str, default=""
+        Suffix to append to the ``aux_table``'s column names. You can use it
+        to avoid duplicate column names in the join.
 
     See Also
     --------
@@ -150,7 +146,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         aux_key=None,
         cols=None,
         operation=None,
-        suffix=None,
+        suffix="",
     ):
         self.aux_table = aux_table
         self.key = key
@@ -162,6 +158,8 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
     def _check_dataframes(self, X, aux_table):
         """Check dataframes input types.
+
+        Allows both dataframes to either be Pandas or Polars dataframes.
 
         Parameters
         ----------
@@ -182,21 +180,38 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         if not hasattr(aux_table, "__dataframe__"):
             raise TypeError(f"'aux_table' must be a dataframe, got {type(aux_table)}.")
 
-        if (is_pandas(X) and is_polars(aux_table)) or (
-            is_polars(X) and is_pandas(aux_table)
+        if (is_pandas(X) and not is_pandas(aux_table)) or (
+            is_polars(X) and not is_polars(aux_table)
         ):
             raise TypeError(
                 "'X' and 'aux_table' must be of the same type, got"
                 f"{type(X)} and {type(aux_table)}"
             )
 
-    def check_operation(self):
+        # TODO: move this somewhere else ? This is needed in skrub_px.aggregate
+        return X, aux_table
+
+    def _check_cols(self):
         """_summary_
 
         Returns
         -------
         _type_
             _description_
+        """
+        if self.cols is None:
+            cols = self.aux_table_.columns
+        else:
+            cols = np.atleast_1d(self.cols).tolist()
+        return cols
+
+    def _check_operation(self):
+        """Check operation input type or convert it to an array.
+
+        Returns
+        -------
+        operation
+            1-dimensional array of operations to perform on columns.
         """
         if self.operation is None:
             operation = ["mean", "mode"]
@@ -223,32 +238,33 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             Fitted :class:`AggJoiner` instance (self).
         """
 
-        self._check_dataframes(X, self.aux_table)
+        X, self.aux_table_ = self._check_dataframes(X, self.aux_table)
 
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
 
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
+        _join_utils.check_missing_columns(self.aux_table_, self._aux_key, "'aux_table'")
         _join_utils.check_column_name_duplicates(
-            X, self.aux_table, self.suffix, main_table_name="X"
+            X, self.aux_table_, self.suffix, main_table_name="X"
         )
+        self.cols = self._check_cols()
 
-        self.operation_ = self.check_operation()
-        num_operations, categ_operations = split_num_categ_operations(self.operation_)
+        self.operation = self._check_operation()
+        num_operations, categ_operations = split_num_categ_operations(self.operation)
 
-        skrub_px, _ = get_df_namespace(self.aux_table)
+        skrub_px, _ = get_df_namespace(self.aux_table_)
 
         aux_table = skrub_px.aggregate(
-            self.aux_table,
+            self.aux_table_,
             self.aux_key,
             self.cols,
             num_operations,
             categ_operations,
             suffix=self.suffix,
         )
-        self.aux_table = self._screen(aux_table, y)
+        self.aux_table_ = self._screen(aux_table, y)
 
         return self
 
@@ -266,7 +282,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             The augmented input.
         """
 
-        check_is_fitted(self, "operation_")
+        check_is_fitted(self, "aux_table_")
         skrub_px, _ = get_df_namespace(self.aux_table_)
 
         X = skrub_px.join(
@@ -284,124 +300,6 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         """
         # TODO: Add logic
         return aux_table
-
-    def check_input(self, X):
-        """Perform a check on column names data type and suffixes.
-
-        Parameters
-        ----------
-        X : DataFrameLike
-            The raw input to check.
-        """
-        # Polars lazyframes will raise an error here.
-        # if not hasattr(X, "__dataframe__"):
-        #     raise TypeError(f"X must be a dataframe, got {type(X)}.")
-        #
-        # self._main_key, self._aux_key = _join_utils.check_key(
-        #     self.main_key, self.aux_key, self.key
-        # )
-        # self.main_key_ = atleast_1d_or_none(self.main_key)
-        self.suffix_ = atleast_1d_or_none(self.suffix)
-        # self.aux_key_ = atleast_2d_or_none(self.aux_key)
-        self.cols_ = atleast_2d_or_none(self.cols)
-
-        # Check main_key
-        # error_msg = f"main_key={self.main_key_!r} are not in {X.columns=!r}."
-        # check_missing_columns(X, self.main_key_, error_msg=error_msg)
-
-        # Check length of table and aux_key
-        if not isinstance(self.aux_table, (list, tuple)):
-            tables = [self.aux_table]
-        else:
-            tables = self.aux_table
-
-        if len(self.suffix_) == 0:
-            self.suffix_ = [f"_{idx+1}" for idx in range(len(tables))]
-
-        # Check tables and list of suffix match
-        if len(tables) != len(self.suffix_):
-            raise ValueError(
-                "'suffix' must be None or match the "
-                f"number of tables, got: {self.suffix_!r}"
-            )
-
-        # Check tables and list of aux_keys match
-        if len(tables) != len(self.aux_key_):
-            error_msg = (
-                "The number of tables must match the number of aux_key, "
-                f"got {len(tables)=!r} and {len(self.aux_key_)=!r}. "
-            )
-            if len(tables) > 1:
-                error_msg += (
-                    "For multiple tables, use a list of list, "
-                    "e.g. aux_key=[['col1', 'col2'], ['colA', 'colB']]."
-                )
-            raise ValueError(error_msg)
-
-        # Check table type and missing columns
-        for idx, (table, aux_key, cols) in enumerate(
-            zip(tables, self.aux_key_, self.cols_)
-        ):
-            if isinstance(table, str):
-                if table != "X":
-                    raise ValueError(
-                        "If the dataframe is declared with a string, "
-                        f"the only acceptable value is 'X', got {table!r}."
-                    )
-                table = deepcopy(X)
-                tables[idx] = table
-
-            elif not hasattr(table, "__dataframe__"):
-                raise TypeError(
-                    "'tables' must be a list of tuple and the first element of each"
-                    f" tuple must be a dataFrame, got {type(tables[0])} at index"
-                    f" {idx}."
-                )
-
-            # If no cols provided, all columns but aux_key are used.
-            if len(cols) == 0:
-                cols = list(set(table.columns) - set(aux_key))
-                self.cols_[idx] = cols
-
-            error_msg = f"{aux_key=!r} are not in {table.columns=!r}."
-            _join_utils.check_missing_columns(
-                self.aux_table, self.aux_key, "'aux_table'"
-            )
-
-            # error_msg = f"{cols=!r} are not in {table.columns=!r}."
-            # check_missing_columns(table, cols, error_msg=error_msg)
-            _join_utils.check_missing_columns(table, cols, "'table'")
-
-        #    if len(aux_key) != len(self.main_key_):
-        #        raise ValueError(
-        #            "The number of keys to join must match, got "
-        #            f"main_key={self.main_key_!r} and "
-        #            f"{aux_key=!r} for the table at index {idx}."
-        #        )
-
-        self.aux_table_ = tables
-
-        # Check tables and list of cols match
-        if len(tables) != len(self.cols_):
-            error_msg = (
-                "The number of tables must match the number of cols, "
-                f"got {len(tables)=!r} and {len(self.cols_)=!r}. "
-            )
-            if len(tables) > 1:
-                error_msg += (
-                    "For multiple tables, use a list of list, "
-                    "e.g. cols=[['col1'], ['colA']]."
-                )
-            raise ValueError(error_msg)
-
-        # Check operation
-        # if self.operation is None:
-        #     operation = ["mean", "mode"]
-        # else:
-        #     operation = np.atleast_1d(self.operation).tolist()
-        # self.operation_ = operation
-
-        return
 
 
 class AggTarget(BaseEstimator, TransformerMixin):
