@@ -17,6 +17,7 @@ from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
 from skrub._dataframe._pandas import _parse_argument
 from skrub._utils import atleast_1d_or_none
 
+# TODO: add "nunique"
 NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
 CATEG_OPERATIONS = ["mode", "count", "value_counts"]
 ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
@@ -84,7 +85,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
-        If None, cols are all columns from table, except `aux_key`.
+        If None, `cols` are all columns from table, except `aux_key`.
 
     operation : str or iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
@@ -95,7 +96,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         categorical : {"mode", "count", "value_counts"}
 
-        If set to None (the default), ['mean', 'mode'] will be used.
+        If set to None (the default), ["mean", "mode"] will be used.
 
     suffix : str or iterable of str, default=""
         Suffix to append to the ``aux_table``'s column names. You can use it
@@ -104,12 +105,10 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     See Also
     --------
     AggTarget :
-        Aggregates the target `y` before joining its aggregation
-        on the base dataframe.
+        Aggregates the target `y` before joining its aggregation on the base dataframe.
 
     Joiner :
-        Augments a main table by automatically joining multiple
-        auxiliary tables on it.
+        Augments a main table by automatically joining an auxiliary table on it.
 
     Examples
     --------
@@ -192,21 +191,24 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         return X, aux_table
 
     def _check_cols(self):
-        """_summary_
+        """Check columns to aggregate.
+
+        If None, `cols` are all columns from table, except `aux_key`.
 
         Returns
         -------
-        _type_
-            _description_
+        cols
+            1-dimensional array of columns on which to perform aggregation.
         """
+        # If no cols provided, all columns but aux_key are used.
         if self.cols is None:
-            cols = self.aux_table_.columns
+            cols = list(set(self.aux_table.columns) - set(self._aux_key))
         else:
             cols = np.atleast_1d(self.cols).tolist()
         return cols
 
     def _check_operation(self):
-        """Check operation input type or convert it to an array.
+        """Check operation input type.
 
         Returns
         -------

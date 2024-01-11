@@ -324,6 +324,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         """
         del y
         input_is_polars = is_polars(X)
+        # TODO: remove this because already done in fit ?
         X = self._check_dataframe(X)
         check_is_fitted(self, "vectorizer_")
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
