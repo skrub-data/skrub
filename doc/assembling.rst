@@ -36,17 +36,21 @@ the common key.
 
 In addition, skrub also enable more advanced analysis:
 
-- :class:`Joiner`: fuzzy-join multiple external tables using a scikit-learn 
+- :class:`Joiner`: fuzzy-joins an external table using a scikit-learn 
   transformer, which can be used in a scikit-learn :class:`~sklearn.pipeline.Pipeline`.
   Pipelines are useful for cross-validation and hyper-parameter search, but also
   for model deployment.
 
-- :class:`AggJoiner`: instead of performing 1:1 joins like Joiner, AggJoiner performs 1:N 
-  joins. It aggregate external tables first, then join them on the main table.
+- :class:`AggJoiner`: instead of performing 1:1 joins like Joiner, AggJoiner 
+  aggregates the external table first, then joins it on the main table.
+  Alternatively, it can aggregate the main table and then join it back onto itself.
 
 - :class:`AggTarget`: in some settings, one can derive powerful features from 
   the target `y` itself. AggTarget aggregates the target without risking data 
-  leakage, then join the result back on the main table, similar to AggJoiner.
+  leakage, then joins the result back on the main table, similar to AggJoiner.
+
+- :class:`MultiJoiner` and :class:`MultiAggJoiner`: extensions of the Joiner and AggJoiner
+  that join multiple auxiliary tables onto the main table.
 
 
 Column selection inside a pipeline
