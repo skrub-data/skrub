@@ -4,6 +4,7 @@ to multiple auxiliary tables.
 """
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.utils.validation import check_is_fitted
 
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
@@ -17,7 +18,7 @@ def check_multi_key():
 
 
 class MultiJoiner(BaseEstimator, TransformerMixin):
-    """Augment features in a main table by fuzzy-joining auxiliary tables to it.
+    """Extension of the Joiner to multiple auxiliary tables.
 
     This transformer is initialized with auxiliary tables ``aux_tables``. It
     transforms a main table by joining it, with approximate ("fuzzy") matching,
@@ -163,7 +164,7 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
 
 
 class MultiAggJoiner(BaseEstimator, TransformerMixin):
-    """Aggregate auxiliary dataframes before joining them on a base dataframe.
+    """Extension of the AggJoiner to multiple auxiliary tables.
 
     Apply numerical and categorical aggregation operations on the columns
     to aggregate, selected by dtypes. See the list of supported operations
@@ -188,7 +189,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     main_keys : str or iterable of str
         Select the columns from the main table to use as keys during
         the join operation.
-        If main_key is a list, we will perform a multi-column join.
+        If main_keys is a list, we will perform a multi-column join.
 
     aux_key : str, or iterable of str, or iterable of iterable of str
         Select the columns from the auxiliary dataframe to use as keys during
@@ -276,6 +277,21 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             if not all(is_polars(aux_table) for aux_table in aux_tables):
                 raise TypeError("All 'aux_tables' must be Polars dataframes.")
 
+    def _check_keys(self):
+        return
+
+    def _check_missing_columns(self):
+        return
+
+    def _check_column_name_duplicates(self):
+        return
+
+    def _check_cols(self):
+        return
+
+    def _check_operations(self):
+        return
+
     def fit(self, X, y=None):
         """Aggregate auxiliary tables based on the main keys.
 
@@ -298,21 +314,31 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         # TODO: check_input: X should be of same type
         self._check_dataframes(X, self.aux_tables)
 
+        self._main_keys, self._aux_keys = self._check_keys(
+            self.main_keys, self.aux_keys, self.keys
+        )
+
+        self._check_missing_columns(X, self._main_keys, "'X' (the main table)")
+        self._check_missing_columns(self.aux_tables, self._aux_keys, "'aux_table'")
+        self._check_column_name_duplicates(
+            X, self.aux_tables, self.suffixes, main_table_name="X"
+        )
+        self.cols = self._check_cols()
+
+        self.operation = self._check_operations()
+
         self.agg_joiners_ = []
 
-        for aux_table, key, main_key, aux_key, cols, operation, suffix in zip(
+        for aux_table, aux_key, cols, operation, suffix in zip(
             self.aux_tables,
-            self.keys,
-            self.main_keys,
-            self.aux_keys,
+            self._aux_keys,
             self.cols,
             self.operations,
             self.suffixes,
         ):
             agg_joiner = AggJoiner(
                 aux_table=aux_table,
-                key=key,
-                main_key=main_key,
+                main_key=self._main_keys,
                 aux_key=aux_key,
                 cols=cols,
                 operation=operation,
@@ -339,7 +365,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             The augmented input.
         """
 
-        # check_is_fitted(self, "agg_joiners_")
+        check_is_fitted(self, "agg_joiners_")
         # skrub_px, _ = get_df_namespace(
         # *[aux_table for aux_table, _ in self.aux_table_]
         # )
