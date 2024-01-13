@@ -125,8 +125,8 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     ... })
     >>> join_agg = AggJoiner(
     ...     aux_table=aux,
-    ...     aux_key="from_airport",
     ...     main_key="airportId",
+    ...     aux_key="from_airport",
     ...     cols=["total_passengers", "company"],
     ...     operation=["mean", "mode"],
     ... )
@@ -187,7 +187,6 @@ class AggJoiner(BaseEstimator, TransformerMixin):
                 f"{type(X)} and {type(aux_table)}"
             )
 
-        # TODO: move this somewhere else ? This is needed in skrub_px.aggregate
         return X, aux_table
 
     def _check_cols(self):
