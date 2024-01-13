@@ -177,7 +177,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    aux_tables : DataFrameLike or str or iterable
+    aux_tables : DataFrameLike or iterable of DataFrameLike or "X"
         Auxiliary dataframe to aggregate then join on the base table.
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
@@ -186,12 +186,12 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         The column names to use for both ``main_key`` and ``aux_key`` when they
         are the same. Provide either ``key`` or both ``main_key`` and ``aux_key``.
 
-    main_keys : str or iterable of str
+    main_key : str or iterable of str
         Select the columns from the main table to use as keys during
         the join operation.
         If main_keys is a list, we will perform a multi-column join.
 
-    aux_key : str, or iterable of str, or iterable of iterable of str
+    aux_keys : str, or iterable of str, or iterable of iterable of str
         Select the columns from the auxiliary dataframe to use as keys during
         the join operation.
 
@@ -233,7 +233,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         aux_tables,
         *,
         keys=None,
-        main_keys=None,
+        main_key=None,
         aux_keys=None,
         cols=None,
         operations=None,
@@ -241,7 +241,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     ):
         self.aux_tables = aux_tables
         self.keys = keys
-        self.main_keys = main_keys
+        self.main_key = main_key
         self.aux_keys = aux_keys
         self.cols = cols
         self.operations = operations
@@ -314,11 +314,11 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         # TODO: check_input: X should be of same type
         self._check_dataframes(X, self.aux_tables)
 
-        self._main_keys, self._aux_keys = self._check_keys(
-            self.main_keys, self.aux_keys, self.keys
+        self._main_key, self._aux_keys = self._check_keys(
+            self.main_key, self.aux_keys, self.keys
         )
 
-        self._check_missing_columns(X, self._main_keys, "'X' (the main table)")
+        self._check_missing_columns(X, self._main_key, "'X' (the main table)")
         self._check_missing_columns(self.aux_tables, self._aux_keys, "'aux_table'")
         self._check_column_name_duplicates(
             X, self.aux_tables, self.suffixes, main_table_name="X"
@@ -338,7 +338,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         ):
             agg_joiner = AggJoiner(
                 aux_table=aux_table,
-                main_key=self._main_keys,
+                main_key=self._main_key,
                 aux_key=aux_key,
                 cols=cols,
                 operation=operation,

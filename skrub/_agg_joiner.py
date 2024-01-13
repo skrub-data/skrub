@@ -64,7 +64,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    aux_table : DataFrameLike or str
+    aux_table : DataFrameLike or "X"
         Auxiliary dataframe to aggregate then join on the base table.
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
@@ -91,7 +91,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         Aggregation operations to perform on the auxiliary table.
 
         numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-            'hist' and 'value_counts' accept an integer argument to parametrize
+            "hist" and "value_counts" accept an integer argument to parametrize
             the binning.
 
         categorical : {"mode", "count", "value_counts"}
@@ -110,6 +110,9 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     Joiner :
         Augments a main table by automatically joining an auxiliary table on it.
 
+    MultiAggJoiner :
+        Extension of the AggJoiner to multiple auxiliary tables.
+
     Examples
     --------
     >>> import pandas as pd
@@ -123,17 +126,17 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     ...     "total_passengers": [90, 120, 100, 70, 80, 90],
     ...     "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
     ... })
-    >>> join_agg = AggJoiner(
+    >>> agg_joiner = AggJoiner(
     ...     aux_table=aux,
     ...     main_key="airportId",
     ...     aux_key="from_airport",
     ...     cols=["total_passengers", "company"],
     ...     operation=["mean", "mode"],
     ... )
-    >>> join_agg.fit_transform(main)
-       airportId airportName company_mode_1  total_passengers_mean_1
-    0          1   Paris CDG             AF               103.33...
-    1          2      NY JFK             DL                80.00...
+    >>> agg_joiner.fit_transform(main)
+       airportId  airportName  company_mode  total_passengers_mean
+    0          1    Paris CDG            AF              103.33...
+    1          2       NY JFK            DL               80.00...
     """
 
     def __init__(
