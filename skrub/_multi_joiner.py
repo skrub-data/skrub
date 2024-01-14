@@ -338,7 +338,6 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         AggJoiner
             Fitted :class:`MultiAggJoiner` instance (self).
         """
-        # TODO: check_input: X should be of same type
         self._check_dataframes(X, self.aux_tables)
 
         self._main_key, self._aux_keys = self._check_keys(
@@ -373,8 +372,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             )
             self.agg_joiners_.append(agg_joiner)
 
-        for i, table in enumerate(X):
-            self.agg_joiners_[i].fit(table)
+        for self.agg_joiner in self.agg_joiners_:
+            self.agg_joiners_.fit(X)
 
         return self
 
