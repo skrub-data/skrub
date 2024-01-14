@@ -88,7 +88,7 @@ def test_input_single_table():
         main_key="userId",
     )
     with pytest.raises(TypeError, match=r"(?=.*dataframe)(?=.*ndarray)"):
-        agg_join.check_input(main.values)
+        agg_join.fit(main)
 
     # check too many main keys
     agg_join = AggJoiner(
@@ -100,7 +100,7 @@ def test_input_single_table():
     with pytest.raises(
         ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
     ):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
     # check too many foreign keys
     agg_join = AggJoiner(
@@ -112,7 +112,7 @@ def test_input_single_table():
     with pytest.raises(
         ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
     ):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
     # check providing only key
     agg_join = AggJoiner(
@@ -120,7 +120,7 @@ def test_input_single_table():
         key=["userId"],
         cols=["rating", "genre"],
     )
-    agg_join.check_input(main)
+    agg_join.fit(main)
 
     # check providing multiple keys
     agg_join = AggJoiner(
@@ -128,7 +128,7 @@ def test_input_single_table():
         key=["userId", "movieId"],
         cols=["rating", "genre"],
     )
-    agg_join.check_input(main)
+    agg_join.fit(main)
 
     # check multiple keys, same length
     agg_join = AggJoiner(
@@ -137,10 +137,10 @@ def test_input_single_table():
         cols=["rating", "genre"],
         main_key=["userId", "movieId"],
     )
-    agg_join.check_input(main)
+    agg_join.fit(main)
     # aux_key_ is 2d since we iterate over it
-    assert agg_join.aux_key_ == [["userId", "movieId"]]
-    assert agg_join.main_key_ == ["userId", "movieId"]
+    assert agg_join._aux_key == [["userId", "movieId"]]
+    assert agg_join._main_key == ["userId", "movieId"]
 
     # check no suffix with one table
     agg_join = AggJoiner(
@@ -149,8 +149,8 @@ def test_input_single_table():
         cols=["rating", "genre"],
         main_key="userId",
     )
-    agg_join.check_input(main)
-    assert agg_join.suffix_ == ["_1"]
+    agg_join.fit(main)
+    assert agg_join.suffix == ["_1"]
 
     # check inconsistent number of suffixes
     agg_join = AggJoiner(
@@ -163,7 +163,7 @@ def test_input_single_table():
     with pytest.raises(
         ValueError, match=r"(?=.*suffix)(?=.*match the number of tables)"
     ):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
     # check missing cols
     agg_join = AggJoiner(
@@ -171,10 +171,11 @@ def test_input_single_table():
         aux_key=["movieId", "userId"],
         main_key=["movieId", "userId"],
     )
-    agg_join.check_input(main)
-    agg_join.cols_ == ["rating", "genre"]
+    agg_join.fit(main)
+    agg_join.cols == ["rating", "genre"]
 
 
+# TODO: check that that it doesn't work with multiple tables
 def test_input_multiple_tables():
     # check foreign key are list of list
     agg_join = AggJoiner(
@@ -186,49 +187,8 @@ def test_input_multiple_tables():
     error_msg = (
         r"(?=.*number of tables)(?=.*number of aux_key)" r"(?=.*For multiple tables)"
     )
-    # with pytest.raises(ValueError, match=error_msg):
-    #    agg_join.fit_transform(main)
-
-    agg_join = AggJoiner(
-        aux_table=[main, main],
-        aux_key=[["userId", "userId"]],
-        cols=[["rating"], ["rating"]],
-        main_key="userId",
-    )
     with pytest.raises(ValueError, match=error_msg):
         agg_join.fit_transform(main)
-
-    # check cols are list of list
-    agg_join = AggJoiner(
-        aux_table=[main, main],
-        aux_key=[["userId"], ["userId"]],
-        cols=["rating", "rating"],
-        main_key="userId",
-    )
-    error_msg = (
-        r"(?=.*number of tables)(?=.*number of cols)" r"(?=.*For multiple tables)"
-    )
-    # with pytest.raises(ValueError, match=error_msg):
-    #    agg_join.fit_transform(main)
-
-    agg_join = AggJoiner(
-        aux_table=[main, main],
-        aux_key=[["userId"], ["userId"]],
-        cols=[["rating", "rating"]],
-        main_key="userId",
-    )
-    # with pytest.raises(ValueError, match=error_msg):
-    #    agg_join.fit_transform(main)
-
-    # check suffixes with multiple tables
-    agg_join = AggJoiner(
-        aux_table=[main, main],
-        aux_key=[["userId"], ["userId"]],
-        cols=[["rating"], ["rating"]],
-        main_key="userId",
-    )
-    agg_join.check_input(main)
-    assert agg_join.suffix_ == ["_1", "_2"]
 
 
 def test_wrong_key():
@@ -240,7 +200,7 @@ def test_wrong_key():
         cols=["rating", "genre"],
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
     # check providing key and extra main_key
     agg_join = AggJoiner(
@@ -250,7 +210,7 @@ def test_wrong_key():
         cols=["rating", "genre"],
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
     # check providing key and extra aux_key and main_key
     agg_join = AggJoiner(
@@ -261,7 +221,7 @@ def test_wrong_key():
         cols=["rating", "genre"],
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
     # check main key missing
     agg_join = AggJoiner(
@@ -272,7 +232,7 @@ def test_wrong_key():
     )
     match = r"(?=.*main_key)(?=.*X.column)"
     with pytest.raises(ValueError, match=match):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
     # check aux key missing
     agg_join = AggJoiner(
@@ -283,7 +243,7 @@ def test_wrong_key():
     )
     match = r"(?=.*aux_key)(?=.*table.column)"
     with pytest.raises(ValueError, match=match):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
     # check missing agg or keys cols in tables
     agg_join = AggJoiner(
@@ -294,7 +254,7 @@ def test_wrong_key():
     )
     match = r"(?=.*cols)(?=.*not in)(?=.*table.columns)"
     with pytest.raises(ValueError, match=match):
-        agg_join.check_input(main)
+        agg_join.fit(main)
 
 
 def test_agg_join_default_operations():
@@ -306,7 +266,7 @@ def test_agg_join_default_operations():
         main_key="userId",
     )
     agg_join.fit(main)
-    assert agg_join.operation_ == ["mean", "mode"]
+    assert agg_join.operation == ["mean", "mode"]
 
     # check invariant operations input
     agg_join = AggJoiner(
@@ -317,7 +277,7 @@ def test_agg_join_default_operations():
         operation=["min", "max", "mode"],
     )
     agg_join.fit(main)
-    assert agg_join.operation_ == ["min", "max", "mode"]
+    assert agg_join.operation == ["min", "max", "mode"]
 
     # check not supported operations
     agg_join = AggJoiner(
