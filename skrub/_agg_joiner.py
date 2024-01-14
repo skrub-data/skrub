@@ -177,10 +177,17 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             or if there is a Polars lazyframe.
         """
         # Polars lazyframes will raise an error here.
+        if type(aux_table) == str:
+            if aux_table == "X":
+                return X, X
+            else:
+                raise AttributeError("'aux_table' must be a dataframe or 'X'.")
         if not hasattr(X, "__dataframe__"):
             raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
         if not hasattr(aux_table, "__dataframe__"):
-            raise TypeError(f"'aux_table' must be a dataframe, got {type(aux_table)}.")
+            raise TypeError(
+                f"'aux_table' must be a dataframe or 'X', got {type(aux_table)}."
+            )
 
         if (is_pandas(X) and not is_pandas(aux_table)) or (
             is_polars(X) and not is_polars(aux_table)
