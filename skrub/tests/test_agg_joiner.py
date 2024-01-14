@@ -303,7 +303,7 @@ def test_X_wrong_string_placeholder():
         main_key="userId",
         cols="genre",
     )
-    with pytest.raises(ValueError, match=r"(?=.*string)(?=.*'X')"):
+    with pytest.raises(ValueError, match=r"(?=.*dataframe)(?=.*'X')"):
         agg_joiner.fit(main)
 
 
