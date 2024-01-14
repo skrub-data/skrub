@@ -10,8 +10,6 @@ from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER  # , Joiner
 
-# from sklearn.utils.validation import check_is_fitted
-
 
 def check_multi_key():
     return
@@ -294,7 +292,6 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             Raises an error if all the frames don't have the same type,
             or if there is a Polars lazyframe.
         """
-
         # Polars lazyframes will raise an error here.
         if not hasattr(X, "__dataframe__"):
             raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
@@ -309,19 +306,19 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                 raise TypeError("All 'aux_tables' must be Polars dataframes.")
 
     def _check_keys(self):
-        return
+        pass
 
     def _check_missing_columns(self):
-        return
+        pass
 
     def _check_column_name_duplicates(self):
-        return
+        pass
 
     def _check_cols(self):
-        return
+        pass
 
     def _check_operations(self):
-        return
+        pass
 
     def fit(self, X, y=None):
         """Aggregate auxiliary tables based on the main keys.
@@ -341,7 +338,6 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         AggJoiner
             Fitted :class:`MultiAggJoiner` instance (self).
         """
-
         # TODO: check_input: X should be of same type
         self._check_dataframes(X, self.aux_tables)
 
@@ -395,31 +391,9 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         X_transformed : DataFrameLike
             The augmented input.
         """
-
         check_is_fitted(self, "agg_joiners_")
-        # skrub_px, _ = get_df_namespace(
-        # *[aux_table for aux_table, _ in self.aux_table_]
-        # )
-        #
-        # for agg_joiner in self.agg_joiners_:
-        #     X = skrub_px.join(
-        #         left=X,
-        #         right=aux_table,
-        #         left_on=self.main_key_,
-        #         right_on=aux_key,
-        #     )
-        #
 
-        # OR from old AggJoiner:
-        # check_is_fitted(self, "aux_table_")
-        # skrub_px, _ = get_df_namespace(*[aux_table
-        #                           for aux_table, _ in self.aux_table_])
-        #
-        # for aux_table, aux_key in self.aux_table_:
-        #     X = skrub_px.join(
-        #         left=X,
-        #         right=aux_table,
-        #         left_on=self.main_key_,
-        #         right_on=aux_key,
-        #     )
+        for agg_joiner in self.agg_joiners_:
+            X = agg_joiner.transform(X)
+
         return X

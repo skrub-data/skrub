@@ -5,6 +5,7 @@ with one-to-many relationships.
 Both classes aggregate the auxiliary table first, then join this grouped
 table with the main table.
 """
+from copy import deepcopy
 from typing import Iterable
 
 import numpy as np
@@ -174,7 +175,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         # Polars lazyframes will raise an error here.
         if type(aux_table) == str:
             if aux_table == "X":
-                return X, X
+                return X, deepcopy(X)
             else:
                 raise ValueError("'aux_table' must be a dataframe or 'X'.")
         if not hasattr(X, "__dataframe__"):
@@ -243,7 +244,6 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         AggJoiner
             Fitted :class:`AggJoiner` instance (self).
         """
-
         X, self.aux_table_ = self._check_dataframes(X, self.aux_table)
 
         self._main_key, self._aux_key = _join_utils.check_key(
@@ -287,7 +287,6 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         X_transformed : DataFrameLike
             The augmented input.
         """
-
         check_is_fitted(self, "aux_table_")
         skrub_px, _ = get_df_namespace(self.aux_table_)
 
