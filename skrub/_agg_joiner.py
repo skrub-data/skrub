@@ -205,7 +205,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         cols
             1-dimensional array of columns on which to perform aggregation.
         """
-        # If no cols provided, all columns but aux_key are used.
+        # If no cols provided, all columns but `aux_key` are used.
         if self.cols is None:
             cols = list(set(self.aux_table.columns) - set(self._aux_key))
         else:
@@ -252,9 +252,11 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self.aux_table_, self._aux_key, "'aux_table'")
-        _join_utils.check_column_name_duplicates(
-            X, self.aux_table_, self.suffix, main_table_name="X"
-        )
+        # Only check duplicate column names if we're not aggregating the main table
+        if not isinstance(self.aux_table, str):
+            _join_utils.check_column_name_duplicates(
+                X, self.aux_table_, self.suffix, main_table_name="X"
+            )
         self.cols = self._check_cols()
 
         self.operation = self._check_operation()
