@@ -225,6 +225,37 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
     Examples
     --------
+    >>> import pandas as pd
+    >>> from skrub import MultiAggJoiner
+    >>> patients = pd.DataFrame({
+    ...    "patient_id": [1, 2],
+    ...    "age": ["72", "45"],
+    ... })
+    >>> hospitalizations = pd.DataFrame({
+    ...    "visit_id": range(1, 7),
+    ...    "patient_id": [1, 1, 1, 1, 2, 2],
+    ...    "days_of_stay": [2, 4, 1, 1, 3, 12],
+    ...    "hospital": ["Cochin", "Bichat", "Cochin", "Necker", "Bichat", "Bichat"],
+    ... })
+    >>> medications = pd.DataFrame({
+    ...    "medication_id": range(1, 6),
+    ...    "patient_id": [1, 1, 1, 1, 2],
+    ...    "medication": ["ozempic", "ozempic", "electrolytes", "ozempic", "morphine"],
+    ... })
+    >>> glucose = pd.DataFrame({
+    ...    "biology_id": range(1, 7),
+    ...    "patientID": [1, 1, 1, 1, 2, 2],
+    ...    "value": [1.4, 3.4, 1.0, 0.8, 3.1, 6.5],
+    ... })
+    >>> multi_agg_joiner = MultiAggJoiner(
+    ...    aux_tables=[hospitalizations, medications, glucose],
+    ...    main_key="patient_id",
+    ...    aux_keys=["patient_id", "patient_id", "patientID"],
+    ...    cols=["days_of_stay", "medication", "value"],
+    ...    operations=["max", "mode", ["mean", "std"]],
+    ...    suffixes=["", "", "glucose"],
+    ... )
+    >>> multi_agg_joiner.fit_transform(patients)
     # TODO
     """
 
