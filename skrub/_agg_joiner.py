@@ -161,7 +161,8 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     def _check_dataframes(self, X, aux_table):
         """Check dataframes input types.
 
-        Allows both dataframes to either be Pandas or Polars dataframes.
+        Raises an error if frames aren't both Pandas or Polars dataframes,
+        or if there is a Polars lazyframe. Alternatively, allows `aux_table` to be 'X'.
 
         Parameters
         ----------
@@ -169,19 +170,13 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             The main table to augment.
         aux_table : DataframeLike
             The auxiliary table.
-
-        Raises
-        ------
-        TypeError
-            Raises an error if all the frames don't have the same type,
-            or if there is a Polars lazyframe.
         """
         # Polars lazyframes will raise an error here.
         if type(aux_table) == str:
             if aux_table == "X":
                 return X, X
             else:
-                raise AttributeError("'aux_table' must be a dataframe or 'X'.")
+                raise ValueError("'aux_table' must be a dataframe or 'X'.")
         if not hasattr(X, "__dataframe__"):
             raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
         if not hasattr(aux_table, "__dataframe__"):
