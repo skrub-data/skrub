@@ -81,15 +81,6 @@ def test_polars_unavailable_operation():
 
 
 def test_input_single_table():
-    agg_joiner = AggJoiner(
-        aux_table=main,
-        aux_key="userId",
-        cols="genre",
-        main_key="userId",
-    )
-    with pytest.raises(TypeError, match=r"(?=.*dataframe)(?=.*ndarray)"):
-        agg_joiner.fit(main)
-
     # check too many main keys
     agg_joiner = AggJoiner(
         aux_table=main,

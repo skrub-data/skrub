@@ -315,7 +315,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         aux_table = skrub_px.aggregate(
             self.aux_table_,
-            self.aux_key,
+            self._aux_key,
             self.cols,
             num_operations,
             categ_operations,
