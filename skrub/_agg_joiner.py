@@ -5,6 +5,7 @@ with one-to-many relationships.
 Both classes aggregate the auxiliary table first, then join this grouped
 table with the main table.
 """
+from collections import Counter
 from copy import deepcopy
 from typing import Iterable
 
@@ -226,6 +227,55 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             operation = np.atleast_1d(self.operation).tolist()
         return operation
 
+    def _check_column_name_duplicates_after_aggregation(
+        self,
+        main_table,
+        aux_table,
+        main_key,
+        aux_key,
+        main_table_name="main_table",
+        aux_table_name="aux_table",
+    ):
+        """Check that there are no duplicate column names after aggregating.
+
+        Parameters
+        ----------
+        main_table : dataframe
+            The main table to join.
+        aux_table : dataframe
+            The aggregated auxiliary table to join.
+        main_table_name : str
+            How to refer to ``main_table`` in error messages.
+        aux_table_name : str
+            How to refer to ``aux_table`` in error messages.
+        Raises
+        ------
+        ValueError
+            If any of the table has duplicate column names, or if there are column
+            names that are used in both tables.
+        """
+        main_columns = list(set(main_table.columns) - set(main_key))
+        aux_columns = [f"{col}" for col in list(set(aux_table.columns) - set(aux_key))]
+        for columns, table_name in [
+            (main_columns, main_table_name),
+            (aux_columns, aux_table_name),
+        ]:
+            counts = Counter(columns)
+            duplicates = [k for k, v in counts.items() if v > 1]
+            if duplicates:
+                raise ValueError(
+                    f"Table '{table_name}' has duplicate column names: {duplicates}."
+                    " Please make sure column names are unique."
+                )
+        overlap = list(set(main_columns).intersection(aux_columns))
+        if overlap:
+            raise ValueError(
+                "After aggregating the auxiliary table, the following"
+                f" column names are found in both tables '{main_table_name}' and"
+                f" '{aux_table_name}': {overlap}. Please make sure column names do not"
+                " overlap by renaming some columns or choosing a different suffix."
+            )
+
     def fit(self, X, y=None):
         """Aggregate auxiliary table based on the main keys.
 
@@ -252,11 +302,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self.aux_table_, self._aux_key, "'aux_table'")
-        # Only check duplicate column names if we're not aggregating the main table
-        if not isinstance(self.aux_table, str):
-            _join_utils.check_column_name_duplicates(
-                X, self.aux_table_, self.suffix, main_table_name="X"
-            )
+
         self.cols = self._check_cols()
 
         self.operation = self._check_operation()
@@ -273,6 +319,10 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             suffix=self.suffix,
         )
         self.aux_table_ = self._screen(aux_table, y)
+
+        self._check_column_name_duplicates_after_aggregation(
+            X, self.aux_table_, self._main_key, self._aux_key, main_table_name="X"
+        )
 
         return self
 
