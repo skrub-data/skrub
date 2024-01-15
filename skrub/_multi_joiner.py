@@ -320,6 +320,9 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     def _check_operations(self):
         pass
 
+    def _check_suffix(self):
+        pass
+
     def fit(self, X, y=None):
         """Aggregate auxiliary tables based on the main keys.
 
@@ -352,6 +355,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         self.cols = self._check_cols()
 
         self.operation = self._check_operations()
+        self._check_suffix()
 
         self.agg_joiners_ = []
 

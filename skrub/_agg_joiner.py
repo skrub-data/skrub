@@ -230,6 +230,10 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             operation = np.atleast_1d(self.operation).tolist()
         return operation
 
+    def _check_suffix(self):
+        if not isinstance(self.suffix, str):
+            raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
+
     def _check_column_name_duplicates_after_aggregation(
         self,
         main_table,
@@ -298,21 +302,17 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             Fitted :class:`AggJoiner` instance (self).
         """
         X, self.aux_table_ = self._check_dataframes(X, self.aux_table)
-
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
-
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self.aux_table_, self._aux_key, "'aux_table'")
-
         self.cols = self._check_cols()
-
         self.operation = self._check_operation()
         num_operations, categ_operations = split_num_categ_operations(self.operation)
+        self._check_suffix()
 
         skrub_px, _ = get_df_namespace(self.aux_table_)
-
         aux_table = skrub_px.aggregate(
             self.aux_table_,
             self._aux_key,
@@ -322,11 +322,9 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             suffix=self.suffix,
         )
         self.aux_table_ = self._screen(aux_table, y)
-
         self._check_column_name_duplicates_after_aggregation(
             X, self.aux_table_, self._main_key, self._aux_key, main_table_name="X"
         )
-
         return self
 
     def transform(self, X):

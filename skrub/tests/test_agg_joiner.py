@@ -130,10 +130,10 @@ def test_input_single_table():
     )
     agg_joiner.fit(main)
     # aux_key_ is 2d since we iterate over it
-    assert agg_joiner._aux_key == [["userId", "movieId"]]
+    assert agg_joiner._aux_key == ["userId", "movieId"]
     assert agg_joiner._main_key == ["userId", "movieId"]
 
-    # check no suffix with one table
+    # check no suffix
     agg_joiner = AggJoiner(
         aux_table=main,
         aux_key="userId",
@@ -141,7 +141,7 @@ def test_input_single_table():
         main_key="userId",
     )
     agg_joiner.fit(main)
-    assert agg_joiner.suffix == ["_1"]
+    assert agg_joiner.suffix == ""
 
     # check inconsistent number of suffixes
     agg_joiner = AggJoiner(
@@ -151,9 +151,7 @@ def test_input_single_table():
         main_key="userId",
         suffix=["_user", "_movie", "_tag"],
     )
-    with pytest.raises(
-        ValueError, match=r"(?=.*suffix)(?=.*match the number of tables)"
-    ):
+    with pytest.raises(ValueError, match=r"(?='suffix' must be a string.*)"):
         agg_joiner.fit(main)
 
     # check missing cols
