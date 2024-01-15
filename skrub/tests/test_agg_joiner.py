@@ -227,7 +227,7 @@ def test_wrong_key():
         cols=["rating", "genre"],
         main_key="wrong_key",
     )
-    match = r"(?=.*main_key)(?=.*X.column)"
+    match = r"(?=.*columns cannot be used for joining because they do not exist)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main)
 
@@ -238,7 +238,7 @@ def test_wrong_key():
         cols=["rating", "genre"],
         main_key="userId",
     )
-    match = r"(?=.*aux_key)(?=.*table.column)"
+    match = r"(?=.*columns cannot be used for joining because they do not exist)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main)
 
@@ -249,7 +249,7 @@ def test_wrong_key():
         cols="wrong_key",
         main_key="userId",
     )
-    match = r"(?=.*cols)(?=.*not in)(?=.*table.columns)"
+    match = "All 'cols' must be present in 'aux_table'"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main)
 

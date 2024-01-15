@@ -211,6 +211,9 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             cols = list(set(self.aux_table.columns) - set(self._aux_key))
         else:
             cols = np.atleast_1d(self.cols).tolist()
+
+        if not all([col in self.aux_table_.columns for col in cols]):
+            raise ValueError("All 'cols' must be present in 'aux_table'.")
         return cols
 
     def _check_operation(self):
