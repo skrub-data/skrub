@@ -3,35 +3,41 @@ import pytest
 from pandas.testing import assert_frame_equal
 from sklearn.pipeline import make_pipeline
 
+from skrub._agg_joiner import AggJoiner, AggTarget, split_num_categ_operations
 from skrub._dataframe._polars import POLARS_SETUP
+
+
+@pytest.fixture
+def main():
+    df = pd.DataFrame(
+        {
+            "userId": [1, 1, 1, 2, 2, 2],
+            "movieId": [1, 3, 6, 318, 6, 1704],
+            "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
+            "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
+        }
+    )
+    return df
+
+
+MODULES = [pd]
+ASSERT_TUPLES = [(pd, assert_frame_equal)]
 
 if POLARS_SETUP:
     import polars as pl
     from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
-from skrub._agg_joiner import AggJoiner, AggTarget, split_num_categ_operations
-
-main = pd.DataFrame(
-    {
-        "userId": [1, 1, 1, 2, 2, 2],
-        "movieId": [1, 3, 6, 318, 6, 1704],
-        "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
-        "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
-    }
-)
-
-
-ASSERT_TUPLES = [(main, pd, assert_frame_equal)]
-if POLARS_SETUP:
-    ASSERT_TUPLES.append((pl.DataFrame(main), pl, assert_frame_equal_pl))
+    MODULES.append(pl)
+    ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
 
 
 @pytest.mark.parametrize("use_X_placeholder", [False, True])
 @pytest.mark.parametrize(
-    "X, px, assert_frame_equal_",
+    "px, assert_frame_equal_",
     ASSERT_TUPLES,
 )
-def test_simple_fit_transform(use_X_placeholder, X, px, assert_frame_equal_):
+def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
+    X = px.DataFrame(main)
     aux = X if not use_X_placeholder else "X"
 
     agg_joiner_user = AggJoiner(
@@ -68,7 +74,7 @@ def test_simple_fit_transform(use_X_placeholder, X, px, assert_frame_equal_):
 
 
 @pytest.mark.skipif(not POLARS_SETUP, reason="Polars is not available")
-def test_polars_unavailable_operation():
+def test_polars_unavailable_operation(main):
     agg_joiner = AggJoiner(
         aux_table="X",
         aux_key="movieId",
@@ -80,7 +86,10 @@ def test_polars_unavailable_operation():
         agg_joiner.fit(pl.DataFrame(main))
 
 
-def test_input_single_table():
+@pytest.mark.parametrize("px", MODULES)
+def test_input_single_table(main, px):
+    main = px.DataFrame(main)
+
     # check too many main keys
     agg_joiner = AggJoiner(
         aux_table=main,
@@ -164,7 +173,10 @@ def test_input_single_table():
     agg_joiner.cols == ["rating", "genre"]
 
 
-def test_input_multiple_tables():
+@pytest.mark.parametrize("px", MODULES)
+def test_input_multiple_tables(main, px):
+    main = px.DataFrame(main)
+
     # check foreign key are list of list
     agg_joiner = AggJoiner(
         aux_table=[main, main],
@@ -177,7 +189,10 @@ def test_input_multiple_tables():
         agg_joiner.fit_transform(main)
 
 
-def test_wrong_key():
+@pytest.mark.parametrize("px", MODULES)
+def test_wrong_key(main, px):
+    main = px.DataFrame(main)
+
     # check providing key and extra aux_key
     agg_joiner = AggJoiner(
         aux_table=main,
@@ -243,7 +258,10 @@ def test_wrong_key():
         agg_joiner.fit(main)
 
 
-def test_agg_joiner_default_operations():
+@pytest.mark.parametrize("px", MODULES)
+def test_agg_joiner_default_operations(main, px):
+    main = px.DataFrame(main)
+
     # check default operations
     agg_joiner = AggJoiner(
         aux_table=main,
@@ -285,7 +303,10 @@ def test_agg_joiner_default_operations():
     assert categ_ops == ["mode"]
 
 
-def test_X_wrong_string_placeholder():
+@pytest.mark.parametrize("px", MODULES)
+def test_X_wrong_string_placeholder(main, px):
+    main = px.DataFrame(main)
+
     agg_joiner = AggJoiner(
         aux_table="Y",
         aux_key="userId",
@@ -308,7 +329,7 @@ y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
         (y.values.tolist(), "y_0"),
     ],
 )
-def test_agg_target(y, col_name):
+def test_agg_target(main, y, col_name):
     agg_target = AggTarget(
         main_key="userId",
         suffix="_user",
@@ -332,7 +353,7 @@ def test_agg_target(y, col_name):
     assert_frame_equal(main_transformed, main_transformed_expected)
 
 
-def test_agg_target_missing_operations():
+def test_agg_target_missing_operations(main):
     agg_target = AggTarget(
         main_key="userId",
         suffix="_user",
@@ -349,7 +370,7 @@ def test_agg_target_missing_operations():
     assert agg_target.operation_ == ["mode"]
 
 
-def test_agg_target_check_input():
+def test_agg_target_check_input(main):
     agg_target = AggTarget(
         main_key="userId",
         suffix="_user",
@@ -363,7 +384,7 @@ def test_agg_target_check_input():
         agg_target.fit(main, y["rating"][:2])
 
 
-def test_no_aggregation_exception():
+def test_no_aggregation_exception(main):
     agg_target = AggTarget(
         main_key="userId",
         operation=[],
@@ -372,7 +393,7 @@ def test_no_aggregation_exception():
         agg_target.fit(main, y)
 
 
-def test_wrong_args_ops():
+def test_wrong_args_ops(main):
     agg_target = AggTarget(
         main_key="userId",
         operation="mean(2)",
