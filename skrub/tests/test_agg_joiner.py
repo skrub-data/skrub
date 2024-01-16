@@ -170,7 +170,7 @@ def test_input_single_table(main, px):
         main_key=["movieId", "userId"],
     )
     agg_joiner.fit(main)
-    agg_joiner.cols == ["rating", "genre"]
+    agg_joiner._cols == ["rating", "genre"]
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -270,7 +270,7 @@ def test_agg_joiner_default_operations(main, px):
         main_key="userId",
     )
     agg_joiner.fit(main)
-    assert agg_joiner.operation == ["mean", "mode"]
+    assert agg_joiner._operation == ["mean", "mode"]
 
     # check invariant operations input
     agg_joiner = AggJoiner(
@@ -281,7 +281,7 @@ def test_agg_joiner_default_operations(main, px):
         operation=["min", "max", "mode"],
     )
     agg_joiner.fit(main)
-    assert agg_joiner.operation == ["min", "max", "mode"]
+    assert agg_joiner._operation == ["min", "max", "mode"]
 
     # check not supported operations
     agg_joiner = AggJoiner(

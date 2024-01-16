@@ -19,7 +19,6 @@ from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
 from skrub._dataframe._pandas import _parse_argument
 from skrub._utils import atleast_1d_or_none
 
-# TODO: add "nunique"
 NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
 CATEG_OPERATIONS = ["mode", "count", "value_counts"]
 ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
@@ -304,23 +303,23 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
-        self.cols = self._check_cols()
-        self.operation = self._check_operation()
-        num_operations, categ_operations = split_num_categ_operations(self.operation)
+        self._cols = self._check_cols()
+        self._operation = self._check_operation()
+        num_operations, categ_operations = split_num_categ_operations(self._operation)
         self._check_suffix()
 
         skrub_px, _ = get_df_namespace(self._aux_table)
-        aux_table = skrub_px.aggregate(
+        agg_aux_table = skrub_px.aggregate(
             self._aux_table,
             self._aux_key,
-            self.cols,
+            self._cols,
             num_operations,
             categ_operations,
             suffix=self.suffix,
         )
-        self._aux_table = self._screen(aux_table, y)
+        self.aux_table_ = self._screen(agg_aux_table, y)
         self._check_column_name_duplicates_after_aggregation(
-            X, self._aux_table, self._main_key, self._aux_key, main_table_name="X"
+            X, self.aux_table_, self._main_key, self._aux_key, main_table_name="X"
         )
         return self
 
@@ -337,12 +336,12 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         X_transformed : DataFrameLike
             The augmented input.
         """
-        check_is_fitted(self, "_aux_table")
-        skrub_px, _ = get_df_namespace(self._aux_table)
+        check_is_fitted(self, "aux_table_")
+        skrub_px, _ = get_df_namespace(self.aux_table_)
 
         X = skrub_px.join(
             left=X,
-            right=self._aux_table,
+            right=self.aux_table_,
             left_on=self._main_key,
             right_on=self._aux_key,
         )
