@@ -2,17 +2,17 @@
 The MultiJoiner and MultiAggJoiner extend Joiner and AggJoiner
 to multiple auxiliary tables.
 """
+from copy import deepcopy
+
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
+# from skrub import _join_utils
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER  # , Joiner
-
-
-def check_multi_key():
-    return
+from skrub._utils import atleast_1d_or_none
 
 
 class MultiJoiner(BaseEstimator, TransformerMixin):
@@ -210,11 +210,11 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         If set to None (the default), ['mean', 'mode'] will be used.
 
     suffixes : str or iterable of str, default=None
-        The suffixes that will be added to each table columns in case of
-        duplicate column names.
-        If set to None, the table index in 'aux_table' are used,
-        e.g. for a duplicate columns: price (main table),
-        price_1 (auxiliary table 1), price_2 (auxiliary table 2), etc.
+        Suffix to append to the ``aux_table``'s column names.
+        If set to None, the table indexes in `aux_tables` are used,
+        e.g. for an aggregation on 2 aux_tables containing the 'price' column:
+            price (main table), price_1 (auxiliary table 1), price_2
+            (auxiliary table 2), etc.
 
     See Also
     --------
@@ -251,7 +251,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     ...    aux_keys=["patient_id", "patient_id", "patientID"],
     ...    cols=["days_of_stay", "medication", "value"],
     ...    operations=["max", "mode", ["mean", "std"]],
-    ...    suffixes=["", "", "glucose"],
+    ...    suffixes=["", "", "_glucose"],
     ... )
     >>> multi_agg_joiner.fit_transform(patients)
     # TODO
@@ -283,7 +283,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         ----------
         X : DataframeLike
             The main table to augment.
-        aux_tables : DataframeLike
+        aux_tables : iterator of DataframeLike or "X"
             The auxiliary tables.
 
         Raises
@@ -292,6 +292,12 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             Raises an error if all the frames don't have the same type,
             or if there is a Polars lazyframe.
         """
+        aux_tables = atleast_1d_or_none(aux_tables)
+        if len(aux_tables) == 1 and type(aux_tables) == str:
+            if aux_tables[0] == "X":
+                return X, deepcopy(X)
+            else:
+                raise ValueError("'aux_table' must be a dataframe or 'X'.")
         # Polars lazyframes will raise an error here.
         if not hasattr(X, "__dataframe__"):
             raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
@@ -304,6 +310,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         if is_polars(X):
             if not all(is_polars(aux_table) for aux_table in aux_tables):
                 raise TypeError("All 'aux_tables' must be Polars dataframes.")
+
+        return X, aux_tables
 
     def _check_keys(self):
         pass
@@ -318,10 +326,43 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         pass
 
     def _check_operations(self):
-        pass
+        if self.operations is None:
+            operations = [["mean", "mode"]] * len(self._aux_tables)
+        else:
+            pass
+        return operations
 
-    def _check_suffix(self):
-        pass
+    def _check_suffixes(self):
+        """Check that the len of `suffixes` match the len of `aux_tables`,
+        and that all suffixes are strings.
+
+        If suffixes is None, the suffixes will default to the
+
+        Returns
+        -------
+        suffixes
+            1-dimensional array of suffixes to append to dataframes.
+
+        Raises
+        ------
+        ValueError
+            If the len of `suffixes` match the len of `aux_tables`, or if all suffixes
+            are not strings.
+        """
+        if self.suffixes is None:
+            suffixes = [f"_{i+1}" for i in range(len(self._aux_tables))]
+        else:
+            suffixes = np.atleast_1d(suffixes).tolist()
+            if len(suffixes) != len(self._aux_tables):
+                raise ValueError(
+                    "The number of provided suffixes must match the number of"
+                    f" tables in 'aux_tables'. Got {len(suffixes)} suffixes and"
+                    f" {len(self._aux_tables)} aux_tables."
+                )
+            if not all([isinstance(suffix, str) for suffix in suffixes]):
+                raise ValueError("All suffixes must be strings.")
+
+        return suffixes
 
     def fit(self, X, y=None):
         """Aggregate auxiliary tables based on the main keys.
@@ -341,30 +382,30 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         AggJoiner
             Fitted :class:`MultiAggJoiner` instance (self).
         """
-        self._check_dataframes(X, self.aux_tables)
+        X, self._aux_tables = self._check_dataframes(X, self.aux_tables)
 
         self._main_key, self._aux_keys = self._check_keys(
             self.main_key, self.aux_keys, self.keys
         )
 
         self._check_missing_columns(X, self._main_key, "'X' (the main table)")
-        self._check_missing_columns(self.aux_tables, self._aux_keys, "'aux_table'")
+        self._check_missing_columns(self._aux_tables, self._aux_keys, "'aux_table'")
         self._check_column_name_duplicates(
             X, self.aux_tables, self.suffixes, main_table_name="X"
         )
-        self.cols = self._check_cols()
+        self._cols = self._check_cols()
 
-        self.operation = self._check_operations()
-        self._check_suffix()
+        self._operations = self._check_operations()
+        self._suffixes = self._check_suffixes()
 
         self.agg_joiners_ = []
 
         for aux_table, aux_key, cols, operation, suffix in zip(
-            self.aux_tables,
+            self._aux_tables,
             self._aux_keys,
-            self.cols,
-            self.operations,
-            self.suffixes,
+            self._cols,
+            self._operations,
+            self._suffixes,
         ):
             agg_joiner = AggJoiner(
                 aux_table=aux_table,
