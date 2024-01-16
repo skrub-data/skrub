@@ -8,11 +8,13 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
+from skrub import _join_utils
+
 # from skrub import _join_utils
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER  # , Joiner
-from skrub._utils import atleast_1d_or_none
+from skrub._utils import atleast_1d_or_none, atleast_2d_or_none
 
 
 class MultiJoiner(BaseEstimator, TransformerMixin):
@@ -250,7 +252,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     ...    main_key="patient_id",
     ...    aux_keys=["patient_id", "patient_id", "patientID"],
     ...    cols=["days_of_stay", "medication", "value"],
-    ...    operations=["max", "mode", ["mean", "std"]],
+    ...    operations=[["max"], ["mode"], ["mean", "std"]],
     ...    suffixes=["", "", "_glucose"],
     ... )
     >>> multi_agg_joiner.fit_transform(patients)
@@ -316,20 +318,54 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     def _check_keys(self):
         pass
 
-    def _check_missing_columns(self):
-        pass
+    def _check_missing_columns_in_aux_tables(
+        self, aux_tables, aux_keys, aux_table_name
+    ):
+        """Check that all `aux_key` are in the corresponding `aux_table`.
+
+        Parameters
+        ----------
+        aux_tables : iterable of DataFrameLine
+            Tables to perform aggregation on
+        aux_keys : str, or iterable of str, or iterable of iterable of str
+            Keys to merge the aggregated results on.
+        aux_table_name : str
+            Name by which to refer to `aux_tables` in the error message if necessary.
+        """
+        for aux_table, aux_key in zip(aux_tables, aux_keys):
+            _join_utils.check_missing_columns(aux_table, aux_key, aux_table_name)
 
     def _check_column_name_duplicates(self):
         pass
 
     def _check_cols(self):
-        pass
+        cols = atleast_2d_or_none(self.cols)
+
+        return cols
 
     def _check_operations(self):
-        if self.operations is None:
+        """_summary_
+
+        Returns
+        -------
+        _type_
+            _description_
+
+        Raises
+        ------
+        ValueError
+            _description_
+        """
+        operations = atleast_2d_or_none(self.operations)
+        # If self.operations was None, add same default for all aggregations
+        if operations[0] == []:
             operations = [["mean", "mode"]] * len(self._aux_tables)
-        else:
-            pass
+        if len(operations) != len(self._aux_tables):
+            raise ValueError(
+                "The number of provided operations must match the number of"
+                f" tables in 'aux_tables'. Got {len(operations)} operations and"
+                f" {len(self._aux_tables)} aux_tables."
+            )
         return operations
 
     def _check_suffixes(self):
@@ -388,8 +424,10 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             self.main_key, self.aux_keys, self.keys
         )
 
-        self._check_missing_columns(X, self._main_key, "'X' (the main table)")
-        self._check_missing_columns(self._aux_tables, self._aux_keys, "'aux_table'")
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        self._check_missing_columns_in_aux_tables(
+            self._aux_tables, self._aux_keys, "'aux_table'"
+        )
         self._check_column_name_duplicates(
             X, self.aux_tables, self.suffixes, main_table_name="X"
         )
