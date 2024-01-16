@@ -209,8 +209,8 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         cols = atleast_1d_or_none(self.cols)
         # If no cols provided, all columns but `aux_key` are used.
         if len(cols) == 0:
-            cols = list(set(self.aux_table_.columns) - set(self._aux_key))
-        if not all([col in self.aux_table_.columns for col in cols]):
+            cols = list(set(self._aux_table.columns) - set(self._aux_key))
+        if not all([col in self._aux_table.columns for col in cols]):
             raise ValueError("All 'cols' must be present in 'aux_table'.")
         return cols
 
@@ -298,29 +298,29 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         AggJoiner
             Fitted :class:`AggJoiner` instance (self).
         """
-        X, self.aux_table_ = self._check_dataframes(X, self.aux_table)
+        X, self._aux_table = self._check_dataframes(X, self.aux_table)
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_missing_columns(self.aux_table_, self._aux_key, "'aux_table'")
+        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
         self.cols = self._check_cols()
         self.operation = self._check_operation()
         num_operations, categ_operations = split_num_categ_operations(self.operation)
         self._check_suffix()
 
-        skrub_px, _ = get_df_namespace(self.aux_table_)
+        skrub_px, _ = get_df_namespace(self._aux_table)
         aux_table = skrub_px.aggregate(
-            self.aux_table_,
+            self._aux_table,
             self._aux_key,
             self.cols,
             num_operations,
             categ_operations,
             suffix=self.suffix,
         )
-        self.aux_table_ = self._screen(aux_table, y)
+        self._aux_table = self._screen(aux_table, y)
         self._check_column_name_duplicates_after_aggregation(
-            X, self.aux_table_, self._main_key, self._aux_key, main_table_name="X"
+            X, self._aux_table, self._main_key, self._aux_key, main_table_name="X"
         )
         return self
 
@@ -337,12 +337,12 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         X_transformed : DataFrameLike
             The augmented input.
         """
-        check_is_fitted(self, "aux_table_")
-        skrub_px, _ = get_df_namespace(self.aux_table_)
+        check_is_fitted(self, "_aux_table")
+        skrub_px, _ = get_df_namespace(self._aux_table)
 
         X = skrub_px.join(
             left=X,
-            right=self.aux_table_,
+            right=self._aux_table,
             left_on=self._main_key,
             right_on=self._aux_key,
         )
