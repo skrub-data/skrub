@@ -170,15 +170,15 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         ----------
         X : DataframeLike
             The main table to augment.
-        aux_table : DataframeLike
+        aux_table : DataframeLike or "X"
             The auxiliary table.
         """
-        # Polars lazyframes will raise an error here.
         if type(aux_table) == str:
             if aux_table == "X":
                 return X, deepcopy(X)
             else:
                 raise ValueError("'aux_table' must be a dataframe or 'X'.")
+        # Polars lazyframes will raise an error here.
         if not hasattr(X, "__dataframe__"):
             raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
         if not hasattr(aux_table, "__dataframe__"):
@@ -206,12 +206,10 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         cols
             1-dimensional array of columns on which to perform aggregation.
         """
+        cols = atleast_1d_or_none(self.cols)
         # If no cols provided, all columns but `aux_key` are used.
-        if self.cols is None:
-            cols = list(set(self.aux_table.columns) - set(self._aux_key))
-        else:
-            cols = np.atleast_1d(self.cols).tolist()
-
+        if len(cols) == 0:
+            cols = list(set(self.aux_table_.columns) - set(self._aux_key))
         if not all([col in self.aux_table_.columns for col in cols]):
             raise ValueError("All 'cols' must be present in 'aux_table'.")
         return cols
@@ -224,10 +222,9 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         operation
             1-dimensional array of operations to perform on columns.
         """
-        if self.operation is None:
+        operation = atleast_1d_or_none(self.operation)
+        if len(operation) == 0:
             operation = ["mean", "mode"]
-        else:
-            operation = np.atleast_1d(self.operation).tolist()
         return operation
 
     def _check_suffix(self):
