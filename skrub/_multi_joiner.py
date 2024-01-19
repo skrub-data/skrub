@@ -14,7 +14,7 @@ from skrub import _join_utils
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER  # , Joiner
-from skrub._utils import atleast_1d_or_none, atleast_2d_or_none
+from skrub._utils import _is_array_like, atleast_1d_or_none, atleast_2d_or_none
 
 
 class MultiJoiner(BaseEstimator, TransformerMixin):
@@ -193,7 +193,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
     aux_keys : str, or iterable of str, or iterable of iterable of str
         Select the columns from the auxiliary dataframes to use as keys during
-        the join operation.
+        the join operation. Note that [["a"], ["b"], ["c", "d"]] is a valid input
+        while ["a", "b", ["c", "d"]] is not.
 
     cols : str, or iterable of str, or iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as values during
@@ -208,6 +209,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             the binning.
 
         categorical : {"mode", "count", "value_counts"}
+
+        If set to str, all auxiliary tables will undergo the same operation.
 
         If set to None (the default), ["mean", "mode"] will be used
         for all auxiliary tables.
@@ -357,10 +360,13 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         ValueError
             If the len of `operations` doesn't match the len of `aux_tables`.
         """
-        operations = atleast_2d_or_none(self.operations)
-        # If self.operations was None, add same default for all aggregations
-        if operations[0] == []:
+        if self.operations is None:
             operations = [["mean", "mode"]] * len(self._aux_tables)
+        if isinstance(self.operations, str):
+            operations = [self.operations] * len(self._aux_tables)
+        if _is_array_like(self.operations):
+            np.atleast_2d(self.operations).to_list()
+
         if len(operations) != len(self._aux_tables):
             raise ValueError(
                 "The number of provided operations must match the number of"
