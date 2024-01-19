@@ -54,12 +54,12 @@ def split_num_categ_operations(operations: list[str]) -> tuple[list[str], list[s
 class AggJoiner(BaseEstimator, TransformerMixin):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
-    Apply numerical and categorical aggregation operations on the columns
+    Apply numerical and categorical aggregation operations on the `cols`
     to aggregate, selected by dtypes. See the list of supported operations
     at the parameter `operation`.
 
-    The grouping columns used during the aggregation are the columns used
-    as keys for joining.
+    If `cols` is not provided, `cols` are all columns from `aux_table`,
+    except `aux_key`.
 
     Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
 
@@ -71,13 +71,13 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         self-aggregation on the input data.
 
     key : str, default=None
-        The column names to use for both ``main_key`` and ``aux_key`` when they
-        are the same. Provide either ``key`` or both ``main_key`` and ``aux_key``.
+        The column names to use for both `main_key` and `aux_key` when they
+        are the same. Provide either `key` or both `main_key` and `aux_key`.
 
     main_key : str or iterable of str, default=None
         Select the columns from the main table to use as keys during
         the join operation.
-        If main_key is a list, we will perform a multi-column join.
+        If `main_key` is a list, we will perform a multi-column join.
 
     aux_key : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as keys during
@@ -86,7 +86,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
-        If None, `cols` are all columns from table, except `aux_key`.
+        If None, `cols` are all columns from `aux_table`, except `aux_key`.
 
     operation : str or iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
@@ -100,7 +100,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         If set to None (the default), ["mean", "mode"] will be used.
 
     suffix : str or iterable of str, default=""
-        Suffix to append to the ``aux_table``'s column names. You can use it
+        Suffix to append to the `aux_table`'s column names. You can use it
         to avoid duplicate column names in the join.
 
     See Also
@@ -214,7 +214,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         return cols
 
     def _check_operation(self):
-        """Check operation input type.
+        """Check operation input.
 
         Returns
         -------
@@ -309,7 +309,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         self._check_suffix()
 
         skrub_px, _ = get_df_namespace(self._aux_table)
-        agg_aux_table = skrub_px.aggregate(
+        aux_table = skrub_px.aggregate(
             self._aux_table,
             self._aux_key,
             self._cols,
@@ -317,7 +317,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             categ_operations,
             suffix=self.suffix,
         )
-        self.aux_table_ = self._screen(agg_aux_table, y)
+        self.aux_table_ = self._screen(aux_table, y)
         self._check_column_name_duplicates_after_aggregation(
             X, self.aux_table_, self._main_key, self._aux_key, main_table_name="X"
         )
@@ -367,15 +367,15 @@ class AggTarget(BaseEstimator, TransformerMixin):
         Select the columns from the main table to use as keys during
         the aggregation of the target and during the join operation.
 
-        If main_key refer to a single column, a single aggregation
+        If `main_key` refer to a single column, a single aggregation
         for this key will be generated and a single join will be performed.
 
-        Otherwise, if main_key is a list of keys, the target will be
+        Otherwise, if `main_key` is a list of keys, the target will be
         aggregated using each key separately, then each aggregation of
         the target will be joined on the main table.
 
     operation : str or iterable of str, optional
-        Aggregation operations to perform on the auxiliary table.
+        Aggregation operations to perform on the target.
 
         numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
             'hist' and 'value_counts' accept an integer argument to parametrize
@@ -383,11 +383,11 @@ class AggTarget(BaseEstimator, TransformerMixin):
 
         categorical : {"mode", "count", "value_counts"}
 
-        If set to None (the default), ['mean', 'mode'] will be used.
+        If set to None (the default), ["mean", "mode"] will be used.
 
     suffix : str, optional
         The suffix to append to the columns of the target table if the join
-        result in some duplicates columns.
+        results in duplicates columns.
         If set to None, "_target" is used.
 
     See Also
@@ -442,17 +442,17 @@ class AggTarget(BaseEstimator, TransformerMixin):
         Parameters
         ----------
         X : DataFrameLike
-            Must contains the columns names defined in ``main_key``.
+            Must contains the columns names defined in `main_key`.
 
         y : DataFrameLike or SeriesLike or ArrayLike
-            ``y`` length must match ``X`` length, with matching indices.
+            `y` length must match `X` length, with matching indices.
             The target can be continuous or discrete, with multiple columns.
 
             If the target is continuous, only numerical operations,
-            listed in ``num_operations``, can be applied.
+            listed in `num_operations`, can be applied.
 
             If the target is discrete, only categorical operations,
-            listed in ``categ_operations``, can be applied.
+            listed in `categ_operations`, can be applied.
 
             Note that the target type is determined by
             :func:`sklearn.utils.multiclass.type_of_target`.

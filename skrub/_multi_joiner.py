@@ -20,29 +20,29 @@ from skrub._utils import atleast_1d_or_none, atleast_2d_or_none
 class MultiJoiner(BaseEstimator, TransformerMixin):
     """Extension of the Joiner to multiple auxiliary tables.
 
-    This transformer is initialized with auxiliary tables ``aux_tables``. It
+    This transformer is initialized with auxiliary tables `aux_tables`. It
     transforms a main table by joining it, with approximate ("fuzzy") matching,
-    to the auxiliary table. The output of ``transform`` has the same rows as
-    the main table (i.e. as the argument passed to ``transform``), but each row
+    to the auxiliary table. The output of `transform` has the same rows as
+    the main table (i.e. as the argument passed to `transform`), but each row
     is augmented with values from the best match in the auxiliary table.
 
     To identify the best match for each row, values from the matching columns
-    (``main_key`` and ``aux_key``) are vectorized, i.e. represented by vectors of
+    (`main_key` and `aux_key`) are vectorized, i.e. represented by vectors of
     continuous values. Then, the Euclidean distances between these vectors are
     computed to find, for each main table row, its nearest neighbor within the
     auxiliary table.
 
-    Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
+    Optionally, a maximum distance threshold, `max_dist`, can be set. Matches
     between vectors that are separated by a distance (strictly) greater than
-    ``max_dist`` will be rejected. We will consider that main table rows that
-    are farther than ``max_dist`` from their nearest neighbor do not have a
+    `max_dist` will be rejected. We will consider that main table rows that
+    are farther than `max_dist` from their nearest neighbor do not have a
     matching row in the auxiliary table, and the output will contain nulls for
     the entries that would normally have come from the auxiliary table (as in a
     traditional left join).
 
-    To make it easier to set a ``max_dist`` threshold, the distances are
+    To make it easier to set a `max_dist` threshold, the distances are
     rescaled by dividing them by a reference distance, which can be chosen with
-    ``ref_dist``. The default is ``'random_pairs'``. The possible choices are:
+    `ref_dist`. The default is `'random_pairs'`. The possible choices are:
 
     'random_pairs'
         Pairs of rows are sampled randomly from the auxiliary table and their
@@ -67,39 +67,39 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
     ----------
     aux_table : :obj:`~pandas.DataFrame`
         The auxiliary table, which will be fuzzy-joined to the main table when
-        calling ``transform``.
+        calling `transform`.
     key : str or list of str, default=None
-        The column names to use for both ``main_key`` and ``aux_key`` when they
-        are the same. Provide either ``key`` or both ``main_key`` and ``aux_key``.
+        The column names to use for both `main_key` and `aux_key` when they
+        are the same. Provide either `key` or both `main_key` and `aux_key`.
     main_key : str or list of str, default=None
         The column names in the main table on which the join will be performed.
         Can be a string if joining on a single column.
-        If ``None``, `aux_key` must also be ``None`` and `key` must be provided.
+        If `None`, `aux_key` must also be `None` and `key` must be provided.
     aux_key : str or list of str, default=None
         The column names in the auxiliary table on which the join will
         be performed. Can be a string if joining on a single column.
-        If ``None``, `main_key` must also be ``None`` and `key` must be provided.
+        If `None`, `main_key` must also be `None` and `key` must be provided.
     suffix : str, default=""
-        Suffix to append to the ``aux_table``'s column names. You can use it
+        Suffix to append to the `aux_table`'s column names. You can use it
         to avoid duplicate column names in the join.
     max_dist : float, default=np.inf
         Maximum acceptable (rescaled) distance between a row in the
-        ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
+        `main_table` and its nearest neighbor in the `aux_table`. Rows that
         are farther apart are not considered to match. By default, the distance
         is rescaled so that a value between 0 and 1 is typically a good choice,
         although rescaled distances can be greater than 1 for some choices of
-        ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
+        `ref_dist`. `None`, `"inf"`, `float("inf")` or `numpy.inf`
         mean that no matches are rejected.
     ref_dist : reference distance for rescaling, default = 'random_pairs'
         Options are {"random_pairs", "second_neighbor", "self_join_neighbor",
         "no_rescaling"}. See above for a description of each option. To
-        facilitate the choice of ``max_dist``, distances between rows in
-        ``main_table`` and their nearest neighbor in ``aux_table`` will be
+        facilitate the choice of `max_dist`, distances between rows in
+        `main_table` and their nearest neighbor in `aux_table` will be
         rescaled by this reference distance.
     string_encoder : scikit-learn transformer used to vectorize text columns
-        By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
+        By default a `HashingVectorizer` combined with a `TfidfTransformer`
         is used. Here we use raw TF-IDF features rather than transforming them
-        for example with ``GapEncoder`` or ``MinHashEncoder`` because it is
+        for example with `GapEncoder` or `MinHashEncoder` because it is
         faster, these features are only used to find nearest neighbors and not
         used by downstream estimators, and distances between TF-IDF vectors
         have a somewhat simpler interpretation.
@@ -108,13 +108,13 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
         the distance, rescaled distance and whether the rescaled distance is
         above the threshold. Those values can be helpful for an estimator that
         uses the joined features, or to inspect the result of the join and set
-        a ``max_dist`` threshold.
+        a `max_dist` threshold.
 
     Attributes
     ----------
     max_dist_ : the maximum distance for a match to be accepted
-        Equal to the parameter ``max_dist`` except that ``"inf"`` and ``None``
-        are mapped to ``np.inf`` (i.e. accept all matches).
+        Equal to the parameter `max_dist` except that `"inf"` and `None`
+        are mapped to `np.inf` (i.e. accept all matches).
 
     vectorizer_ : scikit-learn ColumnTransformer
         The fitted transformer used to transform the matching columns into
@@ -127,7 +127,7 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
 
     fuzzy_join :
         Join two tables (dataframes) based on approximate column matching. This
-        is the same functionality as provided by the ``Joiner`` but exposed as
+        is the same functionality as provided by the `Joiner` but exposed as
         a function rather than a transformer.
 
     Examples
@@ -166,41 +166,41 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
 class MultiAggJoiner(BaseEstimator, TransformerMixin):
     """Extension of the AggJoiner to multiple auxiliary tables.
 
-    Apply numerical and categorical aggregation operations on the columns
+    Apply numerical and categorical aggregation operations on the `cols`
     to aggregate, selected by dtypes. See the list of supported operations
     at the parameter `operation`.
 
-    The grouping columns used during the aggregation are the columns used
-    as keys for joining.
+    If `cols` is not provided, `cols` are all columns from `aux_table`,
+    except `aux_key`.
 
     Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
 
     Parameters
     ----------
     aux_tables : DataFrameLike or iterable of DataFrameLike or "X"
-        Auxiliary dataframe to aggregate then join on the base table.
+        Auxiliary dataframes to aggregate then join on the base table.
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
 
-    keys : str or list of str, default=None
-        The column names to use for both ``main_key`` and ``aux_key`` when they
-        are the same. Provide either ``key`` or both ``main_key`` and ``aux_key``.
+    keys : str or iterable of str, default=None
+        The column names to use for both `main_key` and `aux_key` when they
+        are the same. Provide either `key` or both `main_key` and `aux_keys`.
 
     main_key : str or iterable of str
         Select the columns from the main table to use as keys during
         the join operation.
-        If main_keys is a list, we will perform a multi-column join.
+        If `main_key` is a list, we will perform a multi-column join.
 
     aux_keys : str, or iterable of str, or iterable of iterable of str
-        Select the columns from the auxiliary dataframe to use as keys during
+        Select the columns from the auxiliary dataframes to use as keys during
         the join operation.
 
     cols : str, or iterable of str, or iterable of iterable of str, default=None
-        Select the columns from the auxiliary dataframe to use as values during
+        Select the columns from the auxiliary dataframes to use as values during
         the aggregation operations.
-        If None, cols are all columns from table, except `aux_key`.
+        If None, `cols` are all columns from table, except `aux_key`.
 
-    operations : str or iterable of str, default=None
+    operations : str or iterable of str, or iterable of iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
 
         numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
@@ -209,12 +209,13 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
         categorical : {"mode", "count", "value_counts"}
 
-        If set to None (the default), ['mean', 'mode'] will be used.
+        If set to None (the default), ["mean", "mode"] will be used
+        for all auxiliary tables.
 
     suffixes : str or iterable of str, default=None
-        Suffix to append to the ``aux_table``'s column names.
+        Suffix to append to the `aux_table`'s column names.
         If set to None, the table indexes in `aux_tables` are used,
-        e.g. for an aggregation on 2 aux_tables containing the 'price' column:
+        e.g. for an aggregation on 2 aux_tables containing the "price" column:
             price (main table), price_1 (auxiliary table 1), price_2
             (auxiliary table 2), etc.
 
@@ -321,12 +322,12 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     def _check_missing_columns_in_aux_tables(
         self, aux_tables, aux_keys, aux_table_name
     ):
-        """Check that all `aux_key` are in the corresponding `aux_table`.
+        """Check that all `aux_keys` are in the corresponding `aux_table`.
 
         Parameters
         ----------
         aux_tables : iterable of DataFrameLine
-            Tables to perform aggregation on
+            Tables to perform aggregation on.
         aux_keys : str, or iterable of str, or iterable of iterable of str
             Keys to merge the aggregated results on.
         aux_table_name : str
@@ -344,17 +345,17 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         return cols
 
     def _check_operations(self):
-        """_summary_
+        """Check operation input.
 
         Returns
         -------
-        _type_
-            _description_
+        operations
+            2-dimensional array of operations to perform on columns.
 
         Raises
         ------
         ValueError
-            _description_
+            If the len of `operations` doesn't match the len of `aux_tables`.
         """
         operations = atleast_2d_or_none(self.operations)
         # If self.operations was None, add same default for all aggregations
@@ -382,8 +383,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         Raises
         ------
         ValueError
-            If the len of `suffixes` match the len of `aux_tables`, or if all suffixes
-            are not strings.
+            If the len of `suffixes` doesn't match the len of `aux_tables`,
+            or if all suffixes are not strings.
         """
         if self.suffixes is None:
             suffixes = [f"_{i+1}" for i in range(len(self._aux_tables))]
@@ -415,7 +416,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        AggJoiner
+        MultiAggJoiner
             Fitted :class:`MultiAggJoiner` instance (self).
         """
         X, self._aux_tables = self._check_dataframes(X, self.aux_tables)
