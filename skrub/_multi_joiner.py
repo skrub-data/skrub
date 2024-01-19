@@ -9,8 +9,6 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _join_utils
-
-# from skrub import _join_utils
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER  # , Joiner
@@ -199,7 +197,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     cols : str, or iterable of str, or iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as values during
         the aggregation operations.
-        If None, `cols` are all columns from table, except `aux_key`.
+
+        If set to None, `cols` are all columns from table, except `aux_key`.
 
     operations : str or iterable of str, or iterable of iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
@@ -298,8 +297,9 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             Raises an error if all the frames don't have the same type,
             or if there is a Polars lazyframe.
         """
+        # TODO: convert to list here, or it will return an array
         aux_tables = atleast_1d_or_none(aux_tables)
-        if len(aux_tables) == 1 and type(aux_tables) == str:
+        if type(aux_tables) == str:
             if aux_tables[0] == "X":
                 return X, deepcopy(X)
             else:
@@ -319,8 +319,20 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
         return X, aux_tables
 
-    def _check_keys(self):
-        pass
+    def _check_keys(self, main_key, aux_keys, keys):
+        main_key = atleast_1d_or_none(main_key)
+        aux_keys = atleast_2d_or_none(aux_keys)
+        keys = atleast_2d_or_none(keys)
+
+        # TODO: check this, unsure if this works
+        main_key, aux_keys = zip(
+            *[
+                _join_utils.check_key(m_k, a_k, k)
+                for m_k, a_k, k in zip(main_key, aux_keys, keys)
+            ]
+        )
+
+        return main_key, aux_keys
 
     def _check_missing_columns_in_aux_tables(
         self, aux_tables, aux_keys, aux_table_name
@@ -343,8 +355,17 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         pass
 
     def _check_cols(self):
+        # If no cols provided, all columns but `aux_key` are used.
+        if self.cols is None:
+            cols = [
+                list(set(table.columns) - set(key))
+                for table, key in zip(self._aux_tables, self._aux_keys)
+            ]
         cols = atleast_2d_or_none(self.cols)
-
+        if not all(
+            [col in table.columns for col, table in zip(cols, self._aux_tables)]
+        ):
+            raise ValueError("All 'cols' must be present in 'aux_tables'.")
         return cols
 
     def _check_operations(self):
