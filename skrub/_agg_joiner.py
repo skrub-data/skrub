@@ -86,7 +86,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
-        If None, `cols` are all columns from `aux_table`, except `aux_key`.
+        If set to None, `cols` are all columns from `aux_table`, except `aux_key`.
 
     operation : str or iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.

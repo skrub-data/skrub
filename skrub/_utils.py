@@ -138,9 +138,10 @@ def atleast_2d_or_none(x):
 
     Note that we don't use ``np.atleast_2d`` because x could be a jagged array.
     """
-    x = atleast_1d_or_none(x)
-    if len(x) == 0:
+    if x is None:
         return [[]]
+    if _is_array_like(x) is not True:
+        x = [x]
 
     is_array_list = [_is_array_like(item) for item in x]
 
