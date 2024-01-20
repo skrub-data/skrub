@@ -337,8 +337,10 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             The augmented input.
         """
         check_is_fitted(self, "aux_table_")
-        skrub_px, _ = get_df_namespace(self.aux_table_)
+        X, _ = self._check_dataframes(X, self.aux_table_)
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
+        skrub_px, _ = get_df_namespace(self.aux_table_)
         X = skrub_px.join(
             left=X,
             right=self.aux_table_,

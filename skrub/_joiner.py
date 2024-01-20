@@ -323,10 +323,9 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
         del y
-        input_is_polars = is_polars(X)
-        # TODO: remove this because already done in fit ?
-        X = self._check_dataframe(X)
         check_is_fitted(self, "vectorizer_")
+        input_is_polars = is_polars(X)
+        X = self._check_dataframe(X)
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_column_name_duplicates(
             X, self._aux_table, self.suffix, main_table_name="X"

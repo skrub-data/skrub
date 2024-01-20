@@ -503,6 +503,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         """
         check_is_fitted(self, "agg_joiners_")
 
+        # TODO: add checks here
+
         for agg_joiner in self.agg_joiners_:
             X = agg_joiner.transform(X)
 
