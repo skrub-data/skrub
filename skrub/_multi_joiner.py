@@ -326,18 +326,27 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         return X, aux_tables
 
     def _check_keys(self, main_key, aux_keys, keys):
+        if keys is not None:
+            if aux_keys is not None or main_key is not None:
+                raise ValueError(
+                    "Can only pass argument 'keys' OR 'main_key' and "
+                    "'aux_keys', not a combination of both."
+                )
+            main_key, aux_keys = keys, [keys]
+        else:
+            if aux_keys is None or main_key is None:
+                raise ValueError(
+                    "Must pass EITHER 'keys', OR ('main_key' AND 'aux_keys')."
+                )
         main_key = atleast_1d_or_none(main_key)
         aux_keys = atleast_2d_or_none(aux_keys)
-        keys = atleast_2d_or_none(keys)
 
-        # TODO: check this, unsure if this works
-        main_key, aux_keys = zip(
-            *[
-                _join_utils.check_key(m_k, a_k, k)
-                for m_k, a_k, k in zip(main_key, aux_keys, keys)
-            ]
-        )
-
+        if len(main_key) != len(aux_keys):
+            raise ValueError(
+                "'main_key' and 'aux_keys' keys have different lengths"
+                f" ({len(main_key)} and {len(aux_keys)}). Cannot join on different"
+                " numbers of columns."
+            )
         return main_key, aux_keys
 
     def _check_missing_columns_in_aux_tables(
@@ -462,9 +471,10 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         self._check_missing_columns_in_aux_tables(
             self._aux_tables, self._aux_keys, "'aux_table'"
         )
-        self._check_column_name_duplicates(
-            X, self.aux_tables, self.suffixes, main_table_name="X"
-        )
+        # TODO
+        # self._check_column_name_duplicates(
+        #    X, self.aux_tables, self.suffixes, main_table_name="X"
+        # )
         self._cols = self._check_cols()
 
         self._operations = self._check_operations()
