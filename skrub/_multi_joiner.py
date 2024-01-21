@@ -341,12 +341,13 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         main_key = atleast_1d_or_none(main_key)
         aux_keys = atleast_2d_or_none(aux_keys)
 
-        if len(main_key) != len(aux_keys):
-            raise ValueError(
-                "'main_key' and 'aux_keys' keys have different lengths"
-                f" ({len(main_key)} and {len(aux_keys)}). Cannot join on different"
-                " numbers of columns."
-            )
+        for aux_key in aux_keys:
+            if len(main_key) != len(aux_key):
+                raise ValueError(
+                    "'main_key' and 'aux_keys' keys have different lengths"
+                    f" ({len(main_key)} and {len(aux_keys)}). Cannot join on different"
+                    " numbers of columns."
+                )
         return main_key, aux_keys
 
     def _check_missing_columns_in_aux_tables(
@@ -377,10 +378,9 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                 for table, key in zip(self._aux_tables, self._aux_keys)
             ]
         cols = atleast_2d_or_none(self.cols)
-        if not all(
-            [col in table.columns for col, table in zip(cols, self._aux_tables)]
-        ):
-            raise ValueError("All 'cols' must be present in 'aux_tables'.")
+        for columns, table in zip(cols, self._aux_tables):
+            if not all([col in table.columns for col in columns]):
+                raise ValueError("All 'cols' must be present in 'aux_tables'.")
         return cols
 
     def _check_operations(self):
@@ -401,7 +401,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         if isinstance(self.operations, str):
             operations = [self.operations] * len(self._aux_tables)
         if _is_array_like(self.operations):
-            np.atleast_2d(self.operations).to_list()
+            operations = np.atleast_2d(self.operations).to_list()
 
         if len(operations) != len(self._aux_tables):
             raise ValueError(
@@ -500,7 +500,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             self.agg_joiners_.append(agg_joiner)
 
         for self.agg_joiner in self.agg_joiners_:
-            self.agg_joiners_.fit(X)
+            self.agg_joiner.fit(X)
 
         return self
 

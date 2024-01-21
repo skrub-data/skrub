@@ -130,7 +130,11 @@ def atleast_1d_or_none(x):
 
 
 def _is_array_like(x):
-    return isinstance(x, Iterable) and not isinstance(x, (str, bytes))
+    return (
+        isinstance(x, Iterable)
+        and not isinstance(x, (str, bytes))
+        and not hasattr(x, "__dataframe__")
+    )
 
 
 def atleast_2d_or_none(x):
