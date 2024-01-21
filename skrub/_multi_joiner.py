@@ -400,8 +400,9 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             operations = [["mean", "mode"]] * len(self._aux_tables)
         if isinstance(self.operations, str):
             operations = [self.operations] * len(self._aux_tables)
+        # TODO: check this case
         if _is_array_like(self.operations):
-            operations = np.atleast_2d(self.operations).to_list()
+            operations = atleast_2d_or_none(self.operations)
 
         if len(operations) != len(self._aux_tables):
             raise ValueError(
@@ -431,7 +432,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         if self.suffixes is None:
             suffixes = [f"_{i+1}" for i in range(len(self._aux_tables))]
         else:
-            suffixes = np.atleast_1d(suffixes).tolist()
+            suffixes = np.atleast_1d(self.suffixes).tolist()
             if len(suffixes) != len(self._aux_tables):
                 raise ValueError(
                     "The number of provided suffixes must match the number of"
