@@ -98,6 +98,11 @@ def is_datetime(column):
 
 
 @_dispatch_column
+def to_datetime(column, format):
+    raise NotImplementedError()
+
+
+@_dispatch_column
 def unique(column):
     column = asdfapi(column)
     unique_values = column.take(column.unique_indices(skip_nulls=False))

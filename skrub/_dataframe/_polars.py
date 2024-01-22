@@ -1,6 +1,7 @@
 """
 Polars specialization of the aggregate and join operations.
 """
+
 import sys
 
 try:
@@ -30,6 +31,10 @@ def to_categorical(column):
 
 def make_categorical_dtype(categories):
     return pl.Enum(categories)
+
+
+def to_datetime(column, format):
+    return column.str.to_datetime(format=format)
 
 
 def native_cast(column, dtype):

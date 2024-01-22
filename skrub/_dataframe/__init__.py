@@ -9,6 +9,7 @@ from ._common import (
     native_dtype,
     skrub_namespace,
     to_categorical,
+    to_datetime,
     unique,
     where,
 )
@@ -26,4 +27,5 @@ __all__ = [
     "native_cast",
     "unique",
     "where",
+    "to_datetime",
 ]

@@ -39,6 +39,10 @@ def where(column, mask, other):
     return column.where(mask, pd.Series(other))
 
 
+def to_datetime(column, format):
+    return pd.to_datetime(column, format=format)
+
+
 def make_dataframe(X, index=None, dtypes=None):
     """Convert an dictionary of columns into a Pandas dataframe.
 

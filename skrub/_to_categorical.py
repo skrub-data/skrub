@@ -1,6 +1,6 @@
 from sklearn.base import BaseEstimator
 
-from skrub._dataframe import (
+from ._dataframe import (
     asdfapi,
     asnative,
     dfns,
