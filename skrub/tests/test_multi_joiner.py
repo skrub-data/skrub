@@ -31,17 +31,23 @@ if POLARS_SETUP:
 
 
 @pytest.mark.parametrize("px", MODULES)
+def test_keys(main, px):
+    # TODO
+    pass
+
+
+@pytest.mark.parametrize("px", MODULES)
 def test_cols(main, px):
     main = px.DataFrame(main)
 
-    # This should work
+    # check providing
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=main,
         keys="userId",
         cols=["rating"],
     )
     multi_agg_joiner.fit(main)
-    assert multi_agg_joiner._cols == ["rating"]
+    assert multi_agg_joiner._cols == [["rating"]]
 
     # This should work
     multi_agg_joiner = MultiAggJoiner(
@@ -70,7 +76,7 @@ def test_operations(main, px):
         aux_tables=main, keys="userId", cols="rating", operations=["mean"]
     )
     multi_agg_joiner.fit(main)
-    assert multi_agg_joiner._operations == ["mean"]
+    assert multi_agg_joiner._operations == [["mean"]]
 
     # This should work
     multi_agg_joiner = MultiAggJoiner(
@@ -80,17 +86,17 @@ def test_operations(main, px):
         operations="mean",
     )
     multi_agg_joiner.fit(main)
-    assert multi_agg_joiner._operations == ["mean", "mean"]
+    assert multi_agg_joiner._operations == [["mean"], ["mean"]]
 
     # This should work
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         keys="userId",
         cols=[["rating"], ["rating"]],
-        operations=["mean", "mean"],
+        operations=[["mean"], ["mean"]],
     )
     multi_agg_joiner.fit(main)
-    assert multi_agg_joiner._operations == ["mean", "mean"]
+    assert multi_agg_joiner._operations == [["mean"], ["mean"]]
 
     # This should not work
     multi_agg_joiner = MultiAggJoiner(
@@ -100,9 +106,20 @@ def test_operations(main, px):
         operations=["mean", "mean", "mode"],
     )
     # TODO: raise an error here
+
+    # This should not work
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main, main],
+        keys="userId",
+        cols=[["rating"], ["rating"]],
+        operations=[["mean"], ["mean", "mode"]],
+    )
+    multi_agg_joiner.fit(main)
+    assert multi_agg_joiner._operations == [["mean"], ["mean", "mode"]]
     pass
 
 
+# TODO: remove this
 def test_input_multiple_tables(main):
     # check foreign key are list of list
     multi_agg_joiner = MultiAggJoiner(
@@ -148,12 +165,28 @@ def test_input_multiple_tables(main):
     # with pytest.raises(ValueError, match=error_msg):
     #    multi_agg_joiner.fit_transform(main)
 
-    # check suffixes with multiple tables
+
+@pytest.mark.parametrize("px", MODULES)
+def test_suffixes(main, px):
+    main = px.DataFrame(main)
+
+    # check default suffixes with multiple tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         main_key="userId",
-        aux_keyss=[["userId"], ["userId"]],
+        aux_keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
     )
-    multi_agg_joiner.check_input(main)
-    assert multi_agg_joiner.suffix_ == ["_1", "_2"]
+    multi_agg_joiner.fit(main)
+    assert multi_agg_joiner._suffixes == ["_1", "_2"]
+
+    # check suffixes when defined
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main, main],
+        main_key="userId",
+        aux_keys=[["userId"], ["userId"]],
+        cols=[["rating"], ["rating"]],
+        suffixes=["_this", "_works"],
+    )
+    multi_agg_joiner.fit(main)
+    assert multi_agg_joiner._suffixes == ["_this", "_works"]

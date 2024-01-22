@@ -399,7 +399,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         if self.operations is None:
             operations = [["mean", "mode"]] * len(self._aux_tables)
         if isinstance(self.operations, str):
-            operations = [self.operations] * len(self._aux_tables)
+            operations = [[self.operations]] * len(self._aux_tables)
         # TODO: check this case
         if _is_array_like(self.operations):
             operations = atleast_2d_or_none(self.operations)
