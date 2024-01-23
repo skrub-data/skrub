@@ -45,6 +45,8 @@ filterwarnings = [
     'ignore:.*ast\.NameConstant is deprecated.*:DeprecationWarning',
     # TODO remove when joblib min version >= 1.4.0
     'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
+    # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
+    'ignore:.*Pyarrow.*:DeprecationWarning',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
