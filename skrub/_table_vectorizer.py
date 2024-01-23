@@ -725,6 +725,10 @@ sparse_output=False), \
             verbose=self.verbose,
             verbose_feature_names_out=self.verbose_feature_names_out,
         )
+        if hasattr(self, "_sklearn_output_config"):
+            self._column_transformer.set_output(
+                transform=self._sklearn_output_config.get("transform", "default"),
+            )
 
         X_enc = self._column_transformer.fit_transform(X, y=y)
 

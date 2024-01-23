@@ -18,7 +18,12 @@ from skrub.tests.utils import transformers_list_equal
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
-SKLEARN_VERSION = parse_version(sklearn.__version__)
+if parse_version(sklearn.__version__) < parse_version("1.4"):
+    PASSTHROUGH = "passthrough"
+else:
+    PASSTHROUGH = FunctionTransformer(
+        accept_sparse=True, check_inverse=False, feature_names_out="one-to-one"
+    )
 
 
 def type_equality(expected_type, actual_type):
@@ -167,15 +172,9 @@ def test_fit_default_transform():
     low_cardinality_transformer = LOW_CARDINALITY_TRANSFORMER.fit(
         X[low_cardinality_cols]
     )
-    if SKLEARN_VERSION < parse_version("1.4"):
-        passthrough_transformer = "passthrough"
-    else:
-        passthrough_transformer = FunctionTransformer(
-            accept_sparse=True, check_inverse=False, feature_names_out="one-to-one"
-        )
 
     expected_transformers = [
-        ("numeric", passthrough_transformer, ["int", "float"]),
+        ("numeric", PASSTHROUGH, ["int", "float"]),
         ("low_cardinality", low_cardinality_transformer, low_cardinality_cols),
     ]
 
@@ -406,7 +405,7 @@ def test_passthrough(X):
     vectorizer.set_output(transform="pandas")
     X_trans = vectorizer.fit_transform(X)
 
-    assert_frame_equal(X.astype("object"), X_trans)
+    assert_frame_equal(X, X_trans)
 
 
 def test_handle_unknown_category():
@@ -460,7 +459,17 @@ def test_handle_unknown_category():
         (
             (MinHashEncoder(), ["str1", "str2"]),
             [
-                ("numeric", "passthrough", ["int", "float"]),
+                (
+                    "numeric",
+                    (
+                        # Replace by "FunctionTransformer" when only supporting
+                        # sklearn >= 1.4
+                        PASSTHROUGH
+                        if isinstance(PASSTHROUGH, str)
+                        else PASSTHROUGH.__class__.__name__
+                    ),
+                    ["int", "float"],
+                ),
                 ("minhashencoder", "MinHashEncoder", ["str1", "str2"]),
                 ("low_cardinality", "OneHotEncoder", ["cat1", "cat2"]),
             ],
@@ -468,7 +477,17 @@ def test_handle_unknown_category():
         (
             ("mh_cat1", MinHashEncoder(), ["cat1"]),
             [
-                ("numeric", "passthrough", ["int", "float"]),
+                (
+                    "numeric",
+                    (
+                        # Replace by "FunctionTransformer" when only supporting
+                        # sklearn >= 1.4
+                        PASSTHROUGH
+                        if isinstance(PASSTHROUGH, str)
+                        else PASSTHROUGH.__class__.__name__
+                    ),
+                    ["int", "float"],
+                ),
                 ("mh_cat1", "MinHashEncoder", ["cat1"]),
                 ("low_cardinality", "OneHotEncoder", ["str1", "str2", "cat2"]),
             ],
