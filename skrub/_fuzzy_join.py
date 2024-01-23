@@ -31,7 +31,7 @@ def fuzzy_join(
     used; which one is unspecified.
 
     To identify the best match for each row, values from the matching columns
-    (``left_key`` and ``right_key``) are vectorized, i.e. represented by vectors of
+    (``left_key`` and ``right_key``) are vectorized, ie represented by vectors of
     continuous values. Then, the Euclidean distances between these vectors are
     computed to find, for each left table row, its nearest neighbor within the
     right table.
@@ -58,13 +58,13 @@ def fuzzy_join(
         in the right table.
 
     'self_join_neighbor'
-        Once the match candidate (i.e. the nearest neigbor from the right
+        Once the match candidate (ie the nearest neigbor from the right
         table) has been found, we find its nearest neighbor in the right
         table (excluding itself). The reference distance is the distance that
         separates those 2 right rows.
 
     'no_rescaling'
-        The reference distance is 1.0, i.e. no rescaling of the distances is
+        The reference distance is 1.0, ie no rescaling of the distances is
         applied.
 
     Parameters
@@ -115,7 +115,7 @@ def fuzzy_join(
         uses the joined features, or to inspect the result of the join and set
         a ``max_dist`` threshold.
     drop_unmatched : bool, default=False
-        Remove rows for which a match was not found in the right table (i.e. for
+        Remove rows for which a match was not found in the right table (ie for
         which the nearest neighbor is further than `max_dist`).
 
     Returns
