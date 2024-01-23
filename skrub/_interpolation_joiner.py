@@ -52,6 +52,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         operating on. Therefore, ``aux_table`` is the ``annual_avg_temp``
         table.
 
+    key : list of str, or str
+        Column names to use for both `main_key` and `aux_key`, when they are
+        the same. Provide either `key` (only) or both `main_key` and `aux_key`.
+
     main_key : list of str, or str
         The columns in the main table used for joining. The main table is the
         argument of ``transform``, to which we add information inferred using
@@ -68,10 +72,6 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         columns provide the features for the estimators to be fitted. As for
         ``main_key``, it is possible to pass a string when using a single
         column.
-
-    key : list of str, or str
-        Column names to use for both `main_key` and `aux_key`, when they are
-        the same. Provide either `key` (only) or both `main_key` and `aux_key`.
 
     suffix : str
         Suffix to append to the ``aux_table``'s column names. You can use it
@@ -176,9 +176,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self,
         aux_table,
         *,
+        key=None,
         main_key=None,
         aux_key=None,
-        key=None,
         suffix="",
         regressor=DEFAULT_REGRESSOR,
         classifier=DEFAULT_CLASSIFIER,
