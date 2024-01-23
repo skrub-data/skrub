@@ -184,14 +184,14 @@ class Joiner(TransformerMixin, BaseEstimator):
     Examples
     --------
     >>> import pandas as pd
-    >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
+    >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
     >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
     ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
     >>> main_table
       Country
     0  France
     1  Italia
-    2   Spain
+    2   Georgia
     >>> aux_table
        Country Capital
     0  Germany  Berlin
@@ -201,14 +201,14 @@ class Joiner(TransformerMixin, BaseEstimator):
     ...     aux_table,
     ...     key="Country",
     ...     suffix="_aux",
-    ...     max_dist=0.9,
+    ...     max_dist=0.8,
     ...     add_match_info=False,
     ... )
     >>> joiner.fit_transform(main_table)
       Country      Country_aux      Capital_aux
     0  France           France            Paris
     1  Italia            Italy             Rome
-    2   Spain              NaN              NaN
+    2  Georgia              NaN              NaN
     """
 
     _match_info_keys = ["distance", "rescaled_distance", "match_accepted"]
