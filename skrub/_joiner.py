@@ -1,6 +1,7 @@
 """
 The Joiner provides fuzzy joining as a scikit-learn transformer.
 """
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -10,7 +11,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import _join_utils, _matching
+from skrub import _join_utils, _matching, _utils
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._datetime_encoder import DatetimeEncoder
 
@@ -339,14 +340,20 @@ class Joiner(TransformerMixin, BaseEstimator):
         ).reset_index(drop=True)
         matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1
+        token = _utils.random_string()
+        left_key_name = f"skrub_left_key_{token}"
+        right_key_name = f"skrub_right_key_{token}"
+        left = X.assign(**{left_key_name: matching_col})
+        right = aux_table.assign(**{right_key_name: np.arange(aux_table.shape[0])})
         join = pd.merge(
-            X,
-            aux_table,
-            left_on=matching_col,
-            right_index=True,
+            left,
+            right,
+            left_on=left_key_name,
+            right_on=right_key_name,
             suffixes=("", ""),
             how="left",
         )
+        join = join.drop([left_key_name, right_key_name], axis=1)
         if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
                 join[info_col_name] = match_result[info_key]
