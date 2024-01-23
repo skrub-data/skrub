@@ -424,8 +424,6 @@ class AggTarget(BaseEstimator, TransformerMixin):
     3         4             2  ...               1        0.666667
     4         5             2  ...               1        0.666667
     5         6             2  ...               1        1.000000
-    <BLANKLINE>
-    [6 rows x 6 columns]
     """
 
     def __init__(
