@@ -21,6 +21,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.compose._column_transformer import _get_transformer_list
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import Bunch
+from sklearn.utils._set_output import _safe_set_output
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder, to_datetime
@@ -726,7 +727,8 @@ sparse_output=False), \
             verbose_feature_names_out=self.verbose_feature_names_out,
         )
         if hasattr(self, "_sklearn_output_config"):
-            self._column_transformer.set_output(
+            _safe_set_output(
+                self._column_transformer,
                 transform=self._sklearn_output_config.get("transform", "default"),
             )
 
