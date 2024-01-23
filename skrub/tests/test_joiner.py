@@ -96,7 +96,7 @@ def test_multiple_keys(px, assert_frame_equal_):
 
 
 def test_pandas_aux_table_index():
-    main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
+    main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
     aux_table = pd.DataFrame(
         {
             "Country": ["Germany", "France", "Italy"],
