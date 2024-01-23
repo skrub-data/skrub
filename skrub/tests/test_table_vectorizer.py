@@ -2,11 +2,13 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_raises
 from pandas.testing import assert_frame_equal
 from scipy.sparse import csr_matrix
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils._testing import skip_if_no_parallel
+from sklearn.utils.fixes import parse_version
 
 from skrub._datetime_encoder import DatetimeEncoder, _is_pandas_format_mixed_available
 from skrub._gap_encoder import GapEncoder
@@ -15,6 +17,8 @@ from skrub._table_vectorizer import LOW_CARDINALITY_TRANSFORMER, TableVectorizer
 from skrub.tests.utils import transformers_list_equal
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
+
+SKLEARN_VERSION = parse_version(sklearn.__version__)
 
 
 def type_equality(expected_type, actual_type):
@@ -163,8 +167,15 @@ def test_fit_default_transform():
     low_cardinality_transformer = LOW_CARDINALITY_TRANSFORMER.fit(
         X[low_cardinality_cols]
     )
+    if SKLEARN_VERSION < parse_version("1.4"):
+        passthrough_transformer = "passthrough"
+    else:
+        passthrough_transformer = FunctionTransformer(
+            accept_sparse=True, check_inverse=False, feature_names_out="one-to-one"
+        )
+
     expected_transformers = [
-        ("numeric", "passthrough", ["int", "float"]),
+        ("numeric", passthrough_transformer, ["int", "float"]),
         ("low_cardinality", low_cardinality_transformer, low_cardinality_cols),
     ]
 

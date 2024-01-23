@@ -567,7 +567,12 @@ sparse_output=False), \
                     "your data has a single feature or array.reshape(1, -1) "
                     "if it contains a single sample."
                 )
-            feature_names = getattr(self, "feature_names_in_", None)
+            feature_names = getattr(
+                self,
+                "feature_names_in_",
+                # by default, we will use "x0", "x1", ...
+                np.asarray([f"x{i}" for i in range(X_array.shape[1])], dtype=object),
+            )
             X = pd.DataFrame(X_array, columns=feature_names)
         else:
             # Create a copy to avoid altering the original data.
