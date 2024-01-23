@@ -32,9 +32,7 @@ This page lists all available functions and classes of `skrub`.
    :nosignatures:
 
    Joiner
-   MultiJoiner
    AggJoiner
-   MultiAggJoiner
    AggTarget
 
 
