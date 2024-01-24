@@ -132,14 +132,14 @@ def fuzzy_join(
     --------
     >>> import pandas as pd
     >>> from skrub import fuzzy_join
-    >>> left_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
+    >>> left_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
     >>> right_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
     ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
     >>> left_table
       Country
     0  France
     1  Italia
-    2   Spain
+    2  Georgia
     >>> right_table
        Country Capital
     0  Germany  Berlin
@@ -150,20 +150,20 @@ def fuzzy_join(
     ...     right_table,
     ...     on="Country",
     ...     suffix="_right",
-    ...     max_dist=1.0,
+    ...     max_dist=0.8,
     ...     add_match_info=False,
     ... )
       Country    Country_right    Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
-    2   Spain              NaN              NaN
+    2   Georgia              NaN              NaN
     >>> fuzzy_join(
     ...     left_table,
     ...     right_table,
     ...     on="Country",
     ...     suffix="_right",
     ...     drop_unmatched=True,
-    ...     max_dist=1.0,
+    ...     max_dist=0.8,
     ...     add_match_info=False,
     ... )
       Country    Country_right    Capital_right
@@ -179,8 +179,8 @@ def fuzzy_join(
     ... )
       Country    Country_right    Capital_right
     0  France           France            Paris
-    1  Italia            Italy             Rome
-    2   Spain          Germany           Berlin
+    1  Italia           Italy             Rome
+    2  Georgia          Germany           Berlin
     """
     # duplicate the key checks performed by the Joiner so we can get better
     # names in error messages

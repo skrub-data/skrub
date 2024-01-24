@@ -1,6 +1,7 @@
 import collections
 import importlib
 import re
+import secrets
 from collections.abc import Hashable
 from typing import Any, Iterable
 
@@ -162,3 +163,7 @@ def atleast_2d_or_none(x):
 
 def clone_if_default(estimator, default_estimator):
     return clone(estimator) if estimator is default_estimator else estimator
+
+
+def random_string():
+    return secrets.token_hex()[:8]
