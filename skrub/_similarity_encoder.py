@@ -239,6 +239,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     Examples
     --------
+    >>> from skrub import SimilarityEncoder
     >>> enc = SimilarityEncoder()
     >>> X = [['Male', 1], ['Female', 3], ['Female', 2]]
     >>> enc.fit(X)
@@ -255,7 +256,6 @@ class SimilarityEncoder(OneHotEncoder):
     >>> enc.transform([['Female', 1], ['Male', 4]])
     array([[1.        , 0.42..., 1.        , 0.        , 0.        ],
            [0.42..., 1.        , 0.        , 0.        , 0.        ]])
-
     >>> enc.get_feature_names_out(['gender', 'group'])
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'],
           dtype=object)
