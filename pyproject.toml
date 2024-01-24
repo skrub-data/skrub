@@ -47,6 +47,10 @@ filterwarnings = [
     'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
     # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
     'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
+    # polars to pandas conversions: polars.DataFrame.to_pandas() raises a
+    # DeprecationWarning whenever there are datetime columns. Should be
+    # addressed in polars or pandas not skrub.
+    'ignore:Passing a BlockManager to DataFrame is deprecated'
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
