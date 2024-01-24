@@ -377,7 +377,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Now, we can inspect the transformers assigned to each column:
 
     >>> tv.transformers_
-    [('numeric', 'passthrough', ['year_first_hired']), \
+    [('numeric', ..., ['year_first_hired']), \
 ('datetime', DatetimeEncoder(), ['date_first_hired']), \
 ('low_cardinality', OneHotEncoder(drop='if_binary', handle_unknown='ignore', \
 sparse_output=False), \
