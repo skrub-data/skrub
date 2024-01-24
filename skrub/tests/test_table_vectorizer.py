@@ -645,8 +645,8 @@ def test_changing_types_int_float() -> None:
     The TableVectorizer shouldn't cast floats to ints
     even if only ints were seen during fit
     """
-    X_train = pd.DataFrame([[1], [2], [3]])
-    X_test = pd.DataFrame([[1], [2], [3.3]])
+    X_train = pd.DataFrame([[1], [2], [3]], columns=["a"])
+    X_test = pd.DataFrame([[1], [2], [3.3]], columns=["a"])
     vectorizer = TableVectorizer().fit(X_train)
     X_trans = vectorizer.transform(X_test)
     expected_X_trans = np.array([[1.0], [2.0], [3.3]])
