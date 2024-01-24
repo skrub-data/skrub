@@ -71,149 +71,145 @@ def _make_vectorizer(table, string_encoder, rescale):
 class Joiner(TransformerMixin, BaseEstimator):
     """Augment features in a main table by fuzzy-joining an auxiliary table to it.
 
-        This transformer is initialized with an auxiliary table ``aux_table``. It
-        transforms a main table by joining it, with approximate ("fuzzy") matching,
-        to the auxiliary table. The output of ``transform`` has the same rows as
-        the main table (ie as the argument passed to ``transform``), but each row
-        is augmented with values from the best match in the auxiliary table.
+    This transformer is initialized with an auxiliary table ``aux_table``. It
+    transforms a main table by joining it, with approximate ("fuzzy") matching,
+    to the auxiliary table. The output of ``transform`` has the same rows as
+    the main table (ie as the argument passed to ``transform``), but each row
+    is augmented with values from the best match in the auxiliary table.
 
-        To identify the best match for each row, values from the matching columns
-        (``main_key`` and ``aux_key``) are vectorized, ie represented by vectors of
-        continuous values. Then, the Euclidean distances between these vectors are
-        computed to find, for each main table row, its nearest neighbor within the
-        auxiliary table.
+    To identify the best match for each row, values from the matching columns
+    (``main_key`` and ``aux_key``) are vectorized, ie represented by vectors of
+    continuous values. Then, the Euclidean distances between these vectors are
+    computed to find, for each main table row, its nearest neighbor within the
+    auxiliary table.
 
-        Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
-        between vectors that are separated by a distance (strictly) greater than
-        ``max_dist`` will be rejected. We will consider that main table rows that
-        are farther than ``max_dist`` from their nearest neighbor do not have a
-        matching row in the auxiliary table, and the output will contain nulls for
-        the entries that would normally have come from the auxiliary table (as in a
-        traditional left join).
+    Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
+    between vectors that are separated by a distance (strictly) greater than
+    ``max_dist`` will be rejected. We will consider that main table rows that
+    are farther than ``max_dist`` from their nearest neighbor do not have a
+    matching row in the auxiliary table, and the output will contain nulls for
+    the entries that would normally have come from the auxiliary table (as in a
+    traditional left join).
 
-        To make it easier to set a ``max_dist`` threshold, the distances are
-        rescaled by dividing them by a reference distance, which can be chosen with
-        ``ref_dist``. The default is ``'random_pairs'``. The possible choices are:
+    To make it easier to set a ``max_dist`` threshold, the distances are
+    rescaled by dividing them by a reference distance, which can be chosen with
+    ``ref_dist``. The default is ``'random_pairs'``. The possible choices are:
 
-        'random_pairs'
-            Pairs of rows are sampled randomly from the auxiliary table and their
-            distance is computed. The reference distance is the first quartile of
-            those distances.
+    'random_pairs'
+        Pairs of rows are sampled randomly from the auxiliary table and their
+        distance is computed. The reference distance is the first quartile of
+        those distances.
 
-        'second_neighbor'
-            The reference distance is the distance to the *second* nearest neighbor
-            in the auxiliary table.
+    'second_neighbor'
+        The reference distance is the distance to the *second* nearest neighbor
+        in the auxiliary table.
 
-        'self_join_neighbor'
-            Once the match candidate (ie the nearest neigbor from the auxiliary
-            table) has been found, we find its nearest neighbor in the auxiliary
-            table (excluding itself). The reference distance is the distance that
-            separates those 2 auxiliary rows.
+    'self_join_neighbor'
+        Once the match candidate (ie the nearest neigbor from the auxiliary
+        table) has been found, we find its nearest neighbor in the auxiliary
+        table (excluding itself). The reference distance is the distance that
+        separates those 2 auxiliary rows.
 
-        'no_rescaling'
-            The reference distance is 1.0, ie no rescaling of the distances is
-            applied.
+    'no_rescaling'
+        The reference distance is 1.0, ie no rescaling of the distances is
+        applied.
 
-        Parameters
-        ----------
-        aux_table : :obj:`~pandas.DataFrame`
-            The auxiliary table, which will be fuzzy-joined to the main table when
-            calling ``transform``.
-        main_key : str or list of str, default=None
-            The column names in the main table on which the join will be performed.
-            Can be a string if joining on a single column.
-            If ``None``, `aux_key` must also be ``None`` and `key` must be provided.
-        aux_key : str or list of str, default=None
-            The column names in the auxiliary table on which the join will
-            be performed. Can be a string if joining on a single column.
-            If ``None``, `main_key` must also be ``None`` and `key` must be provided.
-        key : str or list of str, default=None
-            The column names to use for both ``main_key`` and ``aux_key`` when they
-            are the same. Provide either ``key`` or both ``main_key`` and ``aux_key``.
-        suffix : str, default=""
-            Suffix to append to the ``aux_table``'s column names. You can use it
-            to avoid duplicate column names in the join.
-        max_dist : float, default=np.inf
-            Maximum acceptable (rescaled) distance between a row in the
-            ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
-            are farther apart are not considered to match. By default, the distance
-            is rescaled so that a value between 0 and 1 is typically a good choice,
-            although rescaled distances can be greater than 1 for some choices of
-            ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
-            mean that no matches are rejected.
-        ref_dist : reference distance for rescaling, default = 'random_pairs'
-            Options are {"random_pairs", "second_neighbor", "self_join_neighbor",
-            "no_rescaling"}. See above for a description of each option. To
-            facilitate the choice of ``max_dist``, distances between rows in
-            ``main_table`` and their nearest neighbor in ``aux_table`` will be
-            rescaled by this reference distance.
-        string_encoder : scikit-learn transformer used to vectorize text columns
-            By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
-            is used. Here we use raw TF-IDF features rather than transforming them
-            for example with ``GapEncoder`` or ``MinHashEncoder`` because it is
-            faster, these features are only used to find nearest neighbors and not
-            used by downstream estimators, and distances between TF-IDF vectors
-            have a somewhat simpler interpretation.
-        add_match_info : bool, default=True
-            Insert some columns whose names start with `skrub_Joiner` containing
-            the distance, rescaled distance and whether the rescaled distance is
-            above the threshold. Those values can be helpful for an estimator that
-            uses the joined features, or to inspect the result of the join and set
-            a ``max_dist`` threshold.
+    Parameters
+    ----------
+    aux_table : :obj:`~pandas.DataFrame`
+        The auxiliary table, which will be fuzzy-joined to the main table when
+        calling ``transform``.
+    main_key : str or list of str, default=None
+        The column names in the main table on which the join will be performed.
+        Can be a string if joining on a single column.
+        If ``None``, `aux_key` must also be ``None`` and `key` must be provided.
+    aux_key : str or list of str, default=None
+        The column names in the auxiliary table on which the join will
+        be performed. Can be a string if joining on a single column.
+        If ``None``, `main_key` must also be ``None`` and `key` must be provided.
+    key : str or list of str, default=None
+        The column names to use for both ``main_key`` and ``aux_key`` when they
+        are the same. Provide either ``key`` or both ``main_key`` and ``aux_key``.
+    suffix : str, default=""
+        Suffix to append to the ``aux_table``'s column names. You can use it
+        to avoid duplicate column names in the join.
+    max_dist : float, default=np.inf
+        Maximum acceptable (rescaled) distance between a row in the
+        ``main_table`` and its nearest neighbor in the ``aux_table``. Rows that
+        are farther apart are not considered to match. By default, the distance
+        is rescaled so that a value between 0 and 1 is typically a good choice,
+        although rescaled distances can be greater than 1 for some choices of
+        ``ref_dist``. ``None``, ``"inf"``, ``float("inf")`` or ``numpy.inf``
+        mean that no matches are rejected.
+    ref_dist : reference distance for rescaling, default = 'random_pairs'
+        Options are {"random_pairs", "second_neighbor", "self_join_neighbor",
+        "no_rescaling"}. See above for a description of each option. To
+        facilitate the choice of ``max_dist``, distances between rows in
+        ``main_table`` and their nearest neighbor in ``aux_table`` will be
+        rescaled by this reference distance.
+    string_encoder : scikit-learn transformer used to vectorize text columns
+        By default a ``HashingVectorizer`` combined with a ``TfidfTransformer``
+        is used. Here we use raw TF-IDF features rather than transforming them
+        for example with ``GapEncoder`` or ``MinHashEncoder`` because it is
+        faster, these features are only used to find nearest neighbors and not
+        used by downstream estimators, and distances between TF-IDF vectors
+        have a somewhat simpler interpretation.
+    add_match_info : bool, default=True
+        Insert some columns whose names start with `skrub_Joiner` containing
+        the distance, rescaled distance and whether the rescaled distance is
+        above the threshold. Those values can be helpful for an estimator that
+        uses the joined features, or to inspect the result of the join and set
+        a ``max_dist`` threshold.
 
-        Attributes
-        ----------
-        max_dist_ : the maximum distance for a match to be accepted
-            Equal to the parameter ``max_dist`` except that ``"inf"`` and ``None``
-            are mapped to ``np.inf`` (ie accept all matches).
+    Attributes
+    ----------
+    max_dist_ : the maximum distance for a match to be accepted
+        Equal to the parameter ``max_dist`` except that ``"inf"`` and ``None``
+        are mapped to ``np.inf`` (ie accept all matches).
 
-        vectorizer_ : scikit-learn ColumnTransformer
-            The fitted transformer used to transform the matching columns into
-            numerical vectors.
+    vectorizer_ : scikit-learn ColumnTransformer
+        The fitted transformer used to transform the matching columns into
+        numerical vectors.
 
-        See Also
-        --------
-        AggJoiner :
-            Aggregate auxiliary dataframes before joining them on a base dataframe.
+    See Also
+    --------
+    AggJoiner :
+        Aggregate auxiliary dataframes before joining them on a base dataframe.
 
-        fuzzy_join :
-            Join two tables (dataframes) based on approximate column matching. This
-            is the same functionality as provided by the ``Joiner`` but exposed as
-            a function rather than a transformer.
+    fuzzy_join :
+        Join two tables (dataframes) based on approximate column matching. This
+        is the same functionality as provided by the ``Joiner`` but exposed as
+        a function rather than a transformer.
 
-        Examples
-        --------
-        >>> import pandas as pd
-    <<<<<<< HEAD
-        >>> from skrub import Joiner
-        >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
-    =======
-        >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
-    >>>>>>> origin/main
-        >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
-        ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
-        >>> main_table
-          Country
-        0  France
-        1  Italia
-        2   Georgia
-        >>> aux_table
-           Country Capital
-        0  Germany  Berlin
-        1   France   Paris
-        2    Italy    Rome
-        >>> joiner = Joiner(
-        ...     aux_table,
-        ...     key="Country",
-        ...     suffix="_aux",
-        ...     max_dist=0.8,
-        ...     add_match_info=False,
-        ... )
-        >>> joiner.fit_transform(main_table)
-          Country      Country_aux      Capital_aux
-        0  France           France            Paris
-        1  Italia            Italy             Rome
-        2  Georgia              NaN              NaN
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skrub import Joiner
+    >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
+    >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
+    ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
+    >>> main_table
+      Country
+    0  France
+    1  Italia
+    2   Georgia
+    >>> aux_table
+       Country Capital
+    0  Germany  Berlin
+    1   France   Paris
+    2    Italy    Rome
+    >>> joiner = Joiner(
+    ...     aux_table,
+    ...     key="Country",
+    ...     suffix="_aux",
+    ...     max_dist=0.8,
+    ...     add_match_info=False,
+    ... )
+    >>> joiner.fit_transform(main_table)
+      Country      Country_aux      Capital_aux
+    0  France           France            Paris
+    1  Italia            Italy             Rome
+    2  Georgia              NaN              NaN
     """
 
     _match_info_keys = ["distance", "rescaled_distance", "match_accepted"]
