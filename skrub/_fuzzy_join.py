@@ -131,6 +131,7 @@ def fuzzy_join(
     Examples
     --------
     >>> import pandas as pd
+    >>> from skrub import fuzzy_join
     >>> left_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
     >>> right_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
     ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
