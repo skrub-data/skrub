@@ -34,9 +34,9 @@ def check_key(
         Can be provided in place of `main_key` and `aux_key` when they are the
         same. We must provide non-``None`` values for either `key` or both
         `main_key` and `aux_key`.
-    main_key_name : str
+    main_key_name : str, default="main_key"
         How to refer to `main_key` in error messages.
-    aux_key_name : str
+    aux_key_name : str, default="aux_key"
         How to refer to `aux_key` in error messages.
     key_name : str, default="key"
         How to refer to `key` in error messages.
