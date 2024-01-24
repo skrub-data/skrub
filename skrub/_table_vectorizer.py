@@ -370,6 +370,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     1      M        POL  ...       09/12/1988             1988
     2      F        HHS  ...       11/19/1989             1989
 
+    >>> from skrub import TableVectorizer
     >>> tv = TableVectorizer()
     >>> tv.fit(ds.X)
     TableVectorizer()

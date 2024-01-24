@@ -134,6 +134,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> import pandas as pd
+    >>> from skrub import AggJoiner
     >>> main = pd.DataFrame({
     ...     "airportId": [1, 2],
     ...     "airportName": ["Paris CDG", "NY JFK"],
@@ -409,6 +410,8 @@ class AggTarget(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> import pandas as pd
+    >>> import numpy as np
+    >>> from skrub import AggTarget
     >>> X = pd.DataFrame({
     ...     "flightId": range(1, 7),
     ...     "from_airport": [1, 1, 1, 2, 2, 2],
