@@ -90,7 +90,7 @@ def aggregate(
     cols_to_agg : str or Iterable[str]
         The columns to aggregate.
 
-    num_operations : str or Iterable[str], default="mean"
+    num_operations : str or Iterable[str], default=("mean",)
         The reduction functions to apply on numerical columns
         in ``cols_to_agg`` during the aggregation.
 
