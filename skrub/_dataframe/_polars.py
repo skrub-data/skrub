@@ -105,7 +105,7 @@ def aggregate(
         The reduction functions to apply on numerical columns
         in ``cols_to_agg`` during the aggregation.
 
-    categ_operations : str or Iterable[str]
+    categ_operations : str or Iterable[str], default=("mode",)
         The reduction functions to apply on categorical columns
         in ``cols_to_agg`` during the aggregation.
 
