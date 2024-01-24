@@ -26,7 +26,7 @@ def make_dataframe(X, index=None, dtypes=None):
         cast entire pandas object to the same type. Alternatively, use a
         mapping, e.g. {col: dtype, ...}, where col is a column label and dtype is
         a numpy.dtype or Python type to cast one or more of the DataFrame's
-        columns to column-specific types
+        columns to column-specific types.
 
     Returns
     -------
@@ -94,7 +94,7 @@ def aggregate(
         The reduction functions to apply on numerical columns
         in ``cols_to_agg`` during the aggregation.
 
-    categ_operations : str or Iterable[str], default="mode"
+    categ_operations : str or Iterable[str], default=("mode",)
         The reduction functions to apply on categorical columns
         in ``cols_to_agg`` during the aggregation.
 
