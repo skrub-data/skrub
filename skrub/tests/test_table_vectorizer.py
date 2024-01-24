@@ -2,11 +2,13 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_raises
 from pandas.testing import assert_frame_equal
 from scipy.sparse import csr_matrix
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils._testing import skip_if_no_parallel
+from sklearn.utils.fixes import parse_version
 
 from skrub._datetime_encoder import DatetimeEncoder, _is_pandas_format_mixed_available
 from skrub._gap_encoder import GapEncoder
@@ -15,6 +17,13 @@ from skrub._table_vectorizer import LOW_CARDINALITY_TRANSFORMER, TableVectorizer
 from skrub.tests.utils import transformers_list_equal
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
+
+if parse_version(sklearn.__version__) < parse_version("1.4"):
+    PASSTHROUGH = "passthrough"
+else:
+    PASSTHROUGH = FunctionTransformer(
+        accept_sparse=True, check_inverse=False, feature_names_out="one-to-one"
+    )
 
 
 def type_equality(expected_type, actual_type):
@@ -163,8 +172,9 @@ def test_fit_default_transform():
     low_cardinality_transformer = LOW_CARDINALITY_TRANSFORMER.fit(
         X[low_cardinality_cols]
     )
+
     expected_transformers = [
-        ("numeric", "passthrough", ["int", "float"]),
+        ("numeric", PASSTHROUGH, ["int", "float"]),
         ("low_cardinality", low_cardinality_transformer, low_cardinality_cols),
     ]
 
@@ -395,7 +405,7 @@ def test_passthrough(X):
     vectorizer.set_output(transform="pandas")
     X_trans = vectorizer.fit_transform(X)
 
-    assert_frame_equal(X.astype("object"), X_trans)
+    assert_frame_equal(X, X_trans)
 
 
 def test_handle_unknown_category():
@@ -449,7 +459,17 @@ def test_handle_unknown_category():
         (
             (MinHashEncoder(), ["str1", "str2"]),
             [
-                ("numeric", "passthrough", ["int", "float"]),
+                (
+                    "numeric",
+                    (
+                        # Replace by "FunctionTransformer" when only supporting
+                        # sklearn >= 1.4
+                        PASSTHROUGH
+                        if isinstance(PASSTHROUGH, str)
+                        else PASSTHROUGH.__class__.__name__
+                    ),
+                    ["int", "float"],
+                ),
                 ("minhashencoder", "MinHashEncoder", ["str1", "str2"]),
                 ("low_cardinality", "OneHotEncoder", ["cat1", "cat2"]),
             ],
@@ -457,7 +477,17 @@ def test_handle_unknown_category():
         (
             ("mh_cat1", MinHashEncoder(), ["cat1"]),
             [
-                ("numeric", "passthrough", ["int", "float"]),
+                (
+                    "numeric",
+                    (
+                        # Replace by "FunctionTransformer" when only supporting
+                        # sklearn >= 1.4
+                        PASSTHROUGH
+                        if isinstance(PASSTHROUGH, str)
+                        else PASSTHROUGH.__class__.__name__
+                    ),
+                    ["int", "float"],
+                ),
                 ("mh_cat1", "MinHashEncoder", ["cat1"]),
                 ("low_cardinality", "OneHotEncoder", ["str1", "str2", "cat2"]),
             ],
@@ -615,8 +645,8 @@ def test_changing_types_int_float() -> None:
     The TableVectorizer shouldn't cast floats to ints
     even if only ints were seen during fit
     """
-    X_train = pd.DataFrame([[1], [2], [3]])
-    X_test = pd.DataFrame([[1], [2], [3.3]])
+    X_train = pd.DataFrame([[1], [2], [3]], columns=["a"])
+    X_test = pd.DataFrame([[1], [2], [3.3]], columns=["a"])
     vectorizer = TableVectorizer().fit(X_train)
     X_trans = vectorizer.transform(X_test)
     expected_X_trans = np.array([[1.0], [2.0], [3.3]])
