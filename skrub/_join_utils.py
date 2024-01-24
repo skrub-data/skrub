@@ -38,7 +38,7 @@ def check_key(
         How to refer to `main_key` in error messages.
     aux_key_name : str
         How to refer to `aux_key` in error messages.
-    key_name : str
+    key_name : str, default="key"
         How to refer to `key` in error messages.
 
     Returns
