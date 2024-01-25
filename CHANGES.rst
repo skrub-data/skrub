@@ -9,13 +9,29 @@ Changes
 Ongoing development
 =====================
 
-Skrub has not been released yet. It is currently undergoing fast
-development and backward compatibility is not ensured.
+Skrub is a very recent package.
+It is currently undergoing fast development and backward compatibility is not ensured.
+
+Major changes
+-------------
+
+Minor changes
+-------------
+
+skrub release 0.1.0
+===================
+
 
 Major changes
 -------------
 * :class:`TargetEncoder` has been removed in favor of
   :class:`sklearn.preprocessing.TargetEncoder`, available since scikit-learn 1.3.
+
+* :class:`Joiner` and :func:`fuzzy_join` support several ways of rescaling
+  distances; ``match_score`` has been replaced by ``max_dist``; bugs which
+  prevented the Joiner to consistently vectorize inputs and accept or reject
+  matches across calls to transform have been fixed. :pr:`821` by :user:`Jérôme
+  Dockès <jeromedockes>`.
 
 * :class:`InterpolationJoiner` was added to join two tables by using
   machine-learning to infer the matching rows from the second table.
@@ -138,9 +154,6 @@ Minor changes
 
   - Better default hyperparameters: `batch_size` now defaults to 1024, and `max_iter_e_steps`
     to 1.
-
-Minor changes
--------------
 
 * Removed the `most_frequent` and `k-means` strategies from the :class:`SimilarityEncoder`.
   These strategy were used for scalability reasons, but we recommend using the :class:`MinHashEncoder`

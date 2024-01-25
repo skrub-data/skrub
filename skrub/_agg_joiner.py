@@ -75,7 +75,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
     Apply numerical and categorical aggregation operations on the columns
     to aggregate, selected by dtypes. See the list of supported operations
-    at the parameter `agg_ops`.
+    at the parameter `operation`.
 
     The grouping columns used during the aggregation are the columns used
     as keys for joining.
@@ -107,7 +107,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         Aggregation operations to perform on the auxiliary table.
 
         numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-            'hist' and 'value_counts' accepts an integer argument to parametrize
+            'hist' and 'value_counts' accept an integer argument to parametrize
             the binning.
 
         categorical : {"mode", "count", "value_counts"}
@@ -134,6 +134,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> import pandas as pd
+    >>> from skrub import AggJoiner
     >>> main = pd.DataFrame({
     ...     "airportId": [1, 2],
     ...     "airportName": ["Paris CDG", "NY JFK"],
@@ -383,8 +384,8 @@ class AggTarget(BaseEstimator, TransformerMixin):
     operation : str or iterable of str, optional
         Aggregation operations to perform on the auxiliary table.
 
-        numerical : {"sum", "mean", "std", "min", "max", "hist(3)", "value_counts"}
-            'hist' and 'value_counts' accepts an integer argument to parametrize
+        numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
+            'hist' and 'value_counts' accept an integer argument to parametrize
             the binning.
 
         categorical : {"mode", "count", "value_counts"}
@@ -409,6 +410,8 @@ class AggTarget(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> import pandas as pd
+    >>> import numpy as np
+    >>> from skrub import AggTarget
     >>> X = pd.DataFrame({
     ...     "flightId": range(1, 7),
     ...     "from_airport": [1, 1, 1, 2, 2, 2],
@@ -428,8 +431,6 @@ class AggTarget(BaseEstimator, TransformerMixin):
     3         4             2  ...               1        0.666667
     4         5             2  ...               1        0.666667
     5         6             2  ...               1        1.000000
-    <BLANKLINE>
-    [6 rows x 6 columns]
     """
 
     def __init__(

@@ -7,6 +7,7 @@ from skrub._dataframe._polars import (
     join,
     make_dataframe,
     make_series,
+    rename_columns,
 )
 
 if POLARS_SETUP:
@@ -99,3 +100,9 @@ def test_make_series(dtype):
 
     with pytest.raises(ValueError, match=r"(?=.*Polars series)(?=.*index)"):
         make_series(X, index=[0, 1])
+
+
+def test_rename_columns():
+    df = pl.DataFrame({"a column": [1], "another": [1]})
+    df = rename_columns(df, str.swapcase)
+    assert list(df.columns) == ["A COLUMN", "ANOTHER"]

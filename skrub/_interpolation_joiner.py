@@ -136,6 +136,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> buildings = pd.DataFrame(
     ...     {"latitude": [1.0, 2.0], "longitude": [1.0, 2.0], "n_stories": [3, 7]}
     ... )
@@ -146,12 +147,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     ...         "avg_temp": [10.0, 11.0, 15.0, 16.0, 20.0],
     ...     }
     ... )
-
     >>> buildings
        latitude  longitude  n_stories
     0       1.0        1.0          3
     1       2.0        2.0          7
-
     >>> annual_avg_temp
        latitude  longitude  avg_temp
     0       1.2        0.8      10.0
@@ -160,8 +159,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     3       1.7        1.8      16.0
     4       5.0        5.0      20.0
 
-    >>> from sklearn.neighbors import KNeighborsRegressor
+    Let's interpolate the average temperature:
 
+    >>> from sklearn.neighbors import KNeighborsRegressor
+    >>> from skrub import InterpolationJoiner
     >>> InterpolationJoiner(
     ...     annual_avg_temp,
     ...     key=["latitude", "longitude"],
@@ -299,7 +300,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         )
         prediction_results = self._check_prediction_results(prediction_results)
         predictions = [res["predictions"] for res in prediction_results]
-        predictions = _add_column_name_suffix(predictions, self.suffix)
+        predictions = [
+            _join_utils.add_column_name_suffix(df, self.suffix) for df in predictions
+        ]
         for part in predictions:
             part.index = main_table.index
         return pd.concat([main_table] + predictions, axis=1)
@@ -430,12 +433,3 @@ def _predict(key_values, columns, estimator, propagate_exceptions):
         "columns": columns,
         "shape": (key_values.shape[0], len(columns)),
     }
-
-
-def _add_column_name_suffix(dataframes, suffix):
-    if suffix == "":
-        return dataframes
-    renamed = []
-    for df in dataframes:
-        renamed.append(df.rename(columns={c: f"{c}{suffix}" for c in df.columns}))
-    return renamed
