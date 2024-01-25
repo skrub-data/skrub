@@ -2,7 +2,8 @@
 from collections import Counter
 
 from skrub import _utils
-from skrub._dataframe._namespace import get_df_namespace
+
+from ._dataframe import asdfapi, asnative
 
 
 def check_key(
@@ -84,12 +85,12 @@ def check_missing_columns(table, key, table_name):
     table_name : str
         Name by which to refer to `table` in the error message if necessary.
     """
-    missing_columns = set(key) - set(table.columns)
+    missing_columns = set(key) - set(asdfapi(table).column_names)
     if not missing_columns:
         return
     raise ValueError(
         "The following columns cannot be used for joining because they do not exist"
-        f" in {table_name}:\n{missing_columns}"
+        f" in {table_name}: \n{missing_columns}"
     )
 
 
@@ -148,5 +149,7 @@ def check_column_name_duplicates(
 
 
 def add_column_name_suffix(dataframe, suffix):
-    ns, _ = get_df_namespace(dataframe)
-    return ns.rename_columns(dataframe, f"{{}}{suffix}".format)
+    api_df = asdfapi(dataframe)
+    renaming = {name: f"{name}{suffix}" for name in api_df.column_names}
+    api_df = api_df.rename(renaming)
+    return asnative(api_df)
