@@ -7,9 +7,53 @@ def asdfapi(obj):
         return obj.__dataframe_consortium_standard__()
     if hasattr(obj, "__column_consortium_standard__"):
         return obj.__column_consortium_standard__()
+    try:
+        return _asdfapi_old_pandas(obj)
+    except (ImportError, TypeError):
+        pass
+    try:
+        return _asdfapi_old_polars(obj)
+    except (ImportError, TypeError):
+        pass
     raise TypeError(
         f"{obj} cannot be converted to DataFrame Consortium Standard object."
     )
+
+
+def _asdfapi_old_pandas(obj):
+    import pandas as pd
+
+    if isinstance(obj, pd.DataFrame):
+        from dataframe_api_compat.pandas_standard import (
+            convert_to_standard_compliant_dataframe,
+        )
+
+        return convert_to_standard_compliant_dataframe(obj)
+    if isinstance(obj, pd.Series):
+        from dataframe_api_compat.pandas_standard import (
+            convert_to_standard_compliant_column,
+        )
+
+        return convert_to_standard_compliant_column(obj)
+    raise TypeError()
+
+
+def _asdfapi_old_polars(obj):
+    import polars as pl
+
+    if isinstance(obj, (pl.DataFrame, pl.LazyFrame)):
+        from dataframe_api_compat.polars_standard import (
+            convert_to_standard_compliant_dataframe,
+        )
+
+        return convert_to_standard_compliant_dataframe(obj)
+    if isinstance(obj, pl.Series):
+        from dataframe_api_compat.polars_standard import (
+            convert_to_standard_compliant_column,
+        )
+
+        return convert_to_standard_compliant_column(obj)
+    raise TypeError()
 
 
 def asnative(obj):
