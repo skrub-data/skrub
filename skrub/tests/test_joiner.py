@@ -5,6 +5,7 @@ from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal
 
 from skrub import Joiner
+from skrub import _dataframe as sb
 from skrub._dataframe._polars import POLARS_SETUP
 
 MODULES = [pd]
@@ -44,7 +45,7 @@ def test_joiner(px):
     )
 
     joiner.fit(main_table)
-    big_table = joiner.transform(main_table)
+    big_table = sb.collect(joiner.transform(main_table))
     assert big_table.shape == (main_table.shape[0], 3)
     assert_array_equal(
         big_table["Population"].to_numpy(),
@@ -81,17 +82,17 @@ def test_multiple_keys(px, assert_frame_equal_):
         main_key=["Co", "Ca"],
         add_match_info=False,
     )
-    result = joiner_list.fit_transform(df)
+    result = sb.collect(joiner_list.fit_transform(df))
     try:
         expected = px.concat([df, df2], axis=1)
     except TypeError:
         expected = px.concat([df, df2], how="horizontal")
-    assert_frame_equal_(result, expected)
+    assert_frame_equal_(sb.collect(result), expected)
 
     joiner_list = Joiner(
         aux_table=df2, aux_key="CA", main_key="Ca", add_match_info=False
     )
-    result = joiner_list.fit_transform(df)
+    result = sb.collect(joiner_list.fit_transform(df))
     assert_frame_equal_(result, expected)
 
 

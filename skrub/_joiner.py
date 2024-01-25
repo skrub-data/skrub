@@ -3,7 +3,6 @@ The Joiner provides fuzzy joining as a scikit-learn transformer.
 """
 
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
@@ -12,12 +11,18 @@ from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _join_utils, _matching, _utils
-from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._datetime_encoder import DatetimeEncoder
+
+from . import _dataframe as sb
+from ._dataframe import asdfapi, asnative, dfapi_ns
 
 
 def _as_str(column):
-    return column.fillna("").astype(str)
+    column = asdfapi(column)
+    column = column.fill_null("")
+    ns = dfapi_ns(column)
+    column = column.cast(ns.String())
+    return asnative(column)
 
 
 DEFAULT_STRING_ENCODER = make_pipeline(
@@ -45,17 +50,17 @@ def _make_vectorizer(table, string_encoder, rescale):
     In addition if ``rescale`` is ``True``, a StandardScaler is applied to
     numeric and datetime columns.
     """
-    transformers = [
-        (clone(string_encoder), c)
-        for c in table.select_dtypes(include=["string", "category", "object"]).columns
-    ]
-    num_columns = table.select_dtypes(include="number").columns
-    if not num_columns.empty:
+    numeric_columns = sb.numeric_column_names(table)
+    dt_columns = sb.temporal_column_names(table)
+    object_columns = list(
+        set(asdfapi(table).column_names).difference(numeric_columns, dt_columns)
+    )
+    transformers = [(clone(string_encoder), c) for c in object_columns]
+    if numeric_columns:
         transformers.append(
-            (StandardScaler() if rescale else "passthrough", num_columns)
+            (StandardScaler() if rescale else "passthrough", numeric_columns)
         )
-    dt_columns = table.select_dtypes(["datetime", "datetimetz"]).columns
-    if not dt_columns.empty:
+    if dt_columns:
         transformers.append(
             (
                 make_pipeline(
@@ -243,17 +248,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         self.add_match_info = add_match_info
 
-    def _check_dataframe(self, dataframe):
-        # TODO: add support for polars, ATM we just convert to pandas
-        if is_polars(dataframe):
-            return dataframe.to_pandas()
-        if is_pandas(dataframe):
-            return dataframe
-        raise TypeError(
-            f"{self.__class__.__qualname__} only operates on Pandas or Polars"
-            " dataframes."
-        )
-
     def _check_max_dist(self):
         if (
             self.max_dist is None
@@ -288,24 +282,24 @@ class Joiner(TransformerMixin, BaseEstimator):
             Fitted Joiner instance (self).
         """
         del y
-        X = self._check_dataframe(X)
-        self._aux_table = self._check_dataframe(self.aux_table)
         self._check_ref_dist()
         self._check_max_dist()
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
+        _join_utils.check_missing_columns(self.aux_table, self._aux_key, "'aux_table'")
         _join_utils.check_column_name_duplicates(
-            X, self._aux_table, self.suffix, main_table_name="X"
+            X, self.aux_table, self.suffix, main_table_name="X"
         )
         self.vectorizer_ = _make_vectorizer(
-            self._aux_table[self._aux_key],
+            sb.select(self.aux_table, self._aux_key),
             self.string_encoder,
             rescale=self.ref_dist != "no_rescaling",
         )
-        aux = self.vectorizer_.fit_transform(self._aux_table[self._aux_key])
+        aux = self.vectorizer_.fit_transform(
+            sb.collect(sb.select(self.aux_table, self._aux_key))
+        )
         self._matching.fit(aux)
         return self
 
@@ -325,41 +319,39 @@ class Joiner(TransformerMixin, BaseEstimator):
             The final joined table.
         """
         del y
-        input_is_polars = is_polars(X)
-        X = self._check_dataframe(X)
         check_is_fitted(self, "vectorizer_")
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_column_name_duplicates(
-            X, self._aux_table, self.suffix, main_table_name="X"
+            X, self.aux_table, self.suffix, main_table_name="X"
         )
-        main = self.vectorizer_.transform(
-            X[self._main_key].set_axis(self._aux_key, axis="columns")
-        )
+        main = sb.select(X, self._main_key)
+        main = sb.set_column_names(main, self._aux_key)
+        main = self.vectorizer_.transform(sb.collect(main))
         match_result = self._matching.match(main, self.max_dist_)
-        aux_table = _join_utils.add_column_name_suffix(
-            self._aux_table, self.suffix
-        ).reset_index(drop=True)
+        aux_table = _join_utils.add_column_name_suffix(self.aux_table, self.suffix)
         matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1
         token = _utils.random_string()
         left_key_name = f"skrub_left_key_{token}"
         right_key_name = f"skrub_right_key_{token}"
-        left = X.assign(**{left_key_name: matching_col})
-        right = aux_table.assign(**{right_key_name: np.arange(aux_table.shape[0])})
-        join = pd.merge(
-            left,
+        ns = dfapi_ns(X)
+        left = asdfapi(X).assign(
+            ns.column_from_1d_array(matching_col, name=left_key_name)
+        )
+        n_rows = asdfapi(aux_table).persist().shape()[0]
+        right = asdfapi(aux_table).assign(
+            ns.column_from_1d_array(np.arange(n_rows), name=right_key_name)
+        )
+        join = left.join(
             right,
+            how="left",
             left_on=left_key_name,
             right_on=right_key_name,
-            suffixes=("", ""),
-            how="left",
         )
-        join = join.drop([left_key_name, right_key_name], axis=1)
+        join = join.drop(left_key_name, right_key_name)
         if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
-                join[info_col_name] = match_result[info_key]
-        if input_is_polars:
-            import polars as pl
-
-            join = pl.from_pandas(join)
-        return join
+                join = join.assign(
+                    ns.column_from_1d_array(match_result[info_key], name=info_col_name)
+                )
+        return asnative(join)
