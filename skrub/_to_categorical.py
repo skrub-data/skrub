@@ -1,6 +1,7 @@
 from sklearn.base import BaseEstimator
 
 from . import _dataframe as sb
+from . import _utils
 from ._dataframe import asdfapi, asnative, dfapi_ns
 
 _HIGH_CARD_THRESHOLD = 30
@@ -16,7 +17,8 @@ class ToCategoricalCol(BaseEstimator):
         categories = list(sb.unique(column))
         if _HIGH_CARD_THRESHOLD <= len(categories):
             raise NotImplementedError()
-        self.unknown_category_ = "skrub_unknown_category"
+        token = _utils.random_string()
+        self.unknown_category_ = f"skrub_unknown_category_{token}"
         self.categories_ = categories + [self.unknown_category_]
         self.output_native_dtype_ = sb.make_categorical_dtype_for(
             column, self.categories_
