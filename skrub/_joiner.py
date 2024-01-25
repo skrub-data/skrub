@@ -340,7 +340,9 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         n_rows = asdfapi(aux_table).persist().shape()[0]
         right = asdfapi(aux_table).assign(
-            ns.column_from_1d_array(np.arange(n_rows), name=right_key_name)
+            ns.column_from_1d_array(
+                np.arange(n_rows, dtype="int64"), name=right_key_name
+            )
         )
         join = left.join(
             right,
