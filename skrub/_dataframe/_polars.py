@@ -1,9 +1,6 @@
 """
 Polars specialization of the aggregate and join operations.
 """
-
-import sys
-
 try:
     import polars as pl
     import polars.selectors as cs
@@ -15,38 +12,6 @@ except ImportError:
 from itertools import product
 
 from skrub._utils import atleast_1d_or_none
-
-
-def skrub_namespace(obj):
-    return sys.modules[__name__]
-
-
-def is_categorical(column):
-    return isinstance(column.dtype, pl.Categorical)
-
-
-def to_categorical(column):
-    return column.cast(pl.Categorical())
-
-
-def make_categorical_dtype(categories):
-    return pl.Enum(categories)
-
-
-def to_datetime(column, format):
-    return column.str.to_datetime(format=format)
-
-
-def native_cast(column, dtype):
-    return column.cast(dtype)
-
-
-def where(column, mask, other):
-    return column.zip_with(mask, pl.Series(other))
-
-
-def unique(column):
-    return column.unique().drop_nulls()
 
 
 def make_dataframe(X, index=None, dtypes=None):

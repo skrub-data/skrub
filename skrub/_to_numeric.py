@@ -1,11 +1,11 @@
 from sklearn.base import BaseEstimator
 
-from ._dataframe import asdfapi, asnative, dfns, is_numeric
+from ._dataframe import asdfapi, asnative, dfapi_ns, is_numeric
 
 
 def _to_numeric(column):
     column = asdfapi(column)
-    ns = dfns(column)
+    ns = dfapi_ns(column)
     if is_numeric(column):
         return asnative(column)
     try:

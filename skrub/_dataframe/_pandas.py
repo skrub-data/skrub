@@ -1,46 +1,14 @@
 """
 Pandas specialization of the aggregate and join operation.
 """
+
 import re
-import sys
 from itertools import product
 
 import numpy as np
 import pandas as pd
 
 from skrub._utils import atleast_1d_or_none
-
-
-def skrub_namespace(obj):
-    return sys.modules[__name__]
-
-
-def is_categorical(column):
-    return isinstance(column.dtype, pd.CategoricalDtype)
-
-
-def to_categorical(column):
-    return column.astype("category")
-
-
-def make_categorical_dtype(categories):
-    return pd.CategoricalDtype(categories)
-
-
-def native_cast(column, dtype):
-    return column.astype(dtype)
-
-
-def unique(column):
-    return pd.Series(column.dropna().unique())
-
-
-def where(column, mask, other):
-    return column.where(mask, pd.Series(other))
-
-
-def to_datetime(column, format):
-    return pd.to_datetime(column, format=format)
 
 
 def make_dataframe(X, index=None, dtypes=None):

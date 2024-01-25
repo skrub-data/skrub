@@ -1,26 +1,30 @@
 from sklearn.base import BaseEstimator
 
+from . import _dataframe as sb
 from . import _datetime_utils
-from ._dataframe import asdfapi, is_datetime, is_numeric, native_cast, to_datetime
+
+_SAMPLE_SIZE = 1000
 
 
 class ToDatetimeCol(BaseEstimator):
     def fit_transform(self, column):
-        if is_numeric(column):
+        if sb.is_numeric(column):
             raise NotImplementedError()
 
-        if is_datetime(column):
+        if sb.is_temporal(column):
             self.datetime_format_ = None
             return column
 
-        # TODO downsample
-        if not _datetime_utils.is_column_datetime_parsable(asdfapi(column).to_array()):
+        sample = sb.sample(column, n=min(_SAMPLE_SIZE, sb.shape(column)[0]))
+        if not _datetime_utils.is_column_datetime_parsable(
+            sb.asdfapi(sample).to_array()
+        ):
             raise NotImplementedError()
 
         self.datetime_format_ = _datetime_utils.guess_datetime_format(
-            asdfapi(native_cast(column, str)).to_array(), random_state=0
+            sb.asdfapi(sb.native_cast(sample, str)).to_array(), random_state=0
         )
         return self.transform(column)
 
     def transform(self, column):
-        return to_datetime(column, format=self.datetime_format_)
+        return sb.to_datetime(column, format=self.datetime_format_)
