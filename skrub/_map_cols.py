@@ -5,7 +5,6 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from . import _dataframe as sbd
 from . import _selectors
 from ._dataframe import asdfapi, asnative, dfapi_ns
-from ._dataframe._namespace import get_df_namespace
 
 
 class MapCols(TransformerMixin, BaseEstimator):
@@ -54,8 +53,9 @@ class MapCols(TransformerMixin, BaseEstimator):
         for col_name in X.column_names:
             column = X.col(col_name)
             if col_name in self.transformers_:
+                transformer = self.transformers_[col_name]
                 transformer_input = _prepare_transformer_input(transformer, column)
-                output = self.transformers_[col_name].transform(transformer_input)
+                output = transformer.transform(transformer_input)
                 transformed_columns.extend(sbd.to_dfapi_column_list(output))
             else:
                 transformed_columns.append(column)

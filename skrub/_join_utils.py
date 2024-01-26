@@ -1,6 +1,4 @@
 """Utilities specific to the JOIN operations."""
-from collections import Counter
-
 from skrub import _utils
 from skrub._dataframe._namespace import get_df_namespace
 
@@ -130,13 +128,7 @@ def check_column_name_duplicates(
         (main_columns, main_table_name),
         (aux_columns, aux_table_name),
     ]:
-        counts = Counter(columns)
-        duplicates = [k for k, v in counts.items() if v > 1]
-        if duplicates:
-            raise ValueError(
-                f"Table '{table_name}' has duplicate column names: {duplicates}."
-                " Please make sure column names are unique."
-            )
+        _utils.check_duplicated_column_names(columns, table_name=table_name)
     overlap = list(set(main_columns).intersection(aux_columns))
     if overlap:
         raise ValueError(

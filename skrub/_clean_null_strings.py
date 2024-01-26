@@ -1,7 +1,6 @@
 from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
-from ._dataframe import asdfapi, asnative, dfapi_ns
 
 # Taken from pandas.io.parsers (version 1.1.4)
 STR_NA_VALUES = [
@@ -33,11 +32,11 @@ class CleanNullStrings(BaseEstimator):
     __univariate_transformer__ = True
 
     def fit_transform(self, column):
-        column = asdfapi(column)
-        ns = dfapi_ns(column)
-        if not isinstance(column.dtype, ns.String):
+        if not sbd.is_string(column):
             raise NotImplementedError()
-        is_null = column.is_in(ns.column_from_sequence(STR_NA_VALUES))
-        column = sbd.where(asnative(column), ~asnative(is_null), [None])
-        # TODO also replace whitespace-only values
+        return self.transform(column)
+
+    def transform(self, column):
+        column = sbd.replace_regex(column, r"^\s*$", "")
+        column = sbd.replace(column, STR_NA_VALUES, None)
         return column

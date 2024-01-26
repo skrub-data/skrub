@@ -35,6 +35,8 @@ __all__ = [
     "native_cast",
     "where",
     "sample",
+    "replace",
+    "replace_regex",
 ]
 
 
@@ -329,3 +331,33 @@ def _sample_pandas(obj, n, seed=None):
 @sample.specialize("polars")
 def _sample_polars(obj, n, seed=None):
     return obj.sample(n=n, seed=seed, with_replacement=False)
+
+
+@dispatch
+def replace(column, old, new):
+    raise NotImplementedError()
+
+
+@replace.specialize("pandas")
+def _replace_pandas(column, old, new):
+    return column.replace(old, new, regex=False)
+
+
+@replace.specialize("polars")
+def _replace_polars(column, old, new):
+    return column.replace(old, new)
+
+
+@dispatch
+def replace_regex(column, pattern, replacement):
+    raise NotImplementedError()
+
+
+@replace_regex.specialize("pandas")
+def _replace_regex_pandas(column, pattern, replacement):
+    return column.str.replace(pattern, replacement, regex=True)
+
+
+@replace_regex.specialize("polars")
+def _replace_regex_polars(column, pattern, replacement):
+    return column.str.replace_all(pattern, replacement, literal=False)

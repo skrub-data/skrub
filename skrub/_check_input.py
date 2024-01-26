@@ -1,13 +1,14 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from . import _dataframe as sb
+from . import _dataframe as sbd
+from . import _utils
 from ._dataframe import asdfapi
 
 
 class CheckInputDataFrame(TransformerMixin, BaseEstimator):
     def fit(self, X, y=None):
         del y
-        module_name = sb.dataframe_module_name(X)
+        module_name = sbd.dataframe_module_name(X)
         if module_name is None:
             raise TypeError(
                 "Only pandas DataFrames and polars DataFrames and LazyFrames are"
@@ -16,11 +17,13 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         self.module_name_ = module_name
         # TODO check schema (including dtypes) not just names.
         # Need to decide how strict we should be about types
-        self.column_names_ = asdfapi(X).column_names
+        column_names = asdfapi(X).column_names
+        _utils.check_duplicated_column_names(column_names)
+        self.column_names_ = column_names
         return self
 
     def transform(self, X):
-        module_name = sb.dataframe_module_name(X)
+        module_name = sbd.dataframe_module_name(X)
         if module_name is None:
             raise TypeError(
                 "Only pandas DataFrames and polars DataFrames and LazyFrames are"
