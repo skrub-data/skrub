@@ -16,10 +16,10 @@ class ToCategorical(BaseEstimator):
             self.output_native_dtype_ = sbd.native_dtype(column)
             return column
         if sbd.is_numeric(column) or sbd.is_anydate(column):
-            raise NotImplementedError()
+            return NotImplemented
         categories = list(sbd.unique(column))
         if self.cardinality_threshold <= len(categories):
-            raise NotImplementedError()
+            return NotImplemented
         token = _utils.random_string()
         self.unknown_category_ = f"skrub_unknown_category_{token}"
         self.categories_ = categories + [self.unknown_category_]

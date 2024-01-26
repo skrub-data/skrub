@@ -33,7 +33,7 @@ class CleanNullStrings(BaseEstimator):
 
     def fit_transform(self, column):
         if not sbd.is_string(column):
-            raise NotImplementedError()
+            return NotImplemented
         return self.transform(column)
 
     def transform(self, column):

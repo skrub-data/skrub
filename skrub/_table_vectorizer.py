@@ -48,7 +48,7 @@ class PassThrough(BaseEstimator):
     __univariate_transformer__ = True
 
     def fit_transform(self, column):
-        raise NotImplementedError()
+        return NotImplemented
 
 
 def _clone_or_passthrough(transformer):

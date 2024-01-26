@@ -8,13 +8,13 @@ class ToNumeric(BaseEstimator):
 
     def fit_transform(self, column):
         if sbd.is_anydate(column) or sbd.is_categorical(column):
-            raise NotImplementedError()
+            return NotImplemented
         try:
             numeric = sbd.to_numeric(column)
             self.output_native_dtype_ = sbd.native_dtype(numeric)
             return numeric
         except Exception:
-            raise NotImplementedError()
+            return NotImplemented
 
     def transform(self, column):
         return sbd.to_numeric(column, dtype=self.output_native_dtype_)

@@ -11,7 +11,7 @@ class ToDatetime(BaseEstimator):
 
     def fit_transform(self, column):
         if sbd.is_numeric(column):
-            raise NotImplementedError()
+            return NotImplemented
 
         if sbd.is_anydate(column):
             self.datetime_format_ = None
@@ -21,7 +21,7 @@ class ToDatetime(BaseEstimator):
         if not _datetime_utils.is_column_datetime_parsable(
             sbd.asdfapi(sample).to_array()
         ):
-            raise NotImplementedError()
+            return NotImplemented
 
         self.datetime_format_ = _datetime_utils.guess_datetime_format(
             sbd.asdfapi(sbd.native_cast(sample, str)).to_array(), random_state=0

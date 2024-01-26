@@ -31,9 +31,8 @@ class MapCols(TransformerMixin, BaseEstimator):
                 if hasattr(transformer, "set_output"):
                     transformer.set_output(transform=df_module_name)
                 transformer_input = _prepare_transformer_input(transformer, column)
-                try:
-                    output = transformer.fit_transform(transformer_input)
-                except NotImplementedError:
+                output = transformer.fit_transform(transformer_input)
+                if output is NotImplemented:
                     transformed_columns.append(column)
                 else:
                     transformed_columns.extend(sbd.to_dfapi_column_list(output))
