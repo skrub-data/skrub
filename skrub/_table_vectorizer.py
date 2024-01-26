@@ -34,8 +34,8 @@ def _make_table_vectorizer_pipeline(
     return make_pipeline(
         CheckInputDataFrame(),
         MapCols(CleanNullStrings()),
-        MapCols(ToNumeric()),
         MapCols(ToDatetime()),
+        MapCols(ToNumeric()),
         MapCols(ToCategorical(cardinality_threshold)),
         MapCols(low_cardinality_transformer, cols=_selectors.categorical()),
         MapCols(high_cardinality_transformer, cols=_selectors.string()),

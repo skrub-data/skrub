@@ -19,6 +19,7 @@ __all__ = [
     "is_column",
     "to_dfapi_column_list",
     "is_numeric",
+    "to_numeric",
     "is_string",
     "is_anydate",
     "numeric_column_names",
@@ -120,6 +121,29 @@ def _is_numeric_pandas(column):
 @is_numeric.specialize("polars")
 def _is_numeric_polars(column):
     return column.dtype.is_numeric()
+
+
+@dispatch
+def to_numeric(column, dtype=None):
+    raise NotImplementedError()
+
+
+@to_numeric.specialize("pandas")
+def _to_numeric_pandas(column, dtype=None):
+    return pd.to_numeric(column).astype(dtype)
+
+
+@to_numeric.specialize("polars")
+def _to_numeric_polars(column, dtype=None):
+    if dtype is not None:
+        return column.cast(dtype)
+    error = None
+    for dtype in [pl.Int32, pl.Int64, pl.Float64]:
+        try:
+            return column.cast(dtype)
+        except Exception as e:
+            error = e
+    raise ValueError("Could not convert column to numeric dtype") from error
 
 
 @dispatch
