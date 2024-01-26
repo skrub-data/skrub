@@ -7,12 +7,14 @@ from ._dataframe import asdfapi, asnative, dfapi_ns
 _HIGH_CARD_THRESHOLD = 30
 
 
-class ToCategoricalCol(BaseEstimator):
+class ToCategorical(BaseEstimator):
+    __univariate_transformer__ = True
+
     def fit_transform(self, column):
         if sb.is_categorical(column):
             self.output_native_dtype_ = sb.native_dtype(column)
             return column
-        if sb.is_numeric(column) or sb.is_temporal(column):
+        if sb.is_numeric(column) or sb.is_anydate(column):
             raise NotImplementedError()
         categories = list(sb.unique(column))
         if _HIGH_CARD_THRESHOLD <= len(categories):

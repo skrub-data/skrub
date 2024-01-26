@@ -6,12 +6,14 @@ from . import _datetime_utils
 _SAMPLE_SIZE = 1000
 
 
-class ToDatetimeCol(BaseEstimator):
+class ToDatetime(BaseEstimator):
+    __univariate_transformer__ = True
+
     def fit_transform(self, column):
         if sb.is_numeric(column):
             raise NotImplementedError()
 
-        if sb.is_temporal(column):
+        if sb.is_anydate(column):
             self.datetime_format_ = None
             return column
 

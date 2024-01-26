@@ -1,5 +1,6 @@
 try:
     import pandas as pd
+    import pandas.api.types
 except ImportError:
     pass
 try:
@@ -14,10 +15,14 @@ __all__ = [
     "skrub_namespace",
     "dataframe_module_name",
     "shape",
+    "is_dataframe",
+    "is_column",
+    "to_dfapi_column_list",
     "is_numeric",
-    "is_temporal",
+    "is_string",
+    "is_anydate",
     "numeric_column_names",
-    "temporal_column_names",
+    "anydate_column_names",
     "select",
     "set_column_names",
     "collect",
@@ -69,6 +74,22 @@ def _dataframe_module_name_polars(obj):
     return "polars"
 
 
+def is_dataframe(obj):
+    return hasattr(asnative(obj), "__dataframe_consortium_standard__")
+
+
+def is_column(obj):
+    return hasattr(asnative(obj), "__column_consortium_standard__")
+
+
+def to_dfapi_column_list(obj):
+    # NOTE: this returns df api objects, not native objects
+    obj = asdfapi(obj)
+    if is_column(obj):
+        return [obj]
+    return [obj.col(c) for c in obj.column_names]
+
+
 def shape(obj):
     obj = asdfapi(obj)
     if hasattr(obj, "shape"):
@@ -82,23 +103,58 @@ def shape(obj):
     return tuple(map(asnative, shape))
 
 
-def is_numeric(column, include_bool=True):
+@dispatch
+def is_numeric(column):
     column = asdfapi(column)
     ns = dfapi_ns(column)
-    if ns.is_dtype(column.dtype, "numeric"):
-        return True
-    if not include_bool:
-        return False
-    return ns.is_dtype(column.dtype, "bool")
+    return ns.is_dtype(column.dtype, "numeric")
 
 
-def is_temporal(column):
+@is_numeric.specialize("pandas")
+def _is_numeric_pandas(column):
+    return pandas.api.types.is_numeric_dtype(column)
+
+
+@is_numeric.specialize("polars")
+def _is_numeric_polars(column):
+    return column.dtype.is_numeric()
+
+
+@dispatch
+def is_string(column):
+    column = asdfapi(column)
+    ns = dfapi_ns(column)
+    return isinstance(column.dtype, ns.String)
+
+
+@is_string.specialize("pandas")
+def _is_string_pandas(column):
+    return pandas.api.types.is_string_dtype(column)
+
+
+@is_string.specialize("polars")
+def _is_string_polars(column):
+    return isinstance(column.dtype, pl.String)
+
+
+@dispatch
+def is_anydate(column):
     column = asdfapi(column)
     ns = dfapi_ns(column)
     for dtype in [ns.Date, ns.Datetime]:
         if isinstance(column.dtype, dtype):
             return True
     return False
+
+
+@is_anydate.specialize("pandas")
+def _is_anydate_pandas(column):
+    return pandas.api.types.is_datetime64_any_dtype(column)
+
+
+@is_anydate.specialize("polars")
+def _is_anydate_polars(column):
+    return isinstance(column.dtype, (pl.Date, pl.Datetime))
 
 
 def _select_column_names(df, predicate):
@@ -110,8 +166,8 @@ def numeric_column_names(df):
     return _select_column_names(df, is_numeric)
 
 
-def temporal_column_names(df):
-    return _select_column_names(df, is_temporal)
+def anydate_column_names(df):
+    return _select_column_names(df, is_anydate)
 
 
 def select(df, column_names):

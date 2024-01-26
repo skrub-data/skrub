@@ -21,7 +21,9 @@ def _to_numeric(column):
     raise ValueError(f"Could not convert to numeric dtype: {column}")
 
 
-class ToNumericCol(BaseEstimator):
+class ToNumeric(BaseEstimator):
+    __univariate_transformer__ = True
+
     def fit_transform(self, column):
         column = asdfapi(column)
         try:
