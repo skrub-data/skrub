@@ -12,6 +12,7 @@ from ._dispatch import dispatch
 
 __all__ = [
     "skrub_namespace",
+    "dataframe_module_name",
     "shape",
     "is_numeric",
     "is_temporal",
@@ -51,6 +52,21 @@ def _skrub_namespace_polars(obj):
     from . import _polars
 
     return _polars
+
+
+@dispatch
+def dataframe_module_name(obj):
+    return None
+
+
+@dataframe_module_name.specialize("pandas")
+def _dataframe_module_name_pandas(obj):
+    return "pandas"
+
+
+@dataframe_module_name.specialize("polars")
+def _dataframe_module_name_polars(obj):
+    return "polars"
 
 
 def shape(obj):
