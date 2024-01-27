@@ -211,20 +211,20 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     operations : iterable of str, or iterable of iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
 
-        numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-            "hist" and "value_counts" accept an integer argument to parametrize
-            the binning.
+        - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
+        "hist" and "value_counts" accept an integer argument to parametrize
+        the binning.
 
-        categorical : {"mode", "count", "value_counts"}
+        - categorical : {"mode", "count", "value_counts"}
 
-        If set to `None` (the default), ["mean", "mode"] will be used
+        - If set to `None` (the default), ["mean", "mode"] will be used \
         for all auxiliary tables.
 
     suffixes : iterable of str, default=None
         Suffixes to append to the `aux_tables`' column names.
         If set to `None`, the table indexes in `aux_tables` are used,
-        e.g. for an aggregation of 2 `aux_tables` containing the "price" column:
-            price_1 (auxiliary table 1), price_2 (auxiliary table 2), etc.
+        e.g. for an aggregation of 2 `aux_tables`, "_1" and "_2" would be appended
+        to column names
 
     See Also
     --------
@@ -264,7 +264,12 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     ...    suffixes=["", "", "_glucose"],
     ... )
     >>> multi_agg_joiner.fit_transform(patients)
-    # TODO
+       patient_id   age   days_of_stay_max   medication_mode   value_mean_glucose
+    0           1    72                  4           ozempic                 1.65
+    1           2    45                 12          morphine                 4.80
+       value_std_glucose
+    0           1.193035
+    1           2.404163
     """
 
     def __init__(
