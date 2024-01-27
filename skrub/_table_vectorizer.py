@@ -51,10 +51,22 @@ class PassThrough(BaseEstimator):
         return NotImplemented
 
 
-def _clone_or_passthrough(transformer):
+class Drop(BaseEstimator):
+    __univariate_transformer__ = True
+
+    def fit_transform(self, column):
+        return []
+
+    def transform(self, column):
+        return []
+
+
+def _clone_or_create_transformer(transformer):
     if isinstance(transformer, str):
         if transformer == "passthrough":
             return PassThrough()
+        if transformer == "drop":
+            return Drop()
         raise ValueError(
             f"Value not understood: {transformer!r}. Please provide either"
             " 'passthrough' or a scikit-learn transformer."
@@ -109,10 +121,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     def fit_transform(self, X, y=None):
         self.pipeline_ = _make_table_vectorizer_pipeline(
             self.cardinality_threshold,
-            _clone_or_passthrough(self.low_cardinality_transformer),
-            _clone_or_passthrough(self.high_cardinality_transformer),
-            _clone_or_passthrough(self.numerical_transformer),
-            _clone_or_passthrough(self.datetime_transformer),
+            _clone_or_create_transformer(self.low_cardinality_transformer),
+            _clone_or_create_transformer(self.high_cardinality_transformer),
+            _clone_or_create_transformer(self.numerical_transformer),
+            _clone_or_create_transformer(self.datetime_transformer),
         )
         output = self.pipeline_.fit_transform(X)
         self.feature_names_out_ = asdfapi(output).column_names

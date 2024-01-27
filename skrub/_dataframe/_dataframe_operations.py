@@ -87,7 +87,10 @@ def is_column(obj):
 
 def to_dfapi_column_list(obj):
     # NOTE: this returns df api objects, not native objects
-    obj = asdfapi(obj)
+    try:
+        obj = asdfapi(obj)
+    except TypeError:
+        return [asdfapi(c) for c in obj]
     if is_column(obj):
         return [obj]
     return [obj.col(c) for c in obj.column_names]
