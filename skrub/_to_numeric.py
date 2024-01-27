@@ -7,7 +7,7 @@ class ToNumeric(BaseEstimator):
     __univariate_transformer__ = True
 
     def fit_transform(self, column):
-        if sbd.is_anydate(column) or sbd.is_categorical(column):
+        if sbd.is_anydate(column) or sbd.is_categorical(column) or sbd.is_bool(column):
             return NotImplemented
         try:
             numeric = sbd.to_numeric(column)

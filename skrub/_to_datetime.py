@@ -10,13 +10,11 @@ class ToDatetime(BaseEstimator):
     __univariate_transformer__ = True
 
     def fit_transform(self, column):
-        if sbd.is_numeric(column):
-            return NotImplemented
-
         if sbd.is_anydate(column):
             self.datetime_format_ = None
             return column
-
+        if not (sbd.is_string(column) or sbd.is_object(column)):
+            return NotImplemented
         sample = sbd.sample(column, n=min(_SAMPLE_SIZE, sbd.shape(column)[0]))
         if not _datetime_utils.is_column_datetime_parsable(
             sbd.asdfapi(sample).to_array()
