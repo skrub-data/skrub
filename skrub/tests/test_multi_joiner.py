@@ -78,7 +78,7 @@ def test_operations(main, px):
     multi_agg_joiner.fit(main)
     assert multi_agg_joiner._operations == [["mean"]]
 
-    # This should work
+    # This should not work
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         keys="userId",

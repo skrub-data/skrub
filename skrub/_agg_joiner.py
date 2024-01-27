@@ -86,7 +86,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
-        If set to None, `cols` are all columns from `aux_table`, except `aux_key`.
+        If set to `None`, `cols` are all columns from `aux_table`, except `aux_key`.
 
     operation : str or iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
@@ -97,7 +97,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         categorical : {"mode", "count", "value_counts"}
 
-        If set to None (the default), ["mean", "mode"] will be used.
+        If set to `None` (the default), ["mean", "mode"] will be used.
 
     suffix : str or iterable of str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it

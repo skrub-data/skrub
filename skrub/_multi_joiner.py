@@ -130,7 +130,7 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
 
     Examples
     --------
-    # TODO
+    This estimator will be implemented soon.
     """
 
     def __init__(
@@ -166,60 +166,65 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
     Apply numerical and categorical aggregation operations on the `cols`
     to aggregate, selected by dtypes. See the list of supported operations
-    at the parameter `operation`.
+    at the parameter `operations`.
 
-    If `cols` is not provided, `cols` are all columns from `aux_table`,
-    except `aux_key`.
+    If `cols` is not provided, `cols` are all columns from `aux_tables`,
+    except `aux_keys`.
+
+    As opposed to AggJoiner, all parameters here must be iterable of str,
+    or iterable of iterable of str. If a single table is fed to the MultiAggJoiner,
+    a similar behavior to the AggJoiner can be obtained by transforming all parameters
+    to a list of parameters, i.e. ``key = "my_key"`` becomes ``key = ["my_key"]``.
 
     Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
 
     Parameters
     ----------
-    aux_tables : DataFrameLike or iterable of DataFrameLike or "X"
+    aux_tables : iterable of DataFrameLike or "X"
         Auxiliary dataframes to aggregate then join on the base table.
         The placeholder string "X" can be provided to perform
-        self-aggregation on the input data.
+        self-aggregation on the input data. To provide a single auxiliary table,
+        ``aux_tables = [table]`` is supported, but not ``aux_tables = table``.
 
-    keys : str or iterable of str, default=None
+    keys : iterable of str, default=None
         The column names to use for both `main_key` and `aux_key` when they
         are the same. Provide either `key` or both `main_key` and `aux_keys`.
+        If there are multiple auxiliary tables, `keys` will be used to join all
+        of them.
 
     main_key : str or iterable of str
         Select the columns from the main table to use as keys during
         the join operation.
-        If `main_key` is a list, we will perform a multi-column join.
+        If `main_key` contains multiple columns, we will perform a multi-column join.
 
-    aux_keys : str, or iterable of str, or iterable of iterable of str
+    aux_keys : iterable of str, or iterable of iterable of str
         Select the columns from the auxiliary dataframes to use as keys during
-        the join operation. Note that [["a"], ["b"], ["c", "d"]] is a valid input
-        while ["a", "b", ["c", "d"]] is not.
+        the join operation. Note that ``[["a"], ["b"], ["c", "d"]]`` is a valid input
+        while ``["a", "b", ["c", "d"]]`` is not.
 
-    cols : str, or iterable of str, or iterable of iterable of str, default=None
+    cols : iterable of str, or iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as values during
         the aggregation operations.
 
-        If set to None, `cols` are all columns from table, except `aux_key`.
+        If set to `None`, `cols` are all columns from table, except `aux_keys`.
 
-    operations : str or iterable of str, or iterable of iterable of str, default=None
+    operations : iterable of str, or iterable of iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
 
         numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-            'hist' and 'value_counts' accept an integer argument to parametrize
+            "hist" and "value_counts" accept an integer argument to parametrize
             the binning.
 
         categorical : {"mode", "count", "value_counts"}
 
-        If set to str, all auxiliary tables will undergo the same operation.
-
-        If set to None (the default), ["mean", "mode"] will be used
+        If set to `None` (the default), ["mean", "mode"] will be used
         for all auxiliary tables.
 
-    suffixes : str or iterable of str, default=None
-        Suffix to append to the `aux_table`'s column names.
-        If set to None, the table indexes in `aux_tables` are used,
-        e.g. for an aggregation on 2 aux_tables containing the "price" column:
-            price (main table), price_1 (auxiliary table 1), price_2
-            (auxiliary table 2), etc.
+    suffixes : iterable of str, default=None
+        Suffixes to append to the `aux_tables`' column names.
+        If set to `None`, the table indexes in `aux_tables` are used,
+        e.g. for an aggregation of 2 `aux_tables` containing the "price" column:
+            price_1 (auxiliary table 1), price_2 (auxiliary table 2), etc.
 
     See Also
     --------
@@ -253,8 +258,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     >>> multi_agg_joiner = MultiAggJoiner(
     ...    aux_tables=[hospitalizations, medications, glucose],
     ...    main_key="patient_id",
-    ...    aux_keys=["patient_id", "patient_id", "patientID"],
-    ...    cols=["days_of_stay", "medication", "value"],
+    ...    aux_keys=[["patient_id"], ["patient_id"], ["patientID"]],
+    ...    cols=[["days_of_stay"], ["medication"], ["value"]],
     ...    operations=[["max"], ["mode"], ["mean", "std"]],
     ...    suffixes=["", "", "_glucose"],
     ... )
@@ -302,10 +307,16 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             if aux_tables == "X":
                 return X, [deepcopy(X)]
             else:
-                raise ValueError("'aux_table' must be a dataframe or 'X'.")
+                raise ValueError(
+                    "'aux_table' must be an iterable of dataframes or 'X'."
+                )
         # If aux_tables is a single dataframe
         if hasattr(aux_tables, "__dataframe__"):
-            aux_tables = [aux_tables]
+            raise ValueError(
+                "`aux_tables` must be an iterable of dataframes of 'X'."
+                "If you are using a single auxiliary table, convert your current"
+                "`aux_tables` into [`aux_tables`]"
+            )
         # If aux_tables is an iterable
         elif _is_array_like(aux_tables):
             aux_tables = list(aux_tables)
@@ -338,6 +349,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                 raise ValueError(
                     "Must pass EITHER 'keys', OR ('main_key' AND 'aux_keys')."
                 )
+        if not _is_array_like(aux_keys):
+            raise ValueError("")
         main_key = atleast_1d_or_none(main_key)
         aux_keys = atleast_2d_or_none(aux_keys)
 
@@ -398,11 +411,14 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         """
         if self.operations is None:
             operations = [["mean", "mode"]] * len(self._aux_tables)
-        if isinstance(self.operations, str):
-            operations = [[self.operations]] * len(self._aux_tables)
         # TODO: check this case
         if _is_array_like(self.operations):
             operations = atleast_2d_or_none(self.operations)
+        else:
+            raise ValueError(
+                "Accepted inputs for operations are None, iterable of str,"
+                f" or iterable of iterable of str. Got {type(operations)}"
+            )
 
         if len(operations) != len(self._aux_tables):
             raise ValueError(
@@ -416,7 +432,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         """Check that the len of `suffixes` match the len of `aux_tables`,
         and that all suffixes are strings.
 
-        If suffixes is None, the suffixes will default to the
+        If suffixes is None, the suffixes will default to the position of
+        each auxiliary table in the list.
 
         Returns
         -------
