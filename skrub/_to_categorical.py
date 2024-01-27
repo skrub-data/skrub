@@ -15,7 +15,7 @@ class ToCategorical(BaseEstimator):
         if sbd.is_categorical(column):
             self.output_native_dtype_ = sbd.native_dtype(column)
             return column
-        if sbd.is_numeric(column) or sbd.is_anydate(column):
+        if sbd.is_numeric(column) or sbd.is_anydate(column) or sbd.is_bool(column):
             return NotImplemented
         categories = list(sbd.unique(column))
         if self.cardinality_threshold <= len(categories):

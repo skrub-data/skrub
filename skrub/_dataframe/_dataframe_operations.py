@@ -18,9 +18,11 @@ __all__ = [
     "is_dataframe",
     "is_column",
     "to_dfapi_column_list",
+    "is_bool",
     "is_numeric",
     "to_numeric",
     "is_string",
+    "is_object",
     "is_anydate",
     "numeric_column_names",
     "anydate_column_names",
@@ -110,6 +112,23 @@ def shape(obj):
 
 
 @dispatch
+def is_bool(column):
+    column = asdfapi(column)
+    ns = dfapi_ns(column)
+    return ns.is_dtype(column.dtype, "bool")
+
+
+@is_bool.specialize("pandas")
+def _is_bool_pandas(column):
+    return pandas.api.types.is_bool_dtype(column)
+
+
+@is_bool.specialize("polars")
+def _is_bool_polars(column):
+    return column.dtype == pl.Boolean
+
+
+@dispatch
 def is_numeric(column):
     column = asdfapi(column)
     ns = dfapi_ns(column)
@@ -163,7 +182,24 @@ def _is_string_pandas(column):
 
 @is_string.specialize("polars")
 def _is_string_polars(column):
-    return isinstance(column.dtype, pl.String)
+    return column.dtype == pl.String
+
+
+@dispatch
+def is_object(column):
+    raise NotImplementedError()
+
+
+@is_object.specialize("pandas")
+def _is_object_pandas(column):
+    if pandas.api.types.is_string_dtype(column):
+        return False
+    return pandas.api.types.is_object_dtype(column)
+
+
+@is_object.specialize("polars")
+def _is_object_polars(column):
+    return column.dtype == pl.Object
 
 
 @dispatch
@@ -183,7 +219,7 @@ def _is_anydate_pandas(column):
 
 @is_anydate.specialize("polars")
 def _is_anydate_polars(column):
-    return isinstance(column.dtype, (pl.Date, pl.Datetime))
+    return column.dtype in (pl.Date, pl.Datetime)
 
 
 def _select_column_names(df, predicate):
@@ -235,7 +271,7 @@ def _is_categorical_pandas(column):
 
 @is_categorical.specialize("polars")
 def _is_categorical_polars(column):
-    return isinstance(column.dtype, pl.Categorical)
+    return column.dtype in (pl.Categorical, pl.Enum)
 
 
 @dispatch
