@@ -462,13 +462,12 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         """
         if self.operations is None:
             operations = [["mean", "mode"]] * len(self._aux_tables)
-        # TODO: check this case
-        if _is_array_like(self.operations):
+        elif _is_array_like(self.operations):
             operations = atleast_2d_or_none(self.operations)
         else:
             raise ValueError(
                 "Accepted inputs for operations are None, iterable of str,"
-                f" or iterable of iterable of str. Got {type(operations)}"
+                f" or iterable of iterable of str. Got {type(self.operations)}"
             )
 
         if len(operations) != len(self._aux_tables):
