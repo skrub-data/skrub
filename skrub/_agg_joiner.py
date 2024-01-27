@@ -163,7 +163,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         """Check dataframes input types.
 
         Raises an error if frames aren't both Pandas or Polars dataframes,
-        or if there is a Polars lazyframe. Alternatively, allows `aux_table` to be 'X'.
+        or if there is a Polars lazyframe. Alternatively, allows `aux_table` to be "X".
 
         Parameters
         ----------
@@ -196,9 +196,9 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         return X, aux_table
 
     def _check_cols(self):
-        """Check columns to aggregate.
+        """Check `cols` to aggregate.
 
-        If None, `cols` are all columns from table, except `aux_key`.
+        If None, `cols` are all columns from `aux_table`, except `aux_key`.
 
         Returns
         -------

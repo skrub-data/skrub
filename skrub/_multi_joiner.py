@@ -337,6 +337,29 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         return X, aux_tables
 
     def _check_keys(self, main_key, aux_keys, keys):
+        """Check input keys.
+
+        Parameters
+        ----------
+        main_key : str, iterable of str, or None
+            Matching columns in the main table. Can be a single column name (str)
+            if matching on a single column: ``"User_ID"`` is the same as
+            ``"[User_ID]"``.
+        aux_keys : iterable of str, iterable of iterable of str, or None
+            Matching columns in the auxiliary table. Can be a single column name (str)
+            if matching on a single column: ``"User_ID"`` is the same as
+            ``"[User_ID]"``.
+        keys : iterable of str, or None
+            Can be provided in place of `main_key` and `aux_keys` when they are the
+            same. We must provide non-``None`` values for either `keys` or both
+            `main_key` and `aux_keys`.
+
+        Returns
+        -------
+        main_key, aux_keys : iterable of str and iterable of iterable of str
+            The correct sets of matching columns to use, each provided as a list of
+            column names.
+        """
         if keys is not None:
             if aux_keys is not None or main_key is not None:
                 raise ValueError(
@@ -350,7 +373,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                     "Must pass EITHER 'keys', OR ('main_key' AND 'aux_keys')."
                 )
         if not _is_array_like(aux_keys):
-            raise ValueError("")
+            raise ValueError(f"`aux_keys` must be an iterable, got {type(aux_keys)}")
         main_key = atleast_1d_or_none(main_key)
         aux_keys = atleast_2d_or_none(aux_keys)
 
@@ -366,13 +389,13 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     def _check_missing_columns_in_aux_tables(
         self, aux_tables, aux_keys, aux_table_name
     ):
-        """Check that all `aux_keys` are in the corresponding `aux_table`.
+        """Check that all `aux_keys` are in the corresponding aux_table.
 
         Parameters
         ----------
-        aux_tables : iterable of DataFrameLine
+        aux_tables : iterable of DataFrameLike
             Tables to perform aggregation on.
-        aux_keys : str, or iterable of str, or iterable of iterable of str
+        aux_keys : iterable of str, or iterable of iterable of str
             Keys to merge the aggregated results on.
         aux_table_name : str
             Name by which to refer to `aux_tables` in the error message if necessary.
@@ -384,20 +407,42 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         pass
 
     def _check_cols(self):
-        # If no cols provided, all columns but `aux_key` are used.
+        """Check `cols` to aggregate.
+
+        If None, `cols` are all columns from `aux_tables`, except `aux_keys`.
+
+        Returns
+        -------
+        cols
+            2-dimensional array of cols to perform aggregation on.
+
+        Raises
+        ------
+        ValueError
+            If the len of `cols` doesn't match the len of `aux_tables`,
+            or if `cols` is not of a valid type, of if all `cols`
+            are not present in the corresponding aux_table,
+        """
+        # If no `cols` provided, all columns but `aux_keys` are used.
         if self.cols is None:
             cols = [
                 list(set(table.columns) - set(key))
                 for table, key in zip(self._aux_tables, self._aux_keys)
             ]
         cols = atleast_2d_or_none(self.cols)
+        if len(cols) != len(self.aux_tables):
+            raise ValueError(
+                "The number of provided cols must match the number of"
+                f" tables in 'aux_tables'. Got {len(cols)} columns and"
+                f" {len(self._aux_tables)} auxiliary tables."
+            )
         for columns, table in zip(cols, self._aux_tables):
             if not all([col in table.columns for col in columns]):
                 raise ValueError("All 'cols' must be present in 'aux_tables'.")
         return cols
 
     def _check_operations(self):
-        """Check operation input.
+        """Check `operations` input.
 
         Returns
         -------
@@ -407,7 +452,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         Raises
         ------
         ValueError
-            If the len of `operations` doesn't match the len of `aux_tables`.
+            If the len of `operations` doesn't match the len of `aux_tables`,
+            or if `operations` is not of a valid type.
         """
         if self.operations is None:
             operations = [["mean", "mode"]] * len(self._aux_tables)
@@ -424,7 +470,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             raise ValueError(
                 "The number of provided operations must match the number of"
                 f" tables in 'aux_tables'. Got {len(operations)} operations and"
-                f" {len(self._aux_tables)} aux_tables."
+                f" {len(self._aux_tables)} auxiliary tables."
             )
         return operations
 
