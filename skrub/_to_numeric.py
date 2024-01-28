@@ -11,10 +11,10 @@ class ToNumeric(BaseEstimator):
             return NotImplemented
         try:
             numeric = sbd.to_numeric(column)
-            self.output_native_dtype_ = sbd.native_dtype(numeric)
+            self.output_dtype_ = sbd.dtype(numeric)
             return numeric
         except Exception:
             return NotImplemented
 
     def transform(self, column):
-        return sbd.to_numeric(column, dtype=self.output_native_dtype_)
+        return sbd.to_numeric(column, dtype=self.output_dtype_)

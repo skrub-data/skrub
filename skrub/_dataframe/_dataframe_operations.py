@@ -43,8 +43,8 @@ __all__ = [
     "to_categorical",
     "to_datetime",
     "unique",
-    "native_dtype",
-    "native_cast",
+    "dtype",
+    "cast",
     "where",
     "sample",
     "replace",
@@ -509,32 +509,32 @@ def _unique_polars(column):
 
 
 @dispatch
-def native_dtype(column):
+def dtype(column):
     return column.dtype
 
 
-@native_dtype.specialize("pandas")
-def _native_dtype_pandas(column):
+@dtype.specialize("pandas")
+def _dtype_pandas(column):
     return column.dtype
 
 
-@native_dtype.specialize("polars")
-def _native_dtype_polars(column):
+@dtype.specialize("polars")
+def _dtype_polars(column):
     return column.dtype
 
 
 @dispatch
-def native_cast(column, dtype):
+def cast(column, dtype):
     raise NotImplementedError()
 
 
-@native_cast.specialize("pandas")
-def _native_cast_pandas(column, dtype):
+@cast.specialize("pandas")
+def _cast_pandas(column, dtype):
     return column.astype(dtype)
 
 
-@native_cast.specialize("polars")
-def _native_cast_polars(column, dtype):
+@cast.specialize("polars")
+def _cast_polars(column, dtype):
     return column.cast(dtype)
 
 

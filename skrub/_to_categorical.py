@@ -66,7 +66,7 @@ class ToCategorical(BaseEstimator):
 
     def fit_transform(self, column):
         if _is_enum(column):
-            self.output_native_dtype_ = sbd.native_dtype(column)
+            self.output_dtype_ = sbd.dtype(column)
             self._categories = _dtype_categories(column)
             self.unknown_category_ = None
             return column
@@ -78,12 +78,12 @@ class ToCategorical(BaseEstimator):
         token = _utils.random_string()
         self.unknown_category_ = f"skrub_unknown_category_{token}"
         self._categories = categories + [self.unknown_category_]
-        self.output_native_dtype_ = _make_enum_dtype_for(column, self._categories)
+        self.output_dtype_ = _make_enum_dtype_for(column, self._categories)
         return self.transform(column)
 
     def transform(self, column):
-        if sbd.native_dtype(column) == self.output_native_dtype_:
+        if sbd.dtype(column) == self.output_dtype_:
             return column
         keep = sbd.is_in(column, self._categories) | sbd.is_null(column)
         column = sbd.where(column, keep, [self.unknown_category_])
-        return sbd.native_cast(column, self.output_native_dtype_)
+        return sbd.cast(column, self.output_dtype_)

@@ -9,12 +9,12 @@ class PandasConvertDTypes(BaseEstimator):
     def fit_transform(self, column):
         if not sbd.is_pandas(column):
             return NotImplemented
-        self.original_dtype_ = sbd.native_dtype(column)
+        self.original_dtype_ = sbd.dtype(column)
         column = sbd.pandas_convert_dtypes(column)
-        self.target_dtype_ = sbd.native_dtype(column)
+        self.target_dtype_ = sbd.dtype(column)
         return column
 
     def transform(self, column):
         column = sbd.pandas_convert_dtypes(column)
-        column = sbd.native_cast(column, self.target_dtype_)
+        column = sbd.cast(column, self.target_dtype_)
         return column

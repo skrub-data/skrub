@@ -20,7 +20,7 @@ class ToDatetime(BaseEstimator):
             return NotImplemented
 
         self.datetime_format_ = _datetime_utils.guess_datetime_format(
-            sbd.to_array(sbd.native_cast(sample, str)), random_state=0
+            sbd.to_array(sbd.cast(sample, str)), random_state=0
         )
         return self.transform(column)
 
