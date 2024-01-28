@@ -1,4 +1,4 @@
-from ._atoms import custom, filter, filter_names, glob, produced_by, regex
+from ._atoms import filter, filter_names, glob, produced_by, regex
 from ._base import all, cols, inv, make_selector, select
 from ._dtype_atoms import anydate, categorical, numeric, string
 from ._statistic_atoms import cardinality_below
@@ -13,7 +13,6 @@ __all__ = [
     "regex",
     "filter",
     "filter_names",
-    "custom",
     "produced_by",
     "numeric",
     "anydate",

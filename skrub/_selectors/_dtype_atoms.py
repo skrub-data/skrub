@@ -48,3 +48,15 @@ class String(Filter):
 
 def string():
     return String()
+
+
+class Bool(Filter):
+    def __init__(self):
+        super().__init__(sbd.is_bool)
+
+    def __repr__(self):
+        return "bool()"
+
+
+def bool():
+    return Bool()

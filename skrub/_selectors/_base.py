@@ -1,4 +1,5 @@
 from .. import _dataframe as sbd
+from ._utils import list_difference, list_intersect
 
 
 def all():
@@ -10,7 +11,7 @@ def cols(*columns):
 
 
 def inv(obj):
-    return all() - obj
+    return Inv(obj)
 
 
 def make_selector(obj):
@@ -30,7 +31,7 @@ def _select_col_names(df, selector):
 
 @_select_col_names.specialize("pandas")
 def _select_col_names_pandas(df, col_names):
-    return df.select(col_names)
+    return df[col_names]
 
 
 @_select_col_names.specialize("polars")
@@ -43,42 +44,42 @@ def select(df, selector):
 
 
 class Selector:
-    def select(self, df):
+    def select(self, df, ignore=()):
         raise NotImplementedError()
 
     def __invert__(self):
-        return all() - self
+        return Inv(self)
 
     # TODO: implement short-circuit
 
     def __or__(self, other):
-        return SetOp(self, other, "__or__")
+        return Or(self, other)
 
     def __ror__(self, other):
-        return self | other
+        return Or(other, self)
 
     def __and__(self, other):
-        return SetOp(self, other, "__and__")
+        return And(self, other)
 
     def __rand__(self, other):
-        return self & other
+        return And(other, self)
 
     def __sub__(self, other):
-        return SetOp(self, other, "__sub__")
+        return Sub(self, other)
 
     def __rsub__(self, other):
-        return make_selector(other) - self
+        return Sub(other, self)
 
     def __xor__(self, other):
-        return SetOp(self, other, "__xor__")
+        return XOr(self, other)
 
     def __rxor__(self, other):
-        return self ^ other
+        return XOr(other, self)
 
 
 class All(Selector):
-    def select(self, df):
-        return sbd.column_names(df)
+    def select(self, df, ignore=()):
+        return list_difference(sbd.column_names(df), ignore)
 
     def __repr__(self):
         return "all()"
@@ -88,32 +89,89 @@ class Cols(Selector):
     def __init__(self, columns):
         self.columns = list(columns)
 
-    def select(self, df):
-        all_selected = set(self.columns)
+    def select(self, df, ignore=()):
+        all_selected = set(self.columns).difference(ignore)
         assert all_selected.issubset(sbd.column_names(df))
-        return [col for col in sbd.column_names(df) if col in all_selected]
+        return list_intersect(sbd.column_names(df), all_selected)
 
     def __repr__(self):
         args = ", ".join(map(repr, self.columns))
         return f"cols({args})"
 
 
-class SetOp(Selector):
-    def __init__(self, left, right, op):
-        self.left = make_selector(left)
-        self.right = make_selector(right)
-        self.op = op
+class Inv(Selector):
+    def __init__(self, complement):
+        self.complement = make_selector(complement)
 
-    def select(self, df):
-        left_selected = set(self.left.select(df))
-        right_selected = set(self.right.select(df))
-        all_selected = getattr(left_selected, self.op)(right_selected)
-        return [col for col in sbd.column_names(df) if col in all_selected]
+    def select(self, df, ignore=()):
+        inv_selected = self.complement.select(df, ignore)
+        return list_difference(sbd.column_names(df), set(inv_selected).union(ignore))
 
     def __repr__(self):
-        op_repr = {
-            "__or__": "|",
-            "__and__": "&",
-            "__sub__": "-",
-        }[self.op]
-        return f"({self.left!r} {op_repr} {self.right!r})"
+        return "~({self.complement!r})"
+
+
+class Or(Selector):
+    def __init__(self, left, right):
+        self.left = make_selector(left)
+        self.right = make_selector(right)
+
+    def select(self, df, ignore=()):
+        df_cols = sbd.column_names(df)
+        left_selected = set(self.left.select(df, ignore))
+        right_selected = self.right.select(df, ignore=left_selected.union(ignore))
+        all_selected = left_selected.union(right_selected).difference(ignore)
+        return list_intersect(df_cols, all_selected)
+
+    def __repr__(self):
+        return f"({self.left!r} | {self.right!r})"
+
+
+class And(Selector):
+    def __init__(self, left, right):
+        self.left = make_selector(left)
+        self.right = make_selector(right)
+
+    def select(self, df, ignore=()):
+        df_cols = sbd.column_names(df)
+        left_selected = set(self.left.select(df, ignore))
+        left_unselected = set(df_cols).difference(left_selected)
+        right_selected = self.right.select(df, ignore=left_unselected.union(ignore))
+        all_selected = left_selected.intersection(right_selected).difference(ignore)
+        return list_intersect(df_cols, all_selected)
+
+    def __repr__(self):
+        return f"({self.left!r} & {self.right!r})"
+
+
+class Sub(Selector):
+    def __init__(self, left, right):
+        self.left = make_selector(left)
+        self.right = make_selector(right)
+
+    def select(self, df, ignore=()):
+        df_cols = sbd.column_names(df)
+        left_selected = set(self.left.select(df, ignore))
+        left_unselected = set(df_cols).difference(left_selected)
+        right_selected = self.right.select(df, ignore=left_unselected.union(ignore))
+        all_selected = left_selected.difference(right_selected).difference(ignore)
+        return list_intersect(df_cols, all_selected)
+
+    def __repr__(self):
+        return f"({self.left!r} - {self.right!r})"
+
+
+class XOr(Selector):
+    def __init__(self, left, right):
+        self.left = make_selector(left)
+        self.right = make_selector(right)
+
+    def select(self, df, ignore=()):
+        df_cols = sbd.column_names(df)
+        left_selected = self.left.select(df, ignore)
+        right_selected = self.right.select(df, ignore)
+        all_selected = set(left_selected).symmetric_difference(right_selected)
+        return list_intersect(df_cols, all_selected.difference(ignore))
+
+    def __repr__(self):
+        return f"({self.left!r} ^ {self.right!r})"
