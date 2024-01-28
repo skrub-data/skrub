@@ -53,7 +53,7 @@ def _dtype_categories_pandas(column):
     return list(column.dtype.categories)
 
 
-@_make_enum_dtype_for.specialize("polars")
+@_dtype_categories.specialize("polars")
 def _dtype_categories_polars(column):
     return column.dtype.categories
 
