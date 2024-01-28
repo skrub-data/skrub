@@ -371,21 +371,28 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                     "Can only pass argument 'keys' OR 'main_key' and "
                     "'aux_keys', not a combination of both."
                 )
-            main_key, aux_keys = keys, [keys]
+            if not _is_array_like(keys):
+                raise ValueError(f"'keys' must be an 1d iterable, got {type(keys)}.")
+            main_key, aux_keys = keys, keys
         else:
             if aux_keys is None or main_key is None:
                 raise ValueError(
                     "Must pass EITHER 'keys', OR ('main_key' AND 'aux_keys')."
                 )
-        if not _is_array_like(aux_keys):
-            raise ValueError(f"`aux_keys` must be an iterable, got {type(aux_keys)}")
+            if not _is_array_like(aux_keys):
+                raise ValueError(
+                    f"'aux_keys' must be an iterable, got {type(aux_keys)}."
+                )
         main_key = atleast_1d_or_none(main_key)
-        aux_keys = atleast_2d_or_none(aux_keys)
+        if keys is not None:
+            aux_keys = [aux_keys] * len(self.aux_tables)
+        else:
+            aux_keys = atleast_2d_or_none(aux_keys)
 
         for aux_key in aux_keys:
             if len(main_key) != len(aux_key):
                 raise ValueError(
-                    "'main_key' and 'aux_keys' keys have different lengths"
+                    "'main_key' and 'aux_keys' have different lengths"
                     f" ({len(main_key)} and {len(aux_keys)}). Cannot join on different"
                     " numbers of columns."
                 )
@@ -434,7 +441,9 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                 list(set(table.columns) - set(key))
                 for table, key in zip(self._aux_tables, self._aux_keys)
             ]
-        cols = atleast_2d_or_none(self.cols)
+            cols = atleast_2d_or_none(cols)
+        else:
+            cols = atleast_2d_or_none(self.cols)
         if len(cols) != len(self.aux_tables):
             raise ValueError(
                 "The number of provided cols must match the number of"
