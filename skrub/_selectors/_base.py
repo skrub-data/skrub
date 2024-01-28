@@ -24,18 +24,22 @@ def make_selector(obj):
 
 
 @sbd.dispatch
-def select(df, selector):
+def _select_col_names(df, selector):
     raise NotImplementedError()
 
 
-@select.specialize("pandas")
-def _select_pandas(df, selector):
-    return df.select(make_selector(selector).select(df))
+@_select_col_names.specialize("pandas")
+def _select_col_names_pandas(df, col_names):
+    return df.select(col_names)
 
 
-@select.specialize("polars")
-def _select_polars(df, selector):
-    return df.select(make_selector(selector).select(df))
+@_select_col_names.specialize("polars")
+def _select_col_names_polars(df, col_names):
+    return df.select(col_names)
+
+
+def select(df, selector):
+    return _select_col_names(df, make_selector(selector).select(df))
 
 
 class Selector:
@@ -45,7 +49,7 @@ class Selector:
     def __invert__(self):
         return all() - self
 
-    # TODO: implement short-circuit for &, | ?
+    # TODO: implement short-circuit
 
     def __or__(self, other):
         return SetOp(self, other, "__or__")
@@ -63,7 +67,13 @@ class Selector:
         return SetOp(self, other, "__sub__")
 
     def __rsub__(self, other):
-        return self - other
+        return make_selector(other) - self
+
+    def __xor__(self, other):
+        return SetOp(self, other, "__xor__")
+
+    def __rxor__(self, other):
+        return self ^ other
 
 
 class All(Selector):
