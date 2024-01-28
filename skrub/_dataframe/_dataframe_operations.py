@@ -340,6 +340,8 @@ def _to_numeric_pandas(column, dtype=None):
 def _to_numeric_polars(column, dtype=None):
     if dtype is not None:
         return column.cast(dtype)
+    if column.dtype.is_numeric():
+        return column
     error = None
     for dtype in [pl.Int32, pl.Int64, pl.Float64]:
         try:

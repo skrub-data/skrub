@@ -17,7 +17,7 @@ def _to_float32_pandas(col):
 def _to_float32_polars(col):
     import polars as pl
 
-    return col.astype(pl.Float32)
+    return col.cast(pl.Float32)
 
 
 class ToFloat32(BaseEstimator):
@@ -26,12 +26,7 @@ class ToFloat32(BaseEstimator):
     def fit_transform(self, column):
         if not sbd.is_numeric(column):
             return NotImplemented
-        try:
-            numeric = sbd.to_numeric(column)
-            self.output_native_dtype_ = sbd.native_dtype(numeric)
-            return numeric
-        except Exception:
-            return NotImplemented
+        return self.transform(column)
 
     def transform(self, column):
-        return sbd.to_numeric(column, dtype=self.output_native_dtype_)
+        return _to_float32(column)
