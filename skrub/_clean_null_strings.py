@@ -24,7 +24,6 @@ STR_NA_VALUES = [
     "NaN",
     "?",
     "...",
-    None,
 ]
 
 
