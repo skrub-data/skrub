@@ -45,7 +45,7 @@ def _make_table_vectorizer_pipeline(
         Map(CleanNullStrings(), cols),
         Map(ToDatetime(), cols),
         Map(ToNumeric(), cols),
-        Map(ToCategorical(cardinality_threshold), cols),
+        Map(ToCategorical(cardinality_threshold - 1), cols),
     ]
 
     low_card_cat = sbs.categorical() & sbs.cardinality_below(cardinality_threshold)

@@ -29,6 +29,7 @@ __all__ = [
     "to_column_list",
     "is_in",
     "is_null",
+    "drop_nulls",
     "n_unique",
     "is_bool",
     "is_numeric",
@@ -40,7 +41,6 @@ __all__ = [
     "collect",
     "is_categorical",
     "to_categorical",
-    "make_categorical_dtype_for",
     "to_datetime",
     "unique",
     "native_dtype",
@@ -267,6 +267,21 @@ def _is_null_polars(column):
 
 
 @dispatch
+def drop_nulls(column):
+    raise NotImplementedError()
+
+
+@drop_nulls.specialize("pandas")
+def _drop_nulls_pandas(column):
+    return column.dropna()
+
+
+@drop_nulls.specialize("polars")
+def _drop_nulls_polars(column):
+    return column.drop_nulls()
+
+
+@dispatch
 def n_unique(column):
     raise NotImplementedError()
 
@@ -461,21 +476,6 @@ def _to_categorical_pandas(column):
 @to_categorical.specialize("polars")
 def _to_categorical_polars(column):
     return column.cast(pl.Categorical())
-
-
-@dispatch
-def make_categorical_dtype_for(obj, categories):
-    raise NotImplementedError()
-
-
-@make_categorical_dtype_for.specialize("pandas")
-def _make_categorical_dtype_for_pandas(obj, categories):
-    return pd.CategoricalDtype(categories)
-
-
-@make_categorical_dtype_for.specialize("polars")
-def _make_categorical_dtype_for_polars(obj, categories):
-    return pl.Enum(categories)
 
 
 @dispatch
