@@ -15,6 +15,7 @@ __all__ = [
     "dataframe_module_name",
     "shape",
     "is_dataframe",
+    "is_lazyframe",
     "is_column",
     "col",
     "to_array",

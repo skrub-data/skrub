@@ -1,3 +1,5 @@
+import warnings
+
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from . import _dataframe as sbd
@@ -10,7 +12,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         module_name = sbd.dataframe_module_name(X)
         if module_name is None:
             raise TypeError(
-                "Only pandas DataFrames and polars DataFrames and LazyFrames are"
+                "Only pandas and polars DataFrames are"
                 f" supported. Cannot handle X of type: {type(X)}"
             )
         self.module_name_ = module_name
@@ -36,12 +38,17 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
                 "This is likely to produce errors and is not supported."
             )
         column_names = sbd.column_names(X)
-        if column_names == self.column_names_:
-            return X
-        import difflib
+        if column_names != self.column_names_:
+            import difflib
 
-        diff = "\n".join(difflib.Differ().compare(self.column_names_, column_names))
-        message = (
-            f"Columns of dataframes passed to fit() and transform() differ:\n{diff}"
-        )
-        raise ValueError(message)
+            diff = "\n".join(difflib.Differ().compare(self.column_names_, column_names))
+            message = (
+                f"Columns of dataframes passed to fit() and transform() differ:\n{diff}"
+            )
+            raise ValueError(message)
+        if sbd.is_lazyframe(X):
+            warnings.warn(
+                "At the moment, skrub only works on eager DataFrames, calling collect()"
+            )
+            X = sbd.collect(X)
+        return X
