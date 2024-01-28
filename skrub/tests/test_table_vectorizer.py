@@ -390,7 +390,7 @@ def test_passthrough(X):
         low_cardinality_transformer="passthrough",
         high_cardinality_transformer="passthrough",
         datetime_transformer="passthrough",
-        numerical_transformer="passthrough",
+        numeric_transformer="passthrough",
         auto_cast=False,
     )
     vectorizer.set_output(transform="pandas")
@@ -705,7 +705,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
             self.n_jobs = n_jobs
 
     table_vectorizer = TableVectorizer(
-        numerical_transformer=DummyTransformerWithJobs(n_jobs=None),
+        numeric_transformer=DummyTransformerWithJobs(n_jobs=None),
         low_cardinality_transformer=DummyTransformerWithJobs(n_jobs=None),
         n_jobs=None,
     ).fit(X)
@@ -713,7 +713,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
     assert table_vectorizer.named_transformers_["low_cardinality"].n_jobs is None
 
     table_vectorizer = TableVectorizer(
-        numerical_transformer=DummyTransformerWithJobs(n_jobs=2),
+        numeric_transformer=DummyTransformerWithJobs(n_jobs=2),
         low_cardinality_transformer=DummyTransformerWithJobs(n_jobs=None),
         n_jobs=None,
     ).fit(X)
@@ -723,7 +723,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
     # 2. Case where `TableVectorizer.n_jobs` is not `None` and we should propagate
     # when the underlying transformer `n_jobs` is not set explicitly.
     table_vectorizer = TableVectorizer(
-        numerical_transformer=DummyTransformerWithJobs(n_jobs=None),
+        numeric_transformer=DummyTransformerWithJobs(n_jobs=None),
         low_cardinality_transformer=DummyTransformerWithJobs(n_jobs=None),
         n_jobs=2,
     ).fit(X)
@@ -733,7 +733,7 @@ def test_table_vectorizer_policy_propagate_n_jobs():
     # 3. Case where `TableVectorizer.n_jobs` is not `None` and we should not propagate
     # when the underlying transformer `n_jobs` is set explicitly.
     table_vectorizer = TableVectorizer(
-        numerical_transformer=DummyTransformerWithJobs(n_jobs=4),
+        numeric_transformer=DummyTransformerWithJobs(n_jobs=4),
         low_cardinality_transformer=DummyTransformerWithJobs(n_jobs=None),
         n_jobs=2,
     ).fit(X)
@@ -750,13 +750,13 @@ def test_table_vectorizer_remainder_cloning():
     table_vectorizer = TableVectorizer(
         low_cardinality_transformer="remainder",
         high_cardinality_transformer="remainder",
-        numerical_transformer="remainder",
+        numeric_transformer="remainder",
         datetime_transformer="remainder",
         remainder=remainder,
     ).fit(df)
     assert table_vectorizer.low_cardinality_transformer_ is not remainder
     assert table_vectorizer.high_cardinality_transformer_ is not remainder
-    assert table_vectorizer.numerical_transformer_ is not remainder
+    assert table_vectorizer.numeric_transformer_ is not remainder
     assert table_vectorizer.datetime_transformer_ is not remainder
 
 

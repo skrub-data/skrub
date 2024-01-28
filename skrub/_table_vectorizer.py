@@ -31,7 +31,7 @@ NUMERIC_TRANSFORMER = ToFloat32()
 def _make_table_vectorizer_pipeline(
     low_cardinality_transformer,
     high_cardinality_transformer,
-    numerical_transformer,
+    numeric_transformer,
     datetime_transformer,
     cardinality_threshold,
     passthrough,
@@ -53,7 +53,7 @@ def _make_table_vectorizer_pipeline(
     feature_extraction_steps = [
         Map(low_cardinality_transformer, low_card_cat - passthrough),
         Map(high_cardinality_transformer, sbs.string() - passthrough),
-        Map(numerical_transformer, sbs.numeric() - passthrough),
+        Map(numeric_transformer, sbs.numeric() - passthrough),
         Map(datetime_transformer, sbs.anydate() - passthrough),
     ]
 
@@ -106,7 +106,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         cardinality_threshold=40,
         low_cardinality_transformer=LOW_CARDINALITY_TRANSFORMER,
         high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
-        numerical_transformer=NUMERIC_TRANSFORMER,
+        numeric_transformer=NUMERIC_TRANSFORMER,
         datetime_transformer=DATETIME_TRANSFORMER,
         passthrough=(),
         drop_remainder=True,
@@ -119,8 +119,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.high_cardinality_transformer = _utils.clone_if_default(
             high_cardinality_transformer, HIGH_CARDINALITY_TRANSFORMER
         )
-        self.numerical_transformer = _utils.clone_if_default(
-            numerical_transformer, NUMERIC_TRANSFORMER
+        self.numeric_transformer = _utils.clone_if_default(
+            numeric_transformer, NUMERIC_TRANSFORMER
         )
         self.datetime_transformer = _utils.clone_if_default(
             datetime_transformer, DATETIME_TRANSFORMER
@@ -153,7 +153,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.pipeline_ = _make_table_vectorizer_pipeline(
             _clone_or_create_transformer(self.low_cardinality_transformer),
             _clone_or_create_transformer(self.high_cardinality_transformer),
-            _clone_or_create_transformer(self.numerical_transformer),
+            _clone_or_create_transformer(self.numeric_transformer),
             _clone_or_create_transformer(self.datetime_transformer),
             self.cardinality_threshold,
             self.passthrough,
