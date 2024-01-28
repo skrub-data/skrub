@@ -13,12 +13,15 @@ from ._dispatch import dispatch
 __all__ = [
     "skrub_namespace",
     "dataframe_module_name",
+    "is_pandas",
+    "is_polars",
     "shape",
     "is_dataframe",
     "is_lazyframe",
     "is_column",
     "col",
     "to_array",
+    "pandas_convert_dtypes",
     "column_names",
     "name",
     "column_like",
@@ -85,6 +88,14 @@ def _dataframe_module_name_polars(obj):
     return "polars"
 
 
+def is_pandas(obj):
+    return dataframe_module_name(obj) == "pandas"
+
+
+def is_polars(obj):
+    return dataframe_module_name(obj) == "polars"
+
+
 @dispatch
 def is_dataframe(obj):
     return False
@@ -128,6 +139,16 @@ def _to_array_pandas(obj):
 @to_array.specialize("polars")
 def _to_array_polars(obj):
     return obj.to_numpy()
+
+
+@dispatch
+def pandas_convert_dtypes(obj):
+    return obj
+
+
+@pandas_convert_dtypes.specialize("pandas")
+def _pandas_convert_dtypes_pandas(obj):
+    return obj.convert_dtypes()
 
 
 @dispatch

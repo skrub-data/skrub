@@ -12,8 +12,10 @@ from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._gap_encoder import GapEncoder
 from ._map import Map
+from ._pandas_convert_dtypes import PandasConvertDTypes
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime
+from ._to_float import ToFloat32
 from ._to_numeric import ToNumeric
 
 HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
@@ -23,6 +25,7 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     drop="if_binary",
 )
 DATETIME_TRANSFORMER = DatetimeEncoder()
+NUMERIC_TRANSFORMER = ToFloat32()
 
 
 def _make_table_vectorizer_pipeline(
@@ -38,6 +41,7 @@ def _make_table_vectorizer_pipeline(
 
     cleaning_steps = [
         CheckInputDataFrame(),
+        Map(PandasConvertDTypes(), cols),
         Map(CleanNullStrings(), cols),
         Map(ToDatetime(), cols),
         Map(ToNumeric(), cols),
@@ -102,7 +106,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         cardinality_threshold=40,
         low_cardinality_transformer=LOW_CARDINALITY_TRANSFORMER,
         high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
-        numerical_transformer="passthrough",
+        numerical_transformer=NUMERIC_TRANSFORMER,
         datetime_transformer=DATETIME_TRANSFORMER,
         passthrough=(),
         drop_remainder=True,
@@ -115,10 +119,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.high_cardinality_transformer = _utils.clone_if_default(
             high_cardinality_transformer, HIGH_CARDINALITY_TRANSFORMER
         )
+        self.numerical_transformer = _utils.clone_if_default(
+            numerical_transformer, NUMERIC_TRANSFORMER
+        )
         self.datetime_transformer = _utils.clone_if_default(
             datetime_transformer, DATETIME_TRANSFORMER
         )
-        self.numerical_transformer = numerical_transformer
         self.passthrough = passthrough
         self.drop_remainder = drop_remainder
         self.n_jobs = n_jobs
