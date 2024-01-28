@@ -302,6 +302,21 @@ def test_X_wrong_string_placeholder(main, px):
         agg_joiner.fit(main)
 
 
+@pytest.mark.parametrize("px", MODULES)
+def test_not_fitted_dataframe(main, px):
+    main = px.DataFrame(main)
+    not_main = px.DataFrame({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
+
+    agg_joiner = AggJoiner(
+        aux_table=main,
+        key="userId",
+    )
+    agg_joiner.fit(main)
+    error_msg = r"(?=.*columns cannot be used for joining because they do not exist)"
+    with pytest.raises(ValueError, match=error_msg):
+        agg_joiner.transform(not_main)
+
+
 y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
 
 
