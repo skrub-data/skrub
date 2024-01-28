@@ -11,6 +11,7 @@ class ToDatetime(BaseEstimator):
 
     def fit_transform(self, column):
         if sbd.is_anydate(column):
+            # TODO convert to UTC?
             self.datetime_format_ = None
             return column
         if not (sbd.is_string(column) or sbd.is_object(column)):
@@ -25,4 +26,7 @@ class ToDatetime(BaseEstimator):
         return self.transform(column)
 
     def transform(self, column):
+        if self.datetime_format_ is None:
+            # TODO check dtype, unit, timezone
+            return column
         return sbd.to_datetime(column, format=self.datetime_format_)

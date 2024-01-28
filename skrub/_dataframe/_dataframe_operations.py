@@ -485,11 +485,15 @@ def to_datetime(column, format):
 
 @to_datetime.specialize("pandas")
 def _to_datetime_pandas(column, format):
+    if _is_anydate_pandas(column):
+        return column
     return pd.to_datetime(column, format=format)
 
 
 @to_datetime.specialize("polars")
 def _to_datetime_polars(column, format):
+    if _is_anydate_polars(column):
+        return column
     return column.str.to_datetime(format=format)
 
 

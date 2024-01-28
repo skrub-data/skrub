@@ -108,7 +108,7 @@ class Inv(Selector):
         return list_difference(sbd.column_names(df), set(inv_selected).union(ignore))
 
     def __repr__(self):
-        return "~({self.complement!r})"
+        return f"~({self.complement!r})"
 
 
 class Or(Selector):

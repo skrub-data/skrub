@@ -5,8 +5,8 @@ from . import _selectors
 
 
 class Map(TransformerMixin, BaseEstimator):
-    def __init__(self, column_transformer, cols=_selectors.all()):
-        self.column_transformer = column_transformer
+    def __init__(self, transformer, cols=_selectors.all()):
+        self.transformer = transformer
         self.cols = cols
 
     def fit(self, X, y=None):
@@ -25,7 +25,7 @@ class Map(TransformerMixin, BaseEstimator):
         for col_name in sbd.column_names(X):
             column = sbd.col(X, col_name)
             if col_name in self._columns:
-                transformer = clone(self.column_transformer)
+                transformer = clone(self.transformer)
                 if hasattr(transformer, "set_output"):
                     transformer.set_output(transform=df_module_name)
                 transformer_input = _prepare_transformer_input(transformer, column)
