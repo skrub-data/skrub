@@ -1,6 +1,5 @@
 from .. import _dataframe as sbd
 from ._atoms import Filter
-from ._base import Selector
 
 
 class Numeric(Filter):

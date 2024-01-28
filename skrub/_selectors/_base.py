@@ -1,3 +1,6 @@
+from .. import _dataframe as sbd
+
+
 def all():
     return All()
 
@@ -20,7 +23,18 @@ def make_selector(obj):
     return Cols(obj)
 
 
+@sbd.dispatch
 def select(df, selector):
+    raise NotImplementedError()
+
+
+@select.specialize("pandas")
+def _select_pandas(df, selector):
+    return df.select(make_selector(selector).select(df))
+
+
+@select.specialize("polars")
+def _select_polars(df, selector):
     return df.select(make_selector(selector).select(df))
 
 
@@ -54,7 +68,7 @@ class Selector:
 
 class All(Selector):
     def select(self, df):
-        return list(df.columns)
+        return sbd.column_names(df)
 
     def __repr__(self):
         return "all()"
@@ -66,8 +80,8 @@ class Cols(Selector):
 
     def select(self, df):
         all_selected = set(self.columns)
-        assert all_selected.issubset(df.columns)
-        return [col for col in df.columns if col in all_selected]
+        assert all_selected.issubset(sbd.column_names(df))
+        return [col for col in sbd.column_names(df) if col in all_selected]
 
     def __repr__(self):
         args = ", ".join(map(repr, self.columns))
@@ -84,7 +98,7 @@ class SetOp(Selector):
         left_selected = set(self.left.select(df))
         right_selected = set(self.right.select(df))
         all_selected = getattr(left_selected, self.op)(right_selected)
-        return [col for col in df.columns if col in all_selected]
+        return [col for col in sbd.column_names(df) if col in all_selected]
 
     def __repr__(self):
         op_repr = {

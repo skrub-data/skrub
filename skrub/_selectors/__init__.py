@@ -4,6 +4,7 @@ from ._dtype_atoms import anydate, categorical, numeric, string
 from ._statistic_atoms import cardinality_below
 
 __all__ = [
+    "select",
     "make_selector",
     "all",
     "cols",
@@ -20,8 +21,3 @@ __all__ = [
     "string",
     "cardinality_below",
 ]
-
-for name in __all__:
-    setattr(select, name, globals()[name])
-
-__all__.append("select")

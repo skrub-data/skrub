@@ -1,6 +1,7 @@
 import fnmatch
 import re
 
+from .. import _dataframe as sbd
 from ._base import Selector
 
 
@@ -9,7 +10,7 @@ class Glob(Selector):
         self.pattern = pattern
 
     def select(self, df):
-        return fnmatch.filter(df.columns, self.pattern)
+        return fnmatch.filter(sbd.column_names(df), self.pattern)
 
     def __repr__(self):
         return f"glob({self.pattern!r})"
@@ -25,7 +26,7 @@ class Regex(Selector):
 
     def select(self, df):
         pat = re.compile(self.pattern)
-        return [col for col in df.columns if pat.match(col) is not None]
+        return [col for col in sbd.column_names(df) if pat.match(col) is not None]
 
     def __repr__(self):
         return f"regex({self.pattern!r})"
@@ -40,7 +41,7 @@ class Filter(Selector):
         self.predicate = predicate
 
     def select(self, df):
-        return [col for col in df.columns if self.predicate(df[col])]
+        return [col for col in sbd.column_names(df) if self.predicate(df[col])]
 
     def __repr__(self):
         return f"filter({self.predicate!r})"
@@ -55,7 +56,7 @@ class FilterNames(Selector):
         self.predicate = predicate
 
     def select(self, df):
-        return [col for col in df.columns if self.predicate(col)]
+        return [col for col in sbd.column_names(df) if self.predicate(col)]
 
     def __repr__(self):
         return f"filter_names({self.predicate!r})"
@@ -91,7 +92,7 @@ class ProducedBy(Selector):
                 all_produced.update(step.produced_outputs_)
             else:
                 all_produced.update(step.get_feature_names_out())
-        return [c for c in df.columns if c in all_produced]
+        return [c for c in sbd.column_names(df) if c in all_produced]
 
     def __repr__(self):
         transformers_repr = ", ".join(map(repr, self.transformers))
