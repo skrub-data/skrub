@@ -32,8 +32,101 @@ if POLARS_SETUP:
 
 @pytest.mark.parametrize("px", MODULES)
 def test_keys(main, px):
-    # TODO
-    pass
+    main = px.DataFrame(main)
+
+    # Check only keys
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        keys=["userId"],
+        cols=["rating", "genre"],
+    )
+    multi_agg_joiner.fit(main)
+
+    # Check multiple keys
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        keys=["userId", "movieId"],
+        cols=["rating", "genre"],
+    )
+    multi_agg_joiner.fit(main)
+
+    # Check multiple main_key and aux_keys, same length
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        main_key=["userId", "movieId"],
+        aux_keys=["userId", "movieId"],
+        cols=["rating", "genre"],
+    )
+    multi_agg_joiner.fit(main)
+    # aux_keys_ is 2d since we iterate over it
+    assert multi_agg_joiner._main_key == ["userId", "movieId"]
+    assert multi_agg_joiner._aux_keys == [["userId", "movieId"]]
+
+    # Check too many main_key
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        main_key=["userId", "movieId"],
+        aux_keys=["userId"],
+        cols=["rating", "genre"],
+    )
+    with pytest.raises(
+        ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
+    ):
+        multi_agg_joiner.fit(main)
+
+    # Check too many aux_keys
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        main_key="userId",
+        aux_keys=["userId", "movieId"],
+        cols=["rating", "genre"],
+    )
+    with pytest.raises(
+        ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
+    ):
+        multi_agg_joiner.fit(main)
+
+    # Check providing keys and extra main_key
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        keys=["userId"],
+        main_key="userId",
+        cols=["rating", "genre"],
+    )
+    with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
+        multi_agg_joiner.fit(main)
+
+    # Check providing key and extra aux_keys
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        keys=["userId"],
+        aux_keys=["userId"],
+        cols=["rating", "genre"],
+    )
+    with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
+        multi_agg_joiner.fit(main)
+
+    # Check main_key doesn't exist in table
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        main_key="wrong_key",
+        aux_keys=["userId"],
+        cols=["rating", "genre"],
+    )
+    match = r"(?=.*columns cannot be used for joining because they do not exist)"
+    with pytest.raises(ValueError, match=match):
+        multi_agg_joiner.fit(main)
+
+    # Check aux_keys doesn't exist in table
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        main_key="userId",
+        aux_keys=["wrong_key"],
+        cols=["rating", "genre"],
+    )
+    match = r"(?=.*columns cannot be used for joining because they do not exist)"
+    with pytest.raises(ValueError, match=match):
+        multi_agg_joiner.fit(main)
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -49,7 +142,7 @@ def test_cols(main, px):
     multi_agg_joiner.fit(main)
     assert multi_agg_joiner._cols == [["rating"]]
 
-    # Check providing one col for each aux_table
+    # Check providing one col for each aux_tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         keys=["userId"],
@@ -73,24 +166,28 @@ def test_cols(main, px):
 def test_operations(main, px):
     main = px.DataFrame(main)
 
-    # This should work
+    # Check one operation
     multi_agg_joiner = MultiAggJoiner(
-        aux_tables=[main], keys=["userId"], cols=["rating"], operations=["mean"]
+        aux_tables=[main],
+        keys=["userId"],
+        cols=["rating"],
+        operations=["mean"],
     )
     multi_agg_joiner.fit(main)
     assert multi_agg_joiner._operations == [["mean"]]
 
-    # This should not work
+    # Check providing a list
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         keys=["userId"],
         cols=[["rating"], ["rating"]],
         operations="mean",
     )
-    with pytest.raises(ValueError):
+    error_msg = r"Accepted inputs for operations are None, iterable of str"
+    with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main)
 
-    # This should work
+    # Check one operation for each aux_tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         keys=["userId"],
@@ -100,17 +197,18 @@ def test_operations(main, px):
     multi_agg_joiner.fit(main)
     assert multi_agg_joiner._operations == [["mean"], ["mean"]]
 
-    # This should not work
+    # Check badly formatted operation
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         keys="userId",
         cols=[["rating"], ["rating"]],
         operations=["mean", "mean", "mode"],
     )
-    with pytest.raises(ValueError):
+    error_msg = r"The number of provided operations must match the number of tables"
+    with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main)
 
-    # This should work
+    # Check one and two operations
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         keys="userId",
@@ -119,7 +217,6 @@ def test_operations(main, px):
     )
     multi_agg_joiner.fit(main)
     assert multi_agg_joiner._operations == [["mean"], ["mean", "mode"]]
-    pass
 
 
 # TODO: explode this test into multiple smaller ones
