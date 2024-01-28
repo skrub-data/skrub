@@ -586,8 +586,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             The augmented input.
         """
         check_is_fitted(self, "agg_joiners_")
-
-        # TODO: add checks here
+        X, _ = self._check_dataframes(X, self.aux_tables)
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
         for agg_joiner in self.agg_joiners_:
             X = agg_joiner.transform(X)
