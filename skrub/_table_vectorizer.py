@@ -21,6 +21,7 @@ from ._to_numeric import ToNumeric
 HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     sparse_output=False,
+    dtype="float32",
     handle_unknown="ignore",
     drop="if_binary",
 )
