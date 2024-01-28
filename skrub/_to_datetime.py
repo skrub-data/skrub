@@ -16,13 +16,11 @@ class ToDatetime(BaseEstimator):
         if not (sbd.is_string(column) or sbd.is_object(column)):
             return NotImplemented
         sample = sbd.sample(column, n=min(_SAMPLE_SIZE, sbd.shape(column)[0]))
-        if not _datetime_utils.is_column_datetime_parsable(
-            sbd.asdfapi(sample).to_array()
-        ):
+        if not _datetime_utils.is_column_datetime_parsable(sbd.to_array(sample)):
             return NotImplemented
 
         self.datetime_format_ = _datetime_utils.guess_datetime_format(
-            sbd.asdfapi(sbd.native_cast(sample, str)).to_array(), random_state=0
+            sbd.to_array(sbd.native_cast(sample, str)), random_state=0
         )
         return self.transform(column)
 

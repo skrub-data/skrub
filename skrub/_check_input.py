@@ -2,7 +2,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from . import _dataframe as sbd
 from . import _utils
-from ._dataframe import asdfapi
 
 
 class CheckInputDataFrame(TransformerMixin, BaseEstimator):
@@ -17,7 +16,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         self.module_name_ = module_name
         # TODO check schema (including dtypes) not just names.
         # Need to decide how strict we should be about types
-        column_names = asdfapi(X).column_names
+        column_names = sbd.column_names(X)
         _utils.check_duplicated_column_names(column_names)
         self.column_names_ = column_names
         return self
@@ -36,7 +35,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
                 f"but is being applied to a {module_name} dataframe. "
                 "This is likely to produce errors and is not supported."
             )
-        column_names = asdfapi(X).column_names
+        column_names = sbd.column_names(X)
         if column_names == self.column_names_:
             return X
         import difflib

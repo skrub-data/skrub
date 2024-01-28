@@ -8,7 +8,6 @@ try:
 except ImportError:
     pass
 
-from ._dataframe_api import asdfapi, asnative, dfapi_ns
 from ._dispatch import dispatch
 
 __all__ = [
@@ -17,16 +16,22 @@ __all__ = [
     "shape",
     "is_dataframe",
     "is_column",
-    "to_dfapi_column_list",
+    "col",
+    "to_array",
+    "column_names",
+    "name",
+    "column_like",
+    "dataframe_from_columns",
+    "to_column_list",
+    "is_in",
+    "is_null",
+    "n_unique",
     "is_bool",
     "is_numeric",
     "to_numeric",
     "is_string",
     "is_object",
     "is_anydate",
-    "numeric_column_names",
-    "anydate_column_names",
-    "select",
     "set_column_names",
     "collect",
     "is_categorical",
@@ -79,43 +84,199 @@ def _dataframe_module_name_polars(obj):
     return "polars"
 
 
+@dispatch
 def is_dataframe(obj):
-    return hasattr(asnative(obj), "__dataframe_consortium_standard__")
+    return False
 
 
+@is_dataframe.specialize("pandas", "DataFrame")
+def _is_dataframe_pandas(obj):
+    return True
+
+
+@is_dataframe.specialize("polars", ["DataFrame", "LazyFrame"])
+def _is_dataframe_polars(obj):
+    return True
+
+
+@dispatch
 def is_column(obj):
-    return hasattr(asnative(obj), "__column_consortium_standard__")
+    return False
 
 
-def to_dfapi_column_list(obj):
-    # NOTE: this returns df api objects, not native objects
-    try:
-        obj = asdfapi(obj)
-    except TypeError:
-        return [asdfapi(c) for c in obj]
+@is_column.specialize("pandas", "Column")
+def _is_column_pandas(obj):
+    return True
+
+
+@is_column.specialize("polars", "Column")
+def _is_column_polars(obj):
+    return True
+
+
+@dispatch
+def to_array(obj):
+    raise NotImplementedError()
+
+
+@to_array.specialize("pandas")
+def _to_array_pandas(obj):
+    return obj.to_numpy()
+
+
+@to_array.specialize("polars")
+def _to_array_polars(obj):
+    return obj.to_numpy()
+
+
+@dispatch
+def col(df, col_name):
+    raise NotImplementedError()
+
+
+@col.specialize("pandas")
+def _col_pandas(df, col_name):
+    return df[col_name]
+
+
+@col.specialize("polars")
+def _col_polars(df, col_name):
+    return df[col_name]
+
+
+@dispatch
+def column_names(df):
+    raise NotImplementedError()
+
+
+@column_names.specialize("pandas")
+def _column_names_pandas(df):
+    return list(df.columns.values)
+
+
+@column_names.specialize("polars")
+def _column_names_polars(df):
+    return df.columns
+
+
+@dispatch
+def name(col):
+    raise NotImplementedError()
+
+
+@name.specialize("pandas")
+def _name_pandas(col):
+    return col.name
+
+
+@name.specialize("polars")
+def _name_polars(col):
+    return col.name
+
+
+@dispatch
+def column_like(column, values, name):
+    return NotImplementedError()
+
+
+@column_like.specialize("pandas")
+def _column_like_pandas(column, values, name):
+    return pd.Series(values, name=name)
+
+
+@column_like.specialize("polars")
+def _column_like_polars(column, values, name):
+    return pl.Series(values, name=name)
+
+
+@dispatch
+def dataframe_from_columns(*columns):
+    return NotImplementedError()
+
+
+@dataframe_from_columns.specialize("pandas")
+def _dataframe_from_columns_pandas(*columns):
+    return pd.DataFrame({name(c): c for c in columns})
+
+
+@dataframe_from_columns.specialize("polars")
+def _dataframe_from_columns_polars(*columns):
+    return pl.DataFrame({name(c): c for c in columns})
+
+
+def to_column_list(obj):
     if is_column(obj):
         return [obj]
-    return [obj.col(c) for c in obj.column_names]
+    if is_dataframe(obj):
+        return [col(obj, c) for c in column_names(obj)]
+    if not hasattr(obj, "__iter__"):
+        raise TypeError("obj should be a DataFrame, a Column or a list of Columns.")
+    return obj
 
 
+@dispatch
+def is_in(column, values):
+    raise NotImplementedError()
+
+
+@is_in.specialize("pandas")
+def _is_in_pandas(column, values):
+    return column.isin(values)
+
+
+@is_in.specialize("polars")
+def _is_in_polars(column, values):
+    return column.is_in(values)
+
+
+@dispatch
+def is_null(column):
+    raise NotImplementedError()
+
+
+@is_null.specialize("pandas")
+def _is_null_pandas(column):
+    return column.isna()
+
+
+@is_null.specialize("polars")
+def _is_null_polars(column):
+    return column.is_null()
+
+
+@dispatch
+def n_unique(column):
+    raise NotImplementedError()
+
+
+@n_unique.specialize("pandas")
+def _n_unique_pandas(column):
+    return column.nunique()
+
+
+@n_unique.specialize("polars")
+def _n_unique_polars(column):
+    return column.n_unique()
+
+
+@dispatch
 def shape(obj):
-    obj = asdfapi(obj)
-    if hasattr(obj, "shape"):
-        try:
-            shape = obj.shape()
-        except ValueError:
-            shape = obj.persist().shape()
-    else:
-        assert hasattr(obj, "len")
-        shape = (obj.len(),)
-    return tuple(map(asnative, shape))
+    raise NotImplementedError()
+
+
+@shape.specialize("pandas")
+def _shape_pandas(obj):
+    return obj.shape
+
+
+@shape.specialize("polars")
+def _shape_polars(obj):
+    return obj.shape
 
 
 @dispatch
 def is_bool(column):
-    column = asdfapi(column)
-    ns = dfapi_ns(column)
-    return ns.is_dtype(column.dtype, "bool")
+    raise NotImplementedError()
 
 
 @is_bool.specialize("pandas")
@@ -130,9 +291,7 @@ def _is_bool_polars(column):
 
 @dispatch
 def is_numeric(column):
-    column = asdfapi(column)
-    ns = dfapi_ns(column)
-    return ns.is_dtype(column.dtype, "numeric")
+    raise NotImplementedError()
 
 
 @is_numeric.specialize("pandas")
@@ -170,9 +329,7 @@ def _to_numeric_polars(column, dtype=None):
 
 @dispatch
 def is_string(column):
-    column = asdfapi(column)
-    ns = dfapi_ns(column)
-    return isinstance(column.dtype, ns.String)
+    raise NotImplementedError()
 
 
 @is_string.specialize("pandas")
@@ -204,12 +361,7 @@ def _is_object_polars(column):
 
 @dispatch
 def is_anydate(column):
-    column = asdfapi(column)
-    ns = dfapi_ns(column)
-    for dtype in [ns.Date, ns.Datetime]:
-        if isinstance(column.dtype, dtype):
-            return True
-    return False
+    raise NotImplementedError()
 
 
 @is_anydate.specialize("pandas")
@@ -222,21 +374,14 @@ def _is_anydate_polars(column):
     return column.dtype in (pl.Date, pl.Datetime)
 
 
-def _select_column_names(df, predicate):
-    df = asdfapi(df)
-    return [col_name for col_name in df.column_names if predicate(df.col(col_name))]
+@dispatch
+def is_lazyframe(df):
+    return False
 
 
-def numeric_column_names(df):
-    return _select_column_names(df, is_numeric)
-
-
-def anydate_column_names(df):
-    return _select_column_names(df, is_anydate)
-
-
-def select(df, column_names):
-    return asnative(asdfapi(df).select(*column_names))
+@is_lazyframe.specialize("polars", "LazyFrame")
+def _is_lazyframe_polars_lazyframe(df):
+    return True
 
 
 @dispatch
@@ -249,14 +394,19 @@ def _collect_polars_lazyframe(df):
     return df.collect()
 
 
+@dispatch
 def set_column_names(df, new_column_names):
-    df = asdfapi(df)
-    ns = dfapi_ns(df)
-    new_columns = (
-        df.col(col_name).rename(new_name).persist()
-        for (col_name, new_name) in zip(df.column_names, new_column_names)
-    )
-    return asnative(ns.dataframe_from_columns(*new_columns))
+    raise NotImplementedError()
+
+
+@set_column_names.specialize("pandas")
+def _set_column_names_pandas(df, new_column_names):
+    return df.set_axis(new_column_names, axis=1)
+
+
+@set_column_names.specialize("polars")
+def _set_column_names_polars(df, new_column_names):
+    return df.rename(dict(zip(df.columns, new_column_names)))
 
 
 @dispatch
@@ -321,9 +471,7 @@ def _to_datetime_polars(column, format):
 
 @dispatch
 def unique(column):
-    column = asdfapi(column)
-    unique_values = column.take(column.unique_indices(skip_nulls=False))
-    return asnative(unique_values)
+    raise NotImplementedError()
 
 
 @unique.specialize("pandas")

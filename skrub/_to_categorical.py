@@ -2,7 +2,6 @@ from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
 from . import _utils
-from ._dataframe import asdfapi, asnative, dfapi_ns
 
 
 class ToCategorical(BaseEstimator):
@@ -31,8 +30,6 @@ class ToCategorical(BaseEstimator):
     def transform(self, column):
         if sbd.is_categorical(column):
             return column
-        column = asdfapi(column)
-        dfapi_categories = dfapi_ns(column).column_from_sequence(self._categories)
-        mask = asnative(column.is_in(dfapi_categories) | column.is_null())
-        column = sbd.where(asnative(column), mask, [self.unknown_category_])
-        return sbd.native_cast(asnative(column), self.output_native_dtype_)
+        keep = sbd.is_in(column, self._categories) | sbd.is_null(column)
+        column = sbd.where(column, keep, [self.unknown_category_])
+        return sbd.native_cast(column, self.output_native_dtype_)

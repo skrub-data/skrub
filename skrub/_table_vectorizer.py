@@ -4,11 +4,11 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 
+from . import _dataframe as sbd
 from . import _selectors as sbs
 from . import _utils
 from ._check_input import CheckInputDataFrame
 from ._clean_null_strings import CleanNullStrings
-from ._dataframe import asdfapi
 from ._datetime_encoder import DatetimeEncoder
 from ._gap_encoder import GapEncoder
 from ._map import Map
@@ -154,7 +154,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             self.drop_remainder,
         )
         output = self.pipeline_.fit_transform(X)
-        self.feature_names_out_ = asdfapi(output).column_names
+        self.feature_names_out_ = sbd.column_names(output)
         return output
 
     def transform(self, X):
