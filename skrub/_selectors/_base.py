@@ -31,6 +31,8 @@ class Selector:
     def __invert__(self):
         return all() - self
 
+    # TODO: implement short-circuit for &, | ?
+
     def __or__(self, other):
         return SetOp(self, other, "__or__")
 

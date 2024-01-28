@@ -4,13 +4,14 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 
-from . import _selectors, _utils
+from . import _selectors as sbs
+from . import _utils
 from ._check_input import CheckInputDataFrame
 from ._clean_null_strings import CleanNullStrings
 from ._dataframe import asdfapi
 from ._datetime_encoder import DatetimeEncoder
 from ._gap_encoder import GapEncoder
-from ._map_cols import MapCols
+from ._map import Map
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime
 from ._to_numeric import ToNumeric
@@ -25,30 +26,50 @@ DATETIME_TRANSFORMER = DatetimeEncoder()
 
 
 def _make_table_vectorizer_pipeline(
-    cardinality_threshold,
     low_cardinality_transformer,
     high_cardinality_transformer,
     numerical_transformer,
     datetime_transformer,
+    cardinality_threshold,
+    passthrough,
+    drop_remainder,
 ):
-    return make_pipeline(
+    cols = sbs.inv(passthrough)
+
+    cleaning_steps = [
         CheckInputDataFrame(),
-        MapCols(CleanNullStrings()),
-        MapCols(ToDatetime()),
-        MapCols(ToNumeric()),
-        MapCols(ToCategorical(cardinality_threshold)),
-        MapCols(low_cardinality_transformer, cols=_selectors.categorical()),
-        MapCols(high_cardinality_transformer, cols=_selectors.string()),
-        MapCols(numerical_transformer, cols=_selectors.numeric()),
-        MapCols(datetime_transformer, cols=_selectors.anydate()),
-    )
+        Map(CleanNullStrings(), cols),
+        Map(ToDatetime(), cols),
+        Map(ToNumeric(), cols),
+        Map(ToCategorical(cardinality_threshold), cols),
+    ]
+
+    low_card_cat = sbs.categorical() & sbs.cardinality_below(cardinality_threshold)
+
+    feature_extraction_steps = [
+        Map(low_cardinality_transformer, low_card_cat - passthrough),
+        Map(high_cardinality_transformer, sbs.string() - passthrough),
+        Map(numerical_transformer, sbs.numeric() - passthrough),
+        Map(datetime_transformer, sbs.anydate() - passthrough),
+    ]
+
+    all_steps = cleaning_steps + feature_extraction_steps
+
+    if drop_remainder:
+        remainder = cols - sbs.produced_by(*feature_extraction_steps)
+        all_steps.append(Map(Drop(), remainder))
+
+    return make_pipeline(*all_steps)
 
 
 class PassThrough(BaseEstimator):
     __univariate_transformer__ = True
 
     def fit_transform(self, column):
-        return NotImplemented
+        return column
+
+    def transform(self, column):
+        return column
 
 
 class Drop(BaseEstimator):
@@ -83,6 +104,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
         numerical_transformer="passthrough",
         datetime_transformer=DATETIME_TRANSFORMER,
+        passthrough=(),
+        drop_remainder=True,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -96,6 +119,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             datetime_transformer, DATETIME_TRANSFORMER
         )
         self.numerical_transformer = numerical_transformer
+        self.passthrough = passthrough
+        self.drop_remainder = drop_remainder
         self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
@@ -120,11 +145,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     def fit_transform(self, X, y=None):
         self.pipeline_ = _make_table_vectorizer_pipeline(
-            self.cardinality_threshold,
             _clone_or_create_transformer(self.low_cardinality_transformer),
             _clone_or_create_transformer(self.high_cardinality_transformer),
             _clone_or_create_transformer(self.numerical_transformer),
             _clone_or_create_transformer(self.datetime_transformer),
+            self.cardinality_threshold,
+            self.passthrough,
+            self.drop_remainder,
         )
         output = self.pipeline_.fit_transform(X)
         self.feature_names_out_ = asdfapi(output).column_names

@@ -73,8 +73,30 @@ class Custom(Selector):
         return list(self.selector_function(df).columns)
 
     def __repr__(self):
-        return f"custom(self.selector_function!r)"
+        return f"custom({self.selector_function!r})"
 
 
 def custom(selector_function):
     return Custom(selector_function)
+
+
+class ProducedBy(Selector):
+    def __init__(self, *transformers):
+        self.transformers = transformers
+
+    def select(self, df):
+        all_produced = set()
+        for step in self.transformers:
+            if hasattr(step, "produced_outputs_"):
+                all_produced.update(step.produced_outputs_)
+            else:
+                all_produced.update(step.get_feature_names_out())
+        return [c for c in df.columns if c in all_produced]
+
+    def __repr__(self):
+        transformers_repr = ", ".join(map(repr, self.transformers))
+        return f"produced_by({transformers_repr})"
+
+
+def produced_by(*transformers):
+    return ProducedBy(*transformers)

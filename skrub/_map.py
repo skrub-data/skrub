@@ -7,7 +7,7 @@ from . import _selectors
 from ._dataframe import asdfapi, asnative, dfapi_ns
 
 
-class MapCols(TransformerMixin, BaseEstimator):
+class Map(TransformerMixin, BaseEstimator):
     def __init__(self, column_transformer, cols=_selectors.all()):
         self.column_transformer = column_transformer
         self.cols = cols
@@ -21,6 +21,9 @@ class MapCols(TransformerMixin, BaseEstimator):
         self._columns = _selectors.make_selector(self.cols).select(X)
         self.transformers_ = {}
         transformed_columns = []
+        self.used_inputs_ = []
+        self.input_to_outputs_ = {}
+        self.produced_outputs_ = []
         df_module_name = sbd.dataframe_module_name(X)
         ns = dfapi_ns(X)
         X = asdfapi(X)
@@ -35,8 +38,13 @@ class MapCols(TransformerMixin, BaseEstimator):
                 if output is NotImplemented:
                     transformed_columns.append(column)
                 else:
-                    transformed_columns.extend(sbd.to_dfapi_column_list(output))
+                    output_cols = sbd.to_dfapi_column_list(output)
+                    output_col_names = [c.name for c in output_cols]
+                    transformed_columns.extend(output_cols)
                     self.transformers_[col_name] = transformer
+                    self.used_inputs_.append(col_name)
+                    self.input_to_outputs_[col_name] = output_col_names
+                    self.produced_outputs_.extend(output_col_names)
             else:
                 transformed_columns.append(column)
         # TODO find a way to know if a column is already persisted and avoid warning
