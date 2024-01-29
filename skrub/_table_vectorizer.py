@@ -62,7 +62,7 @@ def _make_table_vectorizer_pipeline(
 
     if drop_remainder:
         remainder = cols - sbs.produced_by(*feature_extraction_steps)
-        all_steps.append(Map(Drop(), remainder))
+        all_steps.append(Map(Drop(), remainder - passthrough))
 
     return make_pipeline(*all_steps)
 
