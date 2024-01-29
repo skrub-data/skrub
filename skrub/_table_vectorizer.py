@@ -34,9 +34,9 @@ def _make_table_vectorizer_pipeline(
     high_cardinality_transformer,
     numeric_transformer,
     datetime_transformer,
+    remainder_transformer,
     cardinality_threshold,
     passthrough,
-    drop_remainder,
 ):
     cols = sbs.inv(passthrough)
 
@@ -58,11 +58,10 @@ def _make_table_vectorizer_pipeline(
         Map(datetime_transformer, sbs.anydate() - passthrough),
     ]
 
-    all_steps = cleaning_steps + feature_extraction_steps
+    remainder_cols = cols - sbs.produced_by(*feature_extraction_steps)
+    remainder_steps = [Map(remainder_transformer, remainder_cols)]
 
-    if drop_remainder:
-        remainder = cols - sbs.produced_by(*feature_extraction_steps)
-        all_steps.append(Map(Drop(), remainder - passthrough))
+    all_steps = cleaning_steps + feature_extraction_steps + remainder_steps
 
     return make_pipeline(*all_steps)
 
@@ -109,8 +108,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
         numeric_transformer=NUMERIC_TRANSFORMER,
         datetime_transformer=DATETIME_TRANSFORMER,
+        remainder_transformer="drop",
         passthrough=(),
-        drop_remainder=True,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -126,8 +125,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.datetime_transformer = _utils.clone_if_default(
             datetime_transformer, DATETIME_TRANSFORMER
         )
+        self.remainder_transformer = remainder_transformer
         self.passthrough = passthrough
-        self.drop_remainder = drop_remainder
         self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
@@ -156,9 +155,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             _clone_or_create_transformer(self.high_cardinality_transformer),
             _clone_or_create_transformer(self.numeric_transformer),
             _clone_or_create_transformer(self.datetime_transformer),
+            _clone_or_create_transformer(self.remainder_transformer),
             self.cardinality_threshold,
             self.passthrough,
-            self.drop_remainder,
         )
         output = self.pipeline_.fit_transform(X)
         self.feature_names_out_ = sbd.column_names(output)
