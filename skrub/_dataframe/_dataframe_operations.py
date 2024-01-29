@@ -37,6 +37,7 @@ __all__ = [
     "is_bool",
     "is_numeric",
     "to_numeric",
+    "to_float32",
     "is_string",
     "is_object",
     "is_anydate",
@@ -424,6 +425,21 @@ def _to_numeric_polars(column, dtype=None, strict=True):
     if not strict:
         return column.cast(pl.Float64, strict=False)
     raise ValueError("Could not convert column to numeric dtype") from error
+
+
+@dispatch
+def to_float32(column):
+    raise NotImplementedError()
+
+
+@to_float32.specialize("pandas")
+def _to_float32_pandas(column):
+    return _to_numeric_pandas(column).astype("float32")
+
+
+@to_float32.specialize("polars")
+def _to_float32_polars(column):
+    return _to_numeric_polars(column).cast(pl.Float32)
 
 
 @dispatch

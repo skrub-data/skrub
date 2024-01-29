@@ -10,7 +10,7 @@ from pandas.testing import assert_frame_equal
 
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub._dataframe._test_utils import is_module_polars
-from skrub._datetime_encoder import TIME_LEVELS, DatetimeEncoder, to_datetime
+from skrub._datetime_encoder import _TIME_LEVELS, DatetimeEncoder, to_datetime
 from skrub._parser import _is_pandas_format_mixed_available
 
 MODULES = [pd]
@@ -133,17 +133,17 @@ def get_mixed_datetime_format(as_array=False):
 @pytest.mark.parametrize(
     "get_data_func, features, format",
     [
-        (get_date, TIME_LEVELS[: TIME_LEVELS.index("day") + 1], "%Y-%m-%d"),
-        (get_datetime, TIME_LEVELS, "%Y-%m-%d %H:%M:%S"),
-        (get_tz_datetime, TIME_LEVELS, "%Y-%m-%d %H:%M:%S%z"),
-        (get_nanoseconds, TIME_LEVELS, NANOSECONDS_FORMAT),
+        (get_date, _TIME_LEVELS[: _TIME_LEVELS.index("day") + 1], "%Y-%m-%d"),
+        (get_datetime, _TIME_LEVELS, "%Y-%m-%d %H:%M:%S"),
+        (get_tz_datetime, _TIME_LEVELS, "%Y-%m-%d %H:%M:%S%z"),
+        (get_nanoseconds, _TIME_LEVELS, NANOSECONDS_FORMAT),
     ],
 )
 @pytest.mark.parametrize(
     "add_total_seconds, add_day_of_the_week",
     list(product([True, False], [True, False])),
 )
-@pytest.mark.parametrize("resolution", TIME_LEVELS)
+@pytest.mark.parametrize("resolution", _TIME_LEVELS)
 def test_fit(
     px,
     as_array,
