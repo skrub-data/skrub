@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 try:
     import pandas as pd
@@ -20,6 +20,21 @@ _TIME_LEVELS = ["year", "month", "day", "hour", "minute", "second"]
 
 
 @sbd.dispatch
+def _is_date(column):
+    raise NotImplementedError()
+
+
+@_is_date.specialize("pandas")
+def _is_date_pandas(column):
+    return (column.dt.date == column).all()
+
+
+@_is_date.specialize("polars")
+def _is_date_polars(column):
+    return (column.dt.date() == column).all()
+
+
+@sbd.dispatch
 def _get_dt_feature(column, feature):
     raise NotImplementedError()
 
@@ -27,7 +42,11 @@ def _get_dt_feature(column, feature):
 @_get_dt_feature.specialize("pandas")
 def _get_dt_feature_pandas(column, feature):
     if feature == "total_seconds":
-        return ((column - datetime(1970, 1, 1)) / pd.Timedelta("1s")).astype("float32")
+        if column.dt.tz is None:
+            epoch = datetime(1970, 1, 1)
+        else:
+            epoch = datetime(1970, 1, 1, tzinfo=UTC)
+        return ((column - epoch) / pd.Timedelta("1s")).astype("float32")
     assert feature in _TIME_LEVELS + ["day_of_the_week"]
     feature = {"day_of_the_week": "day_of_week"}.get(feature, feature)
     return getattr(column.dt, feature)
@@ -59,9 +78,13 @@ class DatetimeColumnEncoder(BaseEstimator):
             self.extracted_features_ = []
         else:
             idx_level = _TIME_LEVELS.index(self.resolution)
+            if _is_date(column):
+                idx_level = min(idx_level, _TIME_LEVELS.index("day"))
             self.extracted_features_ = _TIME_LEVELS[: idx_level + 1]
         if self.add_day_of_the_week:
             self.extracted_features_.append("day_of_the_week")
+        if self.add_total_seconds:
+            self.extracted_features_.append("total_seconds")
         return self.transform(column)
 
     def transform(self, column):
