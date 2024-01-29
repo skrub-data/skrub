@@ -46,6 +46,8 @@ class Map(TransformerMixin, BaseEstimator):
                 self.input_to_outputs_[input_name] = output_names
 
         self._output_names = _column_names(transformed_columns)
+        self.used_inputs_ = list(self.transformers_.keys())
+        self.produced_outputs_ = list(itertools.chain(*self.input_to_outputs_.values()))
         return sbd.dataframe_from_columns(*transformed_columns)
 
     def transform(self, X, y=None):
@@ -58,14 +60,6 @@ class Map(TransformerMixin, BaseEstimator):
             )
         transformed_columns = _rename_columns(transformed_columns, self._output_names)
         return sbd.dataframe_from_columns(*transformed_columns)
-
-    @property
-    def used_inputs_(self):
-        return list(self.transformers_.keys())
-
-    @property
-    def produced_outputs_(self):
-        return list(itertools.chain(*self.input_to_outputs_.values()))
 
 
 def _prepare_transformer_input(transformer, column):

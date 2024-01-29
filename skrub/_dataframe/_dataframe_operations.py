@@ -28,6 +28,7 @@ __all__ = [
     "column_like",
     "empty_like",
     "dataframe_from_columns",
+    "concat_horizontal",
     "to_column_list",
     "is_in",
     "is_null",
@@ -264,6 +265,22 @@ def _dataframe_from_columns_pandas(*columns):
 @dataframe_from_columns.specialize("polars")
 def _dataframe_from_columns_polars(*columns):
     return pl.DataFrame({name(c): c for c in columns})
+
+
+@dispatch
+def concat_horizontal(*dataframes):
+    raise NotImplementedError()
+
+
+@concat_horizontal.specialize("pandas")
+def _concat_horizontal_pandas(*dataframes):
+    dataframes = [df.reset_index(drop=True) for df in dataframes]
+    return pd.concat(dataframes, axis=1)
+
+
+@concat_horizontal.specialize("polars")
+def _concat_horizontal_polars(*dataframes):
+    return pl.concat(dataframes, how="horizontal")
 
 
 def to_column_list(obj):
