@@ -24,6 +24,7 @@ __all__ = [
     "pandas_convert_dtypes",
     "column_names",
     "name",
+    "rename",
     "column_like",
     "empty_like",
     "dataframe_from_columns",
@@ -195,6 +196,21 @@ def _name_pandas(col):
 @name.specialize("polars")
 def _name_polars(col):
     return col.name
+
+
+@dispatch
+def rename(col, new_name):
+    raise NotImplementedError()
+
+
+@rename.specialize("pandas")
+def _rename_pandas(col, new_name):
+    return col.rename(new_name)
+
+
+@rename.specialize("polars")
+def _rename_polars(col, new_name):
+    return col.rename(new_name)
 
 
 @dispatch

@@ -1,4 +1,7 @@
 """Utilities specific to the JOIN operations."""
+
+import re
+
 from skrub import _utils
 from skrub._dataframe._namespace import get_df_namespace
 
@@ -142,3 +145,15 @@ def check_column_name_duplicates(
 def add_column_name_suffix(dataframe, suffix):
     ns, _ = get_df_namespace(dataframe)
     return ns.rename_columns(dataframe, f"{{}}{suffix}".format)
+
+
+def pick_column_names(suggested_names, taken_names=(), idx_offset=0):
+    new_names = []
+    taken_names = set(taken_names)
+    for idx, name in enumerate(suggested_names):
+        name = re.sub("__skrub_.*?__", "", name)
+        if name in taken_names:
+            name = f"{name}__skrub_{idx + idx_offset}__"
+        new_names.append(name)
+        taken_names.add(name)
+    return new_names
