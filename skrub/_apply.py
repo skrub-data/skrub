@@ -21,9 +21,7 @@ class Apply(TransformerMixin, BaseEstimator):
         transformed = self.transformer_.fit_transform(to_transform, y)
         passthrough_names = sbd.column_names(passthrough)
         self._transformed_output_names = pick_column_names(
-            sbd.column_names(transformed),
-            taken_names=passthrough_names,
-            idx_offset=len(passthrough_names),
+            sbd.column_names(transformed), forbidden_names=passthrough_names
         )
         transformed = sbd.set_column_names(transformed, self._transformed_output_names)
         self.used_inputs_ = self._columns

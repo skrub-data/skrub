@@ -147,13 +147,14 @@ def add_column_name_suffix(dataframe, suffix):
     return ns.rename_columns(dataframe, f"{{}}{suffix}".format)
 
 
-def pick_column_names(suggested_names, taken_names=(), idx_offset=0):
+def pick_column_names(suggested_names, forbidden_names=()):
     new_names = []
-    taken_names = set(taken_names)
-    for idx, name in enumerate(suggested_names):
+    forbidden_names = set(forbidden_names)
+    for name in suggested_names:
         name = re.sub("__skrub_.*?__", "", name)
-        if name in taken_names:
-            name = f"{name}__skrub_{idx + idx_offset}__"
+        if name in forbidden_names:
+            token = _utils.random_string()
+            name = f"{name}__skrub_{token}__"
         new_names.append(name)
-        taken_names.add(name)
+        forbidden_names.add(name)
     return new_names

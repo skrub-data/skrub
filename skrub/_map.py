@@ -26,24 +26,24 @@ class Map(TransformerMixin, BaseEstimator):
                     sbd.col(X, col_name), self._columns, self.transformer
                 )
             )
-        return self._process_fit_transform_results(results)
+        return self._process_fit_transform_results(results, sbd.column_names(X))
 
-    def _process_fit_transform_results(self, results):
+    def _process_fit_transform_results(self, results, all_input_names):
         self.transformers_ = {}
         self.input_to_outputs_ = {}
         transformed_columns = []
-        idx_offset = 0
-        taken_names = set()
+        forbidden_names = set(all_input_names)
         for input_name, output_cols, transformer in results:
-            suggested_names = _column_names(output_cols)
-            output_names = pick_column_names(suggested_names, taken_names, idx_offset)
-            output_cols = _rename_columns(output_cols, output_names)
-            transformed_columns.extend(output_cols)
-            taken_names.update(output_names)
-            idx_offset += len(output_names)
             if transformer is not None:
+                suggested_names = _column_names(output_cols)
+                output_names = pick_column_names(
+                    suggested_names, forbidden_names - {input_name}
+                )
+                output_cols = _rename_columns(output_cols, output_names)
+                forbidden_names.update(output_names)
                 self.transformers_[input_name] = transformer
                 self.input_to_outputs_[input_name] = output_names
+            transformed_columns.extend(output_cols)
 
         self._output_names = _column_names(transformed_columns)
         self.used_inputs_ = list(self.transformers_.keys())
