@@ -11,8 +11,14 @@ class CardinalityBelow(Selector):
         all_selected = []
         for col_name in list_difference(sbd.column_names(df), ignore):
             column = sbd.col(df, col_name)
-            if sbd.n_unique(column) < self.threshold:
-                all_selected.append(col_name)
+            try:
+                n_unique = sbd.n_unique(column)
+            except Exception:
+                # n_unique can fail for example for polars columns with dtype Object
+                pass
+            else:
+                if n_unique < self.threshold:
+                    all_selected.append(col_name)
         return all_selected
 
     def __repr__(self):

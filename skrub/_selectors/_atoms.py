@@ -42,19 +42,36 @@ def regex(pattern):
 
 
 class Filter(Selector):
-    def __init__(self, predicate):
+    def __init__(self, predicate, on_error="raise"):
         self.predicate = predicate
+        allowed = ["raise", "reject", "accept"]
+        if on_error not in allowed:
+            raise ValueError(f"'on_error' must be one of {allowed}. Got {on_error!r}")
+        self.on_error = on_error
 
     def select(self, df, ignore):
         cols = list_difference(sbd.column_names(df), ignore)
-        return [c for c in cols if self.predicate(sbd.col(df, c))]
+        result = []
+        for col_name in cols:
+            try:
+                accept = self.predicate(sbd.col(df, col_name))
+            except Exception:
+                if self.on_error == "raise":
+                    raise
+                if self.on_error == "accept":
+                    accept = True
+                assert self.on_error == "reject"
+                accept = False
+            if accept:
+                result.append(col_name)
+        return result
 
     def __repr__(self):
         return f"filter({self.predicate!r})"
 
 
-def filter(predicate):
-    return Filter(predicate)
+def filter(predicate, on_error="raise"):
+    return Filter(predicate, on_error=on_error)
 
 
 class FilterNames(Selector):
