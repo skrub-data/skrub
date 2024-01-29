@@ -16,7 +16,16 @@ from . import _dataframe as sbd
 from ._map import Map
 from ._to_datetime import ToDatetime
 
-_TIME_LEVELS = ["year", "month", "day", "hour", "minute", "second"]
+_TIME_LEVELS = [
+    "year",
+    "month",
+    "day",
+    "hour",
+    "minute",
+    "second",
+    "microsecond",
+    "nanosecond",
+]
 
 
 @sbd.dispatch
