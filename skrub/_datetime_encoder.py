@@ -1,7 +1,9 @@
-# try:
-#     import pandas as pd
-# except ImportError:
-#     pass
+from datetime import datetime
+
+try:
+    import pandas as pd
+except ImportError:
+    pass
 try:
     import polars as pl
 except ImportError:
@@ -25,8 +27,7 @@ def _get_dt_feature(column, feature):
 @_get_dt_feature.specialize("pandas")
 def _get_dt_feature_pandas(column, feature):
     if feature == "total_seconds":
-        # TODO
-        return column.dt.second
+        return ((column - datetime(1970, 1, 1)) / pd.Timedelta("1s")).astype("float32")
     assert feature in _TIME_LEVELS + ["day_of_the_week"]
     feature = {"day_of_the_week": "day_of_week"}.get(feature, feature)
     return getattr(column.dt, feature)
