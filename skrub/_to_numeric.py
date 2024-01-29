@@ -17,4 +17,4 @@ class ToNumeric(BaseEstimator):
             return NotImplemented
 
     def transform(self, column):
-        return sbd.to_numeric(column, dtype=self.output_dtype_)
+        return sbd.to_numeric(column, dtype=self.output_dtype_, strict=False)

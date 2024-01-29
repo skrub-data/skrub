@@ -366,19 +366,20 @@ def _is_numeric_polars(column):
 
 
 @dispatch
-def to_numeric(column, dtype=None):
+def to_numeric(column, dtype=None, strict=True):
     raise NotImplementedError()
 
 
 @to_numeric.specialize("pandas")
-def _to_numeric_pandas(column, dtype=None):
-    return pd.to_numeric(column).astype(dtype)
+def _to_numeric_pandas(column, dtype=None, strict=True):
+    errors = "raise" if strict else "coerce"
+    return pd.to_numeric(column, errors=errors).astype(dtype)
 
 
 @to_numeric.specialize("polars")
-def _to_numeric_polars(column, dtype=None):
+def _to_numeric_polars(column, dtype=None, strict=True):
     if dtype is not None:
-        return column.cast(dtype)
+        return column.cast(dtype, strict=strict)
     if column.dtype.is_numeric():
         return column
     error = None
@@ -387,6 +388,8 @@ def _to_numeric_polars(column, dtype=None):
             return column.cast(dtype)
         except Exception as e:
             error = e
+    if not strict:
+        return column.cast(pl.Float64, strict=False)
     raise ValueError("Could not convert column to numeric dtype") from error
 
 
