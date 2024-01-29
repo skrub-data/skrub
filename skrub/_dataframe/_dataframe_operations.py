@@ -25,6 +25,7 @@ __all__ = [
     "column_names",
     "name",
     "column_like",
+    "empty_like",
     "dataframe_from_columns",
     "to_column_list",
     "is_in",
@@ -209,6 +210,29 @@ def _column_like_pandas(column, values, name):
 @column_like.specialize("polars")
 def _column_like_polars(column, values, name):
     return pl.Series(values, name=name)
+
+
+@dispatch
+def empty_like(column, length=None, dtype=None):
+    raise NotImplementedError()
+
+
+@empty_like.specialize("pandas")
+def _empty_like_pandas(column, length=None, dtype=None):
+    if length is None:
+        length = len(column)
+    if dtype is None:
+        dtype = column.dtype
+    return pd.Series(dtype=dtype, index=column.index)
+
+
+@empty_like.specialize("polars")
+def _empty_like_polars(column, length=None, dtype=None):
+    if length is None:
+        length = len(column)
+    if dtype is None:
+        dtype = column.dtype
+    return pl.Series([None] * length, dtype=dtype)
 
 
 @dispatch
@@ -479,22 +503,23 @@ def _to_categorical_polars(column):
 
 
 @dispatch
-def to_datetime(column, format):
+def to_datetime(column, format, strict=True):
     raise NotImplementedError()
 
 
 @to_datetime.specialize("pandas")
-def _to_datetime_pandas(column, format):
+def _to_datetime_pandas(column, format, strict=True):
     if _is_anydate_pandas(column):
         return column
-    return pd.to_datetime(column, format=format)
+    errors = "raise" if strict else "coerce"
+    return pd.to_datetime(column, format=format, errors=errors)
 
 
 @to_datetime.specialize("polars")
-def _to_datetime_polars(column, format):
+def _to_datetime_polars(column, format, strict=True):
     if _is_anydate_polars(column):
         return column
-    return column.str.to_datetime(format=format)
+    return column.str.to_datetime(format=format, strict=strict)
 
 
 @dispatch
