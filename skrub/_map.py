@@ -6,8 +6,14 @@ from . import _dataframe as sbd
 from . import _selectors
 from ._join_utils import pick_column_names
 
+# auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
+# transform or provide set output (we always produce dataframes of the correct
+# type with the correct columns and we don't want the wrapper.) other ways to
+# disable it would be not inheriting from TransformerMixin, not defining
+# get_feature_names_out
 
-class Map(TransformerMixin, BaseEstimator):
+
+class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     def __init__(self, transformer, cols=_selectors.all()):
         self.transformer = transformer
         self.cols = cols
@@ -29,6 +35,7 @@ class Map(TransformerMixin, BaseEstimator):
         return self._process_fit_transform_results(results, sbd.column_names(X))
 
     def _process_fit_transform_results(self, results, all_input_names):
+        self.all_inputs_ = all_input_names
         self.transformers_ = {}
         self.input_to_outputs_ = {}
         transformed_columns = []
@@ -45,7 +52,7 @@ class Map(TransformerMixin, BaseEstimator):
                 self.input_to_outputs_[input_name] = output_names
             transformed_columns.extend(output_cols)
 
-        self._output_names = _column_names(transformed_columns)
+        self.all_outputs_ = _column_names(transformed_columns)
         self.used_inputs_ = list(self.transformers_.keys())
         self.produced_outputs_ = list(itertools.chain(*self.input_to_outputs_.values()))
         return sbd.dataframe_from_columns(*transformed_columns)
@@ -58,8 +65,11 @@ class Map(TransformerMixin, BaseEstimator):
             transformed_columns.extend(
                 _transform_column(column, self.transformers_.get(col_name))
             )
-        transformed_columns = _rename_columns(transformed_columns, self._output_names)
+        transformed_columns = _rename_columns(transformed_columns, self.all_outputs_)
         return sbd.dataframe_from_columns(*transformed_columns)
+
+    def get_feature_names_out(self):
+        return self.all_outputs_
 
 
 def _prepare_transformer_input(transformer, column):

@@ -5,8 +5,14 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from . import _dataframe as sbd
 from . import _utils
 
+# auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
+# transform or provide set output (we always produce dataframes of the correct
+# type with the correct columns and we don't want the wrapper.) other ways to
+# disable it would be not inheriting from TransformerMixin, not defining
+# get_feature_names_out
 
-class CheckInputDataFrame(TransformerMixin, BaseEstimator):
+
+class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     def fit(self, X, y=None):
         del y
         module_name = sbd.dataframe_module_name(X)
@@ -20,7 +26,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         # Need to decide how strict we should be about types
         column_names = sbd.column_names(X)
         _utils.check_duplicated_column_names(column_names)
-        self.column_names_ = column_names
+        self.feature_names_in_ = column_names
         return self
 
     def transform(self, X):
@@ -38,10 +44,12 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
                 "This is likely to produce errors and is not supported."
             )
         column_names = sbd.column_names(X)
-        if column_names != self.column_names_:
+        if column_names != self.feature_names_in_:
             import difflib
 
-            diff = "\n".join(difflib.Differ().compare(self.column_names_, column_names))
+            diff = "\n".join(
+                difflib.Differ().compare(self.feature_names_in_, column_names)
+            )
             message = (
                 f"Columns of dataframes passed to fit() and transform() differ:\n{diff}"
             )
@@ -52,3 +60,6 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
             )
             X = sbd.collect(X)
         return X
+
+    def get_feature_names_out(self):
+        return self.feature_names_in_
