@@ -130,11 +130,6 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
     add_total_seconds : bool, default=True
         Add the total number of seconds since Epoch.
 
-    errors : {'coerce', 'raise'}, default="coerce"
-        During transform:
-        - If ``"coerce"``, then invalid parsing will be set as ``pd.NaT``.
-        - If ``"raise"``, then invalid parsing will raise an exception.
-
     Attributes
     ----------
     column_indices_ : list of int
@@ -187,13 +182,11 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         add_day_of_the_week=False,
         add_total_seconds=True,
         parse_string_columns=True,
-        errors="coerce",
     ):
         self.resolution = resolution
         self.add_day_of_the_week = add_day_of_the_week
         self.add_total_seconds = add_total_seconds
         self.parse_string_columns = parse_string_columns
-        self.errors = errors
 
     def fit(self, X, y=None):
         self.fit_transform(X, y)
