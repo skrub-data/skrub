@@ -9,7 +9,7 @@ from . import _selectors as sbs
 from . import _utils
 from ._check_input import CheckInputDataFrame
 from ._clean_null_strings import CleanNullStrings
-from ._datetime_encoder import DatetimeEncoder
+from ._datetime_encoder import DatetimeColumnEncoder
 from ._gap_encoder import GapEncoder
 from ._map import Map
 from ._pandas_convert_dtypes import PandasConvertDTypes
@@ -25,7 +25,7 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     handle_unknown="ignore",
     drop="if_binary",
 )
-DATETIME_TRANSFORMER = DatetimeEncoder()
+DATETIME_TRANSFORMER = DatetimeColumnEncoder()
 NUMERIC_TRANSFORMER = ToFloat32()
 
 
