@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
-from sklearn.pipeline import make_pipeline
 
 from skrub._agg_joiner import AggJoiner, AggTarget, split_num_categ_operations
 from skrub._dataframe._polars import POLARS_SETUP
@@ -48,6 +47,20 @@ def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
         suffix="_user",
     )
 
+    main_user = agg_joiner_user.fit_transform(X)
+
+    expected_user = px.DataFrame(
+        {
+            "userId": [1, 1, 1, 2, 2, 2],
+            "movieId": [1, 3, 6, 318, 6, 1704],
+            "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
+            "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
+            "genre_mode_user": ["drama", "drama", "drama", "sf", "sf", "sf"],
+            "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
+        }
+    )
+    assert_frame_equal_(main_user, expected_user)
+
     agg_joiner_movie = AggJoiner(
         aux_table=aux,
         aux_key="movieId",
@@ -56,21 +69,19 @@ def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
         suffix="_movie",
     )
 
-    agg_joiner = make_pipeline(agg_joiner_user, agg_joiner_movie)
-    main_user_movie = agg_joiner.fit_transform(X)
+    main_movie = agg_joiner_movie.fit_transform(X)
 
-    expected = px.DataFrame(
+    expected_movie = px.DataFrame(
         {
             "userId": [1, 1, 1, 2, 2, 2],
             "movieId": [1, 3, 6, 318, 6, 1704],
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
-            "genre_mode_user": ["drama", "drama", "drama", "sf", "sf", "sf"],
-            "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
             "rating_mean_movie": [4.0, 4.0, 3.0, 3.0, 3.0, 4.0],
         }
     )
-    assert_frame_equal_(main_user_movie, expected)
+
+    assert_frame_equal_(main_movie, expected_movie)
 
 
 @pytest.mark.skipif(not POLARS_SETUP, reason="Polars is not available")
