@@ -267,12 +267,9 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     ...    suffixes=["", "", "_glucose"],
     ... )
     >>> multi_agg_joiner.fit_transform(patients)
-       patient_id   age   days_of_stay_max   medication_mode   value_mean_glucose
-    0           1    72                  4           ozempic                 1.65
-    1           2    45                 12          morphine                 4.80
-       value_std_glucose
-    0           1.193035
-    1           2.404163
+       patient_id  age  ...  value_mean_glucose  value_std_glucose
+    0           1   72  ...                1.65           1.193035
+    1           2   45  ...                4.80           2.404163
     """
 
     def __init__(
