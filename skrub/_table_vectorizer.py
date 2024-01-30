@@ -125,6 +125,11 @@ def _clone_or_create_transformer(transformer):
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+    """Transform a dataframe to a numerical array.
+
+    TODO
+    """
+
     def __init__(
         self,
         *,

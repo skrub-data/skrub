@@ -42,7 +42,10 @@ class ToDatetime(BaseEstimator):
 
 @sbd.dispatch
 def to_datetime(df):
-    """
+    """Convert DataFrame or column to Datetime dtype.
+
+    TODO
+
     Examples
     --------
     >>> import pandas as pd
