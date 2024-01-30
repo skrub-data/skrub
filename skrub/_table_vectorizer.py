@@ -38,7 +38,12 @@ def _make_table_vectorizer_pipeline(
     cardinality_threshold,
     passthrough,
 ):
-    cols = sbs.inv(passthrough)
+    if isinstance(passthrough, tuple) and passthrough == ():
+        # get a shorter display in scikit-learn _html_repr_ by using the
+        # default value
+        cols = sbs.all()
+    else:
+        cols = sbs.inv(passthrough)
 
     cleaning_steps = [
         ("check_input", CheckInputDataFrame()),
@@ -58,7 +63,7 @@ def _make_table_vectorizer_pipeline(
         ("remainder_transformer", remainder_transformer, sbs.all()),
     ]
     feature_extraction_steps = []
-    for name, transformer, selector in feature_extractors:
+    for _, transformer, selector in feature_extractors:
         selector = (cols - sbs.produced_by(*feature_extraction_steps)) & selector
         feature_extraction_steps.append(Map(transformer, selector))
     feature_extraction_steps = [
@@ -168,9 +173,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.fit_transform(X)
         return self
 
-    def fit_transform(self, X, y=None):
-        self.feature_names_in_ = sbd.column_names(X)
-        self.pipeline_ = _make_table_vectorizer_pipeline(
+    def _sk_visual_block_(self):
+        try:
+            return self.pipeline_._sk_visual_block_()
+        except AttributeError:
+            return self.make_pipeline()._sk_visual_block_()
+
+    def make_pipeline(self):
+        return _make_table_vectorizer_pipeline(
             _clone_or_create_transformer(self.low_cardinality_transformer),
             _clone_or_create_transformer(self.high_cardinality_transformer),
             _clone_or_create_transformer(self.numeric_transformer),
@@ -179,6 +189,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             self.cardinality_threshold,
             self.passthrough,
         )
+
+    def fit_transform(self, X, y=None):
+        self.feature_names_in_ = sbd.column_names(X)
+        self.pipeline_ = self.make_pipeline()
         output = self.pipeline_.fit_transform(X)
         self.feature_names_out_ = sbd.column_names(output)
         return output
