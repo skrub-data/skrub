@@ -64,6 +64,29 @@ def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
 
 
 @pytest.mark.parametrize("px", MODULES)
+def test_X_placeholder(main, px):
+    main = px.DataFrame(main)
+
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=["X", main],
+        keys=[["userId"], ["userId"]],
+    )
+    multi_agg_joiner.fit_transform(main)
+
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=["X", "X"],
+        keys=[["userId"], ["userId"]],
+    )
+    multi_agg_joiner.fit_transform(main)
+
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main, main, "X", main],
+        keys=[["userId"], ["userId"], ["userId"], ["userId"]],
+    )
+    multi_agg_joiner.fit_transform(main)
+
+
+@pytest.mark.parametrize("px", MODULES)
 def test_keys(main, px):
     main = px.DataFrame(main)
 
