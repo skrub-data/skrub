@@ -4,7 +4,7 @@ from . import _dataframe as sbd
 
 
 class PandasConvertDTypes(BaseEstimator):
-    __univariate_transformer__ = True
+    __single_column_transformer__ = True
 
     def fit_transform(self, column):
         if not sbd.is_pandas(column):

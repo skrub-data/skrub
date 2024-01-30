@@ -28,7 +28,7 @@ STR_NA_VALUES = [
 
 
 class CleanNullStrings(BaseEstimator):
-    __univariate_transformer__ = True
+    __single_column_transformer__ = True
 
     def fit_transform(self, column):
         if not sbd.is_string(column):

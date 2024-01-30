@@ -68,7 +68,7 @@ def _make_table_vectorizer_pipeline(
 
 
 class PassThrough(BaseEstimator):
-    __univariate_transformer__ = True
+    __single_column_transformer__ = True
 
     def fit_transform(self, column):
         return column
@@ -78,7 +78,7 @@ class PassThrough(BaseEstimator):
 
 
 class Drop(BaseEstimator):
-    __univariate_transformer__ = True
+    __single_column_transformer__ = True
 
     def fit_transform(self, column):
         return []

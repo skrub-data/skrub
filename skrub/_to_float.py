@@ -21,7 +21,7 @@ def _to_float32_polars(col):
 
 
 class ToFloat32(BaseEstimator):
-    __univariate_transformer__ = True
+    __single_column_transformer__ = True
 
     def fit_transform(self, column):
         if not sbd.is_numeric(column):

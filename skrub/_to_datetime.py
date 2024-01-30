@@ -8,7 +8,7 @@ _SAMPLE_SIZE = 1000
 
 
 class ToDatetime(BaseEstimator):
-    __univariate_transformer__ = True
+    __single_column_transformer__ = True
 
     def fit_transform(self, column):
         if sbd.is_anydate(column):

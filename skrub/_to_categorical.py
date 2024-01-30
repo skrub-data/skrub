@@ -59,7 +59,7 @@ def _dtype_categories_polars(column):
 
 
 class ToCategorical(BaseEstimator):
-    __univariate_transformer__ = True
+    __single_column_transformer__ = True
 
     def __init__(self, max_categories=40):
         self.max_categories = max_categories

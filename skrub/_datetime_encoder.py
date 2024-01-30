@@ -71,7 +71,7 @@ def _get_dt_feature_polars(column, feature):
 
 
 class DatetimeColumnEncoder(BaseEstimator):
-    __univariate_transformer__ = True
+    __single_column_transformer__ = True
 
     def __init__(
         self, resolution="hour", add_day_of_the_week=False, add_total_seconds=True

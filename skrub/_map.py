@@ -63,8 +63,7 @@ class Map(TransformerMixin, BaseEstimator):
 
 
 def _prepare_transformer_input(transformer, column):
-    # TODO better name
-    if hasattr(transformer, "__univariate_transformer__"):
+    if hasattr(transformer, "__single_column_transformer__"):
         return column
     return sbd.dataframe_from_columns(column)
 
