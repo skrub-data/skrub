@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 try:
     import pandas as pd
@@ -54,7 +54,7 @@ def _get_dt_feature_pandas(column, feature):
         if column.dt.tz is None:
             epoch = datetime(1970, 1, 1)
         else:
-            epoch = datetime(1970, 1, 1, tzinfo=UTC)
+            epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
         return ((column - epoch) / pd.Timedelta("1s")).astype("float32")
     assert feature in _TIME_LEVELS + ["day_of_the_week"]
     feature = {"day_of_the_week": "day_of_week"}.get(feature, feature)
