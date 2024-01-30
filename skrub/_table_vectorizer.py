@@ -50,18 +50,19 @@ def _make_table_vectorizer_pipeline(
     ]
 
     low_card_cat = sbs.categorical() & sbs.cardinality_below(cardinality_threshold)
-
-    feature_extraction_steps = [
-        Map(low_cardinality_transformer, low_card_cat - passthrough),
-        Map(high_cardinality_transformer, sbs.string() - passthrough),
-        Map(numeric_transformer, sbs.numeric() - passthrough),
-        Map(datetime_transformer, sbs.anydate() - passthrough),
+    feature_extractors = [
+        (low_cardinality_transformer, low_card_cat),
+        (high_cardinality_transformer, sbs.string()),
+        (numeric_transformer, sbs.numeric()),
+        (datetime_transformer, sbs.anydate()),
+        (remainder_transformer, sbs.all()),
     ]
+    feature_extraction_steps = []
+    for transformer, selector in feature_extractors:
+        selector = (cols - sbs.produced_by(*feature_extraction_steps)) & selector
+        feature_extraction_steps.append(Map(transformer, selector))
 
-    remainder_cols = cols - sbs.produced_by(*feature_extraction_steps)
-    remainder_steps = [Map(remainder_transformer, remainder_cols)]
-
-    all_steps = cleaning_steps + feature_extraction_steps + remainder_steps
+    all_steps = cleaning_steps + feature_extraction_steps
 
     return make_pipeline(*all_steps)
 
