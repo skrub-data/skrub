@@ -227,7 +227,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         Suffixes to append to the `aux_tables`' column names.
         If set to `None`, the table indexes in `aux_tables` are used,
         e.g. for an aggregation of 2 `aux_tables`, "_1" and "_2" would be appended
-        to column names
+        to column names.
 
     See Also
     --------
@@ -403,34 +403,14 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     def _check_missing_columns_in_main_table(
         self, main_table, main_keys, main_table_name
     ):
-        """Check that all `main_keys` are in the main table.
-
-        Parameters
-        ----------
-        main_table : DataFrameLike
-            Table to perform aggregation on.
-        main_key : iterable of str, or iterable of iterable of str
-            Keys to merge the aggregated results on.
-        main_table_name : str
-            Name by which to refer to `X` in the error message if necessary.
-        """
+        """Check that all `main_keys` are in the main table."""
         for main_key in main_keys:
             _join_utils.check_missing_columns(main_table, main_key, main_table_name)
 
     def _check_missing_columns_in_aux_tables(
         self, aux_tables, aux_keys, aux_table_name
     ):
-        """Check that all `aux_keys` are in the corresponding aux_table.
-
-        Parameters
-        ----------
-        aux_tables : iterable of DataFrameLike
-            Tables to perform aggregation on.
-        aux_keys : iterable of str, or iterable of iterable of str
-            Keys to merge the aggregated results on.
-        aux_table_name : str
-            Name by which to refer to `aux_tables` in the error message if necessary.
-        """
+        """Check that all `aux_keys` are in the corresponding aux_table."""
         for aux_table, aux_key in zip(aux_tables, aux_keys):
             _join_utils.check_missing_columns(aux_table, aux_key, aux_table_name)
 
