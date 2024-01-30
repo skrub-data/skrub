@@ -434,10 +434,6 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         for aux_table, aux_key in zip(aux_tables, aux_keys):
             _join_utils.check_missing_columns(aux_table, aux_key, aux_table_name)
 
-    def _check_column_name_duplicates(self):
-        # TODO: check after fit
-        pass
-
     def _check_cols(self):
         """Check `cols` to aggregate.
 
@@ -593,11 +589,6 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
         for self.agg_joiner in self.agg_joiners_:
             self.agg_joiner.fit(X)
-
-        # TODO
-        # self._check_column_name_duplicates(
-        #    X, self.aux_tables, self.suffixes, main_table_name="X"
-        # )
 
         return self
 
