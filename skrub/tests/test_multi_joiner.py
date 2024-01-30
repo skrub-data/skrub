@@ -37,18 +37,17 @@ if POLARS_SETUP:
 )
 def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
     main = px.DataFrame(main)
-    X = [main, main]
-    aux = X if not use_X_placeholder else ["X", "X"]
+    aux = [main, main] if not use_X_placeholder else ["X", "X"]
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=aux,
-        main_keys=[["userID"], ["movieId"]],
-        aux_keys=[["userID"], ["movieId"]],
+        main_keys=[["userId"], ["movieId"]],
+        aux_keys=[["userId"], ["movieId"]],
         cols=[["rating", "genre"], ["rating"]],
         suffixes=["_user", "_movie"],
     )
 
-    main_user_movie = multi_agg_joiner.fit_transform(X)
+    main_user_movie = multi_agg_joiner.fit_transform(main)
 
     expected = px.DataFrame(
         {
