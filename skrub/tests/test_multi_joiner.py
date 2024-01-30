@@ -30,6 +30,40 @@ if POLARS_SETUP:
     ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
 
 
+@pytest.mark.parametrize("use_X_placeholder", [False, True])
+@pytest.mark.parametrize(
+    "px, assert_frame_equal_",
+    ASSERT_TUPLES,
+)
+def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
+    main = px.DataFrame(main)
+    X = [main, main]
+    aux = X if not use_X_placeholder else ["X", "X"]
+
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=aux,
+        main_keys=[["userID"], ["movieId"]],
+        aux_keys=[["userID"], ["movieId"]],
+        cols=[["rating", "genre"], ["rating"]],
+        suffixes=["_user", "_movie"],
+    )
+
+    main_user_movie = multi_agg_joiner.fit_transform(X)
+
+    expected = px.DataFrame(
+        {
+            "userId": [1, 1, 1, 2, 2, 2],
+            "movieId": [1, 3, 6, 318, 6, 1704],
+            "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
+            "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
+            "genre_mode_user": ["drama", "drama", "drama", "sf", "sf", "sf"],
+            "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
+            "rating_mean_movie": [4.0, 4.0, 3.0, 3.0, 3.0, 4.0],
+        }
+    )
+    assert_frame_equal_(main_user_movie, expected)
+
+
 @pytest.mark.parametrize("px", MODULES)
 def test_keys(main, px):
     main = px.DataFrame(main)
@@ -48,21 +82,21 @@ def test_keys(main, px):
     )
     multi_agg_joiner.fit_transform(main)
 
-    # Check multiple main_key and aux_keys, same length
+    # Check multiple main_keys and aux_keys, same length
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main],
-        main_key=["userId", "movieId"],
+        main_keys=["userId", "movieId"],
         aux_keys=["userId", "movieId"],
     )
     multi_agg_joiner.fit_transform(main)
     # aux_keys_ is 2d since we iterate over it
-    assert multi_agg_joiner._main_key == ["userId", "movieId"]
+    assert multi_agg_joiner._main_keys == [["userId", "movieId"]]
     assert multi_agg_joiner._aux_keys == [["userId", "movieId"]]
 
-    # Check too many main_key
+    # Check too many main_keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main],
-        main_key=["userId", "movieId"],
+        main_keys=["userId", "movieId"],
         aux_keys=["userId"],
     )
     with pytest.raises(
@@ -73,7 +107,7 @@ def test_keys(main, px):
     # Check too many aux_keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main],
-        main_key="userId",
+        main_keys=["userId"],
         aux_keys=["userId", "movieId"],
     )
     with pytest.raises(
@@ -81,11 +115,11 @@ def test_keys(main, px):
     ):
         multi_agg_joiner.fit_transform(main)
 
-    # Check providing keys and extra main_key
+    # Check providing keys and extra main_keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main],
         keys=["userId"],
-        main_key="userId",
+        main_keys=["userId"],
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
         multi_agg_joiner.fit_transform(main)
@@ -99,10 +133,10 @@ def test_keys(main, px):
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
         multi_agg_joiner.fit_transform(main)
 
-    # Check main_key doesn't exist in table
+    # Check main_keys doesn't exist in table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main],
-        main_key="wrong_key",
+        main_keys=["wrong_key"],
         aux_keys=["userId"],
     )
     error_msg = r"(?=.*columns cannot be used for joining because they do not exist)"
@@ -112,7 +146,7 @@ def test_keys(main, px):
     # Check aux_keys doesn't exist in table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main],
-        main_key="userId",
+        main_keys=["userId"],
         aux_keys=["wrong_key"],
     )
     error_msg = r"(?=.*columns cannot be used for joining because they do not exist)"
@@ -122,7 +156,7 @@ def test_keys(main, px):
     # Check keys multiple tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
-        keys=["userId"],
+        keys=[["userId"], ["userId"]],
     )
     multi_agg_joiner.fit_transform(main)
 
@@ -143,7 +177,7 @@ def test_cols(main, px):
     # Check providing one col for each aux_tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
-        keys=["userId"],
+        keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
     )
     multi_agg_joiner.fit_transform(main)
@@ -174,10 +208,10 @@ def test_operations(main, px):
     multi_agg_joiner.fit_transform(main)
     assert multi_agg_joiner._operations == [["mean"]]
 
-    # Check providing a list
+    # Check list of operations
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
-        keys=["userId"],
+        keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
         operations="mean",
     )
@@ -185,10 +219,10 @@ def test_operations(main, px):
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main)
 
-    # Check one operation for each aux_tables
+    # Check one operation for each aux table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
-        keys=["userId"],
+        keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
         operations=[["mean"], ["mean"]],
     )
@@ -198,7 +232,7 @@ def test_operations(main, px):
     # Check badly formatted operation
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
-        keys=["userId"],
+        keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
         operations=["mean", "mean", "mode"],
     )
@@ -209,7 +243,7 @@ def test_operations(main, px):
     # Check one and two operations
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
-        keys=["userId"],
+        keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
         operations=[["mean"], ["mean", "mode"]],
     )
@@ -224,8 +258,7 @@ def test_suffixes(main, px):
     # check default suffixes with multiple tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
-        main_key="userId",
-        aux_keys=[["userId"], ["userId"]],
+        keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
     )
     multi_agg_joiner.fit_transform(main)
@@ -234,8 +267,7 @@ def test_suffixes(main, px):
     # check suffixes when defined
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
-        main_key="userId",
-        aux_keys=[["userId"], ["userId"]],
+        keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
         suffixes=["_this", "_works"],
     )

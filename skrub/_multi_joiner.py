@@ -12,7 +12,7 @@ from skrub import _join_utils
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER  # , Joiner
-from skrub._utils import _is_array_like, atleast_1d_or_none, atleast_2d_or_none
+from skrub._utils import _is_array_like, atleast_2d_or_none
 
 
 class MultiJoiner(BaseEstimator, TransformerMixin):
@@ -25,7 +25,7 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
     is augmented with values from the best match in the auxiliary table.
 
     To identify the best match for each row, values from the matching columns
-    (`main_key` and `aux_key`) are vectorized, i.e. represented by vectors of
+    (`main_keys` and `aux_key`) are vectorized, i.e. represented by vectors of
     continuous values. Then, the Euclidean distances between these vectors are
     computed to find, for each main table row, its nearest neighbor within the
     auxiliary table.
@@ -67,16 +67,16 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
         The auxiliary table, which will be fuzzy-joined to the main table when
         calling `transform`.
     key : str or list of str, default=None
-        The column names to use for both `main_key` and `aux_key` when they
-        are the same. Provide either `key` or both `main_key` and `aux_key`.
-    main_key : str or list of str, default=None
+        The column names to use for both `main_keys` and `aux_key` when they
+        are the same. Provide either `key` or both `main_keys` and `aux_key`.
+    main_keys : str or list of str, default=None
         The column names in the main table on which the join will be performed.
         Can be a string if joining on a single column.
         If `None`, `aux_key` must also be `None` and `key` must be provided.
     aux_key : str or list of str, default=None
         The column names in the auxiliary table on which the join will
         be performed. Can be a string if joining on a single column.
-        If `None`, `main_key` must also be `None` and `key` must be provided.
+        If `None`, `main_keys` must also be `None` and `key` must be provided.
     suffix : str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it
         to avoid duplicate column names in the join.
@@ -138,7 +138,7 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
         aux_table,
         *,
         key=None,
-        main_key=None,
+        main_keys=None,
         aux_key=None,
         suffix="",
         max_dist=np.inf,
@@ -147,7 +147,7 @@ class MultiJoiner(BaseEstimator, TransformerMixin):
         add_match_info=True,
     ):
         self.aux_table = aux_table
-        self.main_key = main_key
+        self.main_keys = main_keys
         self.aux_key = aux_key
         self.key = key
         self.suffix = suffix
@@ -185,19 +185,22 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data. To provide a single auxiliary table,
         ``aux_tables = [table]`` is supported, but not ``aux_tables = table``.
+        It's possible to provide both the placeholder "X" and auxiliary tables,
+        as in ``aux_tables = [table, "X"]``. If that's the case, the second table will
+        be replaced by the input data.
 
-    keys : iterable of str, default=None
-        The column names to use for both `main_key` and `aux_key` when they
-        are the same. Provide either `key` or both `main_key` and `aux_keys`.
+    keys : iterable of str, or iterable of iterable of str, default=None
+        The column names to use for both `main_keys` and `aux_key` when they
+        are the same. Provide either `key` or both `main_keys` and `aux_keys`.
         If there are multiple auxiliary tables, `keys` will be used to join all
         of them.
 
-    main_key : str or iterable of str
+    main_keys : iterable of str, or iterable of iterable of str, default=None
         Select the columns from the main table to use as keys during
         the join operation.
-        If `main_key` contains multiple columns, we will perform a multi-column join.
+        If `main_keys` contains multiple columns, we will perform a multi-column join.
 
-    aux_keys : iterable of str, or iterable of iterable of str
+    aux_keys : iterable of str, or iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as keys during
         the join operation. Note that ``[["a"], ["b"], ["c", "d"]]`` is a valid input
         while ``["a", "b", ["c", "d"]]`` is not.
@@ -257,7 +260,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     ... })
     >>> multi_agg_joiner = MultiAggJoiner(
     ...    aux_tables=[hospitalizations, medications, glucose],
-    ...    main_key="patient_id",
+    ...    main_keys=[["patient_id"], ["patient_id"], ["patient_id"]],
     ...    aux_keys=[["patient_id"], ["patient_id"], ["patientID"]],
     ...    cols=[["days_of_stay"], ["medication"], ["value"]],
     ...    operations=[["max"], ["mode"], ["mean", "std"]],
@@ -277,7 +280,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         aux_tables,
         *,
         keys=None,
-        main_key=None,
+        main_keys=None,
         aux_keys=None,
         cols=None,
         operations=None,
@@ -285,7 +288,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
     ):
         self.aux_tables = aux_tables
         self.keys = keys
-        self.main_key = main_key
+        self.main_keys = main_keys
         self.aux_keys = aux_keys
         self.cols = cols
         self.operations = operations
@@ -341,12 +344,12 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
         return X, aux_tables
 
-    def _check_keys(self, main_key, aux_keys, keys):
+    def _check_keys(self, main_keys, aux_keys, keys):
         """Check input keys.
 
         Parameters
         ----------
-        main_key : str, iterable of str, or None
+        main_keys : str, iterable of str, or None
             Matching columns in the main table. Can be a single column name (str)
             if matching on a single column: ``"User_ID"`` is the same as
             ``"[User_ID]"``.
@@ -355,48 +358,69 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             if matching on a single column: ``"User_ID"`` is the same as
             ``"[User_ID]"``.
         keys : iterable of str, or None
-            Can be provided in place of `main_key` and `aux_keys` when they are the
+            Can be provided in place of `main_keys` and `aux_keys` when they are the
             same. We must provide non-``None`` values for either `keys` or both
-            `main_key` and `aux_keys`.
+            `main_keys` and `aux_keys`.
 
         Returns
         -------
-        main_key, aux_keys : iterable of str and iterable of iterable of str
+        main_keys, aux_keys : iterable of str and iterable of iterable of str
             The correct sets of matching columns to use, each provided as a list of
             column names.
         """
         if keys is not None:
-            if aux_keys is not None or main_key is not None:
+            if aux_keys is not None or main_keys is not None:
                 raise ValueError(
-                    "Can only pass argument 'keys' OR 'main_key' and "
+                    "Can only pass argument 'keys' OR 'main_keys' and "
                     "'aux_keys', not a combination of both."
                 )
             if not _is_array_like(keys):
                 raise ValueError(f"'keys' must be an 1d iterable, got {type(keys)}.")
-            main_key, aux_keys = keys, keys
+            main_keys, aux_keys = keys, keys
         else:
-            if aux_keys is None or main_key is None:
+            if aux_keys is None or main_keys is None:
                 raise ValueError(
-                    "Must pass EITHER 'keys', OR ('main_key' AND 'aux_keys')."
+                    "Must pass EITHER 'keys', OR ('main_keys' AND 'aux_keys')."
                 )
             if not _is_array_like(aux_keys):
                 raise ValueError(
                     f"'aux_keys' must be an iterable, got {type(aux_keys)}."
                 )
-        main_key = atleast_1d_or_none(main_key)
-        if keys is not None:
-            aux_keys = [aux_keys] * len(self.aux_tables)
-        else:
-            aux_keys = atleast_2d_or_none(aux_keys)
-
-        for aux_key in aux_keys:
+        main_keys = atleast_2d_or_none(main_keys)
+        aux_keys = atleast_2d_or_none(aux_keys)
+        # Check 2d shape
+        if len(main_keys) != len(aux_keys):
+            raise ValueError(
+                "'main_keys' and 'aux_keys' have different lengths"
+                f" ({len(main_keys)} and {len(aux_keys)}). Cannot join on different"
+                " numbers of tables."
+            )
+        # Check each element
+        for main_key, aux_key in zip(main_keys, aux_keys):
             if len(main_key) != len(aux_key):
                 raise ValueError(
-                    "'main_key' and 'aux_keys' have different lengths"
-                    f" ({len(main_key)} and {len(aux_keys)}). Cannot join on different"
+                    "'main_keys' and 'aux_keys' elements have different lengths"
+                    f" ({len(main_key)} and {len(aux_key)}). Cannot join on different"
                     " numbers of columns."
                 )
-        return main_key, aux_keys
+        return main_keys, aux_keys
+
+    def _check_missing_columns_in_main_table(
+        self, main_table, main_keys, main_table_name
+    ):
+        """Check that all `main_keys` are in the main table.
+
+        Parameters
+        ----------
+        main_table : DataFrameLike
+            Table to perform aggregation on.
+        main_key : iterable of str, or iterable of iterable of str
+            Keys to merge the aggregated results on.
+        main_table_name : str
+            Name by which to refer to `X` in the error message if necessary.
+        """
+        for main_key in main_keys:
+            _join_utils.check_missing_columns(main_table, main_key, main_table_name)
 
     def _check_missing_columns_in_aux_tables(
         self, aux_tables, aux_keys, aux_table_name
@@ -416,6 +440,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             _join_utils.check_missing_columns(aux_table, aux_key, aux_table_name)
 
     def _check_column_name_duplicates(self):
+        # TODO: check after fit
         pass
 
     def _check_cols(self):
@@ -539,28 +564,23 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             Fitted :class:`MultiAggJoiner` instance (self).
         """
         X, self._aux_tables = self._check_dataframes(X, self.aux_tables)
-
-        self._main_key, self._aux_keys = self._check_keys(
-            self.main_key, self.aux_keys, self.keys
+        self._main_keys, self._aux_keys = self._check_keys(
+            self.main_keys, self.aux_keys, self.keys
         )
-
-        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        self._check_missing_columns_in_main_table(
+            X, self._main_keys, "'X' (the main table)"
+        )
         self._check_missing_columns_in_aux_tables(
             self._aux_tables, self._aux_keys, "'aux_table'"
         )
-        # TODO
-        # self._check_column_name_duplicates(
-        #    X, self.aux_tables, self.suffixes, main_table_name="X"
-        # )
         self._cols = self._check_cols()
-
         self._operations = self._check_operations()
         self._suffixes = self._check_suffixes()
 
         self.agg_joiners_ = []
-
-        for aux_table, aux_key, cols, operation, suffix in zip(
+        for aux_table, main_key, aux_key, cols, operation, suffix in zip(
             self._aux_tables,
+            self._main_keys,
             self._aux_keys,
             self._cols,
             self._operations,
@@ -568,7 +588,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         ):
             agg_joiner = AggJoiner(
                 aux_table=aux_table,
-                main_key=self._main_key,
+                main_key=main_key,
                 aux_key=aux_key,
                 cols=cols,
                 operation=operation,
@@ -578,6 +598,11 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
 
         for self.agg_joiner in self.agg_joiners_:
             self.agg_joiner.fit(X)
+
+        # TODO
+        # self._check_column_name_duplicates(
+        #    X, self.aux_tables, self.suffixes, main_table_name="X"
+        # )
 
         return self
 
@@ -595,8 +620,10 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             The augmented input.
         """
         check_is_fitted(self, "agg_joiners_")
-        X, _ = self._check_dataframes(X, self.aux_tables)
-        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        X, _ = self._check_dataframes(X, self._aux_tables)
+        self._check_missing_columns_in_main_table(
+            X, self._main_keys, "'X' (the main table)"
+        )
 
         for agg_joiner in self.agg_joiners_:
             X = agg_joiner.transform(X)
