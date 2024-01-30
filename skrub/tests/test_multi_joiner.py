@@ -298,6 +298,19 @@ def test_suffixes(main, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
+def test_tuple_parameters(main, px):
+    main = px.DataFrame(main)
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=(main, main),
+        keys=(("userId",), ("userId",)),
+        cols=(("rating",), ("rating",)),
+        operations=(("mean",), ("mean", "mode")),
+        suffixes=("_1", "_2"),
+    )
+    multi_agg_joiner.fit_transform(main)
+
+
+@pytest.mark.parametrize("px", MODULES)
 def test_not_fitted_dataframe(main, px):
     main = px.DataFrame(main)
     not_main = px.DataFrame({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
