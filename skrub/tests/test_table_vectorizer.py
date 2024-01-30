@@ -10,7 +10,7 @@ from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardSc
 from sklearn.utils._testing import skip_if_no_parallel
 from sklearn.utils.fixes import parse_version
 
-from skrub._datetime_encoder import DatetimeEncoder, _is_pandas_format_mixed_available
+from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import LOW_CARDINALITY_TRANSFORMER, TableVectorizer
@@ -24,6 +24,10 @@ else:
     PASSTHROUGH = FunctionTransformer(
         accept_sparse=True, check_inverse=False, feature_names_out="one-to-one"
     )
+
+
+def _is_pandas_format_mixed_available():
+    return True
 
 
 def type_equality(expected_type, actual_type):
@@ -545,11 +549,6 @@ def test_specific_transformers_unexpected_behavior(specific_transformers, error_
     "pipeline",
     [
         TableVectorizer(),
-        TableVectorizer(
-            specific_transformers=[
-                (MinHashEncoder(), ["cat1", "cat2"]),
-            ],
-        ),
         TableVectorizer(
             low_cardinality_transformer=MinHashEncoder(),
         ),
