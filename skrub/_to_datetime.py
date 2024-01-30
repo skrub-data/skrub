@@ -35,6 +35,10 @@ class ToDatetime(BaseEstimator):
             column = sbd.to_datetime(column, format=self.datetime_format_, strict=False)
         return sbd.cast(column, self.output_dtype_)
 
+    def fit(self, column):
+        self.fit_transform(column)
+        return self
+
 
 @sbd.dispatch
 def to_datetime(df):

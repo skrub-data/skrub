@@ -18,3 +18,7 @@ class PandasConvertDTypes(BaseEstimator):
         column = sbd.pandas_convert_dtypes(column)
         column = sbd.cast(column, self.target_dtype_)
         return column
+
+    def fit(self, column):
+        self.fit_transform(column)
+        return self

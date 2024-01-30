@@ -18,3 +18,7 @@ class ToNumeric(BaseEstimator):
 
     def transform(self, column):
         return sbd.to_numeric(column, dtype=self.output_dtype_, strict=False)
+
+    def fit(self, column):
+        self.fit_transform(column)
+        return self

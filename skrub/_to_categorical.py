@@ -87,3 +87,7 @@ class ToCategorical(BaseEstimator):
         keep = sbd.is_in(column, self._categories) | sbd.is_null(column)
         column = sbd.where(column, keep, [self.unknown_category_])
         return sbd.cast(column, self.output_dtype_)
+
+    def fit(self, column):
+        self.fit_transform(column)
+        return self

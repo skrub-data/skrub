@@ -105,6 +105,10 @@ class DatetimeColumnEncoder(BaseEstimator):
             all_extracted.append(extracted)
         return all_extracted
 
+    def fit(self, column):
+        self.fit_transform(column)
+        return self
+
 
 class DatetimeEncoder(TransformerMixin, BaseEstimator):
     """Transforms each datetime column into several numeric columns \

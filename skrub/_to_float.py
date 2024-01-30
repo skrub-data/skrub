@@ -30,3 +30,7 @@ class ToFloat32(BaseEstimator):
 
     def transform(self, column):
         return _to_float32(column)
+
+    def fit(self, column):
+        self.fit_transform(column)
+        return self

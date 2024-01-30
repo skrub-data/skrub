@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 
@@ -41,30 +41,33 @@ def _make_table_vectorizer_pipeline(
     cols = sbs.inv(passthrough)
 
     cleaning_steps = [
-        CheckInputDataFrame(),
-        Map(PandasConvertDTypes(), cols),
-        Map(CleanNullStrings(), cols),
-        Map(ToDatetime(), cols),
-        Map(ToNumeric(), cols),
-        Map(ToCategorical(cardinality_threshold - 1), cols),
+        ("check_input", CheckInputDataFrame()),
+        ("convert_dtypes", Map(PandasConvertDTypes(), cols)),
+        ("clean_null_strings", Map(CleanNullStrings(), cols)),
+        ("to_datetime", Map(ToDatetime(), cols)),
+        ("to_numeric", Map(ToNumeric(), cols)),
+        ("to_categorical", Map(ToCategorical(cardinality_threshold - 1), cols)),
     ]
 
     low_card_cat = sbs.categorical() & sbs.cardinality_below(cardinality_threshold)
     feature_extractors = [
-        (low_cardinality_transformer, low_card_cat),
-        (high_cardinality_transformer, sbs.string()),
-        (numeric_transformer, sbs.numeric()),
-        (datetime_transformer, sbs.anydate()),
-        (remainder_transformer, sbs.all()),
+        ("low_cardinality_transformer", low_cardinality_transformer, low_card_cat),
+        ("high_cardinality_transformer", high_cardinality_transformer, sbs.string()),
+        ("numeric_transformer", numeric_transformer, sbs.numeric()),
+        ("datetime_transformer", datetime_transformer, sbs.anydate()),
+        ("remainder_transformer", remainder_transformer, sbs.all()),
     ]
     feature_extraction_steps = []
-    for transformer, selector in feature_extractors:
+    for name, transformer, selector in feature_extractors:
         selector = (cols - sbs.produced_by(*feature_extraction_steps)) & selector
         feature_extraction_steps.append(Map(transformer, selector))
-
+    feature_extraction_steps = [
+        (name, step)
+        for ((name, *_), step) in zip(feature_extractors, feature_extraction_steps)
+    ]
     all_steps = cleaning_steps + feature_extraction_steps
 
-    return make_pipeline(*all_steps)
+    return Pipeline(all_steps)
 
 
 class PassThrough(BaseEstimator):
@@ -76,6 +79,10 @@ class PassThrough(BaseEstimator):
     def transform(self, column):
         return column
 
+    def fit(self, column):
+        self.fit_transform(column)
+        return self
+
 
 class Drop(BaseEstimator):
     __single_column_transformer__ = True
@@ -85,6 +92,10 @@ class Drop(BaseEstimator):
 
     def transform(self, column):
         return []
+
+    def fit(self, column):
+        self.fit_transform(column)
+        return self
 
 
 def _clone_or_create_transformer(transformer):
@@ -100,7 +111,14 @@ def _clone_or_create_transformer(transformer):
     return clone(transformer)
 
 
-class TableVectorizer(TransformerMixin, BaseEstimator):
+# auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
+# transform or provide set output (we always produce dataframes of the correct
+# type with the correct columns and we don't want the wrapper.) other ways to
+# disable it would be not inheriting from TransformerMixin, not defining
+# get_feature_names_out
+
+
+class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     def __init__(
         self,
         *,
@@ -151,6 +169,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         return self
 
     def fit_transform(self, X, y=None):
+        self.feature_names_in_ = sbd.column_names(X)
         self.pipeline_ = _make_table_vectorizer_pipeline(
             _clone_or_create_transformer(self.low_cardinality_transformer),
             _clone_or_create_transformer(self.high_cardinality_transformer),
@@ -182,3 +201,36 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                 "check_complex_data": "Passthrough complex columns as-is.",
             },
         }
+
+    def get_processing_steps(self, kind=None):
+        allowed_kinds = [
+            "datetime",
+            "numeric",
+            "high_cardinality",
+            "low_cardinality",
+            "remainder",
+            None,
+        ]
+        if kind not in allowed_kinds:
+            raise ValueError(f"'kind' must be one of {allowed_kinds}. Got {kind!r}")
+        col_to_steps = {col: [] for col in self.feature_names_in_}
+        for step_name, step in self.pipeline_.steps:
+            if not hasattr(step, "transformers_"):
+                continue
+            for in_col, transformer in step.transformers_.items():
+                col_to_steps[in_col].append((step_name, transformer))
+        if kind is not None:
+            kind = f"{kind}_transformer"
+            col_to_steps = {
+                col: steps
+                for (col, steps) in col_to_steps.items()
+                if steps and steps[-1][0] == kind
+            }
+        return col_to_steps
+
+    def get_transformers(self, kind=None):
+        col_to_steps = self.get_processing_steps(kind=kind)
+        transformers = {
+            c: steps[-1][1] if steps else None for c, steps in col_to_steps.items()
+        }
+        return transformers

@@ -84,7 +84,7 @@ from pprint import pprint
 # Recover the TableVectorizer from the Pipeline
 tv = pipeline.named_steps["tablevectorizer"]
 
-pprint(tv.transformers_)
+pprint(tv.get_transformers())
 
 ###############################################################################
 # We observe it has automatically assigned an appropriate encoder to
@@ -94,25 +94,30 @@ pprint(tv.transformers_)
 #     - The |OneHotEncoder| for low cardinality string variables, the columns
 #       ``'gender'``, ``'department'``, ``'department_name'`` and ``'assignment_category'``.
 
-tv.named_transformers_["low_cardinality"].get_feature_names_out()
+list(tv.get_transformers(kind="low_cardinality").keys())
 
 ###############################################################################
 #     - The |GapEncoder| for high cardinality string columns, ``'employee_position_title'``
 #       and ``'division'``. The |GapEncoder| is a powerful encoder that can handle dirty
 #       categorical columns.
 
-tv.named_transformers_["high_cardinality"].get_feature_names_out()
+list(tv.get_transformers(kind="high_cardinality").keys())
 
 ###############################################################################
 #     - The |DatetimeEncoder| to the ``'date_first_hired'`` column. The |DatetimeEncoder|
 #       can encode datetime columns for machine learning.
 
-tv.named_transformers_["datetime"].get_feature_names_out()
+list(tv.get_transformers(kind="datetime").keys())
 
 ###############################################################################
-# As we can see, it gave us interpretable column names.
-#
-# In total, we have a reasonable number of encoded columns:
+# We can easily inspect the transformer applied to a particular column
+
+gap = tv.get_transformers()["employee_position_title"]
+pprint(list(gap.get_feature_names_out()))
+
+###############################################################################
+# In total, we have a reasonable number of encoded columns.
+# As we can see, the transformer gave us interpretable column names.
 
 feature_names = tv.get_feature_names_out()
 
