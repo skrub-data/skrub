@@ -123,11 +123,6 @@ source activate testenv
 
 pip install .[doc]
 
-pip install scikit-learn
-
-# Build and install the project in dev mode
-python setup.py develop
-
 #if [[ "$CIRCLE_BRANCH" =~ ^main$ && -z "$CI_PULL_REQUEST" ]]
 #then
 #    # List available documentation versions if on default branch
