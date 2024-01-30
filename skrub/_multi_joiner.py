@@ -310,24 +310,19 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             Raises an error if all the frames don't have the same type,
             or if there is a Polars lazyframe.
         """
-        # If aux_tables is a string
-        if type(aux_tables) == str:
-            if aux_tables == "X":
-                return X, [deepcopy(X)]
-            else:
-                raise ValueError(
-                    "'aux_table' must be an iterable of dataframes or 'X'."
-                )
-        # If aux_tables is a single dataframe
-        if hasattr(aux_tables, "__dataframe__"):
+        if not _is_array_like(aux_tables):
             raise ValueError(
-                "`aux_tables` must be an iterable of dataframes of 'X'."
+                "'aux_tables' must be an iterable of dataframes or 'X'."
                 "If you are using a single auxiliary table, convert your current"
                 "`aux_tables` into [`aux_tables`]"
             )
-        # If aux_tables is an iterable
-        elif _is_array_like(aux_tables):
-            aux_tables = list(aux_tables)
+        for i, aux_table in enumerate(aux_tables):
+            if type(aux_table) == str and aux_table == "X":
+                aux_tables[i] = deepcopy(X)
+            elif not hasattr(aux_table, "__dataframe__"):
+                raise ValueError(
+                    "`aux_tables` must be an iterable of dataframes of 'X'."
+                )
 
         # Polars lazyframes will raise an error here.
         if not hasattr(X, "__dataframe__"):
