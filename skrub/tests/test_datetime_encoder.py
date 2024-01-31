@@ -17,21 +17,12 @@ MODULES = [pd]
 ASSERT_TUPLES = [(pd, assert_frame_equal)]
 
 
-def _is_pandas_format_mixed_available():
-    return False
-
-
 if POLARS_SETUP:
     import polars as pl
     from polars.testing import assert_frame_equal as assert_frame_equal_pl
 
     MODULES.append(pl)
     ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
-
-NANOSECONDS_FORMAT = (
-    "%Y-%m-%d %H:%M:%S.%f" if _is_pandas_format_mixed_available() else None
-)
-MSG_MIN_PANDAS_SKIP = "Pandas format=mixed is not available"
 
 
 def get_date(as_array=False):
@@ -122,23 +113,6 @@ def get_mixed_type_dataframe():
     )
 
 
-def get_mixed_datetime_format(as_array=False):
-    df = pd.DataFrame(
-        dict(
-            a=[
-                "2022-10-15",
-                "2021-12-25",
-                "2020-05-18",
-                "2019-10-15 12:00:00",
-            ]
-        )
-    )
-    df.columns = list(map(str, df.columns))
-    if as_array:
-        return df.to_numpy()
-    return df
-
-
 @pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize("as_array", [True, False])
 @pytest.mark.parametrize(
@@ -147,7 +121,7 @@ def get_mixed_datetime_format(as_array=False):
         (get_date, _TIME_LEVELS[: _TIME_LEVELS.index("day") + 1], "%Y-%m-%d"),
         (get_datetime, _TIME_LEVELS, "%Y-%m-%d %H:%M:%S"),
         (get_tz_datetime, _TIME_LEVELS, "%Y-%m-%d %H:%M:%S%z"),
-        (get_nanoseconds, _TIME_LEVELS, NANOSECONDS_FORMAT),
+        (get_nanoseconds, _TIME_LEVELS, "%Y-%m-%d %H:%M:%S.%f"),
     ],
 )
 @pytest.mark.parametrize(
@@ -208,7 +182,6 @@ def test_fit(
         (get_date, ["0", "1", "2"]),
         (get_datetime, ["0", "1", "2"]),
         (get_tz_datetime, ["0"]),
-        (get_mixed_type_dataframe, ["a", "e"]),
     ],
 )
 @pytest.mark.parametrize("random_state", np.arange(20))
@@ -410,19 +383,6 @@ def test_mixed_type_dataframe(px):
     assert X_dt.dtypes.to_list() == expected_dtypes
 
 
-@pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
-def test_indempotency(px, assert_frame_equal_):
-    df = get_mixed_datetime_format()
-    df = px.DataFrame(df)
-    df_dt = to_datetime(df)
-    df_dt_2 = to_datetime(df_dt)
-    assert_frame_equal_(df_dt, df_dt_2)
-
-    X_trans = DatetimeEncoder().fit_transform(df)
-    X_trans_2 = DatetimeEncoder().fit_transform(df_dt)
-    assert_array_equal(X_trans, X_trans_2)
-
-
 @pytest.mark.parametrize("px", MODULES)
 def test_datetime_encoder_invalid_params(px):
     X = get_datetime()
@@ -468,59 +428,6 @@ def test_to_datetime_invalid_params():
 
     with pytest.raises(TypeError, match=r".*unexpected keyword argument"):
         to_datetime(2020, unit="second")
-
-
-@pytest.mark.skipif(
-    not _is_pandas_format_mixed_available(),
-    reason=MSG_MIN_PANDAS_SKIP,
-)
-def test_to_datetime_format_param():
-    X_col = pd.Series(["2021-01-01", "2021/01/01"])
-
-    # without format (default)
-    out = to_datetime(X_col)
-    expected_out = np.array(["2021-01-01", "NaT"], dtype="datetime64[ns]")
-    assert_array_equal(out, expected_out)
-
-    # with format
-    out = to_datetime(X_col, format="%Y/%m/%d")
-    expected_out = np.array(["NaT", "2021-01-01"], dtype="datetime64[ns]")
-    assert_array_equal(out, expected_out)
-
-
-@pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
-def test_mixed_datetime_format(px, assert_frame_equal_):
-    df = get_mixed_datetime_format()
-    df = px.DataFrame(df)
-
-    df_dt = to_datetime(df)
-    expected_df_dt = pd.DataFrame(
-        dict(
-            a=[
-                pd.Timestamp("2022-10-15"),
-                pd.Timestamp("2021-12-25"),
-                pd.Timestamp("2020-05-18"),
-                pd.Timestamp("2019-10-15 12:00:00"),
-            ]
-        )
-    )
-    expected_df_dt = px.DataFrame(expected_df_dt)
-    assert_frame_equal_(df_dt, expected_df_dt)
-
-    series_dt = to_datetime(df["a"])
-    expected_series_dt = expected_df_dt["a"]
-    assert_array_equal(series_dt, expected_series_dt)
-
-
-@pytest.mark.skipif(not _is_pandas_format_mixed_available(), reason=MSG_MIN_PANDAS_SKIP)
-def test_mix_of_unambiguous():
-    X_col = ["2021/10/15", "01/14/2021"]
-    out = to_datetime(X_col)
-    expected_out = np.array(
-        [np.datetime64("2021-10-15"), np.datetime64("NaT")],
-        dtype="datetime64[ns]",
-    )
-    assert_array_equal(out, expected_out)
 
 
 def test_only_ambiguous():

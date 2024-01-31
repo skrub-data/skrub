@@ -24,7 +24,6 @@ class ToDatetime(BaseEstimator):
             return None
         if not _datetime_utils.is_column_datetime_parsable(sample):
             return None
-
         return _datetime_utils.guess_datetime_format(sample, random_state=0)
 
     def fit_transform(self, column):
