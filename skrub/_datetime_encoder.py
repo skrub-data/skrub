@@ -81,7 +81,15 @@ class DatetimeColumnEncoder(BaseEstimator):
         self.add_day_of_the_week = add_day_of_the_week
         self.add_total_seconds = add_total_seconds
 
+    def _check_params(self):
+        allowed = _TIME_LEVELS + [None]
+        if self.resolution not in allowed:
+            raise ValueError(
+                f"'resolution' options are {allowed}, got {self.resolution!r}."
+            )
+
     def fit_transform(self, column):
+        self._check_params()
         if not sbd.is_anydate(column):
             return NotImplemented
         if self.resolution is None:

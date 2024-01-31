@@ -18,7 +18,7 @@ ASSERT_TUPLES = [(pd, assert_frame_equal)]
 
 
 def _is_pandas_format_mixed_available():
-    return True
+    return False
 
 
 if POLARS_SETUP:
@@ -205,9 +205,9 @@ def test_fit(
 @pytest.mark.parametrize(
     "get_data_func, expected_datetime_columns",
     [
-        (get_date, [0, 1, 2]),
-        (get_datetime, [0, 1, 2]),
-        (get_tz_datetime, [0]),
+        (get_date, ["0", "1", "2"]),
+        (get_datetime, ["0", "1", "2"]),
+        (get_tz_datetime, ["0"]),
         (get_mixed_type_dataframe, ["a", "e"]),
     ],
 )
@@ -216,7 +216,7 @@ def test_to_datetime(px, get_data_func, expected_datetime_columns, random_state)
     if is_module_polars(px):
         pytest.xfail(reason="AssertionError is raised when using Polars.")
     X = get_data_func()
-    X = to_datetime(X, random_state=random_state)
+    X = to_datetime(X)
     X = px.DataFrame(X)
     datetime_columns = [col for col in X.columns if is_datetime64_any_dtype(X[col])]
     assert_array_equal(datetime_columns, expected_datetime_columns)
@@ -227,12 +227,12 @@ def test_format_nan(px):
     X = get_nan_datetime()
     X = px.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
-    expected_index_to_format = {
-        0: "%Y-%m-%d %H:%M:%S",
-        1: "%Y-%m-%d %H:%M:%S",
-        2: "%Y-%m-%d %H:%M:%S",
+    expected_datetime_formats = {
+        "0": "%Y-%m-%d %H:%M:%S",
+        "1": "%Y-%m-%d %H:%M:%S",
+        "2": "%Y-%m-%d %H:%M:%S",
     }
-    assert enc.index_to_format_ == expected_index_to_format
+    assert enc.datetime_formats_ == expected_datetime_formats
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -240,7 +240,7 @@ def test_format_nz(px):
     X = get_tz_datetime()
     X = px.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
-    assert enc.index_to_format_ == {0: "%Y-%m-%d %H:%M:%S%z"}
+    assert enc.datetime_formats_ == {"0": "%Y-%m-%d %H:%M:%S%z"}
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -253,7 +253,7 @@ def test_resolution_none(px):
     )
     enc.fit(X)
 
-    assert enc.index_to_features_ == {0: [], 1: [], 2: []}
+    assert enc.input_to_outputs_ == {"0": [], "1": [], "2": []}
     assert enc.n_features_out_ == 0
     assert_array_equal(enc.get_feature_names_out(), [])
 
@@ -396,7 +396,7 @@ def test_mixed_type_dataframe(px):
     X = get_mixed_type_dataframe()
     X = px.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
-    assert enc.index_to_format_ == {0: "%Y-%m-%d", 4: "%d/%m/%Y"}
+    assert enc.datetime_formats_ == {"a": "%Y-%m-%d", "e": "%d/%m/%Y"}
 
     X_dt = to_datetime(X)
     expected_dtypes = [
@@ -408,9 +408,6 @@ def test_mixed_type_dataframe(px):
         np.dtype("bool"),
     ]
     assert X_dt.dtypes.to_list() == expected_dtypes
-
-    X_dt = to_datetime(X.to_numpy())
-    assert X_dt.dtype == np.object_
 
 
 @pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
@@ -436,9 +433,6 @@ def test_datetime_encoder_invalid_params(px):
 
     DatetimeEncoder(resolution=None).fit(X)
 
-    with pytest.raises(ValueError, match=r"(?=.*'errors' options)"):
-        DatetimeEncoder(errors="ignore").fit(X)
-
 
 @pytest.mark.parametrize(
     "X",
@@ -457,7 +451,8 @@ def test_datetime_encoder_invalid_params(px):
     ],
 )
 def test_to_datetime_incorrect_skip(X):
-    assert_array_equal(to_datetime(X), X)
+    with pytest.raises(TypeError, match=".*must be a pandas or polars Series.*"):
+        assert_array_equal(to_datetime(X), X)
 
 
 def test_to_datetime_type_error():
@@ -468,10 +463,10 @@ def test_to_datetime_type_error():
 
 
 def test_to_datetime_invalid_params():
-    with pytest.raises(ValueError, match=r"(?=.*errors options)"):
+    with pytest.raises(TypeError, match=r".*unexpected keyword argument"):
         to_datetime(2020, errors="skip")
 
-    with pytest.raises(ValueError, match=r"(?=.*not a parameter of skrub)"):
+    with pytest.raises(TypeError, match=r".*unexpected keyword argument"):
         to_datetime(2020, unit="second")
 
 
@@ -480,7 +475,7 @@ def test_to_datetime_invalid_params():
     reason=MSG_MIN_PANDAS_SKIP,
 )
 def test_to_datetime_format_param():
-    X_col = ["2021-01-01", "2021/01/01"]
+    X_col = pd.Series(["2021-01-01", "2021/01/01"])
 
     # without format (default)
     out = to_datetime(X_col)
@@ -529,7 +524,7 @@ def test_mix_of_unambiguous():
 
 
 def test_only_ambiguous():
-    X_col = ["2021/10/10", "2020/01/02"]
+    X_col = pd.Series(["2021/10/10", "2020/01/02"])
     out = to_datetime(X_col)
     # monthfirst by default
     expected_out = np.array(["2021-10-10", "2020-01-02"], dtype="datetime64[ns]")
@@ -537,7 +532,7 @@ def test_only_ambiguous():
 
 
 def test_monthfirst_only():
-    X_col = ["2021/02/02", "2021/01/15"]
+    X_col = pd.Series(["2021/02/02", "2021/01/15"])
     out = to_datetime(X_col)
     expected_out = np.array(["2021-02-02", "2021-01-15"], dtype="datetime64[ns]")
     assert_array_equal(out, expected_out)

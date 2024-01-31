@@ -32,9 +32,10 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
                     sbd.col(X, col_name), self._columns, self.transformer
                 )
             )
-        return self._process_fit_transform_results(results, sbd.column_names(X))
+        return self._process_fit_transform_results(results, X)
 
-    def _process_fit_transform_results(self, results, all_input_names):
+    def _process_fit_transform_results(self, results, X):
+        all_input_names = sbd.column_names(X)
         self.all_inputs_ = all_input_names
         self.transformers_ = {}
         self.input_to_outputs_ = {}
@@ -55,7 +56,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         self.all_outputs_ = _column_names(transformed_columns)
         self.used_inputs_ = list(self.transformers_.keys())
         self.produced_outputs_ = list(itertools.chain(*self.input_to_outputs_.values()))
-        return sbd.dataframe_from_columns(*transformed_columns)
+        return sbd.dataframe_like(X, *transformed_columns)
 
     def transform(self, X, y=None):
         del y

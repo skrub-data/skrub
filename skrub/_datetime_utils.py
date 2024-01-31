@@ -34,7 +34,7 @@ def is_column_datetime_parsable(column):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=DeprecationWarning)
         try:
-            if np.array_equal(column, column.astype(np.float64)):
+            if np.array_equal(column, column.astype(np.float64), equal_nan=True):
                 return False
         except (ValueError, TypeError):
             pass

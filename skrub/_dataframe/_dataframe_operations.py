@@ -14,6 +14,7 @@ __all__ = [
     "skrub_namespace",
     "dataframe_module_name",
     "is_pandas",
+    "to_pandas",
     "is_polars",
     "shape",
     "is_dataframe",
@@ -26,8 +27,9 @@ __all__ = [
     "name",
     "rename",
     "column_like",
-    "empty_like",
+    "all_null_like",
     "dataframe_from_columns",
+    "dataframe_like",
     "concat_horizontal",
     "to_column_list",
     "is_in",
@@ -94,6 +96,21 @@ def _dataframe_module_name_polars(obj):
 
 def is_pandas(obj):
     return dataframe_module_name(obj) == "pandas"
+
+
+@dispatch
+def to_pandas(obj):
+    raise NotImplementedError()
+
+
+@to_pandas.specialize("pandas")
+def _to_pandas_pandas(obj):
+    return obj
+
+
+@to_pandas.specialize("polars")
+def _to_pandas_polars(obj):
+    return obj.to_pandas()
 
 
 def is_polars(obj):
@@ -231,12 +248,12 @@ def _column_like_polars(column, values, name):
 
 
 @dispatch
-def empty_like(column, length=None, dtype=None):
+def all_null_like(column, length=None, dtype=None):
     raise NotImplementedError()
 
 
-@empty_like.specialize("pandas")
-def _empty_like_pandas(column, length=None, dtype=None):
+@all_null_like.specialize("pandas")
+def _all_null_like_pandas(column, length=None, dtype=None):
     if length is None:
         length = len(column)
     if dtype is None:
@@ -244,8 +261,8 @@ def _empty_like_pandas(column, length=None, dtype=None):
     return pd.Series(dtype=dtype, index=column.index)
 
 
-@empty_like.specialize("polars")
-def _empty_like_polars(column, length=None, dtype=None):
+@all_null_like.specialize("polars")
+def _all_null_like_polars(column, length=None, dtype=None):
     if length is None:
         length = len(column)
     if dtype is None:
@@ -265,6 +282,23 @@ def _dataframe_from_columns_pandas(*columns):
 
 @dataframe_from_columns.specialize("polars")
 def _dataframe_from_columns_polars(*columns):
+    return pl.DataFrame({name(c): c for c in columns})
+
+
+@dispatch
+def dataframe_like(df, *columns):
+    return NotImplementedError()
+
+
+@dataframe_like.specialize("pandas")
+def _dataframe_like_pandas(df, *columns):
+    del df
+    return pd.DataFrame({name(c): c for c in columns})
+
+
+@dataframe_like.specialize("polars")
+def _dataframe_like_polars(df, *columns):
+    del df
     return pl.DataFrame({name(c): c for c in columns})
 
 
