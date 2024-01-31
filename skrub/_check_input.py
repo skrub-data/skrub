@@ -1,5 +1,6 @@
 import warnings
 
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from . import _dataframe as sbd
@@ -13,8 +14,31 @@ from . import _utils
 
 
 class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+    def __init__(self, convert_arrays=True):
+        self.convert_arrays = convert_arrays
+
+    def _handle_array(self, X):
+        if not isinstance(X, np.ndarray) or not self.convert_arrays:
+            return X
+        warnings.warn(
+            "Only pandas and polars DataFrames are supported, but input is a Numpy"
+            " array. Please convert Numpy arrays to DataFrames before passing them to"
+            " skrub transformers. Converting to pandas DataFrame with columns"
+            " ['0', '1', …]."
+        )
+        if X.ndim != 2:
+            raise ValueError(
+                f"Cannot convert array to DataFrame due to wrong shape: {X.shape}"
+            )
+        import pandas as pd
+
+        columns = list(map(str, range(X.shape[1])))
+        X = pd.DataFrame(X, columns=columns)
+        return X
+
     def fit(self, X, y=None):
         del y
+        X = self._handle_array(X)
         module_name = sbd.dataframe_module_name(X)
         if module_name is None:
             raise TypeError(
@@ -30,6 +54,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
         return self
 
     def transform(self, X):
+        X = self._handle_array(X)
         module_name = sbd.dataframe_module_name(X)
         if module_name is None:
             raise TypeError(
