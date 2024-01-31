@@ -598,7 +598,10 @@ def _to_datetime_pandas(column, format, strict=True):
     if _is_anydate_pandas(column):
         return column
     errors = "raise" if strict else "coerce"
-    return pd.to_datetime(column, format=format, errors=errors)
+    out = pd.to_datetime(column, format=format, errors=errors)
+    if out.dt.tz is not None:
+        out = out.dt.tz_convert("UTC")
+    return out
 
 
 @to_datetime.specialize("polars")
