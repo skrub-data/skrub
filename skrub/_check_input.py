@@ -33,6 +33,43 @@ def _cleaned_column_names(colum_names):
     return _deduplicated_column_names(_column_names_to_strings(colum_names))
 
 
+@sbd.dispatch
+def _check_not_pandas_sparse(df):
+    pass
+
+
+@_check_not_pandas_sparse.specialize("pandas")
+def _check_not_pandas_sparse_pandas(df):
+    import pandas as pd
+
+    sparse_cols = [
+        col for col in df.columns if isinstance(df[col].dtype, pd.SparseDtype)
+    ]
+    if sparse_cols:
+        raise TypeError(
+            f"Columns {sparse_cols} are sparse Pandas series, but dense "
+            "data is required. Use df[col].sparse.to_dense() to convert "
+            "a series from sparse to dense."
+        )
+
+
+def _check_is_dataframe(df):
+    if not sbd.is_dataframe(df):
+        raise TypeError(
+            "Only pandas and polars DataFrames are supported. Cannot handle X of"
+            f" type: {type(df)}"
+        )
+
+
+def _collect_lazyframe(df):
+    if not sbd.is_lazyframe(df):
+        return df
+    warnings.warn(
+        "At the moment, skrub only works on eager DataFrames, calling collect()"
+    )
+    return sbd.collect(df)
+
+
 # auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
 # transform or provide set output (we always produce dataframes of the correct
 # type with the correct columns and we don't want the wrapper.) other ways to
@@ -64,32 +101,29 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
         return X
 
     def fit(self, X, y=None):
+        self.fit_transform(X, y)
+        return self
+
+    def fit_transform(self, X, y=None):
         del y
         X = self._handle_array(X)
-        module_name = sbd.dataframe_module_name(X)
-        if module_name is None:
-            raise TypeError(
-                "Only pandas and polars DataFrames are"
-                f" supported. Cannot handle X of type: {type(X)}"
-            )
-        self.module_name_ = module_name
+        _check_is_dataframe(X)
+        self.module_name_ = sbd.dataframe_module_name(X)
         # TODO check schema (including dtypes) not just names.
         # Need to decide how strict we should be about types
         column_names = sbd.column_names(X)
         self.feature_names_in_ = column_names
         self.feature_names_out_ = _cleaned_column_names(column_names)
-        return self
+        X = sbd.set_column_names(X, self.feature_names_out_)
+        _check_not_pandas_sparse(X)
+        X = _collect_lazyframe(X)
+        return X
 
     def transform(self, X):
         X = self._handle_array(X)
+        _check_is_dataframe(X)
         module_name = sbd.dataframe_module_name(X)
-        if module_name is None:
-            raise TypeError(
-                "Only pandas DataFrames and polars DataFrames and LazyFrames are"
-                f" supported. Cannot handle X of type: {type(X)}"
-            )
         if module_name != self.module_name_:
-            # TODO should this be a warning instead?
             raise TypeError(
                 f"Pipeline was fitted to a {self.module_name_} dataframe "
                 f"but is being applied to a {module_name} dataframe. "
@@ -107,11 +141,8 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
             )
             raise ValueError(message)
         X = sbd.set_column_names(X, self.feature_names_out_)
-        if sbd.is_lazyframe(X):
-            warnings.warn(
-                "At the moment, skrub only works on eager DataFrames, calling collect()"
-            )
-            X = sbd.collect(X)
+        _check_not_pandas_sparse(X)
+        X = _collect_lazyframe(X)
         return X
 
     def get_feature_names_out(self):

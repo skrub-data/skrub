@@ -67,7 +67,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
                 _transform_column(column, self.transformers_.get(col_name))
             )
         transformed_columns = _rename_columns(transformed_columns, self.all_outputs_)
-        return sbd.dataframe_from_columns(*transformed_columns)
+        return sbd.dataframe_like(X, *transformed_columns)
 
     def get_feature_names_out(self):
         return self.all_outputs_

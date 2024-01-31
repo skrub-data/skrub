@@ -193,7 +193,8 @@ def test_duplicate_column_names():
     # Creates a simple dataframe with duplicate column names
     X_dup_col_names = pd.DataFrame(np.ones((3, 2)), columns=["col_1", "col_1"])
 
-    transformed = tablevectorizer.fit_transform(X_dup_col_names)
+    with pytest.warns(UserWarning, match=".*duplicated column names.*"):
+        transformed = tablevectorizer.fit_transform(X_dup_col_names)
     cols = list(transformed.columns)
     assert len(cols) == 2
     assert cols[0] == "col_1"
@@ -622,25 +623,30 @@ def test_pandas_sparse_array():
         TableVectorizer().fit(df)
 
 
-@pytest.mark.parametrize("invalid_transformer", [None, "drop"])
-def test_wrong_transformer(invalid_transformer):
+def test_wrong_transformer():
     X = _get_clean_dataframe()
     with pytest.raises(ValueError):
-        TableVectorizer(high_cardinality_transformer=invalid_transformer).fit(X)
+        TableVectorizer(high_cardinality_transformer="passthroughtypo").fit(X)
+    with pytest.raises(TypeError):
+        TableVectorizer(high_cardinality_transformer=None).fit(X)
 
 
 invalid_tuples = [
-    (1, ValueError, r"(?=.*got scalar array)"),
-    (np.array([1]), ValueError, r"(?=.*got 1D array)"),
-    (pd.DataFrame([], columns=["a", "b"]), ValueError, r"(?=.*0 sample)"),
-    (pd.DataFrame([], index=[0, 1]), ValueError, r"(?=.*0 feature)"),
-    (pd.DataFrame([1], dtype="Sparse[int]"), TypeError, r"(?=.*sparse Pandas series)"),
-    (csr_matrix([1]), TypeError, r"(?=.*A sparse matrix was passed)"),
+    (1, TypeError, r".*Only pandas and polars DataFrames.*"),
+    (np.array([1]), ValueError, r".*wrong shape.*"),
+    (pd.DataFrame([1], dtype="Sparse[int]"), TypeError, r".*sparse Pandas series.*"),
+    (pd.Series([1, 2], name="S"), TypeError, r".*Only pandas and polars DataFrames.*"),
+    (csr_matrix([1]), TypeError, r".*Only pandas and polars DataFrames.*"),
 ]
 
 
 @pytest.mark.parametrize("invalid_X, error, msg", invalid_tuples)
 def test_invalid_X(invalid_X, error, msg):
+    try:
+        # avoid warning
+        invalid_X.columns = list(map(str, invalid_X.columns))
+    except AttributeError:
+        pass
     with pytest.raises(error, match=msg):
         TableVectorizer().fit(invalid_X)
 
