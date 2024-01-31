@@ -1,5 +1,3 @@
-import itertools
-
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import Pipeline
@@ -200,7 +198,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         ].feature_names_in_
         self.feature_names_out_ = sbd.column_names(output)
         self.input_to_outputs_ = _get_input_to_outputs_mapping(
-            self.feature_names_in_, list(self.pipeline_.named_steps.values())[1:]
+            list(self.pipeline_.named_steps.values())[1:]
         )
         return output
 
@@ -257,13 +255,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         return transformers
 
 
-def _get_input_to_outputs_mapping(all_inputs, pipeline_steps):
-    mapping = {c: [c] for c in all_inputs}
+def _get_input_to_outputs_mapping(pipeline_steps):
+    mapping = {col: [col] for col in pipeline_steps[0].all_inputs_}
     for step in pipeline_steps:
-        mapping = {
-            c: list(
-                itertools.chain(*[step.input_to_outputs_.get(o, [o]) for o in outputs])
-            )
-            for (c, outputs) in mapping.items()
-        }
+        for col, outputs_at_previous_step in mapping.items():
+            new_outputs = []
+            for output in outputs_at_previous_step:
+                new_outputs.extend(step.input_to_outputs_.get(output, [output]))
+            mapping[col] = new_outputs
     return mapping
