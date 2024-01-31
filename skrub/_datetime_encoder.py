@@ -13,6 +13,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import make_pipeline
 
 from . import _dataframe as sbd
+from ._check_input import CheckInputDataFrame
 from ._map import Map
 from ._to_datetime import ToDatetime
 
@@ -90,10 +91,10 @@ class DatetimeColumnEncoder(BaseEstimator):
             if _is_date(column):
                 idx_level = min(idx_level, _TIME_LEVELS.index("day"))
             self.extracted_features_ = _TIME_LEVELS[: idx_level + 1]
-        if self.add_day_of_the_week:
-            self.extracted_features_.append("day_of_the_week")
         if self.add_total_seconds:
             self.extracted_features_.append("total_seconds")
+        if self.add_day_of_the_week:
+            self.extracted_features_.append("day_of_the_week")
         return self.transform(column)
 
     def transform(self, column):
@@ -110,7 +111,7 @@ class DatetimeColumnEncoder(BaseEstimator):
         return self
 
 
-class DatetimeEncoder(TransformerMixin, BaseEstimator):
+class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     """Transforms each datetime column into several numeric columns \
     for temporal features (e.g year, month, day...).
 
@@ -216,20 +217,31 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
         DatetimeEncoder
             Fitted DatetimeEncoder instance (self).
         """
+        steps = [CheckInputDataFrame()]
         if self.parse_string_columns:
-            steps = [Map(ToDatetime())]
-        else:
-            steps = []
-        encoder = DatetimeColumnEncoder(
+            self._to_datetime = Map(ToDatetime())
+            steps.append(self._to_datetime)
+        column_encoder = DatetimeColumnEncoder(
             resolution=self.resolution,
             add_day_of_the_week=self.add_day_of_the_week,
             add_total_seconds=self.add_total_seconds,
         )
-        steps.append(Map(encoder))
+        self._encoder = Map(column_encoder)
+        steps.append(self._encoder)
         self.pipeline_ = make_pipeline(*steps)
         output = self.pipeline_.fit_transform(X)
-        self._output_names = sbd.column_names(output)
+        if self.parse_string_columns:
+            self.datetime_formats_ = {
+                c: t.datetime_format_
+                for (c, t) in self._to_datetime.transformers_.items()
+            }
+        self.all_outputs_ = sbd.column_names(output)
+        self.n_features_out_ = len(self.all_outputs_)
+        self.input_to_outputs_ = self._encoder.input_to_outputs_
         return output
+
+    def get_feature_names_out(self):
+        return self.all_outputs_
 
     def transform(self, X):
         return self.pipeline_.transform(X)

@@ -13,7 +13,6 @@ from skrub._dataframe._test_utils import is_module_polars
 from skrub._datetime_encoder import _TIME_LEVELS, DatetimeEncoder
 from skrub._to_datetime import to_datetime
 
-TIME_LEVELS = _TIME_LEVELS
 MODULES = [pd]
 ASSERT_TUPLES = [(pd, assert_frame_equal)]
 
@@ -44,6 +43,7 @@ def get_date(as_array=False):
             ["2023-02-03", "2020-02-04", "2023-02-05"],
         ],
     )
+    df.columns = list(map(str, df.columns))
     if as_array:
         return df.to_numpy()
     return df
@@ -58,6 +58,7 @@ def get_datetime(as_array=False):
             ["2023-02-03 11:12:12", "2020-02-04 08:32:00", "2023-02-05 23:00:00"],
         ],
     )
+    df.columns = list(map(str, df.columns))
     if as_array:
         return df.to_numpy()
     return df
@@ -72,6 +73,7 @@ def get_nanoseconds(as_array=False):
             ["2020-08-20 14:58:33.987123456", "2023-09-20 14:58:33.987123456"],
         ],
     )
+    df.columns = list(map(str, df.columns))
     if as_array:
         return df.to_numpy()
     return df
@@ -85,6 +87,7 @@ def get_nan_datetime(as_array=False):
             ["2022-01-01 23:23:43", "2020-12-25 11:12:00", pd.NA],
         ],
     )
+    df.columns = list(map(str, df.columns))
     if as_array:
         return df.to_numpy()
     return df
@@ -100,6 +103,7 @@ def get_tz_datetime(as_array=False):
             ["2023-02-03 11:12:12+05:30"],
         ],
     )
+    df.columns = list(map(str, df.columns))
     if as_array:
         return df.to_numpy()
     return df
@@ -129,6 +133,7 @@ def get_mixed_datetime_format(as_array=False):
             ]
         )
     )
+    df.columns = list(map(str, df.columns))
     if as_array:
         return df.to_numpy()
     return df
@@ -139,17 +144,17 @@ def get_mixed_datetime_format(as_array=False):
 @pytest.mark.parametrize(
     "get_data_func, features, format",
     [
-        (get_date, TIME_LEVELS[: TIME_LEVELS.index("day") + 1], "%Y-%m-%d"),
-        (get_datetime, TIME_LEVELS, "%Y-%m-%d %H:%M:%S"),
-        (get_tz_datetime, TIME_LEVELS, "%Y-%m-%d %H:%M:%S%z"),
-        (get_nanoseconds, TIME_LEVELS, NANOSECONDS_FORMAT),
+        (get_date, _TIME_LEVELS[: _TIME_LEVELS.index("day") + 1], "%Y-%m-%d"),
+        (get_datetime, _TIME_LEVELS, "%Y-%m-%d %H:%M:%S"),
+        (get_tz_datetime, _TIME_LEVELS, "%Y-%m-%d %H:%M:%S%z"),
+        (get_nanoseconds, _TIME_LEVELS, NANOSECONDS_FORMAT),
     ],
 )
 @pytest.mark.parametrize(
     "add_total_seconds, add_day_of_the_week",
     list(product([True, False], [True, False])),
 )
-@pytest.mark.parametrize("resolution", TIME_LEVELS)
+@pytest.mark.parametrize("resolution", _TIME_LEVELS)
 def test_fit(
     px,
     as_array,
@@ -169,7 +174,7 @@ def test_fit(
     enc.fit(X)
 
     total_seconds = ["total_seconds"] if add_total_seconds else []
-    day_of_week = ["day_of_week"] if add_day_of_the_week else []
+    day_of_week = ["day_of_the_week"] if add_day_of_the_week else []
 
     if resolution in features:
         features_ = features[: features.index(resolution) + 1]
@@ -179,15 +184,19 @@ def test_fit(
     features_ += total_seconds + day_of_week
     columns = range(X.shape[1])
 
-    expected_index_to_features = {col: features_ for col in columns}
-    expected_index_to_format = {col: format for col in columns}
+    try:
+        columns = X.columns
+    except AttributeError:
+        columns = list(map(str, range(X.shape[1])))
+    expected_input_to_outputs = {
+        col: [f"{col}_{f}" for f in features_] for col in columns
+    }
     expected_n_features_out = len(features_) * X.shape[1]
     expected_feature_names = [
         f"{col}_{feature}" for col in columns for feature in features_
     ]
 
-    assert enc.index_to_features_ == expected_index_to_features
-    assert enc.index_to_format_ == expected_index_to_format
+    assert enc.input_to_outputs_ == expected_input_to_outputs
     assert enc.n_features_out_ == expected_n_features_out
     assert_array_equal(enc.get_feature_names_out(), expected_feature_names)
 
