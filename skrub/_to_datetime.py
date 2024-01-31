@@ -46,8 +46,7 @@ class ToDatetime(BaseEstimator):
         return as_datetime
 
     def transform(self, column):
-        if self.datetime_format_ is not None:
-            column = sbd.to_datetime(column, format=self.datetime_format_, strict=False)
+        column = sbd.to_datetime(column, format=self.datetime_format_, strict=False)
         return sbd.cast(column, self.output_dtype_)
 
     def fit(self, column):

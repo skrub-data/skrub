@@ -50,7 +50,7 @@ def string():
     return String()
 
 
-class Bool(Filter):
+class Boolean(Filter):
     def __init__(self):
         super().__init__(sbd.is_bool)
 
@@ -58,5 +58,5 @@ class Bool(Filter):
         return "bool()"
 
 
-def bool():
-    return Bool()
+def boolean():
+    return Boolean()

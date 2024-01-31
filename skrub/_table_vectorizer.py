@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import Pipeline
@@ -59,7 +61,7 @@ def _make_table_vectorizer_pipeline(
     feature_extractors = [
         ("low_cardinality_transformer", low_cardinality_transformer, low_card_cat),
         ("high_cardinality_transformer", high_cardinality_transformer, sbs.string()),
-        ("numeric_transformer", numeric_transformer, sbs.numeric()),
+        ("numeric_transformer", numeric_transformer, sbs.numeric() | sbs.boolean()),
         ("datetime_transformer", datetime_transformer, sbs.anydate()),
         ("remainder_transformer", remainder_transformer, sbs.all()),
     ]
@@ -191,10 +193,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         )
 
     def fit_transform(self, X, y=None):
-        self.feature_names_in_ = sbd.column_names(X)
         self.pipeline_ = self.make_pipeline()
         output = self.pipeline_.fit_transform(X)
+        self.feature_names_in_ = self.pipeline_.named_steps[
+            "check_input"
+        ].feature_names_in_
         self.feature_names_out_ = sbd.column_names(output)
+        self.input_to_outputs_ = _get_input_to_outputs_mapping(
+            self.feature_names_in_, list(self.pipeline_.named_steps.values())[1:]
+        )
         return output
 
     def transform(self, X):
@@ -248,3 +255,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             c: steps[-1][1] if steps else None for c, steps in col_to_steps.items()
         }
         return transformers
+
+
+def _get_input_to_outputs_mapping(all_inputs, pipeline_steps):
+    mapping = {c: [c] for c in all_inputs}
+    for step in pipeline_steps:
+        mapping = {
+            c: list(
+                itertools.chain(*[step.input_to_outputs_.get(o, [o]) for o in outputs])
+            )
+            for (c, outputs) in mapping.items()
+        }
+    return mapping
