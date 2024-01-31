@@ -6,6 +6,25 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from . import _dataframe as sbd
 from . import _utils
 
+
+@sbd.dispatch
+def _column_names_to_strings(df):
+    return df
+
+
+@_column_names_to_strings.specialize("pandas")
+def _column_names_to_strings_pandas(df):
+    non_string_cols = [c for c in df.columns if not isinstance(c, str)]
+    if not non_string_cols:
+        return df
+    warnings.warn(
+        f"Some column names are not strings: {non_string_cols!r}. All column names"
+        " must be strings; converting to strings."
+    )
+    columns = list(map(str, df.columns))
+    return df.set_axis(columns, axis=1)
+
+
 # auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
 # transform or provide set output (we always produce dataframes of the correct
 # type with the correct columns and we don't want the wrapper.) other ways to
@@ -46,6 +65,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
                 f" supported. Cannot handle X of type: {type(X)}"
             )
         self.module_name_ = module_name
+        X = _column_names_to_strings(X)
         # TODO check schema (including dtypes) not just names.
         # Need to decide how strict we should be about types
         column_names = sbd.column_names(X)
@@ -68,6 +88,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
                 f"but is being applied to a {module_name} dataframe. "
                 "This is likely to produce errors and is not supported."
             )
+        X = _column_names_to_strings(X)
         column_names = sbd.column_names(X)
         if column_names != self.feature_names_in_:
             import difflib
