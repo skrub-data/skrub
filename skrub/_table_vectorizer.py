@@ -179,12 +179,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.fit_transform(X)
         return self
 
-    def _sk_visual_block_(self):
-        try:
-            return self.pipeline_._sk_visual_block_()
-        except AttributeError:
-            return self.make_pipeline()._sk_visual_block_()
-
     def make_pipeline(self):
         return _make_table_vectorizer_pipeline(
             _clone_or_create_transformer(self.low_cardinality_transformer),
