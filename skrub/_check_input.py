@@ -4,25 +4,33 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from . import _dataframe as sbd
-from . import _utils
+from . import _join_utils, _utils
 
 
-@sbd.dispatch
-def _column_names_to_strings(df):
-    return df
-
-
-@_column_names_to_strings.specialize("pandas")
-def _column_names_to_strings_pandas(df):
-    non_string_cols = [c for c in df.columns if not isinstance(c, str)]
-    if not non_string_cols:
-        return df
+def _column_names_to_strings(column_names):
+    non_string = [c for c in column_names if not isinstance(c, str)]
+    if not non_string:
+        return column_names
     warnings.warn(
-        f"Some column names are not strings: {non_string_cols!r}. All column names"
+        f"Some column names are not strings: {non_string}. All column names"
         " must be strings; converting to strings."
     )
-    columns = list(map(str, df.columns))
-    return df.set_axis(columns, axis=1)
+    return list(map(str, column_names))
+
+
+def _deduplicated_column_names(column_names):
+    duplicates = _utils.get_duplicates(column_names)
+    if not duplicates:
+        return column_names
+    warnings.warn(
+        f"Found duplicated column names: {duplicates}. Please make sure column names"
+        " are unique. Renaming columns that have duplicated names."
+    )
+    return _join_utils.pick_column_names(column_names)
+
+
+def _cleaned_column_names(colum_names):
+    return _deduplicated_column_names(_column_names_to_strings(colum_names))
 
 
 # auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
@@ -65,12 +73,11 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
                 f" supported. Cannot handle X of type: {type(X)}"
             )
         self.module_name_ = module_name
-        X = _column_names_to_strings(X)
         # TODO check schema (including dtypes) not just names.
         # Need to decide how strict we should be about types
         column_names = sbd.column_names(X)
-        _utils.check_duplicated_column_names(column_names)
         self.feature_names_in_ = column_names
+        self.feature_names_out_ = _cleaned_column_names(column_names)
         return self
 
     def transform(self, X):
@@ -88,7 +95,6 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
                 f"but is being applied to a {module_name} dataframe. "
                 "This is likely to produce errors and is not supported."
             )
-        X = _column_names_to_strings(X)
         column_names = sbd.column_names(X)
         if column_names != self.feature_names_in_:
             import difflib
@@ -100,6 +106,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
                 f"Columns of dataframes passed to fit() and transform() differ:\n{diff}"
             )
             raise ValueError(message)
+        X = sbd.set_column_names(X, self.feature_names_out_)
         if sbd.is_lazyframe(X):
             warnings.warn(
                 "At the moment, skrub only works on eager DataFrames, calling collect()"
@@ -108,4 +115,4 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
         return X
 
     def get_feature_names_out(self):
-        return self.feature_names_in_
+        return self.feature_names_out_

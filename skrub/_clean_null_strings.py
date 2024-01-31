@@ -31,7 +31,7 @@ class CleanNullStrings(BaseEstimator):
     __single_column_transformer__ = True
 
     def fit_transform(self, column):
-        if not sbd.is_string(column):
+        if not sbd.is_string(column) or sbd.is_categorical(column):
             return NotImplemented
         return self.transform(column)
 

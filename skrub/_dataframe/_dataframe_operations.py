@@ -441,7 +441,10 @@ def to_numeric(column, dtype=None, strict=True):
 @to_numeric.specialize("pandas")
 def _to_numeric_pandas(column, dtype=None, strict=True):
     errors = "raise" if strict else "coerce"
-    return pd.to_numeric(column, errors=errors).astype(dtype)
+    out = pd.to_numeric(column, errors=errors)
+    if dtype is None:
+        return out
+    return out.astype(dtype)
 
 
 @to_numeric.specialize("polars")

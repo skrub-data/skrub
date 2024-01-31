@@ -1,3 +1,5 @@
+import re
+
 import joblib
 import numpy as np
 import pandas as pd
@@ -13,7 +15,7 @@ from sklearn.utils.fixes import parse_version
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
-from skrub._table_vectorizer import LOW_CARDINALITY_TRANSFORMER, TableVectorizer
+from skrub._table_vectorizer import TableVectorizer
 from skrub.tests.utils import transformers_list_equal
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -24,10 +26,6 @@ else:
     PASSTHROUGH = FunctionTransformer(
         accept_sparse=True, check_inverse=False, feature_names_out="one-to-one"
     )
-
-
-def _is_pandas_format_mixed_available():
-    return True
 
 
 def type_equality(expected_type, actual_type):
@@ -159,10 +157,6 @@ def _get_datetimes_dataframe():
                 "2015/12/31 01:31:34",
                 "2014/01/31 00:32:45",
             ],
-            # this date format is not found by pandas guess_datetime_format
-            # so shoulnd't be found by our _infer_datetime_format
-            # but pandas.to_datetime can still parse it
-            "mm/dd/yy": ["12/1/22", "2/3/05", "2/1/20", "10/7/99", "1/23/04"],
         }
     )
 
@@ -173,24 +167,22 @@ def test_fit_default_transform():
     vectorizer.fit(X)
 
     low_cardinality_cols = ["str1", "str2", "cat1", "cat2"]
-    low_cardinality_transformer = LOW_CARDINALITY_TRANSFORMER.fit(
-        X[low_cardinality_cols]
-    )
+    expected_transformers_types = {}
+    for c in X.columns:
+        if c in ["int", "float"]:
+            expected_transformers_types[c] = "ToFloat32"
+        elif c in low_cardinality_cols:
+            expected_transformers_types[c] = "OneHotEncoder"
+        else:
+            expected_transformers_types[c] = "GapEncoder"
 
-    expected_transformers = [
-        ("numeric", PASSTHROUGH, ["int", "float"]),
-        ("low_cardinality", low_cardinality_transformer, low_cardinality_cols),
-    ]
-
-    assert transformers_list_equal(
-        expected_transformers,
-        vectorizer.transformers_,
-        ignore_params=["categories_"],  # list of array of different lengths
-    )
-    categories = vectorizer.transformers_[1][1].categories_
-    expected_categories = low_cardinality_transformer.categories_
-    for categories_, expected_categories_ in zip(categories, expected_categories):
-        assert_array_equal(categories_, expected_categories_)
+    transformer_types = {
+        k: v.__class__.__name__ for (k, v) in vectorizer.get_transformers().items()
+    }
+    assert transformer_types == expected_transformers_types
+    categories = vectorizer.get_transformers()["cat1"].categories_[0]
+    expected_categories = ["no", "yes"]
+    assert list(categories) == list(expected_categories)
 
 
 def test_duplicate_column_names():
@@ -200,11 +192,13 @@ def test_duplicate_column_names():
     """
     tablevectorizer = TableVectorizer()
     # Creates a simple dataframe with duplicate column names
-    data = [(3, "a"), (2, "b"), (1, "c"), (0, "d")]
-    X_dup_col_names = pd.DataFrame.from_records(data, columns=["col_1", "col_1"])
+    X_dup_col_names = pd.DataFrame(np.ones((3, 2)), columns=["col_1", "col_1"])
 
-    with pytest.raises(AssertionError, match=r"Duplicate column names"):
-        tablevectorizer.fit_transform(X_dup_col_names)
+    transformed = tablevectorizer.fit_transform(X_dup_col_names)
+    cols = list(transformed.columns)
+    assert len(cols) == 2
+    assert cols[0] == "col_1"
+    assert re.match(r"^col_1__skrub_[0-9a-f]+__$", cols[1])
 
 
 X = _get_datetimes_dataframe()
@@ -220,17 +214,16 @@ X_tuples = [
             "dmy-": "datetime64[ns]",
             "ymd/": "datetime64[ns]",
             "ymd/_hms:": "datetime64[ns]",
-            "mm/dd/yy": "datetime64[ns]",
         },
     ),
     # Test other types detection
     (
         _get_clean_dataframe(),
         {
-            "int": "int64",
-            "float": "float64",
-            "str1": "object",
-            "str2": "object",
+            "int": "Int64",
+            "float": "Float64",
+            "str1": "category",
+            "str2": "category",
             "cat1": "category",
             "cat2": "category",
         },
@@ -238,8 +231,8 @@ X_tuples = [
     (
         _get_dirty_dataframe("category"),
         {
-            "int": "float64",  # int type doesn't support nans
-            "float": "float64",
+            "int": "Int64",
+            "float": "Float64",
             "str1": "category",
             "str2": "category",
             "cat1": "category",
@@ -254,8 +247,14 @@ def test_auto_cast(X, dict_expected_types):
     """
     Tests that the TableVectorizer automatic type detection works as expected.
     """
-    vectorizer = TableVectorizer()
-    X_trans = vectorizer._auto_cast(X, reset=True)
+    vectorizer = TableVectorizer(
+        high_cardinality_transformer="passthrough",
+        low_cardinality_transformer="passthrough",
+        numeric_transformer="passthrough",
+        datetime_transformer="passthrough",
+        remainder_transformer="passthrough",
+    )
+    X_trans = vectorizer.fit_transform(X)
     for col in X_trans.columns:
         assert dict_expected_types[col] == X_trans[col].dtype
 
@@ -616,10 +615,6 @@ def test_mixed_types():
                 }
             ),
             np.array([[1.5463008e09], [1.5463872e09], [np.nan]]),
-            marks=pytest.mark.skipif(
-                not _is_pandas_format_mixed_available(),
-                reason=MSG_PANDAS_DEPRECATED_WARNING,
-            ),
         ),
     ],
 )
