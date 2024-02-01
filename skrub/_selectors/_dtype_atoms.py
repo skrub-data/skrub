@@ -55,7 +55,7 @@ class Boolean(Filter):
         super().__init__(sbd.is_bool)
 
     def __repr__(self):
-        return "bool()"
+        return "boolean()"
 
 
 def boolean():

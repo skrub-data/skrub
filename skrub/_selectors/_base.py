@@ -6,22 +6,28 @@ def all():
     return All()
 
 
+def empty():
+    return Empty()
+
+
 def cols(*columns):
+    if not columns:
+        return empty()
     return Cols(columns)
 
 
 def inv(obj):
-    return Inv(obj)
+    return ~make_selector(obj)
 
 
 def make_selector(obj):
     if isinstance(obj, Selector):
         return obj
     if isinstance(obj, str):
-        return Cols([obj])
+        return cols(obj)
     if not hasattr(obj, "__iter__"):
         raise ValueError(f"selector not understood: {obj}")
-    return Cols(obj)
+    return cols(*obj)
 
 
 @sbd.dispatch
@@ -50,28 +56,26 @@ class Selector:
     def __invert__(self):
         return Inv(self)
 
-    # TODO: implement short-circuit
-
     def __or__(self, other):
-        return Or(self, other)
+        return make_selector(other).__ror__(self)
 
     def __ror__(self, other):
         return Or(other, self)
 
     def __and__(self, other):
-        return And(self, other)
+        return make_selector(other).__rand__(self)
 
     def __rand__(self, other):
         return And(other, self)
 
     def __sub__(self, other):
-        return Sub(self, other)
+        return make_selector(other).__rsub__(self)
 
     def __rsub__(self, other):
         return Sub(other, self)
 
     def __xor__(self, other):
-        return XOr(self, other)
+        return make_selector(other).__rxor__(self)
 
     def __rxor__(self, other):
         return XOr(other, self)
@@ -84,19 +88,121 @@ class All(Selector):
     def __repr__(self):
         return "all()"
 
+    def __invert__(self):
+        return empty()
+
+    def __or__(self, other):
+        return all()
+
+    def __ror__(self, other):
+        return all()
+
+    def __and__(self, other):
+        return make_selector(other)
+
+    def __rand__(self, other):
+        return make_selector(other)
+
+    def __sub__(self, other):
+        return inv(other)
+
+    def __rsub__(self, other):
+        return empty()
+
+    def __xor__(self, other):
+        return inv(other)
+
+    def __rxor__(self, other):
+        return inv(other)
+
+
+class Empty(Selector):
+    def select(self, df, ignore=()):
+        return []
+
+    def __repr__(self):
+        return "empty()"
+
+    def __invert__(self):
+        return all()
+
+    def __or__(self, other):
+        return make_selector(other)
+
+    def __ror__(self, other):
+        return make_selector(other)
+
+    def __and__(self, other):
+        return empty()
+
+    def __rand__(self, other):
+        return empty()
+
+    def __sub__(self, other):
+        return empty()
+
+    def __rsub__(self, other):
+        return make_selector(other)
+
+    def __xor__(self, other):
+        return make_selector(other)
+
+    def __rxor__(self, other):
+        return make_selector(other)
+
 
 class Cols(Selector):
     def __init__(self, columns):
-        self.columns = list(columns)
+        columns = list(columns)
+        for c in columns:
+            if not isinstance(c, str):
+                raise ValueError(
+                    "Cols selector should be initialized with a list of str. Found"
+                    f" non-string element: {c!r}."
+                )
+        self.columns = columns
 
     def select(self, df, ignore=()):
         all_selected = set(self.columns).difference(ignore)
         assert all_selected.issubset(sbd.column_names(df))
         return list_intersect(sbd.column_names(df), all_selected)
 
+    def _set_op(self, other, op):
+        other = make_selector(other)
+        if not isinstance(other, Cols):
+            return getattr(super(), op)(other)
+        self_cols = set(self.columns)
+        other_cols = set(other.columns)
+        result_cols = getattr(self_cols, op)(other_cols)
+        return cols(*sorted(result_cols))
+
     def __repr__(self):
         args = ", ".join(map(repr, self.columns))
         return f"cols({args})"
+
+    def __or__(self, other):
+        return self._set_op(other, "__or__")
+
+    def __ror__(self, other):
+        return self._set_op(other, "__ror__")
+
+    def __and__(self, other):
+        return self._set_op(other, "__and__")
+
+    def __rand__(self, other):
+        return self._set_op(other, "__rand__")
+
+    def __sub__(self, other):
+        return self._set_op(other, "__sub__")
+
+    def __rsub__(self, other):
+        return self._set_op(other, "__rsub__")
+
+    def __xor__(self, other):
+        return self._set_op(other, "__xor__")
+
+    def __rxor__(self, other):
+        return self._set_op(other, "__rxor__")
 
 
 class Inv(Selector):

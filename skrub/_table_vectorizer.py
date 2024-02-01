@@ -38,13 +38,7 @@ def _make_table_vectorizer_pipeline(
     cardinality_threshold,
     passthrough,
 ):
-    if hasattr(passthrough, "__iter__"):
-        passthrough = list(passthrough)
-    if isinstance(passthrough, list) and not passthrough:
-        # get a shorter display in scikit-learn _html_repr_ by using the default value
-        cols = sbs.all()
-    else:
-        cols = sbs.inv(passthrough)
+    cols = sbs.inv(passthrough)
 
     cleaning_steps = [
         ("check_input", CheckInputDataFrame()),
