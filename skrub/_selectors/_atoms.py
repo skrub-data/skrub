@@ -104,7 +104,7 @@ class ProducedBy(Selector):
         return list_intersect(sbd.column_names(df), all_produced.difference(ignore))
 
     def __repr__(self):
-        transformers_repr = f"<Any of {len(self.transformers)} transformers>"
+        transformers_repr = f"<any of {len(self.transformers)} transformers>"
         return f"produced_by({transformers_repr})"
 
 
