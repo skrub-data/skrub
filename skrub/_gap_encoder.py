@@ -950,7 +950,7 @@ class GapEncoder(TransformerMixin, BaseEstimator):
 
     def get_feature_names_out(
         self,
-        col_names: Literal["auto"] | list[str] | None = None,
+        col_names: Literal["auto"] | list[str] | None = "auto",
         n_labels: int = 3,
         input_features=None,
     ):
