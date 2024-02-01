@@ -172,9 +172,12 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
     Examples
     --------
+    >>> import pandas as pd
     >>> from skrub import DatetimeEncoder
     >>> enc = DatetimeEncoder(add_total_seconds=False)
-    >>> X = [['2022-10-15'], ['2021-12-25'], ['2020-05-18'], ['2019-10-15 12:00:00']]
+    >>> X = pd.DataFrame(
+    ...     {"birthday": ["2022-10-15", "2021-12-25", "2020-05-18", "2019-10-15"]}
+    ... )
     >>> enc.fit(X)
     DatetimeEncoder(add_total_seconds=False)
 
@@ -182,10 +185,11 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     with four columns ("year", "month", "day", "hour"):
 
     >>> enc.transform(X)
-    array([[2022.,   10.,   15.,    0.],
-           [2021.,   12.,   25.,    0.],
-           [2020.,    5.,   18.,    0.],
-           [2019.,   10.,   15.,   12.]])
+       birthday_year  birthday_month  birthday_day
+    0         2022.0            10.0          15.0
+    1         2021.0            12.0          25.0
+    2         2020.0             5.0          18.0
+    3         2019.0            10.0          15.0
     """
 
     def __init__(
