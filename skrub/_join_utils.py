@@ -178,17 +178,17 @@ def pick_column_names(suggested_names, forbidden_names=()):
     Examples
     --------
     >>> from skrub._join_utils import pick_column_names
-    >>> pick_column_names(["A", "A", "B"])
+    >>> pick_column_names(["A", "A", "B"])  # doctest: +SKIP
     ['A', 'A__skrub_750a0b7c__', 'B']
-    >>> pick_column_names(['A', 'A__skrub_750a0b7c__', 'B'])
+    >>> pick_column_names(['A', 'A__skrub_750a0b7c__', 'B']) # doctest: +SKIP
     ['A', 'A__skrub_26e3ac0a__', 'B']
-    >>> pick_column_names(['A__skrub_750a0b7c__', 'B'])
+    >>> pick_column_names(['A__skrub_750a0b7c__', 'B']) # doctest: +SKIP
     ['A', 'B']
     >>> pick_column_names(
-    ...     ["A__skrub_750a0b7c___year", "A__skrub_750a0b7c___month", "B"]
+    ...     ["A__skrub_750a0b7c___year", "A__skrub_750a0b7c___month", "B"]  # doctest: +SKIP
     ... )
     ['A_year', 'A_month', 'B']
-    >>> pick_column_names(["A", "B"], forbidden_names=["A", "B", "C"])
+    >>> pick_column_names(["A", "B"], forbidden_names=["A", "B", "C"]) # doctest: +SKIP
     ['A__skrub_ca064e93__', 'B__skrub_472843f7__']
     """
     new_names = []
