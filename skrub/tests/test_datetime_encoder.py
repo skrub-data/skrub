@@ -141,7 +141,7 @@ def test_fit(
     resolution,
 ):
     if ("%f" in format) and (parse_version(pd.__version__) < parse_version("2.0.0")):
-        pytest.skip("pandas too old")
+        pytest.xfail("pandas too old")
     X = get_data_func(as_array=as_array)
     enc = DatetimeEncoder(
         add_day_of_the_week=add_day_of_the_week,

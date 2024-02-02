@@ -47,6 +47,8 @@ filterwarnings = [
     'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
     # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
     'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
+    # warning arising from old pandas is_in
+    'ignore:.*np.find_common_type is deprecated.*'
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"

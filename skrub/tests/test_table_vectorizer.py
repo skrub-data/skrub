@@ -466,6 +466,8 @@ def test_mixed_types():
     """
     Check that the types are correctly inferred.
     """
+    if parse_version(pd.__version__) < parse_version("2.0.0"):
+        pytest.xfail("pandas is_string_dtype incorrect in old pandas")
     X = _get_mixed_types_dataframe()
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
@@ -553,6 +555,8 @@ def test_column_by_column():
     Test that the TableVectorizer gives the same result
     when applied column by column.
     """
+    if parse_version(pd.__version__) < parse_version("2.0.0"):
+        pytest.xfail("pandas is_string_dtype incorrect in old pandas")
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer(
         high_cardinality_transformer=GapEncoder(n_components=2, random_state=0),
