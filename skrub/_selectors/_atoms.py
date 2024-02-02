@@ -49,7 +49,7 @@ class Filter(Selector):
             raise ValueError(f"'on_error' must be one of {allowed}. Got {on_error!r}")
         self.on_error = on_error
 
-    def select(self, df, ignore):
+    def select(self, df, ignore=()):
         cols = list_difference(sbd.column_names(df), ignore)
         result = []
         for col_name in cols:
@@ -78,7 +78,7 @@ class FilterNames(Selector):
     def __init__(self, predicate):
         self.predicate = predicate
 
-    def select(self, df, ignore):
+    def select(self, df, ignore=()):
         cols = list_difference(sbd.column_names(df), ignore)
         return [c for c in cols if self.predicate(c)]
 
