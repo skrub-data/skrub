@@ -143,20 +143,26 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     add_total_seconds : bool, default=True
         Add the total number of seconds since Epoch.
 
+    parse_string_columns : bool, default=True
+        Attempt to convert columns converting strings (such as "02/02/2024") to
+        datetimes, before extracting features. If False, only columns with
+        dtype Date or Datetime are considered.
+
     Attributes
     ----------
-    column_indices_ : list of int
-        Indices of the datetime-parsable columns.
+    input_to_outputs_: dict
+        Maps each column name in the input dataframe to the list of
+        corresponding column names (features extracted from the input column)
+        in the output dataframe.
+        Only contains the names of columns that were actually processed by this
+        transformers, that is, datetime columns.
 
-    index_to_format_ : dict[int, str]
-        Mapping from column indices to their datetime formats.
-
-    index_to_features_ : dict[int, list[str]]
-        Dictionary mapping the column names to the list of datetime
-        features extracted for each column.
+    all_outputs_: list[str]
+        The column names in the transformer's output (all column names,
+        including those that were not modified).
 
     n_features_out_ : int
-        Number of features of the transformed data.
+        Number of features of the transformer' output.
 
     See Also
     --------
@@ -206,28 +212,41 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.parse_string_columns = parse_string_columns
 
     def fit(self, X, y=None):
-        self.fit_transform(X, y)
-        return self
-
-    def fit_transform(self, X, y=None):
-        """Fit the instance to X.
-
-        Select datetime-parsable columns and generate the list of
-        datetime feature to extract.
+        """Fit the encoder to a dataframe.
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
-            Input data. Columns that can't be converted into
-            ``pandas.DatetimeIndex`` and numerical values will
-            be dropped.
+        X : DataFrame
+            Input data. Columns that are not of the dtype Date or Datetime (and
+            cannot be converted to Datetime, when ``parse_string_columns`` is
+            ``True``), will be passed through unchanged.
         y : None
             Unused, only here for compatibility with scikit-learn.
 
         Returns
         -------
         DatetimeEncoder
-            Fitted DatetimeEncoder instance (self).
+            The fitted encoder.
+        """
+        self.fit_transform(X, y)
+        return self
+
+    def fit_transform(self, X, y=None):
+        """Fit the encoder to a dataframe and transform the dataframe.
+
+        Parameters
+        ----------
+        X : DataFrame
+            Input data. Columns that are not of the dtype Date or Datetime (and
+            cannot be converted to such, when ``parse_string_columns`` is
+            ``True``), will be passed through unchanged.
+        y : None
+            Unused, only here for compatibility with scikit-learn.
+
+        Returns
+        -------
+        DataFrame
+            The transformed dataframe.
         """
         steps = [CheckInputDataFrame()]
         if self.parse_string_columns:
@@ -252,11 +271,32 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.input_to_outputs_ = self._encoder.input_to_outputs_
         return output
 
-    def get_feature_names_out(self):
-        return self.all_outputs_
-
     def transform(self, X):
+        """Transform a dataframe.
+
+        Parameters
+        ----------
+        X : DataFrame
+            Input data. Columns that are not of the dtype Date or Datetime (and
+            cannot be converted to Datetime, when ``parse_string_columns`` is
+            ``True``), will be passed through unchanged.
+
+        Returns
+        -------
+        DataFrame
+            The transformed dataframe.
+        """
         return self.pipeline_.transform(X)
+
+    def get_feature_names_out(self):
+        """Return the column names of the output of ``transform`` as a list of strings.
+
+        Returns
+        -------
+        list of strings
+            The column names.
+        """
+        return self.all_outputs_
 
     def _more_tags(self):
         """

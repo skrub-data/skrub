@@ -121,7 +121,114 @@ def _clone_or_create_transformer(transformer):
 class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     """Transform a dataframe to a numerical array.
 
-    TODO
+    Applies a different transformation to each of several kinds of columns:
+
+    - numeric:
+        Floats and ints.
+    - datetime:
+        Datetimes and dates.
+    - low_cardinality:
+        String and categorical columns with a count of unique values smaller
+        than a given threshold (40 by default). Category encoding schemes such
+        as one-hot encoding, ordinal encoding etc. are typically appropriate
+        for low_cardinality columns.
+    - high_cardinality:
+        String and categorical columns with many unique values, such as
+        free-form text. Such columns have so many distinct values that it is
+        not possible to assign a distinct representation to each: the dimension
+        would be too large and there would be too few examples of each
+        category. Representations designed for text, such as topic modelling
+        (GapEncoder) or locality-sensitive hashing (MinHash) are more
+        appropriate.
+    - remainder:
+        Columns that do not fall into any of the above categories (most likely
+        with ``object`` dtype) are called the "remainder" columns and a
+        different transformer can be specified for those.
+
+    The transformer for each kind of column can be configured with the
+    corresponding ``*_transformer`` parameter: ``numeric_transformer``,
+    ``datetime_transformer``, ..., ``remainder_transformer``.
+
+    A transformer can be a scikit-learn Transformer (an object providing the
+    ``fit``, ``fit_transform`` and ``transform`` methods), a clone of which
+    will be applied to each column separately. A transformer can also be the
+    literal string ``"drop"`` to drop the corresponding columns (they will not
+    appear in the output), or ``"passthrough"`` to leave them unchanged.
+
+    Finally, it is possible to indicate that some columns should not be
+    modified by the ``TableVectorizer``, and should be "passed through"
+    unchanged (for example if we know they are already correctly encoded or we
+    want to deal with them further down the data processing pipeline). The
+    names of these columns must be given in the ``passthrough`` argument.
+
+    Parameters
+    ----------
+    cardinality_threshold : int, default=40
+        String and categorical features with a number of unique values strictly
+        smaller than this threshold are considered ``low_cardinality``, the
+        rest are considered ``high_cardinality``.
+
+    low_cardinality_transformer : transformer, "passthrough" or "drop", optional
+        The transformer for ``low_cardinality`` columns. The default is a
+        ``OneHotEncoder``.
+
+    high_cardinality_transformer : transformer, "passthrough" or "drop", optional
+        The transformer for ``high_cardinality`` columns. The default is a
+        ``GapEncoder`` with 30 components (30 output columns for each input).
+
+    numeric_transformer : transformer, "passthrough" or "drop", optional
+        The transformer for ``numeric`` columns. The default simply casts
+        numerical columns to ``Float32``.
+
+    datetime_transformer : transformer, "passthrough" or "drop", optional
+        The transformer for ``datetime`` columns. The default is a
+        ``DatetimeEncoder``.
+
+    remainder_transformer : transformer, "passthrough" or "drop", optional
+        The transformer for ``remainder`` columns. To ensure that by default
+        the output of the TableVectorizer is numerical that is valid input for
+        scikit-learn estimators, the default for ``remainder_transformer`` is
+        ``"drop"``.
+
+    passthrough : str, sequence of str, or skrub selector, optional
+        Columns to pass through without modifying them. Default is ``()``: all
+        columns may be transformed.
+
+    Attributes
+    ----------
+    pipeline_ : scikit-learn Pipeline
+        The TableVectorizer, under the hood, is just a scikit-learn pipeline.
+        This attribute exposes the fitted pipeline. It is also possible to
+        obtain an equivalent pipeline without fitting the TableVectorizer by
+        calling ``make_pipeline``, in order to chain the steps it implements
+        with the rest of a bigger pipeline rather than nesting them inside a
+        TableVectorizer step.
+    input_to_outputs_ : dict
+        Maps the name of each column that was transformed by the
+        TableVectorizer to the names of the corresponding output columns. The
+        columns specified in the ``passthrough`` parameter are not included.
+    all_outputs_ :
+        The names of all output columns, including those that are passed
+        through unchanged.
+
+    Examples
+    --------
+    >>> from skrub import TableVectorizer
+    ... import pandas as pd
+    ...
+    ... df = pd.DataFrame(
+    ...     {
+    ...         "A": ["one", "two", "two", "three"],
+    ...         "B": ["02/02/2024", "23/02/2024", "12/03/2024", "13/03/2024"],
+    ...         "C": ["1.5", "N/A", "12.2", "N/A"],
+    ...     }
+    ... )
+    ... TableVectorizer().fit_transform(df)
+       A_one  A_three  A_two  B_year  B_month  B_day  B_total_seconds     C
+    0    1.0      0.0    0.0  2024.0      2.0    2.0     1.706832e+09   1.5
+    1    0.0      0.0    1.0  2024.0      2.0   23.0     1.708646e+09   NaN
+    2    0.0      0.0    1.0  2024.0      3.0   12.0     1.710202e+09  12.2
+    3    0.0      1.0    0.0  2024.0      3.0   13.0     1.710288e+09   NaN
     """
 
     def __init__(
@@ -134,7 +241,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         datetime_transformer=DATETIME_TRANSFORMER,
         remainder_transformer="drop",
         passthrough=(),
-        n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
         self.low_cardinality_transformer = _utils.clone_if_default(
@@ -151,7 +257,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         )
         self.remainder_transformer = remainder_transformer
         self.passthrough = passthrough
-        self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -190,7 +295,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.feature_names_in_ = self.pipeline_.named_steps[
             "check_input"
         ].feature_names_in_
-        self.feature_names_out_ = sbd.column_names(output)
+        self.all_outputs_ = sbd.column_names(output)
         self.input_to_outputs_ = _get_input_to_outputs_mapping(
             list(self.pipeline_.named_steps.values())[1:]
         )
@@ -201,7 +306,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
     def get_feature_names_out(self):
         check_is_fitted(self, "feature_names_out_")
-        return np.asarray(self.feature_names_out_)
+        return np.asarray(self.all_outputs_)
 
     def _more_tags(self) -> dict:
         """
