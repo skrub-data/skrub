@@ -161,13 +161,17 @@ vectorizer.pipeline_
 steps = vectorizer.get_processing_steps()["date_first_hired"]
 # each step in steps is a pair (step name, fitted transformer)
 print("date_first_hired:")
-print(f"\n{'↓': >5}\n".join(str(transformer) for (step_name, transformer) in steps))
+print(
+    f"\n{'↓': >5}\n".join(str(transformer) for (step_name, transformer) in steps) + "\n"
+)
 
 ###############################################################################
 
 steps = vectorizer.get_processing_steps()["year_first_hired"]
 print("year_first_hired:")
-print(f"\n{'↓': >5}\n".join(str(transformer) for (step_name, transformer) in steps))
+print(
+    f"\n{'↓': >5}\n".join(str(transformer) for (step_name, transformer) in steps) + "\n"
+)
 
 ###############################################################################
 

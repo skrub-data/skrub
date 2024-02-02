@@ -37,16 +37,20 @@ def _make_table_vectorizer_pipeline(
     remainder_transformer,
     cardinality_threshold,
     passthrough,
+    n_jobs,
 ):
     cols = sbs.inv(passthrough)
 
     cleaning_steps = [
         ("check_input", CheckInputDataFrame()),
-        ("convert_dtypes", Map(PandasConvertDTypes(), cols)),
-        ("clean_null_strings", Map(CleanNullStrings(), cols)),
-        ("to_datetime", Map(ToDatetime(), cols)),
-        ("to_numeric", Map(ToNumeric(), cols)),
-        ("to_categorical", Map(ToCategorical(cardinality_threshold - 1), cols)),
+        ("convert_dtypes", Map(PandasConvertDTypes(), cols, n_jobs=n_jobs)),
+        ("clean_null_strings", Map(CleanNullStrings(), cols, n_jobs=n_jobs)),
+        ("to_datetime", Map(ToDatetime(), cols, n_jobs=n_jobs)),
+        ("to_numeric", Map(ToNumeric(), cols, n_jobs=n_jobs)),
+        (
+            "to_categorical",
+            Map(ToCategorical(cardinality_threshold - 1), cols, n_jobs=n_jobs),
+        ),
     ]
 
     low_card_cat = sbs.categorical() & sbs.cardinality_below(cardinality_threshold)
@@ -60,7 +64,7 @@ def _make_table_vectorizer_pipeline(
     feature_extraction_steps = []
     for _, transformer, selector in feature_extractors:
         selector = (cols - sbs.produced_by(*feature_extraction_steps)) & selector
-        feature_extraction_steps.append(Map(transformer, selector))
+        feature_extraction_steps.append(Map(transformer, selector, n_jobs=n_jobs))
     feature_extraction_steps = [
         (name, step)
         for ((name, *_), step) in zip(feature_extractors, feature_extraction_steps)
@@ -187,6 +191,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         Columns to pass through without modifying them. Default is ``()``: all
         columns may be transformed.
 
+    n_jobs : int, default=None
+        Number of jobs to run in parallel.
+        ``None`` means 1 unless in a joblib ``parallel_backend`` context.
+        ``-1`` means using all processors.
+
     Attributes
     ----------
     pipeline_ : scikit-learn Pipeline
@@ -234,6 +243,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         datetime_transformer=DATETIME_TRANSFORMER,
         remainder_transformer="drop",
         passthrough=(),
+        n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
         self.low_cardinality_transformer = _utils.clone_if_default(
@@ -250,6 +260,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         )
         self.remainder_transformer = remainder_transformer
         self.passthrough = passthrough
+        self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -287,6 +298,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             _clone_or_create_transformer(self.remainder_transformer),
             self.cardinality_threshold,
             self.passthrough,
+            self.n_jobs,
         )
 
     def fit_transform(self, X, y=None):

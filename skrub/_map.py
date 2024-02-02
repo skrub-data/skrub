@@ -1,5 +1,6 @@
 import itertools
 
+from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 
 from . import _dataframe as sbd
@@ -14,9 +15,10 @@ from ._join_utils import pick_column_names
 
 
 class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
-    def __init__(self, transformer, cols=_selectors.all()):
+    def __init__(self, transformer, cols=_selectors.all(), n_jobs=None):
         self.transformer = transformer
         self.cols = cols
+        self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
         self.fit_transform(X, y)
@@ -26,12 +28,13 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         del y
         self._columns = _selectors.make_selector(self.cols).select(X)
         results = []
-        for col_name in sbd.column_names(X):
-            results.append(
-                _fit_transform_column(
-                    sbd.col(X, col_name), self._columns, self.transformer
-                )
-            )
+        all_columns = sbd.column_names(X)
+        parallel = Parallel(n_jobs=self.n_jobs)
+        func = delayed(_fit_transform_column)
+        results = parallel(
+            func(sbd.col(X, col_name), self._columns, self.transformer)
+            for col_name in all_columns
+        )
         return self._process_fit_transform_results(results, X)
 
     def _process_fit_transform_results(self, results, X):
