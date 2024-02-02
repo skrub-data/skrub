@@ -9,6 +9,83 @@ from ._join_utils import pick_column_names
 
 
 class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+    """Map a transformer to columns in a dataframe.
+
+    A separate clone of the transformer is applied to each column separately.
+    Moreover, If the transformers' ``fit_transform`` returns ``NotImplemented``
+    for a particular column, that column is passed through unchanged.
+
+    Parameters
+    ----------
+    transformer : scikit-learn Transformer
+        The transformer to map to the input dataframe's columns. For each
+        column in the input dataframe, a clone of the transformer is created
+        then ``fit_transform`` is called on a single-column dataframe. If the
+        transformer has a ``__single_column_transformer__`` attribute,
+        ``fit_transform`` is passed directly the column (a pandas or polars
+        Series) rather than a DataFrame. ``fit_transform`` must return either a
+        DataFrame, a Series, or a list of Series. ``fit_transform`` can return
+        ``NotImplemented`` to indicate that this transformer does not apply to
+        this column -- for example the ``ToDatetime`` transformer will return
+        ``NotImplemented`` for numerical columns. In this case, the column will
+        appear unchanged in the output.
+
+    cols : str, sequence of str, or skrub selector, optional
+        The columns to attempt to transform. Columns outside of this selection
+        will be passed through unchanged, without attempting to call
+        ``fit_transform`` on them. The default is to attempt transforming all
+        columns.
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel.
+        ``None`` means 1 unless in a joblib ``parallel_backend`` context.
+        ``-1`` means using all processors.
+
+    Attributes
+    ----------
+    all_inputs_ : list of str
+        All column names in the input dataframe.
+
+    used_inputs_ : list of str
+        The names of columns that were transformed.
+
+    all_outputs_ : list of str
+        All column names in the output dataframe.
+
+    produced_outputs_ : list of str
+        The names of columns in the output dataframe that were produced by one
+        of the fitted transformers.
+
+    input_to_outputs_ : dict
+        Maps the name of each column that was transformed to the list of the
+        resulting columns' names in the output.
+
+    transformers_ : dict
+        Maps the name of each column that was transformed to the corresponding
+        fitted transformer.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skrub._map import Map
+    >>> from skrub._to_datetime import ToDatetime
+    >>> df = pd.DataFrame(
+    ...     dict(
+    ...         A=[0.0, 1.0],
+    ...         B=["02/02/2020", "22/03/2020"],
+    ...         C=["02/02/2021", "22/03/2021"],
+    ...     )
+    ... )
+    >>> Map(ToDatetime()).fit_transform(df)
+         A          B          C
+    0  0.0 2020-02-02 2021-02-02
+    1  1.0 2020-03-22 2021-03-22
+    >>> Map(ToDatetime(), cols=["A", "B"]).fit_transform(df)
+         A          B           C
+    0  0.0 2020-02-02  02/02/2021
+    1  1.0 2020-03-22  22/03/2021
+    """
+
     def __init__(self, transformer, cols=_selectors.all(), n_jobs=None):
         self.transformer = transformer
         self.cols = cols
