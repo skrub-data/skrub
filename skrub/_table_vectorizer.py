@@ -305,7 +305,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         return self.pipeline_.transform(X)
 
     def get_feature_names_out(self):
-        check_is_fitted(self, "feature_names_out_")
+        check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
 
     def _more_tags(self) -> dict:
