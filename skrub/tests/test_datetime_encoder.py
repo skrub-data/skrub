@@ -7,6 +7,7 @@ import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 from pandas.api.types import is_datetime64_any_dtype
 from pandas.testing import assert_frame_equal
+from sklearn.utils.fixes import parse_version
 
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub._dataframe._test_utils import is_module_polars
@@ -139,6 +140,8 @@ def test_fit(
     add_day_of_the_week,
     resolution,
 ):
+    if ("%f" in format) and (parse_version(pd.__version__) < parse_version("2.0.0")):
+        pytest.skip("pandas too old")
     X = get_data_func(as_array=as_array)
     enc = DatetimeEncoder(
         add_day_of_the_week=add_day_of_the_week,
