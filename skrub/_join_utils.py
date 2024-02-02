@@ -148,6 +148,49 @@ def add_column_name_suffix(dataframe, suffix):
 
 
 def pick_column_names(suggested_names, forbidden_names=()):
+    """Choose column names without duplicates.
+
+    A tag ``__skrub_<random string>__`` is added at the end of columns that
+    would otherwise be duplicates.
+
+    Any similar tag already present in any of the column names is removed
+    beforehand. When there are duplicates, the first (leftmost) occurrence is
+    the one left unchanged.
+
+    We can pass a list of forbidden names, in which case names will also be
+    tagged if they appear in the forbidden names (regardless of whether they
+    have duplicates in the list or their position).
+
+    Parameters
+    ----------
+    suggested_names : list of str
+        The list of column names to transform.
+
+    forbidden_names : list of str
+        A list of names that must not appear in the output.
+
+    Returns
+    -------
+    list of str
+        The chosen names. It has the same length as ``suggested_names`` and
+        ``__skrub`` tags have been added to duplicated names.
+
+    Examples
+    --------
+    >>> from skrub._join_utils import pick_column_names
+    >>> pick_column_names(["A", "A", "B"])
+    ['A', 'A__skrub_750a0b7c__', 'B']
+    >>> pick_column_names(['A', 'A__skrub_750a0b7c__', 'B'])
+    ['A', 'A__skrub_26e3ac0a__', 'B']
+    >>> pick_column_names(['A__skrub_750a0b7c__', 'B'])
+    ['A', 'B']
+    >>> pick_column_names(
+    ...     ["A__skrub_750a0b7c___year", "A__skrub_750a0b7c___month", "B"]
+    ... )
+    ['A_year', 'A_month', 'B']
+    >>> pick_column_names(["A", "B"], forbidden_names=["A", "B", "C"])
+    ['A__skrub_ca064e93__', 'B__skrub_472843f7__']
+    """
     new_names = []
     forbidden_names = set(forbidden_names)
     for name in suggested_names:

@@ -6,6 +6,63 @@ from ._join_utils import pick_column_names
 
 
 class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+    """Apply a transformer to part of a dataframe.
+
+    A subset of the dataframe is selected and passed to the transformer (as a
+    single input). This is different from ``Map`` which fits a separate clone
+    of the transformer to each selected column independently.
+
+    Parameters
+    ----------
+    transformer : scikit-learn Transformer
+        The transformer to apply to the selected columns. ``fit_transform`` and
+        ``transform`` must return a DataFrame. The resulting dataframe will
+        appear as the last columns of the output dataframe. Unselected columns
+        will appear unchanged in the output.
+
+    cols : str, sequence of str, or skrub selector, optional
+        The columns to attempt to transform. Columns outside of this selection
+        will be passed through unchanged, without calling ``fit_transform`` on
+        them. The default is transform all columns.
+
+    Attributes
+    ----------
+    all_inputs_ : list of str
+        All column names in the input dataframe.
+
+    used_inputs_ : list of str
+        The names of columns that were transformed.
+
+    all_outputs_ : list of str
+        All column names in the output dataframe.
+
+    produced_outputs_ : list of str
+        The names of columns in the output dataframe that were produced the
+        fitted transformer.
+
+    transformer_ : Transformer
+        The fitted transformer.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(dict(A=[-10.0, 10.0], B=[-10.0, 10.0], C=[-10.0, 10.0]))
+    >>> df
+          A     B     C
+    0 -10.0 -10.0 -10.0
+    1  10.0  10.0  10.0
+    >>> from skrub._apply import Apply
+    >>> from sklearn.preprocessing import StandardScaler
+    >>> Apply(StandardScaler()).fit_transform(df)
+         A    B    C
+    0 -1.0 -1.0 -1.0
+    1  1.0  1.0  1.0
+    >>> Apply(StandardScaler(), ["A", "B"]).fit_transform(df)
+          C    A    B
+    0 -10.0 -1.0 -1.0
+    1  10.0  1.0  1.0
+    """
+
     def __init__(self, transformer, cols=_selectors.all()):
         self.transformer = transformer
         self.cols = cols
