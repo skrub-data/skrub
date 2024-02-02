@@ -216,16 +216,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     Examples
     --------
     >>> from skrub import TableVectorizer
-    ... import pandas as pd
-    ...
-    ... df = pd.DataFrame(
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
     ...     {
     ...         "A": ["one", "two", "two", "three"],
     ...         "B": ["02/02/2024", "23/02/2024", "12/03/2024", "13/03/2024"],
     ...         "C": ["1.5", "N/A", "12.2", "N/A"],
     ...     }
     ... )
-    ... TableVectorizer().fit_transform(df)
+    >>> TableVectorizer().fit_transform(df)
        A_one  A_three  A_two  B_year  B_month  B_day  B_total_seconds     C
     0    1.0      0.0    0.0  2024.0      2.0    2.0     1.706832e+09   1.5
     1    0.0      0.0    1.0  2024.0      2.0   23.0     1.708646e+09   NaN

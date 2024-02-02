@@ -72,15 +72,15 @@ def to_datetime(df, format=None):
     --------
     >>> import pandas as pd
     >>> from skrub import to_datetime
-    >>> X = pd.DataFrame(dict(a=[1, 2], b=["01/02/2021", "02/12/2021"]))
+    >>> X = pd.DataFrame(dict(a=[1, 2], b=["01/02/2021", "21/02/2021"]))
     >>> X
-       a          b
-    0  1 2021-01-01
-    1  2 2021-02-02
+       a           b
+    0  1  01/02/2021
+    1  2  21/02/2021
     >>> to_datetime(X)
        a          b
-    0  1 2021-01-01
-    1  2 2021-12-02
+    0  1 2021-02-01
+    1  2 2021-02-21
     """
     raise TypeError(
         "Input to skrub.to_datetime must be a pandas or polars Series or DataFrame."
