@@ -3,6 +3,7 @@ skrub: Prepping tables for machine learning.
 """
 from pathlib import Path as _Path
 
+from . import _selectors as selectors
 from ._agg_joiner import AggJoiner, AggTarget
 from ._check_dependencies import check_dependencies
 from ._datetime_encoder import DatetimeEncoder
@@ -39,4 +40,5 @@ __all__ = [
     "AggTarget",
     "SelectCols",
     "DropCols",
+    "selectors",
 ]
