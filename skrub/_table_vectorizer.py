@@ -1,6 +1,8 @@
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _selectors as sbs
@@ -403,6 +405,18 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             c: steps[-1][1] if steps else None for c, steps in col_to_steps.items()
         }
         return transformers
+
+    def get_feature_names_out(self):
+        """Return the column names of the output of ``transform`` as a list of strings.
+
+        Returns
+        -------
+        list of strings
+            The column names.
+        """
+        """"""
+        check_is_fitted(self, "all_outputs_")
+        return np.asarray(self.all_outputs_)
 
 
 def _get_input_to_outputs_mapping(pipeline_steps):
