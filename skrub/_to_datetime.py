@@ -58,13 +58,21 @@ class ToDatetime(BaseEstimator):
 def to_datetime(df, format=None):
     """Convert DataFrame or column to Datetime dtype.
 
-    TODO
+    Parameters
+    ----------
+    df : dataframe or column
+        The dataframe or column to transform.
+
+    format : str or None
+        Format string to use to parse datetime strings.
+        See the reference documentation for format codes:
+        https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes .
 
     Examples
     --------
     >>> import pandas as pd
     >>> from skrub import to_datetime
-    >>> X = pd.DataFrame(dict(a=[1, 2], b=["2021-01-01", "2021-02-02"]))
+    >>> X = pd.DataFrame(dict(a=[1, 2], b=["01/02/2021", "02/12/2021"]))
     >>> X
        a          b
     0  1 2021-01-01
@@ -72,7 +80,7 @@ def to_datetime(df, format=None):
     >>> to_datetime(X)
        a          b
     0  1 2021-01-01
-    1  2 2021-02-02
+    1  2 2021-12-02
     """
     raise TypeError(
         "Input to skrub.to_datetime must be a pandas or polars Series or DataFrame."

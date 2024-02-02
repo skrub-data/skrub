@@ -1,8 +1,6 @@
-import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _selectors as sbs
@@ -109,13 +107,6 @@ def _clone_or_create_transformer(transformer):
             " 'passthrough' or a scikit-learn transformer."
         )
     return clone(transformer)
-
-
-# auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
-# transform or provide set output (we always produce dataframes of the correct
-# type with the correct columns and we don't want the wrapper.) other ways to
-# disable it would be not inheriting from TransformerMixin, not defining
-# get_feature_names_out
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
@@ -279,6 +270,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         return self
 
     def make_pipeline(self):
+        """Make a scikit-learn pipeline that is equivalent to this transformer.
+
+        Returns
+        -------
+        Pipeline
+           An unfitted scikit-learn pipeline that is equivalent to this transformer.
+        """
         return _make_table_vectorizer_pipeline(
             _clone_or_create_transformer(self.low_cardinality_transformer),
             _clone_or_create_transformer(self.high_cardinality_transformer),
@@ -290,6 +288,22 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         )
 
     def fit_transform(self, X, y=None):
+        """Fit transformer and transform dataframe.
+
+        Parameters
+        ----------
+        X : dataframe
+            Input data to transform.
+
+        y : any type, default=None
+            This parameter exists for compatibility with the scikit-learn API
+            and is ignored.
+
+        Returns
+        -------
+        dataframe
+            The transformed input.
+        """
         self.pipeline_ = self.make_pipeline()
         output = self.pipeline_.fit_transform(X)
         self.feature_names_in_ = self.pipeline_.named_steps[
@@ -302,11 +316,19 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         return output
 
     def transform(self, X):
-        return self.pipeline_.transform(X)
+        """Transform dataframe.
 
-    def get_feature_names_out(self):
-        check_is_fitted(self, "all_outputs_")
-        return np.asarray(self.all_outputs_)
+        Parameters
+        ----------
+        X : dataframe
+            Input data to transform.
+
+        Returns
+        -------
+        dataframe
+            The transformed input.
+        """
+        return self.pipeline_.transform(X)
 
     def _more_tags(self) -> dict:
         """
@@ -321,6 +343,20 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         }
 
     def get_processing_steps(self, kind=None):
+        """Get all the processing steps applied to different columns.
+
+        Parameters
+        ----------
+        kind : "numeric", "datetime", "high_cardinality", \
+"low_cardinality", "remainder", or None, optional
+            Filter results to return only those corresponding to the provided kind.
+            None (the default) means return all results.
+
+        Returns
+        -------
+        dict
+            Mapping each column name to a list of (step_name, Transformer) pairs.
+        """
         allowed_kinds = [
             "datetime",
             "numeric",
@@ -347,6 +383,21 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         return col_to_steps
 
     def get_transformers(self, kind=None):
+        """Get the final transformer applied to each column.
+
+        Parameters
+        ----------
+        kind : "numeric", "datetime", "high_cardinality", \
+"low_cardinality", "remainder", or None, optional
+            Filter results to return only those corresponding to the provided kind.
+            None (the default) means return all results.
+
+        Returns
+        -------
+        dict
+            Mapping each column name to the transformer that generated the
+            corresponding output columns.
+        """
         col_to_steps = self.get_processing_steps(kind=kind)
         transformers = {
             c: steps[-1][1] if steps else None for c, steps in col_to_steps.items()
