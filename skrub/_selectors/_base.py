@@ -60,24 +60,32 @@ class Selector:
         return make_selector(other).__ror__(self)
 
     def __ror__(self, other):
+        if not isinstance(other, Selector):
+            return make_selector(other) | self
         return Or(other, self)
 
     def __and__(self, other):
         return make_selector(other).__rand__(self)
 
     def __rand__(self, other):
+        if not isinstance(other, Selector):
+            return make_selector(other) & self
         return And(other, self)
 
     def __sub__(self, other):
         return make_selector(other).__rsub__(self)
 
     def __rsub__(self, other):
+        if not isinstance(other, Selector):
+            return make_selector(other) - self
         return Sub(other, self)
 
     def __xor__(self, other):
         return make_selector(other).__rxor__(self)
 
     def __rxor__(self, other):
+        if not isinstance(other, Selector):
+            return make_selector(other) ^ self
         return XOr(other, self)
 
 
