@@ -70,13 +70,6 @@ def _collect_lazyframe(df):
     return sbd.collect(df)
 
 
-# auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
-# transform or provide set output (we always produce dataframes of the correct
-# type with the correct columns and we don't want the wrapper.) other ways to
-# disable it would be not inheriting from TransformerMixin, not defining
-# get_feature_names_out
-
-
 class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     def __init__(self, convert_arrays=True):
         self.convert_arrays = convert_arrays

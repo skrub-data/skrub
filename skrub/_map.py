@@ -7,12 +7,6 @@ from . import _dataframe as sbd
 from . import _selectors
 from ._join_utils import pick_column_names
 
-# auto_wrap_output_keys = () is so that the TransformerMixin does not wrap
-# transform or provide set output (we always produce dataframes of the correct
-# type with the correct columns and we don't want the wrapper.) other ways to
-# disable it would be not inheriting from TransformerMixin, not defining
-# get_feature_names_out
-
 
 class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     def __init__(self, transformer, cols=_selectors.all(), n_jobs=None):
