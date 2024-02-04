@@ -209,6 +209,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         Maps the name of each column that was transformed by the
         TableVectorizer to the names of the corresponding output columns. The
         columns specified in the ``passthrough`` parameter are not included.
+    output_to_input_ : dict
+        Maps the name of each output column to the name of the column in the
+        input dataframe from which it was derived.
     all_outputs_ :
         The names of all output columns, including those that are passed
         through unchanged.
@@ -326,6 +329,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.input_to_outputs_ = _get_input_to_outputs_mapping(
             list(self.pipeline_.named_steps.values())[1:]
         )
+        self.output_to_input_ = {
+            out: input_
+            for (input_, outputs) in self.input_to_outputs_.items()
+            for out in outputs
+        }
         return output
 
     def transform(self, X):

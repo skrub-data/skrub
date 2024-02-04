@@ -113,6 +113,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         self.all_inputs_ = all_input_names
         self.transformers_ = {}
         self.input_to_outputs_ = {}
+        self.output_to_input_ = {}
         transformed_columns = []
         forbidden_names = set(all_input_names)
         for input_name, output_cols, transformer in results:
@@ -125,6 +126,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
                 forbidden_names.update(output_names)
                 self.transformers_[input_name] = transformer
                 self.input_to_outputs_[input_name] = output_names
+                self.output_to_input_.update(**{o: input_name for o in output_names})
             transformed_columns.extend(output_cols)
 
         self.all_outputs_ = _column_names(transformed_columns)
