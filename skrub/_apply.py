@@ -36,8 +36,8 @@ class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     all_outputs_ : list of str
         All column names in the output dataframe.
 
-    produced_outputs_ : list of str
-        The names of columns in the output dataframe that were produced the
+    created_outputs_ : list of str
+        The names of columns in the output dataframe that were created by the
         fitted transformer.
 
     transformer_ : Transformer
@@ -83,7 +83,7 @@ class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         )
         transformed = sbd.set_column_names(transformed, self._transformed_output_names)
         self.used_inputs_ = self._columns
-        self.produced_outputs_ = self._transformed_output_names
+        self.created_outputs_ = self._transformed_output_names
         self.all_outputs_ = passthrough_names + self._transformed_output_names
         self.feature_names_in_ = self.all_inputs_
         return sbd.concat_horizontal(passthrough, transformed)

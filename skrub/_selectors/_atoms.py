@@ -90,23 +90,23 @@ def filter_names(predicate):
     return FilterNames(predicate)
 
 
-class ProducedBy(Selector):
+class CreatedBy(Selector):
     def __init__(self, *transformers):
         self.transformers = transformers
 
     def select(self, df, ignore=()):
-        all_produced = set()
+        all_created = set()
         for step in self.transformers:
-            if hasattr(step, "produced_outputs_"):
-                all_produced.update(step.produced_outputs_)
+            if hasattr(step, "created_outputs_"):
+                all_created.update(step.created_outputs_)
             else:
-                all_produced.update(step.get_feature_names_out())
-        return list_intersect(sbd.column_names(df), all_produced.difference(ignore))
+                all_created.update(step.get_feature_names_out())
+        return list_intersect(sbd.column_names(df), all_created.difference(ignore))
 
     def __repr__(self):
         transformers_repr = f"<any of {len(self.transformers)} transformers>"
-        return f"produced_by({transformers_repr})"
+        return f"created_by({transformers_repr})"
 
 
-def produced_by(*transformers):
-    return ProducedBy(*transformers)
+def created_by(*transformers):
+    return CreatedBy(*transformers)

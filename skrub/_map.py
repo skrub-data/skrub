@@ -52,8 +52,8 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     all_outputs_ : list of str
         All column names in the output dataframe.
 
-    produced_outputs_ : list of str
-        The names of columns in the output dataframe that were produced by one
+    created_outputs_ : list of str
+        The names of columns in the output dataframe that were created by one
         of the fitted transformers.
 
     input_to_outputs_ : dict
@@ -131,7 +131,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
 
         self.all_outputs_ = _column_names(transformed_columns)
         self.used_inputs_ = list(self.transformers_.keys())
-        self.produced_outputs_ = list(itertools.chain(*self.input_to_outputs_.values()))
+        self.created_outputs_ = list(itertools.chain(*self.input_to_outputs_.values()))
         return sbd.dataframe_like(X, *transformed_columns)
 
     def transform(self, X, y=None):

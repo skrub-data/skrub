@@ -63,7 +63,7 @@ def _make_table_vectorizer_pipeline(
     ]
     feature_extraction_steps = []
     for _, transformer, selector in feature_extractors:
-        selector = (cols - sbs.produced_by(*feature_extraction_steps)) & selector
+        selector = (cols - sbs.created_by(*feature_extraction_steps)) & selector
         feature_extraction_steps.append(Map(transformer, selector, n_jobs=n_jobs))
     feature_extraction_steps = [
         (name, step)

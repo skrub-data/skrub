@@ -41,7 +41,7 @@ TODO
 0   4
 1   3
 """
-from ._atoms import filter, filter_names, glob, produced_by, regex
+from ._atoms import created_by, filter, filter_names, glob, regex
 from ._base import all, cols, inv, make_selector, nothing, select
 from ._dtype_atoms import anydate, boolean, categorical, numeric, string
 from ._statistic_atoms import cardinality_below
@@ -57,7 +57,7 @@ __all__ = [
     "regex",
     "filter",
     "filter_names",
-    "produced_by",
+    "created_by",
     "numeric",
     "anydate",
     "categorical",
