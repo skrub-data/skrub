@@ -45,22 +45,29 @@ class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
 
     Examples
     --------
+    >>> import numpy as np
     >>> import pandas as pd
-    >>> df = pd.DataFrame(dict(A=[-10.0, 10.0], B=[-10.0, 10.0], C=[-10.0, 10.0]))
+    >>> df = pd.DataFrame(np.eye(4) * 10, columns=list("abcd"))
     >>> df
-          A     B     C
-    0 -10.0 -10.0 -10.0
-    1  10.0  10.0  10.0
+          a     b     c     d
+    0  10.0   0.0   0.0   0.0
+    1   0.0  10.0   0.0   0.0
+    2   0.0   0.0  10.0   0.0
+    3   0.0   0.0   0.0  10.0
+    >>> from sklearn.decomposition import PCA
     >>> from skrub._apply import Apply
-    >>> from sklearn.preprocessing import StandardScaler
-    >>> Apply(StandardScaler()).fit_transform(df)
-         A    B    C
-    0 -1.0 -1.0 -1.0
-    1  1.0  1.0  1.0
-    >>> Apply(StandardScaler(), ["A", "B"]).fit_transform(df)
-          C    A    B
-    0 -10.0 -1.0 -1.0
-    1  10.0  1.0  1.0
+    >>> Apply(PCA(n_components=2)).fit_transform(df)
+               pca0      pca1
+    0  1.035852e-15  8.660254
+    1  7.071068e+00 -2.886751
+    2 -7.071068e+00 -2.886751
+    3 -1.602469e-16 -2.886751
+    >>> Apply(PCA(n_components=2), cols=["a", "b"]).fit_transform(df)
+          c     d          pca0      pca1
+    0   0.0   0.0  7.071068e+00  3.535534
+    1   0.0   0.0 -7.071068e+00  3.535534
+    2  10.0   0.0 -1.248768e-15 -3.535534
+    3   0.0  10.0 -1.248768e-15 -3.535534
     """
 
     def __init__(self, transformer, cols=_selectors.all()):

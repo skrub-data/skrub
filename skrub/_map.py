@@ -68,22 +68,20 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     --------
     >>> import pandas as pd
     >>> from skrub._map import Map
-    >>> from skrub._to_datetime import ToDatetime
-    >>> df = pd.DataFrame(
-    ...     dict(
-    ...         A=[0.0, 1.0],
-    ...         B=["02/02/2020", "22/03/2020"],
-    ...         C=["02/02/2021", "22/03/2021"],
-    ...     )
-    ... )
-    >>> Map(ToDatetime()).fit_transform(df)
-         A          B          C
-    0  0.0 2020-02-02 2021-02-02
-    1  1.0 2020-03-22 2021-03-22
-    >>> Map(ToDatetime(), cols=["A", "B"]).fit_transform(df)
-         A          B           C
-    0  0.0 2020-02-02  02/02/2021
-    1  1.0 2020-03-22  22/03/2021
+    >>> from sklearn.preprocessing import StandardScaler
+    >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
+    >>> df
+          A     B     C
+    0 -10.0 -10.0   0.0
+    1  10.0   0.0  10.0
+    >>> Map(StandardScaler()).fit_transform(df)
+         A    B    C
+    0 -1.0 -1.0 -1.0
+    1  1.0  1.0  1.0
+    >>> Map(StandardScaler(), cols=["A", "B"]).fit_transform(df)
+         A    B     C
+    0 -1.0 -1.0   0.0
+    1  1.0  1.0  10.0
     """
 
     def __init__(self, transformer, cols=_selectors.all(), n_jobs=None):
