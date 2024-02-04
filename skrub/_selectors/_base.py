@@ -6,13 +6,13 @@ def all():
     return All()
 
 
-def empty():
-    return Empty()
+def nothing():
+    return Nothing()
 
 
 def cols(*columns):
     if not columns:
-        return empty()
+        return nothing()
     return Cols(columns)
 
 
@@ -97,7 +97,7 @@ class All(Selector):
         return "all()"
 
     def __invert__(self):
-        return empty()
+        return nothing()
 
     def __or__(self, other):
         return all()
@@ -115,7 +115,7 @@ class All(Selector):
         return inv(other)
 
     def __rsub__(self, other):
-        return empty()
+        return nothing()
 
     def __xor__(self, other):
         return inv(other)
@@ -124,12 +124,12 @@ class All(Selector):
         return inv(other)
 
 
-class Empty(Selector):
+class Nothing(Selector):
     def select(self, df, ignore=()):
         return []
 
     def __repr__(self):
-        return "empty()"
+        return "nothing()"
 
     def __invert__(self):
         return all()
@@ -141,13 +141,13 @@ class Empty(Selector):
         return make_selector(other)
 
     def __and__(self, other):
-        return empty()
+        return nothing()
 
     def __rand__(self, other):
-        return empty()
+        return nothing()
 
     def __sub__(self, other):
-        return empty()
+        return nothing()
 
     def __rsub__(self, other):
         return make_selector(other)
