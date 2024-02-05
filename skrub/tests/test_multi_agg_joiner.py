@@ -129,6 +129,14 @@ def test_keys(main, px):
     )
     multi_agg_joiner.fit_transform(main)
 
+    # Check no keys at all
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+    )
+    error_msg = r"Must pass EITHER `keys`, OR \(`main_keys` AND `aux_keys`\)."
+    with pytest.raises(ValueError, match=error_msg):
+        multi_agg_joiner.fit_transform(main)
+
     # Check multiple main_keys and aux_keys, same length
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main],
@@ -206,6 +214,16 @@ def test_keys(main, px):
         keys=[["userId"], ["userId"]],
     )
     multi_agg_joiner.fit_transform(main)
+
+    # Check wrong keys lenght
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main, main],
+        main_keys=[["userId"], ["userId"]],
+        aux_keys=[["userId"]],
+    )
+    error_msg = r"(?=`main_keys` and `aux_keys` have different lengths)"
+    with pytest.raises(ValueError, match=error_msg):
+        multi_agg_joiner.fit_transform(main)
 
 
 @pytest.mark.parametrize("px", MODULES)

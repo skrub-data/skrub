@@ -218,17 +218,11 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                     "Can only pass argument `keys` OR `main_keys` and "
                     "`aux_keys`, not a combination of both."
                 )
-            if not _is_array_like(keys):
-                raise ValueError(f"`keys` must be an 1d iterable, got {type(keys)}.")
             main_keys, aux_keys = keys, keys
         else:
             if aux_keys is None or main_keys is None:
                 raise ValueError(
                     "Must pass EITHER `keys`, OR (`main_keys` AND `aux_keys`)."
-                )
-            if not _is_array_like(aux_keys):
-                raise ValueError(
-                    f"`aux_keys` must be an iterable, got {type(aux_keys)}."
                 )
         main_keys = atleast_2d_or_none(main_keys)
         aux_keys = atleast_2d_or_none(aux_keys)
