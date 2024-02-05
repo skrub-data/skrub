@@ -220,14 +220,87 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     --------
     >>> from skrub import TableVectorizer
     >>> import pandas as pd
-    >>> df = pd.DataFrame(
-    ...     {
-    ...         "A": ["one", "two", "two", "three"],
-    ...         "B": ["02/02/2024", "23/02/2024", "12/03/2024", "13/03/2024"],
-    ...         "C": ["1.5", "N/A", "12.2", "N/A"],
-    ...     }
-    ... )
-    >>> TableVectorizer().fit_transform(df)
+    >>> df = pd.DataFrame({
+    ...     "A": ["one", "two", "two", "three"],
+    ...     "B": ["02/02/2024", "23/02/2024", "12/03/2024", "13/03/2024"],
+    ...     "C": ["1.5", "N/A", "12.2", "N/A"],
+    ... })
+    >>> vectorizer = TableVectorizer()
+    >>> vectorizer.fit_transform(df)
+       A_one  A_three  A_two  B_year  B_month  B_day  B_total_seconds     C
+    0    1.0      0.0    0.0  2024.0      2.0    2.0     1.706832e+09   1.5
+    1    0.0      0.0    1.0  2024.0      2.0   23.0     1.708646e+09   NaN
+    2    0.0      0.0    1.0  2024.0      3.0   12.0     1.710202e+09  12.2
+    3    0.0      1.0    0.0  2024.0      3.0   13.0     1.710288e+09   NaN
+
+    We can inspect which outputs were created from a given column in the input
+    dataframe:
+
+    >>> vectorizer.input_to_outputs_["B"]
+    ['B_year', 'B_month', 'B_day', 'B_total_seconds']
+
+    and the reverse mapping:
+
+    >>> vectorizer.output_to_input_["B_total_seconds"]
+    'B'
+
+    We can also see all the processing steps that were applied to a given column
+
+    >>> list(dict(vectorizer.get_processing_steps()["B"]).values())
+    [PandasConvertDTypes(), CleanNullStrings(), ToDatetime(), DatetimeColumnEncoder()]
+
+    The passthrough parameter tells the vectorizer to pass through some columns
+    without modification:
+
+    >>> vectorizer = TableVectorizer(passthrough="B")
+    >>> vectorizer.fit_transform(df)
+       A_one  A_three  A_two           B     C
+    0    1.0      0.0    0.0  02/02/2024   1.5
+    1    0.0      0.0    1.0  23/02/2024   NaN
+    2    0.0      0.0    1.0  12/03/2024  12.2
+    3    0.0      1.0    0.0  13/03/2024   NaN
+
+    Here the column "B" has not been modified at all.
+
+    >>> vectorizer.get_processing_steps()["B"]
+    []
+
+    Note this is different than providing "passthrough" as one of the
+    transformers, because in the latter case the preprocessing steps are still
+    applied (we are just setting the final transformer):
+
+    >>> vectorizer = TableVectorizer(datetime_transformer="passthrough")
+    >>> vectorizer.fit_transform(df)
+       A_one  A_three  A_two          B     C
+    0    1.0      0.0    0.0 2024-02-02   1.5
+    1    0.0      0.0    1.0 2024-02-23   NaN
+    2    0.0      0.0    1.0 2024-03-12  12.2
+    3    0.0      1.0    0.0 2024-03-13   NaN
+
+    Here the column "B" has been preprocessed and transformed to a Datetime
+    column, but as the final estimator for datetime columns is "passthrough"
+    the year, month, day and total_seconds features have not been extracted.
+
+    >>> list(dict(vectorizer.get_processing_steps()["B"]).values())
+    [PandasConvertDTypes(), CleanNullStrings(), ToDatetime(), PassThrough()]
+
+    Under the hood, a TableVectorizer is just a scikit-learn Pipeline. The
+    fitted pipeline is accessible in the attribute pipeline_:
+
+    >>> list(dict(vectorizer.pipeline_.steps).keys())
+    ['check_input', 'convert_dtypes', 'clean_null_strings', 'to_datetime', 'to_numeric', 'to_categorical', 'low_cardinality_transformer', 'high_cardinality_transformer', 'numeric_transformer', 'datetime_transformer', 'remainder_transformer']
+
+    It is also possible to obtain and use the pipeline directly. Here we build
+    a pipeline (without seeing any data yet, the TableVectorizer provides a
+    configuration):
+
+    >>> pipeline = TableVectorizer().make_pipeline()
+    >>> type(pipeline)
+    <class 'sklearn.pipeline.Pipeline'>
+
+    And we can fit it or add other steps to it
+
+    >>> pipeline.fit_transform(df)
        A_one  A_three  A_two  B_year  B_month  B_day  B_total_seconds     C
     0    1.0      0.0    0.0  2024.0      2.0    2.0     1.706832e+09   1.5
     1    0.0      0.0    1.0  2024.0      2.0   23.0     1.708646e+09   NaN
