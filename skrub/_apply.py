@@ -47,31 +47,31 @@ class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     --------
     >>> import numpy as np
     >>> import pandas as pd
-    >>> df = pd.DataFrame(np.eye(4) * 10, columns=list("abcd"))
+    >>> df = pd.DataFrame(np.eye(4) * np.logspace(0, 3, 4), columns=list("abcd"))
     >>> df
-          a     b     c     d
-    0  10.0   0.0   0.0   0.0
-    1   0.0  10.0   0.0   0.0
-    2   0.0   0.0  10.0   0.0
-    3   0.0   0.0   0.0  10.0
+         a     b      c       d
+    0  1.0   0.0    0.0     0.0
+    1  0.0  10.0    0.0     0.0
+    2  0.0   0.0  100.0     0.0
+    3  0.0   0.0    0.0  1000.0
     >>> from sklearn.decomposition import PCA
     >>> from skrub._apply import Apply
     >>> Apply(PCA(n_components=2)).fit_transform(df).round(2)
-       pca0  pca1
-    0  0.00  8.66
-    1  7.07 -2.89
-    2 -7.07 -2.89
-    3 -0.00 -2.89
+         pca0   pca1
+    0 -249.01 -33.18
+    1 -249.04 -33.68
+    2 -252.37  66.64
+    3  750.42   0.22
 
     We can restrict the transformer to a subset of columns:
 
     >>> pca = Apply(PCA(n_components=2), cols=["a", "b"])
     >>> pca.fit_transform(df).round(2)
-          c     d  pca0  pca1
-    0   0.0   0.0  7.07  3.54
-    1   0.0   0.0 -7.07  3.54
-    2  10.0   0.0 -0.00 -3.54
-    3   0.0  10.0 -0.00 -3.54
+           c       d  pca0  pca1
+    0    0.0     0.0 -2.52  0.67
+    1    0.0     0.0  7.50  0.00
+    2  100.0     0.0 -2.49 -0.33
+    3    0.0  1000.0 -2.49 -0.33
     >>> pca.used_inputs_
     ['a', 'b']
     >>> pca.created_outputs_
