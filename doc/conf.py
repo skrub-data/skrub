@@ -499,7 +499,6 @@ numpydoc_xref_aliases = {
     "fetch_ken_embeddings": "skrub.datasets.fetch_ken_embeddings",
     "fuzzy_join": "skrub.fuzzy_join",
     "Joiner": "skrub.Joiner",
-    "MultiJoiner": "skrub.MultiJoiner",
     "AggJoiner": "skrub.AggJoiner",
     "MultiAggJoiner": "skrub.MultiAggJoiner",
     "AggTarger": "skrub.AggTarget",

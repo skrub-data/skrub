@@ -3,7 +3,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from skrub._dataframe._polars import POLARS_SETUP
-from skrub._multi_joiner import MultiAggJoiner  # , MultiJoiner
+from skrub._multi_joiner import MultiAggJoiner
 
 
 @pytest.fixture

@@ -12,7 +12,7 @@ from ._gap_encoder import GapEncoder
 from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
-from ._multi_joiner import MultiAggJoiner, MultiJoiner
+from ._multi_joiner import MultiAggJoiner
 from ._select_cols import DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import TableVectorizer
@@ -26,7 +26,6 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 __all__ = [
     "DatetimeEncoder",
     "Joiner",
-    "MultiJoiner",
     "fuzzy_join",
     "GapEncoder",
     "InterpolationJoiner",

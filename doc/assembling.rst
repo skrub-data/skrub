@@ -49,8 +49,8 @@ In addition, skrub also enable more advanced analysis:
   the target `y` itself. AggTarget aggregates the target without risking data 
   leakage, then joins the result back on the main table, similar to AggJoiner.
 
-- :class:`MultiJoiner` and :class:`MultiAggJoiner`: extensions of the Joiner and AggJoiner
-  that join multiple auxiliary tables onto the main table.
+- :class:`MultiAggJoiner`: extension of the AggJoiner that joins multiple
+  auxiliary tables onto the main table.
 
 
 Column selection inside a pipeline
