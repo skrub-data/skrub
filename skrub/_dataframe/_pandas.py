@@ -1,5 +1,5 @@
 """
-Pandas specialization of the aggregate and join operation.
+Pandas specialization of the aggregate and join operations.
 """
 import re
 from itertools import product
@@ -26,11 +26,11 @@ def make_dataframe(X, index=None, dtypes=None):
         cast entire pandas object to the same type. Alternatively, use a
         mapping, e.g. {col: dtype, ...}, where col is a column label and dtype is
         a numpy.dtype or Python type to cast one or more of the DataFrame's
-        columns to column-specific types
+        columns to column-specific types.
 
     Returns
     -------
-    X : Pandas dataframe
+    X : pd.DataFrame
         Converted output.
     """
     df = pd.DataFrame(X, index=index)
@@ -42,7 +42,7 @@ def make_dataframe(X, index=None, dtypes=None):
 
 
 def make_series(X, index=None, name=None, dtype=None):
-    """Convert an 1d array into a Pandas series.
+    """Convert a 1d array into a Pandas series.
 
     Parameters
     ----------
@@ -81,20 +81,20 @@ def aggregate(
 
     Parameters
     ----------
-    table : pd.DataFrame,
+    table : pd.DataFrame
         The input dataframe to aggregate.
 
-    key : str or Iterable[str],
+    key : str or Iterable[str]
         The columns used as keys to aggregate on.
 
-    cols_to_agg : str or Iterable[str],
+    cols_to_agg : str or Iterable[str]
         The columns to aggregate.
 
-    num_operations : str or Iterable[str],
+    num_operations : str or Iterable[str], default=("mean",)
         The reduction functions to apply on numerical columns
         in ``cols_to_agg`` during the aggregation.
 
-    categ_operations : str or Iterable[str],
+    categ_operations : str or Iterable[str], default=("mode",)
         The reduction functions to apply on categorical columns
         in ``cols_to_agg`` during the aggregation.
 
@@ -103,7 +103,7 @@ def aggregate(
 
     Returns
     -------
-    group : pd.DataFrame,
+    group : pd.DataFrame
         The aggregated output.
     """
     if not isinstance(table, pd.DataFrame):
@@ -173,10 +173,10 @@ def join(
 
     Parameters
     ----------
-    left : pd.DataFrame,
+    left : pd.DataFrame
         The left dataframe to left-join.
 
-    right : pd.DataFrame,
+    right : pd.DataFrame
         The right dataframe to left-join.
 
     left_on : str or Iterable[str]
@@ -209,27 +209,27 @@ def get_named_agg(table, cols, operations):
     The dictionary has the form: output_key = (column, aggfunc).
     This is used as input for the ``dataframe.agg`` method from Pandas.
 
-    'value_counts' and 'hist' operation require to pivot
+    'value_counts' and 'hist' operations require to pivot
     the tables and treated in a separate mapping.
 
     Parameters
     ----------
-    table : pd.DataFrame,
+    table : pd.DataFrame
         Input dataframe, only used to compute bins values if
         'value_counts' or 'hist' are operations.
 
-    cols : list,
+    cols : list
         The columns to aggregate.
 
-    operations : list,
+    operations : list
         The reduce operations to perform.
 
     Returns
     -------
-    named_agg : dict,
+    named_agg : dict
         Named aggregation mapping.
 
-    value_counts : dict,
+    value_counts : dict
         ``value_counts`` operations mapping.
     """
     named_agg, value_counts = {}, {}
@@ -238,7 +238,7 @@ def get_named_agg(table, cols, operations):
         aggfunc, bin_args = _get_aggfunc(table[col], op_root, bin_args)
 
         output_key = f"{col}_{op_root}"
-        # 'value_counts' change the index of the resulting frame
+        # 'value_counts' changes the index of the resulting frame
         # and must be treated separately.
         if aggfunc == "value_counts":
             value_counts[output_key] = (col, bin_args)
@@ -253,16 +253,16 @@ def _parse_argument(operation):
 
     Parameters
     ----------
-    operation : str,
+    operation : str
         The operation to parse.
 
     Returns
     -------
-    operation_root : str,
+    operation_root : str
         The name of the operation before parenthesis, if any.
 
-    bin_args : int,
-        The number of bin to create for ``hist`` or ``value_counts``.
+    bin_args : int
+        The number of bin to create for 'hist' or 'value_counts'.
 
     Examples
     --------
@@ -298,22 +298,22 @@ def _get_aggfunc(serie, op_root, n_bins):
 
     Parameters
     ----------
-    serie : pd.Series,
-        Input series, used to compute the bins if n_bins is provided.
+    serie : pd.Series
+        Input series, used to compute the bins if `n_bins` is provided.
 
-    op_root : str,
+    op_root : str
         Operation root, the operation without the bin argument, if any.
 
-    n_bins : int,
-        The number of bin to create when value_counts or hist operation are used.
+    n_bins : int
+        The number of bin to create when 'value_counts' or 'hist' operation are used.
 
     Returns
     -------
-    aggfunc : str or callable,
-        The pandas agg functions to perform
+    aggfunc : str or callable
+        The pandas agg functions to perform.
 
-    bins_args : dict,
-        The bins to create when using value_counts or hist.
+    bins_args : dict
+        The bins to create when using 'value_counts' or 'hist'.
     """
     aggfunc = PANDAS_OPS_MAPPING.get(op_root, op_root)
 
