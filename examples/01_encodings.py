@@ -110,9 +110,9 @@ HistGradientBoostingRegressor().fit(features, salaries)
 vectorizer
 
 # We can inspect which transformation was chosen for a each column and retrieve the fitted transformer.
-# ``vectorizer.get_transformers()`` gives us a dictionary which maps column names to the corresponding transformer.
+# ``vectorizer.transformers_`` gives us a dictionary which maps column names to the corresponding transformer.
 
-vectorizer.get_transformers()["date_first_hired"]
+vectorizer.transformers_["date_first_hired"]
 
 # We can also see which features in the vectorizer's output were derived from our input column.
 
@@ -123,22 +123,6 @@ vectorizer.input_to_outputs_["date_first_hired"]
 features[vectorizer.input_to_outputs_["date_first_hired"]]
 
 ###############################################################################
-# To see all the columns that were chosen for a given kind of transformation,
-# we can filter the results of ``get_transformers`` by using its parameter
-# ``'kind'``.
-
-vectorizer.get_transformers(kind="numeric")
-
-###############################################################################
-
-list(vectorizer.get_transformers(kind="low_cardinality").keys())
-
-###############################################################################
-
-list(vectorizer.get_transformers(kind="datetime").keys())
-
-
-###############################################################################
 # We see that ``"date_first_hired"`` has been recognized and processed as a datetime column.
 # But looking closer at our original dataframe, it was encoded as a string.
 
@@ -146,32 +130,20 @@ employees["date_first_hired"]
 
 ###############################################################################
 # Note the ``dtype: object`` in the output above.
-# Before applying the transformers we specify, the |TableVectorizer| performs a few preprocessing steps.
-# Under the hood, the |TableVectorizer| is nothing more than a scikit-learn Pipeline.
-# Therefore, we can easily inspect the operations it performs by retrieving the pipeline
-
-vectorizer.pipeline_
-
-###############################################################################
+# Before applying the transformers we specify, the |TableVectorizer| performs a
+# few preprocessing steps.
+#
 # For example, the "``to_numeric``" step attempts to parse string columns as
 # numbers, the "``clean_null_string``" step replaces values commonly used to
 # represent missing values such as ``"N/A"`` with actuall ``null``, etc.
-# We can also see the list of steps that were relevant for a given column and applied to it
+# We can also see the list of steps that were relevant for a given column and
+# applied to it
 
-steps = vectorizer.get_processing_steps()["date_first_hired"]
-# each step in steps is a pair (step name, fitted transformer)
-print("date_first_hired:")
-print(
-    f"\n{'↓': >5}\n".join(str(transformer) for (step_name, transformer) in steps) + "\n"
-)
+vectorizer.input_to_processing_steps_["date_first_hired"]
 
 ###############################################################################
 
-steps = vectorizer.get_processing_steps()["year_first_hired"]
-print("year_first_hired:")
-print(
-    f"\n{'↓': >5}\n".join(str(transformer) for (step_name, transformer) in steps) + "\n"
-)
+vectorizer.input_to_processing_steps_["year_first_hired"]
 
 ###############################################################################
 

@@ -246,7 +246,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
     We can also see all the processing steps that were applied to a given column
 
-    >>> list(dict(vectorizer.get_processing_steps()["B"]).values())
+    >>> vectorizer.input_to_processing_steps_["B"]
     [PandasConvertDTypes(), CleanNullStrings(), ToDatetime(), DatetimeColumnEncoder()]
 
     The passthrough parameter tells the vectorizer to pass through some columns
@@ -262,7 +262,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
     Here the column "B" has not been modified at all.
 
-    >>> vectorizer.get_processing_steps()["B"]
+    >>> vectorizer.input_to_processing_steps_["B"]
     []
 
     Note this is different than providing "passthrough" as one of the
@@ -281,31 +281,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     column, but as the final estimator for datetime columns is "passthrough"
     the year, month, day and total_seconds features have not been extracted.
 
-    >>> list(dict(vectorizer.get_processing_steps()["B"]).values())
+    >>> vectorizer.input_to_processing_steps_["B"]
     [PandasConvertDTypes(), CleanNullStrings(), ToDatetime(), PassThrough()]
-
-    Under the hood, a TableVectorizer is just a scikit-learn Pipeline. The
-    fitted pipeline is accessible in the attribute pipeline_:
-
-    >>> list(dict(vectorizer.pipeline_.steps).keys())
-    ['check_input', 'convert_dtypes', 'clean_null_strings', 'to_datetime', 'to_numeric', 'to_categorical', 'low_cardinality_transformer', 'high_cardinality_transformer', 'numeric_transformer', 'datetime_transformer', 'remainder_transformer']
-
-    It is also possible to obtain and use the pipeline directly. Here we build
-    a pipeline (without seeing any data yet, the TableVectorizer provides a
-    configuration):
-
-    >>> pipeline = TableVectorizer().make_pipeline()
-    >>> type(pipeline)
-    <class 'sklearn.pipeline.Pipeline'>
-
-    And we can fit it or add other steps to it
-
-    >>> pipeline.fit_transform(df)
-       A_one  A_three  A_two  B_year  B_month  B_day  B_total_seconds     C
-    0    1.0      0.0    0.0  2024.0      2.0    2.0     1.706832e+09   1.5
-    1    0.0      0.0    1.0  2024.0      2.0   23.0     1.708646e+09   NaN
-    2    0.0      0.0    1.0  2024.0      3.0   12.0     1.710202e+09  12.2
-    3    0.0      1.0    0.0  2024.0      3.0   13.0     1.710288e+09   NaN
     """
 
     def __init__(
@@ -397,16 +374,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         output = self.pipeline_.fit_transform(X)
         self.feature_names_in_ = self.pipeline_.named_steps[
             "check_input"
-        ].feature_names_in_
+        ].feature_names_out_
         self.all_outputs_ = sbd.column_names(output)
-        self.input_to_outputs_ = _get_input_to_outputs_mapping(
-            list(self.pipeline_.named_steps.values())[1:]
-        )
-        self.output_to_input_ = {
-            out: input_
-            for (input_, outputs) in self.input_to_outputs_.items()
-            for out in outputs
-        }
+        self._store_input_transformations()
+        self._store_processed_cols()
+        self._store_transformers()
+        self._store_output_to_input()
         return output
 
     def transform(self, X):
@@ -436,68 +409,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             },
         }
 
-    def get_processing_steps(self, kind=None):
-        """Get all the processing steps applied to different columns.
-
-        Parameters
-        ----------
-        kind : "numeric", "datetime", "high_cardinality", \
-"low_cardinality", "remainder", or None, optional
-            Filter results to return only those corresponding to the provided kind.
-            None (the default) means return all results.
-
-        Returns
-        -------
-        dict
-            Mapping each column name to a list of (step_name, Transformer) pairs.
-        """
-        allowed_kinds = [
-            "datetime",
-            "numeric",
-            "high_cardinality",
-            "low_cardinality",
-            "remainder",
-            None,
-        ]
-        if kind not in allowed_kinds:
-            raise ValueError(f"'kind' must be one of {allowed_kinds}. Got {kind!r}")
-        col_to_steps = {col: [] for col in self.feature_names_in_}
-        for step_name, step in self.pipeline_.steps:
-            if not hasattr(step, "transformers_"):
-                continue
-            for in_col, transformer in step.transformers_.items():
-                col_to_steps[in_col].append((step_name, transformer))
-        if kind is not None:
-            kind = f"{kind}_transformer"
-            col_to_steps = {
-                col: steps
-                for (col, steps) in col_to_steps.items()
-                if steps and steps[-1][0] == kind
-            }
-        return col_to_steps
-
-    def get_transformers(self, kind=None):
-        """Get the final transformer applied to each column.
-
-        Parameters
-        ----------
-        kind : "numeric", "datetime", "high_cardinality", \
-"low_cardinality", "remainder", or None, optional
-            Filter results to return only those corresponding to the provided kind.
-            None (the default) means return all results.
-
-        Returns
-        -------
-        dict
-            Mapping each column name to the transformer that generated the
-            corresponding output columns.
-        """
-        col_to_steps = self.get_processing_steps(kind=kind)
-        transformers = {
-            c: steps[-1][1] if steps else None for c, steps in col_to_steps.items()
-        }
-        return transformers
-
     def get_feature_names_out(self):
         """Return the column names of the output of ``transform`` as a list of strings.
 
@@ -510,13 +421,37 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
 
+    def _store_input_transformations(self):
+        pipeline_steps = list(self.pipeline_.named_steps.values())
+        to_outputs = {col: [col] for col in pipeline_steps[0].feature_names_out_}
+        to_steps = {col: [] for col in pipeline_steps[0].feature_names_out_}
+        for step in pipeline_steps[1:]:
+            for col, outputs_at_previous_step in to_outputs.items():
+                new_outputs = []
+                for output in outputs_at_previous_step:
+                    new_outputs.extend(step.input_to_outputs_.get(output, [output]))
+                    if output in step.transformers_:
+                        to_steps[col].append(step.transformers_[output])
+                to_outputs[col] = new_outputs
+        self.input_to_outputs_ = to_outputs
+        self.input_to_processing_steps_ = to_steps
 
-def _get_input_to_outputs_mapping(pipeline_steps):
-    mapping = {col: [col] for col in pipeline_steps[0].all_inputs_}
-    for step in pipeline_steps:
-        for col, outputs_at_previous_step in mapping.items():
-            new_outputs = []
-            for output in outputs_at_previous_step:
-                new_outputs.extend(step.input_to_outputs_.get(output, [output]))
-            mapping[col] = new_outputs
-    return mapping
+    def _store_processed_cols(self):
+        self.used_inputs_, self.created_outputs_ = [], []
+        for col in self.input_to_processing_steps_:
+            if self.input_to_processing_steps_[col]:
+                self.used_inputs_.append(col)
+                self.created_outputs_.extend(self.input_to_outputs_[col])
+
+    def _store_transformers(self):
+        self.transformers_ = {
+            c: ([None] + steps)[-1]
+            for c, steps in self.input_to_processing_steps_.items()
+        }
+
+    def _store_output_to_input(self):
+        self.output_to_input_ = {
+            out: input_
+            for (input_, outputs) in self.input_to_outputs_.items()
+            for out in outputs
+        }

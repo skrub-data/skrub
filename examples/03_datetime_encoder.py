@@ -130,7 +130,7 @@ pprint(table_vec.get_feature_names_out())
 #
 # Inspecting the |TableVectorizer| further, we can check that the
 # |DatetimeEncoder| is used on the correct column(s).
-pprint(table_vec.get_transformers())
+pprint(table_vec.transformers_)
 
 ###############################################################################
 # Prediction with datetime features

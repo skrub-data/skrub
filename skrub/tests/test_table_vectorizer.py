@@ -176,10 +176,10 @@ def test_fit_default_transform():
             expected_transformers_types[c] = "GapEncoder"
 
     transformer_types = {
-        k: v.__class__.__name__ for (k, v) in vectorizer.get_transformers().items()
+        k: v.__class__.__name__ for (k, v) in vectorizer.transformers_.items()
     }
     assert transformer_types == expected_transformers_types
-    categories = vectorizer.get_transformers()["cat1"].categories_[0]
+    categories = vectorizer.transformers_["cat1"].categories_[0]
     expected_categories = ["no", "yes"]
     assert list(categories) == list(expected_categories)
 
@@ -471,15 +471,16 @@ def test_mixed_types():
     X = _get_mixed_types_dataframe()
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
-    expected_name_to_columns = {
-        "numeric": ["int_str", "float_str", "int_float"],
-        "remainder": ["bool_str"],
+    expected_transformer_types = {
+        "int_str": "ToFloat32",
+        "float_str": "ToFloat32",
+        "int_float": "ToFloat32",
+        "bool_str": "Drop",
     }
-    name_to_columns = {
-        name: list(vectorizer.get_transformers(name).keys())
-        for name in expected_name_to_columns
+    transformer_types = {
+        k: v.__class__.__name__ for k, v in vectorizer.transformers_.items()
     }
-    assert expected_name_to_columns == name_to_columns
+    assert expected_transformer_types == transformer_types
 
 
 @pytest.mark.parametrize(
