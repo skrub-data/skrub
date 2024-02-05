@@ -258,6 +258,16 @@ def test_cols(main, px):
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main)
 
+    # Check cols not in table
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        keys=["userId"],
+        cols=[["wrong_col"]],
+    )
+    error_msg = r"All `cols` must be present in `aux_tables`."
+    with pytest.raises(ValueError, match=error_msg):
+        multi_agg_joiner.fit_transform(main)
+
 
 @pytest.mark.parametrize("px", MODULES)
 def test_operations(main, px):
@@ -338,6 +348,31 @@ def test_suffixes(main, px):
     )
     multi_agg_joiner.fit_transform(main)
     assert multi_agg_joiner._suffixes == ["_this", "_works"]
+
+    # check too many suffixes
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main, main],
+        keys=[["userId"], ["userId"]],
+        cols=[["rating"], ["rating"]],
+        suffixes=["_1", "_2", "_3"],
+    )
+    error_msg = (
+        r"The number of provided suffixes must match the number of tables in"
+        r" `aux_tables`. Got 3 suffixes and 2 aux_tables."
+    )
+    with pytest.raises(ValueError, match=error_msg):
+        multi_agg_joiner.fit_transform(main)
+
+    # check suffixes not str
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main],
+        keys=[["userId"]],
+        cols=[["rating"]],
+        suffixes=[1],
+    )
+    error_msg = r"All suffixes must be strings."
+    with pytest.raises(ValueError, match=error_msg):
+        multi_agg_joiner.fit_transform(main)
 
 
 @pytest.mark.parametrize("px", MODULES)
