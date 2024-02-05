@@ -161,7 +161,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         """
         if not _is_array_like(aux_tables):
             raise ValueError(
-                "'aux_tables' must be an iterable of dataframes or 'X'."
+                "`aux_tables` must be an iterable of dataframes or 'X'."
                 "If you are using a single auxiliary table, convert your current"
                 "`aux_tables` into [`aux_tables`]"
             )
@@ -170,21 +170,21 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                 aux_tables[i] = deepcopy(X)
             elif not hasattr(aux_table, "__dataframe__"):
                 raise ValueError(
-                    "`aux_tables` must be an iterable of dataframes of 'X'."
+                    "`aux_tables` must be an iterable of dataframes or 'X'."
                 )
 
         # Polars lazyframes will raise an error here.
         if not hasattr(X, "__dataframe__"):
-            raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
+            raise TypeError(f"`X` must be a dataframe, got {type(X)}.")
         if not all(hasattr(aux_table, "__dataframe__") for aux_table in aux_tables):
-            raise TypeError("'aux_tables' must all be dataframes.")
+            raise TypeError("`aux_tables` must all be dataframes.")
 
         if is_pandas(X):
             if not all(is_pandas(aux_table) for aux_table in aux_tables):
-                raise TypeError("All 'aux_tables' must be Pandas dataframes.")
+                raise TypeError("All `aux_tables` must be Pandas dataframes.")
         if is_polars(X):
             if not all(is_polars(aux_table) for aux_table in aux_tables):
-                raise TypeError("All 'aux_tables' must be Polars dataframes.")
+                raise TypeError("All `aux_tables` must be Polars dataframes.")
 
         return X, aux_tables
 
@@ -215,27 +215,27 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         if keys is not None:
             if aux_keys is not None or main_keys is not None:
                 raise ValueError(
-                    "Can only pass argument 'keys' OR 'main_keys' and "
-                    "'aux_keys', not a combination of both."
+                    "Can only pass argument `keys` OR `main_keys` and "
+                    "`aux_keys`, not a combination of both."
                 )
             if not _is_array_like(keys):
-                raise ValueError(f"'keys' must be an 1d iterable, got {type(keys)}.")
+                raise ValueError(f"`keys` must be an 1d iterable, got {type(keys)}.")
             main_keys, aux_keys = keys, keys
         else:
             if aux_keys is None or main_keys is None:
                 raise ValueError(
-                    "Must pass EITHER 'keys', OR ('main_keys' AND 'aux_keys')."
+                    "Must pass EITHER `keys`, OR (`main_keys` AND `aux_keys`)."
                 )
             if not _is_array_like(aux_keys):
                 raise ValueError(
-                    f"'aux_keys' must be an iterable, got {type(aux_keys)}."
+                    f"`aux_keys` must be an iterable, got {type(aux_keys)}."
                 )
         main_keys = atleast_2d_or_none(main_keys)
         aux_keys = atleast_2d_or_none(aux_keys)
         # Check 2d shape
         if len(main_keys) != len(aux_keys):
             raise ValueError(
-                "'main_keys' and 'aux_keys' have different lengths"
+                "`main_keys` and `aux_keys` have different lengths"
                 f" ({len(main_keys)} and {len(aux_keys)}). Cannot join on different"
                 " numbers of tables."
             )
@@ -243,7 +243,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         for main_key, aux_key in zip(main_keys, aux_keys):
             if len(main_key) != len(aux_key):
                 raise ValueError(
-                    "'main_keys' and 'aux_keys' elements have different lengths"
+                    "`main_keys` and `aux_keys` elements have different lengths"
                     f" ({len(main_key)} and {len(aux_key)}). Cannot join on different"
                     " numbers of columns."
                 )
@@ -292,12 +292,12 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         if len(cols) != len(self.aux_tables):
             raise ValueError(
                 "The number of provided cols must match the number of"
-                f" tables in 'aux_tables'. Got {len(cols)} columns and"
+                f" tables in `aux_tables`. Got {len(cols)} columns and"
                 f" {len(self._aux_tables)} auxiliary tables."
             )
         for columns, table in zip(cols, self._aux_tables):
             if not all([col in table.columns for col in columns]):
-                raise ValueError("All 'cols' must be present in 'aux_tables'.")
+                raise ValueError("All `cols` must be present in `aux_tables`.")
         return cols
 
     def _check_operations(self):
@@ -327,7 +327,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         if len(operations) != len(self._aux_tables):
             raise ValueError(
                 "The number of provided operations must match the number of"
-                f" tables in 'aux_tables'. Got {len(operations)} operations and"
+                f" tables in `aux_tables`. Got {len(operations)} operations and"
                 f" {len(self._aux_tables)} auxiliary tables."
             )
         return operations
@@ -357,7 +357,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             if len(suffixes) != len(self._aux_tables):
                 raise ValueError(
                     "The number of provided suffixes must match the number of"
-                    f" tables in 'aux_tables'. Got {len(suffixes)} suffixes and"
+                    f" tables in `aux_tables`. Got {len(suffixes)} suffixes and"
                     f" {len(self._aux_tables)} aux_tables."
                 )
             if not all([isinstance(suffix, str) for suffix in suffixes]):

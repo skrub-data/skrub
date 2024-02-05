@@ -87,6 +87,31 @@ def test_X_placeholder(main, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
+def test_check_dataframes(main, px):
+    main = px.DataFrame(main)
+
+    # Check aux_tables isn't an array
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=main,
+        keys=["userId"],
+    )
+    with pytest.raises(
+        ValueError, match=r"(?=`aux_tables` must be an iterable of dataframes or 'X'.)"
+    ):
+        multi_agg_joiner.fit_transform(main)
+
+    # Check aux_tables is not a dataframe or "X"
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[1],
+        keys=["userId"],
+    )
+    with pytest.raises(
+        ValueError, match=r"(?=`aux_tables` must be an iterable of dataframes or 'X'.)"
+    ):
+        multi_agg_joiner.fit_transform(main)
+
+
+@pytest.mark.parametrize("px", MODULES)
 def test_keys(main, px):
     main = px.DataFrame(main)
 
