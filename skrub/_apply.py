@@ -62,12 +62,22 @@ class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     1  7.071068e+00 -2.886751
     2 -7.071068e+00 -2.886751
     3 -1.602469e-16 -2.886751
-    >>> Apply(PCA(n_components=2), cols=["a", "b"]).fit_transform(df)
+
+    We can restrict the transformer to a subset of columns:
+
+    >>> pca = Apply(PCA(n_components=2), cols=["a", "b"])
+    >>> pca.fit_transform(df)
           c     d          pca0      pca1
     0   0.0   0.0  7.071068e+00  3.535534
     1   0.0   0.0 -7.071068e+00  3.535534
     2  10.0   0.0 -1.248768e-15 -3.535534
     3   0.0  10.0 -1.248768e-15 -3.535534
+    >>> pca.used_inputs_
+    ['a', 'b']
+    >>> pca.created_outputs_
+    ['pca0', 'pca1']
+    >>> pca.transformer_
+    PCA(n_components=2)
     """
 
     def __init__(self, transformer, cols=_selectors.all()):

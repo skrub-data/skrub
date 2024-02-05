@@ -74,14 +74,61 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
           A     B     C
     0 -10.0 -10.0   0.0
     1  10.0   0.0  10.0
-    >>> Map(StandardScaler()).fit_transform(df)
+
+    Fit a StandardScaler to each column in df:
+
+    >>> scaling = Map(StandardScaler())
+    >>> scaling.fit_transform(df)
          A    B    C
     0 -1.0 -1.0 -1.0
     1  1.0  1.0  1.0
-    >>> Map(StandardScaler(), cols=["A", "B"]).fit_transform(df)
+    >>> scaling.transformers_
+    {'A': StandardScaler(), 'B': StandardScaler(), 'C': StandardScaler()}
+
+    We can restrict the columns on which the transformation is applied:
+
+    >>> scaling = Map(StandardScaler(), cols=["A", "B"])
+    >>> scaling.fit_transform(df)
          A    B     C
     0 -1.0 -1.0   0.0
     1  1.0  1.0  10.0
+
+    We see that the scaling has not been applied to "C", which also does not
+    appear in the transformers_:
+
+    >>> scaling.transformers_
+    {'A': StandardScaler(), 'B': StandardScaler()}
+    >>> scaling.used_inputs_
+    ['A', 'B']
+
+    The transformer can return NotImplemented to indicate it cannot handle a
+    given column.
+
+    >>> from skrub._to_datetime import ToDatetime
+    >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
+    >>> df
+         birthday    city
+    0  29/01/2024  London
+    >>> df.dtypes
+    birthday    object
+    city        object
+    dtype: object
+    >>> ToDatetime().fit_transform(df["birthday"])
+    0   2024-01-29
+    Name: birthday, dtype: datetime64[ns]
+    >>> ToDatetime().fit_transform(df["city"])
+    NotImplemented
+    >>> to_datetime = Map(ToDatetime())
+    >>> transformed = to_datetime.fit_transform(df)
+    >>> transformed
+        birthday    city
+    0 2024-01-29  London
+    >>> transformed.dtypes
+    birthday    datetime64[ns]
+    city                object
+    dtype: object
+    >>> to_datetime.transformers_
+    {'birthday': ToDatetime()}
     """
 
     def __init__(self, transformer, cols=_selectors.all(), n_jobs=None):
