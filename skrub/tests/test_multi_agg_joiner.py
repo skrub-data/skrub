@@ -111,6 +111,25 @@ def test_check_dataframes(main, px):
         multi_agg_joiner.fit_transform(main)
 
 
+@pytest.mark.skipif(not POLARS_SETUP, reason="Polars not available.")
+@pytest.mark.parametrize("px", MODULES)
+def test_check_wrong_aux_table_type(main, px):
+    other_px = pd if px is pl else pl
+    main = px.DataFrame(main)
+    wrong_main = other_px.DataFrame(main)
+
+    # Check aux_tables is pandas when X is polars or the opposite
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[wrong_main],
+        keys=["userId"],
+    )
+    wanted_type = "Pandas" if px == pd else "Polars"
+    with pytest.raises(
+        TypeError, match=rf"All `aux_tables` must be {wanted_type} dataframes."
+    ):
+        multi_agg_joiner.fit_transform(main)
+
+
 @pytest.mark.parametrize("px", MODULES)
 def test_keys(main, px):
     main = px.DataFrame(main)
