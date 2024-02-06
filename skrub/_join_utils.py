@@ -153,13 +153,13 @@ def pick_column_names(suggested_names, forbidden_names=()):
     A tag ``__skrub_<random string>__`` is added at the end of columns that
     would otherwise be duplicates.
 
-    Any similar tag already present in any of the column names is removed
-    beforehand. When there are duplicates, the first (leftmost) occurrence is
-    the one left unchanged.
+    Any similar tag already present in any of the column names is shifted to
+    the end of the column name. When there are duplicates, the first (leftmost)
+    occurrence is the one left unchanged.
 
     We can pass a list of forbidden names, in which case names will also be
     tagged if they appear in the forbidden names (regardless of whether they
-    have duplicates in the list or their position).
+    have duplicates in the list and of their position).
 
     Parameters
     ----------
@@ -178,26 +178,36 @@ def pick_column_names(suggested_names, forbidden_names=()):
     Examples
     --------
     >>> from skrub._join_utils import pick_column_names
-    >>> pick_column_names(["A", "A", "B"])  # doctest: +SKIP
-    ['A', 'A__skrub_750a0b7c__', 'B']
-    >>> pick_column_names(['A', 'A__skrub_750a0b7c__', 'B']) # doctest: +SKIP
-    ['A', 'A__skrub_26e3ac0a__', 'B']
-    >>> pick_column_names(['A__skrub_750a0b7c__', 'B']) # doctest: +SKIP
-    ['A', 'B']
+    >>> pick_column_names(["A", "A", "B"])                                    # doctest: +SKIP
+    ['A', 'A__skrub_87946836__', 'B']
+    >>> pick_column_names(['A__skrub_750a0b7c__', 'B'])                       # doctest: +SKIP
+    ['A__skrub_750a0b7c__', 'B']
     >>> pick_column_names(
-    ...     ["A__skrub_750a0b7c___year", "A__skrub_750a0b7c___month", "B"]  # doctest: +SKIP
-    ... )
-    ['A_year', 'A_month', 'B']
-    >>> pick_column_names(["A", "B"], forbidden_names=["A", "B", "C"]) # doctest: +SKIP
-    ['A__skrub_ca064e93__', 'B__skrub_472843f7__']
+    ...     ["A__skrub_750a0b7c___year", "A__skrub_750a0b7c___month", "B"])   # doctest: +SKIP
+    ['A_year__skrub_750a0b7c__', 'A_month__skrub_750a0b7c__', 'B']
+    >>> pick_column_names(["A", "B"], forbidden_names=["A", "B", "C"])        # doctest: +SKIP
+    ['A__skrub_37dd63aa__', 'B__skrub_21e27e1e__']
+    >>> pick_column_names(["concat_A__skrub_750a0b7c___A__skrub_b1eeb4f7__"]) # doctest: +SKIP
+    ['concat_A_A']
     """
-    new_names = []
+    all_new_names = []
     forbidden_names = set(forbidden_names)
     for name in suggested_names:
-        name = re.sub("__skrub_.*?__", "", name)
-        if name in forbidden_names:
-            token = _utils.random_string()
-            name = f"{name}__skrub_{token}__"
-        new_names.append(name)
-        forbidden_names.add(name)
-    return new_names
+        new_name = _get_new_name(name, forbidden_names)
+        all_new_names.append(new_name)
+        forbidden_names.add(new_name)
+    return all_new_names
+
+
+def _get_new_name(suggested_name, forbidden_names):
+    tag_pattern = "__skrub_.*?__"
+    tags = re.findall(tag_pattern, suggested_name)
+    untagged_name = re.sub(tag_pattern, "", suggested_name)
+    if len(tags) == 1:
+        suggested_name = untagged_name + tags[0]
+    else:
+        suggested_name = untagged_name
+    if suggested_name not in forbidden_names:
+        return suggested_name
+    token = _utils.random_string()
+    return f"{untagged_name}__skrub_{token}__"
