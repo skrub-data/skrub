@@ -6,7 +6,6 @@ Both classes aggregate the auxiliary table first, then join this grouped
 table with the main table.
 """
 from collections import Counter
-from copy import deepcopy
 from typing import Iterable
 
 import numpy as np
@@ -99,7 +98,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         - If set to `None` (the default), ["mean", "mode"] will be used.
 
-    suffix : str or iterable of str, default=""
+    suffix : str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it
         to avoid duplicate column names in the join.
 
@@ -175,7 +174,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         """
         if type(aux_table) == str:
             if aux_table == "X":
-                return X, deepcopy(X)
+                return X, X
             else:
                 raise ValueError("'aux_table' must be a dataframe or 'X'.")
         # Polars lazyframes will raise an error here.
