@@ -16,6 +16,12 @@ def cols(*columns):
     return ExactCols(columns)
 
 
+def name_in(*columns):
+    if not columns:
+        return nothing()
+    return NameIn(columns)
+
+
 def inv(obj):
     return ~_make_selector_in_expr(obj)
 
@@ -192,7 +198,7 @@ class NameIn(Selector):
         self_cols = set(self.columns)
         other_cols = set(other.columns)
         result_cols = getattr(self_cols, op)(other_cols)
-        return cols(*sorted(result_cols))
+        return name_in(*sorted(result_cols))
 
     def __repr__(self):
         args = ", ".join(map(repr, self.columns))
@@ -221,10 +227,6 @@ class NameIn(Selector):
 
     def __rxor__(self, other):
         return self._set_op(other, "__rxor__")
-
-
-def name_in(columns):
-    return NameIn(columns)
 
 
 class ExactCols(Selector):
