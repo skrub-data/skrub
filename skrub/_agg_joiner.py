@@ -172,7 +172,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         aux_table : DataframeLike or "X"
             The auxiliary table.
         """
-        if type(aux_table) == str:
+        if isinstance(aux_table, str):
             if aux_table == "X":
                 return X, X
             else:
