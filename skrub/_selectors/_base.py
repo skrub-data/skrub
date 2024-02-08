@@ -26,10 +26,6 @@ def inv(obj):
     return ~_make_selector_in_expr(obj)
 
 
-def _make_selector_in_expr(obj):
-    return make_selector(obj)._in_expr()
-
-
 def make_selector(obj):
     if isinstance(obj, Selector):
         return obj
@@ -38,6 +34,10 @@ def make_selector(obj):
     if not hasattr(obj, "__iter__"):
         raise ValueError(f"selector not understood: {obj}")
     return cols(*obj)
+
+
+def _make_selector_in_expr(obj):
+    return make_selector(obj)._in_expr()
 
 
 @sbd.dispatch
@@ -177,7 +177,7 @@ def _check_string_list(columns):
     for c in columns:
         if not isinstance(c, str):
             raise ValueError(
-                "Cols selector should be initialized with a list of str. Found"
+                "Column name selector should be initialized with a list of str. Found"
                 f" non-string element: {c!r}."
             )
     return columns
