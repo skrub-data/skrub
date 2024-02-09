@@ -241,20 +241,6 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                 )
         return main_keys, aux_keys
 
-    def _check_missing_columns_in_main_table(
-        self, main_table, main_keys, main_table_name
-    ):
-        """Check that all `main_keys` are in the main table."""
-        for main_key in main_keys:
-            _join_utils.check_missing_columns(main_table, main_key, main_table_name)
-
-    def _check_missing_columns_in_aux_tables(
-        self, aux_tables, aux_keys, aux_table_name
-    ):
-        """Check that all `aux_keys` are in the corresponding aux_table."""
-        for aux_table, aux_key in zip(aux_tables, aux_keys):
-            _join_utils.check_missing_columns(aux_table, aux_key, aux_table_name)
-
     def _check_cols(self):
         """Check `cols` to aggregate.
 
@@ -376,12 +362,6 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         self._main_keys, self._aux_keys = self._check_keys(
             self.main_keys, self.aux_keys, self.keys
         )
-        self._check_missing_columns_in_main_table(
-            X, self._main_keys, "'X' (the main table)"
-        )
-        self._check_missing_columns_in_aux_tables(
-            self._aux_tables, self._aux_keys, "'aux_table'"
-        )
         self._cols = self._check_cols()
         self._operations = self._check_operations()
         self._suffixes = self._check_suffixes()
@@ -428,9 +408,8 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
         """
         check_is_fitted(self, "agg_joiners_")
         X, _ = self._check_dataframes(X, self._aux_tables)
-        self._check_missing_columns_in_main_table(
-            X, self._main_keys, "'X' (the main table)"
-        )
+        for main_key in self._main_keys:
+            _join_utils.check_missing_columns(X, main_key, "'X' (the main table)")
 
         for agg_joiner in self.agg_joiners_:
             X = agg_joiner.transform(X)
