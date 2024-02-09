@@ -287,9 +287,6 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
                 f" tables in `aux_tables`. Got {len(cols)} columns and"
                 f" {len(self._aux_tables)} auxiliary tables."
             )
-        for columns, table in zip(cols, self._aux_tables):
-            if not all([col in table.columns for col in columns]):
-                raise ValueError("All `cols` must be present in `aux_tables`.")
         return cols
 
     def _check_operations(self):

@@ -179,7 +179,7 @@ def test_keys(main, px):
         aux_key="userId",
         cols=["rating", "genre"],
     )
-    match = r"(?=.*columns cannot be used for joining because they do not exist)"
+    match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main)
 
@@ -190,7 +190,7 @@ def test_keys(main, px):
         aux_key="wrong_key",
         cols=["rating", "genre"],
     )
-    match = r"(?=.*columns cannot be used for joining because they do not exist)"
+    match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main)
 
@@ -237,7 +237,7 @@ def test_cols(main, px):
         key="userId",
         cols="wrong_key",
     )
-    match = "All 'cols' must be present in 'aux_table'"
+    match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main)
 
@@ -323,7 +323,7 @@ def test_not_fitted_dataframe(main, px):
         key="userId",
     )
     agg_joiner.fit(main)
-    error_msg = r"(?=.*columns cannot be used for joining because they do not exist)"
+    error_msg = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         agg_joiner.transform(not_main)
 

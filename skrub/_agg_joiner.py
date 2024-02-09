@@ -294,7 +294,14 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
-        self._cols = self._check_cols()
+
+        # self._cols = self._check_cols()
+        self._cols = atleast_1d_or_none(self.cols)
+        # If no cols provided, all columns but `aux_key` are used.
+        if len(self._cols) == 0:
+            self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
+        _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
+
         self._operation = self._check_operation()
         self.num_operations, self.categ_operations = split_num_categ_operations(
             self._operation

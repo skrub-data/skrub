@@ -89,7 +89,7 @@ def check_missing_columns(table, key, table_name):
     if not missing_columns:
         return
     raise ValueError(
-        "The following columns cannot be used for joining because they do not exist"
+        "The following columns cannot be used because they do not exist"
         f" in {table_name}:\n{missing_columns}"
     )
 

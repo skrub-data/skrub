@@ -213,7 +213,7 @@ def test_keys(main, px):
         main_keys=["wrong_key"],
         aux_keys=["userId"],
     )
-    error_msg = r"(?=.*columns cannot be used for joining because they do not exist)"
+    error_msg = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main)
 
@@ -223,7 +223,7 @@ def test_keys(main, px):
         main_keys=["userId"],
         aux_keys=["wrong_key"],
     )
-    error_msg = r"(?=.*columns cannot be used for joining because they do not exist)"
+    error_msg = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main)
 
@@ -283,7 +283,7 @@ def test_cols(main, px):
         keys=["userId"],
         cols=[["wrong_col"]],
     )
-    error_msg = r"All `cols` must be present in `aux_tables`."
+    error_msg = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main)
 
@@ -417,6 +417,6 @@ def test_not_fitted_dataframe(main, px):
         keys=["userId"],
     )
     multi_agg_joiner.fit(main)
-    error_msg = r"(?=.*columns cannot be used for joining because they do not exist)"
+    error_msg = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.transform(not_main)
