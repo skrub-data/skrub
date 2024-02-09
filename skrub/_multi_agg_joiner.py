@@ -408,8 +408,11 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             )
             self.agg_joiners_.append(agg_joiner)
 
-        for self.agg_joiner in self.agg_joiners_:
-            self.agg_joiner.fit(X)
+        for agg_joiner in self.agg_joiners_:
+            agg_joiner._check_input(X)
+
+        for agg_joiner in self.agg_joiners_:
+            agg_joiner.fit(X)
 
         return self
 

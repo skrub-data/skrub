@@ -279,6 +279,28 @@ class AggJoiner(BaseEstimator, TransformerMixin):
                 " overlap by renaming some columns or choosing a different suffix."
             )
 
+    def _check_input(self, X):
+        """Check inputs before fitting.
+
+        Parameters
+        ----------
+        X : DataframeLike
+            Input data, based table on which to left join the
+            auxiliary table.
+        """
+        X, self._aux_table = self._check_dataframes(X, self.aux_table)
+        self._main_key, self._aux_key = _join_utils.check_key(
+            self.main_key, self.aux_key, self.key
+        )
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
+        self._cols = self._check_cols()
+        self._operation = self._check_operation()
+        self.num_operations, self.categ_operations = split_num_categ_operations(
+            self._operation
+        )
+        self._check_suffix()
+
     def fit(self, X, y=None):
         """Aggregate auxiliary table based on the main keys.
 
@@ -297,24 +319,14 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         AggJoiner
             Fitted :class:`AggJoiner` instance (self).
         """
-        X, self._aux_table = self._check_dataframes(X, self.aux_table)
-        self._main_key, self._aux_key = _join_utils.check_key(
-            self.main_key, self.aux_key, self.key
-        )
-        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
-        self._cols = self._check_cols()
-        self._operation = self._check_operation()
-        num_operations, categ_operations = split_num_categ_operations(self._operation)
-        self._check_suffix()
-
+        self._check_input(X)
         skrub_px, _ = get_df_namespace(self._aux_table)
         aux_table = skrub_px.aggregate(
             self._aux_table,
             self._aux_key,
             self._cols,
-            num_operations,
-            categ_operations,
+            self.num_operations,
+            self.categ_operations,
             suffix=self.suffix,
         )
         self.aux_table_ = self._screen(aux_table, y)
