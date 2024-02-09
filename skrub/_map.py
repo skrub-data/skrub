@@ -136,6 +136,10 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         self.cols = cols
         self.n_jobs = n_jobs
 
+    def __repr__(self) -> str:
+        t_cls = self.transformer.__class__.__name__
+        return f"<Transformer: {t_cls}.transform(col) for col in X[{self.cols}]>"
+
     def fit(self, X, y=None):
         self.fit_transform(X, y)
         return self

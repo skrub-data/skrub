@@ -84,6 +84,10 @@ class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         self.transformer = transformer
         self.cols = cols
 
+    def __repr__(self) -> str:
+        t_cls = self.transformer.__class__.__name__
+        return f"<Transformer: {t_cls}.transform(X[{self.cols}])>"
+
     def fit_transform(self, X, y=None):
         self.all_inputs_ = sbd.column_names(X)
         self._columns = _selectors.make_selector(self.cols).select(X)

@@ -101,6 +101,16 @@ class Selector:
             return _make_selector_in_expr(other) ^ self
         return XOr(other, self)
 
+    def on_each_column(self, transformer):
+        from .._map import Map
+
+        return Map(transformer, cols=self)
+
+    def on_dataframe(self, transformer):
+        from .._apply import Apply
+
+        return Apply(transformer, cols=self)
+
 
 class All(Selector):
     def select(self, df, ignore=()):
