@@ -195,24 +195,6 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         return X, aux_table
 
-    def _check_cols(self):
-        """Check `cols` to aggregate.
-
-        If None, `cols` are all columns from `aux_table`, except `aux_key`.
-
-        Returns
-        -------
-        cols
-            1-dimensional array of columns on which to perform aggregation.
-        """
-        cols = atleast_1d_or_none(self.cols)
-        # If no cols provided, all columns but `aux_key` are used.
-        if len(cols) == 0:
-            cols = list(set(self._aux_table.columns) - set(self._aux_key))
-        if not all([col in self._aux_table.columns for col in cols]):
-            raise ValueError("All 'cols' must be present in 'aux_table'.")
-        return cols
-
     def _check_operation(self):
         """Check operation input.
 
@@ -295,7 +277,6 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
 
-        # self._cols = self._check_cols()
         self._cols = atleast_1d_or_none(self.cols)
         # If no cols provided, all columns but `aux_key` are used.
         if len(self._cols) == 0:
