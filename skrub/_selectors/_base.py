@@ -102,14 +102,14 @@ class Selector:
         return XOr(other, self)
 
     def on_each_column(self, transformer, n_jobs=None):
-        from .._map import Map
+        from .._on_each_column import OnEachColumn
 
-        return Map(transformer, cols=self, n_jobs=n_jobs)
+        return OnEachColumn(transformer, cols=self, n_jobs=n_jobs)
 
     def on_dataframe(self, transformer):
-        from .._apply import Apply
+        from .._on_column_selection import OnColumnSelection
 
-        return Apply(transformer, cols=self)
+        return OnColumnSelection(transformer, cols=self)
 
 
 class All(Selector):

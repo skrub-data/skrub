@@ -5,7 +5,7 @@ from . import _selectors
 from ._join_utils import pick_column_names
 
 
-class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class OnColumnSelection(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
@@ -55,8 +55,8 @@ class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     2  0.0   0.0  100.0     0.0
     3  0.0   0.0    0.0  1000.0
     >>> from sklearn.decomposition import PCA
-    >>> from skrub._apply import Apply
-    >>> Apply(PCA(n_components=2)).fit_transform(df).round(2)
+    >>> from skrub._on_column_selection import OnColumnSelection
+    >>> OnColumnSelection(PCA(n_components=2)).fit_transform(df).round(2)
          pca0   pca1
     0 -249.01 -33.18
     1 -249.04 -33.68
@@ -65,7 +65,7 @@ class Apply(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
 
     We can restrict the transformer to a subset of columns:
 
-    >>> pca = Apply(PCA(n_components=2), cols=["a", "b"])
+    >>> pca = OnColumnSelection(PCA(n_components=2), cols=["a", "b"])
     >>> pca.fit_transform(df).round(2)
            c       d  pca0  pca1
     0    0.0     0.0 -2.52  0.67

@@ -8,7 +8,7 @@ from . import _selectors
 from ._join_utils import pick_column_names
 
 
-class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class OnEachColumn(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.
@@ -67,7 +67,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub._map import Map
+    >>> from skrub._on_each_column import OnEachColumn
     >>> from sklearn.preprocessing import StandardScaler
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
     >>> df
@@ -77,7 +77,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
 
     Fit a StandardScaler to each column in df:
 
-    >>> scaling = Map(StandardScaler())
+    >>> scaling = OnEachColumn(StandardScaler())
     >>> scaling.fit_transform(df)
          A    B    C
     0 -1.0 -1.0 -1.0
@@ -87,7 +87,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
 
     We can restrict the columns on which the transformation is applied:
 
-    >>> scaling = Map(StandardScaler(), cols=["A", "B"])
+    >>> scaling = OnEachColumn(StandardScaler(), cols=["A", "B"])
     >>> scaling.fit_transform(df)
          A    B     C
     0 -1.0 -1.0   0.0
@@ -118,7 +118,7 @@ class Map(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     Name: birthday, dtype: datetime64[ns]
     >>> ToDatetime().fit_transform(df["city"])
     NotImplemented
-    >>> to_datetime = Map(ToDatetime())
+    >>> to_datetime = OnEachColumn(ToDatetime())
     >>> transformed = to_datetime.fit_transform(df)
     >>> transformed
         birthday    city
