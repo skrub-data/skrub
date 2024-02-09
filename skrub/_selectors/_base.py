@@ -101,10 +101,10 @@ class Selector:
             return _make_selector_in_expr(other) ^ self
         return XOr(other, self)
 
-    def on_each_column(self, transformer):
+    def on_each_column(self, transformer, n_jobs=None):
         from .._map import Map
 
-        return Map(transformer, cols=self)
+        return Map(transformer, cols=self, n_jobs=n_jobs)
 
     def on_dataframe(self, transformer):
         from .._apply import Apply

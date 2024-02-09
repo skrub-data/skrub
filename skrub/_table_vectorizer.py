@@ -1,17 +1,16 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors as sbs
+from . import _selectors as s
 from . import _utils
 from ._check_input import CheckInputDataFrame
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeColumnEncoder
 from ._gap_encoder import GapEncoder
-from ._map import Map
 from ._pandas_convert_dtypes import PandasConvertDTypes
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime
@@ -39,39 +38,27 @@ def _make_table_vectorizer_pipeline(
     passthrough,
     n_jobs,
 ):
-    cols = sbs.inv(passthrough)
-
+    cols = s.all() - passthrough
     cleaning_steps = [
-        ("check_input", CheckInputDataFrame()),
-        ("convert_dtypes", Map(PandasConvertDTypes(), cols, n_jobs=n_jobs)),
-        ("clean_null_strings", Map(CleanNullStrings(), cols, n_jobs=n_jobs)),
-        ("to_datetime", Map(ToDatetime(), cols, n_jobs=n_jobs)),
-        ("to_numeric", Map(ToNumeric(), cols, n_jobs=n_jobs)),
-        (
-            "to_categorical",
-            Map(ToCategorical(cardinality_threshold - 1), cols, n_jobs=n_jobs),
-        ),
+        CheckInputDataFrame(),
+        cols.on_each_column(PandasConvertDTypes(), n_jobs=n_jobs),
+        cols.on_each_column(CleanNullStrings(), n_jobs=n_jobs),
+        cols.on_each_column(ToDatetime(), n_jobs=n_jobs),
+        cols.on_each_column(ToNumeric(), n_jobs=n_jobs),
+        cols.on_each_column(ToCategorical(cardinality_threshold - 1), n_jobs=n_jobs),
     ]
-
-    low_card_cat = sbs.categorical() & sbs.cardinality_below(cardinality_threshold)
-    feature_extractors = [
-        ("low_cardinality_transformer", low_cardinality_transformer, low_card_cat),
-        ("high_cardinality_transformer", high_cardinality_transformer, sbs.string()),
-        ("numeric_transformer", numeric_transformer, sbs.numeric() | sbs.boolean()),
-        ("datetime_transformer", datetime_transformer, sbs.anydate()),
-        ("remainder_transformer", remainder_transformer, sbs.all()),
-    ]
-    feature_extraction_steps = []
-    for _, transformer, selector in feature_extractors:
-        selector = (cols - sbs.created_by(*feature_extraction_steps)) & selector
-        feature_extraction_steps.append(Map(transformer, selector, n_jobs=n_jobs))
+    low_card = s.categorical() & s.cardinality_below(cardinality_threshold)
     feature_extraction_steps = [
-        (name, step)
-        for ((name, *_), step) in zip(feature_extractors, feature_extraction_steps)
+        (cols & s.numeric()).on_each_column(numeric_transformer, n_jobs=n_jobs),
+        (cols & s.anydate()).on_each_column(datetime_transformer, n_jobs=n_jobs),
+        (cols & low_card).on_each_column(low_cardinality_transformer, n_jobs=n_jobs),
+        (cols & s.string()).on_each_column(high_cardinality_transformer, n_jobs=n_jobs),
     ]
-    all_steps = cleaning_steps + feature_extraction_steps
-
-    return Pipeline(all_steps)
+    remainder = cols - s.created_by(*feature_extraction_steps)
+    remainder_steps = [
+        remainder.on_each_column(remainder_transformer, n_jobs=n_jobs),
+    ]
+    return make_pipeline(*cleaning_steps, *feature_extraction_steps, *remainder_steps)
 
 
 class PassThrough(BaseEstimator):
@@ -372,9 +359,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         """
         self.pipeline_ = self.make_pipeline()
         output = self.pipeline_.fit_transform(X)
-        self.feature_names_in_ = self.pipeline_.named_steps[
-            "check_input"
-        ].feature_names_out_
+        self.feature_names_in_ = self.pipeline_.steps[0][1].feature_names_out_
         self.all_outputs_ = sbd.column_names(output)
         self._store_input_transformations()
         self._store_processed_cols()
