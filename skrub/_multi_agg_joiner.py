@@ -406,7 +406,7 @@ class MultiAggJoiner(BaseEstimator, TransformerMixin):
             self.agg_joiners_.append(agg_joiner)
 
         for agg_joiner in self.agg_joiners_:
-            agg_joiner._check_input(X)
+            agg_joiner._check_inputs(X)
 
         for agg_joiner in self.agg_joiners_:
             agg_joiner.fit(X)

@@ -279,7 +279,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
                 " overlap by renaming some columns or choosing a different suffix."
             )
 
-    def _check_input(self, X):
+    def _check_inputs(self, X):
         """Check inputs before fitting.
 
         Parameters
@@ -326,7 +326,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         AggJoiner
             Fitted :class:`AggJoiner` instance (self).
         """
-        self._check_input(X)
+        self._check_inputs(X)
         skrub_px, _ = get_df_namespace(self._aux_table)
         aux_table = skrub_px.aggregate(
             self._aux_table,
@@ -483,7 +483,7 @@ class AggTarget(BaseEstimator, TransformerMixin):
         AggTarget
             Fitted :class:`AggTarget` instance (self).
         """
-        y_ = self.check_input(X, y)
+        y_ = self.check_inputs(X, y)
         skrub_px, _ = get_df_namespace(X, y_)
 
         # Add the main key on the target
@@ -525,7 +525,7 @@ class AggTarget(BaseEstimator, TransformerMixin):
             right_on=self.main_key_,
         )
 
-    def check_input(self, X, y):
+    def check_inputs(self, X, y):
         """Perform a check on column names data type and suffixes.
 
         Parameters
