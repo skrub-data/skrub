@@ -11,32 +11,31 @@ TODO
 ...         "ID": [4, 3],
 ...     }
 ... )
-...
->>> from skrub import selectors as sbs
->>> sbs.select(df, ["ID", "kind"])
+>>> from skrub import selectors as s
+>>> s.select(df, ["ID", "kind"])
   kind  ID
 0   A4   4
 1   A3   3
->>> sbs.select(df, sbs.all())
+>>> s.select(df, s.all())
    height_mm  width_mm kind  ID
 0      297.0     210.0   A4   4
 1      420.0     297.0   A3   3
->>> sbs.select(df, sbs.numeric() - "ID")
+>>> s.select(df, s.numeric() - "ID")
    height_mm  width_mm
 0      297.0     210.0
 1      420.0     297.0
->>> sbs.select(df, sbs.string() | ["width_mm", "ID"])
+>>> s.select(df, s.string() | ["width_mm", "ID"])
    width_mm kind  ID
 0     210.0   A4   4
 1     297.0   A3   3
->>> sbs.select(df, sbs.numeric() - sbs.glob("*_mm"))
+>>> s.select(df, s.numeric() - s.glob("*_mm"))
    ID
 0   4
 1   3
->>> s = sbs.numeric() - sbs.glob("*_mm")
->>> s
+>>> non_mm = s.numeric() - s.glob("*_mm")
+>>> non_mm
 (numeric() - glob('*_mm'))
->>> sbs.select(df, s)
+>>> s.select(df, non_mm)
    ID
 0   4
 1   3
