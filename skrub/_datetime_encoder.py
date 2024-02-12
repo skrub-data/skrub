@@ -13,8 +13,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import make_pipeline
 
 from . import _dataframe as sbd
+from . import _selectors as s
 from ._check_input import CheckInputDataFrame
-from ._on_each_column import OnEachColumn
 from ._to_datetime import ToDatetime
 
 _TIME_LEVELS = [
@@ -250,14 +250,14 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         """
         steps = [CheckInputDataFrame()]
         if self.parse_string_columns:
-            self._to_datetime = OnEachColumn(ToDatetime())
+            self._to_datetime = s.all().use(ToDatetime())
             steps.append(self._to_datetime)
         column_encoder = DatetimeColumnEncoder(
             resolution=self.resolution,
             add_day_of_the_week=self.add_day_of_the_week,
             add_total_seconds=self.add_total_seconds,
         )
-        self._encoder = OnEachColumn(column_encoder)
+        self._encoder = s.all().use(column_encoder)
         steps.append(self._encoder)
         self.pipeline_ = make_pipeline(*steps)
         output = self.pipeline_.fit_transform(X)

@@ -41,22 +41,22 @@ def _make_table_vectorizer_pipeline(
     cols = s.all() - passthrough
     cleaning_steps = [
         CheckInputDataFrame(),
-        cols.on_each_column(PandasConvertDTypes(), n_jobs=n_jobs),
-        cols.on_each_column(CleanNullStrings(), n_jobs=n_jobs),
-        cols.on_each_column(ToDatetime(), n_jobs=n_jobs),
-        cols.on_each_column(ToNumeric(), n_jobs=n_jobs),
-        cols.on_each_column(ToCategorical(cardinality_threshold - 1), n_jobs=n_jobs),
+        cols.use(PandasConvertDTypes(), n_jobs=n_jobs),
+        cols.use(CleanNullStrings(), n_jobs=n_jobs),
+        cols.use(ToDatetime(), n_jobs=n_jobs),
+        cols.use(ToNumeric(), n_jobs=n_jobs),
+        cols.use(ToCategorical(cardinality_threshold - 1), n_jobs=n_jobs),
     ]
-    low_card = s.categorical() & s.cardinality_below(cardinality_threshold)
+    low_cardinality = s.categorical() & s.cardinality_below(cardinality_threshold)
     feature_extraction_steps = [
-        (cols & s.numeric()).on_each_column(numeric_transformer, n_jobs=n_jobs),
-        (cols & s.anydate()).on_each_column(datetime_transformer, n_jobs=n_jobs),
-        (cols & low_card).on_each_column(low_cardinality_transformer, n_jobs=n_jobs),
-        (cols & s.string()).on_each_column(high_cardinality_transformer, n_jobs=n_jobs),
+        (cols & s.numeric()).use(numeric_transformer, n_jobs=n_jobs),
+        (cols & s.anydate()).use(datetime_transformer, n_jobs=n_jobs),
+        (cols & low_cardinality).use(low_cardinality_transformer, n_jobs=n_jobs),
+        (cols & s.string()).use(high_cardinality_transformer, n_jobs=n_jobs),
     ]
     remainder = cols - s.created_by(*feature_extraction_steps)
     remainder_steps = [
-        remainder.on_each_column(remainder_transformer, n_jobs=n_jobs),
+        remainder.use(remainder_transformer, n_jobs=n_jobs),
     ]
     return make_pipeline(*cleaning_steps, *feature_extraction_steps, *remainder_steps)
 
@@ -212,13 +212,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     ...     "B": ["02/02/2024", "23/02/2024", "12/03/2024", "13/03/2024"],
     ...     "C": ["1.5", "N/A", "12.2", "N/A"],
     ... })
-    >>> vectorizer = TableVectorizer()
+    >>> from sklearn.preprocessing import StandardScaler
+    >>> vectorizer = TableVectorizer(numeric_transformer=StandardScaler())
     >>> vectorizer.fit_transform(df)
-       A_one  A_three  A_two  B_year  B_month  B_day  B_total_seconds     C
-    0    1.0      0.0    0.0  2024.0      2.0    2.0     1.706832e+09   1.5
-    1    0.0      0.0    1.0  2024.0      2.0   23.0     1.708646e+09   NaN
-    2    0.0      0.0    1.0  2024.0      3.0   12.0     1.710202e+09  12.2
-    3    0.0      1.0    0.0  2024.0      3.0   13.0     1.710288e+09   NaN
+       A_one  A_three  A_two  B_year  B_month  B_day  B_total_seconds    C
+    0    1.0      0.0    0.0  2024.0      2.0    2.0     1.706832e+09 -1.0
+    1    0.0      0.0    1.0  2024.0      2.0   23.0     1.708646e+09  NaN
+    2    0.0      0.0    1.0  2024.0      3.0   12.0     1.710202e+09  1.0
+    3    0.0      1.0    0.0  2024.0      3.0   13.0     1.710288e+09  NaN
 
     We can inspect which outputs were created from a given column in the input
     dataframe:

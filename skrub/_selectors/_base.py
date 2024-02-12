@@ -101,14 +101,15 @@ class Selector:
             return _make_selector_in_expr(other) ^ self
         return XOr(other, self)
 
-    def on_each_column(self, transformer, n_jobs=None):
+    def use(self, transformer, n_jobs=None, columnwise=True):
+        from .._on_column_selection import OnColumnSelection
         from .._on_each_column import OnEachColumn
 
-        return OnEachColumn(transformer, cols=self, n_jobs=n_jobs)
+        # when we have all the columnwise transformers we need (GapEncoder etc):
+        # columnwise = hasattr(transformer, "__single_column_transformer__")
 
-    def on_dataframe(self, transformer):
-        from .._on_column_selection import OnColumnSelection
-
+        if columnwise:
+            return OnEachColumn(transformer, cols=self, n_jobs=n_jobs)
         return OnColumnSelection(transformer, cols=self)
 
 

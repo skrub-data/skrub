@@ -2,7 +2,7 @@ from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
 from . import _datetime_utils
-from ._on_each_column import OnEachColumn
+from . import _selectors as s
 
 _SAMPLE_SIZE = 1000
 
@@ -91,7 +91,7 @@ def to_datetime(df, format=None):
 @to_datetime.specialize("pandas", "DataFrame")
 @to_datetime.specialize("polars", "DataFrame")
 def _to_datetime_dataframe(df, format=None):
-    return OnEachColumn(ToDatetime(datetime_format=format)).fit_transform(df)
+    return s.all().use(ToDatetime(datetime_format=format)).fit_transform(df)
 
 
 @to_datetime.specialize("pandas", "Column")
