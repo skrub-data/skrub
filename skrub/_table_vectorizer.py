@@ -41,22 +41,28 @@ def _make_table_vectorizer_pipeline(
     cols = s.all() - passthrough
     cleaning_steps = [
         CheckInputDataFrame(),
-        cols.use(PandasConvertDTypes(), n_jobs=n_jobs),
-        cols.use(CleanNullStrings(), n_jobs=n_jobs),
-        cols.use(ToDatetime(), n_jobs=n_jobs),
-        cols.use(ToNumeric(), n_jobs=n_jobs),
-        cols.use(ToCategorical(cardinality_threshold - 1), n_jobs=n_jobs),
+        cols.use(PandasConvertDTypes(), n_jobs=n_jobs, columnwise=True),
+        cols.use(CleanNullStrings(), n_jobs=n_jobs, columnwise=True),
+        cols.use(ToDatetime(), n_jobs=n_jobs, columnwise=True),
+        cols.use(ToNumeric(), n_jobs=n_jobs, columnwise=True),
+        cols.use(
+            ToCategorical(cardinality_threshold - 1), n_jobs=n_jobs, columnwise=True
+        ),
     ]
     low_cardinality = s.categorical() & s.cardinality_below(cardinality_threshold)
     feature_extraction_steps = [
-        (cols & s.numeric()).use(numeric_transformer, n_jobs=n_jobs),
-        (cols & s.anydate()).use(datetime_transformer, n_jobs=n_jobs),
-        (cols & low_cardinality).use(low_cardinality_transformer, n_jobs=n_jobs),
-        (cols & s.string()).use(high_cardinality_transformer, n_jobs=n_jobs),
+        (cols & s.numeric()).use(numeric_transformer, n_jobs=n_jobs, columnwise=True),
+        (cols & s.anydate()).use(datetime_transformer, n_jobs=n_jobs, columnwise=True),
+        (cols & low_cardinality).use(
+            low_cardinality_transformer, n_jobs=n_jobs, columnwise=True
+        ),
+        (cols & s.string()).use(
+            high_cardinality_transformer, n_jobs=n_jobs, columnwise=True
+        ),
     ]
     remainder = cols - s.created_by(*feature_extraction_steps)
     remainder_steps = [
-        remainder.use(remainder_transformer, n_jobs=n_jobs),
+        remainder.use(remainder_transformer, n_jobs=n_jobs, columnwise=True),
     ]
     return make_pipeline(*cleaning_steps, *feature_extraction_steps, *remainder_steps)
 
