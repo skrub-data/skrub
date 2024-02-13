@@ -161,8 +161,13 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             raise ValueError(
                 "`aux_tables` must be an iterable of dataframes or 'X'."
                 "If you are using a single auxiliary table, convert your current"
-                "`aux_tables` into [`aux_tables`]"
+                "`aux_tables` into [`aux_tables`]."
             )
+        # Check `X` input type
+        if not hasattr(X, "__dataframe__"):
+            raise TypeError(f"`X` must be a dataframe, got {type(X)}.")
+
+        # Check `aux_tables` input types
         for i, aux_table in enumerate(aux_tables):
             if type(aux_table) == str and aux_table == "X":
                 aux_tables[i] = X
@@ -171,12 +176,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                     "`aux_tables` must be an iterable of dataframes or 'X'."
                 )
 
-        # Polars lazyframes will raise an error here.
-        if not hasattr(X, "__dataframe__"):
-            raise TypeError(f"`X` must be a dataframe, got {type(X)}.")
-        if not all(hasattr(aux_table, "__dataframe__") for aux_table in aux_tables):
-            raise TypeError("`aux_tables` must all be dataframes.")
-
+        # Check that all input types are matching
         if is_pandas(X):
             if not all(is_pandas(aux_table) for aux_table in aux_tables):
                 raise TypeError(

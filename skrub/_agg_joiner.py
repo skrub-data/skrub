@@ -172,14 +172,14 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         aux_table : DataframeLike or "X"
             The auxiliary table.
         """
+        # Polars lazyframes will raise an error here.
+        if not hasattr(X, "__dataframe__"):
+            raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
         if isinstance(aux_table, str):
             if aux_table == "X":
                 return X, X
             else:
                 raise ValueError("'aux_table' must be a dataframe or 'X'.")
-        # Polars lazyframes will raise an error here.
-        if not hasattr(X, "__dataframe__"):
-            raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
         if not hasattr(aux_table, "__dataframe__"):
             raise TypeError(
                 f"'aux_table' must be a dataframe or 'X', got {type(aux_table)}."
