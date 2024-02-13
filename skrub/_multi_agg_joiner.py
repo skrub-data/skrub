@@ -11,7 +11,7 @@ from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._utils import _is_array_like, atleast_2d_or_none
 
 
-class MultiAggJoiner(BaseEstimator, TransformerMixin):
+class MultiAggJoiner(TransformerMixin, BaseEstimator):
     """Extension of the AggJoiner to multiple auxiliary tables.
 
     Apply numerical and categorical aggregation operations on the `cols`
