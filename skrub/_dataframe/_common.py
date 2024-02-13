@@ -11,32 +11,42 @@ except ImportError:
 from .._dispatch import dispatch
 
 __all__ = [
+    #
+    # Inspecting containers' type and module
+    #
     "skrub_namespace",
     "dataframe_module_name",
     "is_pandas",
-    "to_pandas",
     "is_polars",
-    "shape",
     "is_dataframe",
     "is_lazyframe",
     "is_column",
-    "col",
+    #
+    # Conversions to and from other container types
+    #
     "to_array",
-    "pandas_convert_dtypes",
-    "column_names",
-    "name",
-    "rename",
-    "column_like",
+    "to_pandas",
+    "make_dataframe_like",
+    "make_column_like",
     "all_null_like",
-    "dataframe_from_columns",
-    "dataframe_from_dict",
-    "dataframe_like",
     "concat_horizontal",
     "to_column_list",
-    "is_in",
-    "is_null",
-    "drop_nulls",
-    "n_unique",
+    "col",
+    "collect",
+    #
+    # Querying and modifying metadata
+    #
+    "shape",
+    "name",
+    "column_names",
+    "rename",
+    "set_column_names",
+    #
+    # Inspecting dtypes and casting
+    #
+    "dtype",
+    "cast",
+    "pandas_convert_dtypes",
     "is_bool",
     "is_numeric",
     "to_numeric",
@@ -44,19 +54,27 @@ __all__ = [
     "is_string",
     "is_object",
     "is_anydate",
-    "set_column_names",
-    "collect",
+    "to_datetime",
     "is_categorical",
     "to_categorical",
-    "to_datetime",
+    #
+    # Inspecting, selecting and modifying values
+    #
+    "is_in",
+    "is_null",
+    "drop_nulls",
+    "n_unique",
     "unique",
-    "dtype",
-    "cast",
     "where",
     "sample",
     "replace",
     "replace_regex",
 ]
+
+#
+# Inspecting containers' type and module
+# ======================================
+#
 
 
 # TODO: skrub_namespace is temporary; all code in those modules should be moved
@@ -99,21 +117,6 @@ def is_pandas(obj):
     return dataframe_module_name(obj) == "pandas"
 
 
-@dispatch
-def to_pandas(obj):
-    raise NotImplementedError()
-
-
-@to_pandas.specialize("pandas")
-def _to_pandas_pandas(obj):
-    return obj
-
-
-@to_pandas.specialize("polars")
-def _to_pandas_polars(obj):
-    return obj.to_pandas()
-
-
 def is_polars(obj):
     return dataframe_module_name(obj) == "polars"
 
@@ -134,6 +137,16 @@ def _is_dataframe_polars(obj):
 
 
 @dispatch
+def is_lazyframe(df):
+    return False
+
+
+@is_lazyframe.specialize("polars", "LazyFrame")
+def _is_lazyframe_polars_lazyframe(df):
+    return True
+
+
+@dispatch
 def is_column(obj):
     return False
 
@@ -146,6 +159,12 @@ def _is_column_pandas(obj):
 @is_column.specialize("polars", "Column")
 def _is_column_polars(obj):
     return True
+
+
+#
+# Conversions to and from other container types
+# =============================================
+#
 
 
 @dispatch
@@ -164,87 +183,47 @@ def _to_array_polars(obj):
 
 
 @dispatch
-def pandas_convert_dtypes(obj):
+def to_pandas(obj):
+    raise NotImplementedError()
+
+
+@to_pandas.specialize("pandas")
+def _to_pandas_pandas(obj):
     return obj
 
 
-@pandas_convert_dtypes.specialize("pandas")
-def _pandas_convert_dtypes_pandas(obj):
-    return obj.convert_dtypes()
+@to_pandas.specialize("polars")
+def _to_pandas_polars(obj):
+    return obj.to_pandas()
 
 
 @dispatch
-def col(df, col_name):
+def make_dataframe_like(df, data):
     raise NotImplementedError()
 
 
-@col.specialize("pandas")
-def _col_pandas(df, col_name):
-    return df[col_name]
+@make_dataframe_like.specialize("pandas")
+def _make_dataframe_like_pandas(df, data):
+    return pd.DataFrame(data)
 
 
-@col.specialize("polars")
-def _col_polars(df, col_name):
-    return df[col_name]
-
-
-@dispatch
-def column_names(df):
-    raise NotImplementedError()
-
-
-@column_names.specialize("pandas")
-def _column_names_pandas(df):
-    return list(df.columns.values)
-
-
-@column_names.specialize("polars")
-def _column_names_polars(df):
-    return df.columns
+@make_dataframe_like.specialize("polars")
+def _make_dataframe_like_polars(df, data):
+    return pl.DataFrame(data)
 
 
 @dispatch
-def name(col):
-    raise NotImplementedError()
-
-
-@name.specialize("pandas")
-def _name_pandas(col):
-    return col.name
-
-
-@name.specialize("polars")
-def _name_polars(col):
-    return col.name
-
-
-@dispatch
-def rename(col, new_name):
-    raise NotImplementedError()
-
-
-@rename.specialize("pandas")
-def _rename_pandas(col, new_name):
-    return col.rename(new_name)
-
-
-@rename.specialize("polars")
-def _rename_polars(col, new_name):
-    return col.rename(new_name)
-
-
-@dispatch
-def column_like(column, values, name):
+def make_column_like(column, values, name):
     return NotImplementedError()
 
 
-@column_like.specialize("pandas")
-def _column_like_pandas(column, values, name):
+@make_column_like.specialize("pandas")
+def _make_column_like_pandas(column, values, name):
     return pd.Series(values, name=name)
 
 
-@column_like.specialize("polars")
-def _column_like_polars(column, values, name):
+@make_column_like.specialize("polars")
+def _make_column_like_polars(column, values, name):
     return pl.Series(values, name=name)
 
 
@@ -269,55 +248,6 @@ def _all_null_like_polars(column, length=None, dtype=None):
     if dtype is None:
         dtype = column.dtype
     return pl.Series([None] * length, dtype=dtype)
-
-
-@dispatch
-def dataframe_from_columns(*columns):
-    return NotImplementedError()
-
-
-@dataframe_from_columns.specialize("pandas")
-def _dataframe_from_columns_pandas(*columns):
-    return pd.DataFrame({name(c): c for c in columns})
-
-
-@dataframe_from_columns.specialize("polars")
-def _dataframe_from_columns_polars(*columns):
-    return pl.DataFrame({name(c): c for c in columns})
-
-
-@dispatch
-def dataframe_like(df, *columns):
-    return NotImplementedError()
-
-
-@dataframe_like.specialize("pandas")
-def _dataframe_like_pandas(df, *columns):
-    del df
-    return pd.DataFrame({name(c): c for c in columns})
-
-
-@dataframe_like.specialize("polars")
-def _dataframe_like_polars(df, *columns):
-    del df
-    return pl.DataFrame({name(c): c for c in columns})
-
-
-@dispatch
-def dataframe_from_dict(df, data_dict):
-    return NotImplementedError()
-
-
-@dataframe_from_dict.specialize("pandas")
-def _dataframe_from_dict_pandas(df, data_dict):
-    del df
-    return pd.DataFrame(data_dict)
-
-
-@dataframe_from_dict.specialize("polars")
-def _dataframe_from_dict_polars(df, data_dict):
-    del df
-    return pl.DataFrame(data_dict)
 
 
 @dispatch
@@ -347,63 +277,34 @@ def to_column_list(obj):
 
 
 @dispatch
-def is_in(column, values):
+def col(df, col_name):
     raise NotImplementedError()
 
 
-@is_in.specialize("pandas")
-def _is_in_pandas(column, values):
-    return column.isin(values)
+@col.specialize("pandas")
+def _col_pandas(df, col_name):
+    return df[col_name]
 
 
-@is_in.specialize("polars")
-def _is_in_polars(column, values):
-    return column.is_in(values)
+@col.specialize("polars")
+def _col_polars(df, col_name):
+    return df[col_name]
 
 
 @dispatch
-def is_null(column):
-    raise NotImplementedError()
+def collect(df):
+    return df
 
 
-@is_null.specialize("pandas")
-def _is_null_pandas(column):
-    return column.isna()
+@collect.specialize("polars", "LazyFrame")
+def _collect_polars_lazyframe(df):
+    return df.collect()
 
 
-@is_null.specialize("polars")
-def _is_null_polars(column):
-    return column.is_null()
-
-
-@dispatch
-def drop_nulls(column):
-    raise NotImplementedError()
-
-
-@drop_nulls.specialize("pandas")
-def _drop_nulls_pandas(column):
-    return column.dropna()
-
-
-@drop_nulls.specialize("polars")
-def _drop_nulls_polars(column):
-    return column.drop_nulls()
-
-
-@dispatch
-def n_unique(column):
-    raise NotImplementedError()
-
-
-@n_unique.specialize("pandas")
-def _n_unique_pandas(column):
-    return column.nunique()
-
-
-@n_unique.specialize("polars")
-def _n_unique_polars(column):
-    return column.n_unique()
+#
+# Querying and modifying metadata
+# ===============================
+#
 
 
 @dispatch
@@ -419,6 +320,112 @@ def _shape_pandas(obj):
 @shape.specialize("polars")
 def _shape_polars(obj):
     return obj.shape
+
+
+@dispatch
+def name(col):
+    raise NotImplementedError()
+
+
+@name.specialize("pandas")
+def _name_pandas(col):
+    return col.name
+
+
+@name.specialize("polars")
+def _name_polars(col):
+    return col.name
+
+
+@dispatch
+def column_names(df):
+    raise NotImplementedError()
+
+
+@column_names.specialize("pandas")
+def _column_names_pandas(df):
+    return list(df.columns.values)
+
+
+@column_names.specialize("polars")
+def _column_names_polars(df):
+    return df.columns
+
+
+@dispatch
+def rename(col, new_name):
+    raise NotImplementedError()
+
+
+@rename.specialize("pandas")
+def _rename_pandas(col, new_name):
+    return col.rename(new_name)
+
+
+@rename.specialize("polars")
+def _rename_polars(col, new_name):
+    return col.rename(new_name)
+
+
+@dispatch
+def set_column_names(df, new_column_names):
+    raise NotImplementedError()
+
+
+@set_column_names.specialize("pandas")
+def _set_column_names_pandas(df, new_column_names):
+    return df.set_axis(new_column_names, axis=1)
+
+
+@set_column_names.specialize("polars")
+def _set_column_names_polars(df, new_column_names):
+    return df.rename(dict(zip(df.columns, new_column_names)))
+
+
+#
+# Inspecting dtypes and casting
+# =============================
+#
+
+
+@dispatch
+def dtype(column):
+    return column.dtype
+
+
+@dtype.specialize("pandas")
+def _dtype_pandas(column):
+    return column.dtype
+
+
+@dtype.specialize("polars")
+def _dtype_polars(column):
+    return column.dtype
+
+
+@dispatch
+def cast(column, dtype):
+    raise NotImplementedError()
+
+
+@cast.specialize("pandas")
+def _cast_pandas(column, dtype):
+    return column.astype(dtype)
+
+
+@cast.specialize("polars")
+def _cast_polars(column, dtype):
+    return column.cast(dtype)
+
+
+@dispatch
+def pandas_convert_dtypes(obj):
+    return obj
+
+
+@pandas_convert_dtypes.specialize("pandas")
+def _pandas_convert_dtypes_pandas(obj):
+    return obj.convert_dtypes()
 
 
 @dispatch
@@ -545,38 +552,26 @@ def _is_anydate_polars(column):
 
 
 @dispatch
-def is_lazyframe(df):
-    return False
-
-
-@is_lazyframe.specialize("polars", "LazyFrame")
-def _is_lazyframe_polars_lazyframe(df):
-    return True
-
-
-@dispatch
-def collect(df):
-    return df
-
-
-@collect.specialize("polars", "LazyFrame")
-def _collect_polars_lazyframe(df):
-    return df.collect()
-
-
-@dispatch
-def set_column_names(df, new_column_names):
+def to_datetime(column, format, strict=True):
     raise NotImplementedError()
 
 
-@set_column_names.specialize("pandas")
-def _set_column_names_pandas(df, new_column_names):
-    return df.set_axis(new_column_names, axis=1)
+@to_datetime.specialize("pandas")
+def _to_datetime_pandas(column, format, strict=True):
+    if _is_anydate_pandas(column):
+        return column
+    errors = "raise" if strict else "coerce"
+    out = pd.to_datetime(column, format=format, errors=errors)
+    if out.dt.tz is not None:
+        out = out.dt.tz_convert("UTC")
+    return out
 
 
-@set_column_names.specialize("polars")
-def _set_column_names_polars(df, new_column_names):
-    return df.rename(dict(zip(df.columns, new_column_names)))
+@to_datetime.specialize("polars")
+def _to_datetime_polars(column, format, strict=True):
+    if _is_anydate_polars(column):
+        return column
+    return column.str.to_datetime(format=format, strict=strict)
 
 
 @dispatch
@@ -609,27 +604,70 @@ def _to_categorical_polars(column):
     return column.cast(pl.Categorical())
 
 
+#
+# Inspecting, selecting and modifying values
+# ==========================================
+#
+
+
 @dispatch
-def to_datetime(column, format, strict=True):
+def is_in(column, values):
     raise NotImplementedError()
 
 
-@to_datetime.specialize("pandas")
-def _to_datetime_pandas(column, format, strict=True):
-    if _is_anydate_pandas(column):
-        return column
-    errors = "raise" if strict else "coerce"
-    out = pd.to_datetime(column, format=format, errors=errors)
-    if out.dt.tz is not None:
-        out = out.dt.tz_convert("UTC")
-    return out
+@is_in.specialize("pandas")
+def _is_in_pandas(column, values):
+    return column.isin(values)
 
 
-@to_datetime.specialize("polars")
-def _to_datetime_polars(column, format, strict=True):
-    if _is_anydate_polars(column):
-        return column
-    return column.str.to_datetime(format=format, strict=strict)
+@is_in.specialize("polars")
+def _is_in_polars(column, values):
+    return column.is_in(values)
+
+
+@dispatch
+def is_null(column):
+    raise NotImplementedError()
+
+
+@is_null.specialize("pandas")
+def _is_null_pandas(column):
+    return column.isna()
+
+
+@is_null.specialize("polars")
+def _is_null_polars(column):
+    return column.is_null()
+
+
+@dispatch
+def drop_nulls(column):
+    raise NotImplementedError()
+
+
+@drop_nulls.specialize("pandas")
+def _drop_nulls_pandas(column):
+    return column.dropna()
+
+
+@drop_nulls.specialize("polars")
+def _drop_nulls_polars(column):
+    return column.drop_nulls()
+
+
+@dispatch
+def n_unique(column):
+    raise NotImplementedError()
+
+
+@n_unique.specialize("pandas")
+def _n_unique_pandas(column):
+    return column.nunique()
+
+
+@n_unique.specialize("polars")
+def _n_unique_polars(column):
+    return column.n_unique()
 
 
 @dispatch
@@ -645,36 +683,6 @@ def _unique_pandas(column):
 @unique.specialize("polars")
 def _unique_polars(column):
     return column.unique().drop_nulls()
-
-
-@dispatch
-def dtype(column):
-    return column.dtype
-
-
-@dtype.specialize("pandas")
-def _dtype_pandas(column):
-    return column.dtype
-
-
-@dtype.specialize("polars")
-def _dtype_polars(column):
-    return column.dtype
-
-
-@dispatch
-def cast(column, dtype):
-    raise NotImplementedError()
-
-
-@cast.specialize("pandas")
-def _cast_pandas(column, dtype):
-    return column.astype(dtype)
-
-
-@cast.specialize("polars")
-def _cast_polars(column, dtype):
-    return column.cast(dtype)
 
 
 @dispatch
