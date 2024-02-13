@@ -13,6 +13,8 @@ from itertools import product
 
 from skrub._utils import atleast_1d_or_none
 
+DATAFRAME_MODULE_NAME = "polars"
+
 
 def make_dataframe(X, index=None, dtypes=None):
     """Convert an dictionary of columns into a Polars dataframe.

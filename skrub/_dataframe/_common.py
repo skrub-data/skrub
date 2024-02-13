@@ -79,8 +79,15 @@ __all__ = [
 
 # TODO: skrub_namespace is temporary; all code in those modules should be moved
 # here or in the corresponding skrub modules and use the dispatch mechanism.
+
+
 @dispatch
 def skrub_namespace(obj):
+    """Return the skrub private module for a dataframe library.
+
+    Returns either ``skrub._dataframe._pandas`` or ``skrub._dataframe._polars``.
+    This is temporary until functions in those modules have moved elsewhere.
+    """
     raise NotImplementedError()
 
 
@@ -100,6 +107,7 @@ def _skrub_namespace_polars(obj):
 
 @dispatch
 def dataframe_module_name(obj):
+    """Return the dataframe module this object belongs to: 'pandas' or 'polars'."""
     return None
 
 
@@ -114,15 +122,18 @@ def _dataframe_module_name_polars(obj):
 
 
 def is_pandas(obj):
+    """Return True if ``obj`` is a pandas DataFrame or Series."""
     return dataframe_module_name(obj) == "pandas"
 
 
 def is_polars(obj):
+    """Return True if ``obj`` is a polars DataFrame, LazyFrame or Series."""
     return dataframe_module_name(obj) == "polars"
 
 
 @dispatch
 def is_dataframe(obj):
+    """Return True if ``obj`` is a DataFrame or a LazyFrame"""
     return False
 
 
@@ -138,6 +149,7 @@ def _is_dataframe_polars(obj):
 
 @dispatch
 def is_lazyframe(df):
+    """Return True if ``df`` is a polars LazyFrame"""
     return False
 
 
@@ -148,6 +160,7 @@ def _is_lazyframe_polars_lazyframe(df):
 
 @dispatch
 def is_column(obj):
+    """Return True if ``obj`` is a dataframe column"""
     return False
 
 
