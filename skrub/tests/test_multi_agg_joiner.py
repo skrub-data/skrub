@@ -234,13 +234,23 @@ def test_keys(main, px):
     )
     multi_agg_joiner.fit_transform(main)
 
-    # Check wrong keys lenght
+    # Check wrong aux_keys lenght
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main, main],
         main_keys=[["userId"], ["userId"]],
         aux_keys=[["userId"]],
     )
-    error_msg = r"(?=`main_keys` and `aux_keys` have different lengths)"
+    error_msg = r"(?=The length of `aux_keys` must match the number of `aux_tables`)"
+    with pytest.raises(ValueError, match=error_msg):
+        multi_agg_joiner.fit_transform(main)
+
+    # Check wrong main_keys lenght
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main, main],
+        main_keys=[["userId"]],
+        aux_keys=[["userId"], ["userId"]],
+    )
+    error_msg = r"(?=The length of `main_keys` must match the number of `aux_tables`)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main)
 

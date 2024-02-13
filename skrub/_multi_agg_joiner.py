@@ -192,7 +192,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         return X, aux_tables
 
-    def _check_keys(self, main_keys, aux_keys, keys):
+    def _check_keys(self, main_keys, aux_keys, keys, aux_tables):
         """Check input keys.
 
         Parameters
@@ -209,6 +209,9 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             Can be provided in place of `main_keys` and `aux_keys` when they are the
             same. We must provide non-``None`` values for either `keys` or both
             `main_keys` and `aux_keys`.
+        aux_tables : iterable of DataFrameLike
+            Auxiliary tables used to check that the length of keys match the number
+            of tables to aggregate.
 
         Returns
         -------
@@ -231,11 +234,17 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         main_keys = atleast_2d_or_none(main_keys)
         aux_keys = atleast_2d_or_none(aux_keys)
         # Check 2d shape
-        if len(main_keys) != len(aux_keys):
+        if len(aux_tables) != len(main_keys):
             raise ValueError(
-                "`main_keys` and `aux_keys` have different lengths"
-                f" ({len(main_keys)} and {len(aux_keys)}). Cannot join on different"
-                " numbers of tables."
+                "The length of `main_keys` must match the number of `aux_tables`."
+                f" Provided `main_keys` of len {len(main_keys)} and"
+                f" `aux_tables` of len {len(aux_tables)}."
+            )
+        if len(aux_tables) != len(aux_keys):
+            raise ValueError(
+                "The length of `aux_keys` must match the number of `aux_tables`."
+                f" Provided `aux_keys` of len {len(aux_keys)} and"
+                f" `aux_tables` of len {len(aux_tables)}."
             )
         # Check each element
         for main_key, aux_key in zip(main_keys, aux_keys):
@@ -366,7 +375,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         """
         X, self._aux_tables = self._check_dataframes(X, self.aux_tables)
         self._main_keys, self._aux_keys = self._check_keys(
-            self.main_keys, self.aux_keys, self.keys
+            self.main_keys, self.aux_keys, self.keys, self._aux_tables
         )
         self._cols = self._check_cols()
         self._operations = self._check_operations()
