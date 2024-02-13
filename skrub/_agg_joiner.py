@@ -87,7 +87,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         the aggregation operations.
         If set to `None`, `cols` are all columns from `aux_table`, except `aux_key`.
 
-    operation : str or iterable of str, default=None
+    operations : str or iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
 
         - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
@@ -132,7 +132,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
     ...     main_key="airportId",
     ...     aux_key="from_airport",
     ...     cols=["total_passengers", "company"],
-    ...     operation=["mean", "mode"],
+    ...     operations=["mean", "mode"],
     ... )
     >>> agg_joiner.fit_transform(main)
        airportId  airportName  company_mode  total_passengers_mean
@@ -148,7 +148,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         main_key=None,
         aux_key=None,
         cols=None,
-        operation=None,
+        operations=None,
         suffix="",
     ):
         self.aux_table = aux_table
@@ -156,7 +156,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         self.main_key = main_key
         self.aux_key = aux_key
         self.cols = cols
-        self.operation = operation
+        self.operations = operations
         self.suffix = suffix
 
     def _check_dataframes(self, X, aux_table):
@@ -195,18 +195,18 @@ class AggJoiner(BaseEstimator, TransformerMixin):
 
         return X, aux_table
 
-    def _check_operation(self):
-        """Check operation input.
+    def _check_operations(self):
+        """Check operations input.
 
         Returns
         -------
-        operation
+        operations
             1-dimensional array of operations to perform on columns.
         """
-        operation = atleast_1d_or_none(self.operation)
-        if len(operation) == 0:
-            operation = ["mean", "mode"]
-        return operation
+        operations = atleast_1d_or_none(self.operations)
+        if len(operations) == 0:
+            operations = ["mean", "mode"]
+        return operations
 
     def _check_suffix(self):
         if not isinstance(self.suffix, str):
@@ -283,9 +283,9 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
         _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
 
-        self._operation = self._check_operation()
+        self._operations = self._check_operations()
         self.num_operations, self.categ_operations = split_num_categ_operations(
-            self._operation
+            self._operations
         )
         self._check_suffix()
 

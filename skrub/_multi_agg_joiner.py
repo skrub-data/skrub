@@ -367,7 +367,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         self._suffixes = self._check_suffixes()
 
         self.agg_joiners_ = []
-        for aux_table, main_key, aux_key, cols, operation, suffix in zip(
+        for aux_table, main_key, aux_key, cols, operations, suffix in zip(
             self._aux_tables,
             self._main_keys,
             self._aux_keys,
@@ -380,7 +380,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 main_key=main_key,
                 aux_key=aux_key,
                 cols=cols,
-                operation=operation,
+                operations=operations,
                 suffix=suffix,
             )
             self.agg_joiners_.append(agg_joiner)

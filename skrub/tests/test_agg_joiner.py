@@ -91,7 +91,7 @@ def test_polars_unavailable_operation(main):
         main_key="userId",
         aux_key="movieId",
         cols="rating",
-        operation=["value_counts"],
+        operations=["value_counts"],
     )
     with pytest.raises(ValueError, match=r"(?=.*value_counts)(?=.*supported)"):
         agg_joiner.fit(pl.DataFrame(main))
@@ -259,7 +259,7 @@ def test_input_multiple_tables(main, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_agg_joiner_default_operations(main, px):
+def test_default_operations(main, px):
     main = px.DataFrame(main)
 
     # Check default operations
@@ -269,24 +269,24 @@ def test_agg_joiner_default_operations(main, px):
         cols=["rating", "genre"],
     )
     agg_joiner.fit(main)
-    assert agg_joiner._operation == ["mean", "mode"]
+    assert agg_joiner._operations == ["mean", "mode"]
 
     # Check invariant operations input
     agg_joiner = AggJoiner(
         aux_table=main,
         key="userId",
         cols=["rating", "genre"],
-        operation=["min", "max", "mode"],
+        operations=["min", "max", "mode"],
     )
     agg_joiner.fit(main)
-    assert agg_joiner._operation == ["min", "max", "mode"]
+    assert agg_joiner._operations == ["min", "max", "mode"]
 
     # Check not supported operations
     agg_joiner = AggJoiner(
         aux_table=main,
         key="userId",
         cols=["rating", "genre"],
-        operation=["most_frequent", "mode"],
+        operations=["most_frequent", "mode"],
     )
     match = r"(?=.*operations options are)"
     with pytest.raises(ValueError, match=match):
