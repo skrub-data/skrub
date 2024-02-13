@@ -309,7 +309,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         """
         self._check_inputs(X)
         skrub_px, _ = get_df_namespace(self._aux_table)
-        aux_table = skrub_px.aggregate(
+        self.aux_table_ = skrub_px.aggregate(
             self._aux_table,
             self._aux_key,
             self._cols,
@@ -317,7 +317,6 @@ class AggJoiner(BaseEstimator, TransformerMixin):
             self.categ_operations,
             suffix=self.suffix,
         )
-        self.aux_table_ = self._screen(aux_table, y)
         self._check_column_name_duplicates_after_aggregation(
             X, self.aux_table_, self._main_key, self._aux_key, main_table_name="X"
         )
@@ -327,7 +326,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         """Left-join pre-aggregated table on `X`.
 
         Parameters
-        ----------
+        ----------s
         X : DataFrameLike
             The input data to transform.
 
@@ -349,13 +348,6 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         )
 
         return X
-
-    def _screen(self, aux_table, y):
-        """Only keep aggregated features which correlation with
-        y is above some threshold.
-        """
-        # TODO: Add logic
-        return aux_table
 
 
 class AggTarget(BaseEstimator, TransformerMixin):
