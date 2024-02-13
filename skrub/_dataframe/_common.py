@@ -24,7 +24,7 @@ __all__ = [
     #
     # Conversions to and from other container types
     #
-    "to_array",
+    "to_numpy",
     "to_pandas",
     "make_dataframe_like",
     "make_column_like",
@@ -181,17 +181,17 @@ def _is_column_polars(obj):
 
 
 @dispatch
-def to_array(obj):
+def to_numpy(obj):
     raise NotImplementedError()
 
 
-@to_array.specialize("pandas")
-def _to_array_pandas(obj):
+@to_numpy.specialize("pandas", "Column")
+def _to_numpy_pandas(obj):
     return obj.to_numpy()
 
 
-@to_array.specialize("polars")
-def _to_array_polars(obj):
+@to_numpy.specialize("polars", "Column")
+def _to_numpy_polars(obj):
     return obj.to_numpy()
 
 

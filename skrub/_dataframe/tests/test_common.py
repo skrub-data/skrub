@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
 
 from skrub._dataframe import _common as ns
 
@@ -63,6 +64,19 @@ def test_is_column_other(obj):
 # Conversions to and from other container types
 # =============================================
 #
+
+
+def test_to_numpy(example_df):
+    with pytest.raises(NotImplementedError):
+        ns.to_numpy(example_df)
+    array = ns.to_numpy(ns.col(example_df, "int-col"))
+    assert array.dtype == float
+    assert_array_equal(array, [4.0, 0.0, -1.0, np.nan])
+
+    array = ns.to_numpy(ns.col(example_df, "str-col"))
+    assert array.dtype == object
+    assert_array_equal(array, ["one", None, "three", "four"])
+
 
 #
 # Querying and modifying metadata

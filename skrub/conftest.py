@@ -68,11 +68,16 @@ def example_df(empty_df):
         "bool-col": [False, True, None, True],
         "datetime-col": [
             datetime.datetime.fromisoformat(dt)
-            for dt in ["2020-02-03T12:30:052021-15-03T11:37:152022-02-13T17:03:25"]
+            for dt in [
+                "2020-02-03T12:30:05",
+                "2021-03-15T00:37:15",
+                "2022-02-13T17:03:25",
+            ]
         ]
         + [None],
         "datetime": [
-            datetime.date.fromisoformat(dt) for dt in ["2002-02-032001-15-032005-02-13"]
+            datetime.date.fromisoformat(dt)
+            for dt in ["2002-02-03", "2001-05-17", "2005-02-13"]
         ]
         + [None],
     }
