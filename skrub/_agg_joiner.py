@@ -50,7 +50,7 @@ def split_num_categ_operations(operations: list[str]) -> tuple[list[str], list[s
     return num_operations, categ_operations
 
 
-class AggJoiner(BaseEstimator, TransformerMixin):
+class AggJoiner(TransformerMixin, BaseEstimator):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
     Apply numerical and categorical aggregation operations on the `cols`
@@ -350,7 +350,7 @@ class AggJoiner(BaseEstimator, TransformerMixin):
         return X
 
 
-class AggTarget(BaseEstimator, TransformerMixin):
+class AggTarget(TransformerMixin, BaseEstimator):
     """Aggregate a target ``y`` before joining its aggregation on a base dataframe.
 
     Accepts :obj:`pandas.DataFrame` or :class:`polars.DataFrame` inputs.
