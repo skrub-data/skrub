@@ -18,13 +18,27 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     to aggregate, selected by dtypes. See the list of supported operations
     at the parameter `operations`.
 
-    If `cols` is not provided, `cols` are all columns from `aux_tables`,
-    except `aux_keys`.
+    If `cols` is not provided, `cols` is set to a list of lists.
+    For each table in `aux_tables`, the correponding list will be all columns
+    of that table, except the `aux_keys` associated with that table.
 
-    As opposed to AggJoiner, all parameters here must be iterable of str,
-    or iterable of iterable of str. If a single table is fed to the MultiAggJoiner,
-    a similar behavior to the AggJoiner can be obtained by transforming all parameters
-    to a list of parameters, i.e. ``key = "my_key"`` becomes ``key = ["my_key"]``.
+    As opposed to the :class:`AggJoiner`, here `aux_tables` is a list of tables,
+    each of which will be joined on the main table. Therefore `aux_keys` is now
+    a list of keys, of the same length as `aux_tables`, and each entry in `aux_keys`
+    is used to join the corresponding aux table. In the same way, each entry in `cols`
+    is a list of columns to aggregate in the corresponding aux table.
+
+    Therefore if we have a single table, we could either
+
+    - use the AggJoiner: ``AggJoiner(aux_table, key="ID")``
+    - or the MultiAggJoiner: ``MultiAggJoiner([aux_table], keys=["ID"])``
+
+    Note that for `keys`, `main_keys`, `aux_keys`, `cols` and `operations`,
+    an input of the form ``[["a"], ["b"], ["c", "d"]]`` is valid
+    while ``["a", "b", ["c", "d"]]`` is not.
+
+    Using a column from the first aux table to join the second aux table is not
+    (yet) supported.
 
     Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
 
@@ -45,24 +59,40 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         If there are multiple auxiliary tables, `keys` will be used to join all
         of them.
 
+        If not `None`, there must be an iterable of `keys` for each table
+        in `aux_tables`.
+
     main_keys : iterable of str, or iterable of iterable of str, default=None
         Select the columns from the main table to use as keys during
         the join operation.
         If `main_keys` contains multiple columns, we will perform a multi-column join.
 
+        If not `None`, there must be an iterable of `main_keys` for each table
+        in `aux_tables`.
+
     aux_keys : iterable of str, or iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as keys during
-        the join operation. Note that ``[["a"], ["b"], ["c", "d"]]`` is a valid input
-        while ``["a", "b", ["c", "d"]]`` is not.
+        the join operation.
+
+        If not `None`, there must be an iterable of `aux_keys` for each table
+        in `aux_tables`.
 
     cols : iterable of str, or iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as values during
         the aggregation operations.
 
-        If set to `None`, `cols` are all columns from table, except `aux_keys`.
+        If not `None`, there must be an iterable of `cols` for each table
+        in `aux_tables`.
+
+        If set to `None`, `cols` is set to a list of lists. For each table
+        in `aux_tables`, the correponding list will be all columns of that table,
+        except the `aux_keys` associated with that table.
 
     operations : iterable of str, or iterable of iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
+
+        If not `None`, there must be an iterable of `operations` for each
+        table in `aux_tables`.
 
         - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
         "hist" and "value_counts" accept an integer argument to parametrize
@@ -117,6 +147,37 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     ...    suffixes=["", "", "_glucose"],
     ... )
     >>> multi_agg_joiner.fit_transform(patients)
+       patient_id  age  ...  value_mean_glucose  value_std_glucose
+    0           1   72  ...                1.65           1.193035
+    1           2   45  ...                4.80           2.404163
+
+    The :class:`MultiAggJoiner` makes it convenient to aggregate multiple tables, but
+    the same results could be obtained by chaining 3 separate :class:`AggJoiner`:
+
+    >>> from skrub import AggJoiner
+    >>> from sklearn.pipeline import make_pipeline
+    >>> agg_joiner_1 = AggJoiner(
+    ...    aux_table=hospitalizations,
+    ...    key="patient_id",
+    ...    cols="days_of_stay",
+    ...    operations="max",
+    ... )
+    >>> agg_joiner_2 = AggJoiner(
+    ...    aux_table=medications,
+    ...    key="patient_id",
+    ...    cols="medication",
+    ...    operations="mode",
+    ... )
+    >>> agg_joiner_3 = AggJoiner(
+    ...    aux_table=glucose,
+    ...    main_key="patient_id",
+    ...    aux_key="patientID",
+    ...    cols="value",
+    ...    operations=["mean", "std"],
+    ...    suffix="_glucose",
+    ... )
+    >>> pipeline = make_pipeline(agg_joiner_1, agg_joiner_2, agg_joiner_3)
+    >>> pipeline.fit_transform(patients)
        patient_id  age  ...  value_mean_glucose  value_std_glucose
     0           1   72  ...                1.65           1.193035
     1           2   45  ...                4.80           2.404163

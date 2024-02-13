@@ -54,7 +54,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
 
     Apply numerical and categorical aggregation operations on the `cols`
     to aggregate, selected by dtypes. See the list of supported operations
-    at the parameter `operation`.
+    at the parameter `operations`.
 
     If `cols` is not provided, `cols` are all columns from `aux_table`,
     except `aux_key`.
