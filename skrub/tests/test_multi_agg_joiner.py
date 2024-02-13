@@ -174,7 +174,11 @@ def test_keys(main, px):
         aux_keys=["userId"],
     )
     with pytest.raises(
-        ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
+        ValueError,
+        match=(
+            r"(?=.*`main_keys` and `aux_keys` elements have different lengths at"
+            r" position 0)"
+        ),
     ):
         multi_agg_joiner.fit_transform(main)
 

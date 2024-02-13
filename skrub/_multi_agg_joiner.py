@@ -247,12 +247,12 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 f" `aux_tables` of len {len(aux_tables)}."
             )
         # Check each element
-        for main_key, aux_key in zip(main_keys, aux_keys):
+        for i, (main_key, aux_key) in enumerate(zip(main_keys, aux_keys)):
             if len(main_key) != len(aux_key):
                 raise ValueError(
                     "`main_keys` and `aux_keys` elements have different lengths"
-                    f" ({len(main_key)} and {len(aux_key)}). Cannot join on different"
-                    " numbers of columns."
+                    f" at position {i} ({len(main_key)} and {len(aux_key)})."
+                    "  Cannot join on different numbers of columns."
                 )
         return main_keys, aux_keys
 
