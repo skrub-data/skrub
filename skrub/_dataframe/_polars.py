@@ -32,7 +32,7 @@ def make_dataframe(X, index=None, dtypes=None):
 
     Returns
     -------
-    X : pl.DataFrame
+    X : Polars dataframe
         Converted output.
     """
     if index is not None:
@@ -40,6 +40,14 @@ def make_dataframe(X, index=None, dtypes=None):
             "Polars dataframes don't have an index, but "
             f"the Polars dataframe maker was called with {index=!r}."
         )
+
+    # Polars doesn't support building a dataframe from a mapping with
+    # non-str keys.
+    keys = list(X.keys())
+    for key in keys:
+        if not isinstance(key, str):
+            X[str(key)] = X.pop(key)
+
     df = pl.DataFrame(X)
     if dtypes is not None:
         df = df.cast(dtypes)
@@ -66,7 +74,7 @@ def make_series(X, index=None, name=None, dtype=None):
 
     Returns
     -------
-    X : pl.Series
+    X : Polars series
         Converted output.
     """
     if index is not None:
@@ -92,20 +100,20 @@ def aggregate(
 
     Parameters
     ----------
-    table : pl.DataFrame or pl.LazyFrame
+    table : pl.DataFrame or pl.LazyFrame,
         The input dataframe to aggregate.
 
-    key : str or Iterable[str]
+    key : str or Iterable[str],
         The columns used as keys to aggregate on.
 
-    cols_to_agg : str or Iterable[str]
+    cols_to_agg : str or Iterable[str],
         The columns to aggregate.
 
-    num_operations : str or Iterable[str], default=("mean",)
+    num_operations : str or Iterable[str],
         The reduction functions to apply on numerical columns
         in ``cols_to_agg`` during the aggregation.
 
-    categ_operations : str or Iterable[str], default=("mode",)
+    categ_operations : str or Iterable[str],
         The reduction functions to apply on categorical columns
         in ``cols_to_agg`` during the aggregation.
 
@@ -163,21 +171,21 @@ def join(left, right, left_on, right_on):
 
     Parameters
     ----------
-    left : pl.DataFrame or pl.LazyFrame
+    left : pl.DataFrame or pl.LazyFrame,
         The left dataframe of the left-join.
 
-    right : pl.DataFrame or pl.LazyFrame
+    right : pl.DataFrame or pl.LazyFrame,
         The right dataframe of the left-join.
 
-    left_on : str or Iterable[str]
+    left_on : str or Iterable[str],
         Left keys to merge on.
 
-    right_on : str or Iterable[str]
+    right_on : str or Iterable[str],
         Right keys to merge on.
 
     Returns
     -------
-    merged : pl.DataFrame or pl.LazyFrame
+    merged : pl.DataFrame or pl.LazyFrame,
         The merged output.
     """
     is_dataframe = isinstance(left, pl.DataFrame) and isinstance(right, pl.DataFrame)
@@ -204,18 +212,18 @@ def get_aggfuncs(cols, operations):
 
     Parameters
     ----------
-    cols : list
+    cols : list,
         The columns to aggregate.
 
-    operations : list
+    operations : list,
         The reduce operations to perform.
 
     Returns
     -------
-    aggfuncs : list
+    aggfuncs : list,
         Named aggregation list.
 
-    mode_cols : list
+    mode_cols : list,
         Output keys to post-process after 'mode' aggregation.
     """
     aggfuncs, mode_cols = [], []
@@ -235,16 +243,16 @@ def _polars_ops_mapping(col, operation, output_key):
 
     Parameters
     ----------
-    col : str
+    col : str,
         Name of the column to aggregate.
-    operation : str
+    operation : str,
         Name of the reduce function.
-    output_key : str
+    output_key : str,
         Name of the reduced column.
 
     Returns
     -------
-    aggfunc: polars.Expression
+    aggfunc: polars.Expression,
         The expression to apply.
     """
     polars_aggfuncs = {
@@ -259,8 +267,8 @@ def _polars_ops_mapping(col, operation, output_key):
 
     if aggfunc is None:
         raise ValueError(
-            f"Polars operation {operation!r} is not supported. Available:"
-            f" {list(polars_aggfuncs)}"
+            f"Polars operation {operation!r} is not supported. Available"
+            f" operations are: {list(polars_aggfuncs)}"
         )
 
     return aggfunc.alias(output_key)
