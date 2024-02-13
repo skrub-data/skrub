@@ -179,10 +179,16 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         if is_pandas(X):
             if not all(is_pandas(aux_table) for aux_table in aux_tables):
-                raise TypeError("All `aux_tables` must be Pandas dataframes.")
+                raise TypeError(
+                    "All `aux_tables` must be Pandas dataframes"
+                    " when `X` is a Pandas dataframe."
+                )
         if is_polars(X):
             if not all(is_polars(aux_table) for aux_table in aux_tables):
-                raise TypeError("All `aux_tables` must be Polars dataframes.")
+                raise TypeError(
+                    "All `aux_tables` must be Polars dataframes"
+                    " when `X` is a Polars dataframe."
+                )
 
         return X, aux_tables
 
