@@ -370,7 +370,7 @@ def test_suffixes(main, px):
         cols=[["rating"], ["rating"]],
     )
     multi_agg_joiner.fit_transform(main)
-    assert multi_agg_joiner._suffixes == ["_1", "_2"]
+    assert multi_agg_joiner._suffixes == ["_0", "_1"]
 
     # check suffixes when defined
     multi_agg_joiner = MultiAggJoiner(
@@ -387,7 +387,7 @@ def test_suffixes(main, px):
         aux_tables=[main, main],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
-        suffixes=["_1", "_2", "_3"],
+        suffixes=["_0", "_1", "_2"],
     )
     error_msg = (
         r"The number of provided suffixes must match the number of tables in"

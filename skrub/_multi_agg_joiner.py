@@ -28,9 +28,9 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     is used to join the corresponding aux table. In the same way, each entry in `cols`
     is a list of columns to aggregate in the corresponding aux table.
 
-    Therefore if we have a single table, we could either
+    Therefore if we have a single table, we could either use
 
-    - use the AggJoiner: ``AggJoiner(aux_table, key="ID")``
+    - the AggJoiner: ``AggJoiner(aux_table, key="ID")``
     - or the MultiAggJoiner: ``MultiAggJoiner([aux_table], keys=["ID"])``
 
     Note that for `keys`, `main_keys`, `aux_keys`, `cols` and `operations`,
@@ -89,7 +89,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         except the `aux_keys` associated with that table.
 
     operations : iterable of str, or iterable of iterable of str, default=None
-        Aggregation operations to perform on the auxiliary table.
+        Aggregation operations to perform on the auxiliary tables.
 
         If not `None`, there must be an iterable of `operations` for each
         table in `aux_tables`.
@@ -106,7 +106,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     suffixes : iterable of str, default=None
         Suffixes to append to the `aux_tables`' column names.
         If set to `None`, the table indexes in `aux_tables` are used,
-        e.g. for an aggregation of 2 `aux_tables`, "_1" and "_2" would be appended
+        e.g. for an aggregation of 2 `aux_tables`, "_0" and "_1" would be appended
         to column names.
 
     See Also
@@ -402,7 +402,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             or if all suffixes are not strings.
         """
         if self.suffixes is None:
-            suffixes = [f"_{i+1}" for i in range(len(self._aux_tables))]
+            suffixes = [f"_{i}" for i in range(len(self._aux_tables))]
         else:
             suffixes = np.atleast_1d(self.suffixes).tolist()
             if len(suffixes) != len(self._aux_tables):
