@@ -232,12 +232,12 @@ def make_column_like(column, values, name):
 
 @make_column_like.specialize("pandas")
 def _make_column_like_pandas(column, values, name):
-    return pd.Series(values, name=name)
+    return pd.Series(data=values, name=name)
 
 
 @make_column_like.specialize("polars")
 def _make_column_like_polars(column, values, name):
-    return pl.Series(values, name=name)
+    return pl.Series(values=values, name=name)
 
 
 @dispatch

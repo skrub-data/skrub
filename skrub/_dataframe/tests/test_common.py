@@ -10,54 +10,36 @@ from skrub._dataframe import _common as ns
 #
 
 
-def test_skrub_namespace(empty_df):
-    skrub_ns = ns.skrub_namespace(empty_df)
-    assert skrub_ns.DATAFRAME_MODULE_NAME == ns.dataframe_module_name(empty_df)
+def test_skrub_namespace(df_module):
+    skrub_ns = ns.skrub_namespace(df_module.empty_dataframe)
+    assert skrub_ns.DATAFRAME_MODULE_NAME == df_module.name
 
 
-def test_dataframe_module_name_pandas(empty_pandas_dataframe, empty_pandas_series):
-    assert ns.dataframe_module_name(empty_pandas_dataframe) == "pandas"
-    assert ns.is_pandas(empty_pandas_dataframe)
-    assert ns.dataframe_module_name(empty_pandas_series) == "pandas"
-    assert ns.is_pandas(empty_pandas_series)
+def test_dataframe_module_name(df_module):
+    assert ns.dataframe_module_name(df_module.empty_dataframe) == df_module.name
+    assert getattr(ns, f"is_{df_module.name}")(df_module.empty_dataframe)
+    assert ns.dataframe_module_name(df_module.empty_column) == df_module.name
+    assert getattr(ns, f"is_{df_module.name}")(df_module.empty_column)
 
 
-def test_dataframe_module_name_polars(empty_polars_dataframe, empty_polars_series):
-    assert ns.dataframe_module_name(empty_polars_dataframe) == "polars"
-    assert ns.is_polars(empty_polars_dataframe)
-    assert ns.dataframe_module_name(empty_polars_series) == "polars"
-    assert ns.is_polars(empty_polars_series)
+def test_is_dataframe(df_module):
+    assert ns.is_dataframe(df_module.empty_dataframe)
+    assert not ns.is_dataframe(df_module.empty_column)
+    assert not ns.is_dataframe(np.eye(3))
+    assert not ns.is_dataframe({"a": [1, 2]})
 
 
-def test_is_dataframe_df(empty_df):
-    assert ns.is_dataframe(empty_df)
+def test_is_lazyframe(df_module):
+    assert not ns.is_lazyframe(df_module.empty_dataframe)
+    if hasattr(df_module, "empty_lazyframe"):
+        assert ns.is_lazyframe(df_module.empty_lazyframe)
 
 
-def test_is_dataframe_col(empty_column):
-    assert not ns.is_dataframe(empty_column)
-
-
-@pytest.mark.parametrize("obj", ["a", [1, 2], np.arange(5), np.ones(3)])
-def test_is_dataframe_other(obj):
-    assert not ns.is_dataframe(obj)
-
-
-def test_is_lazyframe(empty_polars_dataframe):
-    assert not ns.is_lazyframe(empty_polars_dataframe)
-    assert ns.is_lazyframe(empty_polars_dataframe.lazy())
-
-
-def test_is_column_col(empty_column):
-    assert ns.is_column(empty_column)
-
-
-def test_is_column_df(empty_df):
-    assert not ns.is_column(empty_df)
-
-
-@pytest.mark.parametrize("obj", ["a", [1, 2], np.arange(5), np.ones(3)])
-def test_is_column_other(obj):
-    assert not ns.is_column(obj)
+def test_is_column(df_module):
+    assert ns.is_column(df_module.empty_column)
+    assert not ns.is_column(df_module.empty_dataframe)
+    assert not ns.is_column(np.eye(3))
+    assert not ns.is_column({"a": [1, 2]})
 
 
 #
@@ -66,16 +48,49 @@ def test_is_column_other(obj):
 #
 
 
-def test_to_numpy(example_df):
+def test_to_numpy(df_module, example_data_dict):
     with pytest.raises(NotImplementedError):
-        ns.to_numpy(example_df)
-    array = ns.to_numpy(ns.col(example_df, "int-col"))
+        ns.to_numpy(df_module.example_dataframe)
+    array = ns.to_numpy(ns.col(df_module.example_dataframe, "int-col"))
     assert array.dtype == float
-    assert_array_equal(array, [4.0, 0.0, -1.0, np.nan])
+    assert_array_equal(array, np.asarray(example_data_dict["int-col"], dtype=float))
 
-    array = ns.to_numpy(ns.col(example_df, "str-col"))
+    array = ns.to_numpy(ns.col(df_module.example_dataframe, "str-col"))
     assert array.dtype == object
-    assert_array_equal(array, ["one", None, "three", "four"])
+    assert_array_equal(array, np.asarray(example_data_dict["str-col"]))
+
+
+def test_to_pandas(df_module, all_dataframe_modules):
+    pd_module = all_dataframe_modules["pandas"]
+    if df_module.name == "pandas":
+        assert ns.to_pandas(df_module.example_dataframe) is df_module.example_dataframe
+        assert ns.to_pandas(df_module.example_column) is df_module.example_column
+    pd_module.assert_frame_equal(
+        ns.to_pandas(df_module.example_dataframe).drop("date-col", axis=1),
+        pd_module.example_dataframe.drop("date-col", axis=1),
+    )
+    pd_module.assert_column_equal(
+        ns.to_pandas(df_module.example_column), pd_module.example_column
+    )
+
+    with pytest.raises(NotImplementedError):
+        ns.to_pandas(np.arange(3))
+
+
+def test_make_dataframe_like(df_module, example_data_dict):
+    df = ns.make_dataframe_like(df_module.empty_dataframe, example_data_dict)
+    df_module.assert_frame_equal(df, df_module.make_dataframe(example_data_dict))
+    assert ns.dataframe_module_name(df) == df_module.name
+
+
+def test_make_column_like(df_module, example_data_dict):
+    col = ns.make_column_like(
+        df_module.empty_column, example_data_dict["float-col"], "mycol"
+    )
+    df_module.assert_column_equal(
+        col, df_module.make_column(values=example_data_dict["float-col"], name="mycol")
+    )
+    assert ns.dataframe_module_name(col) == df_module.name
 
 
 #
@@ -84,10 +99,11 @@ def test_to_numpy(example_df):
 #
 
 
-def test_column_names(empty_df):
-    data = {"a": [0], "b c": [0]}
-    df = ns.make_dataframe_like(empty_df, data)
-    assert ns.column_names(df) == ["a", "b c"]
+def test_column_names(df_module, example_data_dict):
+    col_names = ns.column_names(df_module.example_dataframe)
+    assert isinstance(col_names, list)
+    assert col_names == list(example_data_dict.keys())
+    assert ns.column_names(df_module.empty_dataframe) == []
 
 
 #
