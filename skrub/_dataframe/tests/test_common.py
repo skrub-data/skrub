@@ -66,8 +66,10 @@ def test_to_pandas(df_module, all_dataframe_modules):
         assert ns.to_pandas(df_module.example_dataframe) is df_module.example_dataframe
         assert ns.to_pandas(df_module.example_column) is df_module.example_column
     pd_module.assert_frame_equal(
-        ns.to_pandas(df_module.example_dataframe).drop("date-col", axis=1),
-        pd_module.example_dataframe.drop("date-col", axis=1),
+        ns.to_pandas(df_module.example_dataframe).drop(
+            ["datetime-col", "date-col"], axis=1
+        ),
+        pd_module.example_dataframe.drop(["datetime-col", "date-col"], axis=1),
     )
     pd_module.assert_column_equal(
         ns.to_pandas(df_module.example_column), pd_module.example_column
