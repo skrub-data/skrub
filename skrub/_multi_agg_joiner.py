@@ -332,7 +332,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         ValueError
             If the len of `cols` doesn't match the len of `aux_tables`,
             or if `cols` is not of a valid type, of if all `cols`
-            are not present in the corresponding aux_table,
+            are not present in the corresponding aux_table.
         """
         # If no `cols` provided, all columns but `aux_keys` are used.
         if self.cols is None:
@@ -425,10 +425,6 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             Input data, based table on which to left join the
             auxiliary tables.
 
-        y : array-like of shape (n_samples), default=None
-            Prediction target. Used to compute correlations between the
-            generated covariates and the target for screening purposes.
-
         Returns
         -------
         MultiAggJoiner
@@ -479,7 +475,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        X_transformed : DataFrameLike
+        DataFrame
             The augmented input.
         """
         check_is_fitted(self, "agg_joiners_")

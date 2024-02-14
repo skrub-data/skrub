@@ -195,7 +195,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         return X, aux_table
 
     def _check_operations(self):
-        """Check operations input.
+        """Check `operations` input.
 
         Returns
         -------
@@ -228,7 +228,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
 
         self._cols = atleast_1d_or_none(self.cols)
-        # If no cols provided, all columns but `aux_key` are used.
+        # If no `cols` provided, all columns but `aux_key` are used.
         if len(self._cols) == 0:
             self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
         _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
@@ -247,10 +247,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         X : DataframeLike
             Input data, based table on which to left join the
             auxiliary table.
-
-        y : array-like of shape (n_samples), default=None
-            Prediction target. Used to compute correlations between the
-            generated covariates and the target for screening purposes.
 
         Returns
         -------
@@ -273,13 +269,13 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         """Left-join pre-aggregated table on `X`.
 
         Parameters
-        ----------s
+        ----------
         X : DataFrameLike
             The input data to transform.
 
         Returns
         -------
-        X_transformed : DataFrameLike
+        DataFrame
             The augmented input.
         """
         check_is_fitted(self, "aux_table_")
