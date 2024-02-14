@@ -424,6 +424,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         X : DataframeLike
             Input data, based table on which to left join the
             auxiliary tables.
+        y : None
+            Unused, only here for compatibility.
 
         Returns
         -------
