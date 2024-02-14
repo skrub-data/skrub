@@ -37,7 +37,7 @@ class CleanNullStrings(BaseEstimator):
 
     def transform(self, column):
         column = sbd.replace_regex(column, r"^\s*$", "")
-        column = sbd.replace(column, STR_NA_VALUES, None)
+        column = sbd.replace(column, STR_NA_VALUES, sbd.null_value_for(column))
         return column
 
     def fit(self, column):

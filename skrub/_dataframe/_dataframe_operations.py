@@ -55,6 +55,7 @@ __all__ = [
     "sample",
     "replace",
     "replace_regex",
+    "null_value_for",
 ]
 
 
@@ -486,7 +487,9 @@ def is_string(column):
 
 @is_string.specialize("pandas")
 def _is_string_pandas(column):
-    return pandas.api.types.is_string_dtype(column)
+    return pandas.api.types.is_string_dtype(
+        column
+    ) and not pandas.api.types.is_object_dtype(column)
 
 
 @is_string.specialize("polars")
@@ -717,3 +720,18 @@ def _replace_regex_pandas(column, pattern, replacement):
 @replace_regex.specialize("polars")
 def _replace_regex_polars(column, pattern, replacement):
     return column.str.replace_all(pattern, replacement, literal=False)
+
+
+@dispatch
+def null_value_for(obj):
+    raise NotImplementedError()
+
+
+@null_value_for.specialize("pandas")
+def _null_value_for_pandas(obj):
+    return pd.NA
+
+
+@null_value_for.specialize("polars")
+def _null_value_for_polars(obj):
+    return None
