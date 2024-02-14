@@ -99,11 +99,39 @@ def test_make_column_like(df_module, example_data_dict):
 #
 
 
+def test_shape(df_module):
+    assert ns.shape(df_module.example_dataframe) == (4, 6)
+    assert ns.shape(df_module.empty_dataframe) == (0, 0)
+    assert ns.shape(df_module.example_column) == (4,)
+    assert ns.shape(df_module.empty_column) == (0,)
+
+
+@pytest.mark.parametrize("name", ["", "a\nname"])
+def test_name(df_module, name):
+    assert ns.name(df_module.make_column(name=name, values=[0])) == name
+
+
 def test_column_names(df_module, example_data_dict):
     col_names = ns.column_names(df_module.example_dataframe)
     assert isinstance(col_names, list)
     assert col_names == list(example_data_dict.keys())
     assert ns.column_names(df_module.empty_dataframe) == []
+
+
+def test_rename(df_module):
+    col = df_module.make_column(name="name", values=[0])
+    col1 = ns.rename(col, "name 1")
+    assert ns.name(col) == "name"
+    assert ns.name(col1) == "name 1"
+
+
+def test_set_column_names(df_module, example_data_dict):
+    df = df_module.make_dataframe(example_data_dict)
+    old_names = ns.column_names(df)
+    new_names = list(map("col_{}".format, range(ns.shape(df)[1])))
+    new_df = ns.set_column_names(df, new_names)
+    assert ns.column_names(df) == old_names
+    assert ns.column_names(new_df) == new_names
 
 
 #
