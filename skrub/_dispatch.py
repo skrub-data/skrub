@@ -88,12 +88,10 @@ a container, as this would rely on backend-specific behavior:
 ...     ns.shape(df)
 
 
-We can inspect which implementations were registered:
+We can inspect which implementations were registered in ``my_function.registry``.
 
->>> my_function.registry
-mappingproxy({<class 'object'>: <function my_function at 0x7f4a0f0fb2e0>, <class 'pandas.core.frame.DataFrame'>: <function _my_function_pandas at 0x7f4953291d00>, <class 'pandas.core.series.Series'>: <function _my_function_pandas at 0x7f4953291d00>, <class 'polars.dataframe.frame.DataFrame'>: <function _my_function_polars at 0x7f4953291e40>, <class 'polars.lazyframe.frame.LazyFrame'>: <function _my_function_polars at 0x7f4953291e40>, <class 'polars.series.series.Series'>: <function _my_function_polars at 0x7f4953291e40>})
-
-It is also possible to register a specialization specifically for dataframes or for columns
+It is also possible to register a specialization specifically for dataframes or
+for columns:
 
 >>> @my_function.specialize("pandas", "Column")
 ... def _my_function_pandas_column(df, other_arg=1.0):
