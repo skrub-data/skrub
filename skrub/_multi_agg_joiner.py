@@ -59,6 +59,10 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         If there are multiple auxiliary tables, `keys` will be used to join all
         of them.
 
+        All `keys` must be present in the main and auxiliary tables before fit.
+        It's not (yet) possible to use columns from the first joined table \
+        to join the second.
+
         If not `None`, there must be an iterable of `keys` for each table
         in `aux_tables`.
 
@@ -73,6 +77,10 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     aux_keys : iterable of str, or iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as keys during
         the join operation.
+
+        All `aux_keys` must be present in respective `aux_tables` before fit.
+        It's not (yet) possible to use columns from the first joined table \
+        to join the second.
 
         If not `None`, there must be an iterable of `aux_keys` for each table
         in `aux_tables`.
