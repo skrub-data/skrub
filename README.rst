@@ -103,3 +103,4 @@ References
 
 .. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
 .. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
+.. [3] Carlos Mougan, Jose Manuel Alvarez, Salvatore Ruggieri, and Steffen Staab. Fairness Implications of Encoding Protected Categorical Attributes. AAAI/ACM Conference on AI, Ethics, and Society (AIES '23).
