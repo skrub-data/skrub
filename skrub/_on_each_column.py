@@ -185,12 +185,13 @@ class OnEachColumn(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
 
     def transform(self, X, y=None):
         del y
-        transformed_columns = []
-        for col_name in sbd.column_names(X):
-            column = sbd.col(X, col_name)
-            transformed_columns.extend(
-                _transform_column(column, self.transformers_.get(col_name))
-            )
+        parallel = Parallel(n_jobs=self.n_jobs)
+        func = delayed(_transform_column)
+        outputs = parallel(
+            func(sbd.col(X, col_name), self.transformers_.get(col_name))
+            for col_name in sbd.column_names(X)
+        )
+        transformed_columns = list(itertools.chain(*outputs))
         transformed_columns = _rename_columns(transformed_columns, self.all_outputs_)
         return sbd.dataframe_like(X, *transformed_columns)
 
