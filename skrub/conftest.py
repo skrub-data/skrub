@@ -88,6 +88,47 @@ def all_dataframe_modules():
 
 @pytest.fixture(params=list(_DATAFAME_MODULES_INFO.values()))
 def df_module(request):
+    """Return information about a dataframe module (either polars or pandas).
+
+    Information is accessed through attributes, for example ``df_module.name``,
+    ``df_module.make_dataframe(dict(a=[1, 2, 3, 4]))``.
+
+    The fixture is parametrized with the installed dataframe modules so a test
+    that requests it will be executed once for each installed module (eg once
+    for pandas and once for polars if both are installed).
+
+    The list of provided attributes is:
+
+    name
+        The module name as a string.
+    module
+        The module object itself (either ``pandas`` or ``polars``).
+    DataFrame
+        The module's dataframe class.
+    Column
+        The module's column class (``pd.Series`` or ``pl.Series``).
+    make_dataframe
+        A function that takes a dictionary of ``{column_name: column_values}``
+        and returns a dataframe.
+    make_column
+        A function that takes a name and sequence of values and returns a column.
+        ``df_module.make_column("country", ["France", "Spain"])``
+    assert_frame_equal
+        A function that asserts 2 dataframes are equal.
+    assert_column_equal
+        A function that asserts 2 columns are equal.
+    empty_dataframe
+        A dataframe with 0 rows and 0 columns.
+    empty_lazyframe
+        A lazy dataframe with 0 rows and 0 columns (only for polars).
+    empty_column
+        A column of length 0.
+    example_dataframe
+        An example dataframe, see ``_example_data_dict`` in this module for the
+        contents.
+    example_column
+        An example column; the "float-col" column from the example dataframe.
+    """
     return request.param
 
 
