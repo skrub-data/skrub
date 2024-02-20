@@ -159,27 +159,59 @@ def _load_dataframe_module_info(name):
                 "Column": [polars.Series],
             },
         }
-    raise KeyError(f"Unknown module: {name}")
+    raise KeyError(
+        f"Unknown dataframe module: {name}. "
+        "Available modules are ['pandas' and 'polars']."
+    )
 
 
 def dispatch(function):
+    """Make a generic function that performs dispatch on the first argument's type.
+
+    The returned value is a generic function whose ``specialize`` attribute can
+    be used to register implementations specialized for different dataframe
+    modules (pandas, polars). See this module's docstring for more details and
+    examples.
+    """
+    # Apply functools.singledispatch
     dispatched = singledispatch(function)
 
+    # Now we can register implementations with ``dispatched.register``.
+    # However that requires a type, and some of the types we want to register
+    # may not be importable (eg polars.DataFrame if polars is not installed).
+    # Therefore for convenience we add a ``specialize`` attribute that accepts
+    # strings instead of types and calls ``register`` with the appropriate
+    # types if they can be imported.
+
     def specialize(module_name, *, argument_type=None):
+        # Build a decorator responsible for adding a new specialized
+        # implementation to ``dispatched``'s registry. It accepts the module
+        # name and an optional list of generic type names (as strings) to
+        # register. If ``argument_type`` is ``None``, all type names for the
+        # module are used.
         try:
             module_info = _load_dataframe_module_info(module_name)
         except (ImportError, KeyError):
-
+            # The module cannot be imported. We return a decorator that does
+            # not do anything. The implementations it is applied to will not be
+            # registered and they will not be called; they are written for a
+            # module that is not installed in the current environment.
             def decorator(specialized_impl):
                 return specialized_impl
 
             return decorator
 
         if argument_type is None:
+            # Use all type names in the module's description by default.
             argument_type = list(module_info["types"].keys())
         if isinstance(argument_type, str):
             argument_type = [argument_type]
 
+        # Define a decorator that adds specialized implementations to
+        # ``dispatched``'s registry. When the decorator is applied to a
+        # function, this function is registered as the implementation to use
+        # for all the types listed in ``argument_type`` for the module
+        # specified by ``module_name``.
         def decorator(specialized_impl):
             types_to_register = set()
             for type_name in argument_type:
@@ -190,5 +222,8 @@ def dispatch(function):
 
         return decorator
 
+    # tack the decorator factory onto the generic function as an attribute
     dispatched.specialize = specialize
+
+    # return the generic function
     return dispatched
