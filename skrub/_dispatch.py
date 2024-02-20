@@ -27,7 +27,7 @@ attribute that can be used to register implementations.
 ...     # here we can either provide a default implementation or:
 ...     raise NotImplementedError()
 
-my_function now has a ``specialize`` attribute we can use to register
+``my_function`` now has a ``specialize`` attribute we can use to register
 implementations:
 
 >>> @my_function.specialize("pandas")
@@ -36,7 +36,7 @@ implementations:
 
 The name ``_my_function_pandas`` is arbitrary, we could use anything such as
 ``_`` (unless we want to be able to call the specialized implementation
-directly, eg for testing).
+directly, e.g. for testing).
 
 The tentative convention in skrub is to use
 ``f"_{generic_function_name.lstrip('_')}_{library_name}"``.
