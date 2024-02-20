@@ -137,12 +137,12 @@ def is_dataframe(obj):
     return False
 
 
-@is_dataframe.specialize("pandas", "DataFrame")
+@is_dataframe.specialize("pandas", argument_type="DataFrame")
 def _is_dataframe_pandas(obj):
     return True
 
 
-@is_dataframe.specialize("polars", ["DataFrame", "LazyFrame"])
+@is_dataframe.specialize("polars", argument_type=["DataFrame", "LazyFrame"])
 def _is_dataframe_polars(obj):
     return True
 
@@ -153,7 +153,7 @@ def is_lazyframe(df):
     return False
 
 
-@is_lazyframe.specialize("polars", "LazyFrame")
+@is_lazyframe.specialize("polars", argument_type="LazyFrame")
 def _is_lazyframe_polars_lazyframe(df):
     return True
 
@@ -164,12 +164,12 @@ def is_column(obj):
     return False
 
 
-@is_column.specialize("pandas", "Column")
+@is_column.specialize("pandas", argument_type="Column")
 def _is_column_pandas(obj):
     return True
 
 
-@is_column.specialize("polars", "Column")
+@is_column.specialize("polars", argument_type="Column")
 def _is_column_polars(obj):
     return True
 
@@ -185,12 +185,12 @@ def to_numpy(obj):
     raise NotImplementedError()
 
 
-@to_numpy.specialize("pandas", "Column")
+@to_numpy.specialize("pandas", argument_type="Column")
 def _to_numpy_pandas(obj):
     return obj.to_numpy()
 
 
-@to_numpy.specialize("polars", "Column")
+@to_numpy.specialize("polars", argument_type="Column")
 def _to_numpy_polars(obj):
     return obj.to_numpy()
 
@@ -309,7 +309,7 @@ def collect(df):
     return df
 
 
-@collect.specialize("polars", "LazyFrame")
+@collect.specialize("polars", argument_type="LazyFrame")
 def _collect_polars_lazyframe(df):
     return df.collect()
 

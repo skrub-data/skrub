@@ -12,7 +12,7 @@ def test_dispatch():
     def _(x, y=None):
         return "pandas"
 
-    @f.specialize("pandas", "Column")
+    @f.specialize("pandas", argument_type="Column")
     def _(x, y=None):
         return "pandas series"
 

@@ -93,7 +93,7 @@ We can inspect which implementations were registered in ``my_function.registry``
 It is also possible to register a specialization specifically for dataframes or
 for columns:
 
->>> @my_function.specialize("pandas", "Column")
+>>> @my_function.specialize("pandas", argument_type="Column")
 ... def _my_function_pandas_column(df, other_arg=1.0):
 ...     print("calling pandas Series implementation")
 ...     print("               ^^^^^^               ")
@@ -165,7 +165,7 @@ def _load_dataframe_module_info(name):
 def dispatch(function):
     dispatched = singledispatch(function)
 
-    def specialize(module_name, generic_type_names=None):
+    def specialize(module_name, *, argument_type=None):
         try:
             module_info = _load_dataframe_module_info(module_name)
         except (ImportError, KeyError):
@@ -175,14 +175,14 @@ def dispatch(function):
 
             return decorator
 
-        if generic_type_names is None:
-            generic_type_names = list(module_info["types"].keys())
-        if isinstance(generic_type_names, str):
-            generic_type_names = [generic_type_names]
+        if argument_type is None:
+            argument_type = list(module_info["types"].keys())
+        if isinstance(argument_type, str):
+            argument_type = [argument_type]
 
         def decorator(specialized_impl):
             types_to_register = set()
-            for type_name in generic_type_names:
+            for type_name in argument_type:
                 types_to_register.update(module_info["types"][type_name])
             for module_type in types_to_register:
                 dispatched.register(module_type, specialized_impl)
