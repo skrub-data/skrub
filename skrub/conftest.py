@@ -45,6 +45,12 @@ _DATAFAME_MODULES_INFO["pandas"] = SimpleNamespace(
         "example_column": pd.Series(
             _example_data_dict()["float-col"], name="float-col"
         ),
+        "dtypes": {
+            "float32": pd.Float32Dtype(),
+            "float64": pd.Float64Dtype(),
+            "int32": pd.Int32Dtype(),
+            "int64": pd.Int64Dtype(),
+        },
     }
 )
 
@@ -74,6 +80,12 @@ if _POLARS_INSTALLED:
             "example_column": pl.Series(
                 values=_example_data_dict()["float-col"], name="float-col"
             ),
+            "dtypes": {
+                "float32": pl.Float32,
+                "float64": pl.Float64,
+                "int32": pl.Int32,
+                "int64": pl.Int64,
+            },
         }
     )
 
@@ -128,6 +140,9 @@ def df_module(request):
         contents.
     example_column
         An example column; the "float-col" column from the example dataframe.
+    dtypes
+        A mapping from dtype names to types, keys are:
+        ['float32', 'float64', 'int32', 'int64'].
     """
     return request.param
 

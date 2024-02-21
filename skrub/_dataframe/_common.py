@@ -52,6 +52,7 @@ __all__ = [
     "to_numeric",
     "to_float32",
     "is_string",
+    "to_string",
     "is_object",
     "is_anydate",
     "to_datetime",
@@ -463,7 +464,10 @@ def is_numeric(column):
 
 @is_numeric.specialize("pandas")
 def _is_numeric_pandas(column):
-    return pandas.api.types.is_numeric_dtype(column)
+    # polars and pandas disagree about whether Booleans are numbers
+    return pandas.api.types.is_numeric_dtype(
+        column
+    ) and not pandas.api.types.is_bool_dtype(column)
 
 
 @is_numeric.specialize("polars")
@@ -481,7 +485,7 @@ def _to_numeric_pandas(column, dtype=None, strict=True):
     errors = "raise" if strict else "coerce"
     out = pd.to_numeric(column, errors=errors)
     if dtype is None:
-        return out
+        return out.convert_dtypes()
     return out.astype(dtype)
 
 
@@ -492,7 +496,7 @@ def _to_numeric_polars(column, dtype=None, strict=True):
     if column.dtype.is_numeric():
         return column
     error = None
-    for dtype in [pl.Int32, pl.Int64, pl.Float64]:
+    for dtype in [pl.Int64, pl.Float64]:
         try:
             return column.cast(dtype)
         except Exception as e:
@@ -532,6 +536,21 @@ def _is_string_pandas(column):
 @is_string.specialize("polars")
 def _is_string_polars(column):
     return column.dtype == pl.String
+
+
+@dispatch
+def to_string(column):
+    raise NotImplementedError()
+
+
+@to_string.specialize("pandas")
+def _to_string_pandas(column):
+    return column.astype(pd.StringDtype())
+
+
+@to_string.specialize("polars")
+def _to_string_polars(column):
+    return column.cast(pl.String)
 
 
 @dispatch

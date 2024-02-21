@@ -2,6 +2,7 @@
 Note: most tests in this file use the ``df_module`` fixture, which is defined
 in ``skrub.conftest``. See the corresponding docstrings for details.
 """
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -144,6 +145,67 @@ def test_set_column_names(df_module, example_data_dict):
 # Inspecting dtypes and casting
 # =============================
 #
+
+
+def test_dtype(df_module):
+    df = ns.pandas_convert_dtypes(df_module.example_dataframe)
+    assert ns.dtype(ns.col(df, "float-col")) == df_module.dtypes["float64"]
+    assert ns.dtype(ns.col(df, "int-col")) == df_module.dtypes["int64"]
+
+
+def test_cast(df_module):
+    col = ns.col(df_module.example_dataframe, "int-col")
+    out = ns.cast(col, df_module.dtypes["float64"])
+    assert ns.dtype(out) == df_module.dtypes["float64"]
+
+
+def test_pandas_convert_dtypes(df_module):
+    if df_module.name == "pandas":
+        df_module.assert_frame_equal(
+            ns.pandas_convert_dtypes(df_module.example_dataframe),
+            df_module.example_dataframe.convert_dtypes(),
+        )
+        df_module.assert_column_equal(
+            ns.pandas_convert_dtypes(df_module.example_column),
+            df_module.example_column.convert_dtypes(),
+        )
+    else:
+        assert (
+            ns.pandas_convert_dtypes(df_module.example_dataframe)
+            is df_module.example_dataframe
+        )
+        assert (
+            ns.pandas_convert_dtypes(df_module.example_column)
+            is df_module.example_column
+        )
+
+
+def test_is_bool(df_module):
+    df = df_module.example_dataframe
+    df = ns.pandas_convert_dtypes(df)
+    assert ns.is_bool(ns.col(df, "bool-col"))
+    assert not ns.is_bool(ns.col(df, "int-col"))
+
+
+def test_is_numeric(df_module):
+    df = df_module.example_dataframe
+    df = ns.pandas_convert_dtypes(df)
+    for num_col in ["int-col", "float-col"]:
+        assert ns.is_numeric(ns.col(df, num_col))
+    for col in ["str-col", "datetime-col", "date-col", "bool-col"]:
+        assert not ns.is_numeric(ns.col(df, col))
+
+
+def test_to_numeric(df_module):
+    s = ns.to_string(df_module.make_column("_", list(range(5))))
+    assert ns.is_string(s)
+    as_num = ns.to_numeric(s)
+    assert ns.is_numeric(as_num)
+    assert ns.dtype(as_num) == df_module.dtypes["int64"]
+    df_module.assert_column_equal(
+        as_num, ns.pandas_convert_dtypes(df_module.make_column("_", list(range(5))))
+    )
+
 
 #
 # Inspecting, selecting and modifying values
