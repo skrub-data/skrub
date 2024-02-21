@@ -326,7 +326,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.fit_transform(X)
         return self
 
-    def make_pipeline(self):
+    def _make_pipeline(self):
         """Make a scikit-learn pipeline that is equivalent to this transformer.
 
         Returns
@@ -362,9 +362,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         dataframe
             The transformed input.
         """
-        self.pipeline_ = self.make_pipeline()
-        output = self.pipeline_.fit_transform(X)
-        self.feature_names_in_ = self.pipeline_.steps[0][1].feature_names_out_
+        self._pipeline = self._make_pipeline()
+        output = self._pipeline.fit_transform(X)
+        self.feature_names_in_ = self._pipeline.steps[0][1].feature_names_out_
         self.all_outputs_ = sbd.column_names(output)
         self._store_input_transformations()
         self._store_processed_cols()
@@ -385,7 +385,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         dataframe
             The transformed input.
         """
-        return self.pipeline_.transform(X)
+        return self._pipeline.transform(X)
 
     def _more_tags(self) -> dict:
         """
@@ -412,7 +412,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         return np.asarray(self.all_outputs_)
 
     def _store_input_transformations(self):
-        pipeline_steps = list(self.pipeline_.named_steps.values())
+        pipeline_steps = list(self._pipeline.named_steps.values())
         to_outputs = {col: [col] for col in pipeline_steps[0].feature_names_out_}
         to_steps = {col: [] for col in pipeline_steps[0].feature_names_out_}
         for step in pipeline_steps[1:]:
