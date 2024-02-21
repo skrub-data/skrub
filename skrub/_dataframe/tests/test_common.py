@@ -3,6 +3,8 @@ Note: most tests in this file use the ``df_module`` fixture, which is defined
 in ``skrub.conftest``. See the corresponding docstrings for details.
 """
 
+from datetime import datetime
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -205,6 +207,99 @@ def test_to_numeric(df_module):
     df_module.assert_column_equal(
         as_num, ns.pandas_convert_dtypes(df_module.make_column("_", list(range(5))))
     )
+
+
+def test_is_string(df_module):
+    df = df_module.example_dataframe
+    df = ns.pandas_convert_dtypes(df)
+    assert ns.is_string(ns.col(df, "str-col"))
+    for col in ["int-col", "float-col", "datetime-col", "date-col", "bool-col"]:
+        assert not ns.is_string(ns.col(df, col))
+
+
+def test_to_string(df_module):
+    s = ns.to_string(df_module.make_column("_", list(range(5))))
+    assert ns.is_string(s)
+
+
+def test_is_object(df_module):
+    if df_module.name == "polars":
+        import polars as pl
+
+        s = pl.Series("", [1, "abc"], dtype=pl.Object)
+    else:
+        s = df_module.make_column("", [1, "abc"])
+    assert ns.is_object(ns.pandas_convert_dtypes(s))
+
+    s = df_module.make_column("", ["1", "abc"])
+    assert not ns.is_object(ns.pandas_convert_dtypes(s))
+
+
+def test_is_anydate(df_module):
+    df = df_module.example_dataframe
+    df = ns.pandas_convert_dtypes(df)
+    date_cols = ["datetime-col"]
+    if df_module.name != "pandas":
+        # pandas does not have a Date type
+        date_cols.append("date-col")
+    for date_col in date_cols:
+        assert ns.is_anydate(ns.col(df, date_col))
+    for col in ["str-col", "int-col", "float-col", "bool-col"]:
+        assert not ns.is_anydate(ns.col(df, col))
+
+
+def test_to_datetime(df_module):
+    s = df_module.make_column("", ["01/02/2020", "02/01/2021", ""])
+    with pytest.raises(ValueError):
+        ns.to_datetime(s, "%m/%d/%Y", True)
+    df_module.assert_column_equal(
+        ns.to_datetime(s, "%m/%d/%Y", False),
+        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None]),
+    )
+    df_module.assert_column_equal(
+        ns.to_datetime(s, "%d/%m/%Y", False),
+        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None]),
+    )
+    s = df_module.make_column("", ["2020-01-02", "2021-04-05"])
+    df_module.assert_column_equal(
+        ns.to_datetime(s, None, True),
+        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 4, 5)]),
+    )
+
+
+def test_is_categorical(df_module):
+    if df_module.name == "pandas":
+        import pandas as pd
+
+        s = pd.Series(list("aab"))
+        assert not ns.is_categorical(s)
+        s = pd.Series(list("aab"), dtype="category")
+        assert ns.is_categorical(s)
+    elif df_module.name == "polars":
+        import polars as pl
+
+        s = pl.Series(list("aab"))
+        assert not ns.is_categorical(s)
+        s = pl.Series(list("aab"), dtype=pl.Categorical)
+        assert ns.is_categorical(s)
+        s = pl.Series(list("aab"), dtype=pl.Enum("ab"))
+        assert ns.is_categorical(s)
+
+
+def test_to_categorical(df_module):
+    s = df_module.make_column("", list("aab"))
+    assert not ns.is_categorical(s)
+    s = ns.to_categorical(s)
+    assert ns.is_categorical(s)
+    if df_module.name == "polars":
+        import polars as pl
+
+        assert s.dtype == pl.Categorical
+        assert list(s.cat.get_categories()) == list("ab")
+    if df_module.name == "pandas":
+        import pandas as pd
+
+        assert s.dtype == pd.CategoricalDtype(list("ab"))
 
 
 #

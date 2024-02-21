@@ -560,8 +560,6 @@ def is_object(column):
 
 @is_object.specialize("pandas")
 def _is_object_pandas(column):
-    if pandas.api.types.is_string_dtype(column):
-        return False
     return pandas.api.types.is_object_dtype(column)
 
 
@@ -605,7 +603,10 @@ def _to_datetime_pandas(column, format, strict=True):
 def _to_datetime_polars(column, format, strict=True):
     if _is_anydate_polars(column):
         return column
-    return column.str.to_datetime(format=format, strict=strict)
+    try:
+        return column.str.to_datetime(format=format, strict=strict)
+    except pl.ComputeError as e:
+        raise ValueError("Failed to convert to datetime") from e
 
 
 @dispatch
