@@ -249,7 +249,7 @@ def test_is_anydate(df_module):
 
 
 def test_to_datetime(df_module):
-    s = df_module.make_column("", ["01/02/2020", "02/01/2021", ""])
+    s = df_module.make_column("", ["01/02/2020", "02/01/2021", "bad"])
     with pytest.raises(ValueError):
         ns.to_datetime(s, "%m/%d/%Y", True)
     df_module.assert_column_equal(
