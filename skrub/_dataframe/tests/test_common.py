@@ -306,3 +306,75 @@ def test_to_categorical(df_module):
 # Inspecting, selecting and modifying values
 # ==========================================
 #
+
+
+def test_is_in(df_module):
+    s = df_module.make_column("", list("aabc") + ["", None])
+    s = ns.pandas_convert_dtypes(s)
+    df_module.assert_column_equal(
+        ns.is_in(s, list("ac")),
+        ns.pandas_convert_dtypes(
+            df_module.make_column("", [True, True, False, True, False, None])
+        ),
+    )
+
+
+def test_is_null(df_module):
+    s = ns.pandas_convert_dtypes(df_module.make_column("", [0, None, 2, None, 4]))
+    df_module.assert_column_equal(
+        ns.is_null(s), df_module.make_column("", [False, True, False, True, False])
+    )
+
+
+def test_drop_nulls(df_module):
+    s = ns.pandas_convert_dtypes(df_module.make_column("", [0, None, 2, None, 4]))
+    df_module.assert_column_equal(
+        ns.drop_nulls(s),
+        ns.pandas_convert_dtypes(df_module.make_column("", [0, 2, 4])),
+    )
+
+
+def test_unique(df_module):
+    s = ns.pandas_convert_dtypes(df_module.make_column("", [0, None, 2, None, 4]))
+    assert ns.n_unique(s) == 3
+    df_module.assert_column_equal(
+        ns.unique(s), ns.pandas_convert_dtypes(df_module.make_column("", [0, 2, 4]))
+    )
+
+
+def test_where(df_module):
+    s = ns.pandas_convert_dtypes(df_module.make_column("", [0, 1, 2]))
+    out = ns.where(
+        s,
+        df_module.make_column("", [True, False, True]),
+        df_module.make_column("", [10, 11, 12]),
+    )
+    df_module.assert_column_equal(
+        out, ns.pandas_convert_dtypes(df_module.make_column("", [0, 11, 2]))
+    )
+
+
+def test_sample(df_module):
+    s = ns.pandas_convert_dtypes(df_module.make_column("", [0, 1, 2]))
+    sample = ns.sample(s, 2)
+    assert ns.shape(sample)[0] == 2
+    vals = set(ns.to_numpy(sample))
+    assert len(vals) == 2
+    assert vals.issubset([0, 1, 2])
+
+
+def test_replace(df_module):
+    s = ns.pandas_convert_dtypes(
+        df_module.make_column("", "aa ab ac ba bb bc".split() + [None])
+    )
+    out = ns.replace(s, "ac", "AC")
+    expected = ns.pandas_convert_dtypes(
+        df_module.make_column("", "aa ab AC ba bb bc".split() + [None])
+    )
+    df_module.assert_column_equal(out, expected)
+
+    out = ns.replace_regex(s, "^a", r"A_")
+    expected = ns.pandas_convert_dtypes(
+        df_module.make_column("", "A_a A_b A_c ba bb bc".split() + [None])
+    )
+    df_module.assert_column_equal(out, expected)

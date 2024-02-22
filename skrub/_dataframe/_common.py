@@ -652,7 +652,9 @@ def is_in(column, values):
 
 @is_in.specialize("pandas")
 def _is_in_pandas(column, values):
-    return column.isin(values)
+    res = column.isin(values).convert_dtypes()
+    res[column.isna()] = pd.NA
+    return res
 
 
 @is_in.specialize("polars")
@@ -682,7 +684,7 @@ def drop_nulls(column):
 
 @drop_nulls.specialize("pandas")
 def _drop_nulls_pandas(column):
-    return column.dropna()
+    return column.dropna().reset_index(drop=True)
 
 
 @drop_nulls.specialize("polars")
@@ -702,7 +704,10 @@ def _n_unique_pandas(column):
 
 @n_unique.specialize("polars")
 def _n_unique_polars(column):
-    return column.n_unique()
+    n = column.n_unique()
+    if column.is_null().any():
+        n -= 1
+    return n
 
 
 @dispatch
@@ -712,7 +717,7 @@ def unique(column):
 
 @unique.specialize("pandas")
 def _unique_pandas(column):
-    return pd.Series(column.dropna().unique())
+    return pd.Series(column.dropna().unique()).rename(column.name)
 
 
 @unique.specialize("polars")
@@ -767,6 +772,9 @@ def _replace_polars(column, old, new):
 
 @dispatch
 def replace_regex(column, pattern, replacement):
+    # NOTE: regex syntax is not the same in python and polars in particular for
+    # referring to capture groups. ATM we don't deal with that ie capture
+    # groups will not work.
     raise NotImplementedError()
 
 
