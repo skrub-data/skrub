@@ -192,9 +192,9 @@ def test_is_bool(df_module):
 def test_is_numeric(df_module):
     df = df_module.example_dataframe
     df = ns.pandas_convert_dtypes(df)
-    for num_col in ["int-col", "float-col"]:
+    for num_col in ["int-col", "float-col", "bool-col"]:
         assert ns.is_numeric(ns.col(df, num_col))
-    for col in ["str-col", "datetime-col", "date-col", "bool-col"]:
+    for col in ["str-col", "datetime-col", "date-col"]:
         assert not ns.is_numeric(ns.col(df, col))
 
 

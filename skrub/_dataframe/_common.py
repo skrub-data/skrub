@@ -464,15 +464,15 @@ def is_numeric(column):
 
 @is_numeric.specialize("pandas")
 def _is_numeric_pandas(column):
-    # polars and pandas disagree about whether Booleans are numbers
-    return pandas.api.types.is_numeric_dtype(
+    return pandas.api.types.is_numeric_dtype(column) or pandas.api.types.is_bool_dtype(
         column
-    ) and not pandas.api.types.is_bool_dtype(column)
+    )
 
 
 @is_numeric.specialize("polars")
 def _is_numeric_polars(column):
-    return column.dtype.is_numeric()
+    # polars and pandas disagree about whether Booleans are numbers
+    return column.dtype.is_numeric() or column.dtype == pl.Boolean
 
 
 @dispatch
