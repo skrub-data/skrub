@@ -132,7 +132,17 @@ Instead we must rewrite it to be:
 ...     ...
 """
 
+from dataclasses import dataclass
 from functools import singledispatch
+from types import MappingProxyType, ModuleType
+from typing import Any, Dict, Tuple
+
+
+@dataclass
+class DataFrameModuleInfo:
+    name: str
+    module: ModuleType
+    types: Dict[str, Tuple[Any]]
 
 
 def _load_dataframe_module_info(name):
@@ -140,25 +150,35 @@ def _load_dataframe_module_info(name):
     if name == "pandas":
         import pandas
 
-        return {
-            "module": pandas,
-            "types": {
-                "DataFrame": [pandas.DataFrame],
-                "Column": [pandas.Series],
-            },
-        }
+        return DataFrameModuleInfo(
+            **{
+                "name": "pandas",
+                "module": pandas,
+                "types": MappingProxyType(
+                    {
+                        "DataFrame": (pandas.DataFrame,),
+                        "Column": (pandas.Series,),
+                    }
+                ),
+            }
+        )
     if name == "polars":
         import polars
 
-        return {
-            "module": polars,
-            "types": {
-                "DataFrame": [polars.DataFrame, polars.LazyFrame],
-                "LazyFrame": [polars.LazyFrame],
-                "EagerFrame": [polars.DataFrame],
-                "Column": [polars.Series],
-            },
-        }
+        return DataFrameModuleInfo(
+            **{
+                "name": "polars",
+                "module": polars,
+                "types": MappingProxyType(
+                    {
+                        "DataFrame": (polars.DataFrame, polars.LazyFrame),
+                        "LazyFrame": (polars.LazyFrame,),
+                        "EagerFrame": (polars.DataFrame,),
+                        "Column": (polars.Series,),
+                    }
+                ),
+            }
+        )
     raise KeyError(
         f"Unknown dataframe module: {name}. "
         "Available modules are ['pandas' and 'polars']."
@@ -203,9 +223,9 @@ def dispatch(function):
 
         if argument_type is None:
             # Use all type names in the module's description by default.
-            argument_type = list(module_info["types"].keys())
+            argument_type = list(module_info.types.keys())
         if isinstance(argument_type, str):
-            argument_type = [argument_type]
+            argument_type = (argument_type,)
 
         # Define a decorator that adds specialized implementations to
         # ``dispatched``'s registry. When the decorator is applied to a
@@ -215,7 +235,7 @@ def dispatch(function):
         def decorator(specialized_impl):
             types_to_register = set()
             for type_name in argument_type:
-                types_to_register.update(module_info["types"][type_name])
+                types_to_register.update(module_info.types[type_name])
             for module_type in types_to_register:
                 dispatched.register(module_type, specialized_impl)
             return specialized_impl
