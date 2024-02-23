@@ -289,7 +289,7 @@ def to_column_list(obj):
         return [obj]
     if is_dataframe(obj):
         return [col(obj, c) for c in column_names(obj)]
-    if not hasattr(obj, "__iter__"):
+    if not hasattr(obj, "__iter__") or (len(obj) and not is_column(next(iter(obj)))):
         raise TypeError("obj should be a DataFrame, a Column or a list of Columns.")
     return obj
 
@@ -408,7 +408,7 @@ def _set_column_names_polars(df, new_column_names):
 
 @dispatch
 def dtype(column):
-    return column.dtype
+    raise NotImplementedError()
 
 
 @dtype.specialize("pandas")
@@ -502,7 +502,7 @@ def _to_numeric_polars(column, dtype=None, strict=True):
     error = None
     for dtype in [pl.Int64, pl.Float64]:
         try:
-            return column.cast(dtype)
+            return column.cast(dtype, strict=strict)
         except Exception as e:
             error = e
     if not strict:
@@ -517,12 +517,12 @@ def to_float32(column):
 
 @to_float32.specialize("pandas")
 def _to_float32_pandas(column):
-    return _to_numeric_pandas(column).astype("float32")
+    return _to_numeric_pandas(column, dtype=pd.Float32Dtype())
 
 
 @to_float32.specialize("polars")
 def _to_float32_polars(column):
-    return _to_numeric_polars(column).cast(pl.Float32)
+    return _to_numeric_polars(column, dtype=pl.Float32)
 
 
 @dispatch

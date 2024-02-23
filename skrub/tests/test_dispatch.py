@@ -38,3 +38,6 @@ def test_dispatch():
     assert f(df) == "polars"
     assert f(df["a"]) == "polars"
     assert f(0, df["a"]) == "default"
+
+    with pytest.raises(KeyError, match="Unknown dataframe module"):
+        f.specialize("numpy")

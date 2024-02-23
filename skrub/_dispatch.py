@@ -211,7 +211,7 @@ def dispatch(function):
         # module are used.
         try:
             module_info = _load_dataframe_module_info(module_name)
-        except (ImportError, KeyError):
+        except ImportError:
             # The module cannot be imported. We return a decorator that does
             # not do anything. The implementations it is applied to will not be
             # registered and they will not be called; they are written for a

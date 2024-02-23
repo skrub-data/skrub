@@ -27,6 +27,7 @@ def test_dataframe_module_name(df_module):
     assert getattr(ns, f"is_{df_module.name}")(df_module.empty_dataframe)
     assert ns.dataframe_module_name(df_module.empty_column) == df_module.name
     assert getattr(ns, f"is_{df_module.name}")(df_module.empty_column)
+    assert ns.dataframe_module_name(0) is None
 
 
 def test_is_dataframe(df_module):
@@ -122,6 +123,13 @@ def test_to_column_list(df_module, example_data_dict):
     cols = ns.to_column_list(df_module.example_dataframe)
     for c, name in zip(cols, example_data_dict.keys()):
         assert ns.name(c) == name
+    assert ns.to_column_list(df_module.example_column)[0] is df_module.example_column
+    assert ns.to_column_list([df_module.example_column])[0] is df_module.example_column
+    assert ns.to_column_list([]) == []
+    with pytest.raises(TypeError, match=".*should be a Data.*"):
+        ns.to_column_list({"A": [1]})
+    with pytest.raises(TypeError, match=".*should be a Data.*"):
+        ns.to_column_list(None)
 
 
 def test_collect(df_module):
@@ -237,6 +245,22 @@ def test_to_numeric(df_module):
     df_module.assert_column_equal(
         as_num, ns.pandas_convert_dtypes(df_module.make_column("_", list(range(5))))
     )
+    assert (
+        ns.dtype(ns.to_numeric(s, dtype=df_module.dtypes["float32"]))
+        == df_module.dtypes["float32"]
+    )
+    assert ns.dtype(ns.to_float32(s)) == df_module.dtypes["float32"]
+    s = df_module.make_column("_", map("_{}".format, range(5)))
+    with pytest.raises(ValueError):
+        ns.to_numeric(s)
+    df_module.assert_column_equal(
+        ns.to_numeric(s, strict=False),
+        ns.all_null_like(s, dtype=df_module.dtypes["int64"]),
+    )
+    assert (
+        ns.dtype(ns.to_numeric(s, strict=False, dtype=df_module.dtypes["float32"]))
+        == df_module.dtypes["float32"]
+    )
 
 
 def test_is_string(df_module):
@@ -295,6 +319,8 @@ def test_to_datetime(df_module):
         ns.to_datetime(s, None, True),
         df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 4, 5)]),
     )
+    dt_col = ns.col(df_module.example_dataframe, "datetime-col")
+    assert ns.to_datetime(dt_col, None) is dt_col
 
 
 def test_is_categorical(df_module):
