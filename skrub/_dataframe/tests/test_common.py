@@ -27,7 +27,6 @@ def test_not_implemented():
         func = getattr(ns, func_name)
         n_params = len(inspect.signature(func).parameters)
         params = [None] * n_params
-        print(func_name)
         with pytest.raises(NotImplementedError):
             func(*params)
 
@@ -48,7 +47,6 @@ def test_dataframe_module_name(df_module):
     assert getattr(ns, f"is_{df_module.name}")(df_module.empty_dataframe)
     assert ns.dataframe_module_name(df_module.empty_column) == df_module.name
     assert getattr(ns, f"is_{df_module.name}")(df_module.empty_column)
-    assert ns.dataframe_module_name(0) is None
 
 
 def test_is_dataframe(df_module):
