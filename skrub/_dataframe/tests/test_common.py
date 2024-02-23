@@ -102,6 +102,15 @@ def test_make_column_like(df_module, example_data_dict):
     assert ns.dataframe_module_name(col) == df_module.name
 
 
+def test_all_null_like(df_module):
+    col = ns.all_null_like(df_module.example_column)
+    assert ns.is_column(col)
+    assert ns.shape(col) == ns.shape(df_module.example_column)
+    df_module.assert_column_equal(
+        ns.is_null(col), df_module.make_column("float-col", [True] * ns.shape(col)[0])
+    )
+
+
 #
 # Querying and modifying metadata
 # ===============================

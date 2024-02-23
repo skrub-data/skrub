@@ -242,26 +242,30 @@ def _make_column_like_polars(column, values, name):
 
 
 @dispatch
-def all_null_like(column, length=None, dtype=None):
+def all_null_like(column, length=None, dtype=None, name=None):
     raise NotImplementedError()
 
 
 @all_null_like.specialize("pandas")
-def _all_null_like_pandas(column, length=None, dtype=None):
+def _all_null_like_pandas(column, length=None, dtype=None, name=None):
     if length is None:
         length = len(column)
     if dtype is None:
         dtype = column.dtype
-    return pd.Series(dtype=dtype, index=column.index)
+    if name is None:
+        name = column.name
+    return pd.Series(dtype=dtype, index=column.index, name=name)
 
 
 @all_null_like.specialize("polars")
-def _all_null_like_polars(column, length=None, dtype=None):
+def _all_null_like_polars(column, length=None, dtype=None, name=None):
     if length is None:
         length = len(column)
     if dtype is None:
         dtype = column.dtype
-    return pl.Series([None] * length, dtype=dtype)
+    if name is None:
+        name = column.name
+    return pl.Series(name, [None] * length, dtype=dtype)
 
 
 @dispatch
@@ -669,7 +673,7 @@ def is_null(column):
 
 @is_null.specialize("pandas")
 def _is_null_pandas(column):
-    return column.isna()
+    return rename(column.isna(), name(column))
 
 
 @is_null.specialize("polars")
