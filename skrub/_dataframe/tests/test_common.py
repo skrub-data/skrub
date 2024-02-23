@@ -111,6 +111,27 @@ def test_all_null_like(df_module):
     )
 
 
+def test_concat_horizontal(df_module, example_data_dict):
+    df1 = df_module.make_dataframe(example_data_dict)
+    df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
+    df = ns.concat_horizontal(df1, df2)
+    assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
+
+
+def test_to_column_list(df_module, example_data_dict):
+    cols = ns.to_column_list(df_module.example_dataframe)
+    for c, name in zip(cols, example_data_dict.keys()):
+        assert ns.name(c) == name
+
+
+def test_collect(df_module):
+    assert ns.collect(df_module.example_dataframe) is df_module.example_dataframe
+    if df_module.name == "polars":
+        df_module.assert_frame_equal(
+            ns.collect(df_module.example_dataframe.lazy()), df_module.example_dataframe
+        )
+
+
 #
 # Querying and modifying metadata
 # ===============================
