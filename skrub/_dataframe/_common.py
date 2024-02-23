@@ -109,7 +109,7 @@ def _skrub_namespace_polars(obj):
 @dispatch
 def dataframe_module_name(obj):
     """Return the dataframe module this object belongs to: 'pandas' or 'polars'."""
-    return None
+    raise NotImplementedError()
 
 
 @dataframe_module_name.specialize("pandas")
@@ -228,7 +228,7 @@ def _make_dataframe_like_polars(df, data):
 
 @dispatch
 def make_column_like(column, values, name):
-    return NotImplementedError()
+    raise NotImplementedError()
 
 
 @make_column_like.specialize("pandas")

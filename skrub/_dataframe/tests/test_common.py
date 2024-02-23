@@ -3,6 +3,7 @@ Note: most tests in this file use the ``df_module`` fixture, which is defined
 in ``skrub.conftest``. See the corresponding docstrings for details.
 """
 
+import inspect
 from datetime import datetime
 
 import numpy as np
@@ -10,6 +11,26 @@ import pytest
 from numpy.testing import assert_array_equal
 
 from skrub._dataframe import _common as ns
+
+
+def test_not_implemented():
+    # make codecov happy
+    has_default_impl = {
+        "is_dataframe",
+        "is_column",
+        "collect",
+        "is_lazyframe",
+        "pandas_convert_dtypes",
+        "to_column_list",
+    }
+    for func_name in sorted(set(ns.__all__) - has_default_impl):
+        func = getattr(ns, func_name)
+        n_params = len(inspect.signature(func).parameters)
+        params = [None] * n_params
+        print(func_name)
+        with pytest.raises(NotImplementedError):
+            func(*params)
+
 
 #
 # Inspecting containers' type and module
