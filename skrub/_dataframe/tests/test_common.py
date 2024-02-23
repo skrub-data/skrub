@@ -340,6 +340,11 @@ def test_to_datetime(df_module):
     )
     dt_col = ns.col(df_module.example_dataframe, "datetime-col")
     assert ns.to_datetime(dt_col, None) is dt_col
+    if df_module.name != "pandas":
+        return
+    s = df_module.make_column("", ["2020-01-01 04:00:00+02:00"])
+    dt = ns.to_datetime(s, None)
+    assert str(dt[0]) == "2020-01-01 02:00:00+00:00"
 
 
 def test_is_categorical(df_module):

@@ -1,8 +1,6 @@
-try:
-    import pandas as pd
-    import pandas.api.types
-except ImportError:
-    pass
+import pandas as pd
+import pandas.api.types
+
 try:
     import polars as pl
 except ImportError:
