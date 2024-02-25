@@ -36,6 +36,7 @@ def _is_date(column):
 
 @_is_date.specialize("pandas")
 def _is_date_pandas(column):
+    column = sbd.drop_nulls(column)
     return (column.dt.date == column).all()
 
 
