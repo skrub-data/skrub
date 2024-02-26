@@ -91,7 +91,7 @@ class DatetimeColumnEncoder(BaseEstimator):
 
     def fit_transform(self, column):
         self._check_params()
-        if not sbd.is_anydate(column):
+        if not sbd.is_any_date(column):
             return NotImplemented
         if self.resolution is None:
             self.extracted_features_ = []

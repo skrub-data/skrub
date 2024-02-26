@@ -42,7 +42,7 @@ __all__ = [
     "to_float32",
     "is_string",
     "is_object",
-    "is_anydate",
+    "is_any_date",
     "set_column_names",
     "collect",
     "is_categorical",
@@ -515,17 +515,17 @@ def _is_object_polars(column):
 
 
 @dispatch
-def is_anydate(column):
+def is_any_date(column):
     raise NotImplementedError()
 
 
-@is_anydate.specialize("pandas")
-def _is_anydate_pandas(column):
+@is_any_date.specialize("pandas")
+def _is_any_date_pandas(column):
     return pandas.api.types.is_datetime64_any_dtype(column)
 
 
-@is_anydate.specialize("polars")
-def _is_anydate_polars(column):
+@is_any_date.specialize("polars")
+def _is_any_date_polars(column):
     return column.dtype in (pl.Date, pl.Datetime)
 
 
@@ -601,7 +601,7 @@ def to_datetime(column, format, strict=True):
 
 @to_datetime.specialize("pandas")
 def _to_datetime_pandas(column, format, strict=True):
-    if _is_anydate_pandas(column):
+    if _is_any_date_pandas(column):
         return column
     errors = "raise" if strict else "coerce"
     out = pd.to_datetime(column, format=format, errors=errors)
@@ -612,7 +612,7 @@ def _to_datetime_pandas(column, format, strict=True):
 
 @to_datetime.specialize("polars")
 def _to_datetime_polars(column, format, strict=True):
-    if _is_anydate_polars(column):
+    if _is_any_date_polars(column):
         return column
     return column.str.to_datetime(format=format, strict=strict)
 

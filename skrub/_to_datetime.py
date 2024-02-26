@@ -27,7 +27,7 @@ class ToDatetime(BaseEstimator):
         return _datetime_utils.guess_datetime_format(sample, random_state=0)
 
     def fit_transform(self, column):
-        if sbd.is_anydate(column):
+        if sbd.is_any_date(column):
             self.datetime_format_ = None
             self.output_dtype_ = sbd.dtype(column)
             return column

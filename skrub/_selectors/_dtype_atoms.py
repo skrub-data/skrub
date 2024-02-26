@@ -16,13 +16,13 @@ def numeric():
 
 class AnyDate(Filter):
     def __init__(self):
-        super().__init__(sbd.is_anydate)
+        super().__init__(sbd.is_any_date)
 
     def __repr__(self):
-        return "anydate()"
+        return "any_date()"
 
 
-def anydate():
+def any_date():
     return AnyDate()
 
 

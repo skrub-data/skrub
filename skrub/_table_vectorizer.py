@@ -50,7 +50,7 @@ def _make_table_vectorizer_pipeline(
     low_cardinality = s.categorical() & s.cardinality_below(cardinality_threshold)
     feature_extraction_steps = [
         (cols & s.numeric()).use(numeric_transformer, n_jobs=n_jobs, columnwise=True),
-        (cols & s.anydate()).use(datetime_transformer, n_jobs=n_jobs, columnwise=True),
+        (cols & s.any_date()).use(datetime_transformer, n_jobs=n_jobs, columnwise=True),
         (cols & low_cardinality).use(
             low_cardinality_transformer, n_jobs=n_jobs, columnwise=True
         ),
