@@ -487,9 +487,7 @@ def is_string(column):
 
 @is_string.specialize("pandas")
 def _is_string_pandas(column):
-    return pandas.api.types.is_string_dtype(
-        column
-    ) and not pandas.api.types.is_object_dtype(column)
+    return pandas.api.types.is_string_dtype(column)
 
 
 @is_string.specialize("polars")
