@@ -26,21 +26,22 @@ def check_key(
     main_key : list of str, str, or None
         Matching columns in the main table. Can be a single column name (str)
         if matching on a single column: ``"User_ID"`` is the same as
-        ``"[User_ID]"``.
+        ``["User_ID"]``.
     aux_key : list of str, str, or None
         Matching columns in the auxiliary table. Can be a single column name (str)
         if matching on a single column: ``"User_ID"`` is the same as
-        ``"[User_ID]"``.
+        ``["User_ID"]``.
     key : list of str, str, or None
         Can be provided in place of `main_key` and `aux_key` when they are the
         same. We must provide non-``None`` values for either `key` or both
         `main_key` and `aux_key`.
-    main_key_name : str
+    main_key_name : str, default="main_key"
         How to refer to `main_key` in error messages.
-    aux_key_name : str
+    aux_key_name : str, default="aux_key"
         How to refer to `aux_key` in error messages.
-    key_name : str
+    key_name : str, default="key"
         How to refer to `key` in error messages.
+
     Returns
     -------
     main_key, aux_key : pair (tuple) of lists of str

@@ -122,7 +122,7 @@ class EncodeDatetime(BaseEstimator):
 
 class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     """Transforms each datetime column into several numeric columns \
-    for temporal features (e.g year, month, day...).
+    for temporal features (e.g. year, month, day...).
 
     If the dates are timezone aware, all the features extracted will correspond
     to the provided timezone.
