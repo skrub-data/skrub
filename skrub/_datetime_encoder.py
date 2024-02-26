@@ -72,7 +72,7 @@ def _get_dt_feature_polars(column, feature):
     return getattr(column.dt, feature)()
 
 
-class DatetimeColumnEncoder(BaseEstimator):
+class EncodeDatetime(BaseEstimator):
     __single_column_transformer__ = True
 
     def __init__(
@@ -253,7 +253,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         if self.parse_string_columns:
             self._to_datetime = s.all().use(ToDatetime())
             steps.append(self._to_datetime)
-        column_encoder = DatetimeColumnEncoder(
+        column_encoder = EncodeDatetime(
             resolution=self.resolution,
             add_day_of_the_week=self.add_day_of_the_week,
             add_total_seconds=self.add_total_seconds,

@@ -9,7 +9,7 @@ from . import _selectors as s
 from . import _utils
 from ._check_input import CheckInputDataFrame
 from ._clean_null_strings import CleanNullStrings
-from ._datetime_encoder import DatetimeColumnEncoder
+from ._datetime_encoder import EncodeDatetime
 from ._gap_encoder import GapEncoder
 from ._pandas_convert_dtypes import PandasConvertDTypes
 from ._to_categorical import ToCategorical
@@ -24,7 +24,7 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     handle_unknown="ignore",
     drop="if_binary",
 )
-DATETIME_TRANSFORMER = DatetimeColumnEncoder()
+DATETIME_TRANSFORMER = EncodeDatetime()
 NUMERIC_TRANSFORMER = ToFloat32()
 
 
@@ -239,7 +239,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     We can also see all the processing steps that were applied to a given column
 
     >>> vectorizer.input_to_processing_steps_["B"]
-    [PandasConvertDTypes(), CleanNullStrings(), ToDatetime(), DatetimeColumnEncoder()]
+    [PandasConvertDTypes(), CleanNullStrings(), ToDatetime(), EncodeDatetime()]
 
     The passthrough parameter tells the vectorizer to pass through some columns
     without modification:
