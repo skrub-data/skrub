@@ -316,9 +316,9 @@ def test_is_anydate(df_module):
         # pandas does not have a Date type
         date_cols.append("date-col")
     for date_col in date_cols:
-        assert ns.is_anydate(ns.col(df, date_col))
+        assert ns.is_any_date(ns.col(df, date_col))
     for col in ["str-col", "int-col", "float-col", "bool-col"]:
-        assert not ns.is_anydate(ns.col(df, col))
+        assert not ns.is_any_date(ns.col(df, col))
 
 
 def test_to_datetime(df_module):
