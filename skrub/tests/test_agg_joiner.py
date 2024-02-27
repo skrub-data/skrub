@@ -36,6 +36,7 @@ if POLARS_SETUP:
     ASSERT_TUPLES,
 )
 def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
+    "Check the general behaviour of the `AggJoiner`."""
     X = px.DataFrame(main)
     aux = X if not use_X_placeholder else "X"
 

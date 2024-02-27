@@ -12,14 +12,14 @@ from skrub._utils import _is_array_like, atleast_2d_or_none
 
 
 class MultiAggJoiner(TransformerMixin, BaseEstimator):
-    """Extension of the AggJoiner to multiple auxiliary tables.
+    """Extension of the :class:`AggJoiner` to multiple auxiliary tables.
 
     Apply numerical and categorical aggregation operations on the `cols`
     to aggregate, selected by dtypes. See the list of supported operations
     at the parameter `operations`.
 
     If `cols` is not provided, `cols` is set to a list of lists.
-    For each table in `aux_tables`, the correponding list will be all columns
+    For each table in `aux_tables`, the corresponding list will be all columns
     of that table, except the `aux_keys` associated with that table.
 
     As opposed to the :class:`AggJoiner`, here `aux_tables` is a list of tables,
@@ -30,8 +30,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
     Therefore if we have a single table, we could either use
 
-    - the AggJoiner: ``AggJoiner(aux_table, key="ID")``
-    - or the MultiAggJoiner: ``MultiAggJoiner([aux_table], keys=["ID"])``
+    - the :class:`AggJoiner`: ``AggJoiner(aux_table, key="ID")``
+    - or the :class:`MultiAggJoiner`: ``MultiAggJoiner([aux_table], keys=["ID"])``
 
     Note that for `keys`, `main_keys`, `aux_keys`, `cols` and `operations`,
     an input of the form ``[["a"], ["b"], ["c", "d"]]`` is valid
@@ -60,7 +60,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         of them.
 
         All `keys` must be present in the main and auxiliary tables before fit.
-        It's not (yet) possible to use columns from the first joined table \
+        It's not (yet) possible to use columns from the first joined table
         to join the second.
 
         If not `None`, there must be an iterable of `keys` for each table
@@ -93,7 +93,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         in `aux_tables`.
 
         If set to `None`, `cols` is set to a list of lists. For each table
-        in `aux_tables`, the correponding list will be all columns of that table,
+        in `aux_tables`, the corresponding list will be all columns of that table,
         except the `aux_keys` associated with that table.
 
     operations : iterable of str, or iterable of iterable of str, default=None
@@ -103,13 +103,11 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         table in `aux_tables`.
 
         - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-        "hist" and "value_counts" accept an integer argument to parametrize
-        the binning.
-
+          "hist" and "value_counts" accept an integer argument to parametrize
+          the binning.
         - categorical : {"mode", "count", "value_counts"}
-
-        - If set to `None` (the default), ["mean", "mode"] will be used \
-        for all auxiliary tables.
+        - If set to `None` (the default), ["mean", "mode"] will be used
+          for all auxiliary tables.
 
     suffixes : iterable of str, default=None
         Suffixes to append to the `aux_tables`' column names.
@@ -217,7 +215,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         ----------
         X : DataframeLike
             The main table to augment.
-        aux_tables : iterator of DataframeLike or "X"
+        aux_tables : iterator of DataFrameLike or "X"
             The auxiliary tables.
 
         Raises

@@ -52,7 +52,7 @@ def split_num_categ_operations(operations: list[str]) -> tuple[list[str], list[s
 class AggJoiner(TransformerMixin, BaseEstimator):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
-    Apply numerical and categorical aggregation operations on the `cols`
+    Apply numerical and categorical aggregation operations on the columns (i.e. `cols`)
     to aggregate, selected by dtypes. See the list of supported operations
     at the parameter `operations`.
 
@@ -69,7 +69,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self-aggregation on the input data.
 
     key : str, default=None
-        The column names to use for both `main_key` and `aux_key` when they
+        The column name to use for both `main_key` and `aux_key` when they
         are the same. Provide either `key` or both `main_key` and `aux_key`.
 
     main_key : str or iterable of str, default=None
@@ -168,8 +168,14 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         ----------
         X : DataframeLike
             The main table to augment.
+
         aux_table : DataframeLike or "X"
             The auxiliary table.
+
+    Returns
+    -------
+    X, aux_table: DataFrameLike
+        The validated main and auxiliary dataframes.
         """
         # Polars lazyframes will raise an error here.
         if not hasattr(X, "__dataframe__"):
@@ -177,18 +183,17 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         if isinstance(aux_table, str):
             if aux_table == "X":
                 return X, X
-            else:
-                raise ValueError("'aux_table' must be a dataframe or 'X'.")
+            raise ValueError("'aux_table' must be a dataframe or the string 'X'.")
         if not hasattr(aux_table, "__dataframe__"):
             raise TypeError(
-                f"'aux_table' must be a dataframe or 'X', got {type(aux_table)}."
+                f"'aux_table' must be a dataframe or the string 'X', got {type(aux_table)}."
             )
 
         if (is_pandas(X) and not is_pandas(aux_table)) or (
             is_polars(X) and not is_polars(aux_table)
         ):
             raise TypeError(
-                "'X' and 'aux_table' must be of the same type, got"
+                "'X' and 'aux_table' must be of the same dataframe type, got"
                 f"{type(X)} and {type(aux_table)}"
             )
 
@@ -244,7 +249,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : DataframeLike
+        X : DataFrameLike
             Input data, based table on which to left join the
             auxiliary table.
         y : None
