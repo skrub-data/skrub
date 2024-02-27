@@ -7,7 +7,7 @@ from skrub._dataframe._polars import POLARS_SETUP
 
 
 @pytest.fixture
-def main():
+def main_table():
     df = pd.DataFrame(
         {
             "userId": [1, 1, 1, 2, 2, 2],
@@ -35,9 +35,9 @@ if POLARS_SETUP:
     "px, assert_frame_equal_",
     ASSERT_TUPLES,
 )
-def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
+def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_equal_):
     "Check the general behaviour of the `AggJoiner`."
-    X = px.DataFrame(main)
+    X = px.DataFrame(main_table)
     aux = X if not use_X_placeholder else "X"
 
     agg_joiner_user = AggJoiner(
@@ -86,7 +86,7 @@ def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
 
 
 @pytest.mark.skipif(not POLARS_SETUP, reason="Polars is not available")
-def test_polars_unavailable_operation(main):
+def test_polars_unavailable_operation(main_table):
     agg_joiner = AggJoiner(
         aux_table="X",
         main_key="userId",
@@ -95,43 +95,43 @@ def test_polars_unavailable_operation(main):
         operations=["value_counts"],
     )
     with pytest.raises(ValueError, match=r"(?=.*value_counts)(?=.*supported)"):
-        agg_joiner.fit(pl.DataFrame(main))
+        agg_joiner.fit(pl.DataFrame(main_table))
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_keys(main, px):
-    main = px.DataFrame(main)
+def test_keys(main_table, px):
+    main_table = px.DataFrame(main_table)
 
     # Check only key
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         cols=["rating", "genre"],
     )
-    agg_joiner.fit(main)
+    agg_joiner.fit(main_table)
 
     # Check multiple key
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key=["userId", "movieId"],
         cols=["rating", "genre"],
     )
-    agg_joiner.fit(main)
+    agg_joiner.fit(main_table)
 
     # Check multiple main_key and aux_key, same length
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         main_key=["userId", "movieId"],
         aux_key=["userId", "movieId"],
         cols=["rating", "genre"],
     )
-    agg_joiner.fit(main)
+    agg_joiner.fit(main_table)
     assert agg_joiner._main_key == ["userId", "movieId"]
     assert agg_joiner._aux_key == ["userId", "movieId"]
 
     # Check too many main_key
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         main_key=["userId", "movieId"],
         aux_key="userId",
         cols=["rating", "genre"],
@@ -139,11 +139,11 @@ def test_keys(main, px):
     with pytest.raises(
         ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
     ):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
     # Check too many aux_key
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         main_key="userId",
         aux_key=["userId", "movieId"],
         cols=["rating", "genre"],
@@ -151,147 +151,147 @@ def test_keys(main, px):
     with pytest.raises(
         ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
     ):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
     # Check providing key and extra main_key
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         main_key="userId",
         cols=["rating", "genre"],
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
     # Check providing key and extra aux_key
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         aux_key="userId",
         cols=["rating", "genre"],
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
     # Check main_key doesn't exist in table
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         main_key="wrong_key",
         aux_key="userId",
         cols=["rating", "genre"],
     )
     match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
     # Check aux_key doesn't exist in table
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         main_key="userId",
         aux_key="wrong_key",
         cols=["rating", "genre"],
     )
     match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_suffix(main, px):
-    main = px.DataFrame(main)
+def test_suffix(main_table, px):
+    main_table = px.DataFrame(main_table)
 
     # Check no suffix
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         cols=["rating", "genre"],
     )
-    agg_joiner.fit(main)
+    agg_joiner.fit(main_table)
     assert agg_joiner.suffix == ""
 
     # Check inconsistent number of suffixes
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         cols="rating",
         suffix=["_user", "_movie", "_tag"],
     )
     with pytest.raises(ValueError, match=r"(?='suffix' must be a string.*)"):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_cols(main, px):
-    main = px.DataFrame(main)
+def test_cols(main_table, px):
+    main_table = px.DataFrame(main_table)
 
     # Check no cols
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key=["movieId", "userId"],
     )
-    agg_joiner.fit(main)
+    agg_joiner.fit(main_table)
     agg_joiner._cols == ["rating", "genre"]
 
     # Check missing agg or keys cols in tables
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         cols="wrong_key",
     )
     match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_input_multiple_tables(main, px):
-    main = px.DataFrame(main)
+def test_input_multiple_tables(main_table, px):
+    main_table = px.DataFrame(main_table)
 
     # Check too many aux_table
     agg_joiner = AggJoiner(
-        aux_table=[main, main],
+        aux_table=[main_table, main_table],
         main_key="userId",
         aux_key=["userId", "userId"],
         cols=[["rating"], ["rating"]],
     )
     error_msg = r"(?=.*must be a dataframe or the string 'X', got <class 'list'>)"
     with pytest.raises(TypeError, match=error_msg):
-        agg_joiner.fit_transform(main)
+        agg_joiner.fit_transform(main_table)
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_default_operations(main, px):
-    main = px.DataFrame(main)
+def test_default_operations(main_table, px):
+    main_table = px.DataFrame(main_table)
 
     # Check default operations
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         cols=["rating", "genre"],
     )
-    agg_joiner.fit(main)
+    agg_joiner.fit(main_table)
     assert agg_joiner._operations == ["mean", "mode"]
 
     # Check invariant operations input
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         cols=["rating", "genre"],
         operations=["min", "max", "mode"],
     )
-    agg_joiner.fit(main)
+    agg_joiner.fit(main_table)
     assert agg_joiner._operations == ["min", "max", "mode"]
 
     # Check not supported operations
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
         cols=["rating", "genre"],
         operations=["most_frequent", "mode"],
     )
     match = r"(?=.*operations options are)"
     with pytest.raises(ValueError, match=match):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
     # Check split ops
     num_ops, categ_ops = split_num_categ_operations(
@@ -302,8 +302,8 @@ def test_default_operations(main, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_X_wrong_string_placeholder(main, px):
-    main = px.DataFrame(main)
+def test_X_wrong_string_placeholder(main_table, px):
+    main_table = px.DataFrame(main_table)
 
     agg_joiner = AggJoiner(
         aux_table="Y",
@@ -311,19 +311,19 @@ def test_X_wrong_string_placeholder(main, px):
         cols="genre",
     )
     with pytest.raises(ValueError, match=r"(?=.*dataframe)(?=.*'X')"):
-        agg_joiner.fit(main)
+        agg_joiner.fit(main_table)
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_not_fitted_dataframe(main, px):
-    main = px.DataFrame(main)
+def test_not_fitted_dataframe(main_table, px):
+    main_table = px.DataFrame(main_table)
     not_main = px.DataFrame({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
 
     agg_joiner = AggJoiner(
-        aux_table=main,
+        aux_table=main_table,
         key="userId",
     )
-    agg_joiner.fit(main)
+    agg_joiner.fit(main_table)
     error_msg = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         agg_joiner.transform(not_main)
@@ -341,13 +341,13 @@ y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
         (y.values.tolist(), "y_0"),
     ],
 )
-def test_agg_target(main, y, col_name):
+def test_agg_target(main_table, y, col_name):
     agg_target = AggTarget(
         main_key="userId",
         suffix="_user",
         operation=["hist(2)", "value_counts"],
     )
-    main_transformed = agg_target.fit_transform(main, y)
+    main_transformed = agg_target.fit_transform(main_table, y)
 
     main_transformed_expected = pd.DataFrame(
         {
@@ -365,7 +365,7 @@ def test_agg_target(main, y, col_name):
     assert_frame_equal(main_transformed, main_transformed_expected)
 
 
-def test_agg_target_missing_operations(main):
+def test_agg_target_missing_operations(main_table):
     agg_target = AggTarget(
         main_key="userId",
         suffix="_user",
@@ -373,42 +373,42 @@ def test_agg_target_missing_operations(main):
 
     # y is continuous
     y = pd.DataFrame(dict(rating=[4.0, 4.1, 4.2, 4.3, 4.4, 4.5]))
-    agg_target.fit(main, y)
+    agg_target.fit(main_table, y)
     assert agg_target.operation_ == ["mean"]
 
     # y is categorical
     y = pd.DataFrame(dict(rating=["1", "2", "3", "1", "2", "3"]))
-    agg_target.fit(main, y)
+    agg_target.fit(main_table, y)
     assert agg_target.operation_ == ["mode"]
 
 
-def test_agg_target_check_input(main):
+def test_agg_target_check_input(main_table):
     agg_target = AggTarget(
         main_key="userId",
         suffix="_user",
     )
     match = r"(?=.*X must be a dataframe)"
     with pytest.raises(TypeError, match=match):
-        agg_target.fit(main.values, y)
+        agg_target.fit(main_table.values, y)
 
     match = r"(?=.*length)(?=.*match)"
     with pytest.raises(ValueError, match=match):
-        agg_target.fit(main, y["rating"][:2])
+        agg_target.fit(main_table, y["rating"][:2])
 
 
-def test_no_aggregation_exception(main):
+def test_no_aggregation_exception(main_table):
     agg_target = AggTarget(
         main_key="userId",
         operation=[],
     )
     with pytest.raises(ValueError, match=r"(?=.*No aggregation)"):
-        agg_target.fit(main, y)
+        agg_target.fit(main_table, y)
 
 
-def test_wrong_args_ops(main):
+def test_wrong_args_ops(main_table):
     agg_target = AggTarget(
         main_key="userId",
         operation="mean(2)",
     )
     with pytest.raises(ValueError, match=r"(?=.*'mean')(?=.*argument)"):
-        agg_target.fit(main, y)
+        agg_target.fit(main_table, y)

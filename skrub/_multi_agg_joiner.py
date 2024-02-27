@@ -226,9 +226,9 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         """
         if not _is_array_like(aux_tables):
             raise ValueError(
-                "`aux_tables` must be an iterable of dataframes or 'X'."
-                "If you are using a single auxiliary table, convert your current"
-                "`aux_tables` into [`aux_tables`]."
+                "`aux_tables` must be an iterable containing dataframes and/or the"
+                " string 'X'. If you are using a single auxiliary table, convert your"
+                " current`aux_tables` into [`aux_tables`]."
             )
         # Check `X` input type
         if not hasattr(X, "__dataframe__"):
@@ -240,7 +240,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 aux_tables[i] = X
             elif not hasattr(aux_table, "__dataframe__"):
                 raise ValueError(
-                    "`aux_tables` must be an iterable of dataframes or 'X'."
+                    "`aux_tables` must be an iterable containing dataframes and/or the"
+                    " string 'X'"
                 )
 
         # Check that all input types are matching

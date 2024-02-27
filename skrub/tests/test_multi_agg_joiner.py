@@ -96,7 +96,8 @@ def test_check_dataframes(main_table, px):
         keys=["userId"],
     )
     with pytest.raises(
-        ValueError, match=r"(?=`aux_tables` must be an iterable of dataframes or 'X'.)"
+        ValueError,
+        match=r"(?=must be an iterable containing dataframes and/or the string 'X')",
     ):
         multi_agg_joiner.fit_transform(main_table)
 
@@ -106,7 +107,8 @@ def test_check_dataframes(main_table, px):
         keys=["userId"],
     )
     with pytest.raises(
-        ValueError, match=r"(?=`aux_tables` must be an iterable of dataframes or 'X'.)"
+        ValueError,
+        match=r"(?=must be an iterable containing dataframes and/or the string 'X')",
     ):
         multi_agg_joiner.fit_transform(main_table)
 
