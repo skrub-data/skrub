@@ -50,14 +50,14 @@ def check_key(
     if key is not None:
         if aux_key is not None or main_key is not None:
             raise ValueError(
-                f"Can only pass argument '{key_name}' OR '{main_key_name}' and "
+                f"Can only pass argument '{key_name}' or '{main_key_name}' and "
                 f"'{aux_key_name}', not a combination of both."
             )
         main_key, aux_key = key, key
     else:
         if aux_key is None or main_key is None:
             raise ValueError(
-                f"Must pass EITHER '{key_name}', OR ('{main_key_name}' AND"
+                f"Must pass either '{key_name}', or ('{main_key_name}' and"
                 f" '{aux_key_name}')."
             )
     main_key = _utils.atleast_1d_or_none(main_key)

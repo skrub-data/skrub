@@ -290,14 +290,14 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         if keys is not None:
             if aux_keys is not None or main_keys is not None:
                 raise ValueError(
-                    "Can only pass argument `keys` OR `main_keys` and "
+                    "Can only pass argument `keys` or `main_keys` and "
                     "`aux_keys`, not a combination of both."
                 )
             main_keys, aux_keys = keys, keys
         else:
             if aux_keys is None or main_keys is None:
                 raise ValueError(
-                    "Must pass EITHER `keys`, OR (`main_keys` AND `aux_keys`)."
+                    "Must pass either `keys`, or (`main_keys` and `aux_keys`)."
                 )
         main_keys = atleast_2d_or_none(main_keys)
         aux_keys = atleast_2d_or_none(aux_keys)
@@ -464,13 +464,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 operations=operations,
                 suffix=suffix,
             )
-            self.agg_joiners_.append(agg_joiner)
-
-        for agg_joiner in self.agg_joiners_:
-            agg_joiner._check_inputs(X)
-
-        for agg_joiner in self.agg_joiners_:
             agg_joiner.fit(X)
+            self.agg_joiners_.append(agg_joiner)
 
         return self
 

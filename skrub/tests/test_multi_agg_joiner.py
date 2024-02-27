@@ -154,7 +154,7 @@ def test_keys(main_table, px):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
     )
-    error_msg = r"Must pass EITHER `keys`, OR \(`main_keys` AND `aux_keys`\)."
+    error_msg = r"Must pass either `keys`, or \(`main_keys` and `aux_keys`\)."
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
