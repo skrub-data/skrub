@@ -36,7 +36,7 @@ if POLARS_SETUP:
     ASSERT_TUPLES,
 )
 def test_simple_fit_transform(main, use_X_placeholder, px, assert_frame_equal_):
-    "Check the general behaviour of the `AggJoiner`."""
+    "Check the general behaviour of the `AggJoiner`."
     X = px.DataFrame(main)
     aux = X if not use_X_placeholder else "X"
 
@@ -254,7 +254,7 @@ def test_input_multiple_tables(main, px):
         aux_key=["userId", "userId"],
         cols=[["rating"], ["rating"]],
     )
-    error_msg = r"(?=.*must be a dataframe or 'X', got <class 'list'>)"
+    error_msg = r"(?=.*must be a dataframe or the string 'X', got <class 'list'>)"
     with pytest.raises(TypeError, match=error_msg):
         agg_joiner.fit_transform(main)
 

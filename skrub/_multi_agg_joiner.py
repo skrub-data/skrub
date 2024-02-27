@@ -79,7 +79,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         the join operation.
 
         All `aux_keys` must be present in respective `aux_tables` before fit.
-        It's not (yet) possible to use columns from the first joined table \
+        It's not (yet) possible to use columns from the first joined table
         to join the second.
 
         If not `None`, there must be an iterable of `aux_keys` for each table
@@ -213,7 +213,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : DataframeLike
+        X : DataFrameLike
             The main table to augment.
         aux_tables : iterator of DataFrameLike or "X"
             The auxiliary tables.
@@ -427,7 +427,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : DataframeLike
+        X : DataFrameLike
             Input data, based table on which to left join the
             auxiliary tables.
         y : None

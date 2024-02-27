@@ -71,15 +71,17 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     key : str, default=None
         The column name to use for both `main_key` and `aux_key` when they
         are the same. Provide either `key` or both `main_key` and `aux_key`.
+        If `key` is an iterable, we will perform a multi-column join.
 
     main_key : str or iterable of str, default=None
         Select the columns from the main table to use as keys during
         the join operation.
-        If `main_key` is a list, we will perform a multi-column join.
+        If `main_key` is an iterable, we will perform a multi-column join.
 
     aux_key : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as keys during
         the join operation.
+        If `aux_key` is an iterable, we will perform a multi-column join.
 
     cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
@@ -161,21 +163,21 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     def _check_dataframes(self, X, aux_table):
         """Check dataframes input types.
 
-        Raises an error if frames aren't both Pandas or Polars dataframes,
-        or if there is a Polars lazyframe. Alternatively, allows `aux_table` to be "X".
+            Raises an error if frames aren't both Pandas or Polars dataframes,
+            or if there is a Polars lazyframe.
+            Alternatively, allows `aux_table` to be "X".
 
-        Parameters
-        ----------
-        X : DataframeLike
-            The main table to augment.
+            Parameters
+            ----------
+            X : DataFrameLike
+                The main table to augment.
+            aux_table : DataFrameLike or "X"
+                The auxiliary table.
 
-        aux_table : DataframeLike or "X"
-            The auxiliary table.
-
-    Returns
-    -------
-    X, aux_table: DataFrameLike
-        The validated main and auxiliary dataframes.
+        Returns
+        -------
+        X, aux_table: DataFrameLike
+            The validated main and auxiliary dataframes.
         """
         # Polars lazyframes will raise an error here.
         if not hasattr(X, "__dataframe__"):
@@ -184,9 +186,10 @@ class AggJoiner(TransformerMixin, BaseEstimator):
             if aux_table == "X":
                 return X, X
             raise ValueError("'aux_table' must be a dataframe or the string 'X'.")
-        if not hasattr(aux_table, "__dataframe__"):
+        elif not hasattr(aux_table, "__dataframe__"):
             raise TypeError(
-                f"'aux_table' must be a dataframe or the string 'X', got {type(aux_table)}."
+                "'aux_table' must be a dataframe or the string 'X', got"
+                f" {type(aux_table)}."
             )
 
         if (is_pandas(X) and not is_pandas(aux_table)) or (
@@ -199,50 +202,49 @@ class AggJoiner(TransformerMixin, BaseEstimator):
 
         return X, aux_table
 
-    def _check_operations(self):
-        """Check `operations` input.
-
-        Returns
-        -------
-        operations
-            1-dimensional array of operations to perform on columns.
-        """
-        operations = atleast_1d_or_none(self.operations)
-        if len(operations) == 0:
-            operations = ["mean", "mode"]
-        return operations
-
-    def _check_suffix(self):
-        if not isinstance(self.suffix, str):
-            raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
-
     def _check_inputs(self, X):
         """Check inputs before fitting.
 
         Parameters
         ----------
-        X : DataframeLike
+        X : DataFrameLike
             Input data, based table on which to left join the
             auxiliary table.
         """
         X, self._aux_table = self._check_dataframes(X, self.aux_table)
+
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
 
-        self._cols = atleast_1d_or_none(self.cols)
         # If no `cols` provided, all columns but `aux_key` are used.
-        if len(self._cols) == 0:
+        if self.cols is None:
             self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
+        elif isinstance(self.cols, str):
+            self._cols = [
+                self.cols,
+            ]
+        else:
+            self._cols = self.cols
         _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
 
-        self._operations = self._check_operations()
+        if self.operations is None:
+            self._operations = ["mean", "mode"]
+        elif isinstance(self.operations, str):
+            self._operations = [
+                self.operations,
+            ]
+        else:
+            self._operations = self.operations
+
         self.num_operations, self.categ_operations = split_num_categ_operations(
             self._operations
         )
-        self._check_suffix()
+
+        if not isinstance(self.suffix, str):
+            raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
 
     def fit(self, X, y=None):
         """Aggregate auxiliary table based on the main keys.
