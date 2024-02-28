@@ -1,5 +1,6 @@
 import pandas as pd
 import pandas.api.types
+from sklearn.utils import parse_version
 
 try:
     import polars as pl
@@ -530,6 +531,8 @@ def is_string(column):
 
 @is_string.specialize("pandas")
 def _is_string_pandas(column):
+    if parse_version(pd.__version__) < parse_version("2.0.0"):
+        return column.convert_dtypes().dtype == pd.StringDtype()
     return pandas.api.types.is_string_dtype(column)
 
 
