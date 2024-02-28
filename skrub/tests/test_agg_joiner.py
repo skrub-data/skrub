@@ -254,7 +254,10 @@ def test_input_multiple_tables(main_table, px):
         aux_key=["userId", "userId"],
         cols=[["rating"], ["rating"]],
     )
-    error_msg = r"(?=.*must be a dataframe or the string 'X', got <class 'list'>)"
+    error_msg = (
+        r"(?=.*must be a dataframe or the string 'X')"
+        r"(?=.*use the MultiAggJoiner instead)"
+    )
     with pytest.raises(TypeError, match=error_msg):
         agg_joiner.fit_transform(main_table)
 

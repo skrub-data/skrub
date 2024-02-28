@@ -187,7 +187,8 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         elif not hasattr(aux_table, "__dataframe__"):
             raise TypeError(
                 "'aux_table' must be a dataframe or the string 'X', got"
-                f" {type(aux_table)}."
+                f" {type(aux_table)}. If you have more than one 'aux_table',"
+                " use the MultiAggJoiner instead."
             )
 
         if (is_pandas(X) and not is_pandas(aux_table)) or (
