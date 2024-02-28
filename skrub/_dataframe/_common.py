@@ -532,6 +532,8 @@ def is_string(column):
 @is_string.specialize("pandas")
 def _is_string_pandas(column):
     if parse_version(pd.__version__) < parse_version("2.0.0"):
+        # on old pandas versions
+        # `pd.api.types.is_string_dtype(pd.Series([1, ""]))` is True
         return column.convert_dtypes().dtype == pd.StringDtype()
     return pandas.api.types.is_string_dtype(column)
 
