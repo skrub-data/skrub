@@ -142,6 +142,11 @@ def atleast_2d_or_none(x):
     """``np.atleast_2d`` helper returning an empty list when x is None.
 
     Note that we don't use ``np.atleast_2d`` because x could be a jagged array.
+
+    Returns
+    -------
+    list of lists
+        The processed array in 2d shape.
     """
     if x is None:
         return [[]]

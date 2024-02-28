@@ -22,11 +22,12 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     For each table in `aux_tables`, the corresponding list will be all columns
     of that table, except the `aux_keys` associated with that table.
 
-    As opposed to the :class:`AggJoiner`, here `aux_tables` is a list of tables,
+    As opposed to the :class:`AggJoiner`, here `aux_tables` is an iterable of tables,
     each of which will be joined on the main table. Therefore `aux_keys` is now
-    a list of keys, of the same length as `aux_tables`, and each entry in `aux_keys`
-    is used to join the corresponding aux table. In the same way, each entry in `cols`
-    is a list of columns to aggregate in the corresponding aux table.
+    an iterable of keys, of the same length as `aux_tables`, and each entry
+    in `aux_keys` is used to join the corresponding aux table. In the same way,
+    each entry in `cols` is an iterable of columns to aggregate in the corresponding
+    aux table.
 
     Therefore if we have a single table, we could either use
 
@@ -332,7 +333,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         Returns
         -------
         cols
-            2-dimensional array of cols to perform aggregation on.
+            2-dimensional list of cols to perform aggregation on.
 
         Raises
         ------
@@ -364,7 +365,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         Returns
         -------
         operations
-            2-dimensional array of operations to perform on columns.
+            2-dimensional list of operations to perform on columns.
 
         Raises
         ------
@@ -400,7 +401,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         Returns
         -------
         suffixes
-            1-dimensional array of suffixes to append to dataframes.
+            1-dimensional list of suffixes to append to dataframes.
 
         Raises
         ------

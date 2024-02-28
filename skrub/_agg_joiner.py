@@ -92,11 +92,9 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         Aggregation operations to perform on the auxiliary table.
 
         - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-        "hist" and "value_counts" accept an integer argument to parametrize
-        the binning.
-
+          "hist" and "value_counts" accept an integer argument to parametrize
+          the binning.
         - categorical : {"mode", "count", "value_counts"}
-
         - If set to `None` (the default), ["mean", "mode"] will be used.
 
     suffix : str, default=""
