@@ -36,6 +36,7 @@ if POLARS_SETUP:
     ASSERT_TUPLES,
 )
 def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_equal_):
+    "Check the general behaviour of the `MultiAggJoiner`."
     main_table = px.DataFrame(main_table)
     aux = [main_table, main_table] if not use_X_placeholder else ["X", "X"]
 
@@ -65,6 +66,10 @@ def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_eq
 
 @pytest.mark.parametrize("px", MODULES)
 def test_X_placeholder(main_table, px):
+    """
+    Check that the 'X' placeholder replaces any of the `aux_tables` into the dataframe
+    seen in `fit`.
+    """
     main_table = px.DataFrame(main_table)
 
     multi_agg_joiner = MultiAggJoiner(
@@ -72,18 +77,26 @@ def test_X_placeholder(main_table, px):
         keys=[["userId"], ["userId"]],
     )
     multi_agg_joiner.fit_transform(main_table)
+    assert multi_agg_joiner._aux_tables == [main_table, main_table]
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=["X", "X"],
         keys=[["userId"], ["userId"]],
     )
     multi_agg_joiner.fit_transform(main_table)
+    assert multi_agg_joiner._aux_tables == [main_table, main_table]
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table, "X", main_table],
         keys=[["userId"], ["userId"], ["userId"], ["userId"]],
     )
     multi_agg_joiner.fit_transform(main_table)
+    assert multi_agg_joiner._aux_tables == [
+        main_table,
+        main_table,
+        main_table,
+        main_table,
+    ]
 
 
 @pytest.mark.parametrize("px", MODULES)
@@ -116,6 +129,10 @@ def test_check_dataframes(main_table, px):
 @pytest.mark.skipif(not POLARS_SETUP, reason="Polars not available.")
 @pytest.mark.parametrize("px", MODULES)
 def test_check_wrong_aux_table_type(main_table, px):
+    """
+    Check that providing different types for `X` and `aux_tables`
+    in the `MultiAggJoiner` raises an error.
+    """
     other_px = pd if px is pl else pl
     main_table = px.DataFrame(main_table)
     aux_table = other_px.DataFrame(main_table)
@@ -283,13 +300,20 @@ def test_cols(main_table, px):
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._cols == [["rating"], ["rating"]]
 
+
+@pytest.mark.parametrize("px", MODULES)
+def test_too_many_cols(main_table, px):
+    main_table = px.DataFrame(main_table)
+
     # Check providing too many cols
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
         keys=["userId"],
         cols=[["rating"], ["rating"]],
     )
-    error_msg = r"The number of provided cols must match the number of"
+    error_msg = (
+        r"The number of provided cols must match the number of tables in `aux_tables`."
+    )
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
@@ -362,7 +386,11 @@ def test_operations(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_suffixes(main_table, px):
+def test_default_suffixes(main_table, px):
+    """
+    Check that the default `suffixes` in the `MultiAggJoiner` are the
+    table indexes in `aux_tables`.
+    """
     main_table = px.DataFrame(main_table)
 
     # check default suffixes with multiple tables
@@ -374,6 +402,12 @@ def test_suffixes(main_table, px):
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._suffixes == ["_0", "_1"]
 
+
+@pytest.mark.parametrize("px", MODULES)
+def test_suffixes(main_table, px):
+    "Check that the `suffixes` parameter of the `MultiAggJoiner` works correctly."
+    main_table = px.DataFrame(main_table)
+
     # check suffixes when defined
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
@@ -383,6 +417,12 @@ def test_suffixes(main_table, px):
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._suffixes == ["_this", "_works"]
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_too_many_suffixes(main_table, px):
+    "Check that providing too many `suffixes` to the `MultiAggJoiner` raises an error."
+    main_table = px.DataFrame(main_table)
 
     # check too many suffixes
     multi_agg_joiner = MultiAggJoiner(
@@ -398,6 +438,12 @@ def test_suffixes(main_table, px):
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
+
+@pytest.mark.parametrize("px", MODULES)
+def test_non_str_suffixes(main_table, px):
+    "Check that providing non-str `suffixes` to the `MultiAggJoiner` raises an error."
+    main_table = px.DataFrame(main_table)
+
     # check suffixes not str
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
@@ -411,8 +457,21 @@ def test_suffixes(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_tuple_parameters(main_table, px):
+def test_iterable_parameters(main_table, px):
+    "Check that providing iterable parameters to `MultiAggJoiner` is possible."
     main_table = px.DataFrame(main_table)
+
+    # Lists of lists
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main_table, main_table],
+        keys=[["userId"], ["userId"]],
+        cols=[["rating"], ["rating"]],
+        operations=[["mean"], ["mean", "mode"]],
+        suffixes=["_1", "_2"],
+    )
+    multi_agg_joiner.fit_transform(main_table)
+
+    # Tuples of tuples
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=(main_table, main_table),
         keys=(("userId",), ("userId",)),
@@ -422,9 +481,33 @@ def test_tuple_parameters(main_table, px):
     )
     multi_agg_joiner.fit_transform(main_table)
 
+    # Lists of tuples
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main_table, main_table],
+        keys=[("userId",), ("userId",)],
+        cols=[("rating",), ("rating",)],
+        operations=[("mean",), ("mean", "mode")],
+        suffixes=["_1", "_2"],
+    )
+    multi_agg_joiner.fit_transform(main_table)
+
+    # Tuples of lists
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=(main_table, main_table),
+        keys=(["userId"], ["userId"]),
+        cols=(["rating"], ["rating"]),
+        operations=(["mean"], ["mean", "mode"]),
+        suffixes=("_1", "_2"),
+    )
+    multi_agg_joiner.fit_transform(main_table)
+
 
 @pytest.mark.parametrize("px", MODULES)
 def test_not_fitted_dataframe(main_table, px):
+    """
+    Check that calling `transform` on a dataframe not containing the columns
+    seen during `fit` raises an error.
+    """
     main_table = px.DataFrame(main_table)
     not_main = px.DataFrame({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
 

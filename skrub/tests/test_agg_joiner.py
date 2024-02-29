@@ -30,6 +30,17 @@ if POLARS_SETUP:
     ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
 
 
+def test_split_num_categ_operations():
+    "Check that the operations are correctly separated."
+
+    # Check split ops
+    num_ops, categ_ops = split_num_categ_operations(
+        ["mean", "std", "min", "mode", "max", "sum"]
+    )
+    assert num_ops == ["mean", "std", "min", "max", "sum"]
+    assert categ_ops == ["mode"]
+
+
 @pytest.mark.parametrize("use_X_placeholder", [False, True])
 @pytest.mark.parametrize(
     "px, assert_frame_equal_",
@@ -85,21 +96,9 @@ def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_eq
     assert_frame_equal_(main_movie, expected_movie)
 
 
-@pytest.mark.skipif(not POLARS_SETUP, reason="Polars is not available")
-def test_polars_unavailable_operation(main_table):
-    agg_joiner = AggJoiner(
-        aux_table="X",
-        main_key="userId",
-        aux_key="movieId",
-        cols="rating",
-        operations=["value_counts"],
-    )
-    with pytest.raises(ValueError, match=r"(?=.*value_counts)(?=.*supported)"):
-        agg_joiner.fit(pl.DataFrame(main_table))
-
-
 @pytest.mark.parametrize("px", MODULES)
-def test_keys(main_table, px):
+def test_correct_keys(main_table, px):
+    "Check that expected `key` parameters for the `AggJoiner` are working."
     main_table = px.DataFrame(main_table)
 
     # Check only key
@@ -128,6 +127,12 @@ def test_keys(main_table, px):
     agg_joiner.fit(main_table)
     assert agg_joiner._main_key == ["userId", "movieId"]
     assert agg_joiner._aux_key == ["userId", "movieId"]
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_wrong_keys(main_table, px):
+    "Check that wrong `key` parameters for the `AggJoiner` raise an error."
+    main_table = px.DataFrame(main_table)
 
     # Check too many main_key
     agg_joiner = AggJoiner(
@@ -197,7 +202,8 @@ def test_keys(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_suffix(main_table, px):
+def test_default_suffix(main_table, px):
+    "Check that the default `suffix` of `AggJoiner` is ''."
     main_table = px.DataFrame(main_table)
 
     # Check no suffix
@@ -208,6 +214,12 @@ def test_suffix(main_table, px):
     )
     agg_joiner.fit(main_table)
     assert agg_joiner.suffix == ""
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_too_many_suffixes(main_table, px):
+    "Check that providing more than one `suffix` for the `AggJoiner` raises an error."
+    main_table = px.DataFrame(main_table)
 
     # Check inconsistent number of suffixes
     agg_joiner = AggJoiner(
@@ -221,7 +233,8 @@ def test_suffix(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_cols(main_table, px):
+def test_default_cols(main_table, px):
+    "Check that by default, `cols` are all the columns of `aux_table` except `aux_key`."
     main_table = px.DataFrame(main_table)
 
     # Check no cols
@@ -232,11 +245,32 @@ def test_cols(main_table, px):
     agg_joiner.fit(main_table)
     agg_joiner._cols == ["rating", "genre"]
 
+
+@pytest.mark.parametrize("px", MODULES)
+def test_correct_cols(main_table, px):
+    "Check that expected `cols` parameters for the `AggJoiner` are working."
+    main_table = px.DataFrame(main_table)
+
+    # Check one col
+    agg_joiner = AggJoiner(
+        aux_table=main_table,
+        key=["movieId", "userId"],
+        cols=["rating"],
+    )
+    agg_joiner.fit(main_table)
+    agg_joiner._cols == ["rating"]
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_wrong_cols(main_table, px):
+    "Check that providing a column that's not in `aux_table` does not work."
+    main_table = px.DataFrame(main_table)
+
     # Check missing agg or keys cols in tables
     agg_joiner = AggJoiner(
         aux_table=main_table,
         key="userId",
-        cols="wrong_key",
+        cols="unknown_col",
     )
     match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
@@ -245,6 +279,7 @@ def test_cols(main_table, px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_input_multiple_tables(main_table, px):
+    "Check that providing too many auxiliary tables in `AggJoiner` raises an error."
     main_table = px.DataFrame(main_table)
 
     # Check too many aux_table
@@ -264,6 +299,7 @@ def test_input_multiple_tables(main_table, px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_default_operations(main_table, px):
+    "Check that the default `operations` of `AggJoiner` are ['mean', 'mode']."
     main_table = px.DataFrame(main_table)
 
     # Check default operations
@@ -275,6 +311,12 @@ def test_default_operations(main_table, px):
     agg_joiner.fit(main_table)
     assert agg_joiner._operations == ["mean", "mode"]
 
+
+@pytest.mark.parametrize("px", MODULES)
+def test_correct_operations_input(main_table, px):
+    "Check that expected `operations` parameters for the `AggJoiner` are working."
+    main_table = px.DataFrame(main_table)
+
     # Check invariant operations input
     agg_joiner = AggJoiner(
         aux_table=main_table,
@@ -285,27 +327,41 @@ def test_default_operations(main_table, px):
     agg_joiner.fit(main_table)
     assert agg_joiner._operations == ["min", "max", "mode"]
 
+
+@pytest.mark.skipif(not POLARS_SETUP, reason="Polars is not available")
+def test_polars_unavailable_operation(main_table):
+    "Check that the 'value_counts' operation is not supported for Polars."
+    agg_joiner = AggJoiner(
+        aux_table="X",
+        main_key="userId",
+        aux_key="movieId",
+        cols="rating",
+        operations=["value_counts"],
+    )
+    with pytest.raises(ValueError, match=r"(?=.*value_counts)(?=.*supported)"):
+        agg_joiner.fit(pl.DataFrame(main_table))
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_not_supported_operations(main_table, px):
+    "Check that calling an unsupported operation raises an error."
+    main_table = px.DataFrame(main_table)
+
     # Check not supported operations
     agg_joiner = AggJoiner(
         aux_table=main_table,
         key="userId",
         cols=["rating", "genre"],
-        operations=["most_frequent", "mode"],
+        operations=["nunique", "mode"],
     )
     match = r"(?=.*operations options are)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main_table)
 
-    # Check split ops
-    num_ops, categ_ops = split_num_categ_operations(
-        ["mean", "std", "min", "mode", "max", "sum"]
-    )
-    assert num_ops == ["mean", "std", "min", "max", "sum"]
-    assert categ_ops == ["mode"]
-
 
 @pytest.mark.parametrize("px", MODULES)
-def test_X_wrong_string_placeholder(main_table, px):
+def test_wrong_string_placeholder(main_table, px):
+    "Check that `aux_table='Y'` is not a valid string placeholder."
     main_table = px.DataFrame(main_table)
 
     agg_joiner = AggJoiner(
@@ -319,8 +375,12 @@ def test_X_wrong_string_placeholder(main_table, px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_not_fitted_dataframe(main_table, px):
+    """
+    Check that calling `transform` on a dataframe not containing the columns
+    seen during `fit` raises an error.
+    """
     main_table = px.DataFrame(main_table)
-    not_main = px.DataFrame({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
+    not_main_table = px.DataFrame({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
 
     agg_joiner = AggJoiner(
         aux_table=main_table,
@@ -329,7 +389,7 @@ def test_not_fitted_dataframe(main_table, px):
     agg_joiner.fit(main_table)
     error_msg = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
-        agg_joiner.transform(not_main)
+        agg_joiner.transform(not_main_table)
 
 
 y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
