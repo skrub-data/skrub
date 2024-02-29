@@ -1,6 +1,8 @@
 """
 The MultiAggJoiner extends AggJoiner to multiple auxiliary tables.
 """
+from collections.abc import Iterable
+
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
@@ -9,6 +11,10 @@ from skrub import _join_utils
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._utils import _is_array_like, atleast_2d_or_none
+
+
+def is_iterable_of_iterable(x):
+    return isinstance(x, Iterable) and all(isinstance(elt, Iterable) for elt in x)
 
 
 class MultiAggJoiner(TransformerMixin, BaseEstimator):
@@ -32,7 +38,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     Therefore if we have a single table, we could either use
 
     - the :class:`AggJoiner`: ``AggJoiner(aux_table, key="ID")``
-    - or the :class:`MultiAggJoiner`: ``MultiAggJoiner([aux_table], keys=["ID"])``
+    - or the :class:`MultiAggJoiner`: ``MultiAggJoiner([aux_table], keys=[["ID"]])``
 
     Note that for `keys`, `main_keys`, `aux_keys`, `cols` and `operations`,
     an input of the form ``[["a"], ["b"], ["c", "d"]]`` is valid
@@ -54,7 +60,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         as in ``aux_tables = [table, "X"]``. If that's the case, the second table will
         be replaced by the input data.
 
-    keys : iterable of str, or iterable of iterable of str, default=None
+    keys : iterable of iterable of str, default=None
         The column names to use for both `main_keys` and `aux_key` when they
         are the same. Provide either `key` or both `main_keys` and `aux_keys`.
         If there are multiple auxiliary tables, `keys` will be used to join all
@@ -67,7 +73,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         If not `None`, there must be an iterable of `keys` for each table
         in `aux_tables`.
 
-    main_keys : iterable of str, or iterable of iterable of str, default=None
+    main_keys : iterable of iterable of str, default=None
         Select the columns from the main table to use as keys during
         the join operation.
         If `main_keys` contains multiple columns, we will perform a multi-column join.
@@ -75,7 +81,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         If not `None`, there must be an iterable of `main_keys` for each table
         in `aux_tables`.
 
-    aux_keys : iterable of str, or iterable of iterable of str, default=None
+    aux_keys : iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as keys during
         the join operation.
 
@@ -86,7 +92,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         If not `None`, there must be an iterable of `aux_keys` for each table
         in `aux_tables`.
 
-    cols : iterable of str, or iterable of iterable of str, default=None
+    cols : iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as values during
         the aggregation operations.
 
@@ -97,7 +103,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         in `aux_tables`, the corresponding list will be all columns of that table,
         except the `aux_keys` associated with that table.
 
-    operations : iterable of str, or iterable of iterable of str, default=None
+    operations : iterable of iterable of str, default=None
         Aggregation operations to perform on the auxiliary tables.
 
         If not `None`, there must be an iterable of `operations` for each
@@ -284,7 +290,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        main_keys, aux_keys : iterable of str and iterable of iterable of str
+        main_keys, aux_keys : iterable of iterable of str
             The correct sets of matching columns to use, each provided as a list of
             column names.
         """
@@ -300,8 +306,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 raise ValueError(
                     "Must pass either `keys`, or (`main_keys` and `aux_keys`)."
                 )
-        main_keys = atleast_2d_or_none(main_keys)
-        aux_keys = atleast_2d_or_none(aux_keys)
+
         # Check 2d shape
         if len(aux_tables) != len(main_keys):
             raise ValueError(
@@ -332,8 +337,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        cols
-            2-dimensional list of cols to perform aggregation on.
+        cols: iterable of iterable of str
+            2-dimensional iterable of cols to perform aggregation on.
 
         Raises
         ------
@@ -343,20 +348,21 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             are not present in the corresponding aux_table.
         """
         # If no `cols` provided, all columns but `aux_keys` are used.
-        if self.cols is None:
+        cols = self.cols
+        if cols is None:
             cols = [
                 list(set(table.columns) - set(key))
                 for table, key in zip(self._aux_tables, self._aux_keys)
             ]
-            cols = atleast_2d_or_none(cols)
         else:
-            cols = atleast_2d_or_none(self.cols)
-        if len(cols) != len(self.aux_tables):
-            raise ValueError(
-                "The number of provided cols must match the number of"
-                f" tables in `aux_tables`. Got {len(cols)} columns and"
-                f" {len(self._aux_tables)} auxiliary tables."
-            )
+            if is_iterable_of_iterable(cols) is not True:
+                raise ValueError("MSG TODO")
+            if len(cols) != len(self.aux_tables):
+                raise ValueError(
+                    "The number of provided cols must match the number of"
+                    f" tables in `aux_tables`. Got {len(cols)} columns and"
+                    f" {len(self._aux_tables)} auxiliary tables."
+                )
         return cols
 
     def _check_operations(self):
@@ -364,8 +370,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        operations
-            2-dimensional list of operations to perform on columns.
+        operations: iterable of iterable of str
+            2-dimensional iterable of operations to perform on columns.
 
         Raises
         ------
@@ -379,8 +385,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             operations = atleast_2d_or_none(self.operations)
         else:
             raise ValueError(
-                "Accepted inputs for operations are None, iterable of str,"
-                f" or iterable of iterable of str. Got {type(self.operations)}"
+                "Accepted inputs for operations are None or iterable of iterable"
+                f" of str. Got {type(self.operations)}."
             )
 
         if len(operations) != len(self._aux_tables):
@@ -395,13 +401,13 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         """Check that the len of `suffixes` match the len of `aux_tables`,
         and that all suffixes are strings.
 
-        If suffixes is None, the suffixes will default to the position of
-        each auxiliary table in the list.
+        If `suffixes` is None, it will default to the position of each auxiliary
+        table in `aux_tables`.
 
         Returns
         -------
-        suffixes
-            1-dimensional list of suffixes to append to dataframes.
+        suffixes: iterable of str
+            1-dimensional iterable of suffixes to append to dataframes.
 
         Raises
         ------

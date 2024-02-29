@@ -108,6 +108,8 @@ def test_correct_keys(main_table, px):
         cols=["rating", "genre"],
     )
     agg_joiner.fit(main_table)
+    assert agg_joiner._main_key == ["userId"]
+    assert agg_joiner._aux_key == ["userId"]
 
     # Check multiple key
     agg_joiner = AggJoiner(
