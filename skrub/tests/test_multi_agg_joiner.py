@@ -151,6 +151,7 @@ def test_check_wrong_aux_table_type(main_table, px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_correct_keys(main_table, px):
+    "Check that expected `keys` parameters for the `MultiAggJoiner` are working."
     main_table = px.DataFrame(main_table)
 
     # Check only keys
@@ -187,6 +188,7 @@ def test_correct_keys(main_table, px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_wrong_keys(main_table, px):
+    "Check that wrong `keys` parameters for the `MultiAggJoiner` raise an error."
     main_table = px.DataFrame(main_table)
 
     # Check no keys at all
@@ -334,6 +336,7 @@ def test_too_many_cols(main_table, px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_operations(main_table, px):
+    "Check that expected `operations` parameters for the `MultiAggJoiner` are working."
     main_table = px.DataFrame(main_table)
 
     # Check one operation
@@ -354,7 +357,7 @@ def test_operations(main_table, px):
         operations="mean",
     )
     error_msg = (
-        r"Accepted inputs for operations are None or iterable of iterable of str."
+        r"Accepted inputs for `operations` are None or iterable of iterable of str."
     )
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
@@ -374,9 +377,11 @@ def test_operations(main_table, px):
         aux_tables=[main_table, main_table],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
-        operations=["mean", "mean", "mode"],
+        operations=[["mean", "mean", "mode"]],
     )
-    error_msg = r"The number of provided operations must match the number of tables"
+    error_msg = (
+        r"The number of iterables in `operations` must match the number of tables"
+    )
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
@@ -438,8 +443,8 @@ def test_too_many_suffixes(main_table, px):
         suffixes=["_0", "_1", "_2"],
     )
     error_msg = (
-        r"The number of provided suffixes must match the number of tables in"
-        r" `aux_tables`. Got 3 suffixes and 2 aux_tables."
+        r"The number of provided `suffixes` must match the number of tables in"
+        r" `aux_tables`. Got 3 suffixes and 2 auxiliary tables."
     )
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)

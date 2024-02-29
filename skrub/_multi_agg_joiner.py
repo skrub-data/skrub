@@ -1,20 +1,18 @@
 """
 The MultiAggJoiner extends AggJoiner to multiple auxiliary tables.
 """
-from collections.abc import Iterable
-
-import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _join_utils
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
-from skrub._utils import _is_array_like, atleast_2d_or_none
+from skrub._utils import _is_array_like
 
 
-def is_iterable_of_iterable(x):
-    return isinstance(x, Iterable) and all(isinstance(elt, Iterable) for elt in x)
+def _is_iterable_of_iterable(x):
+    "Return True if x is an iterable of iterable and False otherwise."
+    return _is_array_like(x) and all(_is_array_like(elt) for elt in x)
 
 
 class MultiAggJoiner(TransformerMixin, BaseEstimator):
@@ -355,8 +353,11 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 for table, key in zip(self._aux_tables, self._aux_keys)
             ]
         else:
-            if is_iterable_of_iterable(cols) is not True:
-                raise ValueError("MSG TODO")
+            if _is_iterable_of_iterable(cols) is not True:
+                raise ValueError(
+                    "Argument `cols` must be an iterable of iterable of str, got"
+                    f" type({cols})."
+                )
             if len(cols) != len(self.aux_tables):
                 raise ValueError(
                     "The number of provided cols must match the number of"
@@ -379,22 +380,22 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             If the len of `operations` doesn't match the len of `aux_tables`,
             or if `operations` is not of a valid type.
         """
-        if self.operations is None:
+        operations = self.operations
+        if operations is None:
             operations = [["mean", "mode"]] * len(self._aux_tables)
-        elif _is_array_like(self.operations):
-            operations = atleast_2d_or_none(self.operations)
         else:
-            raise ValueError(
-                "Accepted inputs for operations are None or iterable of iterable"
-                f" of str. Got {type(self.operations)}."
-            )
+            if _is_iterable_of_iterable(operations) is not True:
+                raise ValueError(
+                    "Accepted inputs for `operations` are None or iterable of iterable"
+                    f" of str. Got {type(operations)}."
+                )
 
-        if len(operations) != len(self._aux_tables):
-            raise ValueError(
-                "The number of provided operations must match the number of"
-                f" tables in `aux_tables`. Got {len(operations)} operations and"
-                f" {len(self._aux_tables)} auxiliary tables."
-            )
+            if len(operations) != len(self._aux_tables):
+                raise ValueError(
+                    "The number of iterables in `operations` must match the number of"
+                    f" tables in `aux_tables`. Got {len(operations)} iterables in"
+                    f" operations and {len(self._aux_tables)} auxiliary tables."
+                )
         return operations
 
     def _check_suffixes(self):
@@ -415,19 +416,23 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             If the len of `suffixes` doesn't match the len of `aux_tables`,
             or if all suffixes are not strings.
         """
-        if self.suffixes is None:
+        suffixes = self.suffixes
+        if suffixes is None:
             suffixes = [f"_{i}" for i in range(len(self._aux_tables))]
         else:
-            suffixes = np.atleast_1d(self.suffixes).tolist()
+            if _is_array_like(suffixes) is not True:
+                raise ValueError(
+                    "Argument `suffixes` must be an iterable of str, got"
+                    f" type({suffixes})."
+                )
             if len(suffixes) != len(self._aux_tables):
                 raise ValueError(
-                    "The number of provided suffixes must match the number of"
+                    "The number of provided `suffixes` must match the number of"
                     f" tables in `aux_tables`. Got {len(suffixes)} suffixes and"
-                    f" {len(self._aux_tables)} aux_tables."
+                    f" {len(self._aux_tables)} auxiliary tables."
                 )
             if not all([isinstance(suffix, str) for suffix in suffixes]):
                 raise ValueError("All suffixes must be strings.")
-
         return suffixes
 
     def fit(self, X, y=None):
