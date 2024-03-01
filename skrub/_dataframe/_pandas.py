@@ -9,6 +9,8 @@ import pandas as pd
 
 from skrub._utils import atleast_1d_or_none
 
+DATAFRAME_MODULE_NAME = "pandas"
+
 
 def make_dataframe(X, index=None, dtypes=None):
     """Convert an dictionary of columns into a Pandas dataframe.
