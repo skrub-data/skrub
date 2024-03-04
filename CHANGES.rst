@@ -14,6 +14,13 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
+* Added the :class:`MultiAggJoiner` that allows to augment a main table with
+  multiple auxiliary tables. :pr:`876` by :user:`Théo Jolivet <TheooJ>`.
+
+* :class:`AggJoiner` now only accepts a single table as an input, and some of its
+  parameters were renamed to be consistent with the :class:`MultiAggJoiner`.
+  It now has a ``key``` parameter that allows to join main and auxiliary tables that share
+  the same column names. :pr:`876` by :user:`Théo Jolivet <TheooJ>`.
 
 Minor changes
 -------------
