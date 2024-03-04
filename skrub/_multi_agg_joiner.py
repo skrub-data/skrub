@@ -10,9 +10,11 @@ from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._utils import _is_array_like
 
 
-def _is_iterable_of_iterable(x):
-    "Return True if x is an iterable of iterable and False otherwise."
-    return _is_array_like(x) and all(_is_array_like(elt) for elt in x)
+def _is_iterable_of_iterable_of_str(x):
+    "Return True if x is an iterable of iterable of str and False otherwise."
+    return _is_array_like(x) and all(
+        _is_array_like(elt) and all(isinstance(item, str) for item in elt) for elt in x
+    )
 
 
 class MultiAggJoiner(TransformerMixin, BaseEstimator):
@@ -29,9 +31,10 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     As opposed to the :class:`AggJoiner`, here `aux_tables` is an iterable of tables,
     each of which will be joined on the main table. Therefore `aux_keys` is now
     an iterable of keys, of the same length as `aux_tables`, and each entry
-    in `aux_keys` is used to join the corresponding aux table. In the same way,
+    in `aux_keys` is used to join the corresponding auxiliary table. In the same way,
     each entry in `cols` is an iterable of columns to aggregate in the corresponding
-    aux table.
+    auxiliary table. If the keys are the same in the main table and the auxiliary
+    tables, the `keys` parameter can be used instead of `main_keys` and `aux_keys`.
 
     Therefore if we have a single table, we could either use
 
@@ -42,8 +45,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     an input of the form ``[["a"], ["b"], ["c", "d"]]`` is valid
     while ``["a", "b", ["c", "d"]]`` is not.
 
-    Using a column from the first aux table to join the second aux table is not
-    (yet) supported.
+    Using a column from the first auxiliary table to join the second auxiliary table
+    is not (yet) supported.
 
     Accepts :obj:`pandas.DataFrame` and :class:`polars.DataFrame` inputs.
 
@@ -61,8 +64,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     keys : iterable of iterable of str, default=None
         The column names to use for both `main_keys` and `aux_key` when they
         are the same. Provide either `key` or both `main_keys` and `aux_keys`.
-        If there are multiple auxiliary tables, `keys` will be used to join all
-        of them.
+        If entries in `keys` contains multiple columns, we will perform
+        a multi-column join.
 
         All `keys` must be present in the main and auxiliary tables before fit.
         It's not (yet) possible to use columns from the first joined table
@@ -74,7 +77,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     main_keys : iterable of iterable of str, default=None
         Select the columns from the main table to use as keys during
         the join operation.
-        If `main_keys` contains multiple columns, we will perform a multi-column join.
+        If entries in `main_keys` contains multiple columns, we will perform
+        a multi-column join.
 
         If not `None`, there must be an iterable of `main_keys` for each table
         in `aux_tables`.
@@ -82,6 +86,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     aux_keys : iterable of iterable of str, default=None
         Select the columns from the auxiliary dataframes to use as keys during
         the join operation.
+        If entries in `aux_keys` contains multiple columns, we will perform
+        a multi-column join.
 
         All `aux_keys` must be present in respective `aux_tables` before fit.
         It's not (yet) possible to use columns from the first joined table
@@ -353,7 +359,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 for table, key in zip(self._aux_tables, self._aux_keys)
             ]
         else:
-            if _is_iterable_of_iterable(cols) is not True:
+            if _is_iterable_of_iterable_of_str(cols) is not True:
                 raise ValueError(
                     "Argument `cols` must be an iterable of iterable of str, got"
                     f" type({cols})."
@@ -384,7 +390,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         if operations is None:
             operations = [["mean", "mode"]] * len(self._aux_tables)
         else:
-            if _is_iterable_of_iterable(operations) is not True:
+            if _is_iterable_of_iterable_of_str(operations) is not True:
                 raise ValueError(
                     "Accepted inputs for `operations` are None or iterable of iterable"
                     f" of str. Got {type(operations)}."

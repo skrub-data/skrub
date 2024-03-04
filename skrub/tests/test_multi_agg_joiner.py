@@ -100,7 +100,8 @@ def test_X_placeholder(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_check_dataframes(main_table, px):
+def test_wrong_aux_tables(main_table, px):
+    "Check that wrong `aux_tables` parameters for the `MultiAggJoiner` raise an error."
     main_table = px.DataFrame(main_table)
 
     # Check aux_tables isn't an array
@@ -124,6 +125,21 @@ def test_check_dataframes(main_table, px):
         match=r"(?=must be an iterable containing dataframes and/or the string 'X')",
     ):
         multi_agg_joiner.fit_transform(main_table)
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_wrong_main_table(main_table, px):
+    "Check that wrong `X` parameters in the `MultiAggJoiner` `fit` raise an error."
+
+    # Check wrong `X`
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main_table],
+        keys=[["userId"]],
+    )
+    with pytest.raises(
+        TypeError, match=r"`X` must be a dataframe, got <class 'list'>."
+    ):
+        multi_agg_joiner.fit_transform([1])
 
 
 @pytest.mark.skipif(not POLARS_SETUP, reason="Polars not available.")
@@ -285,7 +301,26 @@ def test_wrong_keys(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_cols(main_table, px):
+def test_default_cols(main_table, px):
+    """
+    Check that by default, `cols` is set to a list of list. For each table in
+    `aux_tables`, the corresponding list will be all columns of that table,
+    except the `aux_keys` associated with that table.
+    """
+    main_table = px.DataFrame(main_table)
+
+    # Check no cols
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main_table, main_table],
+        keys=[["userId", "movieId"], ["userId"]],
+    )
+    multi_agg_joiner.fit(main_table)
+    multi_agg_joiner._cols == [["rating", "genre"], ["movieId", "rating", "genre"]]
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_correct_cols(main_table, px):
+    "Check that expected `cols` parameters for the `MultiAggJoiner` are working."
     main_table = px.DataFrame(main_table)
 
     # Check providing one col
@@ -309,6 +344,10 @@ def test_cols(main_table, px):
 
 @pytest.mark.parametrize("px", MODULES)
 def test_too_many_cols(main_table, px):
+    """
+    Check that providing more `cols` than `aux_tables`
+    in the `MultiAggJoiner` raises an error.
+    """
     main_table = px.DataFrame(main_table)
 
     # Check providing too many cols
@@ -323,6 +362,15 @@ def test_too_many_cols(main_table, px):
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
+
+@pytest.mark.parametrize("px", MODULES)
+def test_cols_not_in_table(main_table, px):
+    """
+    Check that providing a `cols` not in `aux_tables`
+    in the `MultiAggJoiner` raises an error.
+    """
+    main_table = px.DataFrame(main_table)
+
     # Check cols not in table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
@@ -335,7 +383,25 @@ def test_too_many_cols(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_operations(main_table, px):
+def test_default_operations(main_table, px):
+    """
+    Check that the default `operations` in the `MultiAggJoiner` is an
+    iterable of ['mode', 'mean'].
+    """
+    main_table = px.DataFrame(main_table)
+
+    # Check default operations
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main_table, main_table],
+        keys=[["userId"], ["userId"]],
+        cols=[["rating", "genre"], ["rating", "genre"]],
+    )
+    multi_agg_joiner.fit(main_table)
+    assert multi_agg_joiner._operations == [["mean", "mode"], ["mean", "mode"]]
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_correct_operations(main_table, px):
     "Check that expected `operations` parameters for the `MultiAggJoiner` are working."
     main_table = px.DataFrame(main_table)
 
@@ -348,6 +414,32 @@ def test_operations(main_table, px):
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._operations == [["mean"]]
+
+    # Check one operation for each aux table
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main_table, main_table],
+        keys=[["userId"], ["userId"]],
+        cols=[["rating"], ["rating"]],
+        operations=[["mean"], ["mean"]],
+    )
+    multi_agg_joiner.fit_transform(main_table)
+    assert multi_agg_joiner._operations == [["mean"], ["mean"]]
+
+    # Check one and two operations
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main_table, main_table],
+        keys=[["userId"], ["userId"]],
+        cols=[["rating"], ["rating"]],
+        operations=[["mean"], ["mean", "mode"]],
+    )
+    multi_agg_joiner.fit_transform(main_table)
+    assert multi_agg_joiner._operations == [["mean"], ["mean", "mode"]]
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_wrong_operations(main_table, px):
+    "Check that wrong `operation` parameters for the `MultiAggJoiner` raise an error."
+    main_table = px.DataFrame(main_table)
 
     # Check list of operations
     multi_agg_joiner = MultiAggJoiner(
@@ -362,16 +454,6 @@ def test_operations(main_table, px):
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
-    # Check one operation for each aux table
-    multi_agg_joiner = MultiAggJoiner(
-        aux_tables=[main_table, main_table],
-        keys=[["userId"], ["userId"]],
-        cols=[["rating"], ["rating"]],
-        operations=[["mean"], ["mean"]],
-    )
-    multi_agg_joiner.fit_transform(main_table)
-    assert multi_agg_joiner._operations == [["mean"], ["mean"]]
-
     # Check badly formatted operation
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
@@ -384,16 +466,6 @@ def test_operations(main_table, px):
     )
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
-
-    # Check one and two operations
-    multi_agg_joiner = MultiAggJoiner(
-        aux_tables=[main_table, main_table],
-        keys=[["userId"], ["userId"]],
-        cols=[["rating"], ["rating"]],
-        operations=[["mean"], ["mean", "mode"]],
-    )
-    multi_agg_joiner.fit_transform(main_table)
-    assert multi_agg_joiner._operations == [["mean"], ["mean", "mode"]]
 
 
 @pytest.mark.parametrize("px", MODULES)
