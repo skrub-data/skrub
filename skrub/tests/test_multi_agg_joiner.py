@@ -203,8 +203,8 @@ def test_correct_keys(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
-def test_wrong_keys(main_table, px):
-    "Check that wrong `keys` parameters for the `MultiAggJoiner` raise an error."
+def test_no_keys(main_table, px):
+    "Check that no `keys` for the `MultiAggJoiner` raise an error."
     main_table = px.DataFrame(main_table)
 
     # Check no keys at all
@@ -214,6 +214,12 @@ def test_wrong_keys(main_table, px):
     error_msg = r"Must pass either `keys`, or \(`main_keys` and `aux_keys`\)."
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_too_many_keys(main_table, px):
+    "Check that providing too many keys for the `MultiAggJoiner` raise an error."
+    main_table = px.DataFrame(main_table)
 
     # Check too many main_keys
     multi_agg_joiner = MultiAggJoiner(
@@ -259,6 +265,12 @@ def test_wrong_keys(main_table, px):
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
         multi_agg_joiner.fit_transform(main_table)
 
+
+@pytest.mark.parametrize("px", MODULES)
+def test_unknown_keys(main_table, px):
+    "Check that providing unknown keys in the `MultiAggJoiner` raise an error."
+    main_table = px.DataFrame(main_table)
+
     # Check main_keys doesn't exist in table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
@@ -278,6 +290,12 @@ def test_wrong_keys(main_table, px):
     error_msg = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
+
+
+@pytest.mark.parametrize("px", MODULES)
+def test_wrong_keys_length(main_table, px):
+    "Check that providing wrong key lengths in the `MultiAggJoiner` raise an error."
+    main_table = px.DataFrame(main_table)
 
     # Check wrong main_keys lenght
     multi_agg_joiner = MultiAggJoiner(
