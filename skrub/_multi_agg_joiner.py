@@ -361,8 +361,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         else:
             if _is_iterable_of_iterable_of_str(cols) is not True:
                 raise ValueError(
-                    "Argument `cols` must be an iterable of iterable of str, got"
-                    f" type({cols})."
+                    "Accepted inputs for `cols` are None and iterable of iterable of"
+                    " str."
                 )
             if len(cols) != len(self.aux_tables):
                 raise ValueError(
@@ -392,8 +392,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         else:
             if _is_iterable_of_iterable_of_str(operations) is not True:
                 raise ValueError(
-                    "Accepted inputs for `operations` are None or iterable of iterable"
-                    f" of str. Got {type(operations)}."
+                    "Accepted inputs for `operations` are None and iterable of iterable"
+                    " of str."
                 )
 
             if len(operations) != len(self._aux_tables):
@@ -426,10 +426,11 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         if suffixes is None:
             suffixes = [f"_{i}" for i in range(len(self._aux_tables))]
         else:
-            if _is_array_like(suffixes) is not True:
+            if not _is_array_like(suffixes) or not all(
+                [isinstance(suffix, str) for suffix in suffixes]
+            ):
                 raise ValueError(
-                    "Argument `suffixes` must be an iterable of str, got"
-                    f" type({suffixes})."
+                    "Accepted inputs for `suffixes` are None and iterable of str."
                 )
             if len(suffixes) != len(self._aux_tables):
                 raise ValueError(
@@ -437,8 +438,6 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                     f" tables in `aux_tables`. Got {len(suffixes)} suffixes and"
                     f" {len(self._aux_tables)} auxiliary tables."
                 )
-            if not all([isinstance(suffix, str) for suffix in suffixes]):
-                raise ValueError("All suffixes must be strings.")
         return suffixes
 
     def fit(self, X, y=None):

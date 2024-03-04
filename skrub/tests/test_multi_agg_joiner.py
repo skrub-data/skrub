@@ -343,6 +343,22 @@ def test_correct_cols(main_table, px):
 
 
 @pytest.mark.parametrize("px", MODULES)
+def test_wrong_cols_input_type(main_table, px):
+    """Check that the wrong `cols` type in the `MultiAggJoiner` raises an error."""
+    main_table = px.DataFrame(main_table)
+
+    # Check providing wrong cols type
+    multi_agg_joiner = MultiAggJoiner(
+        aux_tables=[main_table],
+        keys=[["userId"]],
+        cols=[[1]],
+    )
+    error_msg = r"Accepted inputs for `cols` are None and iterable of iterable of str."
+    with pytest.raises(ValueError, match=error_msg):
+        multi_agg_joiner.fit_transform(main_table)
+
+
+@pytest.mark.parametrize("px", MODULES)
 def test_too_many_cols(main_table, px):
     """
     Check that providing more `cols` than `aux_tables`
@@ -449,7 +465,7 @@ def test_wrong_operations(main_table, px):
         operations="mean",
     )
     error_msg = (
-        r"Accepted inputs for `operations` are None or iterable of iterable of str."
+        r"Accepted inputs for `operations` are None and iterable of iterable of str."
     )
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
@@ -534,7 +550,7 @@ def test_non_str_suffixes(main_table, px):
         cols=[["rating"]],
         suffixes=[1],
     )
-    error_msg = r"All suffixes must be strings."
+    error_msg = r"Accepted inputs for `suffixes` are None and iterable of str."
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
