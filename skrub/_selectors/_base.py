@@ -1,4 +1,5 @@
 from .. import _dataframe as sbd
+from .._dispatch import dispatch
 from ._utils import list_difference, list_intersect
 
 
@@ -40,7 +41,7 @@ def _make_selector_in_expr(obj):
     return make_selector(obj)._in_expr()
 
 
-@sbd.dispatch
+@dispatch
 def _select_col_names(df, selector):
     raise NotImplementedError()
 

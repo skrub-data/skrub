@@ -3,6 +3,7 @@ from sklearn.base import BaseEstimator
 from . import _dataframe as sbd
 from . import _datetime_utils
 from . import _selectors as s
+from ._dispatch import dispatch
 
 _SAMPLE_SIZE = 1000
 
@@ -54,7 +55,7 @@ class ToDatetime(BaseEstimator):
         return self
 
 
-@sbd.dispatch
+@dispatch
 def to_datetime(df, format=None):
     """Convert DataFrame or column to Datetime dtype.
 
@@ -88,14 +89,14 @@ def to_datetime(df, format=None):
     )
 
 
-@to_datetime.specialize("pandas", "DataFrame")
-@to_datetime.specialize("polars", "DataFrame")
+@to_datetime.specialize("pandas", argument_type="DataFrame")
+@to_datetime.specialize("polars", argument_type="DataFrame")
 def _to_datetime_dataframe(df, format=None):
     return s.all().use(ToDatetime(datetime_format=format)).fit_transform(df)
 
 
-@to_datetime.specialize("pandas", "Column")
-@to_datetime.specialize("polars", "Column")
+@to_datetime.specialize("pandas", argument_type="Column")
+@to_datetime.specialize("polars", argument_type="Column")
 def _to_datetime_column(column, format=None):
     result = ToDatetime(datetime_format=format).fit_transform(column)
     if result is NotImplemented:

@@ -4,11 +4,12 @@ from itertools import product
 import numpy as np
 import pandas as pd
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
+from numpy.testing import assert_array_equal
 from pandas.api.types import is_datetime64_any_dtype
 from pandas.testing import assert_frame_equal
 from sklearn.utils.fixes import parse_version
 
+from skrub import _dataframe as du
 from skrub._dataframe._polars import POLARS_SETUP
 from skrub._dataframe._test_utils import is_module_polars
 from skrub._datetime_encoder import _TIME_LEVELS, DatetimeEncoder
@@ -275,89 +276,72 @@ def test_transform_datetime(px):
     assert_array_equal(X_trans, expected_X_trans)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_transform_tz(px):
+def test_transform_tz(df_module):
     X = get_tz_datetime()
-    X = px.DataFrame(X)
+    X = df_module.make_dataframe(X)
     enc = DatetimeEncoder(
         add_total_seconds=True,
     )
     X_trans = enc.fit_transform(X)
-    expected_X_trans = np.array(
-        [
-            [2020, 1, 1, 4, 1.57785372e09],
-            [2021, 2, 3, 7, 1.61233652e09],
-            [2022, 1, 1, 17, 1.64105962e09],
-            [2023, 2, 3, 5, 1.67540293e09],
-        ]
+    expected_X_trans = df_module.make_dataframe(
+        {
+            "0_year": [2020.0, 2021.0, 2022.0, 2023.0],
+            "0_month": [1.0, 2.0, 1.0, 2.0],
+            "0_day": [1.0, 3.0, 1.0, 3.0],
+            "0_hour": [4.0, 7.0, 17.0, 5.0],
+            "0_total_seconds": [
+                1.57785372e09,
+                1.61233652e09,
+                1.64105962e09,
+                1.67540293e09,
+            ],
+        }
     )
-    assert_allclose(X_trans, expected_X_trans)
+    expected_X_trans = du.set_column_names(
+        expected_X_trans, "0_year 0_month 0_day 0_hour 0_total_seconds".split()
+    )
+    if df_module.name == "pandas":
+        expected_X_trans = expected_X_trans.convert_dtypes().astype(pd.Float32Dtype())
+    elif df_module.name == "polars":
+        import polars as pl
+
+        expected_X_trans = expected_X_trans.select(pl.all().cast(pl.Float32))
+    df_module.assert_frame_equal(X_trans, expected_X_trans)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_transform_nan(px):
+def test_transform_nan(df_module):
     X = get_nan_datetime()
-    X = px.DataFrame(X)
+    X = df_module.make_dataframe(X)
     enc = DatetimeEncoder(
         add_total_seconds=True,
     )
     X_trans = enc.fit_transform(X)
-    expected_X_trans = np.array(
-        [
-            [
-                2020,
-                1,
-                1,
-                10,
-                1.57787352e09,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                2020,
-                1,
-                3,
-                10,
-                1.57804560e09,
-            ],
-            [
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                2020,
-                2,
-                4,
-                22,
-                1.58085432e09,
-                2021,
-                2,
-                5,
-                12,
-                1.61252640e09,
-            ],
-            [
-                2022,
-                1,
-                1,
-                23,
-                1.64107942e09,
-                2020,
-                12,
-                25,
-                11,
-                1.60889472e09,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-            ],
-        ]
-    )
-    assert_allclose(X_trans, expected_X_trans)
+    expected_X_trans = {
+        "0_year": [2020.0, None, 2022.0],
+        "0_month": [1.0, None, 1.0],
+        "0_day": [1.0, None, 1.0],
+        "0_hour": [10.0, None, 23.0],
+        "0_total_seconds": [1577873536.0, None, 1641079424.0],
+        "1_year": [None, 2020.0, 2020.0],
+        "1_month": [None, 2.0, 12.0],
+        "1_day": [None, 4.0, 25.0],
+        "1_hour": [None, 22.0, 11.0],
+        "1_total_seconds": [None, 1580854272.0, 1608894720.0],
+        "2_year": [2020.0, 2021.0, None],
+        "2_month": [1.0, 2.0, None],
+        "2_day": [3.0, 5.0, None],
+        "2_hour": [10.0, 12.0, None],
+        "2_total_seconds": [1578045568.0, 1612526336.0, None],
+    }
+
+    expected_X_trans = df_module.make_dataframe(expected_X_trans)
+    if df_module.name == "pandas":
+        expected_X_trans = expected_X_trans.convert_dtypes().astype(pd.Float32Dtype())
+    elif df_module.name == "polars":
+        import polars as pl
+
+        expected_X_trans = expected_X_trans.select(pl.all().cast(pl.Float32))
+    df_module.assert_frame_equal(X_trans, expected_X_trans)
 
 
 @pytest.mark.parametrize("px", MODULES)

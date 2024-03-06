@@ -181,7 +181,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         self.all_outputs_ = _column_names(transformed_columns)
         self.used_inputs_ = list(self.transformers_.keys())
         self.created_outputs_ = list(itertools.chain(*self.input_to_outputs_.values()))
-        return sbd.dataframe_like(X, *transformed_columns)
+        return sbd.make_dataframe_like(X, transformed_columns)
 
     def transform(self, X, y=None):
         del y
@@ -193,7 +193,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         )
         transformed_columns = list(itertools.chain(*outputs))
         transformed_columns = _rename_columns(transformed_columns, self.all_outputs_)
-        return sbd.dataframe_like(X, *transformed_columns)
+        return sbd.make_dataframe_like(X, transformed_columns)
 
     def get_feature_names_out(self):
         return self.all_outputs_
@@ -202,7 +202,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
 def _prepare_transformer_input(transformer, column):
     if hasattr(transformer, "__single_column_transformer__"):
         return column
-    return sbd.dataframe_from_columns(column)
+    return sbd.make_dataframe_like(column, [column])
 
 
 def _fit_transform_column(column, columns_to_handle, transformer):

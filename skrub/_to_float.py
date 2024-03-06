@@ -1,9 +1,10 @@
 from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
+from ._dispatch import dispatch
 
 
-@sbd.dispatch
+@dispatch
 def _to_float32(col):
     raise NotImplementedError()
 

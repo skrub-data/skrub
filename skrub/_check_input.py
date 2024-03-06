@@ -5,6 +5,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from . import _dataframe as sbd
 from . import _join_utils, _utils
+from ._dispatch import dispatch
 
 
 def _column_names_to_strings(column_names):
@@ -33,7 +34,7 @@ def _cleaned_column_names(colum_names):
     return _deduplicated_column_names(_column_names_to_strings(colum_names))
 
 
-@sbd.dispatch
+@dispatch
 def _check_not_pandas_sparse(df):
     pass
 

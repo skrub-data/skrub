@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 import pandas as pd
 import pandas.api.types
 from sklearn.utils import parse_version
@@ -27,6 +29,7 @@ __all__ = [
     "to_pandas",
     "make_dataframe_like",
     "make_column_like",
+    "null_value_for",
     "all_null_like",
     "concat_horizontal",
     "to_column_list",
@@ -212,12 +215,23 @@ def _to_pandas_polars(obj):
 
 @dispatch
 def make_dataframe_like(df, data):
+    """Create a dataframe from `data` using the module of `df`.
+
+    data can either be a dictionary {column_name: column} or a list of columns
+    (with names).
+
+    df can either be a dataframe or a column, and it is only used for dispatch,
+    ie to determine if the resulting dataframe should be a pandas or polars
+    dataframe.
+    """
     raise NotImplementedError()
 
 
 @make_dataframe_like.specialize("pandas")
 def _make_dataframe_like_pandas(df, data):
-    return pd.DataFrame(data)
+    if isinstance(data, Mapping):
+        return pd.DataFrame(data)
+    return pd.DataFrame({name(col): col for col in data})
 
 
 @make_dataframe_like.specialize("polars")
@@ -238,6 +252,21 @@ def _make_column_like_pandas(column, values, name):
 @make_column_like.specialize("polars")
 def _make_column_like_polars(column, values, name):
     return pl.Series(values=values, name=name)
+
+
+@dispatch
+def null_value_for(obj):
+    raise NotImplementedError()
+
+
+@null_value_for.specialize("pandas")
+def _null_value_for_pandas(obj):
+    return pd.NA
+
+
+@null_value_for.specialize("polars")
+def _null_value_for_polars(obj):
+    return None
 
 
 @dispatch

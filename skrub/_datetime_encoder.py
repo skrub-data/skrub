@@ -15,6 +15,7 @@ from sklearn.pipeline import make_pipeline
 from . import _dataframe as sbd
 from . import _selectors as s
 from ._check_input import CheckInputDataFrame
+from ._dispatch import dispatch
 from ._to_datetime import ToDatetime
 
 _TIME_LEVELS = [
@@ -29,7 +30,7 @@ _TIME_LEVELS = [
 ]
 
 
-@sbd.dispatch
+@dispatch
 def _is_date(column):
     raise NotImplementedError()
 
@@ -45,7 +46,7 @@ def _is_date_polars(column):
     return (column.dt.date() == column).all()
 
 
-@sbd.dispatch
+@dispatch
 def _get_dt_feature(column, feature):
     raise NotImplementedError()
 

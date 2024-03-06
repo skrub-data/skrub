@@ -11,9 +11,10 @@ from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
 from . import _utils
+from ._dispatch import dispatch
 
 
-@sbd.dispatch
+@dispatch
 def _is_enum(column):
     raise NotImplementedError()
 
@@ -28,7 +29,7 @@ def _is_enum_polars(column):
     return column.dtype == pl.Enum
 
 
-@sbd.dispatch
+@dispatch
 def _make_enum_dtype_for(obj, categories):
     raise NotImplementedError()
 
@@ -43,7 +44,7 @@ def _make_enum_dtype_for_polars(obj, categories):
     return pl.Enum(categories)
 
 
-@sbd.dispatch
+@dispatch
 def _dtype_categories(column):
     raise NotImplementedError()
 
