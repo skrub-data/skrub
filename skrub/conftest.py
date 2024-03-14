@@ -98,7 +98,7 @@ def all_dataframe_modules():
     return _DATAFAME_MODULES_INFO
 
 
-@pytest.fixture(params=list(_DATAFAME_MODULES_INFO.values()))
+@pytest.fixture(params=list(_DATAFAME_MODULES_INFO.keys()))
 def df_module(request):
     """Return information about a dataframe module (either polars or pandas).
 
@@ -144,7 +144,7 @@ def df_module(request):
         A mapping from dtype names to types, keys are:
         ['float32', 'float64', 'int32', 'int64'].
     """
-    return request.param
+    return _DATAFAME_MODULES_INFO[request.param]
 
 
 @pytest.fixture
