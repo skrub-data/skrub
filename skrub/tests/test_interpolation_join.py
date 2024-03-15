@@ -126,7 +126,7 @@ def test_condition_choice(px):
     ).fit_transform(main)
     assert_array_equal(join["C"].values, [11, 12, 10])
 
-    with pytest.raises(ValueError, match="Must pass EITHER"):
+    with pytest.raises(ValueError, match="Must pass either"):
         join = InterpolationJoiner(
             aux, main_key="A", regressor=KNeighborsRegressor(1)
         ).fit(None)

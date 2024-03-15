@@ -33,6 +33,7 @@ This page lists all available functions and classes of `skrub`.
 
    Joiner
    AggJoiner
+   MultiAggJoiner
    AggTarget
 
 

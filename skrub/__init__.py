@@ -12,6 +12,7 @@ from ._gap_encoder import GapEncoder
 from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
+from ._multi_agg_joiner import MultiAggJoiner
 from ._select_cols import DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import TableVectorizer
@@ -35,6 +36,7 @@ __all__ = [
     "compute_ngram_distance",
     "to_datetime",
     "AggJoiner",
+    "MultiAggJoiner",
     "AggTarget",
     "SelectCols",
     "DropCols",

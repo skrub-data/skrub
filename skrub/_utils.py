@@ -12,9 +12,10 @@ from sklearn.utils import check_array
 
 
 class LRUDict:
-    """dict with limited capacity
+    """Dict with limited capacity.
 
-    Using LRU eviction avoids memorizing a full dataset"""
+    Using LRU eviction avoids memorizing a full dataset.
+    """
 
     def __init__(self, capacity: int):
         self.capacity = capacity
@@ -41,8 +42,8 @@ class LRUDict:
 
 
 def check_input(X) -> NDArray:
-    """
-    Check input with sklearn standards.
+    """Check input with sklearn standards.
+
     Also converts X to a numpy array if not already.
     """
     # TODO check for weird type of input to pass scikit learn tests
@@ -99,9 +100,7 @@ def import_optional_dependency(name: str, extra: str = ""):
 
 
 def parse_astype_error_message(e):
-    """
-    Parse the error message from a failed df.astype or pd.to_numeric call.
-    """
+    """Parse the error message from a failed df.astype or pd.to_numeric call."""
     culprit = None
     if str(e).startswith("Given date string"):
         match = re.search(r"Given date string (.*?) not likely", str(e))
@@ -132,17 +131,27 @@ def atleast_1d_or_none(x):
 
 
 def _is_array_like(x):
-    return isinstance(x, Iterable) and not isinstance(x, (str, bytes))
+    return (
+        isinstance(x, Iterable)
+        and not isinstance(x, (str, bytes))
+        and not hasattr(x, "__dataframe__")
+    )
 
 
 def atleast_2d_or_none(x):
     """``np.atleast_2d`` helper returning an empty list when x is None.
 
     Note that we don't use ``np.atleast_2d`` because x could be a jagged array.
+
+    Returns
+    -------
+    list of lists
+        The processed array in 2d shape.
     """
-    x = atleast_1d_or_none(x)
-    if len(x) == 0:
+    if x is None:
         return [[]]
+    if _is_array_like(x) is not True:
+        x = [x]
 
     is_array_list = [_is_array_like(item) for item in x]
 
