@@ -206,6 +206,8 @@ def to_numpy(obj):
 
 @to_numpy.specialize("pandas", argument_type="Column")
 def _to_numpy_pandas(obj):
+    if pd.api.types.is_numeric_dtype(obj) and obj.isna().any():
+        obj = obj.astype(float)
     return obj.to_numpy()
 
 
