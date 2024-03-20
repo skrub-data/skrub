@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 import pandas as pd
 import pandas.api.types
 from sklearn.utils.fixes import parse_version
@@ -23,6 +25,7 @@ __all__ = [
     #
     # Conversions to and from other container types
     #
+    "to_list",
     "to_numpy",
     "to_pandas",
     "make_dataframe_like",
@@ -181,6 +184,22 @@ def _is_column_polars(obj):
 
 
 @dispatch
+def to_list(col):
+    raise NotImplementedError()
+
+
+@to_list.specialize("pandas", argument_type="Column")
+def _to_list_pandas(col):
+    result = col.tolist()
+    return [None if item is pd.NA else item for item in result]
+
+
+@to_list.specialize("polars", argument_type="Column")
+def _to_list_polars(col):
+    return col.to_list()
+
+
+@dispatch
 def to_numpy(obj):
     raise NotImplementedError()
 
@@ -207,17 +226,28 @@ def _to_pandas_pandas(obj):
 
 @to_pandas.specialize("polars")
 def _to_pandas_polars(obj):
-    return obj.to_pandas()
+    return obj.to_pandas().convert_dtypes()
 
 
 @dispatch
 def make_dataframe_like(df, data):
+    """Create a dataframe from `data` using the module of `df`.
+
+    data can either be a dictionary {column_name: column} or a list of columns
+    (with names).
+
+    df can either be a dataframe or a column, and it is only used for dispatch,
+    ie to determine if the resulting dataframe should be a pandas or polars
+    dataframe.
+    """
     raise NotImplementedError()
 
 
 @make_dataframe_like.specialize("pandas")
 def _make_dataframe_like_pandas(df, data):
-    return pd.DataFrame(data)
+    if isinstance(data, Mapping):
+        return pd.DataFrame(data)
+    return pd.DataFrame({name(col): col for col in data})
 
 
 @make_dataframe_like.specialize("polars")
@@ -535,7 +565,9 @@ def _is_string_pandas(column):
         # on old pandas versions
         # `pd.api.types.is_string_dtype(pd.Series([1, ""]))` is True
         return column.convert_dtypes().dtype == pd.StringDtype()
-    return pandas.api.types.is_string_dtype(column)
+    return pandas.api.types.is_string_dtype(column) and not isinstance(
+        column.dtype, pandas.CategoricalDtype
+    )
 
 
 @is_string.specialize("polars")

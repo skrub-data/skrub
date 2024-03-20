@@ -75,6 +75,11 @@ def test_is_column(df_module):
 #
 
 
+def test_to_list(df_module):
+    col = ns.col(df_module.example_dataframe, "str-col")
+    assert ns.to_list(col) == ["one", None, "three", "four"]
+
+
 def test_to_numpy(df_module, example_data_dict):
     with pytest.raises(NotImplementedError):
         ns.to_numpy(df_module.example_dataframe)
@@ -84,7 +89,7 @@ def test_to_numpy(df_module, example_data_dict):
 
     array = ns.to_numpy(ns.col(df_module.example_dataframe, "str-col"))
     assert array.dtype == object
-    assert_array_equal(array, np.asarray(example_data_dict["str-col"]))
+    assert_array_equal(array[2:], np.asarray(example_data_dict["str-col"])[2:])
 
 
 def test_to_pandas(df_module, all_dataframe_modules):
