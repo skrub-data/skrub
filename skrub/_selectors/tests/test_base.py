@@ -14,7 +14,7 @@ def test_repr():
     >>> s.cols("ID", "Name") & "ID"
     (cols('ID', 'Name') & cols('ID'))
     >>> s.filter_names(lambda n: 'a' in n) ^ s.filter(lambda c: c[2] == 3)
-    (filter_names(<function <lambda> at ...>) ^ filter(<function <lambda> at ...>))
+    (filter_names(<lambda>) ^ filter(<lambda>))
     >>> ~s.all()
     (~all())
 
@@ -87,13 +87,13 @@ def test_filter(df_module):
     df = df_module.example_dataframe
     expanded = s.filter(lambda c: 4.5 in sbd.to_list(c)).expand(df)
     assert expanded == ["float-col"]
-    expanded = s.filter(lambda c, v: v in sbd.to_list(c), args=(4.5,)).expand(df)
+    expanded = s.filter(lambda c, v: v in sbd.to_list(c), 4.5).expand(df)
     assert expanded == ["float-col"]
 
 
 def test_filter_names(df_module):
     df = df_module.example_dataframe
-    expanded = s.filter_names(str.endswith, ("t-col",)).expand(df)
+    expanded = s.filter_names(str.endswith, "t-col").expand(df)
     assert expanded == ["int-col", "float-col"]
 
 

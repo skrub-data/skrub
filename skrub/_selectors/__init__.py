@@ -115,7 +115,7 @@ missing from the dataframe.
 
 >>> s.cols("ID", "missing").expand(df)
 Traceback (most recent call last):
-...
+    ...
 ValueError: The following columns are requested for selection but missing from dataframe: ['missing']
 
 However, that is no longer the case as soon as it is combined with other selectors.
@@ -169,7 +169,7 @@ column.
 We can pass args and kwargs that will be passed to the predicate, which can
 help avoid lambda or local functions and thus ensure the selector is picklable.
 
->>> s.filter_names(str.endswith, args=('mm',)).expand(df)
+>>> s.filter_names(str.endswith, 'mm').expand(df)
 ['height_mm', 'width_mm']
 
 Defining new selectors
@@ -199,36 +199,40 @@ implemented with this approach.
 
 Defining a new class:
 
->>> class EndsWithMm(s.Selector):
+>>> class EndsWith(s.Selector):
+...     def __init__(self, suffix):
+...         self.suffix = suffix
+...
 ...     def _matches(self, col):
-...         return sbd.name(col).endswith("_mm")
+...         return sbd.name(col).endswith(self.suffix)
 
->>> EndsWithMm().expand(df)
+>>> EndsWith('_mm').expand(df)
 ['height_mm', 'width_mm']
 
 Using a filter:
 
->>> def ends_with_mm():
-...     return s.filter_names(str.endswith, args=("_mm",))
+>>> def ends_with(suffix):
+...     return s.filter_names(str.endswith, suffix)
 
->>> ends_with_mm().expand(df)
+>>> ends_with('_mm').expand(df)
 ['height_mm', 'width_mm']
 
->>> ends_with_mm()
-filter_names(<method 'endswith' of 'str' objects>, '_mm')
+>>> ends_with('_mm')
+filter_names(str.endswith, '_mm')
 
 Instantiating directly a Filter or FilterNames object allows passing the name
 argument and thus controlling the repr of the resulting selector, so an
-improved version would be:
+slightly improved version could be:
 
 >>> from skrub._selectors._base import NameFilter
 
->>> def ends_with_mm():
-...     return NameFilter(str.endswith, args=('_mm',), name='ends_with_mm')
+>>> def ends_with(suffix):
+...     return NameFilter(str.endswith, args=(suffix,), name='ends_with')
 
->>> ends_with_mm()
-ends_with_mm('_mm')
->>> ends_with_mm().expand(df)
+>>> ends_with('_mm')
+ends_with('_mm')
+
+>>> ends_with('_mm').expand(df)
 ['height_mm', 'width_mm']
 
 """

@@ -133,7 +133,22 @@ def inv(obj):
 
 
 def make_selector(obj):
-    """Transform a selector, column name or list of column names into a selector."""
+    """Transform a selector, column name or list of column names into a selector.
+
+    Examples
+    --------
+    >>> from skrub import _selectors as s
+
+    >>> s.make_selector('ID')
+    cols('ID')
+
+    >>> s.make_selector(['ID', 'kind'])
+    cols('ID', 'kind')
+
+    >>> s.make_selector(s.cols('ID', 'kind'))
+    cols('ID', 'kind')
+
+    """
     if isinstance(obj, Selector):
         return obj
     if isinstance(obj, str):
@@ -358,12 +373,64 @@ class Filter(Selector):
 
     def __repr__(self):
         if self.name is None:
-            args_r = repr_args((self.predicate,) + self.args, self.kwargs)
-            return f"{self._default_name()}({args_r})"
+            pred_name = getattr(self.predicate, "__qualname__", None) or repr(
+                self.predicate
+            )
+            extra_args = repr_args(self.args, self.kwargs)
+            args = ", ".join([pred_name, extra_args]) if extra_args else pred_name
+            return f"{self._default_name()}({args})"
         return f"{self.name}({repr_args(self.args, self.kwargs)})"
 
 
-def filter(predicate, args=None, kwargs=None):
+def filter(predicate, *args, **kwargs):
+    """Select columns for which `predicate` returns True.
+
+    For each column `col` in the dataframe, `predicate` is called as
+    `predicate(col, *args, **kwargs)` and the column is kept if it returns
+    `True`. To filter columns based only on their name, see also
+    `filter_names`.
+
+    `args` and `kwargs` are extra parameters for the predicate. Storing
+    parameters like this rather than in a closure can help using an importable
+    function as the predicate rather than a local one, which is necessary to
+    pickle the selector. (An alternative is to use `functools.partial`).
+
+    Examples
+    --------
+    >>> from skrub import _selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "height_mm": [297.0, 420.0],
+    ...         "width_mm": [210.0, 297.0],
+    ...         "kind": ["A4", "A3"],
+    ...         "ID": [4, 3],
+    ...     }
+    ... )
+    >>> df
+       height_mm  width_mm kind  ID
+    0      297.0     210.0   A4   4
+    1      420.0     297.0   A3   3
+
+    >>> selector = s.filter(lambda col: 'A4' in col.values)
+    >>> s.select(df, selector)
+      kind
+    0   A4
+    1   A3
+
+    >>> def contains(col, value):
+    ...    return value in col.values
+
+    >>> selector = s.filter(contains, 3)
+    >>> selector
+    filter(contains, 3)
+
+    >>> s.select(df, selector)
+       ID
+    0   4
+    1   3
+
+    """
     return Filter(predicate, args=args, kwargs=kwargs)
 
 
@@ -376,5 +443,58 @@ class NameFilter(Filter):
         return "filter_names"
 
 
-def filter_names(predicate, args=None, kwargs=None):
+def filter_names(predicate, *args, **kwargs):
+    """Select columns based on their name.
+
+    For a column whose name is `col_name`, `predicate` is called as
+    `predicate(col_name, *args, **kwargs)` and the column is selected if
+    returns `True`. Note this is different from `filter`, because here the
+    predicate is passed the column name whereas with `filter`, the predicate is
+    passed the actual column (pandas or polars Series).
+
+
+    `args` and `kwargs` are extra parameters for the predicate. Storing
+    parameters like this rather than in a closure can help using an importable
+    function as the predicate rather than a local one, which is necessary to
+    pickle the selector. (An alternative is to use `functools.partial`).
+
+    Examples
+    --------
+    >>> from skrub import _selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "height_mm": [297.0, 420.0],
+    ...         "width_mm": [210.0, 297.0],
+    ...         "kind": ["A4", "A3"],
+    ...         "ID": [4, 3],
+    ...     }
+    ... )
+    >>> df
+       height_mm  width_mm kind  ID
+    0      297.0     210.0   A4   4
+    1      420.0     297.0   A3   3
+
+    >>> selector = s.filter_names(lambda name: name.endswith('_mm'))
+    >>> s.select(df, selector)
+       height_mm  width_mm
+    0      297.0     210.0
+    1      420.0     297.0
+
+    If we want to pickle the selector, we're better off using an importable
+    function and passing the arguments separately:
+
+    >>> selector = s.filter_names(str.endswith, '_mm')
+    >>> selector
+    filter_names(str.endswith, '_mm')
+
+    >>> s.select(df, selector)
+       height_mm  width_mm
+    0      297.0     210.0
+    1      420.0     297.0
+
+    >>> import pickle
+    >>> _ = pickle.dumps(selector) # OK
+
+    """
     return NameFilter(predicate, args=args, kwargs=kwargs)

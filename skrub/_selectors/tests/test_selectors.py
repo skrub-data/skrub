@@ -98,8 +98,8 @@ def test_pickling_selectors_with_args(df_module):
     # pickling selectors should be fine ...
     df = df_module.example_dataframe
     for selector in [
-        s.filter(_filt_col, args=("int-",)),
-        s.filter_names(_filt_col_name, args=("int-",)),
+        s.filter(_filt_col, "int-"),
+        s.filter_names(_filt_col_name, "int-"),
         s.glob("int-*"),
         s.regex("^int-.*$"),
         s.cardinality_below(4),
