@@ -287,6 +287,20 @@ def test_to_numeric(df_module):
     )
 
 
+def test_is_integer(df_module):
+    df = df_module.example_dataframe
+    assert ns.is_integer(ns.col(df, "int-col"))
+    for col in ["float-col", "str-col", "datetime-col", "date-col", "bool-col"]:
+        assert not ns.is_integer(ns.col(df, col))
+
+
+def test_is_float(df_module):
+    df = df_module.example_dataframe
+    assert ns.is_float(ns.col(df, "float-col"))
+    for col in ["int-col", "str-col", "datetime-col", "date-col", "bool-col"]:
+        assert not ns.is_float(ns.col(df, col))
+
+
 def test_is_string(df_module):
     df = df_module.example_dataframe
     df = ns.pandas_convert_dtypes(df)

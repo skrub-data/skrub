@@ -19,6 +19,8 @@ def test_repr():
     cardinality_below(30)
     >>> s.string() | s.any_date() | s.categorical()
     ((string() | any_date()) | categorical())
+    >>> s.float() & s.integer()
+    (float() & integer())
 
     """
 
@@ -51,6 +53,8 @@ def test_dtype_selectors(df_module):
         "float-col",
         "bool-col",
     ]
+    assert s.integer().expand(df) == ["int-col"]
+    assert s.float().expand(df) == ["float-col"]
     assert s.string().expand(df) == ["str-col"]
     assert s.categorical().expand(df) == ["cat-col"]
 

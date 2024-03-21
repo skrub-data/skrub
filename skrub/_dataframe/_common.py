@@ -52,6 +52,8 @@ __all__ = [
     "is_bool",
     "is_numeric",
     "to_numeric",
+    "is_integer",
+    "is_float",
     "to_float32",
     "is_string",
     "to_string",
@@ -539,6 +541,36 @@ def _to_numeric_polars(column, dtype=None, strict=True):
     if not strict:
         return column.cast(pl.Float64, strict=False)
     raise ValueError("Could not convert column to numeric dtype") from error
+
+
+@dispatch
+def is_integer(column):
+    raise NotImplementedError()
+
+
+@is_integer.specialize("pandas")
+def _is_integer_pandas(column):
+    return pd.api.types.is_integer_dtype(column)
+
+
+@is_integer.specialize("polars")
+def _is_integer_polars(column):
+    return column.dtype.is_integer()
+
+
+@dispatch
+def is_float(column):
+    raise NotImplementedError()
+
+
+@is_float.specialize("pandas")
+def _is_float_pandas(column):
+    return pd.api.types.is_float_dtype(column)
+
+
+@is_float.specialize("polars")
+def _is_float_polars(column):
+    return column.dtype.is_float()
 
 
 @dispatch

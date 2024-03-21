@@ -8,6 +8,8 @@ __all__ = [
     "glob",
     "regex",
     "numeric",
+    "integer",
+    "float",
     "any_date",
     "categorical",
     "string",
@@ -39,6 +41,14 @@ def regex(pattern):
 
 def numeric():
     return Filter(sbd.is_numeric, name="numeric")
+
+
+def integer():
+    return Filter(sbd.is_integer, name="integer")
+
+
+def float():
+    return Filter(sbd.is_float, name="float")
 
 
 def any_date():
