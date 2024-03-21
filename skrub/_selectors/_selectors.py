@@ -384,7 +384,7 @@ def string():
     >>> df.dtypes
     os            object
     o             object
-    s     string[python]
+    s     string...
     c           category
     dtype: object
 
