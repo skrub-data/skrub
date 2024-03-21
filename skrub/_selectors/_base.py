@@ -4,18 +4,136 @@ from .._utils import repr_args
 
 
 def all():
+    """Select all columns.
+
+    Examples
+    --------
+    >>> from skrub import _selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "height_mm": [297.0, 420.0],
+    ...         "width_mm": [210.0, 297.0],
+    ...         "kind": ["A4", "A3"],
+    ...         "ID": [4, 3],
+    ...     }
+    ... )
+    >>> df
+       height_mm  width_mm kind  ID
+    0      297.0     210.0   A4   4
+    1      420.0     297.0   A3   3
+
+    >>> s.select(df, s.all())
+       height_mm  width_mm kind  ID
+    0      297.0     210.0   A4   4
+    1      420.0     297.0   A3   3
+
+    """
     return All()
 
 
 def cols(*columns):
+    """Select columns by name.
+
+    Examples
+    --------
+    >>> from skrub import _selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "height_mm": [297.0, 420.0],
+    ...         "width_mm": [210.0, 297.0],
+    ...         "kind": ["A4", "A3"],
+    ...         "ID": [4, 3],
+    ...     }
+    ... )
+    >>> df
+       height_mm  width_mm kind  ID
+    0      297.0     210.0   A4   4
+    1      420.0     297.0   A3   3
+
+    >>> s.select(df, s.cols('height_mm', 'ID'))
+       height_mm  ID
+    0      297.0   4
+    1      420.0   3
+
+    When this selector is used on its own, an error is raised if some columns
+    are missing:
+
+    >>> s.select(df, s.cols('width_mm', 'depth_mm'))
+    Traceback (most recent call last):
+        ...
+    ValueError: The following columns are requested for selection but missing from dataframe: ['depth_mm']
+
+    However, no error is raised when this selector is combined with other
+    selectors:
+
+    >>> s.select(df, s.all() & s.cols('width_mm', 'depth_mm'))
+       width_mm
+    0     210.0
+    1     297.0
+
+    In all skrub functions that accept a selector, a list of column names can
+    be passed and `cols` will be used to turn it into a selector.
+
+    >>> s.select(df, ['kind', 'ID'])
+      kind  ID
+    0   A4   4
+    1   A3   3
+    >>> s.make_selector(['kind', 'ID'])
+    cols('kind', 'ID')
+    >>> s.all() & ['kind', 'ID']
+    (all() & cols('kind', 'ID'))
+
+    """
     return Cols(columns)
 
 
 def inv(obj):
+    """Invert a selector.
+
+    This selects all columns except those that are matched by the input; it is
+    equivalent to `all() - obj` or `~make_selector(obj)`. The argument `obj` can
+    be a selector but also a column name or list of column names.
+
+    Examples
+    --------
+    >>> from skrub import _selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "height_mm": [297.0, 420.0],
+    ...         "width_mm": [210.0, 297.0],
+    ...         "kind": ["A4", "A3"],
+    ...         "ID": [4, 3],
+    ...     }
+    ... )
+    >>> df
+       height_mm  width_mm kind  ID
+    0      297.0     210.0   A4   4
+    1      420.0     297.0   A3   3
+
+    >>> s.select(df, ['ID'])
+       ID
+    0   4
+    1   3
+
+    >>> s.select(df, s.inv(['ID']))
+       height_mm  width_mm kind
+    0      297.0     210.0   A4
+    1      420.0     297.0   A3
+
+    >>> s.select(df, ~s.cols('ID'))
+       height_mm  width_mm kind
+    0      297.0     210.0   A4
+    1      420.0     297.0   A3
+
+    """
     return ~make_selector(obj)
 
 
 def make_selector(obj):
+    """Transform a selector, column name or list of column names into a selector."""
     if isinstance(obj, Selector):
         return obj
     if isinstance(obj, str):
@@ -41,6 +159,48 @@ def _select_col_names_polars(df, col_names):
 
 
 def select(df, selector):
+    """Apply a selector to a dataframe and return the resulting dataframe.
+
+    `selector` can be anything accepted by `make_selector` ie a selector,
+    column name or list of column names.
+
+    Examples
+    --------
+    >>> from skrub import _selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "height_mm": [297.0, 420.0],
+    ...         "width_mm": [210.0, 297.0],
+    ...         "kind": ["A4", "A3"],
+    ...         "ID": [4, 3],
+    ...     }
+    ... )
+    >>> df
+       height_mm  width_mm kind  ID
+    0      297.0     210.0   A4   4
+    1      420.0     297.0   A3   3
+
+    >>> selector = s.all() - 'ID'
+    >>> selector
+    (all() - cols('ID'))
+
+    >>> selector.expand(df)
+    ['height_mm', 'width_mm', 'kind']
+
+    >>> s.select(df, selector)
+       height_mm  width_mm kind
+    0      297.0     210.0   A4
+    1      420.0     297.0   A3
+
+    We can also pass column names directly:
+
+    >>> s.select(df, ['kind', 'ID'])
+      kind  ID
+    0   A4   4
+    1   A3   3
+
+    """
     return _select_col_names(df, make_selector(selector).expand(df))
 
 
