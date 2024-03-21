@@ -29,6 +29,13 @@ def test_make_selector():
         s.make_selector(0)
 
 
+def test_select(df_module):
+    df = df_module.example_dataframe
+    df_module.assert_frame_equal(
+        s.select(df, s.cols("float-col", "str-col")), df[["float-col", "str-col"]]
+    )
+
+
 def test_all(df_module):
     assert s.all().expand(df_module.example_dataframe) == [
         "int-col",
