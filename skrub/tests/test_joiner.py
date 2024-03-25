@@ -2,25 +2,15 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
-from pandas.testing import assert_frame_equal
 
 from skrub import Joiner
-from skrub._dataframe._polars import POLARS_SETUP
-
-MODULES = [pd]
-ASSERT_TUPLES = [(pd, assert_frame_equal)]
-
-if POLARS_SETUP:
-    import polars as pl
-    from polars.testing import assert_frame_equal as assert_frame_equal_pl
-
-    MODULES.append(pl)
-    ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
+from skrub._dataframe import _common as ns
+from skrub._dataframe._test_utils import assert_frame_equal
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_joiner(px):
-    main_table = px.DataFrame(
+# TODO: change this name
+def test_joiner(df_module):
+    main_table = df_module.make_dataframe(
         {
             "Country": [
                 "France",
@@ -30,7 +20,7 @@ def test_joiner(px):
         }
     )
 
-    aux_table = px.DataFrame(
+    aux_table = df_module.make_dataframe(
         {
             "country": ["Germany", "French Republic", "Italia"],
             "Population": [84_000_000, 68_000_000, 59_000_000],
@@ -67,12 +57,11 @@ def test_joiner(px):
         false_joiner2.fit(main_table)
 
 
-@pytest.mark.parametrize("px, assert_frame_equal_", ASSERT_TUPLES)
-def test_multiple_keys(px, assert_frame_equal_):
-    df = px.DataFrame(
+def test_multiple_keys(df_module):
+    df = df_module.make_dataframe(
         {"Co": ["France", "Italia", "Deutchland"], "Ca": ["Paris", "Roma", "Berlin"]}
     )
-    df2 = px.DataFrame(
+    df2 = df_module.make_dataframe(
         {"CO": ["France", "Italy", "Germany"], "CA": ["Paris", "Rome", "Berlin"]}
     )
     joiner_list = Joiner(
@@ -82,17 +71,15 @@ def test_multiple_keys(px, assert_frame_equal_):
         add_match_info=False,
     )
     result = joiner_list.fit_transform(df)
-    try:
-        expected = px.concat([df, df2], axis=1)
-    except TypeError:
-        expected = px.concat([df, df2], how="horizontal")
-    assert_frame_equal_(result, expected)
+
+    expected = ns.concat_horizontal(df, df2)
+    df_module.assert_frame_equal(result, expected)
 
     joiner_list = Joiner(
         aux_table=df2, aux_key="CA", main_key="Ca", add_match_info=False
     )
     result = joiner_list.fit_transform(df)
-    assert_frame_equal_(result, expected)
+    assert_frame_equal(result, expected)
 
 
 def test_pandas_aux_table_index():
