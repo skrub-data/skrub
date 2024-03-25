@@ -35,10 +35,10 @@ def test_joiner(df_module):
 
     joiner.fit(main_table)
     big_table = joiner.transform(main_table)
-    assert big_table.shape == (main_table.shape[0], 3)
+    assert ns.shape(big_table) == (ns.shape(main_table)[0], 3)
     assert_array_equal(
-        big_table["Population"].to_numpy(),
-        aux_table["Population"].to_numpy()[[1, 0, 2]],
+        ns.to_numpy(ns.col(big_table, "Population")),
+        ns.to_numpy(ns.col(aux_table, "Population"))[[1, 0, 2]],
     )
 
     false_joiner = Joiner(aux_table=aux_table, main_key="Countryy", aux_key="country")
@@ -73,7 +73,7 @@ def test_multiple_keys(df_module):
     result = joiner_list.fit_transform(df)
 
     expected = ns.concat_horizontal(df, df2)
-    df_module.assert_frame_equal(result, expected)
+    assert_frame_equal(result, expected)
 
     joiner_list = Joiner(
         aux_table=df2, aux_key="CA", main_key="Ca", add_match_info=False
@@ -98,6 +98,8 @@ def test_pandas_aux_table_index():
         suffix="_capitals",
     )
     join = joiner.fit_transform(main_table)
+    # TODO: change into ``ns.to_list(ns.col(join, "Country_capitals"))``
+    # after selectors PR
     assert join["Country_capitals"].tolist() == ["France", "Italy", "Germany"]
 
 
