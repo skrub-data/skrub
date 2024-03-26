@@ -9,6 +9,7 @@ from skrub._dataframe._test_utils import assert_frame_equal
 
 
 # TODO: change this name
+# see https://github.com/skrub-data/skrub/pull/896#discussion_r1538167538
 def test_joiner(df_module):
     main_table = df_module.make_dataframe(
         {
