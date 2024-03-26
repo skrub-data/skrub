@@ -21,6 +21,10 @@ def test_repr():
     my_filter(3)
     >>> s.Filter(lambda c, x: c[2] == x, args=(3,), selector_repr='my_filter()')
     my_filter()
+    >>> s.NameFilter(lambda c_n, n: c_n.lower() == n,
+    ...              args=('col',),
+    ...              selector_repr='lower_check()')
+    lower_check()
 
     """
 
