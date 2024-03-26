@@ -41,10 +41,10 @@ _DATAFAME_MODULES_INFO["pandas"] = SimpleNamespace(
         "assert_column_equal": pandas.testing.assert_series_equal,
         "empty_dataframe": pd.DataFrame(),
         "empty_column": pd.Series([], dtype="object"),
-        "example_dataframe": pd.DataFrame(_example_data_dict()),
+        "example_dataframe": pd.DataFrame(_example_data_dict()).convert_dtypes(),
         "example_column": pd.Series(
             _example_data_dict()["float-col"], name="float-col"
-        ),
+        ).convert_dtypes(),
         "dtypes": {
             "float32": pd.Float32Dtype(),
             "float64": pd.Float64Dtype(),

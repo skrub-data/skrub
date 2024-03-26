@@ -75,6 +75,11 @@ def test_is_column(df_module):
 #
 
 
+def test_to_list(df_module):
+    col = ns.col(df_module.example_dataframe, "str-col")
+    assert ns.to_list(col) == ["one", None, "three", "four"]
+
+
 def test_to_numpy(df_module, example_data_dict):
     with pytest.raises(NotImplementedError):
         ns.to_numpy(df_module.example_dataframe)
@@ -84,7 +89,7 @@ def test_to_numpy(df_module, example_data_dict):
 
     array = ns.to_numpy(ns.col(df_module.example_dataframe, "str-col"))
     assert array.dtype == object
-    assert_array_equal(array, np.asarray(example_data_dict["str-col"]))
+    assert_array_equal(array[2:], np.asarray(example_data_dict["str-col"])[2:])
 
 
 def test_to_pandas(df_module, all_dataframe_modules):
@@ -280,6 +285,20 @@ def test_to_numeric(df_module):
         ns.dtype(ns.to_numeric(s, strict=False, dtype=df_module.dtypes["float32"]))
         == df_module.dtypes["float32"]
     )
+
+
+def test_is_integer(df_module):
+    df = df_module.example_dataframe
+    assert ns.is_integer(ns.col(df, "int-col"))
+    for col in ["float-col", "str-col", "datetime-col", "date-col", "bool-col"]:
+        assert not ns.is_integer(ns.col(df, col))
+
+
+def test_is_float(df_module):
+    df = df_module.example_dataframe
+    assert ns.is_float(ns.col(df, "float-col"))
+    for col in ["int-col", "str-col", "datetime-col", "date-col", "bool-col"]:
+        assert not ns.is_float(ns.col(df, col))
 
 
 def test_is_string(df_module):

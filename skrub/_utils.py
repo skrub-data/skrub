@@ -176,3 +176,9 @@ def clone_if_default(estimator, default_estimator):
 
 def random_string():
     return secrets.token_hex()[:8]
+
+
+def repr_args(args, kwargs):
+    return ", ".join(
+        [repr(a) for a in args] + [f"{k}={v!r}" for k, v in kwargs.items()]
+    )
