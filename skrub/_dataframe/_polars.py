@@ -42,6 +42,14 @@ def make_dataframe(X, index=None, dtypes=None):
             "Polars dataframes don't have an index, but "
             f"the Polars dataframe maker was called with {index=!r}."
         )
+
+    # Polars doesn't support building a dataframe from a mapping with
+    # non-str keys.
+    keys = list(X.keys())
+    for key in keys:
+        if not isinstance(key, str):
+            X[str(key)] = X.pop(key)
+
     df = pl.DataFrame(X)
     if dtypes is not None:
         df = df.cast(dtypes)
@@ -261,8 +269,8 @@ def _polars_ops_mapping(col, operation, output_key):
 
     if aggfunc is None:
         raise ValueError(
-            f"Polars operation {operation!r} is not supported. Available:"
-            f" {list(polars_aggfuncs)}"
+            f"Polars operation {operation!r} is not supported. Available"
+            f" operations are: {list(polars_aggfuncs)}"
         )
 
     return aggfunc.alias(output_key)

@@ -209,6 +209,7 @@ def test_get_feature_names_out_no_words():
             ],
         ],
     )
+    df.columns = list(map(str, df.columns))
 
     enc.fit(df)
     # The difficulty here is that, in this specific case short words
@@ -230,6 +231,7 @@ def test_get_feature_names_out_redundent():
             ],
         ],
     )
+    df.columns = list(map(str, df.columns))
 
     tv = TableVectorizer(cardinality_threshold=1)
     tv.fit(df)

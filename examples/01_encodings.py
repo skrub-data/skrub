@@ -5,9 +5,10 @@
 Encoding: from a dataframe to a numerical matrix for machine learning
 =====================================================================
 
-This example demonstrates how to transform a somewhat complicated dataframe
-to a matrix well suited for machine-learning. We study the case of predicting wages
-using the `employee salaries <https://www.openml.org/d/42125>`_ dataset.
+This example shows how to transform a rich dataframe with columns of various types
+into a numerical matrix on which machine-learning algorithms can be applied.
+We study the case of predicting wages using the
+`employee salaries <https://www.openml.org/d/42125>`_ dataset.
 
 .. |TableVectorizer| replace::
     :class:`~skrub.TableVectorizer`
@@ -35,23 +36,22 @@ using the `employee salaries <https://www.openml.org/d/42125>`_ dataset.
 """
 
 ###############################################################################
-# A simple prediction pipeline
-# ----------------------------
+# Easily encoding a dataframe
+# ---------------------------
 #
 # Let's first retrieve the dataset:
-
-from skrub.datasets import fetch_employee_salaries
-
-dataset = fetch_employee_salaries()
-
-###############################################################################
-# We denote *X*, employees characteristics (our input data), and *y*,
+# We denote *X*, the employees characteristics (our inputs aka features), and *y*,
 # the annual salary (our target column):
 
-X = dataset.X
-y = dataset.y
 
-X
+from skrub.datasets import fetch_employee_salaries
+import pandas as pd
+
+pd.options.display.max_rows = 5
+
+dataset = fetch_employee_salaries()
+employees, salaries = dataset.X, dataset.y
+employees
 
 ###############################################################################
 # We observe diverse columns in the dataset:
@@ -61,74 +61,109 @@ X
 #   - datetime (``'date_first_hired'``)
 #   - dirty categorical (``'employee_position_title'``, ``'division'``).
 #
-# Using skrub's |TableVectorizer|, we can now already build a machine-learning
-# pipeline and train it:
+# Most machine-learning algorithms work with arrays of numbers. Therefore our
+# complex, heterogeneous table needs to be processed to extract numerical
+# features.
+# We can do this easily using skrub's |TableVectorizer|
+
+from skrub import TableVectorizer
+
+vectorizer = TableVectorizer()
+features = vectorizer.fit_transform(employees)
+features
+
+###############################################################################
+# From our 8 columns, the |TableVectorizer| has extracted 143 numerical
+# features. Most of them are one-hot encoded representations of the categorical
+# features. For example, we can see that 3 columns ``gender_F``, ``gender_M``,
+# ``gender_nan`` were created to encode the ``'gender'`` column.
+
+###############################################################################
+# Before we explore the parameters of the |TableVectorizer| and the choices it
+# made, let us note that by performing apropriate transformations on our
+# complex data, it allows us to use our table for machine-learning:
+
+from sklearn.ensemble import HistGradientBoostingRegressor
+
+HistGradientBoostingRegressor().fit(features, salaries)
+
+###############################################################################
+# The |TableVectorizer| bridges the gap between tabular data and machine-learning
+# pipelines and allows us to apply a machine-learning estimator to our table
+# without manual data wrangling and feature extraction.
+#
+
+###############################################################################
+# Inspecting the TableVectorizer
+# ------------------------------
+#
+# The |TableVectorizer| distinguishes between 4 basic types of columns.
+# For each kind, it applies a different transformation, which we can configure.
+# The types of columns and the default transformations for each of them are:
+#
+# - numeric columns: simply casting to float32
+# - datetime columns: extracting features such as year, day, hour with the |DatetimeEncoder|
+# - low-cardinality categorical columns: one-hot encoding
+# - high-cardinality categorical columns: a simple and effective text representation pipeline provided by the |GapEncoder|
+#
+
+vectorizer
+
+# We can inspect which transformation was chosen for a each column and retrieve the fitted transformer.
+# ``vectorizer.transformers_`` gives us a dictionary which maps column names to the corresponding transformer.
+
+vectorizer.transformers_["date_first_hired"]
+
+# We can also see which features in the vectorizer's output were derived from our input column.
+
+vectorizer.input_to_outputs_["date_first_hired"]
+
+###############################################################################
+
+features[vectorizer.input_to_outputs_["date_first_hired"]]
+
+###############################################################################
+# We see that ``"date_first_hired"`` has been recognized and processed as a datetime column.
+# But looking closer at our original dataframe, it was encoded as a string.
+
+employees["date_first_hired"]
+
+###############################################################################
+# Note the ``dtype: object`` in the output above.
+# Before applying the transformers we specify, the |TableVectorizer| performs a
+# few preprocessing steps.
+#
+# For example, the "``to_numeric``" step attempts to parse string columns as
+# numbers, the "``clean_null_string``" step replaces values commonly used to
+# represent missing values such as ``"N/A"`` with actuall ``null``, etc.
+# We can also see the list of steps that were relevant for a given column and
+# applied to it
+
+vectorizer.input_to_processing_steps_["date_first_hired"]
+
+###############################################################################
+
+vectorizer.input_to_processing_steps_["year_first_hired"]
+
+###############################################################################
+
+
+###############################################################################
+# A simple Pipeline for tabular data
+# ----------------------------------
+#
+# The |TableVectorizer| outputs data that can be understood by a scikit-learn
+# estimator. Therefore we can easily build a 2-step scikit-learn ``Pipeline``
+# that we can fit, test or cross-validate and that works well on tabular data.
 
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
-from skrub import TableVectorizer
-
-pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
-pipeline.fit(X, y)
-
-###############################################################################
-# What just happened here?
-#
-# We actually gave our dataframe as an input to the |TableVectorizer| and it
-# returned an output useful for the scikit-learn model.
-#
-# Let's explore the internals of our encoder, the |TableVectorizer|:
-
-from pprint import pprint
-
-# Recover the TableVectorizer from the Pipeline
-tv = pipeline.named_steps["tablevectorizer"]
-
-pprint(tv.transformers_)
-
-###############################################################################
-# We observe it has automatically assigned an appropriate encoder to
-# corresponding columns:
-
-###############################################################################
-#     - The |OneHotEncoder| for low cardinality string variables, the columns
-#       ``'gender'``, ``'department'``, ``'department_name'`` and ``'assignment_category'``.
-
-tv.named_transformers_["low_cardinality"].get_feature_names_out()
-
-###############################################################################
-#     - The |GapEncoder| for high cardinality string columns, ``'employee_position_title'``
-#       and ``'division'``. The |GapEncoder| is a powerful encoder that can handle dirty
-#       categorical columns.
-
-tv.named_transformers_["high_cardinality"].get_feature_names_out()
-
-###############################################################################
-#     - The |DatetimeEncoder| to the ``'date_first_hired'`` column. The |DatetimeEncoder|
-#       can encode datetime columns for machine learning.
-
-tv.named_transformers_["datetime"].get_feature_names_out()
-
-###############################################################################
-# As we can see, it gave us interpretable column names.
-#
-# In total, we have a reasonable number of encoded columns:
-
-feature_names = tv.get_feature_names_out()
-
-len(feature_names)
-
-###############################################################################
-# Let's look at the cross-validated R2 score of our model:
-
 from sklearn.model_selection import cross_val_score
 import numpy as np
 
-scores = cross_val_score(pipeline, X, y)
+pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
+scores = cross_val_score(pipeline, employees, salaries)
 print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
-
-###############################################################################
-# The simple pipeline applied on this complex dataset gave us very good results.
 
 ###############################################################################
 # Feature importances in the statistical model
@@ -146,10 +181,11 @@ print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
 
 from sklearn.ensemble import RandomForestRegressor
 
-regressor = RandomForestRegressor()
+vectorizer = TableVectorizer()
+regressor = RandomForestRegressor(n_estimators=50, max_depth=20, random_state=0)
 
-pipeline = make_pipeline(TableVectorizer(), regressor)
-pipeline.fit(X, y)
+pipeline = make_pipeline(vectorizer, regressor)
+pipeline.fit(employees, salaries)
 
 ###############################################################################
 # We are retrieving the feature importances:
@@ -166,7 +202,7 @@ indices = np.argsort(avg_importances)[::-1]
 import matplotlib.pyplot as plt
 
 top_indices = indices[:20]
-labels = feature_names[top_indices]
+labels = vectorizer.get_feature_names_out()[top_indices]
 
 plt.figure(figsize=(12, 9))
 plt.barh(

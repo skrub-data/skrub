@@ -176,3 +176,19 @@ def clone_if_default(estimator, default_estimator):
 
 def random_string():
     return secrets.token_hex()[:8]
+
+
+def get_duplicates(values):
+    counts = collections.Counter(values)
+    duplicates = [k for k, v in counts.items() if v > 1]
+    return duplicates
+
+
+def check_duplicated_column_names(column_names, table_name=None):
+    duplicates = get_duplicates(column_names)
+    if duplicates:
+        table_name = "" if table_name is None else f"{table_name!r}"
+        raise ValueError(
+            f"Table {table_name} has duplicate column names: {duplicates}."
+            " Please make sure column names are unique."
+        )
