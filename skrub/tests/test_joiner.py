@@ -5,13 +5,12 @@ from numpy.testing import assert_array_equal
 
 from skrub import Joiner
 from skrub._dataframe import _common as ns
-from skrub._dataframe._test_utils import assert_frame_equal
+from skrub._dataframe._testing_utils import assert_frame_equal
 
 
-# TODO: change this name
-# see https://github.com/skrub-data/skrub/pull/896#discussion_r1538167538
-def test_joiner(df_module):
-    main_table = df_module.make_dataframe(
+@pytest.fixture
+def main_table(df_module):
+    return df_module.make_dataframe(
         {
             "Country": [
                 "France",
@@ -21,12 +20,18 @@ def test_joiner(df_module):
         }
     )
 
-    aux_table = df_module.make_dataframe(
+
+@pytest.fixture
+def aux_table(df_module):
+    return df_module.make_dataframe(
         {
             "country": ["Germany", "French Republic", "Italia"],
             "Population": [84_000_000, 68_000_000, 59_000_000],
         }
     )
+
+
+def test_fit_transform(main_table, aux_table):
     joiner = Joiner(
         aux_table=aux_table,
         main_key="Country",
@@ -42,6 +47,8 @@ def test_joiner(df_module):
         ns.to_numpy(ns.col(aux_table, "Population"))[[1, 0, 2]],
     )
 
+
+def test_wrong_main_key(main_table, aux_table):
     false_joiner = Joiner(aux_table=aux_table, main_key="Countryy", aux_key="country")
 
     with pytest.raises(
@@ -50,6 +57,8 @@ def test_joiner(df_module):
     ):
         false_joiner.fit(main_table)
 
+
+def test_wrong_aux_key(main_table, aux_table):
     false_joiner2 = Joiner(aux_table=aux_table, main_key="Country", aux_key="bad")
     with pytest.raises(
         ValueError,
