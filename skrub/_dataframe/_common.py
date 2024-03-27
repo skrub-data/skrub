@@ -43,6 +43,7 @@ __all__ = [
     "column_names",
     "rename",
     "set_column_names",
+    "values",
     #
     # Inspecting dtypes and casting
     #
@@ -434,6 +435,21 @@ def _set_column_names_pandas(df, new_column_names):
 @set_column_names.specialize("polars")
 def _set_column_names_polars(df, new_column_names):
     return df.rename(dict(zip(df.columns, new_column_names)))
+
+
+@dispatch
+def values(col):
+    raise NotImplementedError()
+
+
+@values.specialize("pandas", argument_type="Column")
+def _values_pandas(col):
+    return col.values
+
+
+@values.specialize("polars", argument_type="Column")
+def _values_polars(col):
+    return np.array(col)
 
 
 #

@@ -6,15 +6,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from skrub import InterpolationJoiner
-from skrub._dataframe._polars import POLARS_SETUP
-from skrub._dataframe._test_utils import is_module_polars
-
-MODULES = [pd]
-
-if POLARS_SETUP:
-    import polars as pl
-
-    MODULES.append(pl)
+from skrub._dataframe import _common as ns
 
 
 @pytest.fixture
@@ -36,39 +28,37 @@ def weather():
     )
 
 
-@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize("key", [["latitude", "longitude"], "latitude"])
 @pytest.mark.parametrize("with_nulls", [False, True])
-def test_interpolation_join(px, buildings, weather, key, with_nulls):
-    if is_module_polars(px):
+def test_interpolation_join(df_module, buildings, weather, key, with_nulls):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
     weather = weather.fillna(0.0)
-    weather = px.DataFrame(weather)
-    buildings = px.DataFrame(buildings)
+    weather = df_module.DataFrame(weather)
+    buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         key=key,
         regressor=KNeighborsRegressor(2),
         classifier=KNeighborsClassifier(2),
     ).fit_transform(buildings)
-    assert_array_equal(transformed["avg_temp"].values, [10.5, 15.5])
-    assert_array_equal(transformed["climate"].values, ["A", "B"])
+    assert_array_equal(ns.values(ns.col(transformed, "avg_temp")), [10.5, 15.5])
+    assert_array_equal(ns.values(ns.col(transformed, "climate")), ["A", "B"])
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_vectorizer(px):
-    if is_module_polars(px):
+def test_vectorizer(df_module):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    main = px.DataFrame({"A": [0, 1]})
-    aux = px.DataFrame({"A": [11, 110], "B": [1, 0]})
+    main = df_module.DataFrame({"A": [0, 1]})
+    aux = df_module.DataFrame({"A": [11, 110], "B": [1, 0]})
 
     class Vectorizer(TransformerMixin, BaseEstimator):
         def fit(self, X):
@@ -83,48 +73,44 @@ def test_vectorizer(px):
         regressor=KNeighborsRegressor(1),
         vectorizer=Vectorizer(),
     ).fit_transform(main)
-    assert_array_equal(join["B"], [0, 1])
+    assert_array_equal(ns.col(join, "B"), [0, 1])
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_no_multioutput(px, buildings, weather):
-    if is_module_polars(px):
+def test_no_multioutput(df_module, buildings, weather):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    weather = px.DataFrame(weather)
-    buildings = px.DataFrame(buildings)
+    weather = df_module.DataFrame(weather)
+    buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         main_key=("latitude", "longitude"),
         aux_key=("latitude", "longitude"),
     ).fit_transform(buildings)
-    assert transformed.shape == (2, 5)
+    assert ns.shape(transformed) == (2, 5)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_condition_choice(px):
-    if is_module_polars(px):
+def test_condition_choice(df_module):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    main = pd.DataFrame({"A": [0, 1, 2]})
-    main = px.DataFrame(main)
-    aux = pd.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
-    aux = px.DataFrame(aux)
+    main = df_module.DataFrame({"A": [0, 1, 2]})
+    aux = df_module.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert_array_equal(join["C"].values, [10, 11, 12])
+    assert_array_equal(ns.values(ns.col(join, "C")), [10, 11, 12])
 
     join = InterpolationJoiner(
         aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert_array_equal(join["C"].values, [11, 12, 10])
+    assert_array_equal(ns.values(ns.col(join, "C")), [11, 12, 10])
 
     with pytest.raises(ValueError, match="Must pass either"):
         join = InterpolationJoiner(
@@ -142,76 +128,69 @@ def test_condition_choice(px):
         ).fit(None)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_suffix(px):
-    if is_module_polars(px):
+def test_suffix(df_module):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    df = pd.DataFrame({"A": [0, 1], "B": [0, 1]})
-    df = px.DataFrame(df)
+    df = df_module.DataFrame({"A": [0, 1], "B": [0, 1]})
     join = InterpolationJoiner(
         df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
-    assert_array_equal(join.columns, ["A", "B", "B_aux"])
+    assert_array_equal(ns.column_names(join), ["A", "B", "B_aux"])
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_mismatched_indexes(px):
-    if is_module_polars(px):
+def test_mismatched_indexes(df_module):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
     main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
-    main = px.DataFrame(main)
-    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
-    aux = px.DataFrame(aux)
+    main = df_module.DataFrame(main)
+    aux = df_module.DataFrame({"A": [0, 1], "B": [10, 11]})
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert_array_equal(join["B"].values, [10, 11])
+    assert_array_equal(ns.values(ns.col(join, "B")), [10, 11])
+    # TODO: dispatch ``.values`` and ``.index``
     assert_array_equal(join.index.values, [1, 0])
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_fit_on_none(px):
+def test_fit_on_none(df_module):
     # X is hardly used in fit so it should be ok to fit without a main table
-    if is_module_polars(px):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]})
-    aux = px.DataFrame(aux)
+    aux = df_module.DataFrame({"A": [0, 1], "B": [10, 11]})
     joiner = InterpolationJoiner(aux, key="A", regressor=KNeighborsRegressor(1)).fit(
         None
     )
     main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
-    main = px.DataFrame(main)
+    main = df_module.DataFrame(main)
     join = joiner.transform(main)
-    assert_array_equal(join["B"].values, [10, 11])
+    # TODO: dispatch ``.values`` and ``.index``
+    assert_array_equal(ns.values(ns.col(join, "B")), [10, 11])
     assert_array_equal(join.index.values, [1, 0])
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_join_on_date(px):
-    if is_module_polars(px):
+def test_join_on_date(df_module):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    sales = pd.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
-    sales = px.DataFrame(sales)
-    temp = pd.DataFrame(
+    sales = df_module.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
+    temp = df_module.DataFrame(
         {"date": ["2023-09-09", "2023-10-01", "2024-09-21"], "temp": [-10, 10, 30]}
     )
-    temp = px.DataFrame(temp)
     transformed = (
         InterpolationJoiner(
             temp,
@@ -222,7 +201,7 @@ def test_join_on_date(px):
         .set_params(vectorizer__datetime_transformer__resolution=None)
         .fit_transform(sales)
     )
-    assert_array_equal(transformed["temp"].values, [-10, 10])
+    assert_array_equal(ns.values(ns.col(transformed, "temp")), [-10, 10])
 
 
 class FailFit(DummyClassifier):
@@ -230,16 +209,15 @@ class FailFit(DummyClassifier):
         raise ValueError("FailFit failed")
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_fit_failures(px, buildings, weather):
-    if is_module_polars(px):
+def test_fit_failures(df_module, buildings, weather):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    weather = px.DataFrame(weather)
-    buildings = px.DataFrame(buildings)
+    weather = df_module.DataFrame(weather)
+    buildings = df_module.DataFrame(buildings)
     weather["climate"] = "A"
     joiner = InterpolationJoiner(
         weather,
@@ -249,7 +227,7 @@ def test_fit_failures(px, buildings, weather):
         on_estimator_failure="pass",
     )
     join = joiner.fit_transform(buildings)
-    assert_array_equal(join["avg_temp"].values, [10.5, 15.5])
+    assert_array_equal(ns.values(ns.col(join, "avg_temp")), [10.5, 15.5])
     assert join.shape == (2, 4)
 
     joiner = InterpolationJoiner(
@@ -261,8 +239,8 @@ def test_fit_failures(px, buildings, weather):
     )
     with pytest.warns(UserWarning, match="(?s)Estimators failed.*climate"):
         join = joiner.fit_transform(buildings)
-    assert_array_equal(join["avg_temp"].values, [10.5, 15.5])
-    assert join.shape == (2, 4)
+    assert_array_equal(ns.values(ns.col(join, "avg_temp")), [10.5, 15.5])
+    assert ns.shape(join) == (2, 4)
 
     joiner = InterpolationJoiner(
         weather,
@@ -280,16 +258,15 @@ class FailPredict(DummyClassifier):
         raise ValueError("FailPredict failed")
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_transform_failures(px, buildings, weather):
-    if is_module_polars(px):
+def test_transform_failures(df_module, buildings, weather):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    weather = px.DataFrame(weather)
-    buildings = px.DataFrame(buildings)
+    weather = df_module.DataFrame(weather)
+    buildings = df_module.DataFrame(buildings)
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
@@ -298,10 +275,10 @@ def test_transform_failures(px, buildings, weather):
         on_estimator_failure="pass",
     )
     join = joiner.fit_transform(buildings)
-    assert_array_equal(join["avg_temp"].values, [10.5, 15.5])
-    assert join["climate"].isnull().all()
-    assert join["climate"].dtype == object
-    assert join.shape == (2, 5)
+    assert_array_equal(ns.values(ns.col(join, "avg_temp")), [10.5, 15.5])
+    assert ns.is_null(ns.col(join, "climate")).all()
+    assert ns.dtype(ns.col(join, "climate")) == object
+    assert ns.shape(join) == (2, 5)
 
     joiner = InterpolationJoiner(
         weather,
@@ -312,10 +289,10 @@ def test_transform_failures(px, buildings, weather):
     )
     with pytest.warns(UserWarning, match="(?s)Prediction failed.*climate"):
         join = joiner.fit_transform(buildings)
-    assert_array_equal(join["avg_temp"].values, [10.5, 15.5])
-    assert join["climate"].isnull().all()
-    assert join["climate"].dtype == object
-    assert join.shape == (2, 5)
+    assert_array_equal(ns.values(ns.col(join, "avg_temp")), [10.5, 15.5])
+    assert ns.is_null(ns.col(join, "climate")).all()
+    assert ns.dtype(ns.col(join, "climate")) == object
+    assert ns.shape(join) == (2, 5)
 
     joiner = InterpolationJoiner(
         weather,
@@ -328,16 +305,15 @@ def test_transform_failures(px, buildings, weather):
         join = joiner.fit_transform(buildings)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_transform_failures_dtype(px, buildings, weather):
-    if is_module_polars(px):
+def test_transform_failures_dtype(df_module, buildings, weather):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'"
+                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    weather = px.DataFrame(weather)
-    buildings = px.DataFrame(buildings)
+    weather = df_module.DataFrame(weather)
+    buildings = df_module.DataFrame(buildings)
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
@@ -346,9 +322,9 @@ def test_transform_failures_dtype(px, buildings, weather):
         on_estimator_failure="pass",
     )
     join = joiner.fit_transform(buildings)
-    assert join["avg_temp"].isnull().all()
-    assert join["avg_temp"].dtype == "float64"
-    assert join.shape == (2, 5)
+    assert ns.is_null(ns.col(join, "avg_temp")).all()
+    assert ns.dtype(ns.col(join, "avg_temp")) == "float64"
+    assert ns.shape(join) == (2, 5)
 
     joiner = InterpolationJoiner(
         weather,
@@ -358,6 +334,6 @@ def test_transform_failures_dtype(px, buildings, weather):
         on_estimator_failure="pass",
     )
     join = joiner.fit_transform(buildings)
-    assert join["climate"].isnull().all()
-    assert join["climate"].dtype == object
-    assert join.shape == (2, 5)
+    assert ns.is_null(ns.col(join, "climate")).all()
+    assert ns.dtype(ns.col(join, "climate")) == object
+    assert ns.shape(join) == (2, 5)
