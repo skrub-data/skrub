@@ -233,10 +233,9 @@ def integer():
 
     Use s.boolean() to also select Boolean columns:
 
-    >>> s.select(df, s.numeric() | s.boolean())
-       f64  F64  i64  I64  i8  bool_  Bool_
-    0  1.1  2.3    2    2   3   True   True
-
+    >>> s.select(df, s.integer() | s.boolean())
+       i64  I64  i8  bool_  Bool_
+    0    2    2   3   True   True
     """
 
     return Filter(sbd.is_integer, name="integer")
