@@ -237,11 +237,11 @@ def _to_pandas_polars(obj):
 def make_dataframe_like(df, data):
     """Create a dataframe from `data` using the module of `df`.
 
-    data can either be a dictionary {column_name: column} or a list of columns
+    `data` can either be a dictionary {column_name: column} or a list of columns
     (with names).
 
-    df can either be a dataframe or a column, and it is only used for dispatch,
-    ie to determine if the resulting dataframe should be a pandas or polars
+    `df` can either be a dataframe or a column, and it is only used for dispatch,
+    i.e. to determine if the resulting dataframe should be a pandas or polars
     dataframe.
     """
     raise NotImplementedError()

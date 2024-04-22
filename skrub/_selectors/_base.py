@@ -176,7 +176,7 @@ def _select_col_names_polars(df, col_names):
 def select(df, selector):
     """Apply a selector to a dataframe and return the resulting dataframe.
 
-    `selector` can be anything accepted by `make_selector` ie a selector,
+    `selector` can be anything accepted by `make_selector` i.e. a selector,
     column name or list of column names.
 
     Examples
@@ -392,7 +392,7 @@ def filter(predicate, *args, **kwargs):
 
     For each column `col` in the dataframe, `predicate` is called as
     `predicate(col, *args, **kwargs)` and the column is kept if it returns
-    `True`. To filter columns based only on their name, see also
+    True. To filter columns based only on their name, see also
     `filter_names`.
 
     `args` and `kwargs` are extra parameters for the predicate. Storing

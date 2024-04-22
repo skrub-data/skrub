@@ -361,6 +361,7 @@ def categorical():
 def string():
     """
     Select columns that have a String data type.
+
     In pandas, object columns containing (only) strings are also selected.
 
     Examples
@@ -446,7 +447,7 @@ def _cardinality_below(column, threshold):
     try:
         return sbd.n_unique(column) < threshold
     except Exception:
-        # n_unique can fail for example for polars columns with dtype Object
+        # `n_unique` can fail for example for polars columns with dtype Object
         return False
 
 
