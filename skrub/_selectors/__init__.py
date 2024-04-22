@@ -3,7 +3,7 @@ Helpers for selecting columns in a dataframe.
 =============================================
 
 A selector represents a column selection rule, such as "all columns that have
-numerical data types, except the column 'User ID'. When applied to a dataframe,
+numerical data types, except the column 'User ID'". When applied to a dataframe,
 it expands into a list of column names that match the selection rule.
 This is implemented by the `Selector` class and its `expand` method.
 
@@ -13,7 +13,7 @@ The 2 advantages offered by selectors are:
   can be combined with operators and a range of useful selectors is provided by
   this module.
 - Delayed selection: passing a selection rule, to be evaluated later on a
-  dataframe that is not yet available. For example, without selectors (ie ATM)
+  dataframe that is not yet available. For example, without selectors (i.e. ATM)
   it is not possible to instantiate a skrub.SelectCols that selects "all
   columns that have numerical data types, except the column 'User ID'", if the
   data on which it will be fitted is not yet available.
@@ -31,7 +31,7 @@ Here is an example dataframe:
 ... )
 
 A simple kind of selector selects a fixed list of column names. Such selectors
-are created with the cols() function.
+are created with the ``cols()`` function.
 
 >>> from skrub import _selectors as s
 >>> mm_cols = s.cols("height_mm", "width_mm")
@@ -101,7 +101,7 @@ when combined with other selectors in an expression.
 
 More generally, a column name or list of column names should be accepted by all
 skrub public interfaces that accept a selector. This is made easy by the
-make_selector function.
+``make_selector`` function.
 
 >>> s.make_selector(s.all())
 all()
@@ -129,14 +129,14 @@ know exist.
 Selectors in skrub interfaces
 -----------------------------
 
-In practice, the expand method of selectors will rarely be called directly by
+In practice, the ``expand`` method of selectors will rarely be called directly by
 client code. Rather, users would create selectors and pass them instead of a
 column list to skrub objects that operate on a subset of columns. This could
 be, for example, the cols parameter of SelectCols: SelectCols(s.glob("*_mm")).
 
 This is not yet the case for SelectCols, as _selectors is still a completely
 private module. One example of a (private) function that consumes selectors is
-the select function provided in this module.
+the ``select`` function provided in this module.
 
 >>> s.select(df, ["ID", "kind"])
    ID kind
@@ -150,17 +150,17 @@ the select function provided in this module.
 Advanced selectors: filter and filter_names
 -------------------------------------------
 
-filter and filter_names allow selecting columns based on arbitrary user-defined
+``filter`` and ``filter_names`` allow selecting columns based on arbitrary user-defined
 criteria. These are also used to implement many of the other selectors provided
 in this module.
 
-filter accepts a predicate that is called with a column (pandas or polars
+``filter`` accepts a predicate that is called with a column (pandas or polars
 Series) and returns True if it should be selected.
 
 >>> s.filter(lambda col: "A4" in col.tolist()).expand(df)
 ['kind']
 
-filter_names accepts a predicate that is passed the column name, instead of the
+``filter_names`` accepts a predicate that is passed the column name, instead of the
 column.
 
 >>> s.filter_names(lambda name: name.endswith('mm')).expand(df)
@@ -188,10 +188,10 @@ other selectors with operators, `_matches` is used. Overriding `expand` thus
 allows special-casing the behavior when it is used on its own, such as raising
 an exception when a simple list of column names is used for selection and some
 are missing from the dataframe. Overriding `expand` is not necessary in most
-cases; it may actually never be necessary except for the cols special case.
+cases; it may actually never be necessary except for the ``cols`` special case.
 
 A simpler alternative to defining a new Selector subclass is to define a
-function that constructs a selector by calling filter or filter_names with an
+function that constructs a selector by calling ``filter`` or ``filter_names`` with an
 appropriate predicate and arguments; most selectors offered by this module are
 implemented with this approach.
 
@@ -220,7 +220,7 @@ Using a filter:
 >>> ends_with('_mm')
 filter_names(str.endswith, '_mm')
 
-Instantiating directly a Filter or FilterNames object allows passing the name
+Directly instantiating a Filter or FilterNames object allows passing the name
 argument and thus controlling the repr of the resulting selector, so an
 slightly improved version could be:
 
