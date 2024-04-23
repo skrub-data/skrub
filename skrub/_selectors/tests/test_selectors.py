@@ -57,6 +57,12 @@ def test_dtype_selectors(df_module):
     assert s.float().expand(df) == ["float-col"]
     assert s.string().expand(df) == ["str-col"]
     assert s.categorical().expand(df) == ["cat-col"]
+    if df_module.name == "polars":
+        assert s.any_date().expand(df) == ["datetime-col", "date-col"]
+    else:
+        # pandas doesn't have a 'date' dtype, only datetime
+        assert df_module.name == "pandas"
+        assert s.any_date().expand(df) == ["datetime-col"]
 
 
 def test_cardinality_below(df_module, monkeypatch):
