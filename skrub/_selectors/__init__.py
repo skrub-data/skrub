@@ -5,7 +5,7 @@ Helpers for selecting columns in a dataframe.
 A selector represents a column selection rule, such as "all columns that have
 numerical data types, except the column 'User ID'". When applied to a dataframe,
 it expands into a list of column names that match the selection rule.
-This is implemented by the `Selector` class and its `expand` method.
+This is implemented by the ``Selector`` class and its ``expand`` method.
 
 The 2 advantages offered by selectors are:
 
@@ -91,7 +91,7 @@ Will not compute the cardinality of non-categorical columns.
 Selecting columns by name
 -------------------------
 
-A column name or sequence of column names is converted to a `cols` selector
+A column name or sequence of column names is converted to a ``cols`` selector
 when combined with other selectors in an expression.
 
 >>> s.numeric() - "ID"
@@ -178,16 +178,16 @@ Defining new selectors
 This last advanced section is aimed at skrub developers adding new selectors to
 this module.
 
-A Selector subclass must define the `_matches` method. It accepts a column and
+A Selector subclass must define the ``_matches`` method. It accepts a column and
 returns True if the column should be selected.
 
-Additionally, the subclass can override the `expand` method. It accepts a
+Additionally, the subclass can override the ``expand`` method. It accepts a
 dataframe and returns the list of column names that should be selected. This is
 only called when the selector is used by itself. Whenever it is combined with
-other selectors with operators, `_matches` is used. Overriding `expand` thus
+other selectors with operators, ``_matches`` is used. Overriding ``expand`` thus
 allows special-casing the behavior when it is used on its own, such as raising
 an exception when a simple list of column names is used for selection and some
-are missing from the dataframe. Overriding `expand` is not necessary in most
+are missing from the dataframe. Overriding ``expand`` is not necessary in most
 cases; it may actually never be necessary except for the ``cols`` special case.
 
 A simpler alternative to defining a new Selector subclass is to define a

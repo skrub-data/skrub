@@ -74,7 +74,7 @@ def cols(*columns):
     1     297.0
 
     In all skrub functions that accept a selector, a list of column names can
-    be passed and `cols` will be used to turn it into a selector.
+    be passed and ``cols`` will be used to turn it into a selector.
 
     >>> s.select(df, ['kind', 'ID'])
       kind  ID
@@ -93,8 +93,8 @@ def inv(obj):
     """Invert a selector.
 
     This selects all columns except those that are matched by the input; it is
-    equivalent to `all() - obj` or `~make_selector(obj)`. The argument `obj` can
-    be a selector but also a column name or list of column names.
+    equivalent to ``all() - obj`` or ``~make_selector(obj)``. The argument
+    ``obj`` can be a selector but also a column name or list of column names.
 
     Examples
     --------
@@ -176,7 +176,7 @@ def _select_col_names_polars(df, col_names):
 def select(df, selector):
     """Apply a selector to a dataframe and return the resulting dataframe.
 
-    `selector` can be anything accepted by `make_selector` i.e. a selector,
+    ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
     column name or list of column names.
 
     Examples
@@ -388,17 +388,17 @@ class Filter(Selector):
 
 
 def filter(predicate, *args, **kwargs):
-    """Select columns for which `predicate` returns True.
+    """Select columns for which ``predicate`` returns True.
 
-    For each column `col` in the dataframe, `predicate` is called as
-    `predicate(col, *args, **kwargs)` and the column is kept if it returns
+    For each column ``col`` in the dataframe, ``predicate`` is called as
+    ``predicate(col, *args, **kwargs)`` and the column is kept if it returns
     True. To filter columns based only on their name, see also
-    `filter_names`.
+    ``filter_names``.
 
-    `args` and `kwargs` are extra parameters for the predicate. Storing
+    ``args`` and ``kwargs`` are extra parameters for the predicate. Storing
     parameters like this rather than in a closure can help using an importable
     function as the predicate rather than a local one, which is necessary to
-    pickle the selector. (An alternative is to use `functools.partial`).
+    pickle the selector. (An alternative is to use ``functools.partial``).
 
     Examples
     --------
@@ -451,17 +451,17 @@ class NameFilter(Filter):
 def filter_names(predicate, *args, **kwargs):
     """Select columns based on their name.
 
-    For a column whose name is `col_name`, `predicate` is called as
-    `predicate(col_name, *args, **kwargs)` and the column is selected if
-    returns `True`. Note this is different from `filter`, because here the
-    predicate is passed the column name whereas with `filter`, the predicate is
-    passed the actual column (pandas or polars Series).
+    For a column whose name is ``col_name``, ``predicate`` is called as
+    ``predicate(col_name, *args, **kwargs)`` and the column is selected if
+    returns ``True``. Note this is different from ``filter``, because here the
+    predicate is passed the column name whereas with ``filter``, the predicate
+    is passed the actual column (pandas or polars Series).
 
 
-    `args` and `kwargs` are extra parameters for the predicate. Storing
+    ``args`` and ``kwargs`` are extra parameters for the predicate. Storing
     parameters like this rather than in a closure can help using an importable
     function as the predicate rather than a local one, which is necessary to
-    pickle the selector. (An alternative is to use `functools.partial`).
+    pickle the selector. (An alternative is to use ``functools.partial``).
 
     Examples
     --------

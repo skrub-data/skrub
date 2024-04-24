@@ -25,7 +25,7 @@ __all__ = [
 def glob(pattern):
     """Select columns by name with Unix shell style 'glob' pattern.
 
-    pattern is interpreted as described in `fnmatch.fnmatchcase`:
+    pattern is interpreted as described in ``fnmatch.fnmatchcase``:
 
         *       matches everything
         ?       matches any single character
@@ -70,7 +70,8 @@ def regex(pattern, flags=0):
     """Select columns by name with a regular expression.
 
     pattern can be a string pattern or a compiled regular expression, and flags
-    are regular expression flags as described in the `re` module documentation:
+    are regular expression flags as described in the ``re`` module
+    documentation:
 
     https://docs.python.org/3/library/re.html#flags
 
@@ -96,7 +97,7 @@ def regex(pattern, flags=0):
     0      297.0     210.0
     1      420.0     297.0
 
-    A column is selected if `re.match(col_name, pattern, flags)` returns a
+    A column is selected if ``re.match(col_name, pattern, flags)`` returns a
     match. Note that it is enough to match at the beginning of the string:
 
     >>> s.select(df, s.regex('wid'))
@@ -111,7 +112,7 @@ def regex(pattern, flags=0):
     Columns: []
     Index: [0, 1]
 
-    Flags are passed to `re.match`; the following are 3 equivalent ways of
+    Flags are passed to ``re.match``; the following are 3 equivalent ways of
     setting re flags (re.IGNORECASE in this example):
 
     >>> import re
@@ -446,14 +447,14 @@ def _cardinality_below(column, threshold):
     try:
         return sbd.n_unique(column) < threshold
     except Exception:
-        # `n_unique` can fail for example for polars columns with dtype Object
+        # ``n_unique`` can fail for example for polars columns with dtype Object
         return False
 
 
 def cardinality_below(threshold):
     """
     Select columns whose cardinality (number of unique values) is (strictly)
-    below `threshold`.
+    below ``threshold``.
 
     Null values do not count in the cardinality.
 
