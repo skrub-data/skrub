@@ -21,7 +21,8 @@ def test_repr():
     ((string() | any_date()) | categorical())
     >>> s.float() & s.integer()
     (float() & integer())
-
+    >>> s.has_nulls()
+    has_nulls()
     """
 
 
@@ -76,6 +77,11 @@ def test_cardinality_below(df_module, monkeypatch):
 
     monkeypatch.setattr(sbd, "n_unique", bad_n_unique)
     assert s.cardinality_below(5).expand(df) == []
+
+
+def test_has_nulls(df_module):
+    df = df_module.make_dataframe(dict(a=[0, 1, 2], b=[0, None, 2], c=["a", "b", None]))
+    assert s.has_nulls().expand(df) == ["b", "c"]
 
 
 @pytest.mark.parametrize("name", s.__all__)

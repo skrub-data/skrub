@@ -15,6 +15,7 @@ __all__ = [
     "string",
     "boolean",
     "cardinality_below",
+    "has_nulls",
 ]
 
 #
@@ -493,3 +494,21 @@ def cardinality_below(threshold):
 
     """
     return Filter(_cardinality_below, args=(threshold,), name="cardinality_below")
+
+
+def has_nulls():
+    """
+    Select columns that contain at least one null value.
+
+    Examples
+    --------
+    >>> from skrub import _selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(dict(a=[0, 1, 2], b=[0, None, 20], c=['a', 'b', None]))
+    >>> s.select(df, s.has_nulls())
+          b     c
+    0   0.0     a
+    1   NaN     b
+    2  20.0  None
+    """
+    return Filter(sbd.has_nulls, name="has_nulls")

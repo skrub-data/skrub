@@ -407,6 +407,32 @@ def test_to_categorical(df_module):
 #
 
 
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        ([False, True, None], False),
+        ([False, True, True], False),
+        ([True, True, None], True),
+    ],
+)
+def test_all(values, expected, df_module):
+    s = df_module.make_column("", values)
+    assert ns.all(s) == expected
+
+
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        ([False, True, None], True),
+        ([False, False, None], False),
+        ([False, False, False], False),
+    ],
+)
+def test_any(values, expected, df_module):
+    s = df_module.make_column("", values)
+    assert ns.any(s) == expected
+
+
 def test_is_in(df_module):
     s = df_module.make_column("", list("aabc") + ["", None])
     s = ns.pandas_convert_dtypes(s)
@@ -423,6 +449,19 @@ def test_is_null(df_module):
     df_module.assert_column_equal(
         ns.is_null(s), df_module.make_column("", [False, True, False, True, False])
     )
+
+
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        ([0, 1, None], True),
+        ([10, 10, None], True),
+        ([0, 0, 0], False),
+    ],
+)
+def test_has_nulls(values, expected, df_module):
+    s = df_module.make_column("", values)
+    assert ns.has_nulls(s) == expected
 
 
 def test_drop_nulls(df_module):

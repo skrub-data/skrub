@@ -65,8 +65,11 @@ __all__ = [
     #
     # Inspecting, selecting and modifying values
     #
+    "all",
+    "any",
     "is_in",
     "is_null",
+    "has_nulls",
     "drop_nulls",
     "n_unique",
     "unique",
@@ -717,6 +720,36 @@ def _to_categorical_polars(column):
 
 
 @dispatch
+def all(column):
+    raise NotImplementedError()
+
+
+@all.specialize("pandas")
+def _all_pandas(column):
+    return column.all()
+
+
+@all.specialize("polars")
+def _all_polars(column):
+    return column.all()
+
+
+@dispatch
+def any(column):
+    raise NotImplementedError()
+
+
+@any.specialize("pandas")
+def _any_pandas(column):
+    return column.any()
+
+
+@any.specialize("polars")
+def _any_polars(column):
+    return column.any()
+
+
+@dispatch
 def is_in(column, values):
     raise NotImplementedError()
 
@@ -746,6 +779,10 @@ def _is_null_pandas(column):
 @is_null.specialize("polars")
 def _is_null_polars(column):
     return column.is_null()
+
+
+def has_nulls(column):
+    return any(is_null(column))
 
 
 @dispatch

@@ -63,7 +63,7 @@ name, data type, contents or with arbitrary user-provided rules.
 See the full list:
 
 >>> s.ALL_SELECTORS
-['Filter', 'NameFilter', 'all', 'any_date', 'boolean', 'cardinality_below', 'categorical', 'cols', 'filter', 'filter_names', 'float', 'glob', 'integer', 'inv', 'numeric', 'regex', 'string']
+['Filter', 'NameFilter', 'all', 'any_date', 'boolean', 'cardinality_below', 'categorical', 'cols', 'filter', 'filter_names', 'float', 'glob', 'has_nulls', 'integer', 'inv', 'numeric', 'regex', 'string']
 
 The available operators are |, &, -, ^ with the usual meaning (the same meaning
 they would on python sets of the selected column names), and ~ to invert a
@@ -234,7 +234,6 @@ ends_with('_mm')
 
 >>> ends_with('_mm').expand(df)
 ['height_mm', 'width_mm']
-
 """
 
 from . import _selectors
