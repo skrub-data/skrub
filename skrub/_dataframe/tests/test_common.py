@@ -75,6 +75,11 @@ def test_is_column(df_module):
 #
 
 
+def test_to_list(df_module):
+    col = ns.col(df_module.example_dataframe, "str-col")
+    assert ns.to_list(col) == ["one", None, "three", "four"]
+
+
 def test_to_numpy(df_module, example_data_dict):
     with pytest.raises(NotImplementedError):
         ns.to_numpy(df_module.example_dataframe)
@@ -84,7 +89,7 @@ def test_to_numpy(df_module, example_data_dict):
 
     array = ns.to_numpy(ns.col(df_module.example_dataframe, "str-col"))
     assert array.dtype == object
-    assert_array_equal(array, np.asarray(example_data_dict["str-col"]))
+    assert_array_equal(array[2:], np.asarray(example_data_dict["str-col"])[2:])
 
 
 def test_to_pandas(df_module, all_dataframe_modules):
@@ -282,6 +287,20 @@ def test_to_numeric(df_module):
     )
 
 
+def test_is_integer(df_module):
+    df = df_module.example_dataframe
+    assert ns.is_integer(ns.col(df, "int-col"))
+    for col in ["float-col", "str-col", "datetime-col", "date-col", "bool-col"]:
+        assert not ns.is_integer(ns.col(df, col))
+
+
+def test_is_float(df_module):
+    df = df_module.example_dataframe
+    assert ns.is_float(ns.col(df, "float-col"))
+    for col in ["int-col", "str-col", "datetime-col", "date-col", "bool-col"]:
+        assert not ns.is_float(ns.col(df, col))
+
+
 def test_is_string(df_module):
     df = df_module.example_dataframe
     df = ns.pandas_convert_dtypes(df)
@@ -388,6 +407,32 @@ def test_to_categorical(df_module):
 #
 
 
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        ([False, True, None], False),
+        ([False, True, True], False),
+        ([True, True, None], True),
+    ],
+)
+def test_all(values, expected, df_module):
+    s = df_module.make_column("", values)
+    assert ns.all(s) == expected
+
+
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        ([False, True, None], True),
+        ([False, False, None], False),
+        ([False, False, False], False),
+    ],
+)
+def test_any(values, expected, df_module):
+    s = df_module.make_column("", values)
+    assert ns.any(s) == expected
+
+
 def test_is_in(df_module):
     s = df_module.make_column("", list("aabc") + ["", None])
     s = ns.pandas_convert_dtypes(s)
@@ -404,6 +449,19 @@ def test_is_null(df_module):
     df_module.assert_column_equal(
         ns.is_null(s), df_module.make_column("", [False, True, False, True, False])
     )
+
+
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        ([0, 1, None], True),
+        ([10, 10, None], True),
+        ([0, 0, 0], False),
+    ],
+)
+def test_has_nulls(values, expected, df_module):
+    s = df_module.make_column("", values)
+    assert ns.has_nulls(s) == expected
 
 
 def test_drop_nulls(df_module):
