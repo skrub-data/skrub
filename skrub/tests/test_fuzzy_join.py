@@ -64,12 +64,10 @@ def test_max_dist(df_module):
     left = df_module.make_dataframe({"A": ["aa", "bb"]})
     right = df_module.make_dataframe({"A": ["aa", "ba"], "B": [1, 2]})
     join = fuzzy_join(left, right, on="A", suffix="r")
-    # TODO: use ``ns.to_list()`` once
-    # https://github.com/skrub-data/skrub/pull/895 is merged
-    assert ns.col(join, "Br").to_list() == [1, 2]
+    assert ns.to_list(ns.col(join, "Br")) == [1, 2]
     join = fuzzy_join(left, right, on="A", suffix="r", max_dist=0.5)
     # TODO: dispatch ``ns.fill_na()``
-    assert ns.col(join, "Br").fillna(-1).to_list() == [1, -1]
+    assert ns.to_list(ns.col(join, "Br").fillna(-1)) == [1, -1]
 
 
 def test_perfect_matches(df_module):

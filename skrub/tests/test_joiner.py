@@ -108,9 +108,11 @@ def test_pandas_aux_table_index():
         suffix="_capitals",
     )
     join = joiner.fit_transform(main_table)
-    # TODO: change into ``ns.to_list(ns.col(join, "Country_capitals"))``
-    # after selectors PR
-    assert join["Country_capitals"].tolist() == ["France", "Italy", "Germany"]
+    assert ns.to_list(ns.col(join, "Country_capitals")) == [
+        "France",
+        "Italy",
+        "Germany",
+    ]
 
 
 def test_bad_ref_dist():
