@@ -7,18 +7,15 @@ import pytest
 from sklearn.exceptions import NotFittedError
 
 from skrub import SimilarityEncoder
-from skrub._dataframe._polars import POLARS_SETUP
-from skrub._dataframe._test_utils import is_module_polars
 from skrub._similarity_encoder import ngram_similarity_matrix
 from skrub._string_distances import ngram_similarity
+from skrub.conftest import _POLARS_INSTALLED
 
-MODULES = [pd]
 INPUT_TYPES = ["list", "numpy", "pandas"]
 
-if POLARS_SETUP:
+if _POLARS_INSTALLED:
     import polars as pl
 
-    MODULES.append(pl)
     INPUT_TYPES.append("polars")
 
 
@@ -340,13 +337,12 @@ def test_check_fitted_super_vectorizer():
     sim_enc.transform(X)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_inverse_transform(px):
-    if is_module_polars(px):
+def test_inverse_transform(df_module):
+    if df_module.name == "polars":
         pytest.xfail(reason="Setting output to polars is not possible yet.")
     encoder = SimilarityEncoder()
     encoder.set_output(transform="pandas")
-    X = pd.DataFrame({"A": ["aaa", "aax", "xxx"], "B": ["bbb", "bby", "yyy"]})
+    X = df_module.DataFrame({"A": ["aaa", "aax", "xxx"], "B": ["bbb", "bby", "yyy"]})
     encoder.fit(X)
     assert encoder.get_feature_names_out().tolist() == [
         "x0_aaa",
