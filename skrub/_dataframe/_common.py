@@ -43,7 +43,6 @@ __all__ = [
     "column_names",
     "rename",
     "set_column_names",
-    "values",
     #
     # Inspecting dtypes and casting
     #
@@ -78,6 +77,7 @@ __all__ = [
     "sample",
     "replace",
     "replace_regex",
+    "with_columns",
 ]
 
 #
@@ -210,16 +210,29 @@ def to_numpy(obj):
     raise NotImplementedError()
 
 
+@to_numpy.specialize("pandas", argument_type="DataFrame")
+def _to_numpy_pandas_dataframe(df):
+    for col in df.columns:
+        if pd.api.types.is_numeric_dtype(df[col]) and df[col].isna().any():
+            df[col] = df[col].astype(float)
+    return df.to_numpy()
+
+
+@to_numpy.specialize("polars", argument_type="DataFrame")
+def _to_numpy_polars_dataframe(df):
+    return df.to_numpy()
+
+
 @to_numpy.specialize("pandas", argument_type="Column")
-def _to_numpy_pandas(obj):
-    if pd.api.types.is_numeric_dtype(obj) and obj.isna().any():
-        obj = obj.astype(float)
-    return obj.to_numpy()
+def _to_numpy_pandas_column(col):
+    if pd.api.types.is_numeric_dtype(col) and col.isna().any():
+        col = col.astype(float)
+    return col.to_numpy()
 
 
 @to_numpy.specialize("polars", argument_type="Column")
-def _to_numpy_polars(obj):
-    return obj.to_numpy()
+def _to_numpy_polars_column(col):
+    return col.to_numpy()
 
 
 @dispatch
@@ -437,21 +450,6 @@ def _set_column_names_polars(df, new_column_names):
     return df.rename(dict(zip(df.columns, new_column_names)))
 
 
-@dispatch
-def values(col):
-    raise NotImplementedError()
-
-
-@values.specialize("pandas", argument_type="Column")
-def _values_pandas(col):
-    return col.values
-
-
-@values.specialize("polars", argument_type="Column")
-def _values_polars(col):
-    return np.array(col)
-
-
 #
 # Inspecting dtypes and casting
 # =============================
@@ -471,6 +469,21 @@ def _dtype_pandas(column):
 @dtype.specialize("polars")
 def _dtype_polars(column):
     return column.dtype
+
+
+@dispatch
+def dtypes(df):
+    raise NotImplementedError()
+
+
+@dtypes.specialize("pandas", argument_type="DataFrame")
+def _dtypes_pandas(df):
+    return df.dtypes
+
+
+@dtypes.specialize("polars", argument_type="DataFrame")
+def _dtypes_polars(df):
+    return df.dtypes
 
 
 @dispatch
@@ -910,3 +923,19 @@ def _replace_regex_pandas(column, pattern, replacement):
 @replace_regex.specialize("polars")
 def _replace_regex_polars(column, pattern, replacement):
     return column.str.replace_all(pattern, replacement, literal=False)
+
+
+@dispatch
+def with_columns(df, col_name, values):
+    raise NotImplementedError()
+
+
+@with_columns.specialize("pandas")
+def _with_columns_pandas(df, col_name, values):
+    df[col_name] = values
+    return df
+
+
+@with_columns.specialize("polars")
+def _with_columns_polars(df, col_name, values):
+    return df.with_columns(pl.Series(name=col_name, values=values))
