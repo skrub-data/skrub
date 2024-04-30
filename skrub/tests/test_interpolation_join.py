@@ -46,8 +46,8 @@ def test_interpolation_join(df_module, buildings, weather, key, with_nulls):
         regressor=KNeighborsRegressor(2),
         classifier=KNeighborsClassifier(2),
     ).fit_transform(buildings)
-    assert_array_equal(ns.values(ns.col(transformed, "avg_temp")), [10.5, 15.5])
-    assert_array_equal(ns.values(ns.col(transformed, "climate")), ["A", "B"])
+    assert_array_equal(ns.to_list(ns.col(transformed, "avg_temp")), [10.5, 15.5])
+    assert_array_equal(ns.to_list(ns.col(transformed, "climate")), ["A", "B"])
 
 
 def test_vectorizer(df_module):
@@ -105,12 +105,12 @@ def test_condition_choice(df_module):
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert_array_equal(ns.values(ns.col(join, "C")), [10, 11, 12])
+    assert_array_equal(ns.to_list(ns.col(join, "C")), [10, 11, 12])
 
     join = InterpolationJoiner(
         aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert_array_equal(ns.values(ns.col(join, "C")), [11, 12, 10])
+    assert_array_equal(ns.to_list(ns.col(join, "C")), [11, 12, 10])
 
     with pytest.raises(ValueError, match="Must pass either"):
         join = InterpolationJoiner(
@@ -155,7 +155,7 @@ def test_mismatched_indexes(df_module):
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert_array_equal(ns.values(ns.col(join, "B")), [10, 11])
+    assert_array_equal(ns.to_list(ns.col(join, "B")), [10, 11])
     # TODO: dispatch ``.values`` and ``.index``
     assert_array_equal(join.index.values, [1, 0])
 
@@ -175,8 +175,8 @@ def test_fit_on_none(df_module):
     main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
     main = df_module.DataFrame(main)
     join = joiner.transform(main)
+    assert_array_equal(ns.to_list(ns.col(join, "B")), [10, 11])
     # TODO: dispatch ``.values`` and ``.index``
-    assert_array_equal(ns.values(ns.col(join, "B")), [10, 11])
     assert_array_equal(join.index.values, [1, 0])
 
 
@@ -201,7 +201,7 @@ def test_join_on_date(df_module):
         .set_params(vectorizer__datetime_transformer__resolution=None)
         .fit_transform(sales)
     )
-    assert_array_equal(ns.values(ns.col(transformed, "temp")), [-10, 10])
+    assert_array_equal(ns.to_list(ns.col(transformed, "temp")), [-10, 10])
 
 
 class FailFit(DummyClassifier):
@@ -227,7 +227,7 @@ def test_fit_failures(df_module, buildings, weather):
         on_estimator_failure="pass",
     )
     join = joiner.fit_transform(buildings)
-    assert_array_equal(ns.values(ns.col(join, "avg_temp")), [10.5, 15.5])
+    assert_array_equal(ns.to_list(ns.col(join, "avg_temp")), [10.5, 15.5])
     assert join.shape == (2, 4)
 
     joiner = InterpolationJoiner(
@@ -239,7 +239,7 @@ def test_fit_failures(df_module, buildings, weather):
     )
     with pytest.warns(UserWarning, match="(?s)Estimators failed.*climate"):
         join = joiner.fit_transform(buildings)
-    assert_array_equal(ns.values(ns.col(join, "avg_temp")), [10.5, 15.5])
+    assert_array_equal(ns.to_list(ns.col(join, "avg_temp")), [10.5, 15.5])
     assert ns.shape(join) == (2, 4)
 
     joiner = InterpolationJoiner(
@@ -275,7 +275,7 @@ def test_transform_failures(df_module, buildings, weather):
         on_estimator_failure="pass",
     )
     join = joiner.fit_transform(buildings)
-    assert_array_equal(ns.values(ns.col(join, "avg_temp")), [10.5, 15.5])
+    assert_array_equal(ns.to_list(ns.col(join, "avg_temp")), [10.5, 15.5])
     assert ns.is_null(ns.col(join, "climate")).all()
     assert ns.dtype(ns.col(join, "climate")) == object
     assert ns.shape(join) == (2, 5)
@@ -289,7 +289,7 @@ def test_transform_failures(df_module, buildings, weather):
     )
     with pytest.warns(UserWarning, match="(?s)Prediction failed.*climate"):
         join = joiner.fit_transform(buildings)
-    assert_array_equal(ns.values(ns.col(join, "avg_temp")), [10.5, 15.5])
+    assert_array_equal(ns.to_list(ns.col(join, "avg_temp")), [10.5, 15.5])
     assert ns.is_null(ns.col(join, "climate")).all()
     assert ns.dtype(ns.col(join, "climate")) == object
     assert ns.shape(join) == (2, 5)

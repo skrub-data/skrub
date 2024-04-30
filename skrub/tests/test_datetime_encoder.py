@@ -374,10 +374,9 @@ def test_mixed_type_dataframe(df_module):
         np.dtype("<M8[ns]"),
         np.dtype("bool"),
     ]
-    assert X_dt.dtypes.to_list() == expected_dtypes
+    assert list(ns.dtypes(X_dt)) == expected_dtypes
 
-    # TODO: adapt ``ns.to_numpy(X)`` to work on dataframes
-    X_dt = to_datetime(X.to_numpy())
+    X_dt = to_datetime(ns.to_numpy(X))
     assert X_dt.dtype == np.object_
 
 
