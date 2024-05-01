@@ -21,5 +21,5 @@ def _assert_frame_equal_pandas(left, right):
 
 
 @assert_frame_equal.specialize("polars", argument_type="DataFrame")
-def assert_frame_equal_polars(left, right):
+def _assert_frame_equal_polars(left, right):
     return pl.testing.assert_frame_equal(left, right)

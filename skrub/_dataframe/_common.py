@@ -47,6 +47,7 @@ __all__ = [
     # Inspecting dtypes and casting
     #
     "dtype",
+    "dtypes",
     "cast",
     "pandas_convert_dtypes",
     "is_bool",
@@ -210,19 +211,6 @@ def to_numpy(obj):
     raise NotImplementedError()
 
 
-@to_numpy.specialize("pandas", argument_type="DataFrame")
-def _to_numpy_pandas_dataframe(df):
-    for col in df.columns:
-        if pd.api.types.is_numeric_dtype(df[col]) and df[col].isna().any():
-            df[col] = df[col].astype(float)
-    return df.to_numpy()
-
-
-@to_numpy.specialize("polars", argument_type="DataFrame")
-def _to_numpy_polars_dataframe(df):
-    return df.to_numpy()
-
-
 @to_numpy.specialize("pandas", argument_type="Column")
 def _to_numpy_pandas_column(col):
     if pd.api.types.is_numeric_dtype(col) and col.isna().any():
@@ -233,6 +221,20 @@ def _to_numpy_pandas_column(col):
 @to_numpy.specialize("polars", argument_type="Column")
 def _to_numpy_polars_column(col):
     return col.to_numpy()
+
+
+@to_numpy.specialize("pandas", argument_type="DataFrame")
+def _to_numpy_pandas_dataframe(df):
+    _df = df.copy()
+    for col in _df.columns:
+        if pd.api.types.is_numeric_dtype(_df[col]) and _df[col].isna().any():
+            _df[col] = _df[col].astype(float)
+    return _df.to_numpy()
+
+
+@to_numpy.specialize("polars", argument_type="DataFrame")
+def _to_numpy_polars_dataframe(df):
+    return df.to_numpy()
 
 
 @dispatch
@@ -461,12 +463,12 @@ def dtype(column):
     raise NotImplementedError()
 
 
-@dtype.specialize("pandas")
+@dtype.specialize("pandas", argument_type="Column")
 def _dtype_pandas(column):
     return column.dtype
 
 
-@dtype.specialize("polars")
+@dtype.specialize("polars", argument_type="Column")
 def _dtype_polars(column):
     return column.dtype
 
@@ -478,7 +480,7 @@ def dtypes(df):
 
 @dtypes.specialize("pandas", argument_type="DataFrame")
 def _dtypes_pandas(df):
-    return df.dtypes
+    return list(df.dtypes.values)
 
 
 @dtypes.specialize("polars", argument_type="DataFrame")
@@ -930,12 +932,13 @@ def with_columns(df, col_name, values):
     raise NotImplementedError()
 
 
-@with_columns.specialize("pandas")
+@with_columns.specialize("pandas", argument_type="DataFrame")
 def _with_columns_pandas(df, col_name, values):
     df[col_name] = values
     return df
 
 
-@with_columns.specialize("polars")
+@with_columns.specialize("polars", argument_type="DataFrame")
 def _with_columns_polars(df, col_name, values):
-    return df.with_columns(pl.Series(name=col_name, values=values))
+    df = df.with_columns(pl.Series(name=col_name, values=values))
+    return df

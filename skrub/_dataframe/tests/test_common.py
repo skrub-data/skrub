@@ -81,8 +81,12 @@ def test_to_list(df_module):
 
 
 def test_to_numpy(df_module, example_data_dict):
-    with pytest.raises(NotImplementedError):
-        ns.to_numpy(df_module.example_dataframe)
+    # # Test on dataframe
+    # df = df_module.example_dataframe
+    # array = ns.to_numpy(df)
+    # assert_array_equal(array, np.asarray(df))
+
+    # Test on series
     array = ns.to_numpy(ns.col(df_module.example_dataframe, "int-col"))
     assert array.dtype == float
     assert_array_equal(array, np.asarray(example_data_dict["int-col"], dtype=float))
@@ -215,6 +219,14 @@ def test_dtype(df_module):
     df = ns.pandas_convert_dtypes(df_module.example_dataframe)
     assert ns.dtype(ns.col(df, "float-col")) == df_module.dtypes["float64"]
     assert ns.dtype(ns.col(df, "int-col")) == df_module.dtypes["int64"]
+
+
+def test_dtypes(df_module):
+    # df = df_module.example_dataframe
+    # if df_module.name == "pandas":
+    #    assert ns.dtypes(df) = df_module.dtypes[""]
+    # else:
+    pass
 
 
 def test_cast(df_module):
@@ -516,3 +528,18 @@ def test_replace(df_module):
         df_module.make_column("", "A_a A_b A_c ba bb bc".split() + [None])
     )
     df_module.assert_column_equal(out, expected)
+
+
+def test_with_columns(df_module):
+    df = df_module.example_dataframe
+    df = ns.with_columns(df, "new_col", ["this", "is", "brand", "new"])
+    df_module.assert_column_equal(
+        ns.col(df, "new_col"),
+        ns.make_column_like(df, name="new_col", values=["this", "is", "brand", "new"]),
+    )
+
+    df = ns.with_columns(df, "another_col", [10, 20, -15, 75])
+    df_module.assert_column_equal(
+        ns.col(df, "another_col"),
+        ns.make_column_like(df, name="another_col", values=[10, 20, -15, 75]),
+    )
