@@ -222,11 +222,11 @@ def test_dtype(df_module):
 
 
 def test_dtypes(df_module):
-    # df = df_module.example_dataframe
-    # if df_module.name == "pandas":
-    #    assert ns.dtypes(df) = df_module.dtypes[""]
-    # else:
-    pass
+    df = ns.pandas_convert_dtypes(df_module.example_dataframe)
+    assert ns.dtypes(ns.select_cols(df, ["int-col", "float-col"])) == [
+        df_module.dtypes["int64"],
+        df_module.dtypes["float64"],
+    ]
 
 
 def test_cast(df_module):
@@ -417,6 +417,17 @@ def test_to_categorical(df_module):
 # Inspecting, selecting and modifying values
 # ==========================================
 #
+
+
+def test_select_cols(df_module):
+    df = df_module.example_dataframe
+    assert ns.column_names(ns.select_cols(df, ["int-col", "date-col"])) == [
+        "int-col",
+        "date-col",
+    ]
+
+    # Returns a dataframe even if we only select one column
+    assert isinstance(ns.select_cols(df, "int-col"), df_module.DataFrame)
 
 
 @pytest.mark.parametrize(
