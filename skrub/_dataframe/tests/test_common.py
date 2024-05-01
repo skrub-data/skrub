@@ -81,10 +81,10 @@ def test_to_list(df_module):
 
 
 def test_to_numpy(df_module, example_data_dict):
-    # # Test on dataframe
-    # df = df_module.example_dataframe
-    # array = ns.to_numpy(df)
-    # assert_array_equal(array, np.asarray(df))
+    # Test on dataframe
+    df = ns.select_cols(df_module.example_dataframe, ["int-col", "float-col"])
+    array = ns.to_numpy(df)
+    assert_array_equal(array, np.asarray(df))
 
     # Test on series
     array = ns.to_numpy(ns.col(df_module.example_dataframe, "int-col"))
@@ -497,24 +497,11 @@ def test_drop_nulls(df_module):
 
 def test_fill_nan(df_module):
     # Test on dataframe
-    df = ns.pandas_convert_dtypes(
-        df_module.make_dataframe({"col_1": [0, np.nan, 2], "col_2": [0, np.nan, 2.0]})
-    )
-    if df_module.name == "pandas":
-        df_module.assert_frame_equal(
-            ns.fill_nan(df, -1),
-            ns.pandas_convert_dtypes(
-                df_module.make_dataframe(
-                    {"col_1": [0, -1, 2], "col_2": [0.0, -1.0, 2.0]}
-                )
-            ),
-        )
-    # Polars transforms to float
-    else:
-        df_module.assert_frame_equal(
+    df = df_module.make_dataframe({"col_1": [0, np.nan, 2], "col_2": [0, np.nan, 2.0]})
+    df_module.assert_frame_equal(
             ns.fill_nan(df, -1),
             df_module.make_dataframe(
-                {"col_1": [0.0, -1.0, 2.0], "col_2": [0.0, -1.0, 2.0]}
+                {"col_1": [0., -1, 2.], "col_2": [0.0, -1.0, 2.0]}
             ),
         )
 
