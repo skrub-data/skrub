@@ -484,6 +484,41 @@ def test_drop_nulls(df_module):
     )
 
 
+def test_fill_nan(df_module):
+    # Test on dataframe
+    df = ns.pandas_convert_dtypes(
+        df_module.make_dataframe({"col_1": [0, np.nan, 2], "col_2": [0, np.nan, 2.0]})
+    )
+    if df_module.name == "pandas":
+        df_module.assert_frame_equal(
+            ns.fill_nan(df, -1),
+            ns.pandas_convert_dtypes(
+                df_module.make_dataframe(
+                    {"col_1": [0, -1, 2], "col_2": [0.0, -1.0, 2.0]}
+                )
+            ),
+        )
+    # Polars transforms to float
+    else:
+        df_module.assert_frame_equal(
+            ns.fill_nan(df, -1),
+            df_module.make_dataframe(
+                {"col_1": [0.0, -1.0, 2.0], "col_2": [0.0, -1.0, 2.0]}
+            ),
+        )
+
+    # Test on series
+    s = ns.pandas_convert_dtypes(
+        df_module.make_column("", [0.0, np.nan, 2.0, np.nan, 4.0])
+    )
+    df_module.assert_column_equal(
+        ns.fill_nan(s, -1),
+        ns.pandas_convert_dtypes(
+            df_module.make_column("", [0.0, -1.0, 2.0, -1.0, 4.0])
+        ),
+    )
+
+
 def test_unique(df_module):
     s = ns.pandas_convert_dtypes(df_module.make_column("", [0, None, 2, None, 4]))
     assert ns.n_unique(s) == 3

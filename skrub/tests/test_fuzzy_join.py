@@ -65,8 +65,7 @@ def test_max_dist(df_module):
     join = fuzzy_join(left, right, on="A", suffix="r")
     assert ns.to_list(ns.col(join, "Br")) == [1, 2]
     join = fuzzy_join(left, right, on="A", suffix="r", max_dist=0.5)
-    # TODO: dispatch ``ns.fill_na()``
-    assert ns.to_list(ns.col(join, "Br").fillna(-1)) == [1, -1]
+    assert ns.to_list(ns.fill_nan(ns.col(join, "Br"), -1)) == [1, -1]
 
 
 def test_perfect_matches(df_module):

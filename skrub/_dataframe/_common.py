@@ -72,6 +72,7 @@ __all__ = [
     "is_null",
     "has_nulls",
     "drop_nulls",
+    "fill_nan",
     "n_unique",
     "unique",
     "where",
@@ -829,6 +830,21 @@ def _drop_nulls_pandas(column):
 @drop_nulls.specialize("polars")
 def _drop_nulls_polars(column):
     return column.drop_nulls()
+
+
+@dispatch
+def fill_nan(obj, value):
+    raise NotImplementedError()
+
+
+@fill_nan.specialize("pandas")
+def _fill_nan_pandas(obj, value):
+    return obj.fillna(value)
+
+
+@fill_nan.specialize("polars")
+def _fill_nan_polars(obj, value):
+    return obj.fill_nan(value)
 
 
 @dispatch
