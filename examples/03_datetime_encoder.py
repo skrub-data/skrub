@@ -93,7 +93,7 @@ encoder = make_column_transformer(
 )
 
 X_enc = encoder.fit_transform(X)
-pprint(encoder.get_feature_names_out())
+# pprint(encoder.get_feature_names_out())
 
 ###############################################################################
 # We see that the encoder is working as expected: the ``"date.utc"`` column has
@@ -280,8 +280,8 @@ result.plot.barh(
     y="importances", x="feature_names", title="Feature Importances", figsize=(12, 9)
 )
 plt.tight_layout()
+plt.show()
 
-###############################################################################
 # We can see that the total seconds since Epoch and the hour of the day
 # are the most important feature, which seems reasonable.
 #

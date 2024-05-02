@@ -178,7 +178,34 @@ def random_string():
     return secrets.token_hex()[:8]
 
 
-def repr_args(args, kwargs):
+def get_duplicates(values):
+    counts = collections.Counter(values)
+    duplicates = [k for k, v in counts.items() if v > 1]
+    return duplicates
+
+
+def check_duplicated_column_names(column_names, table_name=None):
+    duplicates = get_duplicates(column_names)
+    if duplicates:
+        table_name = "" if table_name is None else f"{table_name!r}"
+        raise ValueError(
+            f"Table {table_name} has duplicate column names: {duplicates}."
+            " Please make sure column names are unique."
+        )
+
+
+def renaming_func(renaming):
+    if isinstance(renaming, str):
+        return renaming.format
+    return renaming
+
+
+def repr_args(args, kwargs, defaults={}):
     return ", ".join(
-        [repr(a) for a in args] + [f"{k}={v!r}" for k, v in kwargs.items()]
+        [repr(a) for a in args]
+        + [
+            f"{k}={v!r}"
+            for k, v in kwargs.items()
+            if k not in defaults or defaults[k] != v
+        ]
     )

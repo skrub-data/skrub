@@ -30,6 +30,7 @@ __all__ = [
     "to_pandas",
     "make_dataframe_like",
     "make_column_like",
+    "null_value_for",
     "all_null_like",
     "concat_horizontal",
     "to_column_list",
@@ -75,6 +76,7 @@ __all__ = [
     "unique",
     "where",
     "sample",
+    "head",
     "replace",
     "replace_regex",
 ]
@@ -275,6 +277,21 @@ def _make_column_like_pandas(column, values, name):
 @make_column_like.specialize("polars")
 def _make_column_like_polars(column, values, name):
     return pl.Series(values=values, name=name)
+
+
+@dispatch
+def null_value_for(obj):
+    raise NotImplementedError()
+
+
+@null_value_for.specialize("pandas")
+def _null_value_for_pandas(obj):
+    return pd.NA
+
+
+@null_value_for.specialize("polars")
+def _null_value_for_polars(obj):
+    return None
 
 
 @dispatch
@@ -861,6 +878,21 @@ def _sample_pandas(obj, n, seed=None):
 @sample.specialize("polars")
 def _sample_polars(obj, n, seed=None):
     return obj.sample(n=n, seed=seed, with_replacement=False)
+
+
+@dispatch
+def head(df, n=5):
+    raise NotImplementedError()
+
+
+@head.specialize("pandas")
+def _head_pandas(df, n=5):
+    return df.head(n=n)
+
+
+@head.specialize("polars")
+def _head_polars(df, n=5):
+    return df.head(n=n)
 
 
 @dispatch

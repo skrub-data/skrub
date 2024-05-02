@@ -1,5 +1,6 @@
 """Utilities specific to the JOIN operations."""
-from collections import Counter
+
+import re
 
 from skrub import _utils
 from skrub._dataframe._namespace import get_df_namespace
@@ -131,13 +132,7 @@ def check_column_name_duplicates(
         (main_columns, main_table_name),
         (aux_columns, aux_table_name),
     ]:
-        counts = Counter(columns)
-        duplicates = [k for k, v in counts.items() if v > 1]
-        if duplicates:
-            raise ValueError(
-                f"Table '{table_name}' has duplicate column names: {duplicates}."
-                " Please make sure column names are unique."
-            )
+        _utils.check_duplicated_column_names(columns, table_name=table_name)
     overlap = list(set(main_columns).intersection(aux_columns))
     if overlap:
         raise ValueError(
@@ -151,3 +146,69 @@ def check_column_name_duplicates(
 def add_column_name_suffix(dataframe, suffix):
     ns, _ = get_df_namespace(dataframe)
     return ns.rename_columns(dataframe, f"{{}}{suffix}".format)
+
+
+def pick_column_names(suggested_names, forbidden_names=()):
+    """Choose column names without duplicates.
+
+    A tag ``__skrub_<random string>__`` is added at the end of columns that
+    would otherwise be duplicates.
+
+    Any similar tag already present in any of the column names is shifted to
+    the end of the column name. When there are duplicates, the first (leftmost)
+    occurrence is the one left unchanged.
+
+    We can pass a list of forbidden names, in which case names will also be
+    tagged if they appear in the forbidden names (regardless of whether they
+    have duplicates in the list and of their position).
+
+    Parameters
+    ----------
+    suggested_names : list of str
+        The list of column names to transform.
+
+    forbidden_names : list of str
+        A list of names that must not appear in the output.
+
+    Returns
+    -------
+    list of str
+        The chosen names. It has the same length as ``suggested_names`` and
+        ``__skrub`` tags have been added to duplicated names.
+
+    Examples
+    --------
+    >>> from skrub._join_utils import pick_column_names
+    >>> pick_column_names(["A", "A", "B"])                                    # doctest: +SKIP
+    ['A', 'A__skrub_87946836__', 'B']
+    >>> pick_column_names(['A__skrub_750a0b7c__', 'B'])                       # doctest: +SKIP
+    ['A__skrub_750a0b7c__', 'B']
+    >>> pick_column_names(
+    ...     ["A__skrub_750a0b7c___year", "A__skrub_750a0b7c___month", "B"])   # doctest: +SKIP
+    ['A_year__skrub_750a0b7c__', 'A_month__skrub_750a0b7c__', 'B']
+    >>> pick_column_names(["A", "B"], forbidden_names=["A", "B", "C"])        # doctest: +SKIP
+    ['A__skrub_37dd63aa__', 'B__skrub_21e27e1e__']
+    >>> pick_column_names(["concat_A__skrub_750a0b7c___A__skrub_b1eeb4f7__"]) # doctest: +SKIP
+    ['concat_A_A']
+    """
+    all_new_names = []
+    forbidden_names = set(forbidden_names)
+    for name in suggested_names:
+        new_name = _get_new_name(name, forbidden_names)
+        all_new_names.append(new_name)
+        forbidden_names.add(new_name)
+    return all_new_names
+
+
+def _get_new_name(suggested_name, forbidden_names):
+    tag_pattern = "__skrub_.*?__"
+    tags = re.findall(tag_pattern, suggested_name)
+    untagged_name = re.sub(tag_pattern, "", suggested_name)
+    if len(tags) == 1:
+        suggested_name = untagged_name + tags[0]
+    else:
+        suggested_name = untagged_name
+    if suggested_name not in forbidden_names:
+        return suggested_name
+    token = _utils.random_string()
+    return f"{untagged_name}__skrub_{token}__"

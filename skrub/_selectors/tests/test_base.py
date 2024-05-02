@@ -25,7 +25,6 @@ def test_repr():
     ...              args=('col',),
     ...              selector_repr='lower_check()')
     lower_check()
-
     """
 
 

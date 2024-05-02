@@ -179,3 +179,17 @@ class DropCols(TransformerMixin, BaseEstimator):
         cols = _check_columns(X, self.cols)
         namespace, _ = get_df_namespace(X)
         return namespace.select(X, [c for c in X.columns if c not in cols])
+
+
+class Drop(BaseEstimator):
+    __single_column_transformer__ = True
+
+    def fit_transform(self, column):
+        return []
+
+    def transform(self, column):
+        return []
+
+    def fit(self, column):
+        self.fit_transform(column)
+        return self
