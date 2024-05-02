@@ -14,6 +14,14 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
+* The :class:`TableVectorizer` now consistently applies the same transformation
+  across different calls to `transform`. There also have been some breaking
+  changes to its functionality: (i) all transformations are now applied
+  independently to each column, ie it does not perform multivariate
+  transformations (ii) in ``specific_transformers`` the same column may not be
+  used twice (go through 2 different transformers).
+  :pr:`902` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * Added the :class:`MultiAggJoiner` that allows to augment a main table with
   multiple auxiliary tables. :pr:`876` by :user:`Théo Jolivet <TheooJ>`.
 
