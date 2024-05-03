@@ -373,7 +373,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             CleanNullStrings(),
             ToDatetime(),
             ToNumeric(),
-            ToCategorical(self.cardinality_threshold - 1),
+            ToCategorical(self.cardinality_threshold),
         ]:
             add_step(cleaning_steps, transformer, cols)
 
