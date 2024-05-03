@@ -254,8 +254,8 @@ def make_dataframe_like(df, data):
 @make_dataframe_like.specialize("pandas")
 def _make_dataframe_like_pandas(df, data):
     if isinstance(data, Mapping):
-        return pd.DataFrame(data)
-    return pd.DataFrame({name(col): col for col in data})
+        return pd.DataFrame(data, copy=False)
+    return pd.DataFrame({name(col): col for col in data}, copy=False)
 
 
 @make_dataframe_like.specialize("polars")
