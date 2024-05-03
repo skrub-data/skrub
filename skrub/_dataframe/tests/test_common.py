@@ -128,13 +128,7 @@ def test_make_column_like(df_module, example_data_dict):
 
 
 def test_null_value_for(df_module):
-    if df_module.name == "pandas":
-        import pandas as pd
-
-        assert ns.null_value_for(df_module.example_dataframe) is pd.NA
-    else:
-        assert df_module.name == "polars"
-        assert ns.null_value_for(df_module.example_dataframe) is None
+    assert ns.null_value_for(df_module.example_dataframe) is None
 
 
 def test_all_null_like(df_module):
