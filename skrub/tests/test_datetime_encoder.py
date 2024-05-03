@@ -376,9 +376,6 @@ def test_mixed_type_dataframe(df_module):
     ]
     assert list(ns.dtypes(X_dt)) == expected_dtypes
 
-    X_dt = to_datetime(ns.to_numpy(X))
-    assert X_dt.dtype == np.object_
-
 
 def test_indempotency(df_module):
     df = get_mixed_datetime_format()

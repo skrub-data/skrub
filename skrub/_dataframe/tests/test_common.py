@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+from skrub import _selectors as s
 from skrub._dataframe import _common as ns
 
 
@@ -81,12 +82,6 @@ def test_to_list(df_module):
 
 
 def test_to_numpy(df_module, example_data_dict):
-    # Test on dataframe
-    df = ns.select_cols(df_module.example_dataframe, ["int-col", "float-col"])
-    array = ns.to_numpy(df)
-    assert_array_equal(array, np.asarray(df))
-
-    # Test on series
     array = ns.to_numpy(ns.col(df_module.example_dataframe, "int-col"))
     assert array.dtype == float
     assert_array_equal(array, np.asarray(example_data_dict["int-col"], dtype=float))
@@ -223,7 +218,7 @@ def test_dtype(df_module):
 
 def test_dtypes(df_module):
     df = ns.pandas_convert_dtypes(df_module.example_dataframe)
-    assert ns.dtypes(ns.select_cols(df, ["int-col", "float-col"])) == [
+    assert ns.dtypes(s.select(df, ["int-col", "float-col"])) == [
         df_module.dtypes["int64"],
         df_module.dtypes["float64"],
     ]
@@ -419,17 +414,6 @@ def test_to_categorical(df_module):
 #
 
 
-def test_select_cols(df_module):
-    df = df_module.example_dataframe
-    assert ns.column_names(ns.select_cols(df, ["int-col", "date-col"])) == [
-        "int-col",
-        "date-col",
-    ]
-
-    # Returns a dataframe even if we only select one column
-    assert isinstance(ns.select_cols(df, "int-col"), df_module.DataFrame)
-
-
 @pytest.mark.parametrize(
     "values, expected",
     [
@@ -499,11 +483,9 @@ def test_fill_nan(df_module):
     # Test on dataframe
     df = df_module.make_dataframe({"col_1": [0, np.nan, 2], "col_2": [0, np.nan, 2.0]})
     df_module.assert_frame_equal(
-            ns.fill_nan(df, -1),
-            df_module.make_dataframe(
-                {"col_1": [0., -1, 2.], "col_2": [0.0, -1.0, 2.0]}
-            ),
-        )
+        ns.fill_nan(df, -1),
+        df_module.make_dataframe({"col_1": [0.0, -1, 2.0], "col_2": [0.0, -1.0, 2.0]}),
+    )
 
     # Test on series
     s = ns.pandas_convert_dtypes(

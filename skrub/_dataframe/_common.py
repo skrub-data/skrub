@@ -66,7 +66,6 @@ __all__ = [
     #
     # Inspecting, selecting and modifying values
     #
-    "select_cols",
     "all",
     "any",
     "is_in",
@@ -209,7 +208,7 @@ def _to_list_polars(col):
 
 
 @dispatch
-def to_numpy(obj):
+def to_numpy(col):
     raise NotImplementedError()
 
 
@@ -223,20 +222,6 @@ def _to_numpy_pandas_column(col):
 @to_numpy.specialize("polars", argument_type="Column")
 def _to_numpy_polars_column(col):
     return col.to_numpy()
-
-
-@to_numpy.specialize("pandas", argument_type="DataFrame")
-def _to_numpy_pandas_dataframe(df):
-    _df = df.copy()
-    for col in _df.columns:
-        if pd.api.types.is_numeric_dtype(_df[col]) and _df[col].isna().any():
-            _df[col] = _df[col].astype(float)
-    return _df.to_numpy()
-
-
-@to_numpy.specialize("polars", argument_type="DataFrame")
-def _to_numpy_polars_dataframe(df):
-    return df.to_numpy()
 
 
 @dispatch
@@ -750,23 +735,6 @@ def _to_categorical_polars(column):
 # Inspecting, selecting and modifying values
 # ==========================================
 #
-
-
-@dispatch
-def select_cols(df):
-    raise NotImplementedError()
-
-
-@select_cols.specialize("pandas", argument_type="DataFrame")
-def _select_cols_pandas(df, cols):
-    if isinstance(cols, str):
-        cols = [cols]
-    return df[cols]
-
-
-@select_cols.specialize("polars", argument_type="DataFrame")
-def _select_cols_polars(df, cols):
-    return df.select(cols)
 
 
 @dispatch
