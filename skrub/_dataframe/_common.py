@@ -234,7 +234,7 @@ def _to_pandas_pandas(obj):
 
 @to_pandas.specialize("polars")
 def _to_pandas_polars(obj):
-    return obj.to_pandas().convert_dtypes()
+    return obj.to_pandas()
 
 
 @dispatch
@@ -541,7 +541,7 @@ def _to_numeric_pandas(column, dtype=None, strict=True):
     errors = "raise" if strict else "coerce"
     out = pd.to_numeric(column, errors=errors)
     if dtype is None:
-        return out.convert_dtypes()
+        return out
     return out.astype(dtype)
 
 
@@ -633,7 +633,7 @@ def to_string(column):
 
 @to_string.specialize("pandas")
 def _to_string_pandas(column):
-    return column.astype(pd.StringDtype())
+    return column.astype("str")
 
 
 @to_string.specialize("polars")
@@ -770,8 +770,7 @@ def is_in(column, values):
 
 @is_in.specialize("pandas")
 def _is_in_pandas(column, values):
-    res = column.isin(values).convert_dtypes()
-    res[column.isna()] = pd.NA
+    res = column.isin(values)
     return res
 
 

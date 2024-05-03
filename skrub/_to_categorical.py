@@ -12,9 +12,7 @@ def _with_string_categories(column):
 
 @_with_string_categories.specialize("pandas")
 def _with_string_categories_pandas(column):
-    import pandas as pd
-
-    if pd.api.types.is_string_dtype(column.dtype.categories.dtype):
+    if sbd.is_string(column.dtype.categories.to_series()):
         return column
     return sbd.to_categorical(sbd.to_string(column))
 

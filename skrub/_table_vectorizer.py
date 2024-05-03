@@ -280,10 +280,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     ...     specific_transformers=[('passthrough', ['B'])],
     ... )
     >>> vectorizer.fit_transform(df)
-          A    B
-    0   1.1  1.1
-    1   2.2  2.2
-    2  <NA>  N/A
+         A    B
+    0  1.1  1.1
+    1  2.2  2.2
+    2  NaN  N/A
 
     >>> vectorizer.input_to_processing_steps_
     {'A': [CleanNullStrings(), ToNumeric(), PassThrough()], 'B': [PassThrough()]}

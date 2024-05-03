@@ -223,8 +223,8 @@ X_tuples = [
     (
         _get_clean_dataframe(),
         {
-            "int": "Int64",
-            "float": "Float64",
+            "int": "int64",
+            "float": "float64",
             "str1": "category",
             "str2": "category",
             "cat1": "category",

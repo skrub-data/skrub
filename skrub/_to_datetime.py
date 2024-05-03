@@ -22,7 +22,6 @@ class ToDatetime(BaseEstimator):
         not_null = sbd.drop_nulls(column)
         sample = sbd.sample(not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]))
         sample = sbd.to_pandas(sample)
-        sample = sbd.pandas_convert_dtypes(sample)
         if not sbd.is_string(sample):
             return None
         if not _datetime_utils.is_column_datetime_parsable(sample):

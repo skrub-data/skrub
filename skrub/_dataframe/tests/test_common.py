@@ -104,7 +104,8 @@ def test_to_pandas(df_module, all_dataframe_modules):
         pd_module.example_dataframe.drop(["datetime-col", "date-col"], axis=1),
     )
     pd_module.assert_column_equal(
-        ns.to_pandas(df_module.example_column), pd_module.example_column
+        ns.to_pandas(df_module.example_column),
+        pd_module.example_column.astype("float64"),
     )
 
     with pytest.raises(NotImplementedError):
