@@ -11,7 +11,6 @@ from ._check_input import CheckInputDataFrame
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import EncodeDatetime
 from ._gap_encoder import GapEncoder
-from ._pandas_convert_dtypes import PandasConvertDTypes
 from ._select_cols import Drop
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime
@@ -228,7 +227,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     steps that were applied to a given column:
 
     >>> vectorizer.input_to_processing_steps_['B']
-    [PandasConvertDTypes(), CleanNullStrings(), ToDatetime(), EncodeDatetime()]
+    [CleanNullStrings(), ToDatetime(), EncodeDatetime()]
 
     >>> vectorizer.transformers_['B']
     EncodeDatetime()
@@ -255,12 +254,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     >>> from sklearn.preprocessing import OneHotEncoder
     >>> ohe = OneHotEncoder(sparse_output=False)
     >>> vectorizer = TableVectorizer(
-    ...     specific_transformers=[('drop', ['A']), (ohe, ['C'])]
+    ...     specific_transformers=[('drop', ['A']), (ohe, ['B'])]
     ... )
     >>> vectorizer.fit_transform(df)
-    Traceback (most recent call last):
-        ...
-    ValueError: The following columns are requested for selection but missing from dataframe: ['C']
+       B_four  B_three
+    0     0.0      1.0
+    1     1.0      0.0
 
     Here the column 'A' has been dropped and the column 'B' has been passed to
     the ``OneHotEncoder`` (without any preprocessing such as converting it to
@@ -287,7 +286,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     2  <NA>  N/A
 
     >>> vectorizer.input_to_processing_steps_
-    {'A': [PandasConvertDTypes(), CleanNullStrings(), ToNumeric(), PassThrough()], 'B': [PassThrough()]}
+    {'A': [CleanNullStrings(), ToNumeric(), PassThrough()], 'B': [PassThrough()]}
 
     Here we can see that the final estimator for both columns is passthrough,
     but unlike ``'B'``, ``'A'`` went through the default preprocessing steps
@@ -369,7 +368,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
         cleaning_steps = [CheckInputDataFrame()]
         for transformer in [
-            PandasConvertDTypes(),
             CleanNullStrings(),
             ToDatetime(),
             ToNumeric(),
