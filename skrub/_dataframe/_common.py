@@ -2,7 +2,6 @@ from collections.abc import Mapping
 
 import pandas as pd
 import pandas.api.types
-from sklearn.utils.fixes import parse_version
 
 try:
     import polars as pl
@@ -286,7 +285,7 @@ def null_value_for(obj):
 
 @null_value_for.specialize("pandas")
 def _null_value_for_pandas(obj):
-    return pd.NA
+    return None
 
 
 @null_value_for.specialize("polars")
@@ -615,13 +614,11 @@ def is_string(column):
 
 @is_string.specialize("pandas")
 def _is_string_pandas(column):
-    if parse_version(pd.__version__) < parse_version("2.0.0"):
-        # on old pandas versions
-        # `pd.api.types.is_string_dtype(pd.Series([1, ""]))` is True
+    if column.dtype == pd.StringDtype():
+        return True
+    if pd.api.types.is_object_dtype(column):
         return column.convert_dtypes().dtype == pd.StringDtype()
-    return pandas.api.types.is_string_dtype(column) and not isinstance(
-        column.dtype, pandas.CategoricalDtype
-    )
+    return False
 
 
 @is_string.specialize("polars")
