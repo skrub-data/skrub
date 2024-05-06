@@ -591,7 +591,7 @@ def test_not_fitted_dataframe(main_table, df_module):
     seen during `fit` raises an error.
     """
     main_table = df_module.DataFrame(main_table)
-    not_main = df_module.DataFrame({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
+    not_main = df_module.make_dataframe({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
