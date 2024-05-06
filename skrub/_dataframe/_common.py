@@ -72,14 +72,13 @@ __all__ = [
     "is_null",
     "has_nulls",
     "drop_nulls",
-    "fill_nan",
+    "fill_nulls",
     "n_unique",
     "unique",
     "where",
     "sample",
     "replace",
     "replace_regex",
-    "with_columns",
 ]
 
 #
@@ -819,18 +818,18 @@ def _drop_nulls_polars(column):
 
 
 @dispatch
-def fill_nan(obj, value):
+def fill_nulls(obj, value):
     raise NotImplementedError()
 
 
-@fill_nan.specialize("pandas")
-def _fill_nan_pandas(obj, value):
+@fill_nulls.specialize("pandas")
+def _fill_nulls_pandas(obj, value):
     return obj.fillna(value)
 
 
-@fill_nan.specialize("polars")
-def _fill_nan_polars(obj, value):
-    return obj.fill_nan(value)
+@fill_nulls.specialize("polars")
+def _fill_nulls_polars(obj, value):
+    return obj.fill_nan(value).fill_null(value)
 
 
 @dispatch
@@ -927,20 +926,3 @@ def _replace_regex_pandas(column, pattern, replacement):
 @replace_regex.specialize("polars")
 def _replace_regex_polars(column, pattern, replacement):
     return column.str.replace_all(pattern, replacement, literal=False)
-
-
-@dispatch
-def with_columns(df, col_name, values):
-    raise NotImplementedError()
-
-
-@with_columns.specialize("pandas", argument_type="DataFrame")
-def _with_columns_pandas(df, col_name, values):
-    df[col_name] = values
-    return df
-
-
-@with_columns.specialize("polars", argument_type="DataFrame")
-def _with_columns_polars(df, col_name, values):
-    df = df.with_columns(pl.Series(name=col_name, values=values))
-    return df

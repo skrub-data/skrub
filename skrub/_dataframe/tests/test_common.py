@@ -479,20 +479,20 @@ def test_drop_nulls(df_module):
     )
 
 
-def test_fill_nan(df_module):
+def test_fill_nulls(df_module):
     # Test on dataframe
-    df = df_module.make_dataframe({"col_1": [0, np.nan, 2], "col_2": [0, np.nan, 2.0]})
+    df = df_module.make_dataframe({"col_1": [0, np.nan, 2], "col_2": [0, None, 2.0]})
     df_module.assert_frame_equal(
-        ns.fill_nan(df, -1),
+        ns.fill_nulls(df, -1),
         df_module.make_dataframe({"col_1": [0.0, -1, 2.0], "col_2": [0.0, -1.0, 2.0]}),
     )
 
     # Test on series
     s = ns.pandas_convert_dtypes(
-        df_module.make_column("", [0.0, np.nan, 2.0, np.nan, 4.0])
+        df_module.make_column("", [0.0, np.nan, 2.0, None, 4.0])
     )
     df_module.assert_column_equal(
-        ns.fill_nan(s, -1),
+        ns.fill_nulls(s, -1),
         ns.pandas_convert_dtypes(
             df_module.make_column("", [0.0, -1.0, 2.0, -1.0, 4.0])
         ),
@@ -543,18 +543,3 @@ def test_replace(df_module):
         df_module.make_column("", "A_a A_b A_c ba bb bc".split() + [None])
     )
     df_module.assert_column_equal(out, expected)
-
-
-def test_with_columns(df_module):
-    df = df_module.example_dataframe
-    df = ns.with_columns(df, "new_col", ["this", "is", "brand", "new"])
-    df_module.assert_column_equal(
-        ns.col(df, "new_col"),
-        ns.make_column_like(df, name="new_col", values=["this", "is", "brand", "new"]),
-    )
-
-    df = ns.with_columns(df, "another_col", [10, 20, -15, 75])
-    df_module.assert_column_equal(
-        ns.col(df, "another_col"),
-        ns.make_column_like(df, name="another_col", values=[10, 20, -15, 75]),
-    )

@@ -51,7 +51,8 @@ def test_fuzzy_join(df_module, analyzer: Literal["char", "char_wb", "word"]):
     # Joining is always done on the left table and thus takes it shape:
     assert ns.shape(df_joined2) == (len(df2), n_cols)
 
-    ns.with_columns(df1, "a2", 1)
+    # TODO: dispatch ``with_columns``
+    df1["a2"] = 1
 
     df_on = fuzzy_join(df_joined, df1, on="a1", suffix="2")
     assert "a12" in ns.column_names(df_on)
@@ -65,7 +66,7 @@ def test_max_dist(df_module):
     join = fuzzy_join(left, right, on="A", suffix="r")
     assert ns.to_list(ns.col(join, "Br")) == [1, 2]
     join = fuzzy_join(left, right, on="A", suffix="r", max_dist=0.5)
-    assert ns.to_list(ns.fill_nan(ns.col(join, "Br"), -1)) == [1, -1]
+    assert ns.to_list(ns.fill_nulls(ns.col(join, "Br"), -1)) == [1, -1]
 
 
 def test_perfect_matches(df_module):
