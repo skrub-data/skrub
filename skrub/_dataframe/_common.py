@@ -504,6 +504,8 @@ def is_bool(column):
 
 @is_bool.specialize("pandas")
 def _is_bool_pandas(column):
+    if pd.api.types.is_object_dtype(column):
+        return pandas.api.types.is_bool_dtype(column.convert_dtypes())
     return pandas.api.types.is_bool_dtype(column)
 
 
