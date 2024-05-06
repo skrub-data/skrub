@@ -47,6 +47,7 @@ __all__ = [
     # Inspecting dtypes and casting
     #
     "dtype",
+    "dtypes",
     "cast",
     "pandas_convert_dtypes",
     "is_bool",
@@ -71,6 +72,7 @@ __all__ = [
     "is_null",
     "has_nulls",
     "drop_nulls",
+    "fill_nulls",
     "n_unique",
     "unique",
     "where",
@@ -205,20 +207,20 @@ def _to_list_polars(col):
 
 
 @dispatch
-def to_numpy(obj):
+def to_numpy(col):
     raise NotImplementedError()
 
 
 @to_numpy.specialize("pandas", argument_type="Column")
-def _to_numpy_pandas(obj):
-    if pd.api.types.is_numeric_dtype(obj) and obj.isna().any():
-        obj = obj.astype(float)
-    return obj.to_numpy()
+def _to_numpy_pandas_column(col):
+    if pd.api.types.is_numeric_dtype(col) and col.isna().any():
+        col = col.astype(float)
+    return col.to_numpy()
 
 
 @to_numpy.specialize("polars", argument_type="Column")
-def _to_numpy_polars(obj):
-    return obj.to_numpy()
+def _to_numpy_polars_column(col):
+    return col.to_numpy()
 
 
 @dispatch
@@ -447,14 +449,29 @@ def dtype(column):
     raise NotImplementedError()
 
 
-@dtype.specialize("pandas")
+@dtype.specialize("pandas", argument_type="Column")
 def _dtype_pandas(column):
     return column.dtype
 
 
-@dtype.specialize("polars")
+@dtype.specialize("polars", argument_type="Column")
 def _dtype_polars(column):
     return column.dtype
+
+
+@dispatch
+def dtypes(df):
+    raise NotImplementedError()
+
+
+@dtypes.specialize("pandas", argument_type="DataFrame")
+def _dtypes_pandas(df):
+    return list(df.dtypes.values)
+
+
+@dtypes.specialize("polars", argument_type="DataFrame")
+def _dtypes_polars(df):
+    return df.dtypes
 
 
 @dispatch
@@ -798,6 +815,21 @@ def _drop_nulls_pandas(column):
 @drop_nulls.specialize("polars")
 def _drop_nulls_polars(column):
     return column.drop_nulls()
+
+
+@dispatch
+def fill_nulls(obj, value):
+    raise NotImplementedError()
+
+
+@fill_nulls.specialize("pandas")
+def _fill_nulls_pandas(obj, value):
+    return obj.fillna(value)
+
+
+@fill_nulls.specialize("polars")
+def _fill_nulls_polars(obj, value):
+    return obj.fill_nan(value).fill_null(value)
 
 
 @dispatch

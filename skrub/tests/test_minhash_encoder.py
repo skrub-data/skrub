@@ -10,18 +10,15 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils._testing import skip_if_no_parallel
 
 from skrub import MinHashEncoder
-from skrub._dataframe._polars import POLARS_SETUP
+from skrub.conftest import _POLARS_INSTALLED
 
 from .utils import generate_data
 
-MODULES = [pd]
-INPUT_TYPE = ["numpy", "pandas"]
-
-if POLARS_SETUP:
+INPUT_TYPES = ["numpy", "pandas"]
+if _POLARS_INSTALLED:
     import polars as pl
 
-    MODULES.append(pl)
-    INPUT_TYPE.append("polars")
+    INPUT_TYPES.append("polars")
 
 
 @pytest.mark.parametrize(
@@ -57,14 +54,13 @@ def test_minhash_encoder(hashing, minmax_hash):
         np.testing.assert_array_less(y - y_substring, 0.001)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_multiple_columns(px):
+def test_multiple_columns(df_module):
     """
     This test aims at verifying that fitting multiple columns
     with the MinHashEncoder will not produce an error, and will
     encode the column independently.
     """
-    X = px.DataFrame(
+    X = df_module.make_dataframe(
         {
             "class": ["bird", "bird", "mammal", "mammal"],
             "type": ["parrot", "nightingale", "monkey", np.nan],
@@ -110,7 +106,7 @@ def test_encoder_params(hashing, minmax_hash):
     assert y2.shape == (len(X2), 50)
 
 
-@pytest.mark.parametrize("input_type", INPUT_TYPE)
+@pytest.mark.parametrize("input_type", INPUT_TYPES)
 @pytest.mark.parametrize("missing", ["error", "zero_impute", "aaa"])
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
 def test_missing_values(input_type: str, missing: str, hashing: str):
@@ -273,7 +269,7 @@ def test_check_fitted_minhash_encoder():
 
 
 def test_deterministic():
-    """Test that the encoder is deterministic"""
+    """Test that the encoder is deterministic."""
     # TODO: add random state to encoder
     encoder1 = MinHashEncoder(n_components=4)
     encoder2 = MinHashEncoder(n_components=4)
@@ -283,11 +279,10 @@ def test_deterministic():
     assert_array_equal(encoded1, encoded2)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_get_feature_names_out(px):
-    """Test that get_feature_names_out returns the correct feature names"""
+def test_get_feature_names_out(df_module):
+    """Test that ``get_feature_names_out`` returns the correct feature names."""
     encoder = MinHashEncoder(n_components=4)
-    X = px.DataFrame(
+    X = df_module.make_dataframe(
         {
             "col1": ["a", "b", "c", "d", "e", "f", "g", "h"],
             "col2": ["a", "b", "c", "d", "e", "f", "g", "h"],

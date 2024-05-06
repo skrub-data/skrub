@@ -1,9 +1,9 @@
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal
 
 from skrub._agg_joiner import AggJoiner, AggTarget, split_num_categ_operations
-from skrub._dataframe._polars import POLARS_SETUP
+from skrub._dataframe._testing_utils import assert_frame_equal
+from skrub.conftest import _POLARS_INSTALLED
 
 
 @pytest.fixture
@@ -19,17 +19,6 @@ def main_table():
     return df
 
 
-MODULES = [pd]
-ASSERT_TUPLES = [(pd, assert_frame_equal)]
-
-if POLARS_SETUP:
-    import polars as pl
-    from polars.testing import assert_frame_equal as assert_frame_equal_pl
-
-    MODULES.append(pl)
-    ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
-
-
 def test_split_num_categ_operations():
     "Check that the operations are correctly separated."
 
@@ -42,13 +31,9 @@ def test_split_num_categ_operations():
 
 
 @pytest.mark.parametrize("use_X_placeholder", [False, True])
-@pytest.mark.parametrize(
-    "px, assert_frame_equal_",
-    ASSERT_TUPLES,
-)
-def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_equal_):
+def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
     "Check the general behaviour of the `AggJoiner`."
-    X = px.DataFrame(main_table)
+    X = df_module.DataFrame(main_table)
     aux = X if not use_X_placeholder else "X"
 
     agg_joiner_user = AggJoiner(
@@ -61,7 +46,7 @@ def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_eq
 
     main_user = agg_joiner_user.fit_transform(X)
 
-    expected_user = px.DataFrame(
+    expected_user = df_module.make_dataframe(
         {
             "userId": [1, 1, 1, 2, 2, 2],
             "movieId": [1, 3, 6, 318, 6, 1704],
@@ -71,7 +56,7 @@ def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_eq
             "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
         }
     )
-    assert_frame_equal_(main_user, expected_user)
+    assert_frame_equal(main_user, expected_user)
 
     agg_joiner_movie = AggJoiner(
         aux_table=aux,
@@ -83,7 +68,7 @@ def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_eq
 
     main_movie = agg_joiner_movie.fit_transform(X)
 
-    expected_movie = px.DataFrame(
+    expected_movie = df_module.make_dataframe(
         {
             "userId": [1, 1, 1, 2, 2, 2],
             "movieId": [1, 3, 6, 318, 6, 1704],
@@ -93,13 +78,12 @@ def test_simple_fit_transform(main_table, use_X_placeholder, px, assert_frame_eq
         }
     )
 
-    assert_frame_equal_(main_movie, expected_movie)
+    assert_frame_equal(main_movie, expected_movie)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_correct_keys(main_table, px):
+def test_correct_keys(df_module, main_table):
     "Check that expected `key` parameters for the `AggJoiner` are working."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check only key
     agg_joiner = AggJoiner(
@@ -131,10 +115,9 @@ def test_correct_keys(main_table, px):
     assert agg_joiner._aux_key == ["userId", "movieId"]
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_wrong_keys(main_table, px):
+def test_wrong_keys(df_module, main_table):
     "Check that wrong `key` parameters for the `AggJoiner` raise an error."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check too many main_key
     agg_joiner = AggJoiner(
@@ -203,10 +186,9 @@ def test_wrong_keys(main_table, px):
         agg_joiner.fit(main_table)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_default_suffix(main_table, px):
+def test_default_suffix(df_module, main_table):
     "Check that the default `suffix` of `AggJoiner` is ''."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check no suffix
     agg_joiner = AggJoiner(
@@ -218,10 +200,9 @@ def test_default_suffix(main_table, px):
     assert agg_joiner.suffix == ""
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_too_many_suffixes(main_table, px):
+def test_too_many_suffixes(df_module, main_table):
     "Check that providing more than one `suffix` for the `AggJoiner` raises an error."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check inconsistent number of suffixes
     agg_joiner = AggJoiner(
@@ -234,10 +215,9 @@ def test_too_many_suffixes(main_table, px):
         agg_joiner.fit(main_table)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_default_cols(main_table, px):
+def test_default_cols(df_module, main_table):
     "Check that by default, `cols` are all the columns of `aux_table` except `aux_key`."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check no cols
     agg_joiner = AggJoiner(
@@ -248,10 +228,9 @@ def test_default_cols(main_table, px):
     agg_joiner._cols == ["rating", "genre"]
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_correct_cols(main_table, px):
+def test_correct_cols(df_module, main_table):
     "Check that expected `cols` parameters for the `AggJoiner` are working."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check one col
     agg_joiner = AggJoiner(
@@ -263,10 +242,9 @@ def test_correct_cols(main_table, px):
     agg_joiner._cols == ["rating"]
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_wrong_cols(main_table, px):
+def test_wrong_cols(df_module, main_table):
     "Check that providing a column that's not in `aux_table` does not work."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check missing agg or keys cols in tables
     agg_joiner = AggJoiner(
@@ -279,10 +257,9 @@ def test_wrong_cols(main_table, px):
         agg_joiner.fit(main_table)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_input_multiple_tables(main_table, px):
+def test_input_multiple_tables(df_module, main_table):
     "Check that providing too many auxiliary tables in `AggJoiner` raises an error."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check too many aux_table
     agg_joiner = AggJoiner(
@@ -299,10 +276,9 @@ def test_input_multiple_tables(main_table, px):
         agg_joiner.fit_transform(main_table)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_default_operations(main_table, px):
+def test_default_operations(df_module, main_table):
     "Check that the default `operations` of `AggJoiner` are ['mean', 'mode']."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check default operations
     agg_joiner = AggJoiner(
@@ -314,10 +290,9 @@ def test_default_operations(main_table, px):
     assert agg_joiner._operations == ["mean", "mode"]
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_correct_operations_input(main_table, px):
+def test_correct_operations_input(df_module, main_table):
     "Check that expected `operations` parameters for the `AggJoiner` are working."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check invariant operations input
     agg_joiner = AggJoiner(
@@ -330,9 +305,11 @@ def test_correct_operations_input(main_table, px):
     assert agg_joiner._operations == ["min", "max", "mode"]
 
 
-@pytest.mark.skipif(not POLARS_SETUP, reason="Polars is not available")
+@pytest.mark.skipif(not _POLARS_INSTALLED, reason="Polars is not available")
 def test_polars_unavailable_operation(main_table):
     "Check that the 'value_counts' operation is not supported for Polars."
+    import polars as pl
+
     agg_joiner = AggJoiner(
         aux_table="X",
         main_key="userId",
@@ -344,10 +321,9 @@ def test_polars_unavailable_operation(main_table):
         agg_joiner.fit(pl.DataFrame(main_table))
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_not_supported_operations(main_table, px):
+def test_not_supported_operations(df_module, main_table):
     "Check that calling an unsupported operation raises an error."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check not supported operations
     agg_joiner = AggJoiner(
@@ -361,10 +337,9 @@ def test_not_supported_operations(main_table, px):
         agg_joiner.fit(main_table)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_wrong_string_placeholder(main_table, px):
+def test_wrong_string_placeholder(df_module, main_table):
     "Check that `aux_table='Y'` is not a valid string placeholder."
-    main_table = px.DataFrame(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     agg_joiner = AggJoiner(
         aux_table="Y",
@@ -375,14 +350,15 @@ def test_wrong_string_placeholder(main_table, px):
         agg_joiner.fit(main_table)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_not_fitted_dataframe(main_table, px):
+def test_not_fitted_dataframe(df_module, main_table):
     """
     Check that calling `transform` on a dataframe not containing the columns
     seen during `fit` raises an error.
     """
-    main_table = px.DataFrame(main_table)
-    not_main_table = px.DataFrame({"wrong": [1, 2, 3], "dataframe": [4, 5, 6]})
+    main_table = df_module.DataFrame(main_table)
+    not_main_table = df_module.make_dataframe(
+        {"wrong": [1, 2, 3], "dataframe": [4, 5, 6]}
+    )
 
     agg_joiner = AggJoiner(
         aux_table=main_table,
