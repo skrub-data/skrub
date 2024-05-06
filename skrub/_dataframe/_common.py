@@ -67,7 +67,6 @@ __all__ = [
     #
     "all",
     "any",
-    "is_in",
     "is_null",
     "has_nulls",
     "drop_nulls",
@@ -554,7 +553,7 @@ def _to_numeric_polars(column, dtype=None, strict=True):
     error = None
     for dtype in [pl.Int64, pl.Float64]:
         try:
-            return column.cast(dtype, strict=strict)
+            return column.cast(dtype, strict=True)
         except Exception as e:
             error = e
     if not strict:
@@ -599,7 +598,7 @@ def to_float32(column):
 
 @to_float32.specialize("pandas")
 def _to_float32_pandas(column):
-    return _to_numeric_pandas(column, dtype=pd.Float32Dtype())
+    return _to_numeric_pandas(column, dtype="float32")
 
 
 @to_float32.specialize("polars")
@@ -761,22 +760,6 @@ def _any_pandas(column):
 @any.specialize("polars")
 def _any_polars(column):
     return column.any()
-
-
-@dispatch
-def is_in(column, values):
-    raise NotImplementedError()
-
-
-@is_in.specialize("pandas")
-def _is_in_pandas(column, values):
-    res = column.isin(values)
-    return res
-
-
-@is_in.specialize("polars")
-def _is_in_polars(column, values):
-    return column.is_in(values)
 
 
 @dispatch
