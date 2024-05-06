@@ -197,10 +197,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     >>> vectorizer = TableVectorizer()
     >>> vectorizer.fit_transform(df)
        A_one  A_three  A_two  B_year  B_month  B_day  B_total_seconds     C
-    0    1.0      0.0    0.0  2024.0      2.0    2.0     1706832000.0   1.5
-    1    0.0      0.0    1.0  2024.0      2.0   23.0     1708646400.0   NaN
-    2    0.0      0.0    1.0  2024.0      3.0   12.0     1710201600.0  12.2
-    3    0.0      1.0    0.0  2024.0      3.0   13.0     1710288000.0   NaN
+    0    1.0      0.0    0.0  2024.0      2.0    2.0     1.706832e+09   1.5
+    1    0.0      0.0    1.0  2024.0      2.0   23.0     1.708646e+09   NaN
+    2    0.0      0.0    1.0  2024.0      3.0   12.0     1.710202e+09  12.2
+    3    0.0      1.0    0.0  2024.0      3.0   13.0     1.710288e+09   NaN
 
     We can inspect which outputs were created from a given column in the input
     dataframe:

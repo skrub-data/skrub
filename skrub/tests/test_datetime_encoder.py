@@ -301,7 +301,7 @@ def test_transform_tz(df_module):
         expected_X_trans, "0_year 0_month 0_day 0_hour 0_total_seconds".split()
     )
     if df_module.name == "pandas":
-        expected_X_trans = expected_X_trans.convert_dtypes().astype(pd.Float32Dtype())
+        expected_X_trans = expected_X_trans.astype("float32")
     elif df_module.name == "polars":
         import polars as pl
 
@@ -336,7 +336,7 @@ def test_transform_nan(df_module):
 
     expected_X_trans = df_module.make_dataframe(expected_X_trans)
     if df_module.name == "pandas":
-        expected_X_trans = expected_X_trans.convert_dtypes().astype(pd.Float32Dtype())
+        expected_X_trans = expected_X_trans.astype("float32")
     elif df_module.name == "polars":
         import polars as pl
 
