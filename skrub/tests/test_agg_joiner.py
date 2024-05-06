@@ -33,7 +33,7 @@ def test_split_num_categ_operations():
 @pytest.mark.parametrize("use_X_placeholder", [False, True])
 def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
     "Check the general behaviour of the `AggJoiner`."
-    X = df_module.make_dataframe(main_table)
+    X = df_module.DataFrame(main_table)
     aux = X if not use_X_placeholder else "X"
 
     agg_joiner_user = AggJoiner(
@@ -83,7 +83,7 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
 
 def test_correct_keys(df_module, main_table):
     "Check that expected `key` parameters for the `AggJoiner` are working."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check only key
     agg_joiner = AggJoiner(
@@ -117,7 +117,7 @@ def test_correct_keys(df_module, main_table):
 
 def test_wrong_keys(df_module, main_table):
     "Check that wrong `key` parameters for the `AggJoiner` raise an error."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check too many main_key
     agg_joiner = AggJoiner(
@@ -188,7 +188,7 @@ def test_wrong_keys(df_module, main_table):
 
 def test_default_suffix(df_module, main_table):
     "Check that the default `suffix` of `AggJoiner` is ''."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check no suffix
     agg_joiner = AggJoiner(
@@ -202,7 +202,7 @@ def test_default_suffix(df_module, main_table):
 
 def test_too_many_suffixes(df_module, main_table):
     "Check that providing more than one `suffix` for the `AggJoiner` raises an error."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check inconsistent number of suffixes
     agg_joiner = AggJoiner(
@@ -217,7 +217,7 @@ def test_too_many_suffixes(df_module, main_table):
 
 def test_default_cols(df_module, main_table):
     "Check that by default, `cols` are all the columns of `aux_table` except `aux_key`."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check no cols
     agg_joiner = AggJoiner(
@@ -230,7 +230,7 @@ def test_default_cols(df_module, main_table):
 
 def test_correct_cols(df_module, main_table):
     "Check that expected `cols` parameters for the `AggJoiner` are working."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check one col
     agg_joiner = AggJoiner(
@@ -244,7 +244,7 @@ def test_correct_cols(df_module, main_table):
 
 def test_wrong_cols(df_module, main_table):
     "Check that providing a column that's not in `aux_table` does not work."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check missing agg or keys cols in tables
     agg_joiner = AggJoiner(
@@ -259,7 +259,7 @@ def test_wrong_cols(df_module, main_table):
 
 def test_input_multiple_tables(df_module, main_table):
     "Check that providing too many auxiliary tables in `AggJoiner` raises an error."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check too many aux_table
     agg_joiner = AggJoiner(
@@ -278,7 +278,7 @@ def test_input_multiple_tables(df_module, main_table):
 
 def test_default_operations(df_module, main_table):
     "Check that the default `operations` of `AggJoiner` are ['mean', 'mode']."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check default operations
     agg_joiner = AggJoiner(
@@ -292,7 +292,7 @@ def test_default_operations(df_module, main_table):
 
 def test_correct_operations_input(df_module, main_table):
     "Check that expected `operations` parameters for the `AggJoiner` are working."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check invariant operations input
     agg_joiner = AggJoiner(
@@ -323,7 +323,7 @@ def test_polars_unavailable_operation(main_table):
 
 def test_not_supported_operations(df_module, main_table):
     "Check that calling an unsupported operation raises an error."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     # Check not supported operations
     agg_joiner = AggJoiner(
@@ -339,7 +339,7 @@ def test_not_supported_operations(df_module, main_table):
 
 def test_wrong_string_placeholder(df_module, main_table):
     "Check that `aux_table='Y'` is not a valid string placeholder."
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
 
     agg_joiner = AggJoiner(
         aux_table="Y",
@@ -355,7 +355,7 @@ def test_not_fitted_dataframe(df_module, main_table):
     Check that calling `transform` on a dataframe not containing the columns
     seen during `fit` raises an error.
     """
-    main_table = df_module.make_dataframe(main_table)
+    main_table = df_module.DataFrame(main_table)
     not_main_table = df_module.make_dataframe(
         {"wrong": [1, 2, 3], "dataframe": [4, 5, 6]}
     )

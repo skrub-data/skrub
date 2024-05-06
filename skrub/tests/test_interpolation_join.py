@@ -57,8 +57,8 @@ def test_vectorizer(df_module):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    main = df_module.DataFrame({"A": [0, 1]})
-    aux = df_module.DataFrame({"A": [11, 110], "B": [1, 0]})
+    main = df_module.make_dataframe({"A": [0, 1]})
+    aux = df_module.make_dataframe({"A": [11, 110], "B": [1, 0]})
 
     class Vectorizer(TransformerMixin, BaseEstimator):
         def fit(self, X):
@@ -100,8 +100,8 @@ def test_condition_choice(df_module):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    main = df_module.DataFrame({"A": [0, 1, 2]})
-    aux = df_module.DataFrame({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
+    main = df_module.make_dataframe({"A": [0, 1, 2]})
+    aux = df_module.make_dataframe({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
@@ -135,7 +135,7 @@ def test_suffix(df_module):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    df = df_module.DataFrame({"A": [0, 1], "B": [0, 1]})
+    df = df_module.make_dataframe({"A": [0, 1], "B": [0, 1]})
     join = InterpolationJoiner(
         df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
@@ -151,7 +151,7 @@ def test_mismatched_indexes(df_module):
         )
     main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
     main = df_module.DataFrame(main)
-    aux = df_module.DataFrame({"A": [0, 1], "B": [10, 11]})
+    aux = df_module.make_dataframe({"A": [0, 1], "B": [10, 11]})
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
@@ -168,7 +168,7 @@ def test_fit_on_none(df_module):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    aux = df_module.DataFrame({"A": [0, 1], "B": [10, 11]})
+    aux = df_module.make_dataframe({"A": [0, 1], "B": [10, 11]})
     joiner = InterpolationJoiner(aux, key="A", regressor=KNeighborsRegressor(1)).fit(
         None
     )
@@ -187,8 +187,10 @@ def test_join_on_date(df_module):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    sales = df_module.DataFrame({"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]})
-    temp = df_module.DataFrame(
+    sales = df_module.make_dataframe(
+        {"date": ["2023-09-20", "2023-09-29"], "n": [10, 15]}
+    )
+    temp = df_module.make_dataframe(
         {"date": ["2023-09-09", "2023-10-01", "2024-09-21"], "temp": [-10, 10, 30]}
     )
     transformed = (

@@ -342,7 +342,9 @@ def test_inverse_transform(df_module):
         pytest.xfail(reason="Setting output to polars is not possible yet.")
     encoder = SimilarityEncoder()
     encoder.set_output(transform="pandas")
-    X = df_module.DataFrame({"A": ["aaa", "aax", "xxx"], "B": ["bbb", "bby", "yyy"]})
+    X = df_module.make_dataframe(
+        {"A": ["aaa", "aax", "xxx"], "B": ["bbb", "bby", "yyy"]}
+    )
     encoder.fit(X)
     assert encoder.get_feature_names_out().tolist() == [
         "x0_aaa",

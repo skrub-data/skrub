@@ -35,7 +35,7 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
 
     main_user_movie = multi_agg_joiner.fit_transform(main_table)
 
-    expected = df_module.DataFrame(
+    expected = df_module.make_dataframe(
         {
             "userId": [1, 1, 1, 2, 2, 2],
             "movieId": [1, 3, 6, 318, 6, 1704],
