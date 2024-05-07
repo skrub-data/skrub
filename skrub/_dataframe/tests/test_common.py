@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+from skrub import _selectors as s
 from skrub._dataframe import _common as ns
 
 
@@ -81,8 +82,6 @@ def test_to_list(df_module):
 
 
 def test_to_numpy(df_module, example_data_dict):
-    with pytest.raises(NotImplementedError):
-        ns.to_numpy(df_module.example_dataframe)
     array = ns.to_numpy(ns.col(df_module.example_dataframe, "int-col"))
     assert array.dtype == float
     assert_array_equal(array, np.asarray(example_data_dict["int-col"], dtype=float))
@@ -229,6 +228,14 @@ def test_dtype(df_module):
     df = df_module.example_dataframe
     assert ns.dtype(ns.col(df, "float-col")) == df_module.dtypes["float64"]
     assert ns.dtype(ns.col(df, "int-not-null-col")) == df_module.dtypes["int64"]
+
+
+def test_dtypes(df_module):
+    df = df_module.example_dataframe
+    assert ns.dtypes(s.select(df, ["int-not-null-col", "float-col"])) == [
+        df_module.dtypes["int64"],
+        df_module.dtypes["float64"],
+    ]
 
 
 def test_cast(df_module):
@@ -506,6 +513,26 @@ def test_drop_nulls(df_module):
     df_module.assert_column_equal(
         ns.drop_nulls(s),
         ns.pandas_convert_dtypes(df_module.make_column("", [0, 2, 4])),
+    )
+
+
+def test_fill_nulls(df_module):
+    # Test on dataframe
+    df = df_module.make_dataframe({"col_1": [0, np.nan, 2], "col_2": [0, None, 2.0]})
+    df_module.assert_frame_equal(
+        ns.fill_nulls(df, -1),
+        df_module.make_dataframe({"col_1": [0.0, -1, 2.0], "col_2": [0.0, -1.0, 2.0]}),
+    )
+
+    # Test on series
+    s = ns.pandas_convert_dtypes(
+        df_module.make_column("", [0.0, np.nan, 2.0, None, 4.0])
+    )
+    df_module.assert_column_equal(
+        ns.fill_nulls(s, -1),
+        ns.pandas_convert_dtypes(
+            df_module.make_column("", [0.0, -1.0, 2.0, -1.0, 4.0])
+        ),
     )
 
 

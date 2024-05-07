@@ -6,25 +6,13 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 from pandas.api.types import is_datetime64_any_dtype
-from pandas.testing import assert_frame_equal
 from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as du
-from skrub._dataframe._polars import POLARS_SETUP
-from skrub._dataframe._test_utils import is_module_polars
+from skrub._dataframe import _common as ns
+from skrub._dataframe._testing_utils import assert_frame_equal
 from skrub._datetime_encoder import _TIME_LEVELS, DatetimeEncoder
 from skrub._to_datetime import to_datetime
-
-MODULES = [pd]
-ASSERT_TUPLES = [(pd, assert_frame_equal)]
-
-
-if POLARS_SETUP:
-    import polars as pl
-    from polars.testing import assert_frame_equal as assert_frame_equal_pl
-
-    MODULES.append(pl)
-    ASSERT_TUPLES.append((pl, assert_frame_equal_pl))
 
 
 def get_date(as_array=False):
@@ -115,7 +103,6 @@ def get_mixed_type_dataframe():
     )
 
 
-@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize("as_array", [True, False])
 @pytest.mark.parametrize(
     "get_data_func, features, format",
@@ -132,7 +119,6 @@ def get_mixed_type_dataframe():
 )
 @pytest.mark.parametrize("resolution", _TIME_LEVELS)
 def test_fit(
-    px,
     as_array,
     get_data_func,
     features,
@@ -179,7 +165,6 @@ def test_fit(
     assert_array_equal(enc.get_feature_names_out(), expected_feature_names)
 
 
-@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize(
     "get_data_func, expected_datetime_columns",
     [
@@ -188,21 +173,19 @@ def test_fit(
         (get_tz_datetime, ["0"]),
     ],
 )
-@pytest.mark.parametrize("random_state", np.arange(20))
-def test_to_datetime(px, get_data_func, expected_datetime_columns, random_state):
-    if is_module_polars(px):
+def test_to_datetime(df_module, get_data_func, expected_datetime_columns):
+    if df_module.name == "polars":
         pytest.xfail(reason="AssertionError is raised when using Polars.")
     X = get_data_func()
     X = to_datetime(X)
-    X = px.DataFrame(X)
+    X = df_module.DataFrame(X)
     datetime_columns = [col for col in X.columns if is_datetime64_any_dtype(X[col])]
     assert_array_equal(datetime_columns, expected_datetime_columns)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_format_nan(px):
+def test_format_nan(df_module):
     X = get_nan_datetime()
-    X = px.DataFrame(X)
+    X = df_module.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
     expected_datetime_formats = {
         "0": "%Y-%m-%d %H:%M:%S",
@@ -212,18 +195,16 @@ def test_format_nan(px):
     assert enc.datetime_formats_ == expected_datetime_formats
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_format_nz(px):
+def test_format_nz(df_module):
     X = get_tz_datetime()
-    X = px.DataFrame(X)
+    X = df_module.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
     assert enc.datetime_formats_ == {"0": "%Y-%m-%d %H:%M:%S%z"}
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_resolution_none(px):
+def test_resolution_none(df_module):
     X = get_datetime()
-    px.DataFrame(X)
+    X = df_module.DataFrame(X)
     enc = DatetimeEncoder(
         resolution=None,
         add_total_seconds=False,
@@ -235,10 +216,9 @@ def test_resolution_none(px):
     assert_array_equal(enc.get_feature_names_out(), [])
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_transform_date(px):
+def test_transform_date(df_module):
     X = get_date()
-    X = px.DataFrame(X)
+    X = df_module.DataFrame(X)
     enc = DatetimeEncoder(
         add_total_seconds=False,
     )
@@ -256,10 +236,9 @@ def test_transform_date(px):
     assert_array_equal(X_trans, expected_result)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_transform_datetime(px):
+def test_transform_datetime(df_module):
     X = get_datetime()
-    X = px.DataFrame(X)
+    X = df_module.DataFrame(X)
     enc = DatetimeEncoder(
         resolution="second",
         add_total_seconds=False,
@@ -278,7 +257,7 @@ def test_transform_datetime(px):
 
 def test_transform_tz(df_module):
     X = get_tz_datetime()
-    X = df_module.make_dataframe(X)
+    X = df_module.DataFrame(X)
     enc = DatetimeEncoder(
         add_total_seconds=True,
     )
@@ -311,7 +290,7 @@ def test_transform_tz(df_module):
 
 def test_transform_nan(df_module):
     X = get_nan_datetime()
-    X = df_module.make_dataframe(X)
+    X = df_module.DataFrame(X)
     enc = DatetimeEncoder(
         add_total_seconds=True,
     )
@@ -344,9 +323,8 @@ def test_transform_nan(df_module):
     df_module.assert_frame_equal(X_trans, expected_X_trans)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_mixed_type_dataframe(px):
-    if is_module_polars(px):
+def test_mixed_type_dataframe(df_module):
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
                 "to_datetime(X) raises polars.exceptions.ComputeError: cannot cast"
@@ -354,7 +332,7 @@ def test_mixed_type_dataframe(px):
             )
         )
     X = get_mixed_type_dataframe()
-    X = px.DataFrame(X)
+    X = df_module.DataFrame(X)
     enc = DatetimeEncoder().fit(X)
     assert enc.datetime_formats_ == {"a": "%Y-%m-%d", "e": "%d/%m/%Y"}
 
@@ -367,13 +345,12 @@ def test_mixed_type_dataframe(px):
         np.dtype("<M8[ns]"),
         np.dtype("bool"),
     ]
-    assert X_dt.dtypes.to_list() == expected_dtypes
+    assert list(ns.dtypes(X_dt)) == expected_dtypes
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_datetime_encoder_invalid_params(px):
+def test_datetime_encoder_invalid_params(df_module):
     X = get_datetime()
-    X = px.DataFrame(X)
+    X = df_module.DataFrame(X)
 
     with pytest.raises(ValueError, match=r".*failed on column '0'"):
         DatetimeEncoder(resolution="hello").fit(X)

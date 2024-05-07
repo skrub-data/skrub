@@ -6,17 +6,8 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
 from skrub import GapEncoder, TableVectorizer
-from skrub._dataframe._polars import POLARS_SETUP
-from skrub._dataframe._test_utils import is_module_polars
 from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data
-
-MODULES = [pd]
-
-if POLARS_SETUP:
-    import polars as pl
-
-    MODULES.append(pl)
 
 
 @pytest.mark.parametrize(
@@ -128,8 +119,7 @@ def test_gap_encoder(
     np.testing.assert_array_equal(y, y2)
 
 
-@pytest.mark.parametrize("px", MODULES)
-def test_input_type(px):
+def test_input_type(df_module):
     # Numpy array with one column
     X = np.array([["alice"], ["bob"]])
     enc = GapEncoder(n_components=2, random_state=42)
@@ -146,21 +136,20 @@ def test_input_type(px):
     enc = GapEncoder(n_components=2, random_state=42)
     X_enc_array = enc.fit_transform(X)
     # Dataframe with two columns
-    df = px.DataFrame(X)
+    df = df_module.DataFrame(X)
     enc = GapEncoder(n_components=2, random_state=42)
     X_enc_df = enc.fit_transform(df)
     # Check if the encoded vectors are the same
     np.testing.assert_array_equal(X_enc_array, X_enc_df)
 
 
-@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize(
     "add_words",
     [True, False],
 )
-def test_partial_fit(px, add_words: bool, n_samples: int = 70):
+def test_partial_fit(df_module, add_words: bool, n_samples: int = 70):
     X = generate_data(n_samples, random_state=0)
-    X2 = px.DataFrame(generate_data(n_samples - 10, random_state=1))
+    X2 = df_module.DataFrame(generate_data(n_samples - 10, random_state=1))
     X3 = generate_data(n_samples - 10, random_state=2)
     # Gap encoder with fit on one batch
     enc = GapEncoder(
@@ -258,14 +247,13 @@ def test_score(n_samples: int = 70):
     assert score_X1 * 2 == score_X2
 
 
-@pytest.mark.parametrize("px", MODULES)
 @pytest.mark.parametrize(
     "missing",
     ["zero_impute", "error", "aaa"],
 )
-def test_missing_values(px, missing: str):
-    """Test what happens when missing values are in the data"""
-    if is_module_polars(px):
+def test_missing_values(df_module, missing: str):
+    """Test what happens when missing values are in the data."""
+    if df_module.name == "polars":
         pytest.xfail(
             reason=(
                 "'TypeError: '<' not supported between instances of 'DataTypeClass' and"
@@ -297,7 +285,7 @@ def test_missing_values(px, missing: str):
 
 
 def test_check_fitted_gap_encoder():
-    """Test that calling transform before fit raises an error"""
+    """Test that calling transform before fit raises an error."""
     X = np.array([["alice"], ["bob"]])
     enc = GapEncoder(n_components=2, random_state=42)
     with pytest.raises(NotFittedError):
@@ -309,7 +297,7 @@ def test_check_fitted_gap_encoder():
 
 
 def test_small_sample():
-    """Test that having n_samples < n_components raises an error"""
+    """Test that having n_samples < n_components raises an error."""
     X = np.array([["alice"], ["bob"]])
     enc = GapEncoder(n_components=3, random_state=42)
     with pytest.raises(ValueError, match="should be >= n_components"):
@@ -317,7 +305,7 @@ def test_small_sample():
 
 
 def test_transform_deterministic():
-    """Non-regression test for #188"""
+    """Non-regression test for #188."""
     dataset = fetch_midwest_survey()
     X_train, X_test = train_test_split(
         dataset.X[["What_would_you_call_the_part_of_the_country_you_live_in_now"]],
@@ -332,7 +320,7 @@ def test_transform_deterministic():
 
 
 def test_max_no_improvements_none():
-    """Test that max_no_improvements=None works"""
+    """Test that ``max_no_improvements=None`` works."""
     X = generate_data(300, random_state=0)
     enc_none = GapEncoder(n_components=2, max_no_improvement=None, random_state=42)
     enc_none.fit(X)
