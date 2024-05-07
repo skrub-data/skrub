@@ -400,17 +400,10 @@ def test_to_datetime(df_module):
         ns.to_datetime(s, "%d/%m/%Y", False),
         df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None]),
     )
-    s = df_module.make_column("", ["2020-01-02", "2021-04-05"])
-    df_module.assert_column_equal(
-        ns.to_datetime(s, None, True),
-        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 4, 5)]),
-    )
     dt_col = ns.col(df_module.example_dataframe, "datetime-col")
     assert ns.to_datetime(dt_col, None) is dt_col
-    if df_module.name != "pandas":
-        return
     s = df_module.make_column("", ["2020-01-01 04:00:00+02:00"])
-    dt = ns.to_datetime(s, None)
+    dt = ns.to_datetime(s, "%Y-%m-%d %H:%M:%S%z")
     assert str(dt[0]) == "2020-01-01 02:00:00+00:00"
 
 

@@ -705,7 +705,7 @@ def _to_datetime_pandas(column, format, strict=True):
     if _is_any_date_pandas(column):
         return column
     errors = "raise" if strict else "coerce"
-    utc = "%z" in format
+    utc = (format is None) or ("%z" in format)
     return pd.to_datetime(column, format=format, errors=errors, utc=utc)
 
 
