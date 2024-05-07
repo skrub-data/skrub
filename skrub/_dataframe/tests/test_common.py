@@ -574,9 +574,3 @@ def test_replace(df_module):
         df_module.make_column("", "aa ab AC ba bb bc".split() + [None])
     )
     df_module.assert_column_equal(out, expected)
-
-    out = ns.replace_regex(s, "^a", r"A_")
-    expected = ns.pandas_convert_dtypes(
-        df_module.make_column("", "A_a A_b A_c ba bb bc".split() + [None])
-    )
-    df_module.assert_column_equal(out, expected)

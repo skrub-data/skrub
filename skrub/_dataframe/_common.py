@@ -59,6 +59,7 @@ __all__ = [
     "is_string",
     "to_string",
     "is_object",
+    "is_pandas_object",
     "is_any_date",
     "to_datetime",
     "is_categorical",
@@ -78,7 +79,6 @@ __all__ = [
     "sample",
     "head",
     "replace",
-    "replace_regex",
 ]
 
 #
@@ -286,6 +286,8 @@ def null_value_for(obj):
 
 @null_value_for.specialize("pandas")
 def _null_value_for_pandas(obj):
+    if pd.api.types.is_extension_array_dtype(obj):
+        return pd.NA
     return None
 
 
@@ -674,6 +676,10 @@ def _is_object_polars(column):
     return column.dtype == pl.Object
 
 
+def is_pandas_object(column):
+    return is_pandas(column) and is_object(column)
+
+
 @dispatch
 def is_any_date(column):
     raise NotImplementedError()
@@ -921,21 +927,3 @@ def _replace_pandas(column, old, new):
 @replace.specialize("polars")
 def _replace_polars(column, old, new):
     return column.replace(old, new)
-
-
-@dispatch
-def replace_regex(column, pattern, replacement):
-    # NOTE: regex syntax is not the same in python and polars in particular for
-    # referring to capture groups. ATM we don't deal with that ie capture
-    # groups will not work.
-    raise NotImplementedError()
-
-
-@replace_regex.specialize("pandas")
-def _replace_regex_pandas(column, pattern, replacement):
-    return column.str.replace(pattern, replacement, regex=True)
-
-
-@replace_regex.specialize("polars")
-def _replace_regex_polars(column, pattern, replacement):
-    return column.str.replace_all(pattern, replacement, literal=False)
