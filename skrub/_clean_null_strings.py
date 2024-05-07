@@ -207,7 +207,8 @@ class CleanNullStrings(BaseEstimator):
 
     For ``polars``, only columns with ``String`` dtype are modified.
 
-    >>> import polars as pl
+    >>> import pytest
+    >>> pl = pytest.importorskip('polars')
     >>> s = pl.Series('s', ['a', 'b', '    '])
     >>> s
     shape: (3,)
