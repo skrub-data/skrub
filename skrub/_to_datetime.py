@@ -186,7 +186,7 @@ class ToDatetime(BaseEstimator):
     1                   NaT
     2   2024-05-07 13:17:52
     Name: when, dtype: datetime64[ns]
-    >>> s = pd.Series(["2024-05-05", None, "2024-05-07"], name="when")
+    >>> s = pd.Series(["05/05/2024", None, "07/05/2024"], name="when")
     >>> to_dt.transform(s)
     0   NaT
     1   NaT

@@ -9,6 +9,7 @@ from datetime import datetime
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
+from sklearn.utils.fixes import parse_version
 
 from skrub import _selectors as s
 from skrub._dataframe import _common as ns
@@ -309,13 +310,24 @@ def test_to_numeric(df_module):
     s = df_module.make_column("_", map("_{}".format, range(5)))
     with pytest.raises(ValueError):
         ns.to_numeric(s)
-    df_module.assert_column_equal(
-        ns.to_numeric(s, strict=False),
-        ns.all_null_like(s, dtype=df_module.dtypes["float64"]),
-    )
     assert (
         ns.dtype(ns.to_numeric(s, strict=False, dtype=df_module.dtypes["float32"]))
         == df_module.dtypes["float32"]
+    )
+    if df_module.description == "pandas-nullable-dtypes" and parse_version(
+        df_module.module.__version__
+    ) < parse_version("2.0.0"):
+        # in old versions pd.to_numeric would output numpy dtypes even when
+        # input was a nullable extension dtype; now for nullable dtypes it
+        # outputs nullable dtypes. We could check the version and cast if a
+        # newer version of pandas would but it's probably not worth the added
+        # complexity.
+        dtype = np.float64
+    else:
+        dtype = df_module.dtypes["float64"]
+    df_module.assert_column_equal(
+        ns.to_numeric(s, strict=False),
+        ns.all_null_like(s, dtype=dtype),
     )
 
 
