@@ -46,7 +46,7 @@ def is_column_datetime_parsable(column):
             # avoiding ValueError when both date and datetime formats
             # are present.
             # At this stage, the format itself doesn't matter.
-            _ = pd.to_datetime(column, format=_mixed_format())
+            _ = pd.to_datetime(column, format=_mixed_format(), utc=True)
             return True
         except (pd.errors.ParserError, ValueError, TypeError):
             return False
