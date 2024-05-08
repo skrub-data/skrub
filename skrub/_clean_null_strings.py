@@ -157,19 +157,19 @@ class CleanNullStrings(BaseEstimator):
     Name: s, dtype: object
 
     In both examples above, the column can be converted to numbers by
-    ``ToNumeric`` (only) after being cleaned by ``CleanNullStrings``.
+    ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``.
 
-    >>> from skrub._to_numeric import ToNumeric
-    >>> ToNumeric().fit_transform(s)
+    >>> from skrub._to_float import ToFloat
+    >>> ToFloat().fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._exceptions.RejectColumn: Could not convert column 's' to numbers.
-    >>> ToNumeric().fit_transform(cleaner.fit_transform(s))
+    >>> ToFloat().fit_transform(cleaner.fit_transform(s))
     0    1.1
     1    2.2
     2    NaN
     3    4.4
-    Name: s, dtype: float64
+    Name: s, dtype: float32
 
     Columns that are do not have ``object`` or ``string`` as their ``dtype``
     are rejected.

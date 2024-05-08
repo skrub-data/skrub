@@ -49,6 +49,7 @@ __all__ = [
     "dtype",
     "dtypes",
     "cast",
+    "is_pandas_extension_dtype",
     "pandas_convert_dtypes",
     "is_bool",
     "is_numeric",
@@ -504,6 +505,21 @@ def _cast_pandas(column, dtype):
 @cast.specialize("polars")
 def _cast_polars(column, dtype):
     return column.cast(dtype)
+
+
+@dispatch
+def is_pandas_extension_dtype(obj):
+    raise NotImplementedError()
+
+
+@is_pandas_extension_dtype.specialize("pandas")
+def _is_pandas_extension_dtype_pandas(obj):
+    return pd.api.types.is_extension_array_dtype(obj)
+
+
+@is_pandas_extension_dtype.specialize("polars")
+def _is_pandas_extension_dtype_polars(obj):
+    return False
 
 
 @dispatch

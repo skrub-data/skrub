@@ -172,7 +172,7 @@ def test_fit_default_transform():
     expected_transformers_types = {}
     for c in X.columns:
         if c in ["int", "float"]:
-            expected_transformers_types[c] = "ToFloat32"
+            expected_transformers_types[c] = "PassThrough"
         elif c in low_cardinality_cols:
             expected_transformers_types[c] = "OneHotEncoder"
         else:
@@ -223,7 +223,7 @@ X_tuples = [
     (
         _get_clean_dataframe(),
         {
-            "int": "int64",
+            "int": "float32",
             "float": "float64",
             "str1": "category",
             "str2": "category",
@@ -234,8 +234,8 @@ X_tuples = [
     (
         _get_dirty_dataframe("category"),
         {
-            "int": "Int64",
-            "float": "Float64",
+            "int": "float32",
+            "float": "float64",
             "str1": "category",
             "str2": "category",
             "cat1": "category",
@@ -272,8 +272,8 @@ def test_auto_cast_missing_categories():
     out = vectorizer.fit_transform(X)
 
     expected_type_per_column = {
-        "int": "Int64",
-        "float": "Float64",
+        "int": "float32",
+        "float": "float64",
         "str1": pd.CategoricalDtype(
             categories=["private", "public"],
         ),
@@ -475,9 +475,9 @@ def test_mixed_types():
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
     expected_transformer_types = {
-        "int_str": "ToFloat32",
-        "float_str": "ToFloat32",
-        "int_float": "ToFloat32",
+        "int_str": "PassThrough",
+        "float_str": "PassThrough",
+        "int_float": "PassThrough",
         "bool_str": "Drop",
     }
     transformer_types = {

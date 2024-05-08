@@ -14,31 +14,8 @@ from ._gap_encoder import GapEncoder
 from ._select_cols import Drop
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime
-from ._to_float import ToFloat32
-from ._to_numeric import ToNumeric
+from ._to_float import ToFloat
 from ._wrap_transformer import wrap_transformer
-
-HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
-LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
-    sparse_output=False,
-    dtype="float32",
-    handle_unknown="ignore",
-    drop="if_binary",
-)
-DATETIME_TRANSFORMER = EncodeDatetime()
-NUMERIC_TRANSFORMER = ToFloat32()
-
-
-def _created_by(col, transformers):
-    return any(sbd.name(col) in t.created_outputs_ for t in transformers)
-
-
-def created_by(*transformers):
-    return s.Filter(
-        _created_by,
-        args=(transformers,),
-        selector_repr=f"created_by(<any of {len(transformers)} transformers>)",
-    )
 
 
 class PassThrough(BaseEstimator):
@@ -53,6 +30,29 @@ class PassThrough(BaseEstimator):
     def fit(self, column):
         self.fit_transform(column)
         return self
+
+
+HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
+    sparse_output=False,
+    dtype="float32",
+    handle_unknown="ignore",
+    drop="if_binary",
+)
+DATETIME_TRANSFORMER = EncodeDatetime()
+NUMERIC_TRANSFORMER = PassThrough()
+
+
+def _created_by(col, transformers):
+    return any(sbd.name(col) in t.created_outputs_ for t in transformers)
+
+
+def created_by(*transformers):
+    return s.Filter(
+        _created_by,
+        args=(transformers,),
+        selector_repr=f"created_by(<any of {len(transformers)} transformers>)",
+    )
 
 
 def _check_transformer(transformer):
@@ -286,7 +286,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     2  NaN  N/A
 
     >>> vectorizer.input_to_processing_steps_
-    {'A': [CleanNullStrings(), ToNumeric(), PassThrough()], 'B': [PassThrough()]}
+    {'A': [CleanNullStrings(), ToFloat(), PassThrough()], 'B': [PassThrough()]}
 
     Here we can see that the final estimator for both columns is passthrough,
     but unlike ``'B'``, ``'A'`` went through the default preprocessing steps
@@ -370,7 +370,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         for transformer in [
             CleanNullStrings(),
             ToDatetime(),
-            ToNumeric(),
+            ToFloat(),
             ToCategorical(self.cardinality_threshold),
         ]:
             add_step(cleaning_steps, transformer, cols)
