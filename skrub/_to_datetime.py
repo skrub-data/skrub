@@ -341,7 +341,7 @@ class ToDatetime(BaseEstimator):
             self.output_dtype_ = sbd.dtype(column)
             self.output_time_zone_ = _get_time_zone(column)
             return column
-        if not (sbd.is_string(column) or sbd.is_object(column)):
+        if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
 
         datetime_format = self._get_datetime_format(column)
