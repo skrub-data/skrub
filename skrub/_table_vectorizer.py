@@ -11,6 +11,7 @@ from ._check_input import CheckInputDataFrame
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import EncodeDatetime
 from ._gap_encoder import GapEncoder
+from ._pandas_string_dtype_to_object import PandasStringDtypeToObject
 from ._select_cols import Drop
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime
@@ -371,7 +372,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             CleanNullStrings(),
             ToDatetime(),
             ToFloat(),
-            ToCategorical(self.cardinality_threshold),
+            ToCategorical(self.cardinality_threshold - 1),
+            PandasStringDtypeToObject(),
         ]:
             add_step(cleaning_steps, transformer, cols)
 
@@ -380,10 +382,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         )
         encoding_steps = []
         for transformer, selector in [
-            (self.numeric_transformer, s.numeric() | s.boolean()),
+            (self.numeric_transformer, s.numeric()),
             (self.datetime_transformer, s.any_date()),
             (self.low_cardinality_transformer, low_cardinality),
-            (self.high_cardinality_transformer, s.string() | s.categorical()),
+            (self.high_cardinality_transformer, s.categorical() | s.string()),
         ]:
             add_step(
                 encoding_steps,
