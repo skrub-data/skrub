@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 
+import numpy as np
 import pandas as pd
 import pandas.api.types
 
@@ -53,7 +54,6 @@ __all__ = [
     "pandas_convert_dtypes",
     "is_bool",
     "is_numeric",
-    "to_numeric",
     "is_integer",
     "is_float",
     "to_float32",
@@ -499,11 +499,15 @@ def cast(column, dtype):
 
 @cast.specialize("pandas")
 def _cast_pandas(column, dtype):
+    if column.dtype == dtype:
+        return column
     return column.astype(dtype)
 
 
 @cast.specialize("polars")
 def _cast_polars(column, dtype):
+    if column.dtype == dtype:
+        return column
     return column.cast(dtype)
 
 
@@ -568,41 +572,6 @@ def _is_numeric_polars(column):
 
 
 @dispatch
-def to_numeric(column, dtype=None, strict=True):
-    raise NotImplementedError()
-
-
-@to_numeric.specialize("pandas")
-def _to_numeric_pandas(column, dtype=None, strict=True):
-    if dtype is None and is_numeric(column):
-        return column
-    errors = "raise" if strict else "coerce"
-    out = pd.to_numeric(column, errors=errors)
-    if dtype is None:
-        return out
-    return out.astype(dtype)
-
-
-@to_numeric.specialize("polars")
-def _to_numeric_polars(column, dtype=None, strict=True):
-    if dtype is None and is_numeric(column):
-        return column
-    if dtype is not None:
-        return column.cast(dtype, strict=strict)
-    if column.dtype.is_numeric():
-        return column
-    error = None
-    for dtype in [pl.Int64, pl.Float64]:
-        try:
-            return column.cast(dtype, strict=True)
-        except Exception as e:
-            error = e
-    if not strict:
-        return column.cast(pl.Float64, strict=False)
-    raise ValueError("Could not convert column to numeric dtype") from error
-
-
-@dispatch
 def is_integer(column):
     raise NotImplementedError()
 
@@ -639,12 +608,12 @@ def to_float32(column):
 
 @to_float32.specialize("pandas")
 def _to_float32_pandas(column):
-    return _to_numeric_pandas(column, dtype="float32")
+    return _cast_pandas(column, np.float32)
 
 
 @to_float32.specialize("polars")
 def _to_float32_polars(column):
-    return _to_numeric_polars(column, dtype=pl.Float32)
+    return _cast_polars(column, pl.Float32)
 
 
 @dispatch
@@ -673,12 +642,12 @@ def to_string(column):
 
 @to_string.specialize("pandas")
 def _to_string_pandas(column):
-    return column.astype("str")
+    return _cast_pandas(column, "str")
 
 
 @to_string.specialize("polars")
 def _to_string_polars(column):
-    return column.cast(pl.String)
+    return _cast_polars(column, pl.String)
 
 
 @dispatch
@@ -761,12 +730,12 @@ def to_categorical(column):
 
 @to_categorical.specialize("pandas")
 def _to_categorical_pandas(column):
-    return column.astype("category")
+    return _cast_pandas(column, "category")
 
 
 @to_categorical.specialize("polars")
 def _to_categorical_polars(column):
-    return column.cast(pl.Categorical())
+    return _cast_polars(column, pl.Categorical())
 
 
 #
