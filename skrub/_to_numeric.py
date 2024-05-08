@@ -8,7 +8,7 @@ class ToNumeric(BaseEstimator):
     __single_column_transformer__ = True
 
     def fit_transform(self, column):
-        if sbd.is_any_date(column) or sbd.is_categorical(column) or sbd.is_bool(column):
+        if sbd.is_any_date(column) or sbd.is_categorical(column):
             raise RejectColumn(
                 f"Refusing to cast column {sbd.name(column)!r} "
                 f"with dtype {sbd.dtype(column)} to numbers."

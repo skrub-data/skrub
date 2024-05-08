@@ -558,6 +558,8 @@ def to_numeric(column, dtype=None, strict=True):
 
 @to_numeric.specialize("pandas")
 def _to_numeric_pandas(column, dtype=None, strict=True):
+    if dtype is None and is_numeric(column):
+        return column
     errors = "raise" if strict else "coerce"
     out = pd.to_numeric(column, errors=errors)
     if dtype is None:
@@ -567,6 +569,8 @@ def _to_numeric_pandas(column, dtype=None, strict=True):
 
 @to_numeric.specialize("polars")
 def _to_numeric_polars(column, dtype=None, strict=True):
+    if dtype is None and is_numeric(column):
+        return column
     if dtype is not None:
         return column.cast(dtype, strict=strict)
     if column.dtype.is_numeric():
