@@ -8,12 +8,12 @@ from . import _dataframe as sbd
 from . import _selectors as s
 from . import _utils
 from ._check_input import CheckInputDataFrame
+from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import EncodeDatetime
 from ._gap_encoder import GapEncoder
 from ._pandas_string_dtype_to_object import PandasStringDtypeToObject
 from ._select_cols import Drop
-from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime
 from ._to_float import ToFloat
 from ._wrap_transformer import wrap_transformer
@@ -372,12 +372,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             CleanNullStrings(),
             ToDatetime(),
             ToFloat(),
-            ToCategorical(self.cardinality_threshold - 1),
+            CleanCategories(),
             PandasStringDtypeToObject(),
         ]:
             add_step(cleaning_steps, transformer, cols)
 
-        low_cardinality = s.categorical() & s.cardinality_below(
+        low_cardinality = (s.categorical() | s.string()) & s.cardinality_below(
             self.cardinality_threshold
         )
         encoding_steps = []

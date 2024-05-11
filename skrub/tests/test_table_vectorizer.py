@@ -225,8 +225,8 @@ X_tuples = [
         {
             "int": "float32",
             "float": "float64",
-            "str1": "category",
-            "str2": "category",
+            "str1": "O",
+            "str2": "O",
             "cat1": "category",
             "cat2": "category",
         },
