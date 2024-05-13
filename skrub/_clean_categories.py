@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
@@ -15,9 +14,7 @@ def _with_string_categories(column):
 @_with_string_categories.specialize("pandas")
 def _with_string_categories_pandas(column):
     categories = column.cat.categories.to_series()
-    if pd.api.types.is_string_dtype(
-        categories
-    ) and not pd.api.types.is_extension_array_dtype(categories):
+    if sbd.is_string(categories) and not sbd.is_pandas_extension_dtype(categories):
         return column
     try:
         return column.cat.rename_categories(categories.astype("str"))
