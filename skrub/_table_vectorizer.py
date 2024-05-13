@@ -223,6 +223,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     >>> vectorizer.transformers_['B']
     EncodeDatetime()
 
+    We can also see the columns grouped by the kind of encoder that was applied
+    to them.
+
+    >>> vectorizer.column_kinds_
+    {'numeric': ['C'], 'datetime': ['B'], 'low_cardinality': ['A'], 'high_cardinality': [], 'specific': []}
+
     **Transformers are applied separately to each column**
 
     The ``TableVectorizer`` vectorizes each column separately -- a different
@@ -352,6 +358,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
                     columnwise=True,
                 )
             )
+            return steps[-1]
 
         cols = s.all() - self._user_managed_columns
 
@@ -365,27 +372,35 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         ]:
             add_step(cleaning_steps, transformer, cols)
 
+        self._encoders = {}
         encoding_steps = []
-        for transformer, selector in [
-            (self.numeric_transformer, s.numeric()),
-            (self.datetime_transformer, s.any_date()),
+        for name, selector in [
+            ("numeric", s.numeric()),
+            ("datetime", s.any_date()),
             (
-                self.low_cardinality_transformer,
+                "low_cardinality",
                 s.cardinality_below(self.cardinality_threshold),
             ),
-            (self.high_cardinality_transformer, s.all()),
+            ("high_cardinality", s.all()),
         ]:
-            add_step(
+            self._encoders[name] = add_step(
                 encoding_steps,
-                transformer,
+                getattr(self, f"{name}_transformer"),
                 cols & selector - created_by(*encoding_steps),
             )
 
         user_steps = []
+        self._encoders["specific"] = []
         for user_transformer, user_cols in self.specific_transformers_:
-            add_step(user_steps, user_transformer, user_cols)
+            self._encoders["specific"].append(
+                add_step(user_steps, user_transformer, user_cols)
+            )
 
-        self._pipeline = make_pipeline(*cleaning_steps, *encoding_steps, *user_steps)
+        output_steps = []
+        add_step(output_steps, ToFloat32(), ~created_by(*user_steps))
+        self._pipeline = make_pipeline(
+            *cleaning_steps, *encoding_steps, *user_steps, *output_steps
+        )
 
     def fit_transform(self, X, y=None):
         """Fit transformer and transform dataframe.
@@ -412,6 +427,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self._store_input_transformations()
         self._store_processed_cols()
         self._store_transformers()
+        self._store_column_kinds()
         self._store_output_to_input()
         return output
 
@@ -480,7 +496,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         pipeline_steps = list(self._pipeline.named_steps.values())
         to_outputs = {col: [col] for col in pipeline_steps[0].feature_names_out_}
         to_steps = {col: [] for col in pipeline_steps[0].feature_names_out_}
-        for step in pipeline_steps[1:]:
+        # the initial CheckInputDataFrame and final ToFloat are not included
+        for step in pipeline_steps[1:-1]:
             for col, outputs_at_previous_step in to_outputs.items():
                 new_outputs = []
                 for output in outputs_at_previous_step:
@@ -492,6 +509,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
                 to_outputs[col] = new_outputs
         self.input_to_outputs_ = to_outputs
         self.input_to_processing_steps_ = to_steps
+
+    def _store_column_kinds(self):
+        self.column_kinds_ = {
+            k: v.used_inputs_ for k, v in self._encoders.items() if k != "specific"
+        }
+        self.column_kinds_["specific"] = self._user_managed_columns
 
     def _store_processed_cols(self):
         self.used_inputs_, self.created_outputs_ = [], []
