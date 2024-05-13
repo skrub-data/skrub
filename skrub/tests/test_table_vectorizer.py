@@ -251,7 +251,6 @@ def passthrough_vectorizer():
         low_cardinality_transformer="passthrough",
         numeric_transformer="passthrough",
         datetime_transformer="passthrough",
-        remainder_transformer="passthrough",
     )
 
 
@@ -298,52 +297,25 @@ def test_auto_cast_missing_categories():
     assert dict(out.dtypes) == expected_type_per_column
 
 
-assert_tuples = [
-    (
-        dict(remainder_transformer="passthrough"),
-        [
-            "int",
-            "float",
-            "str1_public",
-            "str2_chef",
-            "str2_lawyer",
-            "str2_manager",
-            "str2_officer",
-            "str2_teacher",
-            "cat1_yes",
-            "cat2_20K+",
-            "cat2_30K+",
-            "cat2_40K+",
-            "cat2_50K+",
-            "cat2_60K+",
-        ],
-    ),
-    (
-        dict(remainder_transformer="drop"),
-        [
-            "int",
-            "float",
-            "str1_public",
-            "str2_chef",
-            "str2_lawyer",
-            "str2_manager",
-            "str2_officer",
-            "str2_teacher",
-            "cat1_yes",
-            "cat2_20K+",
-            "cat2_30K+",
-            "cat2_40K+",
-            "cat2_50K+",
-            "cat2_60K+",
-        ],
-    ),
-]
-
-
-@pytest.mark.parametrize("params, expected_features", assert_tuples)
-def test_get_feature_names_out(params, expected_features):
+def test_get_feature_names_out():
+    expected_features = [
+        "int",
+        "float",
+        "str1_public",
+        "str2_chef",
+        "str2_lawyer",
+        "str2_manager",
+        "str2_officer",
+        "str2_teacher",
+        "cat1_yes",
+        "cat2_20K+",
+        "cat2_30K+",
+        "cat2_40K+",
+        "cat2_50K+",
+        "cat2_60K+",
+    ]
     X = _get_clean_dataframe()
-    vectorizer = TableVectorizer(**params).fit(X)
+    vectorizer = TableVectorizer().fit(X)
     assert_array_equal(
         vectorizer.get_feature_names_out(),
         expected_features,

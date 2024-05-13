@@ -91,10 +91,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         category. Representations designed for text, such as topic modelling
         (GapEncoder) or locality-sensitive hashing (MinHash) are more
         appropriate.
-    - remainder:
-        Columns that do not fall into any of the above categories (most likely
-        with ``object`` dtype) are called the "remainder" columns and a
-        different transformer can be specified for those.
 
     .. note::
 
@@ -104,7 +100,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
     The transformer for each kind of column can be configured with the
     corresponding ``*_transformer`` parameter: ``numeric_transformer``,
-    ``datetime_transformer``, ..., ``remainder_transformer``.
+    ``datetime_transformer``, ...
 
     A transformer can be a scikit-learn Transformer (an object providing the
     ``fit``, ``fit_transform`` and ``transform`` methods), a clone of which
@@ -139,12 +135,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     datetime_transformer : transformer, "passthrough" or "drop", optional
         The transformer for ``datetime`` columns. The default is a
         ``DatetimeEncoder``.
-
-    remainder_transformer : transformer, "passthrough" or "drop", optional
-        The transformer for ``remainder`` columns. To ensure that by default
-        the output of the TableVectorizer is numerical that is valid input for
-        scikit-learn estimators, the default for ``remainder_transformer`` is
-        ``"drop"``.
 
     specific_transformers : list of (transformer, list of column names) pairs, optional
         Override the categories above for the given columns and force using the
@@ -313,7 +303,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
         numeric_transformer=NUMERIC_TRANSFORMER,
         datetime_transformer=DATETIME_TRANSFORMER,
-        remainder_transformer="drop",
         specific_transformers=(),
         n_jobs=None,
     ):
@@ -330,7 +319,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.datetime_transformer = _utils.clone_if_default(
             datetime_transformer, DATETIME_TRANSFORMER
         )
-        self.remainder_transformer = remainder_transformer
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
 
@@ -377,15 +365,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         ]:
             add_step(cleaning_steps, transformer, cols)
 
-        low_cardinality = (s.categorical() | s.string()) & s.cardinality_below(
-            self.cardinality_threshold
-        )
         encoding_steps = []
         for transformer, selector in [
             (self.numeric_transformer, s.numeric()),
             (self.datetime_transformer, s.any_date()),
-            (self.low_cardinality_transformer, low_cardinality),
-            (self.high_cardinality_transformer, s.categorical() | s.string()),
+            (
+                self.low_cardinality_transformer,
+                s.cardinality_below(self.cardinality_threshold),
+            ),
+            (self.high_cardinality_transformer, s.all()),
         ]:
             add_step(
                 encoding_steps,
@@ -393,20 +381,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
                 cols & selector - created_by(*encoding_steps),
             )
 
-        remainder_steps = []
-        add_step(
-            remainder_steps,
-            self.remainder_transformer,
-            cols - created_by(*encoding_steps),
-        )
-
         user_steps = []
         for user_transformer, user_cols in self.specific_transformers_:
             add_step(user_steps, user_transformer, user_cols)
 
-        self._pipeline = make_pipeline(
-            *cleaning_steps, *encoding_steps, *remainder_steps, *user_steps
-        )
+        self._pipeline = make_pipeline(*cleaning_steps, *encoding_steps, *user_steps)
 
     def fit_transform(self, X, y=None):
         """Fit transformer and transform dataframe.
