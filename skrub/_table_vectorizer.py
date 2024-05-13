@@ -362,7 +362,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
         cols = s.all() - self._user_managed_columns
 
-        cleaning_steps = [CheckInputDataFrame()]
+        self._preprocessors = [CheckInputDataFrame()]
         for transformer in [
             CleanNullStrings(),
             ToDatetime(),
@@ -370,10 +370,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             CleanCategories(),
             ToStr(),
         ]:
-            add_step(cleaning_steps, transformer, cols)
+            add_step(self._preprocessors, transformer, cols)
 
-        self._encoders = {}
-        encoding_steps = []
+        self._encoders = []
+        self._named_encoders = {}
         for name, selector in [
             ("numeric", s.numeric()),
             ("datetime", s.any_date()),
@@ -383,23 +383,25 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             ),
             ("high_cardinality", s.all()),
         ]:
-            self._encoders[name] = add_step(
-                encoding_steps,
+            self._named_encoders[name] = add_step(
+                self._encoders,
                 getattr(self, f"{name}_transformer"),
-                cols & selector - created_by(*encoding_steps),
+                cols & selector - created_by(*self._encoders),
             )
 
-        user_steps = []
-        self._encoders["specific"] = []
+        self._specific_transformers = []
         for user_transformer, user_cols in self.specific_transformers_:
-            self._encoders["specific"].append(
-                add_step(user_steps, user_transformer, user_cols)
-            )
+            add_step(self._specific_transformers, user_transformer, user_cols)
 
-        output_steps = []
-        add_step(output_steps, ToFloat32(), ~created_by(*user_steps))
+        self._output_steps = []
+        add_step(
+            self._output_steps, ToFloat32(), ~created_by(*self._specific_transformers)
+        )
         self._pipeline = make_pipeline(
-            *cleaning_steps, *encoding_steps, *user_steps, *output_steps
+            *self._preprocessors,
+            *self._encoders,
+            *self._specific_transformers,
+            *self._output_steps,
         )
 
     def fit_transform(self, X, y=None):
@@ -422,11 +424,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self._check_specific_transformers()
         self._make_pipeline()
         output = self._pipeline.fit_transform(X)
-        self.feature_names_in_ = self._pipeline.steps[0][1].feature_names_out_
+        self.feature_names_in_ = self._preprocessors[0].feature_names_out_
         self.all_outputs_ = sbd.column_names(output)
         self._store_input_transformations()
-        self._store_processed_cols()
-        self._store_transformers()
         self._store_column_kinds()
         self._store_output_to_input()
         return output
@@ -493,41 +493,29 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         return np.asarray(self.all_outputs_)
 
     def _store_input_transformations(self):
-        pipeline_steps = list(self._pipeline.named_steps.values())
-        to_outputs = {col: [col] for col in pipeline_steps[0].feature_names_out_}
-        to_steps = {col: [] for col in pipeline_steps[0].feature_names_out_}
-        # the initial CheckInputDataFrame and final ToFloat are not included
-        for step in pipeline_steps[1:-1]:
-            for col, outputs_at_previous_step in to_outputs.items():
-                new_outputs = []
-                for output in outputs_at_previous_step:
-                    new_outputs.extend(step.input_to_outputs_.get(output, [output]))
-                    if hasattr(step, "transformers_") and output in step.transformers_:
-                        to_steps[col].append(step.transformers_[output])
-                    elif hasattr(step, "transformer_") and output in step.used_inputs_:
-                        to_steps[col].append(step.transformer_)
-                to_outputs[col] = new_outputs
+        input_names = self._preprocessors[0].feature_names_out_
+        to_outputs = {col: [col] for col in input_names}
+        to_steps = {col: [] for col in input_names}
+        self.transformers_ = {}
+        # [1:] because CheckInputDataFrame not included in input_to_processing_steps_
+        for step in self._preprocessors[1:]:
+            for col, transformer in step.transformers_.items():
+                to_steps[col].append(transformer)
+        for step in self._encoders + self._specific_transformers:
+            for col, transformer in step.transformers_.items():
+                to_steps[col].append(transformer)
+                to_outputs[col] = step.input_to_outputs_[col]
+                self.transformers_[col] = transformer
         self.input_to_outputs_ = to_outputs
         self.input_to_processing_steps_ = to_steps
+        # the final ToFloat32, if any, are also not included in
+        # input_to_processing_steps_
 
     def _store_column_kinds(self):
         self.column_kinds_ = {
-            k: v.used_inputs_ for k, v in self._encoders.items() if k != "specific"
+            k: v.used_inputs_ for k, v in self._named_encoders.items()
         }
         self.column_kinds_["specific"] = self._user_managed_columns
-
-    def _store_processed_cols(self):
-        self.used_inputs_, self.created_outputs_ = [], []
-        for col in self.input_to_processing_steps_:
-            if self.input_to_processing_steps_[col]:
-                self.used_inputs_.append(col)
-                self.created_outputs_.extend(self.input_to_outputs_[col])
-
-    def _store_transformers(self):
-        self.transformers_ = {
-            c: ([None] + steps)[-1]
-            for c, steps in self.input_to_processing_steps_.items()
-        }
 
     def _store_output_to_input(self):
         self.output_to_input_ = {
