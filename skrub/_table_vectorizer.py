@@ -473,7 +473,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         list of strings
             The column names.
         """
-        """"""
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
 
