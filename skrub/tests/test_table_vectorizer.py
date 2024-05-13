@@ -224,7 +224,7 @@ X_tuples = [
         _get_clean_dataframe(),
         {
             "int": "float32",
-            "float": "float64",
+            "float": "float32",
             "str1": "O",
             "str2": "O",
             "cat1": "category",
@@ -235,7 +235,7 @@ X_tuples = [
         _get_dirty_dataframe("category"),
         {
             "int": "float32",
-            "float": "float64",
+            "float": "float32",
             "str1": "category",
             "str2": "category",
             "cat1": "category",
@@ -272,7 +272,7 @@ def test_auto_cast_missing_categories():
 
     expected_type_per_column = {
         "int": "float32",
-        "float": "float64",
+        "float": "float32",
         "str1": pd.CategoricalDtype(
             categories=["private", "public"],
         ),

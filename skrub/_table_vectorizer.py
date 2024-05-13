@@ -14,7 +14,7 @@ from ._datetime_encoder import EncodeDatetime
 from ._gap_encoder import GapEncoder
 from ._select_cols import Drop
 from ._to_datetime import ToDatetime
-from ._to_float import ToFloat
+from ._to_float32 import ToFloat32
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
@@ -277,7 +277,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     2  NaN  N/A
 
     >>> vectorizer.input_to_processing_steps_
-    {'A': [CleanNullStrings(), ToFloat(), PassThrough()], 'B': [PassThrough()]}
+    {'A': [CleanNullStrings(), ToFloat32(), PassThrough()], 'B': [PassThrough()]}
 
     Here we can see that the final estimator for both columns is passthrough,
     but unlike ``'B'``, ``'A'`` went through the default preprocessing steps
@@ -359,7 +359,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         for transformer in [
             CleanNullStrings(),
             ToDatetime(),
-            ToFloat(),
+            ToFloat32(),
             CleanCategories(),
             ToStr(),
         ]:
