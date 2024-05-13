@@ -6,7 +6,7 @@ from ._exceptions import RejectColumn
 
 class ToStr(BaseEstimator):
     """
-    Convert a column to string dtype.
+    Convert a column to strings.
 
     A numeric, datetime or categorical column is rejected with a
     ``RejectColumn`` exception. This is to avoid accidentally converting a
@@ -116,7 +116,7 @@ class ToStr(BaseEstimator):
     >>> to_str.fit_transform(pd.Series(['a', 'b'], name='s', dtype='category'))
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Refusing to convert 's' with dtype CategoricalDtype(...) to strings.
+    skrub._exceptions.RejectColumn: Refusing to convert 's' with dtype CategoricalDtype(categories=['a', 'b'], ordered=False, categories_dtype=object) to strings.
     >>> to_str.fit_transform(pd.to_datetime(pd.Series(['2020-02-02'])))
     Traceback (most recent call last):
         ...
@@ -163,21 +163,21 @@ class ToStr(BaseEstimator):
     The conversion also works for Object columns. However converting Object
     columns may be much slower than other columns.
 
-    >>> s = pl.Series([ToStr, {'name': 'one'}, 3.3])
+    >>> s = pl.Series([to_str, 'one', 3.3])
     >>> s
     shape: (3,)
     Series: '' [o][object]
     [
-        <class 'skrub._to_str.ToStr'>
-        {'name': 'one'}
+        ToStr()
+        one
         3.3
     ]
     >>> to_str.fit_transform(s)
     shape: (3,)
     Series: '' [str]
     [
-        "<class 'skrub.…
-        "{'name': 'one'…
+        "ToStr()"
+        "one"
         "3.3"
     ]
 
