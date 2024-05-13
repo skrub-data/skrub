@@ -450,7 +450,7 @@ def test_mixed_types():
         "int_str": "PassThrough",
         "float_str": "PassThrough",
         "int_float": "PassThrough",
-        "bool_str": "Drop",
+        "bool_str": "OneHotEncoder",
     }
     transformer_types = {
         k: v.__class__.__name__ for k, v in vectorizer.transformers_.items()

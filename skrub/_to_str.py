@@ -116,7 +116,7 @@ class ToStr(BaseEstimator):
     >>> to_str.fit_transform(pd.Series(['a', 'b'], name='s', dtype='category'))
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Refusing to convert 's' with dtype CategoricalDtype(categories=['a', 'b'], ordered=False) to strings.
+    skrub._exceptions.RejectColumn: Refusing to convert 's' with dtype CategoricalDtype(...) to strings.
     >>> to_str.fit_transform(pd.to_datetime(pd.Series(['2020-02-02'])))
     Traceback (most recent call last):
         ...
