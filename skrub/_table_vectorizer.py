@@ -360,7 +360,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             )
             return steps[-1]
 
-        cols = s.all() - self._user_managed_columns
+        cols = s.all() - self._specific_columns
 
         self._preprocessors = [CheckInputDataFrame()]
         for transformer in [
@@ -390,8 +390,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             )
 
         self._specific_transformers = []
-        for user_transformer, user_cols in self.specific_transformers_:
-            add_step(self._specific_transformers, user_transformer, user_cols)
+        for specific_transformer, specific_cols in self.specific_transformers:
+            add_step(self._specific_transformers, specific_transformer, specific_cols)
 
         self._output_steps = []
         add_step(
@@ -421,7 +421,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         dataframe
             The transformed input.
         """
-        self._check_specific_transformers()
+        self._check_specific_columns()
         self._make_pipeline()
         output = self._pipeline.fit_transform(X)
         self.feature_names_in_ = self._preprocessors[0].feature_names_out_
@@ -431,12 +431,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self._store_output_to_input()
         return output
 
-    def _check_specific_transformers(self):
-        user_managed_columns = {}
-        self.specific_transformers_ = []
+    def _check_specific_columns(self):
+        specific_columns = {}
         for i, config in enumerate(self.specific_transformers):
             try:
-                transformer, cols = config
+                _, cols = config
             except (ValueError, TypeError):
                 raise ValueError(
                     "Expected a list of (transformer, columns) pairs. "
@@ -445,14 +444,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             for c in cols:
                 if not isinstance(c, str):
                     raise ValueError(f"cols must be string names, got {c}")
-                if c in user_managed_columns:
+                if c in specific_columns:
                     raise ValueError(
                         f"Column {c!r} used twice in in specific_transformers, "
-                        f"at indices {user_managed_columns[c]} and {i}."
+                        f"at indices {specific_columns[c]} and {i}."
                     )
-            user_managed_columns |= {c: i for c in cols}
-            self.specific_transformers_.append((_check_transformer(transformer), cols))
-        self._user_managed_columns = list(user_managed_columns.keys())
+            specific_columns |= {c: i for c in cols}
+        self._specific_columns = list(specific_columns.keys())
 
     def transform(self, X):
         """Transform dataframe.
@@ -515,7 +513,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self.column_kinds_ = {
             k: v.used_inputs_ for k, v in self._named_encoders.items()
         }
-        self.column_kinds_["specific"] = self._user_managed_columns
+        self.column_kinds_["specific"] = self._specific_columns
 
     def _store_output_to_input(self):
         self.output_to_input_ = {
