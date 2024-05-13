@@ -12,10 +12,10 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import EncodeDatetime
 from ._gap_encoder import GapEncoder
-from ._pandas_string_dtype_to_object import PandasStringDtypeToObject
 from ._select_cols import Drop
 from ._to_datetime import ToDatetime
 from ._to_float import ToFloat
+from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
 
@@ -373,7 +373,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             ToDatetime(),
             ToFloat(),
             CleanCategories(),
-            PandasStringDtypeToObject(),
+            ToStr(),
         ]:
             add_step(cleaning_steps, transformer, cols)
 

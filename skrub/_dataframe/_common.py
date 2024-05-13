@@ -647,12 +647,21 @@ def to_string(column):
 
 @to_string.specialize("pandas")
 def _to_string_pandas(column):
-    return _cast_pandas(column, "str")
+    is_na = column.isna()
+    if not (is_pandas_object(column) and is_string(column)):
+        column = column.astype("str")
+        column[is_na] = np.nan
+        return column
+    if not is_na.any():
+        return column
+    return column.fillna(np.nan)
 
 
 @to_string.specialize("polars")
 def _to_string_polars(column):
-    return _cast_polars(column, pl.String)
+    if column.dtype != pl.Object:
+        return _cast_polars(column, pl.String)
+    return column.map_elements(str)
 
 
 @dispatch
