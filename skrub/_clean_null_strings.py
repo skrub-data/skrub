@@ -161,7 +161,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> ToFloat32().fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Could not convert column 's' to numbers.
+    skrub._on_each_column.RejectColumn: Could not convert column 's' to numbers.
     >>> ToFloat32().fit_transform(cleaner.fit_transform(s))
     0    1.1
     1    2.2
@@ -176,7 +176,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Column 's' does not contain strings.
+    skrub._on_each_column.RejectColumn: Column 's' does not contain strings.
 
     In particular, Categorical columns, although they contain strings, do not
     have the ``string`` or ``object`` ``dtype``:
@@ -185,7 +185,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Column None does not contain strings.
+    skrub._on_each_column.RejectColumn: Column None does not contain strings.
 
     Note however that ``object`` columns are accepted even if they do not
     contain any strings. They will not be modified but they will still be
@@ -228,7 +228,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Column 's' does not contain strings.
+    skrub._on_each_column.RejectColumn: Column 's' does not contain strings.
     """
 
     def fit_transform(self, column):

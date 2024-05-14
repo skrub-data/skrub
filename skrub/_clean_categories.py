@@ -146,7 +146,7 @@ class CleanCategories(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Column 'c' is not categorical.
+    skrub._on_each_column.RejectColumn: Column 'c' is not categorical.
 
     However once a column has been accepted, the output of ``transform`` will
     always have a categorical dtype.

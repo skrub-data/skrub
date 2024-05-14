@@ -132,7 +132,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> ToDatetime(datetime_format="%d/%m/%Y").fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
+    skrub._on_each_column.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
 
     Columns that already have ``Datetime`` ``dtype`` are not modified (but
     they are accepted); for those columns the provided format, if any, is ignored.
@@ -162,7 +162,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Column 'year' does not contain strings.
+    skrub._on_each_column.RejectColumn: Column 'year' does not contain strings.
 
     String columns that do not appear to contain datetimes or for some other reason
     fail to be converted are also rejected.
@@ -171,7 +171,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Could not find a datetime format for column 'when'.
+    skrub._on_each_column.RejectColumn: Could not find a datetime format for column 'when'.
 
     Once ``ToDatetime`` was successfully fitted, ``transform`` will always try to
     parse datetimes with the same format and output the same ``dtype``. Entries that

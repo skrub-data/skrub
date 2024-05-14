@@ -21,7 +21,7 @@ class RejectColumn(Exception):
     >>> ToDatetime().fit_transform(df['b'])
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Column 'b' does not contain strings.
+    skrub._on_each_column.RejectColumn: Column 'b' does not contain strings.
     """
 
     pass
@@ -165,7 +165,7 @@ class OnEachColumn(BaseEstimator):
     >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
-    skrub._exceptions.RejectColumn: Could not find a datetime format for column 'city'.
+    skrub._on_each_column.RejectColumn: Could not find a datetime format for column 'city'.
     >>> to_datetime = OnEachColumn(ToDatetime())
     >>> transformed = to_datetime.fit_transform(df)
     >>> transformed
