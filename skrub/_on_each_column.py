@@ -1,7 +1,7 @@
 import itertools
 
 from joblib import Parallel, delayed
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 
 from . import _dataframe as sbd
 from . import _selectors
@@ -37,6 +37,14 @@ class SingleColumnTransformer(BaseEstimator):
 
     __single_column_transformer__ = True
 
+    def fit(self, column, y=None):
+        """Fit the transformer.
+
+        Subclasses should implement ``fit_transform`` and ``transform``.
+        """
+        self.fit_transform(column, y=y)
+        return self
+
     def fit_transform(self, column, y=None):
         """Fit to a column and transform it."""
         raise NotImplementedError()
@@ -45,16 +53,8 @@ class SingleColumnTransformer(BaseEstimator):
         """Transform a column (must be fitted first)."""
         raise NotImplementedError()
 
-    def fit(self, column):
-        """Fit the transformer.
 
-        Subclasses should implement ``fit_transform`` and ``transform``.
-        """
-        self.fit_transform(column)
-        return self
-
-
-class OnEachColumn(BaseEstimator):
+class OnEachColumn(TransformerMixin, BaseEstimator):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.
@@ -292,7 +292,6 @@ class OnEachColumn(BaseEstimator):
         return self
 
     def fit_transform(self, X, y=None):
-        del y
         self._columns = _selectors.make_selector(self.cols).expand(X)
         results = []
         all_columns = sbd.column_names(X)
@@ -301,6 +300,7 @@ class OnEachColumn(BaseEstimator):
         results = parallel(
             func(
                 sbd.col(X, col_name),
+                y,
                 self._columns,
                 self.transformer,
                 self.allow_reject,
@@ -308,6 +308,24 @@ class OnEachColumn(BaseEstimator):
             for col_name in all_columns
         )
         return self._process_fit_transform_results(results, X)
+
+    def transform(self, X):
+        parallel = Parallel(n_jobs=self.n_jobs)
+        func = delayed(_transform_column)
+        outputs = parallel(
+            func(
+                sbd.col(X, col_name),
+                self.transformers_.get(col_name),
+            )
+            for col_name in sbd.column_names(X)
+        )
+        transformed_columns = []
+        for col_name, col_outputs in zip(sbd.column_names(X), outputs):
+            if self.transformers_.get(col_name) is not None and self.keep_original:
+                col_outputs = [sbd.col(X, col_name)] + col_outputs
+            transformed_columns.extend(col_outputs)
+        transformed_columns = _rename_columns(transformed_columns, self.all_outputs_)
+        return sbd.make_dataframe_like(X, transformed_columns)
 
     def _process_fit_transform_results(self, results, X):
         all_input_names = sbd.column_names(X)
@@ -339,26 +357,13 @@ class OnEachColumn(BaseEstimator):
         self.all_outputs_ = _column_names(transformed_columns)
         self.used_inputs_ = list(self.transformers_.keys())
         self.created_outputs_ = list(itertools.chain(*self.input_to_outputs_.values()))
+        # for sklearn
+        self.feature_names_in_ = self.all_inputs_
+        self.n_features_in_ = len(self.all_inputs_)
+
         return sbd.make_dataframe_like(X, transformed_columns)
 
-    def transform(self, X, y=None):
-        del y
-        parallel = Parallel(n_jobs=self.n_jobs)
-        func = delayed(_transform_column)
-        outputs = parallel(
-            func(
-                sbd.col(X, col_name),
-                self.transformers_.get(col_name),
-            )
-            for col_name in sbd.column_names(X)
-        )
-        transformed_columns = []
-        for col_name, col_outputs in zip(sbd.column_names(X), outputs):
-            if self.transformers_.get(col_name) is not None and self.keep_original:
-                col_outputs = [sbd.col(X, col_name)] + col_outputs
-            transformed_columns.extend(col_outputs)
-        transformed_columns = _rename_columns(transformed_columns, self.all_outputs_)
-        return sbd.make_dataframe_like(X, transformed_columns)
+    # set_output api compatibility
 
     def get_feature_names_out(self):
         return self.all_outputs_
@@ -370,7 +375,7 @@ def _prepare_transformer_input(transformer, column):
     return sbd.make_dataframe_like(column, [column])
 
 
-def _fit_transform_column(column, columns_to_handle, transformer, allow_reject):
+def _fit_transform_column(column, y, columns_to_handle, transformer, allow_reject):
     col_name = sbd.name(column)
     if col_name not in columns_to_handle:
         return col_name, [column], None
@@ -381,7 +386,7 @@ def _fit_transform_column(column, columns_to_handle, transformer, allow_reject):
     transformer_input = _prepare_transformer_input(transformer, column)
     allowed = (RejectColumn,) if allow_reject else ()
     try:
-        output = transformer.fit_transform(transformer_input)
+        output = transformer.fit_transform(transformer_input, y=y)
     except allowed:
         return col_name, [column], None
     except Exception as e:

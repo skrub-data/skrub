@@ -24,7 +24,7 @@ from ._wrap_transformer import wrap_transformer
 
 
 class PassThrough(SingleColumnTransformer):
-    def fit_transform(self, column):
+    def fit_transform(self, column, y=None):
         return column
 
     def transform(self, column):
@@ -193,6 +193,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     feature_names_in_ : list of strings
         The names of the input columns, after applying some cleaning (casting
         all column names to strings and deduplication).
+    n_features_in_ : int
+        The number of input columns.
     all_outputs_ : list of strings
         The names of the output columns.
 
@@ -416,11 +418,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self._check_specific_columns()
         self._make_pipeline()
         output = self._pipeline.fit_transform(X, y=y)
-        self.feature_names_in_ = self._preprocessors[0].feature_names_out_
         self.all_outputs_ = sbd.column_names(output)
         self._store_processing_steps()
         self._store_column_kinds()
         self._store_output_to_input()
+        # for sklearn
+        self.feature_names_in_ = self._preprocessors[0].feature_names_out_
+        self.n_features_in_ = len(self.feature_names_in_)
+
         return output
 
     def transform(self, X):

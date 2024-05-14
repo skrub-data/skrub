@@ -71,28 +71,9 @@ def _collect_lazyframe(df):
     return sbd.collect(df)
 
 
-class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class CheckInputDataFrame(TransformerMixin, BaseEstimator):
     def __init__(self, convert_arrays=True):
         self.convert_arrays = convert_arrays
-
-    def _handle_array(self, X):
-        if not isinstance(X, np.ndarray) or not self.convert_arrays:
-            return X
-        warnings.warn(
-            "Only pandas and polars DataFrames are supported, but input is a Numpy"
-            " array. Please convert Numpy arrays to DataFrames before passing them to"
-            " skrub transformers. Converting to pandas DataFrame with columns"
-            " ['0', '1', …]."
-        )
-        if X.ndim != 2:
-            raise ValueError(
-                f"Cannot convert array to DataFrame due to wrong shape: {X.shape}"
-            )
-        import pandas as pd
-
-        columns = list(map(str, range(X.shape[1])))
-        X = pd.DataFrame(X, columns=columns)
-        return X
 
     def fit(self, X, y=None):
         self.fit_transform(X, y)
@@ -107,6 +88,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
         # Need to decide how strict we should be about types
         column_names = sbd.column_names(X)
         self.feature_names_in_ = column_names
+        self.n_features_in_ = len(column_names)
         self.feature_names_out_ = _cleaned_column_names(column_names)
         X = sbd.set_column_names(X, self.feature_names_out_)
         _check_not_pandas_sparse(X)
@@ -138,6 +120,27 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys
         _check_not_pandas_sparse(X)
         X = _collect_lazyframe(X)
         return X
+
+    def _handle_array(self, X):
+        if not isinstance(X, np.ndarray) or not self.convert_arrays:
+            return X
+        warnings.warn(
+            "Only pandas and polars DataFrames are supported, but input is a Numpy"
+            " array. Please convert Numpy arrays to DataFrames before passing them to"
+            " skrub transformers. Converting to pandas DataFrame with columns"
+            " ['0', '1', …]."
+        )
+        if X.ndim != 2:
+            raise ValueError(
+                f"Cannot convert array to DataFrame due to wrong shape: {X.shape}"
+            )
+        import pandas as pd
+
+        columns = list(map(str, range(X.shape[1])))
+        X = pd.DataFrame(X, columns=columns)
+        return X
+
+    # set_output api compatibility
 
     def get_feature_names_out(self):
         return self.feature_names_out_

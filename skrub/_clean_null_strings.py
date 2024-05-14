@@ -231,7 +231,8 @@ class CleanNullStrings(SingleColumnTransformer):
     skrub._on_each_column.RejectColumn: Column 's' does not contain strings.
     """
 
-    def fit_transform(self, column):
+    def fit_transform(self, column, y=None):
+        del y
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
         return self.transform(column)

@@ -189,7 +189,8 @@ class CleanCategories(SingleColumnTransformer):
     True
     """
 
-    def fit_transform(self, column):
+    def fit_transform(self, column, y=None):
+        del y
         if not sbd.is_categorical(column):
             raise RejectColumn(f"Column {sbd.name(column)!r} is not categorical.")
         return _with_string_categories(column)

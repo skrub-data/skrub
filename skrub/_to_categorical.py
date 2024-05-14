@@ -109,7 +109,8 @@ class ToCategorical(SingleColumnTransformer):
     ]
     """
 
-    def fit_transform(self, column):
+    def fit_transform(self, column, y=None):
+        del y
         if not sbd.is_string(column):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
         return sbd.to_categorical(column)

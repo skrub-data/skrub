@@ -331,7 +331,8 @@ class ToDatetime(SingleColumnTransformer):
             return None
         return _datetime_utils.guess_datetime_format(sample, random_state=0)
 
-    def fit_transform(self, column):
+    def fit_transform(self, column, y=None):
+        del y
         if sbd.is_any_date(column):
             self.datetime_format_ = None
             self.output_dtype_ = sbd.dtype(column)

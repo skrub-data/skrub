@@ -90,7 +90,8 @@ class EncodeDatetime(SingleColumnTransformer):
                 f"'resolution' options are {allowed}, got {self.resolution!r}."
             )
 
-    def fit_transform(self, column):
+    def fit_transform(self, column, y=None):
+        del y
         self._check_params()
         if not sbd.is_any_date(column):
             raise RejectColumn(

@@ -1,4 +1,4 @@
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 
 from . import _dataframe as sbd
 from . import _selectors
@@ -6,7 +6,7 @@ from ._join_utils import pick_column_names
 from ._utils import renaming_func
 
 
-class OnSubFrame(BaseEstimator):
+class OnSubFrame(TransformerMixin, BaseEstimator):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
@@ -127,6 +127,10 @@ class OnSubFrame(BaseEstimator):
         self.keep_original = keep_original
         self.rename_columns = rename_columns
 
+    def fit(self, X, y=None):
+        self.fit_transform(X, y)
+        return self
+
     def fit_transform(self, X, y=None):
         self.all_inputs_ = sbd.column_names(X)
         self._columns = _selectors.make_selector(self.cols).expand(X)
@@ -160,13 +164,12 @@ class OnSubFrame(BaseEstimator):
         self.used_inputs_ = self._columns
         self.created_outputs_ = self._transformed_output_names
         self.all_outputs_ = passthrough_names + self._transformed_output_names
-        self.feature_names_in_ = self.all_inputs_
         self.input_to_outputs_ = {c: self.created_outputs_ for c in self.used_inputs_}
-        return result
+        # for sklearn
+        self.feature_names_in_ = self.all_inputs_
+        self.n_features_in_ = len(self.all_inputs_)
 
-    def fit(self, X, y=None):
-        self.fit_transform(X, y)
-        return self
+        return result
 
     def transform(self, X):
         # do the selection even if self._columns is empty to raise if X doesn't
@@ -181,6 +184,8 @@ class OnSubFrame(BaseEstimator):
         transformed = self.transformer_.transform(to_transform)
         transformed = sbd.set_column_names(transformed, self._transformed_output_names)
         return sbd.concat_horizontal(passthrough, transformed)
+
+    # set_output api compatibility
 
     def get_feature_names_out(self):
         return self.all_outputs_
