@@ -1,3 +1,6 @@
+import reprlib
+from collections import UserDict
+
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
@@ -42,6 +45,27 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
 )
 DATETIME_TRANSFORMER = EncodeDatetime()
 NUMERIC_TRANSFORMER = PassThrough()
+
+
+class ShortReprDict(UserDict):
+    """A dict with a shorter repr.
+
+    Examples
+    --------
+    >>> d = {'one': 1, 'two': 2, 'three': 3, 'four': 4}
+    >>> d
+    {'one': 1, 'two': 2, 'three': 3, 'four': 4}
+    >>> from skrub._table_vectorizer import ShortReprDict
+    >>> ShortReprDict(d)
+    {'four': 4, 'one': 1, ...}
+    >>> _['two']
+    2
+    """
+
+    def __repr__(self):
+        r = reprlib.Repr()
+        r.maxdict = 2
+        return r.repr(dict(self))
 
 
 def _created_by(col, transformers):
@@ -204,24 +228,36 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     >>> vectorizer.output_to_input_['B_total_seconds']
     'B'
 
-    We can also see the final transformer that was applied to a given column:
+    We can also see the encoder, i.e. the main transformer that was applied to
+    a given column:
 
+    >>> vectorizer.transformers_['B']
+    EncodeDatetime()
     >>> vectorizer.transformers_['A']
     OneHotEncoder(drop='if_binary', dtype='float32', handle_unknown='ignore',
                   sparse_output=False)
     >>> vectorizer.transformers_['A'].categories_
     [array(['one', 'three', 'two'], dtype=object)]
 
-    Before applying that final transformer, the ``TableVectorizer`` applies
-    several preprocessing steps to all columns, for example to detect numbers
-    or dates that are represented as strings. We can inspect all the processing
-    steps that were applied to a given column:
+    Before applying that transformer, the ``TableVectorizer`` applies several
+    preprocessing steps to all columns, for example to detect numbers or dates
+    that are represented as strings. Moreover, a final post-processing step is
+    applied to all non-categorical columns in the encoder's output to cast them
+    to float32. We can inspect all the processing steps that were applied to a
+    given column:
 
     >>> vectorizer.input_to_processing_steps_['B']
-    [CleanNullStrings(), ToDatetime(), EncodeDatetime()]
+    [CleanNullStrings(), ToDatetime(), EncodeDatetime(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
-    >>> vectorizer.transformers_['B']
-    EncodeDatetime()
+    Note that as the encoder (``EncodeDatetime()`` above) produces multiple
+    columns, the last processing step is not described by a single transformer
+    like the previous ones but by a mapping from column name to transformer.
+
+    ``input_to_processing_steps_`` is useful to inspect the details of the
+    choices made by the ``TableVectorizerf`` during preprocessing, for example:
+
+    >>> vectorizer.input_to_processing_steps_['B'][1].datetime_format_
+    '%d/%m/%Y'
 
     We can also see the columns grouped by the kind of encoder that was applied
     to them.
@@ -264,7 +300,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
     When a column is used in one of the ``specific_transformers``, none of the
     preprocessing steps are applied and the specific transformer controls the
-    full transformation for that column.
+    full transformation for that column. The post-processing casting to float32
+    is not applied either.
 
     >>> df = pd.DataFrame(dict(A=['1.1', '2.2', 'N/A'], B=['1.1', '2.2', 'N/A']))
     >>> df
@@ -283,7 +320,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     2  NaN  N/A
 
     >>> vectorizer.input_to_processing_steps_
-    {'A': [CleanNullStrings(), ToFloat32(), PassThrough()], 'B': [PassThrough()]}
+    {'A': [CleanNullStrings(), ToFloat32(), PassThrough(), {'A': ToFloat32()}], 'B': [PassThrough()]}
 
     Here we can see that the final estimator for both columns is passthrough,
     but unlike ``'B'``, ``'A'`` went through the default preprocessing steps
@@ -504,10 +541,16 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
                 to_steps[col].append(transformer)
                 to_outputs[col] = step.input_to_outputs_[col]
                 self.transformers_[col] = transformer
+        for col, outputs in to_outputs.items():
+            post_proc = {
+                c: t
+                for c in outputs
+                if (t := self._output_steps[0].transformers_.get(c)) is not None
+            }
+            if post_proc:
+                to_steps[col].append(ShortReprDict(post_proc))
         self.input_to_outputs_ = to_outputs
         self.input_to_processing_steps_ = to_steps
-        # the final ToFloat32, if any, are also not included in
-        # input_to_processing_steps_
 
     def _store_column_kinds(self):
         self.column_kinds_ = {
