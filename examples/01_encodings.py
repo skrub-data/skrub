@@ -139,11 +139,11 @@ employees["date_first_hired"]
 # We can also see the list of steps that were relevant for a given column and
 # applied to it
 
-vectorizer.input_to_processing_steps_["date_first_hired"]
+vectorizer.all_processing_steps_["date_first_hired"]
 
 ###############################################################################
 
-vectorizer.input_to_processing_steps_["year_first_hired"]
+vectorizer.all_processing_steps_["year_first_hired"]
 
 ###############################################################################
 

@@ -94,19 +94,19 @@ def _check_transformer(transformer):
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
-    """Transform a dataframe to a numerical array.
+    """Transform a dataframe to a numerical (vectorized) representation.
 
     Applies a different transformation to each of several kinds of columns:
 
     - numeric:
-        Floats ints, and Booleans.
+        Floats, ints, and Booleans.
     - datetime:
         Datetimes and dates.
     - low_cardinality:
         String and categorical columns with a count of unique values smaller
         than a given threshold (40 by default). Category encoding schemes such
         as one-hot encoding, ordinal encoding etc. are typically appropriate
-        for low_cardinality columns.
+        for low-cardinality columns.
     - high_cardinality:
         String and categorical columns with many unique values, such as
         free-form text. Such columns have so many distinct values that it is
@@ -133,9 +133,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     appear in the output), or ``"passthrough"`` to leave them unchanged.
 
     Additionally, it is possible to specify transformers for specific columns,
-    overriding the categories described above. This is done by providing pairs
-    of (transformer, list_of_columns) as the ``specific_transformers``
-    parameter.
+    overriding the categorization described above. This is done by providing
+    pairs of ``(transformer, list_of_columns)`` as the
+    ``specific_transformers`` parameter.
+
+    .. note::
+
+        The ``specific_transformers`` parameter is likely to be removed in a
+        future version of ``skrub``, when better utilities for building complex
+        pipelines are introduced.
 
     Parameters
     ----------
@@ -175,23 +181,26 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
     Attributes
     ----------
-    pipeline_ : scikit-learn Pipeline
-        The TableVectorizer, under the hood, is just a scikit-learn pipeline.
-        This attribute exposes the fitted pipeline. It is also possible to
-        obtain an equivalent pipeline without fitting the TableVectorizer by
-        calling ``make_pipeline``, in order to chain the steps it implements
-        with the rest of a bigger pipeline rather than nesting them inside a
-        TableVectorizer step.
+    transformers_ : dict
+        Maps the name of each column to the main transformer (such as the
+        ``high_cardinality_transformer``, as opposed to the preprocessing
+        steps) that was fitted on it.
+    all_processing_steps_ : dict
+        Maps the name of each column to a list of all the processing steps that
+        were applied to it. Those steps may include some pre-processing
+        transformations such as converting strings to datetimes or numbers, the
+        main transformer, and casting the main transformer's output to float32.
     input_to_outputs_ : dict
         Maps the name of each column that was transformed by the
-        TableVectorizer to the names of the corresponding output columns. The
-        columns specified in the ``passthrough`` parameter are not included.
+        TableVectorizer to the names of the corresponding output columns.
     output_to_input_ : dict
         Maps the name of each output column to the name of the column in the
         input dataframe from which it was derived.
-    all_outputs_ :
-        The names of all output columns, including those that are passed
-        through unchanged.
+    feature_names_in_ : list of strings
+        The names of the input columns, after applying some cleaning (casting
+        all column names to strings and deduplication).
+    all_outputs_ : list of strings
+        The names of the output columns.
 
     Examples
     --------
@@ -208,6 +217,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     1    two  23/02/2024   N/A
     2    two  12/03/2024  12.2
     3  three  13/03/2024   N/A
+    >>> df.dtypes
+    A    object
+    B    object
+    C    object
+    dtype: object
 
     >>> vectorizer = TableVectorizer()
     >>> vectorizer.fit_transform(df)
@@ -239,31 +253,30 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     >>> vectorizer.transformers_['A'].categories_
     [array(['one', 'three', 'two'], dtype=object)]
 
-    Before applying that transformer, the ``TableVectorizer`` applies several
-    preprocessing steps to all columns, for example to detect numbers or dates
-    that are represented as strings. Moreover, a final post-processing step is
-    applied to all non-categorical columns in the encoder's output to cast them
-    to float32. We can inspect all the processing steps that were applied to a
-    given column:
+    We can see the columns grouped by the kind of encoder that was applied
+    to them.
 
-    >>> vectorizer.input_to_processing_steps_['B']
+    >>> vectorizer.column_kinds_
+    {'numeric': ['C'], 'datetime': ['B'], 'low_cardinality': ['A'], 'high_cardinality': [], 'specific': []}
+
+    Before applying the main transformer, the ``TableVectorizer`` applies
+    several preprocessing steps, for example to detect numbers or dates that are
+    represented as strings. Moreover, a final post-processing step is applied to
+    all non-categorical columns in the encoder's output to cast them to float32.
+    We can inspect all the processing steps that were applied to a given column:
+
+    >>> vectorizer.all_processing_steps_['B']
     [CleanNullStrings(), ToDatetime(), EncodeDatetime(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
     Note that as the encoder (``EncodeDatetime()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
     like the previous ones but by a mapping from column name to transformer.
 
-    ``input_to_processing_steps_`` is useful to inspect the details of the
-    choices made by the ``TableVectorizerf`` during preprocessing, for example:
+    ``all_processing_steps_`` is useful to inspect the details of the
+    choices made by the ``TableVectorizer`` during preprocessing, for example:
 
-    >>> vectorizer.input_to_processing_steps_['B'][1].datetime_format_
+    >>> vectorizer.all_processing_steps_['B'][1].datetime_format_
     '%d/%m/%Y'
-
-    We can also see the columns grouped by the kind of encoder that was applied
-    to them.
-
-    >>> vectorizer.column_kinds_
-    {'numeric': ['C'], 'datetime': ['B'], 'low_cardinality': ['A'], 'high_cardinality': [], 'specific': []}
 
     **Transformers are applied separately to each column**
 
@@ -271,8 +284,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     transformer is applied to each column; multivariate transformers are not
     allowed.
 
-    >>> df = pd.DataFrame(dict(A=['one', 'two'], B=['three', 'four']))
-    >>> vectorizer = TableVectorizer().fit(df)
+    >>> df_1 = pd.DataFrame(dict(A=['one', 'two'], B=['three', 'four']))
+    >>> vectorizer = TableVectorizer().fit(df_1)
     >>> vectorizer.transformers_['A'] is not vectorizer.transformers_['B']
     True
     >>> vectorizer.transformers_['A'].categories_
@@ -282,51 +295,53 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
     **Overriding the transformer for specific columns**
 
-    We can also provide transformers for specific columns
+    We can also provide transformers for specific columns. In that case the
+    provided transformer has full control over the associated columns; no other
+    processing is applied to those columns. A column cannot appear twice in the
+    ``specific_transformers``.
 
-    >>> from sklearn.preprocessing import OneHotEncoder
-    >>> ohe = OneHotEncoder(sparse_output=False)
+    .. note::
+
+        This functionality is likely to be removed in a future version of the
+        ``TableVectorizer``.
+
+    The overrides are provided as a list of pairs:
+    ``(transformer, list_of_column_names)``.
+
+    >>> from sklearn.preprocessing import OrdinalEncoder
     >>> vectorizer = TableVectorizer(
-    ...     specific_transformers=[('drop', ['A']), (ohe, ['B'])]
+    ...     specific_transformers=[('drop', ['A']), (OrdinalEncoder(), ['B'])]
     ... )
+    >>> df
+           A           B     C
+    0    one  02/02/2024   1.5
+    1    two  23/02/2024   N/A
+    2    two  12/03/2024  12.2
+    3  three  13/03/2024   N/A
     >>> vectorizer.fit_transform(df)
-       B_four  B_three
-    0     0.0      1.0
-    1     1.0      0.0
+         B     C
+    0  0.0   1.5
+    1  3.0   NaN
+    2  1.0  12.2
+    3  2.0   NaN
 
     Here the column 'A' has been dropped and the column 'B' has been passed to
-    the ``OneHotEncoder`` (without any preprocessing such as converting it to
-    numbers as was done in the first example).
+    the ``OrdinalEncoder`` (instead of the default choice which would have been
+    ``DatetimeEncoder``).
 
-    When a column is used in one of the ``specific_transformers``, none of the
-    preprocessing steps are applied and the specific transformer controls the
-    full transformation for that column. The post-processing casting to float32
-    is not applied either.
+    We can see that 'A' and 'B' are now treated as 'specific' columns:
 
-    >>> df = pd.DataFrame(dict(A=['1.1', '2.2', 'N/A'], B=['1.1', '2.2', 'N/A']))
-    >>> df
-         A    B
-    0  1.1  1.1
-    1  2.2  2.2
-    2  N/A  N/A
-    >>> vectorizer = TableVectorizer(
-    ...     numeric_transformer='passthrough',
-    ...     specific_transformers=[('passthrough', ['B'])],
-    ... )
-    >>> vectorizer.fit_transform(df)
-         A    B
-    0  1.1  1.1
-    1  2.2  2.2
-    2  NaN  N/A
+    >>> vectorizer.column_kinds_
+    {'numeric': ['C'], 'datetime': [], 'low_cardinality': [], 'high_cardinality': [], 'specific': ['A', 'B']}
 
-    >>> vectorizer.input_to_processing_steps_
-    {'A': [CleanNullStrings(), ToFloat32(), PassThrough(), {'A': ToFloat32()}], 'B': [PassThrough()]}
+    Preprocessing and postprocessing steps are not applied to columns appearing
+    in ``specific_columns``. For example 'B' has not gone through
+    ``ToDatetime()``:
 
-    Here we can see that the final estimator for both columns is passthrough,
-    but unlike ``'B'``, ``'A'`` went through the default preprocessing steps
-    and was converted to a numeric column.
+    >>> vectorizer.all_processing_steps_
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
 
-    Specifying several specific transformers for the same column is not allowed.
+    Specifying several ``specific_transformers`` for the same column is not allowed.
 
     >>> vectorizer = TableVectorizer(
     ...     specific_transformers=[('passthrough', ['A', 'B']), ('drop', ['A'])]
@@ -430,15 +445,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         for specific_transformer, specific_cols in self.specific_transformers:
             add_step(self._specific_transformers, specific_transformer, specific_cols)
 
-        self._output_steps = []
+        self._postprocessors = []
         add_step(
-            self._output_steps, ToFloat32(), ~created_by(*self._specific_transformers)
+            self._postprocessors, ToFloat32(), ~created_by(*self._specific_transformers)
         )
         self._pipeline = make_pipeline(
             *self._preprocessors,
             *self._encoders,
             *self._specific_transformers,
-            *self._output_steps,
+            *self._postprocessors,
         )
 
     def fit_transform(self, X, y=None):
@@ -463,7 +478,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         output = self._pipeline.fit_transform(X)
         self.feature_names_in_ = self._preprocessors[0].feature_names_out_
         self.all_outputs_ = sbd.column_names(output)
-        self._store_input_transformations()
+        self._store_processing_steps()
         self._store_column_kinds()
         self._store_output_to_input()
         return output
@@ -527,12 +542,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         check_is_fitted(self, "all_outputs_")
         return np.asarray(self.all_outputs_)
 
-    def _store_input_transformations(self):
+    def _store_processing_steps(self):
         input_names = self._preprocessors[0].feature_names_out_
         to_outputs = {col: [col] for col in input_names}
         to_steps = {col: [] for col in input_names}
         self.transformers_ = {}
-        # [1:] because CheckInputDataFrame not included in input_to_processing_steps_
+        # [1:] because CheckInputDataFrame not included in all_processing_steps_
         for step in self._preprocessors[1:]:
             for col, transformer in step.transformers_.items():
                 to_steps[col].append(transformer)
@@ -545,12 +560,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             post_proc = {
                 c: t
                 for c in outputs
-                if (t := self._output_steps[0].transformers_.get(c)) is not None
+                if (t := self._postprocessors[0].transformers_.get(c)) is not None
             }
             if post_proc:
                 to_steps[col].append(ShortReprDict(post_proc))
         self.input_to_outputs_ = to_outputs
-        self.input_to_processing_steps_ = to_steps
+        self.all_processing_steps_ = to_steps
 
     def _store_column_kinds(self):
         self.column_kinds_ = {
