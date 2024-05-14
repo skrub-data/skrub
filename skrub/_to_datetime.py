@@ -403,9 +403,9 @@ def to_datetime(df, format=None):
 @to_datetime.specialize("pandas", argument_type="DataFrame")
 @to_datetime.specialize("polars", argument_type="DataFrame")
 def _to_datetime_dataframe(df, format=None):
-    return wrap_transformer(ToDatetime(datetime_format=format), s.all()).fit_transform(
-        df
-    )
+    return wrap_transformer(
+        ToDatetime(datetime_format=format), s.all(), allow_reject=True
+    ).fit_transform(df)
 
 
 @to_datetime.specialize("pandas", argument_type="Column")

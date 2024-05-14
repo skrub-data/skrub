@@ -250,14 +250,16 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         """
         steps = [CheckInputDataFrame()]
         if self.parse_string_columns:
-            self._to_datetime = wrap_transformer(ToDatetime(), s.all())
+            self._to_datetime = wrap_transformer(
+                ToDatetime(), s.all(), allow_reject=True
+            )
             steps.append(self._to_datetime)
         column_encoder = EncodeDatetime(
             resolution=self.resolution,
             add_day_of_the_week=self.add_day_of_the_week,
             add_total_seconds=self.add_total_seconds,
         )
-        self._encoder = wrap_transformer(column_encoder, s.all())
+        self._encoder = wrap_transformer(column_encoder, s.any_date())
         steps.append(self._encoder)
         self.pipeline_ = make_pipeline(*steps)
         output = self.pipeline_.fit_transform(X)

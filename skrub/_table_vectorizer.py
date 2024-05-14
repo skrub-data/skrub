@@ -396,11 +396,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         return self
 
     def _make_pipeline(self):
-        def add_step(steps, transformer, cols):
+        def add_step(steps, transformer, cols, allow_reject=False):
             steps.append(
                 wrap_transformer(
                     _check_transformer(transformer),
                     cols,
+                    allow_reject=allow_reject,
                     n_jobs=self.n_jobs,
                     columnwise=True,
                 )
@@ -417,7 +418,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             CleanCategories(),
             ToStr(),
         ]:
-            add_step(self._preprocessors, transformer, cols)
+            add_step(self._preprocessors, transformer, cols, allow_reject=True)
 
         self._encoders = []
         self._named_encoders = {}
@@ -442,7 +443,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
 
         self._postprocessors = []
         add_step(
-            self._postprocessors, ToFloat32(), ~created_by(*self._specific_transformers)
+            self._postprocessors,
+            ToFloat32(),
+            s.all() - created_by(*self._specific_transformers) - s.categorical(),
+            allow_reject=True,
         )
         self._pipeline = make_pipeline(
             *self._preprocessors,

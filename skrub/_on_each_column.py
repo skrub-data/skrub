@@ -9,7 +9,7 @@ from ._join_utils import pick_column_names
 from ._utils import renaming_func
 
 
-class RejectColumn(Exception):
+class RejectColumn(ValueError):
     """Used by single-column transformers to indicate they do not apply to a column.
 
     >>> import pandas as pd
@@ -58,8 +58,11 @@ class OnEachColumn(BaseEstimator):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.
-    Moreover, If the transformers' ``fit_transform`` raises a ``RejectColumn``
-    exception for a particular column, that column is passed through unchanged.
+    Moreover, if ``allow_reject`` is ``True`` and the transformers'
+    ``fit_transform`` raises a ``RejectColumn`` exception for a particular
+    column, that column is passed through unchanged. If ``allow_reject`` is
+    ``False``, ``RejectColumn`` exceptions are propagated, like other errors
+    raised by the transformer.
 
     Parameters
     ----------
@@ -81,6 +84,27 @@ class OnEachColumn(BaseEstimator):
         will be passed through unchanged, without attempting to call
         ``fit_transform`` on them. The default is to attempt transforming all
         columns.
+
+    allow_reject : bool, default=False
+        Whether the transformer is allowed to reject a column by raising a
+        ``RejectColumn`` exception. If ``True``, rejected columns will be
+        passed through unchanged by ``OnEachColumn`` and will not appear in
+        attributes such as ``transformers_``, ``used_inputs_``, etc. If
+        ``False``, column rejections are considered as errors and
+        ``RejectColumn`` exceptions are propagated.
+
+    keep_original : bool, default=False
+        If ``True``, the original columns are preserved in the output. If the
+        transformer produces a column with the same name, it is rename so that
+        both columns can appear in the output. If ``False``, when the
+        transformer accepts a column, only the transformer's output is included
+        in the result, not the original column. In all cases rejected columns
+        (or columns not selected by ``cols``) are passed through.
+
+    rename_columns : str, default='{}'
+        Format strings applied to all ouput column names. For example pass
+        ``'transformed_{}'`` to prepend ``'transformed_'`` to all output column
+        names. The default value does not modify the names.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -147,6 +171,8 @@ class OnEachColumn(BaseEstimator):
     >>> scaling.used_inputs_
     ['A', 'B']
 
+    **Rejected columns**
+
     The transformer can raise ``RejectColumn`` to indicate it cannot handle a
     given column.
 
@@ -166,11 +192,33 @@ class OnEachColumn(BaseEstimator):
     Traceback (most recent call last):
         ...
     skrub._on_each_column.RejectColumn: Could not find a datetime format for column 'city'.
+
+    How these rejections are handled depends on the ``allow_reject`` parameter.
+    By default, no special handling is performed and rejections are considered
+    to be errors:
+
     >>> to_datetime = OnEachColumn(ToDatetime())
+    >>> to_datetime.fit_transform(df)
+    Traceback (most recent call last):
+        ...
+    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
+
+    However, setting ``allow_reject=True`` gives the transformer itself some
+    control over which columns it should be applied to. For example, whether a
+    string column contains dates is only known once we try to parse them.
+    Therefore it might be sensible to try to parse all string columns but allow
+    the transformer to reject those that, upon inspection, do not contain dates.
+
+    >>> to_datetime = OnEachColumn(ToDatetime(), allow_reject=True)
     >>> transformed = to_datetime.fit_transform(df)
     >>> transformed
         birthday    city
     0 2024-01-29  London
+
+    Now the column 'city' was rejected but this was not treated as an error;
+    'city' was passed through unchanged and only 'birthday' was converted to a
+    datetime column.
+
     >>> transformed.dtypes
     birthday    datetime64[ns]
     city                object
@@ -183,12 +231,14 @@ class OnEachColumn(BaseEstimator):
         self,
         transformer,
         cols=_selectors.all(),
+        allow_reject=False,
         keep_original=False,
         rename_columns="{}",
         n_jobs=None,
     ):
         self.transformer = transformer
         self.cols = cols
+        self.allow_reject = allow_reject
         self.keep_original = keep_original
         self.rename_columns = rename_columns
         self.n_jobs = n_jobs
@@ -209,6 +259,7 @@ class OnEachColumn(BaseEstimator):
                 sbd.col(X, col_name),
                 self._columns,
                 self.transformer,
+                self.allow_reject,
             )
             for col_name in all_columns
         )
@@ -275,7 +326,7 @@ def _prepare_transformer_input(transformer, column):
     return sbd.make_dataframe_like(column, [column])
 
 
-def _fit_transform_column(column, columns_to_handle, transformer):
+def _fit_transform_column(column, columns_to_handle, transformer, allow_reject):
     col_name = sbd.name(column)
     if col_name not in columns_to_handle:
         return col_name, [column], None
@@ -284,9 +335,10 @@ def _fit_transform_column(column, columns_to_handle, transformer):
         df_module_name = sbd.dataframe_module_name(column)
         transformer.set_output(transform=df_module_name)
     transformer_input = _prepare_transformer_input(transformer, column)
+    allowed = (RejectColumn,) if allow_reject else ()
     try:
         output = transformer.fit_transform(transformer_input)
-    except RejectColumn:
+    except allowed:
         return col_name, [column], None
     except Exception as e:
         raise ValueError(

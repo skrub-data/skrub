@@ -6,6 +6,7 @@ from ._selectors import make_selector
 def wrap_transformer(
     transformer,
     selector,
+    allow_reject=False,
     keep_original=False,
     rename_columns="{}",
     n_jobs=None,
@@ -19,14 +20,15 @@ def wrap_transformer(
     if columnwise:
         return OnEachColumn(
             transformer,
+            cols=selector,
+            allow_reject=allow_reject,
             keep_original=keep_original,
             rename_columns=rename_columns,
-            cols=selector,
             n_jobs=n_jobs,
         )
     return OnSubFrame(
         transformer,
+        cols=selector,
         keep_original=keep_original,
         rename_columns=rename_columns,
-        cols=selector,
     )
