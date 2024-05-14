@@ -255,7 +255,7 @@ class OnEachColumn(BaseEstimator):
     to avoid the name clash.
 
     >>> scaling = OnEachColumn(StandardScaler(), keep_original=True)
-    >>> scaling.fit_transform(df)
+    >>> scaling.fit_transform(df)                                    # doctest: +SKIP
           A  A__skrub_89725c56__      B  B__skrub_81cc7d00__
     0 -10.0                 -1.0    0.0                 -1.0
     1  10.0                  1.0  100.0                  1.0
