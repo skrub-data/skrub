@@ -1,4 +1,4 @@
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import BaseEstimator, clone
 
 from . import _dataframe as sbd
 from . import _selectors
@@ -6,7 +6,7 @@ from ._join_utils import pick_column_names
 from ._utils import renaming_func
 
 
-class OnSubFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class OnSubFrame(BaseEstimator):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
@@ -25,6 +25,20 @@ class OnSubFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         The columns to attempt to transform. Columns outside of this selection
         will be passed through unchanged, without calling ``fit_transform`` on
         them. The default is transform all columns.
+
+    keep_original : bool, default=False
+        If ``True``, the original columns are preserved in the output. If the
+        transformer produces a column with the same name, the transformation
+        result is renamed so that both columns can appear in the output. If
+        ``False``, only the transformer's output is included in the result, not
+        the original columns. In all cases columns not selected by ``cols`` are
+        passed through.
+
+    rename_columns : str, default='{}'
+        Format strings applied to all transformation ouput column names. For
+        example pass ``'transformed_{}'`` to prepend ``'transformed_'`` to all
+        output column names. The default value does not modify the names.
+        Renaming is not applied to columns not selected by ``cols``.
 
     Attributes
     ----------
@@ -79,6 +93,26 @@ class OnSubFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     ['pca0', 'pca1']
     >>> pca.transformer_
     PCA(n_components=2)
+
+    It is possible to rename the output columns.
+
+    >>> pca = OnSubFrame(PCA(n_components=2), cols=["a", "b"], rename_columns='my_tag-{}')
+    >>> pca.fit_transform(df).round(2)
+           c       d  my_tag-pca0  my_tag-pca1
+    0    0.0     0.0        -2.52         0.67
+    1    0.0     0.0         7.50         0.00
+    2  100.0     0.0        -2.49        -0.33
+    3    0.0  1000.0        -2.49        -0.33
+
+    We can also force preserving the original columns in the output.
+
+    >>> pca = OnSubFrame(PCA(n_components=2), cols=["a", "b"], keep_original=True)
+    >>> pca.fit_transform(df).round(2)
+         a     b      c       d  pca0  pca1
+    0  1.0   0.0    0.0     0.0 -2.52  0.67
+    1  0.0  10.0    0.0     0.0  7.50  0.00
+    2  0.0   0.0  100.0     0.0 -2.49 -0.33
+    3  0.0   0.0    0.0  1000.0 -2.49 -0.33
     """
 
     def __init__(

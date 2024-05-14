@@ -95,16 +95,18 @@ class OnEachColumn(BaseEstimator):
 
     keep_original : bool, default=False
         If ``True``, the original columns are preserved in the output. If the
-        transformer produces a column with the same name, it is rename so that
-        both columns can appear in the output. If ``False``, when the
-        transformer accepts a column, only the transformer's output is included
-        in the result, not the original column. In all cases rejected columns
-        (or columns not selected by ``cols``) are passed through.
+        transformer produces a column with the same name, the transformation
+        result is renamed so that both columns can appear in the output. If
+        ``False``, when the transformer accepts a column, only the
+        transformer's output is included in the result, not the original
+        column. In all cases rejected columns (or columns not selected by
+        ``cols``) are passed through.
 
     rename_columns : str, default='{}'
-        Format strings applied to all ouput column names. For example pass
-        ``'transformed_{}'`` to prepend ``'transformed_'`` to all output column
-        names. The default value does not modify the names.
+        Format strings applied to all transformation ouput column names. For
+        example pass ``'transformed_{}'`` to prepend ``'transformed_'`` to all
+        output column names. The default value does not modify the names.
+        Renaming is not applied to columns not selected by ``cols``.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -225,6 +227,48 @@ class OnEachColumn(BaseEstimator):
     dtype: object
     >>> to_datetime.transformers_
     {'birthday': ToDatetime()}
+
+    **Renaming outputs & keeping the original columns**
+
+    The ``rename_columns`` parameter allows renaming output columns.
+
+    >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[0., 100.]))
+    >>> scaling = OnEachColumn(StandardScaler(), rename_columns='{}_scaled')
+    >>> scaling.fit_transform(df)
+       A_scaled  B_scaled
+    0      -1.0      -1.0
+    1       1.0       1.0
+
+    The renaming is only applied to columns selected by ``cols`` (and not
+    rejected by the transformer when ``allow_reject`` is ``True``).
+
+    >>> scaling = OnEachColumn(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
+    >>> scaling.fit_transform(df)
+       A_scaled      B
+    0      -1.0    0.0
+    1       1.0  100.0
+
+    ``rename_columns`` can be particularly useful when ``keep_original`` is
+    ``True``. When a column is transformed, we can tell ``OnEachColumn`` to
+    retain the original, untransfromed column in the output. If the transformer
+    produces a column with the same name, the transformation result is renamed
+    to avoid the name clash.
+
+    >>> scaling = OnEachColumn(StandardScaler(), keep_original=True)
+    >>> scaling.fit_transform(df)
+          A  A__skrub_89725c56__      B  B__skrub_81cc7d00__
+    0 -10.0                 -1.0    0.0                 -1.0
+    1  10.0                  1.0  100.0                  1.0
+
+    In this case we may want to set a more sensible name for the transformer's output:
+
+    >>> scaling = OnEachColumn(
+    ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
+    ... )
+    >>> scaling.fit_transform(df)
+          A  A_scaled      B  B_scaled
+    0 -10.0      -1.0    0.0      -1.0
+    1  10.0       1.0  100.0       1.0
     """
 
     def __init__(
