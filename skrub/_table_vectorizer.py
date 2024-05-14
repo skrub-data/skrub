@@ -88,7 +88,7 @@ def _check_transformer(transformer):
     return clone(transformer)
 
 
-class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numerical (vectorized) representation.
 
     Applies a different transformation to each of several kinds of columns:
@@ -128,8 +128,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     appear in the output), or ``"passthrough"`` to leave them unchanged.
 
     Additionally, it is possible to specify transformers for specific columns,
-    overriding the categorization described above. This is done by providing
-    pairs of ``(transformer, list_of_columns)`` as the
+    overriding the categorization described above. This is done by providing a
+    list of pairs ``(transformer, list_of_columns)`` as the
     ``specific_transformers`` parameter.
 
     .. note::
@@ -154,12 +154,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         ``GapEncoder`` with 30 components (30 output columns for each input).
 
     numeric_transformer : transformer, "passthrough" or "drop", optional
-        The transformer for ``numeric`` columns. The default simply casts
-        numerical columns to ``Float32``.
+        The transformer for ``numeric`` columns. The default is passthrough.
 
     datetime_transformer : transformer, "passthrough" or "drop", optional
-        The transformer for ``datetime`` columns. The default is a
-        ``DatetimeEncoder``.
+        The transformer for ``datetime`` columns. The default is
+        ``EncodeDatetime``, which extracts features such as year, month, etc.
 
     specific_transformers : list of (transformer, list of column names) pairs, optional
         Override the categories above for the given columns and force using the
@@ -270,7 +269,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
     ``all_processing_steps_`` is useful to inspect the details of the
     choices made by the ``TableVectorizer`` during preprocessing, for example:
 
-    >>> vectorizer.all_processing_steps_['B'][1].datetime_format_
+    >>> vectorizer.all_processing_steps_['B'][1]
+    ToDatetime()
+    >>> _.datetime_format_
     '%d/%m/%Y'
 
     **Transformers are applied separately to each column**
@@ -392,8 +393,71 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
         self : TableVectorizer
             This estimator.
         """
-        self.fit_transform(X)
+        self.fit_transform(X, y=y)
         return self
+
+    def fit_transform(self, X, y=None):
+        """Fit transformer and transform dataframe.
+
+        Parameters
+        ----------
+        X : dataframe
+            Input data to transform.
+
+        y : any type, default=None
+            This parameter exists for compatibility with the scikit-learn API
+            and is ignored.
+
+        Returns
+        -------
+        dataframe
+            The transformed input.
+        """
+        self._check_specific_columns()
+        self._make_pipeline()
+        output = self._pipeline.fit_transform(X, y=y)
+        self.feature_names_in_ = self._preprocessors[0].feature_names_out_
+        self.all_outputs_ = sbd.column_names(output)
+        self._store_processing_steps()
+        self._store_column_kinds()
+        self._store_output_to_input()
+        return output
+
+    def transform(self, X):
+        """Transform dataframe.
+
+        Parameters
+        ----------
+        X : dataframe
+            Input data to transform.
+
+        Returns
+        -------
+        dataframe
+            The transformed input.
+        """
+        return self._pipeline.transform(X)
+
+    def _check_specific_columns(self):
+        specific_columns = {}
+        for i, config in enumerate(self.specific_transformers):
+            try:
+                _, cols = config
+            except (ValueError, TypeError):
+                raise ValueError(
+                    "Expected a list of (transformer, columns) pairs. "
+                    f"Got {config!r} at index {i}."
+                )
+            for c in cols:
+                if not isinstance(c, str):
+                    raise ValueError(f"cols must be string names, got {c}")
+                if c in specific_columns:
+                    raise ValueError(
+                        f"Column {c!r} used twice in in specific_transformers, "
+                        f"at indices {specific_columns[c]} and {i}."
+                    )
+            specific_columns |= {c: i for c in cols}
+        self._specific_columns = list(specific_columns.keys())
 
     def _make_pipeline(self):
         def add_step(steps, transformer, cols, allow_reject=False):
@@ -455,92 +519,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             *self._postprocessors,
         )
 
-    def fit_transform(self, X, y=None):
-        """Fit transformer and transform dataframe.
-
-        Parameters
-        ----------
-        X : dataframe
-            Input data to transform.
-
-        y : any type, default=None
-            This parameter exists for compatibility with the scikit-learn API
-            and is ignored.
-
-        Returns
-        -------
-        dataframe
-            The transformed input.
-        """
-        self._check_specific_columns()
-        self._make_pipeline()
-        output = self._pipeline.fit_transform(X)
-        self.feature_names_in_ = self._preprocessors[0].feature_names_out_
-        self.all_outputs_ = sbd.column_names(output)
-        self._store_processing_steps()
-        self._store_column_kinds()
-        self._store_output_to_input()
-        return output
-
-    def _check_specific_columns(self):
-        specific_columns = {}
-        for i, config in enumerate(self.specific_transformers):
-            try:
-                _, cols = config
-            except (ValueError, TypeError):
-                raise ValueError(
-                    "Expected a list of (transformer, columns) pairs. "
-                    f"Got {config!r} at index {i}."
-                )
-            for c in cols:
-                if not isinstance(c, str):
-                    raise ValueError(f"cols must be string names, got {c}")
-                if c in specific_columns:
-                    raise ValueError(
-                        f"Column {c!r} used twice in in specific_transformers, "
-                        f"at indices {specific_columns[c]} and {i}."
-                    )
-            specific_columns |= {c: i for c in cols}
-        self._specific_columns = list(specific_columns.keys())
-
-    def transform(self, X):
-        """Transform dataframe.
-
-        Parameters
-        ----------
-        X : dataframe
-            Input data to transform.
-
-        Returns
-        -------
-        dataframe
-            The transformed input.
-        """
-        return self._pipeline.transform(X)
-
-    def _more_tags(self) -> dict:
-        """
-        Used internally by sklearn to ease the estimator checks.
-        """
-        return {
-            "X_types": ["2darray", "string"],
-            "allow_nan": [True],
-            "_xfail_checks": {
-                "check_complex_data": "Passthrough complex columns as-is.",
-            },
-        }
-
-    def get_feature_names_out(self):
-        """Return the column names of the output of ``transform`` as a list of strings.
-
-        Returns
-        -------
-        list of strings
-            The column names.
-        """
-        check_is_fitted(self, "all_outputs_")
-        return np.asarray(self.all_outputs_)
-
     def _store_processing_steps(self):
         input_names = self._preprocessors[0].feature_names_out_
         to_outputs = {col: [col] for col in input_names}
@@ -578,3 +556,28 @@ class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=())
             for (input_, outputs) in self.input_to_outputs_.items()
             for out in outputs
         }
+
+    # scikt-learn compatibility
+
+    def _more_tags(self) -> dict:
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {
+            "X_types": ["2darray", "string"],
+            "allow_nan": [True],
+            "_xfail_checks": {
+                "check_complex_data": "Passthrough complex columns as-is.",
+            },
+        }
+
+    def get_feature_names_out(self):
+        """Return the column names of the output of ``transform`` as a list of strings.
+
+        Returns
+        -------
+        list of strings
+            The column names.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return np.asarray(self.all_outputs_)
