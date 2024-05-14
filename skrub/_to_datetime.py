@@ -1,10 +1,8 @@
-from sklearn.base import BaseEstimator
-
 from . import _dataframe as sbd
 from . import _datetime_utils
 from . import _selectors as s
 from ._dispatch import dispatch
-from ._exceptions import RejectColumn
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._wrap_transformer import wrap_transformer
 
 _SAMPLE_SIZE = 1000
@@ -65,7 +63,7 @@ def _convert_time_zone_polars(col, time_zone):
             return col.dt.replace_time_zone("UTC").dt.convert_time_zone(time_zone)
 
 
-class ToDatetime(BaseEstimator):
+class ToDatetime(SingleColumnTransformer):
     """
     Parse datetimes represented as strings and return ``Datetime`` columns.
 
@@ -318,8 +316,6 @@ class ToDatetime(BaseEstimator):
     constructor.
     """
 
-    __single_column_transformer__ = True
-
     def __init__(self, datetime_format=None):
         self.datetime_format = datetime_format
 
@@ -368,10 +364,6 @@ class ToDatetime(BaseEstimator):
         column = sbd.to_datetime(column, format=self.datetime_format_, strict=False)
         column = _convert_time_zone(column, self.output_time_zone_)
         return sbd.cast(column, self.output_dtype_)
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self
 
 
 @dispatch

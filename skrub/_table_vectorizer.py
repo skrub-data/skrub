@@ -15,6 +15,7 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import EncodeDatetime
 from ._gap_encoder import GapEncoder
+from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
@@ -22,18 +23,12 @@ from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
 
-class PassThrough(BaseEstimator):
-    __single_column_transformer__ = True
-
+class PassThrough(SingleColumnTransformer):
     def fit_transform(self, column):
         return column
 
     def transform(self, column):
         return column
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self
 
 
 HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)

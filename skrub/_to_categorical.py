@@ -1,10 +1,8 @@
-from sklearn.base import BaseEstimator
-
 from . import _dataframe as sbd
-from ._exceptions import RejectColumn
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 
 
-class ToCategorical(BaseEstimator):
+class ToCategorical(SingleColumnTransformer):
     """
     Convert a string column to Categorical dtype.
 
@@ -111,8 +109,6 @@ class ToCategorical(BaseEstimator):
     ]
     """
 
-    __single_column_transformer__ = True
-
     def fit_transform(self, column):
         if not sbd.is_string(column):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
@@ -120,7 +116,3 @@ class ToCategorical(BaseEstimator):
 
     def transform(self, column):
         return sbd.to_categorical(column)
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self

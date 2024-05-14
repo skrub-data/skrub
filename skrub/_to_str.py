@@ -1,10 +1,8 @@
-from sklearn.base import BaseEstimator
-
 from . import _dataframe as sbd
-from ._exceptions import RejectColumn
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 
 
-class ToStr(BaseEstimator):
+class ToStr(SingleColumnTransformer):
     """
     Convert a column to strings.
 
@@ -193,8 +191,6 @@ class ToStr(BaseEstimator):
     skrub._exceptions.RejectColumn: Refusing to convert 's' with dtype 'Date' to strings.
     """
 
-    __single_column_transformer__ = True
-
     def fit_transform(self, column):
         if (
             sbd.is_numeric(column)
@@ -209,7 +205,3 @@ class ToStr(BaseEstimator):
 
     def transform(self, column):
         return sbd.to_string(column)
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self

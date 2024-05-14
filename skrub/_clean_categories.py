@@ -1,9 +1,8 @@
 import numpy as np
-from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
 from ._dispatch import dispatch
-from ._exceptions import RejectColumn
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 
 
 @dispatch
@@ -34,7 +33,7 @@ def _with_string_categories_polars(column):
     return column
 
 
-class CleanCategories(BaseEstimator):
+class CleanCategories(SingleColumnTransformer):
     """
     Preprocess a categorical column.
 
@@ -190,8 +189,6 @@ class CleanCategories(BaseEstimator):
     True
     """
 
-    __single_column_transformer__ = True
-
     def fit_transform(self, column):
         if not sbd.is_categorical(column):
             raise RejectColumn(f"Column {sbd.name(column)!r} is not categorical.")
@@ -199,7 +196,3 @@ class CleanCategories(BaseEstimator):
 
     def transform(self, column):
         return _with_string_categories(sbd.to_categorical(column))
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self

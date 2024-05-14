@@ -16,7 +16,7 @@ from . import _dataframe as sbd
 from . import _selectors as s
 from ._check_input import CheckInputDataFrame
 from ._dispatch import dispatch
-from ._exceptions import RejectColumn
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._to_datetime import ToDatetime
 from ._wrap_transformer import wrap_transformer
 
@@ -75,9 +75,7 @@ def _get_dt_feature_polars(column, feature):
     return getattr(column.dt, feature)()
 
 
-class EncodeDatetime(BaseEstimator):
-    __single_column_transformer__ = True
-
+class EncodeDatetime(SingleColumnTransformer):
     def __init__(
         self, resolution="hour", add_day_of_the_week=False, add_total_seconds=True
     ):
@@ -119,10 +117,6 @@ class EncodeDatetime(BaseEstimator):
             extracted = sbd.to_float32(extracted)
             all_extracted.append(extracted)
         return all_extracted
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self
 
 
 class DatetimeEncoder(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):

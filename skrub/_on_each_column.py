@@ -1,16 +1,60 @@
 import itertools
 
 from joblib import Parallel, delayed
-from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.base import BaseEstimator, clone
 
 from . import _dataframe as sbd
 from . import _selectors
-from ._exceptions import RejectColumn
 from ._join_utils import pick_column_names
 from ._utils import renaming_func
 
 
-class OnEachColumn(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class RejectColumn(Exception):
+    """Used by single-column transformers to indicate they do not apply to a column.
+
+    >>> import pandas as pd
+    >>> from skrub._to_datetime import ToDatetime
+    >>> df = pd.DataFrame(dict(a=['2020-02-02'], b=[12.5]))
+    >>> ToDatetime().fit_transform(df['a'])
+    0   2020-02-02
+    Name: a, dtype: datetime64[ns]
+    >>> ToDatetime().fit_transform(df['b'])
+    Traceback (most recent call last):
+        ...
+    skrub._exceptions.RejectColumn: Column 'b' does not contain strings.
+    """
+
+    pass
+
+
+class SingleColumnTransformer(BaseEstimator):
+    """Base class for single-column transformers.
+
+    Such transformers are applied independently to each column by
+    ``OnEachColumn``; see the docstring of ``OnEachColumn`` for more
+    information.
+    """
+
+    __single_column_transformer__ = True
+
+    def fit_transform(self, column, y=None):
+        """Fit to a column and transform it."""
+        raise NotImplementedError()
+
+    def transform(self, column):
+        """Transform a column (must be fitted first)."""
+        raise NotImplementedError()
+
+    def fit(self, column):
+        """Fit the transformer.
+
+        Subclasses should implement ``fit_transform`` and ``transform``.
+        """
+        self.fit_transform(column)
+        return self
+
+
+class OnEachColumn(BaseEstimator):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.

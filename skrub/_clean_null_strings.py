@@ -1,8 +1,6 @@
-from sklearn.base import BaseEstimator
-
 from . import _dataframe as sbd
 from ._dispatch import dispatch
-from ._exceptions import RejectColumn
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 
 # Taken from pandas.io.parsers (version 1.1.4)
 STR_NA_VALUES = [
@@ -46,7 +44,7 @@ def _trim_whitespace_only_polars(column):
     return column.str.replace(r"^\s*$", "", literal=False)
 
 
-class CleanNullStrings(BaseEstimator):
+class CleanNullStrings(SingleColumnTransformer):
     """Replace strings used to represent missing values with actual null values.
 
     For pandas, columns with dtypes ``object`` and ``string`` are considered;
@@ -233,8 +231,6 @@ class CleanNullStrings(BaseEstimator):
     skrub._exceptions.RejectColumn: Column 's' does not contain strings.
     """
 
-    __single_column_transformer__ = True
-
     def fit_transform(self, column):
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
@@ -244,7 +240,3 @@ class CleanNullStrings(BaseEstimator):
         column = _trim_whitespace_only(column)
         column = sbd.replace(column, STR_NA_VALUES, sbd.null_value_for(column))
         return column
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self

@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
 from ._dispatch import dispatch
-from ._exceptions import RejectColumn
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 
 
 @dispatch
@@ -30,7 +29,7 @@ def _to_float32_polars(col, strict):
     return col.cast(pl.Float32, strict=strict)
 
 
-class ToFloat32(BaseEstimator):
+class ToFloat32(SingleColumnTransformer):
     """
     Convert a column to 32-bit floating-point numbers.
 
@@ -192,8 +191,6 @@ class ToFloat32(BaseEstimator):
     True
     """
 
-    __single_column_transformer__ = True
-
     def __init__(self, force_float32=True):
         self.force_float32 = force_float32
 
@@ -213,7 +210,3 @@ class ToFloat32(BaseEstimator):
 
     def transform(self, column):
         return _to_float32(column, strict=False)
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self

@@ -1,6 +1,7 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from ._dataframe._namespace import get_df_namespace
+from ._on_each_column import SingleColumnTransformer
 
 
 def _check_columns(df, columns):
@@ -181,15 +182,9 @@ class DropCols(TransformerMixin, BaseEstimator):
         return namespace.select(X, [c for c in X.columns if c not in cols])
 
 
-class Drop(BaseEstimator):
-    __single_column_transformer__ = True
-
+class Drop(SingleColumnTransformer):
     def fit_transform(self, column):
         return []
 
     def transform(self, column):
         return []
-
-    def fit(self, column):
-        self.fit_transform(column)
-        return self
