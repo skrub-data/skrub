@@ -157,8 +157,9 @@ employees["date_first_hired"]
 vectorizer.all_processing_steps_["date_first_hired"]
 
 ###############################################################################
+# These preprocessing steps depend on the column:
 
-vectorizer.all_processing_steps_["year_first_hired"]
+vectorizer.all_processing_steps_["department"]
 
 ###############################################################################
 
