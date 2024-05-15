@@ -39,38 +39,39 @@ We study the case of predicting wages using the
 # Easily encoding a dataframe
 # ---------------------------
 #
-# Let's first retrieve the dataset:
-# We denote *X*, the employees characteristics (our inputs aka features), and *y*,
-# the annual salary (our target column):
-
+# Let's first retrieve the dataset, using the one of the downloaders from the :mod:`skrub.datasets` module.
+# As all the downloaders, :func:`~skrub.datasets.fetch_employee_salaries` returns a dataset with attributes ``X``, and ``y``.
+# ``X`` is a dataframe which contains the features (aka design matrix, explanatory variables, independent variables).
+# ``y`` is a column (pandas Series) which contains the target (aka dependent, response variable) that we want to learn to predict from ``X``.
+# In this case ``y`` is the annual salary.
 
 from skrub.datasets import fetch_employee_salaries
-import pandas as pd
-
-pd.options.display.max_rows = 5
 
 dataset = fetch_employee_salaries()
 employees, salaries = dataset.X, dataset.y
 employees
 
 ###############################################################################
-# We observe diverse columns in the dataset:
-#   - binary (``'gender'``),
-#   - numerical (``'employee_annual_salary'``),
-#   - categorical (``'department'``, ``'department_name'``, ``'assignment_category'``),
-#   - datetime (``'date_first_hired'``)
-#   - dirty categorical (``'employee_position_title'``, ``'division'``).
+salaries
+
+###############################################################################
+# We observe diverse columns in the ``employees`` dataframe:
+#   - numeric (``'year_first_hired'``)
+#   - dates (``'date_first_hired'``)
+#   - low-cardinality categorical (``'gender'``, ``'department'``, ``'department_name'``, ``'assignment_category'``)
+#   - high-cardinality categorical (``'employee_position_title'``, ``'division'``).
 #
-# Most machine-learning algorithms work with arrays of numbers. Therefore our
-# complex, heterogeneous table needs to be processed to extract numerical
-# features.
-# We can do this easily using skrub's |TableVectorizer|
+# Most machine-learning algorithms work with arrays of numbers.
+# Therefore our complex, heterogeneous table needs to be processed to extract numeric features.
+# Transforming a complex real-world object such as a date into a vector of numeric features —more adequate for machine learning— is often called *vectorizing* it.
+#
+# We can do this easily using skrub's |TableVectorizer|.
 
 from skrub import TableVectorizer
 
 vectorizer = TableVectorizer()
-features = vectorizer.fit_transform(employees)
-features
+vectorized_employees = vectorizer.fit_transform(employees)
+vectorized_employees
 
 ###############################################################################
 # From our 8 columns, the |TableVectorizer| has extracted 143 numerical
@@ -79,65 +80,79 @@ features
 # ``gender_nan`` were created to encode the ``'gender'`` column.
 
 ###############################################################################
-# Before we explore the parameters of the |TableVectorizer| and the choices it
-# made, let us note that by performing apropriate transformations on our
-# complex data, it allows us to use our table for machine-learning:
+# By performing apropriate transformations on our complex data, the |TableVectorizer| produced numeric features that we can use for machine-learning:
 
 from sklearn.ensemble import HistGradientBoostingRegressor
 
-HistGradientBoostingRegressor().fit(features, salaries)
+HistGradientBoostingRegressor().fit(vectorized_employees, salaries)
 
 ###############################################################################
-# The |TableVectorizer| bridges the gap between tabular data and machine-learning
-# pipelines and allows us to apply a machine-learning estimator to our table
-# without manual data wrangling and feature extraction.
+# The |TableVectorizer| bridges the gap between tabular data and machine-learning pipelines.
+# It allows us to apply a machine-learning estimator to our dataframe without manual data wrangling and feature extraction.
 #
 
 ###############################################################################
 # Inspecting the TableVectorizer
 # ------------------------------
 #
-# The |TableVectorizer| distinguishes between 4 basic types of columns.
+# The |TableVectorizer| distinguishes between 4 basic kinds of columns (more may be added in the future).
 # For each kind, it applies a different transformation, which we can configure.
-# The types of columns and the default transformations for each of them are:
+# The kinds of columns and the default transformation for each of them are:
 #
-# - numeric columns: simply casting to float32
+# - numeric columns: simply casting to floating-point
 # - datetime columns: extracting features such as year, day, hour with the |DatetimeEncoder|
 # - low-cardinality categorical columns: one-hot encoding
 # - high-cardinality categorical columns: a simple and effective text representation pipeline provided by the |GapEncoder|
-#
 
 vectorizer
 
+###############################################################################
 # We can inspect which transformation was chosen for a each column and retrieve the fitted transformer.
+# ``vectorizer.column_kinds_`` provides an overview of how the vectorizer categorized columns in our input:
+
+vectorizer.column_kinds_
+
+###############################################################################
 # ``vectorizer.transformers_`` gives us a dictionary which maps column names to the corresponding transformer.
 
 vectorizer.transformers_["date_first_hired"]
 
-# We can also see which features in the vectorizer's output were derived from our input column.
+###############################################################################
+# We can also see which features in the vectorizer's output were derived from a given input column.
 
 vectorizer.input_to_outputs_["date_first_hired"]
 
 ###############################################################################
 
-features[vectorizer.input_to_outputs_["date_first_hired"]]
+vectorized_employees[vectorizer.input_to_outputs_["date_first_hired"]]
 
 ###############################################################################
-# We see that ``"date_first_hired"`` has been recognized and processed as a datetime column.
+# Finally, we can go in the opposite direction: given a column in the input, find out from which input column it was derived.
+
+vectorizer.output_to_input_["department_BOA"]
+
+
+###############################################################################
+# Dataframe preprocessing
+# ~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Note that ``"date_first_hired"`` has been recognized and processed as a datetime column.
+
+vectorizer.column_kinds_["datetime"]
+
+###############################################################################
 # But looking closer at our original dataframe, it was encoded as a string.
 
 employees["date_first_hired"]
 
 ###############################################################################
 # Note the ``dtype: object`` in the output above.
-# Before applying the transformers we specify, the |TableVectorizer| performs a
-# few preprocessing steps.
+# Before applying the transformers we specify, the |TableVectorizer| performs a few preprocessing steps.
 #
-# For example, the "``to_numeric``" step attempts to parse string columns as
-# numbers, the "``clean_null_string``" step replaces values commonly used to
-# represent missing values such as ``"N/A"`` with actuall ``null``, etc.
-# We can also see the list of steps that were relevant for a given column and
-# applied to it
+# For example, strings commonly used to represent missing values such as ``"N/A"`` are replaced with actual ``null``.
+# As we saw above, columns containing strings that represent dates (e.g. ``'2024-05-15'``) are detected and converted  to proper datetimes.
+#
+# We can inspect the list of steps that were applied to a given column:
 
 vectorizer.all_processing_steps_["date_first_hired"]
 
