@@ -67,6 +67,16 @@ class ToDatetime(SingleColumnTransformer):
     """
     Parse datetimes represented as strings and return ``Datetime`` columns.
 
+    An input column is converted to a column with dtype Datetime if possible,
+    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
+    Datetime, String, and pandas object columns are handled, other dtypes are
+    rejected with ``RejectColumn``.
+
+    Once a column is accepted, outputs of ``transform`` always have the same
+    Datetime dtype (including resolution and time zone). Once the transformer
+    is fitted, entries that fail to be converted during subsequent calls to
+    ``transform`` are replaced with nulls.
+
     Parameters
     ----------
     datetime_format : str or None, optional, default=None
@@ -319,19 +329,22 @@ class ToDatetime(SingleColumnTransformer):
     def __init__(self, datetime_format=None):
         self.datetime_format = datetime_format
 
-    def _get_datetime_format(self, column):
-        if self.datetime_format is not None:
-            return self.datetime_format
-        not_null = sbd.drop_nulls(column)
-        sample = sbd.sample(not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]))
-        sample = sbd.to_pandas(sample)
-        if not (sbd.is_pandas_object(sample) or sbd.is_string(sample)):
-            return None
-        if not _datetime_utils.is_column_datetime_parsable(sample):
-            return None
-        return _datetime_utils.guess_datetime_format(sample, random_state=0)
-
     def fit_transform(self, column, y=None):
+        """Fit the encoder and transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series
+            The input to transform.
+
+        y : None
+            Ignored.
+
+        Returns
+        -------
+        transformed : pandas or polars Series.
+            The input transformed to Datetime.
+        """
         del y
         if sbd.is_any_date(column):
             self.datetime_format_ = None
@@ -362,9 +375,33 @@ class ToDatetime(SingleColumnTransformer):
         return as_datetime
 
     def transform(self, column):
+        """Transform a colum.
+
+        Parameters
+        ----------
+        column : pandas or polars Series
+            The input to transform.
+
+        Returns
+        -------
+        transformed : pandas or polars Series.
+            The input transformed to Datetime.
+        """
         column = sbd.to_datetime(column, format=self.datetime_format_, strict=False)
         column = _convert_time_zone(column, self.output_time_zone_)
         return sbd.cast(column, self.output_dtype_)
+
+    def _get_datetime_format(self, column):
+        if self.datetime_format is not None:
+            return self.datetime_format
+        not_null = sbd.drop_nulls(column)
+        sample = sbd.sample(not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]))
+        sample = sbd.to_pandas(sample)
+        if not (sbd.is_pandas_object(sample) or sbd.is_string(sample)):
+            return None
+        if not _datetime_utils.is_column_datetime_parsable(sample):
+            return None
+        return _datetime_utils.guess_datetime_format(sample, random_state=0)
 
 
 @dispatch

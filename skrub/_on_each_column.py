@@ -41,6 +41,20 @@ class SingleColumnTransformer(BaseEstimator):
         """Fit the transformer.
 
         Subclasses should implement ``fit_transform`` and ``transform``.
+
+        Parameters
+        ----------
+        column : a pandas or polars Series
+            Unlike most scikit-learn transformers, single-column transformers
+            transform a single column, not a whole dataframe.
+
+        y : column or dataframe
+            Prediction targets.
+
+        Returns
+        -------
+        self
+            The fitted transformer.
         """
         self.fit_transform(column, y=y)
         return self
@@ -103,7 +117,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         ``cols``) are passed through.
 
     rename_columns : str, default='{}'
-        Format strings applied to all transformation ouput column names. For
+        Format string applied to all transformation ouput column names. For
         example pass ``'transformed_{}'`` to prepend ``'transformed_'`` to all
         output column names. The default value does not modify the names.
         Renaming is not applied to columns not selected by ``cols``.
