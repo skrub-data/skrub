@@ -90,9 +90,10 @@ class SingleColumnTransformer(BaseEstimator):
 
     def __init_subclass__(subclass, **kwargs):
         super().__init_subclass__(**kwargs)
-        subclass.fit = _wrap_add_check_single_column(subclass.fit)
-        subclass.fit_transform = _wrap_add_check_single_column(subclass.fit_transform)
-        subclass.transform = _wrap_add_check_single_column(subclass.transform)
+        for method in "fit", "fit_transform", "transform":
+            if method in subclass.__dict__:
+                wrapped = _wrap_add_check_single_column(getattr(subclass, method))
+                setattr(subclass, method, wrapped)
 
 
 def _wrap_add_check_single_column(f):
