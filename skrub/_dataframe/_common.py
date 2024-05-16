@@ -834,7 +834,9 @@ def _fill_nulls_pandas(obj, value):
 
 @fill_nulls.specialize("polars")
 def _fill_nulls_polars(obj, value):
-    return obj.fill_nan(value).fill_null(value)
+    if is_numeric(obj):
+        return obj.fill_nan(value).fill_null(value)
+    return obj.fill_null(value)
 
 
 @dispatch
