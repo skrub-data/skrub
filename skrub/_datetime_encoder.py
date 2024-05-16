@@ -120,9 +120,9 @@ class DatetimeEncoder(SingleColumnTransformer):
     1                   NaT
     2   2024-05-15 13:46:02
     Name: login, dtype: datetime64[ns]
-    >>> from skrub import EncodeDatetime
+    >>> from skrub import DatetimeEncoder
 
-    >>> EncodeDatetime().fit_transform(login)
+    >>> DatetimeEncoder().fit_transform(login)
        login_year  login_month  login_day  login_hour  login_total_seconds
     0      2024.0          5.0       13.0        12.0         1.715602e+09
     1         NaN          NaN        NaN         NaN                  NaN
@@ -130,7 +130,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     We can ask for a finer resolution:
 
-    >>> EncodeDatetime(resolution='second', add_total_seconds=False).fit_transform(login)
+    >>> DatetimeEncoder(resolution='second', add_total_seconds=False).fit_transform(login)
        login_year  login_month  login_day  login_hour  login_minute  login_second
     0      2024.0          5.0       13.0        12.0           5.0          36.0
     1         NaN          NaN        NaN         NaN           NaN           NaN
@@ -152,7 +152,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     1    NaN
     2    2.0
     Name: login, dtype: float64
-    >>> EncodeDatetime(add_day_of_the_week=True, add_total_seconds=False).fit_transform(login)
+    >>> DatetimeEncoder(add_day_of_the_week=True, add_total_seconds=False).fit_transform(login)
        login_year  login_month  login_day  login_hour  login_day_of_the_week
     0      2024.0          5.0       13.0        12.0                    1.0
     1         NaN          NaN        NaN         NaN                    NaN
@@ -162,7 +162,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     are discarded, regardless of ``resolution``.
 
     >>> birthday = pd.to_datetime(pd.Series(['2024-04-14', '2024-05-15'], name='birthday'))
-    >>> encoder = EncodeDatetime(resolution='second')
+    >>> encoder = DatetimeEncoder(resolution='second')
     >>> encoder.fit_transform(birthday)
        birthday_year  birthday_month  birthday_day  birthday_total_seconds
     0         2024.0             4.0          14.0            1.713053e+09
@@ -179,7 +179,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     0    2024-04-14
     1    2024-05-15
     Name: birthday, dtype: object
-    >>> EncodeDatetime().fit_transform(s)
+    >>> DatetimeEncoder().fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._on_each_column.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
@@ -188,7 +188,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     >>> from skrub import ToDatetime
     >>> from sklearn.pipeline import make_pipeline
-    >>> make_pipeline(ToDatetime(), EncodeDatetime()).fit_transform(s)
+    >>> make_pipeline(ToDatetime(), DatetimeEncoder()).fit_transform(s)
        birthday_year  birthday_month  birthday_day  birthday_total_seconds
     0         2024.0             4.0          14.0            1.713053e+09
     1         2024.0             5.0          15.0            1.715731e+09
@@ -200,7 +200,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> login = pd.to_datetime(
     ...     pd.Series(["2024-05-13T12:05:36", None, "2024-05-15T13:46:02"], name="login")
     ... ).dt.tz_localize('Europe/Paris')
-    >>> encoder = EncodeDatetime()
+    >>> encoder = DatetimeEncoder()
     >>> encoder.fit_transform(login)['login_hour']
     0    12.0
     1     NaN
@@ -225,7 +225,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     To ensure datetime columns are in a consistent timezones, use ``ToDatetime``.
 
-    >>> encoder = make_pipeline(ToDatetime(), EncodeDatetime())
+    >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder())
     >>> encoder.fit_transform(login)['login_hour']
     0    12.0
     1     NaN
