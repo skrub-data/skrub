@@ -273,7 +273,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     >>> vectorizer.all_processing_steps_['B'][1]
     ToDatetime()
-    >>> _.datetime_format_
+    >>> _.format_
     '%d/%m/%Y'
 
     **Transformers are applied separately to each column**

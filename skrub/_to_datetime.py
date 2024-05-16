@@ -79,19 +79,19 @@ class ToDatetime(SingleColumnTransformer):
 
     Parameters
     ----------
-    datetime_format : str or None, optional, default=None
+    format : str or None, optional, default=None
         Format to use for parsing dates that are stored as strings, eg
         ``"%Y-%m-%dT%H:%M%S"``.
 
     Attributes
     ----------
-    datetime_format_ : str or None
+    format_ : str or None
         Detected format. If the transformer was fitted on a column that already had
-        a Datetime dtype, the ``datetime_format_`` is None. Otherwise it is the
+        a Datetime dtype, the ``format_`` is None. Otherwise it is the
         format that was detected when parsing the string column. If the parameter
-        ``datetime_format`` was provided, it is the only one that the transformer
-        attempts to use so in that caset ``datetime_format_`` is either ``None`` or
-        equal to ``datetime_format``.
+        ``format`` was provided, it is the only one that the transformer
+        attempts to use so in that caset ``format_`` is either ``None`` or
+        equal to ``format``.
     output_dtype_ : data type
         The output dtype, which includes information about the time resolution and
         time zone.
@@ -123,7 +123,7 @@ class ToDatetime(SingleColumnTransformer):
     The attributes ``datetetime_format_``, ``output_dtype_``, ``output_timezone_``
     record information about the conversion result.
 
-    >>> to_dt.datetime_format_
+    >>> to_dt.format_
     '%Y-%m-%dT%H:%M:%S'
     >>> to_dt.output_dtype_
     dtype('<M8[ns]')
@@ -133,13 +133,13 @@ class ToDatetime(SingleColumnTransformer):
     If we provide the datetime format, it is used and columns that do not conform to
     it are rejected.
 
-    >>> ToDatetime(datetime_format="%Y-%m-%dT%H:%M:%S").fit_transform(s)
+    >>> ToDatetime(format="%Y-%m-%dT%H:%M:%S").fit_transform(s)
     0   2024-05-05 13:17:52
     1                   NaT
     2   2024-05-07 13:17:52
     Name: when, dtype: datetime64[ns]
 
-    >>> ToDatetime(datetime_format="%d/%m/%Y").fit_transform(s)
+    >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._on_each_column.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
@@ -156,9 +156,9 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s) is s
     True
 
-    In that case the ``datetime_format_`` is ``None``.
+    In that case the ``format_`` is ``None``.
 
-    >>> to_dt.datetime_format_ is None
+    >>> to_dt.format_ is None
     True
     >>> to_dt.output_dtype_
     datetime64[ns, Europe/Paris]
@@ -211,7 +211,7 @@ class ToDatetime(SingleColumnTransformer):
     0   2020-01-01 02:00:00+00:00
     1   2020-01-01 01:00:00+00:00
     dtype: datetime64[ns, UTC]
-    >>> to_dt.datetime_format_
+    >>> to_dt.format_
     '%Y-%m-%dT%H:%M:%S%z'
     >>> to_dt.output_time_zone_
     'UTC'
@@ -298,7 +298,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     0   2024-05-23
     dtype: datetime64[ns]
-    >>> to_dt.datetime_format_
+    >>> to_dt.format_
     '%m/%d/%Y'
 
     Here we could infer ``'%m/%d/%Y'`` because there are not 23 months in a year.
@@ -308,7 +308,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     0   2024-05-23
     dtype: datetime64[ns]
-    >>> to_dt.datetime_format_
+    >>> to_dt.format_
     '%d/%m/%Y'
 
     In the case it cannot be inferred, the USA convention is used:
@@ -317,17 +317,17 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     0   2024-03-05
     dtype: datetime64[ns]
-    >>> to_dt.datetime_format_
+    >>> to_dt.format_
     '%m/%d/%Y'
 
     If the days are randomly distributed and the fitting data large enough, it is
     somewhat unlikely that all days would be below 12 so the inferred format should
-    often be correct. To be sure, one can specify the ``datetime_format`` in the
+    often be correct. To be sure, one can specify the ``format`` in the
     constructor.
     """
 
-    def __init__(self, datetime_format=None):
-        self.datetime_format = datetime_format
+    def __init__(self, format=None):
+        self.format = format
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -347,7 +347,7 @@ class ToDatetime(SingleColumnTransformer):
         """
         del y
         if sbd.is_any_date(column):
-            self.datetime_format_ = None
+            self.format_ = None
             self.output_dtype_ = sbd.dtype(column)
             self.output_time_zone_ = _get_time_zone(column)
             return column
@@ -360,15 +360,13 @@ class ToDatetime(SingleColumnTransformer):
                 f"Could not find a datetime format for column {sbd.name(column)!r}."
             )
 
-        self.datetime_format_ = datetime_format
+        self.format_ = datetime_format
         try:
-            as_datetime = sbd.to_datetime(
-                column, format=self.datetime_format_, strict=True
-            )
+            as_datetime = sbd.to_datetime(column, format=self.format_, strict=True)
         except Exception as e:
             raise RejectColumn(
                 f"Failed to convert column {sbd.name(column)!r} to datetimes "
-                f"using the format {self.datetime_format_!r}."
+                f"using the format {self.format_!r}."
             ) from e
         self.output_dtype_ = sbd.dtype(as_datetime)
         self.output_time_zone_ = _get_time_zone(as_datetime)
@@ -387,13 +385,13 @@ class ToDatetime(SingleColumnTransformer):
         transformed : pandas or polars Series.
             The input transformed to Datetime.
         """
-        column = sbd.to_datetime(column, format=self.datetime_format_, strict=False)
+        column = sbd.to_datetime(column, format=self.format_, strict=False)
         column = _convert_time_zone(column, self.output_time_zone_)
         return sbd.cast(column, self.output_dtype_)
 
     def _get_datetime_format(self, column):
-        if self.datetime_format is not None:
-            return self.datetime_format
+        if self.format is not None:
+            return self.format
         not_null = sbd.drop_nulls(column)
         sample = sbd.sample(not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]))
         sample = sbd.to_pandas(sample)
@@ -442,7 +440,7 @@ def to_datetime(df, format=None):
 @to_datetime.specialize("polars", argument_type="DataFrame")
 def _to_datetime_dataframe(df, format=None):
     return wrap_transformer(
-        ToDatetime(datetime_format=format), s.all(), allow_reject=True
+        ToDatetime(format=format), s.all(), allow_reject=True
     ).fit_transform(df)
 
 
@@ -450,7 +448,7 @@ def _to_datetime_dataframe(df, format=None):
 @to_datetime.specialize("polars", argument_type="Column")
 def _to_datetime_column(column, format=None):
     try:
-        result = ToDatetime(datetime_format=format).fit_transform(column)
+        result = ToDatetime(format=format).fit_transform(column)
     except RejectColumn:
         return column
     return result
