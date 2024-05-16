@@ -21,6 +21,7 @@
 library that facilitates prepping your tables for machine learning.
 
 If you like the package, spread the word and ⭐ this repository!
+You can also join the `discord server <https://discord.gg/ABaPnm7fDC>`_.
 
 What can `skrub` do?
 --------------------
