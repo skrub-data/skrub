@@ -13,7 +13,7 @@ from . import _utils
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
-from ._datetime_encoder import EncodeDatetime
+from ._datetime_encoder import DatetimeEncoder
 from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
@@ -38,7 +38,7 @@ LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     handle_unknown="ignore",
     drop="if_binary",
 )
-DATETIME_TRANSFORMER = EncodeDatetime()
+DATETIME_TRANSFORMER = DatetimeEncoder()
 NUMERIC_TRANSFORMER = PassThrough()
 
 
@@ -158,7 +158,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     datetime_transformer : transformer, "passthrough" or "drop", optional
         The transformer for ``datetime`` columns. The default is
-        ``EncodeDatetime``, which extracts features such as year, month, etc.
+        ``DatetimeEncoder``, which extracts features such as year, month, etc.
 
     specific_transformers : list of (transformer, list of column names) pairs, optional
         Override the categories above for the given columns and force using the
@@ -242,7 +242,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     a given column:
 
     >>> vectorizer.transformers_['B']
-    EncodeDatetime()
+    DatetimeEncoder()
     >>> vectorizer.transformers_['A']
     OneHotEncoder(drop='if_binary', dtype='float32', handle_unknown='ignore',
                   sparse_output=False)
@@ -262,9 +262,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), ToDatetime(), EncodeDatetime(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
-    Note that as the encoder (``EncodeDatetime()`` above) produces multiple
+    Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
     like the previous ones but by a mapping from column name to transformer.
 
