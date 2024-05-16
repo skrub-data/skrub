@@ -22,6 +22,10 @@ def _(col, format):
     return col.dt.strftime(format)
 
 
+def to_iso(dt_col):
+    return sbd.to_list(strftime(dt_col, ISO))
+
+
 @pytest.fixture
 def datetime_col(df_module):
     return sbd.col(df_module.example_dataframe, "datetime-col")
@@ -81,3 +85,40 @@ def test_transform_failures(datetime_col, df_module):
     transformed = encoder.transform(test_col)
     expected = ["2020-01-02T00:20:23", "????", "????", "????"]
     assert sbd.to_list(sbd.fill_nulls(strftime(transformed, ISO), "????")) == expected
+
+
+def test_mixed_offsets(df_module):
+    s = df_module.make_column(
+        "when", ["2020-01-02T08:00:01+02:00", "2020-01-02T08:00:01+04:00"]
+    )
+    encoder = ToDatetime()
+    transformed = encoder.fit_transform(s)
+    assert encoder.output_time_zone_ == "UTC"
+    assert to_iso(transformed) == [
+        "2020-01-02T06:00:01",
+        "2020-01-02T04:00:01",
+    ]
+
+
+def localize(df_module, dt_col, time_zone):
+    if df_module.name == "pandas":
+        return dt_col.dt.tz_localize(time_zone)
+    assert df_module.name == "polars"
+    return dt_col.dt.replace_time_zone(time_zone)
+
+
+def convert(df_module, dt_col, time_zone):
+    if df_module.name == "pandas":
+        return dt_col.dt.tz_convert(time_zone)
+    assert df_module.name == "polars"
+    return dt_col.dt.convert_time_zone(time_zone)
+
+
+def test_fit_aware_transform_naive(df_module, datetime_col):
+    aware = localize(df_module, datetime_col, "Europe/Paris")
+    encoder = ToDatetime()
+    encoder.fit(aware)
+    assert encoder.output_time_zone_ == "Europe/Paris"
+    assert to_iso(encoder.transform(datetime_col)) == to_iso(
+        convert(df_module, localize(df_module, datetime_col, "UTC"), "Europe/Paris")
+    )
