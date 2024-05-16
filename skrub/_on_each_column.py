@@ -1,3 +1,4 @@
+import functools
 import itertools
 
 from joblib import Parallel, delayed
@@ -66,6 +67,60 @@ class SingleColumnTransformer(BaseEstimator):
     def transform(self, column):
         """Transform a column (must be fitted first)."""
         raise NotImplementedError()
+
+    def _check_single_column(self, column, function_name):
+        class_name = self.__class__.__name__
+        if sbd.is_dataframe(column):
+            raise ValueError(
+                f"{class_name}.{function_name} should be passed a single column, not a"
+                f" dataframe. {class_name} is a single-column transformer. Unlike most"
+                " scikit-learn estimators, its fit, transform and fit_transform"
+                " methods expect a single column (a pandas or polars Series) rather"
+                " than a full dataframe. To apply this transformer to one or more"
+                " columns in a dataframe, use it as a parameter in a"
+                " skrub.TableVectorizer or sklearn.compose.ColumnTransformer."
+            )
+        if not sbd.is_column(column):
+            raise ValueError(
+                f"{class_name}.{function_name} expects the first argument X "
+                "to be a column (a pandas or polars Series). "
+                f"Got X with type: {column.__class__.__name__}."
+            )
+        return column
+
+    def __init_subclass__(subclass, **kwargs):
+        super().__init_subclass__(**kwargs)
+        subclass.fit = _wrap_add_check_single_column(subclass.fit)
+        subclass.fit_transform = _wrap_add_check_single_column(subclass.fit_transform)
+        subclass.transform = _wrap_add_check_single_column(subclass.transform)
+
+
+def _wrap_add_check_single_column(f):
+    if f.__name__ == "fit":
+
+        @functools.wraps(f)
+        def wrapped_fit(self, X, y=None):
+            self._check_single_column(X, f.__name__)
+            return f(self, X, y=y)
+
+        return wrapped_fit
+    elif f.__name__ == "fit_transform":
+
+        @functools.wraps(f)
+        def wrapped_fit_transform(self, X, y=None):
+            self._check_single_column(X, f.__name__)
+            return f(self, X, y=y)
+
+        return wrapped_fit_transform
+    else:
+        assert f.__name__ == "transform", f.__name__
+
+        @functools.wraps(f)
+        def wrapped_transform(self, X):
+            self._check_single_column(X, f.__name__)
+            return f(self, X)
+
+        return wrapped_transform
 
 
 class OnEachColumn(TransformerMixin, BaseEstimator):
