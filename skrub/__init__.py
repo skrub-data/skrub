@@ -26,7 +26,6 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 __all__ = [
     "DatetimeEncoder",
-    "DatetimeEncoder",
     "ToDatetime",
     "Joiner",
     "fuzzy_join",
