@@ -832,11 +832,20 @@ def _fill_nulls_pandas(obj, value):
     return obj.fillna(value)
 
 
-@fill_nulls.specialize("polars")
-def _fill_nulls_polars(obj, value):
-    if is_numeric(obj):
-        return obj.fill_nan(value).fill_null(value)
-    return obj.fill_null(value)
+@fill_nulls.specialize("polars", argument_type="Column")
+def _fill_nulls_polars_column(column, value):
+    if is_numeric(column):
+        return column.fill_nan(value).fill_null(value)
+    return column.fill_null(value)
+
+
+@fill_nulls.specialize("polars", argument_type="DataFrame")
+def _fill_nulls_polars_dataframe(df, value):
+    from polars import selectors as cs
+
+    return df.with_columns(
+        cs.numeric().fill_nan(value).fill_null(value), (~cs.numeric()).fill_null(value)
+    )
 
 
 @dispatch
