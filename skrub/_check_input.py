@@ -30,7 +30,7 @@ def _deduplicated_column_names(column_names):
     return _join_utils.pick_column_names(column_names)
 
 
-def _cleaned_column_names(colum_names):
+def _cleaned_column_names(column_names):
     return _deduplicated_column_names(_column_names_to_strings(column_names))
 
 
