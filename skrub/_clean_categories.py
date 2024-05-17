@@ -66,7 +66,7 @@ class CleanCategories(SingleColumnTransformer):
 
     A categorical column that already stores its categories as strings in an
     index with dtype ``object``, as expected by scikit-learn encoders, is
-    passed through unchanged.
+    passed through unchanged:
 
     >>> s = pd.Series(['one', 'two', 'three'], name='c', dtype='category')
     >>> s
@@ -85,7 +85,7 @@ class CleanCategories(SingleColumnTransformer):
     >>> cleaner.fit_transform(s) is s
     True
 
-    Categories stored with the ``StringDtype`` dtype are converted to ``object``.
+    Categories stored with the ``StringDtype`` dtype are converted to ``object``:
 
     >>> s = pd.Series(['cat A', 'cat B', None], name='c', dtype='string').astype('category')
     >>> s
@@ -105,7 +105,7 @@ class CleanCategories(SingleColumnTransformer):
     >>> _.cat.categories.dtype
     dtype('O')
 
-    Non-string categories are converted to strings.
+    Non-string categories are converted to strings:
 
     >>> s = pd.Series([1, 2], name='c').astype('category')
     >>> s
@@ -119,7 +119,7 @@ class CleanCategories(SingleColumnTransformer):
     Name: c, dtype: category
     Categories (2, object): ['1', '2']
 
-    Above we can see that the output categories are strings.
+    We can see above that the output categories are strings.
 
     Note: this can result in some categories being collapsed in the edge case where
     different categories have the same string representation, as shown below.
@@ -149,7 +149,7 @@ class CleanCategories(SingleColumnTransformer):
     skrub._on_each_column.RejectColumn: Column 'c' is not categorical.
 
     However once a column has been accepted, the output of ``transform`` will
-    always have a categorical dtype.
+    always have a categorical dtype:
 
     >>> cleaner.fit(s.astype('category'))
     CleanCategories()

@@ -94,7 +94,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     >>> pca.transformer_
     PCA(n_components=2)
 
-    It is possible to rename the output columns.
+    It is possible to rename the output columns:
 
     >>> pca = OnSubFrame(PCA(n_components=2), cols=["a", "b"], rename_columns='my_tag-{}')
     >>> pca.fit_transform(df).round(2)
@@ -104,7 +104,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     2  100.0     0.0        -2.49        -0.33
     3    0.0  1000.0        -2.49        -0.33
 
-    We can also force preserving the original columns in the output.
+    We can also force preserving the original columns in the output:
 
     >>> pca = OnSubFrame(PCA(n_components=2), cols=["a", "b"], keep_original=True)
     >>> pca.fit_transform(df).round(2)

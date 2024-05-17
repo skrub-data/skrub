@@ -39,7 +39,7 @@ class ToFloat32(SingleColumnTransformer):
     Otherwise, we attempt to convert the column to float32. If the conversion
     fails the column is rejected (a ``RejectColumn`` exception is raised).
 
-    for pandas, the output is always ``np.float32``, not the extension dtype
+    For pandas, the output is always ``np.float32``, not the extension dtype
     ``pd.Float64Dtype``. We do this conversion because most scikit-learn
     estimators cannot handle those dtypes correctly yet, especially in the
     presence of missing values (represented by ``pd.NA`` in such columns).

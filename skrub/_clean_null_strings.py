@@ -65,7 +65,7 @@ class CleanNullStrings(SingleColumnTransformer):
 
     The null value depends on the input. If the input is a pandas ``object``
     column, ``None`` is used as the null value and the output is an ``object``
-    column.
+    column:
 
     >>> s = pd.Series(['one', 'N/A', '    ', True], name='s')
     >>> s
@@ -95,13 +95,13 @@ class CleanNullStrings(SingleColumnTransformer):
 
     Non-string values and strings that do not represent missing values are left
     unchanged. In particular, non-string values in ``object`` columns are not
-    cast to strings.
+    cast to strings:
 
     >>> out[3], type(out[3])
     (True, <class 'bool'>)
 
     If the input uses the pandas string extension dtype, the null value is
-    ``pd.NA`` and the output will have the same dtype as the input.
+    ``pd.NA`` and the output will have the same dtype as the input:
 
     >>> s = pd.Series(['one', 'N/A', ' ', 'two', pd.NA], name='s', dtype='string')
     >>> s
@@ -155,7 +155,7 @@ class CleanNullStrings(SingleColumnTransformer):
     Name: s, dtype: object
 
     In both examples above, the column can be converted to numbers by
-    ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``.
+    ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``:
 
     >>> from skrub._to_float32 import ToFloat32
     >>> ToFloat32().fit_transform(s)
@@ -170,7 +170,7 @@ class CleanNullStrings(SingleColumnTransformer):
     Name: s, dtype: float32
 
     Columns that are do not have ``object`` or ``string`` as their ``dtype``
-    are rejected.
+    are rejected:
 
     >>> s = pd.Series([1.1, None], name='s')
     >>> cleaner.fit_transform(s)
@@ -189,7 +189,7 @@ class CleanNullStrings(SingleColumnTransformer):
 
     Note however that ``object`` columns are accepted even if they do not
     contain any strings. They will not be modified but they will still be
-    recorded as having been handled by this transformer.
+    recorded as having been handled by this transformer:
 
     >>> s = pd.Series([True, False, None])
     >>> s
@@ -203,7 +203,7 @@ class CleanNullStrings(SingleColumnTransformer):
     2     None
     dtype: object
 
-    For ``polars``, only columns with ``String`` dtype are modified.
+    For ``polars``, only columns with ``String`` dtype are modified:
 
     >>> import pytest
     >>> pl = pytest.importorskip('polars')

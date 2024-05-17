@@ -17,7 +17,7 @@ Major changes
 * The :class:`TableVectorizer` now consistently applies the same transformation
   across different calls to `transform`. There also have been some breaking
   changes to its functionality: (i) all transformations are now applied
-  independently to each column, ie it does not perform multivariate
+  independently to each column, i.e. it does not perform multivariate
   transformations (ii) in ``specific_transformers`` the same column may not be
   used twice (go through 2 different transformers).
   :pr:`902` by :user:`Jérôme Dockès <jeromedockes>`.

@@ -76,8 +76,8 @@ vectorized_employees
 ###############################################################################
 # From our 8 columns, the |TableVectorizer| has extracted 143 numerical
 # features. Most of them are one-hot encoded representations of the categorical
-# features. For example, we can see that 3 columns ``gender_F``, ``gender_M``,
-# ``gender_nan`` were created to encode the ``'gender'`` column.
+# features. For example, we can see that 3 columns ``'gender_F'``, ``'gender_M'``,
+# ``'gender_nan'`` were created to encode the ``'gender'`` column.
 
 ###############################################################################
 # By performing apropriate transformations on our complex data, the |TableVectorizer| produced numeric features that we can use for machine-learning:
