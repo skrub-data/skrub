@@ -80,7 +80,7 @@ def test_rejected_columns(df_module):
 def test_transform_failures(datetime_col, df_module):
     encoder = ToDatetime().fit(strftime(datetime_col, ISO))
     test_col = df_module.make_column(
-        "", ["2020-01-02T00:20:23", "2020-01-02 00:20:23", "xyz", None]
+        "", ["2020-01-02T00:20:23", "01/02/2020", "xyz", None]
     )
     transformed = encoder.transform(test_col)
     expected = ["2020-01-02T00:20:23", "????", "????", "????"]
