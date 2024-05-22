@@ -72,8 +72,39 @@ def _collect_lazyframe(df):
 
 
 class CheckInputDataFrame(TransformerMixin, BaseEstimator):
-    def __init__(self, convert_arrays=True):
-        self.convert_arrays = convert_arrays
+    """Check the dataframe entering a skrub pipeline.
+
+    This transformer ensures that:
+
+    - The input is a dataframe.
+        - Numpy arrays are converted to pandas dataframes with a warning.
+    - The dataframe library is the same during ``fit`` and ``transform``, e.g.
+      fitting on a polars dataframe and then transforming a pandas dataframe is
+      not allowed.
+        - A TypeError is raised otherwise.
+    - Column names are unique strings.
+        - Non-strings are cast to strings.
+        - A random suffix is added to duplicated names.
+        - If either of these operations is needed, a warning is emitted.
+        - only applies to pandas; polars column names are always unique strings.
+    - The input is not sparse.
+        - A TypeError is raised otherwise.
+    - The input is not a ``LazyFrame``.
+        - A ``LazyFrame`` is ``collect``ed with a warning.
+    - The column names are the same during ``fit`` and ``transform``.
+        - A ValueError is raised otherwise.
+
+    Attributes
+    ----------
+    module_name_ : str
+        The name of the dataframe module, 'polars' or 'pandas'.
+    feature_names_in_ : list
+        The column names of the input (before cleaning).
+    n_features_in_ : int
+        The number of input columns.
+    feature_names_out_ : list of str
+        The column names after converting to string and deduplication.
+    """
 
     def fit(self, X, y=None):
         self.fit_transform(X, y)
@@ -90,7 +121,8 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         self.feature_names_in_ = column_names
         self.n_features_in_ = len(column_names)
         self.feature_names_out_ = _cleaned_column_names(column_names)
-        X = sbd.set_column_names(X, self.feature_names_out_)
+        if sbd.column_names(X) != self.feature_names_out_:
+            X = sbd.set_column_names(X, self.feature_names_out_)
         _check_not_pandas_sparse(X)
         X = _collect_lazyframe(X)
         return X
@@ -116,24 +148,26 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
                 f"Columns of dataframes passed to fit() and transform() differ:\n{diff}"
             )
             raise ValueError(message)
-        X = sbd.set_column_names(X, self.feature_names_out_)
+        if sbd.column_names(X) != self.feature_names_out_:
+            X = sbd.set_column_names(X, self.feature_names_out_)
         _check_not_pandas_sparse(X)
         X = _collect_lazyframe(X)
         return X
 
     def _handle_array(self, X):
-        if not isinstance(X, np.ndarray) or not self.convert_arrays:
+        if not isinstance(X, np.ndarray):
             return X
+        if X.ndim != 2:
+            raise ValueError(
+                "Input should be a DataFrame. Found an array with incompatible shape:"
+                f" {X.shape}."
+            )
         warnings.warn(
             "Only pandas and polars DataFrames are supported, but input is a Numpy"
             " array. Please convert Numpy arrays to DataFrames before passing them to"
             " skrub transformers. Converting to pandas DataFrame with columns"
             " ['0', '1', …]."
         )
-        if X.ndim != 2:
-            raise ValueError(
-                f"Cannot convert array to DataFrame due to wrong shape: {X.shape}."
-            )
         import pandas as pd
 
         columns = list(map(str, range(X.shape[1])))
