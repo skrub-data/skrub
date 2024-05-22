@@ -44,7 +44,7 @@ class ToFloat32(SingleColumnTransformer):
     estimators cannot handle those dtypes correctly yet, especially in the
     presence of missing values (represented by ``pd.NA`` in such columns).
 
-    During ``transform`` , entries for which conversion fails are replaced by
+    During ``transform``, entries for which conversion fails are replaced by
     null values.
 
     Examples

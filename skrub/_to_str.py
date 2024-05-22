@@ -105,7 +105,7 @@ class ToStr(SingleColumnTransformer):
 
     For other pandas columns, a copy or a modified copy is returned.
 
-    A numeric, datetime or categorical columns is rejected:
+    A numeric, datetime or categorical column is rejected:
 
     >>> to_str.fit_transform(pd.Series([1.1, 2.2], name='s'))
     Traceback (most recent call last):
@@ -132,7 +132,7 @@ class ToStr(SingleColumnTransformer):
     >>> _[0]
     '1.1'
 
-    For polars, a string column is always passed through.
+    For polars, a string column is always passed through:
 
     >>> import pytest
     >>> pl = pytest.importorskip('polars')
@@ -140,7 +140,7 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.fit_transform(s) is s
     True
 
-    A column that is neither String, categorical, numeric or datetime is converted.
+    A column that is neither String, categorical, numeric or datetime is converted:
 
     >>> s = pl.Series('s', [{'name':'one', 'value': 1}, {'name': 'two', 'value': 2}])
     >>> s
@@ -179,7 +179,7 @@ class ToStr(SingleColumnTransformer):
         "3.3"
     ]
 
-    Categorical and Enum columns, numeric, Date and Datetime columns are rejected.
+    Categorical and Enum columns, numeric, Date and Datetime columns are rejected:
 
     >>> to_str.fit_transform(pl.Series('s', ['a', 'b'], dtype=pl.Enum(['a', 'b'])))
     Traceback (most recent call last):

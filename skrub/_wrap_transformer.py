@@ -35,7 +35,7 @@ def wrap_transformer(
         The columns to which the transformer will be applied.
 
     allow_reject : bool, default=False
-        Whether to allow column rejections. Used only when the result is an
+        Whether to allow column rejections. Only used when the result is an
         instance of ``OnEachColumn``, see this class' docstring for details.
 
     keep_original : bool, default=False
@@ -47,7 +47,7 @@ def wrap_transformer(
         ``OnEachColumn`` or ``OnSubFrame`` for details.
 
     n_jobs : int, default=None
-        Number of jobs to run in parallel. Used only when the result is an
+        Number of jobs to run in parallel. Only used when the result is an
         instance of ``OnEachColumn``, see this class' docstring for details.
 
     columnwise : 'auto' or bool, default='auto'
