@@ -10,7 +10,7 @@ from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._wrap_transformer import wrap_transformer
 
-_SAMPLE_SIZE = 1000
+_SAMPLE_SIZE = 30
 
 
 @dispatch
@@ -407,7 +407,9 @@ class ToDatetime(SingleColumnTransformer):
         if self.format is not None:
             return self.format
         not_null = sbd.drop_nulls(column)
-        sample = sbd.sample(not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]))
+        sample = sbd.sample(
+            not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]), seed=0
+        )
         if not sbd.is_string(sample):
             return None
         return _guess_datetime_format(sample)
