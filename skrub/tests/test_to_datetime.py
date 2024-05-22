@@ -1,4 +1,6 @@
+import pandas as pd
 import pytest
+from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as sbd
 from skrub._dispatch import dispatch
@@ -34,10 +36,10 @@ def datetime_col(df_module):
 @pytest.mark.parametrize(
     "format",
     [
-        "%Y%m%d%H%M%S",
+        "%Y%m%dT%H%M%S",
         "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%d %H:%M:%S.%f",
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S",
         "%Y%m%d",
         "%m/%d/%Y",
         "%d/%m/%Y",
@@ -46,7 +48,13 @@ def datetime_col(df_module):
 )
 @pytest.mark.parametrize("provide_format", [False, True])
 def test_string_to_datetime(df_module, datetime_col, format, provide_format):
-    if format == "%G-W%V-%u" and not provide_format:
+    if not provide_format and (
+        format == "%G-W%V-%u"
+        or (
+            parse_version(pd.__version__) < parse_version("2.0.0")
+            and format in ["%Y%m%dT%H%M%S", "%Y-%m-%dT%H:%M:%S.%f"]
+        )
+    ):
         pytest.xfail(
             "TODO improve datetime parsing, pandas does not find some ISO formats."
         )

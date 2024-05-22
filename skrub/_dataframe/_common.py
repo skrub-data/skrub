@@ -717,6 +717,9 @@ def _to_datetime_polars(column, format, strict=True):
     if _is_any_date_polars(column):
         return column
     try:
+        # avoid ChronoFormatWarning due to pandas and polars writing this
+        # differently.
+        format = format.replace(".%f", "%.f")
         return column.str.to_datetime(format=format, strict=strict)
     except pl.ComputeError as e:
         raise ValueError("Failed to convert to datetime") from e
