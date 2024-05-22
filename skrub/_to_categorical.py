@@ -6,10 +6,21 @@ class ToCategorical(SingleColumnTransformer):
     """
     Convert a string column to Categorical dtype.
 
-    A pandas columns with dtype ``string`` or ``object`` containing strings, or
+    The main benefit is that such columns can then be recognized by
+    scikit-learn's ``HistGradientBoostingRegressor`` and
+    ``HistGradientBoostingClassifier`` with their
+    ``categorical_features='from_dtype'`` option. This transformer is therefore
+    particularly useful as the ``low_cardinality_transformer`` parameter of the
+    ``TableVectorizer`` when combined with one of those supervised learners.
+
+    A pandas column with dtype ``string`` or ``object`` containing strings, or
     a polars column with dtype ``String``, is converted to a categorical
-    column. Categorical columns are passed through. Any other type of column is
-    rejected by raising a ``RejectColumn`` exception.
+    column. Categorical columns are passed through.
+
+    Any other type of column is rejected by raising a ``RejectColumn``
+    exception. **Note:** the ``TableVectorizer`` only sends strings or
+    categorical columns (those are suitable for ``ToCategorical``) to its
+    ``low_cardinality_transformer``.
 
     The output of ``transform`` also always has a Categorical dtype. The categories
     are not necessarily the same across different calls to ``transform``. Indeed,
@@ -29,6 +40,11 @@ class ToCategorical(SingleColumnTransformer):
     A string column is converted to a categorical column.
 
     >>> s = pd.Series(['one', 'two', None], name='c')
+    >>> s
+    0     one
+    1     two
+    2    None
+    Name: c, dtype: object
     >>> to_cat = ToCategorical()
     >>> to_cat.fit_transform(s)
     0    one
@@ -89,7 +105,7 @@ class ToCategorical(SingleColumnTransformer):
     >>> _.cat.categories.dtype
     string[python]
 
-    Polars columns are converted to the ``Categorical`` dtype (not ``Enum``). As
+    Polars string columns are converted to the ``Categorical`` dtype (not ``Enum``). As
     for pandas, categories may vary across calls to ``transform``.
 
     >>> import pytest
@@ -103,6 +119,19 @@ class ToCategorical(SingleColumnTransformer):
         "two"
         null
     ]
+
+    Polars Categorical or Enum columns are passed through:
+
+    >>> s = pl.Series('c', ['one', 'two'], dtype=pl.Enum(['one', 'two', 'three']))
+    >>> s
+    shape: (2,)
+    Series: 'c' [enum]
+    [
+        "one"
+        "two"
+    ]
+    >>> to_cat.fit_transform(s) is s
+    True
     """
 
     def fit_transform(self, column, y=None):

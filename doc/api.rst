@@ -83,6 +83,7 @@ This page lists all available functions and classes of `skrub`.
    GapEncoder
    MinHashEncoder
    SimilarityEncoder
+   ToCategorical
 
 .. raw:: html
 
@@ -98,9 +99,17 @@ This page lists all available functions and classes of `skrub`.
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: class.rst
    :nosignatures:
    :caption: Converting datetime columns in a table
+
+   ToDatetime
+
+
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
 
    to_datetime
 
