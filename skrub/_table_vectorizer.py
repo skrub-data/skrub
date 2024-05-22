@@ -63,13 +63,32 @@ class ShortReprDict(UserDict):
         return r.repr(dict(self))
 
 
-def _created_by(col, transformers):
+def _created_by_predicate(col, transformers):
     return any(sbd.name(col) in t.created_outputs_ for t in transformers)
 
 
-def created_by(*transformers):
+def _created_by(*transformers):
+    """Selector for columns created by one of the provided transformers.
+
+    Each of ``transformers`` must be an instance of ``OnEachColumn``.
+    A column is matched if it was created (or modified) by one of them, i.e. if
+    it is listed in one of their ``created_outputs_`` fitted attributes.
+
+    .. note::
+
+        This selector works by storing references to the ``transformers``. If
+        they are cloned, the stored reference still points to the original
+        object. Therefore if this selector is used to refer to earlier steps in
+        a pipeline and the pipeline is cloned, it will not work as it will
+        inspect the original transformers, not their clones. This is fine for
+        the ``TableVectorizer`` because it uses ``_created_by`` in its (private
+        attribute) ``_pipeline`` which is constructed and fitted during
+        ``TableVectorizer.fit``, and is never cloned. ``_created_by`` is a
+        private helper of ``TableVectorizer``, not meant to be generally useful
+        and it should not be moved to the ``skrub._selectors`` module.
+    """
     return s.Filter(
-        _created_by,
+        _created_by_predicate,
         args=(transformers,),
         selector_repr=f"created_by(<any of {len(transformers)} transformers>)",
     )
@@ -503,7 +522,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             self._named_encoders[name] = add_step(
                 self._encoders,
                 getattr(self, f"{name}_transformer"),
-                cols & selector - created_by(*self._encoders),
+                cols & selector - _created_by(*self._encoders),
             )
 
         self._specific_transformers = []
@@ -514,7 +533,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         add_step(
             self._postprocessors,
             ToFloat32(),
-            s.all() - created_by(*self._specific_transformers) - s.categorical(),
+            s.all() - _created_by(*self._specific_transformers) - s.categorical(),
             allow_reject=True,
         )
         self._pipeline = make_pipeline(
