@@ -57,7 +57,8 @@ class CleanCategories(SingleColumnTransformer):
     exception) by this transformer but are passed through unchanged.
 
     Any column that does not have a categorical dtype is rejected with a
-    ``RejectColumn`` exception.
+    ``RejectColumn`` exception (see ``ToCategorical`` for converting columns to
+    a categorical dtype).
 
     Examples
     --------

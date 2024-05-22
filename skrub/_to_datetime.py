@@ -82,6 +82,13 @@ class ToDatetime(SingleColumnTransformer):
     format : str or None, optional, default=None
         Format to use for parsing dates that are stored as strings, e.g.
         ``"%Y-%m-%dT%H:%M%S"``.
+        If not specfied, the format is inferred from the data when possible.
+        When doing so, for dates presented as 01/02/2003, it is usually
+        possible to infer from the data whether the month comes first (USA
+        convention) or the day comes first, ie ``"%m/%d/%Y"`` vs
+        ``"%d/%m/%Y"``. In the odd chance that all the sampled dates land
+        before the 13th day of the month and that both conventions are
+        plausible, the USA convention (month first) is chosen.
 
     Attributes
     ----------
@@ -92,9 +99,11 @@ class ToDatetime(SingleColumnTransformer):
         ``format`` was provided, it is the only one that the transformer
         attempts to use so in that caset ``format_`` is either ``None`` or
         equal to ``format``.
+
     output_dtype_ : data type
         The output dtype, which includes information about the time resolution and
         time zone.
+
     output_time_zone_ : str or None
         The time zone of the transformed column. If the output is time zone naive it
         is ``None``; otherwise it is the name of the time zone such as ``UTC`` or

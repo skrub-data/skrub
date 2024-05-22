@@ -183,8 +183,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Override the categories above for the given columns and force using the
         specified transformer. This disables any preprocessing usually done by
         the TableVectorizer; the columns are passed to the transformer without
-        any modification. Using ``specific_transformers`` provides similar
-        functionality to what is offered by scikit-learn's
+        any modification. A column is not allowed appear twice in
+        ``specific_transformers``. Using ``specific_transformers`` provides
+        similar functionality to what is offered by scikit-learn's
         ``ColumnTransformer``.
 
     n_jobs : int, default=None
@@ -198,22 +199,33 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Maps the name of each column to the main transformer (such as the
         ``high_cardinality_transformer``, as opposed to the preprocessing
         steps) that was fitted on it.
+
+    column_kinds_ : dict
+        Maps each kind of column (``"high_cardinality"``,
+        ``"low_cardinality"``, etc.) to the list of column names that were
+        assigned to the corresponding transformer.
+
     all_processing_steps_ : dict
         Maps the name of each column to a list of all the processing steps that
         were applied to it. Those steps may include some pre-processing
         transformations such as converting strings to datetimes or numbers, the
         main transformer, and casting the main transformer's output to float32.
+
     input_to_outputs_ : dict
         Maps the name of each column that was transformed by the
         TableVectorizer to the names of the corresponding output columns.
+
     output_to_input_ : dict
         Maps the name of each output column to the name of the column in the
         input dataframe from which it was derived.
+
     feature_names_in_ : list of strings
         The names of the input columns, after applying some cleaning (casting
         all column names to strings and deduplication).
+
     n_features_in_ : int
         The number of input columns.
+
     all_outputs_ : list of strings
         The names of the output columns.
 

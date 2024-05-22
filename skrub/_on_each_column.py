@@ -137,17 +137,17 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     transformer : scikit-learn Transformer
-        The transformer to map to the input dataframe's columns. For each
-        column in the input dataframe, a clone of the transformer is created
-        then ``fit_transform`` is called on a single-column dataframe. If the
-        transformer has a ``__single_column_transformer__`` attribute,
-        ``fit_transform`` is passed directly the column (a pandas or polars
-        Series) rather than a DataFrame. ``fit_transform`` must return either a
-        DataFrame, a Series, or a list of Series. ``fit_transform`` can raise
-        ``RejectColumn`` to indicate that this transformer does not apply to
-        this column -- for example the ``ToDatetime`` transformer will raise
-        ``RejectColumn`` for numerical columns. In this case, the column will
-        appear unchanged in the output.
+        The transformer to map to the selected columns. For each column in
+        ``cols``, a clone of the transformer is created then ``fit_transform``
+        is called on a single-column dataframe. If the transformer has a
+        ``__single_column_transformer__`` attribute, ``fit_transform`` is
+        passed directly the column (a pandas or polars Series) rather than a
+        DataFrame. ``fit_transform`` must return either a DataFrame, a Series,
+        or a list of Series. ``fit_transform`` can raise ``RejectColumn`` to
+        indicate that this transformer does not apply to this column -- for
+        example the ``ToDatetime`` transformer will raise ``RejectColumn`` for
+        numerical columns. In this case, the column will appear unchanged in
+        the output.
 
     cols : str, sequence of str, or skrub selector, optional
         The columns to attempt to transform. Columns outside of this selection
@@ -202,6 +202,10 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         Maps the name of each column that was transformed to the list of the
         resulting columns' names in the output.
 
+    output_to_input_ : dict
+        Maps the name of each column in the transformed output to the name of
+        the input column from which it was derived.
+
     transformers_ : dict
         Maps the name of each column that was transformed to the corresponding
         fitted transformer.
@@ -219,18 +223,18 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
 
     Fit a StandardScaler to each column in df:
 
-    >>> scaling = OnEachColumn(StandardScaler())
-    >>> scaling.fit_transform(df)
+    >>> scaler = OnEachColumn(StandardScaler())
+    >>> scaler.fit_transform(df)
          A    B    C
     0 -1.0 -1.0 -1.0
     1  1.0  1.0  1.0
-    >>> scaling.transformers_
+    >>> scaler.transformers_
     {'A': StandardScaler(), 'B': StandardScaler(), 'C': StandardScaler()}
 
     We can restrict the columns on which the transformation is applied:
 
-    >>> scaling = OnEachColumn(StandardScaler(), cols=["A", "B"])
-    >>> scaling.fit_transform(df)
+    >>> scaler = OnEachColumn(StandardScaler(), cols=["A", "B"])
+    >>> scaler.fit_transform(df)
          A    B     C
     0 -1.0 -1.0   0.0
     1  1.0  1.0  10.0
@@ -238,9 +242,9 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     We see that the scaling has not been applied to "C", which also does not
     appear in the transformers_:
 
-    >>> scaling.transformers_
+    >>> scaler.transformers_
     {'A': StandardScaler(), 'B': StandardScaler()}
-    >>> scaling.used_inputs_
+    >>> scaler.used_inputs_
     ['A', 'B']
 
     **Rejected columns**
@@ -303,8 +307,8 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     The ``rename_columns`` parameter allows renaming output columns.
 
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[0., 100.]))
-    >>> scaling = OnEachColumn(StandardScaler(), rename_columns='{}_scaled')
-    >>> scaling.fit_transform(df)
+    >>> scaler = OnEachColumn(StandardScaler(), rename_columns='{}_scaled')
+    >>> scaler.fit_transform(df)
        A_scaled  B_scaled
     0      -1.0      -1.0
     1       1.0       1.0
@@ -312,8 +316,8 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     The renaming is only applied to columns selected by ``cols`` (and not
     rejected by the transformer when ``allow_reject`` is ``True``).
 
-    >>> scaling = OnEachColumn(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
-    >>> scaling.fit_transform(df)
+    >>> scaler = OnEachColumn(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
+    >>> scaler.fit_transform(df)
        A_scaled      B
     0      -1.0    0.0
     1       1.0  100.0
@@ -324,18 +328,18 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     produces a column with the same name, the transformation result is renamed
     to avoid a name clash.
 
-    >>> scaling = OnEachColumn(StandardScaler(), keep_original=True)
-    >>> scaling.fit_transform(df)                                    # doctest: +SKIP
+    >>> scaler = OnEachColumn(StandardScaler(), keep_original=True)
+    >>> scaler.fit_transform(df)                                    # doctest: +SKIP
           A  A__skrub_89725c56__      B  B__skrub_81cc7d00__
     0 -10.0                 -1.0    0.0                 -1.0
     1  10.0                  1.0  100.0                  1.0
 
     In this case we may want to set a more sensible name for the transformer's output:
 
-    >>> scaling = OnEachColumn(
+    >>> scaler = OnEachColumn(
     ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
     ... )
-    >>> scaling.fit_transform(df)
+    >>> scaler.fit_transform(df)
           A  A_scaled      B  B_scaled
     0 -10.0      -1.0    0.0      -1.0
     1  10.0       1.0  100.0       1.0

@@ -164,7 +164,6 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
         self.used_inputs_ = self._columns
         self.created_outputs_ = self._transformed_output_names
         self.all_outputs_ = passthrough_names + self._transformed_output_names
-        self.input_to_outputs_ = {c: self.created_outputs_ for c in self.used_inputs_}
         # for sklearn
         self.feature_names_in_ = self.all_inputs_
         self.n_features_in_ = len(self.all_inputs_)

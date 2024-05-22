@@ -63,12 +63,13 @@ class ToFloat32(SingleColumnTransformer):
     >>> s[0]
     '1.1'
     >>> to_float = ToFloat32()
-    >>> to_float.fit_transform(s)
+    >>> float_s = to_float.fit_transform(s)
+    >>> float_s
     0    1.1
     1    NaN
     2    3.3
     Name: x, dtype: float32
-    >>> _[0]
+    >>> float_s[0]
     1.1
 
     Note that a column such as the example above may easily occur as the output

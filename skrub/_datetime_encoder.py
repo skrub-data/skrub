@@ -95,7 +95,8 @@ class DatetimeEncoder(SingleColumnTransformer):
         Extract the day of the week as a numerical feature from 1 (Monday) to 7 (Sunday).
 
     add_total_seconds : bool, default=True
-        Add the total number of seconds since Epoch.
+        Add the total number of seconds since the Unix epoch (00:00:00 UTC on 1
+        January 1970).
 
     Attributes
     ----------
