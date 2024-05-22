@@ -1,5 +1,10 @@
+import warnings
+
+from pandas._libs.tslibs.parsing import (
+    guess_datetime_format as pd_guess_datetime_format,
+)
+
 from . import _dataframe as sbd
-from . import _datetime_utils
 from . import _selectors as s
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
@@ -403,12 +408,35 @@ class ToDatetime(SingleColumnTransformer):
             return self.format
         not_null = sbd.drop_nulls(column)
         sample = sbd.sample(not_null, n=min(_SAMPLE_SIZE, sbd.shape(not_null)[0]))
-        sample = sbd.to_pandas(sample)
-        if not (sbd.is_pandas_object(sample) or sbd.is_string(sample)):
+        if not sbd.is_string(sample):
             return None
-        if not _datetime_utils.is_column_datetime_parsable(sample):
-            return None
-        return _datetime_utils.guess_datetime_format(sample)
+        return _guess_datetime_format(sample)
+
+
+def _guess_datetime_format(column):
+    """Guess the format of a column of datetimes represented as strings.
+
+    When no format is found that can be successfully applied to the whole
+    column, return ``None``. When both day-first and month-first formats are
+    possible, month-first is kept.
+    """
+    column = sbd.to_pandas(column)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+
+        month_first_formats = column.apply(
+            pd_guess_datetime_format, dayfirst=False
+        ).unique()
+        if len(month_first_formats) == 1 and month_first_formats[0] is not None:
+            return str(month_first_formats[0])
+
+        day_first_formats = column.apply(
+            pd_guess_datetime_format, dayfirst=True
+        ).unique()
+        if len(day_first_formats) == 1 and day_first_formats[0] is not None:
+            return str(day_first_formats[0])
+
+    return None
 
 
 @dispatch
