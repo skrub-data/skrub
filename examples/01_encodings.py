@@ -108,9 +108,14 @@ vectorizer
 
 ###############################################################################
 # We can inspect which transformation was chosen for a each column and retrieve the fitted transformer.
-# ``vectorizer.column_kinds_`` provides an overview of how the vectorizer categorized columns in our input:
+# ``vectorizer.kind_to_columns_`` provides an overview of how the vectorizer categorized columns in our input:
 
-vectorizer.column_kinds_
+vectorizer.kind_to_columns_
+
+###############################################################################
+# The reverse mapping is given by:
+
+vectorizer.column_to_kind_
 
 ###############################################################################
 # ``vectorizer.transformers_`` gives us a dictionary which maps column names to the corresponding transformer.
@@ -138,7 +143,7 @@ vectorizer.output_to_input_["department_BOA"]
 #
 # Note that ``"date_first_hired"`` has been recognized and processed as a datetime column.
 
-vectorizer.column_kinds_["datetime"]
+vectorizer.kind_to_columns_["datetime"]
 
 ###############################################################################
 # But looking closer at our original dataframe, it was encoded as a string.

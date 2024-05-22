@@ -200,10 +200,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         ``high_cardinality_transformer``, as opposed to the preprocessing
         steps) that was fitted on it.
 
-    column_kinds_ : dict
+    kind_to_columns_ : dict
         Maps each kind of column (``"high_cardinality"``,
         ``"low_cardinality"``, etc.) to the list of column names that were
         assigned to the corresponding transformer.
+
+    column_to_kind_ : dict
+        Maps each column name to the kind (``"high_cardinality"``,
+        ``"low_cardinality"``, etc.) it was assigned.
 
     all_processing_steps_ : dict
         Maps the name of each column to a list of all the processing steps that
@@ -283,8 +287,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     We can see the columns grouped by the kind of encoder that was applied
     to them:
 
-    >>> vectorizer.column_kinds_
+    >>> vectorizer.kind_to_columns_
     {'numeric': ['C'], 'datetime': ['B'], 'low_cardinality': ['A'], 'high_cardinality': [], 'specific': []}
+
+    As well as the reverse mapping (from each column to its kind):
+
+    >>> vectorizer.column_to_kind_
+    {'C': 'numeric', 'B': 'datetime', 'A': 'low_cardinality'}
 
     Before applying the main transformer, the ``TableVectorizer`` applies
     several preprocessing steps, for example to detect numbers or dates that are
@@ -360,8 +369,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     We can see that 'A' and 'B' are now treated as 'specific' columns:
 
-    >>> vectorizer.column_kinds_
-    {'numeric': ['C'], 'datetime': [], 'low_cardinality': [], 'high_cardinality': [], 'specific': ['A', 'B']}
+    >>> vectorizer.column_to_kind_
+    {'C': 'numeric', 'A': 'specific', 'B': 'specific'}
 
     Preprocessing and postprocessing steps are not applied to columns appearing
     in ``specific_columns``. For example 'B' has not gone through
@@ -581,10 +590,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.all_processing_steps_ = to_steps
 
     def _store_column_kinds(self):
-        self.column_kinds_ = {
+        self.kind_to_columns_ = {
             k: v.used_inputs_ for k, v in self._named_encoders.items()
         }
-        self.column_kinds_["specific"] = self._specific_columns
+        self.kind_to_columns_["specific"] = self._specific_columns
+        self.column_to_kind_ = {
+            c: k for k, cols in self.kind_to_columns_.items() for c in cols
+        }
 
     def _store_output_to_input(self):
         self.output_to_input_ = {
