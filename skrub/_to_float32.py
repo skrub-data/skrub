@@ -1,32 +1,5 @@
-import numpy as np
-import pandas as pd
-
 from . import _dataframe as sbd
-from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-
-
-@dispatch
-def _to_float32(col, strict):
-    raise NotImplementedError()
-
-
-@_to_float32.specialize("pandas")
-def _to_float32_pandas(col, strict):
-    if not pd.api.types.is_numeric_dtype(col):
-        col = pd.to_numeric(col, errors="raise" if strict else "coerce")
-    if col.dtype == np.float32:
-        return col
-    return col.astype(np.float32)
-
-
-@_to_float32.specialize("polars")
-def _to_float32_polars(col, strict):
-    import polars as pl
-
-    if col.dtype == pl.Float32:
-        return col
-    return col.cast(pl.Float32, strict=strict)
 
 
 class ToFloat32(SingleColumnTransformer):
@@ -200,7 +173,7 @@ class ToFloat32(SingleColumnTransformer):
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
-            numeric = _to_float32(column, strict=True)
+            numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
             raise RejectColumn(
@@ -208,4 +181,4 @@ class ToFloat32(SingleColumnTransformer):
             ) from e
 
     def transform(self, column):
-        return _to_float32(column, strict=False)
+        return sbd.to_float32(column, strict=False)

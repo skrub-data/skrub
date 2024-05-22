@@ -603,18 +603,24 @@ def _is_float_polars(column):
 
 
 @dispatch
-def to_float32(column):
+def to_float32(column, strict=True):
     raise NotImplementedError()
 
 
-@to_float32.specialize("pandas")
-def _to_float32_pandas(column):
-    return _cast_pandas(column, np.float32)
+@to_float32.specialize("pandas", argument_type="Column")
+def _to_float32_pandas(column, strict=True):
+    if not pd.api.types.is_numeric_dtype(column):
+        col = pd.to_numeric(column, errors="raise" if strict else "coerce")
+    if col.dtype == np.float32:
+        return col
+    return col.astype(np.float32)
 
 
-@to_float32.specialize("polars")
-def _to_float32_polars(column):
-    return _cast_polars(column, pl.Float32)
+@to_float32.specialize("polars", argument_type="Column")
+def _to_float32_polars(column, strict=True):
+    if col.dtype == pl.Float32:
+        return col
+    return col.cast(pl.Float32, strict=strict)
 
 
 @dispatch
