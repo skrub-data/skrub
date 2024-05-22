@@ -22,6 +22,9 @@ We study the case of predicting wages using the
 .. |GapEncoder| replace::
     :class:`~skrub.GapEncoder`
 
+.. |MinHashEncoder| replace::
+    :class:`~skrub.MinHashEncoder`
+
 .. |DatetimeEncoder| replace::
     :class:`~skrub.DatetimeEncoder`
 
@@ -143,7 +146,7 @@ vectorizer.output_to_input_["department_BOA"]
 #
 # Note that ``"date_first_hired"`` has been recognized and processed as a datetime column.
 
-vectorizer.kind_to_columns_["datetime"]
+vectorizer.column_to_kind_["date_first_hired"]
 
 ###############################################################################
 # But looking closer at our original dataframe, it was encoded as a string.
@@ -179,12 +182,55 @@ vectorizer.all_processing_steps_["department"]
 
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_validate
 import numpy as np
 
 pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
-scores = cross_val_score(pipeline, employees, salaries)
-print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}\n")
+
+results = cross_validate(pipeline, employees, salaries)
+scores = results["test_score"]
+print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}")
+print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
+
+###############################################################################
+# Specializing the TableVectorizer for HistGradientBoosting
+# ---------------------------------------------------------
+#
+# The encoders used by default by the |TableVectorizer| are safe choices for a wide range of downstream estimators.
+# If we know we want to use it with a |HGBR| (or classifier) model, we can make some different choices that are only well-suited for tree-based models but can yield a faster pipeline.
+# We make 2 changes.
+#
+# The |HGBR| has built-in support for categorical features, so we do not need to one-hot encode them.
+# We do need to tell it which features should be treated as categorical with the ``categorical_features`` parameter.
+# In recent versions of scikit-learn, we can set ``categorical_features='from_dtype'``, and it will treat all columns in the input that have a ``Categorical`` dtype as such.
+# Therefore we change the encoder for low-cardinality columns: instead of ``OneHotEncoder``, we use skrub's ``ToCategorical``.
+# This transformer which will simply ensure our columns have an actual ``Categorical`` dtype (as opposed to string for example), so that they can be recognized by the |HGBR|.
+#
+# The second change replaces the |GapEncoder| with a |MinHashEncoder|.
+# The |GapEncoder| is a topic model.
+# It produces interpretable embeddings in a vector space where distances are meaningful, which is great for interpretation and necessary if the downstream supervised learner is a linear model.
+# However fitting the topic model is costly in computation time and memory.
+# The |MinHashEncoder| produces features that are not easy to interpret, but that decision trees can efficiently use to test for the occurrence of particular character n-grams (more details are provided in its documentation).
+# Therefore it can be a faster and very effective alternative, when the supervised learner is built on top of decision trees, which is the case for the |HGBR|.
+
+from skrub import ToCategorical, MinHashEncoder
+
+vectorizer = TableVectorizer(
+    low_cardinality_transformer=ToCategorical(),
+    high_cardinality_transformer=MinHashEncoder(),
+)
+pipeline = make_pipeline(
+    vectorizer, HistGradientBoostingRegressor(categorical_features="from_dtype")
+)
+
+results = cross_validate(pipeline, employees, salaries)
+scores = results["test_score"]
+print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}")
+print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
+
+###############################################################################
+# We can see that this new pipeline achieves a similar score but is fitted much faster.
+# This is mostly due to replacing |GapEncoder| with |MinHashEncoder| (however this makes the features less interpretable).
 
 ###############################################################################
 # Feature importances in the statistical model

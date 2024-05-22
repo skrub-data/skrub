@@ -8,13 +8,13 @@ class ToCategorical(SingleColumnTransformer):
 
     A pandas columns with dtype ``string`` or ``object`` containing strings, or
     a polars column with dtype ``String``, is converted to a categorical
-    column. Any other type of column is rejected with a ``RejectColumn``
-    exception.
+    column. Categorical columns are passed through. Any other type of column is
+    rejected by raising a ``RejectColumn`` exception.
 
     The output of ``transform`` also always has a Categorical dtype. The categories
     are not necessarily the same across different calls to ``transform``. Indeed,
     scikit-learn estimators do not inspect the dtype's categories but the actual
-    values. Converting to a Categorical itself is therefore just a way to mark a
+    values. Converting to a Categorical is therefore just a way to mark a
     column and indicate to downstream estimators that this column should be treated
     as categorical. Ensuring they are encoded consistently, handling unseen
     categories at test time, etc. is the responsibility of encoders such as
@@ -24,7 +24,7 @@ class ToCategorical(SingleColumnTransformer):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub._to_categorical import ToCategorical
+    >>> from skrub import ToCategorical
 
     A string column is converted to a categorical column.
 
@@ -49,16 +49,15 @@ class ToCategorical(SingleColumnTransformer):
     Name: c, dtype: category
     Categories (2, object): ['five', 'four']
 
-    Columns that are not strings are rejected:
+    Columns that already have a Categorical dtype are passed through:
+
+    >>> s = pd.Series(['one', 'two'], name='c', dtype='category')
+    >>> to_cat.fit_transform(s) is s
+    True
+
+    Columns that are not strings nor categorical are rejected:
 
     >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))
-    Traceback (most recent call last):
-        ...
-    skrub._on_each_column.RejectColumn: Column 'c' does not contain strings.
-
-    In particular, columns that are already categorical are rejected.
-
-    >>> to_cat.fit_transform(pd.Series(['one', 'two'], name='c', dtype='category'))
     Traceback (most recent call last):
         ...
     skrub._on_each_column.RejectColumn: Column 'c' does not contain strings.
@@ -90,9 +89,6 @@ class ToCategorical(SingleColumnTransformer):
     >>> _.cat.categories.dtype
     string[python]
 
-    See ``CleanCategories`` to convert categories to object dtypes or
-    ``PandasStringDtypetoObject`` to convert strings to object dtypes.
-
     Polars columns are converted to the ``Categorical`` dtype (not ``Enum``). As
     for pandas, categories may vary across calls to ``transform``.
 
@@ -110,10 +106,13 @@ class ToCategorical(SingleColumnTransformer):
     """
 
     def fit_transform(self, column, y=None):
-        del y
+        if sbd.is_categorical(column):
+            return column
         if not sbd.is_string(column):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
         return sbd.to_categorical(column)
 
     def transform(self, column):
+        if sbd.is_categorical(column):
+            return column
         return sbd.to_categorical(column)
