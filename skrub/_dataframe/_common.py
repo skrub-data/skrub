@@ -610,17 +610,17 @@ def to_float32(column, strict=True):
 @to_float32.specialize("pandas", argument_type="Column")
 def _to_float32_pandas(column, strict=True):
     if not pd.api.types.is_numeric_dtype(column):
-        col = pd.to_numeric(column, errors="raise" if strict else "coerce")
-    if col.dtype == np.float32:
-        return col
-    return col.astype(np.float32)
+        column = pd.to_numeric(column, errors="raise" if strict else "coerce")
+    if column.dtype == np.float32:
+        return column
+    return column.astype(np.float32)
 
 
 @to_float32.specialize("polars", argument_type="Column")
 def _to_float32_polars(column, strict=True):
-    if col.dtype == pl.Float32:
-        return col
-    return col.cast(pl.Float32, strict=strict)
+    if column.dtype == pl.Float32:
+        return column
+    return column.cast(pl.Float32, strict=strict)
 
 
 @dispatch
