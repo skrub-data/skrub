@@ -613,7 +613,7 @@ def test_wrong_transformer():
 
 invalid_tuples = [
     (1, TypeError, r".*Only pandas and polars DataFrames.*"),
-    (np.array([1]), ValueError, r".*wrong shape.*"),
+    (np.array([1]), ValueError, r".*incompatible shape.*"),
     (pd.DataFrame([1], dtype="Sparse[int]"), TypeError, r".*sparse Pandas series.*"),
     (pd.Series([1, 2], name="S"), TypeError, r".*Only pandas and polars DataFrames.*"),
     (csr_matrix([1]), TypeError, r".*Only pandas and polars DataFrames.*"),
