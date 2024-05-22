@@ -106,6 +106,21 @@ class ToCategorical(SingleColumnTransformer):
     """
 
     def fit_transform(self, column, y=None):
+        """Fit the encoder and transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series
+            The input to transform.
+
+        y : None
+            Ignored.
+
+        Returns
+        -------
+        transformed : pandas or polars Series.
+            The input transformed to Categorical.
+        """
         if sbd.is_categorical(column):
             return column
         if not sbd.is_string(column):
@@ -113,6 +128,18 @@ class ToCategorical(SingleColumnTransformer):
         return sbd.to_categorical(column)
 
     def transform(self, column):
+        """Transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series
+            The input to transform.
+
+        Returns
+        -------
+        transformed : pandas or polars Series.
+            The input transformed to Categorical.
+        """
         if sbd.is_categorical(column):
             return column
         return sbd.to_categorical(column)

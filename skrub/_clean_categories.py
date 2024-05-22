@@ -10,7 +10,7 @@ def _with_string_categories(column):
     raise NotImplementedError()
 
 
-@_with_string_categories.specialize("pandas")
+@_with_string_categories.specialize("pandas", argument_type="Column")
 def _with_string_categories_pandas(column):
     categories = column.cat.categories.to_series()
     if sbd.is_string(categories) and not sbd.is_pandas_extension_dtype(categories):
@@ -28,7 +28,7 @@ def _with_string_categories_pandas(column):
         return column
 
 
-@_with_string_categories.specialize("polars")
+@_with_string_categories.specialize("polars", argument_type="Column")
 def _with_string_categories_polars(column):
     return column
 
