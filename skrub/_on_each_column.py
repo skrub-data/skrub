@@ -1,5 +1,7 @@
 import functools
 import itertools
+import re
+import textwrap
 
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -8,6 +10,18 @@ from . import _dataframe as sbd
 from . import _selectors
 from ._join_utils import pick_column_names
 from ._utils import renaming_func
+
+_SINGLE_COL_LINE = (
+    "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
+    " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
+    " single column (a pandas or polars Series) rather than a full dataframe. To apply"
+    " this transformer to one or more columns in a dataframe, use it as a parameter in"
+    " a ``skrub.TableVectorizer`` or ``sklearn.compose.ColumnTransformer``."
+)
+_SINGLE_COL_PARAGRAPH = textwrap.fill(
+    _SINGLE_COL_LINE, initial_indent="    ", subsequent_indent="    "
+)
+_SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
 
 
 class RejectColumn(ValueError):
@@ -34,6 +48,18 @@ class SingleColumnTransformer(BaseEstimator):
     Such transformers are applied independently to each column by
     ``OnEachColumn``; see the docstring of ``OnEachColumn`` for more
     information.
+
+    Single-column transformers are not required to inherit from this class in
+    order to work with ``OnEachColumn``, however doing so avoids some
+    boilerplate:
+
+        - The required ``__single_column_transformer__`` attribute is set.
+        - ``fit`` is defined (calls ``fit_transform`` and discards the result).
+        - ``fit``, ``transform`` and ``fit_transform`` are wrapped to check
+          that the input is a single column and raise a ``ValueError`` with a
+          helpful message when it is not.
+        - A note about single-column transformers (vs dataframe transformers)
+          is added after the summary line of the docstring.
     """
 
     __single_column_transformer__ = True
@@ -72,13 +98,9 @@ class SingleColumnTransformer(BaseEstimator):
         class_name = self.__class__.__name__
         if sbd.is_dataframe(column):
             raise ValueError(
-                f"{class_name}.{function_name} should be passed a single column, not a"
-                f" dataframe. {class_name} is a single-column transformer. Unlike most"
-                " scikit-learn estimators, its fit, transform and fit_transform"
-                " methods expect a single column (a pandas or polars Series) rather"
-                " than a full dataframe. To apply this transformer to one or more"
-                " columns in a dataframe, use it as a parameter in a"
-                " skrub.TableVectorizer or sklearn.compose.ColumnTransformer."
+                f"``{class_name}.{function_name}`` should be passed a single column,"
+                " not a dataframe. "
+                + _SINGLE_COL_LINE.format(class_name=class_name)
             )
         if not sbd.is_column(column):
             raise ValueError(
@@ -90,6 +112,11 @@ class SingleColumnTransformer(BaseEstimator):
 
     def __init_subclass__(subclass, **kwargs):
         super().__init_subclass__(**kwargs)
+        if subclass.__doc__ is not None:
+            subclass.__doc__ = insert_after_first_paragraph(
+                subclass.__doc__,
+                _SINGLE_COL_NOTE.format(class_name=subclass.__name__),
+            )
         for method in "fit", "fit_transform", "transform":
             if method in subclass.__dict__:
                 wrapped = _wrap_add_check_single_column(getattr(subclass, method))
@@ -122,6 +149,35 @@ def _wrap_add_check_single_column(f):
             return f(self, X)
 
         return wrapped_transform
+
+
+def insert_after_first_paragraph(document, text_to_insert):
+    split_doc = document.splitlines(True)
+    indent = min(
+        (
+            len(m.group(1))
+            for line in split_doc[1:]
+            if (m := re.match(r"^( *)\S", line)) is not None
+        ),
+        default=0,
+    )
+    doc_lines = iter(split_doc)
+    output_lines = []
+    for line in doc_lines:
+        output_lines.append(line)
+        if line.strip():
+            break
+    for line in doc_lines:
+        output_lines.append(line)
+        if not line.strip():
+            break
+    else:
+        output_lines.append("\n")
+    for line in text_to_insert.splitlines(True):
+        output_lines.append(line if not line.strip() else " " * indent + line)
+    output_lines.append("\n")
+    output_lines.extend(doc_lines)
+    return "".join(output_lines)
 
 
 class OnEachColumn(TransformerMixin, BaseEstimator):
