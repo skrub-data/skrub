@@ -32,12 +32,12 @@ def _trim_whitespace_only(column):
     raise NotImplementedError()
 
 
-@_trim_whitespace_only.specialize("pandas")
+@_trim_whitespace_only.specialize("pandas", argument_type="Column")
 def _trim_whitespace_only_pandas(column):
     return column.replace(r"^\s*$", "", regex=True)
 
 
-@_trim_whitespace_only.specialize("polars")
+@_trim_whitespace_only.specialize("polars", argument_type="Column")
 def _trim_whitespace_only_polars(column):
     if not sbd.is_string(column):
         return column

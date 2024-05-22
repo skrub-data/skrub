@@ -76,26 +76,6 @@ class ToStr(SingleColumnTransformer):
     3                  NaN
     dtype: object
 
-    >>> s = pd.Series(['one', 'two', None], name='s', dtype='string')
-    >>> s
-    0     one
-    1     two
-    2    <NA>
-    Name: s, dtype: string
-    >>> s_to_obj.fit_transform(s)
-    Traceback (most recent call last):
-        ...
-    NameError: name 's_to_obj' is not defined
-
-    In an ``object`` column, ``pd.NA`` is also replaced with ``np.nan``:
-
-    >>> s = pd.Series(['one', 'two', pd.NA], name='s', dtype='str')
-    >>> s
-    0     one
-    1     two
-    2    <NA>
-    Name: s, dtype: object
-
     A column that already contain strings, has the dtype ``object`` and no
     missing values is passed through:
 

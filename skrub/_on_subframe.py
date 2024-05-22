@@ -10,8 +10,8 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
-    single input). This is different from ``Map`` which fits a separate clone
-    of the transformer to each selected column independently.
+    single input). This is different from ``OnEachColumn`` which fits a
+    separate clone of the transformer to each selected column independently.
 
     Parameters
     ----------

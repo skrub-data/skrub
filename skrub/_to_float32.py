@@ -191,9 +191,6 @@ class ToFloat32(SingleColumnTransformer):
     True
     """
 
-    def __init__(self, force_float32=True):
-        self.force_float32 = force_float32
-
     def fit_transform(self, column, y=None):
         del y
         if sbd.is_any_date(column) or sbd.is_categorical(column):

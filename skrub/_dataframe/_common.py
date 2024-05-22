@@ -660,6 +660,8 @@ def _to_string_pandas(column):
 @to_string.specialize("polars")
 def _to_string_polars(column):
     if column.dtype != pl.Object:
+        # Objects are mere passengers in polars dataframes and we can't do
+        # anything with them; map_elements raises an exception.
         return _cast_polars(column, pl.String)
     return column.map_elements(str)
 
