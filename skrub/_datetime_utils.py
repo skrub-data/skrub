@@ -6,7 +6,6 @@ from pandas._libs.tslibs.parsing import (
     guess_datetime_format as pd_guess_datetime_format,
 )
 from sklearn.utils.fixes import parse_version
-from sklearn.utils.validation import check_random_state
 
 
 def _mixed_format():
@@ -52,7 +51,7 @@ def is_column_datetime_parsable(column):
             return False
 
 
-def guess_datetime_format(column, random_state=None):
+def guess_datetime_format(column):
     """Infer the format of a 1d array.
 
     This functions uses Pandas ``guess_datetime_format`` routine for both
@@ -68,11 +67,7 @@ def guess_datetime_format(column, random_state=None):
     ``_guess_datetime_format``.
     """
     # Subsample samples for fast format estimation
-    column = pd.Series(column).dropna().to_numpy()
-    n_samples = 30
-    size = min(column.shape[0], n_samples)
-    rng = check_random_state(random_state)
-    column = rng.choice(column, size=size, replace=False)
+    column = column.to_numpy()
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=UserWarning)
