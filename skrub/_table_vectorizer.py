@@ -269,7 +269,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     [array(['one', 'three', 'two'], dtype=object)]
 
     We can see the columns grouped by the kind of encoder that was applied
-    to them.
+    to them:
 
     >>> vectorizer.column_kinds_
     {'numeric': ['C'], 'datetime': ['B'], 'low_cardinality': ['A'], 'high_cardinality': [], 'specific': []}
@@ -412,7 +412,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Returns
         -------
         self : TableVectorizer
-            This estimator.
+            The fitted estimator.
         """
         self.fit_transform(X, y=y)
         return self

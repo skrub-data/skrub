@@ -184,7 +184,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         ...
     skrub._on_each_column.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
 
-    ToDatetime can be used for converting strings to datetimes.
+    :class:`ToDatetime`: can be used for converting strings to datetimes.
 
     >>> from skrub import ToDatetime
     >>> from sklearn.pipeline import make_pipeline
@@ -249,7 +249,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         self.add_total_seconds = add_total_seconds
 
     def fit_transform(self, column, y=None):
-        """Fit the encoder and transform a colum.
+        """Fit the encoder and transform a column.
 
         Parameters
         ----------

@@ -13,7 +13,7 @@ def _get_time_zone(col):
     raise NotImplementedError()
 
 
-@_get_time_zone.specialize("pandas")
+@_get_time_zone.specialize("pandas", argument_type="Column")
 def _get_time_zone_pandas(col):
     tz = col.dt.tz
     if tz is None:
@@ -23,7 +23,7 @@ def _get_time_zone_pandas(col):
     return tz.tzname(None)
 
 
-@_get_time_zone.specialize("polars")
+@_get_time_zone.specialize("polars", argument_type="Column")
 def _get_time_zone_polars(col):
     return col.dtype.time_zone
 
@@ -80,7 +80,7 @@ class ToDatetime(SingleColumnTransformer):
     Parameters
     ----------
     format : str or None, optional, default=None
-        Format to use for parsing dates that are stored as strings, eg
+        Format to use for parsing dates that are stored as strings, e.g.
         ``"%Y-%m-%dT%H:%M%S"``.
 
     Attributes
@@ -120,7 +120,7 @@ class ToDatetime(SingleColumnTransformer):
     2   2024-05-07 13:17:52
     Name: when, dtype: datetime64[ns]
 
-    The attributes ``datetetime_format_``, ``output_dtype_``, ``output_timezone_``
+    The attributes ``format_``, ``output_dtype_``, ``output_time_zone_``
     record information about the conversion result.
 
     >>> to_dt.format_
@@ -204,7 +204,7 @@ class ToDatetime(SingleColumnTransformer):
     **Timezones**
 
     During ``fit``, parsing strings that contain fixed offsets results in datetimes
-    in UTC. Mixed offsets are supported and all will be converted to UTC.
+    in UTC. Mixed offsets are supported and will all be converted to UTC.
 
     >>> s = pd.Series(["2020-01-01T04:00:00+02:00", "2020-01-01T04:00:00+03:00"])
     >>> to_dt.fit_transform(s)
@@ -216,7 +216,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.output_time_zone_
     'UTC'
 
-    Strings with no timezone indication result in naive datetimes
+    Strings with no timezone indication result in naive datetimes:
 
     >>> s = pd.Series(["2020-01-01T04:00:00", "2020-01-01T04:00:00"])
     >>> to_dt.fit_transform(s)
@@ -373,7 +373,7 @@ class ToDatetime(SingleColumnTransformer):
         return as_datetime
 
     def transform(self, column):
-        """Transform a colum.
+        """Transform a column.
 
         Parameters
         ----------
@@ -403,7 +403,7 @@ class ToDatetime(SingleColumnTransformer):
 
 
 @dispatch
-def to_datetime(df, format=None):
+def to_datetime(obj, format=None):
     """Convert DataFrame or column to Datetime dtype.
 
     Parameters
@@ -411,7 +411,7 @@ def to_datetime(df, format=None):
     df : dataframe or column
         The dataframe or column to transform.
 
-    format : str or None
+    format : str or None, optional, default=None
         Format string to use to parse datetime strings.
         See the reference documentation for format codes:
         https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes .
@@ -432,7 +432,7 @@ def to_datetime(df, format=None):
     """
     raise TypeError(
         "Input to skrub.to_datetime must be a pandas or polars Series or DataFrame."
-        f" Got {type(df)}."
+        f" Got {type(obj)}."
     )
 
 

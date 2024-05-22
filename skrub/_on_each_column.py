@@ -320,9 +320,9 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
 
     ``rename_columns`` can be particularly useful when ``keep_original`` is
     ``True``. When a column is transformed, we can tell ``OnEachColumn`` to
-    retain the original, untransfromed column in the output. If the transformer
+    retain the original, untransformed column in the output. If the transformer
     produces a column with the same name, the transformation result is renamed
-    to avoid the name clash.
+    to avoid a name clash.
 
     >>> scaling = OnEachColumn(StandardScaler(), keep_original=True)
     >>> scaling.fit_transform(df)                                    # doctest: +SKIP

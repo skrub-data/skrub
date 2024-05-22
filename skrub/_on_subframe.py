@@ -24,7 +24,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     cols : str, sequence of str, or skrub selector, optional
         The columns to attempt to transform. Columns outside of this selection
         will be passed through unchanged, without calling ``fit_transform`` on
-        them. The default is transform all columns.
+        them. The default is to transform all columns.
 
     keep_original : bool, default=False
         If ``True``, the original columns are preserved in the output. If the
