@@ -412,12 +412,12 @@ class ToDatetime(SingleColumnTransformer):
 
 
 @dispatch
-def to_datetime(obj, format=None):
+def to_datetime(data, format=None):
     """Convert DataFrame or column to Datetime dtype.
 
     Parameters
     ----------
-    df : dataframe or column
+    data : dataframe or column
         The dataframe or column to transform.
 
     format : str or None, optional, default=None
@@ -441,7 +441,7 @@ def to_datetime(obj, format=None):
     """
     raise TypeError(
         "Input to skrub.to_datetime must be a pandas or polars Series or DataFrame."
-        f" Got {type(obj)}."
+        f" Got {type(data)}."
     )
 
 
