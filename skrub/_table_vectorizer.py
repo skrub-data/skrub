@@ -196,32 +196,35 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Attributes
     ----------
     transformers_ : dict
-        Maps the name of each column to the main transformer (such as the
-        ``high_cardinality_transformer``, as opposed to the preprocessing
-        steps) that was fitted on it.
-
-    kind_to_columns_ : dict
-        Maps each kind of column (``"high_cardinality"``,
-        ``"low_cardinality"``, etc.) to the list of column names that were
-        assigned to the corresponding transformer.
+        Maps the name of each column to the fitted transformer that was applied
+        to it.
 
     column_to_kind_ : dict
         Maps each column name to the kind (``"high_cardinality"``,
-        ``"low_cardinality"``, etc.) it was assigned.
+        ``"low_cardinality"``, ``"specific"``, etc.) it was assigned.
+
+    kind_to_columns_ : dict
+        The reverse of ``column_to_kind_``: maps each kind of column
+        (``"high_cardinality"``, ``"low_cardinality"``, etc.) to a list of
+        column names. For example ``kind_to_columns['datetime']`` contains the
+        names of all datetime columns.
+
+    input_to_outputs_ : dict
+        Maps the name of each input column to the names of the corresponding
+        output columns.
+
+    output_to_input_ : dict
+        The reverse of ``input_to_outputs_``: maps the name of each output
+        column to the name of the column in the input dataframe from which it
+        was derived.
 
     all_processing_steps_ : dict
         Maps the name of each column to a list of all the processing steps that
         were applied to it. Those steps may include some pre-processing
         transformations such as converting strings to datetimes or numbers, the
-        main transformer, and casting the main transformer's output to float32.
-
-    input_to_outputs_ : dict
-        Maps the name of each column that was transformed by the
-        TableVectorizer to the names of the corresponding output columns.
-
-    output_to_input_ : dict
-        Maps the name of each output column to the name of the column in the
-        input dataframe from which it was derived.
+        main transformer (e.g. the ``DatetimeEncoder``), and a post-processing
+        step casting the main transformer's output to float32. See the
+        "Examples" section below for details.
 
     feature_names_in_ : list of strings
         The names of the input columns, after applying some cleaning (casting
@@ -273,8 +276,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     >>> vectorizer.output_to_input_['B_total_seconds']
     'B'
 
-    We can also see the encoder, i.e. the main transformer that was applied to
-    a given column:
+    We can also see the encoder that was applied to a given column:
 
     >>> vectorizer.transformers_['B']
     DatetimeEncoder()
