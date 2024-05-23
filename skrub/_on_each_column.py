@@ -127,28 +127,28 @@ def _wrap_add_check_single_column(f):
     if f.__name__ == "fit":
 
         @functools.wraps(f)
-        def wrapped_fit(self, X, y=None):
+        def fit(self, X, y=None):
             self._check_single_column(X, f.__name__)
             return f(self, X, y=y)
 
-        return wrapped_fit
+        return fit
     elif f.__name__ == "fit_transform":
 
         @functools.wraps(f)
-        def wrapped_fit_transform(self, X, y=None):
+        def fit_transform(self, X, y=None):
             self._check_single_column(X, f.__name__)
             return f(self, X, y=y)
 
-        return wrapped_fit_transform
+        return fit_transform
     else:
         assert f.__name__ == "transform", f.__name__
 
         @functools.wraps(f)
-        def wrapped_transform(self, X):
+        def transform(self, X):
             self._check_single_column(X, f.__name__)
             return f(self, X)
 
-        return wrapped_transform
+        return transform
 
 
 def insert_after_first_paragraph(document, text_to_insert):
