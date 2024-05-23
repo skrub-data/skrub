@@ -5,6 +5,7 @@ import textwrap
 
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _selectors
@@ -442,6 +443,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         return self._process_fit_transform_results(results, X)
 
     def transform(self, X):
+        check_is_fitted(self, "transformers_")
         parallel = Parallel(n_jobs=self.n_jobs)
         func = delayed(_transform_column)
         outputs = parallel(

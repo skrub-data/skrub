@@ -1,4 +1,5 @@
 from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _selectors
@@ -171,6 +172,8 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
         return result
 
     def transform(self, X):
+        check_is_fitted(self, "transformer_")
+
         # do the selection even if self._columns is empty to raise if X doesn't
         # have the right columns
         to_transform = _selectors.select(X, self._columns)
