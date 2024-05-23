@@ -147,7 +147,7 @@ class ToCategorical(SingleColumnTransformer):
 
         Returns
         -------
-        transformed : pandas or polars Series.
+        transformed : pandas or polars Series
             The input transformed to Categorical.
         """
         if sbd.is_categorical(column):
@@ -166,7 +166,7 @@ class ToCategorical(SingleColumnTransformer):
 
         Returns
         -------
-        transformed : pandas or polars Series.
+        transformed : pandas or polars Series
             The input transformed to Categorical.
         """
         if sbd.is_categorical(column):

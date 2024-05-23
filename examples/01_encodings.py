@@ -42,7 +42,7 @@ We study the case of predicting wages using the
 # Easily encoding a dataframe
 # ---------------------------
 #
-# Let's first retrieve the dataset, using the one of the downloaders from the :mod:`skrub.datasets` module.
+# Let's first retrieve the dataset, using one of the downloaders from the :mod:`skrub.datasets` module.
 # As all the downloaders, :func:`~skrub.datasets.fetch_employee_salaries` returns a dataset with attributes ``X``, and ``y``.
 # ``X`` is a dataframe which contains the features (aka design matrix, explanatory variables, independent variables).
 # ``y`` is a column (pandas Series) which contains the target (aka dependent, response variable) that we want to learn to predict from ``X``.
@@ -68,7 +68,7 @@ salaries
 # Therefore our complex, heterogeneous table needs to be processed to extract numeric features.
 # Transforming a complex real-world object such as a date into a vector of numeric features —more adequate for machine learning— is often called *vectorizing* it.
 #
-# We can do this easily using skrub's |TableVectorizer|.
+# We can easily do this using skrub's |TableVectorizer|.
 
 from skrub import TableVectorizer
 
@@ -83,7 +83,7 @@ vectorized_employees
 # ``'gender_nan'`` were created to encode the ``'gender'`` column.
 
 ###############################################################################
-# By performing apropriate transformations on our complex data, the |TableVectorizer| produced numeric features that we can use for machine-learning:
+# By performing appropriate transformations on our complex data, the |TableVectorizer| produced numeric features that we can use for machine-learning:
 
 from sklearn.ensemble import HistGradientBoostingRegressor
 

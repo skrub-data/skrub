@@ -86,7 +86,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         - Non-strings are cast to strings.
         - A random suffix is added to duplicated names.
         - If either of these operations is needed, a warning is emitted.
-        - only applies to pandas; polars column names are always unique strings.
+        - Only applies to pandas; polars column names are always unique strings.
     - The input is not sparse.
         - A TypeError is raised otherwise.
     - The input is not a ``LazyFrame``.
