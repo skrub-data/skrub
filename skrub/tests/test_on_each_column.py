@@ -10,13 +10,19 @@ from skrub._on_each_column import OnEachColumn, RejectColumn, SingleColumnTransf
 from skrub._select_cols import Drop
 
 
-def test_single_column_transformer_wrapped_methods(df_module):
+@pytest.mark.parametrize("define_fit", [False, True])
+def test_single_column_transformer_wrapped_methods(df_module, define_fit):
     class Dummy(SingleColumnTransformer):
         def fit_transform(self, column, y=None):
             return column
 
         def transform(self, column):
             return column
+
+        if define_fit:
+
+            def fit(self, column, y=None):
+                return self
 
     col = df_module.example_column
     assert Dummy().fit_transform(col) is col
@@ -35,12 +41,19 @@ def test_single_column_transformer_wrapped_methods(df_module):
             getattr(dummy, method)(np.ones((3,)))
 
 
-def test_single_column_transformer_docstring():
+@pytest.mark.parametrize(
+    "docstring",
+    [
+        "dummy transformer\n\n    details\n",
+        "\n    dummy transformer\n    summary\n\n    details",
+        "summary",
+        "\n    dummy transformer\n\ndetails\n   \n    more",
+        "",
+    ],
+)
+def test_single_column_transformer_docstring(docstring):
     class Dummy(SingleColumnTransformer):
-        """dummy transformer
-
-        details
-        """
+        __doc__ = docstring
 
     assert "``Dummy`` is a type of single-column" in Dummy.__doc__
 
@@ -102,13 +115,17 @@ class SCMult(Mult):
 
 @pytest.mark.parametrize("output_kind", ["single_column", "dataframe", "column_list"])
 @pytest.mark.parametrize("transformer_class", [Mult, SCMult])
-def test_on_each_column(df_module, output_kind, transformer_class):
+@pytest.mark.parametrize("use_fit_transform", [False, True])
+def test_on_each_column(df_module, output_kind, transformer_class, use_fit_transform):
     mapper = OnEachColumn(transformer_class(output_kind), s.glob("a*"))
     X = df_module.make_dataframe(
         {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}
     )
     y = [0.0, 1.0]
-    out = mapper.fit_transform(X, y)
+    if use_fit_transform:
+        out = mapper.fit_transform(X, y)
+    else:
+        out = mapper.fit(X, y).transform(X)
     expected_data = {
         "a 0 * y": [0.0, 2.2],
         "a 0 * 2.0": [2.0, 4.4],
@@ -151,10 +168,14 @@ class Rejector(SingleColumnTransformer):
         return column * 2.2
 
 
-def test_allowed_column_rejections(df_module):
+@pytest.mark.parametrize("use_fit_transform", [False, True])
+def test_allowed_column_rejections(df_module, use_fit_transform):
     df = df_module.example_dataframe
     mapper = OnEachColumn(Rejector(), allow_reject=True)
-    out = mapper.fit_transform(df)
+    if use_fit_transform:
+        out = mapper.fit_transform(df)
+    else:
+        out = mapper.fit(df).transform(df)
     assert sbd.column_names(out) == sbd.column_names(df)
     df_module.assert_column_equal(
         sbd.col(out, "float-col"), sbd.col(df, "float-col") * 2.2
@@ -169,6 +190,22 @@ def test_forbidden_column_rejections(df_module):
     mapper = OnEachColumn(Rejector())
     with pytest.raises(ValueError, match=".*failed on.*int-col"):
         mapper.fit(df)
+
+
+class RejectInTransform(SingleColumnTransformer):
+    def fit_transform(self, column, y=None):
+        return column
+
+    def transform(self, column):
+        raise RejectColumn()
+
+
+def test_rejection_forbidden_in_transform(df_module):
+    df = df_module.example_dataframe
+    mapper = OnEachColumn(RejectInTransform(), allow_reject=True)
+    mapper.fit(df)
+    with pytest.raises(ValueError, match=".*failed on.*int-col"):
+        mapper.transform(df)
 
 
 class RenameB(SingleColumnTransformer):
@@ -186,22 +223,30 @@ def _to_XXX(names):
     return [re.sub(r"__skrub_[0-9a-f]+__", "__skrub_XXX__", n) for n in names]
 
 
-def test_column_renaming(df_module):
+@pytest.mark.parametrize("use_fit_transform", [False, True])
+def test_column_renaming(df_module, use_fit_transform):
+    df = mapper = out = out_names = None
+
+    def fit_transform():
+        nonlocal out, out_names
+        if use_fit_transform:
+            out = mapper.fit_transform(df)
+        else:
+            out = mapper.fit(df).transform(df)
+        out_names = _to_XXX(sbd.column_names(out))
+
     df = df_module.make_dataframe({"A": [1], "B": [2]})
 
     mapper = OnEachColumn(RenameB())
-    out = mapper.fit_transform(df)
-    out_names = _to_XXX(sbd.column_names(out))
+    fit_transform()
     assert out_names == ["B__skrub_XXX__", "B"]
 
     mapper = OnEachColumn(RenameB(), cols=("A",), rename_columns="{}_out")
-    out = mapper.fit_transform(df)
-    out_names = sbd.column_names(out)
+    fit_transform()
     assert out_names == ["B_out", "B"]
 
     mapper = OnEachColumn(
         RenameB(), cols=("A",), rename_columns="{}_out", keep_original=True
     )
-    out = mapper.fit_transform(df)
-    out_names = sbd.column_names(out)
+    fit_transform()
     assert out_names == ["A", "B_out", "B"]
