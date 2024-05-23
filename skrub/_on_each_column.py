@@ -11,6 +11,8 @@ from . import _selectors
 from ._join_utils import pick_column_names
 from ._utils import renaming_func
 
+__all__ = ["OnEachColumn", "SingleColumnTransformer", "RejectColumn"]
+
 _SINGLE_COL_LINE = (
     "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
     " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
@@ -104,7 +106,7 @@ class SingleColumnTransformer(BaseEstimator):
             )
         if not sbd.is_column(column):
             raise ValueError(
-                f"{class_name}.{function_name} expects the first argument X "
+                f"``{class_name}.{function_name}`` expects the first argument X "
                 "to be a column (a pandas or polars Series). "
                 f"Got X with type: {column.__class__.__name__}."
             )
@@ -113,7 +115,7 @@ class SingleColumnTransformer(BaseEstimator):
     def __init_subclass__(subclass, **kwargs):
         super().__init_subclass__(**kwargs)
         if subclass.__doc__ is not None:
-            subclass.__doc__ = insert_after_first_paragraph(
+            subclass.__doc__ = _insert_after_first_paragraph(
                 subclass.__doc__,
                 _SINGLE_COL_NOTE.format(class_name=subclass.__name__),
             )
@@ -151,7 +153,7 @@ def _wrap_add_check_single_column(f):
         return transform
 
 
-def insert_after_first_paragraph(document, text_to_insert):
+def _insert_after_first_paragraph(document, text_to_insert):
     split_doc = document.splitlines(True)
     indent = min(
         (
