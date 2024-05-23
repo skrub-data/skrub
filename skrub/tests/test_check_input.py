@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
@@ -48,8 +49,6 @@ def test_wrong_dataframe_library_in_transform():
 
 
 def test_column_names_to_unique_strings():
-    import pandas as pd
-
     df = pd.DataFrame(np.ones((2, 4)), columns=["a", 0, "0", "a"])
     assert df.columns.tolist() == ["a", 0, "0", "a"]
     check = CheckInputDataFrame()
@@ -68,8 +67,6 @@ def test_column_names_to_unique_strings():
 
 
 def test_input_is_sparse():
-    import pandas as pd
-
     df = pd.DataFrame({"a": [1, 2], "b": pd.Series(pd.arrays.SparseArray([0, 1]))})
     with pytest.raises(TypeError, match=".*are sparse Pandas series"):
         CheckInputDataFrame().fit_transform(df)
@@ -107,7 +104,7 @@ def test_column_names_changed(df_module):
         check.transform(new_df)
 
 
-def test_column_names_diff():
+def test_column_names_diff_display():
     """
     >>> import pandas as pd
     >>> from skrub._check_input import CheckInputDataFrame
