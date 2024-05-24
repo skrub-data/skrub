@@ -760,6 +760,9 @@ def _to_categorical_pandas(column):
 
 @to_categorical.specialize("polars")
 def _to_categorical_polars(column):
+    if column.dtype in (pl.Categorical, pl.Enum):
+        return column
+    column = to_string(column)
     return _cast_polars(column, pl.Categorical())
 
 
