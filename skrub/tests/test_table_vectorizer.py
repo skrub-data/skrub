@@ -665,7 +665,9 @@ def test_specific_transformers():
             ]
         ).fit_transform(df)
 
-    with pytest.raises(ValueError, match="Expected a list of .* pairs"):
+    with pytest.raises(
+        ValueError, match="'specific_transformers' must be a list .* pairs"
+    ):
         TableVectorizer(
             specific_transformers=[("name", "passthrough", ["a1", "b1"])]
         ).fit_transform(df)
