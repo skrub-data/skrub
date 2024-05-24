@@ -39,8 +39,7 @@ def _trim_whitespace_only_pandas(column):
 
 @_trim_whitespace_only.specialize("polars", argument_type="Column")
 def _trim_whitespace_only_polars(column):
-    if not sbd.is_string(column):
-        return column
+    assert sbd.is_string(column), column.dtype
     return column.str.replace(r"^\s*$", "", literal=False)
 
 
@@ -238,6 +237,8 @@ class CleanNullStrings(SingleColumnTransformer):
         return self.transform(column)
 
     def transform(self, column):
+        if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
+            return column
         column = _trim_whitespace_only(column)
         column = sbd.replace(column, STR_NA_VALUES, sbd.null_value_for(column))
         return column
