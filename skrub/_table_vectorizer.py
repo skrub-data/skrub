@@ -1,5 +1,6 @@
 import reprlib
 from collections import UserDict
+from typing import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -490,14 +491,19 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         for i, config in enumerate(self.specific_transformers):
             try:
                 _, cols = config
-            except (ValueError, TypeError):
+                assert isinstance(cols, Iterable) and not isinstance(cols, str)
+            except (ValueError, TypeError, AssertionError):
                 raise ValueError(
-                    "Expected a list of (transformer, columns) pairs. "
+                    "'specific_transformers' must be a list of "
+                    "(transformer, list of columns) pairs. "
                     f"Got {config!r} at index {i}."
                 )
             for c in cols:
                 if not isinstance(c, str):
-                    raise ValueError(f"cols must be string names, got {c}")
+                    raise ValueError(
+                        "Column names in 'specific_transformers' must be strings,"
+                        f" got {c}"
+                    )
                 if c in specific_columns:
                     raise ValueError(
                         f"Column {c!r} used twice in in specific_transformers, "

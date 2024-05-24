@@ -1,3 +1,5 @@
+from datetime import timezone
+
 import pandas as pd
 import pytest
 from sklearn.utils.fixes import parse_version
@@ -141,11 +143,23 @@ def test_fit_naive_transform_aware(df_module, datetime_col):
     assert to_iso(encoder.transform(aware)) == to_iso(convert(df_module, aware, "UTC"))
 
 
-def test_transform_from_a_different_timezone(df_module, datetime_col):
-    fit_col = localize(df_module, datetime_col, "Europe/Paris")
+@pytest.mark.parametrize(
+    "source", ["Europe/Paris", "America/Sao_Paulo", "UTC", timezone.utc]
+)
+@pytest.mark.parametrize(
+    "dest", ["Europe/Paris", "America/Sao_Paulo", "UTC", timezone.utc]
+)
+def test_transform_from_a_different_timezone(df_module, datetime_col, source, dest):
+    if timezone.utc in (source, dest) and df_module.name != "pandas":
+        # polars only receives strings as time zones.
+        # for pandas we also test with timezone.utc because it results in
+        # series where .dt.tz is a standard library timezone rather than a
+        # pandas timezone, so it does not have the 'zone' attribute and we must
+        # use its '.tzname' method instead.
+        return
+    fit_col = localize(df_module, datetime_col, source)
     encoder = ToDatetime().fit(fit_col)
-    transform_col = convert(df_module, fit_col, "America/Sao_Paulo")
-    assert to_iso(transform_col) != to_iso(fit_col)
+    transform_col = convert(df_module, fit_col, dest)
     assert to_iso(encoder.transform(transform_col)) == to_iso(fit_col)
 
 

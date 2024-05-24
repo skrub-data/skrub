@@ -694,3 +694,14 @@ def test_numberlike_categories():
     # transform and end up treating numbers as categories
     df = pd.DataFrame(dict(a=pd.Series(["0", "1"], dtype="category")))
     TableVectorizer().fit(df).transform(df)
+
+
+def test_bad_specific_cols():
+    with pytest.raises(
+        ValueError, match=".* must be a list of .transformer, list of columns."
+    ):
+        TableVectorizer(specific_transformers=[(None, "a")]).fit(None)
+    with pytest.raises(
+        ValueError, match="Column names in 'specific_transformers' must be strings"
+    ):
+        TableVectorizer(specific_transformers=[(None, [0])]).fit(None)

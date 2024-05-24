@@ -12,6 +12,7 @@ def test_good_input(df_module):
     assert check.fit_transform(df) is df
     assert check.transform(df) is df
     assert check.module_name_ == df_module.name
+    assert check.get_feature_names_out() == sbd.column_names(df)
 
 
 def test_input_is_an_array():
