@@ -184,3 +184,13 @@ def df_module(request):
 @pytest.fixture
 def example_data_dict():
     return _example_data_dict()
+
+
+@pytest.fixture(params=[False, True])
+def use_fit_transform(request):
+    """A simple fixture that yields False, then True.
+
+    The benefit is to reduce the number of times we have to parametrize a test
+    manually.
+    """
+    return request.param

@@ -99,7 +99,6 @@ def expected_features(df_module):
     return OnEachColumn(ToFloat32()).fit_transform(res)
 
 
-@pytest.mark.parametrize("use_fit_transform", [False, True])
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):
     enc = DatetimeEncoder()
     if use_fit_transform:

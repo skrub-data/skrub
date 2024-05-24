@@ -102,7 +102,7 @@ class Mult(BaseEstimator):
         return sbd.col(outputs, sbd.column_names(outputs)[0])
 
 
-class SCMult(Mult):
+class SingleColMult(Mult):
     """Single-column transformer equivalent of Mult."""
 
     __single_column_transformer__ = True
@@ -114,8 +114,7 @@ class SCMult(Mult):
 
 
 @pytest.mark.parametrize("output_kind", ["single_column", "dataframe", "column_list"])
-@pytest.mark.parametrize("transformer_class", [Mult, SCMult])
-@pytest.mark.parametrize("use_fit_transform", [False, True])
+@pytest.mark.parametrize("transformer_class", [Mult, SingleColMult])
 def test_on_each_column(df_module, output_kind, transformer_class, use_fit_transform):
     mapper = OnEachColumn(transformer_class(output_kind), s.glob("a*"))
     X = df_module.make_dataframe(
@@ -168,7 +167,6 @@ class Rejector(SingleColumnTransformer):
         return column * 2.2
 
 
-@pytest.mark.parametrize("use_fit_transform", [False, True])
 def test_allowed_column_rejections(df_module, use_fit_transform):
     df = df_module.example_dataframe
     mapper = OnEachColumn(Rejector(), allow_reject=True)
@@ -223,7 +221,6 @@ def _to_XXX(names):
     return [re.sub(r"__skrub_[0-9a-f]+__", "__skrub_XXX__", n) for n in names]
 
 
-@pytest.mark.parametrize("use_fit_transform", [False, True])
 def test_column_renaming(df_module, use_fit_transform):
     df = mapper = out = out_names = None
 
