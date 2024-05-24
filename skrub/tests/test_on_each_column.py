@@ -248,3 +248,15 @@ def test_column_renaming(df_module, use_fit_transform):
     )
     fit_transform()
     assert out_names == ["A", "B_out", "B"]
+
+
+class NumpyOutput(BaseEstimator):
+    def fit_transform(self, X, y=None):
+        return np.ones(sbd.shape(X))
+
+
+def test_wrong_transformer_output_type(all_dataframe_modules):
+    with pytest.raises(TypeError, match=".*fit_transform returned a result of type"):
+        OnEachColumn(NumpyOutput()).fit_transform(
+            all_dataframe_modules["pandas-numpy-dtypes"].example_dataframe
+        )

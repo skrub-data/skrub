@@ -9,6 +9,8 @@ from numpy.typing import NDArray
 from sklearn.base import clone
 from sklearn.utils import check_array
 
+from skrub import _dataframe as sbd
+
 
 class LRUDict:
     """Dict with limited capacity.
@@ -184,3 +186,23 @@ def repr_args(args, kwargs, defaults={}):
             if k not in defaults or defaults[k] != v
         ]
     )
+
+
+def transformer_output_type_error(transformer, transform_input, transform_output):
+    module = sbd.dataframe_module_name(transform_input)
+    message = (
+        f"{transformer.__class__.__name__}.fit_transform returned a result of type"
+        f" {transform_output.__class__.__name__}, but a {module} DataFrame was"
+        f" expected. If {transformer.__class__.__name__} is a custom transformer class,"
+        f" please make sure that the output is a {module} container when the input is a"
+        f" {module} container."
+    )
+    if not hasattr(transformer, "set_output"):
+        message += (
+            f" One way of enabling a transformer to output {module} DataFrames is"
+            " inheriting from the sklearn.base.TransformerMixin class and defining the"
+            " 'get_feature_names_out' method. See"
+            " https://scikit-learn.org/stable/auto_examples/miscellaneous/plot_set_output.html"
+            " for details."
+        )
+    raise TypeError(message)

@@ -10,7 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _selectors
 from ._join_utils import pick_column_names
-from ._utils import renaming_func
+from ._utils import renaming_func, transformer_output_type_error
 
 __all__ = ["OnEachColumn", "SingleColumnTransformer", "RejectColumn"]
 
@@ -192,6 +192,13 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     column, that column is passed through unchanged. If ``allow_reject`` is
     ``False``, ``RejectColumn`` exceptions are propagated, like other errors
     raised by the transformer.
+
+    .. note::
+
+        The ``transform`` and ``fit_transform`` methods of ``transformer`` must
+        return a column, a list of columns or a dataframe of the same module
+        (polars or pandas) as the input, either by default or by supporting the
+        scikit-learn ``set_output`` API.
 
     Parameters
     ----------
@@ -528,7 +535,10 @@ def _fit_transform_column(column, y, columns_to_handle, transformer, allow_rejec
             f"Transformer {transformer.__class__.__name__}.fit_transform "
             f"failed on column {col_name!r}. See above for the full traceback."
         ) from e
-    output_cols = sbd.to_column_list(output)
+    try:
+        output_cols = sbd.to_column_list(output)
+    except TypeError:
+        transformer_output_type_error(transformer, transformer_input, output)
     return col_name, output_cols, transformer
 
 

@@ -1,6 +1,7 @@
 import re
 
 import numpy as np
+import pytest
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import FunctionTransformer
 
@@ -84,3 +85,15 @@ def test_keep_original(df_module, use_fit_transform):
 
     out_names = _to_XXX(sbd.column_names(out))
     assert out_names == ["A", "B", "A__skrub_XXX__", "B__skrub_XXX__"]
+
+
+class NumpyOutput(BaseEstimator):
+    def fit_transform(self, X, y=None):
+        return np.ones(sbd.shape(X))
+
+
+def test_wrong_transformer_output_type(all_dataframe_modules):
+    with pytest.raises(TypeError, match=".*fit_transform returned a result of type"):
+        OnSubFrame(NumpyOutput()).fit_transform(
+            all_dataframe_modules["pandas-numpy-dtypes"].example_dataframe
+        )

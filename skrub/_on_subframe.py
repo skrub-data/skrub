@@ -4,7 +4,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _selectors
 from ._join_utils import pick_column_names
-from ._utils import renaming_func
+from ._utils import renaming_func, transformer_output_type_error
 
 
 class OnSubFrame(TransformerMixin, BaseEstimator):
@@ -13,6 +13,12 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     A subset of the dataframe is selected and passed to the transformer (as a
     single input). This is different from ``OnEachColumn`` which fits a
     separate clone of the transformer to each selected column independently.
+
+    .. note::
+
+        The ``transform`` and ``fit_transform`` methods of ``transformer`` must
+        return dataframes of the same type (polars or pandas) as the input,
+        either by default or by supporting the scikit-learn ``set_output`` API.
 
     Parameters
     ----------
@@ -147,6 +153,10 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
                 df_module_name = sbd.dataframe_module_name(X)
                 self.transformer_.set_output(transform=df_module_name)
             transformed = self.transformer_.fit_transform(to_transform, y)
+            if not sbd.is_dataframe(transformed):
+                transformer_output_type_error(
+                    self.transformer_, to_transform, transformed
+                )
             suggested_names = sbd.column_names(transformed)
             suggested_names = list(
                 map(renaming_func(self.rename_columns), suggested_names)
