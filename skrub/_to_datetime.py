@@ -30,7 +30,11 @@ def _get_time_zone_pandas(col):
 
 @_get_time_zone.specialize("polars", argument_type="Column")
 def _get_time_zone_polars(col):
-    return col.dtype.time_zone
+    import polars as pl
+
+    if col.dtype == pl.Datetime:
+        return col.dtype.time_zone
+    return None
 
 
 @dispatch
@@ -55,16 +59,20 @@ def _convert_time_zone_pandas(col, time_zone):
 
 @_convert_time_zone.specialize("polars")
 def _convert_time_zone_polars(col, time_zone):
+    import polars as pl
+
     is_localized = _get_time_zone(col) is not None
     if is_localized:
         if time_zone is None:
-            return col.dt.convert_time_zone("UTC").replace_time_zone(None)
+            return col.dt.convert_time_zone("UTC").dt.replace_time_zone(None)
         else:
             return col.dt.convert_time_zone(time_zone)
     else:
         if time_zone is None:
             return col
         else:
+            if col.dtype == pl.Date:
+                col = col.cast(pl.Datetime)
             return col.dt.replace_time_zone("UTC").dt.convert_time_zone(time_zone)
 
 
@@ -215,7 +223,7 @@ class ToDatetime(SingleColumnTransformer):
     2   NaT
     Name: when, dtype: datetime64[ns]
 
-    **Timezones**
+    **Time zones**
 
     During ``fit``, parsing strings that contain fixed offsets results in datetimes
     in UTC. Mixed offsets are supported and will all be converted to UTC.

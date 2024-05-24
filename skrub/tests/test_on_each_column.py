@@ -137,6 +137,7 @@ def test_on_each_column(df_module, output_kind, transformer_class, use_fit_trans
         expected_data.pop("a 1 * 2.0")
     expected = df_module.make_dataframe(expected_data)
     df_module.assert_frame_equal(out, expected)
+    assert mapper.get_feature_names_out() == list(expected_data.keys())
 
 
 def test_empty_selection(df_module):

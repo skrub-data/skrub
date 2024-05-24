@@ -45,6 +45,7 @@ def test_on_subframe(df_module, use_fit_transform):
     }
     expected = df_module.make_dataframe(expected_data)
     df_module.assert_frame_equal(out, expected)
+    assert transformer.get_feature_names_out() == list(expected_data.keys())
 
 
 def test_empty_selection(df_module, use_fit_transform):

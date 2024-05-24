@@ -4,7 +4,8 @@ from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as sbd
 from skrub._dispatch import dispatch
-from skrub._to_datetime import ToDatetime
+from skrub._on_each_column import OnEachColumn, RejectColumn
+from skrub._to_datetime import ToDatetime, to_datetime
 
 ISO = "%Y-%m-%dT%H:%M:%S"
 
@@ -130,3 +131,74 @@ def test_fit_aware_transform_naive(df_module, datetime_col):
     assert to_iso(encoder.transform(datetime_col)) == to_iso(
         convert(df_module, localize(df_module, datetime_col, "UTC"), "Europe/Paris")
     )
+
+
+def test_fit_naive_transform_aware(df_module, datetime_col):
+    aware = localize(df_module, datetime_col, "Europe/Paris")
+    encoder = ToDatetime()
+    encoder.fit(datetime_col)
+    assert encoder.output_time_zone_ is None
+    assert to_iso(encoder.transform(aware)) == to_iso(convert(df_module, aware, "UTC"))
+
+
+def test_transform_from_a_different_timezone(df_module, datetime_col):
+    fit_col = localize(df_module, datetime_col, "Europe/Paris")
+    encoder = ToDatetime().fit(fit_col)
+    transform_col = convert(df_module, fit_col, "America/Sao_Paulo")
+    assert to_iso(transform_col) != to_iso(fit_col)
+    assert to_iso(encoder.transform(transform_col)) == to_iso(fit_col)
+
+
+def test_fit_object_column():
+    import pandas as pd
+
+    col = pd.Series(["2020-02-01T00:01:02", True])
+    with pytest.raises(RejectColumn, match="Could not find a datetime format"):
+        ToDatetime().fit(col)
+
+
+@pytest.mark.parametrize("time_zone", [None, "UTC", "America/Toronto", "Asia/Istanbul"])
+def test_polars_date_columns(all_dataframe_modules, time_zone):
+    pl = pytest.importorskip("polars")
+    datetime = (
+        pl.Series(["2020-02-01T12:01:02"])
+        .str.to_datetime()
+        .dt.replace_time_zone(time_zone)
+    )
+    date = datetime.cast(pl.Date)
+    encoder = ToDatetime().fit(date)
+    assert_equal = all_dataframe_modules["polars"].assert_column_equal
+    assert_equal(encoder.transform(datetime), date)
+    encoder = ToDatetime().fit(datetime)
+    out = encoder.transform(date)
+    if time_zone is None:
+        assert_equal(out, datetime.dt.truncate("1d"))
+    else:
+        assert_equal(
+            out,
+            datetime.dt.truncate("1d")
+            .dt.replace_time_zone("UTC")
+            .dt.convert_time_zone(time_zone),
+        )
+
+
+def test_to_datetime_func(df_module, datetime_col):
+    with pytest.raises(TypeError, match=".*must be .* Series or DataFrame"):
+        to_datetime("2020-02-01T00:01:02")
+    df_module.assert_column_equal(
+        to_datetime(datetime_col), ToDatetime().fit_transform(datetime_col)
+    )
+    cols = (
+        ("datetime-col",)
+        if df_module.name == "pandas"
+        else ("datetime-col", "date-col")
+    )
+    df_module.assert_frame_equal(
+        to_datetime(df_module.example_dataframe),
+        OnEachColumn(ToDatetime(), cols=cols).fit_transform(
+            df_module.example_dataframe
+        ),
+    )
+    float_col = df_module.example_column
+    assert sbd.is_float(float_col)
+    assert to_datetime(float_col) is float_col
