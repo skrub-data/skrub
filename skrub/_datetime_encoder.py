@@ -56,7 +56,7 @@ def _get_dt_feature_pandas(column, feature):
         else:
             epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
         return ((column - epoch) / pd.Timedelta("1s")).astype("float32")
-    if feature == "day_of_the_week":
+    if feature == "weekday":
         return column.dt.day_of_week + 1
     assert feature in _TIME_LEVELS
     return getattr(column.dt, feature)
@@ -66,8 +66,7 @@ def _get_dt_feature_pandas(column, feature):
 def _get_dt_feature_polars(column, feature):
     if feature == "total_seconds":
         return (column.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
-    assert feature in _TIME_LEVELS + ["day_of_the_week"]
-    feature = {"day_of_the_week": "weekday"}.get(feature, feature)
+    assert feature in _TIME_LEVELS + ["weekday"]
     return getattr(column.dt, feature)()
 
 
@@ -98,7 +97,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         If ``None``, the features listed above are not extracted (but day of
         the week and total seconds may still be extracted, see below).
 
-    add_day_of_the_week : bool, default=False
+    add_weekday : bool, default=False
         Extract the day of the week as a numerical feature from 1 (Monday) to 7
         (Sunday).
 
@@ -110,7 +109,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     ----------
     extracted_features_ : list of strings
         The features that are extracted, a subset of ["year", …, "nanosecond",
-        "day_of_the_week", "total_seconds"]
+        "weekday", "total_seconds"]
 
     See Also
     --------
@@ -161,11 +160,11 @@ class DatetimeEncoder(SingleColumnTransformer):
     1    NaN
     2    2.0
     Name: login, dtype: float64
-    >>> DatetimeEncoder(add_day_of_the_week=True, add_total_seconds=False).fit_transform(login)
-       login_year  login_month  login_day  login_hour  login_day_of_the_week
-    0      2024.0          5.0       13.0        12.0                    1.0
-    1         NaN          NaN        NaN         NaN                    NaN
-    2      2024.0          5.0       15.0        13.0                    3.0
+    >>> DatetimeEncoder(add_weekday=True, add_total_seconds=False).fit_transform(login)
+       login_year  login_month  login_day  login_hour  login_weekday
+    0      2024.0          5.0       13.0        12.0            1.0
+    1         NaN          NaN        NaN         NaN            NaN
+    2      2024.0          5.0       15.0        13.0            3.0
 
     When a column contains only dates without time information, the time features
     are discarded, regardless of ``resolution``.
@@ -253,11 +252,9 @@ class DatetimeEncoder(SingleColumnTransformer):
     # noqa
     """
 
-    def __init__(
-        self, resolution="hour", add_day_of_the_week=False, add_total_seconds=True
-    ):
+    def __init__(self, resolution="hour", add_weekday=False, add_total_seconds=True):
         self.resolution = resolution
-        self.add_day_of_the_week = add_day_of_the_week
+        self.add_weekday = add_weekday
         self.add_total_seconds = add_total_seconds
 
     def fit_transform(self, column, y=None):
@@ -291,8 +288,8 @@ class DatetimeEncoder(SingleColumnTransformer):
             self.extracted_features_ = _TIME_LEVELS[: idx_level + 1]
         if self.add_total_seconds:
             self.extracted_features_.append("total_seconds")
-        if self.add_day_of_the_week:
-            self.extracted_features_.append("day_of_the_week")
+        if self.add_weekday:
+            self.extracted_features_.append("weekday")
         return self.transform(column)
 
     def transform(self, column):

@@ -93,7 +93,7 @@ def expected_features(df_module):
         "when_microsecond": [123456.0, None, 123987.0],
         "when_nanosecond": [789.0, None, 654.0],
         "when_total_seconds": [1577873536.0, None, 1641079424.0],
-        "when_day_of_the_week": [3.0, None, 6.0],
+        "when_weekday": [3.0, None, 6.0],
     }
     res = df_module.make_dataframe(values)
     return OnEachColumn(ToFloat32()).fit_transform(res)
@@ -134,8 +134,8 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
         (dict(resolution=None), ["total_seconds"]),
         (dict(add_total_seconds=False), ["year", "month", "day", "hour"]),
         (
-            dict(add_day_of_the_week=True, add_total_seconds=False),
-            ["year", "month", "day", "hour", "day_of_the_week"],
+            dict(add_weekday=True, add_total_seconds=False),
+            ["year", "month", "day", "hour", "weekday"],
         ),
     ],
 )

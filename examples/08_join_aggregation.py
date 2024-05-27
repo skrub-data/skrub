@@ -88,7 +88,7 @@ from skrub import TableVectorizer, DatetimeEncoder
 
 
 table_vectorizer = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True)
+    datetime_transformer=DatetimeEncoder(add_weekday=True)
 )
 X_date_encoded = table_vectorizer.fit_transform(X)
 X_date_encoded.head()
@@ -114,7 +114,7 @@ def make_barplot(x, y, title):
 
 # O is Monday, 6 is Sunday
 
-daily_volume = X_date_encoded["timestamp_day_of_the_week"].value_counts().sort_index()
+daily_volume = X_date_encoded["timestamp_weekday"].value_counts().sort_index()
 
 make_barplot(
     x=daily_volume.index,
