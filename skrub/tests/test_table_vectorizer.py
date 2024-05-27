@@ -11,7 +11,7 @@ from pandas.testing import assert_frame_equal
 from scipy.sparse import csr_matrix
 from sklearn.base import clone
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, TargetEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
 from sklearn.utils._testing import skip_if_no_parallel
 from sklearn.utils.fixes import parse_version
 
@@ -711,6 +711,7 @@ def test_bad_specific_cols():
 
 
 def test_supervised_encoder(df_module):
+    TargetEncoder = pytest.importorskip("sklearn.preprocessing.TargetEncoder")
     # test that the vectorizer works correctly with encoders that need y (none
     # of the defaults encoders do)
     X = df_module.make_dataframe({"a": [f"c_{i}" for _ in range(5) for i in range(4)]})
