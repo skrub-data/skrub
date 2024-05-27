@@ -511,7 +511,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                     )
                 if c in specific_columns:
                     raise ValueError(
-                        f"Column {c!r} used twice in in specific_transformers, "
+                        f"Column {c!r} used twice in in 'specific_transformers', "
                         f"at indices {specific_columns[c]} and {i}."
                     )
             specific_columns |= {c: i for c in cols}

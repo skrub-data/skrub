@@ -45,7 +45,7 @@ class CleanCategories(SingleColumnTransformer):
 
     Pandas allows anything as categories but scikit-learn encoders raise an
     exception when categories mix strings and numbers or use any other type, so
-    we make sure they are strings. Note that can result in collapsing 2
+    we make sure they are strings. Note that this can result in collapsing 2
     categories in the edge case that they are different but have the same string
     representation.
 

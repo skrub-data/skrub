@@ -150,7 +150,7 @@ def test_fit_naive_transform_aware(df_module, datetime_col):
     "dest", ["Europe/Paris", "America/Sao_Paulo", "UTC", timezone.utc]
 )
 def test_transform_from_a_different_timezone(df_module, datetime_col, source, dest):
-    if timezone.utc in (source, dest) and df_module.name != "pandas":
+    if timezone.utc in (source, dest) and df_module.name == "polars":
         # polars only receives strings as time zones.
         # for pandas we also test with timezone.utc because it results in
         # series where .dt.tz is a standard library timezone rather than a
@@ -164,7 +164,6 @@ def test_transform_from_a_different_timezone(df_module, datetime_col, source, de
 
 
 def test_fit_object_column():
-    import pandas as pd
 
     col = pd.Series(["2020-02-01T00:01:02", True])
     with pytest.raises(RejectColumn, match="Could not find a datetime format"):

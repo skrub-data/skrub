@@ -237,7 +237,7 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 # --------------------------------------------
 #
 # As we just saw, we can fit a |MinHashEncoder| faster than a |GapEncoder|.
-# However, the |GapEncoder| has a crucial advantage: the dimensions of its output space are each associated with a topic which can be inspected and interpreted.
+# However, the |GapEncoder| has a crucial advantage: each dimension of its output space is associated with a topic which can be inspected and interpreted.
 # In this section, after training a regressor, we will plot the feature importances.
 #
 # .. topic:: Note:
@@ -286,7 +286,7 @@ plt.tight_layout(pad=1)
 plt.show()
 
 ###############################################################################
-# The |GapEncoder| creates feature names that show the first 3 most important words in the topic associated to each feature.
+# The |GapEncoder| creates feature names that show the first 3 most important words in the topic associated with each feature.
 # As we can see in the plot above, this helps inspecting the model.
 # If we had used a |MinHashEncoder| instead, the features would be much less helpful, with names such as ``employee_position_title_0``, ``employee_position_title_1``, etc.
 
