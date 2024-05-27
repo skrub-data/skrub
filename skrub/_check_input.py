@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _join_utils, _utils
@@ -130,6 +131,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         return X
 
     def transform(self, X):
+        check_is_fitted(self, "module_name_")
         X = self._handle_array(X)
         _check_is_dataframe(X)
         module_name = sbd.dataframe_module_name(X)

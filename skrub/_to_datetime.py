@@ -3,6 +3,7 @@ import warnings
 from pandas._libs.tslibs.parsing import (
     guess_datetime_format as pd_guess_datetime_format,
 )
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _selectors as s
@@ -411,6 +412,7 @@ class ToDatetime(SingleColumnTransformer):
         transformed : pandas or polars Series.
             The input transformed to Datetime.
         """
+        check_is_fitted(self, "format_")
         column = sbd.to_datetime(column, format=self.format_, strict=False)
         column = _convert_time_zone(column, self.output_time_zone_)
         return sbd.cast(column, self.output_dtype_)

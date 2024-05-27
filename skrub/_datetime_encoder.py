@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
 
-try:
-    import pandas as pd
-except ImportError:
-    pass
+import pandas as pd
+from sklearn.utils.validation import check_is_fitted
+
 try:
     import polars as pl
 except ImportError:
@@ -305,6 +304,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         transformed : DataFrame
             The extracted features.
         """
+        check_is_fitted(self, "extracted_features_")
         name = sbd.name(column)
         all_extracted = []
         for feature in self.extracted_features_:
