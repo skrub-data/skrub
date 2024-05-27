@@ -204,11 +204,11 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 # We do need to tell it which features should be treated as categorical with the ``categorical_features`` parameter.
 # In recent versions of scikit-learn, we can set ``categorical_features='from_dtype'``, and it will treat all columns in the input that have a ``Categorical`` dtype as such.
 # Therefore we change the encoder for low-cardinality columns: instead of ``OneHotEncoder``, we use skrub's ``ToCategorical``.
-# This transformer which will simply ensure our columns have an actual ``Categorical`` dtype (as opposed to string for example), so that they can be recognized by the |HGBR|.
+# This transformer will simply ensure our columns have an actual ``Categorical`` dtype (as opposed to string for example), so that they can be recognized by the |HGBR|.
 #
 # The second change replaces the |GapEncoder| with a |MinHashEncoder|.
 # The |GapEncoder| is a topic model.
-# It produces interpretable embeddings in a vector space where distances are meaningful, which is great for interpretation and necessary if the downstream supervised learner is a linear model.
+# It produces interpretable embeddings in a vector space where distances are meaningful, which is great for interpretation and necessary for some downstream supervised learners such as linear models.
 # However fitting the topic model is costly in computation time and memory.
 # The |MinHashEncoder| produces features that are not easy to interpret, but that decision trees can efficiently use to test for the occurrence of particular character n-grams (more details are provided in its documentation).
 # Therefore it can be a faster and very effective alternative, when the supervised learner is built on top of decision trees, which is the case for the |HGBR|.
@@ -236,6 +236,8 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 # Feature importances in the statistical model
 # --------------------------------------------
 #
+# As we just saw, we can fit a |MinHashEncoder| faster than a |GapEncoder|.
+# However, the |GapEncoder| has a crucial advantage: the dimensions of its output space are each associated with a topic which can be inspected and interpreted.
 # In this section, after training a regressor, we will plot the feature importances.
 #
 # .. topic:: Note:
@@ -244,11 +246,11 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 #   |RandomForestRegressor|, but you should prefer |permutation importances|
 #   instead (which are less subject to biases).
 #
-# First, let's train another scikit-learn regressor, the |RandomForestRegressor|:
+# First, we train another scikit-learn regressor, the |RandomForestRegressor|:
 
 from sklearn.ensemble import RandomForestRegressor
 
-vectorizer = TableVectorizer()
+vectorizer = TableVectorizer()  # now using the default GapEncoder
 regressor = RandomForestRegressor(n_estimators=50, max_depth=20, random_state=0)
 
 pipeline = make_pipeline(vectorizer, regressor)
@@ -282,6 +284,11 @@ plt.yticks(fontsize=15)
 plt.title("Feature importances")
 plt.tight_layout(pad=1)
 plt.show()
+
+###############################################################################
+# The |GapEncoder| creates feature names that show the first 3 most important words in the topic associated to each feature.
+# As we can see in the plot above, this helps inspecting the model.
+# If we had used a |MinHashEncoder| instead, the features would be much less helpful, with names such as ``employee_position_title_0``, ``employee_position_title_1``, etc.
 
 ###############################################################################
 # We can see that features such the time elapsed since being hired, having a full-time employment, and the position, seem to be the most informative for prediction.
