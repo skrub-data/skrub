@@ -11,10 +11,11 @@ from pandas.testing import assert_frame_equal
 from scipy.sparse import csr_matrix
 from sklearn.base import clone
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, TargetEncoder
 from sklearn.utils._testing import skip_if_no_parallel
 from sklearn.utils.fixes import parse_version
 
+from skrub import _dataframe as sbd
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
@@ -707,3 +708,12 @@ def test_bad_specific_cols():
         ValueError, match="Column names in 'specific_transformers' must be strings"
     ):
         TableVectorizer(specific_transformers=[(None, [0])]).fit(None)
+
+
+def test_supervised_encoder(df_module):
+    # test that the vectorizer works correctly with encoders that need y (none
+    # of the defaults encoders do)
+    X = df_module.make_dataframe({"a": [f"c_{i}" for _ in range(5) for i in range(4)]})
+    y = np.random.default_rng(0).normal(size=sbd.shape(X)[0])
+    tv = TableVectorizer(low_cardinality_transformer=TargetEncoder())
+    tv.fit_transform(X, y)
