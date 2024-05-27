@@ -2,6 +2,8 @@ from ._on_each_column import OnEachColumn
 from ._on_subframe import OnSubFrame
 from ._selectors import make_selector
 
+__all__ = ["wrap_transformer"]
+
 
 def wrap_transformer(
     transformer,

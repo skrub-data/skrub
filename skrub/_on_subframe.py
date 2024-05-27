@@ -6,6 +6,8 @@ from . import _selectors
 from ._join_utils import pick_column_names
 from ._utils import renaming_func, transformer_output_type_error
 
+__all__ = ["OnSubFrame"]
+
 
 class OnSubFrame(TransformerMixin, BaseEstimator):
     """Apply a transformer to part of a dataframe.

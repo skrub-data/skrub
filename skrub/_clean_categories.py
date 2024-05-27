@@ -4,6 +4,8 @@ from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 
+__all__ = ["CleanCategories"]
+
 
 @dispatch
 def _with_string_categories(column):

@@ -23,6 +23,8 @@ from ._to_float32 import ToFloat32
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
+__all__ = ["TableVectorizer"]
+
 
 class PassThrough(SingleColumnTransformer):
     def fit_transform(self, column, y=None):
@@ -184,7 +186,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Override the categories above for the given columns and force using the
         specified transformer. This disables any preprocessing usually done by
         the TableVectorizer; the columns are passed to the transformer without
-        any modification. A column is not allowed appear twice in
+        any modification. A column is not allowed to appear twice in
         ``specific_transformers``. Using ``specific_transformers`` provides
         similar functionality to what is offered by scikit-learn's
         ``ColumnTransformer``.

@@ -1,12 +1,14 @@
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 
+__all__ = ["ToCategorical"]
+
 
 class ToCategorical(SingleColumnTransformer):
     """
     Convert a string column to Categorical dtype.
 
-    The main benefit is that such columns can then be recognized by
+    The main benefit is that categorical columns can then be recognized by
     scikit-learn's ``HistGradientBoostingRegressor`` and
     ``HistGradientBoostingClassifier`` with their
     ``categorical_features='from_dtype'`` option. This transformer is therefore
@@ -18,8 +20,9 @@ class ToCategorical(SingleColumnTransformer):
     column. Categorical columns are passed through.
 
     Any other type of column is rejected by raising a ``RejectColumn``
-    exception. **Note:** the ``TableVectorizer`` only sends strings or
-    categorical columns (those are suitable for ``ToCategorical``) to its
+    exception. **Note:** the ``TableVectorizer`` only sends string or
+    categorical columns to its ``low_cardinality_transformer``. Therefore it is
+    always safe to use ``ToCategorical()`` as the
     ``low_cardinality_transformer``.
 
     The output of ``transform`` also always has a Categorical dtype. The categories

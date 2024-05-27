@@ -7,6 +7,8 @@ from . import _dataframe as sbd
 from . import _join_utils, _utils
 from ._dispatch import dispatch
 
+__all__ = ["CheckInputDataFrame"]
+
 
 def _column_names_to_strings(column_names):
     non_string = [c for c in column_names if not isinstance(c, str)]

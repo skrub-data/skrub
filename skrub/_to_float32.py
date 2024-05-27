@@ -1,6 +1,8 @@
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 
+__all__ = ["ToFloat32"]
+
 
 class ToFloat32(SingleColumnTransformer):
     """

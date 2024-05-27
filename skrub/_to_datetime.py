@@ -10,6 +10,8 @@ from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._wrap_transformer import wrap_transformer
 
+__all__ = ["ToDatetime", "to_datetime"]
+
 _SAMPLE_SIZE = 30
 
 

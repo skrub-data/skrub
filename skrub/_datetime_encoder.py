@@ -13,6 +13,8 @@ from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 
+__all__ = ["DatetimeEncoder"]
+
 _TIME_LEVELS = [
     "year",
     "month",
