@@ -428,12 +428,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : dataframe
+        X : dataframe of shape (n_samples, n_features)
             Input data to transform.
 
-        y : any type, default=None
-            This parameter exists for compatibility with the scikit-learn API
-            and is ignored.
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, default=None
+            Target values for supervised learning (None for unsupervised
+            transformations).
 
         Returns
         -------
@@ -448,12 +448,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : dataframe
+        X : dataframe of shape (n_samples, n_features)
             Input data to transform.
 
-        y : any type, default=None
-            This parameter exists for compatibility with the scikit-learn API
-            and is ignored.
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, default=None
+            Target values for supervised learning (None for unsupervised
+            transformations).
 
         Returns
         -------
@@ -478,14 +478,19 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : dataframe
+        X : dataframe of shape (n_samples, n_features)
             Input data to transform.
+
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, default=None
+            Target values for supervised learning (None for unsupervised
+            transformations).
 
         Returns
         -------
         dataframe
             The transformed input.
         """
+        check_is_fitted(self, "transformers_")
         return self._pipeline.transform(X)
 
     def _check_specific_columns(self):
