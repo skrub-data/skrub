@@ -12,17 +12,17 @@ from skrub._on_subframe import OnSubFrame
 
 
 class Dummy(BaseEstimator):
-    def fit_transform(self, df, y):
+    def fit_transform(self, X, y):
         self.y_ = np.asarray(y)
-        return self.transform(df)
+        return self.transform(X)
 
-    def transform(self, df):
+    def transform(self, X):
         result = {}
-        for name in sbd.column_names(df):
-            col = sbd.col(df, name)
+        for name in sbd.column_names(X):
+            col = sbd.col(X, name)
             result[f"{name} * y"] = col * self.y_
             result[f"{name} * 2.0"] = col * 2.0
-        return sbd.make_dataframe_like(df, result)
+        return sbd.make_dataframe_like(X, result)
 
     def fit(self, df, y):
         self.fit_transform(df, y)
