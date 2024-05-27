@@ -165,6 +165,8 @@ class ToFloat32(SingleColumnTransformer):
     >>> s = pd.Series([1.1, None], dtype='float32')
     >>> to_float.fit_transform(s) is s
     True
+
+    # noqa
     """
 
     def fit_transform(self, column, y=None):

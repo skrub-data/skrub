@@ -190,6 +190,8 @@ class CleanCategories(SingleColumnTransformer):
     >>> s = pl.Series('c', ['one', 'two', None], dtype=pl.Enum(['one', 'two', 'three']))
     >>> cleaner.fit_transform(s) is s
     True
+
+    # noqa
     """
 
     def fit_transform(self, column, y=None):

@@ -202,7 +202,8 @@ def transformer_output_type_error(transformer, transform_input, transform_output
             f" One way of enabling a transformer to output {module} DataFrames is"
             " inheriting from the sklearn.base.TransformerMixin class and defining the"
             " 'get_feature_names_out' method. See"
-            " https://scikit-learn.org/stable/auto_examples/miscellaneous/plot_set_output.html"
+            " https://scikit-learn.org/stable/auto_examples/"
+            "miscellaneous/plot_set_output.html"
             " for details."
         )
     raise TypeError(message)

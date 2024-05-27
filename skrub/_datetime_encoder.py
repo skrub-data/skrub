@@ -80,21 +80,27 @@ class DatetimeEncoder(SingleColumnTransformer):
     No timezone conversion is performed: if the input column is timezone aware, the
     extracted features will be in the column's timezone.
 
-    An input column that does not have a Date or Datetime dtype will be rejected by
-    raising a ``RejectColumn`` exception. See ``ToDatetime`` for converting strings
-    to proper datetimes.
+    An input column that does not have a Date or Datetime dtype will be
+    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
+    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
+    only sends datetime columns to its ``datetime_encoder``. Therefore it is
+    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
+    ``datetime_encoder`` parameter.
 
     Parameters
     ----------
-    resolution : {"year", "month", "day", "hour", "minute", "second", "microsecond", "nanosecond", None}, default="hour"
-        Extract up to this resolution. E.g., ``resolution="day"`` generates the
-        features "year", "month", "day" only. If the input column contains dates
-        with no time information, time features ("hour", "minute", … ) are never
-        extracted. If ``None``, the features listed above are not extracted (but day
-        of the week and total seconds may still be extracted, see below).
+    resolution : str or None, default="hour"
+        If a string, extract up to this resolution. Must be "year", "month",
+        "day", "hour", "minute", "second", "microsecond", or "nanosecond". For
+        example, ``resolution="day"`` generates the features "year", "month",
+        and "day" only. If the input column contains dates with no time
+        information, time features ("hour", "minute", … ) are never extracted.
+        If ``None``, the features listed above are not extracted (but day of
+        the week and total seconds may still be extracted, see below).
 
     add_day_of_the_week : bool, default=False
-        Extract the day of the week as a numerical feature from 1 (Monday) to 7 (Sunday).
+        Extract the day of the week as a numerical feature from 1 (Monday) to 7
+        (Sunday).
 
     add_total_seconds : bool, default=True
         Add the total number of seconds since the Unix epoch (00:00:00 UTC on 1
@@ -173,7 +179,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> encoder.extracted_features_
     ['year', 'month', 'day', 'total_seconds']
 
-    (The number of seconds since Epoch can still be extracted but not "hour", "minute", etc.)
+    (The number of seconds since Epoch can still be extracted but not "hour",
+    "minute", etc.)
 
     Non-datetime columns are rejected by raising a ``RejectColumn`` exception.
 
@@ -242,6 +249,8 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     Here we can see the input to ``transform`` has been converted back to the
     timezone used during ``fit`` and that we get the same result for "hour".
+
+    # noqa
     """
 
     def __init__(

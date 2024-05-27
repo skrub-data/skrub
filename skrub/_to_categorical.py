@@ -22,7 +22,7 @@ class ToCategorical(SingleColumnTransformer):
     Any other type of column is rejected by raising a ``RejectColumn``
     exception. **Note:** the ``TableVectorizer`` only sends string or
     categorical columns to its ``low_cardinality_transformer``. Therefore it is
-    always safe to use ``ToCategorical()`` as the
+    always safe to use a ``ToCategorical`` instance as the
     ``low_cardinality_transformer``.
 
     The output of ``transform`` also always has a Categorical dtype. The categories

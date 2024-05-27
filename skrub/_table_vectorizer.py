@@ -394,6 +394,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Traceback (most recent call last):
         ...
     ValueError: Column 'A' used twice in in specific_transformers, at indices 0 and 1.
+
+    # noqa
     """
 
     def __init__(
@@ -431,7 +433,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         X : dataframe of shape (n_samples, n_features)
             Input data to transform.
 
-        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, default=None
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs) or None, default=None # noqa
             Target values for supervised learning (None for unsupervised
             transformations).
 
@@ -451,7 +453,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         X : dataframe of shape (n_samples, n_features)
             Input data to transform.
 
-        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, default=None
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, default=None # noqa
             Target values for supervised learning (None for unsupervised
             transformations).
 
@@ -480,10 +482,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         ----------
         X : dataframe of shape (n_samples, n_features)
             Input data to transform.
-
-        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, default=None
-            Target values for supervised learning (None for unsupervised
-            transformations).
 
         Returns
         -------

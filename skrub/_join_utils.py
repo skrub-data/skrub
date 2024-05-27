@@ -193,6 +193,8 @@ def pick_column_names(suggested_names, forbidden_names=()):
     ['A__skrub_37dd63aa__', 'B__skrub_21e27e1e__']
     >>> pick_column_names(["concat_A__skrub_750a0b7c___A__skrub_b1eeb4f7__"]) # doctest: +SKIP
     ['concat_A_A']
+
+    # noqa
     """
     all_new_names = []
     forbidden_names = set(forbidden_names)
