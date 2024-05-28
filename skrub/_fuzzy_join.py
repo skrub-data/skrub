@@ -31,7 +31,7 @@ def fuzzy_join(
     used; which one is unspecified.
 
     To identify the best match for each row, values from the matching columns
-    (``left_key`` and ``right_key``) are vectorized, ie represented by vectors of
+    (``left_key`` and ``right_key``) are vectorized, i.e. represented by vectors of
     continuous values. Then, the Euclidean distances between these vectors are
     computed to find, for each left table row, its nearest neighbor within the
     right table.
@@ -58,13 +58,13 @@ def fuzzy_join(
         in the right table.
 
     'self_join_neighbor'
-        Once the match candidate (ie the nearest neigbor from the right
+        Once the match candidate (i.e. the nearest neigbor from the right
         table) has been found, we find its nearest neighbor in the right
         table (excluding itself). The reference distance is the distance that
         separates those 2 right rows.
 
     'no_rescaling'
-        The reference distance is 1.0, ie no rescaling of the distances is
+        The reference distance is 1.0, i.e. no rescaling of the distances is
         applied.
 
     Parameters
@@ -115,7 +115,7 @@ def fuzzy_join(
         uses the joined features, or to inspect the result of the join and set
         a ``max_dist`` threshold.
     drop_unmatched : bool, default=False
-        Remove rows for which a match was not found in the right table (ie for
+        Remove rows for which a match was not found in the right table (i.e. for
         which the nearest neighbor is further than `max_dist`).
 
     Returns
@@ -131,14 +131,15 @@ def fuzzy_join(
     Examples
     --------
     >>> import pandas as pd
-    >>> left_table = pd.DataFrame({"Country": ["France", "Italia", "Spain"]})
+    >>> from skrub import fuzzy_join
+    >>> left_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
     >>> right_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
     ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
     >>> left_table
       Country
     0  France
     1  Italia
-    2   Spain
+    2  Georgia
     >>> right_table
        Country Capital
     0  Germany  Berlin
@@ -148,38 +149,38 @@ def fuzzy_join(
     ...     left_table,
     ...     right_table,
     ...     on="Country",
-    ...     suffix="_capitals",
-    ...     max_dist=1.0,
+    ...     suffix="_right",
+    ...     max_dist=0.8,
     ...     add_match_info=False,
     ... )
-      Country Country_capitals Capital_capitals
+      Country    Country_right    Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
-    2   Spain              NaN              NaN
+    2   Georgia              NaN              NaN
     >>> fuzzy_join(
     ...     left_table,
     ...     right_table,
     ...     on="Country",
-    ...     suffix="_capitals",
+    ...     suffix="_right",
     ...     drop_unmatched=True,
-    ...     max_dist=1.0,
+    ...     max_dist=0.8,
     ...     add_match_info=False,
     ... )
-      Country Country_capitals Capital_capitals
+      Country    Country_right    Capital_right
     0  France           France            Paris
     1  Italia            Italy             Rome
     >>> fuzzy_join(
     ...     left_table,
     ...     right_table,
     ...     on="Country",
-    ...     suffix="_capitals",
+    ...     suffix="_right",
     ...     max_dist=float("inf"),
     ...     add_match_info=False,
     ... )
-      Country Country_capitals Capital_capitals
+      Country    Country_right    Capital_right
     0  France           France            Paris
-    1  Italia            Italy             Rome
-    2   Spain          Germany           Berlin
+    1  Italia           Italy             Rome
+    2  Georgia          Germany           Berlin
     """
     # duplicate the key checks performed by the Joiner so we can get better
     # names in error messages

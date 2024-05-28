@@ -141,7 +141,7 @@ def deduplicate(
 ):
     """Deduplicate categorical data by hierarchically clustering similar strings.
 
-    This works best if there is a number of underlying categories that
+    This works best if there are a number of underlying categories that
     sometimes appear in the data with small variations and/or misspellings.
 
     Parameters
@@ -201,13 +201,13 @@ def deduplicate(
     ...                                      entries_per_example=[5, 5],
     ...                                      prob_mistake_per_letter=0.3,
     ...                                      random_state=42)
-
     >>> duplicated
     ['blacs', 'black', 'black', 'black', 'black', \
 'uhibe', 'white', 'white', 'white', 'white']
 
     To deduplicate the data, we can build a correspondence matrix:
 
+    >>> from skrub import deduplicate
     >>> deduplicate_correspondence = deduplicate(duplicated)
     >>> deduplicate_correspondence
     blacs    black

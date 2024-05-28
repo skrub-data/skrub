@@ -93,12 +93,12 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> from skrub import MinHashEncoder
     >>> enc = MinHashEncoder(n_components=5)
 
     Let's encode the following non-normalized data:
 
     >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['London']]
-
     >>> enc.fit(X)
     MinHashEncoder(n_components=5)
 

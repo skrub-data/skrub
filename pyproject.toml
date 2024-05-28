@@ -45,6 +45,11 @@ filterwarnings = [
     'ignore:.*ast\.NameConstant is deprecated.*:DeprecationWarning',
     # TODO remove when joblib min version >= 1.4.0
     'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
+    # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
+    'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
+    # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
+    # should be addressed in pandas
+    'ignore:np.find_common_type is deprecated.*:DeprecationWarning'
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"

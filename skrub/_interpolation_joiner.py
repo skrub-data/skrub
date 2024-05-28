@@ -52,6 +52,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         operating on. Therefore, ``aux_table`` is the ``annual_avg_temp``
         table.
 
+    key : list of str, or str
+        Column names to use for both `main_key` and `aux_key`, when they are
+        the same. Provide either `key` (only) or both `main_key` and `aux_key`.
+
     main_key : list of str, or str
         The columns in the main table used for joining. The main table is the
         argument of ``transform``, to which we add information inferred using
@@ -68,10 +72,6 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         columns provide the features for the estimators to be fitted. As for
         ``main_key``, it is possible to pass a string when using a single
         column.
-
-    key : list of str, or str
-        Column names to use for both `main_key` and `aux_key`, when they are
-        the same. Provide either `key` (only) or both `main_key` and `aux_key`.
 
     suffix : str
         Suffix to append to the ``aux_table``'s column names. You can use it
@@ -136,6 +136,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> buildings = pd.DataFrame(
     ...     {"latitude": [1.0, 2.0], "longitude": [1.0, 2.0], "n_stories": [3, 7]}
     ... )
@@ -146,12 +147,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     ...         "avg_temp": [10.0, 11.0, 15.0, 16.0, 20.0],
     ...     }
     ... )
-
     >>> buildings
        latitude  longitude  n_stories
     0       1.0        1.0          3
     1       2.0        2.0          7
-
     >>> annual_avg_temp
        latitude  longitude  avg_temp
     0       1.2        0.8      10.0
@@ -160,8 +159,10 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     3       1.7        1.8      16.0
     4       5.0        5.0      20.0
 
-    >>> from sklearn.neighbors import KNeighborsRegressor
+    Let's interpolate the average temperature:
 
+    >>> from sklearn.neighbors import KNeighborsRegressor
+    >>> from skrub import InterpolationJoiner
     >>> InterpolationJoiner(
     ...     annual_avg_temp,
     ...     key=["latitude", "longitude"],
@@ -176,9 +177,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self,
         aux_table,
         *,
+        key=None,
         main_key=None,
         aux_key=None,
-        key=None,
         suffix="",
         regressor=DEFAULT_REGRESSOR,
         classifier=DEFAULT_CLASSIFIER,

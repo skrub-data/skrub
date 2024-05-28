@@ -13,7 +13,7 @@ from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils import parse_version
+from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from ._string_distances import get_ngram_count, preprocess
@@ -239,6 +239,7 @@ class SimilarityEncoder(OneHotEncoder):
 
     Examples
     --------
+    >>> from skrub import SimilarityEncoder
     >>> enc = SimilarityEncoder()
     >>> X = [['Male', 1], ['Female', 3], ['Female', 2]]
     >>> enc.fit(X)
@@ -255,7 +256,6 @@ class SimilarityEncoder(OneHotEncoder):
     >>> enc.transform([['Female', 1], ['Male', 4]])
     array([[1.        , 0.42..., 1.        , 0.        , 0.        ],
            [0.42..., 1.        , 0.        , 0.        , 0.        ]])
-
     >>> enc.get_feature_names_out(['gender', 'group'])
     array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'],
           dtype=object)

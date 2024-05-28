@@ -48,6 +48,7 @@ class SelectCols(TransformerMixin, BaseEstimator):
     Examples
     --------
     >>> import pandas as pd
+    >>> from skrub import SelectCols
     >>> df = pd.DataFrame({"A": [1, 2], "B": [10, 20], "C": ["x", "y"]})
     >>> df
        A   B  C
@@ -122,6 +123,7 @@ class DropCols(TransformerMixin, BaseEstimator):
     Examples
     --------
     >>> import pandas as pd
+    >>> from skrub import DropCols
     >>> df = pd.DataFrame({"A": [1, 2], "B": [10, 20], "C": ["x", "y"]})
     >>> df
        A   B  C

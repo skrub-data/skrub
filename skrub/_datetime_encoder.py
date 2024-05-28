@@ -108,6 +108,8 @@ def to_datetime(
 
     Examples
     --------
+    >>> import pandas as pd
+    >>> from skrub import to_datetime
     >>> X = pd.DataFrame(dict(a=[1, 2], b=["2021-01-01", "2021-02-02"]))
     >>> X
        a          b
@@ -497,14 +499,14 @@ def _datetime_to_total_seconds(X_col):
 
 class DatetimeEncoder(TransformerMixin, BaseEstimator):
     """Transforms each datetime column into several numeric columns \
-    for temporal features (e.g year, month, day...).
+    for temporal features (e.g. year, month, day...).
 
     If the dates are timezone aware, all the features extracted will correspond
     to the provided timezone.
 
     Parameters
     ----------
-    resolution : {"year", "month", "day", "hour", "minute", "second",
+    resolution : {"year", "month", "day", "hour", "minute", "second", \
         "microsecond", "nanosecond", None}, default="hour"
         Extract up to this resolution.
         E.g., ``resolution="day"`` generates the features "year", "month",
@@ -553,6 +555,7 @@ class DatetimeEncoder(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> from skrub import DatetimeEncoder
     >>> enc = DatetimeEncoder(add_total_seconds=False)
     >>> X = [['2022-10-15'], ['2021-12-25'], ['2020-05-18'], ['2019-10-15 12:00:00']]
     >>> enc.fit(X)

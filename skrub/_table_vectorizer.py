@@ -21,6 +21,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.compose._column_transformer import _get_transformer_list
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils import Bunch
+from sklearn.utils._set_output import _get_output_config, _safe_set_output
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import DatetimeEncoder, GapEncoder, to_datetime
@@ -194,20 +195,22 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Transformer used on categorical/string features with low cardinality
         (threshold is defined by `cardinality_threshold`).
         Can either be a:
-        - transformer object instance (e.g. OneHotEncoder)
-        - a Pipeline containing the preprocessing steps
-        - 'drop' for dropping the columns
-        - 'remainder' for applying `remainder`
-        - 'passthrough' to return the unencoded columns
 
-        The default transformer is
-            ```
+        * transformer object instance (e.g. ``OneHotEncoder``)
+        * a Pipeline containing the preprocessing steps
+        * 'drop' for dropping the columns
+        * 'remainder' for applying `remainder`
+        * 'passthrough' to return the unencoded columns
+
+        The default transformer is:
+
+        .. code-block::
+
             OneHotEncoder(
                 handle_unknown='ignore',
                 drop='if_binary',
                 sparse_output=False,
             )
-            ```
 
         When the downstream estimator is a tree-based model
         (e.g., scikit-learn HistGradientBoostingRegressor), the OneHotEncoder
@@ -253,8 +256,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         column-specific transformers, and passing the ``TableVectorizer``
         as the ``remainder``.
         This parameter can take two different formats, either:
-        - a list of 2-tuples (transformer, column names or indices)
-        - a list of 3-tuple (name, transformer, column names or indices)
+
+        * a list of 2-tuples (transformer, column names or indices)
+        * a list of 3-tuple (name, transformer, column names or indices)
         In the latter format, you can specify the name of the assignment.
         Mixing the two is not supported.
 
@@ -263,11 +267,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         will call ``_auto_cast`` to convert each column to the "optimal" dtype
         for scikit-learn estimators.
         The main heuristics are the following:
-        - pandas extension dtypes conversion to numpy dtype
-        - datetime conversion using ``skrub.to_datetime``
-        - numeric conversion using ``pandas.to_numeric``
-        - numeric columns with missing values are converted to float to input np.nan
-        - categorical columns dtypes are updated with the new entries (if any)
+
+        * pandas extension dtypes conversion to numpy dtype
+        * datetime conversion using ``skrub.to_datetime``
+        * numeric conversion using ``pandas.to_numeric``
+        * numeric columns with missing values are converted to float to input np.nan
+        * categorical columns dtypes are updated with the new entries (if any) \
           during transform.
 
     remainder : {'drop', 'passthrough'} or Transformer, default='passthrough'
@@ -364,8 +369,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     0      F        POL  ...       09/22/1986             1986
     1      M        POL  ...       09/12/1988             1988
     2      F        HHS  ...       11/19/1989             1989
-    [3 rows x 8 columns]
 
+    >>> from skrub import TableVectorizer
     >>> tv = TableVectorizer()
     >>> tv.fit(ds.X)
     TableVectorizer()
@@ -373,7 +378,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Now, we can inspect the transformers assigned to each column:
 
     >>> tv.transformers_
-    [('numeric', 'passthrough', ['year_first_hired']), \
+    [('numeric', ..., ['year_first_hired']), \
 ('datetime', DatetimeEncoder(), ['date_first_hired']), \
 ('low_cardinality', OneHotEncoder(drop='if_binary', handle_unknown='ignore', \
 sparse_output=False), \
@@ -564,7 +569,12 @@ sparse_output=False), \
                     "your data has a single feature or array.reshape(1, -1) "
                     "if it contains a single sample."
                 )
-            feature_names = getattr(self, "feature_names_in_", None)
+            feature_names = getattr(
+                self,
+                "feature_names_in_",
+                # by default, we will use "x0", "x1", ...
+                np.asarray([f"x{i}" for i in range(X_array.shape[1])], dtype=object),
+            )
             X = pd.DataFrame(X_array, columns=feature_names)
         else:
             # Create a copy to avoid altering the original data.
@@ -717,6 +727,11 @@ sparse_output=False), \
             verbose=self.verbose,
             verbose_feature_names_out=self.verbose_feature_names_out,
         )
+        if hasattr(self, "_sklearn_output_config"):
+            _safe_set_output(
+                self._column_transformer,
+                transform=_get_output_config("transform", self)["dense"],
+            )
 
         X_enc = self._column_transformer.fit_transform(X, y=y)
 
