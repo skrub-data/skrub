@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 import sklearn
 from sklearn.metrics.pairwise import linear_kernel, pairwise_distances
-from sklearn.utils import parse_version
 from sklearn.utils._tags import _safe_tags
 from sklearn.utils.estimator_checks import _is_pairwise_metric, parametrize_with_checks
+from sklearn.utils.fixes import parse_version
 
 from skrub import (  # isort:skip
     DatetimeEncoder,
