@@ -115,38 +115,6 @@ def _is_array_like(x):
     )
 
 
-def atleast_2d_or_none(x):
-    """``np.atleast_2d`` helper returning an empty list when x is None.
-
-    Note that we don't use ``np.atleast_2d`` because x could be a jagged array.
-
-    Returns
-    -------
-    list of lists
-        The processed array in 2d shape.
-    """
-    if x is None:
-        return [[]]
-    if _is_array_like(x) is not True:
-        x = [x]
-
-    is_array_list = [_is_array_like(item) for item in x]
-
-    # 2d array
-    if all(is_array_list):
-        return [atleast_1d_or_none(item) for item in x]
-
-    # 1d array, mix of scalar and arrays
-    elif any(is_array_list):
-        raise ValueError(
-            f"Mix of array and scalar or string values not accepted, got {x=!r}"
-        )
-
-    # 1d array
-    else:
-        return [x]
-
-
 def clone_if_default(estimator, default_estimator):
     return clone(estimator) if estimator is default_estimator else estimator
 
