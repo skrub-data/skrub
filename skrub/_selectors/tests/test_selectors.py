@@ -32,7 +32,6 @@ def test_glob(df_module):
     assert s.glob("xxx").expand(df) == []
     assert (s.glob("[Ii]nt-*") | s.glob("?loat-col")).expand(df) == [
         "int-col",
-        "int-not-null-col",
         "float-col",
     ]
 
@@ -41,7 +40,6 @@ def test_regex(df_module):
     df = df_module.example_dataframe
     assert (s.regex("int-.*") | s.regex("float-") | s.regex("date-$")).expand(df) == [
         "int-col",
-        "int-not-null-col",
         "float-col",
     ]
 
@@ -50,22 +48,14 @@ def test_dtype_selectors(df_module):
     df = df_module.example_dataframe
     cat_col = sbd.rename(sbd.to_categorical(sbd.col(df, "str-col")), "cat-col")
     df = sbd.make_dataframe_like(df, sbd.to_column_list(df) + [cat_col])
-    assert s.numeric().expand(df) == ["int-col", "int-not-null-col", "float-col"]
+    assert s.numeric().expand(df) == ["int-col", "float-col"]
     assert (s.numeric() | s.boolean()).expand(df) == [
         "int-col",
-        "int-not-null-col",
         "float-col",
         "bool-col",
-        "bool-not-null-col",
     ]
-    if df_module.description == "pandas-numpy-dtypes":
-        int_cols = ["int-not-null-col"]
-        float_cols = ["int-col", "float-col"]
-    else:
-        int_cols = ["int-col", "int-not-null-col"]
-        float_cols = ["float-col"]
-    assert s.integer().expand(df) == int_cols
-    assert s.float().expand(df) == float_cols
+    assert s.integer().expand(df) == ["int-col"]
+    assert s.float().expand(df) == ["float-col"]
     assert s.string().expand(df) == ["str-col"]
     assert s.categorical().expand(df) == ["cat-col"]
     if df_module.name == "polars":
@@ -78,10 +68,8 @@ def test_dtype_selectors(df_module):
 
 def test_cardinality_below(df_module, monkeypatch):
     df = df_module.example_dataframe
-    assert s.cardinality_below(3).expand(df) == ["bool-col", "bool-not-null-col"]
-    assert s.cardinality_below(4).expand(df) == (
-        s.all() - "date-col" - "int-not-null-col"
-    ).expand(df)
+    assert s.cardinality_below(3).expand(df) == ["bool-col"]
+    assert s.cardinality_below(4).expand(df) == (s.all() - "date-col").expand(df)
     assert s.cardinality_below(5).expand(df) == s.all().expand(df)
 
     def bad_n_unique(c):

@@ -25,6 +25,7 @@ def test_repr():
     ...              args=('col',),
     ...              selector_repr='lower_check()')
     lower_check()
+
     """
 
 
@@ -46,11 +47,9 @@ def test_select(df_module):
 def test_all(df_module):
     assert s.all().expand(df_module.example_dataframe) == [
         "int-col",
-        "int-not-null-col",
         "float-col",
         "str-col",
         "bool-col",
-        "bool-not-null-col",
         "datetime-col",
         "date-col",
     ]
@@ -109,9 +108,7 @@ def test_filter_names(df_module):
 def test_inv(df_module):
     df = df_module.example_dataframe
     assert s.inv(["int-col", "float-col", "str-col"]).expand(df) == [
-        "int-not-null-col",
         "bool-col",
-        "bool-not-null-col",
         "datetime-col",
         "date-col",
     ]

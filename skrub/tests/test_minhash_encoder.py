@@ -60,8 +60,6 @@ def test_multiple_columns(df_module):
     with the MinHashEncoder will not produce an error, and will
     encode the column independently.
     """
-    if df_module.description == "pandas-nullable-dtypes":
-        pytest.xfail(reason="MinHashEncoder doesn't support pd.NA yet.")
     X = df_module.make_dataframe(
         {
             "class": ["bird", "bird", "mammal", "mammal"],

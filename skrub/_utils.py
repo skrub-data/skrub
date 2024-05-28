@@ -1,5 +1,6 @@
 import collections
 import importlib
+import re
 import secrets
 from collections.abc import Hashable
 from typing import Any, Iterable
@@ -8,8 +9,6 @@ import numpy as np
 from numpy.typing import NDArray
 from sklearn.base import clone
 from sklearn.utils import check_array
-
-from skrub import _dataframe as sbd
 
 
 class LRUDict:
@@ -100,6 +99,30 @@ def import_optional_dependency(name: str, extra: str = ""):
     return module
 
 
+def parse_astype_error_message(e):
+    """Parse the error message from a failed df.astype or pd.to_numeric call."""
+    culprit = None
+    if str(e).startswith("Given date string"):
+        match = re.search(r"Given date string (.*?) not likely", str(e))
+        if match:
+            culprit = match.group(1)
+    elif str(e).startswith("could not convert"):
+        culprit = str(e).split(":")[1].strip()
+    elif str(e).startswith("Unknown string format"):
+        match = re.search(r"Unknown string format: (.*?) present at position", str(e))
+        if match:
+            culprit = match.group(1)
+    elif str(e).startswith("Unable to parse string"):
+        match = re.search(r"""Unable to parse string "(.*?)" at position""", str(e))
+        if match:
+            culprit = match.group(1)
+    elif str(e).startswith("time data"):
+        match = re.search(r"""time data "(.*?)" doesn't match format""", str(e))
+        if match:
+            culprit = match.group(1)
+    return culprit
+
+
 def atleast_1d_or_none(x):
     """``np.atleast_1d`` helper returning an empty list when x is None."""
     if x is None:
@@ -155,55 +178,7 @@ def random_string():
     return secrets.token_hex()[:8]
 
 
-def get_duplicates(values):
-    counts = collections.Counter(values)
-    duplicates = [k for k, v in counts.items() if v > 1]
-    return duplicates
-
-
-def check_duplicated_column_names(column_names, table_name=None):
-    duplicates = get_duplicates(column_names)
-    if duplicates:
-        table_name = "" if table_name is None else f"{table_name!r}"
-        raise ValueError(
-            f"Table {table_name} has duplicate column names: {duplicates}."
-            " Please make sure column names are unique."
-        )
-
-
-def renaming_func(renaming):
-    if isinstance(renaming, str):
-        return renaming.format
-    return renaming
-
-
-def repr_args(args, kwargs, defaults={}):
+def repr_args(args, kwargs):
     return ", ".join(
-        [repr(a) for a in args]
-        + [
-            f"{k}={v!r}"
-            for k, v in kwargs.items()
-            if k not in defaults or defaults[k] != v
-        ]
+        [repr(a) for a in args] + [f"{k}={v!r}" for k, v in kwargs.items()]
     )
-
-
-def transformer_output_type_error(transformer, transform_input, transform_output):
-    module = sbd.dataframe_module_name(transform_input)
-    message = (
-        f"{transformer.__class__.__name__}.fit_transform returned a result of type"
-        f" {transform_output.__class__.__name__}, but a {module} DataFrame was"
-        f" expected. If {transformer.__class__.__name__} is a custom transformer class,"
-        f" please make sure that the output is a {module} container when the input is a"
-        f" {module} container."
-    )
-    if not hasattr(transformer, "set_output"):
-        message += (
-            f" One way of enabling a transformer to output {module} DataFrames is"
-            " inheriting from the sklearn.base.TransformerMixin class and defining the"
-            " 'get_feature_names_out' method. See"
-            " https://scikit-learn.org/stable/auto_examples/"
-            "miscellaneous/plot_set_output.html"
-            " for details."
-        )
-    raise TypeError(message)

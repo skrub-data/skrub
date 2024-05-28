@@ -15,9 +15,6 @@ from skrub import _join_utils, _matching, _utils
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._datetime_encoder import DatetimeEncoder
 
-from . import _selectors as s
-from ._wrap_transformer import wrap_transformer
-
 
 def _as_str(column):
     return column.fillna("").astype(str)
@@ -48,7 +45,6 @@ def _make_vectorizer(table, string_encoder, rescale):
     In addition if `rescale` is `True`, a StandardScaler is applied to
     numeric and datetime columns.
     """
-    # TODO remove use of ColumnTransformer, select_dtypes & pandas-specific code
     transformers = [
         (clone(string_encoder), c)
         for c in table.select_dtypes(include=["string", "category", "object"]).columns
@@ -63,7 +59,7 @@ def _make_vectorizer(table, string_encoder, rescale):
         transformers.append(
             (
                 make_pipeline(
-                    wrap_transformer(_DATETIME_ENCODER, s.all()),
+                    clone(_DATETIME_ENCODER),
                     StandardScaler() if rescale else "passthrough",
                 ),
                 dt_columns,

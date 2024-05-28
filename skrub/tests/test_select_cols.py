@@ -4,7 +4,6 @@ import pytest
 
 from skrub import DropCols, SelectCols
 from skrub._dataframe import _common as ns
-from skrub._select_cols import Drop
 
 
 @pytest.fixture
@@ -71,9 +70,3 @@ def test_drop_missing_cols(df):
     selector = DropCols(["A", "B"]).fit(df)
     with pytest.raises(ValueError, match="not found"):
         selector.transform(df_subset)
-
-
-def test_drop(df_module):
-    col = df_module.example_column
-    assert Drop().fit_transform(col) == []
-    assert Drop().fit(col).transform(col) == []

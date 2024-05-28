@@ -88,8 +88,9 @@ from skrub import TableVectorizer, DatetimeEncoder
 
 
 table_vectorizer = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_weekday=True)
+    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True)
 )
+table_vectorizer.set_output(transform="pandas")
 X_date_encoded = table_vectorizer.fit_transform(X)
 X_date_encoded.head()
 
@@ -102,19 +103,19 @@ sns.set_style("darkgrid")
 
 
 def make_barplot(x, y, title):
-    fig, ax = plt.subplots(layout="constrained")
     norm = plt.Normalize(y.min(), y.max())
     cmap = plt.get_cmap("magma")
 
-    sns.barplot(x=x, y=y, palette=cmap(norm(y)), ax=ax)
-    ax.set_title(title)
-    ax.set_xticks(ax.get_xticks(), labels=ax.get_xticklabels(), rotation=30)
-    ax.set_ylabel(None)
+    sns.barplot(x=x, y=y, palette=cmap(norm(y)))
+    plt.title(title)
+    plt.xticks(rotation=30)
+    plt.ylabel(None)
+    plt.tight_layout()
 
 
 # O is Monday, 6 is Sunday
 
-daily_volume = X_date_encoded["timestamp_weekday"].value_counts().sort_index()
+daily_volume = X_date_encoded["timestamp_day_of_week"].value_counts().sort_index()
 
 make_barplot(
     x=daily_volume.index,
@@ -286,10 +287,9 @@ results.insert(0, "naive mean estimator", all_baseline_r2)
 
 # we only keep the 5 out of 10 last results
 # because the initial size of the train set is rather small
-fig, ax = plt.subplots(layout="constrained")
-sns.boxplot(results.tail(5), palette="magma", ax=ax)
-ax.set_ylabel("R2 score")
-ax.set_title("Hyper parameters grid-search results")
+sns.boxplot(results.tail(5), palette="magma")
+plt.ylabel("R2 score")
+plt.title("Hyper parameters grid-search results")
 plt.tight_layout()
 
 ###############################################################################
