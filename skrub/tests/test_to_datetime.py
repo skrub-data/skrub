@@ -164,7 +164,6 @@ def test_transform_from_a_different_timezone(df_module, datetime_col, source, de
 
 
 def test_fit_object_column():
-
     col = pd.Series(["2020-02-01T00:01:02", True])
     with pytest.raises(RejectColumn, match="Could not find a datetime format"):
         ToDatetime().fit(col)
