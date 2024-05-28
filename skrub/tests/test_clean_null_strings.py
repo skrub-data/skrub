@@ -16,4 +16,7 @@ def test_reject_non_string_cols(df_module):
         CleanNullStrings().fit(df_module.example_column)
     s = df_module.make_column("c", ["a", "b", "   ", "N/A", None])
     cleaner = CleanNullStrings().fit(s)
-    cleaner.transform(df_module.example_column)
+    # at transform time columns are not rejected anymore
+    out = cleaner.transform(df_module.example_column)
+    # in this case no substitutions need to be made
+    assert out is df_module.example_column
