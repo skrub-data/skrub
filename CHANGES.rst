@@ -12,11 +12,12 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
-Major changes
--------------
+skrub release 0.1.1
+===================
 
-Minor changes
--------------
+This is a bugfix release to adapt to the most recent versions of pandas (2.2) and
+scikit-learn (1.5). There are no major changes to the functionality of skrub.
+
 
 skrub release 0.1.0
 ===================
