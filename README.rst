@@ -76,10 +76,6 @@ Dependencies
 
 Dependencies and minimal versions are listed in the `setup <https://github.com/skrub-data/skrub/blob/main/setup.cfg#L27>`_ file.
 
-Related projects
-----------------
-
-Are listed on the `skrub's website <https://skrub-data.github.io/stable/#related-projects>`_
 
 Contributing
 ------------
