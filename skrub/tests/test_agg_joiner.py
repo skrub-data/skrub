@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 
+from skrub import _dataframe as sbd
 from skrub._agg_joiner import AggJoiner, AggTarget, split_num_categ_operations
 from skrub._dataframe._testing_utils import assert_frame_equal
 from skrub.conftest import _POLARS_INSTALLED
@@ -56,7 +57,9 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
             "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
         }
     )
-    assert_frame_equal(main_user, expected_user)
+    assert_frame_equal(
+        sbd.pandas_convert_dtypes(main_user), sbd.pandas_convert_dtypes(expected_user)
+    )
 
     agg_joiner_movie = AggJoiner(
         aux_table=aux,
@@ -78,7 +81,9 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
         }
     )
 
-    assert_frame_equal(main_movie, expected_movie)
+    assert_frame_equal(
+        sbd.pandas_convert_dtypes(main_movie), sbd.pandas_convert_dtypes(expected_movie)
+    )
 
 
 def test_correct_keys(df_module, main_table):

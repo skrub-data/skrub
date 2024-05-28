@@ -1,513 +1,162 @@
-from copy import deepcopy
-from itertools import product
+from types import SimpleNamespace
 
-import numpy as np
-import pandas as pd
 import pytest
-from numpy.testing import assert_allclose, assert_array_equal
-from pandas.api.types import is_datetime64_any_dtype
 
-from skrub._dataframe import _common as ns
-from skrub._dataframe._testing_utils import assert_frame_equal
-from skrub._datetime_encoder import (
-    TIME_LEVELS,
-    DatetimeEncoder,
-    _is_pandas_format_mixed_available,
-    to_datetime,
-)
-
-NANOSECONDS_FORMAT = (
-    "%Y-%m-%d %H:%M:%S.%f" if _is_pandas_format_mixed_available() else None
-)
-MSG_MIN_PANDAS_SKIP = "Pandas format=mixed is not available"
+from skrub import DatetimeEncoder
+from skrub import _dataframe as sbd
+from skrub import _selectors as s
+from skrub._on_each_column import OnEachColumn
+from skrub._to_float32 import ToFloat32
 
 
-def get_date(as_array=False):
-    df = pd.DataFrame(
-        [
-            ["2020-01-01", "2020-01-02", "2020-01-03"],
-            ["2021-02-03", "2020-02-04", "2021-02-05"],
-            ["2022-01-01", "2020-12-25", "2022-01-03"],
-            ["2023-02-03", "2020-02-04", "2023-02-05"],
-        ],
+def date(df_module):
+    return sbd.to_datetime(
+        df_module.make_column("when", ["2020-01-01", None, "2022-01-01"]),
+        "%Y-%m-%d",
     )
-    if as_array:
-        return df.to_numpy()
-    return df
 
 
-def get_datetime(as_array=False):
-    df = pd.DataFrame(
-        [
-            ["2020-01-01 10:12:01", "2020-01-02 10:23:00", "2020-01-03 10:00:00"],
-            ["2021-02-03 12:45:23", "2020-02-04 22:12:00", "2021-02-05 12:00:00"],
-            ["2022-01-01 23:23:43", "2020-12-25 11:12:00", "2022-01-03 11:00:00"],
-            ["2023-02-03 11:12:12", "2020-02-04 08:32:00", "2023-02-05 23:00:00"],
-        ],
+def datetime(df_module):
+    return sbd.to_datetime(
+        df_module.make_column(
+            "when",
+            ["2020-01-01 10:12:01", None, "2022-01-01 23:23:43"],
+        ),
+        "%Y-%m-%d %H:%M:%S",
     )
-    if as_array:
-        return df.to_numpy()
-    return df
 
 
-def get_nanoseconds(as_array=False):
-    df = pd.DataFrame(
-        [
-            ["2020-08-24 15:55:30.123456789", "2020-08-24 15:55:30.123456789"],
-            ["2020-08-20 14:56:31.987654321", "2021-07-20 14:56:31.987654321"],
-            ["2020-08-20 14:57:32.123987654", "2023-09-20 14:57:32.123987654"],
-            ["2020-08-20 14:58:33.987123456", "2023-09-20 14:58:33.987123456"],
-        ],
-    )
-    if as_array:
-        return df.to_numpy()
-    return df
-
-
-def get_nan_datetime(as_array=False):
-    df = pd.DataFrame(
-        [
-            ["2020-01-01 10:12:01", None, "2020-01-03 10:00:00"],
-            [np.nan, "2020-02-04 22:12:00", "2021-02-05 12:00:00"],
-            ["2022-01-01 23:23:43", "2020-12-25 11:12:00", pd.NA],
-        ],
-    )
-    if as_array:
-        return df.to_numpy()
-    return df
-
-
-def get_tz_datetime(as_array=False):
+def tz_datetime(df_module):
     # The equivalent dtype is "datetime64[ns, Asia/Kolkata]"
-    df = pd.DataFrame(
-        [
-            ["2020-01-01 10:12:01+05:30"],
-            ["2021-02-03 12:45:23+05:30"],
-            ["2022-01-01 23:23:43+05:30"],
-            ["2023-02-03 11:12:12+05:30"],
-        ],
+    col = sbd.to_datetime(
+        df_module.make_column(
+            "when",
+            [
+                "2020-01-01 10:12:01",
+                None,
+                "2022-01-01 23:23:43",
+            ],
+        ),
+        "%Y-%m-%d %H:%M:%S",
     )
-    if as_array:
-        return df.to_numpy()
-    return df
-
-
-def get_mixed_type_dataframe():
-    return pd.DataFrame(
-        dict(
-            a=["2020-01-01", "2020-02-04", "2021-02-05"],
-            b=["yo", "ya", "yu"],
-            c=[1, 2, 3],
-            d=["1", "2", "3"],
-            e=["01/01/2023", "03/01/2023", "14/01/2023"],
-            f=[True, False, True],
-        )
-    )
-
-
-def get_mixed_datetime_format(as_array=False):
-    df = pd.DataFrame(
-        dict(
-            a=[
-                "2022-10-15",
-                "2021-12-25",
-                "2020-05-18",
-                "2019-10-15 12:00:00",
-            ]
-        )
-    )
-    if as_array:
-        return df.to_numpy()
-    return df
-
-
-@pytest.mark.parametrize("as_array", [True, False])
-@pytest.mark.parametrize(
-    "get_data_func, features, format",
-    [
-        (get_date, TIME_LEVELS[: TIME_LEVELS.index("day") + 1], "%Y-%m-%d"),
-        (get_datetime, TIME_LEVELS, "%Y-%m-%d %H:%M:%S"),
-        (get_tz_datetime, TIME_LEVELS, "%Y-%m-%d %H:%M:%S%z"),
-        (get_nanoseconds, TIME_LEVELS, NANOSECONDS_FORMAT),
-    ],
-)
-@pytest.mark.parametrize(
-    "add_total_seconds, add_day_of_the_week",
-    list(product([True, False], [True, False])),
-)
-@pytest.mark.parametrize("resolution", TIME_LEVELS)
-def test_fit(
-    as_array,
-    get_data_func,
-    features,
-    format,
-    add_total_seconds,
-    add_day_of_the_week,
-    resolution,
-):
-    X = get_data_func(as_array=as_array)
-    enc = DatetimeEncoder(
-        add_day_of_the_week=add_day_of_the_week,
-        add_total_seconds=add_total_seconds,
-        resolution=resolution,
-    )
-    enc.fit(X)
-
-    total_seconds = ["total_seconds"] if add_total_seconds else []
-    day_of_week = ["day_of_week"] if add_day_of_the_week else []
-
-    if resolution in features:
-        features_ = features[: features.index(resolution) + 1]
+    if df_module.name == "pandas":
+        return col.dt.tz_localize("Asia/Kolkata")
     else:
-        features_ = deepcopy(features)
-
-    features_ += total_seconds + day_of_week
-    columns = range(X.shape[1])
-
-    expected_index_to_features = {col: features_ for col in columns}
-    expected_index_to_format = {col: format for col in columns}
-    expected_n_features_out = len(features_) * X.shape[1]
-    expected_feature_names = [
-        f"{col}_{feature}" for col in columns for feature in features_
-    ]
-
-    assert enc.index_to_features_ == expected_index_to_features
-    assert enc.index_to_format_ == expected_index_to_format
-    assert enc.n_features_out_ == expected_n_features_out
-    assert_array_equal(enc.get_feature_names_out(), expected_feature_names)
+        assert df_module.name == "polars"
+        return col.dt.replace_time_zone("Asia/Kolkata")
 
 
-@pytest.mark.parametrize(
-    "get_data_func, expected_datetime_columns",
-    [
-        (get_date, [0, 1, 2]),
-        (get_datetime, [0, 1, 2]),
-        (get_tz_datetime, [0]),
-        (get_mixed_type_dataframe, ["a", "e"]),
-    ],
-)
-@pytest.mark.parametrize("random_state", np.arange(20))
-def test_to_datetime(df_module, get_data_func, expected_datetime_columns, random_state):
-    if df_module.name == "polars":
-        pytest.xfail(reason="AssertionError is raised when using Polars.")
-    X = get_data_func()
-    X = to_datetime(X, random_state=random_state)
-    X = df_module.DataFrame(X)
-    datetime_columns = [col for col in X.columns if is_datetime64_any_dtype(X[col])]
-    assert_array_equal(datetime_columns, expected_datetime_columns)
+def nanoseconds(df_module):
+    return sbd.to_datetime(
+        df_module.make_column(
+            "when",
+            [
+                "2020-01-01 10:12:01.123456789",
+                None,
+                "2022-01-01 23:23:43.123987654",
+            ],
+        ),
+        (
+            "%Y-%m-%d %H:%M:%S%.f"
+            if df_module.name == "polars"
+            else "%Y-%m-%d %H:%M:%S.%f"
+        ),
+    )
 
 
-def test_format_nan(df_module):
-    X = get_nan_datetime()
-    X = df_module.DataFrame(X)
-    enc = DatetimeEncoder().fit(X)
-    expected_index_to_format = {
-        0: "%Y-%m-%d %H:%M:%S",
-        1: "%Y-%m-%d %H:%M:%S",
-        2: "%Y-%m-%d %H:%M:%S",
+_DATETIME_COLUMN_GENERATORS = {
+    k: globals()[k] for k in ["date", "datetime", "tz_datetime", "nanoseconds"]
+}
+
+
+@pytest.fixture
+def datetime_cols(df_module):
+    return SimpleNamespace(
+        **{k: v(df_module) for k, v in _DATETIME_COLUMN_GENERATORS.items()}
+    )
+
+
+@pytest.fixture(params=list(_DATETIME_COLUMN_GENERATORS.keys()))
+def a_datetime_col(request, df_module):
+    return _DATETIME_COLUMN_GENERATORS[request.param](df_module)
+
+
+@pytest.fixture
+def expected_features(df_module):
+    values = {
+        "when_year": [2020.0, None, 2022.0],
+        "when_month": [1.0, None, 1.0],
+        "when_day": [1.0, None, 1.0],
+        "when_hour": [10.0, None, 23.0],
+        "when_minute": [12.0, None, 23.0],
+        "when_second": [1.0, None, 43.0],
+        "when_microsecond": [123456.0, None, 123987.0],
+        "when_nanosecond": [789.0, None, 654.0],
+        "when_total_seconds": [1577873536.0, None, 1641079424.0],
+        "when_weekday": [3.0, None, 6.0],
     }
-    assert enc.index_to_format_ == expected_index_to_format
+    res = df_module.make_dataframe(values)
+    return OnEachColumn(ToFloat32()).fit_transform(res)
 
 
-def test_format_nz(df_module):
-    X = get_tz_datetime()
-    X = df_module.DataFrame(X)
-    enc = DatetimeEncoder().fit(X)
-    assert enc.index_to_format_ == {0: "%Y-%m-%d %H:%M:%S%z"}
-
-
-def test_resolution_none(df_module):
-    X = get_datetime()
-    X = df_module.DataFrame(X)
-    enc = DatetimeEncoder(
-        resolution=None,
-        add_total_seconds=False,
+def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):
+    enc = DatetimeEncoder()
+    if use_fit_transform:
+        res = enc.fit_transform(a_datetime_col)
+    else:
+        res = enc.fit(a_datetime_col).transform(a_datetime_col)
+    expected_features = s.select(
+        expected_features,
+        [f"when_{f}" for f in enc.extracted_features_],
     )
-    enc.fit(X)
-
-    assert enc.index_to_features_ == {0: [], 1: [], 2: []}
-    assert enc.n_features_out_ == 0
-    assert_array_equal(enc.get_feature_names_out(), [])
-
-
-def test_transform_date(df_module):
-    X = get_date()
-    X = df_module.DataFrame(X)
-    enc = DatetimeEncoder(
-        add_total_seconds=False,
-    )
-    X_trans = enc.fit_transform(X)
-
-    expected_result = np.array(
-        [
-            [2020, 1, 1, 2020, 1, 2, 2020, 1, 3],
-            [2021, 2, 3, 2020, 2, 4, 2021, 2, 5],
-            [2022, 1, 1, 2020, 12, 25, 2022, 1, 3],
-            [2023, 2, 3, 2020, 2, 4, 2023, 2, 5],
-        ]
-    )
-    X_trans = enc.transform(X)
-    assert_array_equal(X_trans, expected_result)
-
-
-def test_transform_datetime(df_module):
-    X = get_datetime()
-    X = df_module.DataFrame(X)
-    enc = DatetimeEncoder(
-        resolution="second",
-        add_total_seconds=False,
-    )
-    X_trans = enc.fit_transform(X)
-    expected_X_trans = np.array(
-        [
-            [2020, 1, 1, 10, 12, 1, 2020, 1, 2, 10, 23, 0, 2020, 1, 3, 10, 0, 0],
-            [2021, 2, 3, 12, 45, 23, 2020, 2, 4, 22, 12, 0, 2021, 2, 5, 12, 0, 0],
-            [2022, 1, 1, 23, 23, 43, 2020, 12, 25, 11, 12, 0, 2022, 1, 3, 11, 0, 0],
-            [2023, 2, 3, 11, 12, 12, 2020, 2, 4, 8, 32, 0, 2023, 2, 5, 23, 0, 0],
-        ]
-    )
-    assert_array_equal(X_trans, expected_X_trans)
-
-
-def test_transform_tz(df_module):
-    X = get_tz_datetime()
-    X = df_module.DataFrame(X)
-    enc = DatetimeEncoder(
-        add_total_seconds=True,
-    )
-    X_trans = enc.fit_transform(X)
-    expected_X_trans = np.array(
-        [
-            [2020, 1, 1, 10, 1.57785372e09],
-            [2021, 2, 3, 12, 1.61233652e09],
-            [2022, 1, 1, 23, 1.64105962e09],
-            [2023, 2, 3, 11, 1.67540293e09],
-        ]
-    )
-    assert_allclose(X_trans, expected_X_trans)
-
-
-def test_transform_nan(df_module):
-    X = get_nan_datetime()
-    X = df_module.DataFrame(X)
-    enc = DatetimeEncoder(
-        add_total_seconds=True,
-    )
-    X_trans = enc.fit_transform(X)
-    expected_X_trans = np.array(
-        [
-            [
-                2020,
-                1,
-                1,
-                10,
-                1.57787352e09,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                2020,
-                1,
-                3,
-                10,
-                1.57804560e09,
-            ],
-            [
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                2020,
-                2,
-                4,
-                22,
-                1.58085432e09,
-                2021,
-                2,
-                5,
-                12,
-                1.61252640e09,
-            ],
-            [
-                2022,
-                1,
-                1,
-                23,
-                1.64107942e09,
-                2020,
-                12,
-                25,
-                11,
-                1.60889472e09,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-                np.nan,
-            ],
-        ]
-    )
-    assert_allclose(X_trans, expected_X_trans)
-
-
-def test_mixed_type_dataframe(df_module):
-    if df_module.name == "polars":
-        pytest.xfail(
-            reason=(
-                "to_datetime(X) raises polars.exceptions.ComputeError: cannot cast"
-                " 'Object' type"
-            )
-        )
-    X = get_mixed_type_dataframe()
-    X = df_module.DataFrame(X)
-    enc = DatetimeEncoder().fit(X)
-    assert enc.index_to_format_ == {0: "%Y-%m-%d", 4: "%d/%m/%Y"}
-
-    X_dt = to_datetime(X)
-    expected_dtypes = [
-        np.dtype("<M8[ns]"),
-        np.dtype("object"),
-        np.dtype("int64"),
-        np.dtype("object"),
-        np.dtype("<M8[ns]"),
-        np.dtype("bool"),
-    ]
-    assert list(ns.dtypes(X_dt)) == expected_dtypes
-
-
-def test_indempotency(df_module):
-    df = get_mixed_datetime_format()
-    df = df_module.DataFrame(df)
-    df_dt = to_datetime(df)
-    df_dt_2 = to_datetime(df_dt)
-    assert_frame_equal(df_dt, df_dt_2)
-
-    X_trans = DatetimeEncoder().fit_transform(df)
-    X_trans_2 = DatetimeEncoder().fit_transform(df_dt)
-    assert_array_equal(X_trans, X_trans_2)
-
-
-def test_datetime_encoder_invalid_params(df_module):
-    X = get_datetime()
-    X = df_module.DataFrame(X)
-
-    with pytest.raises(ValueError, match=r"(?=.*'resolution' options)"):
-        DatetimeEncoder(resolution="hello").fit(X)
-
-    DatetimeEncoder(resolution=None).fit(X)
-
-    with pytest.raises(ValueError, match=r"(?=.*'errors' options)"):
-        DatetimeEncoder(errors="ignore").fit(X)
+    df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
 
 
 @pytest.mark.parametrize(
-    "X",
+    "params, extracted_features",
     [
-        True,
-        "a",
-        ["a", "b"],
-        ("a", "b"),
-        1,
-        [1, 2],
-        np.array([1, 2]),
-        pd.Timestamp(2020, 1, 1),
-        np.array([pd.Timestamp(2020, 1, 1), "hello"]),
-        np.array(["2020-01-01", {"hello"}]),
-        np.array(["2020-01-01", "hello", "2020-01-02"]),
+        (dict(), ["year", "month", "day", "hour", "total_seconds"]),
+        (dict(resolution="month"), ["year", "month", "total_seconds"]),
+        (
+            dict(resolution="nanosecond"),
+            [
+                "year",
+                "month",
+                "day",
+                "hour",
+                "minute",
+                "second",
+                "microsecond",
+                "nanosecond",
+                "total_seconds",
+            ],
+        ),
+        (dict(resolution=None), ["total_seconds"]),
+        (dict(add_total_seconds=False), ["year", "month", "day", "hour"]),
+        (
+            dict(add_weekday=True, add_total_seconds=False),
+            ["year", "month", "day", "hour", "weekday"],
+        ),
     ],
 )
-def test_to_datetime_incorrect_skip(X):
-    assert_array_equal(to_datetime(X), X)
+def test_extracted_features_choice(datetime_cols, params, extracted_features):
+    enc = DatetimeEncoder(**params)
+    res = enc.fit_transform(datetime_cols.datetime)
+    assert enc.extracted_features_ == extracted_features
+    assert sbd.column_names(res) == [f"when_{f}" for f in enc.extracted_features_]
 
 
-def test_to_datetime_type_error():
-    # 3d tensor
-    X = [[["2021-01-01"]]]
-    with pytest.raises(TypeError):
-        to_datetime(X)
+def test_time_not_extracted_from_date_col(datetime_cols):
+    enc = DatetimeEncoder(resolution="nanosecond")
+    enc.fit(datetime_cols.date)
+    assert enc.extracted_features_ == ["year", "month", "day", "total_seconds"]
 
 
-def test_to_datetime_invalid_params():
-    with pytest.raises(ValueError, match=r"(?=.*errors options)"):
-        to_datetime(2020, errors="skip")
-
-    with pytest.raises(ValueError, match=r"(?=.*not a parameter of skrub)"):
-        to_datetime(2020, unit="second")
+def test_invalid_resolution(datetime_cols):
+    with pytest.raises(ValueError, match=r".*'resolution' options are"):
+        DatetimeEncoder(resolution="hello").fit(datetime_cols.datetime)
 
 
-@pytest.mark.skipif(
-    not _is_pandas_format_mixed_available(),
-    reason=MSG_MIN_PANDAS_SKIP,
-)
-def test_to_datetime_format_param():
-    X_col = ["2021-01-01", "2021/01/01"]
-
-    # without format (default)
-    out = to_datetime(X_col)
-    expected_out = np.array(["2021-01-01", "NaT"], dtype="datetime64[ns]")
-    assert_array_equal(out, expected_out)
-
-    # with format
-    out = to_datetime(X_col, format="%Y/%m/%d")
-    expected_out = np.array(["NaT", "2021-01-01"], dtype="datetime64[ns]")
-    assert_array_equal(out, expected_out)
-
-
-def test_mixed_datetime_format(df_module):
-    df = get_mixed_datetime_format()
-    df = df_module.DataFrame(df)
-
-    df_dt = to_datetime(df)
-    expected_df_dt = pd.DataFrame(
-        dict(
-            a=[
-                pd.Timestamp("2022-10-15"),
-                pd.Timestamp("2021-12-25"),
-                pd.Timestamp("2020-05-18"),
-                pd.Timestamp("2019-10-15 12:00:00"),
-            ]
-        )
-    )
-    expected_df_dt = df_module.DataFrame(expected_df_dt)
-    assert_frame_equal(df_dt, expected_df_dt)
-
-    series_dt = to_datetime(ns.col(df, "a"))
-    expected_series_dt = ns.col(expected_df_dt, "a")
-    assert_array_equal(series_dt, expected_series_dt)
-
-
-@pytest.mark.skipif(not _is_pandas_format_mixed_available(), reason=MSG_MIN_PANDAS_SKIP)
-def test_mix_of_unambiguous():
-    X_col = ["2021/10/15", "01/14/2021"]
-    out = to_datetime(X_col)
-    expected_out = np.array(
-        [np.datetime64("2021-10-15"), np.datetime64("NaT")],
-        dtype="datetime64[ns]",
-    )
-    assert_array_equal(out, expected_out)
-
-
-def test_only_ambiguous():
-    X_col = ["2021/10/10", "2020/01/02"]
-    out = to_datetime(X_col)
-    # monthfirst by default
-    expected_out = np.array(["2021-10-10", "2020-01-02"], dtype="datetime64[ns]")
-    assert_array_equal(out, expected_out)
-
-
-def test_monthfirst_only():
-    X_col = ["2021/02/02", "2021/01/15"]
-    out = to_datetime(X_col)
-    expected_out = np.array(["2021-02-02", "2021-01-15"], dtype="datetime64[ns]")
-    assert_array_equal(out, expected_out)
-
-
-def test_preserve_dtypes():
-    X = get_mixed_type_dataframe()
-    X["b"] = X["b"].astype("category")
-    non_datetime_columns = ["b", "c", "f"]
-
-    X_trans = to_datetime(X)
-    assert_frame_equal(X_trans[non_datetime_columns], X[non_datetime_columns])
+def test_reject_non_datetime(df_module):
+    with pytest.raises(ValueError, match=".*does not have Date or Datetime dtype."):
+        DatetimeEncoder().fit_transform(df_module.example_column)

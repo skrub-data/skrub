@@ -171,7 +171,9 @@ def test_estimator_docstrings(estimator_cls: type, method: str, request):
 
     import_path = ".".join(import_path)
 
-    if import_path in DOCSTRING_TEMP_IGNORE_SET:
+    if (import_path in DOCSTRING_TEMP_IGNORE_SET) or (
+        base_import_path in DOCSTRING_TEMP_IGNORE_SET
+    ):
         request.applymarker(
             pytest.mark.xfail(run=False, reason="TODO pass numpydoc validation")
         )

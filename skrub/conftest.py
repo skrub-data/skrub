@@ -1,6 +1,7 @@
 import datetime
 from types import SimpleNamespace
 
+import numpy as np
 import pandas as pd
 import pandas.testing
 import pytest
@@ -9,9 +10,11 @@ import pytest
 def _example_data_dict():
     return {
         "int-col": [4, 0, -1, None],
+        "int-not-null-col": [4, 0, -1, 10],
         "float-col": [4.5, 0.5, None, -1.5],
         "str-col": ["one", None, "three", "four"],
         "bool-col": [False, True, None, True],
+        "bool-not-null-col": [False, True, True, True],
         "datetime-col": [
             datetime.datetime.fromisoformat(dt)
             for dt in [
@@ -29,14 +32,43 @@ def _example_data_dict():
 
 
 _DATAFAME_MODULES_INFO = {}
-_DATAFAME_MODULES_INFO["pandas"] = SimpleNamespace(
+_DATAFAME_MODULES_INFO["pandas-numpy-dtypes"] = SimpleNamespace(
     **{
         "name": "pandas",
+        "description": "pandas-numpy-dtypes",
         "module": pd,
         "DataFrame": pd.DataFrame,
         "Column": pd.Series,
         "make_dataframe": pd.DataFrame.from_dict,
         "make_column": lambda name, values: pd.Series(name=name, data=values),
+        "assert_frame_equal": pandas.testing.assert_frame_equal,
+        "assert_column_equal": pandas.testing.assert_series_equal,
+        "empty_dataframe": pd.DataFrame(),
+        "empty_column": pd.Series([], dtype="object"),
+        "example_dataframe": pd.DataFrame(_example_data_dict()),
+        "example_column": pd.Series(
+            _example_data_dict()["float-col"], name="float-col"
+        ),
+        "dtypes": {
+            "float32": np.float32,
+            "float64": np.float64,
+            "int32": np.int32,
+            "int64": np.int64,
+        },
+    }
+)
+
+_DATAFAME_MODULES_INFO["pandas-nullable-dtypes"] = SimpleNamespace(
+    **{
+        "name": "pandas",
+        "description": "pandas-nullable-dtypes",
+        "module": pd,
+        "DataFrame": pd.DataFrame,
+        "Column": pd.Series,
+        "make_dataframe": lambda data: pd.DataFrame(data).convert_dtypes(),
+        "make_column": lambda name, values: pd.Series(
+            name=name, data=values
+        ).convert_dtypes(),
         "assert_frame_equal": pandas.testing.assert_frame_equal,
         "assert_column_equal": pandas.testing.assert_series_equal,
         "empty_dataframe": pd.DataFrame(),
@@ -54,6 +86,7 @@ _DATAFAME_MODULES_INFO["pandas"] = SimpleNamespace(
     }
 )
 
+
 try:
     import polars as pl
     import polars.testing
@@ -66,6 +99,7 @@ if _POLARS_INSTALLED:
     _DATAFAME_MODULES_INFO["polars"] = SimpleNamespace(
         **{
             "name": "polars",
+            "description": "polars",
             "module": pl,
             "DataFrame": pl.DataFrame,
             "Column": pl.Series,
@@ -150,3 +184,13 @@ def df_module(request):
 @pytest.fixture
 def example_data_dict():
     return _example_data_dict()
+
+
+@pytest.fixture(params=[False, True])
+def use_fit_transform(request):
+    """A simple fixture that yields False, then True.
+
+    The benefit is to reduce the number of times we have to parametrize a test
+    manually.
+    """
+    return request.param

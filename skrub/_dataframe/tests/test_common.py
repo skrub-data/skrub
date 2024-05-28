@@ -92,10 +92,14 @@ def test_to_numpy(df_module, example_data_dict):
 
 
 def test_to_pandas(df_module, all_dataframe_modules):
-    pd_module = all_dataframe_modules["pandas"]
+    with pytest.raises(NotImplementedError):
+        ns.to_pandas(np.arange(3))
+
+    pd_module = all_dataframe_modules["pandas-numpy-dtypes"]
     if df_module.name == "pandas":
         assert ns.to_pandas(df_module.example_dataframe) is df_module.example_dataframe
         assert ns.to_pandas(df_module.example_column) is df_module.example_column
+        return
     pd_module.assert_frame_equal(
         ns.to_pandas(df_module.example_dataframe).drop(
             ["datetime-col", "date-col"], axis=1
@@ -103,15 +107,17 @@ def test_to_pandas(df_module, all_dataframe_modules):
         pd_module.example_dataframe.drop(["datetime-col", "date-col"], axis=1),
     )
     pd_module.assert_column_equal(
-        ns.to_pandas(df_module.example_column), pd_module.example_column
+        ns.to_pandas(df_module.example_column),
+        pd_module.example_column.astype("float64"),
     )
-
-    with pytest.raises(NotImplementedError):
-        ns.to_pandas(np.arange(3))
 
 
 def test_make_dataframe_like(df_module, example_data_dict):
     df = ns.make_dataframe_like(df_module.empty_dataframe, example_data_dict)
+    if df_module.description == "pandas-nullable-dtypes":
+        # for pandas, make_dataframe_like will return an old-style / numpy
+        # dtypes dataframe
+        df = df.convert_dtypes()
     df_module.assert_frame_equal(df, df_module.make_dataframe(example_data_dict))
     assert ns.dataframe_module_name(df) == df_module.name
 
@@ -120,19 +126,27 @@ def test_make_column_like(df_module, example_data_dict):
     col = ns.make_column_like(
         df_module.empty_column, example_data_dict["float-col"], "mycol"
     )
+    if df_module.description == "pandas-nullable-dtypes":
+        # for pandas, make_column_like will return an old-style / numpy dtypes Series
+        col = col.convert_dtypes()
     df_module.assert_column_equal(
         col, df_module.make_column(values=example_data_dict["float-col"], name="mycol")
     )
     assert ns.dataframe_module_name(col) == df_module.name
 
 
+def test_null_value_for(df_module):
+    assert ns.null_value_for(df_module.example_dataframe) is None
+
+
 def test_all_null_like(df_module):
     col = ns.all_null_like(df_module.example_column)
     assert ns.is_column(col)
     assert ns.shape(col) == ns.shape(df_module.example_column)
-    df_module.assert_column_equal(
-        ns.is_null(col), df_module.make_column("float-col", [True] * ns.shape(col)[0])
-    )
+    expected = df_module.make_column("float-col", [True] * ns.shape(col)[0])
+    if df_module.description == "pandas-nullable-dtypes":
+        expected = expected.astype("bool")
+    df_module.assert_column_equal(ns.is_null(col), expected)
 
 
 def test_concat_horizontal(df_module, example_data_dict):
@@ -170,7 +184,7 @@ def test_collect(df_module):
 
 
 def test_shape(df_module):
-    assert ns.shape(df_module.example_dataframe) == (4, 6)
+    assert ns.shape(df_module.example_dataframe) == (4, 8)
     assert ns.shape(df_module.empty_dataframe) == (0, 0)
     assert ns.shape(df_module.example_column) == (4,)
     assert ns.shape(df_module.empty_column) == (0,)
@@ -211,14 +225,14 @@ def test_set_column_names(df_module, example_data_dict):
 
 
 def test_dtype(df_module):
-    df = ns.pandas_convert_dtypes(df_module.example_dataframe)
+    df = df_module.example_dataframe
     assert ns.dtype(ns.col(df, "float-col")) == df_module.dtypes["float64"]
-    assert ns.dtype(ns.col(df, "int-col")) == df_module.dtypes["int64"]
+    assert ns.dtype(ns.col(df, "int-not-null-col")) == df_module.dtypes["int64"]
 
 
 def test_dtypes(df_module):
-    df = ns.pandas_convert_dtypes(df_module.example_dataframe)
-    assert ns.dtypes(s.select(df, ["int-col", "float-col"])) == [
+    df = df_module.example_dataframe
+    assert ns.dtypes(s.select(df, ["int-not-null-col", "float-col"])) == [
         df_module.dtypes["int64"],
         df_module.dtypes["float64"],
     ]
@@ -267,44 +281,33 @@ def test_is_numeric(df_module):
         assert not ns.is_numeric(ns.col(df, col))
 
 
-def test_to_numeric(df_module):
-    s = ns.to_string(df_module.make_column("_", list(range(5))))
-    assert ns.is_string(s)
-    as_num = ns.to_numeric(s)
-    assert ns.is_numeric(as_num)
-    assert ns.dtype(as_num) == df_module.dtypes["int64"]
-    df_module.assert_column_equal(
-        as_num, ns.pandas_convert_dtypes(df_module.make_column("_", list(range(5))))
-    )
-    assert (
-        ns.dtype(ns.to_numeric(s, dtype=df_module.dtypes["float32"]))
-        == df_module.dtypes["float32"]
-    )
-    assert ns.dtype(ns.to_float32(s)) == df_module.dtypes["float32"]
-    s = df_module.make_column("_", map("_{}".format, range(5)))
-    with pytest.raises(ValueError):
-        ns.to_numeric(s)
-    df_module.assert_column_equal(
-        ns.to_numeric(s, strict=False),
-        ns.all_null_like(s, dtype=df_module.dtypes["int64"]),
-    )
-    assert (
-        ns.dtype(ns.to_numeric(s, strict=False, dtype=df_module.dtypes["float32"]))
-        == df_module.dtypes["float32"]
-    )
-
-
 def test_is_integer(df_module):
     df = df_module.example_dataframe
-    assert ns.is_integer(ns.col(df, "int-col"))
-    for col in ["float-col", "str-col", "datetime-col", "date-col", "bool-col"]:
+    assert ns.is_integer(ns.col(df, "int-not-null-col"))
+    if df_module.description != "pandas-numpy-dtypes":
+        assert ns.is_integer(ns.col(df, "int-col"))
+    for col in [
+        "float-col",
+        "str-col",
+        "datetime-col",
+        "date-col",
+        "bool-col",
+        "bool-not-null-col",
+    ]:
         assert not ns.is_integer(ns.col(df, col))
 
 
 def test_is_float(df_module):
     df = df_module.example_dataframe
     assert ns.is_float(ns.col(df, "float-col"))
-    for col in ["int-col", "str-col", "datetime-col", "date-col", "bool-col"]:
+    for col in [
+        "int-not-null-col",
+        "str-col",
+        "datetime-col",
+        "date-col",
+        "bool-col",
+        "bool-not-null-col",
+    ]:
         assert not ns.is_float(ns.col(df, col))
 
 
@@ -359,17 +362,10 @@ def test_to_datetime(df_module):
         ns.to_datetime(s, "%d/%m/%Y", False),
         df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None]),
     )
-    s = df_module.make_column("", ["2020-01-02", "2021-04-05"])
-    df_module.assert_column_equal(
-        ns.to_datetime(s, None, True),
-        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 4, 5)]),
-    )
     dt_col = ns.col(df_module.example_dataframe, "datetime-col")
     assert ns.to_datetime(dt_col, None) is dt_col
-    if df_module.name != "pandas":
-        return
     s = df_module.make_column("", ["2020-01-01 04:00:00+02:00"])
-    dt = ns.to_datetime(s, None)
+    dt = ns.to_datetime(s, "%Y-%m-%d %H:%M:%S%z")
     assert str(dt[0]) == "2020-01-01 02:00:00+00:00"
 
 
@@ -402,13 +398,19 @@ def test_to_categorical(df_module):
 
         assert s.dtype == pl.Categorical
         assert list(s.cat.get_categories()) == list("ab")
-    if df_module.name == "pandas":
+    if df_module.description == "pandas-numpy-dtypes":
         import pandas as pd
 
         assert s.dtype == pd.CategoricalDtype(list("ab"))
+        assert list(s.cat.categories) == list("ab")
+
+    if df_module.description == "pandas-nullable-dtypes":
+        import pandas as pd
+
+        assert s.dtype == pd.CategoricalDtype(pd.Series(list("ab")).astype("string"))
+        assert list(s.cat.categories) == list("ab")
 
 
-#
 # Inspecting, selecting and modifying values
 # ==========================================
 #
@@ -440,22 +442,12 @@ def test_any(values, expected, df_module):
     assert ns.any(s) == expected
 
 
-def test_is_in(df_module):
-    s = df_module.make_column("", list("aabc") + ["", None])
-    s = ns.pandas_convert_dtypes(s)
-    df_module.assert_column_equal(
-        ns.is_in(s, list("ac")),
-        ns.pandas_convert_dtypes(
-            df_module.make_column("", [True, True, False, True, False, None])
-        ),
-    )
-
-
 def test_is_null(df_module):
     s = ns.pandas_convert_dtypes(df_module.make_column("", [0, None, 2, None, 4]))
-    df_module.assert_column_equal(
-        ns.is_null(s), df_module.make_column("", [False, True, False, True, False])
-    )
+    expected = df_module.make_column("", [False, True, False, True, False])
+    if df_module.description == "pandas-nullable-dtypes":
+        expected = expected.astype("bool")
+    df_module.assert_column_equal(ns.is_null(s), expected)
 
 
 @pytest.mark.parametrize(
@@ -535,11 +527,5 @@ def test_replace(df_module):
     out = ns.replace(s, "ac", "AC")
     expected = ns.pandas_convert_dtypes(
         df_module.make_column("", "aa ab AC ba bb bc".split() + [None])
-    )
-    df_module.assert_column_equal(out, expected)
-
-    out = ns.replace_regex(s, "^a", r"A_")
-    expected = ns.pandas_convert_dtypes(
-        df_module.make_column("", "A_a A_b A_c ba bb bc".split() + [None])
     )
     df_module.assert_column_equal(out, expected)

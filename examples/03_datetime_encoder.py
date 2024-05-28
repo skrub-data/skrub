@@ -88,12 +88,12 @@ from skrub import DatetimeEncoder
 
 encoder = make_column_transformer(
     (OneHotEncoder(handle_unknown="ignore"), ["city"]),
-    (DatetimeEncoder(add_day_of_the_week=True, resolution="minute"), ["date.utc"]),
+    (DatetimeEncoder(add_weekday=True, resolution="minute"), "date.utc"),
     remainder="drop",
 )
 
 X_enc = encoder.fit_transform(X)
-pprint(encoder.get_feature_names_out())
+# pprint(encoder.get_feature_names_out())
 
 ###############################################################################
 # We see that the encoder is working as expected: the ``"date.utc"`` column has
@@ -119,7 +119,7 @@ pprint(table_vec.get_feature_names_out())
 # Here, for example, we want it to extract the day of the week.
 
 table_vec = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
+    datetime_transformer=DatetimeEncoder(add_weekday=True),
 ).fit(X)
 pprint(table_vec.get_feature_names_out())
 
@@ -257,7 +257,7 @@ plt.show()
 from sklearn.inspection import permutation_importance
 
 table_vec = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_day_of_the_week=True),
+    datetime_transformer=DatetimeEncoder(add_weekday=True),
 )
 
 # In this case, we don't use a pipeline, because we want to compute the
@@ -280,8 +280,8 @@ result.plot.barh(
     y="importances", x="feature_names", title="Feature Importances", figsize=(12, 9)
 )
 plt.tight_layout()
+plt.show()
 
-###############################################################################
 # We can see that the total seconds since Epoch and the hour of the day
 # are the most important feature, which seems reasonable.
 #

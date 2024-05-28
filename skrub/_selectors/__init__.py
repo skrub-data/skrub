@@ -234,6 +234,8 @@ ends_with('_mm')
 
 >>> ends_with('_mm').expand(df)
 ['height_mm', 'width_mm']
+
+# noqa
 """
 
 from . import _selectors
