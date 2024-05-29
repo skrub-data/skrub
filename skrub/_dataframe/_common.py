@@ -29,6 +29,7 @@ __all__ = [
     "to_list",
     "to_numpy",
     "to_pandas",
+    "reset_index",
     "make_dataframe_like",
     "make_column_like",
     "null_value_for",
@@ -254,11 +255,21 @@ def make_dataframe_like(df, data):
     raise NotImplementedError()
 
 
+@dispatch
+def reset_index(obj):
+    return obj
+
+
+@reset_index.specialize("pandas")
+def _reset_index_pandas(obj):
+    return obj.reset_index(drop=True)
+
+
 @make_dataframe_like.specialize("pandas")
 def _make_dataframe_like_pandas(df, data):
     if isinstance(data, Mapping):
-        return pd.DataFrame(data, copy=False)
-    return pd.DataFrame({name(col): col for col in data}, copy=False)
+        return pd.DataFrame({k: reset_index(v) for k, v in data.items()}, copy=False)
+    return pd.DataFrame({name(col): reset_index(col) for col in data}, copy=False)
 
 
 @make_dataframe_like.specialize("polars")

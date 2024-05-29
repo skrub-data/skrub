@@ -7,8 +7,10 @@ import inspect
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 from skrub import _selectors as s
 from skrub._dataframe import _common as ns
@@ -23,6 +25,7 @@ def test_not_implemented():
         "is_lazyframe",
         "pandas_convert_dtypes",
         "to_column_list",
+        "reset_index",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)
@@ -120,6 +123,16 @@ def test_make_dataframe_like(df_module, example_data_dict):
         df = df.convert_dtypes()
     df_module.assert_frame_equal(df, df_module.make_dataframe(example_data_dict))
     assert ns.dataframe_module_name(df) == df_module.name
+
+
+def test_make_dataframe_like_pandas_index():
+    c1 = pd.Series([10, 11], index=[2, 3], name="c1")
+    c2 = pd.Series([100, 110], index=[4, 5], name="c2")
+    expected = pd.DataFrame({"c1": [10, 11], "c2": [100, 110]})
+    df = ns.make_dataframe_like(c1, [c1, c2])
+    pd_assert_frame_equal(df, expected)
+    df = ns.make_dataframe_like(c1, {"c1": c1, "c2": c2})
+    pd_assert_frame_equal(df, expected)
 
 
 def test_make_column_like(df_module, example_data_dict):
