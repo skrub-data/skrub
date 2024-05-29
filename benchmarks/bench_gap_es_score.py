@@ -12,7 +12,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import roc_auc_score, balanced_accuracy_score
 from skrub import GapEncoder
 from skrub._gap_encoder import (
-    GapEncoderColumn,
+    GapEncoder,
     _beta_divergence,
     batch_lookup,
     _multiplicative_update_h,
@@ -22,7 +22,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-class ModifiedGapEncoderColumn(GapEncoderColumn):
+class ModifiedGapEncoderColumn(GapEncoder):
     def __init__(self, *args, **kwargs):
         if "max_no_improvement" in kwargs:
             self.max_no_improvement = kwargs.pop("max_no_improvement")
@@ -81,7 +81,7 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 
         return False
 
-    def fit(self, X, y=None) -> "GapEncoderColumn":
+    def fit(self, X, y=None) -> "GapEncoder":
         """
         Fit the GapEncoder on `X`.
 
