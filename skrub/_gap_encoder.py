@@ -541,7 +541,8 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         list of str
             The labels that best describe each topic.
         """
-
+        # TODO: remove
+        return [f"{self._input_name}_{i}" for i in range(self.n_components)]
         vectorizer = CountVectorizer()
         try:
             vectorizer.fit(list(self.H_dict_.keys()))
