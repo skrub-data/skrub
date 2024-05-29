@@ -4,7 +4,9 @@ in ``skrub.conftest``. See the corresponding docstrings for details.
 """
 
 import inspect
+import warnings
 from datetime import datetime
+from functools import partial
 
 import numpy as np
 import pytest
@@ -529,3 +531,23 @@ def test_replace(df_module):
         df_module.make_column("", "aa ab AC ba bb bc".split() + [None])
     )
     df_module.assert_column_equal(out, expected)
+
+
+def test_nans_treated_as_nulls(df_module):
+    "Non-regression test for https://github.com/skrub-data/skrub/issues/916"
+    col = partial(df_module.make_column, "")
+
+    def same(c1, c2):
+        return df_module.assert_column_equal(
+            ns.pandas_convert_dtypes(c1), ns.pandas_convert_dtypes(c2)
+        )
+
+    with warnings.catch_warnings():
+        # pandas warning when it checks if a column that contains inf could be
+        # cast to int
+        warnings.simplefilter("ignore")
+        s = col([1.1, None, 2.2, float("nan"), float("inf")])
+        same(ns.is_null(s), col([False, True, False, True, False]))
+
+        same(ns.drop_nulls(s), col([1.1, 2.2, float("inf")]))
+        same(ns.fill_nulls(s, -1.0), col([1.1, -1.0, 2.2, -1.0, float("inf")]))
