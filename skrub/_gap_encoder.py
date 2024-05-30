@@ -154,20 +154,21 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
 
     Examples
     --------
+    >>> import pandas as pd
     >>> from skrub import GapEncoder
     >>> enc = GapEncoder(n_components=2, random_state=0)
 
     Let's encode the following non-normalized data:
 
-    >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['Paris, France'],
-    ...      ['london'], ['London, England'], ['London'], ['Pqris']]
+    >>> X = pd.Series(['Paris, FR', 'Paris', 'London, UK', 'Paris, France',
+    ...                'london', 'London, England', 'London', 'Pqris'])
     >>> enc.fit(X)
     GapEncoder(n_components=2, random_state=0)
 
     The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names_out()
-    array(['england, london, uk', 'france, paris, pqris'], dtype=object)
+    ['england, london, uk', 'france, paris, pqris']
 
     It got it right, reccuring topics are "London" and "England" on the
     one side and "Paris" and "France" on the other.
@@ -176,14 +177,14 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
     activation of each topic for each category:
 
     >>> enc.transform(X)
-    array([[ 0.051..., 10.548...],
-           [ 0.050...,  4.549...],
-           [12.046...,  0.053...],
-           [ 0.052..., 16.547...],
-           [ 6.049...,  0.050...],
-           [19.545...,  0.054...],
-           [ 6.049...,  0.050...],
-           [ 0.060...,  4.539...]])
+    array([[ 0.05181645, 10.54818355],
+           [ 0.05013363,  4.54986637],
+           [12.04651708,  0.05348292],
+           [ 0.05227038, 16.54772961],
+           [ 6.04996972,  0.05003028],
+           [19.54522669,  0.0547733 ],
+           [ 6.04996972,  0.05003028],
+           [ 0.06011992,  4.53988008]])
 
     The higher the value, the bigger the correspondence with the topic.
     """
