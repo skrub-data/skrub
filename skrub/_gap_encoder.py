@@ -541,8 +541,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         list of str
             The labels that best describe each topic.
         """
-        # TODO: remove
-        return [f"{self._input_name}_{i}" for i in range(self.n_components)]
         vectorizer = CountVectorizer()
         try:
             vectorizer.fit(list(self.H_dict_.keys()))
@@ -552,7 +550,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
             vectorizer = CountVectorizer(analyzer="char_wb")
             vectorizer.fit(list(self.H_dict_.keys()))
         vocabulary = np.array(vectorizer.get_feature_names_out())
-        encoding = self.transform(pd.Series(vocabulary)).to_numpy()
+        encoding = self._transform(vocabulary)
         encoding = abs(encoding)
         encoding = encoding / np.sum(encoding, axis=1, keepdims=True)
         n_components = encoding.shape[1]
@@ -726,6 +724,9 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         """
         check_is_fitted(self, "H_dict_")
         X = sbd.to_numpy(X)
+        return self._transform(X)
+
+    def _transform(self, X):
         X = self._handle_missing(X)
         # Copy the state of H before continuing fitting it
         pre_trans_H_dict_ = deepcopy(self.H_dict_)
