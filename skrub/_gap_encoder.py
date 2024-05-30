@@ -120,11 +120,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         be denoted as `None`.
         "Missing values" are any value for which ``pandas.isna`` returns
         ``True``, such as ``numpy.nan`` or ``None``.
-    n_jobs : int, optional
-        The number of jobs to run in parallel.
-        The process is parallelized column-wise,
-        meaning each column is fitted in parallel. Thus, having
-        `n_jobs` > X.shape[1] will not speed up the computation.
     verbose : int, default=0
         Verbosity level. The higher, the more granular the logging.
 
@@ -211,8 +206,8 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         rescale_W: bool = True,
         max_iter_e_step: int = 1,
         max_no_improvement: int = 5,
-        verbose: int = 0,
         handle_missing="zero_impute",
+        verbose: int = 0,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -231,8 +226,8 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
         self.max_no_improvement = max_no_improvement
-        self.verbose = verbose
         self.handle_missing = handle_missing
+        self.verbose = verbose
 
     def _init_vars(self, X) -> tuple[NDArray, NDArray, NDArray]:
         """
@@ -519,8 +514,22 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def fit_transform(self, column, y=None):
-        return self.fit(column).transform(column)
+    def fit_transform(self, X, y=None):
+        """Fit the instance and transform the column.
+
+        Parameters
+        ----------
+        X : Column of strings
+            The data to transform.
+        y : labels, optional
+            For scikit-learn compatibility. Ignored.
+
+        Returns
+        -------
+        features : DataFrame
+            The extracted features.
+        """
+        return self.fit(X).transform(X)
 
     def get_feature_names_out(
         self,
@@ -528,7 +537,8 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         prefix: str = "",
     ) -> list[str]:
         """
-        Returns the labels that best summarize the learned components/topics.
+        Return the labels that best summarize the learned components/topics.
+
         For each topic, labels with the highest activations are selected.
 
         Parameters
