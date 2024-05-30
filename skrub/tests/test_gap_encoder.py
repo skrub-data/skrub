@@ -5,9 +5,19 @@ from numpy.testing import assert_array_equal
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
-from skrub import GapEncoder, TableVectorizer
+from skrub import GapEncoder
 from skrub.datasets import fetch_midwest_survey
-from skrub.tests.utils import generate_data
+from skrub.tests.utils import generate_data as _gen_data
+
+
+@pytest.fixture
+def generate_data(df_module):
+    def generate(*args, as_list=True, **kwargs):
+        del as_list
+        data = _gen_data(*args, as_list=True, **kwargs)
+        return df_module.make_column("some col", data)
+
+    return generate
 
 
 @pytest.mark.parametrize(
@@ -24,12 +34,13 @@ def test_analyzer(
     rescale_W: bool,
     add_words: bool,
     rescale_rho: bool,
-    n_samples: int = 70,
+    generate_data,
 ):
     """
     Test if the output is different when the analyzer is 'word' or 'char'.
     If it is, no error ir raised.
     """
+    n_samples = 70
     X = generate_data(n_samples, random_state=0)
     n_components = 10
     # Test first analyzer output:
@@ -81,8 +92,9 @@ def test_gap_encoder(
     analyzer: str,
     add_words: bool,
     verbose: bool,
-    n_samples: int = 70,
+    generate_data,
 ):
+    n_samples = 70
     X = generate_data(n_samples, random_state=0)
     n_components = 10
     # Test output shape
@@ -98,12 +110,11 @@ def test_gap_encoder(
     )
     encoder.fit(X)
     y = encoder.transform(X)
-    assert y.shape == (n_samples, n_components * X.shape[1]), str(y.shape)
+    assert y.shape == (n_samples, n_components), str(y.shape)
 
     # Test L1-norm of topics W.
-    for col_enc in encoder.fitted_models_:
-        l1_norm_W = np.abs(col_enc.W_).sum(axis=1)
-        np.testing.assert_array_almost_equal(l1_norm_W, np.ones(n_components))
+    l1_norm_W = np.abs(encoder.W_).sum(axis=1)
+    np.testing.assert_array_almost_equal(l1_norm_W, np.ones(n_components))
 
     # Test same seed return the same output
     encoder = GapEncoder(
@@ -119,37 +130,14 @@ def test_gap_encoder(
     np.testing.assert_array_equal(y, y2)
 
 
-def test_input_type(df_module):
-    # Numpy array with one column
-    X = np.array([["alice"], ["bob"]])
-    enc = GapEncoder(n_components=2, random_state=42)
-    X_enc_array = enc.fit_transform(X)
-    # List
-    X2 = [["alice"], ["bob"]]
-    enc = GapEncoder(n_components=2, random_state=42)
-    X_enc_list = enc.fit_transform(X2)
-    # Check if the encoded vectors are the same
-    np.testing.assert_array_equal(X_enc_array, X_enc_list)
-
-    # Numpy array with two columns
-    X = np.array([["alice", "charlie"], ["bob", "delta"]])
-    enc = GapEncoder(n_components=2, random_state=42)
-    X_enc_array = enc.fit_transform(X)
-    # Dataframe with two columns
-    df = df_module.DataFrame(X)
-    enc = GapEncoder(n_components=2, random_state=42)
-    X_enc_df = enc.fit_transform(df)
-    # Check if the encoded vectors are the same
-    np.testing.assert_array_equal(X_enc_array, X_enc_df)
-
-
 @pytest.mark.parametrize(
     "add_words",
     [True, False],
 )
-def test_partial_fit(df_module, add_words: bool, n_samples: int = 70):
+def test_partial_fit(df_module, add_words: bool, generate_data):
+    n_samples = 70
     X = generate_data(n_samples, random_state=0)
-    X2 = df_module.DataFrame(generate_data(n_samples - 10, random_state=1))
+    X2 = generate_data(n_samples - 10, random_state=1)
     X3 = generate_data(n_samples - 10, random_state=2)
     # Gap encoder with fit on one batch
     enc = GapEncoder(
@@ -169,82 +157,53 @@ def test_partial_fit(df_module, add_words: bool, n_samples: int = 70):
     )
 
 
-def test_get_feature_names_out(n_samples=70):
+def test_get_feature_names_out(generate_data):
+    n_samples = 70
     X = generate_data(n_samples, random_state=0)
-    enc = GapEncoder(random_state=42)
+    enc = GapEncoder(random_state=42, n_components=3)
     enc.fit(X)
-    feature_names_1 = enc.get_feature_names_out()
-    feature_names_2 = enc.get_feature_names_out()
-    for topic_labels in [feature_names_1, feature_names_2]:
-        # Check number of labels
-        assert len(topic_labels) == enc.n_components * X.shape[1]
-        # Test different parameters for col_names
-        topic_labels_2 = enc.get_feature_names_out(col_names="auto")
-        assert topic_labels_2[0] == "col0: " + topic_labels[0]
-        topic_labels_3 = enc.get_feature_names_out(col_names=["abc", "def"])
-        assert topic_labels_3[0] == "abc: " + topic_labels[0]
-    return
+    feature_names = enc.get_feature_names_out()
+    assert len(feature_names) == 3
+    assert feature_names[0] == "some col: vzöklðáö, ìÿþiä, ¼µmihåûõöý"
 
 
-def test_get_feature_names_out_no_words():
+def test_get_feature_names_out_no_words(df_module):
     # Test the GapEncoder get_feature_names_out when there are no words
     enc = GapEncoder(random_state=42)
     # A dataframe with words too short
-    df = pd.DataFrame(
-        20
-        * [
-            [
-                "a b c d",
-            ],
-        ],
-    )
-    df.columns = list(map(str, df.columns))
+    col = df_module.make_column("", 20 * ["a b c d"])
 
-    enc.fit(df)
+    enc.fit(col)
     # The difficulty here is that, in this specific case short words
     # should not be filtered out
     enc.get_feature_names_out()
     return
 
 
-def test_get_feature_names_out_redundent():
-    # With the following dataframe, the GapEncoder can produce feature names
-    # that have the same name, which leads duplicated features names,
-    # which themselves lead to errors in the TableVectorizer
-    # get_feature_names_out() method.
-    df = pd.DataFrame(
-        40
-        * [
-            [
-                "aaa bbb cccc ddd",
-            ],
-        ],
-    )
-    df.columns = list(map(str, df.columns))
-
-    tv = TableVectorizer(cardinality_threshold=1)
-    tv.fit(df)
-    tv.get_feature_names_out()
+def test_get_feature_names_out_redundent(df_module):
+    col = df_module.make_column("", 40 * ["aaa bbb cccc ddd"])
+    enc = GapEncoder().fit(col)
+    feat = enc.get_feature_names_out()
+    assert feat[-1] == "aaa, bbb, ddd (9)"
+    assert len(set(feat)) == len(feat)
 
 
-def test_overflow_error():
+def test_overflow_error(df_module):
     np.seterr(over="raise", divide="raise")
     r = np.random.RandomState(0)
-    X = r.randint(1e5, 1e6, size=(8000, 1)).astype(str)
+    X = r.randint(1e5, 1e6, size=8000).astype(str)
+    X = df_module.make_column("", X)
     enc = GapEncoder(n_components=2, batch_size=1, max_iter=1, random_state=0)
     enc.fit(X)
 
 
-def test_score(n_samples: int = 70):
+def test_score(generate_data):
+    n_samples = 70
     X1 = generate_data(n_samples, random_state=0)
-    X2 = np.hstack([X1, X1])
     enc = GapEncoder(random_state=42)
     enc.fit(X1)
     score_X1 = enc.score(X1)
-    enc.fit(X2)
-    score_X2 = enc.score(X2)
-    # Check that two identical columns give the same score
-    assert score_X1 * 2 == score_X2
+    assert int(score_X1) == 81999
 
 
 @pytest.mark.parametrize(
@@ -260,14 +219,12 @@ def test_missing_values(df_module, missing: str):
                 " 'str'' raised because of pl.Null"
             )
         )
-    observations = [
-        ["alice", "bob"],
-        [pd.NA, "alice"],
-        ["bob", None],
-        ["alice", "charlie"],
-        [np.nan, "alice"],
-    ]
-    observations = np.array(observations, dtype=object)
+    if df_module.name == "pandas":
+        m1, m2 = pd.NA, np.nan
+    else:
+        m1, m2 = None, None
+    observations = ["alice", "bob", None, "alice", m1, m2]
+    observations = df_module.make_column("", observations)
     enc = GapEncoder(handle_missing=missing, n_components=3)
     if missing == "error":
         with pytest.raises(ValueError, match="Input data contains missing values"):
@@ -284,9 +241,9 @@ def test_missing_values(df_module, missing: str):
             enc.fit_transform(observations)
 
 
-def test_check_fitted_gap_encoder():
+def test_check_fitted_gap_encoder(df_module):
     """Test that calling transform before fit raises an error."""
-    X = np.array([["alice"], ["bob"]])
+    X = df_module.make_column("", ["alice", "bob"])
     enc = GapEncoder(n_components=2, random_state=42)
     with pytest.raises(NotFittedError):
         enc.transform(X)
@@ -296,9 +253,9 @@ def test_check_fitted_gap_encoder():
     enc.transform(X)
 
 
-def test_small_sample():
+def test_small_sample(df_module):
     """Test that having n_samples < n_components raises an error."""
-    X = np.array([["alice"], ["bob"]])
+    X = df_module.make_column("", "alice bob".split())
     enc = GapEncoder(n_components=3, random_state=42)
     with pytest.raises(ValueError, match="should be >= n_components"):
         enc.fit_transform(X)
@@ -308,7 +265,7 @@ def test_transform_deterministic():
     """Non-regression test for #188."""
     dataset = fetch_midwest_survey()
     X_train, X_test = train_test_split(
-        dataset.X[["What_would_you_call_the_part_of_the_country_you_live_in_now"]],
+        dataset.X["What_would_you_call_the_part_of_the_country_you_live_in_now"],
         random_state=0,
     )
     enc = GapEncoder(n_components=2, random_state=2)
@@ -319,7 +276,7 @@ def test_transform_deterministic():
     assert_array_equal(topics1, topics2)
 
 
-def test_max_no_improvements_none():
+def test_max_no_improvements_none(generate_data):
     """Test that ``max_no_improvements=None`` works."""
     X = generate_data(300, random_state=0)
     enc_none = GapEncoder(n_components=2, max_no_improvement=None, random_state=42)

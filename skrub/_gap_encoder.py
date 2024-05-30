@@ -18,7 +18,7 @@ from sklearn.cluster import KMeans, kmeans_plusplus
 from sklearn.decomposition._nmf import _beta_divergence
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.neighbors import NearestNeighbors
-from sklearn.utils import gen_batches
+from sklearn.utils import check_random_state, gen_batches
 from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
@@ -312,12 +312,12 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
                 V,
                 self.n_components,
                 x_squared_norms=row_norms(V, squared=True),
-                random_state=self.random_state,
+                random_state=self._random_state,
                 n_local_trials=None,
             )
             W = W + 0.1  # To avoid restricting topics to a few n-grams only
         elif self.init == "random":
-            W = self.random_state.gamma(
+            W = self._random_state.gamma(
                 shape=self.gamma_shape_prior,
                 scale=self.gamma_scale_prior,
                 size=(self.n_components, self.n_vocab),
@@ -327,7 +327,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
                 X,
                 self.n_components,
                 analyzer=self.analyzer,
-                random_state=self.random_state,
+                random_state=self._random_state,
             )
             W = self.ngrams_count_.transform(prototypes).A + 0.1
             if self.add_words:
@@ -339,7 +339,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
                     V,
                     self.n_components - W.shape[0],
                     x_squared_norms=row_norms(V, squared=True),
-                    random_state=self.random_state,
+                    random_state=self._random_state,
                     n_local_trials=None,
                 )
                 W2 = W2 + 0.1
@@ -452,6 +452,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
                 f"n_samples={n_samples} should be >= n_components={self.n_components}. "
             )
         self._input_name = sbd.name(X)
+        self._random_state = check_random_state(self.random_state)
         X = sbd.to_numpy(X)
         X = self._handle_missing(X)
         # Copy parameter rho
@@ -632,6 +633,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
             The fitted GapEncoderColumn instance (self).
         """
         self._input_name = sbd.name(X)
+        self._random_state = check_random_state(self.random_state)
         X = sbd.to_numpy(X)
         X = self._handle_missing(X)
         # Init H_dict_ with empty dict if it's the first call of partial_fit
