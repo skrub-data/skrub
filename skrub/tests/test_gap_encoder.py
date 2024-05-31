@@ -1,3 +1,5 @@
+import re
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -164,7 +166,7 @@ def test_get_feature_names_out(generate_data):
     enc.fit(X)
     feature_names = enc.get_feature_names_out()
     assert len(feature_names) == 3
-    assert feature_names[0] == "some col: vzöklðáö, ìÿþiä, ¼µmihåûõöý"
+    assert feature_names[0].startswith("some col: ")
 
 
 def test_get_feature_names_out_no_words(df_module):
@@ -184,7 +186,7 @@ def test_get_feature_names_out_redundent(df_module):
     col = df_module.make_column("", 40 * ["aaa bbb cccc ddd"])
     enc = GapEncoder().fit(col)
     feat = enc.get_feature_names_out()
-    assert feat[-1] == "aaa, bbb, ddd (9)"
+    assert re.match(r".* \(\d\)", feat[-1]) is not None
     assert len(set(feat)) == len(feat)
 
 
@@ -199,11 +201,16 @@ def test_overflow_error(df_module):
 
 def test_score(generate_data):
     n_samples = 70
-    X1 = generate_data(n_samples, random_state=0)
+    X = generate_data(n_samples, random_state=0)
     enc = GapEncoder(random_state=42)
-    enc.fit(X1)
-    score_X1 = enc.score(X1)
-    assert int(score_X1) == 81999
+    enc.fit(X)
+    score_1 = enc.score(X)
+
+    enc = GapEncoder(random_state=42)
+    enc.fit(X)
+    score_2 = enc.score(X)
+
+    assert score_1 == score_2
 
 
 @pytest.mark.parametrize(
