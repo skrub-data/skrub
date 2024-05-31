@@ -16,7 +16,7 @@ __all__ = ["OnEachColumn", "SingleColumnTransformer", "RejectColumn"]
 
 _SINGLE_COL_LINE = (
     "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
-    " estimators, its ``fit`` and ``transform`` methods expect a"
+    " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
     " single column (a pandas or polars Series) rather than a full dataframe. To apply"
     " this transformer to one or more columns in a dataframe, use it as a parameter in"
     " a ``skrub.TableVectorizer`` or ``sklearn.compose.ColumnTransformer``."
