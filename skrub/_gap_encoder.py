@@ -23,7 +23,7 @@ from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 
 
 class GapEncoder(SingleColumnTransformer, TransformerMixin):
@@ -55,6 +55,9 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
     "Gap" stands for "Gamma-Poisson", the families of distributions that are
     used to model the importance of topics in a document (Gamma), and the term
     frequencies in a document (Poisson).
+
+    Input columns that do not have a string or Categorical dtype are rejected
+    by raising a ``RejectColumn`` exception.
 
     Parameters
     ----------
@@ -439,6 +442,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         GapEncoderColumn
             The fitted GapEncoderColumn instance (self).
         """
+        self._check_input_type(X)
         # Check that n_samples >= n_components
         n_samples = _num_samples(X)
         if n_samples < self.n_components:
@@ -455,8 +459,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         self._ewa_cost = None
         self._ewa_cost_min = None
         self._no_improvement = 0
-        # Check if first item has str or np.str_ type
-        assert isinstance(X[0], str), "Input data is not string. "
         # Make n-grams counts matrix unq_V
         unq_X, unq_V, lookup = self._init_vars(X)
         n_batch = (len(X) - 1) // self.batch_size + 1
@@ -624,6 +626,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         GapEncoderColumn
             The fitted GapEncoderColumn instance (self).
         """
+        self._check_input_type(X)
         if not hasattr(self, "_input_name"):
             self._input_name = sbd.name(X)
         if not hasattr(self, "_random_state"):
@@ -636,8 +639,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         # Same thing for the rho_ parameter
         if not hasattr(self, "rho_"):
             self.rho_ = self.rho
-        # Check if first item has str or np.str_ type
-        assert isinstance(X[0], str), "Input data is not string. "
         # Check if it is not the first batch
         if hasattr(self, "vocabulary"):  # Update unq_X, unq_V with new batch
             unq_X, lookup = np.unique(X, return_inverse=True)
@@ -719,15 +720,20 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
             Transformed input.
         """
         check_is_fitted(self, "H_dict_")
+        # rejecting columns is only for fit, so we raise a plain ValueError here
+        self._check_input_type(X, err_type=ValueError)
         X = sbd.to_numpy(X)
         return self._transform(X)
+
+    def _check_input_type(self, X, err_type=RejectColumn):
+        if sbd.is_categorical(X) or sbd.is_string(X):
+            return
+        raise err_type(f"Column {sbd.name(X)!r} does not contain strings.")
 
     def _transform(self, X):
         X = self._handle_missing(X)
         # Copy the state of H before continuing fitting it
         pre_trans_H_dict_ = deepcopy(self.H_dict_)
-        # Check if the first item has str or np.str_ type
-        assert isinstance(X[0], str), "Input data is not string. "
         unq_X = np.unique(X)
         # Build the n-grams counts matrix V for the string data to encode
         unq_V = self.ngrams_count_.transform(unq_X)

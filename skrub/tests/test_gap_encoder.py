@@ -8,6 +8,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
 from skrub import GapEncoder
+from skrub._on_each_column import RejectColumn
 from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data as _gen_data
 
@@ -288,3 +289,15 @@ def test_max_no_improvements_none(generate_data):
     X = generate_data(300, random_state=0)
     enc_none = GapEncoder(n_components=2, max_no_improvement=None, random_state=42)
     enc_none.fit(X)
+
+
+def test_bad_input_dtype(df_module):
+    float_col = df_module.make_column("C", [2.2])
+    with pytest.raises(RejectColumn, match="Column 'C' does not contain strings."):
+        GapEncoder().fit(float_col)
+    encoder = GapEncoder(n_components=2).fit(
+        df_module.make_column("", "abc abc".split())
+    )
+    with pytest.raises(ValueError, match="Column 'C' does not contain strings.") as e:
+        encoder.transform(float_col)
+    assert e.type is ValueError
