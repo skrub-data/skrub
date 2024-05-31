@@ -512,23 +512,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def fit_transform(self, X, y=None):
-        """Fit the instance and transform the column.
-
-        Parameters
-        ----------
-        X : Column of strings
-            The data to transform.
-        y : labels, optional
-            For scikit-learn compatibility. Ignored.
-
-        Returns
-        -------
-        features : DataFrame
-            The extracted features.
-        """
-        return self.fit(X).transform(X)
-
     def get_feature_names_out(
         self,
         n_labels: int = 3,

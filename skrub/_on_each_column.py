@@ -63,6 +63,9 @@ class SingleColumnTransformer(BaseEstimator):
           helpful message when it is not.
         - A note about single-column transformers (vs dataframe transformers)
           is added after the summary line of the docstring.
+
+    Subclasses must define ``fit_transform`` and ``transform`` (or inherit them
+    from another superclass).
     """
 
     __single_column_transformer__ = True
@@ -88,14 +91,6 @@ class SingleColumnTransformer(BaseEstimator):
         """
         self.fit_transform(column, y=y)
         return self
-
-    def fit_transform(self, column, y=None):
-        """Fit to a column and transform it."""
-        raise NotImplementedError()
-
-    def transform(self, column):
-        """Transform a column (must be fitted first)."""
-        raise NotImplementedError()
 
     def _check_single_column(self, column, function_name):
         class_name = self.__class__.__name__
