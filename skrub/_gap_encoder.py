@@ -116,8 +116,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
     handle_missing : {'error', 'zero_impute'}, default='zero_impute'
         Whether to raise an error or impute with empty string ('') if missing
         values (NaN) are present during GapEncoder.fit (default is to impute).
-        In GapEncoder.inverse_transform, the missing categories will
-        be denoted as `None`.
         "Missing values" are any value for which ``pandas.isna`` returns
         ``True``, such as ``numpy.nan`` or ``None``.
     verbose : int, default=0
