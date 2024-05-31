@@ -643,8 +643,10 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         GapEncoderColumn
             The fitted GapEncoderColumn instance (self).
         """
-        self._input_name = sbd.name(X)
-        self._random_state = check_random_state(self.random_state)
+        if not hasattr(self, "_input_name"):
+            self._input_name = sbd.name(X)
+        if not hasattr(self, "_random_state"):
+            self._random_state = check_random_state(self.random_state)
         X = sbd.to_numpy(X)
         X = self._handle_missing(X)
         # Init H_dict_ with empty dict if it's the first call of partial_fit

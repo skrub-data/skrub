@@ -16,7 +16,7 @@ __all__ = ["OnEachColumn", "SingleColumnTransformer", "RejectColumn"]
 
 _SINGLE_COL_LINE = (
     "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
-    " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
+    " estimators, its ``fit`` and ``transform`` methods expect a"
     " single column (a pandas or polars Series) rather than a full dataframe. To apply"
     " this transformer to one or more columns in a dataframe, use it as a parameter in"
     " a ``skrub.TableVectorizer`` or ``sklearn.compose.ColumnTransformer``."
@@ -120,13 +120,17 @@ class SingleColumnTransformer(BaseEstimator):
                 subclass.__doc__,
                 _SINGLE_COL_NOTE.format(class_name=subclass.__name__),
             )
-        for method in "fit", "fit_transform", "transform":
+        for method in "fit", "fit_transform", "transform", "partial_fit":
             if method in subclass.__dict__:
                 wrapped = _wrap_add_check_single_column(getattr(subclass, method))
                 setattr(subclass, method, wrapped)
 
 
 def _wrap_add_check_single_column(f):
+    # as we have only a few predefined functions to handle, using their exact
+    # name and signature in the wrapper definition gives better tracebacks and
+    # autocompletion than just functools.wraps / setting __name__ and
+    # __signature__
     if f.__name__ == "fit":
 
         @functools.wraps(f)
@@ -135,6 +139,15 @@ def _wrap_add_check_single_column(f):
             return f(self, X, y=y)
 
         return fit
+    elif f.__name__ == "partial_fit":
+
+        @functools.wraps(f)
+        def partial_fit(self, X, y=None):
+            self._check_single_column(X, f.__name__)
+            return f(self, X, y=y)
+
+        return partial_fit
+
     elif f.__name__ == "fit_transform":
 
         @functools.wraps(f)
