@@ -113,7 +113,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         that do not yield an improvement on the smoothed cost function.
         To disable early stopping and run the process fully,
         set ``max_no_improvement=None``.
-    handle_missing : {'error', 'empty_impute'}, default='empty_impute'
+    handle_missing : {'error', 'zero_impute'}, default='zero_impute'
         Whether to raise an error or impute with empty string ('') if missing
         values (NaN) are present during GapEncoder.fit (default is to impute).
         In GapEncoder.inverse_transform, the missing categories will
