@@ -536,6 +536,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         list of str
             The labels that best describe each topic.
         """
+        check_is_fitted(self, "H_dict_")
         vectorizer = CountVectorizer()
         try:
             vectorizer.fit(list(self.H_dict_.keys()))
