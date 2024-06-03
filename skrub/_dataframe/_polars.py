@@ -190,6 +190,7 @@ def join(left, right, left_on, right_on):
             how="left",
             left_on=left_on,
             right_on=right_on,
+            coalesce=True,
         )
     else:
         raise TypeError(
