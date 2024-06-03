@@ -22,6 +22,11 @@ Major changes
   used twice (go through 2 different transformers).
   :pr:`902` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The :class:`MinHashEncoder` is now a single-column transformer: its ``fit``,
+  ``fit_transform`` and ``transform`` methods accept a single column (a pandas
+  or polars Series). Dataframes and numpy arrays are not accepted.
+  :pr:`923` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * Added the :class:`MultiAggJoiner` that allows to augment a main table with
   multiple auxiliary tables. :pr:`876` by :user:`Théo Jolivet <TheooJ>`.
 
