@@ -830,6 +830,8 @@ def _is_null_pandas(column):
 
 @is_null.specialize("polars")
 def _is_null_polars(column):
+    if column.dtype.is_float():
+        return column.is_null() | column.is_nan()
     return column.is_null()
 
 
@@ -849,6 +851,8 @@ def _drop_nulls_pandas(column):
 
 @drop_nulls.specialize("polars")
 def _drop_nulls_polars(column):
+    if column.dtype.is_float():
+        return column.drop_nulls().drop_nans()
     return column.drop_nulls()
 
 
@@ -864,7 +868,7 @@ def _fill_nulls_pandas(obj, value):
 
 @fill_nulls.specialize("polars", argument_type="Column")
 def _fill_nulls_polars_column(column, value):
-    if is_numeric(column):
+    if column.dtype.is_float():
         return column.fill_nan(value).fill_null(value)
     return column.fill_null(value)
 
@@ -874,7 +878,7 @@ def _fill_nulls_polars_dataframe(df, value):
     from polars import selectors as cs
 
     return df.with_columns(
-        cs.numeric().fill_nan(value).fill_null(value), (~cs.numeric()).fill_null(value)
+        cs.float().fill_nan(value).fill_null(value), (~cs.float()).fill_null(value)
     )
 
 
