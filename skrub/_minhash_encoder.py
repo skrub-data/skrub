@@ -242,7 +242,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         MinHashEncoder
             The fitted MinHashEncoder instance (self).
         """
-        if not sbd.is_string(X):
+        if not (sbd.is_categorical(X) or sbd.is_string(X)):
             raise RejectColumn(f"Column {sbd.name(X)!r} does not contain strings.")
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
@@ -282,7 +282,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             Transformed input.
         """
         check_is_fitted(self, "hash_dict_")
-        if not sbd.is_string(X):
+        if not (sbd.is_categorical(X) or sbd.is_string(X)):
             raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
 
         X_values = sbd.to_numpy(X)
