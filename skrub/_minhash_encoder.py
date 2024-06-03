@@ -287,7 +287,9 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
 
         X_values = sbd.to_numpy(X)
         # Handle missing values
-        missing_mask = (sbd.is_null(X) | sbd.fill_nulls(X == "", True)).to_numpy()
+        missing_mask = (
+            (sbd.is_null(X) | sbd.fill_nulls(X == "", True)).to_numpy().astype(bool)
+        )
 
         if missing_mask.any():  # contains at least one missing value
             if self.handle_missing == "error":
