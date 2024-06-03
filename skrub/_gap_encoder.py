@@ -173,14 +173,15 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
     activation of each topic for each category:
 
     >>> enc.transform(X)
-    array([[ 0.05181645, 10.54818355],
-           [ 0.05013363,  4.54986637],
-           [12.04651708,  0.05348292],
-           [ 0.05227038, 16.54772961],
-           [ 6.04996972,  0.05003028],
-           [19.54522669,  0.0547733 ],
-           [ 6.04996972,  0.05003028],
-           [ 0.06011992,  4.53988008]])
+       england, london, uk  france, paris, pqris
+    0             0.051816             10.548184
+    1             0.050134              4.549866
+    2            12.046517              0.053483
+    3             0.052270             16.547730
+    4             6.049970              0.050030
+    5            19.545227              0.054773
+    6             6.049970              0.050030
+    7             0.060120              4.539880
 
     The higher the value, the bigger the correspondence with the topic.
     """
