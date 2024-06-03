@@ -723,8 +723,13 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         check_is_fitted(self, "H_dict_")
         # rejecting columns is only for fit, so we raise a plain ValueError here
         self._check_input_type(X, err_type=ValueError)
-        X = sbd.to_numpy(X)
-        return self._transform(X)
+        result = self._transform(sbd.to_numpy(X))
+        names = self.get_feature_names_out()
+        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
+        if (idx := sbd.index(X)) is not None:
+            # X and result are pandas dataframes
+            result = result.set_axis(idx, axis="index")
+        return result
 
     def _check_input_type(self, X, err_type=RejectColumn):
         if sbd.is_categorical(X) or sbd.is_string(X):
@@ -759,10 +764,10 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
             )
         # Store and return the encoded vectors of X
         self.H_dict_.update(zip(unq_X, unq_H))
-        feature_names_out = self._get_H(X)
+        result = self._get_H(X)
         # Restore H
         self.H_dict_ = pre_trans_H_dict_
-        return feature_names_out
+        return result
 
     def _handle_missing(self, X):
         """

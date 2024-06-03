@@ -26,6 +26,7 @@ def test_not_implemented():
         "pandas_convert_dtypes",
         "to_column_list",
         "reset_index",
+        "index",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)

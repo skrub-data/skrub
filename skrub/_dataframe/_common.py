@@ -29,7 +29,6 @@ __all__ = [
     "to_list",
     "to_numpy",
     "to_pandas",
-    "reset_index",
     "make_dataframe_like",
     "make_column_like",
     "null_value_for",
@@ -46,6 +45,8 @@ __all__ = [
     "column_names",
     "rename",
     "set_column_names",
+    "reset_index",
+    "index",
     #
     # Inspecting dtypes and casting
     #
@@ -255,16 +256,6 @@ def make_dataframe_like(df, data):
     raise NotImplementedError()
 
 
-@dispatch
-def reset_index(obj):
-    return obj
-
-
-@reset_index.specialize("pandas")
-def _reset_index_pandas(obj):
-    return obj.reset_index(drop=True)
-
-
 @make_dataframe_like.specialize("pandas")
 def _make_dataframe_like_pandas(df, data):
     if isinstance(data, Mapping):
@@ -466,6 +457,26 @@ def _set_column_names_pandas(df, new_column_names):
 @set_column_names.specialize("polars")
 def _set_column_names_polars(df, new_column_names):
     return df.rename(dict(zip(df.columns, new_column_names)))
+
+
+@dispatch
+def reset_index(obj):
+    return obj
+
+
+@reset_index.specialize("pandas")
+def _reset_index_pandas(obj):
+    return obj.reset_index(drop=True)
+
+
+@dispatch
+def index(obj):
+    return None
+
+
+@index.specialize("pandas")
+def _index_pandas(obj):
+    return obj.index
 
 
 #

@@ -152,12 +152,11 @@ def test_partial_fit(df_module, add_words: bool, generate_data):
     enc.partial_fit(X)
     X_enc_partial = enc.transform(X)
     # Check if the encoded vectors are the same
-    np.testing.assert_almost_equal(X_enc, X_enc_partial)
+    df_module.assert_frame_equal(X_enc, X_enc_partial)
     enc.partial_fit(X2)
     X_enc_partial2 = enc.transform(X3)
-    np.testing.assert_raises(
-        AssertionError, np.testing.assert_array_equal, X_enc, X_enc_partial2
-    )
+    with pytest.raises(AssertionError):
+        df_module.assert_frame_equal(X_enc, X_enc_partial2)
 
 
 def test_get_feature_names_out(generate_data):
@@ -301,3 +300,11 @@ def test_bad_input_dtype(df_module):
     with pytest.raises(ValueError, match="Column 'C' does not contain strings.") as e:
         encoder.transform(float_col)
     assert e.type is ValueError
+
+
+def test_output_pandas_index():
+    s = pd.Series("one two two".split(), name="", index=[10, 20, 30])
+    gap = GapEncoder(n_components=2).fit(s)
+    s_test = pd.Series("one two two".split(), name="", index=[-11, 200, 32])
+    out = gap.transform(s_test)
+    assert out.index.tolist() == [-11, 200, 32]
