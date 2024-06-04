@@ -58,7 +58,8 @@ def get_learner(predictor, n_jobs=None):
     >>> from sklearn.linear_model import Ridge
     >>> get_learner(Ridge())
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
-                    ('simpleimputer', SimpleImputer()), ('ridge', Ridge())])"""
+                    ('simpleimputer', SimpleImputer()), ('ridge', Ridge())])
+    """
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         cat_feat_kwargs = {}
