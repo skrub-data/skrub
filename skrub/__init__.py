@@ -9,6 +9,7 @@ from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
+from ._get_learner import get_learner
 from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
@@ -26,6 +27,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
+    "get_learner",
     "DatetimeEncoder",
     "ToDatetime",
     "Joiner",
