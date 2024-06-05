@@ -68,6 +68,18 @@ salaries
 # Therefore our complex, heterogeneous table needs to be processed to extract numeric features.
 # Transforming a complex real-world object such as a date into a vector of numeric features —more adequate for machine learning— is often called *vectorizing* it.
 #
+# ``skrub`` provides an easy way to build a simple but reliable
+# machine-learning model which works well on most tabular data.
+
+from sklearn.model_selection import cross_validate
+from skrub import make_tabular_pipeline
+
+model = make_tabular_pipeline("regressor")
+results = cross_validate(model, employees, salaries)
+
+# %%
+
+#
 # We can easily do this using skrub's |TableVectorizer|.
 
 from skrub import TableVectorizer

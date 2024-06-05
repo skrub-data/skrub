@@ -86,7 +86,8 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     1  2021.0      4.0    1.0     1.617235e+09  11.0  b
 
     The default pipeline combines a :obj:`TableVectorizer` and a
-    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` (or :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` for
+    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` (or
+    :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` for
     classification).
 
     The parameters of the :obj:`TableVectorizer` differ from the default ones:
