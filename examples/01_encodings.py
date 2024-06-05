@@ -39,8 +39,8 @@ We study the case of predicting wages using the
 """
 
 ###############################################################################
-# Easily encoding a dataframe
-# ---------------------------
+# Easy learning on a dataframe
+# ----------------------------
 #
 # Let's first retrieve the dataset, using one of the downloaders from the :mod:`skrub.datasets` module.
 # As all the downloaders, :func:`~skrub.datasets.fetch_employee_salaries` returns a dataset with attributes ``X``, and ``y``.
@@ -68,19 +68,26 @@ salaries
 # Therefore our complex, heterogeneous table needs to be processed to extract numeric features.
 # Transforming a complex real-world object such as a date into a vector of numeric features —more adequate for machine learning— is often called *vectorizing* it.
 #
-# ``skrub`` provides an easy way to build a simple but reliable
-# machine-learning model which works well on most tabular data.
+# ``skrub`` provides an easy way to build a simple but reliable machine-learning model which works well on most tabular data.
 
 from sklearn.model_selection import cross_validate
 from skrub import make_tabular_pipeline
 
 model = make_tabular_pipeline("regressor")
 results = cross_validate(model, employees, salaries)
+results["test_score"]
 
 # %%
-
+# The estimator returned by :obj:`make_tabular_pipeline` combines 2 steps:
 #
-# We can easily do this using skrub's |TableVectorizer|.
+# - a |TableVectorizer| to preprocess the dataframe and vectorize the features
+# - a supervised learner (by default a |HistGradientBoostingRegressor|)
+#
+# In the rest of this example, we focus on the first step and explore the capabilities of skrub's |TableVectorizer|.
+
+# %%
+# Encoding tabular data
+# ---------------------
 
 from skrub import TableVectorizer
 
@@ -224,6 +231,8 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 # However fitting the topic model is costly in computation time and memory.
 # The |MinHashEncoder| produces features that are not easy to interpret, but that decision trees can efficiently use to test for the occurrence of particular character n-grams (more details are provided in its documentation).
 # Therefore it can be a faster and very effective alternative, when the supervised learner is built on top of decision trees, which is the case for the |HGBR|.
+
+# The resulting pipeline is identical to the one produced by default by :obj:`make_tabular_pipeline`.
 
 from skrub import ToCategorical, MinHashEncoder
 
