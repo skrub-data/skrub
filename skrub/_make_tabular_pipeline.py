@@ -14,12 +14,19 @@ from ._to_categorical import ToCategorical
 def make_tabular_pipeline(predictor, n_jobs=None):
     """Get a simple-machine learning pipeline that should work well in many cases.
 
+    This function returns a scikit-learn ``Pipeline`` that combines a
+    ``TableVectorizer``, a ``SimpleImputer`` if missing values are not handled
+    by the provided ``predictor``, and finally the ``predictor`` itself.
+
+    This pipeline is simple but (depending on the chosen ``predictor``) should
+    provide a strong baseline for many learning problems. It can handle tabular
+    input and complex data such as categories, text or datetimes.
+
     Examples
     --------
     >>> from skrub import make_tabular_pipeline
 
-    We can get a simple pipeline that should provide a strong baseline either
-    for classification or regression:
+    We can easily get a default pipeline for classification or regression:
 
     >>> make_tabular_pipeline('regressor')
     Pipeline(steps=[('tablevectorizer',
@@ -28,7 +35,35 @@ def make_tabular_pipeline(predictor, n_jobs=None):
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
 
-    We see that the default pipeline combines a ``TableVectorizer`` and a
+    This pipeline can handle complex, tabular data:
+
+    >>> import pandas as pd
+    >>> X = pd.DataFrame({'a': ['2020-01-02', '2021-04-01'], 'b': [None, 11], 'c': ['a', 'b']})
+    >>> y = [True, False]
+    >>> X
+                a     b  c
+    0  2020-01-02   NaN  a
+    1  2021-04-01  11.0  b
+    >>> model = make_tabular_pipeline('regressor')
+    >>> model.fit(X, y)
+    Pipeline(steps=[('tablevectorizer',
+                     TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
+                                     low_cardinality_transformer=ToCategorical())),
+                    ('histgradientboostingregressor',
+                     HistGradientBoostingRegressor(categorical_features='from_dtype'))])
+    >>> model.predict(X)
+    array([0.5, 0.5])
+
+    By applying only the first pipeline step we can see the transformed data
+    that is sent to the supervised predictor (see the ``TableVectorizer``
+    documentation for details):
+
+    >>> model.named_steps['tablevectorizer'].transform(X)
+       a_year  a_month  a_day  a_total_seconds     b  c
+    0  2020.0      1.0    2.0     1.577923e+09   NaN  a
+    1  2021.0      4.0    1.0     1.617235e+09  11.0  b
+
+    The default pipeline combines a ``TableVectorizer`` and a
     ``HistGradientBoostingRegressor`` (or ``HistGradientBoostingClassifier`` for
     classification).
 
@@ -54,9 +89,37 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     step will be added.
 
     >>> from sklearn.linear_model import Ridge
-    >>> make_tabular_pipeline(Ridge())
+    >>> model = make_tabular_pipeline(Ridge(solver='lsqr'))
+    >>> model.fit(X, y)
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
-                    ('simpleimputer', SimpleImputer()), ('ridge', Ridge())])
+                    ('simpleimputer', SimpleImputer()),
+                    ('ridge', Ridge(solver='lsqr'))])
+
+    >>> model.predict(X)
+    array([1., 0.], dtype=float32)
+
+    Here, different choices were made for the ``TableVectorizer`` -- in
+    particular the categorical columb "c" is one-hot encoded, because the
+    ``Ridge`` regressor lacks the ``HistGradientBoostingRegressor``'s bult-in
+    support for categorical variables.
+
+    >>> model.named_steps['tablevectorizer'].transform(X)
+       a_year  a_month  a_day  a_total_seconds     b  c_b
+    0  2020.0      1.0    2.0     1.577923e+09   NaN  0.0
+    1  2021.0      4.0    1.0     1.617235e+09  11.0  1.0
+
+    Moreover, as ``Ridge`` does not handle missing values, a step was added to
+    perform mean imputation. Therefore the data seen by the final predictor
+    actually looks like this (note scikit-learn ``Pipelines`` can be sliced to
+    produce another ``Pipeline`` containing only the specified steps):
+
+    >>> model[:2].transform(X)
+    array([[2.0200000e+03, 1.0000000e+00, 2.0000000e+00, 1.5779232e+09,
+            1.1000000e+01, 0.0000000e+00],
+           [2.0210000e+03, 4.0000000e+00, 1.0000000e+00, 1.6172352e+09,
+            1.1000000e+01, 1.0000000e+00]], dtype=float32)
+
+    # noqa
     """
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
