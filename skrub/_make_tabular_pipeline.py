@@ -12,11 +12,12 @@ from ._to_categorical import ToCategorical
 
 
 def make_tabular_pipeline(predictor, n_jobs=None):
-    """Get a simple-machine learning pipeline that should work well in many cases.
+    """Get a simple machine-learning pipeline that should work well in many cases.
 
-    This function returns a scikit-learn ``Pipeline`` that combines a
-    ``TableVectorizer``, a ``SimpleImputer`` if missing values are not handled
-    by the provided ``predictor``, and finally the ``predictor`` itself.
+    This function returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline` that
+    combines a :obj:`TableVectorizer`, a :obj:`~sklearn.impute.SimpleImputer`
+    if missing values are not handled by the provided ``predictor``, and
+    finally the ``predictor`` itself.
 
     This pipeline is simple but (depending on the chosen ``predictor``) should
     provide a strong baseline for many learning problems. It can handle tabular
@@ -27,19 +28,21 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     predictor : str or scikit-learn estimator
         The estimator to use as the final step in the pipeline. Appropriate
         choices are made for previous step depending on the ``predictor``. Can
-        be the string "regressor" to use a ``HistGradientBoostingRegressor`` or
-        "classifier" to use a ``HistGradientBoostingClassifier``.
+        be the string ``"regressor"`` to use a
+        :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or
+        ``"classifier"`` to use a
+        :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`.
 
     n_jobs : int, default=None
-        Number of jobs to run in parallel in the ``TableVectorizer`` step.
+        Number of jobs to run in parallel in the :obj:`TableVectorizer` step.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
         ``-1`` means using all processors.
 
     Returns
     -------
     Pipeline
-        A scikit-learn Pipeline chaining some preprocessing and the provided
-        ``predictor``.
+        A scikit-learn :obj:`~sklearn.pipeline.Pipeline` chaining some
+        preprocessing and the provided ``predictor``.
 
     Examples
     --------
@@ -74,7 +77,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     array([0.5, 0.5])
 
     By applying only the first pipeline step we can see the transformed data
-    that is sent to the supervised predictor (see the ``TableVectorizer``
+    that is sent to the supervised predictor (see the :obj:`TableVectorizer`
     documentation for details):
 
     >>> model.named_steps['tablevectorizer'].transform(X)
@@ -82,28 +85,31 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     0  2020.0      1.0    2.0     1.577923e+09   NaN  a
     1  2021.0      4.0    1.0     1.617235e+09  11.0  b
 
-    The default pipeline combines a ``TableVectorizer`` and a
-    ``HistGradientBoostingRegressor`` (or ``HistGradientBoostingClassifier`` for
+    The default pipeline combines a :obj:`TableVectorizer` and a
+    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` (or :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` for
     classification).
 
-    The parameters of the ``TableVectorizer`` differ from the default ones:
+    The parameters of the :obj:`TableVectorizer` differ from the default ones:
 
-      - A ``MinHashEncoder`` is used as the ``high_cardinality_transformer``.
-        This encoder provides good performance when the supervised estimator is
-        based on a decision tree or ensemble of trees, as is the case for the
-        ``HistGradientBoostingClassifier``. Unlike the default ``GapEncoder``,
-        the ``MinHashEncoder`` does not produce interpretable features. However,
-        it is much faster and uses less memory.
+      - A :obj:`MinHashEncoder` is used as the
+        ``high_cardinality_transformer``. This encoder provides good
+        performance when the supervised estimator is based on a decision tree
+        or ensemble of trees, as is the case for the
+        :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`. Unlike the
+        default :obj:`GapEncoder`, the :obj:`MinHashEncoder` does not produce
+        interpretable features. However, it is much faster and uses less
+        memory.
 
       - The ``low_cardinality_transformer`` does not one-hot encode features.
-        The ``HistGradientBoostingRegressor`` has built-in support for
-        categorical data which is more efficient than one-hot encoding.
-        Therefore the selected encoder, ``ToCategorical``, simply makes sure
-        that those features have a categorical dtype so that the
-        ``HistGradientBoostingRegressor`` recognizes them as such.
+        The :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` has built-in
+        support for categorical data which is more efficient than one-hot
+        encoding. Therefore the selected encoder, :obj:`ToCategorical`, simply
+        makes sure that those features have a categorical dtype so that the
+        :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` recognizes them
+        as such.
 
     We can also choose which predictor (the final step in the pipeline) to use,
-    and appropriate choices will be made for the ``TableVectorizer``. Moreover,
+    and appropriate choices will be made for the :obj:`TableVectorizer`. Moreover,
     unless the predictor has built-in support for null values, an imputation
     step will be added.
 
@@ -117,20 +123,22 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     >>> model.predict(X)
     array([1., 0.], dtype=float32)
 
-    Here, different choices were made for the ``TableVectorizer`` -- in
-    particular the categorical columb "c" is one-hot encoded, because the
-    ``Ridge`` regressor lacks the ``HistGradientBoostingRegressor``'s bult-in
-    support for categorical variables.
+    Here, different choices were made for the :obj:`TableVectorizer` -- in
+    particular the categorical column ``"c"`` is one-hot encoded, because the
+    :obj:`~sklearn.linear_model.Ridge` regressor lacks the
+    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`'s bult-in support
+    for categorical variables.
 
     >>> model.named_steps['tablevectorizer'].transform(X)
        a_year  a_month  a_day  a_total_seconds     b  c_b
     0  2020.0      1.0    2.0     1.577923e+09   NaN  0.0
     1  2021.0      4.0    1.0     1.617235e+09  11.0  1.0
 
-    Moreover, as ``Ridge`` does not handle missing values, a step was added to
-    perform mean imputation. Therefore the data seen by the final predictor
-    actually looks like this (note scikit-learn ``Pipelines`` can be sliced to
-    produce another ``Pipeline`` containing only the specified steps):
+    Moreover, as :obj:`~sklearn.linear_model.Ridge` does not handle missing
+    values, a step was added to perform mean imputation. Therefore the data
+    seen by the final predictor actually looks like this (note scikit-learn
+    :obj:`~sklearn.pipeline.Pipeline` can be sliced to produce another
+    ``Pipeline`` containing only the specified steps):
 
     >>> model[:2].transform(X)
     array([[2.0200000e+03, 1.0000000e+00, 2.0000000e+00, 1.5779232e+09,
