@@ -28,7 +28,6 @@ def make_tabular_pipeline(predictor, n_jobs=None):
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
 
-
     We see that the default pipeline combines a ``TableVectorizer`` and a
     ``HistGradientBoostingRegressor`` (or ``HistGradientBoostingClassifier`` for
     classification).
