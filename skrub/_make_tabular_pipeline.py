@@ -11,18 +11,17 @@ from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
 
-def get_learner(predictor, n_jobs=None):
-    """
-    Get a simple-machine learning pipeline that should work well in many cases.
+def make_tabular_pipeline(predictor, n_jobs=None):
+    """Get a simple-machine learning pipeline that should work well in many cases.
 
     Examples
     --------
-    >>> from skrub import get_learner
+    >>> from skrub import make_tabular_pipeline
 
     We can get a simple pipeline that should provide a strong baseline either
     for classification or regression:
 
-    >>> get_learner('regressor')
+    >>> make_tabular_pipeline('regressor')
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
@@ -56,7 +55,7 @@ def get_learner(predictor, n_jobs=None):
     step will be added.
 
     >>> from sklearn.linear_model import Ridge
-    >>> get_learner(Ridge())
+    >>> make_tabular_pipeline(Ridge())
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer()), ('ridge', Ridge())])
     """
@@ -67,12 +66,12 @@ def get_learner(predictor, n_jobs=None):
         cat_feat_kwargs = {"categorical_features": "from_dtype"}
     match predictor:
         case "classifier":
-            return get_learner(
+            return make_tabular_pipeline(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
         case "regressor":
-            return get_learner(
+            return make_tabular_pipeline(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )

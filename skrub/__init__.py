@@ -9,9 +9,9 @@ from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
-from ._get_learner import get_learner
 from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
+from ._make_tabular_pipeline import make_tabular_pipeline
 from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
 from ._select_cols import DropCols, SelectCols
@@ -27,7 +27,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
-    "get_learner",
+    "make_tabular_pipeline",
     "DatetimeEncoder",
     "ToDatetime",
     "Joiner",
