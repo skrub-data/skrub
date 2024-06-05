@@ -22,6 +22,25 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     provide a strong baseline for many learning problems. It can handle tabular
     input and complex data such as categories, text or datetimes.
 
+    Parameters
+    ----------
+    predictor : str or scikit-learn estimator
+        The estimator to use as the final step in the pipeline. Appropriate
+        choices are made for previous step depending on the ``predictor``. Can
+        be the string "regressor" to use a ``HistGradientBoostingRegressor`` or
+        "classifier" to use a ``HistGradientBoostingClassifier``.
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel in the ``TableVectorizer`` step.
+        ``None`` means 1 unless in a joblib ``parallel_backend`` context.
+        ``-1`` means using all processors.
+
+    Returns
+    -------
+    Pipeline
+        A scikit-learn Pipeline chaining some preprocessing and the provided
+        ``predictor``.
+
     Examples
     --------
     >>> from skrub import make_tabular_pipeline
