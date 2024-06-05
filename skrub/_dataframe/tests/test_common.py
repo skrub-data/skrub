@@ -253,6 +253,16 @@ def test_reset_index(df_module):
     assert col1.index.tolist() == idx
 
 
+def test_index(df_module):
+    df, col = df_module.example_dataframe, df_module.example_column
+    if df_module.name == "pandas":
+        assert ns.index(df) is df.index
+        assert ns.index(col) is col.index
+    else:
+        assert ns.index(df) is None
+        assert ns.index(col) is None
+
+
 #
 # Inspecting dtypes and casting
 # =============================
