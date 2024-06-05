@@ -234,6 +234,25 @@ def test_set_column_names(df_module, example_data_dict):
     assert ns.column_names(new_df) == new_names
 
 
+def test_reset_index(df_module):
+    df, col = df_module.example_dataframe, df_module.example_column
+    if df_module.name != "pandas":
+        assert ns.reset_index(df) is df
+        assert ns.reset_index(col) is col
+        return
+    idx = [-10 - i for i in range(len(col))]
+
+    df1 = df.set_axis(idx, axis="index")
+    assert df1.index.tolist() == idx
+    assert ns.reset_index(df1).index.tolist() == list(range(df1.shape[0]))
+    assert df1.index.tolist() == idx
+
+    col1 = col.set_axis(idx)
+    assert col1.index.tolist() == idx
+    assert ns.reset_index(col1).index.tolist() == list(range(len(col1)))
+    assert col1.index.tolist() == idx
+
+
 #
 # Inspecting dtypes and casting
 # =============================

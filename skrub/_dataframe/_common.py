@@ -461,6 +461,11 @@ def _set_column_names_polars(df, new_column_names):
 
 @dispatch
 def reset_index(obj):
+    """Reset the index of a pandas dataframe or series.
+
+    If ``obj`` is a pandas dataframe or series, returns ``obj.reset_index(drop=True)``.
+    Otherwise this is a no-op: it returns ``obj`` itself without modifying it.
+    """
     return obj
 
 
