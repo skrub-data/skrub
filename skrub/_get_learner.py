@@ -65,7 +65,6 @@ def get_learner(predictor, n_jobs=None):
         cat_feat_kwargs = {}
     else:
         cat_feat_kwargs = {"categorical_features": "from_dtype"}
-    imputer = None
     match predictor:
         case "classifier":
             return get_learner(
@@ -99,14 +98,14 @@ def get_learner(predictor, n_jobs=None):
                 high_cardinality_transformer=MinHashEncoder(),
             )
         case BaseEstimator():
-            imputer = SimpleImputer()
+            pass
         case type(cls) if issubclass(cls, BaseEstimator):
             raise TypeError("pass an estimator instance not the class")
         case _:
             raise TypeError("pass a scikit-learn estimator")
 
-    if imputer is None:
+    if predictor._get_tags().get("allow_nan", False):
         steps = (vectorizer, predictor)
     else:
-        steps = (vectorizer, imputer, predictor)
+        steps = (vectorizer, SimpleImputer(), predictor)
     return make_pipeline(*steps)
