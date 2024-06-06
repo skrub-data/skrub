@@ -9,13 +9,11 @@ Date: June 2023
 """
 
 import math
-from pathlib import Path
-from utils import default_parser, find_result, monitor
-from utils.join import evaluate, fetch_big_data
-from argparse import ArgumentParser
 import numbers
 import warnings
+from argparse import ArgumentParser
 from collections.abc import Iterable
+from pathlib import Path
 from time import perf_counter
 from typing import Literal
 
@@ -32,6 +30,8 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
+from utils import default_parser, find_result, monitor
+from utils.join import evaluate, fetch_big_data
 
 
 def _numeric_encoding(
@@ -355,8 +355,10 @@ def fuzzy_join(
 
     if numerical_match not in ["string", "number"]:
         raise ValueError(
-            "Parameter 'numerical_match' should be either 'string' or 'number', "
-            f"got {numerical_match!r}. ",
+            (
+                "Parameter 'numerical_match' should be either 'string' or 'number', "
+                f"got {numerical_match!r}. "
+            ),
         )
 
     for param in [on, left_on, right_on]:
@@ -401,9 +403,11 @@ def fuzzy_join(
     # Warn if presence of missing values
     if main_table[main_cols].isna().any().any():
         warnings.warn(
-            "You are merging on missing values. "
-            "The output correspondence will be random or missing. "
-            "To avoid unexpected errors you can drop them. ",
+            (
+                "You are merging on missing values. "
+                "The output correspondence will be random or missing. "
+                "To avoid unexpected errors you can drop them. "
+            ),
             UserWarning,
             stacklevel=2,
         )

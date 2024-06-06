@@ -364,8 +364,9 @@ print(f"Mean R² score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 y = df["Happiness score"]
 df = df.drop("Happiness score", axis=1)
 
-from skrub import Joiner, SelectCols
 from sklearn.pipeline import make_pipeline
+
+from skrub import Joiner, SelectCols
 
 # We create a selector that we will insert at the end of our pipeline, to
 # select the relevant columns before fitting the regressor

@@ -69,4 +69,3 @@ From shorter term to longer term:
 
 - Automatic feature synthesis in databases, building on the assembling
   features
-

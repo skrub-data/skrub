@@ -66,7 +66,6 @@ import pandas as pd
 
 from skrub.datasets import fetch_movielens
 
-
 ratings = fetch_movielens(dataset_id="ratings")
 ratings = ratings.X.sort_values("timestamp").reset_index(drop=True)
 ratings["timestamp"] = pd.to_datetime(ratings["timestamp"], unit="s")
@@ -84,8 +83,7 @@ X.head()
 # Our first step is to extract features from the timestamp, using the
 # |TableVectorizer|. Natively, it uses the |DatetimeEncoder| on datetime
 # columns, and doesn't interact with numerical columns.
-from skrub import TableVectorizer, DatetimeEncoder
-
+from skrub import DatetimeEncoder, TableVectorizer
 
 table_vectorizer = TableVectorizer(
     datetime_transformer=DatetimeEncoder(add_weekday=True)
@@ -95,8 +93,8 @@ X_date_encoded.head()
 
 ###############################################################################
 # We can now make a couple of plots and gain some insight on our dataset.
-from matplotlib import pyplot as plt
 import seaborn as sns
+from matplotlib import pyplot as plt
 
 sns.set_style("darkgrid")
 
@@ -158,7 +156,6 @@ make_barplot(
 # This feature answer questions like
 # *"How many times has this user given a bad, medium or good rate to movies?"*.
 from skrub import AggTarget
-
 
 agg_target_user = AggTarget(
     main_key="userId",
@@ -231,7 +228,7 @@ from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 operations = ["mean", "hist(3)", "hist(5)", "hist(7)", "value_counts"]
 param_grid = [
     {
-        f"aggtarget-2__operation": [op],
+        "aggtarget-2__operation": [op],
     }
     for op in operations
 ]

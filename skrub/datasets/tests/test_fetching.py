@@ -170,7 +170,9 @@ def test_fetch_movielens():
     test_dataset = {
         "id": "ratings",
         "desc_start": "Summary\n=======\n\nThis dataset (ml-latest-small)",
-        "url": "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip",  # noqa
+        "url": (
+            "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
+        ),  # noqa
         "dataset_columns_count": 4,
     }
 
