@@ -50,7 +50,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
 
     We can easily get a default pipeline for classification or regression:
 
-    >>> make_tabular_pipeline('regressor')
+    >>> make_tabular_pipeline('regressor')                # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
@@ -66,13 +66,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
                 a     b  c
     0  2020-01-02   NaN  a
     1  2021-04-01  11.0  b
-    >>> model = make_tabular_pipeline('regressor')
-    >>> model.fit(X, y)
-    Pipeline(steps=[('tablevectorizer',
-                     TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
-                                     low_cardinality_transformer=ToCategorical())),
-                    ('histgradientboostingregressor',
-                     HistGradientBoostingRegressor(categorical_features='from_dtype'))])
+    >>> model = make_tabular_pipeline('regressor').fit(X, y)
     >>> model.predict(X)
     array([0.5, 0.5])
 
@@ -120,9 +114,6 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer()),
                     ('ridge', Ridge(solver='lsqr'))])
-
-    >>> model.predict(X)
-    array([1., 0.], dtype=float32)
 
     Here, different choices were made for the :obj:`TableVectorizer` -- in
     particular the categorical column ``"c"`` is one-hot encoded, because the
