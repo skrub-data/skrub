@@ -1,0 +1,89 @@
+[project]
+name = "skrub"
+version = "0.2.0"
+description = "Prepping tables for machine learning"
+channels = ["conda-forge"]
+authors = ["Patricio Cerda <patricio.cerda@inria.fr>"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+license = "BSD-3-Clause"
+homepage = "https://skrub-data.org/"
+readme = "README.rst"
+
+[dependencies]
+python = ">=3.10"
+numpy = ">=1.23.5"
+packaging = ">=23.1"
+pandas = ">=1.5.3"
+scikit-learn = ">=1.2.1"
+scipy = ">=1.9.3"
+
+[pypi-dependencies]
+skrub = { path=".", editable=true }
+
+[feature.optional.dependencies]
+pyarrow = "*"
+polars = "*"
+
+[feature.pyarrow.dependencies]
+pyarrow = "*"
+
+[feature.doc.dependencies]
+jupyterlite-sphinx = "*"
+jupyterlite-pyodide-kernel = "*"
+matplotlib = "*"
+pydata-sphinx-theme = "*"
+seaborn = "*"
+sphinx = "*"
+sphinx-copybutton = "*"
+sphinx-gallery = "*"
+sphinxext-opengraph = "*"
+statsmodels = "*"
+
+[feature.lint.dependencies]
+# The version below should be aligned with the one of `.pre-commit-config.yaml`
+black = "==22.6.0"
+flake8 = "5.0.4"
+isort = "5.12.0"
+mypy = "*"
+pre-commit = "*"
+
+[feature.test.dependencies]
+numpydoc = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+
+[feature.min-dependencies.dependencies]
+numpy = "==1.23.5"
+pandas = "==1.5.3"
+scikit-learn = "==1.2.1"
+scipy = "==1.9.3"
+
+[feature.py310.dependencies]
+python = "==3.10"
+
+[feature.py311.dependencies]
+python = "==3.11"
+
+[feature.py312.dependencies]
+python = "==3.12"
+
+[feature.doc.tasks]
+build-doc = { cmd = "make html", cwd = "doc" }
+clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
+
+[feature.lint.tasks]
+lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
+
+[feature.test.tasks]
+test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
+
+[environments]
+doc = ["doc"]
+lint = ["lint"]
+test = ["test"]
+dev = ["optional", "doc", "lint", "test"]
+ci-min-deps = ["py310", "min-dependencies", "test"]
+ci-py311-pyarrow = ["py311", "pyarrow", "test"]
+ci-py311-polars = ["py311", "optional", "test"]
+ci-py312-polars = ["py312", "optional", "test"]

@@ -71,3 +71,6 @@ benchmarks/*.pkl
 
 # Default JupyterLite content
 jupyterlite_contents
+
+# Pixi folder
+.pixi/
