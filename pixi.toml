@@ -18,14 +18,17 @@ scikit-learn = ">=1.2.1"
 scipy = ">=1.9.3"
 
 [pypi-dependencies]
-skrub = { path=".", editable=true }
+skrub = { path = ".", editable = true }
 
 [feature.optional.dependencies]
 pyarrow = "*"
 polars = "*"
 
-[feature.pyarrow.dependencies]
-pyarrow = "*"
+[feature.min-dependencies.dependencies]
+numpy = "==1.23.5"
+pandas = "==1.5.3"
+scikit-learn = "==1.2.1"
+scipy = "==1.9.3"
 
 [feature.doc.dependencies]
 jupyterlite-sphinx = "*"
@@ -53,28 +56,18 @@ pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
 
-[feature.min-dependencies.dependencies]
-numpy = "==1.23.5"
-pandas = "==1.5.3"
-scikit-learn = "==1.2.1"
-scipy = "==1.9.3"
-
 [feature.py310.dependencies]
 python = "==3.10"
-
 [feature.py311.dependencies]
 python = "==3.11"
-
 [feature.py312.dependencies]
 python = "==3.12"
 
 [feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
-
 [feature.lint.tasks]
 lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
-
 [feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 
@@ -83,7 +76,9 @@ doc = ["doc"]
 lint = ["lint"]
 test = ["test"]
 dev = ["optional", "doc", "lint", "test"]
-ci-min-deps = ["py310", "min-dependencies", "test"]
-ci-py311-pyarrow = ["py311", "pyarrow", "test"]
-ci-py311-polars = ["py311", "optional", "test"]
-ci-py312-polars = ["py312", "optional", "test"]
+ci-py310-min-deps = ["py310", "min-dependencies", "test"]
+ci-py311-min-deps = ["py311", "min-dependencies", "test"]
+ci-py310-latest-deps = ["py310", "test"]
+ci-py311-latest-deps = ["py311", "test"]
+ci-py312-latest-deps = ["py312", "test"]
+ci-py312-latest-optional-deps = ["py312", "optional", "test"]

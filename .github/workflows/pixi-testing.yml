@@ -13,7 +13,11 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest, macos-12]
-        environment: [ci-min-deps, ci-py311-pyarrow, ci-py311-polars, ci-py312-polars]
+        environment: [
+            ci-py310-min-deps, ci-py311-min-deps,
+            ci-py310-latest-deps, ci-py311-latest-deps, ci-py312-latest-deps,
+            ci-py312-latest-optional-deps
+        ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
