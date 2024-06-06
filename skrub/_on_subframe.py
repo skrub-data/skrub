@@ -124,8 +124,6 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     1  0.0  10.0    0.0     0.0  7.50  0.00
     2  0.0   0.0  100.0     0.0 -2.49 -0.33
     3  0.0   0.0    0.0  1000.0 -2.49 -0.33
-
-    # noqa
     """
 
     def __init__(

@@ -35,7 +35,10 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 import pandas as pd
 
 df = pd.read_csv(
-    "https://raw.githubusercontent.com/skrub-data/datasets/master/data/Happiness_report_2022.csv",  # noqa
+    (
+        "https://raw.githubusercontent.com/skrub-data/datasets/"
+        "master/data/Happiness_report_2022.csv"
+    ),
     thousands=",",
 )
 df.drop(df.tail(1).index, inplace=True)
