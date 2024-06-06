@@ -179,10 +179,17 @@ def make_tabular_pipeline(predictor, n_jobs=None):
             )
         case BaseEstimator():
             pass
-        case type(cls) if issubclass(cls, BaseEstimator):
-            raise TypeError("pass an estimator instance not the class")
+        case type() as cls if issubclass(cls, BaseEstimator):
+            raise TypeError(
+                "make_tabular_pipeline expects a scikit-learn estimator as its first"
+                f" argument. Pass an instance of {cls.__name__} rather than the class"
+                " itself."
+            )
         case _:
-            raise TypeError("pass a scikit-learn estimator")
+            raise TypeError(
+                "make_tabular_pipeline expects a scikit-learn estimator, 'regressor',"
+                " or 'classifier' as its first argument."
+            )
 
     if predictor._get_tags().get("allow_nan", False):
         steps = (vectorizer, predictor)
