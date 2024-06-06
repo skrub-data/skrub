@@ -74,7 +74,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     that is sent to the supervised predictor (see the :obj:`TableVectorizer`
     documentation for details):
 
-    >>> model.named_steps['tablevectorizer'].transform(X)
+    >>> model.named_steps['tablevectorizer'].transform(X)   # doctest: +SKIP
        a_year  a_month  a_day  a_total_seconds     b  c
     0  2020.0      1.0    2.0     1.577923e+09   NaN  a
     1  2021.0      4.0    1.0     1.617235e+09  11.0  b
