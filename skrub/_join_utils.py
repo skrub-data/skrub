@@ -182,16 +182,19 @@ def pick_column_names(suggested_names, forbidden_names=()):
     Examples
     --------
     >>> from skrub._join_utils import pick_column_names
-    >>> pick_column_names(["A", "A", "B"])                                    # doctest: +SKIP
+    >>> pick_column_names(["A", "A", "B"])  # doctest: +SKIP
     ['A', 'A__skrub_87946836__', 'B']
-    >>> pick_column_names(['A__skrub_750a0b7c__', 'B'])                       # doctest: +SKIP
+    >>> pick_column_names(['A__skrub_750a0b7c__', 'B'])  # doctest: +SKIP
     ['A__skrub_750a0b7c__', 'B']
     >>> pick_column_names(
-    ...     ["A__skrub_750a0b7c___year", "A__skrub_750a0b7c___month", "B"])   # doctest: +SKIP
+    ...     ["A__skrub_750a0b7c___year", "A__skrub_750a0b7c___month", "B"]
+    ... )  # doctest: +SKIP
     ['A_year__skrub_750a0b7c__', 'A_month__skrub_750a0b7c__', 'B']
-    >>> pick_column_names(["A", "B"], forbidden_names=["A", "B", "C"])        # doctest: +SKIP
+    >>> pick_column_names(["A", "B"], forbidden_names=["A", "B", "C"])  # doctest: +SKIP
     ['A__skrub_37dd63aa__', 'B__skrub_21e27e1e__']
-    >>> pick_column_names(["concat_A__skrub_750a0b7c___A__skrub_b1eeb4f7__"]) # doctest: +SKIP
+    >>> pick_column_names(
+    ...     ["concat_A__skrub_750a0b7c___A__skrub_b1eeb4f7__"]
+    ... ) # doctest: +SKIP
     ['concat_A_A']
 
     # noqa

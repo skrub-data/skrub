@@ -1,5 +1,5 @@
 """
-Taken from https://github.com/scikit-learn/scikit-learn/blob/3d4ee9e9dc384ea11724e270b51bd26a1f227f0c/doc/sphinxext/github_link.py  # noqa
+Taken from scikit-learn.
 """
 
 import inspect
