@@ -9,22 +9,7 @@ on:
       - main
 
 jobs:
-  check_skip:
-    runs-on: ubuntu-latest
-    outputs:
-      skip: ${{ steps.result_step.outputs.ci-skip }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: result_step
-        uses: mstachniuk/ci-skip@master
-        with:
-          commit-filter: '[skip ci];[ci skip];[skip github]'
-          commit-filter-separator: ';'
-
   build:
-    needs: check_skip
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest, macos-12]

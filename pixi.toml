@@ -72,8 +72,8 @@ lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 
 [environments]
+lint = { features = ["lint"], no-default-feature = true }
 doc = ["doc"]
-lint = ["lint"]
 test = ["test"]
 dev = ["optional", "doc", "lint", "test"]
 ci-py310-min-deps = ["py310", "min-dependencies", "test"]
