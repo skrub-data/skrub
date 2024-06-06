@@ -24,8 +24,18 @@ exclude = '''
 )/
 '''
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+# max line length for black
+line-length = 88
+target-version = "py38"
+exclude=[
+    ".git",
+    "__pycache__",
+    "dist",
+    "doc/_build",
+    "doc/auto_examples",
+    "build",
+]
 
 [tool.pytest.ini_options]
 filterwarnings = [
