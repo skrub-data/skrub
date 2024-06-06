@@ -45,12 +45,12 @@ X
 #   alternate naming conventions etc.
 #
 
-X_dirty = X[["employee_position_title"]]
+X_dirty = X["employee_position_title"]
 
 ###############################################################################
 # Let's have a look at a sample of the job titles:
 
-X_dirty.sort_values(by="employee_position_title").tail(15)
+X_dirty.sort_values().tail(15)
 
 ###############################################################################
 # Then, we create an instance of the |GapEncoder| with 10 components.

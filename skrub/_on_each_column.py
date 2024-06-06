@@ -63,6 +63,9 @@ class SingleColumnTransformer(BaseEstimator):
           helpful message when it is not.
         - A note about single-column transformers (vs dataframe transformers)
           is added after the summary line of the docstring.
+
+    Subclasses must define ``fit_transform`` and ``transform`` (or inherit them
+    from another superclass).
     """
 
     __single_column_transformer__ = True
@@ -89,14 +92,6 @@ class SingleColumnTransformer(BaseEstimator):
         self.fit_transform(column, y=y)
         return self
 
-    def fit_transform(self, column, y=None):
-        """Fit to a column and transform it."""
-        raise NotImplementedError()
-
-    def transform(self, column):
-        """Transform a column (must be fitted first)."""
-        raise NotImplementedError()
-
     def _check_single_column(self, column, function_name):
         class_name = self.__class__.__name__
         if sbd.is_dataframe(column):
@@ -120,13 +115,17 @@ class SingleColumnTransformer(BaseEstimator):
                 subclass.__doc__,
                 _SINGLE_COL_NOTE.format(class_name=subclass.__name__),
             )
-        for method in "fit", "fit_transform", "transform":
+        for method in "fit", "fit_transform", "transform", "partial_fit":
             if method in subclass.__dict__:
                 wrapped = _wrap_add_check_single_column(getattr(subclass, method))
                 setattr(subclass, method, wrapped)
 
 
 def _wrap_add_check_single_column(f):
+    # as we have only a few predefined functions to handle, using their exact
+    # name and signature in the wrapper definition gives better tracebacks and
+    # autocompletion than just functools.wraps / setting __name__ and
+    # __signature__
     if f.__name__ == "fit":
 
         @functools.wraps(f)
@@ -135,6 +134,15 @@ def _wrap_add_check_single_column(f):
             return f(self, X, y=y)
 
         return fit
+    elif f.__name__ == "partial_fit":
+
+        @functools.wraps(f)
+        def partial_fit(self, X, y=None):
+            self._check_single_column(X, f.__name__)
+            return f(self, X, y=y)
+
+        return partial_fit
+
     elif f.__name__ == "fit_transform":
 
         @functools.wraps(f)

@@ -28,6 +28,7 @@ def test_not_implemented():
         "pandas_convert_dtypes",
         "to_column_list",
         "reset_index",
+        "index",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)
@@ -250,6 +251,16 @@ def test_reset_index(df_module):
     assert col1.index.tolist() == idx
     assert ns.reset_index(col1).index.tolist() == list(range(len(col1)))
     assert col1.index.tolist() == idx
+
+
+def test_index(df_module):
+    df, col = df_module.example_dataframe, df_module.example_column
+    if df_module.name == "pandas":
+        assert ns.index(df) is df.index
+        assert ns.index(col) is col.index
+    else:
+        assert ns.index(df) is None
+        assert ns.index(col) is None
 
 
 #

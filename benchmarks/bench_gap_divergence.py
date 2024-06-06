@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 from skrub._gap_encoder import (
     GapEncoder,
-    GapEncoderColumn,
+    GapEncoder,
     _multiplicative_update_h,
     _multiplicative_update_w,
     batch_lookup,
@@ -55,7 +55,7 @@ from utils import (
 )
 
 
-class ModifiedGapEncoderColumn(GapEncoderColumn):
+class ModifiedGapEncoderColumn(GapEncoder):
     def __init__(self, *args, column_name: str = "MISSING COLUMN", **kwargs):
         super().__init__(*args, **kwargs)
         self.column_name = column_name
