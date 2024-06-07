@@ -47,7 +47,6 @@ from utils import (
 from skrub import TableVectorizer
 from skrub._gap_encoder import (
     GapEncoder,
-    GapEncoder,
     _multiplicative_update_h,
     _multiplicative_update_w,
     batch_lookup,

@@ -15,7 +15,6 @@ from utils import default_parser, find_result, monitor
 
 from skrub import GapEncoder
 from skrub._gap_encoder import (
-    GapEncoder,
     _beta_divergence,
     _multiplicative_update_h,
     _multiplicative_update_w,
