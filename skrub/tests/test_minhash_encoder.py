@@ -78,11 +78,19 @@ def test_encoder_params(generate_data, hashing, minmax_hash):
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
 def test_missing_values(df_module, hashing: str):
     X = df_module.make_column(
-        "", ["Red", None, "green", "blue", "green", "green", "blue", None]
+        "",
+        [
+            "Red",
+            pd.NA if df_module.description == "pandas-nullable-dtypes" else np.nan,
+            "green",
+            "blue",
+            "green",
+            "green",
+            "blue",
+            None,
+        ],
     )
-    n = 3
-
-    encoder = MinHashEncoder(n_components=n, hashing=hashing, minmax_hash=False)
+    encoder = MinHashEncoder(n_components=3, hashing=hashing, minmax_hash=False)
 
     if hashing == "aaa":
         with pytest.raises(ValueError, match=r"Got hashing="):
