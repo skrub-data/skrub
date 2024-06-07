@@ -8,7 +8,6 @@ from copy import deepcopy
 from typing import Literal
 
 import numpy as np
-import pandas as pd
 import scipy.sparse as sp
 from numpy.random import RandomState
 from numpy.typing import ArrayLike, NDArray
@@ -116,11 +115,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         that do not yield an improvement on the smoothed cost function.
         To disable early stopping and run the process fully,
         set ``max_no_improvement=None``.
-    handle_missing : {'error', 'zero_impute'}, default='zero_impute'
-        Whether to raise an error or impute with empty string ('') if missing
-        values (NaN) are present during GapEncoder.fit (default is to impute).
-        "Missing values" are any value for which ``pandas.isna`` returns
-        ``True``, such as ``numpy.nan`` or ``None``.
     verbose : int, default=0
         Verbosity level. The higher, the more granular the logging.
 
@@ -208,7 +202,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         rescale_W: bool = True,
         max_iter_e_step: int = 1,
         max_no_improvement: int = 5,
-        handle_missing="zero_impute",
         verbose: int = 0,
     ):
         self.ngram_range = ngram_range
@@ -228,7 +221,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         self.rescale_W = rescale_W
         self.max_iter_e_step = max_iter_e_step
         self.max_no_improvement = max_no_improvement
-        self.handle_missing = handle_missing
         self.verbose = verbose
 
     def _init_vars(self, X) -> tuple[NDArray, NDArray, NDArray]:
@@ -239,6 +231,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         # Init n-grams counts vectorizer
         if self.hashing:
             self.ngrams_count_ = HashingVectorizer(
+                preprocessor=_preprocess_text,
                 analyzer=self.analyzer,
                 ngram_range=self.ngram_range,
                 n_features=self.hashing_n_features,
@@ -247,6 +240,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
             )
             if self.add_words:  # Init a word counts vectorizer if needed
                 self.word_count_ = HashingVectorizer(
+                    preprocessor=_preprocess_text,
                     analyzer="word",
                     n_features=self.hashing_n_features,
                     norm=None,
@@ -254,10 +248,15 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
                 )
         else:
             self.ngrams_count_ = CountVectorizer(
-                analyzer=self.analyzer, ngram_range=self.ngram_range, dtype=np.float64
+                preprocessor=_preprocess_text,
+                analyzer=self.analyzer,
+                ngram_range=self.ngram_range,
+                dtype=np.float64,
             )
             if self.add_words:
-                self.word_count_ = CountVectorizer(dtype=np.float64)
+                self.word_count_ = CountVectorizer(
+                    preprocessor=_preprocess_text, dtype=np.float64
+                )
 
         # Init H_dict_ with empty dict to train from scratch
         self.H_dict_ = dict()
@@ -427,6 +426,14 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
 
         return False
 
+    def _check_analyzer(self):
+        if not isinstance(self.analyzer, str) or self.analyzer not in (
+            "word",
+            "char",
+            "char_wb",
+        ):
+            raise ValueError("analyzer should be one of ['word', 'char', 'char_wb'].")
+
     def fit(self, X, y=None):
         """
         Fit the GapEncoder on `X`.
@@ -443,6 +450,7 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         GapEncoderColumn
             The fitted GapEncoderColumn instance (self).
         """
+        self._check_analyzer()
         self._check_input_type(X)
         # Check that n_samples >= n_components
         n_samples = _num_samples(X)
@@ -453,7 +461,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         self._input_name = sbd.name(X)
         self._random_state = check_random_state(self.random_state)
         X = sbd.to_numpy(X)
-        X = self._handle_missing(X)
         # Copy parameter rho
         self.rho_ = self.rho
         # Attributes to monitor the convergence
@@ -538,13 +545,15 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
             The labels that best describe each topic.
         """
         check_is_fitted(self, "H_dict_")
-        vectorizer = CountVectorizer()
+        vectorizer = CountVectorizer(preprocessor=_preprocess_text)
         try:
             vectorizer.fit(list(self.H_dict_.keys()))
         except ValueError:
             # The vectorizer failed to find words, we need to switch to
             # char-level representation
-            vectorizer = CountVectorizer(analyzer="char_wb")
+            vectorizer = CountVectorizer(
+                preprocessor=_preprocess_text, analyzer="char_wb"
+            )
             vectorizer.fit(list(self.H_dict_.keys()))
         vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self._transform(vocabulary)
@@ -582,7 +591,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
             The Kullback-Leibler divergence.
         """
         X = sbd.to_numpy(X)
-        X = self._handle_missing(X)
         # Build n-grams/word counts matrix
         unq_X, lookup = np.unique(X, return_inverse=True)
         unq_V = self.ngrams_count_.transform(unq_X)
@@ -628,13 +636,13 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         GapEncoderColumn
             The fitted GapEncoderColumn instance (self).
         """
+        self._check_analyzer()
         self._check_input_type(X)
         if not hasattr(self, "_input_name"):
             self._input_name = sbd.name(X)
         if not hasattr(self, "_random_state"):
             self._random_state = check_random_state(self.random_state)
         X = sbd.to_numpy(X)
-        X = self._handle_missing(X)
         # Init H_dict_ with empty dict if it's the first call of partial_fit
         if not hasattr(self, "H_dict_"):
             self.H_dict_ = dict()
@@ -738,7 +746,6 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         raise err_type(f"Column {sbd.name(X)!r} does not contain strings.")
 
     def _transform(self, X):
-        X = self._handle_missing(X)
         # Copy the state of H before continuing fitting it
         pre_trans_H_dict_ = deepcopy(self.H_dict_)
         unq_X = np.unique(X)
@@ -770,26 +777,17 @@ class GapEncoder(SingleColumnTransformer, TransformerMixin):
         self.H_dict_ = pre_trans_H_dict_
         return result
 
-    def _handle_missing(self, X):
-        """
-        Imputes missing values with `` or raises an error
-        Note: modifies the array in-place.
-        """
-        if self.handle_missing not in ["error", "zero_impute"]:
-            raise ValueError(
-                "handle_missing should be either 'error' or "
-                f"'zero_impute', got {self.handle_missing!r}. "
-            )
 
-        missing_mask = pd.isna(X)
+def _preprocess_text(text):
+    """Text preprocessor for the GapEncoder and MinHashEncoder.
 
-        if missing_mask.any():
-            if self.handle_missing == "error":
-                raise ValueError("Input data contains missing values. ")
-            elif self.handle_missing == "zero_impute":
-                X[missing_mask] = ""
+    It is equivalent to the default preprocessor of CountVectorizer except that
+    nulls are replaced by the empty string instead of raising an exception.
 
-        return X
+    """
+    if isinstance(text, str):
+        return text.lower()
+    return ""
 
 
 def _rescale_W(W: NDArray, A: NDArray) -> None:
@@ -930,6 +928,7 @@ def get_kmeans_prototypes(
       - nearest neighbor
     """
     vectorizer = HashingVectorizer(
+        preprocessor=_preprocess_text,
         analyzer=analyzer,
         norm=None,
         alternate_sign=False,
