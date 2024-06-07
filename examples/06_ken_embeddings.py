@@ -277,7 +277,7 @@ encoder3 = make_column_transformer(
     ("passthrough", emb_columns2),
     ("passthrough", ["Year"]),
     (ohe, ["Genre"]),
-    (min_hash, ["Platform"]),
+    (min_hash, "Platform"),
     remainder="drop",
 )
 
