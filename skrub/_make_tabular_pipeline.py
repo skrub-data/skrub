@@ -137,9 +137,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
             1.1000000e+01, 0.0000000e+00],
            [2.0210000e+03, 4.0000000e+00, 1.0000000e+00, 1.6172352e+09,
             1.1000000e+01, 1.0000000e+00]], dtype=float32)
-
-    # noqa
-    """
+    """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         cat_feat_kwargs = {}
