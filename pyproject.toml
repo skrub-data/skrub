@@ -31,6 +31,35 @@ dependencies = [
     "scipy>=1.9.3",
 ]
 
+[project.optional-dependencies]
+doc = [
+    "jupyterlite-sphinx",
+    "jupyterlite-pyodide-kernel",
+    "matplotlib",
+    "pydata-sphinx-theme",
+    "seaborn",
+    "sphinx",
+    "sphinx-copybutton",
+    "sphinx-gallery",
+    "sphinxext-opengraph",
+    "statsmodels",
+]
+lint = [
+    "black==23.3.0",
+    "ruff==0.4.8",
+    "pre-commit",
+]
+optional = [
+    "pyarrow",
+    "polars",
+]
+test = [
+    "numpydoc",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+]
+
 [project.urls]
 Homepage = "https://skrub-data.org/"
 Source = "https://github.com/skrub-data/skrub"
@@ -46,64 +75,43 @@ platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 [tool.pixi.pypi-dependencies]
 skrub = { path = ".", editable = true }
 
-[tool.pixi.feature.optional.dependencies]
-pyarrow = "*"
-polars = "*"
-
 [tool.pixi.feature.min-dependencies.dependencies]
 numpy = "==1.23.5"
 pandas = "==1.5.3"
 scikit-learn = "==1.2.1"
 scipy = "==1.9.3"
 
-[tool.pixi.feature.doc.dependencies]
-jupyterlite-sphinx = "*"
-jupyterlite-pyodide-kernel = "*"
-matplotlib = "*"
-pydata-sphinx-theme = "*"
-seaborn = "*"
-sphinx = "*"
-sphinx-copybutton = "*"
-sphinx-gallery = "*"
-sphinxext-opengraph = "*"
-statsmodels = "*"
-
-[tool.pixi.feature.lint.dependencies]
-# The version below should be aligned with the one of `.pre-commit-config.yaml`
-black = "==22.6.0"
-flake8 = "5.0.4"
-isort = "5.12.0"
-mypy = "*"
-pre-commit = "*"
-
-[tool.pixi.feature.test.dependencies]
-numpydoc = "*"
-pytest = "*"
-pytest-cov = "*"
-pytest-xdist = "*"
+[tool.pixi.feature.min-optional-dependencies.dependencies]
+pyarrow = "==16.*"
+polars = "==0.19"
 
 [tool.pixi.feature.py310.dependencies]
 python = "==3.10"
+
 [tool.pixi.feature.py311.dependencies]
 python = "==3.11"
+
 [tool.pixi.feature.py312.dependencies]
 python = "==3.12"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
-[feature.lint.tasks]
+
+[tool.pixi.feature.lint.tasks]
 lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
-[feature.test.tasks]
+
+[tools.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 
 [tool.pixi.environments]
-lint = { features = ["lint"], no-default-feature = true }
+lint = ["lint"]
 doc = ["doc"]
 test = ["test"]
 dev = ["optional", "doc", "lint", "test"]
 ci-py310-min-deps = ["py310", "min-dependencies", "test"]
 ci-py311-min-deps = ["py311", "min-dependencies", "test"]
+ci-py310-min-optional-deps = ["py310", "min-dependencies", "min-optional-dependencies", "test"]
 ci-py310-latest-deps = ["py310", "test"]
 ci-py311-latest-deps = ["py311", "test"]
 ci-py312-latest-deps = ["py312", "test"]
