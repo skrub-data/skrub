@@ -188,7 +188,7 @@ ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
 encoder = make_column_transformer(
     ("passthrough", ["Year"]),
     (ohe, ["Genre"]),
-    (min_hash, ["Platform"]),
+    (min_hash, "Platform"),
     remainder="drop",
 )
 
