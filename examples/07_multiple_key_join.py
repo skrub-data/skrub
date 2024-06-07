@@ -44,6 +44,7 @@ pool of tables are combined for machine learning.
 #       Here, we consider only flights from 2008.
 
 import pandas as pd
+
 from skrub.datasets import fetch_figshare
 
 flights = fetch_figshare("41771418").X
@@ -133,9 +134,10 @@ flights.drop(columns=["TailNum", "FlightNum"])
 # our main table.
 # - We will use this main table to model the prediction of flight delay.
 
-from skrub import TableVectorizer
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import make_pipeline
+
+from skrub import TableVectorizer
 
 tv = TableVectorizer()
 hgb = HistGradientBoostingClassifier()

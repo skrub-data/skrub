@@ -349,9 +349,7 @@ class ToDatetime(SingleColumnTransformer):
     somewhat unlikely that all days would be below 12 so the inferred format should
     often be correct. To be sure, one can specify the ``format`` in the
     constructor.
-
-    # noqa
-    """
+    """  # noqa: E501
 
     def __init__(self, format=None):
         self.format = format
@@ -482,9 +480,7 @@ def to_datetime(data, format=None):
        a          b
     0  1 2021-02-01
     1  2 2021-02-21
-
-    # noqa
-    """
+    """  # noqa: E501
     raise TypeError(
         "Input to skrub.to_datetime must be a pandas or polars Series or DataFrame."
         f" Got {type(data)}."

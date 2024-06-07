@@ -43,8 +43,9 @@ X.head(10)
 ###############################################################################
 # Let's import the |TableVectorizer| and see what the default assignation is:
 
-from skrub import TableVectorizer
 from pprint import pprint
+
+from skrub import TableVectorizer
 
 tv = TableVectorizer()
 tv.fit(X)
@@ -80,7 +81,8 @@ pprint(tv.transformers_)
 #
 # Say we wanted to use a |MinHashEncoder| instead of the default |GapEncoder|,
 # but only for the column ``department_name``.
-# We can apply a column-specific transformer by using the ``specific_transformers`` parameter.
+# We can apply a column-specific transformer by using the ``specific_transformers``
+# parameter.
 
 tv = TableVectorizer(specific_transformers=[(MinHashEncoder(), ["department_name"])])
 tv.fit(X)
@@ -107,9 +109,10 @@ pprint(tv.transformers_)
 # We recommend using the 3-tuple syntax for the column-specific transformers,
 # which allows us to give a name to the assignment (here ``mh_dep_name``).
 
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import make_pipeline
-from sklearn.ensemble import HistGradientBoostingClassifier
+
 from skrub import GapEncoder
 
 pipeline = make_pipeline(
@@ -135,8 +138,3 @@ grid_search = GridSearchCV(pipeline, param_grid=params)
 #
 # In this notebook, we saw how to better customize the |TableVectorizer| so
 # it fits all your needs!
-#
-# If you've got any improvement ideas, please open a feature request on
-# `GitHub <https://github.com/skrub-data/skrub/issues/new?labels=enhancement&template=feature_request.yml>`_!
-#
-# We are always happy to see new suggestions from the community :)

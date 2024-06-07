@@ -21,41 +21,40 @@ Date: June 12th 2023
 Commit: dc77f610e240d2613c99436d01f98db4e4e7922c
 """
 
-import scipy as sp
+from argparse import ArgumentParser
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scipy as sp
 import seaborn as sns
-import matplotlib.pyplot as plt
-
-from argparse import ArgumentParser
-from skrub._gap_encoder import (
-    GapEncoder,
-    GapEncoderColumn,
-    _multiplicative_update_h,
-    _multiplicative_update_w,
-    batch_lookup,
-    check_input,
-)
 from joblib import Parallel, delayed
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
 )
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import cross_validate
-from skrub import TableVectorizer
-from pathlib import Path
-
+from sklearn.pipeline import Pipeline
 from utils import (
-    monitor,
     default_parser,
     find_result,
     get_classification_datasets,
     get_regression_datasets,
+    monitor,
+)
+
+from skrub import TableVectorizer
+from skrub._gap_encoder import (
+    GapEncoder,
+    _multiplicative_update_h,
+    _multiplicative_update_w,
+    batch_lookup,
+    check_input,
 )
 
 
-class ModifiedGapEncoderColumn(GapEncoderColumn):
+class ModifiedGapEncoderColumn(GapEncoder):
     def __init__(self, *args, column_name: str = "MISSING COLUMN", **kwargs):
         super().__init__(*args, **kwargs)
         self.column_name = column_name
@@ -182,7 +181,8 @@ benchmark_name = Path(__file__).stem
             "employee_salaries",
             # "road_safety",  # https://github.com/skrub-data/skrub/issues/622
             "drug_directory",
-            # "traffic_violations",  # Takes way too long and seems to cause memory leaks
+            # Takes way too long and seems to cause memory leaks
+            # "traffic_violations",
         ],
     },
     save_as=benchmark_name,

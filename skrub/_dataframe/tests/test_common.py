@@ -9,8 +9,10 @@ from datetime import datetime
 from functools import partial
 
 import numpy as np
+import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 from skrub import _selectors as s
 from skrub._dataframe import _common as ns
@@ -25,6 +27,8 @@ def test_not_implemented():
         "is_lazyframe",
         "pandas_convert_dtypes",
         "to_column_list",
+        "reset_index",
+        "index",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)
@@ -124,6 +128,16 @@ def test_make_dataframe_like(df_module, example_data_dict):
     assert ns.dataframe_module_name(df) == df_module.name
 
 
+def test_make_dataframe_like_pandas_index():
+    c1 = pd.Series([10, 11], index=[2, 3], name="c1")
+    c2 = pd.Series([100, 110], index=[4, 5], name="c2")
+    expected = pd.DataFrame({"c1": [10, 11], "c2": [100, 110]})
+    df = ns.make_dataframe_like(c1, [c1, c2])
+    pd_assert_frame_equal(df, expected)
+    df = ns.make_dataframe_like(c1, {"c1": c1, "c2": c2})
+    pd_assert_frame_equal(df, expected)
+
+
 def test_make_column_like(df_module, example_data_dict):
     col = ns.make_column_like(
         df_module.empty_column, example_data_dict["float-col"], "mycol"
@@ -218,6 +232,35 @@ def test_set_column_names(df_module, example_data_dict):
     new_df = ns.set_column_names(df, new_names)
     assert ns.column_names(df) == old_names
     assert ns.column_names(new_df) == new_names
+
+
+def test_reset_index(df_module):
+    df, col = df_module.example_dataframe, df_module.example_column
+    if df_module.name != "pandas":
+        assert ns.reset_index(df) is df
+        assert ns.reset_index(col) is col
+        return
+    idx = [-10 - i for i in range(len(col))]
+
+    df1 = df.set_axis(idx, axis="index")
+    assert df1.index.tolist() == idx
+    assert ns.reset_index(df1).index.tolist() == list(range(df1.shape[0]))
+    assert df1.index.tolist() == idx
+
+    col1 = col.set_axis(idx)
+    assert col1.index.tolist() == idx
+    assert ns.reset_index(col1).index.tolist() == list(range(len(col1)))
+    assert col1.index.tolist() == idx
+
+
+def test_index(df_module):
+    df, col = df_module.example_dataframe, df_module.example_column
+    if df_module.name == "pandas":
+        assert ns.index(df) is df.index
+        assert ns.index(col) is col.index
+    else:
+        assert ns.index(df) is None
+        assert ns.index(col) is None
 
 
 #

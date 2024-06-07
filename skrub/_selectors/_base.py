@@ -84,9 +84,7 @@ def cols(*columns):
     cols('kind', 'ID')
     >>> s.all() & ['kind', 'ID']
     (all() & cols('kind', 'ID'))
-
-    # noqa
-    """
+    """  # noqa: E501
     return Cols(columns)
 
 

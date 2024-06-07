@@ -265,11 +265,13 @@ def _fetch_world_bank_data(
         indicator_name = df.columns[1]
     else:
         warnings.warn(
-            f"Could not find the dataset {indicator_id!r} locally. "
-            "Downloading it from the World Bank; this might take a while... "
-            "If it is interrupted, some files might be invalid/incomplete: "
-            "if on the following run, the fetching raises errors, you can try "
-            f"fixing this issue by deleting the directory {csv_path!s}.",
+            (
+                f"Could not find the dataset {indicator_id!r} locally. "
+                "Downloading it from the World Bank; this might take a while... "
+                "If it is interrupted, some files might be invalid/incomplete: "
+                "if on the following run, the fetching raises errors, you can try "
+                f"fixing this issue by deleting the directory {csv_path!s}."
+            ),
             UserWarning,
             stacklevel=2,
         )
@@ -369,11 +371,13 @@ def _fetch_figshare(
         }
     else:
         warnings.warn(
-            f"Could not find the dataset {figshare_id!r} locally. "
-            "Downloading it from figshare; this might take a while... "
-            "If it is interrupted, some files might be invalid/incomplete: "
-            "if on the following run, the fetching raises errors, you can try "
-            f"fixing this issue by deleting the directory {parquet_path!s}.",
+            (
+                f"Could not find the dataset {figshare_id!r} locally. "
+                "Downloading it from figshare; this might take a while... "
+                "If it is interrupted, some files might be invalid/incomplete: "
+                "if on the following run, the fetching raises errors, you can try "
+                f"fixing this issue by deleting the directory {parquet_path!s}."
+            ),
             UserWarning,
             stacklevel=2,
         )
@@ -446,11 +450,13 @@ def _fetch_movielens(dataset_id: str, data_directory: Path | None = None) -> dic
         # If the details file or the features file don't exist,
         # download the dataset.
         warnings.warn(
-            f"Could not find the dataset {dataset_id!r} locally. "
-            "Downloading it from MovieLens; this might take a while... "
-            "If it is interrupted, some files might be invalid/incomplete: "
-            "if on the following run, the fetching raises errors, you can try "
-            f"fixing this issue by deleting the directory {data_directory!s}.",
+            (
+                f"Could not find the dataset {dataset_id!r} locally. "
+                "Downloading it from MovieLens; this might take a while... "
+                "If it is interrupted, some files might be invalid/incomplete: "
+                "if on the following run, the fetching raises errors, you can try "
+                f"fixing this issue by deleting the directory {data_directory!s}."
+            ),
             UserWarning,
             stacklevel=2,
         )

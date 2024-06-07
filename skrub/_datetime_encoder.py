@@ -120,7 +120,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> import pandas as pd
 
     >>> login = pd.to_datetime(
-    ...     pd.Series(["2024-05-13T12:05:36", None, "2024-05-15T13:46:02"], name="login")
+    ...     pd.Series(
+    ...         ["2024-05-13T12:05:36", None, "2024-05-15T13:46:02"], name="login")
     ... )
     >>> login
     0   2024-05-13 12:05:36
@@ -137,7 +138,9 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     We can ask for a finer resolution:
 
-    >>> DatetimeEncoder(resolution='second', add_total_seconds=False).fit_transform(login)
+    >>> DatetimeEncoder(resolution='second', add_total_seconds=False).fit_transform(
+    ...     login
+    ... )
        login_year  login_month  login_day  login_hour  login_minute  login_second
     0      2024.0          5.0       13.0        12.0           5.0          36.0
     1         NaN          NaN        NaN         NaN           NaN           NaN
@@ -168,7 +171,9 @@ class DatetimeEncoder(SingleColumnTransformer):
     When a column contains only dates without time information, the time features
     are discarded, regardless of ``resolution``.
 
-    >>> birthday = pd.to_datetime(pd.Series(['2024-04-14', '2024-05-15'], name='birthday'))
+    >>> birthday = pd.to_datetime(
+    ...     pd.Series(['2024-04-14', '2024-05-15'], name='birthday')
+    ... )
     >>> encoder = DatetimeEncoder(resolution='second')
     >>> encoder.fit_transform(birthday)
        birthday_year  birthday_month  birthday_day  birthday_total_seconds
@@ -206,7 +211,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     If the input column has a time zone, the extracted features are in this timezone.
 
     >>> login = pd.to_datetime(
-    ...     pd.Series(["2024-05-13T12:05:36", None, "2024-05-15T13:46:02"], name="login")
+    ...     pd.Series(
+    ...         ["2024-05-13T12:05:36", None, "2024-05-15T13:46:02"], name="login")
     ... ).dt.tz_localize('Europe/Paris')
     >>> encoder = DatetimeEncoder()
     >>> encoder.fit_transform(login)['login_hour']
@@ -247,9 +253,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     Here we can see the input to ``transform`` has been converted back to the
     timezone used during ``fit`` and that we get the same result for "hour".
-
-    # noqa
-    """
+    """  # noqa: E501
 
     def __init__(self, resolution="hour", add_weekday=False, add_total_seconds=True):
         self.resolution = resolution
