@@ -123,14 +123,12 @@ class MinHashEncoder(SingleColumnTransformer, TransformerMixin):
         ngram_range: tuple[int, int] = (2, 4),
         hashing: Literal["fast", "murmur"] = "fast",
         minmax_hash: bool = False,
-        handle_missing: Literal["error", "zero_impute"] = "zero_impute",
         n_jobs: int = None,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
         self.hashing = hashing
         self.minmax_hash = minmax_hash
-        self.handle_missing = handle_missing
         self.n_jobs = n_jobs
 
     def _get_murmur_hash(self, string: str) -> NDArray:
