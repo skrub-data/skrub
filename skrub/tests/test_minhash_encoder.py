@@ -75,9 +75,8 @@ def test_encoder_params(generate_data, hashing, minmax_hash):
     assert y.shape == (len(X), 50)
 
 
-@pytest.mark.parametrize("missing", ["error", "zero_impute", "aaa"])
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
-def test_missing_values(df_module, missing: str, hashing: str):
+def test_missing_values(df_module, hashing: str):
     X = df_module.make_column(
         "", ["Red", None, "green", "blue", "green", "green", "blue", None]
     )
