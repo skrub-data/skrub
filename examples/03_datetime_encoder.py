@@ -282,6 +282,7 @@ result.plot.barh(
 plt.tight_layout()
 plt.show()
 
+# %%
 # We can see that the total seconds since Epoch and the hour of the day
 # are the most important feature, which seems reasonable.
 #

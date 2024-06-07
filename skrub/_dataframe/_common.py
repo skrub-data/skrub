@@ -46,6 +46,7 @@ __all__ = [
     "rename",
     "set_column_names",
     "reset_index",
+    "index",
     #
     # Inspecting dtypes and casting
     #
@@ -471,6 +472,16 @@ def reset_index(obj):
 @reset_index.specialize("pandas")
 def _reset_index_pandas(obj):
     return obj.reset_index(drop=True)
+
+
+@dispatch
+def index(obj):
+    return None
+
+
+@index.specialize("pandas")
+def _index_pandas(obj):
+    return obj.index
 
 
 #
