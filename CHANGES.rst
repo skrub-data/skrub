@@ -39,6 +39,13 @@ Major changes
 Minor changes
 -------------
 
+* :class:`GapEncoder` and :class:`MinHashEncoder` used to modify their input
+  in-place, replacing missing values with a string. They no longer do so. Their
+  parameter `handle_missing` has been removed; now missing values are always
+  treated as the empty string.
+  :pr:`TODO` by :user:`Jérôme Dockès <jeromedockes>`.
+
+
 skrub release 0.1.0
 ===================
 
