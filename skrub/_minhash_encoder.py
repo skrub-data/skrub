@@ -23,7 +23,7 @@ from ._utils import LRUDict
 NoneType = type(None)
 
 
-class MinHashEncoder(SingleColumnTransformer, TransformerMixin):
+class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
     """Encode string categorical features by applying the MinHash method to n-gram \
     decompositions of strings.
 
@@ -261,7 +261,7 @@ class MinHashEncoder(SingleColumnTransformer, TransformerMixin):
             )
         if self.hashing == "murmur" and self.minmax_hash:
             raise ValueError(
-                "minmax_hash encoding is not supportedwith the murmur hashing function"
+                "minmax_hash encoding is not supported with the murmur hashing function"
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         self._input_name = sbd.name(X)
