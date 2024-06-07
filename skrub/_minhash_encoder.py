@@ -8,6 +8,7 @@ from collections.abc import Callable, Collection
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 from joblib import Parallel, delayed, effective_n_jobs
 from numpy.typing import ArrayLike, NDArray
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -56,9 +57,6 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         might have some concern with its entropy.
     minmax_hash : bool, default=False
         If `True`, returns the min and max hashes concatenated.
-    handle_missing : {'error', 'zero_impute'}, default='zero_impute'
-        Whether to raise an error or encode missing values (NaN) with
-        vectors filled with zeros.
     n_jobs : int, optional
         The number of jobs to run in parallel.
         The hash computations for all unique elements are parallelized.
@@ -217,10 +215,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         res = np.zeros((len(batch), self.n_components))
         for i, string in enumerate(batch):
             if string not in self.hash_dict_:
-                if string == "NAN":  # true if x is a missing value
-                    self.hash_dict_[string] = np.zeros(self.n_components)
-                else:
-                    self.hash_dict_[string] = hash_func(string)
+                self.hash_dict_[string] = hash_func(string)
             res[i] = self.hash_dict_[string]
         return res
 
@@ -250,11 +245,6 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             raise ValueError(
                 f"Got hashing={self.hashing!r}, "
                 "but expected any of {'fast', 'murmur'}. "
-            )
-        if self.handle_missing not in ["error", "zero_impute"]:
-            raise ValueError(
-                f"Got handle_missing={self.handle_missing!r}, but expected "
-                "any of {'error', 'zero_impute'}. "
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
@@ -289,29 +279,6 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
                     "minmax_hash encoding is not supported"
                     "with the murmur hashing function"
                 )
-        if self.handle_missing not in ["error", "zero_impute"]:
-            raise ValueError(
-                "handle_missing should be either "
-                f"'error' or 'zero_impute', got {self.handle_missing!r}"
-            )
-
-        # Handle missing values
-        missing_mask = (
-            ~(X == X)  # Find np.nan
-            | (X == None)  # noqa: E711 Find None. Note: `X is None` doesn't work.
-            | (X == "")  # Find empty strings
-        )
-
-        if missing_mask.any():  # contains at least one missing value
-            if self.handle_missing == "error":
-                raise ValueError(
-                    "Found missing values in input data; set "
-                    "handle_missing='zero_impute' to encode with missing values"
-                )
-            elif self.handle_missing == "zero_impute":
-                # NANs will be replaced by zeroes in _compute_hash
-                X[missing_mask] = "NAN"
-
         if self.hashing == "fast":
             hash_func = self._get_fast_hash
         elif self.hashing == "murmur":
@@ -322,8 +289,10 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
                 f"got {self.hashing!r}"
             )
 
+        null_mask = ~pd.isna(X)
+        not_null_X = X[null_mask]
         # Compute the hashes for unique values
-        unique_x, indices_x = np.unique(X, return_inverse=True)
+        unique_x, indices_x = np.unique(not_null_X, return_inverse=True)
         n_jobs = effective_n_jobs(self.n_jobs)
 
         # Compute the hashes in parallel on n_jobs batches
@@ -335,12 +304,13 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             for idx_slice in gen_even_slices(len(unique_x), n_jobs)
         )
 
-        # Match the hashes of the unique value to the original values
-        X_out = np.concatenate(unique_x_trans)[indices_x].reshape(
-            len(X), X.shape[1] * self.n_components
+        unique_hashes = np.concatenate(unique_x_trans)
+        X_out = np.empty(
+            shape=(len(X), X.shape[1] * self.n_components), dtype="float32"
         )
-
-        return X_out.astype(np.float64)  # The output is an int32 before conversion
+        X_out[~null_mask] = 0.0
+        X_out[null_mask] = unique_hashes[indices_x]
+        return X_out
 
     def get_feature_names_out(
         self, input_features: ArrayLike | str | None = None
