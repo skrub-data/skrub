@@ -213,39 +213,17 @@ def test_score(generate_data):
     assert score_1 == score_2
 
 
-@pytest.mark.parametrize(
-    "missing",
-    ["zero_impute", "error", "aaa"],
-)
-def test_missing_values(df_module, missing: str):
+def test_missing_values(df_module):
     """Test what happens when missing values are in the data."""
-    if df_module.name == "polars":
-        pytest.xfail(
-            reason=(
-                "'TypeError: '<' not supported between instances of 'DataTypeClass' and"
-                " 'str'' raised because of pl.Null"
-            )
-        )
     if df_module.name == "pandas":
         m1, m2 = pd.NA, np.nan
     else:
         m1, m2 = None, None
     observations = ["alice", "bob", None, "alice", m1, m2]
     observations = df_module.make_column("", observations)
-    enc = GapEncoder(handle_missing=missing, n_components=3)
-    if missing == "error":
-        with pytest.raises(ValueError, match="Input data contains missing values"):
-            enc.fit_transform(observations)
-    elif missing == "zero_impute":
-        enc.fit_transform(observations)
-        enc.partial_fit(observations)
-    else:
-        with pytest.raises(
-            ValueError,
-            match=r"handle_missing should be either "
-            r"'error' or 'zero_impute', got 'aaa'",
-        ):
-            enc.fit_transform(observations)
+    enc = GapEncoder(n_components=3)
+    enc.fit_transform(observations)
+    enc.partial_fit(observations)
 
 
 def test_check_fitted_gap_encoder(df_module):
