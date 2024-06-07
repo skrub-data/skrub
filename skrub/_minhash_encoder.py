@@ -18,7 +18,7 @@ from . import _dataframe as sbd
 from ._fast_hash import ngram_min_hash
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._string_distances import get_unique_ngrams
-from ._utils import LRUDict
+from ._utils import LRUDict, unique_strings
 
 NoneType = type(None)
 
@@ -280,28 +280,20 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             assert self.hashing == "murmur", self.hashing
             hash_func = self._get_murmur_hash
 
-        null_mask = ~sbd.is_null(X).to_numpy()
-        not_null_X = X_values[null_mask]
-        if not len(not_null_X):
-            X_out = np.zeros(shape=(len(X), self.n_components), dtype="float32")
-        else:
-            # TODO use the dataframe library to get unique values (faster than numpy)
-            unique_x, indices_x = np.unique(not_null_X, return_inverse=True)
-            n_jobs = effective_n_jobs(self.n_jobs)
+        is_null = sbd.to_numpy(sbd.is_null(X))
+        unique_x, indices_x = unique_strings(X_values, is_null)
+        n_jobs = effective_n_jobs(self.n_jobs)
 
-            # Compute the hashes in parallel on n_jobs batches
-            unique_x_trans = Parallel(n_jobs=n_jobs)(
-                delayed(self._compute_hash_batched)(
-                    unique_x[idx_slice],
-                    hash_func,
-                )
-                for idx_slice in gen_even_slices(len(unique_x), n_jobs)
+        # Compute the hashes in parallel on n_jobs batches
+        unique_x_trans = Parallel(n_jobs=n_jobs)(
+            delayed(self._compute_hash_batched)(
+                unique_x[idx_slice],
+                hash_func,
             )
-
-            unique_hashes = np.concatenate(unique_x_trans)
-            X_out = np.empty(shape=(len(X), self.n_components), dtype="float32")
-            X_out[~null_mask] = 0.0
-            X_out[null_mask] = unique_hashes[indices_x]
+            for idx_slice in gen_even_slices(len(unique_x), n_jobs)
+        )
+        X_out = np.concatenate(unique_x_trans, dtype="float32")[indices_x]
+        X_out[is_null] = 0.0
         names = self.get_feature_names_out()
         result = sbd.make_dataframe_like(X, dict(zip(names, X_out.T)))
         if (idx := sbd.index(X)) is not None:
