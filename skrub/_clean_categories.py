@@ -90,7 +90,8 @@ class CleanCategories(SingleColumnTransformer):
 
     Categories stored with the ``StringDtype`` dtype are converted to ``object``:
 
-    >>> s = pd.Series(['cat A', 'cat B', None], name='c', dtype='string').astype('category')
+    >>> s = pd.Series(['cat A', 'cat B', None], name='c', dtype='string')
+    >>> s = s.astype('category')
     >>> s
     0    cat A
     1    cat B
@@ -190,8 +191,6 @@ class CleanCategories(SingleColumnTransformer):
     >>> s = pl.Series('c', ['one', 'two', None], dtype=pl.Enum(['one', 'two', 'three']))
     >>> cleaner.fit_transform(s) is s
     True
-
-    # noqa
     """
 
     def fit_transform(self, column, y=None):

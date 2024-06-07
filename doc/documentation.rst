@@ -25,5 +25,3 @@ typically with `scikit-learn <http://scikit-learn.org>`_ with its
    assembling
    cleaning
    development
-
-

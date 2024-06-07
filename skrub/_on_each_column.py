@@ -417,9 +417,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
           A  A_scaled      B  B_scaled
     0 -10.0      -1.0    0.0      -1.0
     1  10.0       1.0  100.0       1.0
-
-    # noqa
-    """
+    """  # noqa: E501
 
     def __init__(
         self,
