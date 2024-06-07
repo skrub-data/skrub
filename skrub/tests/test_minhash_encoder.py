@@ -98,6 +98,8 @@ def test_missing_values(df_module, hashing: str):
     else:
         y = encoder.fit_transform(X)
         assert y["_0"][1] == 0.0
+        # non-regression for https://github.com/skrub-data/skrub/issues/921
+        assert sbd.is_null(X)[1]
 
 
 def test_missing_values_none(df_module):

@@ -8,6 +8,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
 from skrub import GapEncoder
+from skrub import _dataframe as sbd
 from skrub._on_each_column import RejectColumn
 from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data as _gen_data
@@ -224,6 +225,8 @@ def test_missing_values(df_module):
     enc = GapEncoder(n_components=3)
     enc.fit_transform(observations)
     enc.partial_fit(observations)
+    # non-regression for https://github.com/skrub-data/skrub/issues/921
+    assert sbd.is_null(observations)[2]
 
 
 def test_check_fitted_gap_encoder(df_module):
