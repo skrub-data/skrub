@@ -287,23 +287,26 @@ class MinHashEncoder(SingleColumnTransformer, TransformerMixin):
 
         null_mask = ~sbd.is_null(X).to_numpy()
         not_null_X = X_values[null_mask]
-        # TODO use the dataframe library to get unique values (faster than numpy)
-        unique_x, indices_x = np.unique(not_null_X, return_inverse=True)
-        n_jobs = effective_n_jobs(self.n_jobs)
+        if not len(not_null_X):
+            X_out = np.zeros(shape=(len(X), self.n_components), dtype="float32")
+        else:
+            # TODO use the dataframe library to get unique values (faster than numpy)
+            unique_x, indices_x = np.unique(not_null_X, return_inverse=True)
+            n_jobs = effective_n_jobs(self.n_jobs)
 
-        # Compute the hashes in parallel on n_jobs batches
-        unique_x_trans = Parallel(n_jobs=n_jobs)(
-            delayed(self._compute_hash_batched)(
-                unique_x[idx_slice],
-                hash_func,
+            # Compute the hashes in parallel on n_jobs batches
+            unique_x_trans = Parallel(n_jobs=n_jobs)(
+                delayed(self._compute_hash_batched)(
+                    unique_x[idx_slice],
+                    hash_func,
+                )
+                for idx_slice in gen_even_slices(len(unique_x), n_jobs)
             )
-            for idx_slice in gen_even_slices(len(unique_x), n_jobs)
-        )
 
-        unique_hashes = np.concatenate(unique_x_trans)
-        X_out = np.empty(shape=(len(X), self.n_components), dtype="float32")
-        X_out[~null_mask] = 0.0
-        X_out[null_mask] = unique_hashes[indices_x]
+            unique_hashes = np.concatenate(unique_x_trans)
+            X_out = np.empty(shape=(len(X), self.n_components), dtype="float32")
+            X_out[~null_mask] = 0.0
+            X_out[null_mask] = unique_hashes[indices_x]
         names = self.get_feature_names_out()
         result = sbd.make_dataframe_like(X, dict(zip(names, X_out.T)))
         if (idx := sbd.index(X)) is not None:
