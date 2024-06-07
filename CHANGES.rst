@@ -43,7 +43,7 @@ Minor changes
   in-place, replacing missing values with a string. They no longer do so. Their
   parameter `handle_missing` has been removed; now missing values are always
   treated as the empty string.
-  :pr:`TODO` by :user:`Jérôme Dockès <jeromedockes>`.
+  :pr:`930` by :user:`Jérôme Dockès <jeromedockes>`.
 
 
 skrub release 0.1.0
