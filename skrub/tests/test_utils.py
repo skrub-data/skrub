@@ -25,7 +25,7 @@ def test_lrudict():
     "values", [[], [None], ["", None], ["abc", "", None], [np.nan, "abc"]]
 )
 def test_unique_strings(df_module, values):
-    c = df_module.make_column("", values)
+    c = df_module.make_column("", values) if values else df_module.empty_column
     is_null = sbd.to_numpy(sbd.is_null(c))
     unique, idx = unique_strings(sbd.to_numpy(c), is_null)
     assert list(unique) == sorted({s if isinstance(s, str) else "" for s in values})
