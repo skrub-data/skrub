@@ -7,7 +7,7 @@ Assembling: joining multiple tables
 
 .. currentmodule:: skrub
 
-Assembling is the process of collecting and joining together tables. 
+Assembling is the process of collecting and joining together tables.
 Good analytics requires including as much information as possible,
 often from different sources.
 
@@ -24,7 +24,7 @@ related columns. Furthermore, it chooses the type of fuzzy matching used based
 on the column type (string, numerical or datetime). It also outputs a similarity
 score, to single out bad matches, so that they can be dropped or replaced.
 
-In sum, equivalent to :func:`pandas.merge`, the :func:`fuzzy_join` 
+In sum, equivalent to :func:`pandas.merge`, the :func:`fuzzy_join`
 has no need for pre-cleaning.
 
 
@@ -45,8 +45,8 @@ In addition, skrub also enable more advanced analysis:
   aggregates the external table first, then joins it on the main table.
   Alternatively, it can aggregate the main table and then join it back onto itself.
 
-- :class:`AggTarget`: in some settings, one can derive powerful features from 
-  the target `y` itself. AggTarget aggregates the target without risking data 
+- :class:`AggTarget`: in some settings, one can derive powerful features from
+  the target `y` itself. AggTarget aggregates the target without risking data
   leakage, then joins the result back on the main table, similar to AggJoiner.
 
 - :class:`MultiAggJoiner`: extension of the :class:`AggJoiner` that joins multiple
@@ -74,7 +74,7 @@ always easy to find the right one for your analysis.
 
 skrub has some very helpful methods that gives you easy
 access to embeddings, or vectorial representations of an entity,
-of all common entities from Wikipedia. 
+of all common entities from Wikipedia.
 You can use :func:`datasets.get_ken_embeddings` to search for the right
 embeddings and download them.
 

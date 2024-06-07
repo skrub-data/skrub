@@ -45,6 +45,8 @@ __all__ = [
     "column_names",
     "rename",
     "set_column_names",
+    "reset_index",
+    "index",
     #
     # Inspecting dtypes and casting
     #
@@ -257,8 +259,8 @@ def make_dataframe_like(df, data):
 @make_dataframe_like.specialize("pandas")
 def _make_dataframe_like_pandas(df, data):
     if isinstance(data, Mapping):
-        return pd.DataFrame(data, copy=False)
-    return pd.DataFrame({name(col): col for col in data}, copy=False)
+        return pd.DataFrame({k: reset_index(v) for k, v in data.items()}, copy=False)
+    return pd.DataFrame({name(col): reset_index(col) for col in data}, copy=False)
 
 
 @make_dataframe_like.specialize("polars")
@@ -455,6 +457,31 @@ def _set_column_names_pandas(df, new_column_names):
 @set_column_names.specialize("polars")
 def _set_column_names_polars(df, new_column_names):
     return df.rename(dict(zip(df.columns, new_column_names)))
+
+
+@dispatch
+def reset_index(obj):
+    """Reset the index of a pandas dataframe or series.
+
+    If ``obj`` is a pandas dataframe or series, returns ``obj.reset_index(drop=True)``.
+    Otherwise this is a no-op: it returns ``obj`` itself without modifying it.
+    """
+    return obj
+
+
+@reset_index.specialize("pandas")
+def _reset_index_pandas(obj):
+    return obj.reset_index(drop=True)
+
+
+@dispatch
+def index(obj):
+    return None
+
+
+@index.specialize("pandas")
+def _index_pandas(obj):
+    return obj.index
 
 
 #

@@ -10,15 +10,19 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils._testing import skip_if_no_parallel
 
 from skrub import MinHashEncoder
-from skrub.conftest import _POLARS_INSTALLED
+from skrub import _dataframe as sbd
 
-from .utils import generate_data
+from .utils import generate_data as _gen_data
 
-INPUT_TYPES = ["numpy", "pandas"]
-if _POLARS_INSTALLED:
-    import polars as pl
 
-    INPUT_TYPES.append("polars")
+@pytest.fixture
+def generate_data(df_module):
+    def generate(*args, as_list=True, **kwargs):
+        del as_list
+        data = _gen_data(*args, as_list=True, **kwargs)
+        return df_module.make_column("some col", data)
+
+    return generate
 
 
 @pytest.mark.parametrize(
@@ -29,14 +33,13 @@ if _POLARS_INSTALLED:
         ("murmur", False),
     ],
 )
-def test_minhash_encoder(hashing, minmax_hash):
-    X = np.array(["al ice", "b ob", "bob and alice", "alice and bob"])[:, None]
+def test_minhash_encoder(df_module, hashing, minmax_hash):
+    X = df_module.make_column("", ["al ice", "b ob", "bob and alice", "alice and bob"])
     # Test output shape
     encoder = MinHashEncoder(n_components=2, hashing=hashing)
     encoder.fit(X)
     y = encoder.transform(X)
     assert y.shape == (4, 2), str(y.shape)
-    assert len(set(y[0])) == 2
 
     # Test that using the same seed returns the same output
     encoder2 = MinHashEncoder(n_components=2, hashing=hashing)
@@ -46,45 +49,12 @@ def test_minhash_encoder(hashing, minmax_hash):
 
     # Test min property
     if not minmax_hash:
-        X_substring = [x[: x.find(" ")] for x in X[:, 0]]
-        X_substring = np.array(X_substring)[:, None]
+        X_substring = [x[: x.find(" ")] for x in X]
+        X_substring = df_module.make_column("", X_substring)
         encoder3 = MinHashEncoder(n_components=2, hashing=hashing)
         encoder3.fit(X_substring)
         y_substring = encoder3.transform(X_substring)
         np.testing.assert_array_less(y - y_substring, 0.001)
-
-
-def test_multiple_columns(df_module):
-    """
-    This test aims at verifying that fitting multiple columns
-    with the MinHashEncoder will not produce an error, and will
-    encode the column independently.
-    """
-    if df_module.description == "pandas-nullable-dtypes":
-        pytest.xfail(reason="MinHashEncoder doesn't support pd.NA yet.")
-    X = df_module.make_dataframe(
-        {
-            "class": ["bird", "bird", "mammal", "mammal"],
-            "type": ["parrot", "nightingale", "monkey", np.nan],
-        }
-    )
-    X1 = X[["class"]]
-    X2 = X[["type"]]
-    fit1 = MinHashEncoder(n_components=30).fit_transform(X1)
-    fit2 = MinHashEncoder(n_components=30).fit_transform(X2)
-    fit = MinHashEncoder(n_components=30).fit_transform(X)
-    assert_array_equal(np.array([fit[:, :30], fit[:, 30:60]]), np.array([fit1, fit2]))
-
-
-def test_input_type():
-    # Numpy array
-    X = np.array(["alice", "bob"])[:, None]
-    enc = MinHashEncoder(n_components=2)
-    enc.fit_transform(X)
-    # List
-    X = [["alice"], ["bob"]]
-    enc = MinHashEncoder(n_components=2)
-    enc.fit_transform(X)
 
 
 @pytest.mark.parametrize(
@@ -95,7 +65,7 @@ def test_input_type():
         ("murmur", False),
     ],
 )
-def test_encoder_params(hashing, minmax_hash):
+def test_encoder_params(generate_data, hashing, minmax_hash):
     X = generate_data(n_samples=20)
     enc = MinHashEncoder(
         n_components=50, hashing=hashing, minmax_hash=minmax_hash, ngram_range=(3, 3)
@@ -103,25 +73,15 @@ def test_encoder_params(hashing, minmax_hash):
     enc.fit(X)
     y = enc.transform(X)
     assert y.shape == (len(X), 50)
-    X2 = np.array([["a", "", "c"]]).T
-    y2 = enc.transform(X2)
-    assert y2.shape == (len(X2), 50)
 
 
-@pytest.mark.parametrize("input_type", INPUT_TYPES)
 @pytest.mark.parametrize("missing", ["error", "zero_impute", "aaa"])
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
-def test_missing_values(input_type: str, missing: str, hashing: str):
-    X = ["Red", np.nan, "green", "blue", "green", "green", "blue", float("nan")]
+def test_missing_values(df_module, missing: str, hashing: str):
+    X = df_module.make_column(
+        "", ["Red", None, "green", "blue", "green", "green", "blue", None]
+    )
     n = 3
-    z = np.zeros(n)
-
-    if input_type == "numpy":
-        X = np.array(X, dtype=object)[:, None]
-    elif input_type == "pandas":
-        X = pd.DataFrame(X)
-    elif input_type == "polars":
-        X = pl.DataFrame(X)
 
     encoder = MinHashEncoder(
         n_components=n, hashing=hashing, minmax_hash=False, handle_missing=missing
@@ -132,35 +92,30 @@ def test_missing_values(input_type: str, missing: str, hashing: str):
             encoder.fit_transform(X)
     else:
         if missing == "error":
-            if input_type in ["numpy", "pandas"]:
-                with pytest.raises(
-                    ValueError, match=r"Found missing values in input data; set"
-                ):
-                    encoder.fit_transform(X)
+            with pytest.raises(
+                ValueError, match=r"Found missing values in input data; set"
+            ):
+                encoder.fit_transform(X)
         elif missing == "zero_impute":
             y = encoder.fit_transform(X)
-            assert np.array_equal(y[1], z)
-            assert np.array_equal(y[-1], z)
+            assert y["_0"][1] == 0.0
         else:
             with pytest.raises(ValueError, match=r"Got handle_missing="):
                 encoder.fit_transform(X)
     return
 
 
-def test_missing_values_none():
+def test_missing_values_none(df_module):
     # Test that "None" is also understood as a missing value
-    a = np.array([["a", "b", None, "c"]], dtype=object).T
+    a = df_module.make_column("", ["a", "b", None, ""])
 
     enc = MinHashEncoder()
     d = enc.fit_transform(a)
-    assert_array_equal(d[2], 0)
-
-    e = np.array([["a", "b", "", "c"]], dtype=object).T
-    f = enc.fit_transform(e)
-    assert_array_equal(f[2], 0)
+    assert_array_equal(d["_0"][2], 0.0)
+    assert_array_equal(d["_0"][3], 0.0)
 
 
-def test_cache_overflow():
+def test_cache_overflow(df_module):
     # Regression test for cache overflow resulting in -1s in encoding
     def get_random_string(length):
         letters = ascii_lowercase
@@ -170,28 +125,27 @@ def test_cache_overflow():
     encoder = MinHashEncoder(n_components=3)
     capacity = encoder._capacity
     raw_data = [get_random_string(10) for _ in range(capacity + 1)]
-    raw_data = np.array(raw_data)[:, None]
+    raw_data = df_module.make_column("", raw_data)
     y = encoder.fit_transform(raw_data)
-
-    assert len(y[y == -1.0]) == 0
+    assert (sbd.to_numpy(y["_0"]) != -1.0).all()
 
 
 @skip_if_no_parallel
-def test_parallelism():
+def test_parallelism(df_module):
     # Test that parallelism works
     encoder = MinHashEncoder(n_components=3, n_jobs=1)
-    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    X = df_module.make_column("", ["a", "b", "c", "d", "e", "f", "g", "h"])
     y = encoder.fit_transform(X)
     for n_jobs in [None, 2, -1]:
         encoder = MinHashEncoder(n_components=3, n_jobs=n_jobs)
         y_parallel = encoder.fit_transform(X)
-        assert_array_equal(y, y_parallel)
+        df_module.assert_frame_equal(y, y_parallel)
 
     # Test with threading backend
     encoder = MinHashEncoder(n_components=3, n_jobs=2)
     with joblib.parallel_backend("threading"):
         y_threading = encoder.fit_transform(X)
-    assert_array_equal(y, y_threading)
+    df_module.assert_frame_equal(y, y_threading)
     assert encoder.n_jobs == 2
 
 
@@ -203,7 +157,7 @@ class DummyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
     A dummy backend used to check that specifying a backend works
     in MinHashEncoder.
     The `count` attribute is used to check that the backend is used.
-    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    Copied from sklearn/ensemble/tests/test_forest.py
     """
 
     def __init__(self, *args, **kwargs):
@@ -222,11 +176,13 @@ joblib.register_parallel_backend("testing", DummyBackend)
 def test_backend_respected():
     """
     Test that the joblib backend is used.
-    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    Copied from sklearn/ensemble/tests/test_forest.py
     """
     # Test that parallelism works
     encoder = MinHashEncoder(n_components=3, n_jobs=2)
-    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    # this is not related to the dataframe so doesn't need to be tested for all
+    # backends
+    X = pd.Series(["a", "b", "c", "d", "e", "f", "g", "h"])
 
     with joblib.parallel_backend("testing") as (ba, n_jobs):
         encoder.fit_transform(X)
@@ -236,7 +192,10 @@ def test_backend_respected():
 
 def test_correct_arguments():
     # Test that the correct arguments are passed to the hashing function
-    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+
+    # this is not related to the dataframe so doesn't need to be tested for all
+    # backends
+    X = pd.Series(["a", "b", "c", "d", "e", "f", "g", "h"])
     # Write an incorrect value for the `hashing` argument
     with pytest.raises(ValueError, match=r"expected any of"):
         encoder = MinHashEncoder(n_components=3, hashing="incorrect")
@@ -258,10 +217,10 @@ def test_correct_arguments():
         encoder.fit_transform(X)
 
 
-def test_check_fitted_minhash_encoder():
+def test_check_fitted_minhash_encoder(df_module):
     """Test that calling transform before fit raises an error"""
     encoder = MinHashEncoder(n_components=3)
-    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    X = df_module.make_column("some col", ["a", "b", "c", "d", "e", "f", "g", "h"])
     with pytest.raises(NotFittedError):
         encoder.transform(X)
 
@@ -270,35 +229,24 @@ def test_check_fitted_minhash_encoder():
     encoder.transform(X)
 
 
-def test_deterministic():
+def test_deterministic(df_module):
     """Test that the encoder is deterministic."""
     # TODO: add random state to encoder
     encoder1 = MinHashEncoder(n_components=4)
     encoder2 = MinHashEncoder(n_components=4)
-    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
+    X = df_module.make_column("", ["a", "b", "c", "d", "e", "f", "g", "h"])
     encoded1 = encoder1.fit_transform(X)
     encoded2 = encoder2.fit_transform(X)
-    assert_array_equal(encoded1, encoded2)
+    df_module.assert_frame_equal(encoded1, encoded2)
 
 
 def test_get_feature_names_out(df_module):
     """Test that ``get_feature_names_out`` returns the correct feature names."""
     encoder = MinHashEncoder(n_components=4)
-    X = df_module.make_dataframe(
-        {
-            "col1": ["a", "b", "c", "d", "e", "f", "g", "h"],
-            "col2": ["a", "b", "c", "d", "e", "f", "g", "h"],
-        }
+    X = df_module.make_column(
+        "col1",
+        ["a", "b", "c", "d", "e", "f", "g", "h"],
     )
     encoder.fit(X)
-    expected_columns = np.array(
-        ["col1_0", "col1_1", "col1_2", "col1_3", "col2_0", "col2_1", "col2_2", "col2_3"]
-    )
-    assert_array_equal(np.array(encoder.get_feature_names_out()), expected_columns)
-
-    # Test that it works with a list of strings
-    encoder = MinHashEncoder(n_components=4)
-    X = np.array(["a", "b", "c", "d", "e", "f", "g", "h"])[:, None]
-    encoder.fit(X)
-    expected_columns = np.array(["x0_0", "x0_1", "x0_2", "x0_3"])
-    assert_array_equal(np.array(encoder.get_feature_names_out()), expected_columns)
+    expected_columns = ["col1_0", "col1_1", "col1_2", "col1_3"]
+    assert encoder.get_feature_names_out() == expected_columns
