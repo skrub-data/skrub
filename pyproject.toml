@@ -36,6 +36,7 @@ doc = [
     "jupyterlite-sphinx",
     "jupyterlite-pyodide-kernel",
     "matplotlib",
+    "numpydoc",
     "pydata-sphinx-theme",
     "seaborn",
     "sphinx",
