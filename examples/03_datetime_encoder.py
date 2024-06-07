@@ -49,6 +49,7 @@ It is used by default in the |TableVectorizer|.
 # on the location, date and time of measurement.
 
 from pprint import pprint
+
 import pandas as pd
 
 data = pd.read_csv(
@@ -82,8 +83,9 @@ X.dtypes
 # finer than minutes. This is because we don't want to extract seconds and
 # lower units, as they are probably unimportant.
 
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import make_column_transformer
+from sklearn.preprocessing import OneHotEncoder
+
 from skrub import DatetimeEncoder
 
 encoder = make_column_transformer(
@@ -178,7 +180,6 @@ cross_val_score(
 #
 # The mean squared error is not obvious to interpret, so we compare
 # visually the prediction of our model with the actual values.
-import numpy as np
 import matplotlib.pyplot as plt
 
 mask_train = X["date.utc"] < "2019-06-01"

@@ -157,7 +157,7 @@ class DummyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
     A dummy backend used to check that specifying a backend works
     in MinHashEncoder.
     The `count` attribute is used to check that the backend is used.
-    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    Copied from sklearn/ensemble/tests/test_forest.py
     """
 
     def __init__(self, *args, **kwargs):
@@ -176,7 +176,7 @@ joblib.register_parallel_backend("testing", DummyBackend)
 def test_backend_respected():
     """
     Test that the joblib backend is used.
-    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    Copied from sklearn/ensemble/tests/test_forest.py
     """
     # Test that parallelism works
     encoder = MinHashEncoder(n_components=3, n_jobs=2)

@@ -15,4 +15,3 @@ facilitate learning on databases.
     about
     CONTRIBUTING.rst
     CHANGES.rst
-

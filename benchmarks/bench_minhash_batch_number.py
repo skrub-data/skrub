@@ -64,13 +64,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
     batch_per_job: int, default=1
         Number of batches to be processed in each job.
     n_jobs : int, default=None
-        The number of jobs to run in parallel.
-        The hash computations for all unique elements are parallelized.
-        None means 1 unless in a
-        `joblib.parallel_backend context <https://joblib.readthedocs.io/en/latest/parallel.html>`_.
-        -1 means using all processors.
-        See `Scikit-learn Glossary <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_
-        for more details.
+        The number of jobs to run in parallel. The hash computations for all unique
+        elements are parallelized. None means 1 unless in a `joblib.parallel_backend
+        context <https://joblib.readthedocs.io/en/latest/parallel.html>`_. -1 means
+        using all processors. See `Scikit-learn Glossary
+        <https://scikit-learn.org/stable/glossary.html#term-n_jobs>`_ for more details.
 
     Attributes
     ----------
@@ -319,7 +317,8 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         # Handle missing values
         missing_mask = (
             ~(X == X)  # Find np.nan
-            | (X == None)  # Find None. Note: `X is None` doesn't work.
+            # Find None. Note: `X is None` doesn't work.
+            | (X == None)  # noqa: E711
             | (X == "")  # Find empty strings
         )
 
@@ -406,9 +405,11 @@ def plot(df: pd.DataFrame):
     # Create a new columns merging batched and batch_per_job
     # If batch is False, ignore batch_per_job
     df["config"] = df.apply(
-        lambda row: f"batched={row['batched']}, batch_per_job={row['batch_per_job']}"
-        if row["batched"]
-        else "batched=False",
+        lambda row: (
+            f"batched={row['batched']}, batch_per_job={row['batch_per_job']}"
+            if row["batched"]
+            else "batched=False"
+        ),
         axis=1,
     )
     sns.boxplot(x="n_jobs", y="time", hue="config", data=df)

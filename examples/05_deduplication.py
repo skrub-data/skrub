@@ -47,8 +47,9 @@ misspelled category names in an unsupervised manner.
 #
 # Let's generate this example dataset:
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from skrub.datasets import make_deduplication_data
 
 duplicated_names = make_deduplication_data(
@@ -156,8 +157,9 @@ translation_table.head()
 # (i.e. more similar), a lighter color means a larger distance.
 #
 
-from skrub import compute_ngram_distance
 from scipy.spatial.distance import squareform
+
+from skrub import compute_ngram_distance
 
 ngram_distances = compute_ngram_distance(unique_examples)
 square_distances = squareform(ngram_distances)
