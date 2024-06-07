@@ -126,7 +126,7 @@ pip install .[doc]
 pip install scikit-learn
 
 # Build and install the project in dev mode
-python setup.py develop
+pip install .
 
 #if [[ "$CIRCLE_BRANCH" =~ ^main$ && -z "$CI_PULL_REQUEST" ]]
 #then
