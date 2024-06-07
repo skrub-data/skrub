@@ -325,10 +325,9 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         X_out = np.concatenate(unique_x_trans)[indices_x].astype(np.float32)
         names = self.get_feature_names_out()
         result = sbd.make_dataframe_like(X, dict(zip(names, X_out.T)))
-        # TODO: after gapencoder pr is merged: set index to that of the input
-        # if (idx := sbd.index(X)) is not None:
-        #     # X and result are pandas dataframes
-        #     result = result.set_axis(idx, axis="index")
+        if (idx := sbd.index(X)) is not None:
+            # X and result are pandas dataframes
+            result = result.set_axis(idx, axis="index")
         return result
 
     def get_feature_names_out(self):
