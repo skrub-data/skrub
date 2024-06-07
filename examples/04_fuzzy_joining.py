@@ -35,7 +35,10 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 import pandas as pd
 
 df = pd.read_csv(
-    "https://raw.githubusercontent.com/skrub-data/datasets/master/data/Happiness_report_2022.csv",  # noqa
+    (
+        "https://raw.githubusercontent.com/skrub-data/datasets/"
+        "master/data/Happiness_report_2022.csv"
+    ),
     thousands=",",
 )
 df.drop(df.tail(1).index, inplace=True)
@@ -364,8 +367,9 @@ print(f"Mean R² score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 y = df["Happiness score"]
 df = df.drop("Happiness score", axis=1)
 
-from skrub import Joiner, SelectCols
 from sklearn.pipeline import make_pipeline
+
+from skrub import Joiner, SelectCols
 
 # We create a selector that we will insert at the end of our pipeline, to
 # select the relevant columns before fitting the regressor

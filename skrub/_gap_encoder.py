@@ -25,7 +25,7 @@ from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 
 
-class GapEncoder(SingleColumnTransformer, TransformerMixin):
+class GapEncoder(TransformerMixin, SingleColumnTransformer):
     """Constructs latent topics with continuous encoding.
 
     This encoder can be understood as a continuous encoding on a set of latent

@@ -1,4 +1,4 @@
-..  
+..
     File to ..include in a document with a big table of content, to give
     it 'style'
 
@@ -158,6 +158,3 @@
     }
 
   </style>
-
-
-

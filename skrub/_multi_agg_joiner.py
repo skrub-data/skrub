@@ -247,7 +247,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         # Check `aux_tables` input types
         for i, aux_table in enumerate(aux_tables):
-            if type(aux_table) == str and aux_table == "X":
+            if isinstance(aux_table, str) and aux_table == "X":
                 aux_tables[i] = X
             elif not hasattr(aux_table, "__dataframe__"):
                 raise ValueError(
