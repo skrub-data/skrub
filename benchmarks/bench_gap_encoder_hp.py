@@ -2,18 +2,20 @@
 Benchmark hyperparameters of GapEncoder on traffic_violations dataset
 """
 
-from utils import default_parser, find_result, monitor
 from time import perf_counter
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from skrub.datasets import fetch_traffic_violations
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.metrics import roc_auc_score, balanced_accuracy_score
-from skrub import GapEncoder
 import seaborn as sns
-import matplotlib.pyplot as plt
 from loguru import logger
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.metrics import balanced_accuracy_score, roc_auc_score
+from sklearn.model_selection import train_test_split
+from utils import default_parser, find_result, monitor
+
+from skrub import GapEncoder
+from skrub.datasets import fetch_traffic_violations
 
 #######################################################
 # Benchmarking accuracy and speed on traffic_violations

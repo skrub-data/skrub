@@ -1,5 +1,6 @@
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 
 from skrub.datasets._utils import get_data_dir
 
@@ -30,7 +31,7 @@ def fetch_data(
     data_home: Path | str | None = None,
     data_directory: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Fetch datasets from https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark  # noqa
+    """Fetch datasets from [1]_.
 
     Parameters
     ----------
@@ -57,6 +58,10 @@ def fetch_data(
 
     gt: pd.DataFrame
         Ground truth dataset.
+
+    References
+    ----------
+    .. [1] https://github.com/Yeye-He/Auto-Join/tree/master/autojoin-Benchmark
     """
     left_path, right_path, gt_path, file_paths = get_local_data(
         dataset_name, data_home, data_directory
@@ -89,7 +94,7 @@ def fetch_big_data(
     data_home: Path | str | None = None,
     data_directory: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Fetch datasets from https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md  # noqa
+    """Fetch datasets from [1]_.
 
     Parameters
     ----------
@@ -120,6 +125,10 @@ def fetch_big_data(
 
     gt: pd.DataFrame
         Ground truth dataset.
+
+    References
+    ----------
+    .. [1] https://github.com/anhaidgroup/deepmatcher/blob/master/Datasets.md
     """
     link = "https://pages.cs.wisc.edu/~anhai/data1/deepmatcher_data/"
     left_path, right_path, gt_path, file_paths = get_local_data(

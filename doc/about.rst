@@ -15,5 +15,3 @@ empirical work.
 
 skrub received funding from `project DirtyData
 <https://project.inria.fr/dirtydata/>`_ (ANR-17-CE23-0018).
-
-

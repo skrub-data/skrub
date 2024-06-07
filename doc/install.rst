@@ -103,4 +103,3 @@ the `contributing guidelines <https://skrub-data.org/stable/CONTRIBUTING.html>`_
     </div>
 
     </div>
-
