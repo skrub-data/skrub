@@ -56,7 +56,11 @@ def test_linear_learner():
 def test_tree_learner():
     original_learner = ensemble.RandomForestClassifier()
     p = make_tabular_pipeline(original_learner)
-    tv, learner = [e for _, e in p.steps]
+    if parse_version(sklearn.__version__) < parse_version("1.4"):
+        tv, impute, learner = [e for _, e in p.steps]
+        assert isinstance(impute, SimpleImputer)
+    else:
+        tv, learner = [e for _, e in p.steps]
     assert learner is original_learner
     assert isinstance(tv.high_cardinality_transformer, MinHashEncoder)
     assert isinstance(tv.low_cardinality_transformer, OrdinalEncoder)
