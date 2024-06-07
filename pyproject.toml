@@ -82,7 +82,7 @@ scikit-learn = "==1.2.1"
 scipy = "==1.9.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
-pyarrow = "==16.*"
+pyarrow = "*"
 polars = "==0.19"
 
 [tool.pixi.feature.py310.dependencies]
