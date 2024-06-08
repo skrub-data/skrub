@@ -4,7 +4,7 @@ skrub: Prepping tables for machine learning.
 from pathlib import Path as _Path
 
 from ._agg_joiner import AggJoiner, AggTarget
-from ._check_dependencies import check_dependencies
+# from ._check_dependencies import check_dependencies
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._fuzzy_join import fuzzy_join
@@ -19,7 +19,7 @@ from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
 
-check_dependencies()
+# check_dependencies()
 
 with open(_Path(__file__).parent / "VERSION.txt") as _fh:
     __version__ = _fh.read().strip()

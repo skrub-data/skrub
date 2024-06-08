@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skrub"
-version = "0.2.0"
+version = "0.2.0.dev0"
 description = "Prepping tables for machine learning"
 authors = [
     { name="Patricio Cerda", email="patricio.cerda@inria.fr"},
@@ -66,8 +66,8 @@ Homepage = "https://skrub-data.org/"
 Source = "https://github.com/skrub-data/skrub"
 Issues = "https://github.com/skrub-data/skrub/issues"
 
-[tool.setuptools.packages.find]
-where = ["skrub"]
+[tool.setuptools]
+packages = ["skrub"]
 
 [tool.pixi.project]
 channels = ["conda-forge"]
@@ -137,7 +137,7 @@ clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
 [tool.pixi.feature.lint.tasks]
 lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
 
-[tools.pixi.feature.test.tasks]
+[tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 
 [tool.pixi.environments]
