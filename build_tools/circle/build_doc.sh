@@ -98,6 +98,7 @@ fi
 
 # Install pixi
 curl -fsSL https://pixi.sh/install.sh | bash
+export PATH=/home/circleci/.pixi/bin:$PATH
 
 # The pipefail is requested to propagate exit code
 set -o pipefail && pixi run --frozen -e doc $make_args 2>&1 | tee ~/log.txt
