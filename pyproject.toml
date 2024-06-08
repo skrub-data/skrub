@@ -73,6 +73,41 @@ where = ["skrub"]
 channels = ["conda-forge"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
+[tool.pixi.dependencies]
+numpy = ">=1.23.5"
+packaging = ">=23.1"
+pandas = ">=1.5.3"
+scikit-learn = ">=1.2.1"
+scipy = ">=1.9.3"
+
+[tool.pixi.feature.doc.dependencies]
+jupyterlite-sphinx = "*"
+jupyterlite-pyodide-kernel = "*"
+matplotlib = "*"
+numpydoc = "*"
+pydata-sphinx-theme = "*"
+seaborn = "*"
+sphinx = "*"
+sphinx-copybutton = "*"
+sphinx-gallery = "*"
+sphinxext-opengraph = "*"
+statsmodels = "*"
+
+[tool.pixi.feature.lint.dependencies]
+black = "==23.3.0"
+ruff = "==0.4.8"
+pre-commit = "*"
+
+[tool.pixi.feature.optional.dependencies]
+pyarrow = "*"
+polars = "*"
+
+[tool.pixi.feature.test.dependencies]
+numpydoc = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+
 [tool.pixi.pypi-dependencies]
 skrub = { path = ".", editable = true }
 
