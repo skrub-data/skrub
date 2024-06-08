@@ -132,6 +132,7 @@ python = "==3.12"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
+build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
 
 [tool.pixi.feature.lint.tasks]
