@@ -67,11 +67,13 @@ jobs:
             python-version: "3.11"
         name: 'Setup python'
       - shell: bash {0}
-        run: ./build_tools/github/install.sh
-        name: 'Install skrub'
-        env:
-          INSTALL_NIGHTLY: "true"
-          DEPS_VERSION: "dev"
+        run: |
+          dev_anaconda_url=https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
+          pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url .
+          dev_arrow=https://pypi.fury.io/arrow-nightlies/
+          pip install --extra-index-url $dev_arrow --prefer-binary --pre .[optional]
+          pip install .[test]
+        name: 'Install skrub and nightly dependencies'
       - shell: bash {0}
-        run: ./build_tools/github/test.sh
+        run: pytest -vsl --cov=skrub --cov-report=xml skrub -n 3
         name: 'Run tests'
