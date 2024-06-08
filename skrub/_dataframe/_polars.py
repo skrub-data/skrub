@@ -1,6 +1,8 @@
 """
 Polars specialization of the aggregate and join operations.
 """
+import inspect
+
 try:
     import polars as pl
     import polars.selectors as cs
@@ -185,13 +187,11 @@ def join(left, right, left_on, right_on):
     is_dataframe = isinstance(left, pl.DataFrame) and isinstance(right, pl.DataFrame)
     is_lazyframe = isinstance(left, pl.LazyFrame) and isinstance(right, pl.LazyFrame)
     if is_dataframe or is_lazyframe:
-        return left.join(
-            right,
-            how="left",
-            left_on=left_on,
-            right_on=right_on,
-            coalesce=True,
-        )
+        if "coalesce" in inspect.signature(left.join).parameters:
+            kw = {"coalesce": True}
+        else:
+            kw = {}
+        return left.join(right, how="left", left_on=left_on, right_on=right_on, **kw)
     else:
         raise TypeError(
             "'left' and 'right' must be polars dataframes or lazyframes, "
