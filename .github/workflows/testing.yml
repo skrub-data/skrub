@@ -35,11 +35,11 @@ jobs:
       - name: Run tests
         run: pixi run -e ${{ matrix.environment }} test -n 3
 
-      # - name: Upload coverage reports to Codecov
-      #   uses: codecov/codecov-action@v4.4.1
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     slug: scikit-learn-contrib/project-template
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.4.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: skrub-data/skrub
 
   check_run_nightly:
     runs-on: ubuntu-latest
