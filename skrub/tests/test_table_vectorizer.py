@@ -682,6 +682,10 @@ def test_accept_pipeline():
     tv.fit(df)
 
 
+@pytest.mark.skipif(
+    parse_version(sklearn.__version__) < parse_version("1.4"),
+    reason="set_output('polars') was added in scikit-learn 1.4",
+)
 def test_clean_null_downcast_warning():
     # non-regression test for https://github.com/skrub-data/skrub/issues/894
     pl = pytest.importorskip("polars")
