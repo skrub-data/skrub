@@ -119,7 +119,7 @@ scipy = "==1.9.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "*"
-polars = "==0.19"
+polars = "==0.20.0"
 
 [tool.pixi.feature.py310.dependencies]
 python = "==3.10"

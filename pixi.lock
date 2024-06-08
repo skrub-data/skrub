@@ -713,7 +713,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/packaging-24.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pandas-1.5.3-py310h9b08913_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.5.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/polars-0.19.0-py310h2d36a57_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/polars-0.20.0-py310hed3f9c4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-16.1.0-py310h17c5347_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-core-16.1.0-py310h6f79a3a_1_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
@@ -835,7 +835,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/packaging-24.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pandas-1.5.3-py310hecf8f37_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.5.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/polars-0.19.0-py310h95fa17d_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/polars-0.20.0-py310hd176c80_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-16.1.0-py310h1cef2ca_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-core-16.1.0-py310h907dfef_1_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
@@ -956,7 +956,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/packaging-24.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pandas-1.5.3-py310h2b830bf_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.5.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-0.19.0-py310h49106b5_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-0.20.0-py310h47eff2d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-16.1.0-py310h7ed268f_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-core-16.1.0-py310h75075a0_1_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
@@ -1013,6 +1013,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/aws-crt-cpp-0.26.10-h819e545_4.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/aws-sdk-cpp-1.11.329-hd2a0318_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/babel-2.14.0-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/backports.zoneinfo-0.2.1-py310h5588dad_8.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/brotli-python-1.1.0-py310h00ffb61_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/bzip2-1.0.8-hcfcfb64_5.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/c-ares-1.28.1-hcfcfb64_0.conda
@@ -1077,7 +1078,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/packaging-24.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pandas-1.5.3-py310h1c4a608_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.5.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/polars-0.19.0-py310he0a9947_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/polars-0.20.0-h4b2a980_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pthreads-win32-2.9.1-hfa6e2cd_3.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyarrow-16.1.0-py310h3bcd3f7_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pyarrow-core-16.1.0-py310hcb4c9cb_1_cpu.conda
@@ -6538,6 +6539,24 @@ packages:
   - pkg:pypi/babel?source=conda-forge-mapping
   size: 7609750
   timestamp: 1702422720584
+- kind: conda
+  name: backports.zoneinfo
+  version: 0.2.1
+  build: py310h5588dad_8
+  build_number: 8
+  subdir: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/backports.zoneinfo-0.2.1-py310h5588dad_8.conda
+  sha256: 413c5969e75903299351cea5785565d662c2652c857591232eac4d74deefd9e1
+  md5: 8fd93c85ef214ed73dcf25c49fbfe0c0
+  depends:
+  - python >=3.10,<3.11.0a0
+  - python_abi 3.10.* *_cp310
+  license: Apache-2.0
+  license_family: APACHE
+  purls:
+  - pkg:pypi/backports-zoneinfo?source=conda-forge-mapping
+  size: 7087
+  timestamp: 1695531597353
 - kind: conda
   name: beautifulsoup4
   version: 4.12.3
@@ -16783,33 +16802,34 @@ packages:
   timestamp: 1712243121626
 - kind: conda
   name: polars
-  version: 0.19.0
-  build: py310h2d36a57_0
-  subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/polars-0.19.0-py310h2d36a57_0.conda
-  sha256: b184c38a5cf505f7093dd1f505c73c61d8bed8fdc7777670e084be67950a640b
-  md5: a216cbf5e026b4e0ab204862d26239cd
+  version: 0.20.0
+  build: h4b2a980_0
+  subdir: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/polars-0.20.0-h4b2a980_0.conda
+  sha256: 97b89829ffd7eb0f14a2c618008d8f03dbb21687a44d6bffe76bf3e0964073b4
+  md5: 5aba3cc9c9d869612578b23b95309b34
   depends:
-  - libgcc-ng >=12
+  - backports.zoneinfo
   - numpy >=1.16.0
-  - packaging
-  - python >=3.10,<3.11.0a0
-  - python_abi 3.10.* *_cp310
+  - python
   - typing_extensions >=4.0.0
+  - ucrt >=10.0.20348.0
+  - vc >=14.3
+  - vc14_runtime >=14.38.33130
   license: MIT
   license_family: MIT
   purls:
   - pkg:pypi/polars?source=conda-forge-mapping
-  size: 16191388
-  timestamp: 1693428404336
+  size: 17779060
+  timestamp: 1702754477344
 - kind: conda
   name: polars
-  version: 0.19.0
-  build: py310h49106b5_0
+  version: 0.20.0
+  build: py310h47eff2d_0
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/polars-0.19.0-py310h49106b5_0.conda
-  sha256: adda0ed409959e2ff11f615d5b36ba95c2065e69cc104b0c6d13be632c3cc988
-  md5: 1ebd827baa1bfe4c2f2250b5f4eff79d
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/polars-0.20.0-py310h47eff2d_0.conda
+  sha256: 485560671272438244b7adcc5910b9367dba810e25225bee084f24c10aca4a7d
+  md5: 1244a071440b804e1675d91da204d143
   depends:
   - numpy >=1.16.0
   - packaging
@@ -16821,16 +16841,16 @@ packages:
   license_family: MIT
   purls:
   - pkg:pypi/polars?source=conda-forge-mapping
-  size: 13020968
-  timestamp: 1693431597073
+  size: 16181738
+  timestamp: 1702756215028
 - kind: conda
   name: polars
-  version: 0.19.0
-  build: py310h95fa17d_0
+  version: 0.20.0
+  build: py310hd176c80_0
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/polars-0.19.0-py310h95fa17d_0.conda
-  sha256: 31e8e4216f05ef456ec779544d6363b28609e8bc12944c3bb597706c64f53941
-  md5: 6314fa7b0e7c10e51ce636ea7ceb2410
+  url: https://conda.anaconda.org/conda-forge/osx-64/polars-0.20.0-py310hd176c80_0.conda
+  sha256: c52625f263a8c552fd82a1235b395a64f0afdf839bfb74ed657e36eae9d1f621
+  md5: 378d971156ec69c72c7746a32782ab5c
   depends:
   - numpy >=1.16.0
   - packaging
@@ -16841,31 +16861,29 @@ packages:
   license_family: MIT
   purls:
   - pkg:pypi/polars?source=conda-forge-mapping
-  size: 14024851
-  timestamp: 1693430525903
+  size: 17843650
+  timestamp: 1702756532546
 - kind: conda
   name: polars
-  version: 0.19.0
-  build: py310he0a9947_0
-  subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/polars-0.19.0-py310he0a9947_0.conda
-  sha256: 80c7fb03d99393b8f61efb0ea779298053bc7b86ab2e7975e88158c4763582de
-  md5: 194ac7e4ef51351f41823409d0ab6b5d
+  version: 0.20.0
+  build: py310hed3f9c4_0
+  subdir: linux-64
+  url: https://conda.anaconda.org/conda-forge/linux-64/polars-0.20.0-py310hed3f9c4_0.conda
+  sha256: 837c0bae11d80bcbe4a2b048c36deeb5946dca5791223aeee86976074333135e
+  md5: 36725b76a4316e233612859ab19b1838
   depends:
+  - libgcc-ng >=12
   - numpy >=1.16.0
   - packaging
   - python >=3.10,<3.11.0a0
   - python_abi 3.10.* *_cp310
   - typing_extensions >=4.0.0
-  - ucrt >=10.0.20348.0
-  - vc >=14.2,<15
-  - vc14_runtime >=14.29.30139
   license: MIT
   license_family: MIT
   purls:
   - pkg:pypi/polars?source=conda-forge-mapping
-  size: 14263843
-  timestamp: 1693430989642
+  size: 19958257
+  timestamp: 1702754082815
 - kind: conda
   name: polars
   version: 0.20.31
@@ -21391,7 +21409,7 @@ packages:
   name: skrub
   version: 0.2.0.dev0
   path: .
-  sha256: 623a6fa1152d440277893aa40b2cde07f126272f2eb3121003b84ead9b36f192
+  sha256: 2069958b8af197c97771d1dfe9c7265c6984446549a83540c97501dad259e386
   requires_dist:
   - numpy>=1.23.5
   - packaging>=23.1
