@@ -1,12 +1,10 @@
 import pandas as pd
 import pytest
-from pandas.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal
 
 from skrub._dataframe._pandas import (
     aggregate,
     join,
-    make_dataframe,
-    make_series,
     rename_columns,
 )
 
@@ -101,26 +99,6 @@ def test_no_agg_operation():
             num_operations=None,
             categ_operations=None,
         )
-
-
-@pytest.mark.parametrize("dtypes", [None, {"a": "int64", "b": "category"}])
-def test_make_dataframe(dtypes):
-    X = dict(a=[1, 2], b=["z", "e"])
-
-    expected_df = pd.DataFrame(dict(a=[1, 2], b=["z", "e"]))
-    if dtypes is not None:
-        expected_df = expected_df.astype(dtypes)
-
-    df = make_dataframe(X, index=[0, 1], dtypes=dtypes)
-    assert_frame_equal(df, expected_df)
-
-
-@pytest.mark.parametrize("dtype", [None, "category"])
-def test_make_series(dtype):
-    X = ["1", "2", "3"]
-    expected_series = pd.Series(X, dtype=dtype)
-    series = make_series(X, index=[0, 1, 2], dtype=dtype)
-    assert_series_equal(series, expected_series)
 
 
 def test_rename_columns():
