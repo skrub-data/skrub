@@ -1,35 +1,7 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from ._dataframe._namespace import get_df_namespace
+from . import _selectors as s
 from ._on_each_column import SingleColumnTransformer
-
-
-def _check_columns(df, columns):
-    """Check that provided columns exist in the dataframe and return them in a list.
-
-    Checking this ourselves allows having the same exception for both pandas
-    and polars dataframes.
-
-    If `df` is not a dataframe (does not have a ``columns`` attribute), skip
-    the check. As the transformers in this module are basically stateless,
-    this allows getting an operational transformer without fit data; for
-    example ``selector = SelectCols(["A", "B"]).fit(None)``, as the fit data is
-    not used for anything else than this check.
-
-    If ``columns`` is a ``str`` (a single column name), the return value wraps
-    it in a list (of length 1).
-    """
-    if isinstance(columns, str):
-        columns = [columns]
-    columns = list(columns)
-    if not hasattr(df, "columns"):
-        return columns
-    diff = set(columns) - set(df.columns)
-    if not diff:
-        return columns
-    raise ValueError(
-        f"The following columns were not found in the input DataFrame: {diff}"
-    )
 
 
 class SelectCols(TransformerMixin, BaseEstimator):
@@ -62,8 +34,8 @@ class SelectCols(TransformerMixin, BaseEstimator):
     >>> SelectCols(["X", "A"]).fit_transform(df)
     Traceback (most recent call last):
         ...
-    ValueError: The following columns were not found in the input DataFrame: {'X'}
-    """
+    ValueError: The following columns are requested for selection but missing from dataframe: ['X']
+    """  # noqa: E501
 
     def __init__(self, cols):
         self.cols = cols
@@ -85,7 +57,7 @@ class SelectCols(TransformerMixin, BaseEstimator):
         SelectCols
             The transformer itself.
         """
-        _check_columns(X, self.cols)
+        self._columns = s.make_selector(self.cols).expand(X)
         return self
 
     def transform(self, X):
@@ -102,9 +74,7 @@ class SelectCols(TransformerMixin, BaseEstimator):
             The input DataFrame ``X`` after selecting only the columns listed
             in ``self.cols`` (in the provided order).
         """
-        cols = _check_columns(X, self.cols)
-        namespace, _ = get_df_namespace(X)
-        return namespace.select(X, cols)
+        return s.select(X, self._columns)
 
 
 class DropCols(TransformerMixin, BaseEstimator):
@@ -137,8 +107,8 @@ class DropCols(TransformerMixin, BaseEstimator):
     >>> DropCols(["X"]).fit_transform(df)
     Traceback (most recent call last):
         ...
-    ValueError: The following columns were not found in the input DataFrame: {'X'}
-    """
+    ValueError: The following columns are requested for selection but missing from dataframe: ['X']
+    """  # noqa: E501
 
     def __init__(self, cols):
         self.cols = cols
@@ -160,7 +130,7 @@ class DropCols(TransformerMixin, BaseEstimator):
         DropCols
             The transformer itself.
         """
-        _check_columns(X, self.cols)
+        self._columns = s.make_selector(self.cols).expand(X)
         return self
 
     def transform(self, X):
@@ -177,9 +147,7 @@ class DropCols(TransformerMixin, BaseEstimator):
             The input DataFrame ``X`` after dropping the columns listed in
             ``self.cols``.
         """
-        cols = _check_columns(X, self.cols)
-        namespace, _ = get_df_namespace(X)
-        return namespace.select(X, [c for c in X.columns if c not in cols])
+        return s.select(X, ~s.make_selector(self._columns))
 
 
 class Drop(SingleColumnTransformer):

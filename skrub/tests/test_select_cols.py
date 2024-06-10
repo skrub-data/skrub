@@ -27,19 +27,13 @@ def test_select_single_col(df):
     pandas.testing.assert_frame_equal(pandas.DataFrame(out_1), pandas.DataFrame(out_2))
 
 
-def test_fit_select_cols_without_x(df):
-    selector = SelectCols(["C", "A"]).fit(None)
-    out = selector.transform(df)
-    assert list(ns.column_names(out)) == ["C", "A"]
-
-
 def test_select_missing_cols(df):
     selector = SelectCols(["X", "A"])
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(ValueError, match=r".*missing from dataframe: \['X'\]"):
         selector.fit(df)
     df_subset = SelectCols(["C", "A"]).fit_transform(df)
     selector = SelectCols(["A", "B"]).fit(df)
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(ValueError, match=r".*missing from dataframe: \['B'\]"):
         selector.transform(df_subset)
 
 
@@ -57,20 +51,10 @@ def test_drop_single_col(df):
     pandas.testing.assert_frame_equal(pandas.DataFrame(out_1), pandas.DataFrame(out_2))
 
 
-def test_fit_drop_cols_without_x(df):
-    selector = DropCols(["C", "A"]).fit(None)
-    out = selector.transform(df)
-    assert list(ns.column_names(out)) == ["B"]
-
-
 def test_drop_missing_cols(df):
     selector = DropCols(["X", "A"])
-    with pytest.raises(ValueError, match="not found"):
+    with pytest.raises(ValueError, match=r".*missing from dataframe: \['X'\]"):
         selector.fit(df)
-    df_subset = DropCols(["A"]).fit_transform(df)
-    selector = DropCols(["A", "B"]).fit(df)
-    with pytest.raises(ValueError, match="not found"):
-        selector.transform(df_subset)
 
 
 def test_drop(df_module):
