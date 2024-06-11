@@ -44,11 +44,6 @@ def test_not_implemented():
 #
 
 
-def test_skrub_namespace(df_module):
-    skrub_ns = ns.skrub_namespace(df_module.empty_dataframe)
-    assert skrub_ns.DATAFRAME_MODULE_NAME == df_module.name
-
-
 def test_dataframe_module_name(df_module):
     assert ns.dataframe_module_name(df_module.empty_dataframe) == df_module.name
     assert getattr(ns, f"is_{df_module.name}")(df_module.empty_dataframe)
