@@ -62,22 +62,37 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     >>> import pandas as pd
     >>> X = pd.DataFrame({'a': ['2020-01-02', '2021-04-01'], 'b': [None, 11], 'c': ['a', 'b']})
     >>> y = [True, False]
+    >>> X = pd.DataFrame(
+    ...     {
+    ...         "last_visit": ["2020-01-02", "2021-04-01", "2024-12-05", "2023-08-10"],
+    ...         "medication": [None, "metformin", "paracetamol", "gliclazide"],
+    ...         "insulin_prescriptions": ["N/A", 13, 0, 17],
+    ...         "fasting_glucose": [35, 140, 44, 137],
+    ...     }
+    ... )
+    >>> y = [False, True, False, True]
     >>> X
-                a     b  c
-    0  2020-01-02   NaN  a
-    1  2021-04-01  11.0  b
+       last_visit   medication insulin_prescriptions  fasting_glucose
+    0  2020-01-02         None                   N/A               35
+    1  2021-04-01    metformin                    13              140
+    2  2024-12-05  paracetamol                     0               44
+    3  2023-08-10   gliclazide                    17              137
     >>> model = make_tabular_pipeline('classifier').fit(X, y)
     >>> model.predict(X)
-    array([False, False])
+    array([False, False, False, False])
 
     By applying only the first pipeline step we can see the transformed data
     that is sent to the supervised predictor (see the :obj:`TableVectorizer`
     documentation for details):
 
     >>> model.named_steps['tablevectorizer'].transform(X)   # doctest: +SKIP
-       a_year  a_month  a_day  a_total_seconds     b  c
-    0  2020.0      1.0    2.0     1.577923e+09   NaN  a
-    1  2021.0      4.0    1.0     1.617235e+09  11.0  b
+       last_visit_year  last_visit_month  ...  insulin_prescriptions  fasting_glucose
+    0           2020.0               1.0  ...                    NaN             35.0
+    1           2021.0               4.0  ...                   13.0            140.0
+    2           2024.0              12.0  ...                    0.0             44.0
+    3           2023.0               8.0  ...                   17.0            137.0
+    <BLANKLINE>
+    [4 rows x 7 columns]
 
     The default pipeline combines a :obj:`TableVectorizer` and a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` (or
@@ -122,9 +137,13 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     for categorical variables.
 
     >>> model.named_steps['tablevectorizer'].transform(X)
-       a_year  a_month  a_day  a_total_seconds     b  c_b
-    0  2020.0      1.0    2.0     1.577923e+09   NaN  0.0
-    1  2021.0      4.0    1.0     1.617235e+09  11.0  1.0
+       last_visit_year  last_visit_month  ...  insulin_prescriptions  fasting_glucose
+    0           2020.0               1.0  ...                    NaN             35.0
+    1           2021.0               4.0  ...                   13.0            140.0
+    2           2024.0              12.0  ...                    0.0             44.0
+    3           2023.0               8.0  ...                   17.0            137.0
+    <BLANKLINE>
+    [4 rows x 10 columns]
 
     Moreover, as :obj:`~sklearn.linear_model.Ridge` does not handle missing
     values, a step was added to perform mean imputation. Therefore the data
@@ -134,9 +153,17 @@ def make_tabular_pipeline(predictor, n_jobs=None):
 
     >>> model[:2].transform(X)
     array([[2.0200000e+03, 1.0000000e+00, 2.0000000e+00, 1.5779232e+09,
-            1.1000000e+01, 0.0000000e+00],
+            0.0000000e+00, 0.0000000e+00, 0.0000000e+00, 1.0000000e+00,
+            1.0000000e+01, 3.5000000e+01],
            [2.0210000e+03, 4.0000000e+00, 1.0000000e+00, 1.6172352e+09,
-            1.1000000e+01, 1.0000000e+00]], dtype=float32)
+            0.0000000e+00, 1.0000000e+00, 0.0000000e+00, 0.0000000e+00,
+            1.3000000e+01, 1.4000000e+02],
+           [2.0240000e+03, 1.2000000e+01, 5.0000000e+00, 1.7333568e+09,
+            0.0000000e+00, 0.0000000e+00, 1.0000000e+00, 0.0000000e+00,
+            0.0000000e+00, 4.4000000e+01],
+           [2.0230000e+03, 8.0000000e+00, 1.0000000e+01, 1.6916256e+09,
+            1.0000000e+00, 0.0000000e+00, 0.0000000e+00, 0.0000000e+00,
+            1.7000000e+01, 1.3700000e+02]], dtype=float32)
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
