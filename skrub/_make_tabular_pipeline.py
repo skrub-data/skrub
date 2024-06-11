@@ -68,7 +68,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     1  2021-04-01  11.0  b
     >>> model = make_tabular_pipeline('classifier').fit(X, y)
     >>> model.predict(X)
-    array([0.5, 0.5])
+    array([False, False])
 
     By applying only the first pipeline step we can see the transformed data
     that is sent to the supervised predictor (see the :obj:`TableVectorizer`
