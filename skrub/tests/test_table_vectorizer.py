@@ -514,7 +514,7 @@ def test_changing_types(X_train, X_test, expected_X_out):
     assert (X_out.dropna() == expected_X_out.dropna()).all().all()
 
 
-def test_changing_types_int_float() -> None:
+def test_changing_types_int_float():
     """
     The TableVectorizer shouldn't cast floats to ints
     even if only ints were seen during fit.

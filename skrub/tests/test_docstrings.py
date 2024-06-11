@@ -10,7 +10,6 @@ should also remove their corresponding references from the list.
 
 import inspect
 import re
-from collections.abc import Callable
 from importlib import import_module
 
 import pytest
@@ -68,10 +67,10 @@ def get_functions_to_validate():
 
 
 def repr_errors(
-    res: dict,
-    estimator: type | None = None,
-    method: str | None = None,
-) -> str:
+    res,
+    estimator=None,
+    method=None,
+):
     """
     Pretty print original docstring and the obtained errors
 
@@ -126,7 +125,7 @@ def repr_errors(
     return msg
 
 
-def filter_errors(errors, method: Callable, estimator_cls: type | None = None):
+def filter_errors(errors, method, estimator_cls=None):
     """
     Ignore some errors based on the method type.
     """
@@ -163,7 +162,7 @@ def filter_errors(errors, method: Callable, estimator_cls: type | None = None):
     ["estimator_cls", "method"],
     get_methods_to_validate(),
 )
-def test_estimator_docstrings(estimator_cls: type, method: str, request):
+def test_estimator_docstrings(estimator_cls, method, request):
     base_import_path = estimator_cls.__module__
     import_path = [base_import_path, estimator_cls.__name__]
     if method is not None:
@@ -192,7 +191,7 @@ def test_estimator_docstrings(estimator_cls: type, method: str, request):
     ["func", "name"],
     get_functions_to_validate(),
 )
-def test_function_docstrings(func: Callable, name: str, request):
+def test_function_docstrings(func, name, request):
     import_path = ".".join([func.__module__, name])
     print(import_path)
 
