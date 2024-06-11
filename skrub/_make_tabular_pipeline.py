@@ -66,7 +66,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
                 a     b  c
     0  2020-01-02   NaN  a
     1  2021-04-01  11.0  b
-    >>> model = make_tabular_pipeline('regressor').fit(X, y)
+    >>> model = make_tabular_pipeline('classifier').fit(X, y)
     >>> model.predict(X)
     array([0.5, 0.5])
 
@@ -118,7 +118,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     Here, different choices were made for the :obj:`TableVectorizer` -- in
     particular the categorical column ``"c"`` is one-hot encoded, because the
     :obj:`~sklearn.linear_model.Ridge` regressor lacks the
-    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`'s bult-in support
+    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`'s built-in support
     for categorical variables.
 
     >>> model.named_steps['tablevectorizer'].transform(X)
@@ -128,7 +128,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
 
     Moreover, as :obj:`~sklearn.linear_model.Ridge` does not handle missing
     values, a step was added to perform mean imputation. Therefore the data
-    seen by the final predictor actually looks like this (note scikit-learn
+    seen by the final predictor actually looks like this (note: scikit-learn
     :obj:`~sklearn.pipeline.Pipeline` can be sliced to produce another
     ``Pipeline`` containing only the specified steps):
 
@@ -156,7 +156,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
             )
         case str():
             raise ValueError(
-                "If ``predictor`` is a string it should be 'regressor' or 'classifier'"
+                "If ``predictor`` is a string it should be 'regressor' or 'classifier'."
             )
         case ensemble.HistGradientBoostingClassifier(
             categorical_features="from_dtype"

@@ -87,7 +87,7 @@ results["test_score"]
 # The estimator returned by :obj:`make_tabular_pipeline` combines 2 steps:
 #
 # - a |TableVectorizer| to preprocess the dataframe and vectorize the features
-# - a supervised learner (by default a |HistGradientBoostingRegressor|)
+# - a supervised learner (by default a |HGBR|)
 #
 # In the rest of this example, we focus on the first step and explore the
 # capabilities of skrub's |TableVectorizer|.
