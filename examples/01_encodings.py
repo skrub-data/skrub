@@ -262,7 +262,7 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 # of particular character n-grams (more details are provided in its documentation).
 # Therefore it can be a faster and very effective alternative, when the supervised
 # learner is built on top of decision trees, which is the case for the |HGBR|.
-
+#
 # The resulting pipeline is identical to the one produced by default by
 # :obj:`make_tabular_pipeline`.
 
