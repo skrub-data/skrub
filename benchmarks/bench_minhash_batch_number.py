@@ -104,8 +104,6 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     """
 
-    # hash_dict_: LRUDict
-
     _capacity = 2**10
 
     def __init__(

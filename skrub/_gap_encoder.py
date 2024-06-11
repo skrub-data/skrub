@@ -182,9 +182,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     The higher the value, the bigger the correspondence with the topic.
     """
 
-    # rho_: float
-    # H_dict_: dict[NDArray, NDArray]
-
     def __init__(
         self,
         n_components=10,

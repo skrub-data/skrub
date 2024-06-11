@@ -111,8 +111,6 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
     3 -1.975829e+09 -2.095000e+09 -1.530721e+09 -1.459183e+09 -1.580988e+09
     """
 
-    # hash_dict_: LRUDict
-
     _capacity = 2**10
 
     def __init__(

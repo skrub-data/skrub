@@ -259,14 +259,6 @@ class SimilarityEncoder(OneHotEncoder):
           dtype=object)
     """
 
-    # categories_: list[NDArray]
-    # n_features_in_: int
-    # drop_idx_: NDArray
-    # vectorizers_: list[CountVectorizer]
-    # vocabulary_count_matrices_: list[NDArray]
-    # vocabulary_ngram_counts_: list[list[int]]
-    # _infrequent_enabled: bool
-
     def __init__(
         self,
         *,

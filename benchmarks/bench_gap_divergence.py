@@ -123,8 +123,6 @@ class ModifiedGapEncoderColumn(GapEncoder):
 
 
 class ModifiedGapEncoder(GapEncoder):
-    # fitted_models_: list[ModifiedGapEncoderColumn]
-
     def _create_column_gap_encoder(self, column_name):
         return ModifiedGapEncoderColumn(
             column_name=column_name,
