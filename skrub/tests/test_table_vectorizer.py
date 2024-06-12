@@ -684,6 +684,8 @@ def test_accept_pipeline():
 
 def test_clean_null_downcast_warning():
     # non-regression test for https://github.com/skrub-data/skrub/issues/894
+    if parse_version(sklearn.__version__) < parse_version("1.4"):
+        pytest.skip()
     pl = pytest.importorskip("polars")
     df = pl.DataFrame(dict(a=[0, 1], b=["a", "b"]))
     with warnings.catch_warnings():
