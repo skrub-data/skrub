@@ -682,9 +682,11 @@ def test_accept_pipeline():
     tv.fit(df)
 
 
-def test_clean_null_downcast_warning():
+def test_clean_null_downcast_warning(all_dataframe_modules):
     # non-regression test for https://github.com/skrub-data/skrub/issues/894
-    pl = pytest.importorskip("polars")
+    if "polars" not in all_dataframe_modules:
+        pytest.skip("This test applies TableVectorizer to a polars dataframe.")
+    pl = all_dataframe_modules["polars"].module
     df = pl.DataFrame(dict(a=[0, 1], b=["a", "b"]))
     with warnings.catch_warnings():
         warnings.simplefilter("error")

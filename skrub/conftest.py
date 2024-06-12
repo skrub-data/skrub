@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import pandas.testing
 import pytest
+import sklearn
+from sklearn.utils.fixes import parse_version
 
 
 def _example_data_dict():
@@ -94,7 +96,7 @@ try:
 except ImportError:
     _POLARS_INSTALLED = False
 
-if _POLARS_INSTALLED:
+if _POLARS_INSTALLED and parse_version("1.4") <= parse_version(sklearn.__version__):
     _DATAFAME_MODULES_INFO["polars"] = SimpleNamespace(
         **{
             "name": "polars",
