@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
+from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as sbd
 from skrub._check_input import CheckInputDataFrame
@@ -36,6 +38,15 @@ def test_input_is_an_array():
     # 1D array
     with pytest.raises(ValueError, match=".*incompatible shape"):
         check.fit_transform(np.ones((2,)))
+
+
+def test_sklearn_version_check():
+    if parse_version("1.4") <= parse_version(sklearn.__version__):
+        pytest.skip("Scikit-learn recent enough to support polars")
+    pl = pytest.importorskip("polars")
+    df = pl.DataFrame({"a": [0, 1], "b": [10, 20]})
+    with pytest.raises(RuntimeError, match=".*scikit-learn version 1.4 or newer"):
+        CheckInputDataFrame().fit(df)
 
 
 def test_wrong_dataframe_library_in_transform():

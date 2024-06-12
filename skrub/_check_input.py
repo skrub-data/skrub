@@ -1,7 +1,9 @@
 import warnings
 
 import numpy as np
+import sklearn
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -74,6 +76,16 @@ def _collect_lazyframe(df):
     return sbd.collect(df)
 
 
+def _check_sklearn_version(X):
+    if sbd.is_polars(X) and parse_version(sklearn.__version__) < parse_version("1.4"):
+        raise RuntimeError(
+            "Using polars dataframes requires scikit-learn version 1.4 or newer. The"
+            f" current scikit-learn version is {sklearn.__version__}. You can upgrade"
+            " scikit-learn with `pip install -U scikit-learn` or `conda update"
+            " scikit-learn`."
+        )
+
+
 class CheckInputDataFrame(TransformerMixin, BaseEstimator):
     """Check the dataframe entering a skrub pipeline.
 
@@ -81,6 +93,8 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
 
     - The input is a dataframe.
         - Numpy arrays are converted to pandas dataframes with a warning.
+    - If the input is a polars dataframe, the scikit-learn version is recent
+      enough to support it (1.4).
     - The dataframe library is the same during ``fit`` and ``transform``, e.g.
       fitting on a polars dataframe and then transforming a pandas dataframe is
       not allowed.
@@ -117,6 +131,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         del y
         X = self._handle_array(X)
         _check_is_dataframe(X)
+        _check_sklearn_version(X)
         self.module_name_ = sbd.dataframe_module_name(X)
         # TODO check schema (including dtypes) not just names.
         # Need to decide how strict we should be about types
