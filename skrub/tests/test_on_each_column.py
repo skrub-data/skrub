@@ -151,7 +151,13 @@ def test_empty_selection(df_module):
 def test_empty_output(df_module):
     mapper = OnEachColumn(Drop())
     out = mapper.fit_transform(df_module.example_dataframe)
-    df_module.assert_frame_equal(out, df_module.empty_dataframe)
+    if df_module.name == "pandas":
+        expected = df_module.empty_dataframe.set_axis(
+            df_module.example_dataframe.index, axis="index"
+        )
+    else:
+        expected = df_module.empty_dataframe
+    df_module.assert_frame_equal(out, expected)
     assert list(mapper.transformers_.keys()) == sbd.column_names(
         df_module.example_dataframe
     )
