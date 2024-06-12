@@ -166,6 +166,7 @@ def set_output(transformer, X):
     if module_name == "polars" and parse_version(sklearn.__version__) < parse_version(
         "1.4"
     ):
+        # TODO: remove when scikit-learn 1.3 support is dropped.
         warnings.warn(
             "To use polars, we recommend using scikit-learn version 1.4 or newer. The"
             f" current version is {sklearn.__version__!r}. This will produce correct"
@@ -191,6 +192,8 @@ def check_output(
         and hasattr(transformer, "set_output")
         and parse_version(sklearn.__version__) < parse_version("1.4")
     ):
+        # TODO: remove when scikit-learn 1.3 support is dropped.
+        #
         # For older scikit-learn versions that do not support
         # `set_output(transform='polars')`, we fall back to using
         # `set_output(transform='pandas')` and converting the output dataframe
