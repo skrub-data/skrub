@@ -1,7 +1,6 @@
 import collections
 import importlib
 import secrets
-import warnings
 from collections.abc import Hashable
 from typing import Any, Iterable
 
@@ -167,14 +166,9 @@ def set_output(transformer, X):
         "1.4"
     ):
         # TODO: remove when scikit-learn 1.3 support is dropped.
-        warnings.warn(
-            "To use polars, we recommend using scikit-learn version 1.4 or newer. The"
-            f" current version is {sklearn.__version__!r}. This will produce correct"
-            " results but may cause an extra copy of the transformer's output."
-        )
         transformer.set_output(transform="pandas")
-        return
-    transformer.set_output(transform=module_name)
+    else:
+        transformer.set_output(transform=module_name)
 
 
 def check_output(
