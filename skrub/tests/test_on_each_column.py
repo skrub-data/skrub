@@ -1,6 +1,7 @@
 import re
 
 import numpy as np
+import pandas as pd
 import pytest
 from sklearn.base import BaseEstimator
 
@@ -260,3 +261,20 @@ def test_wrong_transformer_output_type(all_dataframe_modules):
         OnEachColumn(NumpyOutput()).fit_transform(
             all_dataframe_modules["pandas-numpy-dtypes"].example_dataframe
         )
+
+
+class ResetsIndex(BaseEstimator):
+    def fit_transform(self, X, y=None):
+        return X.reset_index()
+
+    def transform(self, X):
+        return X.reset_index()
+
+
+@pytest.mark.parametrize("cols", [(), ("a",), ("a", "b")])
+def test_output_index(cols):
+    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
+    transformer = OnEachColumn(ResetsIndex(), cols=cols)
+    assert transformer.fit_transform(df).index.tolist() == df.index.tolist()
+    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
+    assert transformer.transform(df).index.tolist() == df.index.tolist()
