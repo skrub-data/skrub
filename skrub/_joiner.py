@@ -12,6 +12,9 @@ from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _join_utils, _matching, _utils
+from skrub._dataframe import _common as ns
+
+# TODO: rm
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._datetime_encoder import DatetimeEncoder
 
@@ -26,6 +29,7 @@ def _as_str(column):
 DEFAULT_STRING_ENCODER = make_pipeline(
     FunctionTransformer(_as_str),
     HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)),
+    # TODO: Remove sparse output from Tfidf to work with TableVectorizer
     TfidfTransformer(),
 )
 _DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
@@ -51,7 +55,9 @@ def _make_vectorizer(table, string_encoder, rescale):
     # TODO remove use of ColumnTransformer, select_dtypes & pandas-specific code
     transformers = [
         (clone(string_encoder), c)
-        for c in table.select_dtypes(include=["string", "category", "object"]).columns
+        for c in table.select_dtypes(
+            include=["string", "category", "object"]
+        ).columns  # TODO: Use selector (s.expand)
     ]
     num_columns = table.select_dtypes(include="number").columns
     if not num_columns.empty:
@@ -120,7 +126,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    aux_table : :obj:`~pandas.DataFrame`
+    aux_table : :obj:`~pandas.DataFrame` or :obj:`~polars.DataFrame`
         The auxiliary table, which will be fuzzy-joined to the main table when
         calling `transform`.
     key : str or iterable of str, default=None
@@ -145,7 +151,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         although rescaled distances can be greater than 1 for some choices of
         `ref_dist`. `None`, `"inf"`, `float("inf")` or `numpy.inf`
         mean that no matches are rejected.
-    ref_dist : reference distance for rescaling, default = 'random_pairs'
+    ref_dist : reference distance for rescaling, default='random_pairs'
         Options are {"random_pairs", "second_neighbor", "self_join_neighbor",
         "no_rescaling"}. See above for a description of each option. To
         facilitate the choice of `max_dist`, distances between rows in
@@ -178,7 +184,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     See Also
     --------
     AggJoiner :
-        Aggregate auxiliary dataframes before joining them on a base dataframe.
+        Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
     fuzzy_join :
         Join two tables (dataframes) based on approximate column matching. This
@@ -247,6 +253,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         self.add_match_info = add_match_info
 
+    # TODO: rm
     def _check_dataframe(self, dataframe):
         # TODO: add support for polars, ATM we just convert to pandas
         if is_polars(dataframe):
@@ -271,7 +278,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     def _check_ref_dist(self):
         if self.ref_dist not in _MATCHERS:
             raise ValueError(
-                f"ref_dist should be one of {list(_MATCHERS.keys())}, got"
+                f"`ref_dist` should be one of {list(_MATCHERS.keys())}, got"
                 f" {self.ref_dist!r}"
             )
         self._matching = _MATCHERS[self.ref_dist]()
@@ -281,7 +288,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
+        X : :obj:`~pandas.DataFrame` or :obj:`~polars.DataFrame`
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
@@ -305,11 +312,11 @@ class Joiner(TransformerMixin, BaseEstimator):
             X, self._aux_table, self.suffix, main_table_name="X"
         )
         self.vectorizer_ = _make_vectorizer(
-            self._aux_table[self._aux_key],
+            ns.col(self._aux_table, self._aux_key),
             self.string_encoder,
             rescale=self.ref_dist != "no_rescaling",
         )
-        aux = self.vectorizer_.fit_transform(self._aux_table[self._aux_key])
+        aux = self.vectorizer_.fit_transform(ns.col(self._aux_table, self._aux_key))
         self._matching.fit(aux)
         return self
 
@@ -318,50 +325,65 @@ class Joiner(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
+        X : :obj:`~pandas.DataFrame` or :obj:`~polars.DataFrame`
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
 
         Returns
         -------
-        :obj:`~pandas.DataFrame`
+        :obj:`~pandas.DataFrame` or :obj:`~polars.DataFrame`
             The final joined table.
         """
         del y
         check_is_fitted(self, "vectorizer_")
+        # rm
         input_is_polars = is_polars(X)
         X = self._check_dataframe(X)
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_column_name_duplicates(
             X, self._aux_table, self.suffix, main_table_name="X"
         )
+        # TODO: dispatch select, set_axis in df._common
         main = self.vectorizer_.transform(
-            X[self._main_key].set_axis(self._aux_key, axis="columns")
+            ns.col(X, self._main_key).set_axis(self._aux_key, axis="columns")
         )
-        match_result = self._matching.match(main, self.max_dist_)
-        aux_table = _join_utils.add_column_name_suffix(
-            self._aux_table, self.suffix
-        ).reset_index(drop=True)
-        matching_col = match_result["index"].copy()
-        matching_col[~match_result["match_accepted"]] = -1
+        _match_result = self._matching.match(main, self.max_dist_)
+        match_result = ns.make_dataframe_like(X, _match_result)
+        aux_table = ns.reset_index(
+            _join_utils.add_column_name_suffix(self._aux_table, self.suffix)
+        )
+        # dispatch copy ?
+        matching_col = ns.col(match_result, "index").copy()
+        matching_col[~ns.col(match_result, "match_accepted")] = -1
         token = _utils.random_string()
         left_key_name = f"skrub_left_key_{token}"
         right_key_name = f"skrub_right_key_{token}"
-        left = X.assign(**{left_key_name: matching_col})
-        right = aux_table.assign(**{right_key_name: np.arange(aux_table.shape[0])})
+        left = ns.with_columns(X, **{left_key_name: matching_col})
+        right = ns.with_columns(
+            aux_table, **{right_key_name: np.arange(ns.shape(aux_table)[0])}
+        )
+        # TODO: dispatch in ``_join_utils``
+        # TODO: check pd vs pl behavior and how can we use the duplicates -> in PR WIP
         join = pd.merge(
             left,
             right,
             left_on=left_key_name,
             right_on=right_key_name,
-            suffixes=("", ""),
+            suffixes=(
+                "",
+                "",
+            ),
             how="left",
         )
+        # TODO: dispatch ``drop``
         join = join.drop([left_key_name, right_key_name], axis=1)
         if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
-                join[info_col_name] = match_result[info_key]
+                join = ns.with_columns(
+                    join, **{info_col_name: ns.col(match_result, info_key)}
+                )
+        # TODO: remove this part
         if input_is_polars:
             import polars as pl
 
