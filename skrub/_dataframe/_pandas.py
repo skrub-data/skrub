@@ -107,48 +107,6 @@ def aggregate(
     return base_group[sorted_cols]
 
 
-def join(
-    left,
-    right,
-    left_on,
-    right_on,
-):
-    """Left join two :obj:`pandas.DataFrame`.
-
-    This function uses the ``dataframe.merge`` method from Pandas.
-
-    Parameters
-    ----------
-    left : pd.DataFrame
-        The left dataframe to left-join.
-
-    right : pd.DataFrame
-        The right dataframe to left-join.
-
-    left_on : str or Iterable[str]
-        Left keys to merge on.
-
-    right_on : str or Iterable[str]
-        Right keys to merge on.
-
-    Returns
-    -------
-    merged : pd.DataFrame,
-        The merged output.
-    """
-    if not (isinstance(left, pd.DataFrame) and isinstance(right, pd.DataFrame)):
-        raise TypeError(
-            "'left' and 'right' must be pandas dataframes, "
-            f"got {type(left)!r} and {type(right)!r}."
-        )
-    return left.merge(
-        right,
-        how="left",
-        left_on=left_on,
-        right_on=right_on,
-    )
-
-
 def get_named_agg(table, cols, operations):
     """Map aggregation tuples to their output key.
 

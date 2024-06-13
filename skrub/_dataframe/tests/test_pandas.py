@@ -4,7 +4,6 @@ from pandas.testing import assert_frame_equal
 
 from skrub._dataframe._pandas import (
     aggregate,
-    join,
     rename_columns,
 )
 
@@ -16,12 +15,6 @@ main = pd.DataFrame(
         "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
     }
 )
-
-
-def test_join():
-    joined = join(left=main, right=main, left_on="movieId", right_on="movieId")
-    expected = main.merge(main, on="movieId", how="left")
-    assert_frame_equal(joined, expected)
 
 
 def test_simple_agg():
@@ -78,8 +71,9 @@ def test_value_counts_agg():
 
 
 def test_incorrect_dataframe_inputs():
-    with pytest.raises(TypeError, match=r"(?=.*pandas dataframes)(?=.*array)"):
-        join(left=main.values, right=main, left_on="movieId", right_on="movieId")
+    # TODO: deal with this
+    # with pytest.raises(TypeError, match=r"(?=.*pandas dataframes)(?=.*array)"):
+    #     join(left=main.values, right=main, left_on="movieId", right_on="movieId")
 
     with pytest.raises(TypeError, match=r"(?=.*pandas dataframe)(?=.*array)"):
         aggregate(

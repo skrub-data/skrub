@@ -3,7 +3,6 @@ The Joiner provides fuzzy joining as a scikit-learn transformer.
 """
 
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
@@ -365,7 +364,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         # TODO: dispatch in ``_join_utils``
         # TODO: check pd vs pl behavior and how can we use the duplicates -> in PR WIP
-        join = pd.merge(
+        join = _join_utils.left_join(
             left,
             right,
             left_on=left_key_name,
@@ -374,7 +373,6 @@ class Joiner(TransformerMixin, BaseEstimator):
                 "",
                 "",
             ),
-            how="left",
         )
         # TODO: dispatch ``drop``
         join = join.drop([left_key_name, right_key_name], axis=1)

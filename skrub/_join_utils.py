@@ -1,9 +1,19 @@
 """Utilities specific to the JOIN operations."""
 
+import inspect
 import re
+
+import pandas as pd
+
+try:
+    import polars as pl
+except ImportError:
+    pass
 
 from skrub import _utils
 from skrub._dataframe._namespace import get_df_namespace
+
+from ._dispatch import dispatch
 
 
 def check_key(
@@ -218,3 +228,104 @@ def _get_new_name(suggested_name, forbidden_names):
         return suggested_name
     token = _utils.random_string()
     return f"{untagged_name}__skrub_{token}__"
+
+
+@dispatch
+def left_join(
+    left,
+    right,
+    left_on,
+    right_on,
+    suffixes,
+    how,
+):
+    raise NotImplementedError()
+
+
+@left_join.specialize("pandas", argument_type="DataFrame")
+def _left_join_pandas(
+    left,
+    right,
+    left_on,
+    right_on,
+    suffixes,
+):
+    """Left join two :obj:`pandas.DataFrame`.
+
+    This function uses the ``dataframe.merge`` method from Pandas.
+
+    Parameters
+    ----------
+    left : pd.DataFrame
+        The left dataframe to left-join.
+
+    right : pd.DataFrame
+        The right dataframe to left-join.
+
+    left_on : str or Iterable[str]
+        Left keys to merge on.
+
+    right_on : str or Iterable[str]
+        Right keys to merge on.
+
+    Returns
+    -------
+    merged : pd.DataFrame,
+        The merged output.
+    """
+    if not (isinstance(left, pd.DataFrame) and isinstance(right, pd.DataFrame)):
+        raise TypeError(
+            "'left' and 'right' must be pandas dataframes, "
+            f"got {type(left)!r} and {type(right)!r}."
+        )
+    return left.merge(
+        right,
+        how="left",
+        left_on=left_on,
+        right_on=right_on,
+    ).drop(columns=right_on)
+
+
+@left_join.specialize("polars", argument_type="DataFrame")
+def _left_join_polars(left, right, left_on, right_on, suffixes):
+    """Left join two :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
+
+    This function uses the ``dataframe.join`` method from Polars.
+
+    Note that the input dataframes type must agree: either both
+    Polars dataframes or both Polars lazyframes.
+
+    Mixing polars dataframe with lazyframe will raise an error.
+
+    Parameters
+    ----------
+    left : pl.DataFrame or pl.LazyFrame
+        The left dataframe of the left-join.
+
+    right : pl.DataFrame or pl.LazyFrame
+        The right dataframe of the left-join.
+
+    left_on : str or Iterable[str]
+        Left keys to merge on.
+
+    right_on : str or Iterable[str]
+        Right keys to merge on.
+
+    Returns
+    -------
+    merged : pl.DataFrame or pl.LazyFrame
+        The merged output.
+    """
+    is_dataframe = isinstance(left, pl.DataFrame) and isinstance(right, pl.DataFrame)
+    is_lazyframe = isinstance(left, pl.LazyFrame) and isinstance(right, pl.LazyFrame)
+    if is_dataframe or is_lazyframe:
+        if "coalesce" in inspect.signature(left.join).parameters:
+            kw = {"coalesce": True}
+        else:
+            kw = {}
+        return left.join(right, how="left", left_on=left_on, right_on=right_on, **kw)
+    else:
+        raise TypeError(
+            "'left' and 'right' must be polars dataframes or lazyframes, "
+            f"got {type(left)!r} and {type(right)!r}."
+        )

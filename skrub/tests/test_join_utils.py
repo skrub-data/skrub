@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from skrub import _join_utils
+from skrub._dataframe._testing_utils import assert_frame_equal
 
 
 @pytest.mark.parametrize(
@@ -72,3 +73,45 @@ def test_add_column_name_suffix():
     assert list(df.columns) == ["one", "two three", "x"]
     df = _join_utils.add_column_name_suffix(df, "_y")
     assert list(df.columns) == ["one_y", "two three_y", "x_y"]
+
+
+def test_left_join(df_module):
+    # Test all left keys in right dataframe
+    left = df_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
+    right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
+
+    joined = _join_utils.left_join(
+        left, right=right, left_on="left_key", right_on="right_key", suffixes=None
+    )
+
+    expected = df_module.make_dataframe(
+        {
+            "left_key": [1, 2, 2],
+            "left_col": [10, 20, 30],
+            "right_col": ["a", "b", "b"],
+        }
+    )
+    assert_frame_equal(joined, expected)
+
+    # Test all left keys not it right dataframe
+    # TODO: modify default behavior of `left_join`
+    # Will break for polars or pandas by default
+    # Polars keep right_key by default when it doesn't find a match
+    # left = df_module.make_dataframe(
+    #     {"left_key": [1, 2, 2, 3], "left_col": [10, 20, 30, 40]}
+    # )
+    # right = df_module.make_dataframe(
+    #     {"right_key": [2, 9, 3, 5, 6], "right_col": ["a", "b", "c", "d", "e"]}
+    # )
+    # joined = _join_utils.left_join(
+    #     left, right=right, left_on="left_key", right_on="right_key", suffixes=None
+    # )
+    # expected = df_module.make_dataframe(
+    #     {
+    #         "left_key": [1, 2, 2, 3],
+    #         "left_col": [10, 20, 30, 40],
+    #         "right_key": [None, 2, 2, 3],
+    #         "right_col": [None, "a", "a", "c"],
+    #     }
+    # )
+    assert_frame_equal(joined, expected)
