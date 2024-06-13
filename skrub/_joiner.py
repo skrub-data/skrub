@@ -11,18 +11,17 @@ from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _join_utils, _matching, _utils
+from skrub import _selectors as s
+from skrub._check_input import CheckInputDataFrame
 from skrub._dataframe import _common as ns
-
-# TODO: rm
-from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._datetime_encoder import DatetimeEncoder
+from skrub._to_str import ToStr
 
-from . import _selectors as s
 from ._wrap_transformer import wrap_transformer
 
 
-def _as_str(column):
-    return column.fillna("").astype(str)
+def _as_str(col):
+    return ToStr().fit_transform(col)
 
 
 DEFAULT_STRING_ENCODER = make_pipeline(
@@ -53,18 +52,15 @@ def _make_vectorizer(table, string_encoder, rescale):
     """
     # TODO remove use of ColumnTransformer, select_dtypes & pandas-specific code
     transformers = [
-        (clone(string_encoder), c)
-        for c in table.select_dtypes(
-            include=["string", "category", "object"]
-        ).columns  # TODO: Use selector (s.expand)
+        (clone(string_encoder), c) for c in (s.string() | s.categorical()).expand(table)
     ]
-    num_columns = table.select_dtypes(include="number").columns
-    if not num_columns.empty:
+    num_columns = s.numeric().expand(table)
+    if num_columns:
         transformers.append(
             (StandardScaler() if rescale else "passthrough", num_columns)
         )
-    dt_columns = table.select_dtypes(["datetime", "datetimetz"]).columns
-    if not dt_columns.empty:
+    dt_columns = s.any_date().expand(table)
+    if dt_columns:
         transformers.append(
             (
                 make_pipeline(
@@ -252,18 +248,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         self.add_match_info = add_match_info
 
-    # TODO: rm
-    def _check_dataframe(self, dataframe):
-        # TODO: add support for polars, ATM we just convert to pandas
-        if is_polars(dataframe):
-            return dataframe.to_pandas()
-        if is_pandas(dataframe):
-            return dataframe
-        raise TypeError(
-            f"{self.__class__.__qualname__} only operates on Pandas or Polars"
-            " dataframes."
-        )
-
     def _check_max_dist(self):
         if (
             self.max_dist is None
@@ -298,8 +282,9 @@ class Joiner(TransformerMixin, BaseEstimator):
             Fitted Joiner instance (self).
         """
         del y
-        X = self._check_dataframe(X)
-        self._aux_table = self._check_dataframe(self.aux_table)
+        self._aux_table = CheckInputDataFrame().fit_transform(self.aux_table)
+        self._main_check_input = CheckInputDataFrame()
+        X = self._main_check_input.fit_transform(X)
         self._check_ref_dist()
         self._check_max_dist()
         self._main_key, self._aux_key = _join_utils.check_key(
@@ -336,25 +321,21 @@ class Joiner(TransformerMixin, BaseEstimator):
         """
         del y
         check_is_fitted(self, "vectorizer_")
-        # rm
-        input_is_polars = is_polars(X)
-        X = self._check_dataframe(X)
+        X = self._main_check_input.transform(X)
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_column_name_duplicates(
             X, self._aux_table, self.suffix, main_table_name="X"
         )
-        # TODO: dispatch select, set_axis in df._common
+        # TODO: dispatch set_axis in df._common
         main = self.vectorizer_.transform(
             ns.col(X, self._main_key).set_axis(self._aux_key, axis="columns")
         )
-        _match_result = self._matching.match(main, self.max_dist_)
-        match_result = ns.make_dataframe_like(X, _match_result)
         aux_table = ns.reset_index(
             _join_utils.add_column_name_suffix(self._aux_table, self.suffix)
         )
-        # Remove ns.col
-        matching_col = ns.col(match_result, "index").copy()
-        matching_col[~ns.col(match_result, "match_accepted")] = -1
+        _match_result = self._matching.match(main, self.max_dist_)
+        matching_col = _match_result["index"].copy()
+        matching_col[~_match_result["match_accepted"]] = -1
         token = _utils.random_string()
         left_key_name = f"skrub_left_key_{token}"
         right_key_name = f"skrub_right_key_{token}"
@@ -368,16 +349,8 @@ class Joiner(TransformerMixin, BaseEstimator):
             left_on=left_key_name,
             right_on=right_key_name,
         )
-        # TODO: dispatch ``drop``
-        join = join.drop([left_key_name], axis=1)
+        join = s.select(join, ~s.cols(left_key_name))
         if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
-                join = ns.with_columns(
-                    join, **{info_col_name: ns.col(match_result, info_key)}
-                )
-        # TODO: remove this part
-        if input_is_polars:
-            import polars as pl
-
-            join = pl.from_pandas(join)
+                join = ns.with_columns(join, **{info_col_name: _match_result[info_key]})
         return join
