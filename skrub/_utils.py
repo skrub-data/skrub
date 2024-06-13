@@ -1,12 +1,10 @@
 import collections
 import importlib
 import secrets
-from collections.abc import Hashable
-from typing import Any, Iterable
+from typing import Iterable
 
 import numpy as np
 import sklearn
-from numpy.typing import NDArray
 from sklearn.base import clone
 from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
@@ -20,11 +18,11 @@ class LRUDict:
     Using LRU eviction avoids memorizing a full dataset.
     """
 
-    def __init__(self, capacity: int):
+    def __init__(self, capacity):
         self.capacity = capacity
         self.cache = collections.OrderedDict()
 
-    def __getitem__(self, key: Hashable):
+    def __getitem__(self, key):
         try:
             value = self.cache.pop(key)
             self.cache[key] = value
@@ -32,7 +30,7 @@ class LRUDict:
         except KeyError:
             return -1
 
-    def __setitem__(self, key: Hashable, value: Any):
+    def __setitem__(self, key, value):
         try:
             self.cache.pop(key)
         except KeyError:
@@ -40,11 +38,11 @@ class LRUDict:
                 self.cache.popitem(last=False)
         self.cache[key] = value
 
-    def __contains__(self, key: Hashable):
+    def __contains__(self, key):
         return key in self.cache
 
 
-def check_input(X) -> NDArray:
+def check_input(X):
     """Check input with sklearn standards.
 
     Also converts X to a numpy array if not already.
@@ -71,7 +69,7 @@ def check_input(X) -> NDArray:
     return X_
 
 
-def import_optional_dependency(name: str, extra: str = ""):
+def import_optional_dependency(name, extra=""):
     """Import an optional dependency.
 
     By default, if a dependency is missing an ImportError with a nice

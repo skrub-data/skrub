@@ -1,5 +1,3 @@
-from collections.abc import Callable
-
 import numpy as np
 import numpy.testing
 import pandas as pd
@@ -76,7 +74,7 @@ def test_parameters():
         sim.transform(X2)
 
 
-def _test_missing_values(input_type: str, missing: str):
+def _test_missing_values(input_type, missing):
     observations = [["a", "b"], ["b", "a"], ["b", None], ["a", "c"], [np.nan, "a"]]
     encoded = np.array(
         [
@@ -108,7 +106,7 @@ def _test_missing_values(input_type: str, missing: str):
         return
 
 
-def _test_missing_values_transform(input_type: str, missing: str):
+def _test_missing_values_transform(input_type, missing):
     observations = [["a", "b"], ["b", "a"], ["b", "b"], ["a", "c"], ["c", "a"]]
     test_observations = [
         ["a", "b"],
@@ -146,9 +144,9 @@ def _test_missing_values_transform(input_type: str, missing: str):
 
 
 def _test_similarity(
-    similarity_f: Callable,
-    hashing_dim: int | None = None,
-    categories: str = "auto",
+    similarity_f,
+    hashing_dim=None,
+    categories="auto",
 ):
     X = np.array(["aa", "aaa", "aaab"]).reshape(-1, 1)
     X_test = np.array([["Aa", "aAa", "aaa", "aaab", " aaa  c"]]).reshape(-1, 1)

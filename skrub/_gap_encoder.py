@@ -3,15 +3,11 @@ Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 from __future__ import annotations
 
-from collections.abc import Generator
 from copy import deepcopy
-from typing import Literal
 
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-from numpy.random import RandomState
-from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.base import TransformerMixin
 from sklearn.cluster import KMeans, kmeans_plusplus
@@ -186,30 +182,27 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     The higher the value, the bigger the correspondence with the topic.
     """
 
-    rho_: float
-    H_dict_: dict[NDArray, NDArray]
-
     def __init__(
         self,
-        n_components: int = 10,
-        batch_size: int = 1024,
-        gamma_shape_prior: float = 1.1,
-        gamma_scale_prior: float = 1.0,
-        rho: float = 0.95,
-        rescale_rho: bool = False,
-        hashing: bool = False,
-        hashing_n_features: int = 2**12,
-        init: Literal["k-means++", "random", "k-means"] = "k-means++",
-        max_iter: int = 5,
-        ngram_range: tuple[int, int] = (2, 4),
-        analyzer: Literal["word", "char", "char_wb"] = "char",
-        add_words: bool = False,
-        random_state: int | RandomState | None = None,
-        rescale_W: bool = True,
-        max_iter_e_step: int = 1,
-        max_no_improvement: int = 5,
+        n_components=10,
+        batch_size=1024,
+        gamma_shape_prior=1.1,
+        gamma_scale_prior=1.0,
+        rho=0.95,
+        rescale_rho=False,
+        hashing=False,
+        hashing_n_features=2**12,
+        init="k-means++",
+        max_iter=5,
+        ngram_range=(2, 4),
+        analyzer="char",
+        add_words=False,
+        random_state=None,
+        rescale_W=True,
+        max_iter_e_step=1,
+        max_no_improvement=5,
         handle_missing="zero_impute",
-        verbose: int = 0,
+        verbose=0,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -231,7 +224,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.handle_missing = handle_missing
         self.verbose = verbose
 
-    def _init_vars(self, X) -> tuple[NDArray, NDArray, NDArray]:
+    def _init_vars(self, X):
         """
         Build the bag-of-n-grams representation `V` of `X` and initialize
         the topics `W`.
@@ -286,7 +279,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             self.rho_ = self.rho ** (self.batch_size / len(X))
         return unq_X, unq_V, lookup
 
-    def _get_H(self, X: NDArray) -> NDArray:
+    def _get_H(self, X):
         """
         Return the bag-of-n-grams representation of `X`.
         """
@@ -295,7 +288,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             h_out[:] = self.H_dict_[x]
         return H_out
 
-    def _init_w(self, V: NDArray, X) -> tuple[NDArray, NDArray, NDArray]:
+    def _init_w(self, V, X):
         """
         Initialize the topics `W`.
         If `self.init='k-means++'`, we use the init method of
@@ -351,11 +344,11 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
     def _minibatch_convergence(
         self,
-        batch_size: int,
-        batch_cost: float,
-        n_samples: int,
-        step: int,
-        n_steps: int,
+        batch_size,
+        batch_cost,
+        n_samples,
+        step,
+        n_steps,
     ):
         """
         Helper function to encapsulate the early stopping logic.
@@ -517,9 +510,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
     def get_feature_names_out(
         self,
-        n_labels: int = 3,
-        prefix: str = "",
-    ) -> list[str]:
+        n_labels=3,
+        prefix="",
+    ):
         """
         Return the labels that best summarize the learned components/topics.
 
@@ -692,7 +685,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def _add_unseen_keys_to_H_dict(self, X) -> None:
+    def _add_unseen_keys_to_H_dict(self, X):
         """
         Add activations of unseen string categories from `X` to `H_dict`.
         """
@@ -792,7 +785,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         return X
 
 
-def _rescale_W(W: NDArray, A: NDArray) -> None:
+def _rescale_W(W, A):
     """
     Rescale the topics `W` to have a L1-norm equal to 1.
     Note that they are modified in-place.
@@ -826,14 +819,14 @@ def _special_sparse_dot(H, W, X):
 
 
 def _multiplicative_update_w(
-    Vt: NDArray,
-    W: NDArray,
-    A: NDArray,
-    B: NDArray,
-    Ht: NDArray,
-    rescale_W: bool,
-    rho: float,
-) -> tuple[NDArray, NDArray, NDArray]:
+    Vt,
+    W,
+    A,
+    B,
+    Ht,
+    rescale_W,
+    rho,
+):
     """
     Multiplicative update step for the topics `W`.
     """
@@ -852,7 +845,7 @@ def _multiplicative_update_w(
     return W, A, B
 
 
-def _rescale_h(V: NDArray, H: NDArray) -> NDArray:
+def _rescale_h(V, H):
     """
     Rescale the activations `H`.
     """
@@ -863,14 +856,14 @@ def _rescale_h(V: NDArray, H: NDArray) -> NDArray:
 
 
 def _multiplicative_update_h(
-    Vt: NDArray,
-    W: NDArray,
-    Ht: NDArray,
-    epsilon: float = 1e-3,
-    max_iter: int = 10,
-    rescale_W: bool = False,
-    gamma_shape_prior: float = 1.1,
-    gamma_scale_prior: float = 1.0,
+    Vt,
+    W,
+    Ht,
+    epsilon=1e-3,
+    max_iter=10,
+    rescale_W=False,
+    gamma_shape_prior=1.1,
+    gamma_scale_prior=1.0,
 ):
     """
     Multiplicative update step for the activations `H`.
@@ -900,9 +893,9 @@ def _multiplicative_update_h(
 
 
 def batch_lookup(
-    lookup: NDArray,
-    n: int = 1,
-) -> Generator[tuple[NDArray, NDArray], None, None]:
+    lookup,
+    n=1,
+):
     """
     Make batches of the lookup array.
     """
@@ -914,15 +907,15 @@ def batch_lookup(
 
 
 def get_kmeans_prototypes(
-    X: ArrayLike,
-    n_prototypes: int,
-    analyzer: Literal["word", "char", "char_wb"] = "char",
-    hashing_dim: int = 128,
-    ngram_range: tuple[int, int] = (2, 4),
-    sparse: bool = False,
+    X,
+    n_prototypes,
+    analyzer="char",
+    hashing_dim=128,
+    ngram_range=(2, 4),
+    sparse=False,
     sample_weight=None,
-    random_state: int | RandomState | None = None,
-) -> NDArray:
+    random_state=None,
+):
     """
     Computes prototypes based on:
       - dimensionality reduction (via hashing n-grams)

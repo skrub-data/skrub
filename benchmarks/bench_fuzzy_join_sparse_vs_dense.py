@@ -13,9 +13,7 @@ import numbers
 import warnings
 from argparse import ArgumentParser
 from collections.abc import Iterable
-from pathlib import Path
 from time import perf_counter
-from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,11 +33,11 @@ from utils.join import evaluate, fetch_big_data
 
 
 def _numeric_encoding(
-    main: pd.DataFrame,
-    main_cols: list | str,
-    aux: pd.DataFrame,
-    aux_cols: list | str,
-) -> tuple:
+    main,
+    main_cols,
+    aux,
+    aux_cols,
+):
     """Encoding numerical columns.
 
     Parameters
@@ -71,15 +69,15 @@ def _numeric_encoding(
 
 
 def _string_encoding(
-    main: pd.DataFrame,
-    main_cols: list | str,
-    aux: pd.DataFrame,
-    aux_cols: list | str,
-    analyzer: Literal["word", "char", "char_wb"],
-    ngram_range: int | int,
-    encoder: _VectorizerMixin = None,
-    sparse: bool = True,
-) -> tuple:
+    main,
+    main_cols,
+    aux,
+    aux_cols,
+    analyzer,
+    ngram_range,
+    encoder=None,
+    sparse=True,
+):
     """Encoding string columns.
 
     Parameters
@@ -147,7 +145,7 @@ def _string_encoding(
         return main_enc_d, aux_enc_d
 
 
-def _nearest_matches(main_array, aux_array, sparse=True) -> np.ndarray | np.ndarray:
+def _nearest_matches(main_array, aux_array, sparse=True):
     """Find the closest matches using the nearest neighbors method.
 
     Parameters
@@ -182,23 +180,23 @@ def _nearest_matches(main_array, aux_array, sparse=True) -> np.ndarray | np.ndar
 
 
 def fuzzy_join(
-    left: pd.DataFrame,
-    right: pd.DataFrame,
-    how: Literal["left", "right"] = "left",
-    left_on: str | list[str] | list[int] | None = None,
-    right_on: str | list[str] | list[int] | None = None,
-    on: str | list[str] | list[int] | None = None,
-    numerical_match: Literal["string", "number"] = "number",
-    encoder: _VectorizerMixin = None,
-    analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-    ngram_range: tuple[int, int] = (2, 4),
-    return_score: bool = False,
-    match_score: float = 0,
-    drop_unmatched: bool = False,
-    sort: bool = False,
-    suffixes: tuple[str, str] = ("_x", "_y"),
-    sparse: bool = True,
-) -> pd.DataFrame:
+    left,
+    right,
+    how="left",
+    left_on=None,
+    right_on=None,
+    on=None,
+    numerical_match="number",
+    encoder=None,
+    analyzer="char_wb",
+    ngram_range=(2, 4),
+    return_score=False,
+    match_score=0,
+    drop_unmatched=False,
+    sort=False,
+    suffixes=("_x", "_y"),
+    sparse=True,
+):
     """
     Join two tables categorical string columns based on approximate
     matching and using morphological similarity.
@@ -526,12 +524,12 @@ benchmark_name = "bench_fuzzy_join_sparse_vs_dense"
     save_as=benchmark_name,
 )
 def benchmark(
-    sparse: bool,
-    dataset_name: str,
-    analyzer: Literal["char_wb", "char", "word"],
-    ngram_range: tuple,
-    data_home: Path | str | None = None,
-    data_directory: str | None = "benchmarks_data",
+    sparse,
+    dataset_name,
+    analyzer,
+    ngram_range,
+    data_home=None,
+    data_directory="benchmarks_data",
 ):
     left_table, right_table, gt = fetch_big_data(
         dataset_name=dataset_name, data_home=data_home, data_directory=data_directory
@@ -578,7 +576,7 @@ def benchmark(
     return res_dic
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     sns.set_theme(style="ticks", palette="pastel")
 
     n_datasets = len(np.unique(df["dataset_name"]))
