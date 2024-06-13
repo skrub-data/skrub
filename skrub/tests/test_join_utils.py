@@ -77,14 +77,13 @@ def test_add_column_name_suffix():
 
 
 def test_left_join(df_module):
-    # Test all left keys in right dataframe
     left = df_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
-    right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
 
+    # Test all left keys in right dataframe
+    right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
     joined = _join_utils.left_join(
         left, right=right, left_on="left_key", right_on="right_key"
     )
-
     expected = df_module.make_dataframe(
         {
             "left_key": [1, 2, 2],
@@ -94,21 +93,16 @@ def test_left_join(df_module):
     )
     assert_frame_equal(joined, expected)
 
-    # Test all left keys not it right dataframe
-    left = df_module.make_dataframe(
-        {"left_key": [1, 2, 2, 3], "left_col": [10, 20, 30, 40]}
-    )
-    right = df_module.make_dataframe(
-        {"right_key": [2, 9, 3, 5, 6], "right_col": ["a", "b", "c", "d", "e"]}
-    )
+    # Some left keys not it right dataframe
+    right = df_module.make_dataframe({"right_key": [2, 3], "right_col": ["a", "c"]})
     joined = _join_utils.left_join(
         left, right=right, left_on="left_key", right_on="right_key"
     )
     expected = df_module.make_dataframe(
         {
-            "left_key": [1, 2, 2, 3],
-            "left_col": [10, 20, 30, 40],
-            "right_col": [np.nan, "a", "a", "c"],
+            "left_key": [1, 2, 2],
+            "left_col": [10, 20, 30],
+            "right_col": [np.nan, "a", "a"],
         }
     )
     assert_frame_equal(joined, expected)
