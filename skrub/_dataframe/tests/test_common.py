@@ -1,3 +1,4 @@
+skrub/_dataframe/tests/test_common.py
 """
 Note: most tests in this file use the ``df_module`` fixture, which is defined
 in ``skrub.conftest``. See the corresponding docstrings for details.
@@ -589,3 +590,11 @@ def test_nans_treated_as_nulls(df_module):
 
         same(ns.drop_nulls(s), col([1.1, 2.2, float("inf")]))
         same(ns.fill_nulls(s, -1.0), col([1.1, -1.0, 2.2, -1.0, float("inf")]))
+
+
+def test_with_columns(df_module):
+    # TODO: test one new col
+    # TODO: test multiple new cols
+    # TODO: test array (+ 1 test in ns.make_column_like(s) = s)
+    # TODO: test replace col
+    pass
