@@ -33,11 +33,11 @@ def generate_data(df_module):
     ],
 )
 def test_analyzer(
-    hashing: bool,
-    init: str,
-    rescale_W: bool,
-    add_words: bool,
-    rescale_rho: bool,
+    hashing,
+    init,
+    rescale_W,
+    add_words,
+    rescale_rho,
     generate_data,
 ):
     """
@@ -91,11 +91,11 @@ def test_analyzer(
     ],
 )
 def test_gap_encoder(
-    hashing: bool,
-    init: str,
-    analyzer: str,
-    add_words: bool,
-    verbose: bool,
+    hashing,
+    init,
+    analyzer,
+    add_words,
+    verbose,
     generate_data,
 ):
     n_samples = 70
@@ -138,7 +138,7 @@ def test_gap_encoder(
     "add_words",
     [True, False],
 )
-def test_partial_fit(df_module, add_words: bool, generate_data):
+def test_partial_fit(df_module, add_words, generate_data):
     n_samples = 70
     X = generate_data(n_samples, random_state=0)
     X2 = generate_data(n_samples - 10, random_state=1)

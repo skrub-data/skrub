@@ -76,7 +76,7 @@ def test_encoder_params(generate_data, hashing, minmax_hash):
 
 
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
-def test_missing_values(df_module, hashing: str):
+def test_missing_values(df_module, hashing):
     X = df_module.make_column(
         "",
         [

@@ -16,7 +16,6 @@ __all__ = [
     #
     # Inspecting containers' type and module
     #
-    "skrub_namespace",
     "dataframe_module_name",
     "is_pandas",
     "is_polars",
@@ -89,34 +88,6 @@ __all__ = [
 # Inspecting containers' type and module
 # ======================================
 #
-
-
-# TODO: skrub_namespace is temporary; all code in those modules should be moved
-# here or in the corresponding skrub modules and use the dispatch mechanism.
-
-
-@dispatch
-def skrub_namespace(obj):
-    """Return the skrub private module for a dataframe library.
-
-    Returns either ``skrub._dataframe._pandas`` or ``skrub._dataframe._polars``.
-    This is temporary until functions in those modules have moved elsewhere.
-    """
-    raise NotImplementedError()
-
-
-@skrub_namespace.specialize("pandas")
-def _skrub_namespace_pandas(obj):
-    from . import _pandas
-
-    return _pandas
-
-
-@skrub_namespace.specialize("polars")
-def _skrub_namespace_polars(obj):
-    from . import _polars
-
-    return _polars
 
 
 @dispatch

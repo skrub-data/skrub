@@ -3,7 +3,7 @@ import numpy as np
 from skrub import _string_distances
 
 
-def test_get_unique_ngrams() -> None:
+def test_get_unique_ngrams():
     string = "test"
     true_ngrams = {
         (" ", "t"),
@@ -24,7 +24,7 @@ def test_get_unique_ngrams() -> None:
     assert ngrams == true_ngrams
 
 
-def _random_string_pairs(n_pairs=50, seed=1) -> list[tuple[str, str]]:
+def _random_string_pairs(n_pairs=50, seed=1):
     rng = np.random.RandomState(seed)
     characters = list(map(chr, range(10000)))
     pairs = []
@@ -37,12 +37,12 @@ def _random_string_pairs(n_pairs=50, seed=1) -> list[tuple[str, str]]:
     return pairs
 
 
-def _check_symmetry(dist_func, *args, **kwargs) -> None:
+def _check_symmetry(dist_func, *args, **kwargs):
     for a, b in _random_string_pairs():
         assert dist_func(a, b, *args, **kwargs) == dist_func(b, a, *args, **kwargs)
 
 
-def test_ngram_similarity() -> None:
+def test_ngram_similarity():
     # TODO
     # assert ...
     for n in range(1, 4):

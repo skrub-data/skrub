@@ -1,5 +1,4 @@
 import warnings
-from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -16,7 +15,7 @@ from skrub._dataframe._testing_utils import assert_frame_equal
     "analyzer",
     ["char", "char_wb", "word"],
 )
-def test_fuzzy_join(df_module, analyzer: Literal["char", "char_wb", "word"]):
+def test_fuzzy_join(df_module, analyzer):
     """
     Testing if ``fuzzy_join`` results are as expected.
     """
