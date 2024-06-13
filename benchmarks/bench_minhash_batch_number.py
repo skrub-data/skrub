@@ -9,9 +9,7 @@ Date: February 2023
 
 import pickle
 from argparse import ArgumentParser
-from collections.abc import Callable, Collection
 from pathlib import Path
-from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -106,20 +104,18 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
 
     """
 
-    hash_dict_: LRUDict
-
-    _capacity: int = 2**10
+    _capacity = 2**10
 
     def __init__(
         self,
-        n_components: int = 30,
-        ngram_range: tuple[int, int] = (2, 4),
-        hashing: Literal["fast", "murmur"] = "fast",
-        minmax_hash: bool = False,
-        handle_missing: Literal["error", "zero_impute"] = "zero_impute",
-        batch: bool = False,
-        batch_per_job: int = 1,
-        n_jobs: int = None,
+        n_components=30,
+        ngram_range=(2, 4),
+        hashing="fast",
+        minmax_hash=False,
+        handle_missing="zero_impute",
+        batch=False,
+        batch_per_job=1,
+        n_jobs=None,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -130,13 +126,13 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.batch_per_job = batch_per_job
         self.n_jobs = n_jobs
 
-    def _more_tags(self) -> dict[str, list[str]]:
+    def _more_tags(self):
         """
         Used internally by sklearn to ease the estimator checks.
         """
         return {"X_types": ["categorical"]}
 
-    def _get_murmur_hash(self, string: str) -> np.array:
+    def _get_murmur_hash(self, string):
         """
         Encode a string using murmur hashing function.
 
@@ -164,7 +160,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
-    def _get_fast_hash(self, string: str) -> np.array:
+    def _get_fast_hash(self, string):
         """
         Encode a string with fast hashing function.
         fast hashing supports both min_hash and minmax_hash encoding.
@@ -194,9 +190,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 ]
             )
 
-    def _compute_hash(
-        self, string: str, hash_func: Callable[[str], np.ndarray]
-    ) -> np.ndarray:
+    def _compute_hash(self, string, hash_func):
         """Function called to compute the hash of a string.
 
         Check if the string is in the hash dictionary, if not, scompute the hash using
@@ -221,9 +215,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
                 self.hash_dict_[string] = hash_func(string)
         return self.hash_dict_[string]
 
-    def _compute_hash_batched(
-        self, batch: Collection[str], hash_func: Callable[[str], np.ndarray]
-    ):
+    def _compute_hash_batched(self, batch, hash_func):
         """Function called to compute the hashes of a batch of strings.
 
         Check if the string is in the hash dictionary, if not, compute the hash using
@@ -251,7 +243,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
             res[i] = self.hash_dict_[string]
         return res
 
-    def fit(self, X, y=None) -> "MinHashEncoder":
+    def fit(self, X, y=None):
         """
         Fit the MinHashEncoder to X. In practice, just initializes a dictionary
         to store encodings to speed up computation.
@@ -281,7 +273,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.hash_dict_ = LRUDict(capacity=self._capacity)
         return self
 
-    def transform(self, X) -> np.array:
+    def transform(self, X):
         """
         Transform X using specified encoding scheme.
 
@@ -388,18 +380,18 @@ benchmark_name = "bench_minhash_batch_number"
     repeat=10,
 )
 def benchmark(
-    dataset_size: str,
-    batched: bool,
-    n_jobs: int,
-    batch_per_job: int,
-) -> None:
+    dataset_size,
+    batched,
+    n_jobs,
+    batch_per_job,
+):
     X = data[dataset_size]
     MinHashEncoder(batch=batched, n_jobs=n_jobs, batch_per_job=batch_per_job).fit(
         X
     ).transform(X)
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     sns.set_theme(style="ticks", palette="pastel")
 
     # Create a new columns merging batched and batch_per_job

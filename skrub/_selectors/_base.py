@@ -158,16 +158,16 @@ def make_selector(obj):
 
 
 @dispatch
-def _select_col_names(df, selector):
+def _select_col_names(df, col_names):
     raise NotImplementedError()
 
 
-@_select_col_names.specialize("pandas")
+@_select_col_names.specialize("pandas", argument_type="DataFrame")
 def _select_col_names_pandas(df, col_names):
     return df[col_names]
 
 
-@_select_col_names.specialize("polars")
+@_select_col_names.specialize("polars", argument_type="DataFrame")
 def _select_col_names_polars(df, col_names):
     return df.select(col_names)
 

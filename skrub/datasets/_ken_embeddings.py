@@ -17,7 +17,7 @@ _correspondence_table_url = (
 )
 
 
-def fetch_ken_table_aliases() -> set[str]:
+def fetch_ken_table_aliases():
     """Get the supported aliases of embedded KEN entities tables.
 
     These aliases can be using in subsequent functions (see section *See Also*).
@@ -50,11 +50,11 @@ def fetch_ken_table_aliases() -> set[str]:
 
 
 def fetch_ken_types(
-    search: str = None,
+    search=None,
     *,
-    exclude: str | None = None,
-    embedding_table_id: str = "all_entities",
-) -> pd.DataFrame:
+    exclude=None,
+    embedding_table_id="all_entities",
+):
     """Helper function to search for KEN entity types.
 
     The result can then be used with fetch_ken_embeddings.
@@ -136,14 +136,14 @@ def fetch_ken_types(
 
 
 def fetch_ken_embeddings(
-    search_types: str | None = None,
+    search_types=None,
     *,
-    exclude: str | None = None,
-    embedding_table_id: str = "all_entities",
-    embedding_type_id: str | None = None,
-    pca_components: int | None = None,
-    suffix: str = "",
-) -> pd.DataFrame:
+    exclude=None,
+    embedding_table_id="all_entities",
+    embedding_type_id=None,
+    pca_components=None,
+    suffix="",
+):
     """Download Wikipedia embeddings by type.
 
     More details on the embeddings can be found on

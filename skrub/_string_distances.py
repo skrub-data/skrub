@@ -8,7 +8,7 @@ from collections import Counter
 # TODO vectorize these functions (accept arrays)
 
 
-def get_ngram_count(string: str, ngram_range: tuple[int, int]) -> int:
+def get_ngram_count(string, ngram_range):
     """
     Compute the number of ngrams in a string.
 
@@ -30,7 +30,7 @@ def get_ngram_count(string: str, ngram_range: tuple[int, int]) -> int:
     return ngram_count
 
 
-def preprocess(x: str) -> str:
+def preprocess(x):
     """
     Combine preprocessing done by CountVectorizer and the SimilarityEncoder.
 
@@ -56,7 +56,7 @@ def preprocess(x: str) -> str:
     return _white_spaces.sub(" ", x)
 
 
-def get_unique_ngrams(string: str, ngram_range: tuple[int, int]):
+def get_unique_ngrams(string, ngram_range):
     """
     Return the set of unique n-grams of a string.
 
@@ -83,7 +83,7 @@ def get_unique_ngrams(string: str, ngram_range: tuple[int, int]):
     return ngram_set
 
 
-def get_ngrams(string: str, n: int) -> list[tuple]:
+def get_ngrams(string, n):
     """Return the set of different n-grams in a string"""
     # Pure Python implementation: no numpy
     spaces = " "  # * (n // 2 + n % 2)
