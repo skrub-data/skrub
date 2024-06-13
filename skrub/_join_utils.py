@@ -236,8 +236,6 @@ def left_join(
     right,
     left_on,
     right_on,
-    suffixes,
-    how,
 ):
     raise NotImplementedError()
 
@@ -248,7 +246,6 @@ def _left_join_pandas(
     right,
     left_on,
     right_on,
-    suffixes,
 ):
     """Left join two :obj:`pandas.DataFrame`.
 
@@ -287,7 +284,7 @@ def _left_join_pandas(
 
 
 @left_join.specialize("polars", argument_type="DataFrame")
-def _left_join_polars(left, right, left_on, right_on, suffixes):
+def _left_join_polars(left, right, left_on, right_on):
     """Left join two :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
 
     This function uses the ``dataframe.join`` method from Polars.

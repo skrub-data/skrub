@@ -369,13 +369,9 @@ class Joiner(TransformerMixin, BaseEstimator):
             right,
             left_on=left_key_name,
             right_on=right_key_name,
-            suffixes=(
-                "",
-                "",
-            ),
-        )
+            )
         # TODO: dispatch ``drop``
-        join = join.drop([left_key_name, right_key_name], axis=1)
+        join = join.drop([left_key_name], axis=1)
         if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
                 join = ns.with_columns(

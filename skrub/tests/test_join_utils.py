@@ -81,7 +81,7 @@ def test_left_join(df_module):
     right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
 
     joined = _join_utils.left_join(
-        left, right=right, left_on="left_key", right_on="right_key", suffixes=None
+        left, right=right, left_on="left_key", right_on="right_key"
     )
 
     expected = df_module.make_dataframe(
@@ -104,7 +104,7 @@ def test_left_join(df_module):
     #     {"right_key": [2, 9, 3, 5, 6], "right_col": ["a", "b", "c", "d", "e"]}
     # )
     # joined = _join_utils.left_join(
-    #     left, right=right, left_on="left_key", right_on="right_key", suffixes=None
+    #     left, right=right, left_on="left_key", right_on="right_key"
     # )
     # expected = df_module.make_dataframe(
     #     {
