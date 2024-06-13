@@ -275,12 +275,18 @@ def _left_join_pandas(
             "'left' and 'right' must be pandas dataframes, "
             f"got {type(left)!r} and {type(right)!r}."
         )
-    return left.merge(
+
+    joined = left.merge(
         right,
         how="left",
         left_on=left_on,
         right_on=right_on,
-    ).drop(columns=right_on)
+    )
+
+    if left_on == right_on:
+        return joined
+    else:
+        return joined.drop(columns=right_on)
 
 
 @left_join.specialize("polars", argument_type="DataFrame")
