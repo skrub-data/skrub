@@ -8,9 +8,8 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors
+from . import _selectors, _utils
 from ._join_utils import pick_column_names
-from ._utils import renaming_func, transformer_output_type_error
 
 __all__ = ["OnEachColumn", "SingleColumnTransformer", "RejectColumn"]
 
@@ -488,7 +487,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
             if transformer is not None:
                 suggested_names = _column_names(output_cols)
                 suggested_names = list(
-                    map(renaming_func(self.rename_columns), suggested_names)
+                    map(_utils.renaming_func(self.rename_columns), suggested_names)
                 )
                 output_names = pick_column_names(
                     suggested_names,
@@ -529,9 +528,7 @@ def _fit_transform_column(column, y, columns_to_handle, transformer, allow_rejec
     if col_name not in columns_to_handle:
         return col_name, [column], None
     transformer = clone(transformer)
-    if hasattr(transformer, "set_output"):
-        df_module_name = sbd.dataframe_module_name(column)
-        transformer.set_output(transform=df_module_name)
+    _utils.set_output(transformer, column)
     transformer_input = _prepare_transformer_input(transformer, column)
     allowed = (RejectColumn,) if allow_reject else ()
     try:
@@ -543,10 +540,8 @@ def _fit_transform_column(column, y, columns_to_handle, transformer, allow_rejec
             f"Transformer {transformer.__class__.__name__}.fit_transform "
             f"failed on column {col_name!r}. See above for the full traceback."
         ) from e
-    try:
-        output_cols = sbd.to_column_list(output)
-    except TypeError:
-        transformer_output_type_error(transformer, transformer_input, output)
+    output = _utils.check_output(transformer, transformer_input, output)
+    output_cols = sbd.to_column_list(output)
     return col_name, output_cols, transformer
 
 
@@ -561,6 +556,9 @@ def _transform_column(column, transformer):
             f"Transformer {transformer.__class__.__name__}.transform "
             f"failed on column {sbd.name(column)!r}. See above for the full traceback."
         ) from e
+    # we do not call `_utils.check_output` here, assuming that if the output
+    # had a correct type (e.g. polars dataframe) in `fit_transform` it will
+    # have the same (correct) type in `transform`.
     output_cols = sbd.to_column_list(output)
     return output_cols
 
