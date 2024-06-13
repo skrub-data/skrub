@@ -352,7 +352,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         aux_table = ns.reset_index(
             _join_utils.add_column_name_suffix(self._aux_table, self.suffix)
         )
-        # dispatch copy ?
+        # Remove ns.col
         matching_col = ns.col(match_result, "index").copy()
         matching_col[~ns.col(match_result, "match_accepted")] = -1
         token = _utils.random_string()
@@ -362,8 +362,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         right = ns.with_columns(
             aux_table, **{right_key_name: np.arange(ns.shape(aux_table)[0])}
         )
-        # TODO: dispatch in ``_join_utils``
-        # TODO: check pd vs pl behavior and how can we use the duplicates -> in PR WIP
         join = _join_utils.left_join(
             left,
             right,

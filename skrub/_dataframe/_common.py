@@ -958,7 +958,7 @@ def _replace_polars(col, old, new):
     return col.replace(old, new)
 
 
-def with_columns(df, **new_columns):
+def with_columns(df, **new_cols):
     columns = {col_name: col(df, col_name) for col_name in column_names(df)}
-    columns.update({n: make_column_like(df, c, n) for n, c in new_columns.items()})
+    columns.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
     return make_dataframe_like(df, columns)
