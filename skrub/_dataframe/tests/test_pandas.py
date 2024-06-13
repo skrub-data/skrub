@@ -71,10 +71,6 @@ def test_value_counts_agg():
 
 
 def test_incorrect_dataframe_inputs():
-    # TODO: deal with this
-    # with pytest.raises(TypeError, match=r"(?=.*pandas dataframes)(?=.*array)"):
-    #     join(left=main.values, right=main, left_on="movieId", right_on="movieId")
-
     with pytest.raises(TypeError, match=r"(?=.*pandas dataframe)(?=.*array)"):
         aggregate(
             table=main.values,

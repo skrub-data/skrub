@@ -55,10 +55,6 @@ def test_mode_agg():
 
 
 def test_incorrect_dataframe_inputs():
-    # TODO: deal with this
-    # with pytest.raises(TypeError, match=r"(?=.*polars dataframes)(?=.*pandas)"):
-    #     join(left=pd.DataFrame(main), right=main, left_on="movieId", right_on="movieId") # noqa: E501
-
     with pytest.raises(TypeError, match=r"(?=.*polars dataframe)(?=.*pandas)"):
         aggregate(
             table=pd.DataFrame(main),
