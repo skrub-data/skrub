@@ -29,6 +29,7 @@ def test_not_implemented():
         "to_column_list",
         "reset_index",
         "index",
+        "with_columns",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)

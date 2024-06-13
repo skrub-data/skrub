@@ -958,14 +958,7 @@ def _replace_polars(column, old, new):
     return column.replace(old, new)
 
 
-@dispatch
 def with_columns(df, **new_columns):
-    raise NotImplementedError()
-
-
-@with_columns.specialize("pandas", argument_type="DataFrame")
-@with_columns.specialize("polars", argument_type="DataFrame")
-def _with_columns_dataframe(df, **new_columns):
     columns = {col_name: col(df, col_name) for col_name in column_names(df)}
     columns.update({n: make_column_like(df, c, n) for n, c in new_columns.items()})
     return make_dataframe_like(df, columns)
