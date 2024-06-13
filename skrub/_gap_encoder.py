@@ -542,15 +542,13 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             The labels that best describe each topic.
         """
         check_is_fitted(self, "H_dict_")
-        vectorizer = CountVectorizer(preprocessor=_preprocess_text)
+        vectorizer = CountVectorizer()
         try:
             vectorizer.fit(list(self.H_dict_.keys()))
         except ValueError:
             # The vectorizer failed to find words, we need to switch to
             # char-level representation
-            vectorizer = CountVectorizer(
-                preprocessor=_preprocess_text, analyzer="char_wb"
-            )
+            vectorizer = CountVectorizer(analyzer="char_wb")
             vectorizer.fit(list(self.H_dict_.keys()))
         vocabulary = np.array(vectorizer.get_feature_names_out())
         encoding = self._transform(vocabulary, np.zeros(len(vocabulary), dtype="bool"))
