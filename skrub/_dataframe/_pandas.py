@@ -9,64 +9,8 @@ import pandas as pd
 
 from skrub._utils import atleast_1d_or_none
 
-DATAFRAME_MODULE_NAME = "pandas"
-
-
-def make_dataframe(X, index=None, dtypes=None):
-    """Convert an dictionary of columns into a Pandas dataframe.
-
-    Parameters
-    ----------
-    X : mapping from column name to 1d iterable
-        Input data to convert.
-
-    index : 1d array-like, default=None
-        The index of the dataframe.
-
-    dtypes : str, data type, Series or Mapping of column name -> data type, default=None
-        Use a str, numpy.dtype, pandas.ExtensionDtype or Python type to
-        cast entire pandas object to the same type. Alternatively, use a
-        mapping, e.g. {col: dtype, ...}, where col is a column label and dtype is
-        a numpy.dtype or Python type to cast one or more of the DataFrame's
-        columns to column-specific types.
-
-    Returns
-    -------
-    X : pd.DataFrame
-        Converted output.
-    """
-    df = pd.DataFrame(X, index=index)
-    if dtypes is not None:
-        # 'df.astype(None)' might raise a ValueError because
-        # it tries to cast all columns to floats.
-        df = df.astype(dtypes)
-    return df
-
-
-def make_series(X, index=None, name=None, dtype=None):
-    """Convert a 1d array into a Pandas series.
-
-    Parameters
-    ----------
-    X : 1d iterable
-        Input data to convert.
-
-    index : 1d array-like, default=None
-        The index of the series.
-
-    name : str, default=None
-        The name of the series.
-
-    dtype : str, numpy.dtype, or ExtensionDtype, default=None
-        Data type for the output Series.
-
-    Returns
-    -------
-    X : Pandas series
-        Converted output.
-    """
-    series = pd.Series(X, index=index, name=name, dtype=dtype)
-    return series
+# TODO: _dataframe._pandas is temporary; all code in this module should be moved
+# elsewhere and use the dispatch mechanism.
 
 
 def aggregate(
@@ -344,10 +288,6 @@ def split_num_categ_cols(table):
     categ_cols = table.select_dtypes(["object", "string", "category"]).columns
 
     return num_cols, categ_cols
-
-
-def select(dataframe, columns):
-    return dataframe[columns]
 
 
 def rename_columns(dataframe, renaming_function):

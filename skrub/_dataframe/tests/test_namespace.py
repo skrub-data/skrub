@@ -4,7 +4,7 @@ import pytest
 import skrub._dataframe._pandas as skrub_pd
 import skrub._dataframe._polars as skrub_pl
 from skrub._dataframe._namespace import get_df_namespace
-from skrub._dataframe._polars import POLARS_SETUP
+from skrub.conftest import _POLARS_INSTALLED
 
 main = pd.DataFrame(
     {
@@ -25,7 +25,7 @@ def test_get_namespace_pandas():
         get_df_namespace(main, main.values)
 
 
-@pytest.mark.skipif(not POLARS_SETUP, reason="Polars is not available")
+@pytest.mark.skipif(not _POLARS_INSTALLED, reason="Polars is not available")
 def test_get_namespace_polars():
     import polars as pl
 

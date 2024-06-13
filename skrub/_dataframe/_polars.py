@@ -1,83 +1,21 @@
 """
 Polars specialization of the aggregate and join operations.
 """
+import inspect
+
 try:
     import polars as pl
     import polars.selectors as cs
 
-    POLARS_SETUP = True
 except ImportError:
-    POLARS_SETUP = False
+    pass
 
 from itertools import product
 
 from skrub._utils import atleast_1d_or_none
 
-DATAFRAME_MODULE_NAME = "polars"
-
-
-def make_dataframe(X, index=None, dtypes=None):
-    """Convert an dictionary of columns into a Polars dataframe.
-
-    Parameters
-    ----------
-    X : mapping from column name to 1d iterable
-        Input data to convert.
-
-    index : 1d array-like, default=None
-        Unused since polars doesn't use index.
-        Only here for compatibility with Pandas.
-
-    dtypes : DataType or mapping of column names to DataType, default=None
-        Mapping of column names (or selector) to dtypes, or a single dtype
-        to which all columns will be cast.
-
-    Returns
-    -------
-    X : pl.DataFrame
-        Converted output.
-    """
-    if index is not None:
-        raise ValueError(
-            "Polars dataframes don't have an index, but "
-            f"the Polars dataframe maker was called with {index=!r}."
-        )
-    df = pl.DataFrame(X)
-    if dtypes is not None:
-        df = df.cast(dtypes)
-    return df
-
-
-def make_series(X, index=None, name=None, dtype=None):
-    """Convert an 1d array into a Polars series.
-
-    Parameters
-    ----------
-    X : 1d iterable
-        Input data to convert.
-
-    index : 1d array-like, default=None
-        Unused since polars doesn't use index.
-        Only here for compatibility with Pandas.
-
-    name : str, default=None
-        The name of the series.
-
-    dtype : DataType, default=None
-        Polars dtype of the Series data.
-
-    Returns
-    -------
-    X : pl.Series
-        Converted output.
-    """
-    if index is not None:
-        raise ValueError(
-            "Polars series don't have an index, but "
-            f"the Polars series maker was called with {index=!r}."
-        )
-    series = pl.Series(values=X, name=name, dtype=dtype)
-    return series
+# TODO: _dataframe._polars is temporary; all code in this module should be moved
+# elsewhere and use the dispatch mechanism.
 
 
 def aggregate(
@@ -185,13 +123,11 @@ def join(left, right, left_on, right_on):
     is_dataframe = isinstance(left, pl.DataFrame) and isinstance(right, pl.DataFrame)
     is_lazyframe = isinstance(left, pl.LazyFrame) and isinstance(right, pl.LazyFrame)
     if is_dataframe or is_lazyframe:
-        return left.join(
-            right,
-            how="left",
-            left_on=left_on,
-            right_on=right_on,
-            coalesce=True,
-        )
+        if "coalesce" in inspect.signature(left.join).parameters:
+            kw = {"coalesce": True}
+        else:
+            kw = {}
+        return left.join(right, how="left", left_on=left_on, right_on=right_on, **kw)
     else:
         raise TypeError(
             "'left' and 'right' must be polars dataframes or lazyframes, "
@@ -275,10 +211,6 @@ def split_num_categ_cols(table):
     categ_cols = table.select(cs.string()).columns
 
     return num_cols, categ_cols
-
-
-def select(dataframe, columns):
-    return dataframe.select(columns)
 
 
 def rename_columns(dataframe, renaming_function):

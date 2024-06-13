@@ -9,7 +9,7 @@ import pytest
 from skrub.datasets import _fetching
 
 
-def _has_data_id(call, data_id: int) -> bool:
+def _has_data_id(call, data_id):
     # Unpacking copied from `mock._Call.__eq__`
     if len(call) == 2:
         args, kwargs = call
@@ -22,7 +22,7 @@ def _has_data_id(call, data_id: int) -> bool:
     "skrub.datasets._fetching.fetch_openml",
     side_effect=_fetching.fetch_openml,
 )
-def test_openml_fetching(fetch_openml_mock: mock.Mock):
+def test_openml_fetching(fetch_openml_mock):
     """
     Downloads a small dataset (midwest survey) and performs a bunch of tests
     that asserts the fetching function works correctly.
@@ -79,7 +79,7 @@ def test_openml_datasets_exist():
 
 
 @mock.patch("skrub.datasets._fetching.fetch_openml")
-def test_openml_datasets_calls(fetch_openml_mock: mock.Mock):
+def test_openml_datasets_calls(fetch_openml_mock):
     """
     Checks that calling the fetching functions actually calls
     `sklearn.datasets.fetch_openml`.
