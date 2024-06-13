@@ -146,6 +146,9 @@ def test_make_column_like(df_module, example_data_dict):
     )
     assert ns.dataframe_module_name(col) == df_module.name
 
+    col = df_module.make_column("name", [1, 2, 3])
+    df_module.assert_column_equal(col, ns.make_column_like(col, col, "name"))
+
 
 def test_null_value_for(df_module):
     assert ns.null_value_for(df_module.example_dataframe) is None
@@ -598,6 +601,7 @@ def test_with_columns(df_module):
     # Add one new col
     out = ns.with_columns(df, **{"c": [5, 6]})
     if df_module.description == "pandas-nullable-dtypes":
+        # for pandas, make_column_like will return an old-style / numpy dtypes Series
         out = ns.pandas_convert_dtypes(out)
     expected = df_module.make_dataframe({"a": [1, 2], "b": [3, 4], "c": [5, 6]})
     df_module.assert_frame_equal(out, expected)

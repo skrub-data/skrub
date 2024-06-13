@@ -79,7 +79,7 @@ def test_add_column_name_suffix():
 def test_left_join(df_module):
     left = df_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
 
-    # Test all left keys in right dataframe
+    # All left keys in right dataframe
     right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
     joined = _join_utils.left_join(
         left, right=right, left_on="left_key", right_on="right_key"
@@ -106,3 +106,6 @@ def test_left_join(df_module):
         }
     )
     assert_frame_equal(joined, expected)
+
+    # TODO: test joining on different types doesn't work
+    # TODO: check adding suffixes
