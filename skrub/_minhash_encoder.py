@@ -141,8 +141,8 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         """
         min_hashes = np.ones(self.n_components) * np.infty
         grams = get_unique_ngrams(string, self.ngram_range)
-        if len(grams) == 0:
-            grams = get_unique_ngrams(" Na ", self.ngram_range)
+        if string == "" or len(grams) == 0:
+            return np.zeros(self.n_components)
         for gram in grams:
             hash_array = np.array(
                 [
@@ -285,7 +285,6 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             for idx_slice in gen_even_slices(len(unique_x), n_jobs)
         )
         X_out = np.concatenate(unique_x_trans, dtype="float32")[indices_x]
-        X_out[is_null] = 0.0
         names = self.get_feature_names_out()
         result = sbd.make_dataframe_like(X, dict(zip(names, X_out.T)))
         if (idx := sbd.index(X)) is not None:

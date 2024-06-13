@@ -104,12 +104,15 @@ def test_missing_values(df_module, hashing):
         assert sbd.is_null(X)[7]
 
 
-def test_missing_values_none(df_module):
+@pytest.mark.parametrize("hashing", ["fast", "murmur"])
+def test_missing_values_none(df_module, hashing):
     # Test that "None" is also understood as a missing value
-    a = df_module.make_column("", ["a", "b", None, ""])
+    a = df_module.make_column("", ["a", "  ", None, ""])
 
-    enc = MinHashEncoder()
+    enc = MinHashEncoder(hashing=hashing)
     d = enc.fit_transform(a)
+    assert d["_0"][0] != 0.0
+    assert d["_0"][1] != 0.0
     assert_array_equal(d["_0"][2], 0.0)
     assert_array_equal(d["_0"][3], 0.0)
 
