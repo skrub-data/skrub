@@ -8,31 +8,31 @@ __all__ = ["CleanCategories"]
 
 
 @dispatch
-def _with_string_categories(column):
+def _with_string_categories(col):
     raise NotImplementedError()
 
 
 @_with_string_categories.specialize("pandas", argument_type="Column")
-def _with_string_categories_pandas(column):
-    categories = column.cat.categories.to_series()
+def _with_string_categories_pandas(col):
+    categories = col.cat.categories.to_series()
     if sbd.is_string(categories) and not sbd.is_pandas_extension_dtype(categories):
-        return column
+        return col
     try:
-        return column.cat.rename_categories(categories.astype("str"))
+        return col.cat.rename_categories(categories.astype("str"))
     except ValueError:
         # unlikely case that different values in categories have the same
         # string representation: recompute unique categories after casting to
         # string
-        is_na = column.isna()
-        column = column.astype("str")
-        column[is_na] = np.nan
-        column = column.astype("category")
-        return column
+        is_na = col.isna()
+        col = col.astype("str")
+        col[is_na] = np.nan
+        col = col.astype("category")
+        return col
 
 
 @_with_string_categories.specialize("polars", argument_type="Column")
-def _with_string_categories_polars(column):
-    return column
+def _with_string_categories_polars(col):
+    return col
 
 
 class CleanCategories(SingleColumnTransformer):
