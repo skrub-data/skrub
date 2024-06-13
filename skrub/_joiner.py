@@ -326,9 +326,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         _join_utils.check_column_name_duplicates(
             X, self._aux_table, self.suffix, main_table_name="X"
         )
-        # TODO: dispatch set_axis in df._common
         main = self.vectorizer_.transform(
-            ns.col(X, self._main_key).set_axis(self._aux_key, axis="columns")
+            ns.set_column_names(ns.col(X, self._main_key), self._aux_key)
         )
         aux_table = ns.reset_index(
             _join_utils.add_column_name_suffix(self._aux_table, self.suffix)
