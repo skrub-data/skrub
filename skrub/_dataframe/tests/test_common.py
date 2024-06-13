@@ -593,8 +593,34 @@ def test_nans_treated_as_nulls(df_module):
 
 
 def test_with_columns(df_module):
-    # TODO: test one new col
-    # TODO: test multiple new cols
-    # TODO: test array (+ 1 test in ns.make_column_like(s) = s)
-    # TODO: test replace col
-    pass
+    df = df_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+
+    # Add one new col
+    out = ns.with_columns(df, **{"c": [5, 6]})
+    if df_module.description == "pandas-nullable-dtypes":
+        out = ns.pandas_convert_dtypes(out)
+    expected = df_module.make_dataframe({"a": [1, 2], "b": [3, 4], "c": [5, 6]})
+    df_module.assert_frame_equal(out, expected)
+
+    # Add multiple new cols
+    out = ns.with_columns(df, **{"c": [5, 6], "d": [7, 8]})
+    if df_module.description == "pandas-nullable-dtypes":
+        out = ns.pandas_convert_dtypes(out)
+    expected = df_module.make_dataframe(
+        {"a": [1, 2], "b": [3, 4], "c": [5, 6], "d": [7, 8]}
+    )
+    df_module.assert_frame_equal(out, expected)
+
+    # Pass a col instead of an array
+    out = ns.with_columns(df, **{"c": df_module.make_column("c", [5, 6])})
+    if df_module.description == "pandas-nullable-dtypes":
+        out = ns.pandas_convert_dtypes(out)
+    expected = df_module.make_dataframe({"a": [1, 2], "b": [3, 4], "c": [5, 6]})
+    df_module.assert_frame_equal(out, expected)
+
+    # Replace col
+    out = ns.with_columns(df, **{"a": [5, 6]})
+    if df_module.description == "pandas-nullable-dtypes":
+        out = ns.pandas_convert_dtypes(out)
+    expected = df_module.make_dataframe({"a": [5, 6], "b": [3, 4]})
+    df_module.assert_frame_equal(out, expected)
