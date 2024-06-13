@@ -27,46 +27,46 @@ _TIME_LEVELS = [
 
 
 @dispatch
-def _is_date(column):
+def _is_date(col):
     raise NotImplementedError()
 
 
-@_is_date.specialize("pandas")
-def _is_date_pandas(column):
-    column = sbd.drop_nulls(column)
-    return (column.dt.date == column).all()
+@_is_date.specialize("pandas", argument_type="Column")
+def _is_date_pandas(col):
+    col = sbd.drop_nulls(col)
+    return (col.dt.date == col).all()
 
 
-@_is_date.specialize("polars")
-def _is_date_polars(column):
-    return (column.dt.date() == column).all()
+@_is_date.specialize("polars", argument_type="Column")
+def _is_date_polars(col):
+    return (col.dt.date() == col).all()
 
 
 @dispatch
-def _get_dt_feature(column, feature):
+def _get_dt_feature(col, feature):
     raise NotImplementedError()
 
 
-@_get_dt_feature.specialize("pandas")
-def _get_dt_feature_pandas(column, feature):
+@_get_dt_feature.specialize("pandas", argument_type="Column")
+def _get_dt_feature_pandas(col, feature):
     if feature == "total_seconds":
-        if column.dt.tz is None:
+        if col.dt.tz is None:
             epoch = datetime(1970, 1, 1)
         else:
             epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
-        return ((column - epoch) / pd.Timedelta("1s")).astype("float32")
+        return ((col - epoch) / pd.Timedelta("1s")).astype("float32")
     if feature == "weekday":
-        return column.dt.day_of_week + 1
+        return col.dt.day_of_week + 1
     assert feature in _TIME_LEVELS
-    return getattr(column.dt, feature)
+    return getattr(col.dt, feature)
 
 
-@_get_dt_feature.specialize("polars")
-def _get_dt_feature_polars(column, feature):
+@_get_dt_feature.specialize("polars", argument_type="Column")
+def _get_dt_feature_polars(col, feature):
     if feature == "total_seconds":
-        return (column.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
+        return (col.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
     assert feature in _TIME_LEVELS + ["weekday"]
-    return getattr(column.dt, feature)()
+    return getattr(col.dt, feature)()
 
 
 class DatetimeEncoder(SingleColumnTransformer):

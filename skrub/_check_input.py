@@ -42,7 +42,7 @@ def _check_not_pandas_sparse(df):
     pass
 
 
-@_check_not_pandas_sparse.specialize("pandas")
+@_check_not_pandas_sparse.specialize("pandas", argument_type="DataFrame")
 def _check_not_pandas_sparse_pandas(df):
     import pandas as pd
 
