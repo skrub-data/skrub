@@ -10,6 +10,17 @@ from ._minhash_encoder import MinHashEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
+_HGBT_CLASSES = (
+    ensemble.HistGradientBoostingClassifier,
+    ensemble.HistGradientBoostingRegressor,
+)
+_TREE_ENSEMBLE_CLASSES = (
+    ensemble.HistGradientBoostingClassifier,
+    ensemble.HistGradientBoostingRegressor,
+    ensemble.RandomForestClassifier,
+    ensemble.RandomForestRegressor,
+)
+
 
 def make_tabular_pipeline(predictor, n_jobs=None):
     """Get a simple machine-learning pipeline that should work well in many cases.
@@ -91,8 +102,6 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     1           2021.0               4.0  ...                   13.0            140.0
     2           2024.0              12.0  ...                    0.0             44.0
     3           2023.0               8.0  ...                   17.0            137.0
-    <BLANKLINE>
-    [4 rows x 7 columns]
 
     The default pipeline combines a :obj:`TableVectorizer` and a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` (or
@@ -142,8 +151,6 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     1           2021.0               4.0  ...                   13.0            140.0
     2           2024.0              12.0  ...                    0.0             44.0
     3           2023.0               8.0  ...                   17.0            137.0
-    <BLANKLINE>
-    [4 rows x 10 columns]
 
     Moreover, as :obj:`~sklearn.linear_model.Ridge` does not handle missing
     values, a step was added to perform mean imputation. Therefore the data
@@ -170,52 +177,46 @@ def make_tabular_pipeline(predictor, n_jobs=None):
         cat_feat_kwargs = {}
     else:
         cat_feat_kwargs = {"categorical_features": "from_dtype"}
-    match predictor:
-        case "classifier":
+
+    if isinstance(predictor, str):
+        if predictor == "classifier":
             return make_tabular_pipeline(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
-        case "regressor":
+        if predictor == "regressor":
             return make_tabular_pipeline(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
-        case str():
-            raise ValueError(
-                "If ``predictor`` is a string it should be 'regressor' or 'classifier'."
-            )
-        case ensemble.HistGradientBoostingClassifier(
-            categorical_features="from_dtype"
-        ) | ensemble.HistGradientBoostingRegressor(categorical_features="from_dtype"):
-            vectorizer.set_params(
-                low_cardinality_transformer=ToCategorical(),
-                high_cardinality_transformer=MinHashEncoder(),
-            )
-        case (
-            ensemble.HistGradientBoostingClassifier()
-            | ensemble.HistGradientBoostingRegressor()
-            | ensemble.RandomForestClassifier()
-            | ensemble.RandomForestRegressor()
-        ):
-            vectorizer.set_params(
-                low_cardinality_transformer=OrdinalEncoder(),
-                high_cardinality_transformer=MinHashEncoder(),
-            )
-        case BaseEstimator():
-            pass
-        case type() as cls if issubclass(cls, BaseEstimator):
-            raise TypeError(
-                "make_tabular_pipeline expects a scikit-learn estimator as its first"
-                f" argument. Pass an instance of {cls.__name__} rather than the class"
-                " itself."
-            )
-        case _:
-            raise TypeError(
-                "make_tabular_pipeline expects a scikit-learn estimator, 'regressor',"
-                " or 'classifier' as its first argument."
-            )
+        raise ValueError(
+            "If ``predictor`` is a string it should be 'regressor' or 'classifier'."
+        )
+    if isinstance(predictor, type) and issubclass(predictor, BaseEstimator):
+        raise TypeError(
+            "make_tabular_pipeline expects a scikit-learn estimator as its first"
+            f" argument. Pass an instance of {predictor.__name__} rather than the class"
+            " itself."
+        )
+    if not isinstance(predictor, BaseEstimator):
+        raise TypeError(
+            "make_tabular_pipeline expects a scikit-learn estimator, 'regressor',"
+            " or 'classifier' as its first argument."
+        )
 
+    if (
+        isinstance(predictor, _HGBT_CLASSES)
+        and getattr(predictor, "categorical_features", None) == "from_dtype"
+    ):
+        vectorizer.set_params(
+            low_cardinality_transformer=ToCategorical(),
+            high_cardinality_transformer=MinHashEncoder(),
+        )
+    elif isinstance(predictor, _TREE_ENSEMBLE_CLASSES):
+        vectorizer.set_params(
+            low_cardinality_transformer=OrdinalEncoder(),
+            high_cardinality_transformer=MinHashEncoder(),
+        )
     if predictor._get_tags().get("allow_nan", False):
         steps = (vectorizer, predictor)
     else:
