@@ -35,7 +35,7 @@ jobs:
         fail-fast: false
         matrix:
             os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-            python-version: ["3.9", "3.11", "3.12"]
+            python-version: ["3.9", "3.10", "3.11", "3.12"]
             # Install the min or latest dependencies for skrub
             # as defined in setup.cfg at [options.extra_require].
             #
@@ -56,6 +56,9 @@ jobs:
                 python-version: "3.11"
               - dependencies-version: "dev, polars"
                 python-version: "3.12"
+              - dependencies-version: "dev, min-py39"
+                python-version: "3.10"
+                dependencies-version-type: "minimal"
               - dependencies-version: "dev, min-py39"
                 python-version: "3.9"
                 dependencies-version-type: "minimal"
