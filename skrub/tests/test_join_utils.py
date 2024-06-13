@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -94,24 +95,20 @@ def test_left_join(df_module):
     assert_frame_equal(joined, expected)
 
     # Test all left keys not it right dataframe
-    # TODO: modify default behavior of `left_join`
-    # Will break for polars or pandas by default
-    # Polars keep right_key by default when it doesn't find a match
-    # left = df_module.make_dataframe(
-    #     {"left_key": [1, 2, 2, 3], "left_col": [10, 20, 30, 40]}
-    # )
-    # right = df_module.make_dataframe(
-    #     {"right_key": [2, 9, 3, 5, 6], "right_col": ["a", "b", "c", "d", "e"]}
-    # )
-    # joined = _join_utils.left_join(
-    #     left, right=right, left_on="left_key", right_on="right_key"
-    # )
-    # expected = df_module.make_dataframe(
-    #     {
-    #         "left_key": [1, 2, 2, 3],
-    #         "left_col": [10, 20, 30, 40],
-    #         "right_key": [None, 2, 2, 3],
-    #         "right_col": [None, "a", "a", "c"],
-    #     }
-    # )
+    left = df_module.make_dataframe(
+        {"left_key": [1, 2, 2, 3], "left_col": [10, 20, 30, 40]}
+    )
+    right = df_module.make_dataframe(
+        {"right_key": [2, 9, 3, 5, 6], "right_col": ["a", "b", "c", "d", "e"]}
+    )
+    joined = _join_utils.left_join(
+        left, right=right, left_on="left_key", right_on="right_key"
+    )
+    expected = df_module.make_dataframe(
+        {
+            "left_key": [1, 2, 2, 3],
+            "left_col": [10, 20, 30, 40],
+            "right_col": [np.nan, "a", "a", "c"],
+        }
+    )
     assert_frame_equal(joined, expected)
