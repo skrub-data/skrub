@@ -224,7 +224,7 @@ def dispatch(function):
         if argument_type is None:
             # Use all type names in the module's description by default.
             argument_type = list(module_info.types.keys())
-        if isinstance(argument_type, str):
+        elif isinstance(argument_type, str):
             argument_type = (argument_type,)
 
         # Define a decorator that adds specialized implementations to
