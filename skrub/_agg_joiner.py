@@ -6,7 +6,6 @@ Both classes aggregate the auxiliary table first, then join this grouped
 table with the main table.
 """
 from typing import Iterable
-from skrub import _join_utils
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -293,7 +292,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
 
         # skrub_px, _ = get_df_namespace(self.aux_table_)
         X = _join_utils.left_join(
-            left=X,
+            X,
             right=self.aux_table_,
             left_on=self._main_key,
             right_on=self._aux_key,
@@ -441,10 +440,9 @@ class AggTarget(TransformerMixin, BaseEstimator):
             The augmented input.
         """
         check_is_fitted(self, "y_")
-        skrub_px, _ = get_df_namespace(X)
 
         return _join_utils.left_join(
-            left=X,
+            X,
             right=self.y_,
             left_on=self.main_key_,
             right_on=self.main_key_,

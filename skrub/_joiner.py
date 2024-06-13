@@ -369,7 +369,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             right,
             left_on=left_key_name,
             right_on=right_key_name,
-            )
+        )
         # TODO: dispatch ``drop``
         join = join.drop([left_key_name], axis=1)
         if self.add_match_info:

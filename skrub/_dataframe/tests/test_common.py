@@ -1,4 +1,3 @@
-skrub/_dataframe/tests/test_common.py
 """
 Note: most tests in this file use the ``df_module`` fixture, which is defined
 in ``skrub.conftest``. See the corresponding docstrings for details.
