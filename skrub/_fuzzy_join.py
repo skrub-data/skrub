@@ -210,7 +210,9 @@ def fuzzy_join(
         add_match_info=True,
     ).fit_transform(left)
     if drop_unmatched:
+        # TODO: dispatch
         join = join[join["skrub_Joiner_match_accepted"]]
     if not add_match_info:
+        # TODO: use selectors
         join = join.drop(Joiner.match_info_columns, axis=1)
     return join
