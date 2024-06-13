@@ -71,8 +71,6 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     This pipeline can handle complex, tabular data:
 
     >>> import pandas as pd
-    >>> X = pd.DataFrame({'a': ['2020-01-02', '2021-04-01'], 'b': [None, 11], 'c': ['a', 'b']})
-    >>> y = [True, False]
     >>> X = pd.DataFrame(
     ...     {
     ...         "last_visit": ["2020-01-02", "2021-04-01", "2024-12-05", "2023-08-10"],
