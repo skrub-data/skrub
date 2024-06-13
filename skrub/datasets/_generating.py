@@ -11,11 +11,11 @@ from sklearn.utils import check_random_state
 
 
 def make_deduplication_data(
-    examples: list[str],
-    entries_per_example: list[int],
-    prob_mistake_per_letter: float = 0.2,
-    random_state: int | np.random.RandomState | None = None,
-) -> list[str]:
+    examples,
+    entries_per_example,
+    prob_mistake_per_letter=0.2,
+    random_state=None,
+):
     """Duplicates examples with spelling mistakes.
 
     Characters are misspelled with probability `prob_mistake_per_letter`.

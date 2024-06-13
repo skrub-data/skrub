@@ -49,12 +49,12 @@ benchmark_name = "gap_encoder_benchmark_hp"
     repeat=1,
 )
 def benchmark(
-    high_card_feature: str,
-    batch_size: int,
-    max_iter_e_step: int,
-    max_rows: int,
-    max_no_improvement: int,
-    random_state: int,
+    high_card_feature,
+    batch_size,
+    max_iter_e_step,
+    max_rows,
+    max_no_improvement,
+    random_state,
 ):
     X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
     y = ds.y
@@ -111,7 +111,7 @@ def benchmark(
     return res_dic
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     base_values = {"batch_size": 1024, "max_iter_e_step": 1, "max_no_improvement": 5}
     for variable in base_values.keys():
         df_to_plot = df
