@@ -3,17 +3,11 @@
 import inspect
 import re
 
-import pandas as pd
-
-try:
-    import polars as pl
-except ImportError:
-    pass
-
+from skrub import _dataframe as sbd
+from skrub import _selectors as s
 from skrub import _utils
 from skrub._dataframe._namespace import get_df_namespace
-
-from ._dispatch import dispatch
+from skrub._dispatch import dispatch
 
 
 def check_key(
@@ -231,16 +225,61 @@ def _get_new_name(suggested_name, forbidden_names):
 
 
 def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
-    # TODO -- replace AssertionErrors with exceptions with appropriate type &
-    # message
-    assert sbd.is_dataframe(left)
-    assert sbd.is_dataframe(right)
-    assert sbd.dataframe_module_name(left) == sbd.dataframe_module_name(right)
+    """Left join two dataframes of the same type.
+
+    The input dataframes type must agree: either both `left` and `right` need to be
+    :obj:`pandas.DataFrame`, :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
+    Mixing types will raise an error.
+
+    `rename_right_cols` can be used to format the right dataframe columns, e.g. use
+    "right_.{}" to rename all right cols with a leading "right_".
+
+    If duplicate column names are found between renamed right cols and left cols,
+    a __skrub_<random string>__ is added at the end of columns that would otherwise
+    be duplicates.
+
+    Parameters
+    ----------
+    left : pd.DataFrame or pl.DataFrame or pl.LazyFrame
+        The left dataframe of the left-join.
+    right : pd.DataFrame or pl.DataFrame or pl.LazyFrame
+        The right dataframe of the left-join.
+    left_on : str or Iterable[str]
+        Left keys to merge on.
+    right_on : str or Iterable[str]
+        Right keys to merge on.
+    rename_right_cols : str, optional
+        Formatting used to rename right cols, by default "{}".
+
+    Returns
+    -------
+    pd.DataFrame or pl.DataFrame or pl.LazyFrame
+        The joined output.
+
+    Raises
+    ------
+    TypeError
+        If either of `left` and `right` is not a dataframe, or if both types
+        are not equal.
+    """
+    if not sbd.is_dataframe(left):
+        raise TypeError(
+            f"`left` must be a pandas or polars dataframe, got {type(left)}."
+        )
+    if not sbd.is_dataframe(right):
+        raise TypeError(
+            f"`right` must be a pandas or polars dataframe, got {type(right)}."
+        )
+    if not sbd.dataframe_module_name(left) == sbd.dataframe_module_name(right):
+        raise TypeError(
+            "`left` and `right` must be of the same dataframe type, got"
+            f"{type(left)} and {type(right)}."
+        )
 
     left_cols = sbd.column_names(left)
     original_right_cols = sbd.column_names(right)
     right_cols = map(_utils.renaming_func(rename_right_cols), original_right_cols)
-    right_cols = pick_column_names(right_cols , forbidden_names=left_cols)
+    right_cols = pick_column_names(right_cols, forbidden_names=left_cols)
     renaming = dict(zip(original_right_cols, right_cols))
     right = sbd.set_column_names(right, right_cols)
     if isinstance(right_on, str):
@@ -261,7 +300,9 @@ def _do_left_join(left, right, left_on, right_on):
 
 @_do_left_join.specialize("pandas", argument_type="DataFrame")
 def _do_left_join_pandas(left, right, left_on, right_on):
-    return left.merge(right, left_on=left_on, right_on=right_on, how="left", suffixes=("", ""))
+    return left.merge(
+        right, left_on=left_on, right_on=right_on, how="left", suffixes=("", "")
+    )
 
 
 @_do_left_join.specialize("polars", argument_type="DataFrame")

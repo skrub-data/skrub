@@ -3,7 +3,6 @@ import pandas as pd
 import pytest
 
 from skrub import _join_utils
-from skrub._dataframe._testing_utils import assert_frame_equal
 
 
 @pytest.mark.parametrize(
@@ -91,7 +90,7 @@ def test_left_join(df_module):
             "right_col": ["a", "b", "b"],
         }
     )
-    assert_frame_equal(joined, expected)
+    df_module.assert_frame_equal(joined, expected)
 
     # Some left keys not it right dataframe
     right = df_module.make_dataframe({"right_key": [2, 3], "right_col": ["a", "c"]})
@@ -105,7 +104,60 @@ def test_left_join(df_module):
             "right_col": [np.nan, "a", "a"],
         }
     )
-    assert_frame_equal(joined, expected)
+    df_module.assert_frame_equal(joined, expected)
 
-    # TODO: test joining on different types doesn't work
-    # TODO: check adding suffixes
+    # Renaming right col
+    right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
+    joined = _join_utils.left_join(
+        left,
+        right=right,
+        left_on="left_key",
+        right_on="right_key",
+        rename_right_cols="right.{}",
+    )
+    expected = df_module.make_dataframe(
+        {
+            "left_key": [1, 2, 2],
+            "left_col": [10, 20, 30],
+            "right.right_col": ["a", "b", "b"],
+        }
+    )
+    df_module.assert_frame_equal(joined, expected)
+
+    # Left not a df raises TypeError
+    with pytest.raises(
+        TypeError,
+        match=(
+            "`left` must be a pandas or polars dataframe, got <class 'numpy.ndarray'>."
+        ),
+    ):
+        joined = _join_utils.left_join(
+            np.array([1, 2]), right=right, left_on="left_key", right_on="right_key"
+        )
+
+    # Right not a df raises TypeError
+    with pytest.raises(
+        TypeError,
+        match=(
+            "`right` must be a pandas or polars dataframe, got <class 'numpy.ndarray'>."
+        ),
+    ):
+        joined = _join_utils.left_join(
+            left, right=np.array([1, 2]), left_on="left_key", right_on="right_key"
+        )
+
+    # Joining on different types raises TypeError
+    try:
+        import polars as pl
+    except ImportError:
+        pytest.skip(reason="Polars not available.")
+
+    other_px = pd if df_module.module is pl else pl
+    right = other_px.DataFrame(left)
+
+    with pytest.raises(
+        TypeError, match=r"`left` and `right` must be of the same dataframe type"
+    ):
+        joined = _join_utils.left_join(
+            left, right=right, left_on="left_key", right_on="right_key"
+        )
