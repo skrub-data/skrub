@@ -230,105 +230,46 @@ def _get_new_name(suggested_name, forbidden_names):
     return f"{untagged_name}__skrub_{token}__"
 
 
+def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
+    # TODO -- replace AssertionErrors with exceptions with appropriate type &
+    # message
+    assert sbd.is_dataframe(left)
+    assert sbd.is_dataframe(right)
+    assert sbd.dataframe_module_name(left) == sbd.dataframe_module_name(right)
+
+    left_cols = sbd.column_names(left)
+    original_right_cols = sbd.column_names(right)
+    right_cols = map(_utils.renaming_func(rename_right_cols), original_right_cols)
+    right_cols = pick_column_names(right_cols , forbidden_names=left_cols)
+    renaming = dict(zip(original_right_cols, right_cols))
+    right = sbd.set_column_names(right, right_cols)
+    if isinstance(right_on, str):
+        right_on = renaming[right_on]
+        right_on_selector = s.cols(right_on)
+    else:
+        right_on = tuple(renaming[c] for c in right_on)
+        right_on_selector = s.cols(*right_on)
+    joined = _do_left_join(left, right, left_on, right_on)
+    joined = s.select(joined, ~right_on_selector)
+    return joined
+
+
 @dispatch
-def left_join(
-    left,
-    right,
-    left_on,
-    right_on,
-):
+def _do_left_join(left, right, left_on, right_on):
     raise NotImplementedError()
 
 
-@left_join.specialize("pandas", argument_type="DataFrame")
-def _left_join_pandas(
-    left,
-    right,
-    left_on,
-    right_on,
-):
-    """Left join two :obj:`pandas.DataFrame`.
+@_do_left_join.specialize("pandas", argument_type="DataFrame")
+def _do_left_join_pandas(left, right, left_on, right_on):
+    return left.merge(right, left_on=left_on, right_on=right_on, how="left", suffixes=("", ""))
 
-    This function uses the ``dataframe.merge`` method from Pandas.
 
-    Parameters
-    ----------
-    left : pd.DataFrame
-        The left dataframe to left-join.
-
-    right : pd.DataFrame
-        The right dataframe to left-join.
-
-    left_on : str or Iterable[str]
-        Left keys to merge on.
-
-    right_on : str or Iterable[str]
-        Right keys to merge on.
-
-    Returns
-    -------
-    merged : pd.DataFrame,
-        The merged output.
-    """
-    if not (isinstance(left, pd.DataFrame) and isinstance(right, pd.DataFrame)):
-        raise TypeError(
-            "'left' and 'right' must be pandas dataframes, "
-            f"got {type(left)!r} and {type(right)!r}."
-        )
-
-    joined = left.merge(
-        right,
-        how="left",
-        left_on=left_on,
-        right_on=right_on,
+@_do_left_join.specialize("polars", argument_type="DataFrame")
+def _do_left_join_polars(left, right, left_on, right_on):
+    if "coalesce" in inspect.signature(left.join).parameters:
+        kw = {"coalesce": True}
+    else:
+        kw = {}
+    return left.join(
+        right, left_on=left_on, right_on=right_on, how="left", suffix="", **kw
     )
-
-    if left_on == right_on:
-        return joined
-    else:
-        return joined.drop(columns=right_on)
-
-
-@left_join.specialize("polars", argument_type="DataFrame")
-def _left_join_polars(left, right, left_on, right_on):
-    """Left join two :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
-
-    This function uses the ``dataframe.join`` method from Polars.
-
-    Note that the input dataframes type must agree: either both
-    Polars dataframes or both Polars lazyframes.
-
-    Mixing polars dataframe with lazyframe will raise an error.
-
-    Parameters
-    ----------
-    left : pl.DataFrame or pl.LazyFrame
-        The left dataframe of the left-join.
-
-    right : pl.DataFrame or pl.LazyFrame
-        The right dataframe of the left-join.
-
-    left_on : str or Iterable[str]
-        Left keys to merge on.
-
-    right_on : str or Iterable[str]
-        Right keys to merge on.
-
-    Returns
-    -------
-    merged : pl.DataFrame or pl.LazyFrame
-        The merged output.
-    """
-    is_dataframe = isinstance(left, pl.DataFrame) and isinstance(right, pl.DataFrame)
-    is_lazyframe = isinstance(left, pl.LazyFrame) and isinstance(right, pl.LazyFrame)
-    if is_dataframe or is_lazyframe:
-        if "coalesce" in inspect.signature(left.join).parameters:
-            kw = {"coalesce": True}
-        else:
-            kw = {}
-        return left.join(right, how="left", left_on=left_on, right_on=right_on, **kw)
-    else:
-        raise TypeError(
-            "'left' and 'right' must be polars dataframes or lazyframes, "
-            f"got {type(left)!r} and {type(right)!r}."
-        )
