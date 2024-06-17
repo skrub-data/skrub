@@ -232,7 +232,7 @@ def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
     Mixing types will raise an error.
 
     `rename_right_cols` can be used to format the right dataframe columns, e.g. use
-    "right_.{}" to rename all right cols with a leading "right_".
+    "right_.{}" to rename all right cols with a leading "right_.".
 
     If duplicate column names are found between renamed right cols and left cols,
     a __skrub_<random string>__ is added at the end of columns that would otherwise
