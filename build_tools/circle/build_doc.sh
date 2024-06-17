@@ -78,11 +78,9 @@ fi
 
 if [[ "$CIRCLE_BRANCH" =~ ^main$|^[0-9]+\.[0-9]+\.X$ && -z "$CI_PULL_REQUEST" ]]
 then
-    env_var=""
     make_args="build-doc"
 elif [[ "$build_type" =~ ^QUICK ]]
 then
-    env_var=""
     make_args="build-doc-quick"
 elif [[ "$build_type" =~ ^'BUILD: detected examples' ]]
 then
@@ -91,7 +89,6 @@ then
     export EXAMPLES_PATTERN="$pattern"
     make_args="build-doc"
 else
-    env_var=""
     make_args="build-doc"
 fi
 
@@ -103,12 +100,6 @@ fi
 # Install pixi
 curl -fsSL https://pixi.sh/install.sh | bash
 export PATH=/home/circleci/.pixi/bin:$PATH
-
-# if the env_var is not empty, we need to export it
-if [ -n "$env_var" ]
-then
-    export $env_var
-fi
 
 # The pipefail is requested to propagate exit code
 set -o pipefail && pixi run --frozen -e doc $make_args 2>&1 | tee ~/log.txt
