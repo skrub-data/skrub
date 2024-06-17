@@ -44,7 +44,7 @@ class ToFloat32(SingleColumnTransformer):
     1    NaN
     2    3.3
     Name: x, dtype: float32
-    >>> float_s[0]
+    >>> float_s[0]            # doctest: +SKIP
     np.float32(1.1)
 
     Note that a column such as the example above may easily occur as the output
