@@ -42,6 +42,37 @@ class LRUDict:
         return key in self.cache
 
 
+def unique_strings(values, is_null):
+    """Unique values, accounting for nulls.
+
+    This is like np.unique except
+    - it is only for 1d arrays of strings
+    - caller must pass a boolean array indicating which values are null: ``is_null``
+    - null values are considered to be the same as the empty string.
+
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from skrub._utils import unique_strings
+    >>> a = np.asarray(['paris', '', 'berlin', None, 'london'])
+    >>> values, idx = unique_strings(a, pd.isna(a))
+    >>> values
+    array(['', 'berlin', 'london', 'paris'], dtype=object)
+    >>> values[idx]
+    array(['paris', '', 'berlin', '', 'london'], dtype=object)
+    """
+    not_null_values = values[~is_null]
+    unique, idx = np.unique(not_null_values, return_inverse=True)
+    if not is_null.any():
+        return unique, idx
+    if not len(unique) or unique[0] != "":
+        unique = np.concatenate([[""], unique])
+        idx += 1
+    full_idx = np.empty(values.shape, dtype=idx.dtype)
+    full_idx[is_null] = 0
+    full_idx[~is_null] = idx
+    return unique, full_idx
+
+
 def check_input(X):
     """Check input with sklearn standards.
 

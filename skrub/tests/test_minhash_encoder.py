@@ -75,42 +75,44 @@ def test_encoder_params(generate_data, hashing, minmax_hash):
     assert y.shape == (len(X), 50)
 
 
-@pytest.mark.parametrize("missing", ["error", "zero_impute", "aaa"])
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
-def test_missing_values(df_module, missing, hashing):
+def test_missing_values(df_module, hashing):
     X = df_module.make_column(
-        "", ["Red", None, "green", "blue", "green", "green", "blue", None]
+        "",
+        [
+            "Red",
+            pd.NA if df_module.description == "pandas-nullable-dtypes" else np.nan,
+            "green",
+            "blue",
+            "green",
+            "green",
+            "blue",
+            None,
+        ],
     )
-    n = 3
-
-    encoder = MinHashEncoder(
-        n_components=n, hashing=hashing, minmax_hash=False, handle_missing=missing
-    )
+    encoder = MinHashEncoder(n_components=3, hashing=hashing, minmax_hash=False)
 
     if hashing == "aaa":
         with pytest.raises(ValueError, match=r"Got hashing="):
             encoder.fit_transform(X)
     else:
-        if missing == "error":
-            with pytest.raises(
-                ValueError, match=r"Found missing values in input data; set"
-            ):
-                encoder.fit_transform(X)
-        elif missing == "zero_impute":
-            y = encoder.fit_transform(X)
-            assert y["_0"][1] == 0.0
-        else:
-            with pytest.raises(ValueError, match=r"Got handle_missing="):
-                encoder.fit_transform(X)
-    return
+        y = encoder.fit_transform(X)
+        assert y["_0"][1] == 0.0
+        assert y["_0"][7] == 0.0
+        # non-regression for https://github.com/skrub-data/skrub/issues/921
+        assert sbd.is_null(X)[1]
+        assert sbd.is_null(X)[7]
 
 
-def test_missing_values_none(df_module):
+@pytest.mark.parametrize("hashing", ["fast", "murmur"])
+def test_missing_values_none(df_module, hashing):
     # Test that "None" is also understood as a missing value
-    a = df_module.make_column("", ["a", "b", None, ""])
+    a = df_module.make_column("", ["a", "  ", None, ""])
 
-    enc = MinHashEncoder()
+    enc = MinHashEncoder(hashing=hashing)
     d = enc.fit_transform(a)
+    assert d["_0"][0] != 0.0
+    assert d["_0"][1] != 0.0
     assert_array_equal(d["_0"][2], 0.0)
     assert_array_equal(d["_0"][3], 0.0)
 
@@ -199,11 +201,6 @@ def test_correct_arguments():
     # Write an incorrect value for the `hashing` argument
     with pytest.raises(ValueError, match=r"expected any of"):
         encoder = MinHashEncoder(n_components=3, hashing="incorrect")
-        encoder.fit_transform(X)
-
-    # Write an incorrect value for the `handle_missing` argument
-    with pytest.raises(ValueError, match=r"expected any of"):
-        encoder = MinHashEncoder(n_components=3, handle_missing="incorrect")
         encoder.fit_transform(X)
 
     # Use minmax_hash with murmur hashing

@@ -14,7 +14,7 @@ from . import _dataframe as sbd
 from ._fast_hash import ngram_min_hash
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._string_distances import get_unique_ngrams
-from ._utils import LRUDict
+from ._utils import LRUDict, unique_strings
 
 NoneType = type(None)
 
@@ -54,9 +54,6 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         might have some concern with its entropy.
     minmax_hash : bool, default=False
         If `True`, returns the min and max hashes concatenated.
-    handle_missing : {'error', 'zero_impute'}, default='zero_impute'
-        Whether to raise an error or encode missing values (NaN) with
-        vectors filled with zeros.
     n_jobs : int, optional
         The number of jobs to run in parallel.
         The hash computations for all unique elements are parallelized.
@@ -120,14 +117,12 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         ngram_range=(2, 4),
         hashing="fast",
         minmax_hash=False,
-        handle_missing="zero_impute",
         n_jobs=None,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
         self.hashing = hashing
         self.minmax_hash = minmax_hash
-        self.handle_missing = handle_missing
         self.n_jobs = n_jobs
 
     def _get_murmur_hash(self, string):
@@ -146,8 +141,8 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         """
         min_hashes = np.ones(self.n_components) * np.inf
         grams = get_unique_ngrams(string, self.ngram_range)
-        if len(grams) == 0:
-            grams = get_unique_ngrams(" Na ", self.ngram_range)
+        if string == "" or len(grams) == 0:
+            return np.zeros(self.n_components)
         for gram in grams:
             hash_array = np.array(
                 [
@@ -209,10 +204,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         res = np.zeros((len(batch), self.n_components))
         for i, string in enumerate(batch):
             if string not in self.hash_dict_:
-                if string == "NAN":  # true if x is a missing value
-                    self.hash_dict_[string] = np.zeros(self.n_components)
-                else:
-                    self.hash_dict_[string] = hash_func(string)
+                self.hash_dict_[string] = hash_func(string)
             res[i] = self.hash_dict_[string]
         return res
 
@@ -240,11 +232,6 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             raise ValueError(
                 f"Got hashing={self.hashing!r}, "
                 "but expected any of {'fast', 'murmur'}. "
-            )
-        if self.handle_missing not in ["error", "zero_impute"]:
-            raise ValueError(
-                f"Got handle_missing={self.handle_missing!r}, but expected "
-                "any of {'error', 'zero_impute'}. "
             )
         if self.minmax_hash and self.n_components % 2 != 0:
             raise ValueError(
@@ -278,21 +265,6 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
 
         X_values = sbd.to_numpy(X)
-        # Handle missing values
-        missing_mask = (
-            (sbd.is_null(X) | sbd.fill_nulls(X == "", True)).to_numpy().astype(bool)
-        )
-
-        if missing_mask.any():  # contains at least one missing value
-            if self.handle_missing == "error":
-                raise ValueError(
-                    "Found missing values in input data; set "
-                    "handle_missing='zero_impute' to encode with missing values"
-                )
-            elif self.handle_missing == "zero_impute":
-                # NANs will be replaced by zeroes in _compute_hash
-                X_values[missing_mask] = "NAN"
-
         if self.hashing == "fast":
             hash_func = self._get_fast_hash
         else:
@@ -300,8 +272,8 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             assert self.hashing == "murmur", self.hashing
             hash_func = self._get_murmur_hash
 
-        # Compute the hashes for unique values
-        unique_x, indices_x = np.unique(X_values, return_inverse=True)
+        is_null = sbd.to_numpy(sbd.is_null(X))
+        unique_x, indices_x = unique_strings(X_values, is_null)
         n_jobs = effective_n_jobs(self.n_jobs)
 
         # Compute the hashes in parallel on n_jobs batches
@@ -312,9 +284,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             )
             for idx_slice in gen_even_slices(len(unique_x), n_jobs)
         )
-
-        # Match the hashes of the unique value to the original values
-        X_out = np.concatenate(unique_x_trans)[indices_x].astype(np.float32)
+        X_out = np.concatenate(unique_x_trans, dtype="float32")[indices_x]
         names = self.get_feature_names_out()
         result = sbd.make_dataframe_like(X, dict(zip(names, X_out.T)))
         if (idx := sbd.index(X)) is not None:
