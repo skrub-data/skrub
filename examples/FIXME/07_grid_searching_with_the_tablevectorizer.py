@@ -62,9 +62,7 @@ pprint(tv.transformers_)
 
 from skrub import MinHashEncoder
 
-tv = TableVectorizer(
-    many_unique=MinHashEncoder(),
-)
+tv = TableVectorizer(many_unique=MinHashEncoder())
 tv.fit(X)
 
 pprint(tv.transformers_)

@@ -243,10 +243,7 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 
 from skrub import MinHashEncoder, ToCategorical
 
-vectorizer = TableVectorizer(
-    few_unique=ToCategorical(),
-    many_unique=MinHashEncoder(),
-)
+vectorizer = TableVectorizer(few_unique=ToCategorical(), many_unique=MinHashEncoder())
 pipeline = make_pipeline(
     vectorizer, HistGradientBoostingRegressor(categorical_features="from_dtype")
 )
