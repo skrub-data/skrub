@@ -3,6 +3,7 @@ import re
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_index_equal
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import FunctionTransformer
 
@@ -112,6 +113,6 @@ class ResetsIndex(BaseEstimator):
 def test_output_index(cols):
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
     transformer = OnSubFrame(ResetsIndex(), cols=cols)
-    assert transformer.fit_transform(df).index.tolist() == df.index.tolist()
+    assert_index_equal(transformer.fit_transform(df).index, df.index)
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
-    assert transformer.transform(df).index.tolist() == df.index.tolist()
+    assert_index_equal(transformer.transform(df).index, df.index)

@@ -270,7 +270,7 @@ def test_copy_index_non_pandas(all_dataframe_modules):
     assert ns.copy_index(a, b) is b
     assert ns.copy_index(b, a) is a
     if "polars" not in all_dataframe_modules:
-        pytest.skip()
+        pytest.skip(reason="polars not installed")
     b = all_dataframe_modules["polars"].example_column
     assert ns.copy_index(a, b) is b
     assert ns.copy_index(b, a) is a
