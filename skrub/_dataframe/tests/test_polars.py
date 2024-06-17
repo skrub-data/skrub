@@ -1,3 +1,5 @@
+import inspect
+
 import pandas as pd
 import pytest
 
@@ -27,7 +29,11 @@ else:
 
 def test_join():
     joined = join(left=main, right=main, left_on="movieId", right_on="movieId")
-    expected = main.join(main, on="movieId", how="left", coalesce=True)
+    if "coalesce" in inspect.signature(main.join).parameters:
+        kw = {"coalesce": True}
+    else:
+        kw = {}
+    expected = main.join(main, on="movieId", how="left", **kw)
     assert_frame_equal(joined, expected)
 
 
