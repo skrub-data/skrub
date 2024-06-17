@@ -104,8 +104,14 @@ fi
 curl -fsSL https://pixi.sh/install.sh | bash
 export PATH=/home/circleci/.pixi/bin:$PATH
 
+# if the env_var is not empty, we need to export it
+if [ -n "$env_var" ]
+then
+    export $env_var
+fi
+
 # The pipefail is requested to propagate exit code
-set -o pipefail && $env_var pixi run --frozen -e doc $make_args 2>&1 | tee ~/log.txt
+set -o pipefail && pixi run --frozen -e doc $make_args 2>&1 | tee ~/log.txt
 set +o pipefail
 
 affected_doc_paths() {
