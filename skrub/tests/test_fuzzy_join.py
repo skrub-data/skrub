@@ -21,9 +21,9 @@ def test_fuzzy_join(df_module, analyzer):
     """
     if df_module.name == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'.")
-    df1 = df_module.make_dataframe({"a1": ["ana", "lala", "nana et sana", np.NaN]})
+    df1 = df_module.make_dataframe({"a1": ["ana", "lala", "nana et sana", np.nan]})
     df2 = df_module.make_dataframe(
-        {"a2": ["anna", "lala et nana", "lana", "sana", np.NaN]}
+        {"a2": ["anna", "lala et nana", "lana", "sana", np.nan]}
     )
 
     df_joined = fuzzy_join(
@@ -107,9 +107,9 @@ def test_missing_keys(df_module):
         match=r"Must pass",
     ):
         fuzzy_join(a, b, left_on="col1", suffix="r", add_match_info=False)
-    left = df_module.make_dataframe({"a": ["aa", np.NaN, "bb"], "b": [1, 2, np.NaN]})
+    left = df_module.make_dataframe({"a": ["aa", np.nan, "bb"], "b": [1, 2, np.nan]})
     right = df_module.make_dataframe(
-        {"a": ["aa", "bb", np.NaN, "cc", "dd"], "c": [5, 6, 7, 8, np.NaN]}
+        {"a": ["aa", "bb", np.nan, "cc", "dd"], "c": [5, 6, 7, 8, np.nan]}
     )
     output = fuzzy_join(left, right, on="a", suffix="r", add_match_info=False)
     assert ns.shape(output) == (3, 4)
@@ -537,7 +537,7 @@ def test_missing_values(df_module):
     if df_module.name == "polars":
         pytest.xfail(reason="Polars DataFrame object has no attribute 'reset_index'.")
     a = df_module.make_dataframe({"col1": ["aaaa", "bbb", "ddd dd"], "col2": [1, 2, 3]})
-    b = df_module.make_dataframe({"col3": [np.NaN, "bbb", "ddd dd"], "col4": [1, 2, 3]})
+    b = df_module.make_dataframe({"col3": [np.nan, "bbb", "ddd dd"], "col4": [1, 2, 3]})
 
     with pytest.warns(UserWarning, match=r"merging on missing values"):
         c = fuzzy_join(a, b, left_on="col1", right_on="col3", add_match_info=False)

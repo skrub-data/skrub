@@ -40,11 +40,13 @@ Major changes
   learner that works well on tabular data. :pr:`926` by :user:`Jérôme Dockès
   <jeromedockes>`.
 
+Minor changes
+-------------
+
 * The minimum supported python version is now 3.9
   :pr:`939` by :user:`Jérôme Dockès <jeromedockes>`.
 
-Minor changes
--------------
+* Skrub supports numpy 2. :pr:`946` by :user:`Jérôme Dockès <jeromedockes>`.
 
 skrub release 0.1.0
 ===================
