@@ -23,16 +23,43 @@ _TREE_ENSEMBLE_CLASSES = (
 
 
 def tabular_learner(estimator, n_jobs=None):
-    """Get a simple machine-learning pipeline that should work well in many cases.
+    """Get a simple machine-learning pipeline for tabular data.
 
-    This function returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline` that
-    combines a :obj:`TableVectorizer`, a :obj:`~sklearn.impute.SimpleImputer`
-    if missing values are not handled by the provided ``estimator``, and
-    finally the ``estimator`` itself.
+    Scikit-learn estimators such as ``LogisticRegression()`` or
+    ``RandomForestClassifier()`` expect their input to be numeric arrays. They
+    do not accept heterogeneous dataframes containing complex data such as
+    datetimes or strings. Moreover, they do not always accept the input to
+    contain missing values. Therefore, some preprocessing must be applied to
+    dataframes before they are passed to an estimator.
 
-    This pipeline is simple but (depending on the chosen ``estimator``) should
-    provide a strong baseline for many learning problems. It can handle tabular
-    input and complex data such as categories, text or datetimes.
+    This function is given a scikit-learn ``estimator``, and creates a simple
+    pipeline which applies the necessary preprocessing to an input dataframe,
+    then passes the result to the provided ``estimator``. Thus,
+    ``tabular_learner`` returns a scikit-learn
+    :obj:`~sklearn.pipeline.Pipeline` with several steps:
+
+        - a :obj:`TableVectorizer` transforms the tabular data into numeric features.
+        - an optional :obj:`~sklearn.impute.SimpleImputer` imputes missing
+          values by their mean. This step is only added if the ``estimator``
+          does not support missing values. For example, scikit-learn's
+          :obj:`~sklearn.ensemble.RandomForestRegressor` handles missing values
+          itself, whereas :obj:`~sklearn.linear_model.Ridge` does not and thus
+          requires imputation.
+        - the last step is the provided ``estimator`` itself.
+
+    The exact parameters of the :obj:`TableVectorizer` are chosen depending on
+    the provided ``estimator``. For example, if the ``estimator`` is a tree
+    ensemble such as a :obj:`~sklearn.ensemble.RandomForestRegressor`,
+    categories are encoded with a `~sklearn.preprocessing.OrdinalEncoder`
+    because trees deal well with such an encoding. However, that choice would
+    not be appropriate for some other models (in particular linear models), so
+    when the ``estimator`` is not a tree ensemble,
+    `~sklearn.preprocessing.OneHotEncoder` is used rather than ordinal
+    encoding.
+
+    **Note:** ``tabular_learner`` is a recent addition and the heuristics used
+      to define an appropriate preprocessing based on the ``estimator`` are
+      likely to change and improve in future releases.
 
     Parameters
     ----------
@@ -61,14 +88,19 @@ def tabular_learner(estimator, n_jobs=None):
 
     We can easily get a default pipeline for classification or regression:
 
-    >>> tabular_learner('regressor')                # doctest: +SKIP
+    >>> tabular_learner('regressor')                # _doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
 
-    This pipeline can handle complex, tabular data:
+    >>> tabular_learner('classifier')                # _doctest: +SKIP
+    Pipeline(steps=[('tablevectorizer',
+                     TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
+                                     low_cardinality_transformer=ToCategorical())),
+                    ('histgradientboostingclassifier',
+                     HistGradientBoostingClassifier(categorical_features='from_dtype'))])
 
     >>> import pandas as pd
     >>> X = pd.DataFrame(
@@ -90,16 +122,32 @@ def tabular_learner(estimator, n_jobs=None):
     >>> model.predict(X)
     array([False, False, False, False])
 
+    If we pass ``estimator="regressor"``, the last step of the pipeline is a
+    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`. If we pass
+    ``estimator="classifier"``, it is a
+    :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`. Rather than using
+    the default estimator, we can provide our own:
+
+    >>> from sklearn.linear_model import Ridge
+    >>> model = tabular_learner(Ridge(solver='lsqr'))
+    >>> model.fit(X, y)
+    Pipeline(steps=[('tablevectorizer', TableVectorizer()),
+                    ('simpleimputer', SimpleImputer()),
+                    ('ridge', Ridge(solver='lsqr'))])
+
+
     By applying only the first pipeline step we can see the transformed data
     that is sent to the supervised estimator (see the :obj:`TableVectorizer`
     documentation for details):
 
-    >>> model.named_steps['tablevectorizer'].transform(X)   # doctest: +SKIP
+    >>> model.named_steps['tablevectorizer'].transform(X)   # _doctest: +SKIP
        last_visit_year  last_visit_month  ...  insulin_prescriptions  fasting_glucose
     0           2020.0               1.0  ...                    NaN             35.0
     1           2021.0               4.0  ...                   13.0            140.0
     2           2024.0              12.0  ...                    0.0             44.0
     3           2023.0               8.0  ...                   17.0            137.0
+    <BLANKLINE>
+    [4 rows x 10 columns]
 
     The default pipeline combines a :obj:`TableVectorizer` and a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` (or
@@ -149,6 +197,8 @@ def tabular_learner(estimator, n_jobs=None):
     1           2021.0               4.0  ...                   13.0            140.0
     2           2024.0              12.0  ...                    0.0             44.0
     3           2023.0               8.0  ...                   17.0            137.0
+    <BLANKLINE>
+    [4 rows x 10 columns]
 
     Moreover, as :obj:`~sklearn.linear_model.Ridge` does not handle missing
     values, a step was added to perform mean imputation. Therefore the data
