@@ -1,8 +1,10 @@
 from inspect import ismodule
 
+import numpy as np
 import pytest
 
-from skrub._utils import LRUDict, import_optional_dependency
+from skrub import _dataframe as sbd
+from skrub._utils import LRUDict, import_optional_dependency, unique_strings
 
 
 def test_lrudict():
@@ -17,6 +19,17 @@ def test_lrudict():
 
     for x in range(5):
         assert x not in dict_
+
+
+@pytest.mark.parametrize(
+    "values", [[], [None], ["", None], ["abc", "", None], [np.nan, "abc"]]
+)
+def test_unique_strings(df_module, values):
+    c = df_module.make_column("", values) if values else df_module.empty_column
+    is_null = sbd.to_numpy(sbd.is_null(c))
+    unique, idx = unique_strings(sbd.to_numpy(c), is_null)
+    assert list(unique) == sorted({s if isinstance(s, str) else "" for s in values})
+    assert list(unique[idx]) == [s if isinstance(s, str) else "" for s in values]
 
 
 def test_import_optional_dependency():

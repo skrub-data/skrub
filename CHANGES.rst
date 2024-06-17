@@ -36,11 +36,24 @@ Major changes
   It now has a ``key``` parameter that allows to join main and auxiliary tables that share
   the same column names. :pr:`876` by :user:`Théo Jolivet <TheooJ>`.
 
-* The minimum supported python version is now 3.9
-  :pr:`939` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Minor changes
 -------------
+
+* :class:`GapEncoder` and :class:`MinHashEncoder` used to modify their input
+  in-place, replacing missing values with a string. They no longer do so. Their
+  parameter `handle_missing` has been removed; now missing values are always
+  treated as the empty string.
+  :pr:`930` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The minimum supported python version is now 3.9
+  :pr:`939` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Skrub supports numpy 2. :pr:`946` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* :func:`~datasets.fetch_ken_embeddings` now add suffix even with the default
+  value for the parameter `pca_components`.
+  :pr:`956` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 skrub release 0.1.0
 ===================

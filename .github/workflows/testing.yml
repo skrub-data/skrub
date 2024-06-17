@@ -1,4 +1,4 @@
-name: 'build'
+name: 'test'
 
 on:
   push:
@@ -9,116 +9,69 @@ on:
       - '*'
   schedule:
     - cron: "30 2 * * *"
-      branches:
-        - "main"
 
 jobs:
-  check_skip:
-    runs-on: ubuntu-latest
-    outputs:
-      skip: ${{ steps.result_step.outputs.ci-skip }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - id: result_step
-        uses: mstachniuk/ci-skip@master
-        with:
-          commit-filter: '[skip ci];[ci skip];[skip github]'
-          commit-filter-separator: ';'
-
-  latest:
-    needs: check_skip
-    if: ${{ needs.check_skip.outputs.skip == 'false' }}
-    runs-on: ${{ matrix.os }}
+  test:
     strategy:
-        fail-fast: false
-        matrix:
-            os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-            python-version: ["3.9", "3.10", "3.11", "3.12"]
-            # Install the min or latest dependencies for skrub
-            # as defined in setup.cfg at [options.extra_require].
-            #
-            # Installing these extra dependencies will overwrite the already
-            # installed version defined at install_requires.
-            dependencies-version-type: ["minimal", "latest"]
-            include:
-              - os: "ubuntu-latest"
-                os-name: "Ubuntu"
-              - os: "macos-latest"
-                os-name: "MacOS"
-              - os: "windows-latest"
-                os-name: "Windows"
-              - dependencies-version: "dev"
-              - dependencies-version: "dev, pyarrow"
-                python-version: "3.11"
-              - dependencies-version: "dev, polars"
-                python-version: "3.11"
-              - dependencies-version: "dev, polars"
-                python-version: "3.12"
-              - dependencies-version: "dev, min-py39"
-                python-version: "3.10"
-                dependencies-version-type: "minimal"
-              - dependencies-version: "dev, min-py39"
-                python-version: "3.9"
-                dependencies-version-type: "minimal"
-    name: ${{ matrix.os-name }} with Python ${{ matrix.python-version }} and ${{ matrix.dependencies-version-type }} dependencies
-    defaults:
-      run:
-        shell: bash
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        environment: [
+            ci-py309-min-deps,
+            ci-py309-min-optional-deps,
+            ci-py312-latest-deps,
+            ci-py312-latest-optional-deps
+        ]
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
         with:
-            python-version: ${{ matrix.python-version }}
-        name: 'Setup python'
-      - shell: bash {0}
-        run: ./build_tools/github/install.sh
-        name: 'Install skrub'
-        env:
-          DEPS_VERSION: ${{ matrix.dependencies-version }}
-      - shell: bash {0}
-        run: |
-          cp $GITHUB_WORKSPACE/pyproject.toml .
-          $GITHUB_WORKSPACE/build_tools/github/test.sh
-        working-directory: ${{ runner.temp }}
-        name: 'Run tests'
-      - uses: codecov/codecov-action@v3
-        with:
-          directory: ${{ runner.temp }}
-          verbose: true
-        if: success()
-        name: 'Upload coverage to CodeCov'
+          pixi-version: v0.24.0
+          environments: ${{ matrix.environment }}
+          # we can freeze the environment and manually bump the dependencies to the
+          # latest version time to time.
+          frozen: true
 
-  run_nightly:
+      - name: Run tests
+        run: pixi run -e ${{ matrix.environment }} test -n 3
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.5.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: skrub-data/skrub
+
+  check_run_nightly:
     runs-on: ubuntu-latest
     outputs:
       run: ${{ github.event_name == 'schedule' || contains(steps.get_head_commit_message.outputs.COMMIT_MSG, '[deps nightly]') }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - id: get_head_commit_message
         name: get head commit message
         run: echo "COMMIT_MSG=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
 
-  nightly:
-    needs: run_nightly
-    if: ${{ needs.run_nightly.outputs.run == 'true' }}
+  test_against_nightly:
+    needs: check_run_nightly
+    if: ${{ needs.check_run_nightly.outputs.run == 'true' }}
     runs-on: ubuntu-latest
     name: test against nighlty dependencies
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
             python-version: "3.11"
         name: 'Setup python'
       - shell: bash {0}
-        run: ./build_tools/github/install.sh
-        name: 'Install skrub'
-        env:
-          INSTALL_NIGHTLY: "true"
-          DEPS_VERSION: "dev"
+        run: |
+          dev_anaconda_url=https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
+          pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url .
+          dev_arrow=https://pypi.fury.io/arrow-nightlies/
+          pip install --extra-index-url $dev_arrow --prefer-binary --pre .[optional]
+          pip install .[test]
+        name: 'Install skrub and nightly dependencies'
       - shell: bash {0}
-        run: ./build_tools/github/test.sh
+        run: pytest -vsl --cov=skrub --cov-report=xml skrub -n 3
         name: 'Run tests'

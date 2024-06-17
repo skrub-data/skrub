@@ -26,6 +26,7 @@ def test_not_implemented():
         "collect",
         "is_lazyframe",
         "pandas_convert_dtypes",
+        "is_column_list",
         "to_column_list",
         "reset_index",
         "index",
@@ -169,6 +170,23 @@ def test_concat_horizontal(df_module, example_data_dict):
     df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
     df = ns.concat_horizontal(df1, df2)
     assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
+
+
+def test_is_column_list(df_module):
+    assert ns.is_column_list([])
+    assert ns.is_column_list(())
+    assert ns.is_column_list(ns.to_column_list(df_module.example_dataframe))
+    assert ns.is_column_list(tuple(ns.to_column_list(df_module.example_dataframe)))
+    assert ns.is_column_list([df_module.example_column])
+
+    assert not ns.is_column_list(df_module.example_dataframe)
+    assert not ns.is_column_list(df_module.example_column)
+    assert not ns.is_column_list([df_module.example_dataframe])
+    assert not ns.is_column_list([np.ones(3)])
+    assert not ns.is_column_list(np.ones(3))
+    assert not ns.is_column_list(np.ones((3, 3)))
+    assert not ns.is_column_list((df_module.example_column for i in range(2)))
+    assert not ns.is_column_list({"col": df_module.example_column})
 
 
 def test_to_column_list(df_module, example_data_dict):

@@ -78,66 +78,31 @@ fi
 
 if [[ "$CIRCLE_BRANCH" =~ ^main$|^[0-9]+\.[0-9]+\.X$ && -z "$CI_PULL_REQUEST" ]]
 then
-    make_args="html"
+    make_args="build-doc"
 elif [[ "$build_type" =~ ^QUICK ]]
 then
-    make_args=html-noplot
+    make_args="build-doc-quick"
 elif [[ "$build_type" =~ ^'BUILD: detected examples' ]]
 then
     # pattern for examples to run is the last line of output
     pattern=$(echo "$build_type" | tail -n 1)
-    make_args="html EXAMPLES_PATTERN=$pattern"
+    export EXAMPLES_PATTERN="$pattern"
+    make_args="build-doc"
 else
-    make_args=html
+    make_args="build-doc"
 fi
-
-# Installing required system packages to support the rendering of math
-# notation in the HTML documentation
-sudo -E apt-get -yq update
-sudo -E apt-get -yq remove texlive-binaries --purge
-sudo -E apt-get -yq --no-install-suggests --no-install-recommends --force-yes \
-    install dvipng texlive-latex-base texlive-latex-extra \
-    texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended\
-    latexmk
 
 # deactivate circleci virtualenv and setup a miniconda env instead
 if [[ `type -t deactivate` ]]; then
   deactivate
 fi
 
-# Install dependencies with miniconda
-wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh \
-   -O miniconda.sh
-chmod +x miniconda.sh && bash ./miniconda.sh -b -p "miniconda"
-export PATH="miniconda/bin:$PATH"
-
-# Configure the conda environment and put it in the path using the
-# provided versions
-mamba create -n $CONDA_ENV_NAME --yes python="${PYTHON_VERSION:-*}" \
-  numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" \
-  pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx \
-  seaborn statsmodels pillow cython joblib pandas="${PANDAS_VERSION:-*}"
-#removed scikit learn from conda since it is installed from main after
-
-source activate testenv
-
-pip install .[doc]
-
-pip install scikit-learn
-
-# Build and install the project in dev mode
-python setup.py develop
-
-#if [[ "$CIRCLE_BRANCH" =~ ^main$ && -z "$CI_PULL_REQUEST" ]]
-#then
-#    # List available documentation versions if on default branch
-#    python build_tools/circle/list_versions.py > doc/versions.rst
-#fi
+# Install pixi
+curl -fsSL https://pixi.sh/install.sh | bash
+export PATH=/home/circleci/.pixi/bin:$PATH
 
 # The pipefail is requested to propagate exit code
-set -o pipefail && cd doc && make $make_args 2>&1 | tee ~/log.txt
-
-cd -
+set -o pipefail && pixi run --frozen -e doc $make_args 2>&1 | tee ~/log.txt
 set +o pipefail
 
 affected_doc_paths() {

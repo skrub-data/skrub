@@ -1,10 +1,159 @@
 [build-system]
-# Minimum requirements for the build system to execute.
-requires = [
-    "setuptools",
-    "wheel",
-]
+requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "skrub"
+version = "0.2.0.dev0"
+description = "Prepping tables for machine learning"
+authors = [
+    { name="Patricio Cerda", email="patricio.cerda@inria.fr"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
+]
+readme = "README.rst"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.23.5",
+    "packaging>=23.1",
+    "pandas>=1.5.3",
+    "scikit-learn>=1.2.1",
+    "scipy>=1.9.3",
+]
+
+[project.optional-dependencies]
+doc = [
+    "jupyterlite-sphinx",
+    "jupyterlite-pyodide-kernel",
+    "matplotlib",
+    "numpydoc",
+    "pydata-sphinx-theme",
+    "seaborn",
+    "sphinx",
+    "sphinx-copybutton",
+    "sphinx-gallery",
+    "sphinxext-opengraph",
+    "statsmodels",
+]
+lint = [
+    "black==23.3.0",
+    "ruff==0.4.8",
+    "pre-commit",
+]
+optional = [
+    "pyarrow",
+    "polars",
+]
+test = [
+    "numpydoc",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+]
+
+[project.urls]
+Homepage = "https://skrub-data.org/"
+Source = "https://github.com/skrub-data/skrub"
+Issues = "https://github.com/skrub-data/skrub/issues"
+
+[tool.setuptools]
+packages = ["skrub"]
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+
+[tool.pixi.dependencies]
+numpy = ">=1.23.5"
+packaging = ">=23.1"
+pandas = ">=1.5.3"
+scikit-learn = ">=1.2.1"
+scipy = ">=1.9.3"
+
+[tool.pixi.feature.doc.dependencies]
+jupyterlite-sphinx = "*"
+jupyterlite-pyodide-kernel = "*"
+matplotlib = "*"
+numpydoc = "*"
+pydata-sphinx-theme = "*"
+seaborn = "*"
+sphinx = "*"
+sphinx-copybutton = "*"
+sphinx-gallery = "*"
+sphinxext-opengraph = "*"
+statsmodels = "*"
+
+[tool.pixi.feature.lint.dependencies]
+black = "==23.3.0"
+ruff = "==0.4.8"
+pre-commit = "*"
+
+[tool.pixi.feature.optional.dependencies]
+pyarrow = "*"
+polars = "*"
+
+[tool.pixi.feature.test.dependencies]
+numpydoc = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+
+[tool.pixi.pypi-dependencies]
+skrub = { path = ".", editable = true }
+
+[tool.pixi.feature.min-dependencies.dependencies]
+numpy = "==1.23.5"
+pandas = "==1.5.3"
+scikit-learn = "==1.2.1"
+scipy = "==1.9.3"
+
+[tool.pixi.feature.min-optional-dependencies.dependencies]
+pyarrow = "==15.0.2"
+polars = "==0.20.15"
+
+[tool.pixi.feature.py309.dependencies]
+python = "~=3.9.0"
+
+[tool.pixi.feature.py310.dependencies]
+python = "~=3.10.0"
+
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+
+[tool.pixi.feature.doc.tasks]
+build-doc = { cmd = "make html", cwd = "doc" }
+build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
+clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
+
+[tool.pixi.feature.lint.tasks]
+lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
+
+[tool.pixi.feature.test.tasks]
+test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
+
+[tool.pixi.environments]
+lint = ["lint"]
+doc = ["optional", "doc"]
+test = ["test"]
+dev = ["optional", "doc", "lint", "test"]
+ci-py309-min-deps = ["py309", "min-dependencies", "test"]
+ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
+ci-py312-latest-deps = ["py312", "test"]
+ci-py312-latest-optional-deps = ["py312", "optional", "test"]
 
 [tool.black]
 line-length = 88
@@ -60,7 +209,6 @@ filterwarnings = [
     # Turn deprecation warnings into errors
     "error::FutureWarning",
     "error::DeprecationWarning",
-    "error::numpy.VisibleDeprecationWarning",
 
     # Ignore warning from np.in1d since the future behavior is already the desired
     # behavior. TODO remove when numpy min version >= 1.25.
