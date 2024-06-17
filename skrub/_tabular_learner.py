@@ -22,7 +22,7 @@ _TREE_ENSEMBLE_CLASSES = (
 )
 
 
-def table_learner(estimator, n_jobs=None):
+def tabular_learner(estimator, n_jobs=None):
     """Get a simple machine-learning pipeline that should work well in many cases.
 
     This function returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline` that
@@ -57,11 +57,11 @@ def table_learner(estimator, n_jobs=None):
 
     Examples
     --------
-    >>> from skrub import table_learner
+    >>> from skrub import tabular_learner
 
     We can easily get a default pipeline for classification or regression:
 
-    >>> table_learner('regressor')                # doctest: +SKIP
+    >>> tabular_learner('regressor')                # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
@@ -86,7 +86,7 @@ def table_learner(estimator, n_jobs=None):
     1  2021-04-01    metformin                    13              140
     2  2024-12-05  paracetamol                     0               44
     3  2023-08-10   gliclazide                    17              137
-    >>> model = table_learner('classifier').fit(X, y)
+    >>> model = tabular_learner('classifier').fit(X, y)
     >>> model.predict(X)
     array([False, False, False, False])
 
@@ -131,7 +131,7 @@ def table_learner(estimator, n_jobs=None):
     step will be added.
 
     >>> from sklearn.linear_model import Ridge
-    >>> model = table_learner(Ridge(solver='lsqr'))
+    >>> model = tabular_learner(Ridge(solver='lsqr'))
     >>> model.fit(X, y)
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer()),
@@ -178,12 +178,12 @@ def table_learner(estimator, n_jobs=None):
 
     if isinstance(estimator, str):
         if estimator == "classifier":
-            return table_learner(
+            return tabular_learner(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
         if estimator == "regressor":
-            return table_learner(
+            return tabular_learner(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
@@ -192,13 +192,13 @@ def table_learner(estimator, n_jobs=None):
         )
     if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
         raise TypeError(
-            "table_learner expects a scikit-learn estimator as its first"
+            "tabular_learner expects a scikit-learn estimator as its first"
             f" argument. Pass an instance of {estimator.__name__} rather than the class"
             " itself."
         )
     if not isinstance(estimator, BaseEstimator):
         raise TypeError(
-            "table_learner expects a scikit-learn estimator, 'regressor',"
+            "tabular_learner expects a scikit-learn estimator, 'regressor',"
             " or 'classifier' as its first argument."
         )
 

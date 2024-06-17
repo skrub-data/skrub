@@ -15,8 +15,8 @@ from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
 from ._select_cols import DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
-from ._table_learner import table_learner
 from ._table_vectorizer import TableVectorizer
+from ._tabular_learner import tabular_learner
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
 
@@ -27,7 +27,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
-    "table_learner",
+    "tabular_learner",
     "DatetimeEncoder",
     "ToDatetime",
     "Joiner",
