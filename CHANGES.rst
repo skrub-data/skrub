@@ -42,6 +42,8 @@ Major changes
 Minor changes
 -------------
 
+* Skrub supports numpy 2. :pr:`946` by :user:`Jérôme Dockès <jeromedockes>`.
+
 skrub release 0.1.0
 ===================
 
