@@ -359,7 +359,7 @@ class SimilarityEncoder(OneHotEncoder):
                 self.categories_.append(np.unique(Xi))
             else:
                 if self.handle_unknown == "error":
-                    valid_mask = np.in1d(Xi, self.categories[i])
+                    valid_mask = np.isin(Xi, self.categories[i])
                     if not np.all(valid_mask):
                         diff = np.unique(Xi[~valid_mask])
                         raise ValueError(
@@ -455,7 +455,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         for i in range(n_features):
             Xi = Xlist[i]
-            valid_mask = np.in1d(Xi, self.categories_[i])
+            valid_mask = np.isin(Xi, self.categories_[i])
 
             if not np.all(valid_mask):
                 if self.handle_unknown == "error":

@@ -2,9 +2,8 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors
+from . import _selectors, _utils
 from ._join_utils import pick_column_names
-from ._utils import renaming_func, transformer_output_type_error
 
 __all__ = ["OnSubFrame"]
 
@@ -153,17 +152,14 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
         passthrough_names = sbd.column_names(passthrough)
         if self._columns:
             self.transformer_ = clone(self.transformer)
-            if hasattr(self.transformer_, "set_output"):
-                df_module_name = sbd.dataframe_module_name(X)
-                self.transformer_.set_output(transform=df_module_name)
+            _utils.set_output(self.transformer_, X)
             transformed = self.transformer_.fit_transform(to_transform, y)
-            if not sbd.is_dataframe(transformed):
-                transformer_output_type_error(
-                    self.transformer_, to_transform, transformed
-                )
+            transformed = _utils.check_output(
+                self.transformer_, to_transform, transformed, allow_column_list=False
+            )
             suggested_names = sbd.column_names(transformed)
             suggested_names = list(
-                map(renaming_func(self.rename_columns), suggested_names)
+                map(_utils.renaming_func(self.rename_columns), suggested_names)
             )
             self._transformed_output_names = pick_column_names(
                 suggested_names, forbidden_names=passthrough_names
@@ -199,6 +195,9 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
         if not self._columns:
             return passthrough
         transformed = self.transformer_.transform(to_transform)
+        # we do not call `_utils.check_output` here, assuming that if the output
+        # had a correct type (e.g. polars dataframe) in `fit_transform` it will
+        # have the same (correct) type in `transform`.
         transformed = sbd.set_column_names(transformed, self._transformed_output_names)
         result = sbd.concat_horizontal(passthrough, transformed)
         result = sbd.copy_index(X, result)

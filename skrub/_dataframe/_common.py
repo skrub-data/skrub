@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import numpy as np
 import pandas as pd
@@ -33,6 +33,7 @@ __all__ = [
     "null_value_for",
     "all_null_like",
     "concat_horizontal",
+    "is_column_list",
     "to_column_list",
     "col",
     "collect",
@@ -315,12 +316,22 @@ def _concat_horizontal_polars(*dataframes):
     return pl.concat(dataframes, how="horizontal")
 
 
+def is_column_list(obj):
+    if not isinstance(obj, Sequence):
+        return False
+    if not len(obj):
+        return True
+    if is_column(obj[0]):
+        return True
+    return False
+
+
 def to_column_list(obj):
     if is_column(obj):
         return [obj]
     if is_dataframe(obj):
         return [col(obj, c) for c in column_names(obj)]
-    if not hasattr(obj, "__iter__") or (len(obj) and not is_column(next(iter(obj)))):
+    if not is_column_list(obj):
         raise TypeError("obj should be a DataFrame, a Column or a list of Columns.")
     return obj
 
