@@ -62,6 +62,9 @@ X = data[["city", "date.utc"]]
 
 X
 
+changes = 1
+
+
 ###############################################################################
 # We convert the dataframe date columns using |to_datetime|. Notice how
 # we don't need to specify the columns to convert.

@@ -56,6 +56,8 @@ dataset = fetch_employee_salaries()
 employees, salaries = dataset.X, dataset.y
 employees
 
+changes = 1
+
 ###############################################################################
 salaries
 
