@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
 
 import pandas as pd
+from sklearn.base import _fit_context
 from sklearn.utils.validation import check_is_fitted
+from sklearn.utils._param_validation import StrOptions
 
 try:
     import polars as pl
@@ -255,11 +257,18 @@ class DatetimeEncoder(SingleColumnTransformer):
     timezone used during ``fit`` and that we get the same result for "hour".
     """  # noqa: E501
 
+    _parameter_constraints = {
+        "resolution": [StrOptions(set(_TIME_LEVELS)), None],
+        "add_weekday": ["boolean"],
+        "add_total_seconds": ["boolean"],
+    }
+
     def __init__(self, resolution="hour", add_weekday=False, add_total_seconds=True):
         self.resolution = resolution
         self.add_weekday = add_weekday
         self.add_total_seconds = add_total_seconds
 
+    @_fit_context(prefer_skip_nested_validation=True)
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
 
@@ -277,7 +286,6 @@ class DatetimeEncoder(SingleColumnTransformer):
             The extracted features.
         """
         del y
-        self._check_params()
         if not sbd.is_any_date(column):
             raise RejectColumn(
                 f"Column {sbd.name(column)!r} does not have Date or Datetime dtype."
@@ -316,10 +324,3 @@ class DatetimeEncoder(SingleColumnTransformer):
             extracted = sbd.to_float32(extracted)
             all_extracted.append(extracted)
         return sbd.make_dataframe_like(column, all_extracted)
-
-    def _check_params(self):
-        allowed = _TIME_LEVELS + [None]
-        if self.resolution not in allowed:
-            raise ValueError(
-                f"'resolution' options are {allowed}, got {self.resolution!r}."
-            )
