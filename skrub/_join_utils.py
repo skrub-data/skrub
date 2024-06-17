@@ -227,9 +227,8 @@ def _get_new_name(suggested_name, forbidden_names):
 def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
     """Left join two dataframes of the same type.
 
-    The input dataframes type must agree: either both `left` and `right` need to be
-    :obj:`pandas.DataFrame`, :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
-    Mixing types will raise an error.
+    The input dataframes type must agree: both `left` and `right` need to be
+    pandas or polars dataframes. Mixing types will raise an error.
 
     `rename_right_cols` can be used to format the right dataframe columns, e.g. use
     "right_.{}" to rename all right cols with a leading "right_.".
@@ -240,20 +239,20 @@ def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
 
     Parameters
     ----------
-    left : pd.DataFrame or pl.DataFrame or pl.LazyFrame
+    left : dataframe
         The left dataframe of the left-join.
-    right : pd.DataFrame or pl.DataFrame or pl.LazyFrame
+    right : dataframe
         The right dataframe of the left-join.
-    left_on : str or Iterable[str]
+    left_on : str or iterable of str
         Left keys to merge on.
-    right_on : str or Iterable[str]
+    right_on : str or iterable of str
         Right keys to merge on.
-    rename_right_cols : str, optional
-        Formatting used to rename right cols, by default "{}".
+    rename_right_cols : str or callable, default="{}"
+        Formatting used to rename right cols.
 
     Returns
     -------
-    pd.DataFrame or pl.DataFrame or pl.LazyFrame
+    dataframe
         The joined output.
 
     Raises

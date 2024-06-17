@@ -121,7 +121,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    aux_table : :obj:`~pandas.DataFrame` or :obj:`~polars.DataFrame`
+    aux_table : dataframe
         The auxiliary table, which will be fuzzy-joined to the main table when
         calling `transform`.
     key : str or iterable of str, default=None
@@ -261,7 +261,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     def _check_ref_dist(self):
         if self.ref_dist not in _MATCHERS:
             raise ValueError(
-                f"`ref_dist` should be one of {list(_MATCHERS.keys())}, got"
+                f"'ref_dist' should be one of {list(_MATCHERS.keys())}, got"
                 f" {self.ref_dist!r}"
             )
         self._matching = _MATCHERS[self.ref_dist]()
@@ -271,7 +271,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : :obj:`~pandas.DataFrame` or :obj:`~polars.DataFrame`
+        X : dataframe
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
@@ -309,14 +309,14 @@ class Joiner(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : :obj:`~pandas.DataFrame` or :obj:`~polars.DataFrame`
+        X : dataframe
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
 
         Returns
         -------
-        :obj:`~pandas.DataFrame` or :obj:`~polars.DataFrame`
+        dataframe
             The final joined table.
         """
         del y
