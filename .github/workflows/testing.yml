@@ -17,7 +17,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
         environment: [
             ci-py309-min-deps,
-            ci-py309-min-optional-deps,
+            ci-py310-min-optional-deps,
             ci-py312-latest-deps,
             ci-py312-latest-optional-deps
         ]
