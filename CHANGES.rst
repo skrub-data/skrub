@@ -54,6 +54,10 @@ Minor changes
 
 * Skrub supports numpy 2. :pr:`946` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* :func:`~datasets.fetch_ken_embeddings` now add suffix even with the default
+  value for the parameter `pca_components`.
+  :pr:`956` by :user:`Guillaume Lemaitre <glemaitre>`.
+
 skrub release 0.1.0
 ===================
 
