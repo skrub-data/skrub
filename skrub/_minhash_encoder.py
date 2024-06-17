@@ -4,12 +4,8 @@ applying the MinHash method to n-gram decompositions of strings.
 """
 from __future__ import annotations
 
-from collections.abc import Callable, Collection
-from typing import Literal
-
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
-from numpy.typing import NDArray
 from sklearn.base import TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
 from sklearn.utils.validation import check_is_fitted
@@ -115,19 +111,17 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
     3 -1.975829e+09 -2.095000e+09 -1.530721e+09 -1.459183e+09 -1.580988e+09
     """
 
-    hash_dict_: LRUDict
-
-    _capacity: int = 2**10
+    _capacity = 2**10
 
     def __init__(
         self,
         *,
-        n_components: int = 30,
-        ngram_range: tuple[int, int] = (2, 4),
-        hashing: Literal["fast", "murmur"] = "fast",
-        minmax_hash: bool = False,
-        handle_missing: Literal["error", "zero_impute"] = "zero_impute",
-        n_jobs: int = None,
+        n_components=30,
+        ngram_range=(2, 4),
+        hashing="fast",
+        minmax_hash=False,
+        handle_missing="zero_impute",
+        n_jobs=None,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -136,7 +130,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         self.handle_missing = handle_missing
         self.n_jobs = n_jobs
 
-    def _get_murmur_hash(self, string: str) -> NDArray:
+    def _get_murmur_hash(self, string):
         """
         Encode a string using murmur hashing function.
 
@@ -150,7 +144,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         ndarray of shape (n_components, )
             The encoded string.
         """
-        min_hashes = np.ones(self.n_components) * np.infty
+        min_hashes = np.ones(self.n_components) * np.inf
         grams = get_unique_ngrams(string, self.ngram_range)
         if len(grams) == 0:
             grams = get_unique_ngrams(" Na ", self.ngram_range)
@@ -164,7 +158,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
-    def _get_fast_hash(self, string: str) -> NDArray:
+    def _get_fast_hash(self, string):
         """Encode a string with fast hashing function.
 
         Fast hashing supports both min_hash and minmax_hash encoding.
@@ -194,9 +188,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
                 ]
             )
 
-    def _compute_hash_batched(
-        self, batch: Collection[str], hash_func: Callable[[str], NDArray]
-    ) -> NDArray:
+    def _compute_hash_batched(self, batch, hash_func):
         """Function called to compute the hashes of a batch of strings.
 
         Check if the string is in the hash dictionary, if not, compute the hash
@@ -224,7 +216,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             res[i] = self.hash_dict_[string]
         return res
 
-    def fit(self, X, y=None) -> "MinHashEncoder":
+    def fit(self, X, y=None):
         """Fit the MinHashEncoder to `X`.
 
         In practice, just initializes a dictionary

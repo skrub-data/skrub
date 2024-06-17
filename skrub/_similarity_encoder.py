@@ -3,13 +3,11 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
-from typing import Literal
 
 import numpy as np
 import pandas as pd
 import sklearn
 from joblib import Parallel, delayed
-from numpy.typing import ArrayLike, NDArray
 from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
@@ -23,15 +21,15 @@ from ._string_distances import get_ngram_count, preprocess
 
 
 def _ngram_similarity_one_sample_inplace(
-    x_count_vector: NDArray,
-    vocabulary_count_matrix: NDArray,
-    str_x: str,
-    vocabulary_ngram_counts: NDArray,
-    se_dict: dict,
-    unq_X: NDArray,
-    i: int,
-    ngram_range: tuple[int, int],
-) -> None:
+    x_count_vector,
+    vocabulary_count_matrix,
+    str_x,
+    vocabulary_ngram_counts,
+    se_dict,
+    unq_X,
+    i,
+    ngram_range,
+):
     """
     Update inplace a dict of similarities between a string and a vocabulary
 
@@ -74,12 +72,12 @@ def _ngram_similarity_one_sample_inplace(
 
 def ngram_similarity_matrix(
     X,
-    cats: list[str],
-    ngram_range: tuple[int, int],
-    analyzer: Literal["word", "char", "char_wb"],
-    hashing_dim: int,
-    dtype: type = np.float64,
-) -> NDArray:
+    cats,
+    ngram_range,
+    analyzer,
+    hashing_dim,
+    dtype=np.float64,
+):
     """
     Similarity encoding for dirty categorical variables:
     Given two arrays of strings, returns the similarity encoding matrix
@@ -261,25 +259,17 @@ class SimilarityEncoder(OneHotEncoder):
           dtype=object)
     """
 
-    categories_: list[NDArray]
-    n_features_in_: int
-    drop_idx_: NDArray
-    vectorizers_: list[CountVectorizer]
-    vocabulary_count_matrices_: list[NDArray]
-    vocabulary_ngram_counts_: list[list[int]]
-    _infrequent_enabled: bool
-
     def __init__(
         self,
         *,
-        ngram_range: tuple[int, int] = (2, 4),
-        analyzer: Literal["word", "char", "char_wb"] = "char",
-        categories: Literal["auto"] | list[list[str]] = "auto",
-        dtype: type = np.float64,
-        handle_unknown: Literal["error", "ignore"] = "ignore",
-        handle_missing: Literal["error", ""] = "",
-        hashing_dim: int | None = None,
-        n_jobs: int | None = None,
+        ngram_range=(2, 4),
+        analyzer="char",
+        categories="auto",
+        dtype=np.float64,
+        handle_unknown="ignore",
+        handle_missing="",
+        hashing_dim=None,
+        n_jobs=None,
     ):
         super().__init__()
         self.categories = categories
@@ -298,7 +288,7 @@ class SimilarityEncoder(OneHotEncoder):
                     "'auto' or a list of prototypes. "
                 )
 
-    def fit(self, X: ArrayLike, y=None) -> "SimilarityEncoder":
+    def fit(self, X, y=None):
         """Fit the instance to `X`.
 
         Parameters
@@ -369,7 +359,7 @@ class SimilarityEncoder(OneHotEncoder):
                 self.categories_.append(np.unique(Xi))
             else:
                 if self.handle_unknown == "error":
-                    valid_mask = np.in1d(Xi, self.categories[i])
+                    valid_mask = np.isin(Xi, self.categories[i])
                     if not np.all(valid_mask):
                         diff = np.unique(Xi[~valid_mask])
                         raise ValueError(
@@ -422,7 +412,7 @@ class SimilarityEncoder(OneHotEncoder):
         self._n_features_outs = list(map(len, self.categories_))
         return self
 
-    def transform(self, X: ArrayLike, fast: bool = True) -> NDArray:
+    def transform(self, X, fast=True):
         """Transform `X` using specified encoding scheme.
 
         Parameters
@@ -465,7 +455,7 @@ class SimilarityEncoder(OneHotEncoder):
 
         for i in range(n_features):
             Xi = Xlist[i]
-            valid_mask = np.in1d(Xi, self.categories_[i])
+            valid_mask = np.isin(Xi, self.categories_[i])
 
             if not np.all(valid_mask):
                 if self.handle_unknown == "error":
@@ -498,9 +488,9 @@ class SimilarityEncoder(OneHotEncoder):
 
     def _ngram_similarity_fast(
         self,
-        X: list | NDArray,
-        col_idx: int,
-    ) -> NDArray:
+        X,
+        col_idx,
+    ):
         """
         Fast computation of ngram similarity.
 

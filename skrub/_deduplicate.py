@@ -2,12 +2,10 @@
 Implements deduplication based on clustering string distance matrices.
 """
 
-from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from numpy.typing import NDArray
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -15,10 +13,10 @@ from sklearn.metrics import silhouette_score
 
 
 def compute_ngram_distance(
-    unique_words: Sequence[str] | NDArray,
-    ngram_range: tuple[int, int] = (2, 4),
-    analyzer: str = "char_wb",
-) -> NDArray:
+    unique_words,
+    ngram_range=(2, 4),
+    analyzer="char_wb",
+):
     """Compute the condensed pair-wise n-gram distance between `unique_words`.
 
     Parameters
@@ -52,15 +50,13 @@ def compute_ngram_distance(
     return distance_mat
 
 
-def _get_silhouette_avg(Z: NDArray, n_clust: int, redundant_dist: NDArray) -> float:
+def _get_silhouette_avg(Z, n_clust, redundant_dist):
     labels = fcluster(Z, n_clust, criterion="maxclust")
     silhouette_avg = silhouette_score(redundant_dist, labels, metric="precomputed")
     return silhouette_avg
 
 
-def _guess_clusters(
-    Z: NDArray, distance_mat: NDArray, n_jobs: int | None = None
-) -> int:
+def _guess_clusters(Z, distance_mat, n_jobs=None):
     """Finds the number of clusters that maximize the silhouette score
     when clustering `distance_mat`.
 
@@ -88,10 +84,10 @@ def _guess_clusters(
 
 
 def _create_spelling_correction(
-    unique_words: Sequence[str] | NDArray[np.str_],
-    counts: Sequence[int] | NDArray[np.int_],
-    clusters: Sequence[int],
-) -> pd.Series:
+    unique_words,
+    counts,
+    clusters,
+):
     """
     Creates a pandas Series that map each cluster member to the most
     frequent cluster member. The assumption is that the most common spelling
@@ -115,8 +111,8 @@ def _create_spelling_correction(
         corrected spelling of each word as values.
     """
     count_series = pd.Series(counts, index=unique_words)
-    original_spelling: list[str] = []
-    corrected_spelling: list[str] = []
+    original_spelling = []
+    corrected_spelling = []
     for cluster in np.unique(clusters):
         sorted_spellings = (
             count_series.loc[clusters == cluster]

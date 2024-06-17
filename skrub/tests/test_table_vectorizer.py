@@ -514,7 +514,7 @@ def test_changing_types(X_train, X_test, expected_X_out):
     assert (X_out.dropna() == expected_X_out.dropna()).all().all()
 
 
-def test_changing_types_int_float() -> None:
+def test_changing_types_int_float():
     """
     The TableVectorizer shouldn't cast floats to ints
     even if only ints were seen during fit.
@@ -688,6 +688,8 @@ def test_accept_pipeline():
 )
 def test_clean_null_downcast_warning():
     # non-regression test for https://github.com/skrub-data/skrub/issues/894
+    if parse_version(sklearn.__version__) < parse_version("1.4"):
+        pytest.skip("polars not supported for old scikit-learn versions")
     pl = pytest.importorskip("polars")
     df = pl.DataFrame(dict(a=[0, 1], b=["a", "b"]))
     with warnings.catch_warnings():

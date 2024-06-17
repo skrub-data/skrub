@@ -1,13 +1,13 @@
 import collections
 import importlib
 import secrets
-from collections.abc import Hashable
-from typing import Any, Iterable
+from typing import Iterable
 
 import numpy as np
-from numpy.typing import NDArray
+import sklearn
 from sklearn.base import clone
 from sklearn.utils import check_array
+from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as sbd
 
@@ -18,11 +18,11 @@ class LRUDict:
     Using LRU eviction avoids memorizing a full dataset.
     """
 
-    def __init__(self, capacity: int):
+    def __init__(self, capacity):
         self.capacity = capacity
         self.cache = collections.OrderedDict()
 
-    def __getitem__(self, key: Hashable):
+    def __getitem__(self, key):
         try:
             value = self.cache.pop(key)
             self.cache[key] = value
@@ -30,7 +30,7 @@ class LRUDict:
         except KeyError:
             return -1
 
-    def __setitem__(self, key: Hashable, value: Any):
+    def __setitem__(self, key, value):
         try:
             self.cache.pop(key)
         except KeyError:
@@ -38,11 +38,11 @@ class LRUDict:
                 self.cache.popitem(last=False)
         self.cache[key] = value
 
-    def __contains__(self, key: Hashable):
+    def __contains__(self, key):
         return key in self.cache
 
 
-def check_input(X) -> NDArray:
+def check_input(X):
     """Check input with sklearn standards.
 
     Also converts X to a numpy array if not already.
@@ -69,7 +69,7 @@ def check_input(X) -> NDArray:
     return X_
 
 
-def import_optional_dependency(name: str, extra: str = ""):
+def import_optional_dependency(name, extra=""):
     """Import an optional dependency.
 
     By default, if a dependency is missing an ImportError with a nice
@@ -156,22 +156,80 @@ def repr_args(args, kwargs, defaults={}):
     )
 
 
-def transformer_output_type_error(transformer, transform_input, transform_output):
-    module = sbd.dataframe_module_name(transform_input)
+def set_output(transformer, X):
+    if not hasattr(transformer, "set_output"):
+        return
+    module_name = sbd.dataframe_module_name(X)
+    if module_name == "polars" and parse_version(sklearn.__version__) < parse_version(
+        "1.4"
+    ):
+        # TODO: remove when scikit-learn 1.3 support is dropped.
+        transformer.set_output(transform="pandas")
+    else:
+        transformer.set_output(transform=module_name)
+
+
+def check_output(
+    transformer, transform_input, transform_output, allow_column_list=True
+):
+    target_module = sbd.dataframe_module_name(transform_input)
+
+    def has_correct_module(obj):
+        return sbd.dataframe_module_name(obj) == target_module
+
+    if (
+        sbd.is_dataframe(transform_output)
+        and target_module == "polars"
+        and sbd.dataframe_module_name(transform_output) == "pandas"
+        and hasattr(transformer, "set_output")
+        and parse_version(sklearn.__version__) < parse_version("1.4")
+    ):
+        # TODO: remove when scikit-learn 1.3 support is dropped.
+        #
+        # For older scikit-learn versions that do not support
+        # `set_output(transform='polars')`, we fall back to using
+        # `set_output(transform='pandas')` and converting the output dataframe
+        # to polars ourselves.
+        # Therefore having pandas output when the input is polars is tolerated,
+        # when:
+        #   - the scikit-learn version is < 1.4
+        #   - and the transformer relies on the set_output API
+        #     (this implies that the output is a dataframe -- not a column or
+        #     list of columns).
+        # In all other cases having the output backed by the wrong dataframe
+        # library (e.g. pandas instead of polars) will result in an error.
+
+        # transform_input is a polars object so we know we can import it
+        import polars as pl
+
+        return pl.from_pandas(transform_output)
+    if sbd.is_dataframe(transform_output) and has_correct_module(transform_output):
+        return transform_output
+    if (
+        allow_column_list
+        and sbd.is_column(transform_output)
+        and has_correct_module(transform_output)
+    ):
+        return transform_output
+    if (
+        allow_column_list
+        and sbd.is_column_list(transform_output)
+        and (not len(transform_output) or has_correct_module(transform_output[0]))
+    ):
+        return transform_output
     message = (
         f"{transformer.__class__.__name__}.fit_transform returned a result of type"
-        f" {transform_output.__class__.__name__}, but a {module} DataFrame was"
+        f" {transform_output.__class__.__name__}, but a {target_module} DataFrame was"
         f" expected. If {transformer.__class__.__name__} is a custom transformer class,"
-        f" please make sure that the output is a {module} container when the input is a"
-        f" {module} container."
+        f" please make sure that the output is a {target_module} container when the"
+        f" input is a {target_module} container."
     )
     if not hasattr(transformer, "set_output"):
         message += (
-            f" One way of enabling a transformer to output {module} DataFrames is"
-            " inheriting from the sklearn.base.TransformerMixin class and defining the"
-            " 'get_feature_names_out' method. See"
-            " https://scikit-learn.org/stable/auto_examples/"
-            "miscellaneous/plot_set_output.html"
+            f" One way of enabling a transformer to output {target_module} DataFrames"
+            " is inheriting from the sklearn.base.TransformerMixin class and defining"
+            " the 'get_feature_names_out' method. See"
+            " https://scikit-learn.org/stable/auto_examples/miscellaneous/plot_set_output.html"
             " for details."
         )
     raise TypeError(message)

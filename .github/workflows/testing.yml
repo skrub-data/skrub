@@ -16,9 +16,9 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest, macos-12]
         environment: [
-            ci-py310-min-deps, ci-py311-min-deps,
-            ci-py310-min-optional-deps,
-            ci-py310-latest-deps, ci-py311-latest-deps, ci-py312-latest-deps,
+            ci-py309-min-deps,
+            ci-py309-min-optional-deps,
+            ci-py312-latest-deps,
             ci-py312-latest-optional-deps
         ]
     runs-on: ${{ matrix.os }}

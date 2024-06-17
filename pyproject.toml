@@ -10,11 +10,12 @@ authors = [
     { name="Patricio Cerda", email="patricio.cerda@inria.fr"},
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -22,7 +23,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 readme = "README.rst"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.23.5",
     "packaging>=23.1",
@@ -121,6 +122,9 @@ scipy = "==1.9.3"
 pyarrow = "*"
 polars = "==0.20.15"
 
+[tool.pixi.feature.py309.dependencies]
+python = "==3.9"
+
 [tool.pixi.feature.py310.dependencies]
 python = "==3.10"
 
@@ -146,11 +150,8 @@ lint = ["lint"]
 doc = ["doc"]
 test = ["test"]
 dev = ["optional", "doc", "lint", "test"]
-ci-py310-min-deps = ["py310", "min-dependencies", "test"]
-ci-py311-min-deps = ["py311", "min-dependencies", "test"]
-ci-py310-min-optional-deps = ["py310", "min-dependencies", "min-optional-dependencies", "test"]
-ci-py310-latest-deps = ["py310", "test"]
-ci-py311-latest-deps = ["py311", "test"]
+ci-py309-min-deps = ["py309", "min-dependencies", "test"]
+ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
 ci-py312-latest-deps = ["py312", "test"]
 ci-py312-latest-optional-deps = ["py312", "optional", "test"]
 

@@ -1,4 +1,4 @@
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,6 @@ __all__ = [
     #
     # Inspecting containers' type and module
     #
-    "skrub_namespace",
     "dataframe_module_name",
     "is_pandas",
     "is_polars",
@@ -34,6 +33,7 @@ __all__ = [
     "null_value_for",
     "all_null_like",
     "concat_horizontal",
+    "is_column_list",
     "to_column_list",
     "col",
     "collect",
@@ -91,34 +91,6 @@ __all__ = [
 #
 
 
-# TODO: skrub_namespace is temporary; all code in those modules should be moved
-# here or in the corresponding skrub modules and use the dispatch mechanism.
-
-
-@dispatch
-def skrub_namespace(obj):
-    """Return the skrub private module for a dataframe library.
-
-    Returns either ``skrub._dataframe._pandas`` or ``skrub._dataframe._polars``.
-    This is temporary until functions in those modules have moved elsewhere.
-    """
-    raise NotImplementedError()
-
-
-@skrub_namespace.specialize("pandas")
-def _skrub_namespace_pandas(obj):
-    from . import _pandas
-
-    return _pandas
-
-
-@skrub_namespace.specialize("polars")
-def _skrub_namespace_polars(obj):
-    from . import _polars
-
-    return _polars
-
-
 @dispatch
 def dataframe_module_name(obj):
     """Return the dataframe module this object belongs to: 'pandas' or 'polars'."""
@@ -147,7 +119,7 @@ def is_polars(obj):
 
 @dispatch
 def is_dataframe(obj):
-    """Return True if ``obj`` is a DataFrame or a LazyFrame"""
+    """Return True if ``obj`` is a DataFrame or a LazyFrame."""
     return False
 
 
@@ -156,19 +128,19 @@ def _is_dataframe_pandas(obj):
     return True
 
 
-@is_dataframe.specialize("polars", argument_type=["DataFrame", "LazyFrame"])
+@is_dataframe.specialize("polars", argument_type="DataFrame")
 def _is_dataframe_polars(obj):
     return True
 
 
 @dispatch
-def is_lazyframe(df):
-    """Return True if ``df`` is a polars LazyFrame"""
+def is_lazyframe(obj):
+    """Return True if ``obj`` is a polars LazyFrame."""
     return False
 
 
 @is_lazyframe.specialize("polars", argument_type="LazyFrame")
-def _is_lazyframe_polars_lazyframe(df):
+def _is_lazyframe_polars_lazyframe(obj):
     return True
 
 
@@ -243,13 +215,13 @@ def _to_pandas_polars(obj):
 
 
 @dispatch
-def make_dataframe_like(df, data):
-    """Create a dataframe from `data` using the module of `df`.
+def make_dataframe_like(obj, data):
+    """Create a dataframe from `data` using the module of `obj`.
 
     `data` can either be a dictionary {column_name: column} or a list of columns
     (with names).
 
-    `df` can either be a dataframe or a column, and it is only used for dispatch,
+    `obj` can either be a dataframe or a column, and it is only used for dispatch,
     i.e. to determine if the resulting dataframe should be a pandas or polars
     dataframe.
     """
@@ -257,29 +229,29 @@ def make_dataframe_like(df, data):
 
 
 @make_dataframe_like.specialize("pandas")
-def _make_dataframe_like_pandas(df, data):
+def _make_dataframe_like_pandas(obj, data):
     if isinstance(data, Mapping):
         return pd.DataFrame({k: reset_index(v) for k, v in data.items()}, copy=False)
     return pd.DataFrame({name(col): reset_index(col) for col in data}, copy=False)
 
 
 @make_dataframe_like.specialize("polars")
-def _make_dataframe_like_polars(df, data):
+def _make_dataframe_like_polars(obj, data):
     return pl.DataFrame(data)
 
 
 @dispatch
-def make_column_like(column, values, name):
+def make_column_like(obj, values, name):
     raise NotImplementedError()
 
 
 @make_column_like.specialize("pandas")
-def _make_column_like_pandas(column, values, name):
+def _make_column_like_pandas(obj, values, name):
     return pd.Series(data=values, name=name)
 
 
 @make_column_like.specialize("polars")
-def _make_column_like_polars(column, values, name):
+def _make_column_like_polars(obj, values, name):
     return pl.Series(values=values, name=name)
 
 
@@ -301,29 +273,29 @@ def _null_value_for_polars(obj):
 
 
 @dispatch
-def all_null_like(column, length=None, dtype=None, name=None):
+def all_null_like(col, length=None, dtype=None, name=None):
     raise NotImplementedError()
 
 
-@all_null_like.specialize("pandas")
-def _all_null_like_pandas(column, length=None, dtype=None, name=None):
+@all_null_like.specialize("pandas", argument_type="Column")
+def _all_null_like_pandas(col, length=None, dtype=None, name=None):
     if length is None:
-        length = len(column)
+        length = len(col)
     if dtype is None:
-        dtype = column.dtype
+        dtype = col.dtype
     if name is None:
-        name = column.name
-    return pd.Series(dtype=dtype, index=column.index, name=name)
+        name = col.name
+    return pd.Series(dtype=dtype, index=col.index, name=name)
 
 
-@all_null_like.specialize("polars")
-def _all_null_like_polars(column, length=None, dtype=None, name=None):
+@all_null_like.specialize("polars", argument_type="Column")
+def _all_null_like_polars(col, length=None, dtype=None, name=None):
     if length is None:
-        length = len(column)
+        length = len(col)
     if dtype is None:
-        dtype = column.dtype
+        dtype = col.dtype
     if name is None:
-        name = column.name
+        name = col.name
     return pl.Series(name, [None] * length, dtype=dtype)
 
 
@@ -343,12 +315,22 @@ def _concat_horizontal_polars(*dataframes):
     return pl.concat(dataframes, how="horizontal")
 
 
+def is_column_list(obj):
+    if not isinstance(obj, Sequence):
+        return False
+    if not len(obj):
+        return True
+    if is_column(obj[0]):
+        return True
+    return False
+
+
 def to_column_list(obj):
     if is_column(obj):
         return [obj]
     if is_dataframe(obj):
         return [col(obj, c) for c in column_names(obj)]
-    if not hasattr(obj, "__iter__") or (len(obj) and not is_column(next(iter(obj)))):
+    if not is_column_list(obj):
         raise TypeError("obj should be a DataFrame, a Column or a list of Columns.")
     return obj
 
@@ -358,12 +340,12 @@ def col(df, col_name):
     raise NotImplementedError()
 
 
-@col.specialize("pandas")
+@col.specialize("pandas", argument_type="DataFrame")
 def _col_pandas(df, col_name):
     return df[col_name]
 
 
-@col.specialize("polars")
+@col.specialize("polars", argument_type="DataFrame")
 def _col_polars(df, col_name):
     return df[col_name]
 
@@ -404,12 +386,12 @@ def name(col):
     raise NotImplementedError()
 
 
-@name.specialize("pandas")
+@name.specialize("pandas", argument_type="Column")
 def _name_pandas(col):
     return col.name
 
 
-@name.specialize("polars")
+@name.specialize("polars", argument_type="Column")
 def _name_polars(col):
     return col.name
 
@@ -419,12 +401,12 @@ def column_names(df):
     raise NotImplementedError()
 
 
-@column_names.specialize("pandas")
+@column_names.specialize("pandas", argument_type="DataFrame")
 def _column_names_pandas(df):
     return list(df.columns.values)
 
 
-@column_names.specialize("polars")
+@column_names.specialize("polars", argument_type="DataFrame")
 def _column_names_polars(df):
     return df.columns
 
@@ -434,29 +416,29 @@ def rename(col, new_name):
     raise NotImplementedError()
 
 
-@rename.specialize("pandas")
+@rename.specialize("pandas", argument_type="Column")
 def _rename_pandas(col, new_name):
     return col.rename(new_name)
 
 
-@rename.specialize("polars")
+@rename.specialize("polars", argument_type="Column")
 def _rename_polars(col, new_name):
     return col.rename(new_name)
 
 
 @dispatch
-def set_column_names(df, new_column_names):
+def set_column_names(df, new_col_names):
     raise NotImplementedError()
 
 
-@set_column_names.specialize("pandas")
-def _set_column_names_pandas(df, new_column_names):
-    return df.set_axis(new_column_names, axis=1)
+@set_column_names.specialize("pandas", argument_type="DataFrame")
+def _set_column_names_pandas(df, new_col_names):
+    return df.set_axis(new_col_names, axis=1)
 
 
-@set_column_names.specialize("polars")
-def _set_column_names_polars(df, new_column_names):
-    return df.rename(dict(zip(df.columns, new_column_names)))
+@set_column_names.specialize("polars", argument_type="DataFrame")
+def _set_column_names_polars(df, new_col_names):
+    return df.rename(dict(zip(df.columns, new_col_names)))
 
 
 @dispatch
@@ -491,18 +473,18 @@ def _index_pandas(obj):
 
 
 @dispatch
-def dtype(column):
+def dtype(col):
     raise NotImplementedError()
 
 
 @dtype.specialize("pandas", argument_type="Column")
-def _dtype_pandas(column):
-    return column.dtype
+def _dtype_pandas(col):
+    return col.dtype
 
 
 @dtype.specialize("polars", argument_type="Column")
-def _dtype_polars(column):
-    return column.dtype
+def _dtype_polars(col):
+    return col.dtype
 
 
 @dispatch
@@ -521,22 +503,22 @@ def _dtypes_polars(df):
 
 
 @dispatch
-def cast(column, dtype):
+def cast(col, dtype):
     raise NotImplementedError()
 
 
-@cast.specialize("pandas")
-def _cast_pandas(column, dtype):
-    if column.dtype == dtype:
-        return column
-    return column.astype(dtype)
+@cast.specialize("pandas", argument_type="Column")
+def _cast_pandas(col, dtype):
+    if col.dtype == dtype:
+        return col
+    return col.astype(dtype)
 
 
-@cast.specialize("polars")
-def _cast_polars(column, dtype):
-    if column.dtype == dtype:
-        return column
-    return column.cast(dtype)
+@cast.specialize("polars", argument_type="Column")
+def _cast_polars(col, dtype):
+    if col.dtype == dtype:
+        return col
+    return col.cast(dtype)
 
 
 @dispatch
@@ -565,232 +547,232 @@ def _pandas_convert_dtypes_pandas(obj):
 
 
 @dispatch
-def is_bool(column):
+def is_bool(col):
     raise NotImplementedError()
 
 
-@is_bool.specialize("pandas")
-def _is_bool_pandas(column):
-    if pd.api.types.is_object_dtype(column):
-        return pandas.api.types.is_bool_dtype(column.convert_dtypes())
-    return pandas.api.types.is_bool_dtype(column)
+@is_bool.specialize("pandas", argument_type="Column")
+def _is_bool_pandas(col):
+    if pd.api.types.is_object_dtype(col):
+        return pandas.api.types.is_bool_dtype(col.convert_dtypes())
+    return pandas.api.types.is_bool_dtype(col)
 
 
-@is_bool.specialize("polars")
-def _is_bool_polars(column):
-    return column.dtype == pl.Boolean
+@is_bool.specialize("polars", argument_type="Column")
+def _is_bool_polars(col):
+    return col.dtype == pl.Boolean
 
 
 @dispatch
-def is_numeric(column):
+def is_numeric(col):
     raise NotImplementedError()
 
 
-@is_numeric.specialize("pandas")
-def _is_numeric_pandas(column):
+@is_numeric.specialize("pandas", argument_type="Column")
+def _is_numeric_pandas(col):
     # polars and pandas disagree about whether Booleans are numbers
     return pandas.api.types.is_numeric_dtype(
-        column
-    ) and not pandas.api.types.is_bool_dtype(column)
+        col
+    ) and not pandas.api.types.is_bool_dtype(col)
 
 
-@is_numeric.specialize("polars")
-def _is_numeric_polars(column):
-    return column.dtype.is_numeric()
+@is_numeric.specialize("polars", argument_type="Column")
+def _is_numeric_polars(col):
+    return col.dtype.is_numeric()
 
 
 @dispatch
-def is_integer(column):
+def is_integer(col):
     raise NotImplementedError()
 
 
-@is_integer.specialize("pandas")
-def _is_integer_pandas(column):
-    return pd.api.types.is_integer_dtype(column)
+@is_integer.specialize("pandas", argument_type="Column")
+def _is_integer_pandas(col):
+    return pd.api.types.is_integer_dtype(col)
 
 
-@is_integer.specialize("polars")
-def _is_integer_polars(column):
-    return column.dtype.is_integer()
+@is_integer.specialize("polars", argument_type="Column")
+def _is_integer_polars(col):
+    return col.dtype.is_integer()
 
 
 @dispatch
-def is_float(column):
+def is_float(col):
     raise NotImplementedError()
 
 
-@is_float.specialize("pandas")
-def _is_float_pandas(column):
-    return pd.api.types.is_float_dtype(column)
+@is_float.specialize("pandas", argument_type="Column")
+def _is_float_pandas(col):
+    return pd.api.types.is_float_dtype(col)
 
 
-@is_float.specialize("polars")
-def _is_float_polars(column):
-    return column.dtype.is_float()
+@is_float.specialize("polars", argument_type="Column")
+def _is_float_polars(col):
+    return col.dtype.is_float()
 
 
 @dispatch
-def to_float32(column, strict=True):
+def to_float32(col, strict=True):
     raise NotImplementedError()
 
 
 @to_float32.specialize("pandas", argument_type="Column")
-def _to_float32_pandas(column, strict=True):
-    if not pd.api.types.is_numeric_dtype(column):
-        column = pd.to_numeric(column, errors="raise" if strict else "coerce")
-    if column.dtype == np.float32:
-        return column
-    return column.astype(np.float32)
+def _to_float32_pandas(col, strict=True):
+    if not pd.api.types.is_numeric_dtype(col):
+        col = pd.to_numeric(col, errors="raise" if strict else "coerce")
+    if col.dtype == np.float32:
+        return col
+    return col.astype(np.float32)
 
 
 @to_float32.specialize("polars", argument_type="Column")
-def _to_float32_polars(column, strict=True):
-    if column.dtype == pl.Float32:
-        return column
-    return column.cast(pl.Float32, strict=strict)
+def _to_float32_polars(col, strict=True):
+    if col.dtype == pl.Float32:
+        return col
+    return col.cast(pl.Float32, strict=strict)
 
 
 @dispatch
-def is_string(column):
+def is_string(col):
     raise NotImplementedError()
 
 
-@is_string.specialize("pandas")
-def _is_string_pandas(column):
-    if column.dtype == pd.StringDtype():
+@is_string.specialize("pandas", argument_type="Column")
+def _is_string_pandas(col):
+    if col.dtype == pd.StringDtype():
         return True
-    if not pd.api.types.is_object_dtype(column):
+    if not pd.api.types.is_object_dtype(col):
         return False
     if parse_version(pd.__version__) < parse_version("2.0.0"):
         # on old pandas versions
         # `pd.api.types.is_string_dtype(pd.Series([1, ""]))` is True
-        return column.convert_dtypes().dtype == pd.StringDtype()
-    return pandas.api.types.is_string_dtype(column[~column.isna()])
+        return col.convert_dtypes().dtype == pd.StringDtype()
+    return pandas.api.types.is_string_dtype(col[~col.isna()])
 
 
-@is_string.specialize("polars")
-def _is_string_polars(column):
-    return column.dtype == pl.String
+@is_string.specialize("polars", argument_type="Column")
+def _is_string_polars(col):
+    return col.dtype == pl.String
 
 
 @dispatch
-def to_string(column):
+def to_string(col):
     raise NotImplementedError()
 
 
-@to_string.specialize("pandas")
-def _to_string_pandas(column):
-    is_na = column.isna()
-    if not (is_pandas_object(column) and is_string(column)):
-        column = column.astype("str")
-        column[is_na] = np.nan
-        return column
+@to_string.specialize("pandas", argument_type="Column")
+def _to_string_pandas(col):
+    is_na = col.isna()
+    if not (is_pandas_object(col) and is_string(col)):
+        col = col.astype("str")
+        col[is_na] = np.nan
+        return col
     if not is_na.any():
-        return column
-    return column.fillna(np.nan)
+        return col
+    return col.fillna(np.nan)
 
 
-@to_string.specialize("polars")
-def _to_string_polars(column):
-    if column.dtype != pl.Object:
+@to_string.specialize("polars", argument_type="Column")
+def _to_string_polars(col):
+    if col.dtype != pl.Object:
         # Objects are mere passengers in polars dataframes and we can't do
         # anything with them; map_elements raises an exception.
-        return _cast_polars(column, pl.String)
-    return column.map_elements(str)
+        return _cast_polars(col, pl.String)
+    return col.map_elements(str)
 
 
 @dispatch
-def is_object(column):
+def is_object(col):
     raise NotImplementedError()
 
 
-@is_object.specialize("pandas")
-def _is_object_pandas(column):
-    return pandas.api.types.is_object_dtype(column)
+@is_object.specialize("pandas", argument_type="Column")
+def _is_object_pandas(col):
+    return pandas.api.types.is_object_dtype(col)
 
 
-@is_object.specialize("polars")
-def _is_object_polars(column):
-    return column.dtype == pl.Object
+@is_object.specialize("polars", argument_type="Column")
+def _is_object_polars(col):
+    return col.dtype == pl.Object
 
 
-def is_pandas_object(column):
-    return is_pandas(column) and is_object(column)
+def is_pandas_object(col):
+    return is_pandas(col) and is_object(col)
 
 
 @dispatch
-def is_any_date(column):
+def is_any_date(col):
     raise NotImplementedError()
 
 
-@is_any_date.specialize("pandas")
-def _is_any_date_pandas(column):
-    return pandas.api.types.is_datetime64_any_dtype(column)
+@is_any_date.specialize("pandas", argument_type="Column")
+def _is_any_date_pandas(col):
+    return pandas.api.types.is_datetime64_any_dtype(col)
 
 
-@is_any_date.specialize("polars")
-def _is_any_date_polars(column):
-    return column.dtype in (pl.Date, pl.Datetime)
+@is_any_date.specialize("polars", argument_type="Column")
+def _is_any_date_polars(col):
+    return col.dtype in (pl.Date, pl.Datetime)
 
 
 @dispatch
-def to_datetime(column, format, strict=True):
+def to_datetime(col, format, strict=True):
     raise NotImplementedError()
 
 
-@to_datetime.specialize("pandas")
-def _to_datetime_pandas(column, format, strict=True):
-    if _is_any_date_pandas(column):
-        return column
+@to_datetime.specialize("pandas", argument_type="Column")
+def _to_datetime_pandas(col, format, strict=True):
+    if _is_any_date_pandas(col):
+        return col
     errors = "raise" if strict else "coerce"
     utc = (format is None) or ("%z" in format)
-    return pd.to_datetime(column, format=format, errors=errors, utc=utc)
+    return pd.to_datetime(col, format=format, errors=errors, utc=utc)
 
 
-@to_datetime.specialize("polars")
-def _to_datetime_polars(column, format, strict=True):
-    if _is_any_date_polars(column):
-        return column
+@to_datetime.specialize("polars", argument_type="Column")
+def _to_datetime_polars(col, format, strict=True):
+    if _is_any_date_polars(col):
+        return col
     try:
         # avoid ChronoFormatWarning due to pandas and polars writing this
         # differently.
         format = format.replace(".%f", "%.f")
-        return column.str.to_datetime(format=format, strict=strict)
+        return col.str.to_datetime(format=format, strict=strict)
     except pl.ComputeError as e:
         raise ValueError("Failed to convert to datetime") from e
 
 
 @dispatch
-def is_categorical(column):
+def is_categorical(col):
     raise NotImplementedError()
 
 
-@is_categorical.specialize("pandas")
-def _is_categorical_pandas(column):
-    return isinstance(column.dtype, pd.CategoricalDtype)
+@is_categorical.specialize("pandas", argument_type="Column")
+def _is_categorical_pandas(col):
+    return isinstance(col.dtype, pd.CategoricalDtype)
 
 
-@is_categorical.specialize("polars")
-def _is_categorical_polars(column):
-    return column.dtype in (pl.Categorical, pl.Enum)
+@is_categorical.specialize("polars", argument_type="Column")
+def _is_categorical_polars(col):
+    return col.dtype in (pl.Categorical, pl.Enum)
 
 
 @dispatch
-def to_categorical(column):
+def to_categorical(col):
     raise NotImplementedError()
 
 
-@to_categorical.specialize("pandas")
-def _to_categorical_pandas(column):
-    return _cast_pandas(column, "category")
+@to_categorical.specialize("pandas", argument_type="Column")
+def _to_categorical_pandas(col):
+    return _cast_pandas(col, "category")
 
 
-@to_categorical.specialize("polars")
-def _to_categorical_polars(column):
-    if column.dtype in (pl.Categorical, pl.Enum):
-        return column
-    column = to_string(column)
-    return _cast_polars(column, pl.Categorical())
+@to_categorical.specialize("polars", argument_type="Column")
+def _to_categorical_polars(col):
+    if col.dtype in (pl.Categorical, pl.Enum):
+        return col
+    col = to_string(col)
+    return _cast_polars(col, pl.Categorical())
 
 
 #
@@ -800,71 +782,71 @@ def _to_categorical_polars(column):
 
 
 @dispatch
-def all(column):
+def all(col):
     raise NotImplementedError()
 
 
-@all.specialize("pandas")
-def _all_pandas(column):
-    return column.all()
+@all.specialize("pandas", argument_type="Column")
+def _all_pandas(col):
+    return col.all()
 
 
-@all.specialize("polars")
-def _all_polars(column):
-    return column.all()
+@all.specialize("polars", argument_type="Column")
+def _all_polars(col):
+    return col.all()
 
 
 @dispatch
-def any(column):
+def any(col):
     raise NotImplementedError()
 
 
-@any.specialize("pandas")
-def _any_pandas(column):
-    return column.any()
+@any.specialize("pandas", argument_type="Column")
+def _any_pandas(col):
+    return col.any()
 
 
-@any.specialize("polars")
-def _any_polars(column):
-    return column.any()
+@any.specialize("polars", argument_type="Column")
+def _any_polars(col):
+    return col.any()
 
 
 @dispatch
-def is_null(column):
+def is_null(col):
     raise NotImplementedError()
 
 
-@is_null.specialize("pandas")
-def _is_null_pandas(column):
-    return rename(column.isna(), name(column))
+@is_null.specialize("pandas", argument_type="Column")
+def _is_null_pandas(col):
+    return rename(col.isna(), name(col))
 
 
-@is_null.specialize("polars")
-def _is_null_polars(column):
-    if column.dtype.is_float():
-        return column.is_null() | column.is_nan()
-    return column.is_null()
+@is_null.specialize("polars", argument_type="Column")
+def _is_null_polars(col):
+    if col.dtype.is_float():
+        return col.is_null() | col.is_nan()
+    return col.is_null()
 
 
-def has_nulls(column):
-    return any(is_null(column))
+def has_nulls(col):
+    return any(is_null(col))
 
 
 @dispatch
-def drop_nulls(column):
+def drop_nulls(col):
     raise NotImplementedError()
 
 
-@drop_nulls.specialize("pandas")
-def _drop_nulls_pandas(column):
-    return column.dropna().reset_index(drop=True)
+@drop_nulls.specialize("pandas", argument_type="Column")
+def _drop_nulls_pandas(col):
+    return col.dropna().reset_index(drop=True)
 
 
-@drop_nulls.specialize("polars")
-def _drop_nulls_polars(column):
-    if column.dtype.is_float():
-        return column.drop_nulls().drop_nans()
-    return column.drop_nulls()
+@drop_nulls.specialize("polars", argument_type="Column")
+def _drop_nulls_polars(col):
+    if col.dtype.is_float():
+        return col.drop_nulls().drop_nans()
+    return col.drop_nulls()
 
 
 @dispatch
@@ -878,10 +860,10 @@ def _fill_nulls_pandas(obj, value):
 
 
 @fill_nulls.specialize("polars", argument_type="Column")
-def _fill_nulls_polars_column(column, value):
-    if column.dtype.is_float():
-        return column.fill_nan(value).fill_null(value)
-    return column.fill_null(value)
+def _fill_nulls_polars_col(col, value):
+    if col.dtype.is_float():
+        return col.fill_nan(value).fill_null(value)
+    return col.fill_null(value)
 
 
 @fill_nulls.specialize("polars", argument_type="DataFrame")
@@ -894,51 +876,51 @@ def _fill_nulls_polars_dataframe(df, value):
 
 
 @dispatch
-def n_unique(column):
+def n_unique(col):
     raise NotImplementedError()
 
 
-@n_unique.specialize("pandas")
-def _n_unique_pandas(column):
-    return column.nunique()
+@n_unique.specialize("pandas", argument_type="Column")
+def _n_unique_pandas(col):
+    return col.nunique()
 
 
-@n_unique.specialize("polars")
-def _n_unique_polars(column):
-    n = column.n_unique()
-    if column.is_null().any():
+@n_unique.specialize("polars", argument_type="Column")
+def _n_unique_polars(col):
+    n = col.n_unique()
+    if col.is_null().any():
         n -= 1
     return n
 
 
 @dispatch
-def unique(column):
+def unique(col):
     raise NotImplementedError()
 
 
-@unique.specialize("pandas")
-def _unique_pandas(column):
-    return pd.Series(column.dropna().unique()).rename(column.name)
+@unique.specialize("pandas", argument_type="Column")
+def _unique_pandas(col):
+    return pd.Series(col.dropna().unique()).rename(col.name)
 
 
-@unique.specialize("polars")
-def _unique_polars(column):
-    return column.unique().drop_nulls()
+@unique.specialize("polars", argument_type="Column")
+def _unique_polars(col):
+    return col.unique().drop_nulls()
 
 
 @dispatch
-def where(column, mask, other):
+def where(col, mask, other):
     raise NotImplementedError()
 
 
-@where.specialize("pandas")
-def _where_pandas(column, mask, other):
-    return column.where(mask, pd.Series(other))
+@where.specialize("pandas", argument_type="Column")
+def _where_pandas(col, mask, other):
+    return col.where(mask, pd.Series(other))
 
 
-@where.specialize("polars")
-def _where_polars(column, mask, other):
-    return column.zip_with(mask, pl.Series(other))
+@where.specialize("polars", argument_type="Column")
+def _where_polars(col, mask, other):
+    return col.zip_with(mask, pl.Series(other))
 
 
 @dispatch
@@ -957,30 +939,30 @@ def _sample_polars(obj, n, seed=None):
 
 
 @dispatch
-def head(df, n=5):
+def head(obj, n=5):
     raise NotImplementedError()
 
 
 @head.specialize("pandas")
-def _head_pandas(df, n=5):
-    return df.head(n=n)
+def _head_pandas(obj, n=5):
+    return obj.head(n=n)
 
 
 @head.specialize("polars")
-def _head_polars(df, n=5):
-    return df.head(n=n)
+def _head_polars(obj, n=5):
+    return obj.head(n=n)
 
 
 @dispatch
-def replace(column, old, new):
+def replace(col, old, new):
     raise NotImplementedError()
 
 
-@replace.specialize("pandas")
-def _replace_pandas(column, old, new):
-    return column.replace(old, new, regex=False)
+@replace.specialize("pandas", argument_type="Column")
+def _replace_pandas(col, old, new):
+    return col.replace(old, new, regex=False)
 
 
-@replace.specialize("polars")
-def _replace_polars(column, old, new):
-    return column.replace(old, new)
+@replace.specialize("polars", argument_type="Column")
+def _replace_polars(col, old, new):
+    return col.replace(old, new)

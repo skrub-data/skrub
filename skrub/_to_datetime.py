@@ -45,7 +45,7 @@ def _convert_time_zone(col, time_zone):
     raise NotImplementedError()
 
 
-@_convert_time_zone.specialize("pandas")
+@_convert_time_zone.specialize("pandas", argument_type="Column")
 def _convert_time_zone_pandas(col, time_zone):
     is_localized = _get_time_zone(col) is not None
     if is_localized:
@@ -60,7 +60,7 @@ def _convert_time_zone_pandas(col, time_zone):
             return col.dt.tz_localize("UTC").dt.tz_convert(time_zone)
 
 
-@_convert_time_zone.specialize("polars")
+@_convert_time_zone.specialize("polars", argument_type="Column")
 def _convert_time_zone_polars(col, time_zone):
     import polars as pl
 

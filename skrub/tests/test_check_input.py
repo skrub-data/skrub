@@ -53,11 +53,9 @@ def test_column_names_to_unique_strings():
     df = pd.DataFrame(np.ones((2, 4)), columns=["a", 0, "0", "a"])
     assert df.columns.tolist() == ["a", 0, "0", "a"]
     check = CheckInputDataFrame()
-    with (
-        pytest.warns(UserWarning, match="Some column names are not strings"),
-        pytest.warns(UserWarning, match="Found duplicated column names"),
-    ):
-        out = check.fit_transform(df)
+    with pytest.warns(UserWarning, match="Some column names are not strings"):
+        with pytest.warns(UserWarning, match="Found duplicated column names"):
+            out = check.fit_transform(df)
     assert out.shape == (2, 4)
     out_cols = out.columns.tolist()
     assert out_cols[:2] == ["a", "0"]

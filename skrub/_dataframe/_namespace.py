@@ -5,6 +5,9 @@ import pandas as pd
 import skrub._dataframe._pandas as skrub_pd
 import skrub._dataframe._polars as skrub_pl
 
+# TODO: _dataframe._namespace is temporary; all code in this module should be moved
+# elsewhere and use the dispatch mechanism.
+
 
 def is_pandas(dataframe):
     """Check whether the input is a Pandas dataframe.

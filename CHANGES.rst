@@ -36,8 +36,14 @@ Major changes
   It now has a ``key``` parameter that allows to join main and auxiliary tables that share
   the same column names. :pr:`876` by :user:`Théo Jolivet <TheooJ>`.
 
+
 Minor changes
 -------------
+
+* The minimum supported python version is now 3.9
+  :pr:`939` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Skrub supports numpy 2. :pr:`946` by :user:`Jérôme Dockès <jeromedockes>`.
 
 skrub release 0.1.0
 ===================

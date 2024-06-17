@@ -30,19 +30,19 @@ STR_NA_VALUES = [
 
 
 @dispatch
-def _trim_whitespace_only(column):
+def _trim_whitespace_only(col):
     raise NotImplementedError()
 
 
 @_trim_whitespace_only.specialize("pandas", argument_type="Column")
-def _trim_whitespace_only_pandas(column):
-    return column.replace(r"^\s*$", "", regex=True)
+def _trim_whitespace_only_pandas(col):
+    return col.replace(r"^\s*$", "", regex=True)
 
 
 @_trim_whitespace_only.specialize("polars", argument_type="Column")
-def _trim_whitespace_only_polars(column):
-    assert sbd.is_string(column), column.dtype
-    return column.str.replace(r"^\s*$", "", literal=False)
+def _trim_whitespace_only_polars(col):
+    assert sbd.is_string(col), col.dtype
+    return col.str.replace(r"^\s*$", "", literal=False)
 
 
 class CleanNullStrings(SingleColumnTransformer):
