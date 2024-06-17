@@ -84,14 +84,14 @@ def test_big_ken_embeddings():
 
 
 @pytest.mark.parametrize("pca_components", [None, 5])
-def test_ken_embedding_suffix(pca_components):
+@pytest.mark.parametrize("suffix", ["", "_aux"])
+def test_ken_embedding_suffix(pca_components, suffix):
     """Check that we always add the suffix to the columns names.
 
     Non-regression test for:
     https://github.com/skrub-data/skrub/issues/955
     """
     pytest.importorskip("pyarrow")
-    suffix = "_aux"
     embedding = fetch_ken_embeddings(
         search_types="game_designers",
         embedding_table_id="39254360",
