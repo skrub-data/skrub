@@ -63,7 +63,7 @@ pprint(tv.transformers_)
 from skrub import MinHashEncoder
 
 tv = TableVectorizer(
-    high_cardinality_transformer=MinHashEncoder(),
+    many_unique=MinHashEncoder(),
 )
 tv.fit(X)
 
@@ -117,7 +117,7 @@ from skrub import GapEncoder
 
 pipeline = make_pipeline(
     TableVectorizer(
-        high_cardinality_transformer=GapEncoder(),
+        many_unique=GapEncoder(),
         specific_transformers=[
             ("mh_dep_name", MinHashEncoder(), ["department_name"]),
         ],

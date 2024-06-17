@@ -169,12 +169,12 @@ def test_fit_default_transform():
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
 
-    low_cardinality_cols = ["str1", "str2", "cat1", "cat2"]
+    few_unique_cols = ["str1", "str2", "cat1", "cat2"]
     expected_transformers_types = {}
     for c in X.columns:
         if c in ["int", "float"]:
             expected_transformers_types[c] = "PassThrough"
-        elif c in low_cardinality_cols:
+        elif c in few_unique_cols:
             expected_transformers_types[c] = "OneHotEncoder"
         else:
             expected_transformers_types[c] = "GapEncoder"
@@ -248,10 +248,10 @@ X_tuples = [
 
 def passthrough_vectorizer():
     return TableVectorizer(
-        high_cardinality_transformer="passthrough",
-        low_cardinality_transformer="passthrough",
-        numeric_transformer="passthrough",
-        datetime_transformer="passthrough",
+        many_unique="passthrough",
+        few_unique="passthrough",
+        numeric="passthrough",
+        datetime="passthrough",
     )
 
 
@@ -374,8 +374,8 @@ inputs = [
 
 def test_handle_unknown_category():
     X = _get_clean_dataframe()
-    # Treat all columns as low cardinality
-    table_vec = TableVectorizer(cardinality_threshold=7).fit(X)
+    # Treat all columns as having few unique values
+    table_vec = TableVectorizer(n_unique_threshold=7).fit(X)
     X_unknown = pd.DataFrame(
         {
             "int": pd.Series([3, 1], dtype="int"),
@@ -423,7 +423,7 @@ def test_handle_unknown_category():
     [
         TableVectorizer(),
         TableVectorizer(
-            low_cardinality_transformer=MinHashEncoder(),
+            few_unique=MinHashEncoder(),
         ),
     ],
 )
@@ -506,7 +506,7 @@ def test_changing_types(X_train, X_test, expected_X_out):
     """
     table_vec = TableVectorizer(
         # only extract the total seconds
-        datetime_transformer=DatetimeEncoder(resolution=None)
+        datetime=DatetimeEncoder(resolution=None)
     )
     table_vec.fit(X_train)
     X_out = table_vec.transform(X_test)
@@ -536,8 +536,8 @@ def test_column_by_column():
         pytest.xfail("pandas is_string_dtype incorrect in old pandas")
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer(
-        high_cardinality_transformer=GapEncoder(n_components=2, random_state=0),
-        cardinality_threshold=4,
+        many_unique=GapEncoder(n_components=2, random_state=0),
+        n_unique_threshold=4,
     )
     X_trans = vectorizer.fit_transform(X)
     for col in X.columns:
@@ -551,7 +551,7 @@ def test_column_by_column():
 
 @skip_if_no_parallel
 @pytest.mark.parametrize(
-    "high_cardinality_transformer",
+    "many_unique",
     # The GapEncoder and the MinHashEncoder should be parallelized on all columns.
     # The OneHotEncoder should not be parallelized.
     [
@@ -560,11 +560,11 @@ def test_column_by_column():
         MinHashEncoder(n_components=2),
     ],
 )
-def test_parallelism(high_cardinality_transformer):
+def test_parallelism(many_unique):
     X = _get_clean_dataframe()
     params = dict(
-        high_cardinality_transformer=high_cardinality_transformer,
-        cardinality_threshold=4,
+        many_unique=many_unique,
+        n_unique_threshold=4,
     )
     vectorizer = TableVectorizer(**params)
     X_trans = vectorizer.fit_transform(X)
@@ -607,9 +607,9 @@ def test_pandas_sparse_array():
 def test_wrong_transformer():
     X = _get_clean_dataframe()
     with pytest.raises(ValueError):
-        TableVectorizer(high_cardinality_transformer="passthroughtypo").fit(X)
+        TableVectorizer(many_unique="passthroughtypo").fit(X)
     with pytest.raises(TypeError):
-        TableVectorizer(high_cardinality_transformer=None).fit(X)
+        TableVectorizer(many_unique=None).fit(X)
 
 
 invalid_tuples = [
@@ -678,7 +678,7 @@ def test_accept_pipeline():
     # non-regression test for https://github.com/skrub-data/skrub/issues/886
     # TableVectorizer used to force transformers to inherit from TransformerMixin
     df = pd.DataFrame(dict(a=[1.1, 2.2]))
-    tv = TableVectorizer(numeric_transformer=make_pipeline("passthrough"))
+    tv = TableVectorizer(numeric=make_pipeline("passthrough"))
     tv.fit(df)
 
 
@@ -718,5 +718,5 @@ def test_supervised_encoder(df_module):
     # of the defaults encoders do)
     X = df_module.make_dataframe({"a": [f"c_{i}" for _ in range(5) for i in range(4)]})
     y = np.random.default_rng(0).normal(size=sbd.shape(X)[0])
-    tv = TableVectorizer(low_cardinality_transformer=TargetEncoder())
+    tv = TableVectorizer(few_unique=TargetEncoder())
     tv.fit_transform(X, y)

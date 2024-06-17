@@ -14,7 +14,7 @@ from skrub import _join_utils, _utils
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import TableVectorizer
 
-DEFAULT_VECTORIZER = TableVectorizer(high_cardinality_transformer=MinHashEncoder())
+DEFAULT_VECTORIZER = TableVectorizer(many_unique=MinHashEncoder())
 DEFAULT_REGRESSOR = HistGradientBoostingRegressor()
 DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
 

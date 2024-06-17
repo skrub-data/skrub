@@ -85,9 +85,7 @@ X.head()
 # columns, and doesn't interact with numerical columns.
 from skrub import DatetimeEncoder, TableVectorizer
 
-table_vectorizer = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_weekday=True)
-)
+table_vectorizer = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True))
 X_date_encoded = table_vectorizer.fit_transform(X)
 X_date_encoded.head()
 
