@@ -76,7 +76,7 @@ This page lists all available functions and classes of `skrub`.
    :nosignatures:
    :caption: Easily creating a learning pipeline for tabular data
 
-   make_tabular_pipeline
+   table_learner
 
 
 .. raw:: html

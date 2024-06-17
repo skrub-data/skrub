@@ -22,23 +22,23 @@ _TREE_ENSEMBLE_CLASSES = (
 )
 
 
-def make_tabular_pipeline(predictor, n_jobs=None):
+def table_learner(estimator, n_jobs=None):
     """Get a simple machine-learning pipeline that should work well in many cases.
 
     This function returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline` that
     combines a :obj:`TableVectorizer`, a :obj:`~sklearn.impute.SimpleImputer`
-    if missing values are not handled by the provided ``predictor``, and
-    finally the ``predictor`` itself.
+    if missing values are not handled by the provided ``estimator``, and
+    finally the ``estimator`` itself.
 
-    This pipeline is simple but (depending on the chosen ``predictor``) should
+    This pipeline is simple but (depending on the chosen ``estimator``) should
     provide a strong baseline for many learning problems. It can handle tabular
     input and complex data such as categories, text or datetimes.
 
     Parameters
     ----------
-    predictor : str or scikit-learn estimator
+    estimator : str or scikit-learn estimator
         The estimator to use as the final step in the pipeline. Appropriate
-        choices are made for previous step depending on the ``predictor``. Can
+        choices are made for previous step depending on the ``estimator``. Can
         be the string ``"regressor"`` to use a
         :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or
         ``"classifier"`` to use a
@@ -53,15 +53,15 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     -------
     Pipeline
         A scikit-learn :obj:`~sklearn.pipeline.Pipeline` chaining some
-        preprocessing and the provided ``predictor``.
+        preprocessing and the provided ``estimator``.
 
     Examples
     --------
-    >>> from skrub import make_tabular_pipeline
+    >>> from skrub import table_learner
 
     We can easily get a default pipeline for classification or regression:
 
-    >>> make_tabular_pipeline('regressor')                # doctest: +SKIP
+    >>> table_learner('regressor')                # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
@@ -86,12 +86,12 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     1  2021-04-01    metformin                    13              140
     2  2024-12-05  paracetamol                     0               44
     3  2023-08-10   gliclazide                    17              137
-    >>> model = make_tabular_pipeline('classifier').fit(X, y)
+    >>> model = table_learner('classifier').fit(X, y)
     >>> model.predict(X)
     array([False, False, False, False])
 
     By applying only the first pipeline step we can see the transformed data
-    that is sent to the supervised predictor (see the :obj:`TableVectorizer`
+    that is sent to the supervised estimator (see the :obj:`TableVectorizer`
     documentation for details):
 
     >>> model.named_steps['tablevectorizer'].transform(X)   # doctest: +SKIP
@@ -131,7 +131,7 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     step will be added.
 
     >>> from sklearn.linear_model import Ridge
-    >>> model = make_tabular_pipeline(Ridge(solver='lsqr'))
+    >>> model = table_learner(Ridge(solver='lsqr'))
     >>> model.fit(X, y)
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer()),
@@ -176,47 +176,47 @@ def make_tabular_pipeline(predictor, n_jobs=None):
     else:
         cat_feat_kwargs = {"categorical_features": "from_dtype"}
 
-    if isinstance(predictor, str):
-        if predictor == "classifier":
-            return make_tabular_pipeline(
+    if isinstance(estimator, str):
+        if estimator == "classifier":
+            return table_learner(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
-        if predictor == "regressor":
-            return make_tabular_pipeline(
+        if estimator == "regressor":
+            return table_learner(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
         raise ValueError(
             "If ``predictor`` is a string it should be 'regressor' or 'classifier'."
         )
-    if isinstance(predictor, type) and issubclass(predictor, BaseEstimator):
+    if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
         raise TypeError(
-            "make_tabular_pipeline expects a scikit-learn estimator as its first"
-            f" argument. Pass an instance of {predictor.__name__} rather than the class"
+            "table_learner expects a scikit-learn estimator as its first"
+            f" argument. Pass an instance of {estimator.__name__} rather than the class"
             " itself."
         )
-    if not isinstance(predictor, BaseEstimator):
+    if not isinstance(estimator, BaseEstimator):
         raise TypeError(
-            "make_tabular_pipeline expects a scikit-learn estimator, 'regressor',"
+            "table_learner expects a scikit-learn estimator, 'regressor',"
             " or 'classifier' as its first argument."
         )
 
     if (
-        isinstance(predictor, _HGBT_CLASSES)
-        and getattr(predictor, "categorical_features", None) == "from_dtype"
+        isinstance(estimator, _HGBT_CLASSES)
+        and getattr(estimator, "categorical_features", None) == "from_dtype"
     ):
         vectorizer.set_params(
             low_cardinality_transformer=ToCategorical(),
             high_cardinality_transformer=MinHashEncoder(),
         )
-    elif isinstance(predictor, _TREE_ENSEMBLE_CLASSES):
+    elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         vectorizer.set_params(
             low_cardinality_transformer=OrdinalEncoder(),
             high_cardinality_transformer=MinHashEncoder(),
         )
-    if predictor._get_tags().get("allow_nan", False):
-        steps = (vectorizer, predictor)
+    if estimator._get_tags().get("allow_nan", False):
+        steps = (vectorizer, estimator)
     else:
-        steps = (vectorizer, SimpleImputer(), predictor)
+        steps = (vectorizer, SimpleImputer(), estimator)
     return make_pipeline(*steps)

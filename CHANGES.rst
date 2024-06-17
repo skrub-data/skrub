@@ -36,7 +36,7 @@ Major changes
   It now has a ``key``` parameter that allows to join main and auxiliary tables that share
   the same column names. :pr:`876` by :user:`Théo Jolivet <TheooJ>`.
 
-* :func:`make_tabular_pipeline` has been added to easily create a supervised
+* :func:`table_learner` has been added to easily create a supervised
   learner that works well on tabular data. :pr:`926` by :user:`Jérôme Dockès
   <jeromedockes>`.
 
