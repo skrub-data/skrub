@@ -147,8 +147,9 @@ def test_make_column_like(df_module, example_data_dict):
     )
     assert ns.dataframe_module_name(col) == df_module.name
 
-    col = df_module.make_column("name", [1, 2, 3])
-    df_module.assert_column_equal(col, ns.make_column_like(col, col, "name"))
+    col = df_module.make_column("old_name", [1, 2, 3])
+    expected = df_module.make_column("new_name", [1, 2, 3])
+    df_module.assert_column_equal(ns.make_column_like(col, col, "new_name"), expected)
 
 
 def test_null_value_for(df_module):
