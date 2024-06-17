@@ -89,7 +89,7 @@ then
     # pattern for examples to run is the last line of output
     pattern=$(echo "$build_type" | tail -n 1)
     env_var="EXAMPLES_PATTERN=$pattern"
-    make_args="build-doc
+    make_args="build-doc"
 else
     env_var=""
     make_args="build-doc"
