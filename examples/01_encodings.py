@@ -77,14 +77,14 @@ salaries
 
 from sklearn.model_selection import cross_validate
 
-from skrub import table_learner
+from skrub import tabular_learner
 
-model = table_learner("regressor")
+model = tabular_learner("regressor")
 results = cross_validate(model, employees, salaries)
 results["test_score"]
 
 # %%
-# The estimator returned by :obj:`table_learner` combines 2 steps:
+# The estimator returned by :obj:`tabular_learner` combines 2 steps:
 #
 # - a |TableVectorizer| to preprocess the dataframe and vectorize the features
 # - a supervised learner (by default a |HGBR|)
@@ -264,7 +264,7 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 # learner is built on top of decision trees, which is the case for the |HGBR|.
 #
 # The resulting pipeline is identical to the one produced by default by
-# :obj:`table_learner`.
+# :obj:`tabular_learner`.
 
 from skrub import MinHashEncoder, ToCategorical
 

@@ -38,28 +38,27 @@ def tabular_learner(estimator, n_jobs=None):
     ``tabular_learner`` returns a scikit-learn
     :obj:`~sklearn.pipeline.Pipeline` with several steps:
 
-        - a :obj:`TableVectorizer` transforms the tabular data into numeric features.
-        - an optional :obj:`~sklearn.impute.SimpleImputer` imputes missing
-          values by their mean. This step is only added if the ``estimator``
-          does not support missing values. For example, scikit-learn's
-          :obj:`~sklearn.ensemble.RandomForestRegressor` handles missing values
-          itself, whereas :obj:`~sklearn.linear_model.Ridge` does not and thus
-          requires imputation.
-        - the last step is the provided ``estimator`` itself.
+    - a :obj:`TableVectorizer` transforms the tabular data into numeric features.
+    - an optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
+      by their mean. This step is only added if the ``estimator`` does not
+      support missing values. For example, scikit-learn's
+      :obj:`~sklearn.ensemble.RandomForestRegressor` handles missing values
+      itself, whereas :obj:`~sklearn.linear_model.Ridge` does not and thus
+      requires imputation.
+    - the last step is the provided ``estimator`` itself.
 
     The exact parameters of the :obj:`TableVectorizer` are chosen depending on
-    the provided ``estimator``. For example, if the ``estimator`` is a tree
-    ensemble such as a :obj:`~sklearn.ensemble.RandomForestRegressor`,
-    categories are encoded with a `~sklearn.preprocessing.OrdinalEncoder`
-    because trees deal well with such an encoding. However, that choice would
-    not be appropriate for some other models (in particular linear models), so
-    when the ``estimator`` is not a tree ensemble,
-    `~sklearn.preprocessing.OneHotEncoder` is used rather than ordinal
-    encoding.
+    the provided ``estimator``. For example, if the ``estimator`` is a
+    :obj:`~sklearn.ensemble.RandomForestRegressor`, categories are encoded with
+    a :obj:`~sklearn.preprocessing.OrdinalEncoder` because trees deal well with
+    such an encoding. However, that choice would not be appropriate for some
+    other models (in particular linear models), so when the ``estimator`` is
+    not a tree ensemble, :obj:`~sklearn.preprocessing.OneHotEncoder` is used
+    rather than ordinal encoding.
 
-    **Note:** ``tabular_learner`` is a recent addition and the heuristics used
-      to define an appropriate preprocessing based on the ``estimator`` are
-      likely to change and improve in future releases.
+    **Note:** ``tabular_learner`` is a recent addition and the heuristics used to
+    define an appropriate preprocessing based on the ``estimator`` are likely
+    to change and improve in future releases.
 
     Parameters
     ----------
@@ -88,19 +87,21 @@ def tabular_learner(estimator, n_jobs=None):
 
     We can easily get a default pipeline for classification or regression:
 
-    >>> tabular_learner('regressor')                # _doctest: +SKIP
+    >>> tabular_learner('regressor')                # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
 
-    >>> tabular_learner('classifier')                # _doctest: +SKIP
+    >>> tabular_learner('classifier')                # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
+
+    This pipeline can be applied to rich tabular data:
 
     >>> import pandas as pd
     >>> X = pd.DataFrame(
@@ -118,6 +119,7 @@ def tabular_learner(estimator, n_jobs=None):
     1  2021-04-01    metformin                    13              140
     2  2024-12-05  paracetamol                     0               44
     3  2023-08-10   gliclazide                    17              137
+
     >>> model = tabular_learner('classifier').fit(X, y)
     >>> model.predict(X)
     array([False, False, False, False])
@@ -128,97 +130,64 @@ def tabular_learner(estimator, n_jobs=None):
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`. Rather than using
     the default estimator, we can provide our own:
 
-    >>> from sklearn.linear_model import Ridge
-    >>> model = tabular_learner(Ridge(solver='lsqr'))
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> model = tabular_learner(LogisticRegression())
     >>> model.fit(X, y)
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer()),
-                    ('ridge', Ridge(solver='lsqr'))])
-
+                    ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data
     that is sent to the supervised estimator (see the :obj:`TableVectorizer`
     documentation for details):
 
-    >>> model.named_steps['tablevectorizer'].transform(X)   # _doctest: +SKIP
+    >>> model.named_steps['tablevectorizer'].transform(X)   # doctest: +SKIP
        last_visit_year  last_visit_month  ...  insulin_prescriptions  fasting_glucose
     0           2020.0               1.0  ...                    NaN             35.0
     1           2021.0               4.0  ...                   13.0            140.0
     2           2024.0              12.0  ...                    0.0             44.0
     3           2023.0               8.0  ...                   17.0            137.0
-    <BLANKLINE>
-    [4 rows x 10 columns]
 
-    The default pipeline combines a :obj:`TableVectorizer` and a
-    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` (or
-    :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` for
-    classification).
+    The parameters of the :obj:`TableVectorizer` depend on the provided
+    ``estimator``.
 
-    The parameters of the :obj:`TableVectorizer` differ from the default ones:
-
-      - A :obj:`MinHashEncoder` is used as the
-        ``high_cardinality_transformer``. This encoder provides good
-        performance when the supervised estimator is based on a decision tree
-        or ensemble of trees, as is the case for the
-        :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`. Unlike the
-        default :obj:`GapEncoder`, the :obj:`MinHashEncoder` does not produce
-        interpretable features. However, it is much faster and uses less
-        memory.
-
-      - The ``low_cardinality_transformer`` does not one-hot encode features.
-        The :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` has built-in
-        support for categorical data which is more efficient than one-hot
-        encoding. Therefore the selected encoder, :obj:`ToCategorical`, simply
-        makes sure that those features have a categorical dtype so that the
-        :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` recognizes them
-        as such.
-
-    We can also choose which predictor (the final step in the pipeline) to use,
-    and appropriate choices will be made for the :obj:`TableVectorizer`. Moreover,
-    unless the predictor has built-in support for null values, an imputation
-    step will be added.
-
-    >>> from sklearn.linear_model import Ridge
-    >>> model = tabular_learner(Ridge(solver='lsqr'))
-    >>> model.fit(X, y)
+    >>> tabular_learner(LogisticRegression())
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer()),
-                    ('ridge', Ridge(solver='lsqr'))])
+                    ('logisticregression', LogisticRegression())])
 
-    Here, different choices were made for the :obj:`TableVectorizer` -- in
-    particular the categorical column ``"c"`` is one-hot encoded, because the
-    :obj:`~sklearn.linear_model.Ridge` regressor lacks the
-    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`'s built-in support
-    for categorical variables.
+    We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get
+    the default configuration of the ``TableVectorizer`` which is intended to
+    work well for a wide variety of downstream estimators. Moreover, as the
+    ``LogisticRegression`` cannot handle missing values, an imputation step is
+    added.
 
-    >>> model.named_steps['tablevectorizer'].transform(X)
-       last_visit_year  last_visit_month  ...  insulin_prescriptions  fasting_glucose
-    0           2020.0               1.0  ...                    NaN             35.0
-    1           2021.0               4.0  ...                   13.0            140.0
-    2           2024.0              12.0  ...                    0.0             44.0
-    3           2023.0               8.0  ...                   17.0            137.0
-    <BLANKLINE>
-    [4 rows x 10 columns]
+    On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`:
 
-    Moreover, as :obj:`~sklearn.linear_model.Ridge` does not handle missing
-    values, a step was added to perform mean imputation. Therefore the data
-    seen by the final predictor actually looks like this (note: scikit-learn
-    :obj:`~sklearn.pipeline.Pipeline` can be sliced to produce another
-    ``Pipeline`` containing only the specified steps):
+    >>> tabular_learner('classifier')
+    Pipeline(steps=[('tablevectorizer',
+                     TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
+                                     low_cardinality_transformer=ToCategorical())),
+                    ('histgradientboostingclassifier',
+                     HistGradientBoostingClassifier(categorical_features='from_dtype'))])
 
-    >>> model[:2].transform(X)
-    array([[2.0200000e+03, 1.0000000e+00, 2.0000000e+00, 1.5779232e+09,
-            0.0000000e+00, 0.0000000e+00, 0.0000000e+00, 1.0000000e+00,
-            1.0000000e+01, 3.5000000e+01],
-           [2.0210000e+03, 4.0000000e+00, 1.0000000e+00, 1.6172352e+09,
-            0.0000000e+00, 1.0000000e+00, 0.0000000e+00, 0.0000000e+00,
-            1.3000000e+01, 1.4000000e+02],
-           [2.0240000e+03, 1.2000000e+01, 5.0000000e+00, 1.7333568e+09,
-            0.0000000e+00, 0.0000000e+00, 1.0000000e+00, 0.0000000e+00,
-            0.0000000e+00, 4.4000000e+01],
-           [2.0230000e+03, 8.0000000e+00, 1.0000000e+01, 1.6916256e+09,
-            1.0000000e+00, 0.0000000e+00, 0.0000000e+00, 0.0000000e+00,
-            1.7000000e+01, 1.3700000e+02]], dtype=float32)
+
+    - A :obj:`MinHashEncoder` is used as the
+      ``high_cardinality_transformer``. This encoder provides good
+      performance when the supervised estimator is based on a decision tree
+      or ensemble of trees, as is the case for the
+      :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`. Unlike the
+      default :obj:`GapEncoder`, the :obj:`MinHashEncoder` does not produce
+      interpretable features. However, it is much faster and uses less
+      memory.
+
+    - The ``low_cardinality_transformer`` does not one-hot encode features.
+      The :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` has built-in
+      support for categorical data which is more efficient than one-hot
+      encoding. Therefore the selected encoder, :obj:`ToCategorical`, simply
+      makes sure that those features have a categorical dtype so that the
+      :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` recognizes them
+      as such.
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
