@@ -86,7 +86,8 @@ elif [[ "$build_type" =~ ^'BUILD: detected examples' ]]
 then
     # pattern for examples to run is the last line of output
     pattern=$(echo "$build_type" | tail -n 1)
-    make_args="build-doc -- EXAMPLES_PATTERN=$pattern"
+    export EXAMPLES_PATTERN="$pattern"
+    make_args="build-doc"
 else
     make_args="build-doc"
 fi
