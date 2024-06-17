@@ -1,7 +1,12 @@
 name: Run code format checks
+
 on:
+  push:
+    branches:
+      - "main"
   pull_request:
-  push: { branches: main }
+    branches:
+      - '*'
 
 jobs:
   run-pre-commit-checks:
@@ -9,13 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.24.0
+          frozen: true
 
-    - name: Install pre-commit setup
-      run: |
-        pip install pre-commit
-        pre-commit install
-
-    - name: Run checks
-      run: pre-commit run -v --all-files --show-diff-on-failure
+      - name: Run tests
+        run: pixi run -e lint lint
