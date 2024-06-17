@@ -43,6 +43,12 @@ Major changes
 Minor changes
 -------------
 
+* :class:`GapEncoder` and :class:`MinHashEncoder` used to modify their input
+  in-place, replacing missing values with a string. They no longer do so. Their
+  parameter `handle_missing` has been removed; now missing values are always
+  treated as the empty string.
+  :pr:`930` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * The minimum supported python version is now 3.9
   :pr:`939` by :user:`Jérôme Dockès <jeromedockes>`.
 
