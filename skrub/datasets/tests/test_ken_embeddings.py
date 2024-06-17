@@ -90,6 +90,7 @@ def test_ken_embedding_suffix(pca_components):
     Non-regression test for:
     https://github.com/skrub-data/skrub/issues/955
     """
+    pytest.importorskip("pyarrow")
     suffix = "_aux"
     embedding = fetch_ken_embeddings(
         search_types="game_designers",
