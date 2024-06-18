@@ -243,9 +243,9 @@ def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
         The left dataframe of the left-join.
     right : dataframe
         The right dataframe of the left-join.
-    left_on : str or iterable of str
+    left_on : str or list of str
         Left keys to merge on.
-    right_on : str or iterable of str
+    right_on : str or list of str
         Right keys to merge on.
     rename_right_cols : str or callable, default="{}"
         Formatting used to rename right cols.

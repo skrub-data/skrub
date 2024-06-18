@@ -124,14 +124,14 @@ class Joiner(TransformerMixin, BaseEstimator):
     aux_table : dataframe
         The auxiliary table, which will be fuzzy-joined to the main table when
         calling `transform`.
-    key : str or iterable of str, default=None
+    key : str or list of str, default=None
         The column names to use for both `main_key` and `aux_key` when they
         are the same. Provide either `key` or both `main_key` and `aux_key`.
-    main_key : str or iterable of str, default=None
+    main_key : str or list of str, default=None
         The column names in the main table on which the join will be performed.
         Can be a string if joining on a single column.
         If `None`, `aux_key` must also be `None` and `key` must be provided.
-    aux_key : str or iterable of str, default=None
+    aux_key : str or list of str, default=None
         The column names in the auxiliary table on which the join will
         be performed. Can be a string if joining on a single column.
         If `None`, `main_key` must also be `None` and `key` must be provided.

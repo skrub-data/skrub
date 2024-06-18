@@ -20,6 +20,7 @@ def fuzzy_join(
     add_match_info=False,
     drop_unmatched=False,
 ):
+    # TODO: change docstring
     """Fuzzy (approximate) join.
 
     Rows in the left table are joined to their closest match from the right
