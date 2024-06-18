@@ -79,7 +79,7 @@ def test_multiple_keys(df_module):
     df_module.assert_frame_equal(result, expected)
 
     joiner_list = Joiner(
-        aux_table=df2, aux_key="CA", main_key="Ca", add_match_info=False
+        aux_table=df2, main_key="Ca", aux_key="CA", add_match_info=False
     )
     result = joiner_list.fit_transform(df)
     df_module.assert_frame_equal(result, expected)
@@ -108,13 +108,14 @@ def test_pandas_aux_table_index(df_module):
     ]
 
 
-def test_wrong_ref_dist(df_module):
-    table = df_module.make_dataframe({"A": [1, 2]})
-    joiner = Joiner(table, key="A", ref_dist="wrong_ref_dist")
+def test_wrong_ref_dist(main_table, aux_table):
+    joiner = Joiner(
+        aux_table, main_key="Country", aux_key="country", ref_dist="wrong_ref_dist"
+    )
     with pytest.raises(
-        ValueError, match=r"('ref_dist' should be one of)*(got 'wrong_ref_dist')"
+        ValueError, match=r"('ref_dist' should be one of)*(Got 'wrong_ref_dist')"
     ):
-        joiner.fit(table)
+        joiner.fit(main_table)
 
 
 @pytest.mark.parametrize("max_dist", [np.inf, float("inf"), "inf", None])
@@ -123,3 +124,17 @@ def test_max_dist(main_table, aux_table, max_dist):
         aux_table, main_key="Country", aux_key="country", max_dist=max_dist
     ).fit(main_table)
     assert joiner.max_dist_ == np.inf
+
+
+def test_wrong_max_dist(main_table, aux_table):
+    joiner = Joiner(
+        aux_table, main_key="Country", aux_key="country", max_dist="wrong_max_dist"
+    )
+    with pytest.raises(
+        ValueError,
+        match=(
+            "'max_dist' should be an int, a float, `None` or `np.inf`. Got"
+            " 'wrong_max_dist'"
+        ),
+    ):
+        joiner.fit(main_table)
