@@ -248,7 +248,8 @@ def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
     right_on : str or list of str
         Right keys to merge on.
     rename_right_cols : str or callable, default="{}"
-        Formatting used to rename right cols.
+        Formatting used to rename right cols. If it is a callable, it should
+        accept strings as an argument. By default, no formatting is applied.
 
     Returns
     -------
