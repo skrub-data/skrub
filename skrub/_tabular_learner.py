@@ -171,6 +171,9 @@ def tabular_learner(estimator, n_jobs=None):
       makes sure that those features have a categorical dtype so that the
       :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` recognizes them
       as such.
+
+    - There is no missing-value imputation because the classifier has its own
+      (better) mechanism for dealing with missing values.
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):

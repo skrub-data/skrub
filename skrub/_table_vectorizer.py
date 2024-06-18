@@ -196,6 +196,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
         ``-1`` means using all processors.
 
+    See Also
+    --------
+    tabular_learner :
+        A function that accepts a scikit-learn estimator and creates a pipeline
+        combining a ``TableVectorizer``, optional missing value imputation and
+        the provided estimator.
+
     Attributes
     ----------
     transformers_ : dict
