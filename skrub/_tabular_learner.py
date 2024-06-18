@@ -92,7 +92,7 @@ def tabular_learner(estimator, n_jobs=None):
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
 
-    When requesting a ``'regressor'``, the last of the pipeline is set to a
+    When requesting a ``'regressor'``, the last step of the pipeline is set to a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`.
 
     >>> tabular_learner('classifier')
@@ -102,7 +102,7 @@ def tabular_learner(estimator, n_jobs=None):
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
 
-    When requesting a ``'classifier'``, the last of the pipeline is set to a
+    When requesting a ``'classifier'``, the last step of the pipeline is set to a
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`.
 
     This pipeline can be applied to rich tabular data:
