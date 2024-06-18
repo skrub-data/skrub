@@ -733,9 +733,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         result = self._transform(sbd.to_numpy(X), is_null)
         names = self.get_feature_names_out()
         result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
-        if (idx := sbd.index(X)) is not None:
-            # X and result are pandas dataframes
-            result = result.set_axis(idx, axis="index")
+        result = sbd.copy_index(X, result)
         return result
 
     def _check_input_type(self, X, err_type=RejectColumn):

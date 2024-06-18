@@ -1,0 +1,59 @@
+# Workflow to update lock files
+name: Update lock files
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * 1'
+
+# XXX Set the right permissions, per step??
+# Can we set read only at the global level here and then elevate to write for some steps?
+#permissions: read-all
+
+jobs:
+  update_lock_files:
+    if: github.repository == 'skrub-data/skrub'
+    runs-on: ubuntu-latest
+
+    strategy:
+      # if we have a matrix in the future, we don't want to stop the whole matrix if
+      # one job fails
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.24.0
+
+      - name: Update the pixi lock files
+        run: pixi update
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.BOT_GITHUB_TOKEN }}
+          push-to-fork: skrub-bot/skrub
+          commit-message: "Update CI lock files [doc build]"
+          committer: "Lock file bot <noreply@github.com>"
+          author: "Lock file bot <noreply@github.com>"
+          delete-branch: true
+          branch: auto-update-pixi-lock-file
+          title: ":lock: :robot: CI Update pixi lock file :lock: :robot:"
+          body: |
+            Update lock files.
+
+            ### Note
+            If the CI tasks fail, create a new branch based on this PR and add the required fixes to that branch.
+
+      - name: Check Pull Request
+        if: steps.cpr.outputs.pull-request-number != ''
+        run: |
+          echo "### :rocket: Pull-Request Summary" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
+          echo "The following lock files pull-request has been auto-generated:"
+          echo "- **PR** #${{ steps.cpr.outputs.pull-request-number }}" >> ${GITHUB_STEP_SUMMARY}
+          echo "- **URL** ${{ steps.cpr.outputs.pull-request-url }}" >> ${GITHUB_STEP_SUMMARY}
+          echo "- **Operation** [${{ steps.cpr.outputs.pull-request-operation }}]" >> ${GITHUB_STEP_SUMMARY}
+          echo "- **SHA** ${{ steps.cpr.outputs.pull-request-head-sha }}" >> ${GITHUB_STEP_SUMMARY}

@@ -287,9 +287,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         X_out = np.concatenate(unique_x_trans, dtype="float32")[indices_x]
         names = self.get_feature_names_out()
         result = sbd.make_dataframe_like(X, dict(zip(names, X_out.T)))
-        if (idx := sbd.index(X)) is not None:
-            # X and result are pandas dataframes
-            result = result.set_axis(idx, axis="index")
+        result = sbd.copy_index(X, result)
         return result
 
     def get_feature_names_out(self):

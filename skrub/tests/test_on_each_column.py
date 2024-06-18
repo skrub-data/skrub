@@ -1,7 +1,9 @@
 import re
 
 import numpy as np
+import pandas as pd
 import pytest
+from pandas.testing import assert_index_equal
 from sklearn.base import BaseEstimator
 
 from skrub import _dataframe as sbd
@@ -150,7 +152,13 @@ def test_empty_selection(df_module):
 def test_empty_output(df_module):
     mapper = OnEachColumn(Drop())
     out = mapper.fit_transform(df_module.example_dataframe)
-    df_module.assert_frame_equal(out, df_module.empty_dataframe)
+    if df_module.name == "pandas":
+        expected = df_module.empty_dataframe.set_axis(
+            df_module.example_dataframe.index, axis="index"
+        )
+    else:
+        expected = df_module.empty_dataframe
+    df_module.assert_frame_equal(out, expected)
     assert list(mapper.transformers_.keys()) == sbd.column_names(
         df_module.example_dataframe
     )
@@ -260,3 +268,20 @@ def test_wrong_transformer_output_type(all_dataframe_modules):
         OnEachColumn(NumpyOutput()).fit_transform(
             all_dataframe_modules["pandas-numpy-dtypes"].example_dataframe
         )
+
+
+class ResetsIndex(BaseEstimator):
+    def fit_transform(self, X, y=None):
+        return X.reset_index()
+
+    def transform(self, X):
+        return X.reset_index()
+
+
+@pytest.mark.parametrize("cols", [(), ("a",), ("a", "b")])
+def test_output_index(cols):
+    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
+    transformer = OnEachColumn(ResetsIndex(), cols=cols)
+    assert_index_equal(transformer.fit_transform(df).index, df.index)
+    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
+    assert_index_equal(transformer.transform(df).index, df.index)

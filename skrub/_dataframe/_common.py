@@ -46,6 +46,7 @@ __all__ = [
     "rename",
     "set_column_names",
     "reset_index",
+    "copy_index",
     "index",
     #
     # Inspecting dtypes and casting
@@ -455,6 +456,30 @@ def reset_index(obj):
 @reset_index.specialize("pandas")
 def _reset_index_pandas(obj):
     return obj.reset_index(drop=True)
+
+
+@dispatch
+def _set_index(obj, index):
+    return obj
+
+
+@_set_index.specialize("pandas")
+def _set_index_pandas(obj, index):
+    if index is None:
+        return obj
+    return obj.set_axis(index, axis="index")
+
+
+def copy_index(source, target):
+    """Copy index from source to target.
+
+    If both are pandas dataframes or series, returns a new object which is
+    identical to `target` but with the index of `source`. `target` itself is
+    not modified.
+
+    If either is not a pandas object, return `target` itself (unchanged).
+    """
+    return _set_index(target, index(source))
 
 
 @dispatch
