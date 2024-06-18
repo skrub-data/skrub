@@ -35,7 +35,7 @@ jobs:
         with:
           token: ${{ secrets.BOT_GITHUB_TOKEN }}
           push-to-fork: skrub-bot/skrub
-          commit-message: Update CI lock files [doc build]
+          commit-message: "Update CI lock files [doc build]"
           committer: "Lock file bot <noreply@github.com>"
           author: "Lock file bot <noreply@github.com>"
           delete-branch: true
