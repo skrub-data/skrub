@@ -215,5 +215,6 @@ def fuzzy_join(
         join = join[join["skrub_Joiner_match_accepted"]]
     if not add_match_info:
         # TODO: use selectors
+        # join = s.select(join, ~s.cols(Joiner.match_info_columns))
         join = join.drop(Joiner.match_info_columns, axis=1)
     return join
