@@ -234,7 +234,9 @@ def tabular_learner(estimator, n_jobs=None):
             low_cardinality_transformer=OrdinalEncoder(),
             high_cardinality_transformer=MinHashEncoder(),
         )
-    if estimator._get_tags().get("allow_nan", False):
+    if hasattr(estimator, "_get_tags") and estimator._get_tags().get(
+        "allow_nan", False
+    ):
         steps = (vectorizer, estimator)
     else:
         steps = (vectorizer, SimpleImputer(), estimator)
