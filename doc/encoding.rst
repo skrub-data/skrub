@@ -59,6 +59,17 @@ type of the final estimator.
      - Native support
      - :class:`~sklearn.impute.SimpleImputer`
 
+With tree-based models, the :obj:`MinHashEncoder` is used for high-cardinality
+categorical features. It does not provide interpretable features as the
+default :obj:`GapEncoder` but it is much faster. For low-cardinality, these models
+relies on either the native support of the model or the :obj:`OrdinalEncoder`.
+
+With linear models or unknown models, the default values of the different parameters
+are used. Therefore, the :obj:`GapEncoder` is used for high-cardinality categorical
+features and the :obj:`OneHotEncoder` for low-cardinality ones. If the final estimator
+does not support missing values, a :obj:`SimpleImputer` is added before the final
+estimator. Those choices are not optimal but they are methodologically safe.
+
 .. _dirty_categories:
 
 Encoding open-ended entries and dirty categories
