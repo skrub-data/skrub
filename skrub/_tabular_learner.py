@@ -25,9 +25,16 @@ _TREE_ENSEMBLE_CLASSES = (
 def tabular_learner(estimator, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
-    Given a scikit-learn ``estimator``, this function creates a machine-learning
-    pipeline that preprocesses tabular data to extract numeric features and
-    impute missing values if necessary, then applies the ``estimator``.
+    Given a scikit-learn ``estimator``, this function creates a
+    machine-learning pipeline that preprocesses tabular data to extract numeric
+    features and impute missing values if necessary, then applies the
+    ``estimator``.
+
+    Instead of an actual estimator, ``estimator`` can also be the string
+    ``'regressor'`` or ``'classifier'`` to use a
+    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or a
+    :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default
+    parameters.
 
     ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
     with several steps:
@@ -50,9 +57,9 @@ def tabular_learner(estimator, n_jobs=None):
     estimator : str or scikit-learn estimator
         The estimator to use as the final step in the pipeline. Appropriate
         choices are made for previous steps depending on the ``estimator``. Can
-        be the string ``"regressor"`` to use a
+        be the string ``'regressor'`` to use a
         :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or
-        ``"classifier"`` to use a
+        ``'classifier'`` to use a
         :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`.
 
     n_jobs : int, default=None
