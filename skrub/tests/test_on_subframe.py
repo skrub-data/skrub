@@ -1,7 +1,9 @@
 import re
 
 import numpy as np
+import pandas as pd
 import pytest
+from pandas.testing import assert_index_equal
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import FunctionTransformer
 
@@ -97,3 +99,20 @@ def test_wrong_transformer_output_type(all_dataframe_modules):
         OnSubFrame(NumpyOutput()).fit_transform(
             all_dataframe_modules["pandas-numpy-dtypes"].example_dataframe
         )
+
+
+class ResetsIndex(BaseEstimator):
+    def fit_transform(self, X, y=None):
+        return X.reset_index()
+
+    def transform(self, X):
+        return X.reset_index()
+
+
+@pytest.mark.parametrize("cols", [(), ("a",), ("a", "b")])
+def test_output_index(cols):
+    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
+    transformer = OnSubFrame(ResetsIndex(), cols=cols)
+    assert_index_equal(transformer.fit_transform(df).index, df.index)
+    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
+    assert_index_equal(transformer.transform(df).index, df.index)
