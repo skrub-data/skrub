@@ -71,14 +71,14 @@ def tabular_learner(estimator, n_jobs=None):
 
     We can easily get a default pipeline for classification or regression:
 
-    >>> tabular_learner('regressor')                # doctest: +SKIP
+    >>> tabular_learner('regressor')                             # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
 
-    >>> tabular_learner('classifier')                # doctest: +SKIP
+    >>> tabular_learner('classifier')                            # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
@@ -125,7 +125,7 @@ def tabular_learner(estimator, n_jobs=None):
     that is sent to the supervised estimator (see the :obj:`TableVectorizer`
     documentation for details):
 
-    >>> model.named_steps['tablevectorizer'].transform(X)   # doctest: +SKIP
+    >>> model.named_steps['tablevectorizer'].transform(X)            # doctest: +SKIP
        last_visit_year  last_visit_month  ...  insulin_prescriptions  fasting_glucose
     0           2020.0               1.0  ...                    NaN             35.0
     1           2021.0               4.0  ...                   13.0            140.0
@@ -148,7 +148,7 @@ def tabular_learner(estimator, n_jobs=None):
 
     On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`:
 
-    >>> tabular_learner('classifier')
+    >>> tabular_learner('classifier')                             # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
