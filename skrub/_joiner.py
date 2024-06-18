@@ -138,7 +138,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     suffix : str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it
         to avoid duplicate column names in the join.
-    max_dist : float, default=np.inf
+    max_dist : int, float, `None` or `np.inf`, default=`np.inf`
         Maximum acceptable (rescaled) distance between a row in the
         `main_table` and its nearest neighbor in the `aux_table`. Rows that
         are farther apart are not considered to match. By default, the distance
@@ -255,13 +255,18 @@ class Joiner(TransformerMixin, BaseEstimator):
             and self.max_dist == "inf"
         ):
             self.max_dist_ = np.inf
-        else:
+        elif isinstance(self.max_dist, int) or isinstance(self.max_dist, float):
             self.max_dist_ = self.max_dist
+        else:
+            raise ValueError(
+                "'max_dist' should be an int, a float, `None` or `np.inf`. Got"
+                f" {self.max_dist!r}"
+            )
 
     def _check_ref_dist(self):
         if self.ref_dist not in _MATCHERS:
             raise ValueError(
-                f"'ref_dist' should be one of {list(_MATCHERS.keys())}, got"
+                f"'ref_dist' should be one of {list(_MATCHERS.keys())}. Got"
                 f" {self.ref_dist!r}"
             )
         self._matching = _MATCHERS[self.ref_dist]()
