@@ -1,3 +1,5 @@
+import datetime
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -138,3 +140,30 @@ def test_wrong_max_dist(main_table, aux_table):
         ),
     ):
         joiner.fit(main_table)
+
+
+def test_missing_values(df_module):
+    df = df_module.make_dataframe({"A": [None, "hollywood", "beverly"]})
+    joiner = Joiner(df, key="A", suffix="_")
+    with pytest.xfail():
+        joiner.fit_transform(df)
+
+
+def test_fit_transform_numeric(df_module):
+    df = df_module.make_dataframe({"A": [4.5, 0.5, 1, -1.5]})
+    joiner = Joiner(df, key="A", suffix="_")
+    joiner.fit_transform(df)
+
+
+def test_fit_transform_datetimes(df_module):
+    values = [
+        datetime.datetime.fromisoformat(dt)
+        for dt in [
+            "2020-02-03T12:30:05",
+            "2021-03-15T00:37:15",
+            "2022-02-13T17:03:25",
+        ]
+    ]
+    df = df_module.make_dataframe({"A": values})
+    joiner = Joiner(df, key="A", suffix="_")
+    joiner.fit_transform(df)
