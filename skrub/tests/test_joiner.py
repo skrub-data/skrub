@@ -5,7 +5,6 @@ from numpy.testing import assert_array_equal
 
 from skrub import Joiner
 from skrub._dataframe import _common as ns
-from skrub._dataframe._testing_utils import assert_frame_equal
 
 
 @pytest.fixture
@@ -83,13 +82,13 @@ def test_multiple_keys(df_module):
     result = joiner_list.fit_transform(df)
 
     expected = ns.concat_horizontal(df, df2)
-    assert_frame_equal(result, expected)
+    df_module.assert_frame_equal(result, expected)
 
     joiner_list = Joiner(
         aux_table=df2, aux_key="CA", main_key="Ca", add_match_info=False
     )
     result = joiner_list.fit_transform(df)
-    assert_frame_equal(result, expected)
+    df_module.assert_frame_equal(result, expected)
 
 
 def test_pandas_aux_table_index():
