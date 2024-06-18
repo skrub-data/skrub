@@ -281,6 +281,11 @@ def fetch_ken_embeddings(
             )
             emb_final.append(emb_pca)
         else:
+            if suffix != "":
+                emb_extracts.columns = [
+                    col if col in ["Entity", "Type"] else col + suffix
+                    for col in emb_extracts.columns
+                ]
             emb_final.append(emb_extracts)
     emb_df = pd.concat(emb_final)
     emb_df["Entity"] = emb_df["Entity"].str[1:-1]
