@@ -93,8 +93,8 @@ results["test_score"]
 # capabilities of skrub's |TableVectorizer|.
 
 # %%
-# Encoding tabular data
-# ---------------------
+# More details on encoding tabular data
+# -------------------------------------
 
 from skrub import TableVectorizer
 
