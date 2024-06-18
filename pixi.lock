@@ -80,7 +80,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xz-5.2.6-h166bdaf_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -151,7 +151,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/xz-5.2.6-h775f41a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -222,7 +222,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/xz-5.2.6-h57fd34a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -300,7 +300,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h8a93ad2_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.40.33810-ha82c5b3_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vs2015_runtime-14.40.33810-h3bf8584_20.conda
@@ -356,13 +356,13 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/krb5-1.21.2-h659d440_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ld_impl_linux-64-2.40-hf3520f5_7.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libabseil-20240116.2-cxx17_h59595ed_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-15.0.2-h9102155_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-acero-15.0.2-hbabe93e_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-dataset-15.0.2-hbabe93e_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-flight-15.0.2-he07691f_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-flight-sql-15.0.2-he4f5ca8_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-gandiva-15.0.2-hc1954e9_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-substrait-15.0.2-he4f5ca8_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-15.0.2-h9102155_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-acero-15.0.2-hbabe93e_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-dataset-15.0.2-hbabe93e_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-flight-15.0.2-he07691f_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-flight-sql-15.0.2-he4f5ca8_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-gandiva-15.0.2-hc1954e9_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libarrow-substrait-15.0.2-he4f5ca8_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libblas-3.9.0-20_linux64_openblas.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libbrotlicommon-1.1.0-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libbrotlidec-1.1.0-hd590300_1.conda
@@ -388,7 +388,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libnl-3.9.0-hd590300_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libnsl-2.0.1-hd590300_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libopenblas-0.3.25-pthreads_h413a1c8_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/libparquet-15.0.2-hacf5a1f_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libparquet-15.0.2-hacf5a1f_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libprotobuf-4.25.3-h08a7969_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libre2-11-2023.09.01-h5a48ba9_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libsqlite-3.46.0-hde9e2c9_0.conda
@@ -411,7 +411,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pandas-1.5.3-py39h2ad29b5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.5.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/polars-0.20.15-py39h87fa3cb_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-15.0.2-py39h6f7bfa8_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-15.0.2-py39h647b7ea_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-8.2.2-pyhd8ed1ab_0.conda
@@ -447,7 +447,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_extensions-4.12.2-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ucx-1.16.0-h209287a_5.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xz-5.2.6-h166bdaf_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
@@ -490,13 +490,13 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/joblib-1.4.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/krb5-1.21.2-hb884880_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libabseil-20240116.2-cxx17_hc1bcbd7_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-15.0.2-hc2fafd7_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-acero-15.0.2-hf036a51_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-dataset-15.0.2-hf036a51_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-flight-15.0.2-hd834827_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-flight-sql-15.0.2-he1e86a1_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-gandiva-15.0.2-hfa04d5a_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-substrait-15.0.2-he1e86a1_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-15.0.2-hc2fafd7_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-acero-15.0.2-hf036a51_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-dataset-15.0.2-hf036a51_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-flight-15.0.2-hd834827_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-flight-sql-15.0.2-he1e86a1_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-gandiva-15.0.2-hfa04d5a_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/libarrow-substrait-15.0.2-he1e86a1_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libblas-3.9.0-20_osx64_openblas.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libbrotlicommon-1.1.0-h0dc2134_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libbrotlidec-1.1.0-h0dc2134_1.conda
@@ -519,7 +519,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libllvm16-16.0.6-hbedff68_3.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libnghttp2-1.58.0-h64cf6d3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libopenblas-0.3.25-openmp_hfef2a42_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/libparquet-15.0.2-h904a336_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/libparquet-15.0.2-h904a336_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libprotobuf-4.25.3-h4e4d658_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libre2-11-2023.09.01-h81f5012_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/libsqlite-3.46.0-h1b8f9f3_0.conda
@@ -540,7 +540,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pandas-1.5.3-py39hecff1ad_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.5.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/polars-0.20.15-py39hcc1e243_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-15.0.2-py39he3cc3af_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-15.0.2-py39ha632924_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-8.2.2-pyhd8ed1ab_0.conda
@@ -573,7 +573,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_extensions-4.12.2-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/xz-5.2.6-h775f41a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.6-h915ae27_0.conda
@@ -616,13 +616,13 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/joblib-1.4.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/krb5-1.21.2-h92f50d5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libabseil-20240116.2-cxx17_hebf3989_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-15.0.2-h431211a_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-acero-15.0.2-h00cdb27_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-dataset-15.0.2-h00cdb27_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-flight-15.0.2-h6348776_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-flight-sql-15.0.2-h6956890_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-gandiva-15.0.2-h31ed65c_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-substrait-15.0.2-h6df5cdc_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-15.0.2-h431211a_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-acero-15.0.2-h00cdb27_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-dataset-15.0.2-h00cdb27_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-flight-15.0.2-h6348776_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-flight-sql-15.0.2-h6956890_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-gandiva-15.0.2-h31ed65c_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-substrait-15.0.2-h6df5cdc_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libblas-3.9.0-20_osxarm64_openblas.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libbrotlicommon-1.1.0-hb547adb_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libbrotlidec-1.1.0-hb547adb_1.conda
@@ -645,7 +645,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libllvm16-16.0.6-haab561b_3.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libnghttp2-1.58.0-ha4dd798_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libopenblas-0.3.25-openmp_h6c19121_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libparquet-15.0.2-hcf52c46_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libparquet-15.0.2-hcf52c46_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libprotobuf-4.25.3-hbfab5d5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libre2-11-2023.09.01-h7b2c953_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/libsqlite-3.46.0-hfb93653_0.conda
@@ -666,7 +666,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pandas-1.5.3-py39hde7b980_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.5.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-0.20.15-py39h08ca3d8_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-15.0.2-py39h7884d04_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-15.0.2-py39h18c283c_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-8.2.2-pyhd8ed1ab_0.conda
@@ -699,7 +699,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_extensions-4.12.2-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/xz-5.2.6-h57fd34a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.6-hb46c0d2_0.conda
@@ -741,13 +741,13 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/joblib-1.4.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/krb5-1.21.2-heb0366b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libabseil-20240116.2-cxx17_h63175ca_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-15.0.2-h6a9fb90_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-acero-15.0.2-he0c23c2_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-dataset-15.0.2-he0c23c2_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-flight-15.0.2-ha7f4a34_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-flight-sql-15.0.2-hdeef14f_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-gandiva-15.0.2-hc87e867_14_cpu.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-substrait-15.0.2-h1f0e801_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-15.0.2-h6a9fb90_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-acero-15.0.2-he0c23c2_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-dataset-15.0.2-he0c23c2_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-flight-15.0.2-ha7f4a34_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-flight-sql-15.0.2-hdeef14f_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-gandiva-15.0.2-hc87e867_15_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/libarrow-substrait-15.0.2-h1f0e801_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libblas-3.9.0-22_win64_mkl.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libbrotlicommon-1.1.0-hcfcfb64_1.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libbrotlidec-1.1.0-hcfcfb64_1.conda
@@ -763,7 +763,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/libhwloc-2.10.0-default_h8125262_1001.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libiconv-1.17-hcfcfb64_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/liblapack-3.9.0-22_win64_mkl.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/libparquet-15.0.2-h178134c_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/libparquet-15.0.2-h178134c_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libprotobuf-4.25.3-h503648d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libre2-11-2023.09.01-hf8d8778_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libsqlite-3.46.0-h2466b09_0.conda
@@ -790,7 +790,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.5.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/polars-0.20.15-h4678df4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/pthreads-win32-2.9.1-hfa6e2cd_3.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/win-64/pyarrow-15.0.2-py39h3c730f4_14_cpu.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/pyarrow-15.0.2-py39h6f6571a_15_cpu.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyh0701188_6.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-8.2.2-pyhd8ed1ab_0.conda
@@ -824,7 +824,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_extensions-4.12.2-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h8a93ad2_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.40.33810-ha82c5b3_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vs2015_runtime-14.40.33810-h3bf8584_20.conda
@@ -915,7 +915,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xz-5.2.6-h166bdaf_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -988,7 +988,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/xz-5.2.6-h775f41a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -1061,7 +1061,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/xz-5.2.6-h57fd34a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -1135,7 +1135,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h8a93ad2_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.40.33810-ha82c5b3_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vs2015_runtime-14.40.33810-h3bf8584_20.conda
@@ -1274,7 +1274,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xz-5.2.6-h166bdaf_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.6-ha6fb4c9_0.conda
@@ -1395,7 +1395,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/xz-5.2.6-h775f41a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/zstd-1.5.6-h915ae27_0.conda
@@ -1516,7 +1516,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/xz-5.2.6-h57fd34a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.6-hb46c0d2_0.conda
@@ -1633,7 +1633,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h8a93ad2_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.40.33810-ha82c5b3_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vs2015_runtime-14.40.33810-h3bf8584_20.conda
@@ -2101,7 +2101,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ukkonen-1.0.1-py311h9547e67_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/uri-template-1.3.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/virtualenv-20.26.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webcolors-24.6.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-pyhd8ed1ab_2.conda
@@ -2296,8 +2296,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydata-sphinx-theme-0.15.3-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-10.2-py311h9b70068_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-10.2-py311h9b70068_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-10.3.1-py311h9d23797_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-10.3.1-py311h9d23797_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.1.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-8.2.2-pyhd8ed1ab_0.conda
@@ -2358,7 +2358,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/ukkonen-1.0.1-py311h5fe6e05_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/uri-template-1.3.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/virtualenv-20.26.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webcolors-24.6.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-pyhd8ed1ab_2.conda
@@ -2536,8 +2536,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydata-sphinx-theme-0.15.3-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-core-10.2-py311h665608e_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-framework-cocoa-10.2-py311h665608e_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-core-10.3.1-py311h5f135c3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-framework-cocoa-10.3.1-py311h5f135c3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.1.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/pytest-8.2.2-pyhd8ed1ab_0.conda
@@ -2598,7 +2598,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ukkonen-1.0.1-py311he4fd1f5_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/uri-template-1.3.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/virtualenv-20.26.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webcolors-24.6.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-pyhd8ed1ab_2.conda
@@ -2856,7 +2856,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/win-64/ukkonen-1.0.1-py311h005e61a_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/uri-template-1.3.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h8a93ad2_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.40.33810-ha82c5b3_20.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/virtualenv-20.26.2-pyhd8ed1ab_0.conda
@@ -3153,7 +3153,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_utils-0.1.0-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/uri-template-1.3.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webcolors-24.6.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.8.0-pyhd8ed1ab_0.conda
@@ -3333,8 +3333,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydata-sphinx-theme-0.15.3-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-10.2-py312h74abf1d_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-10.2-py312h74abf1d_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-10.3.1-py312he77c50b_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-10.3.1-py312he77c50b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.1.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/python-3.12.4-h37a9e06_0_cpython.conda
@@ -3389,7 +3389,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_utils-0.1.0-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/uri-template-1.3.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webcolors-24.6.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.8.0-pyhd8ed1ab_0.conda
@@ -3552,8 +3552,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydata-sphinx-theme-0.15.3-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pygments-2.18.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-core-10.2-py312h9d22092_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-framework-cocoa-10.2-py312h9d22092_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-core-10.3.1-py312hbb55c70_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-framework-cocoa-10.3.1-py312hbb55c70_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyparsing-3.1.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/python-3.12.4-h30c5eda_0_cpython.conda
@@ -3608,7 +3608,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/typing_utils-0.1.0-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/uri-template-1.3.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webcolors-24.6.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/webencodings-0.5.1-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.8.0-pyhd8ed1ab_0.conda
@@ -3846,7 +3846,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/uri-template-1.3.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h8a93ad2_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.40.33810-ha82c5b3_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vs2015_runtime-14.40.33810-h3bf8584_20.conda
@@ -4179,7 +4179,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xz-5.2.6-h166bdaf_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -4252,7 +4252,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/xz-5.2.6-h775f41a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -4325,7 +4325,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/toml-0.10.2-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/xz-5.2.6-h57fd34a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/zipp-3.19.2-pyhd8ed1ab_0.conda
       - pypi: .
@@ -4399,7 +4399,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2024a-h0c530f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/ucrt-10.0.22621.0-h57928b3_0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc-14.3-h8a93ad2_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.40.33810-ha82c5b3_20.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/vs2015_runtime-14.40.33810-h3bf8584_20.conda
@@ -9492,12 +9492,12 @@ packages:
 - kind: conda
   name: libarrow
   version: 15.0.2
-  build: h431211a_14_cpu
-  build_number: 14
+  build: h431211a_15_cpu
+  build_number: 15
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-15.0.2-h431211a_14_cpu.conda
-  sha256: 86c407c961062d84daa5d475c621144f060c9ff00e75dbaa498abcb41906b97b
-  md5: c9f87e227e66c73d0eb70149306bcdcf
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-15.0.2-h431211a_15_cpu.conda
+  sha256: cab064daf88534418432d0016a91203aacd2b7b2a275f05efd616ebf827789e1
+  md5: f3eccb94079aa3b57f595e96995f24b3
   depends:
   - __osx >=11.0
   - aws-crt-cpp >=0.26.12,<0.26.13.0a0
@@ -9520,23 +9520,22 @@ packages:
   - snappy >=1.2.0,<1.3.0a0
   - zstd >=1.5.6,<1.6.0a0
   constrains:
+  - apache-arrow-proc =*=cpu
   - arrow-cpp <0.0a0
   - parquet-cpp <0.0a0
-  - apache-arrow-proc =*=cpu
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 5150202
-  timestamp: 1718337744042
+  size: 5147793
+  timestamp: 1718626031286
 - kind: conda
   name: libarrow
   version: 15.0.2
-  build: h6a9fb90_14_cpu
-  build_number: 14
+  build: h6a9fb90_15_cpu
+  build_number: 15
   subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-15.0.2-h6a9fb90_14_cpu.conda
-  sha256: 2b656c8930fcebc0f2e6c3c463d9867240d57cd33dbc89c07739639e4c748e1c
-  md5: de8672967eb69d8b60c0147b5d179646
+  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-15.0.2-h6a9fb90_15_cpu.conda
+  sha256: 34b0f112cd07e1fe718323b1825836bd16815962f8918138e02168988c787733
+  md5: f89ae50a4186f00c00de7185d8930452
   depends:
   - aws-crt-cpp >=0.26.12,<0.26.13.0a0
   - aws-sdk-cpp >=1.11.329,<1.11.330.0a0
@@ -9562,23 +9561,22 @@ packages:
   - vc14_runtime >=14.29.30139
   - zstd >=1.5.6,<1.6.0a0
   constrains:
-  - parquet-cpp <0.0a0
-  - arrow-cpp <0.0a0
   - apache-arrow-proc =*=cpu
+  - arrow-cpp <0.0a0
+  - parquet-cpp <0.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 5048037
-  timestamp: 1718338922808
+  size: 5079207
+  timestamp: 1718626552391
 - kind: conda
   name: libarrow
   version: 15.0.2
-  build: h9102155_14_cpu
-  build_number: 14
+  build: h9102155_15_cpu
+  build_number: 15
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-15.0.2-h9102155_14_cpu.conda
-  sha256: c817b3c1ca9a9080f71176087753d1953f34eb24eed6450eb713f140b51d6e35
-  md5: cd3f9456661e6448c4b96fc76fba848e
+  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-15.0.2-h9102155_15_cpu.conda
+  sha256: 70a40ff8f3edffdd1a545eb20e88571f122e01d49d6e4f0697b9531e0607655f
+  md5: 5e70df0154ca79128f1f6c067996e883
   depends:
   - aws-crt-cpp >=0.26.12,<0.26.13.0a0
   - aws-sdk-cpp >=1.11.329,<1.11.330.0a0
@@ -9602,23 +9600,22 @@ packages:
   - snappy >=1.2.0,<1.3.0a0
   - zstd >=1.5.6,<1.6.0a0
   constrains:
-  - parquet-cpp <0.0a0
   - apache-arrow-proc =*=cpu
+  - parquet-cpp <0.0a0
   - arrow-cpp <0.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 8209365
-  timestamp: 1718338170854
+  size: 8209029
+  timestamp: 1718626122817
 - kind: conda
   name: libarrow
   version: 15.0.2
-  build: hc2fafd7_14_cpu
-  build_number: 14
+  build: hc2fafd7_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-15.0.2-hc2fafd7_14_cpu.conda
-  sha256: 7f32177a2f9c1accca10785479829dd03fd2d5dcea22b68b749883380937c193
-  md5: 61e9d212fdebd10d364d7298fd8f6d6d
+  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-15.0.2-hc2fafd7_15_cpu.conda
+  sha256: 2e091ab803aaf7c56e379c3eff5eca5d2e24169e5bdd4fddad4e570b3a6fd6f2
+  md5: 22a08fe63c00a597486e011568306051
   depends:
   - __osx >=10.13
   - aws-crt-cpp >=0.26.12,<0.26.13.0a0
@@ -9645,10 +9642,9 @@ packages:
   - arrow-cpp <0.0a0
   - apache-arrow-proc =*=cpu
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 5771095
-  timestamp: 1718337536503
+  size: 5778854
+  timestamp: 1718626153344
 - kind: conda
   name: libarrow
   version: 16.1.0
@@ -9811,77 +9807,73 @@ packages:
 - kind: conda
   name: libarrow-acero
   version: 15.0.2
-  build: h00cdb27_14_cpu
-  build_number: 14
+  build: h00cdb27_15_cpu
+  build_number: 15
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-acero-15.0.2-h00cdb27_14_cpu.conda
-  sha256: 7e06702f61b9e6e7fe47980d9c3f4ad470a81705cf7b276c51a1a4909bd65d5a
-  md5: b836bf32eb6ee5235e120b32345efb62
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-acero-15.0.2-h00cdb27_15_cpu.conda
+  sha256: d2c63ca18ae01a258da1a5b5ea6dad9a66eb02abd44aebdb56bf2c529b2c07a2
+  md5: 10ab0ca424a34950c328c610165219bf
   depends:
   - __osx >=11.0
-  - libarrow 15.0.2 h431211a_14_cpu
+  - libarrow 15.0.2 h431211a_15_cpu
   - libcxx >=16
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 489452
-  timestamp: 1718337823400
+  size: 493260
+  timestamp: 1718626123668
 - kind: conda
   name: libarrow-acero
   version: 15.0.2
-  build: hbabe93e_14_cpu
-  build_number: 14
+  build: hbabe93e_15_cpu
+  build_number: 15
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-acero-15.0.2-hbabe93e_14_cpu.conda
-  sha256: 829413c2df2b3d32b3dd97de0f728000745de87161cf67d08a00262704a3c079
-  md5: 1ca9355e6193f8bcca250e3999758b11
+  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-acero-15.0.2-hbabe93e_15_cpu.conda
+  sha256: f49f6fe9bf541be7db640ab02fbb037d23519eccd03025a24c3ae353705a2ea4
+  md5: 8dc6698e1cec12a0816bb4abe6b194ca
   depends:
   - gflags >=2.2.2,<2.3.0a0
-  - libarrow 15.0.2 h9102155_14_cpu
+  - libarrow 15.0.2 h9102155_15_cpu
   - libgcc-ng >=12
   - libstdcxx-ng >=12
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 601427
-  timestamp: 1718338213349
+  size: 603897
+  timestamp: 1718626164549
 - kind: conda
   name: libarrow-acero
   version: 15.0.2
-  build: he0c23c2_14_cpu
-  build_number: 14
+  build: he0c23c2_15_cpu
+  build_number: 15
   subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-acero-15.0.2-he0c23c2_14_cpu.conda
-  sha256: fc653ad3577040b502ba0d3100b0b09a1fd18693e05819867b0ad73777cde62f
-  md5: ef0d480a12fd090a742c72ba579f4f65
+  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-acero-15.0.2-he0c23c2_15_cpu.conda
+  sha256: 52ca35cbf500d5e401c7fe4337cdb29828911e9ceac80e0b3424cea8b66d6816
+  md5: 6bf8192283688de7f6af4f9d36266b84
   depends:
-  - libarrow 15.0.2 h6a9fb90_14_cpu
+  - libarrow 15.0.2 h6a9fb90_15_cpu
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 449066
-  timestamp: 1718339019857
+  size: 452825
+  timestamp: 1718626616277
 - kind: conda
   name: libarrow-acero
   version: 15.0.2
-  build: hf036a51_14_cpu
-  build_number: 14
+  build: hf036a51_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-acero-15.0.2-hf036a51_14_cpu.conda
-  sha256: 772c0cdcd550cb76548b9314c9b3fd2ef44ab8be895cf6f702d7d7fc584e7643
-  md5: 013d2f7db54b6a1c9a7d755e1fd9914d
+  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-acero-15.0.2-hf036a51_15_cpu.conda
+  sha256: 8972334e1c9bc19202802e4f63b541eac24caf8c8b935ebd2547c24b30b5879a
+  md5: 0e52da1772da50299e40f5e4616697dd
   depends:
   - __osx >=10.13
-  - libarrow 15.0.2 hc2fafd7_14_cpu
+  - libarrow 15.0.2 hc2fafd7_15_cpu
   - libcxx >=16
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 527270
-  timestamp: 1718337625597
+  size: 530795
+  timestamp: 1718626271939
 - kind: conda
   name: libarrow-acero
   version: 16.1.0
@@ -9958,85 +9950,81 @@ packages:
 - kind: conda
   name: libarrow-dataset
   version: 15.0.2
-  build: h00cdb27_14_cpu
-  build_number: 14
+  build: h00cdb27_15_cpu
+  build_number: 15
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-dataset-15.0.2-h00cdb27_14_cpu.conda
-  sha256: 86b7b12dc62e4fc18bdbf47d5bf1ad4b31766037ef405492f524d1663742e997
-  md5: 33885147e1a6bc16f214e77a662cdcd6
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-dataset-15.0.2-h00cdb27_15_cpu.conda
+  sha256: 662d2d80decaac5c8da6d4415f6857f911f6e52d749c3cd828848c3e6f216f70
+  md5: 299041ef6660fd58095207ac349cfd96
   depends:
   - __osx >=11.0
-  - libarrow 15.0.2 h431211a_14_cpu
-  - libarrow-acero 15.0.2 h00cdb27_14_cpu
+  - libarrow 15.0.2 h431211a_15_cpu
+  - libarrow-acero 15.0.2 h00cdb27_15_cpu
   - libcxx >=16
-  - libparquet 15.0.2 hcf52c46_14_cpu
+  - libparquet 15.0.2 hcf52c46_15_cpu
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 500425
-  timestamp: 1718338733160
+  size: 504463
+  timestamp: 1718626993690
 - kind: conda
   name: libarrow-dataset
   version: 15.0.2
-  build: hbabe93e_14_cpu
-  build_number: 14
+  build: hbabe93e_15_cpu
+  build_number: 15
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-dataset-15.0.2-hbabe93e_14_cpu.conda
-  sha256: 415bf4d60accddb4bb6b642b338250163a7a16c4471eb6f60300a3876374d1cf
-  md5: 9e8829a8dd1c639164a2c7d34e929f5b
+  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-dataset-15.0.2-hbabe93e_15_cpu.conda
+  sha256: 9efa2b90e4ee33c8e919c844cf657bfdd2a2ae8d8291c220e07f4aa262c6d713
+  md5: 5ed7fd80ba575f36018c269f87fff573
   depends:
   - gflags >=2.2.2,<2.3.0a0
-  - libarrow 15.0.2 h9102155_14_cpu
-  - libarrow-acero 15.0.2 hbabe93e_14_cpu
+  - libarrow 15.0.2 h9102155_15_cpu
+  - libarrow-acero 15.0.2 hbabe93e_15_cpu
   - libgcc-ng >=12
-  - libparquet 15.0.2 hacf5a1f_14_cpu
+  - libparquet 15.0.2 hacf5a1f_15_cpu
   - libstdcxx-ng >=12
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 586515
-  timestamp: 1718338298081
+  size: 592203
+  timestamp: 1718626249721
 - kind: conda
   name: libarrow-dataset
   version: 15.0.2
-  build: he0c23c2_14_cpu
-  build_number: 14
+  build: he0c23c2_15_cpu
+  build_number: 15
   subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-dataset-15.0.2-he0c23c2_14_cpu.conda
-  sha256: 41109aafd4770cec683839202f1939ba1536ef2d631ccf5741e2f831d1341f64
-  md5: 58f5b236c67c3e2c4f6134ca6fc22517
+  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-dataset-15.0.2-he0c23c2_15_cpu.conda
+  sha256: a7c1a3159ea445fd8c33fcb015b69fdc89f0cedcec18a75ab41f7648c013f5cc
+  md5: 414b62c366fb4a4c9b20d4f72e2fccdd
   depends:
-  - libarrow 15.0.2 h6a9fb90_14_cpu
-  - libarrow-acero 15.0.2 he0c23c2_14_cpu
-  - libparquet 15.0.2 h178134c_14_cpu
+  - libarrow 15.0.2 h6a9fb90_15_cpu
+  - libarrow-acero 15.0.2 he0c23c2_15_cpu
+  - libparquet 15.0.2 h178134c_15_cpu
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 434115
-  timestamp: 1718339319012
+  size: 437992
+  timestamp: 1718626843015
 - kind: conda
   name: libarrow-dataset
   version: 15.0.2
-  build: hf036a51_14_cpu
-  build_number: 14
+  build: hf036a51_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-dataset-15.0.2-hf036a51_14_cpu.conda
-  sha256: 409b8921f7a8393b5be6b8807e1b5c9239235568815eea25d119d040dc110099
-  md5: b0655e95644c476718855f4e016929f7
+  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-dataset-15.0.2-hf036a51_15_cpu.conda
+  sha256: 8d34ddd5f4f224729a69d9b04346a04ba9ac0666413080b2bee1ca2189580b4e
+  md5: 0d66ad160bd37e1964f304a8f8e720f7
   depends:
   - __osx >=10.13
-  - libarrow 15.0.2 hc2fafd7_14_cpu
-  - libarrow-acero 15.0.2 hf036a51_14_cpu
+  - libarrow 15.0.2 hc2fafd7_15_cpu
+  - libarrow-acero 15.0.2 hf036a51_15_cpu
   - libcxx >=16
-  - libparquet 15.0.2 h904a336_14_cpu
+  - libparquet 15.0.2 h904a336_15_cpu
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 524344
-  timestamp: 1718338245161
+  size: 529105
+  timestamp: 1718626974042
 - kind: conda
   name: libarrow-dataset
   version: 16.1.0
@@ -10121,188 +10109,180 @@ packages:
 - kind: conda
   name: libarrow-flight
   version: 15.0.2
-  build: h6348776_14_cpu
-  build_number: 14
+  build: h6348776_15_cpu
+  build_number: 15
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-flight-15.0.2-h6348776_14_cpu.conda
-  sha256: 1088b0821663ff479c6e1c881d0406c79f2092ff171c6fc6922099373dbf8f82
-  md5: edaa1724654c4f2303a807a0447966f8
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-flight-15.0.2-h6348776_15_cpu.conda
+  sha256: 56cb33484e9b330c5b5d9d2fb02a9bf179f576061f9727a51c2624f467d74fef
+  md5: 1c2d9113988efe982c126ff944b6d6a1
   depends:
   - __osx >=11.0
   - libabseil * cxx17*
   - libabseil >=20240116.2,<20240117.0a0
-  - libarrow 15.0.2 h431211a_14_cpu
+  - libarrow 15.0.2 h431211a_15_cpu
   - libcxx >=16
   - libgrpc >=1.62.2,<1.63.0a0
   - libprotobuf >=4.25.3,<4.25.4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 318360
-  timestamp: 1718337997457
+  size: 321682
+  timestamp: 1718626304315
 - kind: conda
   name: libarrow-flight
   version: 15.0.2
-  build: ha7f4a34_14_cpu
-  build_number: 14
+  build: ha7f4a34_15_cpu
+  build_number: 15
   subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-flight-15.0.2-ha7f4a34_14_cpu.conda
-  sha256: cfbece9b16247ec2bbc84242fe998c7104151a04393cd0777d7feee082a1a055
-  md5: 54f57c33c6fad59e7258783fc29f5e81
+  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-flight-15.0.2-ha7f4a34_15_cpu.conda
+  sha256: f3ac9bd4c176263b4b9f522fac3c9d03d407c115df264958d3dc673765ed8066
+  md5: 40e8d5ea782e675fe90206dd747176fc
   depends:
   - libabseil * cxx17*
   - libabseil >=20240116.2,<20240117.0a0
-  - libarrow 15.0.2 h6a9fb90_14_cpu
+  - libarrow 15.0.2 h6a9fb90_15_cpu
   - libgrpc >=1.62.2,<1.63.0a0
   - libprotobuf >=4.25.3,<4.25.4.0a0
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 292626
-  timestamp: 1718339093569
+  size: 295236
+  timestamp: 1718626668703
 - kind: conda
   name: libarrow-flight
   version: 15.0.2
-  build: hd834827_14_cpu
-  build_number: 14
+  build: hd834827_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-flight-15.0.2-hd834827_14_cpu.conda
-  sha256: df94f10b3cee1d2349282e8817a69367cec9cd864e61e1f7d1e9e19c45b27cd7
-  md5: cf6109c7d430c9adb2983c759c7434e6
+  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-flight-15.0.2-hd834827_15_cpu.conda
+  sha256: a359569b301629d9bcafc6a9bd04e610c1f6add9cdf2144d3aba6e9e4f0cf603
+  md5: eea121e007dc7a047e7f8db30c105991
   depends:
   - __osx >=10.13
   - libabseil * cxx17*
   - libabseil >=20240116.2,<20240117.0a0
-  - libarrow 15.0.2 hc2fafd7_14_cpu
+  - libarrow 15.0.2 hc2fafd7_15_cpu
   - libcxx >=16
   - libgrpc >=1.62.2,<1.63.0a0
   - libprotobuf >=4.25.3,<4.25.4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 329690
-  timestamp: 1718337747918
+  size: 333839
+  timestamp: 1718626405589
 - kind: conda
   name: libarrow-flight
   version: 15.0.2
-  build: he07691f_14_cpu
-  build_number: 14
+  build: he07691f_15_cpu
+  build_number: 15
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-flight-15.0.2-he07691f_14_cpu.conda
-  sha256: c4bc4d75c68120247c2c7929a717182172d79457b61cd45dd0853aec164fee44
-  md5: aef1d7f861bd77a7b3201ea896d198bc
+  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-flight-15.0.2-he07691f_15_cpu.conda
+  sha256: 810bd5fa70f352b1db825187c7c6bbd35bfa4047810f119f9593e329db45f21c
+  md5: bb8786a95027aa7518e0d2950fdbc668
   depends:
   - gflags >=2.2.2,<2.3.0a0
   - libabseil * cxx17*
   - libabseil >=20240116.2,<20240117.0a0
-  - libarrow 15.0.2 h9102155_14_cpu
+  - libarrow 15.0.2 h9102155_15_cpu
   - libgcc-ng >=12
   - libgrpc >=1.62.2,<1.63.0a0
   - libprotobuf >=4.25.3,<4.25.4.0a0
   - libstdcxx-ng >=12
   - ucx >=1.16.0,<1.17.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 507851
-  timestamp: 1718338234030
+  size: 511740
+  timestamp: 1718626184887
 - kind: conda
   name: libarrow-flight-sql
   version: 15.0.2
-  build: h6956890_14_cpu
-  build_number: 14
+  build: h6956890_15_cpu
+  build_number: 15
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-flight-sql-15.0.2-h6956890_14_cpu.conda
-  sha256: a2852b6459c0729be4848e936418079372ccaaae363820bbf6a14e794c41702a
-  md5: 7950a86353a5abc3a92abc79aa024567
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-flight-sql-15.0.2-h6956890_15_cpu.conda
+  sha256: 000e0dee79087c2aa8e5c943a3787c7289b0b3bba2217eaf2e784665d33a3b5e
+  md5: cacfdfde3a8e3192085489c8b7dca090
   depends:
   - __osx >=11.0
-  - libarrow 15.0.2 h431211a_14_cpu
-  - libarrow-flight 15.0.2 h6348776_14_cpu
+  - libarrow 15.0.2 h431211a_15_cpu
+  - libarrow-flight 15.0.2 h6348776_15_cpu
   - libcxx >=16
   - libprotobuf >=4.25.3,<4.25.4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 158883
-  timestamp: 1718338805231
+  size: 162648
+  timestamp: 1718627058813
 - kind: conda
   name: libarrow-flight-sql
   version: 15.0.2
-  build: hdeef14f_14_cpu
-  build_number: 14
+  build: hdeef14f_15_cpu
+  build_number: 15
   subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-flight-sql-15.0.2-hdeef14f_14_cpu.conda
-  sha256: a75087ba8f3d9bf34d0a46e99058eaa88d7f1992e005092a69072eda2691e9c1
-  md5: 49a7c7332918f971c5f04770859aa48d
+  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-flight-sql-15.0.2-hdeef14f_15_cpu.conda
+  sha256: ad8fa2094b56e7635b0c1e46b1ce2ff06b4974b1e3e3f1070765a8d619be7a71
+  md5: 4835e342ae45e479e507503cd207d509
   depends:
-  - libarrow 15.0.2 h6a9fb90_14_cpu
-  - libarrow-flight 15.0.2 ha7f4a34_14_cpu
+  - libarrow 15.0.2 h6a9fb90_15_cpu
+  - libarrow-flight 15.0.2 ha7f4a34_15_cpu
   - libprotobuf >=4.25.3,<4.25.4.0a0
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 238538
-  timestamp: 1718339385006
+  size: 242442
+  timestamp: 1718626894690
 - kind: conda
   name: libarrow-flight-sql
   version: 15.0.2
-  build: he1e86a1_14_cpu
-  build_number: 14
+  build: he1e86a1_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-flight-sql-15.0.2-he1e86a1_14_cpu.conda
-  sha256: 99f81e8045dceab9e823d2fabe65003e42faaff865bf3784d90cac05e61b5827
-  md5: a1b8a6a0f694d7fd02c730f9216751db
+  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-flight-sql-15.0.2-he1e86a1_15_cpu.conda
+  sha256: c78883594e722cc3015c6e170c70117b5d0966625a649dcbccc7e774c3dbd898
+  md5: d62949605367e4198ab176c3ac2a457d
   depends:
   - __osx >=10.13
-  - libarrow 15.0.2 hc2fafd7_14_cpu
-  - libarrow-flight 15.0.2 hd834827_14_cpu
+  - libarrow 15.0.2 hc2fafd7_15_cpu
+  - libarrow-flight 15.0.2 hd834827_15_cpu
   - libcxx >=16
   - libprotobuf >=4.25.3,<4.25.4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 158665
-  timestamp: 1718338295859
+  size: 162845
+  timestamp: 1718627034474
 - kind: conda
   name: libarrow-flight-sql
   version: 15.0.2
-  build: he4f5ca8_14_cpu
-  build_number: 14
+  build: he4f5ca8_15_cpu
+  build_number: 15
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-flight-sql-15.0.2-he4f5ca8_14_cpu.conda
-  sha256: 38ec11add8002214197b00b2779c81bef1f6b4b6c89fdbf48fb5b4f2e46f80e4
-  md5: cc8a7355dd039a61018c099bb3867191
+  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-flight-sql-15.0.2-he4f5ca8_15_cpu.conda
+  sha256: d68ad811a6c98ab53ce5402fe3e7c2f40104f50a2dead8f8d2f8cad2801090e7
+  md5: 6d30a564b140a0dd850943cf401c337a
   depends:
   - gflags >=2.2.2,<2.3.0a0
-  - libarrow 15.0.2 h9102155_14_cpu
-  - libarrow-flight 15.0.2 he07691f_14_cpu
+  - libarrow 15.0.2 h9102155_15_cpu
+  - libarrow-flight 15.0.2 he07691f_15_cpu
   - libgcc-ng >=12
   - libprotobuf >=4.25.3,<4.25.4.0a0
   - libstdcxx-ng >=12
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 197895
-  timestamp: 1718338319832
+  size: 201430
+  timestamp: 1718626268956
 - kind: conda
   name: libarrow-gandiva
   version: 15.0.2
-  build: h31ed65c_14_cpu
-  build_number: 14
+  build: h31ed65c_15_cpu
+  build_number: 15
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-gandiva-15.0.2-h31ed65c_14_cpu.conda
-  sha256: a157e71cb0526accbe47c9c4d374852ab94f41c5cc7d87946dee0cdb92d640b3
-  md5: 68221504b22eb7f9d8750a9ba2f1a66f
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-gandiva-15.0.2-h31ed65c_15_cpu.conda
+  sha256: 089f51f173d629acec3516fd6a81b62621e8f9d5fe098ccaaf23954d066994c6
+  md5: a2825e97431053addabe1e8232d30de1
   depends:
   - __osx >=11.0
-  - libarrow 15.0.2 h431211a_14_cpu
+  - libarrow 15.0.2 h431211a_15_cpu
   - libcxx >=16
   - libllvm16 >=16.0.6,<16.1.0a0
   - libre2-11 >=2023.9.1,<2024.0a0
@@ -10310,22 +10290,21 @@ packages:
   - openssl >=3.3.1,<4.0a0
   - re2
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 693602
-  timestamp: 1718338569503
+  size: 696099
+  timestamp: 1718626841789
 - kind: conda
   name: libarrow-gandiva
   version: 15.0.2
-  build: hc1954e9_14_cpu
-  build_number: 14
+  build: hc1954e9_15_cpu
+  build_number: 15
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-gandiva-15.0.2-hc1954e9_14_cpu.conda
-  sha256: 9e3db0897d16887d4a6819be01a2c83182e7676819277ae554c6782da99ff02d
-  md5: f2ec369a822cb11de31fa19fcedfe222
+  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-gandiva-15.0.2-hc1954e9_15_cpu.conda
+  sha256: aac29cc81524b80d15c84f729b2d635c0b1f72378b82c2192d9ff9aba6168bac
+  md5: 032fd03cee8fe993ac98a87093ee7e5f
   depends:
   - gflags >=2.2.2,<2.3.0a0
-  - libarrow 15.0.2 h9102155_14_cpu
+  - libarrow 15.0.2 h9102155_15_cpu
   - libgcc-ng >=12
   - libllvm16 >=16.0.6,<16.1.0a0
   - libre2-11 >=2023.9.1,<2024.0a0
@@ -10334,21 +10313,20 @@ packages:
   - openssl >=3.3.1,<4.0a0
   - re2
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 899755
-  timestamp: 1718338256422
+  size: 903500
+  timestamp: 1718626208458
 - kind: conda
   name: libarrow-gandiva
   version: 15.0.2
-  build: hc87e867_14_cpu
-  build_number: 14
+  build: hc87e867_15_cpu
+  build_number: 15
   subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-gandiva-15.0.2-hc87e867_14_cpu.conda
-  sha256: f3121e9a08c0a8014506f2ac5bf7e63972e811fabdb7db38d220b9f138be4f9a
-  md5: a023a63141acbfb270ba57143942e688
+  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-gandiva-15.0.2-hc87e867_15_cpu.conda
+  sha256: 6918d46b1eac388145fd1301ad581d7834d9019f3d3cfe04f1ab4c95d5b21233
+  md5: 8aa39658de489e60c91f695e06d816de
   depends:
-  - libarrow 15.0.2 h6a9fb90_14_cpu
+  - libarrow 15.0.2 h6a9fb90_15_cpu
   - libre2-11 >=2023.9.1,<2024.0a0
   - libutf8proc >=2.8.0,<3.0a0
   - libzlib >=1.3.1,<2.0a0
@@ -10359,22 +10337,21 @@ packages:
   - vc14_runtime >=14.29.30139
   - zstd >=1.5.6,<1.6.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 10721287
-  timestamp: 1718339161067
+  size: 10719151
+  timestamp: 1718626720297
 - kind: conda
   name: libarrow-gandiva
   version: 15.0.2
-  build: hfa04d5a_14_cpu
-  build_number: 14
+  build: hfa04d5a_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-gandiva-15.0.2-hfa04d5a_14_cpu.conda
-  sha256: 194939f679e75d67b62fdf037913c4b2764290bc5f5ced9b811297bc7352d79b
-  md5: ed7542d2e29f51db4de3c39061916423
+  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-gandiva-15.0.2-hfa04d5a_15_cpu.conda
+  sha256: eaae472bb020bb080a5d70c59d80301a09c2e7b18233d7099375accea82f0865
+  md5: bcb3cd1f3d01bf5904f1f0ec8834c18e
   depends:
   - __osx >=10.13
-  - libarrow 15.0.2 hc2fafd7_14_cpu
+  - libarrow 15.0.2 hc2fafd7_15_cpu
   - libcxx >=16
   - libllvm16 >=16.0.6,<16.1.0a0
   - libre2-11 >=2023.9.1,<2024.0a0
@@ -10382,98 +10359,93 @@ packages:
   - openssl >=3.3.1,<4.0a0
   - re2
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 707899
-  timestamp: 1718338106100
+  size: 710178
+  timestamp: 1718626779087
 - kind: conda
   name: libarrow-substrait
   version: 15.0.2
-  build: h1f0e801_14_cpu
-  build_number: 14
+  build: h1f0e801_15_cpu
+  build_number: 15
   subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-substrait-15.0.2-h1f0e801_14_cpu.conda
-  sha256: 9ed9bc82b1804721207d93a7e09eef53748776a32129885984cf5803af1567bc
-  md5: ea7aefd1d16be72aa132c7c3ff2edfd9
+  url: https://conda.anaconda.org/conda-forge/win-64/libarrow-substrait-15.0.2-h1f0e801_15_cpu.conda
+  sha256: a5739c36d6f09b935b755f3c62de6c73b0d150bb8b575ebcf2bbfdf773629d25
+  md5: 4848e0403cde9b040f97e94fc8ceaf2e
   depends:
   - libabseil * cxx17*
   - libabseil >=20240116.2,<20240117.0a0
-  - libarrow 15.0.2 h6a9fb90_14_cpu
-  - libarrow-acero 15.0.2 he0c23c2_14_cpu
-  - libarrow-dataset 15.0.2 he0c23c2_14_cpu
+  - libarrow 15.0.2 h6a9fb90_15_cpu
+  - libarrow-acero 15.0.2 he0c23c2_15_cpu
+  - libarrow-dataset 15.0.2 he0c23c2_15_cpu
   - libprotobuf >=4.25.3,<4.25.4.0a0
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 364153
-  timestamp: 1718339455138
+  size: 368383
+  timestamp: 1718626947319
 - kind: conda
   name: libarrow-substrait
   version: 15.0.2
-  build: h6df5cdc_14_cpu
-  build_number: 14
+  build: h6df5cdc_15_cpu
+  build_number: 15
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-substrait-15.0.2-h6df5cdc_14_cpu.conda
-  sha256: 4ead99565205c7bf3feaad305963de43a655eea567ba605b190758fd9d21fe1c
-  md5: f31172243f519d6c25a758d0b92b5549
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/libarrow-substrait-15.0.2-h6df5cdc_15_cpu.conda
+  sha256: 8caa7083436271ec17c70110f1332137b6bba7df35c87e5973b83235f994efeb
+  md5: c9aa65f78c1dd8e57c0c1d294cac1119
   depends:
   - __osx >=11.0
-  - libarrow 15.0.2 h431211a_14_cpu
-  - libarrow-acero 15.0.2 h00cdb27_14_cpu
-  - libarrow-dataset 15.0.2 h00cdb27_14_cpu
+  - libarrow 15.0.2 h431211a_15_cpu
+  - libarrow-acero 15.0.2 h00cdb27_15_cpu
+  - libarrow-dataset 15.0.2 h00cdb27_15_cpu
   - libcxx >=16
   - libprotobuf >=4.25.3,<4.25.4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 447568
-  timestamp: 1718338892924
+  size: 449781
+  timestamp: 1718627167356
 - kind: conda
   name: libarrow-substrait
   version: 15.0.2
-  build: he1e86a1_14_cpu
-  build_number: 14
+  build: he1e86a1_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-substrait-15.0.2-he1e86a1_14_cpu.conda
-  sha256: 2a1414c455ff03c2a89710d811347ed9cbe1c900ab2b31d81590febc6e55d4ba
-  md5: 9b8ea424e5ada81bc3916bb55b4c4a8e
+  url: https://conda.anaconda.org/conda-forge/osx-64/libarrow-substrait-15.0.2-he1e86a1_15_cpu.conda
+  sha256: db3f4421d2833b87d1c014769589900a962b4db066ad4585a6a22601538c0c95
+  md5: 1b1f50b8d68b1f6b0e8b71232b932988
   depends:
   - __osx >=10.13
-  - libarrow 15.0.2 hc2fafd7_14_cpu
-  - libarrow-acero 15.0.2 hf036a51_14_cpu
-  - libarrow-dataset 15.0.2 hf036a51_14_cpu
+  - libarrow 15.0.2 hc2fafd7_15_cpu
+  - libarrow-acero 15.0.2 hf036a51_15_cpu
+  - libarrow-dataset 15.0.2 hf036a51_15_cpu
   - libcxx >=16
   - libprotobuf >=4.25.3,<4.25.4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 456292
-  timestamp: 1718338379070
+  size: 459380
+  timestamp: 1718627126803
 - kind: conda
   name: libarrow-substrait
   version: 15.0.2
-  build: he4f5ca8_14_cpu
-  build_number: 14
+  build: he4f5ca8_15_cpu
+  build_number: 15
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-substrait-15.0.2-he4f5ca8_14_cpu.conda
-  sha256: 261c799b0b4c65cb7d1f5da6f3e781839bab5579ae3703c8d40ab0b2d16e6474
-  md5: 5649dbf86f4db9788bc4899edc1cfeb4
+  url: https://conda.anaconda.org/conda-forge/linux-64/libarrow-substrait-15.0.2-he4f5ca8_15_cpu.conda
+  sha256: e2b5cfc09b3d61375d370a18b41762bd05f44f86fdb2f61edb5b69b2b36b1e9e
+  md5: fa97db39b2d1bab9c2b329ba1f4977b2
   depends:
   - gflags >=2.2.2,<2.3.0a0
-  - libarrow 15.0.2 h9102155_14_cpu
-  - libarrow-acero 15.0.2 hbabe93e_14_cpu
-  - libarrow-dataset 15.0.2 hbabe93e_14_cpu
+  - libarrow 15.0.2 h9102155_15_cpu
+  - libarrow-acero 15.0.2 hbabe93e_15_cpu
+  - libarrow-dataset 15.0.2 hbabe93e_15_cpu
   - libgcc-ng >=12
   - libprotobuf >=4.25.3,<4.25.4.0a0
   - libstdcxx-ng >=12
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 522114
-  timestamp: 1718338338359
+  size: 528291
+  timestamp: 1718626286722
 - kind: conda
   name: libarrow-substrait
   version: 16.1.0
@@ -12926,85 +12898,81 @@ packages:
 - kind: conda
   name: libparquet
   version: 15.0.2
-  build: h178134c_14_cpu
-  build_number: 14
+  build: h178134c_15_cpu
+  build_number: 15
   subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libparquet-15.0.2-h178134c_14_cpu.conda
-  sha256: a070599da81e4f19070fe1848b36d337164f78f4fd4a6ad14afc72ba1bb69316
-  md5: 8daf3061161feece9c112fbdd7ef24dc
+  url: https://conda.anaconda.org/conda-forge/win-64/libparquet-15.0.2-h178134c_15_cpu.conda
+  sha256: c8286b016f776ea84fbfdce7b86ec2f77ec6a40ef0052762540fa36b8edf53d3
+  md5: a7da9bce5b0f312c617a89fe5d3d3799
   depends:
-  - libarrow 15.0.2 h6a9fb90_14_cpu
+  - libarrow 15.0.2 h6a9fb90_15_cpu
   - libthrift >=0.19.0,<0.19.1.0a0
   - openssl >=3.3.1,<4.0a0
   - ucrt >=10.0.20348.0
   - vc >=14.2,<15
   - vc14_runtime >=14.29.30139
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 798184
-  timestamp: 1718339248394
+  size: 798766
+  timestamp: 1718626790395
 - kind: conda
   name: libparquet
   version: 15.0.2
-  build: h904a336_14_cpu
-  build_number: 14
+  build: h904a336_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libparquet-15.0.2-h904a336_14_cpu.conda
-  sha256: fd186eebceb233d5a18763a5b6fa97e1210b2884fd11f37982fb841f9a0f7b2b
-  md5: ae2adf36516fef8ae93079d775b9ac1a
+  url: https://conda.anaconda.org/conda-forge/osx-64/libparquet-15.0.2-h904a336_15_cpu.conda
+  sha256: 6784e506f7b951c48be7853d690b5c74b36746ef7a20f9a485e879cb3c9a484a
+  md5: 9a6ec78e70764fdbb75a4044ef0b179c
   depends:
   - __osx >=10.13
-  - libarrow 15.0.2 hc2fafd7_14_cpu
+  - libarrow 15.0.2 hc2fafd7_15_cpu
   - libcxx >=16
   - libthrift >=0.19.0,<0.19.1.0a0
   - openssl >=3.3.1,<4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 936573
-  timestamp: 1718338174447
+  size: 942284
+  timestamp: 1718626883691
 - kind: conda
   name: libparquet
   version: 15.0.2
-  build: hacf5a1f_14_cpu
-  build_number: 14
+  build: hacf5a1f_15_cpu
+  build_number: 15
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libparquet-15.0.2-hacf5a1f_14_cpu.conda
-  sha256: ca4b43d0e9ac838525e8a03a5cf840d04cbb1bdf729622071bc8c45593e02c35
-  md5: ee3fc4fd9146e3c07c7f1bb0ca720b10
+  url: https://conda.anaconda.org/conda-forge/linux-64/libparquet-15.0.2-hacf5a1f_15_cpu.conda
+  sha256: 72d3a5abb77b42517bef0daaf4866915176346b2feb04381d8e7da6cce9d0747
+  md5: 10d30f369ef6e1c593b75b4210c13a50
   depends:
   - gflags >=2.2.2,<2.3.0a0
-  - libarrow 15.0.2 h9102155_14_cpu
+  - libarrow 15.0.2 h9102155_15_cpu
   - libgcc-ng >=12
   - libstdcxx-ng >=12
   - libthrift >=0.19.0,<0.19.1.0a0
   - openssl >=3.3.1,<4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 1184379
-  timestamp: 1718338277386
+  size: 1186118
+  timestamp: 1718626227637
 - kind: conda
   name: libparquet
   version: 15.0.2
-  build: hcf52c46_14_cpu
-  build_number: 14
+  build: hcf52c46_15_cpu
+  build_number: 15
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libparquet-15.0.2-hcf52c46_14_cpu.conda
-  sha256: cf8f61d75a37a710fd81095f4fec1460ee1ebfe074243ee6b9fb3ac10657edcf
-  md5: 97f8d99946a28d807a449e607c095831
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/libparquet-15.0.2-hcf52c46_15_cpu.conda
+  sha256: 535f02a7f683e8b8a0506688b05295aa2f8678c4c99404295f65c657aa534ee4
+  md5: b1e26f9d071675216f63520b7b3e83a7
   depends:
   - __osx >=11.0
-  - libarrow 15.0.2 h431211a_14_cpu
+  - libarrow 15.0.2 h431211a_15_cpu
   - libcxx >=16
   - libthrift >=0.19.0,<0.19.1.0a0
   - openssl >=3.3.1,<4.0a0
   license: Apache-2.0
-  license_family: APACHE
   purls: []
-  size: 878130
-  timestamp: 1718338665318
+  size: 881172
+  timestamp: 1718626927832
 - kind: conda
   name: libparquet
   version: 16.1.0
@@ -17016,23 +16984,88 @@ packages:
 - kind: conda
   name: pyarrow
   version: 15.0.2
-  build: py39h3c730f4_14_cpu
-  build_number: 14
-  subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/pyarrow-15.0.2-py39h3c730f4_14_cpu.conda
-  sha256: 551217268df8016ac000efcc442265102a750d95956ff0cf46cce958719b28ec
-  md5: 2813e13a26ccc20a4bf3e7a1edaf5efd
+  build: py39h18c283c_15_cpu
+  build_number: 15
+  subdir: osx-arm64
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-15.0.2-py39h18c283c_15_cpu.conda
+  sha256: 15904e011c49e31042ed7da2138f6d4750438525b1c38d3e39535c450e48c6ce
+  md5: dc132fbcc5662a229aa3d1e4b8c385d8
   depends:
-  - libarrow 15.0.2 h6a9fb90_14_cpu
-  - libarrow-acero 15.0.2 he0c23c2_14_cpu
-  - libarrow-dataset 15.0.2 he0c23c2_14_cpu
-  - libarrow-flight 15.0.2 ha7f4a34_14_cpu
-  - libarrow-flight-sql 15.0.2 hdeef14f_14_cpu
-  - libarrow-gandiva 15.0.2 hc87e867_14_cpu
-  - libarrow-substrait 15.0.2 h1f0e801_14_cpu
-  - libparquet 15.0.2 h178134c_14_cpu
+  - __osx >=11.0
+  - libarrow 15.0.2 h431211a_15_cpu
+  - libarrow-acero 15.0.2 h00cdb27_15_cpu
+  - libarrow-dataset 15.0.2 h00cdb27_15_cpu
+  - libarrow-flight 15.0.2 h6348776_15_cpu
+  - libarrow-flight-sql 15.0.2 h6956890_15_cpu
+  - libarrow-gandiva 15.0.2 h31ed65c_15_cpu
+  - libarrow-substrait 15.0.2 h6df5cdc_15_cpu
+  - libcxx >=16
+  - libparquet 15.0.2 hcf52c46_15_cpu
   - libzlib >=1.3.1,<2.0a0
-  - numpy >=1.22.4,<2.0a0
+  - numpy >=1.19,<3
+  - python >=3.9,<3.10.0a0
+  - python >=3.9,<3.10.0a0 *_cpython
+  - python_abi 3.9.* *_cp39
+  - tzdata
+  constrains:
+  - apache-arrow-proc =*=cpu
+  license: Apache-2.0
+  purls:
+  - pkg:pypi/pyarrow?source=conda-forge-mapping
+  size: 3945972
+  timestamp: 1718627706264
+- kind: conda
+  name: pyarrow
+  version: 15.0.2
+  build: py39h647b7ea_15_cpu
+  build_number: 15
+  subdir: linux-64
+  url: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-15.0.2-py39h647b7ea_15_cpu.conda
+  sha256: f395a3071a3f9463ccc0236f2a7dae6282ba5fb8618784fb7daa3bc4d8de9308
+  md5: 5d6fb5d3c0a5d92f73b61fbd5abe9526
+  depends:
+  - libarrow 15.0.2 h9102155_15_cpu
+  - libarrow-acero 15.0.2 hbabe93e_15_cpu
+  - libarrow-dataset 15.0.2 hbabe93e_15_cpu
+  - libarrow-flight 15.0.2 he07691f_15_cpu
+  - libarrow-flight-sql 15.0.2 he4f5ca8_15_cpu
+  - libarrow-gandiva 15.0.2 hc1954e9_15_cpu
+  - libarrow-substrait 15.0.2 he4f5ca8_15_cpu
+  - libgcc-ng >=12
+  - libparquet 15.0.2 hacf5a1f_15_cpu
+  - libstdcxx-ng >=12
+  - libzlib >=1.3.1,<2.0a0
+  - numpy >=1.19,<3
+  - python >=3.9,<3.10.0a0
+  - python_abi 3.9.* *_cp39
+  - tzdata
+  constrains:
+  - apache-arrow-proc =*=cpu
+  license: Apache-2.0
+  purls:
+  - pkg:pypi/pyarrow?source=conda-forge-mapping
+  size: 4510348
+  timestamp: 1718628879957
+- kind: conda
+  name: pyarrow
+  version: 15.0.2
+  build: py39h6f6571a_15_cpu
+  build_number: 15
+  subdir: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/pyarrow-15.0.2-py39h6f6571a_15_cpu.conda
+  sha256: a7f400e1ff7405547484530544754284119ed6ca652b1aff6bf5acaa8106c80c
+  md5: 1bb17c76426ac606c6f82783e8f5bb7d
+  depends:
+  - libarrow 15.0.2 h6a9fb90_15_cpu
+  - libarrow-acero 15.0.2 he0c23c2_15_cpu
+  - libarrow-dataset 15.0.2 he0c23c2_15_cpu
+  - libarrow-flight 15.0.2 ha7f4a34_15_cpu
+  - libarrow-flight-sql 15.0.2 hdeef14f_15_cpu
+  - libarrow-gandiva 15.0.2 hc87e867_15_cpu
+  - libarrow-substrait 15.0.2 h1f0e801_15_cpu
+  - libparquet 15.0.2 h178134c_15_cpu
+  - libzlib >=1.3.1,<2.0a0
+  - numpy >=1.19,<3
   - python >=3.9,<3.10.0a0
   - python_abi 3.9.* *_cp39
   - tzdata
@@ -17042,111 +17075,42 @@ packages:
   constrains:
   - apache-arrow-proc =*=cpu
   license: Apache-2.0
-  license_family: APACHE
   purls:
   - pkg:pypi/pyarrow?source=conda-forge-mapping
-  size: 3463822
-  timestamp: 1718340940079
+  size: 3473912
+  timestamp: 1718628025987
 - kind: conda
   name: pyarrow
   version: 15.0.2
-  build: py39h6f7bfa8_14_cpu
-  build_number: 14
-  subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/pyarrow-15.0.2-py39h6f7bfa8_14_cpu.conda
-  sha256: f14d7569e7bd6cf8e8dbcf96be8d4a1a8b831a44cf3d9a2e0e10b2cc86dd27da
-  md5: eb3ecfa2c3a4628dc5ad9595fae18d83
-  depends:
-  - libarrow 15.0.2 h9102155_14_cpu
-  - libarrow-acero 15.0.2 hbabe93e_14_cpu
-  - libarrow-dataset 15.0.2 hbabe93e_14_cpu
-  - libarrow-flight 15.0.2 he07691f_14_cpu
-  - libarrow-flight-sql 15.0.2 he4f5ca8_14_cpu
-  - libarrow-gandiva 15.0.2 hc1954e9_14_cpu
-  - libarrow-substrait 15.0.2 he4f5ca8_14_cpu
-  - libgcc-ng >=12
-  - libparquet 15.0.2 hacf5a1f_14_cpu
-  - libstdcxx-ng >=12
-  - libzlib >=1.3.1,<2.0a0
-  - numpy >=1.22.4,<2.0a0
-  - python >=3.9,<3.10.0a0
-  - python_abi 3.9.* *_cp39
-  - tzdata
-  constrains:
-  - apache-arrow-proc =*=cpu
-  license: Apache-2.0
-  license_family: APACHE
-  purls:
-  - pkg:pypi/pyarrow?source=conda-forge-mapping
-  size: 4491478
-  timestamp: 1718340420396
-- kind: conda
-  name: pyarrow
-  version: 15.0.2
-  build: py39h7884d04_14_cpu
-  build_number: 14
-  subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyarrow-15.0.2-py39h7884d04_14_cpu.conda
-  sha256: d2250d0de6fd8abb59f09e75086b8eba7ba0f8ae46918161740082e9fdd23d53
-  md5: b140a674bc73497fe9690878a4c5bb95
-  depends:
-  - __osx >=11.0
-  - libarrow 15.0.2 h431211a_14_cpu
-  - libarrow-acero 15.0.2 h00cdb27_14_cpu
-  - libarrow-dataset 15.0.2 h00cdb27_14_cpu
-  - libarrow-flight 15.0.2 h6348776_14_cpu
-  - libarrow-flight-sql 15.0.2 h6956890_14_cpu
-  - libarrow-gandiva 15.0.2 h31ed65c_14_cpu
-  - libarrow-substrait 15.0.2 h6df5cdc_14_cpu
-  - libcxx >=16
-  - libparquet 15.0.2 hcf52c46_14_cpu
-  - libzlib >=1.3.1,<2.0a0
-  - numpy >=1.22.4,<2.0a0
-  - python >=3.9,<3.10.0a0
-  - python >=3.9,<3.10.0a0 *_cpython
-  - python_abi 3.9.* *_cp39
-  - tzdata
-  constrains:
-  - apache-arrow-proc =*=cpu
-  license: Apache-2.0
-  license_family: APACHE
-  purls:
-  - pkg:pypi/pyarrow?source=conda-forge-mapping
-  size: 3941762
-  timestamp: 1718340177773
-- kind: conda
-  name: pyarrow
-  version: 15.0.2
-  build: py39he3cc3af_14_cpu
-  build_number: 14
+  build: py39ha632924_15_cpu
+  build_number: 15
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-15.0.2-py39he3cc3af_14_cpu.conda
-  sha256: 3f1244d11a455d4dc27eac6b9cb4cc6d62875b71ce420180e304259246dd05bd
-  md5: 7aa8e62e417d5dbc9d4f1a831a24b83d
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyarrow-15.0.2-py39ha632924_15_cpu.conda
+  sha256: c28584b8088dc85b2917c798dc206dbd92b457b98edd1e096f528149ad734a70
+  md5: 5df19b1b8d6fa61ee9fbc49b2200a32e
   depends:
   - __osx >=10.13
-  - libarrow 15.0.2 hc2fafd7_14_cpu
-  - libarrow-acero 15.0.2 hf036a51_14_cpu
-  - libarrow-dataset 15.0.2 hf036a51_14_cpu
-  - libarrow-flight 15.0.2 hd834827_14_cpu
-  - libarrow-flight-sql 15.0.2 he1e86a1_14_cpu
-  - libarrow-gandiva 15.0.2 hfa04d5a_14_cpu
-  - libarrow-substrait 15.0.2 he1e86a1_14_cpu
+  - libarrow 15.0.2 hc2fafd7_15_cpu
+  - libarrow-acero 15.0.2 hf036a51_15_cpu
+  - libarrow-dataset 15.0.2 hf036a51_15_cpu
+  - libarrow-flight 15.0.2 hd834827_15_cpu
+  - libarrow-flight-sql 15.0.2 he1e86a1_15_cpu
+  - libarrow-gandiva 15.0.2 hfa04d5a_15_cpu
+  - libarrow-substrait 15.0.2 he1e86a1_15_cpu
   - libcxx >=16
-  - libparquet 15.0.2 h904a336_14_cpu
+  - libparquet 15.0.2 h904a336_15_cpu
   - libzlib >=1.3.1,<2.0a0
-  - numpy >=1.22.4,<2.0a0
+  - numpy >=1.19,<3
   - python >=3.9,<3.10.0a0
   - python_abi 3.9.* *_cp39
   - tzdata
   constrains:
   - apache-arrow-proc =*=cpu
   license: Apache-2.0
-  license_family: APACHE
   purls:
   - pkg:pypi/pyarrow?source=conda-forge-mapping
-  size: 3977826
-  timestamp: 1718339584670
+  size: 3975693
+  timestamp: 1718628829500
 - kind: conda
   name: pyarrow
   version: 16.1.0
@@ -17620,13 +17584,14 @@ packages:
   timestamp: 1714846885370
 - kind: conda
   name: pyobjc-core
-  version: '10.2'
-  build: py311h665608e_0
+  version: 10.3.1
+  build: py311h5f135c3_0
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-core-10.2-py311h665608e_0.conda
-  sha256: d9dca029a92dff4ce4e97463033d7eb1528d03adebd6e39dfc5f8c4c988a2e7d
-  md5: 756d3967f52eb7a5c8a4595836f0cba7
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-core-10.3.1-py311h5f135c3_0.conda
+  sha256: 7d52a7ee1fa28ed97acd33ad29407aca29e652c4588e15a98360b729a4155ec7
+  md5: 03b8f7f2cd5efcebac78a17f8ae8c0d2
   depends:
+  - __osx >=11.0
   - libffi >=3.4,<4.0a0
   - python >=3.11,<3.12.0a0
   - python >=3.11,<3.12.0a0 *_cpython
@@ -17636,17 +17601,18 @@ packages:
   license_family: MIT
   purls:
   - pkg:pypi/pyobjc-core?source=conda-forge-mapping
-  size: 460197
-  timestamp: 1710591353438
+  size: 481686
+  timestamp: 1718171961717
 - kind: conda
   name: pyobjc-core
-  version: '10.2'
-  build: py311h9b70068_0
+  version: 10.3.1
+  build: py311h9d23797_0
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-10.2-py311h9b70068_0.conda
-  sha256: ee087e894c54d4f803564e7f3eca8c3874df1cafc4393cb90bd42ea9b84b44ee
-  md5: df310a6ec985adaa0f1a3cba4190e1ed
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-10.3.1-py311h9d23797_0.conda
+  sha256: 00321f83e0079164e3c220b0b8311c1397dac34e8a209c3300c1cae04b1796ed
+  md5: 5bce9e98557971559e7c2e672c6772fe
   depends:
+  - __osx >=10.13
   - libffi >=3.4,<4.0a0
   - python >=3.11,<3.12.0a0
   - python_abi 3.11.* *_cp311
@@ -17655,36 +17621,18 @@ packages:
   license_family: MIT
   purls:
   - pkg:pypi/pyobjc-core?source=conda-forge-mapping
-  size: 470129
-  timestamp: 1710591219864
+  size: 489019
+  timestamp: 1718171770466
 - kind: conda
   name: pyobjc-core
-  version: '10.2'
-  build: py312h74abf1d_0
-  subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-10.2-py312h74abf1d_0.conda
-  sha256: adc9590ed50322275a7e835377157c93e93fd457133ecb62d0ccb60cf2906340
-  md5: fc53fe067431dee92471aac39ed58128
-  depends:
-  - libffi >=3.4,<4.0a0
-  - python >=3.12,<3.13.0a0
-  - python_abi 3.12.* *_cp312
-  - setuptools
-  license: MIT
-  license_family: MIT
-  purls:
-  - pkg:pypi/pyobjc-core?source=conda-forge-mapping
-  size: 469732
-  timestamp: 1710591122760
-- kind: conda
-  name: pyobjc-core
-  version: '10.2'
-  build: py312h9d22092_0
+  version: 10.3.1
+  build: py312hbb55c70_0
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-core-10.2-py312h9d22092_0.conda
-  sha256: 15db5d1e8639691365a0485c5ee9791760480ffff9cc7d1bbb635a9a83efc35e
-  md5: e8e394bb93509a5f0dacd981dc06099d
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-core-10.3.1-py312hbb55c70_0.conda
+  sha256: 407fca7feca5dceb058a48b7272f342e4e8708eba4ac890a076d5499da3d7fe4
+  md5: ce11aaac866b943dbb644b70a820385e
   depends:
+  - __osx >=11.0
   - libffi >=3.4,<4.0a0
   - python >=3.12,<3.13.0a0
   - python >=3.12,<3.13.0a0 *_cpython
@@ -17694,86 +17642,106 @@ packages:
   license_family: MIT
   purls:
   - pkg:pypi/pyobjc-core?source=conda-forge-mapping
-  size: 458802
-  timestamp: 1710591355614
+  size: 491160
+  timestamp: 1718171865193
+- kind: conda
+  name: pyobjc-core
+  version: 10.3.1
+  build: py312he77c50b_0
+  subdir: osx-64
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-10.3.1-py312he77c50b_0.conda
+  sha256: d3f056d2fb9fb2838b79672b17f2b1305218c1e95fbf05f0b02ac1eca513082d
+  md5: fb6108445d2e14c5aa1f79fa97aab8ed
+  depends:
+  - __osx >=10.13
+  - libffi >=3.4,<4.0a0
+  - python >=3.12,<3.13.0a0
+  - python_abi 3.12.* *_cp312
+  - setuptools
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/pyobjc-core?source=conda-forge-mapping
+  size: 496184
+  timestamp: 1718171987828
 - kind: conda
   name: pyobjc-framework-cocoa
-  version: '10.2'
-  build: py311h665608e_0
+  version: 10.3.1
+  build: py311h5f135c3_0
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-framework-cocoa-10.2-py311h665608e_0.conda
-  sha256: 02c663bb7e9e7557ebe6361123704fb202cea726ae90530cea3f8069678a25fa
-  md5: cccc71d68a0c7c91bbb40aaa9704e8e8
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-framework-cocoa-10.3.1-py311h5f135c3_0.conda
+  sha256: 80c5cc1941af44446ee007a6c7c98c642307ae968fd70f7f5bf6ebd0ec311fd5
+  md5: a0541fa0e67858765b21be323626f5b0
   depends:
+  - __osx >=11.0
   - libffi >=3.4,<4.0a0
-  - pyobjc-core 10.2.*
+  - pyobjc-core 10.3.1.*
   - python >=3.11,<3.12.0a0
   - python >=3.11,<3.12.0a0 *_cpython
   - python_abi 3.11.* *_cp311
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/pyobjc-framework-cocoa?source=conda-forge-mapping
-  size: 372727
-  timestamp: 1710597522066
+  size: 384567
+  timestamp: 1718645692999
 - kind: conda
   name: pyobjc-framework-cocoa
-  version: '10.2'
-  build: py311h9b70068_0
+  version: 10.3.1
+  build: py311h9d23797_0
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-10.2-py311h9b70068_0.conda
-  sha256: 336f8920c4f42da580491ca4298f04bd74db3cbea9aaa83abd9679085ce93c52
-  md5: ccdf574dc51507ce83a1fd56207e3757
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-10.3.1-py311h9d23797_0.conda
+  sha256: 8cc6a36d71affa4354ed5184ebafe1144f5a0a4add37f4410ff4ea422695f47c
+  md5: 557ec4f240ee3f8944ae1b3015ef36dd
   depends:
+  - __osx >=10.13
   - libffi >=3.4,<4.0a0
-  - pyobjc-core 10.2.*
+  - pyobjc-core 10.3.1.*
   - python >=3.11,<3.12.0a0
   - python_abi 3.11.* *_cp311
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/pyobjc-framework-cocoa?source=conda-forge-mapping
-  size: 372679
-  timestamp: 1710597487565
+  size: 382713
+  timestamp: 1718645767182
 - kind: conda
   name: pyobjc-framework-cocoa
-  version: '10.2'
-  build: py312h74abf1d_0
-  subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-10.2-py312h74abf1d_0.conda
-  sha256: 6a8b5be723f5c9188bfe3219e0448450775e2e0e798e6986e46605df4c875437
-  md5: b5fca135abb5b6d34afceb96c91e60fd
-  depends:
-  - libffi >=3.4,<4.0a0
-  - pyobjc-core 10.2.*
-  - python >=3.12,<3.13.0a0
-  - python_abi 3.12.* *_cp312
-  license: MIT
-  license_family: MIT
-  purls:
-  - pkg:pypi/pyobjc-framework-cocoa?source=conda-forge-mapping
-  size: 369208
-  timestamp: 1710597488587
-- kind: conda
-  name: pyobjc-framework-cocoa
-  version: '10.2'
-  build: py312h9d22092_0
+  version: 10.3.1
+  build: py312hbb55c70_0
   subdir: osx-arm64
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-framework-cocoa-10.2-py312h9d22092_0.conda
-  sha256: 3a7130dd53f3b92bae250c8f5831cde031d102b884bc5b556ade3882d8a27151
-  md5: b21b7942dd1d055073b95fed9cac0bff
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/pyobjc-framework-cocoa-10.3.1-py312hbb55c70_0.conda
+  sha256: 9bd12bc17b6307dc3ca5bc3aac5f82a01bc9953bd448616b6f62577ba4e04148
+  md5: ba19305f7b6e524edb92cefdd47fbbb1
   depends:
+  - __osx >=11.0
   - libffi >=3.4,<4.0a0
-  - pyobjc-core 10.2.*
+  - pyobjc-core 10.3.1.*
   - python >=3.12,<3.13.0a0
   - python >=3.12,<3.13.0a0 *_cpython
   - python_abi 3.12.* *_cp312
   license: MIT
-  license_family: MIT
   purls:
   - pkg:pypi/pyobjc-framework-cocoa?source=conda-forge-mapping
-  size: 370036
-  timestamp: 1710597539579
+  size: 379357
+  timestamp: 1718645762924
+- kind: conda
+  name: pyobjc-framework-cocoa
+  version: 10.3.1
+  build: py312he77c50b_0
+  subdir: osx-64
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-10.3.1-py312he77c50b_0.conda
+  sha256: aa99ea58ad2f8ade894c11f5be2e9e28860efe527f0994532c84bef20eef249a
+  md5: 58a1af350ed69dd0d9e43c652c9b35b6
+  depends:
+  - __osx >=10.13
+  - libffi >=3.4,<4.0a0
+  - pyobjc-core 10.3.1.*
+  - python >=3.12,<3.13.0a0
+  - python_abi 3.12.* *_cp312
+  license: MIT
+  purls:
+  - pkg:pypi/pyobjc-framework-cocoa?source=conda-forge-mapping
+  size: 375734
+  timestamp: 1718645660119
 - kind: conda
   name: pyparsing
   version: 3.1.2
@@ -21677,13 +21645,13 @@ packages:
   timestamp: 1688655976471
 - kind: conda
   name: urllib3
-  version: 2.2.1
+  version: 2.2.2
   build: pyhd8ed1ab_0
   subdir: noarch
   noarch: python
-  url: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.1-pyhd8ed1ab_0.conda
-  sha256: d4009dcc9327684d6409706ce17656afbeae690d8522d3c9bc4df57649a352cd
-  md5: 08807a87fa7af10754d46f63b368e016
+  url: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.2.2-pyhd8ed1ab_0.conda
+  sha256: 8cd972048f297b8e0601158ce352f5ca9510dda9f2706a46560220aa58b9f038
+  md5: 92cdb6fe54b78739ad70637e4f0deb07
   depends:
   - brotli-python >=1.0.9
   - pysocks >=1.5.6,<2.0,!=1.5.7
@@ -21692,8 +21660,8 @@ packages:
   license_family: MIT
   purls:
   - pkg:pypi/urllib3?source=conda-forge-mapping
-  size: 94669
-  timestamp: 1708239595549
+  size: 95016
+  timestamp: 1718653149133
 - kind: conda
   name: vc
   version: '14.3'
