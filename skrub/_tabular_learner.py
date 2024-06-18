@@ -25,46 +25,30 @@ _TREE_ENSEMBLE_CLASSES = (
 def tabular_learner(estimator, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
-    Scikit-learn estimators such as ``LogisticRegression()`` or
-    ``RandomForestClassifier()`` expect their input to be numeric arrays. They
-    do not accept heterogeneous dataframes containing complex data such as
-    datetimes or strings. Moreover, they do not always accept the input to
-    contain missing values. Therefore, some preprocessing must be applied to
-    dataframes before they are passed to an estimator.
+    Given a scikit-learn ``estimator``, this function creates a machine-learning
+    pipeline that preprocesses tabular data to extract numeric features and
+    impute missing values if necessary, then applies the ``estimator``.
 
-    This function is given a scikit-learn ``estimator``, and creates a simple
-    pipeline which applies the necessary preprocessing to an input dataframe,
-    then passes the result to the provided ``estimator``. Thus,
-    ``tabular_learner`` returns a scikit-learn
-    :obj:`~sklearn.pipeline.Pipeline` with several steps:
+    ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
+    with several steps:
 
-    - a :obj:`TableVectorizer` transforms the tabular data into numeric features.
-    - an optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
-      by their mean. This step is only added if the ``estimator`` does not
-      support missing values. For example, scikit-learn's
-      :obj:`~sklearn.ensemble.RandomForestRegressor` handles missing values
-      itself, whereas :obj:`~sklearn.linear_model.Ridge` does not and thus
-      requires imputation.
-    - the last step is the provided ``estimator`` itself.
+    - a :obj:`TableVectorizer` transforms the tabular data into numeric
+      features. Its parameters are chosen depending on the provided
+      ``estimator``.
+    - an optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values by
+      their mean. This step is only added if the ``estimator`` cannot handle
+      missing values itself.
+    - the last step is the provided ``estimator``.
 
-    The exact parameters of the :obj:`TableVectorizer` are chosen depending on
-    the provided ``estimator``. For example, if the ``estimator`` is a
-    :obj:`~sklearn.ensemble.RandomForestRegressor`, categories are encoded with
-    a :obj:`~sklearn.preprocessing.OrdinalEncoder` because trees deal well with
-    such an encoding. However, that choice would not be appropriate for some
-    other models (in particular linear models), so when the ``estimator`` is
-    not a tree ensemble, :obj:`~sklearn.preprocessing.OneHotEncoder` is used
-    rather than ordinal encoding.
-
-    **Note:** ``tabular_learner`` is a recent addition and the heuristics used to
-    define an appropriate preprocessing based on the ``estimator`` are likely
-    to change and improve in future releases.
+    **Note:** ``tabular_learner`` is a recent addition and the heuristics used
+    to define an appropriate preprocessing based on the ``estimator`` may change
+    in future releases.
 
     Parameters
     ----------
     estimator : str or scikit-learn estimator
         The estimator to use as the final step in the pipeline. Appropriate
-        choices are made for previous step depending on the ``estimator``. Can
+        choices are made for previous steps depending on the ``estimator``. Can
         be the string ``"regressor"`` to use a
         :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or
         ``"classifier"`` to use a
@@ -170,7 +154,6 @@ def tabular_learner(estimator, n_jobs=None):
                                      low_cardinality_transformer=ToCategorical())),
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
-
 
     - A :obj:`MinHashEncoder` is used as the
       ``high_cardinality_transformer``. This encoder provides good
