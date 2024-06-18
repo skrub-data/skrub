@@ -79,13 +79,30 @@ def tabular_learner(estimator, n_jobs=None):
         A scikit-learn :obj:`~sklearn.pipeline.Pipeline` chaining some
         preprocessing and the provided ``estimator``.
 
+    Notes
+    -----
+    The parameter values for the :obj:`TableVectorizer` might differ depending on the
+    version of scikit-learn:
+
+    - support for categorical features in
+      :class:`~sklearn.ensemble.HistGradientBoostingClassifier` and
+      :class:`~sklearn.ensemble.HistGradientBoostingRegressor` was added in
+      scikit-learn 1.4. Therefore, before this version, a
+      :class:`~sklearn.preprocessing.OrdinalEncoder` is used for low-cardinality
+      features.
+    - support for missing values in
+      :class:`~sklearn.ensemble.RandomForestClassifier` and
+      :class:`~sklearn.ensemble.RandomForestRegressor` was added in scikit-learn 1.4.
+      Therefore, before this version, a :class:`~sklearn.impute.SimpleImputer` is used
+      to impute missing values.
+
     Examples
     --------
     >>> from skrub import tabular_learner
 
-    We can easily get a default pipeline for classification or regression:
+    We can easily get a default pipeline for regression or classification:
 
-    >>> tabular_learner('regressor')
+    >>> tabular_learner('regressor')                                    # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
@@ -95,7 +112,7 @@ def tabular_learner(estimator, n_jobs=None):
     When requesting a ``'regressor'``, the last step of the pipeline is set to a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`.
 
-    >>> tabular_learner('classifier')
+    >>> tabular_learner('classifier')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),
@@ -142,7 +159,7 @@ def tabular_learner(estimator, n_jobs=None):
     sent to the supervised estimator (see the :obj:`TableVectorizer` documentation for
     details):
 
-    >>> model.named_steps['tablevectorizer'].transform(X)
+    >>> model.named_steps['tablevectorizer'].transform(X)               # doctest: +SKIP
        last_visit_year  last_visit_month  ...  insulin_prescriptions  fasting_glucose
     0           2020.0               1.0  ...                    NaN             35.0
     1           2021.0               4.0  ...                   13.0            140.0
@@ -165,7 +182,7 @@ def tabular_learner(estimator, n_jobs=None):
     On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
     (generated with the string ``"classifier"``):
 
-    >>> tabular_learner('classifier')
+    >>> tabular_learner('classifier')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
                                      low_cardinality_transformer=ToCategorical())),

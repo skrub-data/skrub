@@ -31,7 +31,7 @@ natively support missing values, a missing value imputer step is added before th
 final estimator. The parameters of the :class:`TableVectorizer` are chosen based on the
 type of the final estimator.
 
-.. list-table:: Parameter values choice of :class:`TableVectorizer` when using :func:`tabular_learner` function
+.. list-table:: Parameter values choice of :class:`TableVectorizer` when using the :func:`tabular_learner` function
    :header-rows: 1
 
    * -
@@ -40,7 +40,7 @@ type of the final estimator.
      - Linear models and others
    * - Low-cardinality encoder
      - :class:`~sklearn.preprocessing.OrdinalEncoder`
-     - Native support
+     - Native support :sup:`(1)`
      - :class:`~sklearn.preprocessing.OneHotEncoder`
    * - High-cardinality encoder
      - :class:`MinHashEncoder`
@@ -55,20 +55,31 @@ type of the final estimator.
      - :class:`DatetimeEncoder`
      - :class:`DatetimeEncoder`
    * - Missing value strategy
-     - Native support
+     - Native support :sup:`(2)`
      - Native support
      - :class:`~sklearn.impute.SimpleImputer`
 
-With tree-based models, the :obj:`MinHashEncoder` is used for high-cardinality
-categorical features. It does not provide interpretable features as the
-default :obj:`GapEncoder` but it is much faster. For low-cardinality, these models
-relies on either the native support of the model or the :obj:`OrdinalEncoder`.
+.. note::
+  :sup:`(1)` if scikit-learn installed is lower than 1.4, then
+  :class:`~sklearn.preprocessing.OrdinalEncoder` is used since native support
+  for categorical features is not available.
 
-With linear models or unknown models, the default values of the different parameters
-are used. Therefore, the :obj:`GapEncoder` is used for high-cardinality categorical
-features and the :obj:`OneHotEncoder` for low-cardinality ones. If the final estimator
-does not support missing values, a :obj:`SimpleImputer` is added before the final
-estimator. Those choices are not optimal but they are methodologically safe.
+  :sup:`(2)` if scikit-learn installed is lower than 1.4, then
+  :class:`~sklearn.impute.SimpleImputer` is used since native support
+  for missing values is not available.
+
+With tree-based models, the :obj:`MinHashEncoder` is used for high-cardinality
+categorical features. It does not provide interpretable features as the default
+:obj:`GapEncoder` but it is much faster. For low-cardinality, these models relies on
+either the native support of the model or the
+:obj:`~sklearn.preprocessing.OrdinalEncoder`.
+
+With linear models or unknown models, the default values of the different parameters are
+used. Therefore, the :obj:`GapEncoder` is used for high-cardinality categorical features
+and the :obj:`~sklearn.preprocessing.OneHotEncoder` for low-cardinality ones. If the
+final estimator does not support missing values, a :obj:`~sklearn.impute.SimpleImputer`
+is added before the final estimator. Those choices are not optimal but they are
+methodologically safe.
 
 .. _dirty_categories:
 
