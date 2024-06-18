@@ -137,7 +137,6 @@ embedding_games = fetch_ken_embeddings(
 embedding_publisher = fetch_ken_embeddings(
     search_types="game_development_companies|game_companies|game_publish",
     embedding_table_id="games",
-    suffix="_aux",
 )
 
 # We keep the 200 embeddings column names in a list (for the |Pipeline|):
