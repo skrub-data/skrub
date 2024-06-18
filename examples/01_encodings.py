@@ -39,8 +39,8 @@ We study the case of predicting wages using the
 """
 
 ###############################################################################
-# Easily encoding a dataframe
-# ---------------------------
+# Easy learning on a dataframe
+# ----------------------------
 #
 # Let's first retrieve the dataset, using one of the downloaders from the
 # :mod:`skrub.datasets` module. As all the downloaders,
@@ -72,7 +72,29 @@ salaries
 # complex real-world object such as a date into a vector of numeric features —more
 # adequate for machine learning— is often called *vectorizing* it.
 #
-# We can easily do this using skrub's |TableVectorizer|.
+# ``skrub`` provides an easy way to build a simple but reliable
+# machine-learning model which works well on most tabular data.
+
+from sklearn.model_selection import cross_validate
+
+from skrub import tabular_learner
+
+model = tabular_learner("regressor")
+results = cross_validate(model, employees, salaries)
+results["test_score"]
+
+# %%
+# The estimator returned by :obj:`tabular_learner` combines 2 steps:
+#
+# - a |TableVectorizer| to preprocess the dataframe and vectorize the features
+# - a supervised learner (by default a |HGBR|)
+#
+# In the rest of this example, we focus on the first step and explore the
+# capabilities of skrub's |TableVectorizer|.
+
+# %%
+# More details on encoding tabular data
+# -------------------------------------
 
 from skrub import TableVectorizer
 
@@ -240,6 +262,9 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 # of particular character n-grams (more details are provided in its documentation).
 # Therefore it can be a faster and very effective alternative, when the supervised
 # learner is built on top of decision trees, which is the case for the |HGBR|.
+#
+# The resulting pipeline is identical to the one produced by default by
+# :obj:`tabular_learner`.
 
 from skrub import MinHashEncoder, ToCategorical
 
