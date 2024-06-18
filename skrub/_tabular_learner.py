@@ -48,6 +48,8 @@ def tabular_learner(estimator, n_jobs=None):
       missing values itself.
     - the last step is the provided ``estimator``.
 
+    Read more in the :ref:`User Guide <table_vectorizer>`.
+
     .. note::
        ``tabular_learner`` is a recent addition and the heuristics used
        to define an appropriate preprocessing based on the ``estimator`` may change

@@ -10,6 +10,8 @@ Encoding or vectorizing creates numerical features from the data,
 converting dataframes, strings, dates... Different encoders are suited
 for different types of data.
 
+.. _table_vectorizer:
+
 Turning a dataframe into a numerical feature matrix
 ---------------------------------------------------
 
