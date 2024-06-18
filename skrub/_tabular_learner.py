@@ -35,8 +35,9 @@ def tabular_learner(estimator, n_jobs=None):
     - a :obj:`TableVectorizer` transforms the tabular data into numeric
       features. Its parameters are chosen depending on the provided
       ``estimator``.
-    - an optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values by
-      their mean. This step is only added if the ``estimator`` cannot handle
+    - an optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
+      by their mean and adds binary columns that indicate which values were
+      missing. This step is only added if the ``estimator`` cannot handle
       missing values itself.
     - the last step is the provided ``estimator``.
 
@@ -118,7 +119,7 @@ def tabular_learner(estimator, n_jobs=None):
     >>> model = tabular_learner(LogisticRegression())
     >>> model.fit(X, y)
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
-                    ('simpleimputer', SimpleImputer()),
+                    ('simpleimputer', SimpleImputer(add_indicator=True)),
                     ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data
@@ -137,7 +138,7 @@ def tabular_learner(estimator, n_jobs=None):
 
     >>> tabular_learner(LogisticRegression())
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
-                    ('simpleimputer', SimpleImputer()),
+                    ('simpleimputer', SimpleImputer(add_indicator=True)),
                     ('logisticregression', LogisticRegression())])
 
     We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get
@@ -225,5 +226,5 @@ def tabular_learner(estimator, n_jobs=None):
     ):
         steps = (vectorizer, estimator)
     else:
-        steps = (vectorizer, SimpleImputer(), estimator)
+        steps = (vectorizer, SimpleImputer(add_indicator=True), estimator)
     return make_pipeline(*steps)
