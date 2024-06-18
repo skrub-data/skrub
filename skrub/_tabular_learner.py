@@ -194,7 +194,7 @@ def tabular_learner(estimator, n_jobs=None):
                 n_jobs=n_jobs,
             )
         raise ValueError(
-            "If ``predictor`` is a string it should be 'regressor' or 'classifier'."
+            "If ``estimator`` is a string it should be 'regressor' or 'classifier'."
         )
     if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
         raise TypeError(
