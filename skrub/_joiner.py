@@ -301,11 +301,13 @@ class Joiner(TransformerMixin, BaseEstimator):
             X, self._aux_table, self.suffix, main_table_name="X"
         )
         self.vectorizer_ = _make_vectorizer(
-            ns.col(self._aux_table, self._aux_key),
+            s.select(self._aux_table, s.cols(*self._aux_key)),
             self.string_encoder,
             rescale=self.ref_dist != "no_rescaling",
         )
-        aux = self.vectorizer_.fit_transform(ns.col(self._aux_table, self._aux_key))
+        aux = self.vectorizer_.fit_transform(
+            s.select(self._aux_table, s.cols(*self._aux_key))
+        )
         self._matching.fit(aux)
         return self
 
@@ -332,7 +334,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             X, self._aux_table, self.suffix, main_table_name="X"
         )
         main = self.vectorizer_.transform(
-            ns.set_column_names(ns.col(X, self._main_key), self._aux_key)
+            ns.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
         )
         aux_table = ns.reset_index(
             _join_utils.add_column_name_suffix(self._aux_table, self.suffix)
