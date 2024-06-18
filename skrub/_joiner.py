@@ -1,4 +1,4 @@
-skrub/_joiner.py"""
+"""
 The Joiner provides fuzzy joining as a scikit-learn transformer.
 """
 
