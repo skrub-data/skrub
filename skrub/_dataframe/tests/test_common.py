@@ -29,6 +29,7 @@ def test_not_implemented():
         "is_column_list",
         "to_column_list",
         "reset_index",
+        "copy_index",
         "index",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
@@ -264,6 +265,33 @@ def test_reset_index(df_module):
     assert col1.index.tolist() == idx
     assert ns.reset_index(col1).index.tolist() == list(range(len(col1)))
     assert col1.index.tolist() == idx
+
+
+@pytest.mark.parametrize("source_is_df", [False, True])
+@pytest.mark.parametrize("target_is_df", [False, True])
+def test_copy_index(source_is_df, target_is_df):
+    source = pd.Series(list("abc"), index=[10, 20, 30], name="s")
+    if source_is_df:
+        source = pd.DataFrame({"s": source}, index=source.index)
+    target = pd.Series(list("def"), index=[100, 200, 300], name="t")
+    if target_is_df:
+        target = pd.DataFrame({"t": target}, index=target.index)
+    out = ns.copy_index(source, target)
+    assert (out.index == source.index).all()
+    assert target.index.tolist() == [100, 200, 300]
+    assert source.index.tolist() == [10, 20, 30]
+
+
+def test_copy_index_non_pandas(all_dataframe_modules):
+    a = all_dataframe_modules["pandas-numpy-dtypes"].example_column
+    b = []
+    assert ns.copy_index(a, b) is b
+    assert ns.copy_index(b, a) is a
+    if "polars" not in all_dataframe_modules:
+        pytest.skip(reason="polars not installed")
+    b = all_dataframe_modules["polars"].example_column
+    assert ns.copy_index(a, b) is b
+    assert ns.copy_index(b, a) is a
 
 
 def test_index(df_module):
