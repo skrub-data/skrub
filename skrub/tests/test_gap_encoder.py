@@ -224,9 +224,11 @@ def test_missing_values(df_module):
     observations = df_module.make_column("", observations)
     enc = GapEncoder(n_components=3)
     enc.fit_transform(observations)
+    enc.transform(observations)
     enc.partial_fit(observations)
     # non-regression for https://github.com/skrub-data/skrub/issues/921
-    assert sbd.is_null(observations)[2]
+    for null_idx in 2, 4, 5:
+        assert sbd.is_null(observations)[null_idx]
 
 
 def test_check_fitted_gap_encoder(df_module):
