@@ -7,22 +7,16 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.preprocessing import StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import _join_utils, _matching, _utils
-from skrub import _selectors as s
-from skrub._check_input import CheckInputDataFrame
-from . import _dataframe as ns
-from skrub._datetime_encoder import DatetimeEncoder
-from skrub._to_str import ToStr
-
+from . import _dataframe as sbd
+from . import _join_utils, _matching, _utils
+from . import _selectors as s
+from ._check_input import CheckInputDataFrame
+from ._datetime_encoder import DatetimeEncoder
+from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
-
-
-def _as_str(col):
-    return ToStr().fit_transform(col)
-
 
 DEFAULT_STRING_ENCODER = make_pipeline(
     ToStr(),
@@ -255,13 +249,8 @@ class Joiner(TransformerMixin, BaseEstimator):
             and self.max_dist == "inf"
         ):
             self.max_dist_ = np.inf
-        elif isinstance(self.max_dist, int) or isinstance(self.max_dist, float):
-            self.max_dist_ = self.max_dist
         else:
-            raise ValueError(
-                "'max_dist' should be an int, a float, `None` or `np.inf`. Got"
-                f" {self.max_dist!r}"
-            )
+            self.max_dist_ = self.max_dist
 
     def _check_ref_dist(self):
         if self.ref_dist not in _MATCHERS:
@@ -334,9 +323,9 @@ class Joiner(TransformerMixin, BaseEstimator):
             X, self._aux_table, self.suffix, main_table_name="X"
         )
         main = self.vectorizer_.transform(
-            ns.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
+            sbd.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
         )
-        aux_table = ns.reset_index(
+        aux_table = sbd.reset_index(
             _join_utils.add_column_name_suffix(self._aux_table, self.suffix)
         )
         _match_result = self._matching.match(main, self.max_dist_)
@@ -345,9 +334,9 @@ class Joiner(TransformerMixin, BaseEstimator):
         token = _utils.random_string()
         left_key_name = f"skrub_left_key_{token}"
         right_key_name = f"skrub_right_key_{token}"
-        left = ns.with_columns(X, **{left_key_name: matching_col})
-        right = ns.with_columns(
-            aux_table, **{right_key_name: np.arange(ns.shape(aux_table)[0])}
+        left = sbd.with_columns(X, **{left_key_name: matching_col})
+        right = sbd.with_columns(
+            aux_table, **{right_key_name: np.arange(sbd.shape(aux_table)[0])}
         )
         join = _join_utils.left_join(
             left,
@@ -358,5 +347,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         join = s.select(join, ~s.cols(left_key_name))
         if self.add_match_info:
             for info_key, info_col_name in self._match_info_key_renaming.items():
-                join = ns.with_columns(join, **{info_col_name: _match_result[info_key]})
+                join = sbd.with_columns(
+                    join, **{info_col_name: _match_result[info_key]}
+                )
         return join

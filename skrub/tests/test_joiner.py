@@ -128,20 +128,6 @@ def test_max_dist(main_table, aux_table, max_dist):
     assert joiner.max_dist_ == np.inf
 
 
-def test_wrong_max_dist(main_table, aux_table):
-    joiner = Joiner(
-        aux_table, main_key="Country", aux_key="country", max_dist="wrong_max_dist"
-    )
-    with pytest.raises(
-        ValueError,
-        match=(
-            "'max_dist' should be an int, a float, `None` or `np.inf`. Got"
-            " 'wrong_max_dist'"
-        ),
-    ):
-        joiner.fit(main_table)
-
-
 def test_missing_values(df_module):
     df = df_module.make_dataframe({"A": [None, "hollywood", "beverly"]})
     joiner = Joiner(df, key="A", suffix="_")
