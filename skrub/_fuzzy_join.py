@@ -3,8 +3,10 @@ Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 """
 import numpy as np
 
-from skrub import _join_utils
-from skrub._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER, Joiner
+from . import _join_utils
+from . import _dataframe as sbd
+from . import _selectors as s
+from ._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER, Joiner
 
 
 def fuzzy_join(
@@ -20,7 +22,6 @@ def fuzzy_join(
     add_match_info=False,
     drop_unmatched=False,
 ):
-    # TODO: change docstring
     """Fuzzy (approximate) join.
 
     Rows in the left table are joined to their closest match from the right
@@ -212,9 +213,8 @@ def fuzzy_join(
     ).fit_transform(left)
     if drop_unmatched:
         # TODO: dispatch
-        join = join[join["skrub_Joiner_match_accepted"]]
+        # join = join[join["skrub_Joiner_match_accepted"]]
+        join = sbd.where(join,
     if not add_match_info:
-        # TODO: use selectors
-        # join = s.select(join, ~s.cols(Joiner.match_info_columns))
-        join = join.drop(Joiner.match_info_columns, axis=1)
+        join = s.select(join, ~s.cols(*Joiner.match_info_columns))
     return join
