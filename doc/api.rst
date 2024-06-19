@@ -70,6 +70,15 @@ This page lists all available functions and classes of `skrub`.
 
    TableVectorizer
 
+.. autosummary::
+   :toctree: generated/
+   :template: function.rst
+   :nosignatures:
+   :caption: Easily creating a learning pipeline for tabular data
+
+   tabular_learner
+
+
 .. raw:: html
 
    <h2>Dirty category encoders</h2>

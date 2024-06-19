@@ -225,7 +225,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         # Init n-grams counts vectorizer
         if self.hashing:
             self.ngrams_count_ = HashingVectorizer(
-                preprocessor=_preprocess_text,
                 analyzer=self.analyzer,
                 ngram_range=self.ngram_range,
                 n_features=self.hashing_n_features,
@@ -234,7 +233,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             )
             if self.add_words:  # Init a word counts vectorizer if needed
                 self.word_count_ = HashingVectorizer(
-                    preprocessor=_preprocess_text,
                     analyzer="word",
                     n_features=self.hashing_n_features,
                     norm=None,
@@ -242,15 +240,12 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
                 )
         else:
             self.ngrams_count_ = CountVectorizer(
-                preprocessor=_preprocess_text,
                 analyzer=self.analyzer,
                 ngram_range=self.ngram_range,
                 dtype=np.float64,
             )
             if self.add_words:
-                self.word_count_ = CountVectorizer(
-                    preprocessor=_preprocess_text, dtype=np.float64
-                )
+                self.word_count_ = CountVectorizer(dtype=np.float64)
 
         # Init H_dict_ with empty dict to train from scratch
         self.H_dict_ = dict()
@@ -733,9 +728,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         result = self._transform(sbd.to_numpy(X), is_null)
         names = self.get_feature_names_out()
         result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
-        if (idx := sbd.index(X)) is not None:
-            # X and result are pandas dataframes
-            result = result.set_axis(idx, axis="index")
+        result = sbd.copy_index(X, result)
         return result
 
     def _check_input_type(self, X, err_type=RejectColumn):
@@ -774,18 +767,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         # Restore H
         self.H_dict_ = pre_trans_H_dict_
         return result
-
-
-def _preprocess_text(text):
-    """Text preprocessor for the GapEncoder and MinHashEncoder.
-
-    It is equivalent to the default preprocessor of CountVectorizer except that
-    nulls are replaced by the empty string instead of raising an exception.
-
-    """
-    if isinstance(text, str):
-        return text.lower()
-    return ""
 
 
 def _rescale_W(W, A):
@@ -926,7 +907,6 @@ def get_kmeans_prototypes(
       - nearest neighbor
     """
     vectorizer = HashingVectorizer(
-        preprocessor=_preprocess_text,
         analyzer=analyzer,
         norm=None,
         alternate_sign=False,

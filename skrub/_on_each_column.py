@@ -473,7 +473,9 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
                 col_outputs = [sbd.col(X, col_name)] + col_outputs
             transformed_columns.extend(col_outputs)
         transformed_columns = _rename_columns(transformed_columns, self.all_outputs_)
-        return sbd.make_dataframe_like(X, transformed_columns)
+        result = sbd.make_dataframe_like(X, transformed_columns)
+        result = sbd.copy_index(X, result)
+        return result
 
     def _process_fit_transform_results(self, results, X):
         all_input_names = sbd.column_names(X)
@@ -509,7 +511,9 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         self.feature_names_in_ = self.all_inputs_
         self.n_features_in_ = len(self.all_inputs_)
 
-        return sbd.make_dataframe_like(X, transformed_columns)
+        result = sbd.make_dataframe_like(X, transformed_columns)
+        result = sbd.copy_index(X, result)
+        return result
 
     # set_output api compatibility
 

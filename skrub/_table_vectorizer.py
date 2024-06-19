@@ -241,6 +241,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     all_outputs_ : list of strings
         The names of the output columns.
 
+    See Also
+    --------
+    tabular_learner :
+        A function that accepts a scikit-learn estimator and creates a pipeline
+        combining a ``TableVectorizer``, optional missing value imputation and
+        the provided estimator.
+
     Examples
     --------
     >>> from skrub import TableVectorizer

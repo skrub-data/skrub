@@ -21,6 +21,12 @@ different data-specific encoder to the different columns. It makes
 heuristic choices that are not necessarily optimal but is typically a
 very good baseline.
 
+The function :func:`tabular_learner` is an easy way to create a machine-learning
+model that works well on tabular data. It is given a scikit-learn estimator and
+creates a :class:`~sklearn.pipeline.Pipeline` combining a
+:class:`TableVectorizer`, optional missing value imputation and the provided
+estimator.
+
 .. _dirty_categories:
 
 Encoding open-ended entries and dirty categories
