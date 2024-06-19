@@ -80,6 +80,7 @@ __all__ = [
     "fill_nulls",
     "n_unique",
     "unique",
+    "filter",
     "where",
     "sample",
     "head",
@@ -932,6 +933,21 @@ def _unique_pandas(col):
 @unique.specialize("polars", argument_type="Column")
 def _unique_polars(col):
     return col.unique().drop_nulls()
+
+
+@dispatch
+def filter(obj, predicate):
+    raise NotImplementedError()
+
+
+@filter.specialize("pandas")
+def _filter_pandas(obj, predicate):
+    return obj[predicate]
+
+
+@filter.specialize("polars")
+def _filter_polars(obj, predicate):
+    return obj.filter(predicate)
 
 
 @dispatch

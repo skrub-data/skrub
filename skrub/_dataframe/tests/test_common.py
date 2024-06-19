@@ -590,6 +590,16 @@ def test_unique(df_module):
     )
 
 
+def test_filter(df_module):
+    df = df_module.example_dataframe
+    pred = ns.col(df, "int-not-null-col") > 1
+    filtered_df = ns.filter(df, pred)
+    assert ns.shape(filtered_df) == (2, 8)
+    assert ns.to_list(ns.col(filtered_df, "int-not-null-col")) == [4, 10]
+    filtered_col = ns.filter(df_module.example_column, pred)
+    assert ns.to_list(filtered_col) == [4.5, -1.5]
+
+
 def test_where(df_module):
     s = ns.pandas_convert_dtypes(df_module.make_column("", [0, 1, 2]))
     out = ns.where(
