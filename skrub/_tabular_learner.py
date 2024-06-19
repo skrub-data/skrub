@@ -235,4 +235,5 @@ def tabular_learner(estimator, *, n_jobs=None):
         steps.append(SimpleImputer(add_indicator=True))
     if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         steps.append(StandardScaler())
+    steps.append(estimator)
     return make_pipeline(*steps)
