@@ -104,7 +104,7 @@ def aggregate(
     ]
     sorted_cols = sorted(base_group.columns)
 
-    return base_group[sorted_cols]
+    return base_group[sorted_cols].reset_index(drop=False)
 
 
 def get_named_agg(table, cols, operations):
