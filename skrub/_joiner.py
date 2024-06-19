@@ -346,8 +346,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         join = s.select(join, ~s.cols(left_key_name))
         if self.add_match_info:
+            match_info_dict = {}
             for info_key, info_col_name in self._match_info_key_renaming.items():
-                join = sbd.with_columns(
-                    join, **{info_col_name: _match_result[info_key]}
-                )
+                match_info_dict[info_col_name] = _match_result[info_key]
+            join = sbd.with_columns(join, **match_info_dict)
         return join
