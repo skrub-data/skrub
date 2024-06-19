@@ -22,7 +22,7 @@ _TREE_ENSEMBLE_CLASSES = (
 )
 
 
-def tabular_learner(estimator, n_jobs=None):
+def tabular_learner(estimator, *, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
     Given a scikit-learn ``estimator``, this function creates a
