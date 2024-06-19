@@ -292,6 +292,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         _join_utils.check_column_name_duplicates(
             X, self._aux_table, self.suffix, main_table_name="X"
         )
+        self._suffix = f"{{}}{self.suffix}".format
         self.vectorizer_ = _make_vectorizer(
             s.select(self._aux_table, s.cols(*self._aux_key)),
             self.string_encoder,
@@ -328,9 +329,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         main = self.vectorizer_.transform(
             sbd.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
         )
-        aux_table = sbd.reset_index(
-            _join_utils.add_column_name_suffix(self._aux_table, self.suffix)
-        )
         match_result = self._matching.match(main, self.max_dist_)
         matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1
@@ -339,13 +337,15 @@ class Joiner(TransformerMixin, BaseEstimator):
         right_key_name = f"skrub_right_key_{token}"
         left = sbd.with_columns(X, **{left_key_name: matching_col})
         right = sbd.with_columns(
-            aux_table, **{right_key_name: np.arange(sbd.shape(aux_table)[0])}
+            self._aux_table,
+            **{right_key_name: np.arange(sbd.shape(self._aux_table)[0])},
         )
         join = _join_utils.left_join(
             left,
             right,
             left_on=left_key_name,
             right_on=right_key_name,
+            rename_right_cols=self._suffix,
         )
         join = s.select(join, ~s.cols(left_key_name))
         if self.add_match_info:
