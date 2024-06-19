@@ -2,12 +2,14 @@
 The Joiner provides fuzzy joining as a scikit-learn transformer.
 """
 
+from functools import partial
+
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -19,6 +21,7 @@ from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
 DEFAULT_STRING_ENCODER = make_pipeline(
+    FunctionTransformer(partial(sbd.fill_nulls, value="")),
     ToStr(),
     HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)),
     # TODO: Remove sparse output from Tfidf to work with TableVectorizer
@@ -328,9 +331,9 @@ class Joiner(TransformerMixin, BaseEstimator):
         aux_table = sbd.reset_index(
             _join_utils.add_column_name_suffix(self._aux_table, self.suffix)
         )
-        _match_result = self._matching.match(main, self.max_dist_)
-        matching_col = _match_result["index"].copy()
-        matching_col[~_match_result["match_accepted"]] = -1
+        match_result = self._matching.match(main, self.max_dist_)
+        matching_col = match_result["index"].copy()
+        matching_col[~match_result["match_accepted"]] = -1
         token = _utils.random_string()
         left_key_name = f"skrub_left_key_{token}"
         right_key_name = f"skrub_right_key_{token}"
@@ -348,6 +351,6 @@ class Joiner(TransformerMixin, BaseEstimator):
         if self.add_match_info:
             match_info_dict = {}
             for info_key, info_col_name in self._match_info_key_renaming.items():
-                match_info_dict[info_col_name] = _match_result[info_key]
+                match_info_dict[info_col_name] = match_result[info_key]
             join = sbd.with_columns(join, **match_info_dict)
         return join
