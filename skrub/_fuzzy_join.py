@@ -3,6 +3,7 @@ Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 """
 import numpy as np
 
+from . import _dataframe as sbd
 from . import _join_utils
 from . import _selectors as s
 from ._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER, Joiner
@@ -211,8 +212,7 @@ def fuzzy_join(
         add_match_info=True,
     ).fit_transform(left)
     if drop_unmatched:
-        # TODO: dispatch
-        join = join[join["skrub_Joiner_match_accepted"]]
+        join = sbd.filter(join, sbd.col(join, "skrub_Joiner_match_accepted"))
     if not add_match_info:
         join = s.select(join, ~s.cols(*Joiner.match_info_columns))
     return join
