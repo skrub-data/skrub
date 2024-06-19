@@ -87,6 +87,8 @@ model
 # %%
 # In the rest of this example, we focus on the first step and explore the
 # capabilities of skrub's |TableVectorizer|.
+#
+# |
 
 # %%
 # More details on encoding tabular data
