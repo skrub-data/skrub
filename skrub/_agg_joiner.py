@@ -289,7 +289,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         X, _ = self._check_dataframes(X, self.aux_table_)
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
-        # skrub_px, _ = get_df_namespace(self.aux_table_)
         X = _join_utils.left_join(
             X,
             right=self.aux_table_,
