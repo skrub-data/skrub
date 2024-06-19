@@ -127,6 +127,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     >>> model.fit(X, y)
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
+                    ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data
@@ -146,6 +147,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     >>> tabular_learner(LogisticRegression())
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
+                    ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
 
     We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get
