@@ -62,11 +62,11 @@ employees
 # set of columns: some are numerical (``'year_first_hired'``), some dates
 # (``'date_first_hired'``), some have a few categorical entries
 # (``'gender'``), some many (``'employee_position_title'``). Therefore
-# our table needs to be "vectorized": processed to extracted numeric
+# our table needs to be "vectorized": processed to extract numeric
 # features.
 #
 # ``skrub`` provides an easy way to build a simple but reliable
-# machine-learning model which includes this step, working well on mostly
+# machine-learning model which includes this step, working well on most
 # tabular data.
 
 from sklearn.model_selection import cross_validate
@@ -82,9 +82,13 @@ results["test_score"]
 #
 # - a |TableVectorizer| to preprocess the dataframe and vectorize the features
 # - a supervised learner (by default a |HGBR|)
-#
+model
+
+# %%
 # In the rest of this example, we focus on the first step and explore the
 # capabilities of skrub's |TableVectorizer|.
+#
+# |
 
 # %%
 # More details on encoding tabular data
