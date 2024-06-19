@@ -3,7 +3,7 @@ from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
 from ._minhash_encoder import MinHashEncoder
@@ -228,10 +228,11 @@ def tabular_learner(estimator, *, n_jobs=None):
             low_cardinality_transformer=OrdinalEncoder(),
             high_cardinality_transformer=MinHashEncoder(),
         )
-    if hasattr(estimator, "_get_tags") and estimator._get_tags().get(
+    steps = [vectorizer]
+    if not hasattr(estimator, "_get_tags") or not estimator._get_tags().get(
         "allow_nan", False
     ):
-        steps = (vectorizer, estimator)
-    else:
-        steps = (vectorizer, SimpleImputer(add_indicator=True), estimator)
+        steps.append(SimpleImputer(add_indicator=True))
+    if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
+        steps.append(StandardScaler())
     return make_pipeline(*steps)
