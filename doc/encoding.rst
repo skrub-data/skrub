@@ -49,7 +49,7 @@ type of the final estimator.
    * - Numerical preprocessor
      - No processing
      - No processing
-     - No processing
+     - :class:`~sklearn.preprocessing.StandardScaler`
    * - Date preprocessor
      - :class:`DatetimeEncoder`
      - :class:`DatetimeEncoder`
@@ -74,11 +74,14 @@ categorical features. It does not provide interpretable features as the default
 either the native support of the model or the
 :obj:`~sklearn.preprocessing.OrdinalEncoder`.
 
-With linear models or unknown models, the default values of the different parameters are
-used. Therefore, the :obj:`GapEncoder` is used for high-cardinality categorical features
-and the :obj:`~sklearn.preprocessing.OneHotEncoder` for low-cardinality ones. If the
-final estimator does not support missing values, a :obj:`~sklearn.impute.SimpleImputer`
-is added before the final estimator. Those choices are not optimal but they are
+With linear models or unknown models, the default values of the different
+parameters are used. Therefore, the :obj:`GapEncoder` is used for
+high-cardinality categorical features and the
+:obj:`~sklearn.preprocessing.OneHotEncoder` for low-cardinality ones. If the
+final estimator does not support missing values, a
+:obj:`~sklearn.impute.SimpleImputer` is added before the final estimator.
+Finally, a :obj:`~sklearn.preprocessing.StandardScaler` is added to the
+pipeline. Those choices may not be optimal in all cases but they are
 methodologically safe.
 
 .. _dirty_categories:
