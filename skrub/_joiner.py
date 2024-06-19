@@ -5,11 +5,13 @@ The Joiner provides fuzzy joining as a scikit-learn transformer.
 from functools import partial
 
 import numpy as np
+import sklearn
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -37,6 +39,12 @@ _MATCHERS = {
     "no_rescaling": _matching.Matching,
 }
 DEFAULT_REF_DIST = "random_pairs"
+
+
+def _compat_df(df):
+    if parse_version(sklearn.__version__) < parse_version("1.4"):
+        return sbd.to_pandas(df)
+    return df
 
 
 def _make_vectorizer(table, string_encoder, rescale):
@@ -299,7 +307,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             rescale=self.ref_dist != "no_rescaling",
         )
         aux = self.vectorizer_.fit_transform(
-            s.select(self._aux_table, s.cols(*self._aux_key))
+            _compat_df(s.select(self._aux_table, s.cols(*self._aux_key)))
         )
         self._matching.fit(aux)
         return self
@@ -327,7 +335,11 @@ class Joiner(TransformerMixin, BaseEstimator):
             X, self._aux_table, self.suffix, main_table_name="X"
         )
         main = self.vectorizer_.transform(
-            sbd.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
+            _compat_df(
+                sbd.set_column_names(
+                    s.select(X, s.cols(*self._main_key)), self._aux_key
+                )
+            )
         )
         match_result = self._matching.match(main, self.max_dist_)
         matching_col = match_result["index"].copy()
