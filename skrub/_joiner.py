@@ -13,7 +13,7 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import _join_utils, _matching, _utils
 from skrub import _selectors as s
 from skrub._check_input import CheckInputDataFrame
-from skrub._dataframe import _common as ns
+from . import _dataframe as ns
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._to_str import ToStr
 
@@ -25,7 +25,7 @@ def _as_str(col):
 
 
 DEFAULT_STRING_ENCODER = make_pipeline(
-    FunctionTransformer(_as_str),
+    ToStr(),
     HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)),
     # TODO: Remove sparse output from Tfidf to work with TableVectorizer
     TfidfTransformer(),
