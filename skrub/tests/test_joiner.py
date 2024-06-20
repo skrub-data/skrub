@@ -131,14 +131,15 @@ def test_max_dist(main_table, aux_table, max_dist):
 def test_missing_values(df_module):
     df = df_module.make_dataframe({"A": [None, "hollywood", "beverly"]})
     joiner = Joiner(df, key="A", suffix="_")
-    with pytest.xfail():
-        joiner.fit_transform(df)
+    out = joiner.fit_transform(df)
+    assert ns.shape(out) == (3, 5)
 
 
 def test_fit_transform_numeric(df_module):
     df = df_module.make_dataframe({"A": [4.5, 0.5, 1, -1.5]})
     joiner = Joiner(df, key="A", suffix="_")
-    joiner.fit_transform(df)
+    out = joiner.fit_transform(df)
+    assert ns.shape(out) == (4, 5)
 
 
 def test_fit_transform_datetimes(df_module):

@@ -334,13 +334,8 @@ class Joiner(TransformerMixin, BaseEstimator):
         _join_utils.check_column_name_duplicates(
             X, self._aux_table, self.suffix, main_table_name="X"
         )
-        main = self.vectorizer_.transform(
-            _compat_df(
-                sbd.set_column_names(
-                    s.select(X, s.cols(*self._main_key)), self._aux_key
-                )
-            )
-        )
+        main = sbd.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
+        main = self.vectorizer_.transform(_compat_df(main))
         match_result = self._matching.match(main, self.max_dist_)
         matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1
