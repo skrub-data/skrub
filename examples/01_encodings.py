@@ -57,23 +57,17 @@ employees, salaries = dataset.X, dataset.y
 employees
 
 ###############################################################################
-salaries
-
-###############################################################################
-# We observe diverse columns in the ``employees`` dataframe:
-#   - numeric (``'year_first_hired'``)
-#   - dates (``'date_first_hired'``)
-#   - low-cardinality categorical (``'gender'``, ``'department'``,
-#     ``'department_name'``, ``'assignment_category'``)
-#   - high-cardinality categorical (``'employee_position_title'``, ``'division'``).
-#
-# Most machine-learning algorithms work with arrays of numbers. Therefore our complex,
-# heterogeneous table needs to be processed to extract numeric features. Transforming a
-# complex real-world object such as a date into a vector of numeric features —more
-# adequate for machine learning— is often called *vectorizing* it.
+# Most machine-learning algorithms work with arrays of numbers. The
+# challenge here is that the ``employees`` dataframe is a heterogeneous
+# set of columns: some are numerical (``'year_first_hired'``), some dates
+# (``'date_first_hired'``), some have a few categorical entries
+# (``'gender'``), some many (``'employee_position_title'``). Therefore
+# our table needs to be "vectorized": processed to extract numeric
+# features.
 #
 # ``skrub`` provides an easy way to build a simple but reliable
-# machine-learning model which works well on most tabular data.
+# machine-learning model which includes this step, working well on most
+# tabular data.
 
 from sklearn.model_selection import cross_validate
 
@@ -88,9 +82,13 @@ results["test_score"]
 #
 # - a |TableVectorizer| to preprocess the dataframe and vectorize the features
 # - a supervised learner (by default a |HGBR|)
-#
+model
+
+# %%
 # In the rest of this example, we focus on the first step and explore the
 # capabilities of skrub's |TableVectorizer|.
+#
+# |
 
 # %%
 # More details on encoding tabular data
