@@ -350,7 +350,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         left = sbd.with_columns(X, **{left_key_name: matching_col})
         right = sbd.with_columns(
             self._aux_table,
-            **{right_key_name: np.arange(sbd.shape(self._aux_table)[0])},
+            **{right_key_name: np.arange(sbd.shape(self._aux_table)[0], dtype="int64")},
         )
         join = _join_utils.left_join(
             left,
