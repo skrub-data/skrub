@@ -3,7 +3,7 @@ from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
 from ._minhash_encoder import MinHashEncoder
@@ -39,14 +39,18 @@ def tabular_learner(estimator, *, n_jobs=None):
     ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
     with several steps:
 
-    - a :obj:`TableVectorizer` transforms the tabular data into numeric
+    - A :obj:`TableVectorizer` transforms the tabular data into numeric
       features. Its parameters are chosen depending on the provided
       ``estimator``.
-    - an optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
+    - An optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
       by their mean and adds binary columns that indicate which values were
       missing. This step is only added if the ``estimator`` cannot handle
       missing values itself.
-    - the last step is the provided ``estimator``.
+    - An optional :obj:`~sklearn.preprocessing.StandardScaler` centers and
+      rescales the data. This step is not added (because it is unnecessary) when
+      the ``estimator`` is a tree ensemble such as random forest or gradient
+      boosting.
+    - The last step is the provided ``estimator``.
 
     Read more in the :ref:`User Guide <table_vectorizer>`.
 
@@ -153,6 +157,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     >>> model.fit(X, y)
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
+                    ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data that is
@@ -171,13 +176,16 @@ def tabular_learner(estimator, *, n_jobs=None):
     >>> tabular_learner(LogisticRegression())
     Pipeline(steps=[('tablevectorizer', TableVectorizer()),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
+                    ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
 
-    We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get the
-    default configuration of the :obj:`TableVectorizer` which is intended to work well
-    for a wide variety of downstream estimators. Moreover, as the
-    :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing values, an
-    imputation step is added.
+    We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get
+    the default configuration of the :obj:`TableVectorizer` which is intended
+    to work well for a wide variety of downstream estimators. Moreover, as the
+    :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing
+    values, an imputation step is added. Finally, as many models require the
+    inputs to be centered and on the same scale, centering and standard scaling
+    is added.
 
     On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
     (generated with the string ``"classifier"``):
@@ -208,6 +216,9 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     - There is no missing-value imputation because the classifier has its own
       (better) mechanism for dealing with missing values.
+
+    - There is no standard scaling which is unnecessary for trees and ensembles
+      of trees.
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
@@ -254,10 +265,12 @@ def tabular_learner(estimator, *, n_jobs=None):
             low_cardinality_transformer=OrdinalEncoder(),
             high_cardinality_transformer=MinHashEncoder(),
         )
-    if hasattr(estimator, "_get_tags") and estimator._get_tags().get(
+    steps = [vectorizer]
+    if not hasattr(estimator, "_get_tags") or not estimator._get_tags().get(
         "allow_nan", False
     ):
-        steps = (vectorizer, estimator)
-    else:
-        steps = (vectorizer, SimpleImputer(add_indicator=True), estimator)
+        steps.append(SimpleImputer(add_indicator=True))
+    if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
+        steps.append(StandardScaler())
+    steps.append(estimator)
     return make_pipeline(*steps)
