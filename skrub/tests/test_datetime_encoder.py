@@ -2,6 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from sklearn.utils._param_validation import InvalidParameterError
+
 from skrub import DatetimeEncoder
 from skrub import _dataframe as sbd
 from skrub import _selectors as s
@@ -153,7 +155,7 @@ def test_time_not_extracted_from_date_col(datetime_cols):
 
 
 def test_invalid_resolution(datetime_cols):
-    with pytest.raises(ValueError, match=r".*'resolution' options are"):
+    with pytest.raises(InvalidParameterError):
         DatetimeEncoder(resolution="hello").fit(datetime_cols.datetime)
 
 

@@ -7,7 +7,7 @@ table with the main table.
 """
 
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, _fit_context
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
@@ -67,7 +67,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
 
-    key : str, default=None
+    key : str or iterable of str, default=None
         The column name to use for both `main_key` and `aux_key` when they
         are the same. Provide either `key` or both `main_key` and `aux_key`.
         If `key` is an iterable, we will perform a multi-column join.
@@ -137,6 +137,16 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     0          1    Paris CDG            AF              103.33...
     1          2       NY JFK            DL               80.00...
     """
+
+    _parameter_constraints = {
+        "aux_table": "no_validation",  # we should have a DataFrameLike constraint
+        "key": [str, "array-like", None],
+        "main_key": [str, "array-like", None],
+        "aux_key": [str, "array-like", None],
+        "cols": [str, "array-like", None],
+        "operations": [str, "array-like", None],
+        "suffix": [str],
+    }
 
     def __init__(
         self,
@@ -244,6 +254,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         if not isinstance(self.suffix, str):
             raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
 
+    @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X, y=None):
         """Aggregate auxiliary table based on the main keys.
 
@@ -318,7 +329,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         aggregated using each key separately, then each aggregation of
         the target will be joined on the main table.
 
-    operation : str or iterable of str, optional
+    operation : str or iterable of str, default=None
         Aggregation operations to perform on the target.
 
         numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
@@ -329,7 +340,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         If set to None (the default), ["mean", "mode"] will be used.
 
-    suffix : str, optional
+    suffix : str, default=None
         The suffix to append to the columns of the target table if the join
         results in duplicates columns.
         If set to None, "_target" is used.
@@ -370,6 +381,12 @@ class AggTarget(TransformerMixin, BaseEstimator):
     5         6             2  ...               1        1.000000
     """
 
+    _parameter_constraints = {
+        "main_key": [str, "array-like", None],
+        "operations": [str, "array-like", None],
+        "suffix": [str, None],
+    }
+
     def __init__(
         self,
         main_key,
@@ -380,6 +397,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         self.operation = operation
         self.suffix = suffix
 
+    @_fit_context(prefer_skip_nested_validation=True)
     def fit(self, X, y):
         """Aggregate the target ``y`` based on keys from ``X``.
 
