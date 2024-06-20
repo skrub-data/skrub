@@ -26,7 +26,6 @@ DEFAULT_STRING_ENCODER = make_pipeline(
     FunctionTransformer(partial(sbd.fill_nulls, value="")),
     ToStr(),
     HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)),
-    # TODO: Remove sparse output from Tfidf to work with TableVectorizer
     TfidfTransformer(),
 )
 _DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
@@ -55,7 +54,8 @@ def _make_vectorizer(table, string_encoder, rescale):
     In addition if `rescale` is `True`, a StandardScaler is applied to
     numeric and datetime columns.
     """
-    # TODO remove use of ColumnTransformer, select_dtypes & pandas-specific code
+    # TODO: add Skrubber before ColumnTransformer
+    # TODO: remove use of ColumnTransformer
     transformers = [
         (clone(string_encoder), c) for c in (s.string() | s.categorical()).expand(table)
     ]
