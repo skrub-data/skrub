@@ -3,7 +3,7 @@ import sklearn
 from sklearn import ensemble
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
 from skrub import (
@@ -46,11 +46,12 @@ def test_bad_learner():
 def test_linear_learner():
     original_learner = Ridge()
     p = tabular_learner(original_learner)
-    tv, imputer, learner = [e for _, e in p.steps]
+    tv, imputer, scaler, learner = [e for _, e in p.steps]
     assert learner is original_learner
     assert isinstance(tv.high_cardinality_transformer, GapEncoder)
     assert isinstance(tv.low_cardinality_transformer, OneHotEncoder)
     assert isinstance(imputer, SimpleImputer)
+    assert isinstance(scaler, StandardScaler)
 
 
 def test_tree_learner():
