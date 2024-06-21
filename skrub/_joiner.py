@@ -41,6 +41,11 @@ DEFAULT_REF_DIST = "random_pairs"
 
 
 def _compat_df(df):
+    # In scikit-learn versions older than 1.4, the ColumnTransformer fails on
+    # polars dataframes. Here it is only applied as an internal step on the
+    # joining columns, and we get the output as a numpy array or sparse matrix.
+    # Therefore on old scikit-learn versions we convert the joining columns to
+    # pandas before vectorizing them.
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         return sbd.to_pandas(df)
     return df

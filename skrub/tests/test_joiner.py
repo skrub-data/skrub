@@ -115,7 +115,7 @@ def test_wrong_ref_dist(main_table, aux_table):
         aux_table, main_key="Country", aux_key="country", ref_dist="wrong_ref_dist"
     )
     with pytest.raises(
-        ValueError, match=r"('ref_dist' should be one of)*(Got 'wrong_ref_dist')"
+        ValueError, match=r"'ref_dist' should be one of.* Got 'wrong_ref_dist'"
     ):
         joiner.fit(main_table)
 

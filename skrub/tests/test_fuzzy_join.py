@@ -82,7 +82,7 @@ def test_fuzzy_join_dtypes(df_module):
     a = df_module.make_dataframe({"col1": ["aaa", "bbb"], "col2": [1, 2]})
     b = df_module.make_dataframe({"col1": ["aaa_", "bbb_"], "col3": [1, 2]})
     c = fuzzy_join(a, b, on="col1", suffix="r")
-    ns.is_integer(ns.col(a, "col2"))
+    assert ns.is_integer(ns.col(a, "col2"))
     assert ns.dtype(ns.col(c, "col2")) == ns.dtype(ns.col(a, "col2"))
     assert ns.dtype(ns.col(c, "col3r")) == ns.dtype(ns.col(b, "col3"))
 
