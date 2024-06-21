@@ -24,6 +24,12 @@ Major changes
   used twice (go through 2 different transformers).
   :pr:`902` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* Some parameters of :class:`TableVectorizer` have been renamed:
+  `high_cardinality_transformer` → `high_cardinality`,
+  `low_cardinality_transformer` → `low_cardinality`,
+  `datetime_transformer` → `datetime`, `numeric_transformer` → `numeric`.
+  :pr:`947` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * The :class:`GapEncoder` and :class:`MinHashEncoder` are now a single-column
   transformers: their ``fit``, ``fit_transform`` and ``transform`` methods
   accept a single column (a pandas or polars Series). Dataframes and numpy

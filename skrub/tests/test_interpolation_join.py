@@ -200,7 +200,7 @@ def test_join_on_date(df_module):
             aux_key="date",
             regressor=KNeighborsRegressor(1),
         )
-        .set_params(vectorizer__datetime_transformer__resolution=None)
+        .set_params(vectorizer__datetime__resolution=None)
         .fit_transform(sales)
     )
     assert_array_equal(ns.to_list(ns.col(transformed, "temp")), [-10, 10])
