@@ -1,7 +1,10 @@
+import re
+
 import numpy as np
 import pandas as pd
 import pytest
 
+from skrub import _dataframe as sbd
 from skrub import _join_utils
 
 
@@ -104,6 +107,43 @@ def test_left_join_some_keys_not_in_right_dataframe(df_module, left):
             "right_col": [np.nan, "a", "a"],
         }
     )
+    df_module.assert_frame_equal(joined, expected)
+
+
+def test_left_join_same_key_name(df_module, left):
+    right = df_module.make_dataframe({"left_key": [2, 1], "right_col": ["b", "a"]})
+    joined = _join_utils.left_join(
+        left, right=right, left_on="left_key", right_on="left_key"
+    )
+    expected = df_module.make_dataframe(
+        {
+            "left_key": [1, 2, 2],
+            "left_col": [10, 20, 30],
+            "right_col": ["a", "b", "b"],
+        }
+    )
+    df_module.assert_frame_equal(joined, expected)
+
+
+def test_left_join_same_col_name(df_module, left):
+    right = df_module.make_dataframe({"right_key": [2, 1], "left_col": ["b", "a"]})
+    joined = _join_utils.left_join(
+        left, right=right, left_on="left_key", right_on="right_key"
+    )
+
+    cols = sbd.column_names(joined)
+    assert cols[:2] == ["left_key", "left_col"]
+    assert re.match("left_col__skrub_.*__", cols[2]) is not None
+
+    expected = df_module.make_dataframe(
+        {
+            "a": [1, 2, 2],
+            "b": [10, 20, 30],
+            "c": ["a", "b", "b"],
+        }
+    )
+    # Renaming is necessary because a random tag has been added
+    expected = sbd.set_column_names(expected, cols)
     df_module.assert_frame_equal(joined, expected)
 
 
