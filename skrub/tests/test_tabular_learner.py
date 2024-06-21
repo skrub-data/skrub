@@ -20,11 +20,11 @@ def test_default_pipeline(learner_kind):
     p = tabular_learner(learner_kind)
     tv, learner = [e for _, e in p.steps]
     assert isinstance(tv, TableVectorizer)
-    assert isinstance(tv.high_cardinality_transformer, MinHashEncoder)
+    assert isinstance(tv.high_cardinality, MinHashEncoder)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
-        assert isinstance(tv.low_cardinality_transformer, OrdinalEncoder)
+        assert isinstance(tv.low_cardinality, OrdinalEncoder)
     else:
-        assert isinstance(tv.low_cardinality_transformer, ToCategorical)
+        assert isinstance(tv.low_cardinality, ToCategorical)
         assert learner.categorical_features == "from_dtype"
     if learner_kind == "regressor":
         assert isinstance(learner, ensemble.HistGradientBoostingRegressor)
@@ -48,8 +48,8 @@ def test_linear_learner():
     p = tabular_learner(original_learner)
     tv, imputer, scaler, learner = [e for _, e in p.steps]
     assert learner is original_learner
-    assert isinstance(tv.high_cardinality_transformer, GapEncoder)
-    assert isinstance(tv.low_cardinality_transformer, OneHotEncoder)
+    assert isinstance(tv.high_cardinality, GapEncoder)
+    assert isinstance(tv.low_cardinality, OneHotEncoder)
     assert isinstance(imputer, SimpleImputer)
     assert isinstance(scaler, StandardScaler)
 
@@ -63,20 +63,16 @@ def test_tree_learner():
     else:
         tv, learner = [e for _, e in p.steps]
     assert learner is original_learner
-    assert isinstance(tv.high_cardinality_transformer, MinHashEncoder)
-    assert isinstance(tv.low_cardinality_transformer, OrdinalEncoder)
+    assert isinstance(tv.high_cardinality, MinHashEncoder)
+    assert isinstance(tv.low_cardinality, OrdinalEncoder)
 
 
 def test_from_dtype():
     p = tabular_learner(ensemble.HistGradientBoostingRegressor(categorical_features=()))
-    assert isinstance(
-        p.named_steps["tablevectorizer"].low_cardinality_transformer, OrdinalEncoder
-    )
+    assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, OrdinalEncoder)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         return
     p = tabular_learner(
         ensemble.HistGradientBoostingRegressor(categorical_features="from_dtype")
     )
-    assert isinstance(
-        p.named_steps["tablevectorizer"].low_cardinality_transformer, ToCategorical
-    )
+    assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, ToCategorical)

@@ -123,7 +123,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         String and categorical columns with a count of unique values smaller
         than a given threshold (40 by default). Category encoding schemes such
         as one-hot encoding, ordinal encoding etc. are typically appropriate
-        for low-cardinality columns.
+        for columns with few unique values.
     - high_cardinality:
         String and categorical columns with many unique values, such as
         free-form text. Such columns have so many distinct values that it is
@@ -140,8 +140,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         multivariate transformations are therefore not supported.
 
     The transformer for each kind of column can be configured with the
-    corresponding ``*_transformer`` parameter: ``numeric_transformer``,
-    ``datetime_transformer``, ...
+    corresponding parameter.
 
     A transformer can be a scikit-learn Transformer (an object providing the
     ``fit``, ``fit_transform`` and ``transform`` methods), a clone of which
@@ -156,30 +155,33 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     .. note::
 
-        The ``specific_transformers`` parameter is likely to be removed in a
-        future version of ``skrub``, when better utilities for building complex
+        The ``specific_transformers`` parameter will be removed in a future
+        version of ``skrub``, when better utilities for building complex
         pipelines are introduced.
 
     Parameters
     ----------
     cardinality_threshold : int, default=40
         String and categorical features with a number of unique values strictly
-        smaller than this threshold are considered ``low_cardinality``, the
-        rest are considered ``high_cardinality``.
+        smaller than this threshold are handled by the transformer ``low_cardinality``, the
+        rest are handled by the transformer ``high_cardinality``.
 
-    low_cardinality_transformer : transformer, "passthrough" or "drop", optional
-        The transformer for ``low_cardinality`` columns. The default is a
+    low_cardinality : transformer, "passthrough" or "drop", optional
+        The transformer for string or categorical columns with strictly fewer
+        than ``cardinality_threshold`` unique values. The default is a
         ``OneHotEncoder``.
 
-    high_cardinality_transformer : transformer, "passthrough" or "drop", optional
-        The transformer for ``high_cardinality`` columns. The default is a
-        ``GapEncoder`` with 30 components (30 output columns for each input).
+    high_cardinality : transformer, "passthrough" or "drop", optional
+        The transformer for string or categorical columns with at least
+        ``cardinality_threshold`` unique values. The default is a ``GapEncoder``
+        with 30 components (30 output columns for each input).
 
-    numeric_transformer : transformer, "passthrough" or "drop", optional
-        The transformer for ``numeric`` columns. The default is passthrough.
+    numeric : transformer, "passthrough" or "drop", optional
+        The transformer for numeric columns (floats, ints, booleans). The
+        default is passthrough.
 
-    datetime_transformer : transformer, "passthrough" or "drop", optional
-        The transformer for ``datetime`` columns. The default is
+    datetime : transformer, "passthrough" or "drop", optional
+        The transformer for date and datetime columns. The default is
         ``DatetimeEncoder``, which extracts features such as year, month, etc.
 
     specific_transformers : list of (transformer, list of column names) pairs, optional
@@ -407,26 +409,22 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self,
         *,
         cardinality_threshold=40,
-        low_cardinality_transformer=LOW_CARDINALITY_TRANSFORMER,
-        high_cardinality_transformer=HIGH_CARDINALITY_TRANSFORMER,
-        numeric_transformer=NUMERIC_TRANSFORMER,
-        datetime_transformer=DATETIME_TRANSFORMER,
+        low_cardinality=LOW_CARDINALITY_TRANSFORMER,
+        high_cardinality=HIGH_CARDINALITY_TRANSFORMER,
+        numeric=NUMERIC_TRANSFORMER,
+        datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
-        self.low_cardinality_transformer = _utils.clone_if_default(
-            low_cardinality_transformer, LOW_CARDINALITY_TRANSFORMER
+        self.low_cardinality = _utils.clone_if_default(
+            low_cardinality, LOW_CARDINALITY_TRANSFORMER
         )
-        self.high_cardinality_transformer = _utils.clone_if_default(
-            high_cardinality_transformer, HIGH_CARDINALITY_TRANSFORMER
+        self.high_cardinality = _utils.clone_if_default(
+            high_cardinality, HIGH_CARDINALITY_TRANSFORMER
         )
-        self.numeric_transformer = _utils.clone_if_default(
-            numeric_transformer, NUMERIC_TRANSFORMER
-        )
-        self.datetime_transformer = _utils.clone_if_default(
-            datetime_transformer, DATETIME_TRANSFORMER
-        )
+        self.numeric = _utils.clone_if_default(numeric, NUMERIC_TRANSFORMER)
+        self.datetime = _utils.clone_if_default(datetime, DATETIME_TRANSFORMER)
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
 
@@ -562,7 +560,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         ]:
             self._named_encoders[name] = add_step(
                 self._encoders,
-                getattr(self, f"{name}_transformer"),
+                getattr(self, name),
                 cols & selector - _created_by(*self._encoders),
             )
 

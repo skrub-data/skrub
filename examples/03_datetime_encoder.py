@@ -120,9 +120,7 @@ pprint(table_vec.get_feature_names_out())
 #
 # Here, for example, we want it to extract the day of the week.
 
-table_vec = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_weekday=True),
-).fit(X)
+table_vec = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True)).fit(X)
 pprint(table_vec.get_feature_names_out())
 
 ###############################################################################
@@ -257,9 +255,7 @@ plt.show()
 ###############################################################################
 from sklearn.inspection import permutation_importance
 
-table_vec = TableVectorizer(
-    datetime_transformer=DatetimeEncoder(add_weekday=True),
-)
+table_vec = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True))
 
 # In this case, we don't use a pipeline, because we want to compute the
 # importance of the features created by the DatetimeEncoder

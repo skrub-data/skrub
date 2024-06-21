@@ -108,8 +108,8 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     >>> tabular_learner('regressor')                                    # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
-                     TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
-                                     low_cardinality_transformer=ToCategorical())),
+                     TableVectorizer(high_cardinality=MinHashEncoder(),
+                                     low_cardinality=ToCategorical())),
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
 
@@ -118,8 +118,8 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     >>> tabular_learner('classifier')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
-                     TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
-                                     low_cardinality_transformer=ToCategorical())),
+                     TableVectorizer(high_cardinality=MinHashEncoder(),
+                                     low_cardinality=ToCategorical())),
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
 
@@ -192,13 +192,13 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     >>> tabular_learner('classifier')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
-                     TableVectorizer(high_cardinality_transformer=MinHashEncoder(),
-                                     low_cardinality_transformer=ToCategorical())),
+                     TableVectorizer(high_cardinality=MinHashEncoder(),
+                                     low_cardinality=ToCategorical())),
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
 
     - A :obj:`MinHashEncoder` is used as the
-      ``high_cardinality_transformer``. This encoder provides good
+      ``high_cardinality``. This encoder provides good
       performance when the supervised estimator is based on a decision tree
       or ensemble of trees, as is the case for the
       :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`. Unlike the
@@ -206,7 +206,7 @@ def tabular_learner(estimator, *, n_jobs=None):
       interpretable features. However, it is much faster and uses less
       memory.
 
-    - The ``low_cardinality_transformer`` does not one-hot encode features.
+    - The ``low_cardinality`` does not one-hot encode features.
       The :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` has built-in
       support for categorical data which is more efficient than one-hot
       encoding. Therefore the selected encoder, :obj:`ToCategorical`, simply
@@ -257,13 +257,13 @@ def tabular_learner(estimator, *, n_jobs=None):
         and getattr(estimator, "categorical_features", None) == "from_dtype"
     ):
         vectorizer.set_params(
-            low_cardinality_transformer=ToCategorical(),
-            high_cardinality_transformer=MinHashEncoder(),
+            low_cardinality=ToCategorical(),
+            high_cardinality=MinHashEncoder(),
         )
     elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         vectorizer.set_params(
-            low_cardinality_transformer=OrdinalEncoder(),
-            high_cardinality_transformer=MinHashEncoder(),
+            low_cardinality=OrdinalEncoder(),
+            high_cardinality=MinHashEncoder(),
         )
     steps = [vectorizer]
     if not hasattr(estimator, "_get_tags") or not estimator._get_tags().get(
