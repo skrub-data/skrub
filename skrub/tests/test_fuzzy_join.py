@@ -123,14 +123,14 @@ def test_drop_unmatched(df_module):
     assert sum(ns.is_null(ns.col(c2, "col3r"))) > 0
 
 
-def test_fuzzy_join_pandas_comparison(df_module):
+def test_fuzzy_join_exact_matches(df_module):
     """
-    Tests if fuzzy_join's output is as similar as
-    possible with `pandas.merge`.
+    Tests if fuzzy_join's output is the same as a normal left-join when there
+    are exact matches for all rows.
     """
     left = df_module.make_dataframe(
         {
-            "key": ["K0", "K1", "K2", "K3"],
+            "key": ["K2", "K2", "K3", "K1"],
             "A": ["A0", "A1", "A2", "A3"],
             "B": ["B0", "B1", "B2", "B3"],
         }
@@ -148,7 +148,15 @@ def test_fuzzy_join_pandas_comparison(df_module):
     result_fj = fuzzy_join(
         left, right, left_on="key", right_on="key_", add_match_info=False
     )
-    # `fuzzy_join`` keeps the vectorized col, so we must drop it
+    df_module.assert_column_equal(
+        ns.col(result_fj, "key_"), ns.rename(ns.col(result_fj, "key"), "key_")
+    )
+    # `_left_join` does a (non-fuzzy, regular) equijoin so it only keeps one of the
+    # join columns (keeping both would be redundant as they are identical due to exact
+    # matching) -- same as the default behavior of polars (coalesce=True) and pandas.
+    # `fuzzy_join` keeps both columns because they are not identical, only up to
+    # fuzziness, so keeping both is informative. So here we drop `key_` to compare the
+    # 2 resulting dataframes.
     result_fj = s.select(result_fj, ~s.cols("key_"))
 
     df_module.assert_frame_equal(result, result_fj)

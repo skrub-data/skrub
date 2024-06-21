@@ -1,6 +1,7 @@
 import datetime
 
 import numpy as np
+import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
 
@@ -87,9 +88,9 @@ def test_multiple_keys(df_module):
     df_module.assert_frame_equal(result, expected)
 
 
-def test_pandas_aux_table_index(df_module):
-    main_table = df_module.make_dataframe({"Country": ["France", "Italia", "Georgia"]})
-    aux_table = df_module.make_dataframe(
+def test_pandas_aux_table_index():
+    main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
+    aux_table = pd.DataFrame(
         {
             "Country": ["Germany", "France", "Italy"],
             "Capital": ["Berlin", "Paris", "Rome"],
@@ -103,7 +104,7 @@ def test_pandas_aux_table_index(df_module):
         suffix="_capitals",
     )
     join = joiner.fit_transform(main_table)
-    assert ns.to_list(ns.col(join, "Country_capitals")) == [
+    assert join["Country_capitals"].to_list() == [
         "France",
         "Italy",
         "Germany",

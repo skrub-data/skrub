@@ -75,11 +75,14 @@ def test_add_column_name_suffix():
     assert list(df.columns) == ["one_y", "two three_y", "x_y"]
 
 
-def test_left_join(df_module):
-    left = df_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
+@pytest.fixture
+def left(df_module):
+    return df_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
 
+
+def test_left_join_all_keys_in_right_dataframe(df_module, left):
     # All left keys in right dataframe
-    right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
+    right = df_module.make_dataframe({"right_key": [2, 1], "right_col": ["b", "a"]})
     joined = _join_utils.left_join(
         left, right=right, left_on="left_key", right_on="right_key"
     )
@@ -92,7 +95,8 @@ def test_left_join(df_module):
     )
     df_module.assert_frame_equal(joined, expected)
 
-    # Some left keys not it right dataframe
+
+def test_left_join_some_keys_not_in_right_dataframe(df_module, left):
     right = df_module.make_dataframe({"right_key": [2, 3], "right_col": ["a", "c"]})
     joined = _join_utils.left_join(
         left, right=right, left_on="left_key", right_on="right_key"
@@ -106,7 +110,8 @@ def test_left_join(df_module):
     )
     df_module.assert_frame_equal(joined, expected)
 
-    # Renaming right col
+
+def test_left_join_renaming_right_cols(df_module, left):
     right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
     joined = _join_utils.left_join(
         left,
@@ -124,29 +129,33 @@ def test_left_join(df_module):
     )
     df_module.assert_frame_equal(joined, expected)
 
-    # Left not a df raises TypeError
+
+def test_left_join_wrong_left_type(df_module):
+    right = df_module.make_dataframe({"right_key": [1, 2], "right_col": ["a", "b"]})
     with pytest.raises(
         TypeError,
         match=(
             "`left` must be a pandas or polars dataframe, got <class 'numpy.ndarray'>."
         ),
     ):
-        joined = _join_utils.left_join(
+        _join_utils.left_join(
             np.array([1, 2]), right=right, left_on="left_key", right_on="right_key"
         )
 
-    # Right not a df raises TypeError
+
+def test_left_join_wrong_right_type(df_module, left):
     with pytest.raises(
         TypeError,
         match=(
             "`right` must be a pandas or polars dataframe, got <class 'numpy.ndarray'>."
         ),
     ):
-        joined = _join_utils.left_join(
+        _join_utils.left_join(
             left, right=np.array([1, 2]), left_on="left_key", right_on="right_key"
         )
 
-    # Joining on different types raises TypeError
+
+def test_left_join_types_not_equal(df_module, left):
     try:
         import polars as pl
     except ImportError:
@@ -158,6 +167,6 @@ def test_left_join(df_module):
     with pytest.raises(
         TypeError, match=r"`left` and `right` must be of the same dataframe type"
     ):
-        joined = _join_utils.left_join(
+        _join_utils.left_join(
             left, right=right, left_on="left_key", right_on="right_key"
         )
