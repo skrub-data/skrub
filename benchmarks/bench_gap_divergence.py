@@ -206,7 +206,7 @@ def benchmark(max_iter_e_step, dataset_name):
                 (
                     "encoding",
                     TableVectorizer(
-                        many_unique=ModifiedGapEncoder(
+                        high_cardinality=ModifiedGapEncoder(
                             min_iter=5,
                             max_iter=5,
                             max_iter_e_step=max_iter_e_step,

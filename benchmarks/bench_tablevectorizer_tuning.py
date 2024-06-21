@@ -58,8 +58,8 @@ def benchmark(
     dataset_name,
 ):
     tv = TableVectorizer(
-        n_unique_threshold=tv_cardinality_threshold,
-        many_unique=MinHashEncoder(n_components=minhash_n_components),
+        cardinality_threshold=tv_cardinality_threshold,
+        high_cardinality=MinHashEncoder(n_components=minhash_n_components),
     )
 
     dataset = dataset_map[dataset_name]

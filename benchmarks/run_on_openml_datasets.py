@@ -47,14 +47,14 @@ openml.config.cache_directory = os.path.expanduser(args.cache_directory)
 
 classification_pipeline = Pipeline(
     [
-        ("vectorizer", TableVectorizer(many_unique=MinHashEncoder())),
+        ("vectorizer", TableVectorizer(high_cardinality=MinHashEncoder())),
         ("classifier", HistGradientBoostingClassifier()),
     ]
 )
 
 regression_pipeline = Pipeline(
     [
-        ("vectorizer", TableVectorizer(many_unique=MinHashEncoder())),
+        ("vectorizer", TableVectorizer(high_cardinality=MinHashEncoder())),
         ("regressor", HistGradientBoostingRegressor()),
     ]
 )

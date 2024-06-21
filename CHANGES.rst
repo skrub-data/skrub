@@ -23,8 +23,8 @@ Major changes
   :pr:`902` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * Some parameters of :class:`TableVectorizer` have been renamed:
-  `cardinality_threshold` → `n_unique_threshold`, `high_cardinality_transformer`
-  → `many_unique`, `low_cardinality_transformer` → `few_unique`,
+  `high_cardinality_transformer` → `high_cardinality`,
+  `low_cardinality_transformer` → `low_cardinality`,
   `datetime_transformer` → `datetime`, `numeric_transformer` → `numeric`.
   :pr:`947` by :user:`Jérôme Dockès <jeromedockes>`.
 

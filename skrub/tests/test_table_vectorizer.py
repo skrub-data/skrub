@@ -169,12 +169,12 @@ def test_fit_default_transform():
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
 
-    few_unique_cols = ["str1", "str2", "cat1", "cat2"]
+    low_cardinality_cols = ["str1", "str2", "cat1", "cat2"]
     expected_transformers_types = {}
     for c in X.columns:
         if c in ["int", "float"]:
             expected_transformers_types[c] = "PassThrough"
-        elif c in few_unique_cols:
+        elif c in low_cardinality_cols:
             expected_transformers_types[c] = "OneHotEncoder"
         else:
             expected_transformers_types[c] = "GapEncoder"
@@ -248,8 +248,8 @@ X_tuples = [
 
 def passthrough_vectorizer():
     return TableVectorizer(
-        many_unique="passthrough",
-        few_unique="passthrough",
+        high_cardinality="passthrough",
+        low_cardinality="passthrough",
         numeric="passthrough",
         datetime="passthrough",
     )
@@ -375,7 +375,7 @@ inputs = [
 def test_handle_unknown_category():
     X = _get_clean_dataframe()
     # Treat all columns as having few unique values
-    table_vec = TableVectorizer(n_unique_threshold=7).fit(X)
+    table_vec = TableVectorizer(cardinality_threshold=7).fit(X)
     X_unknown = pd.DataFrame(
         {
             "int": pd.Series([3, 1], dtype="int"),
@@ -423,7 +423,7 @@ def test_handle_unknown_category():
     [
         TableVectorizer(),
         TableVectorizer(
-            few_unique=MinHashEncoder(),
+            low_cardinality=MinHashEncoder(),
         ),
     ],
 )
@@ -536,8 +536,8 @@ def test_column_by_column():
         pytest.xfail("pandas is_string_dtype incorrect in old pandas")
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer(
-        many_unique=GapEncoder(n_components=2, random_state=0),
-        n_unique_threshold=4,
+        high_cardinality=GapEncoder(n_components=2, random_state=0),
+        cardinality_threshold=4,
     )
     X_trans = vectorizer.fit_transform(X)
     for col in X.columns:
@@ -551,7 +551,7 @@ def test_column_by_column():
 
 @skip_if_no_parallel
 @pytest.mark.parametrize(
-    "many_unique",
+    "high_cardinality",
     # The GapEncoder and the MinHashEncoder should be parallelized on all columns.
     # The OneHotEncoder should not be parallelized.
     [
@@ -560,11 +560,11 @@ def test_column_by_column():
         MinHashEncoder(n_components=2),
     ],
 )
-def test_parallelism(many_unique):
+def test_parallelism(high_cardinality):
     X = _get_clean_dataframe()
     params = dict(
-        many_unique=many_unique,
-        n_unique_threshold=4,
+        high_cardinality=high_cardinality,
+        cardinality_threshold=4,
     )
     vectorizer = TableVectorizer(**params)
     X_trans = vectorizer.fit_transform(X)
@@ -607,9 +607,9 @@ def test_pandas_sparse_array():
 def test_wrong_transformer():
     X = _get_clean_dataframe()
     with pytest.raises(ValueError):
-        TableVectorizer(many_unique="passthroughtypo").fit(X)
+        TableVectorizer(high_cardinality="passthroughtypo").fit(X)
     with pytest.raises(TypeError):
-        TableVectorizer(many_unique=None).fit(X)
+        TableVectorizer(high_cardinality=None).fit(X)
 
 
 invalid_tuples = [
@@ -720,5 +720,5 @@ def test_supervised_encoder(df_module):
     # of the defaults encoders do)
     X = df_module.make_dataframe({"a": [f"c_{i}" for _ in range(5) for i in range(4)]})
     y = np.random.default_rng(0).normal(size=sbd.shape(X)[0])
-    tv = TableVectorizer(few_unique=TargetEncoder())
+    tv = TableVectorizer(low_cardinality=TargetEncoder())
     tv.fit_transform(X, y)
