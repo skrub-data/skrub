@@ -1,9 +1,13 @@
 """Utilities specific to the JOIN operations."""
 
+import inspect
 import re
 
+from skrub import _dataframe as sbd
+from skrub import _selectors as s
 from skrub import _utils
 from skrub._dataframe._namespace import get_df_namespace
+from skrub._dispatch import dispatch
 
 
 def check_key(
@@ -218,3 +222,95 @@ def _get_new_name(suggested_name, forbidden_names):
         return suggested_name
     token = _utils.random_string()
     return f"{untagged_name}__skrub_{token}__"
+
+
+def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
+    """Left join two dataframes of the same type.
+
+    The input dataframes type must agree: both `left` and `right` need to be
+    pandas or polars dataframes. Mixing types will raise an error.
+
+    `rename_right_cols` can be used to format the right dataframe columns, e.g. use
+    "right_.{}" to rename all right cols with a leading "right_.".
+
+    If duplicate column names are found between renamed right cols and left cols,
+    a __skrub_<random string>__ is added at the end of columns that would otherwise
+    be duplicates.
+
+    Parameters
+    ----------
+    left : dataframe
+        The left dataframe of the left-join.
+    right : dataframe
+        The right dataframe of the left-join.
+    left_on : str or list of str
+        Left keys to merge on.
+    right_on : str or list of str
+        Right keys to merge on.
+    rename_right_cols : str or callable, default="{}"
+        Formatting used to rename right cols. If it is a callable, it should
+        accept strings as an argument. By default, no formatting is applied.
+
+    Returns
+    -------
+    dataframe
+        The joined output.
+
+    Raises
+    ------
+    TypeError
+        If either of `left` and `right` is not a dataframe, or if both types
+        are not equal.
+    """
+    if not sbd.is_dataframe(left):
+        raise TypeError(
+            f"`left` must be a pandas or polars dataframe, got {type(left)}."
+        )
+    if not sbd.is_dataframe(right):
+        raise TypeError(
+            f"`right` must be a pandas or polars dataframe, got {type(right)}."
+        )
+    if not sbd.dataframe_module_name(left) == sbd.dataframe_module_name(right):
+        raise TypeError(
+            "`left` and `right` must be of the same dataframe type, got"
+            f"{type(left)} and {type(right)}."
+        )
+
+    left_cols = sbd.column_names(left)
+    original_right_cols = sbd.column_names(right)
+    right_cols = map(_utils.renaming_func(rename_right_cols), original_right_cols)
+    right_cols = pick_column_names(right_cols, forbidden_names=left_cols)
+    renaming = dict(zip(original_right_cols, right_cols))
+    right = sbd.set_column_names(right, right_cols)
+    if isinstance(right_on, str):
+        right_on = renaming[right_on]
+        right_on_selector = s.cols(right_on)
+    else:
+        right_on = tuple(renaming[c] for c in right_on)
+        right_on_selector = s.cols(*right_on)
+    joined = _do_left_join(left, right, left_on, right_on)
+    joined = s.select(joined, ~right_on_selector)
+    return joined
+
+
+@dispatch
+def _do_left_join(left, right, left_on, right_on):
+    raise NotImplementedError()
+
+
+@_do_left_join.specialize("pandas", argument_type="DataFrame")
+def _do_left_join_pandas(left, right, left_on, right_on):
+    return left.merge(
+        right, left_on=left_on, right_on=right_on, how="left", suffixes=("", "")
+    )
+
+
+@_do_left_join.specialize("polars", argument_type="DataFrame")
+def _do_left_join_polars(left, right, left_on, right_on):
+    if "coalesce" in inspect.signature(left.join).parameters:
+        kw = {"coalesce": True}
+    else:
+        kw = {}
+    return left.join(
+        right, left_on=left_on, right_on=right_on, how="left", suffix="", **kw
+    )

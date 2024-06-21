@@ -31,6 +31,7 @@ def test_not_implemented():
         "reset_index",
         "copy_index",
         "index",
+        "with_columns",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)
@@ -146,6 +147,10 @@ def test_make_column_like(df_module, example_data_dict):
         col, df_module.make_column(values=example_data_dict["float-col"], name="mycol")
     )
     assert ns.dataframe_module_name(col) == df_module.name
+
+    col = df_module.make_column("old_name", [1, 2, 3])
+    expected = df_module.make_column("new_name", [1, 2, 3])
+    df_module.assert_column_equal(ns.make_column_like(col, col, "new_name"), expected)
 
 
 def test_null_value_for(df_module):
@@ -645,3 +650,38 @@ def test_nans_treated_as_nulls(df_module):
 
         same(ns.drop_nulls(s), col([1.1, 2.2, float("inf")]))
         same(ns.fill_nulls(s, -1.0), col([1.1, -1.0, 2.2, -1.0, float("inf")]))
+
+
+def test_with_columns(df_module):
+    df = df_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+
+    # Add one new col
+    out = ns.with_columns(df, **{"c": [5, 6]})
+    if df_module.description == "pandas-nullable-dtypes":
+        # for pandas, make_column_like will return an old-style / numpy dtypes Series
+        out = ns.pandas_convert_dtypes(out)
+    expected = df_module.make_dataframe({"a": [1, 2], "b": [3, 4], "c": [5, 6]})
+    df_module.assert_frame_equal(out, expected)
+
+    # Add multiple new cols
+    out = ns.with_columns(df, **{"c": [5, 6], "d": [7, 8]})
+    if df_module.description == "pandas-nullable-dtypes":
+        out = ns.pandas_convert_dtypes(out)
+    expected = df_module.make_dataframe(
+        {"a": [1, 2], "b": [3, 4], "c": [5, 6], "d": [7, 8]}
+    )
+    df_module.assert_frame_equal(out, expected)
+
+    # Pass a col instead of an array
+    out = ns.with_columns(df, **{"c": df_module.make_column("c", [5, 6])})
+    if df_module.description == "pandas-nullable-dtypes":
+        out = ns.pandas_convert_dtypes(out)
+    expected = df_module.make_dataframe({"a": [1, 2], "b": [3, 4], "c": [5, 6]})
+    df_module.assert_frame_equal(out, expected)
+
+    # Replace col
+    out = ns.with_columns(df, **{"a": [5, 6]})
+    if df_module.description == "pandas-nullable-dtypes":
+        out = ns.pandas_convert_dtypes(out)
+    expected = df_module.make_dataframe({"a": [5, 6], "b": [3, 4]})
+    df_module.assert_frame_equal(out, expected)

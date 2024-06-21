@@ -289,9 +289,8 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         X, _ = self._check_dataframes(X, self.aux_table_)
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
-        skrub_px, _ = get_df_namespace(self.aux_table_)
-        X = skrub_px.join(
-            left=X,
+        X = _join_utils.left_join(
+            X,
             right=self.aux_table_,
             left_on=self._main_key,
             right_on=self._aux_key,
@@ -439,10 +438,9 @@ class AggTarget(TransformerMixin, BaseEstimator):
             The augmented input.
         """
         check_is_fitted(self, "y_")
-        skrub_px, _ = get_df_namespace(X)
 
-        return skrub_px.join(
-            left=X,
+        return _join_utils.left_join(
+            X,
             right=self.y_,
             left_on=self.main_key_,
             right_on=self.main_key_,

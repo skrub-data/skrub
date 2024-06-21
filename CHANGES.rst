@@ -14,6 +14,8 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
+* The :class:`Joiner` has been adapted to support polars dataframes. :pr:`945` by :user:`Théo Jolivet <TheooJ>`.
+
 * The :class:`TableVectorizer` now consistently applies the same transformation
   across different calls to `transform`. There also have been some breaking
   changes to its functionality: (i) all transformations are now applied

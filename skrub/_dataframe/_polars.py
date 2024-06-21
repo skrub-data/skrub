@@ -1,8 +1,6 @@
 """
 Polars specialization of the aggregate and join operations.
 """
-import inspect
-
 try:
     import polars as pl
     import polars.selectors as cs
@@ -89,50 +87,6 @@ def aggregate(
     sorted_cols = sorted(table.columns)
 
     return table.select(sorted_cols)
-
-
-def join(left, right, left_on, right_on):
-    """Left join two :obj:`polars.DataFrame` or :obj:`polars.LazyFrame`.
-
-    This function uses the ``dataframe.join`` method from Polars.
-
-    Note that the input dataframes type must agree: either both
-    Polars dataframes or both Polars lazyframes.
-
-    Mixing polars dataframe with lazyframe will raise an error.
-
-    Parameters
-    ----------
-    left : pl.DataFrame or pl.LazyFrame
-        The left dataframe of the left-join.
-
-    right : pl.DataFrame or pl.LazyFrame
-        The right dataframe of the left-join.
-
-    left_on : str or Iterable[str]
-        Left keys to merge on.
-
-    right_on : str or Iterable[str]
-        Right keys to merge on.
-
-    Returns
-    -------
-    merged : pl.DataFrame or pl.LazyFrame
-        The merged output.
-    """
-    is_dataframe = isinstance(left, pl.DataFrame) and isinstance(right, pl.DataFrame)
-    is_lazyframe = isinstance(left, pl.LazyFrame) and isinstance(right, pl.LazyFrame)
-    if is_dataframe or is_lazyframe:
-        if "coalesce" in inspect.signature(left.join).parameters:
-            kw = {"coalesce": True}
-        else:
-            kw = {}
-        return left.join(right, how="left", left_on=left_on, right_on=right_on, **kw)
-    else:
-        raise TypeError(
-            "'left' and 'right' must be polars dataframes or lazyframes, "
-            f"got {type(left)!r} and {type(right)!r}."
-        )
 
 
 def get_aggfuncs(cols, operations):

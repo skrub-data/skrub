@@ -1,11 +1,8 @@
-import inspect
-
 import pandas as pd
 import pytest
 
 from skrub._dataframe._polars import (
     aggregate,
-    join,
     rename_columns,
 )
 from skrub.conftest import _POLARS_INSTALLED
@@ -25,16 +22,6 @@ if _POLARS_INSTALLED:
 else:
     POLARS_MISSING_MSG = "Polars is not available"
     pytest.skip(reason=POLARS_MISSING_MSG, allow_module_level=True)
-
-
-def test_join():
-    joined = join(left=main, right=main, left_on="movieId", right_on="movieId")
-    if "coalesce" in inspect.signature(main.join).parameters:
-        kw = {"coalesce": True}
-    else:
-        kw = {}
-    expected = main.join(main, on="movieId", how="left", **kw)
-    assert_frame_equal(joined, expected)
 
 
 def test_simple_agg():
@@ -68,9 +55,6 @@ def test_mode_agg():
 
 
 def test_incorrect_dataframe_inputs():
-    with pytest.raises(TypeError, match=r"(?=.*polars dataframes)(?=.*pandas)"):
-        join(left=pd.DataFrame(main), right=main, left_on="movieId", right_on="movieId")
-
     with pytest.raises(TypeError, match=r"(?=.*polars dataframe)(?=.*pandas)"):
         aggregate(
             table=pd.DataFrame(main),

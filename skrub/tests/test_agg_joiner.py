@@ -401,6 +401,7 @@ def test_agg_target(main_table, y, col_name):
             "movieId": [1, 3, 6, 318, 6, 1704],
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
+            "index": [0, 0, 0, 1, 1, 1],
             f"{col_name}_(1.999, 3.0]_user": [0, 0, 0, 2, 2, 2],
             f"{col_name}_(3.0, 4.0]_user": [3, 3, 3, 1, 1, 1],
             f"{col_name}_2.0_user": [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
