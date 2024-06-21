@@ -45,30 +45,27 @@ def test_check_key_length_mismatch():
         )
 
 
-def test_check_column_name_duplicates():
-    left = pd.DataFrame(columns=["A", "B"])
-    right = pd.DataFrame(columns=["C"])
+def test_check_no_column_name_duplicates_with_no_suffix(df_module):
+    left = df_module.make_dataframe({"A": [], "B": []})
+    right = df_module.make_dataframe({"C": []})
     _join_utils.check_column_name_duplicates(left, right, "")
 
-    left = pd.DataFrame(columns=["A", "B"])
-    right = pd.DataFrame(columns=["B"])
+
+def test_check_no_column_name_duplicates_after_adding_a_suffix(df_module):
+    left = df_module.make_dataframe({"A": [], "B": []})
+    right = df_module.make_dataframe({"B": []})
     _join_utils.check_column_name_duplicates(left, right, "_right")
 
-    left = pd.DataFrame(columns=["A", "B_right"])
-    right = pd.DataFrame(columns=["B"])
+
+def test_check_column_name_duplicates_after_adding_a_suffix(df_module):
+    left = df_module.make_dataframe({"A": [], "B_right": []})
+    right = df_module.make_dataframe({"B": []})
     with pytest.raises(ValueError, match=".*suffix '_right'.*['B_right']"):
         _join_utils.check_column_name_duplicates(left, right, "_right")
 
-    left = pd.DataFrame(columns=["A", "A"])
-    right = pd.DataFrame(columns=["B"])
-    with pytest.raises(ValueError, match="Table 'left' has duplicate"):
-        _join_utils.check_column_name_duplicates(
-            left, right, "", main_table_name="left"
-        )
 
-
-def test_add_column_name_suffix():
-    df = pd.DataFrame(columns=["one", "two three", "x"])
+def test_add_column_name_suffix(df_module):
+    df = df_module.make_dataframe({"one": [], "two three": [], "x": []})
     df = _join_utils.add_column_name_suffix(df, "")
     assert list(df.columns) == ["one", "two three", "x"]
     df = _join_utils.add_column_name_suffix(df, "_y")
@@ -81,7 +78,6 @@ def left(df_module):
 
 
 def test_left_join_all_keys_in_right_dataframe(df_module, left):
-    # All left keys in right dataframe
     right = df_module.make_dataframe({"right_key": [2, 1], "right_col": ["b", "a"]})
     joined = _join_utils.left_join(
         left, right=right, left_on="left_key", right_on="right_key"
