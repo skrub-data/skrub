@@ -2,7 +2,6 @@ import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub._dataframe._testing_utils import assert_frame_equal
 from skrub._multi_agg_joiner import MultiAggJoiner
 from skrub.conftest import _POLARS_INSTALLED
 
@@ -47,7 +46,7 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
             "rating_mean_movie": [4.0, 4.0, 3.0, 3.0, 3.0, 4.0],
         }
     )
-    assert_frame_equal(
+    df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(main_user_movie), sbd.pandas_convert_dtypes(expected)
     )
 

@@ -3,7 +3,6 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub._agg_joiner import AggJoiner, AggTarget, split_num_categ_operations
-from skrub._dataframe._testing_utils import assert_frame_equal
 from skrub.conftest import _POLARS_INSTALLED
 
 
@@ -57,7 +56,7 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
             "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
         }
     )
-    assert_frame_equal(
+    df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(main_user), sbd.pandas_convert_dtypes(expected_user)
     )
 
@@ -81,7 +80,7 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
         }
     )
 
-    assert_frame_equal(
+    df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(main_movie), sbd.pandas_convert_dtypes(expected_movie)
     )
 
@@ -409,7 +408,7 @@ def test_agg_target(main_table, y, col_name):
             f"{col_name}_4.0_user": [3.0, 3.0, 3.0, 1.0, 1.0, 1.0],
         }
     )
-    assert_frame_equal(main_transformed, main_transformed_expected)
+    pd.testing.assert_frame_equal(main_transformed, main_transformed_expected)
 
 
 def test_agg_target_missing_operations(main_table):
