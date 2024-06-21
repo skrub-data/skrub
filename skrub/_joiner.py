@@ -305,7 +305,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         _join_utils.check_column_name_duplicates(
             X, self._aux_table, self.suffix, main_table_name="X"
         )
-        self._suffix = f"{{}}{self.suffix}".format
+        self._right_cols_renaming = f"{{}}{self.suffix}".format
         self.vectorizer_ = _make_vectorizer(
             s.select(self._aux_table, s.cols(*self._aux_key)),
             self.string_encoder,
@@ -357,7 +357,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             right,
             left_on=left_key_name,
             right_on=right_key_name,
-            rename_right_cols=self._suffix,
+            rename_right_cols=self._right_cols_renaming,
         )
         join = s.select(join, ~s.cols(left_key_name))
         if self.add_match_info:
