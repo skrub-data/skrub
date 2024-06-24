@@ -479,6 +479,7 @@ def _fetch_movielens(dataset_id: str, data_directory: Path | None = None) -> dic
 
 def _download_and_write_movielens_dataset(dataset_id, data_directory, zip_directory):
     url = MOVIELENS_URL.format(zip_directory=zip_directory)
+    tmp_file = None
     try:
         tmp_file, _ = urllib.request.urlretrieve(url)
         data_file = str((zip_directory / f"{dataset_id}.csv").as_posix())
@@ -489,7 +490,7 @@ def _download_and_write_movielens_dataset(dataset_id, data_directory, zip_direct
                 members=[data_file, readme_file],
             )
     except Exception:
-        if Path(tmp_file).exists():
+        if tmp_file is not None and Path(tmp_file).exists():
             Path(tmp_file).unlink()
         raise
 
