@@ -163,6 +163,7 @@ def test_fetch_world_bank_indicator():
             assert disk_loaded_info == returned_info
 
 
+@pytest.mark.xfail(run=False, reason="temporary SSL certificate issue")
 def test_fetch_movielens():
     """
     Tests the ``fetch_movielens()`` function in a real environment.
