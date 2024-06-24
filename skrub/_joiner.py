@@ -19,6 +19,7 @@ from . import _join_utils, _matching, _utils
 from . import _selectors as s
 from ._check_input import CheckInputDataFrame
 from ._datetime_encoder import DatetimeEncoder
+from ._table_vectorizer import TableVectorizer
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
@@ -59,28 +60,33 @@ def _make_vectorizer(table, string_encoder, rescale):
     In addition if `rescale` is `True`, a StandardScaler is applied to
     numeric and datetime columns.
     """
-    # TODO: add Skrubber before ColumnTransformer
-    # TODO: remove use of ColumnTransformer
+    skrubber = TableVectorizer(
+        datetime="passthrough",
+        low_cardinality="passthrough",
+        high_cardinality="passthrough",
+        numeric="passthrough",
+    )
+    table = skrubber.fit_transform(table)
+    cols = skrubber.kind_to_columns_
     transformers = [
-        (clone(string_encoder), c) for c in (s.string() | s.categorical()).expand(table)
+        (clone(string_encoder), c)
+        for c in cols["high_cardinality"] + cols["low_cardinality"]
     ]
-    num_columns = s.numeric().expand(table)
-    if num_columns:
+    if cols["numeric"]:
         transformers.append(
-            (StandardScaler() if rescale else "passthrough", num_columns)
+            (StandardScaler() if rescale else "passthrough", cols["numeric"])
         )
-    dt_columns = s.any_date().expand(table)
-    if dt_columns:
+    if cols["datetime"]:
         transformers.append(
             (
                 make_pipeline(
                     wrap_transformer(_DATETIME_ENCODER, s.all()),
                     StandardScaler() if rescale else "passthrough",
                 ),
-                dt_columns,
+                cols["datetime"],
             )
         )
-    return make_column_transformer(*transformers)
+    return make_pipeline(skrubber, make_column_transformer(*transformers))
 
 
 class Joiner(TransformerMixin, BaseEstimator):
