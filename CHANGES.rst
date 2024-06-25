@@ -66,6 +66,11 @@ Minor changes
   value for the parameter `pca_components`.
   :pr:`956` by :user:`Guillaume Lemaitre <glemaitre>`.
 
+* :class:`Joiner` now performs some preprocessing (the same as done by the
+  :class:`TableVectorizer`, eg trying to parse dates, converting pandas object
+  columns with mixed types to a single type) on the joining columns before
+  vectorizing them. :pr:`972` by :user:`Jérôme Dockès <jeromedockes>`.
+
 skrub release 0.1.0
 ===================
 

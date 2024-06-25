@@ -155,3 +155,12 @@ def test_fit_transform_datetimes(df_module):
     df = df_module.make_dataframe({"A": values})
     joiner = Joiner(df, key="A", suffix="_")
     joiner.fit_transform(df)
+
+
+def test_preprocessing(df_module):
+    df1 = df_module.make_dataframe(dict(date=["2021-10-01"], v=["A"]))
+    df2 = df_module.make_dataframe(
+        dict(date=["2021-09-17", "2012-10-01"], v=["A", "B"])
+    )
+    out = Joiner(df2, key="date", suffix="_", add_match_info=False).fit_transform(df1)
+    assert ns.to_list(ns.col(out, "v_")) == ["A"]
