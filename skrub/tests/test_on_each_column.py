@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_index_equal
 from sklearn.base import BaseEstimator
+from sklearn.pipeline import make_pipeline
 
 from skrub import _dataframe as sbd
 from skrub import _selectors as s
@@ -87,6 +88,10 @@ class Mult(BaseEstimator):
     def fit_transform(self, X, y):
         self.y_ = np.asarray(y)
         return self.transform(X)
+
+    def fit(self, X, y):
+        self.fit_transform(X, y)
+        return self
 
     def transform(self, X):
         assert sbd.is_dataframe(X)
@@ -268,6 +273,18 @@ def test_wrong_transformer_output_type(all_dataframe_modules):
         OnEachColumn(NumpyOutput()).fit_transform(
             all_dataframe_modules["pandas-numpy-dtypes"].example_dataframe
         )
+
+
+def test_set_output_failure(df_module):
+    # check that set_output on the transformer is allowed to fail even if the
+    # set_output method exists, as long as the transformer produces output of
+    # the right type.
+    X = df_module.make_dataframe(
+        {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}
+    )
+    y = [0.0, 1.0]
+    mapper = OnEachColumn(make_pipeline(Mult()))
+    mapper.fit_transform(X, y)
 
 
 class ResetsIndex(BaseEstimator):
