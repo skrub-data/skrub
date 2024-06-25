@@ -317,9 +317,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
                 analyzer=self.analyzer,
                 random_state=self._random_state,
             )
-            W = self.ngrams_count_.transform(prototypes).A + 0.1
+            W = self.ngrams_count_.transform(prototypes).toarray() + 0.1
             if self.add_words:
-                W2 = self.word_count_.transform(prototypes).A + 0.1
+                W2 = self.word_count_.transform(prototypes).toarray() + 0.1
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_components:
@@ -834,7 +834,7 @@ def _rescale_h(V, H):
     Rescale the activations `H`.
     """
     epsilon = 1e-10  # in case of a document having length=0
-    H *= np.maximum(epsilon, V.sum(axis=1).A)
+    H *= np.maximum(epsilon, V.sum(axis=1).toarray())
     H /= H.sum(axis=1, keepdims=True)
     return H
 
