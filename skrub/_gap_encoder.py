@@ -317,9 +317,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
                 analyzer=self.analyzer,
                 random_state=self._random_state,
             )
-            W = self.ngrams_count_.transform(prototypes).A + 0.1
+            W = self.ngrams_count_.transform(prototypes).toarray() + 0.1
             if self.add_words:
-                W2 = self.word_count_.transform(prototypes).A + 0.1
+                W2 = self.word_count_.transform(prototypes).toarray() + 0.1
                 W = np.hstack((W, W2))
             # if k-means doesn't find the exact number of prototypes
             if W.shape[0] < self.n_components:
