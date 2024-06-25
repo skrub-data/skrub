@@ -834,7 +834,7 @@ def _rescale_h(V, H):
     Rescale the activations `H`.
     """
     epsilon = 1e-10  # in case of a document having length=0
-    H *= np.maximum(epsilon, V.sum(axis=1).toarray())
+    H *= np.maximum(epsilon, V.sum(axis=1).A)
     H /= H.sum(axis=1, keepdims=True)
     return H
 
