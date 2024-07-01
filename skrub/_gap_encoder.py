@@ -148,14 +148,14 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     Let's encode the following non-normalized data:
 
     >>> X = pd.Series(['Paris, FR', 'Paris', 'London, UK', 'Paris, France',
-    ...                'london', 'London, England', 'London', 'Pqris'])
+    ...                'london', 'London, England', 'London', 'Pqris'], name='city')
     >>> enc.fit(X)
     GapEncoder(n_components=2, random_state=0)
 
     The GapEncoder has found the following two topics:
 
     >>> enc.get_feature_names_out()
-    ['england, london, uk', 'france, paris, pqris']
+    ['city: england, london, uk', 'city: france, paris, pqris']
 
     It got it right, reccuring topics are "London" and "England" on the
     one side and "Paris" and "France" on the other.
@@ -164,15 +164,15 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     activation of each topic for each category:
 
     >>> enc.transform(X)
-       england, london, uk  france, paris, pqris
-    0             0.051816             10.548184
-    1             0.050134              4.549866
-    2            12.046517              0.053483
-    3             0.052270             16.547730
-    4             6.049970              0.050030
-    5            19.545227              0.054773
-    6             6.049970              0.050030
-    7             0.060120              4.539880
+       city: england, london, uk  city: france, paris, pqris
+    0                   0.051816                   10.548184
+    1                   0.050134                    4.549866
+    2                  12.046517                    0.053483
+    3                   0.052270                   16.547730
+    4                   6.049970                    0.050030
+    5                  19.545227                    0.054773
+    6                   6.049970                    0.050030
+    7                   0.060120                    4.539880
 
     The higher the value, the bigger the correspondence with the topic.
     """
@@ -514,11 +514,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def get_feature_names_out(
-        self,
-        n_labels=3,
-        prefix="",
-    ):
+    def get_feature_names_out(self, n_labels=3):
         """
         Return the labels that best summarize the learned components/topics.
 
@@ -528,8 +524,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         ----------
         n_labels : int, default=3
             The number of labels used to describe each topic.
-        prefix : str, default=''
-            Used as a prefix for the categories.
 
         Returns
         -------
@@ -555,12 +549,11 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             x = encoding[:, i]
             labels = vocabulary[np.argsort(-x)[:n_labels]]
             label = ", ".join(labels)
-            label = prefix + label
-            # Avoid having twice the same name for the different features
-            if label in topic_labels:
-                label += " ({:})".format(i)
             if self._input_name:
                 label = f"{self._input_name}: {label}"
+            # Avoid having the same name twice for the different features
+            if label in topic_labels:
+                label = f"{label} ({i})"
             topic_labels.append(label)
         return topic_labels
 
