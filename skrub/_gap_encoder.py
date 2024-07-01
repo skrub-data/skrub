@@ -551,7 +551,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             label = ", ".join(labels)
             if self._input_name:
                 label = f"{self._input_name}: {label}"
-            # Avoid having twice the same name for the different features
+            # Avoid having the same name twice for the different features
             if label in topic_labels:
                 label = f"{label} ({i})"
             topic_labels.append(label)
