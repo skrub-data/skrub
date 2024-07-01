@@ -514,11 +514,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.H_dict_.update(zip(unq_X, unq_H))
         return self
 
-    def get_feature_names_out(
-        self,
-        n_labels=3,
-        prefix="",
-    ):
+    def get_feature_names_out(self, n_labels=3):
         """
         Return the labels that best summarize the learned components/topics.
 
@@ -528,8 +524,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         ----------
         n_labels : int, default=3
             The number of labels used to describe each topic.
-        prefix : str, default=''
-            Used as a prefix for the categories.
 
         Returns
         -------
@@ -555,12 +549,10 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             x = encoding[:, i]
             labels = vocabulary[np.argsort(-x)[:n_labels]]
             label = ", ".join(labels)
-            label = prefix + label
+            label = f"{self._input_name}: {label}"
             # Avoid having twice the same name for the different features
             if label in topic_labels:
-                label += " ({:})".format(i)
-            if self._input_name:
-                label = f"{self._input_name}: {label}"
+                label = f"{label} ({i})"
             topic_labels.append(label)
         return topic_labels
 

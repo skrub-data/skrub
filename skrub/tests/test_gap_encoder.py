@@ -291,3 +291,9 @@ def test_output_pandas_index():
     s_test = pd.Series("one two two".split(), name="", index=[-11, 200, 32])
     out = gap.transform(s_test)
     assert out.index.tolist() == [-11, 200, 32]
+
+
+def test_duplicate_topics(df_module):
+    s = df_module.make_column("s", ["one", "two"] * 10)
+    out = GapEncoder(n_components=3, random_state=0).fit_transform(s)
+    assert sbd.column_names(out) == ["s: one, two", "s: two, one", "s: one, two (2)"]
