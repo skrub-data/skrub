@@ -549,7 +549,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             x = encoding[:, i]
             labels = vocabulary[np.argsort(-x)[:n_labels]]
             label = ", ".join(labels)
-            label = f"{self._input_name}: {label}"
+            if self._input_name:
+                label = f"{self._input_name}: {label}"
             # Avoid having twice the same name for the different features
             if label in topic_labels:
                 label = f"{label} ({i})"
