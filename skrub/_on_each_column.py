@@ -18,7 +18,11 @@ _SINGLE_COL_LINE = (
     " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
     " single column (a pandas or polars Series) rather than a full dataframe. To apply"
     " this transformer to one or more columns in a dataframe, use it as a parameter in"
-    " a ``skrub.TableVectorizer`` or ``sklearn.compose.ColumnTransformer``."
+    " a ``skrub.TableVectorizer`` or ``sklearn.compose.ColumnTransformer``. In the"
+    " ``ColumnTransformer``, pass a single column:"
+    " ``make_column_transformer(({class_name}(), 'col_name_1'), ({class_name}(),"
+    " 'col_name_2'))`` instead of ``make_column_transformer(({class_name}(),"
+    " ['col_name_1', 'col_name_2']))``."
 )
 _SINGLE_COL_PARAGRAPH = textwrap.fill(
     _SINGLE_COL_LINE, initial_indent="    ", subsequent_indent="    "
