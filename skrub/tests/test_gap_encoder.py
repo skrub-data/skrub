@@ -297,3 +297,9 @@ def test_duplicate_topics(df_module):
     s = df_module.make_column("s", ["one", "two"] * 10)
     out = GapEncoder(n_components=3, random_state=0).fit_transform(s)
     assert sbd.column_names(out) == ["s: one, two", "s: two, one", "s: one, two (2)"]
+
+
+def test_empty_column_name(df_module):
+    s = df_module.make_column("", ["one", "two"] * 10)
+    out = GapEncoder(n_components=3, random_state=0).fit_transform(s)
+    assert sbd.column_names(out) == ["one, two", "two, one", "one, two (2)"]
