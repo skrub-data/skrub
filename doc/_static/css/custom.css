@@ -29,7 +29,6 @@
 .card-body {
     padding-left: 32px;
     padding-right: 32px;
-    overflow: hidden;
 }
 
 .card-title {
@@ -68,6 +67,10 @@
 
 .sk-landing-header text-white text-monospace {
     margin-top: -20px;
+}
+
+div.card-body div.output_result {
+    overflow-x: auto;
 }
 
 div.card-body details {
