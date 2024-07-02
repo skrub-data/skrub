@@ -1,0 +1,79 @@
+{% set report_id_selector="#{}".format(report_id) if report_id else "" %}
+
+{{ report_id_selector }}.skrubview-report dt {
+    float: none;
+    margin: 0;
+    width: auto;
+}
+
+
+{{ report_id_selector }}.skrubview-report code {
+    background-color: inherit;
+    padding: 0;
+    color: inherit;
+    line-height: inherit;
+}
+
+{{ report_id_selector }}.skrubview-report :is(h2, h3) {
+    line-height: inherit;
+    font-weight: bold;
+}
+
+/*
+Adapted from:
+
+Pure v3.0.0
+Copyright 2013 Yahoo!
+Licensed under the BSD License.
+https://github.com/pure-css/pure/blob/master/LICENSE
+*/
+
+{{ report_id_selector }}.skrubview-report .pure-table {
+    /* Remove spacing between table cells (from Normalize.css) */
+    border-collapse: collapse;
+    border-spacing: 0;
+    empty-cells: show;
+    border: 1px solid #cbcbcb;
+}
+
+{{ report_id_selector }}.skrubview-report .pure-table td,
+{{ report_id_selector }}.skrubview-report .pure-table th {
+    border-left: 1px solid #cbcbcb; /* inner column border */
+    border-width: 0 0 0 1px;
+    font-size: inherit;
+    margin: 0;
+    overflow: visible; /* to make this where the title is really long work */
+    padding: 0.5em 1em; /* cell padding */
+}
+
+{{ report_id_selector }}.skrubview-report .pure-table thead {
+    background-color: #e0e0e0;
+    color: #000;
+    text-align: left;
+    vertical-align: bottom;
+}
+
+/*
+striping:
+   even - #fff (white)
+   odd  - #f2f2f2 (light gray)
+*/
+{{ report_id_selector }}.skrubview-report .pure-table td {
+    background-color: white;
+}
+{{ report_id_selector }}.skrubview-report .pure-table-odd td {
+    background-color: #f2f2f2;
+}
+
+/* nth-child selector for modern browsers */
+{{ report_id_selector }}.skrubview-report .pure-table-striped tr:nth-child(2n-1) td:not(.skrubview-ellided-table-part):not([data-is-in-selected-column]) {
+    background-color: #f2f2f2;
+}
+
+{{ report_id_selector }}.skrubview-report .pure-table td.skrubview-ellided-table-part {
+    border: 1px solid white;
+    text-align: center;
+    border-top: 0;
+    border-bottom: 0;
+    background: white;
+}

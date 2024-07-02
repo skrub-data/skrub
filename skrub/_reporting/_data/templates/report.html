@@ -1,0 +1,43 @@
+{% set sample_tab_id = "{}-sample-tab".format(report_id) %}
+{% set sample_tab_button_id = "{}-sample-tab-button".format(report_id) %}
+{% set columns_tab_id = "{}-columns-tab".format(report_id) %}
+{% set columns_tab_button_id = "{}-columns-tab-button".format(report_id) %}
+{% set interactions_tab_id = "{}-interactions-tab".format(report_id) %}
+
+<div class="skrubview-report" id="{{ report_id }}">
+    <div class="skrubview-dataframe-summary skrubview-wrapper skrubview-text">
+        {% if summary.title %}
+        <h1>{{ summary.title }}</h1>
+        {% endif %}
+    </div>
+
+    {% if summary.n_rows > 0 and summary.n_columns > 0 %}
+    <div class="skrubview-flex-reverse">
+        <div class="skrubview-tabset-buttons">
+            <button data-target-tab="{{ sample_tab_id }}" id="{{ sample_tab_button_id }}" onclick="displayTab(event)">Table preview</button>
+            <button data-target-tab="{{ columns_tab_id }}" id="{{ columns_tab_button_id }}" onclick="displayTab(event)">Column summaries</button>
+            {% set interactions_warning = summary["top_associations"][0]["cramer_v"] is gt 0.9 %}
+            <button data-target-tab="{{ interactions_tab_id }}" onclick="displayTab(event)" {% if interactions_warning %}data-has-warning="" {% endif %}>Column similarities</button>
+        </div>
+        {% include "column-filters.html" %}
+    </div>
+    <div class="skrubview-tab" id="{{ sample_tab_id }}">
+        {% include "dataframe-sample.html" %}
+    </div>
+    <div class="skrubview-tab" id="{{ columns_tab_id }}">
+        {% include "dataframe-columns.html" %}
+    </div>
+    <div class="skrubview-tab" id="{{ interactions_tab_id }}">
+        {% include "dataframe-interactions.html" %}
+    </div>
+    <script>
+        updateSelectedColsSnippet("{{ report_id }}", false);
+        document.getElementById("{{ sample_tab_button_id }}").click();
+        onFilterChange("{{ report_id }}_col_filter");
+    </script>
+    {% else %}
+    <div class="skrubview-text skrubview-announcement skrubview-wrapper">
+        The dataframe is empty.
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,53 @@
+{% set table_id = "{}_sample_table".format(report_id) %}
+{% set top_bar_id = "{}-top-bar".format(report_id) %}
+{% set top_bar_display_id = "{}-display".format(top_bar_id) %}
+{% set top_bar_select_id = "{}-select".format(top_bar_id) %}
+
+
+<div class="skrubview-if-else skrubview-table-sample-toggle" data-predicate="true">
+<article class="skrubview-wrapper">
+    {% include "top-bar.html" %}
+
+    <div class="skrubview-horizontal-scroll">
+        <table class="pure-table pure-table-striped skrubview-dataframe-sample-table" id="{{ table_id }}" data-top-bar-id="{{ top_bar_display_id }}" data-report-id="{{ report_id }}">
+            <thead>
+                <tr>
+                    {% for idx in range(summary.head.header.__len__()) %}
+                    {% set column_name = summary.head.header[idx] %}
+
+                    <th class="skrubview-filterable-column" data-column-name="{{ column_name }}" data-column-idx="{{ idx }}" onclick="displayFirstCellValue(event)">{{ column_name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            {% set table_part = "head" %}
+            {% include "table-part.html" %}
+            <tr>
+                {% for column_name in summary.head.header %}
+                <td class="skrubview-ellided-table-part skrubview-filterable-column" data-column-name="{{ column_name }}">⋮</td>
+                {% endfor %}
+            </tr>
+
+            {% set table_part = "tail" %}
+            {% include "table-part.html" %}
+
+        </table>
+    </div>
+
+    <p>
+        <strong>{{ summary.n_rows }}</strong> rows ✕ <strong id="{{ report_id }}_display_n_columns">{{ summary.n_columns }}</strong> columns.
+    </p>
+
+
+        <div class="skrubview-column-summary-group skrubview-columns-in-sample-tab">
+            {% set in_sample_tab=True %}
+            {% for column in summary.columns %}
+            {% set col_id="{}_col_{}_in_sample_tab".format(report_id, loop.index0) %}
+            {% include "column-summary.html" %}
+            {% endfor %}
+            {% set in_sample_tab=False %}
+    </div>
+</article>
+<div class="skrubview-text skrubview-announcement skrubview-wrapper">
+    {% include "no-filter-matches.html" %}
+</div>
+</div>

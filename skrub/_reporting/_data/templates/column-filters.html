@@ -1,0 +1,17 @@
+<script type="text/javascript">
+ var columnFiltersForReport{{ report_id }} = JSON.parse('{{ column_filters | tojson | safe }}');
+</script>
+
+{% set col_filter_id = "{}_col_filter".format(report_id) %}
+
+<div class="skrubview-wrapper">
+    <label for="{{ col_filter_id }}">Show: </label>
+    <select id="{{ col_filter_id }}" class="skrubview-col-filter-select"
+        onchange='onFilterChange("{{ col_filter_id }}")'
+        data-report-id="{{ report_id }}" autocomplete="off">
+        {% for filter_name in column_filters %}
+        <option value="{{ filter_name }}" {{ "selected" if filter_name == "all()" }}>
+            {{ column_filters[filter_name]["display_name"] }}</option>
+        {% endfor %}
+    </select>
+</div>
