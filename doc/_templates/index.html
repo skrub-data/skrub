@@ -47,7 +47,7 @@ still full-width (unlike the article) #}
           <h4 class="card-title"><a href="{{ pathto('assembling') }}">Assembling</a></h4>
     <p><a class="reference internal" href="generated/skrub.fuzzy_join.html"
 title="skrub.fuzzy_join"><code class="xref py py-func docutils literal
-notranslate"><span class="pre">fuzzy_join()</span></code></a>, Joining
+notranslate"><span class="pre">fuzzy_join()</span></code></a>: Joining
 tables on non-normalized categories with approximate matching. <a
 class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining') }}"><span class="std std-ref">Example</span></a></p>
 <p><a class="reference internal"
@@ -57,7 +57,7 @@ literal notranslate"><span class="pre">Joiner</span></code></a>,
 <a class="reference internal"
 href="generated/skrub.AggJoiner.html"
 title="skrub.AggJoiner"><code class="xref py py-class docutils
-literal notranslate"><span class="pre">AggJoiner</span></code></a>, transformers for joining multiple tables together. <a class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining') }}"><span class="std std-ref">Example</span></a></p>
+literal notranslate"><span class="pre">AggJoiner</span></code></a>: transformers for joining multiple tables together. <a class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining') }}"><span class="std std-ref">Example</span></a></p>
     </div>
   </div>
 </div>
@@ -74,7 +74,7 @@ machine learning. <a class="reference internal" href="auto_examples/01_encodings
 <p><a class="reference internal"
 href="generated/skrub.GapEncoder.html#skrub.GapEncoder"
 title="skrub.GapEncoder"><code class="xref py py-class docutils literal
-notranslate"><span class="pre">GapEncoder</span></code></a>,
+notranslate"><span class="pre">GapEncoder</span></code></a>:
 OneHotEncoder but robust to typos or non-normalized categories. <a
 class="reference internal" href="auto_examples/02_feature_interpretation_with_gapencoder.html#example-gap-encoder"><span class="std std-ref">Example</span></a></p>
     </div>
@@ -94,7 +94,48 @@ categories of similar morphology (spelling). <a class="reference internal" href=
   </div>
 </div>
 </article>
-<h2 style="margin-top: max(4rem, 7vh);text-align: center;margin-bottom: .1rem;font-size: max(1.3vw, 4ex);">Less data wrangling, more machine learning</h2>
+
+<div class="container-fluid" style="max-width: 58rem;">
+  <div class="sd-card sd-shadow-sm card-landing">
+    <div class="card-body">
+    <h4 class="card-title">Less data wrangling, more machine learning</h4>
+      <div>
+          <p>
+            <a class="reference
+              internal"
+              href="generated/skrub.tabular_learner.html#skrub.tabular_learner"
+              title="skrub.tabular_learner"><code class="xref py py-class docutils
+              literal notranslate"><span class="pre">tabular_learner</span></code>
+            </a>: create a machine learning pipeline for tabular data with one function call.
+          </p>
+      </div>
+      <div class="doctest highlight-default notranslate">
+        <div class="highlight">
+          <pre style="overflow-x: auto;">
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skrub.datasets</span> <span class="kn">import</span> <span class="n">fetch_employee_salaries</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">fetch_employee_salaries</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">gender                                                                     F</span>
+<span class="go">department                                                               POL</span>
+<span class="go">department_name                                         Department of Police</span>
+<span class="go">division                   MSB Information Mgmt and Tech Division Records...</span>
+<span class="go">assignment_category                                         Fulltime-Regular</span>
+<span class="go">employee_position_title                          Office Services Coordinator</span>
+<span class="go">date_first_hired                                                  09/22/1986</span>
+<span class="go">year_first_hired                                                        1986</span>
+<span class="go">Name: 0, dtype: object</span>
+<span class="go"></span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skrub</span> <span class="kn">import</span> <span class="n">tabular_learner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cross_val_score</span><span class="p">(</span><span class="n">tabular_learner</span><span class="p">(</span><span class="s1">&#39;regressor&#39;</span><span class="p">),</span> <span class="n">dataset</span><span class="o">.</span><span class="n">X</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])</span>
+          </pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 {# So far, no article footer. Maybe this is brutal #}
 </div>
