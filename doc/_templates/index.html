@@ -47,7 +47,7 @@ still full-width (unlike the article) #}
           <h4 class="card-title"><a href="{{ pathto('assembling') }}">Assembling</a></h4>
     <p><a class="reference internal" href="generated/skrub.fuzzy_join.html"
 title="skrub.fuzzy_join"><code class="xref py py-func docutils literal
-notranslate"><span class="pre">fuzzy_join()</span></code></a>, Joining
+notranslate"><span class="pre">fuzzy_join()</span></code></a>: Joining
 tables on non-normalized categories with approximate matching. <a
 class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining') }}"><span class="std std-ref">Example</span></a></p>
 <p><a class="reference internal"
@@ -57,7 +57,7 @@ literal notranslate"><span class="pre">Joiner</span></code></a>,
 <a class="reference internal"
 href="generated/skrub.AggJoiner.html"
 title="skrub.AggJoiner"><code class="xref py py-class docutils
-literal notranslate"><span class="pre">AggJoiner</span></code></a>, transformers for joining multiple tables together. <a class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining') }}"><span class="std std-ref">Example</span></a></p>
+literal notranslate"><span class="pre">AggJoiner</span></code></a>: transformers for joining multiple tables together. <a class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining') }}"><span class="std std-ref">Example</span></a></p>
     </div>
   </div>
 </div>
@@ -74,7 +74,7 @@ machine learning. <a class="reference internal" href="auto_examples/01_encodings
 <p><a class="reference internal"
 href="generated/skrub.GapEncoder.html#skrub.GapEncoder"
 title="skrub.GapEncoder"><code class="xref py py-class docutils literal
-notranslate"><span class="pre">GapEncoder</span></code></a>,
+notranslate"><span class="pre">GapEncoder</span></code></a>:
 OneHotEncoder but robust to typos or non-normalized categories. <a
 class="reference internal" href="auto_examples/02_feature_interpretation_with_gapencoder.html#example-gap-encoder"><span class="std std-ref">Example</span></a></p>
     </div>
@@ -94,7 +94,140 @@ categories of similar morphology (spelling). <a class="reference internal" href=
   </div>
 </div>
 </article>
-<h2 style="margin-top: max(4rem, 7vh);text-align: center;margin-bottom: .1rem;font-size: max(1.3vw, 4ex);">Less data wrangling, more machine learning</h2>
+
+<div class="container-fluid" style="max-width: 58rem;">
+    <div class="sd-card sd-shadow-sm card-landing" style="border: 1px solid var(--pst-color-border, #d1d5da);">
+    <div class="card-body">
+        <div style="display: flex; justify-content: center; padding-bottom: 0.5rem;">
+    <h4 class="card-title">Less data wrangling, more machine learning</h4>
+        </div>
+      <div>
+          <p>
+            <a class="reference
+              internal"
+              href="generated/skrub.tabular_learner.html#skrub.tabular_learner"
+              title="skrub.tabular_learner"><code class="xref py py-class docutils
+              literal notranslate"><span class="pre">tabular_learner</span></code></a>:
+              easily create tabular-learning pipelines that wrangle complex dataframes.
+          </p>
+      </div>
+      <details>
+	<summary>Given, a complex dataframe
+	<code class="docutils literal notranslate"><span
+class="pre">df</span></code>: <i>(expand for full code)</i></summary>
+      <div class="doctest highlight-default notranslate">
+        <div class="highlight">
+          <pre style="overflow-x: auto;">
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skrub.datasets</span> <span class="kn">import</span> <span class="n">fetch_employee_salaries</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">fetch_employee_salaries</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">X</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span></pre>
+        </div>
+      </div>
+    </details>
+<div class="output_subarea output_html rendered_html output_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>gender</th>
+      <th>department</th>
+      <th>department_name</th>
+      <th>division</th>
+      <th>assignment_category</th>
+      <th>employee_position_title</th>
+      <th>date_first_hired</th>
+      <th>year_first_hired</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>F</td>
+      <td>POL</td>
+      <td>Department of Police</td>
+      <td>MSB Information Mgmt and...</td>
+      <td>Fulltime-Regular</td>
+      <td>Office Services Coordinator</td>
+      <td>09/22/1986</td>
+      <td>1986</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>M</td>
+      <td>POL</td>
+      <td>Department of Police</td>
+      <td>ISB Major Crimes...</td>
+      <td>Fulltime-Regular</td>
+      <td>Master Police Officer</td>
+      <td>09/12/1988</td>
+      <td>1988</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>9226</th>
+      <td>M</td>
+      <td>CCL</td>
+      <td>County Council</td>
+      <td>Council Central Staff</td>
+      <td>Fulltime-Regular</td>
+      <td>Manager II</td>
+      <td>09/05/2006</td>
+      <td>2006</td>
+    </tr>
+    <tr>
+      <th>9227</th>
+      <td>M</td>
+      <td>DLC</td>
+      <td>Department of Liquor Control</td>
+      <td>Licensure, Regulation...</td>
+      <td>Fulltime-Regular</td>
+      <td>Alcohol/Tobacco Enforcement Specialist II</td>
+      <td>01/30/2012</td>
+      <td>2012</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+      <div class="doctest highlight-default notranslate">
+        <div class="highlight">
+          <pre style="overflow-x: auto;">
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skrub</span> <span class="kn">import</span> <span class="n">tabular_learner</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cross_val_score</span><span class="p">(</span><span class="n">tabular_learner</span><span class="p">(</span><span class="s1">&#39;regressor&#39;</span><span class="p">),</span> </span><span class="n">df</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 {# So far, no article footer. Maybe this is brutal #}
 </div>
