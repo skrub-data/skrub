@@ -36,8 +36,12 @@ def _onehot_encode(df, n_bins):
     output = np.zeros((n_cols, n_bins, n_rows), dtype=bool)
     for col_idx, col_name in enumerate(sbd.column_names(df)):
         col = sbd.col(df, col_name)
-        if sbd.is_numeric(col) and _CATEGORICAL_THRESHOLD < len(set(sbd.to_numpy(col))):
-            _onehot_encode_numbers(sbd.to_numpy(col), n_bins, output[col_idx])
+        if sbd.is_numeric(col):
+            col = sbd.to_float32(col)
+            if _CATEGORICAL_THRESHOLD <= sbd.n_unique(col):
+                _onehot_encode_numbers(sbd.to_numpy(col), n_bins, output[col_idx])
+            else:
+                _onehot_encode_categories(sbd.to_numpy(col), n_bins, output[col_idx])
         else:
             col = sbd.to_string(col)
             _onehot_encode_categories(sbd.to_numpy(col), n_bins, output[col_idx])
@@ -53,7 +57,6 @@ def _onehot_encode_categories(values, n_bins, output):
 
 
 def _onehot_encode_numbers(values, n_bins, output):
-    values = values.astype(float)
     mask = ~np.isfinite(values)
     filled_na = np.array(values)
     # TODO pick a better value & non-uniform bins?
