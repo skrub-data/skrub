@@ -84,7 +84,7 @@ div.card-body summary {
 }
 
 div.card-body summary:hover {
-  background-color: var(--pst-color-shadow);
+  background-color: var(--pst-color-dark);
 }
 
 div.card-body details[open] summary {
