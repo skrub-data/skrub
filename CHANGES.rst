@@ -6,11 +6,8 @@ Changes
 
 .. currentmodule:: skrub
 
-Ongoing development
-=====================
-
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
+Release 0.2.0
+=============
 
 Major changes
 -------------
@@ -70,6 +67,13 @@ Minor changes
   :class:`TableVectorizer`, eg trying to parse dates, converting pandas object
   columns with mixed types to a single type) on the joining columns before
   vectorizing them. :pr:`972` by :user:`Jérôme Dockès <jeromedockes>`.
+
+skrub release 0.1.1
+===================
+
+This is a bugfix release to adapt to the most recent versions of pandas (2.2) and
+scikit-learn (1.5). There are no major changes to the functionality of skrub.
+
 
 skrub release 0.1.0
 ===================
