@@ -56,6 +56,13 @@ dataset = fetch_employee_salaries()
 employees, salaries = dataset.X, dataset.y
 employees
 
+# %%
+# ``skrub`` provides an easy way to get an overview of a dataframe's contents:
+
+from skrub import Report
+
+Report(employees)
+
 ###############################################################################
 # Most machine-learning algorithms work with arrays of numbers. The
 # challenge here is that the ``employees`` dataframe is a heterogeneous
