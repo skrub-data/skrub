@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skrub"
-version = "0.2.0.dev0"
+dynamic = ["version", "readme"]
 description = "Prepping tables for machine learning"
 authors = [
     { name="Patricio Cerda", email="patricio.cerda@inria.fr"},
@@ -22,7 +22,6 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries",
 ]
-readme = "README.rst"
 requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.23.5",
@@ -31,6 +30,10 @@ dependencies = [
     "scikit-learn>=1.2.1",
     "scipy>=1.9.3",
 ]
+
+[tool.setuptools.dynamic]
+version = { file = "skrub/VERSION.txt" }
+readme = { file = "README.rst" }
 
 [project.optional-dependencies]
 doc = [
