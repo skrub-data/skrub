@@ -375,10 +375,8 @@ def notebook_modification_function(notebook_content, notebook_filename):
         [
             "import micropip",
             (
-                "await micropip.install("
-                "'https://test-files.pythonhosted.org/packages/3c/03/"
-                "e1598c7abe536e56834f568f61497ad075d966c4c8fb7d0ad004b81e7bfc/"
-                "skrub-0.0.1.dev1-py3-none-any.whl')"
+                "await"
+                " micropip.install('https://files.pythonhosted.org/packages/eb/6d/0e78d028591bedd9580e49ae1060d9faf7fb4503e1db54227616db8f359d/skrub-0.2.0rc1-py3-none-any.whl')"
             ),
         ]
     )
