@@ -1,11 +1,11 @@
-from pathlib import Path
 import functools
 import json
+from pathlib import Path
 
-from ._summarize import summarize_dataframe
 from ._html import to_html
+from ._serve import open_file_in_browser, open_in_browser
+from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
-from ._serve import open_in_browser, open_file_in_browser
 
 
 class Report:
@@ -36,11 +36,6 @@ class Report:
         notebook.
     json : str
         Report in JSON format.
-    summary_with_plots : dict
-        Dictionary containing information about the dataframe, used to generate
-        the reports. Plots such as histograms are stored as SVG strings.
-    summary_without_plots : dict
-        Same as ``summary_with_plots`` without the plots.
     """
 
     def __init__(self, dataframe, order_by=None, title=None, column_filters=None):
@@ -50,13 +45,13 @@ class Report:
         self.dataframe = dataframe
 
     @functools.cached_property
-    def summary_with_plots(self):
+    def _summary_with_plots(self):
         return summarize_dataframe(
             self.dataframe, with_plots=True, title=self.title, **self._summary_kwargs
         )
 
     @functools.cached_property
-    def summary_without_plots(self):
+    def _summary_without_plots(self):
         return summarize_dataframe(
             self.dataframe, with_plots=False, title=self.title, **self._summary_kwargs
         )
@@ -64,26 +59,39 @@ class Report:
     @property
     def _any_summary(self):
         if "_summary_with_plots" in self.__dict__:
-            return self.summary_with_plots
-        return self.summary_without_plots
+            return self._summary_with_plots
+        return self._summary_without_plots
 
     @functools.cached_property
     def html(self):
-        return to_html(self.summary_with_plots, standalone=True, column_filters=self.column_filters)
+        return to_html(
+            self._summary_with_plots,
+            standalone=True,
+            column_filters=self.column_filters,
+        )
 
     @functools.cached_property
     def html_snippet(self):
-        return to_html(self.summary_with_plots, standalone=False, column_filters=self.column_filters)
+        return to_html(
+            self._summary_with_plots,
+            standalone=False,
+            column_filters=self.column_filters,
+        )
 
     @functools.cached_property
     def json(self):
-        to_remove = ['dataframe', 'head', 'tail', 'first_row_dict']
-        data = {k: v for k, v in self.summary_without_plots.items() if k not in to_remove}
+        to_remove = ["dataframe", "head", "tail", "first_row_dict"]
+        data = {
+            k: v for k, v in self._summary_without_plots.items() if k not in to_remove
+        }
         return json.dumps(data, cls=JSONEncoder)
 
     def _repr_mimebundle_(self, include=None, exclude=None):
         del include, exclude
         return {"text/html": self.html_snippet}
+
+    def _repr_html_(self):
+        return self._repr_mimebundle_()["text/html"]
 
     def open(self, file_path=None):
         """Open the HTML report in a web browser.
