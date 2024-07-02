@@ -19,6 +19,7 @@ from ._table_vectorizer import TableVectorizer
 from ._tabular_learner import tabular_learner
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
+from ._reporting import Report
 
 check_dependencies()
 
@@ -27,6 +28,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
+    "Report",
     "tabular_learner",
     "DatetimeEncoder",
     "ToDatetime",

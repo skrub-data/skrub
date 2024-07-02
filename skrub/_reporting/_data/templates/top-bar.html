@@ -1,0 +1,28 @@
+<div class="skrubview-top-bar-toggle skrubview-if-else" data-predicate="false">
+    <div id="{{ top_bar_id }}" class="skrubview-flex skrubview-flex-wrap skrubview-wrapper skrubview-top-bar">
+        <select id="{{ top_bar_select_id }}" onchange="updateBarContent('{{ top_bar_display_id }}')" data-bar-id="{{ top_bar_display_id }}" autocomplete="off">
+
+            <option value="table-column-name" data-placeholder="Select a table cell to display its column name">Column name</option>
+            <option value="table-column-name-repr" data-placeholder="Select a table cell to display its column name as a Python expression">Quoted column name</option>
+
+            <option selected value="table-cell-value" data-placeholder="Select a table cell to display its value">Cell display value</option>
+            <option value="table-cell-repr" data-placeholder="Select a table cell to display its value as a Python expression">Cell as Python expression</option>
+            <option value="table-cell-filter" data-placeholder="Select a table cell to display a snippet for filtering the dataframe">Filter df by cell value</option>
+
+        </select>
+
+        <div class="skrubview-box">
+            <pre id="{{ top_bar_display_id }}" data-selector-id="{{ top_bar_select_id }}"></pre>
+            <button class="skrubview-copybutton" onclick='copyTextToClipboard("{{ top_bar_display_id }}")'>📋</button>
+        </div>
+
+    </div>
+    <div class="skrubview-flex">
+    <div class="skrubview-announcement skrubview-text skrubview-important-note" id="{{ top_bar_id }}-placeholder">
+        Click on a table cell below to display more information about its column.
+    </div>
+    </div>
+</div>
+<script>
+    updateBarContent('{{ top_bar_display_id }}');
+</script>
