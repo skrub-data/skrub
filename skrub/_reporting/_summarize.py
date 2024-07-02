@@ -1,15 +1,12 @@
-from skrub import _dataframe as sbd
-
-from . import _plotting, _utils, _interactions
+from .. import _dataframe as sbd
+from . import _interactions, _plotting, _utils
 
 _HIGH_CARDINALITY_THRESHOLD = 10
 _SUBSAMPLE_SIZE = 3000
 _ASSOCIATION_THRESHOLD = 0.2
 
 
-def summarize_dataframe(
-    df, *, order_by=None, with_plots=False, title=None
-):
+def summarize_dataframe(df, *, order_by=None, with_plots=False, title=None):
     shape = sbd.shape(df)
     summary = {
         "dataframe": df,
@@ -99,8 +96,7 @@ def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
         summary["high_cardinality"] = True
         return
     n_unique, value_counts = _utils.top_k_value_counts(
-        sbd.filter(column, ~sbd.is_null(column)),
-        k=10
+        sbd.filter(column, ~sbd.is_null(column)), k=10
     )
     summary["n_unique"] = n_unique
     summary["unique_proportion"] = n_unique / dataframe_summary["n_rows"]
@@ -115,7 +111,10 @@ def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
         summary["value_is_constant"] = False
         if with_plots:
             summary["value_counts_plot"] = _plotting.value_counts(
-                value_counts, n_unique, dataframe_summary["n_rows"], color=_plotting.COLORS[1]
+                value_counts,
+                n_unique,
+                dataframe_summary["n_rows"],
+                color=_plotting.COLORS[1],
             )
 
 
