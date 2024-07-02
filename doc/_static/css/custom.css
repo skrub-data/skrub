@@ -68,6 +68,31 @@
     margin-top: -20px;
 }
 
+div.card-body details {
+  border-radius: 4px;
+}
+
+div.card-body summary i {
+    color: var(--pst-color-on-surface);
+    margin-left: 4em;
+}
+
+div.card-body summary {
+  margin: -0.5em;
+  padding-left: 0.5em;
+}
+
+div.card-body summary:hover {
+  background-color: var(--pst-color-shadow);
+}
+
+div.card-body details[open] summary {
+  margin-bottom: -0.5em;
+}
+
+div.card-body details[open] summary i {
+    display: none;
+}
 
 /** Styling **************************************************************/
 
