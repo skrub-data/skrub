@@ -54,7 +54,6 @@ from skrub.datasets import fetch_employee_salaries
 
 dataset = fetch_employee_salaries()
 employees, salaries = dataset.X, dataset.y
-employees
 
 # %%
 # ``skrub`` provides an easy way to get an overview of a dataframe's contents:
