@@ -203,7 +203,7 @@ function revealColCard(reportId, colIdx) {
 
 }
 
-function displayTab(event) {
+function displayTab(event, removeWarnings=false) {
     const elem = event.target;
     elem.parentElement.querySelectorAll("button").forEach(elem => {
         elem.removeAttribute("data-is-selected");
@@ -214,7 +214,7 @@ function displayTab(event) {
         elem.removeAttribute("data-is-displayed");
     });
     tab.setAttribute("data-is-displayed", "");
-    if (elem.hasAttribute("data-has-warning")) {
+    if (removeWarnings && elem.hasAttribute("data-has-warning")) {
         elem.removeAttribute("data-has-warning");
     }
 }
