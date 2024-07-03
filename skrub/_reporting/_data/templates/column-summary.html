@@ -8,7 +8,7 @@
         {% endif %}
         <code class="skrubview-float-end">{{ column.dtype }}</code>
         {%- if in_sample_tab -%}
-        <span style="position: relative;"><button class="skrubview-close-card-button" onclick="clearTableCellSelection(document.getElementById('{{ table_id }}'))">⨉</button></span>
+        <span class="skrubview-relative-pos"><button class="skrubview-close-card-button" onclick="clearTableCellSelection(document.getElementById('{{ table_id }}'))">⨉</button></span>
         {%- endif -%}
     </div>
     <div class="skrubview-column-summary-content skrubview-wrapper">

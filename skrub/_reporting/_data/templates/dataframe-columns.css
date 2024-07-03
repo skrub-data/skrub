@@ -53,7 +53,15 @@
     display: none;
 }
 
+{{ report_id_selector }}.skrubview-report .skrubview-relative-pos {
+    position: relative;
+}
+
 {{ report_id_selector }}.skrubview-report .skrubview-card .skrubview-close-card-button {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     position: absolute;
     top: -1.5rem;
     left: -.5rem;
@@ -63,14 +71,13 @@
     border-radius: 1rem;
     background: var(--skrubview-darkgreen);
     border: 1px solid var(--skrubview-verydarkgreen);
-    display: none;
 }
 
 {{ report_id_selector }}.skrubview-report .skrubview-card:hover .skrubview-close-card-button {
-    display: inline;
+    display: flex;
 }
 
 {{ report_id_selector }}.skrubview-report .skrubview-card .skrubview-close-card-button:hover {
-    display: inline;
+    display: flex;
     background: var(--skrubview-verydarkgreen);
 }
