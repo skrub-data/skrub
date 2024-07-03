@@ -7,6 +7,9 @@
         <input class="skrubview-select-column-checkbox" type="checkbox" onchange="updateColSelection(event)" data-column-id="{{ col_id }}" data-report-id="{{ report_id }}" checked />
         {% endif %}
         <code class="skrubview-float-end">{{ column.dtype }}</code>
+        {%- if in_sample_tab -%}
+        <span style="position: relative;"><button class="skrubview-close-card-button" onclick="clearTableCellSelection(document.getElementById('{{ table_id }}'))">⨉</button></span>
+        {%- endif -%}
     </div>
     <div class="skrubview-column-summary-content skrubview-wrapper">
         <div>

@@ -52,3 +52,25 @@
 {{ report_id_selector }}.skrubview-report .skrubview-constant-columns-summary:not(:has(dt:not([data-is-excluded-by-filter]))){
     display: none;
 }
+
+{{ report_id_selector }}.skrubview-report .skrubview-card .skrubview-close-card-button {
+    position: absolute;
+    top: -1.5rem;
+    left: -.5rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: 1rem;
+    background: var(--skrubview-darkgreen);
+    border: 1px solid var(--skrubview-verydarkgreen);
+    display: none;
+}
+
+{{ report_id_selector }}.skrubview-report .skrubview-card:hover .skrubview-close-card-button {
+    display: inline;
+}
+
+{{ report_id_selector }}.skrubview-report .skrubview-card .skrubview-close-card-button:hover {
+    display: inline;
+    background: var(--skrubview-verydarkgreen);
+}
