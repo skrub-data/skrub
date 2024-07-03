@@ -1,5 +1,5 @@
 <div class="skrubview-card skrubview-column-summary skrubview-filterable-column {{"skrubview-constant-column" if column.value_is_constant else "" }}" id="{{ col_id }}" data-name-repr="{{ column.name.__repr__() }}" data-column-name="{{ column.name }}">
-    <div class="skrubview-card-header">
+    <div class="skrubview-card-header {% if in_sample_tab %}skrubview-relative-pos{% endif %}">
         <h3 class="skrubview-margin-r-t">
             <code class="skrubview-select-all">{{ column.name }}</code>
         </h3>
@@ -8,7 +8,7 @@
         {% endif %}
         <code class="skrubview-float-end">{{ column.dtype }}</code>
         {%- if in_sample_tab -%}
-        <span class="skrubview-relative-pos"><button class="skrubview-close-card-button" onclick="clearTableCellSelection(document.getElementById('{{ table_id }}'))">⨉</button></span>
+        <button class="skrubview-close-card-button" onclick="clearTableCellSelection(document.getElementById('{{ table_id }}'))">⨉</button>
         {%- endif -%}
     </div>
     <div class="skrubview-column-summary-content skrubview-wrapper">

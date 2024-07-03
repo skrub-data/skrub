@@ -63,8 +63,8 @@
     justify-content: center;
     align-items: center;
     position: absolute;
-    top: -1.5rem;
-    left: -.5rem;
+    top: -1rem;
+    right: -1rem;
     width: 2rem;
     height: 2rem;
     padding: 0;
