@@ -15,7 +15,7 @@
                     {% for idx in range(summary.head.header.__len__()) %}
                     {% set column_name = summary.head.header[idx] %}
 
-                    <th class="skrubview-filterable-column" data-column-name="{{ column_name }}" data-column-idx="{{ idx }}" onclick="displayFirstCellValue(event)">{{ column_name }}</th>
+                    <th class="skrubview-clickable skrubview-filterable-column" data-column-name="{{ column_name }}" data-column-idx="{{ idx }}" onclick="displayFirstCellValue(event)">{{ column_name }}</th>
                     {% endfor %}
                 </tr>
             </thead>

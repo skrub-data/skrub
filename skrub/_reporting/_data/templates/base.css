@@ -22,7 +22,7 @@
     --skrubview-lightg: #f0f0f0;
 }
 
-{{ report_id_selector }} button {
+{{ report_id_selector }} :is(select, summary, button) {
     cursor: pointer;
 }
 
@@ -289,7 +289,7 @@
 }
 
 
-{{ report_id_selector }}.skrubview-report .skrubview-table-cell {
+{{ report_id_selector }}.skrubview-report .skrubview-clickable {
     cursor: pointer;
 }
 
