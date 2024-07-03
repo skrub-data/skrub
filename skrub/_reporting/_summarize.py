@@ -14,14 +14,14 @@ def summarize_dataframe(df, *, order_by=None, with_plots=False, title=None):
         "n_rows": int(shape[0]),
         "n_columns": int(shape[1]),
         "columns": [],
-        "head": _utils.to_row_list(_utils.slice(df, 5)),
-        "tail": _utils.to_row_list(_utils.slice(df, -5, None)),
+        "head": _utils.to_row_list(sbd.slice(df, 5)),
+        "tail": _utils.to_row_list(sbd.slice(df, -5, None)),
         "first_row_dict": _utils.first_row_dict(df),
     }
     if title is not None:
         summary["title"] = title
     if order_by is not None:
-        df = _utils.sort(df, by=order_by)
+        df = sbd.sort(df, by=order_by)
         summary["order_by"] = order_by
     for position, column_name in enumerate(sbd.column_names(df)):
         summary["columns"].append(
@@ -79,7 +79,7 @@ def _summarize_column(
 
 
 def _add_nulls_summary(summary, column, dataframe_summary):
-    null_count = _utils.sum(sbd.is_null(column))
+    null_count = sbd.sum(sbd.is_null(column))
     summary["null_count"] = null_count
     null_proportion = null_count / dataframe_summary["n_rows"]
     summary["null_proportion"] = null_proportion
@@ -121,8 +121,8 @@ def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
 def _add_datetime_summary(summary, column, with_plots):
     if not sbd.is_any_date(column):
         return
-    min_date = _utils.min(column)
-    max_date = _utils.max(column)
+    min_date = sbd.min(column)
+    max_date = sbd.max(column)
     if min_date == max_date:
         summary["value_is_constant"] = True
         summary["constant_value"] = min_date.isoformat()
@@ -144,9 +144,9 @@ def _add_numeric_summary(
         return
     if not summary["high_cardinality"]:
         return
-    std = _utils.std(column)
+    std = sbd.std(column)
     summary["standard_deviation"] = float("nan") if std is None else float(std)
-    summary["mean"] = float(_utils.mean(column))
+    summary["mean"] = float(sbd.mean(column))
     quantiles = _utils.quantiles(column)
     summary["inter_quartile_range"] = quantiles[0.75] - quantiles[0.25]
     if quantiles[0.0] == quantiles[1.0]:
