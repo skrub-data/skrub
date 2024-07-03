@@ -1,10 +1,10 @@
+import webbrowser
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
+from queue import Empty, Queue
 from socketserver import TCPServer
 from threading import Thread
-from queue import Queue, Empty
-import webbrowser
 
 BROWSER_TIMEOUT_SECONDS = 3
 

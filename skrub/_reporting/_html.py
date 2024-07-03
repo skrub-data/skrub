@@ -121,8 +121,9 @@ def to_html(summary, standalone=True, column_filters=None):
         {
             "summary": summary,
             # prioritize user-provided filters and keep them at the beginning
-            "column_filters": column_filters
-            | {k: v for (k, v) in default_filters.items() if k not in column_filters},
+            "column_filters": column_filters | {
+                k: v for (k, v) in default_filters.items() if k not in column_filters
+            },
             "report_id": f"report_{secrets.token_hex()[:8]}",
         }
     )

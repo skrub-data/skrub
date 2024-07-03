@@ -3,6 +3,7 @@ import io
 from matplotlib import pyplot as plt
 
 from skrub import _dataframe as sbd
+
 from . import _utils
 
 # from matplotlib import colormaps, colors
