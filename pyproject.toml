@@ -230,7 +230,8 @@ filterwarnings = [
     'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
     # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
     # should be addressed in pandas
-    'ignore:np.find_common_type is deprecated.*:DeprecationWarning'
+    'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
+    'ignore:.*distutils Version classes are deprecated.*',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
