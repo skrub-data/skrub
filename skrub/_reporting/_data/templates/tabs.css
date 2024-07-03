@@ -45,9 +45,3 @@
 {{ report_id_selector }}.skrubview-report .skrubview-tabset-buttons button[data-has-warning]::before {
     content: "⚠️ ";
 }
-
-{{ report_id_selector }}.skrubview-report .skrubview-flex-reverse {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap-reverse;
-}

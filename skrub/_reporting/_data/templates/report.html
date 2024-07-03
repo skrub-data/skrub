@@ -12,7 +12,7 @@
     </div>
 
     {% if summary.n_rows > 0 and summary.n_columns > 0 %}
-    <div class="skrubview-flex-reverse">
+    <div class="skrubview-flex-reverse skrubview-space-between">
         <div class="skrubview-tabset-buttons">
             <button data-target-tab="{{ sample_tab_id }}" id="{{ sample_tab_button_id }}" onclick="displayTab(event)">Table preview</button>
             <button data-target-tab="{{ columns_tab_id }}" id="{{ columns_tab_button_id }}" onclick="displayTab(event)">Column summaries</button>

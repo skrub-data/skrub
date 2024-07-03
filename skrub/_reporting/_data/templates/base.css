@@ -156,6 +156,24 @@
     align-items: center;
 }
 
+{{ report_id_selector }}.skrubview-report .skrubview-gap-l {
+    gap: var(--skrubview-large);
+}
+
+{{ report_id_selector }}.skrubview-report .skrubview-flex-reverse {
+    display: flex;
+    flex-wrap: wrap-reverse;
+}
+
+{{ report_id_selector }}.skrubview-report .skrubview-space-between {
+    justify-content: space-between;
+}
+
+{{ report_id_selector }}.skrubview-report .skrubview-shrinkable-text {
+    flex-basis: 20rem;
+    flex-grow: 1;
+}
+
 {{ report_id_selector }}.skrubview-report .skrubview-flex-wrap {
     flex-wrap: wrap;
     padding-block-start: var(--skrubview-tiny);
