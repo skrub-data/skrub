@@ -14,6 +14,10 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
+* The :class:`TableReport` provides an interactive report on a dataframe's
+  contents: an overview, summary statistics and plots, statistical associations
+  between columns. It can be displayed in a jupyter notebook, a browser tab or
+  saved as a static HTML page. :pr:`984` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Minor changes
 -------------
