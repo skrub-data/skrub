@@ -14,10 +14,22 @@
     {% if summary.n_rows > 0 and summary.n_columns > 0 %}
     <div class="skrubview-flex-reverse skrubview-space-between">
         <div class="skrubview-tabset-buttons">
-            <button data-target-tab="{{ sample_tab_id }}" id="{{ sample_tab_button_id }}" onclick="displayTab(event)">Table preview</button>
-            <button data-target-tab="{{ columns_tab_id }}" id="{{ columns_tab_button_id }}" onclick="displayTab(event)">Column summaries</button>
+            <button data-target-tab="{{ sample_tab_id }}"
+                    id="{{ sample_tab_button_id }}"
+                    onclick="displayTab(event)"
+                    title="Display a few rows of the dataframe in a table.">Table preview</button>
+            <button data-target-tab="{{ columns_tab_id }}"
+                    id="{{ columns_tab_button_id }}"
+                    onclick="displayTab(event)"
+                    title="Summary statistics and plots for all columns in the dataframe.">Column summaries</button>
             {% set interactions_warning = summary["top_associations"][0]["cramer_v"] is gt 0.9 %}
-            <button data-target-tab="{{ interactions_tab_id }}" onclick="displayTab(event)" {% if interactions_warning %}data-has-warning="" {% endif %}>Column similarities</button>
+            <button data-target-tab="{{ interactions_tab_id }}"
+                    onclick="displayTab(event)"
+                    {% if interactions_warning %}data-has-warning=""{% endif %}
+                    title="Show which columns are similar (have a strong association).
+{%- if interactions_warning %}
+NOTE: some columns have very strong associations and may be redundant.
+{%- endif -%}">Column similarities</button>
         </div>
         {% include "column-filters.html" %}
     </div>
