@@ -8,7 +8,7 @@ from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
 
-class Report:
+class TableReport:
     """Summarize the contents of a dataframe.
 
     This class summarizes a dataframe, providing information such as the type

@@ -59,9 +59,9 @@ employees
 # %%
 # ``skrub`` provides an easy way to get an overview of a dataframe's contents:
 
-from skrub import Report
+from skrub import TableReport
 
-Report(employees)
+TableReport(employees)
 
 ###############################################################################
 # Most machine-learning algorithms work with arrays of numbers. The

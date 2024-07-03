@@ -1,5 +1,5 @@
 """Summarize the contents of a dataframe and generate an HTML report."""
 
-from ._report import Report
+from ._table_report import TableReport
 
-__all__ = ["Report"]
+__all__ = ["TableReport"]

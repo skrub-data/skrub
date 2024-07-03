@@ -13,13 +13,13 @@ from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
+from ._reporting import TableReport
 from ._select_cols import DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import TableVectorizer
 from ._tabular_learner import tabular_learner
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
-from ._reporting import Report
 
 check_dependencies()
 
@@ -28,7 +28,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
-    "Report",
+    "TableReport",
     "tabular_learner",
     "DatetimeEncoder",
     "ToDatetime",

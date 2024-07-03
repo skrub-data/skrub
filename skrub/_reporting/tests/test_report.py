@@ -2,7 +2,7 @@ import pathlib
 
 import pandas as pd
 
-from skrub import Report
+from skrub import TableReport
 
 
 def test_report():
@@ -10,7 +10,7 @@ def test_report():
     fname = "air_quality_no2_long.parquet"
     data_file = data_dir / fname
     df = pd.read_parquet(data_file)
-    report = Report(df)
+    report = TableReport(df)
     report.html
     report.html_snippet
     report.json
