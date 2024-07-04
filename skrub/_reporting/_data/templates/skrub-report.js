@@ -289,3 +289,7 @@ function displayFirstCellValue(event) {
         firstCell.click();
     }
 }
+
+function getReport(event){
+    return event.target.getRootNode().host;
+}

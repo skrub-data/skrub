@@ -14,7 +14,7 @@
             data-value-is-none=""
             {%- endif -%}
             data-dataframe-module="{{ summary.dataframe_module }}"
-            onclick="document.getElementById('{{ report_id }}').displayValue(event)">
+            onclick="getReport(event).displayValue(event)">
             {%- if  not (row[idx] | is_null) -%}
             {{ row[idx] }}
             {%- endif -%}

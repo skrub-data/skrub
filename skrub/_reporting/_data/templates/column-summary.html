@@ -4,11 +4,11 @@
             <span class="select-all">{{ column.name }}</span>
         </h3>
         {% if not in_sample_tab %}
-        <input class="select-column-checkbox" type="checkbox" onchange="document.getElementById('{{ report_id }}').updateSelectedColsSnippet()" checked />
+        <input class="select-column-checkbox" type="checkbox" onchange="getReport(event).updateSelectedColsSnippet()" checked />
         {% endif %}
         <code class="float-end">{{ column.dtype }}</code>
         {%- if in_sample_tab -%}
-        <button class="close-card-button" onclick="document.getElementById('{{ report_id }}').clearTableCellSelection()">⨉</button>
+        <button class="close-card-button" onclick="getReport(event).clearTableCellSelection()">⨉</button>
         {%- endif -%}
     </div>
     <div class="column-summary-content wrapper">

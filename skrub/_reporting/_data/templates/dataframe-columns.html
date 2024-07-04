@@ -10,8 +10,8 @@
     <input type="checkbox" id="collapse-const-cols-check" checked="true" />
     <label for="collapse-const-cols-check" class="margin-r-s">Collapse constant columns</label>
     {% endif %}
-    <button class="margin-r-s" onclick='document.getElementById("{{ report_id }}").clearSelectedCols()'>Deselect all</button>
-    <button onclick='document.getElementById("{{ report_id }}").selectAllCols()'>Select all</button>
+    <button class="margin-r-s" onclick='getReport(event).clearSelectedCols()'>Deselect all</button>
+    <button onclick='getReport(event).selectAllCols()'>Select all</button>
 
     <div class="column-summary-group">
         {% if summary.n_constant_columns %}
