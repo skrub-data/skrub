@@ -1,4 +1,3 @@
-{% set table_id = "{}_sample_table".format(report_id) %}
 {% set top_bar_id = "{}-top-bar".format(report_id) %}
 {% set top_bar_display_id = "{}-display".format(top_bar_id) %}
 {% set top_bar_select_id = "{}-select".format(top_bar_id) %}
@@ -9,7 +8,7 @@
     {% include "top-bar.html" %}
 
     <div class="skrubview-horizontal-scroll">
-        <table class="pure-table pure-table-striped skrubview-dataframe-sample-table" id="{{ table_id }}" data-top-bar-id="{{ top_bar_display_id }}" data-report-id="{{ report_id }}">
+        <table class="pure-table pure-table-striped skrubview-dataframe-sample-table" id="sample-table" data-top-bar-id="{{ top_bar_display_id }}" data-report-id="{{ report_id }}">
             <thead>
                 <tr>
                     {% for idx in range(summary.head.header.__len__()) %}
@@ -34,14 +33,14 @@
     </div>
 
     <p>
-        <strong>{{ summary.n_rows }}</strong> rows ✕ <strong id="{{ report_id }}_display_n_columns">{{ summary.n_columns }}</strong> columns.
+        <strong>{{ summary.n_rows }}</strong> rows ✕ <strong id="display-n-columns">{{ summary.n_columns }}</strong> columns.
     </p>
 
 
         <div class="skrubview-column-summary-group skrubview-columns-in-sample-tab">
             {% set in_sample_tab=True %}
             {% for column in summary.columns %}
-            {% set col_id="{}_col_{}_in_sample_tab".format(report_id, loop.index0) %}
+            {% set col_id="col_{}_in_sample_tab".format(loop.index0) %}
             {% include "column-summary.html" %}
             {% endfor %}
             {% set in_sample_tab=False %}

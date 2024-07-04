@@ -1,5 +1,7 @@
 {% set report_id_selector="#{}".format(report_id) if report_id else "" %}
 
+{% include "pure-3.0.0/base-min.css" %}
+{% include "pure-3.0.0/tables-min.css" %}
 {% include "base.css" %}
 {% include "tabs.css" %}
 {% include "dataframe-columns.css" %}

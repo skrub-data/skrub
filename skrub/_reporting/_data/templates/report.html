@@ -1,10 +1,8 @@
-{% set sample_tab_id = "{}-sample-tab".format(report_id) %}
-{% set sample_tab_button_id = "{}-sample-tab-button".format(report_id) %}
-{% set columns_tab_id = "{}-columns-tab".format(report_id) %}
-{% set columns_tab_button_id = "{}-columns-tab-button".format(report_id) %}
-{% set interactions_tab_id = "{}-interactions-tab".format(report_id) %}
-
-<div class="skrubview-report" id="{{ report_id }}">
+<template id="{{ report_id }}-template">
+    <style>
+     {% include "skrubview.css" %}
+    </style>
+    <div id="report">
     <div class="skrubview-dataframe-summary skrubview-wrapper skrubview-text">
         {% if summary.title %}
         <h1>{{ summary.title }}</h1>
@@ -14,16 +12,17 @@
     {% if summary.n_rows > 0 and summary.n_columns > 0 %}
     <div class="skrubview-flex-reverse skrubview-space-between">
         <div class="skrubview-tabset-buttons">
-            <button data-target-tab="{{ sample_tab_id }}"
-                    id="{{ sample_tab_button_id }}"
+            <button data-target-tab="sample-tab"
+                    id="sample-tab-button"
                     onclick="displayTab(event)"
                     title="Display a few rows of the dataframe in a table.">Table preview</button>
-            <button data-target-tab="{{ columns_tab_id }}"
-                    id="{{ columns_tab_button_id }}"
+            <button data-target-tab="columns-tab"
+                    id="columns-tab-button"
                     onclick="displayTab(event)"
                     title="Summary statistics and plots for all columns in the dataframe.">Column summaries</button>
             {% set interactions_warning = summary["top_associations"][0]["cramer_v"] is gt 0.9 %}
-            <button data-target-tab="{{ interactions_tab_id }}"
+            <button data-target-tab="interactions-tab"
+                    id="interactions-tab-button"
                     onclick="displayTab(event)"
                     {% if interactions_warning %}data-has-warning=""{% endif %}
                     title="Show which columns are similar (have a strong association).
@@ -33,23 +32,33 @@ NOTE: some columns have very strong associations and may be redundant.
         </div>
         {% include "column-filters.html" %}
     </div>
-    <div class="skrubview-tab" id="{{ sample_tab_id }}">
+    <div class="skrubview-tab-set">
+    <div class="skrubview-tab" id="sample-tab">
         {% include "dataframe-sample.html" %}
     </div>
-    <div class="skrubview-tab" id="{{ columns_tab_id }}">
+    <div class="skrubview-tab" id="columns-tab">
         {% include "dataframe-columns.html" %}
     </div>
-    <div class="skrubview-tab" id="{{ interactions_tab_id }}">
+    <div class="skrubview-tab" id="interactions-tab">
         {% include "dataframe-interactions.html" %}
     </div>
+    </div>
     <script>
-        updateSelectedColsSnippet("{{ report_id }}", false);
-        document.getElementById("{{ sample_tab_button_id }}").click();
-        onFilterChange("{{ report_id }}_col_filter");
+     var columnFiltersForReport{{ report_id }} = JSON.parse('{{ column_filters | tojson | safe }}');
+     initReport("{{ report_id }}");
     </script>
     {% else %}
     <div class="skrubview-text skrubview-announcement skrubview-wrapper">
         The dataframe is empty.
     </div>
     {% endif %}
-</div>
+    </div>
+</template>
+
+
+<skrub-table-report class="skrubview-report" id="{{ report_id }}">
+</skrub-table-report>
+
+<script>
+{% include "skrubview.js" %}
+</script>

@@ -1,4 +1,4 @@
-:root {
+:host {
     --skrubview-micro: 0.25rem;
     --skrubview-tiny: 0.5rem;
     --skrubview-small: 1.0rem;
@@ -22,120 +22,134 @@
     --skrubview-lightg: #f0f0f0;
 }
 
-{{ report_id_selector }} :is(select, summary, button) {
+:host {
+    /* copy from normalize.css & pure.css html rule to :host */
+    font-family: sans-serif;
+    line-height: 1.15;
+    -webkit-text-size-adjust: 100%;
+}
+
+#report {
+    background: white;
+    color: black;
+    color-scheme: light;
+    border-radius: var(--skrubview-radius, 0);
+}
+
+:is(select, summary, button) {
     cursor: pointer;
 }
 
-{{ report_id_selector }}.skrubview-report summary > * {
+summary > * {
     display: inline;
 }
 
-{{ report_id_selector }}.skrubview-report p {
+p {
     margin-block-start: var(--skrubview-tiny);
     margin-block-end: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report code {
+code {
     overflow-wrap: anywhere;
 }
 
-{{ report_id_selector }}.skrubview-report pre {
+pre {
     margin: 0;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-margin-r-s {
+.skrubview-margin-r-s {
     margin-inline-end: var(--skrubview-small);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-margin-r-t {
+.skrubview-margin-r-t {
     margin-inline-end: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-margin-v-t {
+.skrubview-margin-v-t {
     margin-block-start: var(--skrubview-tiny);
     margin-block-end: var(--skrubview-tiny);
 }
 
 
 
-{{ report_id_selector }}.skrubview-report :is(td, th) {
+:is(td, th) {
     padding: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report dl {
+dl {
     display: grid;
     grid-template-columns: max-content auto;
     column-gap: var(--skrubview-tiny);
     margin: 0;
 }
 
-{{ report_id_selector }}.skrubview-report dt {
+dt {
     grid-column-start: 1;
     font-weight: bold;
     justify-self: end;
 }
 
-{{ report_id_selector }}.skrubview-report dt::after {
+dt::after {
     content: ":";
 }
 
-{{ report_id_selector }}.skrubview-report dd {
+dd {
     grid-column-start: 2;
     justify-self: start;
     margin: 0;
 }
 
-{{ report_id_selector }}.skrubview-report table caption {
+table caption {
     padding: 0;
     font: inherit;
 }
 
-{{ report_id_selector }}.skrubview-report :is(td, th) {
+:is(td, th) {
     white-space: nowrap;
 }
 
 
-{{ report_id_selector }}.skrubview-report .skrubview-horizontal-scroll {
+.skrubview-horizontal-scroll {
     overflow-x: auto;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-select-all {
+.skrubview-select-all {
     user-select: all;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-select-none {
+.skrubview-select-none {
     user-select: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-wrapper {
+.skrubview-wrapper {
     padding-inline-start: var(--skrubview-small);
     padding-inline-end: var(--skrubview-small);
     padding-block-end: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-wrapper-vert {
+.skrubview-wrapper-vert {
     padding-block-end: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-wrapper-vert-l {
+.skrubview-wrapper-vert-l {
     padding-block-start: var(--skrubview-large);
     padding-block-end: var(--skrubview-huge);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-text {
+.skrubview-text {
     max-width: var(--skrubview-max-content-width);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-shrink {
+.skrubview-shrink {
     display: flex;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-shrink > * {
+.skrubview-shrink > * {
     width: 0;
     flex-grow: 1;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-copybutton-grid {
+.skrubview-copybutton-grid {
     display: flex;
     flex-direction: column;
     gap: var(--skrubview-tiny);
@@ -145,62 +159,60 @@
 
 
 
-{{ report_id_selector }}.skrubview-report .skrubview-grid-separator {
+.skrubview-grid-separator {
     grid-column: 1/-1;
     justify-self: left;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-flex {
+.skrubview-flex {
     display: flex;
     gap: var(--skrubview-tiny);
     align-items: center;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-gap-l {
+.skrubview-gap-l {
     gap: var(--skrubview-large);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-flex-reverse {
+.skrubview-flex-reverse {
     display: flex;
     flex-wrap: wrap-reverse;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-space-between {
+.skrubview-space-between {
     justify-content: space-between;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-shrinkable-text {
+.skrubview-shrinkable-text {
     flex-basis: 20rem;
     flex-grow: 1;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-flex-wrap {
+.skrubview-flex-wrap {
     flex-wrap: wrap;
     padding-block-start: var(--skrubview-tiny);
     padding-block-end: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-flex-wrap > * {
+.skrubview-flex-wrap > * {
     margin: 0;
 }
 
-
-
-{{ report_id_selector }}.skrubview-report .skrubview-ellided {
+#report .skrubview-ellided {
     max-width: 100ch;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-ellided-short {
+#report .skrubview-ellided-short {
     max-width: 30ch;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-card {
+.skrubview-card {
     padding: 0;
     margin: 0.75rem;
     border-radius: var(--skrubview-radius);
@@ -208,7 +220,7 @@
     min-width: min-content;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-card-header {
+.skrubview-card-header {
     border-radius: var(--skrubview-radius) var(--skrubview-radius) 0 0;
 
     display: flex;
@@ -220,27 +232,27 @@
     border-block-end: 1px solid var(--skrubview-mediumg);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-columns-in-sample-tab .skrubview-card-header {
+.skrubview-columns-in-sample-tab .skrubview-card-header {
     background-color: var(--skrubview-darkgreen);
     border-block-end: 1px solid var(--skrubview-verydarkgreen);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-card-header {
+.skrubview-card-header {
     --checkbox-margin: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-card-header > * {
+.skrubview-card-header > * {
     margin-block-start: 0;
     margin-block-end: 0;
     font-size: var(--skrubview-large);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-dataframe-summary {
+.skrubview-dataframe-summary {
     --skrubview-max-content-width: 100rem;
     font-size: var(--skrubview-large);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-box {
+.skrubview-box {
     display: flex;
     justify-content: space-between;
     align-items: stretch;
@@ -252,22 +264,22 @@
     min-height: 1.8rem;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-box pre {
+.skrubview-box pre {
     overflow-x: auto;
     padding: var(--skrubview-tiny);
     flex-grow: 1;
     white-space: pre;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-table-value-box {
+.skrubview-table-value-box {
     max-width: 100%;
 }
 
-{{ report_id_selector }}.skrubview-report *[data-shows-placeholder] {
+*[data-shows-placeholder] {
     color: #777777;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-copybutton {
+.skrubview-copybutton {
     margin-left: -2rem;
     min-width: 2rem;
     display: none;
@@ -278,47 +290,47 @@
     background: rgba(0, 0, 0, 0);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-box:hover .skrubview-copybutton {
+.skrubview-box:hover .skrubview-copybutton {
     display: inline;
     background: var(--skrubview-lightg);
 }
 
-{{ report_id_selector }}.skrubview-report:hover .skrubview-copybutton:hover {
+.skrubview-report:hover .skrubview-copybutton:hover {
     display: inline;
     background: var(--skrubview-mediumg);
 }
 
 
-{{ report_id_selector }}.skrubview-report .skrubview-clickable {
+.skrubview-clickable {
     cursor: pointer;
 }
 
-{{ report_id_selector }}.skrubview-report th[data-is-in-selected-column] {
+th[data-is-in-selected-column] {
     background-color: var(--skrubview-darkgreen);
 }
 
-{{ report_id_selector }}.skrubview-report tr:nth-child(2n -1) .skrubview-table-cell[data-is-in-selected-column] {
+tr:nth-child(2n -1) .skrubview-table-cell[data-is-in-selected-column] {
     background-color: var(--skrubview-mediumgreen);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-table-cell[data-is-in-selected-column] {
+.skrubview-table-cell[data-is-in-selected-column] {
     background-color: var(--skrubview-lightgreen);
 }
 
 
-{{ report_id_selector }}.skrubview-report tr:nth-child(2n -1) .skrubview-table-cell[data-is-selected] {
+tr:nth-child(2n -1) .skrubview-table-cell[data-is-selected] {
     background-color: var(--skrubview-yellowish);
     border: 1px solid black;
 }
 
 
-{{ report_id_selector }}.skrubview-report .skrubview-table-cell[data-is-selected] {
+.skrubview-table-cell[data-is-selected] {
     background-color: var(--skrubview-yellowish);
     border: 1px solid black;
 }
 
 
-{{ report_id_selector }}.skrubview-report .skrubview-ellided-table-part {
+#report .skrubview-ellided-table-part {
     border: 1px solid white;
     text-align: center;
     border-top: 0;
@@ -327,54 +339,54 @@
 }
 
 
-{{ report_id_selector }}.skrubview-report :is(.skrubview-ok, .skrubview-warning, .skrubview-critical) {
+:is(.skrubview-ok, .skrubview-warning, .skrubview-critical) {
                                                  font-weight: bold;
                                              }
 
-{{ report_id_selector }}.skrubview-report .skrubview-ok {
+.skrubview-ok {
     color: green;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-warning {
+.skrubview-warning {
     color: #ff6600;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-critical {
+.skrubview-critical {
     color: red;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-pseudocolumn {
+.skrubview-pseudocolumn {
     --header-color: #ffffff;
 }
 
-{{ report_id_selector }}.skrubview-report *[data-is-being-copied]{
+*[data-is-being-copied]{
     color: white;
     background-color: #4c72b0;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-select-displayed-siblings ~ [data-option-value]:not([data-is-selected]) {
+.skrubview-select-displayed-siblings ~ [data-option-value]:not([data-is-selected]) {
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-filterable-column[data-is-excluded-by-filter] {
+.skrubview-filterable-column[data-is-excluded-by-filter] {
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-if-else[data-predicate="false"] > :first-child{
+.skrubview-if-else[data-predicate="false"] > :first-child{
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-if-else[data-predicate="true"] > :last-child{
+.skrubview-if-else[data-predicate="true"] > :last-child{
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-announcement  {
+.skrubview-announcement  {
     font-size: var(--skrubview-large);
     padding-block-start: var(--skrubview-huge);
     padding-block-end: var(--skrubview-huge);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-important-note {
+.skrubview-important-note {
     background-color: var(--skrubview-lightgreen);
     padding: var(--skrubview-small);
     border-radius: var(--skrubview-radius);

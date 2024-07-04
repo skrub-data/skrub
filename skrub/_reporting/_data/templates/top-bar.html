@@ -1,6 +1,6 @@
 <div class="skrubview-top-bar-toggle skrubview-if-else" data-predicate="false">
-    <div id="{{ top_bar_id }}" class="skrubview-flex skrubview-flex-wrap skrubview-wrapper skrubview-top-bar">
-        <select id="{{ top_bar_select_id }}" onchange="updateBarContent('{{ top_bar_display_id }}')" data-bar-id="{{ top_bar_display_id }}" autocomplete="off">
+    <div class="skrubview-flex skrubview-flex-wrap skrubview-wrapper skrubview-top-bar">
+        <select id="top-bar-mode-select" onchange="document.getElementById('{{ report_id }}').updateBarContent('top-bar')" autocomplete="off">
 
             <option value="table-column-name" data-placeholder="Select a table cell to display its column name">Column name</option>
             <option value="table-column-name-repr" data-placeholder="Select a table cell to display its column name as a Python expression">Quoted column name</option>
@@ -12,8 +12,8 @@
         </select>
 
         <div class="skrubview-box">
-            <pre id="{{ top_bar_display_id }}" data-selector-id="{{ top_bar_select_id }}"></pre>
-            <button class="skrubview-copybutton" onclick='copyTextToClipboard("{{ top_bar_display_id }}")'>📋</button>
+            <pre id="top-bar" data-selector-id="top-bar-mode-select"></pre>
+            <button class="skrubview-copybutton" onclick='copyButtonClick(event)' data-target-id="top-bar">📋</button>
         </div>
 
     </div>
@@ -23,6 +23,3 @@
     </div>
     </div>
 </div>
-<script>
-    updateBarContent('{{ top_bar_display_id }}');
-</script>

@@ -1,21 +1,21 @@
-{{ report_id_selector }}.skrubview-report .skrubview-tab {
+.skrubview-tab {
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-tabset-buttons {
+.skrubview-tabset-buttons {
     display: flex;
     column-gap: var(--skrubview-tiny);
     padding-left: var(--skrubview-tiny);
     padding-right: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-tab[data-is-displayed] {
+.skrubview-tab[data-is-displayed] {
     display: block;
     border-top: 1px solid var(--skrubview-darkg);
     padding-top: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-tabset-buttons button {
+.skrubview-tabset-buttons button {
     border: none;
     padding: var(--skrubview-tiny);
     font-size: var(--skrubview-small);
@@ -23,13 +23,13 @@
     border-radius: var(--skrubview-radius) var(--skrubview-radius) 0 0;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-tabset-buttons button:hover {
+.skrubview-tabset-buttons button:hover {
     background-color: var(--skrubview-mediumg);
 }
 
 
 
-{{ report_id_selector }}.skrubview-report .skrubview-tabset-buttons button[data-is-selected] {
+.skrubview-tabset-buttons button[data-is-selected] {
     border-top: 1px solid var(--skrubview-darkg);
     border-left: 1px solid var(--skrubview-darkg);
     border-right: 1px solid var(--skrubview-darkg);
@@ -38,10 +38,10 @@
     background-color: white;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-tabset-buttons button[data-has-warning] {
+.skrubview-tabset-buttons button[data-has-warning] {
     color: red;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-tabset-buttons button[data-has-warning]::before {
+.skrubview-tabset-buttons button[data-has-warning]::before {
     content: "⚠️ ";
 }

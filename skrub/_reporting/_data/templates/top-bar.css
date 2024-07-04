@@ -1,4 +1,4 @@
-{{ report_id_selector }}.skrubview-report .skrubview-top-bar .skrubview-box {
+.skrubview-top-bar .skrubview-box {
     flex-grow: 1;
     max-width: 55rem;
 }

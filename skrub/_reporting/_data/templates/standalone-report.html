@@ -5,17 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ summary.file_name if summary.file_name else "skrubview report" }}</title>
-
-    <style>
-     {% include "pure-3.0.0/base-min.css" %}
-     {% include "pure-3.0.0/tables-min.css" %}
-     {% include "skrubview.css" %}
-    </style>
-    <script>
-     {% include "skrubview.js" %}
-    </script>
 </head>
-
 <body>
     <main>
         {% include "report.html" %}

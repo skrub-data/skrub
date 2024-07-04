@@ -1,24 +1,23 @@
 {% from "utils.j2" import collapse_const_id with context %}
-{% set selected_cols_id = "{}_selected_cols_box".format(report_id) %}
 
 <div class="skrubview-if-else skrubview-column-summaries-toggle" data-predicate="true">
 <article class="skrubview-wrapper">
     <div class="skrubview-flex skrubview-wrapper-vert">
         <div class="skrubview-box">
-        <pre class="selected-columns-box" id="{{ selected_cols_id }}"></pre>
-        <button class="skrubview-copybutton" onclick='copyTextToClipboard("{{ selected_cols_id }}")'>📋</button>
+        <pre class="selected-columns-box" id="selected-cols-box"></pre>
+        <button class="skrubview-copybutton" data-target-id="selected-cols-box" onclick='copyButtonClick(event)'>📋</button>
         </div>
     </div>
     {% if summary.n_constant_columns %}
     <input type="checkbox" id="{{ collapse_const_id }}" checked="true" />
     <label for="{{ collapse_const_id }}" class="skrubview-margin-r-s">Collapse constant columns</label>
     {% endif %}
-    <button class="skrubview-margin-r-s" onclick='clearSelectedCols("{{ report_id }}")'>Deselect all</button>
-    <button onclick='selectAllCols("{{ report_id }}")'>Select all</button>
+    <button class="skrubview-margin-r-s" onclick='document.getElementById("{{ report_id }}").clearSelectedCols()'>Deselect all</button>
+    <button onclick='document.getElementById("{{ report_id }}").selectAllCols()'>Select all</button>
 
     <div class="skrubview-column-summary-group">
         {% if summary.n_constant_columns %}
-        <div id="{{ report_id }}_constant_columns" class="skrubview-pseudocolumn skrubview-constant-columns-summary skrubview-card">
+        <div id="constant-columns-card" class="skrubview-pseudocolumn skrubview-constant-columns-summary skrubview-card">
             <div class="skrubview-card-header">
                 <h3>Constant columns</h3>
             </div>
@@ -37,7 +36,7 @@
         </div>
         {% endif %}
         {% for column in summary.columns %}
-        {% set col_id="{}_col_{}".format(report_id, loop.index0) %}
+        {% set col_id="col_{}".format(loop.index0) %}
         {% include "column-summary.html" %}
         {% endfor %}
     </div>

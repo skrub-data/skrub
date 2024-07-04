@@ -1,12 +1,12 @@
 {% from "utils.j2" import collapse_const_id with context %}
 
 
-{{ report_id_selector }}.skrubview-report .skrubview-float-end {
+.skrubview-float-end {
     margin-inline-start: auto;
     padding-inline-start: var(--skrubview-tiny);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-column-summary-group {
+.skrubview-column-summary-group {
     display: flex;
     flex-direction: column;
     gap: var(--skrubview-small);
@@ -17,21 +17,21 @@
     max-width: max-content;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-column-summary-group > * {
+.skrubview-column-summary-group > * {
     margin: 0;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-column-summary-group.skrubview-columns-in-sample-tab > .skrubview-column-summary:not([data-is-selected-in-table]) {
+.skrubview-column-summary-group.skrubview-columns-in-sample-tab > .skrubview-column-summary:not([data-is-selected-in-table]) {
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-column-summary-content {
+.skrubview-column-summary-content {
     display: flex;
     flex-direction: column;
 }
 
 @media screen and (min-width: 60rem) {
-    {{ report_id_selector }}.skrubview-report .skrubview-column-summary-group {
+    .skrubview-column-summary-group {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
@@ -41,23 +41,23 @@
 }
 
 
-{{ report_id_selector }}.skrubview-report #{{ collapse_const_id }}:checked ~ * .skrubview-constant-column {
+#{{ collapse_const_id }}:checked ~ * .skrubview-constant-column {
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report #{{ collapse_const_id }}:not(:checked) ~ * .skrubview-constant-columns-summary{
+#{{ collapse_const_id }}:not(:checked) ~ * .skrubview-constant-columns-summary{
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-constant-columns-summary:not(:has(dt:not([data-is-excluded-by-filter]))){
+.skrubview-constant-columns-summary:not(:has(dt:not([data-is-excluded-by-filter]))){
     display: none;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-relative-pos {
+.skrubview-relative-pos {
     position: relative;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-card .skrubview-close-card-button {
+.skrubview-card .skrubview-close-card-button {
     display: none;
     flex-direction: column;
     justify-content: center;
@@ -73,11 +73,11 @@
     border: 1px solid var(--skrubview-verydarkgreen);
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-card:hover .skrubview-close-card-button {
+.skrubview-card:hover .skrubview-close-card-button {
     display: flex;
 }
 
-{{ report_id_selector }}.skrubview-report .skrubview-card .skrubview-close-card-button:hover {
+.skrubview-card .skrubview-close-card-button:hover {
     display: flex;
     background: var(--skrubview-verydarkgreen);
 }

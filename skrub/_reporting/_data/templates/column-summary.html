@@ -4,11 +4,11 @@
             <code class="skrubview-select-all">{{ column.name }}</code>
         </h3>
         {% if not in_sample_tab %}
-        <input class="skrubview-select-column-checkbox" type="checkbox" onchange="updateColSelection(event)" data-column-id="{{ col_id }}" data-report-id="{{ report_id }}" checked />
+        <input class="skrubview-select-column-checkbox" type="checkbox" onchange="document.getElementById('{{ report_id }}').updateSelectedColsSnippet()" checked />
         {% endif %}
         <code class="skrubview-float-end">{{ column.dtype }}</code>
         {%- if in_sample_tab -%}
-        <button class="skrubview-close-card-button" onclick="clearTableCellSelection(document.getElementById('{{ table_id }}'))">⨉</button>
+        <button class="skrubview-close-card-button" onclick="document.getElementById('{{ report_id }}').clearTableCellSelection()">⨉</button>
         {%- endif -%}
     </div>
     <div class="skrubview-column-summary-content skrubview-wrapper">
@@ -57,7 +57,7 @@
         <div class="skrubview-copybutton-grid">
             <div class="skrubview-box">
         <pre id="{{ val_id }}">{{ column.constant_value }}</pre>
-        <button class="skrubview-copybutton" onclick='copyTextToClipboard("{{ val_id }}")'>📋</button>
+        <button class="skrubview-copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
             </div>
         </div>
         </div>
@@ -88,7 +88,7 @@
                      data-content-repr="{{ value.__repr__() }}"
                      data-content-filter="{{ value | filter_equal_snippet(column.name, summary.dataframe_module) }}"
                  >{{ value }}</pre>
-            <button class="skrubview-copybutton" onclick='copyTextToClipboard("{{ val_id }}")'>📋</button>
+            <button class="skrubview-copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
                 </div>
 
             {% endfor %}
@@ -103,7 +103,7 @@
                  data-content-repr="{{ column.value_counts | list }}"
                  data-content-filter="{{ column.value_counts | list | filter_isin_snippet(column.name, summary.dataframe_module) }}"
             >{{ column.value_counts.keys() | list }}</pre>
-            <button class="skrubview-copybutton" onclick='copyTextToClipboard("{{ val_id }}")'>📋</button>
+            <button class="skrubview-copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
             </div>
             </div>
             </div>

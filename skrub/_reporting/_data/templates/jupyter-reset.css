@@ -1,5 +1,22 @@
 {% set report_id_selector="#{}".format(report_id) if report_id else "" %}
 
+{{ report_id_selector }}.skrubview-report {
+    color: black;
+    background: white;
+}
+
+{{ report_id_selector }}.skrubview-report * {
+    background: inherit;
+    color: inherit;
+    filter: none;
+}
+
+{{ report_id_selector }}.skrubview-report input[type='checkbox'] {
+    background: white;
+    /* color: inherit; */
+    /* filter: none; */
+}
+
 {{ report_id_selector }}.skrubview-report dt {
     float: none;
     margin: 0;
