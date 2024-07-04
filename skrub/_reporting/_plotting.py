@@ -29,7 +29,8 @@ COLOR_0 = COLORS[0]
 
 
 def _despine(ax):
-    ax.spines[["top", "right"]].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
 
 
 def _serialize(fig, close=True):

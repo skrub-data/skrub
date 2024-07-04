@@ -930,7 +930,9 @@ def value_counts(column):
 
 @value_counts.specialize("pandas", argument_type="Column")
 def _value_counts_pandas(column):
-    return column.rename("value").value_counts().reset_index()
+    return (
+        column.value_counts().reset_index().set_axis(["value", "count"], axis="columns")
+    )
 
 
 @value_counts.specialize("polars", argument_type="Column")
