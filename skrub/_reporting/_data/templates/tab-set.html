@@ -1,0 +1,33 @@
+<div class="flex-reverse space-between">
+    <div class="tabset-buttons">
+        <button data-target-tab="sample-tab"
+                id="sample-tab-button"
+                onclick="displayTab(event)"
+                title="Display a few rows of the dataframe in a table.">Table preview</button>
+        <button data-target-tab="columns-tab"
+                id="columns-tab-button"
+                onclick="displayTab(event)"
+                title="Summary statistics and plots for all columns in the dataframe.">Column summaries</button>
+        {% set interactions_warning = summary["top_associations"][0]["cramer_v"] is gt 0.9 %}
+        <button data-target-tab="interactions-tab"
+                id="interactions-tab-button"
+                onclick="displayTab(event)"
+                {% if interactions_warning %}data-has-warning=""{% endif %}
+                title="Show which columns are similar (have a strong association).
+                                 {%- if interactions_warning %}
+                                 NOTE: some columns have very strong associations and may be redundant.
+                                 {%- endif -%}">Column similarities</button>
+    </div>
+    {% include "column-filters.html" %}
+</div>
+<div class="tab-set">
+    <div class="tab" id="sample-tab">
+        {% include "dataframe-sample.html" %}
+    </div>
+    <div class="tab" id="columns-tab">
+        {% include "dataframe-columns.html" %}
+    </div>
+    <div class="tab" id="interactions-tab">
+        {% include "dataframe-interactions.html" %}
+    </div>
+</div>

@@ -1,64 +1,48 @@
-<template id="{{ report_id }}-template">
-    <style>
-     {% include "skrub-report.css" %}
-    </style>
-    <div id="report">
-    <div class="dataframe-summary wrapper text">
-        {% if summary.title %}
-        <h1>{{ summary.title }}</h1>
-        {% endif %}
-    </div>
+<div id="{{ report_id }}-wrapper" hidden>
+    <template id="{{ report_id }}-template">
+        <style>
+         {% include "skrub-report.css" %}
+        </style>
+        <div id="report">
+            <div class="dataframe-summary wrapper text">
+                {% if summary.title %}
+                <h1>{{ summary.title }}</h1>
+                {% endif %}
+            </div>
 
-    {% if summary.n_rows > 0 and summary.n_columns > 0 %}
-    <div class="flex-reverse space-between">
-        <div class="tabset-buttons">
-            <button data-target-tab="sample-tab"
-                    id="sample-tab-button"
-                    onclick="displayTab(event)"
-                    title="Display a few rows of the dataframe in a table.">Table preview</button>
-            <button data-target-tab="columns-tab"
-                    id="columns-tab-button"
-                    onclick="displayTab(event)"
-                    title="Summary statistics and plots for all columns in the dataframe.">Column summaries</button>
-            {% set interactions_warning = summary["top_associations"][0]["cramer_v"] is gt 0.9 %}
-            <button data-target-tab="interactions-tab"
-                    id="interactions-tab-button"
-                    onclick="displayTab(event)"
-                    {% if interactions_warning %}data-has-warning=""{% endif %}
-                    title="Show which columns are similar (have a strong association).
-{%- if interactions_warning %}
-NOTE: some columns have very strong associations and may be redundant.
-{%- endif -%}">Column similarities</button>
+            {% if summary.n_rows > 0 and summary.n_columns > 0 %}
+            {% include "tab-set.html" %}
+            {% else %}
+            <div class="text announcement wrapper">
+                The dataframe is empty.
+            </div>
+            {% endif %}
         </div>
-        {% include "column-filters.html" %}
-    </div>
-    <div class="tab-set">
-    <div class="tab" id="sample-tab">
-        {% include "dataframe-sample.html" %}
-    </div>
-    <div class="tab" id="columns-tab">
-        {% include "dataframe-columns.html" %}
-    </div>
-    <div class="tab" id="interactions-tab">
-        {% include "dataframe-interactions.html" %}
-    </div>
-    </div>
-    {% else %}
-    <div class="text announcement wrapper">
-        The dataframe is empty.
-    </div>
-    {% endif %}
-    </div>
-</template>
+    </template>
 
+    <skrub-table-report class="report" id="{{ report_id }}">
+    </skrub-table-report>
 
-<skrub-table-report class="report" id="{{ report_id }}">
-</skrub-table-report>
+    <script>
+     {% include "skrub-report.js" %}
+    </script>
+    <script>
+     var columnFiltersForReport{{ report_id }} = JSON.parse('{{ column_filters | tojson | safe }}');
+     setTimeout(() => {initReport("{{ report_id }}");});
+    </script>
+</div>
+
+<div id="{{ report_id }}-wrapper-fallback">
+    <h2>Please enable javascript</h2>
+    <p>
+        The skrub table reports need javascript to display correctly. If you are
+        displaying a report in a Jupyter notebook and you see this message, you may need to
+        re-execute the cell or to trust the notebook (button on the top right or
+        "File > Trust notebook").
+    </p>
+</div>
 
 <script>
-{% include "skrub-report.js" %}
-</script>
-<script>
- var columnFiltersForReport{{ report_id }} = JSON.parse('{{ column_filters | tojson | safe }}');
- setTimeout(() => {initReport("{{ report_id }}");});
+ document.getElementById("{{ report_id }}-wrapper").removeAttribute("hidden");
+ document.getElementById("{{ report_id }}-wrapper-fallback").setAttribute("hidden", "");
 </script>
