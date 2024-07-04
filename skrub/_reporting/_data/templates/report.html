@@ -43,10 +43,6 @@ NOTE: some columns have very strong associations and may be redundant.
         {% include "dataframe-interactions.html" %}
     </div>
     </div>
-    <script>
-     var columnFiltersForReport{{ report_id }} = JSON.parse('{{ column_filters | tojson | safe }}');
-     initReport("{{ report_id }}");
-    </script>
     {% else %}
     <div class="text announcement wrapper">
         The dataframe is empty.
@@ -61,4 +57,8 @@ NOTE: some columns have very strong associations and may be redundant.
 
 <script>
 {% include "skrub-report.js" %}
+</script>
+<script>
+ var columnFiltersForReport{{ report_id }} = JSON.parse('{{ column_filters | tojson | safe }}');
+ initReport("{{ report_id }}");
 </script>
