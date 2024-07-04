@@ -60,5 +60,5 @@ NOTE: some columns have very strong associations and may be redundant.
 </script>
 <script>
  var columnFiltersForReport{{ report_id }} = JSON.parse('{{ column_filters | tojson | safe }}');
- initReport("{{ report_id }}");
+ setTimeout(() => {initReport("{{ report_id }}");});
 </script>
