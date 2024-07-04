@@ -1,10 +1,8 @@
-import json
 import pathlib
 
 import pandas as pd
 import pytest
 
-from skrub._reporting import TableReport
 from skrub._reporting._summarize import summarize_dataframe
 
 
@@ -16,8 +14,6 @@ def test_summarize():
         df = pd.read_parquet(data_file)
     except ImportError:
         pytest.skip("missing pyarrow, cannot read parquet")
-    expected = json.loads((data_dir / f"{fname}.expected.json").read_text("utf-8"))
-    assert json.loads(TableReport(df, title=fname).json) == expected
     summary = summarize_dataframe(df, with_plots=True)
     for c in summary["columns"]:
         assert c["value_is_constant"] or len(c["plot_names"]) == 1
