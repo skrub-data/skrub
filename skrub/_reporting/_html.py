@@ -5,14 +5,8 @@ import secrets
 import jinja2
 import pandas as pd
 
-try:
-    from skrub import _selectors as s
-
-    _SELECTORS_AVAILABLE = True
-except ImportError:
-    _SELECTORS_AVAILABLE = False
-
 from skrub import _dataframe as sbd
+from skrub import _selectors as s
 
 from . import _utils
 
@@ -52,8 +46,6 @@ def _get_jinja_env():
 
 
 def _get_column_filters(df):
-    if not _SELECTORS_AVAILABLE:
-        return _get_column_filters_no_selectors(df)
     filters = {}
     if sbd.shape(df)[1] > 10:
         filters["first_10"] = {
@@ -80,32 +72,6 @@ def _get_column_filters(df):
             "display_name": display_name,
             "columns": selector.expand(df),
         }
-    return filters
-
-
-def _get_column_filters_no_selectors(df):
-    # temporary manual filtering until selectors PR is merged
-    filters = {}
-    if sbd.shape(df)[1] > 10:
-        first_10 = sbd.column_names(df)[:10]
-        filters["first_10"] = {"display_name": "First 10 columns", "columns": first_10}
-    col_names = sbd.column_names(df)
-    filters["all()"] = {"display_name": "All columns", "columns": col_names}
-
-    def add_filt(f, name):
-        filters[name] = {
-            "display_name": name,
-            "columns": [c for c in col_names if f(sbd.col(df, c))],
-        }
-        filters[f"~{name}"] = {
-            "display_name": f"~{name}",
-            "columns": [c for c in col_names if c not in filters[name]],
-        }
-
-    add_filt(sbd.is_numeric, "numeric()")
-    add_filt(sbd.is_string, "string()")
-    add_filt(sbd.is_categorical, "categorical()")
-    add_filt(sbd.is_any_date, "any_date()")
     return filters
 
 
