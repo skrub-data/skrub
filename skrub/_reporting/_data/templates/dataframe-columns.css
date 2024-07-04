@@ -1,6 +1,3 @@
-{% from "utils.j2" import collapse_const_id with context %}
-
-
 .skrubview-float-end {
     margin-inline-start: auto;
     padding-inline-start: var(--skrubview-tiny);
@@ -41,11 +38,11 @@
 }
 
 
-#{{ collapse_const_id }}:checked ~ * .skrubview-constant-column {
+#collapse-const-cols-check:checked ~ * .skrubview-constant-column {
     display: none;
 }
 
-#{{ collapse_const_id }}:not(:checked) ~ * .skrubview-constant-columns-summary{
+#collapse-const-cols-check:not(:checked) ~ * .skrubview-constant-columns-summary{
     display: none;
 }
 
