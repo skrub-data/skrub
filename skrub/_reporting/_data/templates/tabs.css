@@ -1,47 +1,47 @@
-.skrubview-tab {
+.tab {
     display: none;
 }
 
-.skrubview-tabset-buttons {
+.tabset-buttons {
     display: flex;
-    column-gap: var(--skrubview-tiny);
-    padding-left: var(--skrubview-tiny);
-    padding-right: var(--skrubview-tiny);
+    column-gap: var(--tiny);
+    padding-left: var(--tiny);
+    padding-right: var(--tiny);
 }
 
-.skrubview-tab[data-is-displayed] {
+.tab[data-is-displayed] {
     display: block;
-    border-top: 1px solid var(--skrubview-darkg);
-    padding-top: var(--skrubview-tiny);
+    border-top: 1px solid var(--darkg);
+    padding-top: var(--tiny);
 }
 
-.skrubview-tabset-buttons button {
+.tabset-buttons button {
     border: none;
-    padding: var(--skrubview-tiny);
-    font-size: var(--skrubview-small);
-    background-color: var(--skrubview-lightg);
-    border-radius: var(--skrubview-radius) var(--skrubview-radius) 0 0;
+    padding: var(--tiny);
+    font-size: var(--small);
+    background-color: var(--lightg);
+    border-radius: var(--radius) var(--radius) 0 0;
 }
 
-.skrubview-tabset-buttons button:hover {
-    background-color: var(--skrubview-mediumg);
+.tabset-buttons button:hover {
+    background-color: var(--mediumg);
 }
 
 
 
-.skrubview-tabset-buttons button[data-is-selected] {
-    border-top: 1px solid var(--skrubview-darkg);
-    border-left: 1px solid var(--skrubview-darkg);
-    border-right: 1px solid var(--skrubview-darkg);
+.tabset-buttons button[data-is-selected] {
+    border-top: 1px solid var(--darkg);
+    border-left: 1px solid var(--darkg);
+    border-right: 1px solid var(--darkg);
     border-bottom: 1px solid white;
     margin-bottom: -1px;
     background-color: white;
 }
 
-.skrubview-tabset-buttons button[data-has-warning] {
+.tabset-buttons button[data-has-warning] {
     color: red;
 }
 
-.skrubview-tabset-buttons button[data-has-warning]::before {
+.tabset-buttons button[data-has-warning]::before {
     content: "⚠️ ";
 }

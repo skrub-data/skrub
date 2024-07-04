@@ -3,7 +3,7 @@
     <tr>
         {% for idx in range(row.__len__()) %}
         {% set column_name = summary.head.header[idx] %}
-        <td class="skrubview-table-cell skrubview-clickable skrubview-ellided-short skrubview-filterable-column"
+        <td class="table-cell clickable ellided-short filterable-column"
             data-column-name="{{ column_name }}"
             data-column-idx="{{ idx }}"
             data-value-str="{{ row[idx].__str__() }}"

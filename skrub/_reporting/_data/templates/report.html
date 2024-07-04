@@ -3,15 +3,15 @@
      {% include "skrubview.css" %}
     </style>
     <div id="report">
-    <div class="skrubview-dataframe-summary skrubview-wrapper skrubview-text">
+    <div class="dataframe-summary wrapper text">
         {% if summary.title %}
         <h1>{{ summary.title }}</h1>
         {% endif %}
     </div>
 
     {% if summary.n_rows > 0 and summary.n_columns > 0 %}
-    <div class="skrubview-flex-reverse skrubview-space-between">
-        <div class="skrubview-tabset-buttons">
+    <div class="flex-reverse space-between">
+        <div class="tabset-buttons">
             <button data-target-tab="sample-tab"
                     id="sample-tab-button"
                     onclick="displayTab(event)"
@@ -32,14 +32,14 @@ NOTE: some columns have very strong associations and may be redundant.
         </div>
         {% include "column-filters.html" %}
     </div>
-    <div class="skrubview-tab-set">
-    <div class="skrubview-tab" id="sample-tab">
+    <div class="tab-set">
+    <div class="tab" id="sample-tab">
         {% include "dataframe-sample.html" %}
     </div>
-    <div class="skrubview-tab" id="columns-tab">
+    <div class="tab" id="columns-tab">
         {% include "dataframe-columns.html" %}
     </div>
-    <div class="skrubview-tab" id="interactions-tab">
+    <div class="tab" id="interactions-tab">
         {% include "dataframe-interactions.html" %}
     </div>
     </div>
@@ -48,7 +48,7 @@ NOTE: some columns have very strong associations and may be redundant.
      initReport("{{ report_id }}");
     </script>
     {% else %}
-    <div class="skrubview-text skrubview-announcement skrubview-wrapper">
+    <div class="text announcement wrapper">
         The dataframe is empty.
     </div>
     {% endif %}
@@ -56,7 +56,7 @@ NOTE: some columns have very strong associations and may be redundant.
 </template>
 
 
-<skrub-table-report class="skrubview-report" id="{{ report_id }}">
+<skrub-table-report class="report" id="{{ report_id }}">
 </skrub-table-report>
 
 <script>

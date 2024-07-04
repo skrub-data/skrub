@@ -1,60 +1,60 @@
-.skrubview-float-end {
+.float-end {
     margin-inline-start: auto;
-    padding-inline-start: var(--skrubview-tiny);
+    padding-inline-start: var(--tiny);
 }
 
-.skrubview-column-summary-group {
+.column-summary-group {
     display: flex;
     flex-direction: column;
-    gap: var(--skrubview-small);
-    padding-block-start: var(--skrubview-tiny);
-    padding-block-end: var(--skrubview-tiny);
-    padding-inline-end: var(--skrubview-small);
+    gap: var(--small);
+    padding-block-start: var(--tiny);
+    padding-block-end: var(--tiny);
+    padding-inline-end: var(--small);
     min-width: min-content;
     max-width: max-content;
 }
 
-.skrubview-column-summary-group > * {
+.column-summary-group > * {
     margin: 0;
 }
 
-.skrubview-column-summary-group.skrubview-columns-in-sample-tab > .skrubview-column-summary:not([data-is-selected-in-table]) {
+.column-summary-group.columns-in-sample-tab > .column-summary:not([data-is-selected-in-table]) {
     display: none;
 }
 
-.skrubview-column-summary-content {
+.column-summary-content {
     display: flex;
     flex-direction: column;
 }
 
 @media screen and (min-width: 60rem) {
-    .skrubview-column-summary-group {
+    .column-summary-group {
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
-        gap: var(--skrubview-small);
+        gap: var(--small);
     }
 
 }
 
 
-#collapse-const-cols-check:checked ~ * .skrubview-constant-column {
+#collapse-const-cols-check:checked ~ * .constant-column {
     display: none;
 }
 
-#collapse-const-cols-check:not(:checked) ~ * .skrubview-constant-columns-summary{
+#collapse-const-cols-check:not(:checked) ~ * .constant-columns-summary{
     display: none;
 }
 
-.skrubview-constant-columns-summary:not(:has(dt:not([data-is-excluded-by-filter]))){
+.constant-columns-summary:not(:has(dt:not([data-is-excluded-by-filter]))){
     display: none;
 }
 
-.skrubview-relative-pos {
+.relative-pos {
     position: relative;
 }
 
-.skrubview-card .skrubview-close-card-button {
+.card .close-card-button {
     display: none;
     flex-direction: column;
     justify-content: center;
@@ -66,15 +66,15 @@
     height: 2rem;
     padding: 0;
     border-radius: 1rem;
-    background: var(--skrubview-darkgreen);
-    border: 1px solid var(--skrubview-verydarkgreen);
+    background: var(--darkgreen);
+    border: 1px solid var(--verydarkgreen);
 }
 
-.skrubview-card:hover .skrubview-close-card-button {
+.card:hover .close-card-button {
     display: flex;
 }
 
-.skrubview-card .skrubview-close-card-button:hover {
+.card .close-card-button:hover {
     display: flex;
-    background: var(--skrubview-verydarkgreen);
+    background: var(--verydarkgreen);
 }

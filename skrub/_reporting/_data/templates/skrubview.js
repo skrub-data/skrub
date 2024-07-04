@@ -13,7 +13,7 @@ class SkrubTableReport extends HTMLElement {
 
     updateSelectedColsSnippet() {
         const allCols = this.shadowRoot.querySelectorAll(
-            ".skrubview-column-summary");
+            ".column-summary");
         const selectedCols = Array.from(allCols).filter(c => this.isSelectedCol(c));
         const snippet = selectedCols.map(col => col.dataset.nameRepr).join(", ");
         const bar = this.shadowRoot.querySelector(".selected-columns-box");
@@ -22,7 +22,7 @@ class SkrubTableReport extends HTMLElement {
 
     isSelectedCol(columnElem) {
         const checkboxElem = columnElem.querySelector(
-            "input.skrubview-select-column-checkbox[type='checkbox']");
+            "input.select-column-checkbox[type='checkbox']");
         return checkboxElem && checkboxElem.checked;
     }
 
@@ -43,7 +43,7 @@ class SkrubTableReport extends HTMLElement {
 
     clearSelectedCols() {
         this.shadowRoot.querySelectorAll(
-            "input.skrubview-select-column-checkbox[type='checkbox']").forEach(
+            "input.select-column-checkbox[type='checkbox']").forEach(
             box => {
                 box.checked = false;
             }
@@ -52,10 +52,10 @@ class SkrubTableReport extends HTMLElement {
     }
 
     selectAllCols() {
-        this.shadowRoot.querySelectorAll(".skrubview-column-summary").forEach(
+        this.shadowRoot.querySelectorAll(".column-summary").forEach(
             elem => {
                 const box = elem.querySelector(
-                    "input.skrubview-select-column-checkbox[type='checkbox']"
+                    "input.select-column-checkbox[type='checkbox']"
                 );
                 if (!(box === null)) {
                     box.checked = !elem.hasAttribute(
@@ -72,7 +72,7 @@ class SkrubTableReport extends HTMLElement {
         tabButton.parentElement.querySelectorAll("button").forEach(elem => {
             elem.removeAttribute("data-is-selected");
         });
-        tab.parentElement.querySelectorAll(".skrubview-tab").forEach(elem => {
+        tab.parentElement.querySelectorAll(".tab").forEach(elem => {
             elem.removeAttribute("data-is-displayed");
         });
         tabButton.setAttribute("data-is-selected", "");
@@ -86,7 +86,7 @@ class SkrubTableReport extends HTMLElement {
         const elem = event.target;
         const table = elem.closest("table");
         table.setAttribute("data-selected-column", elem.dataset.colNameStr);
-        table.querySelectorAll(".skrubview-table-cell").forEach(cell => {
+        table.querySelectorAll(".table-cell").forEach(cell => {
             cell.removeAttribute("data-is-selected");
             if (cell.dataset.columnIdx === elem.dataset.columnIdx) {
                 cell.setAttribute("data-is-in-selected-column", "");
@@ -104,7 +104,7 @@ class SkrubTableReport extends HTMLElement {
         elem.setAttribute("data-is-selected", "");
 
         const bar = this.shadowRoot.getElementById("top-bar");
-        const barToggle = bar.closest(".skrubview-top-bar-toggle");
+        const barToggle = bar.closest(".top-bar-toggle");
         barToggle.setAttribute("data-predicate", "true");
         bar.setAttribute("data-content-table-cell-value", elem.dataset.valueStr);
         bar.setAttribute("data-content-table-cell-repr", elem.dataset.valueRepr);
@@ -124,7 +124,7 @@ class SkrubTableReport extends HTMLElement {
 
     revealColCard(colIdx) {
         const allCols = this.shadowRoot.querySelectorAll(
-            ".skrubview-columns-in-sample-tab .skrubview-column-summary");
+            ".columns-in-sample-tab .column-summary");
         allCols.forEach(col => {
             col.removeAttribute("data-is-selected-in-table");
         });
@@ -146,7 +146,7 @@ class SkrubTableReport extends HTMLElement {
             });
         tableElem.removeAttribute("data-selected-cell");
         const bar = this.shadowRoot.getElementById("top-bar");
-        const barToggle = bar.closest(".skrubview-top-bar-toggle");
+        const barToggle = bar.closest(".top-bar-toggle");
         barToggle.setAttribute("data-predicate", "false");
         bar.removeAttribute("data-content-table-cell-value");
         bar.removeAttribute("data-content-table-cell-repr");
@@ -163,7 +163,7 @@ class SkrubTableReport extends HTMLElement {
         const filterName = selectElem.value;
         const acceptedCols = colFilters[filterName]["columns"];
         const colElements = this.shadowRoot.querySelectorAll(
-            ".skrubview-filterable-column");
+            ".filterable-column");
         colElements.forEach(elem => {
             if (acceptedCols.includes(elem.dataset.columnName)) {
                 elem.removeAttribute("data-is-excluded-by-filter");
@@ -178,13 +178,13 @@ class SkrubTableReport extends HTMLElement {
         if (!acceptedCols.includes(tableElem.dataset.selectedColumn)) {
             this.clearTableCellSelection();
         }
-        for (let toggleSelector of [".skrubview-table-sample-toggle",
-                ".skrubview-column-summaries-toggle"
+        for (let toggleSelector of [".table-sample-toggle",
+                ".column-summaries-toggle"
             ]) {
             const toggle = this.shadowRoot.querySelector(toggleSelector);
             toggle.dataset.predicate = acceptedCols.length === 0 ? "false" : "true";
             const filterDisplay = toggle.querySelector(
-                ".skrubview-selected-filter-display");
+                ".selected-filter-display");
             filterDisplay.textContent = '"' + colFilters[filterName][
                 "display_name"
             ] + '"';
@@ -284,7 +284,7 @@ function displayFirstCellValue(event) {
     const header = event.target;
     const idx = header.dataset.columnIdx;
     const firstCell = header.closest("table").querySelector(
-        `.skrubview-table-cell[data-column-idx="${idx}"]`);
+        `.table-cell[data-column-idx="${idx}"]`);
     if (firstCell) {
         firstCell.click();
     }

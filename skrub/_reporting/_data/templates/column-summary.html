@@ -1,21 +1,21 @@
-<div class="skrubview-card skrubview-column-summary skrubview-filterable-column {{"skrubview-constant-column" if column.value_is_constant else "" }}" id="{{ col_id }}" data-name-repr="{{ column.name.__repr__() }}" data-column-name="{{ column.name }}">
-    <div class="skrubview-card-header {% if in_sample_tab %}skrubview-relative-pos{% endif %}">
-        <h3 class="skrubview-margin-r-t">
-            <span class="skrubview-select-all">{{ column.name }}</span>
+<div class="card column-summary filterable-column {{"constant-column" if column.value_is_constant else "" }}" id="{{ col_id }}" data-name-repr="{{ column.name.__repr__() }}" data-column-name="{{ column.name }}">
+    <div class="card-header {% if in_sample_tab %}relative-pos{% endif %}">
+        <h3 class="margin-r-t">
+            <span class="select-all">{{ column.name }}</span>
         </h3>
         {% if not in_sample_tab %}
-        <input class="skrubview-select-column-checkbox" type="checkbox" onchange="document.getElementById('{{ report_id }}').updateSelectedColsSnippet()" checked />
+        <input class="select-column-checkbox" type="checkbox" onchange="document.getElementById('{{ report_id }}').updateSelectedColsSnippet()" checked />
         {% endif %}
-        <code class="skrubview-float-end">{{ column.dtype }}</code>
+        <code class="float-end">{{ column.dtype }}</code>
         {%- if in_sample_tab -%}
-        <button class="skrubview-close-card-button" onclick="document.getElementById('{{ report_id }}').clearTableCellSelection()">⨉</button>
+        <button class="close-card-button" onclick="document.getElementById('{{ report_id }}').clearTableCellSelection()">⨉</button>
         {%- endif -%}
     </div>
-    <div class="skrubview-column-summary-content skrubview-wrapper">
+    <div class="column-summary-content wrapper">
         <div>
             <dl>
                 <dt>Null values</dt>
-                <dd class="skrubview-{{ column.nulls_level }}">{{ column.null_count }} ({{ column.null_proportion | format_percent }})</dd>
+                <dd class="{{ column.nulls_level }}">{{ column.null_count }} ({{ column.null_proportion | format_percent }})</dd>
                 {% if not column.value_is_constant %}
                 {% if column.n_unique %}
                 <dt>Unique values</dt>
@@ -52,12 +52,12 @@
 
         {% if column.value_is_constant %}
         {% set val_id = "{}-constant-value".format(col_id) %}
-        <div class="skrubview-margin-v-t">
+        <div class="margin-v-t">
         <strong>Constant value:</strong>
-        <div class="skrubview-copybutton-grid">
-            <div class="skrubview-box">
+        <div class="copybutton-grid">
+            <div class="box">
         <pre id="{{ val_id }}">{{ column.constant_value }}</pre>
-        <button class="skrubview-copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
+        <button class="copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
             </div>
         </div>
         </div>
@@ -69,10 +69,10 @@
         {% if plot_name == "value_counts_plot" %}
         <details>
             <summary>Most frequent values</summary>
-            <div class="skrubview-shrink">
-            <div class="skrubview-copybutton-grid">
+            <div class="shrink">
+            <div class="copybutton-grid">
                 {% set selector_id = "{}_freq_value_select_snippet".format(col_id) %}
-                <select class="skrubview-grid-separator skrubview-select-displayed-siblings" id="{{ selector_id }}" onchange="updateSiblingBarContents(event)" autocomplete="off">
+                <select class="grid-separator select-displayed-siblings" id="{{ selector_id }}" onchange="updateSiblingBarContents(event)" autocomplete="off">
                     <option value="value">Display value</option>
                     <option value="repr">Python expression</option>
                     <option value="filter">Filtered dataframe</option>
@@ -80,7 +80,7 @@
 
                 {% for value in column.value_counts %}
                 {% set val_id = "{}-freq-value-{}".format(col_id, loop.index0) %}
-                <div class="skrubview-box">
+                <div class="box">
                 <pre
                      id="{{ val_id }}"
                      data-selector-id="{{ selector_id }}"
@@ -88,14 +88,14 @@
                      data-content-repr="{{ value.__repr__() }}"
                      data-content-filter="{{ value | filter_equal_snippet(column.name, summary.dataframe_module) }}"
                  >{{ value }}</pre>
-            <button class="skrubview-copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
+            <button class="copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
                 </div>
 
             {% endfor %}
-            <span class="skrubview-grid-separator">List:</span>
+            <span class="grid-separator">List:</span>
             {% set val_id = "{}-freq-value-list".format(col_id) %}
 
-            <div class="skrubview-box">
+            <div class="box">
             <pre
                  id="{{ val_id }}"
                  data-selector-id="{{ selector_id }}"
@@ -103,7 +103,7 @@
                  data-content-repr="{{ column.value_counts | list }}"
                  data-content-filter="{{ column.value_counts | list | filter_isin_snippet(column.name, summary.dataframe_module) }}"
             >{{ column.value_counts.keys() | list }}</pre>
-            <button class="skrubview-copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
+            <button class="copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
             </div>
             </div>
             </div>

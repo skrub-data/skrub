@@ -1,7 +1,7 @@
 
-<div class="skrubview-wrapper">
+<div class="wrapper">
     <label for="col-filter-select">Show: </label>
-    <select id="col-filter-select" class="skrubview-col-filter-select"
+    <select id="col-filter-select" class="col-filter-select"
         onchange='document.getElementById("{{ report_id }}").onFilterChange()'
         data-report-id="{{ report_id }}" autocomplete="off">
         {% for filter_name in column_filters %}

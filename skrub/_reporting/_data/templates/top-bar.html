@@ -1,5 +1,5 @@
-<div class="skrubview-top-bar-toggle skrubview-if-else" data-predicate="false">
-    <div class="skrubview-flex skrubview-flex-wrap skrubview-wrapper skrubview-top-bar">
+<div class="top-bar-toggle if-else" data-predicate="false">
+    <div class="flex flex-wrap wrapper top-bar">
         <select id="top-bar-mode-select" onchange="document.getElementById('{{ report_id }}').updateBarContent('top-bar')" autocomplete="off">
 
             <option value="table-column-name" data-placeholder="Select a table cell to display its column name">Column name</option>
@@ -11,14 +11,14 @@
 
         </select>
 
-        <div class="skrubview-box">
+        <div class="box">
             <pre id="top-bar" data-selector-id="top-bar-mode-select"></pre>
-            <button class="skrubview-copybutton" onclick='copyButtonClick(event)' data-target-id="top-bar">📋</button>
+            <button class="copybutton" onclick='copyButtonClick(event)' data-target-id="top-bar">📋</button>
         </div>
 
     </div>
-    <div class="skrubview-flex">
-    <div class="skrubview-announcement skrubview-text skrubview-important-note" id="{{ top_bar_id }}-placeholder">
+    <div class="flex">
+    <div class="announcement text important-note" id="{{ top_bar_id }}-placeholder">
         Click on a table cell below to display more information about its column.
     </div>
     </div>

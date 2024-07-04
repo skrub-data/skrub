@@ -1,7 +1,7 @@
-<article class="skrubview-flex-reverse skrubview-wrapper skrubview-wrapper-vert-l skrubview-gap-l">
+<article class="flex-reverse wrapper wrapper-vert-l gap-l">
     {% if summary["top_associations"] %}
 
-    <div class="skrubview-horizontal-scroll">
+    <div class="horizontal-scroll">
     <table class="pure-table">
         <thead>
             <tr>
@@ -17,7 +17,7 @@
                 <td>{{ association["right_column"] }}</td>
                 <td
                     {% if association["cramer_v"] is gt 0.9 %}
-                    class="skrubview-critical"
+                    class="critical"
                     {%- endif -%}
                     >
                     {{ association["cramer_v"] | format_number }}
@@ -28,7 +28,7 @@
     </table>
     </div>
 
-    <div class="skrubview-text skrubview-shrinkable-text">
+    <div class="text shrinkable-text">
         The table below shows the strength of association between the most similar columns in the dataframe.
         <a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a> statistic is a number between 0 and 1.
         When it is close to 1 the columns are strongly associated — they contain similar information.
