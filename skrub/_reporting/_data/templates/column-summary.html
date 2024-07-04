@@ -1,7 +1,7 @@
 <div class="skrubview-card skrubview-column-summary skrubview-filterable-column {{"skrubview-constant-column" if column.value_is_constant else "" }}" id="{{ col_id }}" data-name-repr="{{ column.name.__repr__() }}" data-column-name="{{ column.name }}">
     <div class="skrubview-card-header {% if in_sample_tab %}skrubview-relative-pos{% endif %}">
         <h3 class="skrubview-margin-r-t">
-            <code class="skrubview-select-all">{{ column.name }}</code>
+            <span class="skrubview-select-all">{{ column.name }}</span>
         </h3>
         {% if not in_sample_tab %}
         <input class="skrubview-select-column-checkbox" type="checkbox" onchange="document.getElementById('{{ report_id }}').updateSelectedColsSnippet()" checked />
