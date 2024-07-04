@@ -20,11 +20,14 @@
     --skrubview-darkg: #555555;
     --skrubview-mediumg: #d0d0d0;
     --skrubview-lightg: #f0f0f0;
+
+    /* copied from github */
+    --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+    --fontStack-sansSerif: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
 :host {
-    /* copy from normalize.css & pure.css html rule to :host */
-    font-family: sans-serif;
+    font-family: var(--fontStack-sansSerif);
     line-height: 1.15;
     -webkit-text-size-adjust: 100%;
 }
@@ -55,6 +58,10 @@ code {
 
 pre {
     margin: 0;
+}
+
+code, pre {
+    font-family: var(--fontStack-monospace);
 }
 
 .skrubview-margin-r-s {
