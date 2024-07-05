@@ -19,7 +19,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             const selectedCols = Array.from(allCols).filter(c => this.isSelectedCol(
                 c));
             const snippet = selectedCols.map(col => col.dataset.nameRepr).join(
-            ", ");
+                ", ");
             const bar = this.shadowRoot.querySelector(".selected-columns-box");
             bar.textContent = "[" + snippet + "]";
         }
@@ -111,9 +111,9 @@ if (customElements.get('skrub-table-report') === undefined) {
             const barToggle = bar.closest(".top-bar-toggle");
             barToggle.setAttribute("data-predicate", "true");
             bar.setAttribute("data-content-table-cell-value", elem.dataset
-            .valueStr);
+                .valueStr);
             bar.setAttribute("data-content-table-cell-repr", elem.dataset
-            .valueRepr);
+                .valueRepr);
             bar.setAttribute("data-content-table-column-name", elem.dataset
                 .colNameStr);
             bar.setAttribute("data-content-table-column-name-repr", elem.dataset
@@ -210,99 +210,97 @@ if (customElements.get('skrub-table-report') === undefined) {
 
     customElements.define("skrub-table-report", SkrubTableReport);
 
-}
-else{
-    console.log('skip definition');
-}
-
-function initReport(reportId) {
-    const report = document.getElementById(reportId);
-    report.updateBarContent("top-bar");
-    report.updateSelectedColsSnippet();
-    report.displayTab("sample-tab-button");
-    report.onFilterChange();
-}
-
-function displayTab(event) {
-    const button = event.target;
-    button.getRootNode().host.displayTab(button.id);
-}
-
-
-function copyButtonClick(event) {
-    const button = event.target;
-    const textElem = button.getRootNode().getElementById(button.dataset.targetId);
-    copyTextToClipboard(textElem);
-}
-
-function copyTextToClipboard(elem) {
-    if (elem.hasAttribute("data-shows-placeholder")) {
-        return;
+    function initReport(reportId) {
+        const report = document.getElementById(reportId);
+        report.updateBarContent("top-bar");
+        report.updateSelectedColsSnippet();
+        report.displayTab("sample-tab-button");
+        report.onFilterChange();
     }
-    elem.setAttribute("data-is-being-copied", "");
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(elem.textContent || "");
-    } else {
-        const selection = window.getSelection();
-        if (selection == null) {
+
+    function displayTab(event) {
+        const button = event.target;
+        button.getRootNode().host.displayTab(button.id);
+    }
+
+
+    function copyButtonClick(event) {
+        const button = event.target;
+        const textElem = button.getRootNode().getElementById(button.dataset.targetId);
+        copyTextToClipboard(textElem);
+    }
+
+    function copyTextToClipboard(elem) {
+        if (elem.hasAttribute("data-shows-placeholder")) {
             return;
         }
-        selection.removeAllRanges();
-        const range = document.createRange();
-        range.selectNodeContents(elem);
-        selection.addRange(range);
-        document.execCommand("copy");
-        selection.removeAllRanges();
+        elem.setAttribute("data-is-being-copied", "");
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(elem.textContent || "");
+        } else {
+            const selection = window.getSelection();
+            if (selection == null) {
+                return;
+            }
+            selection.removeAllRanges();
+            const range = document.createRange();
+            range.selectNodeContents(elem);
+            selection.addRange(range);
+            document.execCommand("copy");
+            selection.removeAllRanges();
+        }
+
+        setTimeout(() => {
+            elem.removeAttribute("data-is-being-copied");
+        }, 200);
     }
 
-    setTimeout(() => {
-        elem.removeAttribute("data-is-being-copied");
-    }, 200);
-}
-
-function pandasFilterSnippet(colName, value, valueIsNone) {
-    if (valueIsNone) {
-        return `df.loc[df[${colName}].isnull()]`;
+    function pandasFilterSnippet(colName, value, valueIsNone) {
+        if (valueIsNone) {
+            return `df.loc[df[${colName}].isnull()]`;
+        }
+        return `df.loc[df[${colName}] == ${value}]`;
     }
-    return `df.loc[df[${colName}] == ${value}]`;
-}
 
-function polarsFilterSnippet(colName, value, valueIsNone) {
-    if (valueIsNone) {
-        return `df.filter(pl.col(${colName}).is_null())`;
+    function polarsFilterSnippet(colName, value, valueIsNone) {
+        if (valueIsNone) {
+            return `df.filter(pl.col(${colName}).is_null())`;
+        }
+        return `df.filter(pl.col(${colName}) == ${value})`;
     }
-    return `df.filter(pl.col(${colName}) == ${value})`;
-}
 
-function filterSnippet(colName, value, valueIsNone, dataframeModule) {
-    if (dataframeModule === "polars") {
-        return polarsFilterSnippet(colName, value, valueIsNone);
+    function filterSnippet(colName, value, valueIsNone, dataframeModule) {
+        if (dataframeModule === "polars") {
+            return polarsFilterSnippet(colName, value, valueIsNone);
+        }
+        if (dataframeModule === "pandas") {
+            return pandasFilterSnippet(colName, value, valueIsNone);
+        }
+        return `Unknown dataframe library: ${dataframeModule}`;
     }
-    if (dataframeModule === "pandas") {
-        return pandasFilterSnippet(colName, value, valueIsNone);
+
+    function updateSiblingBarContents(event) {
+        const select = event.target;
+        const report = select.getRootNode().host;
+        select.parentElement.querySelectorAll(`*[data-selector-id=${select.id}]`)
+            .forEach(
+                elem => {
+                    report.updateBarContent(elem.id);
+                });
     }
-    return `Unknown dataframe library: ${dataframeModule}`;
-}
 
-function updateSiblingBarContents(event) {
-    const select = event.target;
-    const report = select.getRootNode().host;
-    select.parentElement.querySelectorAll(`*[data-selector-id=${select.id}]`).forEach(
-        elem => {
-            report.updateBarContent(elem.id);
-        });
-}
-
-function displayFirstCellValue(event) {
-    const header = event.target;
-    const idx = header.dataset.columnIdx;
-    const firstCell = header.closest("table").querySelector(
-        `.table-cell[data-column-idx="${idx}"]`);
-    if (firstCell) {
-        firstCell.click();
+    function displayFirstCellValue(event) {
+        const header = event.target;
+        const idx = header.dataset.columnIdx;
+        const firstCell = header.closest("table").querySelector(
+            `.table-cell[data-column-idx="${idx}"]`);
+        if (firstCell) {
+            firstCell.click();
+        }
     }
-}
 
-function getReport(event) {
-    return event.target.getRootNode().host;
+    function getReport(event) {
+        return event.target.getRootNode().host;
+    }
+
 }
