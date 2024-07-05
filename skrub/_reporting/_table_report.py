@@ -68,6 +68,13 @@ class TableReport:
         return self._summary_without_plots
 
     def html(self):
+        """Get the report as a full HTML page.
+
+        Returns
+        -------
+        str :
+            The HTML page.
+        """
         return to_html(
             self._summary_with_plots,
             standalone=True,
@@ -75,6 +82,13 @@ class TableReport:
         )
 
     def html_snippet(self):
+        """Get the report as an HTML fragment that can be inserted in a page.
+
+        Returns
+        -------
+        str :
+            The HTML snippet.
+        """
         return to_html(
             self._summary_with_plots,
             standalone=False,
@@ -82,6 +96,13 @@ class TableReport:
         )
 
     def json(self):
+        """Get the report data in JSON format.
+
+        Returns
+        -------
+        str :
+            The JSON data.
+        """
         to_remove = ["dataframe", "head", "tail", "first_row_dict"]
         data = {
             k: v for k, v in self._summary_without_plots.items() if k not in to_remove
