@@ -125,8 +125,8 @@ class JSONEncoder(json.JSONEncoder):
         try:
             return super().default(value)
         except TypeError:
-            if isinstance(value, np.int_):
+            if isinstance(value, np.integer):
                 return int(value)
-            if isinstance(value, np.float_):
+            if isinstance(value, np.floating):
                 return float(value)
             raise

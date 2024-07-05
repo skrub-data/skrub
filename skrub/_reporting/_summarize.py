@@ -11,8 +11,8 @@ def summarize_dataframe(df, *, order_by=None, with_plots=False, title=None):
     summary = {
         "dataframe": df,
         "dataframe_module": sbd.dataframe_module_name(df),
-        "n_rows": int(shape[0]),
-        "n_columns": int(shape[1]),
+        "n_rows": shape[0],
+        "n_columns": shape[1],
         "columns": [],
         "head": _utils.to_row_list(sbd.slice(df, 5)),
         "tail": _utils.to_row_list(sbd.slice(df, -5, None)),
@@ -44,7 +44,7 @@ def _add_interactions(df, dataframe_summary):
     df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
     associations = _interactions.stack_symmetric_associations(
         _interactions.cramer_v(df),
-        df.columns,
+        sbd.column_names(df),
     )[:20]
     dataframe_summary["top_associations"] = [
         dict(zip(("left_column", "right_column", "cramer_v"), a))
@@ -145,8 +145,8 @@ def _add_numeric_summary(
     if not summary["high_cardinality"]:
         return
     std = sbd.std(column)
-    summary["standard_deviation"] = float("nan") if std is None else float(std)
-    summary["mean"] = float(sbd.mean(column))
+    summary["standard_deviation"] = float("nan") if std is None else std
+    summary["mean"] = sbd.mean(column)
     quantiles = _utils.quantiles(column)
     summary["inter_quartile_range"] = quantiles[0.75] - quantiles[0.25]
     if quantiles[0.0] == quantiles[1.0]:
