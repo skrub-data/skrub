@@ -31,9 +31,22 @@ def browser_mock(monkeypatch):
 
 
 @pytest.fixture
-def browser_mock_bad(monkeypatch):
+def browser_mock_no_request(monkeypatch):
     def opener(url):
         pass
 
+    monkeypatch.setattr(webbrowser, "open", opener)
+    return opener
+
+
+class BadUrlOpener:
+    def __call__(self, url):
+        with urlopen(url.replace("index.html", "somethingelse")) as f:
+            self.content = f.read()
+
+
+@pytest.fixture
+def browser_mock_bad_request(monkeypatch):
+    opener = BadUrlOpener()
     monkeypatch.setattr(webbrowser, "open", opener)
     return opener

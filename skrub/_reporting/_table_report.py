@@ -1,9 +1,8 @@
 import functools
 import json
-from pathlib import Path
 
 from ._html import to_html
-from ._serve import open_file_in_browser, open_in_browser
+from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
@@ -116,21 +115,6 @@ class TableReport:
     def _repr_html_(self):
         return self._repr_mimebundle_()["text/html"]
 
-    def open(self, file_path=None):
-        """Open the HTML report in a web browser.
-
-        Parameters
-        ----------
-        file_path : str or pathlib.Path
-            If provided, the report is saved at the specified location and the
-            file is opened in the browser. If ``None``, nothing is written to
-            disk. A server is started to send the report to the browser and
-            shut down immediately afterwards; refreshing the page will result
-            in a "Not found" error.
-        """
-        if file_path is None:
-            open_in_browser(self.html)
-            return
-        file_path = Path(file_path).resolve()
-        file_path.write_text(self.html, "UTF-8")
-        open_file_in_browser(file_path)
+    def open(self):
+        """Open the HTML report in a web browser."""
+        open_in_browser(self.html)
