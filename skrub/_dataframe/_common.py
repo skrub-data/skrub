@@ -1,4 +1,5 @@
 import builtins
+import warnings
 from collections.abc import Mapping, Sequence
 
 import numpy as np
@@ -712,10 +713,13 @@ def _to_string_pandas(col):
 @to_string.specialize("polars", argument_type="Column")
 def _to_string_polars(col):
     if col.dtype != pl.Object:
-        # Objects are mere passengers in polars dataframes and we can't do
-        # anything with them; map_elements raises an exception.
         return _cast_polars(col, pl.String)
-    return col.map_elements(str)
+    # Objects are mere passengers in polars dataframes and we can't do
+    # anything with them; cast raises an exception.
+    # polars emits a performance warning when using map_elements
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return col.map_elements(str)
 
 
 @dispatch
