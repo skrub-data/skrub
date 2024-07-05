@@ -931,13 +931,20 @@ def value_counts(column):
 @value_counts.specialize("pandas", argument_type="Column")
 def _value_counts_pandas(column):
     return (
-        column.value_counts().reset_index().set_axis(["value", "count"], axis="columns")
+        column.value_counts(dropna=True)
+        .reset_index()
+        .set_axis(["value", "count"], axis="columns")
     )
 
 
 @value_counts.specialize("polars", argument_type="Column")
 def _value_counts_polars(column):
-    return column.rename("value").value_counts()
+    return (
+        column.drop_nulls()
+        .rename("value")
+        .value_counts()
+        .with_columns(pl.col("count").cast(pl.Int64))
+    )
 
 
 @dispatch
@@ -947,12 +954,14 @@ def sort(df, by, descending=False):
 
 @sort.specialize("pandas", argument_type="DataFrame")
 def _sort_pandas_dataframe(df, by, descending=False):
-    return df.sort_values(by=by, ascending=not descending, ignore_index=True)
+    return df.sort_values(
+        by=by, ascending=not descending, ignore_index=True, na_position="last"
+    )
 
 
 @sort.specialize("polars", argument_type="DataFrame")
 def _sort_polars_dataframe(df, by, descending=False):
-    return df.sort(by=by, descending=descending)
+    return df.sort(by=by, descending=descending, nulls_last=True)
 
 
 @dispatch
@@ -967,7 +976,7 @@ def _quantile_pandas_column(column, q, interpolation="nearest"):
 
 @quantile.specialize("polars", argument_type="Column")
 def _quantile_polars_column(column, q, interpolation="nearest"):
-    return column.quantile(q, interpolation=interpolation)
+    return _drop_nulls_polars(column).quantile(q, interpolation=interpolation)
 
 
 @dispatch
