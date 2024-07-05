@@ -9,7 +9,10 @@ from skrub._reporting._summarize import summarize_dataframe
 @pytest.mark.parametrize("order_by", [None, "date.utc"])
 @pytest.mark.parametrize("with_plots", [False, True])
 def test_summarize(df_module, air_quality, order_by, with_plots):
-    summary = summarize_dataframe(air_quality, with_plots=with_plots, order_by=order_by)
+    summary = summarize_dataframe(
+        air_quality, with_plots=with_plots, order_by=order_by, title="the title"
+    )
+    assert summary["title"] == "the title"
     assert summary["n_columns"] == 9
     assert summary["n_constant_columns"] == 2
     assert summary["n_rows"] == 207
@@ -115,3 +118,11 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
         "left_column": "value",
         "right_column": "loc_with_nulls",
     }
+
+
+def test_no_title(pd_module):
+    summary = summarize_dataframe(pd_module.example_dataframe)
+    assert "title" not in summary
+
+
+# def test_constant_numeric_column()

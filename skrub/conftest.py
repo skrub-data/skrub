@@ -131,6 +131,19 @@ def all_dataframe_modules():
     return _DATAFAME_MODULES_INFO
 
 
+@pytest.fixture
+def pd_module(all_dataframe_modules):
+    return all_dataframe_modules["pandas-numpy-dtypes"]
+
+
+@pytest.fixture
+def pl_module(all_dataframe_modules):
+    try:
+        return all_dataframe_modules["polars"]
+    except KeyError:
+        pytest.skip("polars not installed")
+
+
 @pytest.fixture(params=list(_DATAFAME_MODULES_INFO.keys()))
 def df_module(request):
     """Return information about a dataframe module (either polars or pandas).
