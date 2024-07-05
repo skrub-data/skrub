@@ -67,7 +67,6 @@ class TableReport:
             return self._summary_with_plots
         return self._summary_without_plots
 
-    @functools.cached_property
     def html(self):
         return to_html(
             self._summary_with_plots,
@@ -75,7 +74,6 @@ class TableReport:
             column_filters=self.column_filters,
         )
 
-    @functools.cached_property
     def html_snippet(self):
         return to_html(
             self._summary_with_plots,
@@ -83,7 +81,6 @@ class TableReport:
             column_filters=self.column_filters,
         )
 
-    @functools.cached_property
     def json(self):
         to_remove = ["dataframe", "head", "tail", "first_row_dict"]
         data = {
@@ -93,7 +90,7 @@ class TableReport:
 
     def _repr_mimebundle_(self, include=None, exclude=None):
         del include, exclude
-        return {"text/html": self.html_snippet}
+        return {"text/html": self.html_snippet()}
 
     def _repr_html_(self):
         return self._repr_mimebundle_()["text/html"]

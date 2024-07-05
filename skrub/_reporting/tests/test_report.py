@@ -15,9 +15,9 @@ def test_report():
     except ImportError:
         pytest.skip("missing pyarrow, cannot read parquet")
     report = TableReport(df)
-    report.html
-    report.html_snippet
-    report.json
+    report.html()
+    report.html_snippet()
+    report.json()
     report._any_summary
     report._repr_mimebundle_()
     report._repr_html_()
