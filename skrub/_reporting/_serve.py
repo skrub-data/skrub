@@ -1,7 +1,6 @@
 import webbrowser
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
-from pathlib import Path
 from queue import Empty, Queue
 from socketserver import TCPServer
 from threading import Thread
@@ -42,8 +41,3 @@ def open_in_browser(content):
         raise RuntimeError("Failed to open report in a web browser.")
     server.shutdown()
     server_thread.join()
-
-
-def open_file_in_browser(file_path):
-    file_path = Path(file_path).resolve()
-    webbrowser.open(f"file:///{file_path}")
