@@ -56,12 +56,12 @@ def test_report(air_quality):
     assert len(all_report_ids) == len(set(all_report_ids))
 
 
-def test_report_few_columns(df_module):
+def test_report_few_columns(df_module, check_polars_numpy2):
     report = TableReport(df_module.example_dataframe)
     assert "First 10 columns" not in report.html()
 
 
-def test_report_few_rows(df_module):
+def test_report_few_rows(df_module, check_polars_numpy2):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
 

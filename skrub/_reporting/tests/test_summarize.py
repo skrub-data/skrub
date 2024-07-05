@@ -1,9 +1,7 @@
 import datetime
 
-import numpy as np
 import pytest
 import zoneinfo
-from sklearn.utils.fixes import parse_version
 
 from skrub._reporting._summarize import summarize_dataframe
 
@@ -11,13 +9,6 @@ from skrub._reporting._summarize import summarize_dataframe
 @pytest.mark.parametrize("order_by", [None, "date.utc"])
 @pytest.mark.parametrize("with_plots", [False, True])
 def test_summarize(df_module, air_quality, order_by, with_plots):
-    if df_module.name == "polars":
-        import polars as pl
-
-        if parse_version(pl.__version__) <= parse_version("1.0.0") and parse_version(
-            "2.0.0"
-        ) <= parse_version(np.__version__):
-            pytest.xfail("polars 1.0.0 does not support numpy 2 causing segfaults")
     summary = summarize_dataframe(
         air_quality, with_plots=with_plots, order_by=order_by, title="the title"
     )
