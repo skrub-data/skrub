@@ -1,5 +1,4 @@
 import pathlib
-import re
 import secrets
 
 import jinja2
@@ -63,11 +62,7 @@ def _get_column_filters(df):
         all_selectors.extend([selector, ~selector])
     for selector in all_selectors:
         selector_name = repr(selector)
-        if selector_name in _FILTER_NAMES:
-            display_name = _FILTER_NAMES[selector_name]
-        else:
-            display_name = re.sub(r"^\((.*)\)$", r"\1", repr(selector))
-            display_name = selector_name.replace("~", "NOT ").replace("()", "")
+        display_name = _FILTER_NAMES[selector_name]
         filters[selector_name] = {
             "display_name": display_name,
             "columns": selector.expand(df),
