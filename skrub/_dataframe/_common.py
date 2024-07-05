@@ -706,7 +706,8 @@ def _to_string_pandas(col):
         return col
     if not is_na.any():
         return col
-    return col.fillna(np.nan)
+    with pd.option_context("future.no_silent_downcasting", True):
+        return col.fillna(np.nan)
 
 
 @to_string.specialize("polars", argument_type="Column")
@@ -1024,7 +1025,8 @@ def fill_nulls(obj, value):
 
 @fill_nulls.specialize("pandas")
 def _fill_nulls_pandas(obj, value):
-    return obj.fillna(value)
+    with pd.option_context("future.no_silent_downcasting", True):
+        return obj.fillna(value)
 
 
 @fill_nulls.specialize("polars", argument_type="Column")
