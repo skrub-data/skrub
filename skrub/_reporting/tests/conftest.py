@@ -1,4 +1,6 @@
 import pathlib
+import webbrowser
+from urllib.request import urlopen
 
 import pytest
 
@@ -13,3 +15,25 @@ def air_quality(df_module):
         assert df_module.name == "pandas"
         pytest.skip("missing pyarrow, cannot read parquet")
     return df
+
+
+class UrlOpener:
+    def __call__(self, url):
+        with urlopen(url) as f:
+            self.content = f.read()
+
+
+@pytest.fixture
+def browser_mock(monkeypatch):
+    opener = UrlOpener()
+    monkeypatch.setattr(webbrowser, "open", opener)
+    return opener
+
+
+@pytest.fixture
+def browser_mock_bad(monkeypatch):
+    def opener(url):
+        pass
+
+    monkeypatch.setattr(webbrowser, "open", opener)
+    return opener

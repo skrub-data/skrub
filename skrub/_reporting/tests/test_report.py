@@ -1,3 +1,4 @@
+import json
 import re
 
 from skrub import TableReport
@@ -25,14 +26,34 @@ def test_report(air_quality):
         assert col_name in html
     report_id = get_report_id(html)
     assert len(report_id) == 8
-    new_report_id = get_report_id(report.html())
-    assert len(new_report_id) == 8
-    assert report_id != new_report_id
-    report.html_snippet()
-    report.json()
-    report._any_summary
-    report._repr_mimebundle_()
-    report._repr_html_()
+    all_report_ids = [report_id]
+    report_id = get_report_id(report.html())
+    assert len(report_id) == 8
+    all_report_ids.append(report_id)
+    snippet = report.html_snippet()
+    report_id = get_report_id(snippet)
+    all_report_ids.append(report_id)
+    assert "<html" not in snippet
+    assert "the title" in snippet
+    assert "<skrub-table-report" in snippet
+    data = json.loads(report.json())
+    assert data["title"] == "the title"
+    assert report._any_summary["title"] == "the title"
+    del report._summary_with_plots
+    assert report._any_summary["title"] == "the title"
+    snippet = report._repr_mimebundle_()["text/html"]
+    report_id = get_report_id(snippet)
+    all_report_ids.append(report_id)
+    assert "<html" not in snippet
+    assert "the title" in snippet
+    assert "<skrub-table-report" in snippet
+    snippet = report._repr_html_()
+    report_id = get_report_id(snippet)
+    all_report_ids.append(report_id)
+    assert "<html" not in snippet
+    assert "the title" in snippet
+    assert "<skrub-table-report" in snippet
+    assert len(all_report_ids) == len(set(all_report_ids))
 
 
 def test_report_few_columns(df_module):
