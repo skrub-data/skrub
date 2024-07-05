@@ -13,8 +13,8 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
         air_quality, with_plots=with_plots, order_by=order_by, title="the title"
     )
     assert summary["title"] == "the title"
-    assert summary["n_columns"] == 9
-    assert summary["n_constant_columns"] == 2
+    assert summary["n_columns"] == 11
+    assert summary["n_constant_columns"] == 4
     assert summary["n_rows"] == 207
     assert summary["head"]["header"] == [
         "city",
@@ -26,6 +26,8 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
         "unit",
         "loc_with_nulls",
         "all_null",
+        "constant_numeric",
+        "constant_datetime",
     ]
     assert summary["tail"]["header"] == summary["head"]["header"]
     assert summary["head"]["data"][0] == [
@@ -38,6 +40,8 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
         "µg/m³",
         None,
         None,
+        2.7,
+        datetime.datetime(2024, 7, 5, 12, 17, 29, 427865),
     ]
     assert len(summary["head"]["data"]) == len(summary["tail"]["data"]) == 5
     assert summary["first_row_dict"] == {
@@ -52,6 +56,8 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
         "parameter": "no2",
         "unit": "µg/m³",
         "value": 20.0,
+        "constant_numeric": 2.7,
+        "constant_datetime": datetime.datetime(2024, 7, 5, 12, 17, 29, 427865),
     }
     assert summary["dataframe"] is air_quality
     assert summary["dataframe_module"] == df_module.name

@@ -142,8 +142,6 @@ def _add_numeric_summary(
     del dataframe_summary
     if not sbd.is_numeric(column):
         return
-    if not summary["high_cardinality"]:
-        return
     std = sbd.std(column)
     summary["standard_deviation"] = float("nan") if std is None else std
     summary["mean"] = sbd.mean(column)
