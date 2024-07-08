@@ -1,4 +1,4 @@
-name: 'test'
+name: 'test reports javascript'
 
 on:
   push:
