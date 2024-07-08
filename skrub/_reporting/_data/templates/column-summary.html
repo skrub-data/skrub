@@ -67,12 +67,17 @@
         <div>
         <img class="pure-img" src="{{ column[plot_name] | svg_to_img_src | safe }}" alt={{ plot_name }} />
         {% if plot_name == "value_counts_plot" %}
-        <details>
+        <details data-test="frequent-values-details">
             <summary>Most frequent values</summary>
             <div class="shrink">
             <div class="copybutton-grid">
                 {% set selector_id = "{}_freq_value_select_snippet".format(col_id) %}
-                <select class="grid-separator select-displayed-siblings" id="{{ selector_id }}" onchange="updateSiblingBarContents(event)" autocomplete="off">
+                <select
+                    class="grid-separator select-displayed-siblings"
+                    id="{{ selector_id }}"
+                    onchange="updateSiblingBarContents(event)"
+                    autocomplete="off"
+                    data-test="frequent-values-select-snippet">
                     <option value="value">Display value</option>
                     <option value="repr">Python expression</option>
                     <option value="filter">Filtered dataframe</option>
@@ -88,7 +93,10 @@
                      data-content-repr="{{ value.__repr__() }}"
                      data-content-filter="{{ value | filter_equal_snippet(column.name, summary.dataframe_module) }}"
                  >{{ value }}</pre>
-            <button class="copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
+                <button class="copybutton"
+                        data-target-id="{{ val_id }}"
+                        onclick='copyButtonClick(event)'
+                        data-test="copybutton-{{ loop.index0 }}">📋</button>
                 </div>
 
             {% endfor %}
