@@ -22,4 +22,9 @@ jobs:
           frozen: true
 
       - name: Create the reports
-        run: pixi run skrub/_reporting/js_tests/make_reports.py
+        working-directory: skrub/_reporting/js_tests/
+        run: pixi run make_reports
+
+      - name: Cypress run
+        working-directory: skrub/_reporting/js_tests/
+        uses: cypress-io/github-action@v6
