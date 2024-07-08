@@ -1,10 +1,13 @@
-import pathlib
+#! /usr/bin/env python
 
-from skrub import TableReport, datasets
+if __name__ == "__main__":
+    import pathlib
 
-reports_dir = pathlib.Path(__file__).resolve().parent / "_reports"
-reports_dir.mkdir(exist_ok=True)
+    from skrub import TableReport, datasets
 
-df = datasets.fetch_employee_salaries().X
-html = TableReport(df).html()
-(reports_dir / "employee_salaries.html").write_text(html, encoding="UTF-8")
+    reports_dir = pathlib.Path(__file__).resolve().parent / "_reports"
+    reports_dir.mkdir(exist_ok=True)
+
+    df = datasets.fetch_employee_salaries().X
+    html = TableReport(df).html()
+    (reports_dir / "employee_salaries.html").write_text(html, encoding="UTF-8")
