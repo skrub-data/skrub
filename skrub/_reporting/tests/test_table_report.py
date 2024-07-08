@@ -56,16 +56,21 @@ def test_report(air_quality):
     assert len(all_report_ids) == len(set(all_report_ids))
 
 
-def test_report_few_columns(df_module, check_polars_numpy2):
+def test_few_columns(df_module, check_polars_numpy2):
     report = TableReport(df_module.example_dataframe)
     assert "First 10 columns" not in report.html()
 
 
-def test_report_few_rows(df_module, check_polars_numpy2):
+def test_few_rows(df_module, check_polars_numpy2):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
 
 
-def test_report_empty_dataframe(df_module):
+def test_empty_dataframe(df_module):
     html = TableReport(df_module.empty_dataframe).html()
     assert "The dataframe is empty." in html
+
+
+def test_open(pd_module, browser_mock):
+    TableReport(pd_module.example_dataframe, title="the title").open()
+    assert b"the title" in browser_mock.content

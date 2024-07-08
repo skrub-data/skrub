@@ -117,4 +117,4 @@ class TableReport:
 
     def open(self):
         """Open the HTML report in a web browser."""
-        open_in_browser(self.html)
+        open_in_browser(self.html())

@@ -33,12 +33,11 @@ def _despine(ax):
     ax.spines["right"].set_visible(False)
 
 
-def _serialize(fig, close=True):
+def _serialize(fig):
     buffer = io.BytesIO()
     fig.savefig(buffer, format="svg", bbox_inches="tight")
     out = buffer.getvalue().decode("UTF-8")
-    if close:
-        plt.close(fig)
+    plt.close(fig)
     return out
 
 
@@ -61,13 +60,11 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
     fig.set_size_inches((w, h))
 
 
-def histogram(col, title=None, color=COLOR_0):
+def histogram(col, color=COLOR_0):
     values = sbd.to_numpy(col)
     fig, ax = plt.subplots()
     _despine(ax)
     ax.hist(values, color=color)
-    if title is not None:
-        ax.set_title(title)
     _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
     return _serialize(fig)

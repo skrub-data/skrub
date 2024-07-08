@@ -57,8 +57,26 @@ class BadUrlOpener:
             self.content = f.read()
 
 
+class BadThenGoodUrlOpener:
+    def __call__(self, url):
+        try:
+            with urlopen(url.replace("index.html", "favicon.ico")) as f:
+                self.content = f.read()
+        except Exception:
+            pass
+        with urlopen(url) as f:
+            self.content = f.read()
+
+
 @pytest.fixture
 def browser_mock_bad_request(monkeypatch):
     opener = BadUrlOpener()
+    monkeypatch.setattr(webbrowser, "open", opener)
+    return opener
+
+
+@pytest.fixture
+def browser_mock_bad_then_good_request(monkeypatch):
+    opener = BadThenGoodUrlOpener()
     monkeypatch.setattr(webbrowser, "open", opener)
     return opener

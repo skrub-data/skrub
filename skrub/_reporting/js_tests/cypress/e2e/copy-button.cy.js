@@ -16,6 +16,5 @@ describe('test using the copybuttons', {
         });
         cy.window().its('navigator.clipboard').then((clip) => clip
             .readText()).should('be.equal', "'HHS'");
-
     });
 });

@@ -132,7 +132,7 @@ def _add_datetime_summary(summary, column, with_plots):
     summary["max"] = max_date.isoformat()
     if with_plots:
         summary["histogram_plot"] = _plotting.histogram(
-            column, None, color=_plotting.COLORS[0]
+            column, color=_plotting.COLORS[0]
         )
 
 
@@ -157,7 +157,7 @@ def _add_numeric_summary(
         return
     if order_by_column is None:
         summary["histogram_plot"] = _plotting.histogram(
-            column, title=None, color=_plotting.COLORS[0]
+            column, color=_plotting.COLORS[0]
         )
     else:
         summary["line_plot"] = _plotting.line(order_by_column, column)

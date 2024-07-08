@@ -131,4 +131,7 @@ def test_no_title(pd_module):
     assert "title" not in summary
 
 
-# def test_constant_numeric_column()
+def test_high_cardinality_column(pd_module):
+    df = pd_module.make_dataframe({"s": [f"value {i}" for i in range(30)]})
+    summary = summarize_dataframe(df, with_plots=True)
+    assert "10 most frequent" in summary["columns"][0]["value_counts_plot"]
