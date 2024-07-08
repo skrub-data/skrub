@@ -28,4 +28,4 @@ jobs:
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
-          project: skrub/_reporting/js_tests/
+          working-directory: skrub/_reporting/js_tests/
