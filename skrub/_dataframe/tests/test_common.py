@@ -95,11 +95,10 @@ def test_to_numpy(df_module, example_data_dict):
     assert_array_equal(array[2:], np.asarray(example_data_dict["str-col"])[2:])
 
 
-def test_to_pandas(df_module, all_dataframe_modules):
+def test_to_pandas(df_module, pd_module):
     with pytest.raises(NotImplementedError):
         ns.to_pandas(np.arange(3))
 
-    pd_module = all_dataframe_modules["pandas-numpy-dtypes"]
     if df_module.name == "pandas":
         assert ns.to_pandas(df_module.example_dataframe) is df_module.example_dataframe
         assert ns.to_pandas(df_module.example_column) is df_module.example_column
@@ -287,14 +286,16 @@ def test_copy_index(source_is_df, target_is_df):
     assert source.index.tolist() == [10, 20, 30]
 
 
-def test_copy_index_non_pandas(all_dataframe_modules):
-    a = all_dataframe_modules["pandas-numpy-dtypes"].example_column
+def test_copy_index_list(pd_module):
+    a = pd_module.example_column
     b = []
     assert ns.copy_index(a, b) is b
     assert ns.copy_index(b, a) is a
-    if "polars" not in all_dataframe_modules:
-        pytest.skip(reason="polars not installed")
-    b = all_dataframe_modules["polars"].example_column
+
+
+def test_copy_index_polars(pd_module, pl_module):
+    a = pd_module.example_column
+    b = pl_module.example_column
     assert ns.copy_index(a, b) is b
     assert ns.copy_index(b, a) is a
 
