@@ -10,12 +10,22 @@ Information about the dataframe is collected in a dictionary by
 `_summarize.summarize_dataframe`. This dictionary is then used to render a
 `jinja <https://jinja.palletsprojects.com/en/3.0.x/>`_ template, filling it with
 information about this particular dataframe. This is done by ``_html.to_html``.
+
 The templates are stored in ``_data/templates/``. The top-level templates are
 ``standalone-report.html`` for a full html page (``TableReport.html()``), and
 ``inline-report.html`` for an html fragment that can be inserted into another
 page or a notebook (``TableReport.html_snippet()``). Those, in turn, use the
 jinja ``include`` directive to bring in inner parts of the report, including the
 CSS and javascript files.
+
+.. note::
+
+   the files in `_data/templates/pure-3.0.0/` are a subset of the
+   `pure.css <https://purecss.io/>`_ project. Only the ``base`` and ``tables``
+   modules are included. They respectively provide some baseline default styling
+   for better cross-browser consistency and some basic styling of tables such as
+   thinner borders and gray stripes. Do not edit those files manually, but
+   rather override any styles in the skrub css files as necessary.
 
 The reports are meant to be embedded in web pages we do not control, such as
 jupyter notebooks, sphinx gallery documentation pages, etc.
