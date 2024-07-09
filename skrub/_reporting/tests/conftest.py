@@ -21,8 +21,9 @@ def skip_if_polars_and_numpy2_installed():
 
 @pytest.fixture
 def check_polars_numpy2(df_module):
-    if df_module.name == "polars":
-        pl = df_module.module
+    if df_module.name != "polars":
+        return
+    pl = df_module.module
     if parse_version(pl.__version__) <= parse_version("1.0.0") and parse_version(
         "2.0.0"
     ) <= parse_version(np.__version__):

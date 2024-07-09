@@ -3,6 +3,7 @@ import datetime
 import pytest
 import zoneinfo
 
+from skrub import _dataframe as sbd
 from skrub._reporting._summarize import summarize_dataframe
 
 
@@ -135,3 +136,18 @@ def test_high_cardinality_column(pd_module):
     df = pd_module.make_dataframe({"s": [f"value {i}" for i in range(30)]})
     summary = summarize_dataframe(df, with_plots=True)
     assert "10 most frequent" in summary["columns"][0]["value_counts_plot"]
+
+
+def test_all_null(df_module):
+    df = df_module.make_dataframe(
+        {
+            "a": sbd.to_float32(df_module.make_column("a", [None, None])),
+            "b": sbd.to_datetime(
+                df_module.make_column("b", ["", ""]), format="%Y-%m-%d", strict=False
+            ),
+            "c": sbd.to_string(df_module.make_column("c", [None, None])),
+        }
+    )
+    summary = summarize_dataframe(df, with_plots=True)
+    for col in summary["columns"]:
+        assert col["null_proportion"] == 1.0

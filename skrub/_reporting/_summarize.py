@@ -63,6 +63,9 @@ def _summarize_column(
         "value_is_constant": False,
     }
     _add_nulls_summary(summary, column, dataframe_summary=dataframe_summary)
+    if summary["null_count"] == dataframe_summary["n_rows"]:
+        summary["plot_names"] = []
+        return summary
     _add_value_counts(
         summary, column, dataframe_summary=dataframe_summary, with_plots=with_plots
     )
