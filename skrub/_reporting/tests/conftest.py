@@ -8,18 +8,35 @@ from sklearn.utils.fixes import parse_version
 
 
 @pytest.fixture
-def check_polars_numpy2(df_module):
-    if df_module.name == "polars":
-        pl = df_module.module
-        if parse_version(pl.__version__) <= parse_version("1.0.0") and parse_version(
-            "2.0.0"
-        ) <= parse_version(np.__version__):
-            pytest.xfail("polars 1.0.0 does not support numpy 2 causing segfaults")
+def skip_if_polars_and_numpy2_installed():
+    try:
+        import polars as pl
+    except ImportError:
+        return
+    if parse_version(pl.__version__) <= parse_version("1.0.0") and parse_version(
+        "2.0.0"
+    ) <= parse_version(np.__version__):
+        pytest.xfail("polars 1.0.0 does not support numpy 2 causing segfaults")
 
 
 @pytest.fixture
-def air_quality(df_module, check_polars_numpy2):
-    data_file = pathlib.Path(__file__).parent / "data" / "air_quality_small.parquet"
+def check_polars_numpy2(df_module):
+    if df_module.name == "polars":
+        pl = df_module.module
+    if parse_version(pl.__version__) <= parse_version("1.0.0") and parse_version(
+        "2.0.0"
+    ) <= parse_version(np.__version__):
+        pytest.xfail("polars 1.0.0 does not support numpy 2 causing segfaults")
+
+
+@pytest.fixture
+def data_directory():
+    return pathlib.Path(__file__).parent / "data"
+
+
+@pytest.fixture
+def air_quality(df_module, check_polars_numpy2, data_directory):
+    data_file = data_directory / "air_quality_small.parquet"
     reader = df_module.module.read_parquet
     try:
         df = reader(data_file)
