@@ -17,7 +17,9 @@ Major changes
 * The :class:`TableReport` provides an interactive report on a dataframe's
   contents: an overview, summary statistics and plots, statistical associations
   between columns. It can be displayed in a jupyter notebook, a browser tab or
-  saved as a static HTML page. :pr:`984` by :user:`Jérôme Dockès <jeromedockes>`.
+  saved as a static HTML page. The ``skrub-report`` command is also available to
+  generate reports from the command line rather than from a python script.
+  :pr:`984` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Minor changes
 -------------
