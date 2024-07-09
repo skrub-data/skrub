@@ -98,15 +98,15 @@ def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
     if sbd.is_numeric(column) or sbd.is_any_date(column):
         summary["high_cardinality"] = True
         return
-    n_unique, value_counts = _utils.top_k_value_counts(
-        sbd.filter(column, ~sbd.is_null(column)), k=10
-    )
+    n_unique, value_counts = _utils.top_k_value_counts(column, k=10)
+    # if the column contains all nulls, _add_value_counts does not get called
+    assert n_unique > 0
+
     summary["n_unique"] = n_unique
     summary["unique_proportion"] = n_unique / dataframe_summary["n_rows"]
     summary["high_cardinality"] = n_unique >= _HIGH_CARDINALITY_THRESHOLD
     summary["value_counts"] = value_counts
-    if n_unique == 0:
-        return
+
     if n_unique == 1:
         summary["value_is_constant"] = True
         summary["constant_value"] = next(iter(value_counts.keys()))
