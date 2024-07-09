@@ -6,3 +6,6 @@
 {% include "tabs.css" %}
 {% include "dataframe-columns.css" %}
 {% include "top-bar.css" %}
+{% if is_inline_report %}
+{% include "inline-report.css" %}
+{% endif %}

@@ -37,6 +37,7 @@
     color: black;
     color-scheme: light;
     border-radius: var(--radius, 0);
+    overflow: hidden;
 }
 
 :is(select, summary, button) {
