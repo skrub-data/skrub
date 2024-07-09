@@ -1,12 +1,15 @@
 """
 Quick start to skrub
---------------------
+====================
 
 Skrub provides some tools to easily start analyzing and learning from tabular
 data.
 """
 
 # %%
+# Downloading example datasets
+# ----------------------------
+#
 # The :obj:`~skrub.datasets` module allows us to download a variety of tabular datasets.
 
 # %%
@@ -16,6 +19,9 @@ dataset = fetch_employee_salaries()
 employees, salaries = dataset.X, dataset.y
 
 # %%
+# Generating an interactive report for a dataframe
+# -------------------------------------------------
+#
 # To quickly get an overview of a dataframe's contents, use :class:`~skrub.TableReport`.
 
 # %%
@@ -28,6 +34,9 @@ TableReport(employees)
 # ``skrub-report ./my_file.csv``. See ``skrub-report --help`` for details.
 
 # %%
+# Easily building a strong baseline for tabular machine learning
+# --------------------------------------------------------------
+#
 # The :func:`~skrub.tabular_learner` function provides an easy way to build a
 # simple but reliable machine-learning model, working well on most tabular
 # data.
