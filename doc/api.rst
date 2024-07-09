@@ -70,6 +70,10 @@ This page lists all available functions and classes of `skrub`.
 
    TableVectorizer
 
+.. raw:: html
+
+   <h2>Easily creating a learning pipeline for tabular data</h2>
+
 .. autosummary::
    :toctree: generated/
    :template: function.rst
@@ -78,6 +82,17 @@ This page lists all available functions and classes of `skrub`.
 
    tabular_learner
 
+.. raw:: html
+
+   <h2>Inspecting a dataframe</h2>
+
+.. autosummary::
+   :toctree: generated/
+   :template: class.rst
+   :nosignatures:
+   :caption: Inspecting a dataframe
+
+   TableReport
 
 .. raw:: html
 
