@@ -62,6 +62,10 @@ from skrub import TableReport
 
 TableReport(employees)
 
+# %%
+# Note: it is also possible to generate a report from the command line. After
+# installing skrub, run ``skrub-report --help`` for details.
+
 ###############################################################################
 # Most machine-learning algorithms work with arrays of numbers. The
 # challenge here is that the ``employees`` dataframe is a heterogeneous
