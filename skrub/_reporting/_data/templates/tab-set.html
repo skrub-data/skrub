@@ -2,7 +2,9 @@
 {% set interactions_title -%}
 Show which columns are similar (have a strong association).
 {%- if interactions_warning %}
-NOTE: some columns have very strong associations and may be redundant.
+<br/>
+<br/>
+<strong>NOTE:</strong> some columns have very strong associations and may be redundant.
 {%- endif -%}
 {% endset %}
 
@@ -10,17 +12,20 @@ NOTE: some columns have very strong associations and may be redundant.
     <div class="tabset-buttons">
         <button data-target-tab="sample-tab"
                 id="sample-tab-button"
+                class="tooltip"
                 onclick="displayTab(event)"
-                title="Display a few rows of the dataframe in a table.">Table preview</button>
+        >Table preview<span class="tooltip-text tooltip-right">Display a few rows of the dataframe in a table.</span></button>
         <button data-target-tab="columns-tab"
                 id="columns-tab-button"
+                class="tooltip"
                 onclick="displayTab(event)"
-                title="Summary statistics and plots for all columns in the dataframe.">Column summaries</button>
+        >Column summaries<span class="tooltip-text tooltip-center">Summary statistics and plots for all columns in the dataframe.</span></button>
         <button data-target-tab="interactions-tab"
                 id="interactions-tab-button"
+                class="tooltip"
                 onclick="displayTab(event)"
                 {% if interactions_warning %}data-has-warning=""{% endif %}
-                title="{{ interactions_title }}">Column similarities</button>
+        >Column similarities<span class="tooltip-text tooltip-left">{{ interactions_title }}</span></button>
     </div>
     {% include "column-filters.html" %}
 </div>
