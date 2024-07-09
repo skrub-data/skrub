@@ -54,17 +54,7 @@ from skrub.datasets import fetch_employee_salaries
 
 dataset = fetch_employee_salaries()
 employees, salaries = dataset.X, dataset.y
-
-# %%
-# ``skrub`` provides an easy way to get an overview of a dataframe's contents:
-
-from skrub import TableReport
-
-TableReport(employees)
-
-# %%
-# Note: it is also possible to generate a report from the command line. After
-# installing skrub, run ``skrub-report --help`` for details.
+employees
 
 ###############################################################################
 # Most machine-learning algorithms work with arrays of numbers. The
