@@ -30,6 +30,8 @@ from skrub import TableReport
 TableReport(employees)
 
 # %%
+# You can use the interactive display above to explore the dataset visually.
+#
 # It is also possible to generate reports from the command-line using
 # ``skrub-report ./my_file.csv``. See ``skrub-report --help`` for details.
 
