@@ -6,7 +6,32 @@ _SUBSAMPLE_SIZE = 3000
 _ASSOCIATION_THRESHOLD = 0.2
 
 
-def summarize_dataframe(df, *, order_by=None, with_plots=False, title=None):
+def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
+    """Collect information about a dataframe, used to produce reports.
+
+    Parameters
+    ----------
+    df : dataframe
+        The dataframe about which the summary/report needs to be generated.
+
+    order_by : str or None, default=None
+        The name of the column on which the dataframe should be sorted. If
+        provided, it must correspond to a numeric or datetime column. Other
+        numeric columns are plotted as a function of the sorting columns,
+        rather than histograms.
+
+    with_plots : bool, default=True
+        Generate the images or not.
+
+    title : str or None, default=None
+        A title that gets added to the returned dictionary and can be picked up
+        and inserted in the report.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the extracted information.
+    """
     shape = sbd.shape(df)
     summary = {
         "dataframe": df,

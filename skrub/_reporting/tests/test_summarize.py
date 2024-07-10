@@ -128,7 +128,7 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
 
 
 def test_no_title(pd_module):
-    summary = summarize_dataframe(pd_module.example_dataframe)
+    summary = summarize_dataframe(pd_module.example_dataframe, with_plots=False)
     assert "title" not in summary
 
 
