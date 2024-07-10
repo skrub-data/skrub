@@ -189,6 +189,7 @@ table caption {
 
 .space-between {
     justify-content: space-between;
+    max-width: 125ch;
 }
 
 .shrinkable-text {
