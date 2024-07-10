@@ -1,3 +1,5 @@
+"""Command-line interface to generate reports."""
+
 import argparse
 from pathlib import Path
 
@@ -24,7 +26,7 @@ def _get_arg_parser():
         default=None,
         help=(
             "Output file in which to store the report. If not provided, "
-            "the report is opened in a web browser and nothing is displayed."
+            "the report is opened in a web browser and no file is created."
         ),
     )
     parser.add_argument(
@@ -32,7 +34,7 @@ def _get_arg_parser():
         type=str,
         default=None,
         help=(
-            "Sort by this column. Other numerical columns will be plotted as function"
+            "Sort by this column. Other numerical columns will be plotted as functions"
             " of the sorting column. Must be of numerical or datetime type."
         ),
     )

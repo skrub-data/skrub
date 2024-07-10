@@ -27,7 +27,7 @@ class TableReport:
     column_filters : dict
         A dict for adding custom entries to the column filter dropdown menu.
         Each key is an id for the filter (e.g. ``"all()"``) and the value is a
-        mapping with the keys ``display_name`` (the name shown in the menue,
+        mapping with the keys ``display_name`` (the name shown in the menu,
         e.g. ``"All columns"``) and ``columns`` (a list of column names).
 
     Attributes

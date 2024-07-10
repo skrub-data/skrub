@@ -27,6 +27,13 @@ CSS and javascript files.
    thinner borders and gray stripes. Do not edit those files manually, but
    rather override any styles in the skrub css files as necessary.
 
+To open reports in a browser (``TableReport.open()``),
+``_serve.open_in_browser`` is used. It starts a local server which sends the
+report to the browser then immediately shuts down.
+
+Reports in the wild
+-------------------
+
 The reports are meant to be embedded in web pages we do not control, such as
 jupyter notebooks, sphinx gallery documentation pages, etc.
 This means that CSS and javascript in the surrounding page could easily break
@@ -47,7 +54,7 @@ Testing the javascript code
 ---------------------------
 
 The Python code generating the reports is tested with ``pytest`` like the rest of ``skrub``.
-The functionality of the reports themselves, which happends in the web browser,
+The functionality of the reports themselves, which happens in the web browser,
 is tested with `cypress <https://www.cypress.io/>`_. Those tests are in ``js_tests/``.
 
 To execute them, you need to install nodejs (and the javascript package manager,
@@ -80,17 +87,21 @@ All the tests are executed and a report is printed on stdout. If a test fails, a
 screenshot of the browser window at the point where it failed is saved in
 ``cypress/screenshots/``. See the Cypress documentation for details.
 
-In the CI, installing node, cypress and running the tests is done by the
-``test-javascript.yml`` workflow, which relies on the cypress
-`github action <https://github.com/cypress-io/github-action>`_.
+To add or modify the tests, edit the files in ``js_tests/cypres/e2e/`` or add
+new ones.
+
+In the CI, running the javascript tests is done by the ``test-javascript.yml``
+workflow. It which relies on the cypress
+`github action <https://github.com/cypress-io/github-action>`_
+to install node and cypress and to run the tests .
 
 
 Distributing non-Python files
 -----------------------------
 
-The html templates, javascript and CSS files are not python file so some special
+The html templates, javascript and CSS files are not python files so some special
 steps must be taken in the build configuration to make sure they are included in
-the source distribution and the wheels. At the moment (see ``pyproject.toml``)
+the source distribution and the wheel. At the moment (see ``pyproject.toml``)
 skrub's ``build-system`` requires the ``setuptools_scm`` plugin, which pacakges
 all files that are tracked by git. If the build backend is replaced by a
 different one, refer to the new build backend's documentation on handling
