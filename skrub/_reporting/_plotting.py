@@ -55,6 +55,16 @@ def _get_adjusted_fig_size(fig, ax, direction, target_size):
 
 
 def _adjust_fig_size(fig, ax, target_w, target_h):
+    """Rescale a figure to the target width and height.
+
+    This allows us to have all figures of a given type (bar plots, lines or
+    histograms) have the same size, so that the displayed report looks more
+    uniform, without having to do manual adjustments to account for the length
+    of labels, occurrence of titles etc. We let pyplot generate the figure
+    without any size constraints then resize it and thus let matplotlib deal
+    with resizing the appropriate elements (eg shorter bars when the labels
+    take more horizontal space).
+    """
     w = _get_adjusted_fig_size(fig, ax, "width", target_w)
     h = _get_adjusted_fig_size(fig, ax, "height", target_h)
     fig.set_size_inches((w, h))
