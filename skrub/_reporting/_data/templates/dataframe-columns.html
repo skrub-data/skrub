@@ -3,15 +3,20 @@
     <div class="flex wrapper-vert">
         <div class="box">
         <pre class="selected-columns-box" id="selected-cols-box"></pre>
-        <button class="copybutton" data-target-id="selected-cols-box" onclick='copyButtonClick(event)'>📋</button>
+        <button class="copybutton"
+                data-target-id="selected-cols-box"
+                onclick='copyButtonClick(event)'>📋</button>
         </div>
     </div>
     {% if summary.n_constant_columns %}
     <input type="checkbox" id="collapse-const-cols-check" checked="true" />
     <label for="collapse-const-cols-check" class="margin-r-s">Collapse constant columns</label>
     {% endif %}
-    <button class="margin-r-s" id="deselect-all-cols" onclick='getReport(event).clearSelectedCols()'>Deselect all</button>
-    <button id="select-all-cols" onclick='getReport(event).selectAllCols()'>Select all</button>
+    <button class="margin-r-s"
+            id="deselect-all-cols"
+            onclick='getReport(event).clearSelectedCols()'>Deselect all</button>
+    <button id="select-all-cols"
+            onclick='getReport(event).selectAllCols()'>Select all</button>
 
     <div class="column-summary-group">
         {% if summary.n_constant_columns %}
@@ -24,8 +29,11 @@
                 <dl>
                     {% for column in summary.columns %}
                     {% if column.value_is_constant %}
-                    <dt class="select-all filterable-column" data-col-index="{{ loop.index0 }}" data-column-name="{{ column.name }}">{{ column.name }}</dt>
-                    <dd class="filterable-column" data-column-name="{{ column.name }}">{{ column.constant_value.__repr__()  }}</dd>
+                    <dt class="select-all filterable-column"
+                        data-col-index="{{ loop.index0 }}"
+                        data-column-name="{{ column.name }}">{{ column.name }}</dt>
+                    <dd class="filterable-column"
+                        data-column-name="{{ column.name }}">{{ column.constant_value.__repr__()  }}</dd>
                     {% endif %}
                     {% endfor %}
                 </dl>

@@ -1,10 +1,15 @@
-<div class="card column-summary filterable-column {{"constant-column" if column.value_is_constant else "" }}" id="{{ col_id }}" data-name-repr="{{ column.name.__repr__() }}" data-column-name="{{ column.name }}">
+<div class="card column-summary filterable-column {{"constant-column" if column.value_is_constant else "" }}"
+     id="{{ col_id }}"
+     data-name-repr="{{ column.name.__repr__() }}"
+     data-column-name="{{ column.name }}">
     <div class="card-header {% if in_sample_tab %}relative-pos{% endif %}">
         <h3 class="margin-r-t">
             <span class="select-all">{{ column.name }}</span>
         </h3>
         {% if not in_sample_tab %}
-        <input class="select-column-checkbox" type="checkbox" onchange="getReport(event).updateSelectedColsSnippet()" checked />
+        <input class="select-column-checkbox"
+               type="checkbox"
+               onchange="getReport(event).updateSelectedColsSnippet()" checked />
         {% endif %}
         <code class="float-end">{{ column.dtype }}</code>
         {%- if in_sample_tab -%}
@@ -57,7 +62,9 @@
         <div class="copybutton-grid">
             <div class="box">
         <pre id="{{ val_id }}">{{ column.constant_value }}</pre>
-        <button class="copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
+        <button class="copybutton"
+                data-target-id="{{ val_id }}"
+                onclick='copyButtonClick(event)'>📋</button>
             </div>
         </div>
         </div>
