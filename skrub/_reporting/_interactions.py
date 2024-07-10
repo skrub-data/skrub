@@ -1,3 +1,4 @@
+"""Detect which columns have strong statistical associations."""
 import warnings
 
 import numpy as np
@@ -9,7 +10,46 @@ _N_BINS = 10
 _CATEGORICAL_THRESHOLD = 30
 
 
-def stack_symmetric_associations(associations, column_names):
+def cramer_v(df):
+    """Get the Cramer V statistic of association between all pairs of columns.
+
+    The result is returned as a list of tuples (col_1_name, col_2_name,
+    statistic_value). As the function is commutative, each pair of columns
+    appears only once (either col_1, col_2 or col_2, col_1 but not both).
+    The results are sorted from most associated to least associated.
+
+    To compute the statistic, all columns are discretized. Numeric columns are
+    binned with 10 bins. For categorical columns, only the 10 most frequent
+    categories are considered. In both cases, nulls are treated as a separate
+    category, ie a separate row in the contingency table. Thus associations
+    betwen the values of 2 columns or between their missingness patterns may be
+    captured.
+
+    Parameters
+    ----------
+    df : dataframe
+        The dataframe whose columns will be compared to each other.
+
+    Returns
+    -------
+    list of (str, str, float) tuples
+        The associations: each tuple contains the names of the two columns and
+        the corresponding V statistic.
+    """
+    return _stack_symmetric_associations(_cramer_v_matrix(df), sbd.column_names(df))
+
+
+def _stack_symmetric_associations(associations, column_names):
+    """Turn a symmetric matrix of V statistics into a list of (col, col, value).
+
+    The input is the symmetric matrix where entry i, j contains the V statistic
+    for (column i, column j).
+
+    The result is a list of (column i name, column j name, V statistic). Each
+    pair of column appears only once ie the number of entries is
+    n_columns x (n_columns - 1). The results are sorted from most to least
+    associated.
+    """
     left_indices, right_indices = np.triu_indices_from(associations, 1)
     associations = associations[(left_indices, right_indices)]
     order = np.argsort(associations)[::-1]
@@ -24,7 +64,12 @@ def stack_symmetric_associations(associations, column_names):
     ]
 
 
-def cramer_v(df):
+def _cramer_v_matrix(df):
+    """Compute Cramer's V statistic for all pairs of columns.
+
+    The result is a symmetric matrix where entry (i, j) contains the V
+    statistic of association between column i and column j.
+    """
     encoded = _onehot_encode(df, _N_BINS)
     table = _contingency_table(encoded)
     stats = _compute_cramer(table, sbd.shape(df)[0])
@@ -32,6 +77,16 @@ def cramer_v(df):
 
 
 def _onehot_encode(df, n_bins):
+    """One-hot encode all columns in a dataframe.
+
+    Numeric columns with fewer than _CATEGORICAL_THRESHOLD values are treated
+    as categorical, the others are binned with uniform bins before being
+    one-hot encoded. For categorical columns infrequent categories are lumped
+    together.
+
+    Returns an array of shape (n columns, n bins, n rows) where result[i]
+    contains the one-hot-encoding representation of column i.
+    """
     n_rows, n_cols = sbd.shape(df)
     output = np.zeros((n_cols, n_bins, n_rows), dtype=bool)
     for col_idx, col_name in enumerate(sbd.column_names(df)):
@@ -49,6 +104,7 @@ def _onehot_encode(df, n_bins):
 
 
 def _onehot_encode_categories(values, n_bins, output):
+    """One-hot encode a categorical column."""
     encoded = OneHotEncoder(max_categories=n_bins, sparse_output=False).fit_transform(
         values[:, None]
     )
@@ -57,6 +113,7 @@ def _onehot_encode_categories(values, n_bins, output):
 
 
 def _onehot_encode_numbers(values, n_bins, output):
+    """One-hot encode a numeric column."""
     mask = ~np.isfinite(values)
     filled_na = np.array(values)
     # TODO pick a better value & non-uniform bins?
@@ -77,12 +134,31 @@ def _onehot_encode_numbers(values, n_bins, output):
 
 
 def _contingency_table(encoded):
-    n_cols, n_quantiles, _ = encoded.shape
-    out = np.empty((n_cols, n_cols, n_quantiles, n_quantiles), dtype="int32")
+    """Build the contingency table given a OH-encoded dataframe.
+
+    The input is computed by ``_one_hot_encode``:
+    it has shape (n columns, n bins, n rows).
+
+    This function computes for each pair of columns, the n bins x n bins
+    contingency table that will be used to measure their association.
+
+    The result is an array of shape n cols, n cols, n bins, n bind where result
+    [i, j, :, :] is the contingency table for column i vs column j.
+    """
+    n_cols, n_bins, _ = encoded.shape
+    out = np.empty((n_cols, n_cols, n_bins, n_bins), dtype="int32")
     return np.einsum("ack,bdk", encoded, encoded, out=out)
 
 
 def _compute_cramer(table, n_samples):
+    """Compute the Cramer V statistic given a contingency table.
+
+    The input is the table computed by ``_contingency_table`` with shape
+    (n cols, n cols, n bins, n bins).
+
+    This returs the symmetric matrix with shape (n cols, n cols) where entry
+    i, j contains the statistic for column i x column j.
+    """
     marginal_0 = table.sum(axis=-2)
     marginal_1 = table.sum(axis=-1)
     expected = (
