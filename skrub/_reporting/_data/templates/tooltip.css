@@ -1,3 +1,9 @@
+/* A tooltip shown when an element is hovered. */
+/* ------------------------------------------- */
+
+/* The actual content is wrapped in a positioned element so we can control its */
+/* position wrt to the parent. */
+
 .tooltip {
     position: relative;
 }
@@ -15,6 +21,26 @@
     cursor: auto;
 }
 
+.tooltip:hover .tooltip-text {
+    display: block;
+}
+
+/* The arrow above the tooltip */
+
+.tooltip .tooltip-text::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent black transparent;
+}
+
+/* To enable making the tooltips a bit wider
+   we can offset them to the right or left. */
+
 .tooltip-right {
     left: 0%;
     right: -50%;
@@ -29,19 +55,4 @@
     left: -50%;
     right: 0%;
 
-}
-
-.tooltip .tooltip-text::after {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent black transparent;
-}
-
-.tooltip:hover .tooltip-text {
-    display: block;
 }
