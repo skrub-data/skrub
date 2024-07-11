@@ -4,19 +4,21 @@ import pytest
 import zoneinfo
 
 from skrub import _dataframe as sbd
+from skrub._reporting import _interactions
 from skrub._reporting._summarize import summarize_dataframe
 
 
 @pytest.mark.parametrize("order_by", [None, "date.utc"])
 @pytest.mark.parametrize("with_plots", [False, True])
-def test_summarize(df_module, air_quality, order_by, with_plots):
+def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
+    monkeypatch.setattr(_interactions, "_CATEGORICAL_THRESHOLD", 10)
     summary = summarize_dataframe(
         air_quality, with_plots=with_plots, order_by=order_by, title="the title"
     )
     assert summary["title"] == "the title"
     assert summary["n_columns"] == 11
     assert summary["n_constant_columns"] == 4
-    assert summary["n_rows"] == 207
+    assert summary["n_rows"] == 17
     assert summary["head"]["header"] == [
         "city",
         "country",
@@ -32,12 +34,12 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
     ]
     assert summary["tail"]["header"] == summary["head"]["header"]
     assert summary["head"]["data"][0] == [
-        "Paris",
-        "FR",
-        datetime.datetime(2019, 6, 21, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")),
-        "FR04014",
+        "London",
+        "GB",
+        datetime.datetime(2019, 6, 13, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")),
+        "London Westminster",
         "no2",
-        20.0,
+        29.0,
         "µg/m³",
         None,
         None,
@@ -47,18 +49,18 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
     assert len(summary["head"]["data"]) == len(summary["tail"]["data"]) == 5
     assert summary["first_row_dict"] == {
         "all_null": None,
-        "city": "Paris",
-        "country": "FR",
+        "city": "London",
+        "constant_datetime": datetime.datetime(2024, 7, 5, 12, 17, 29, 427865),
+        "constant_numeric": 2.7,
+        "country": "GB",
         "date.utc": datetime.datetime(
-            2019, 6, 21, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+            2019, 6, 13, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
         ),
         "loc_with_nulls": None,
-        "location": "FR04014",
+        "location": "London Westminster",
         "parameter": "no2",
         "unit": "µg/m³",
-        "value": 20.0,
-        "constant_numeric": 2.7,
-        "constant_datetime": datetime.datetime(2024, 7, 5, 12, 17, 29, 427865),
+        "value": 29.0,
     }
     assert summary["dataframe"] is air_quality
     assert summary["dataframe_module"] == df_module.name
@@ -69,8 +71,8 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
     c = dict(summary["columns"][0])
     assert "string" in c["dtype"].lower() or "object" in c["dtype"].lower()
     c["dtype"] = "string"
-    assert round(c["unique_proportion"], 3) == 0.014
-    c["unique_proportion"] = 0.014
+    assert round(c["unique_proportion"], 3) == 0.118
+    c["unique_proportion"] = 0.118
     if with_plots:
         assert c["value_counts_plot"].startswith("<?xml")
         assert c["plot_names"] == ["value_counts_plot"]
@@ -79,35 +81,35 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
     assert c == {
         "dtype": "string",
         "high_cardinality": False,
-        "n_unique": 3,
+        "n_unique": 2,
         "name": "city",
         "null_count": 0,
         "null_proportion": 0.0,
         "nulls_level": "ok",
         "plot_names": [],
         "position": 0,
-        "unique_proportion": 0.014,
-        "value_counts": {"Antwerpen": 9, "London": 97, "Paris": 101},
+        "unique_proportion": 0.118,
+        "value_counts": {"London": 8, "Paris": 9},
         "value_is_constant": False,
     }
 
     assert summary["columns"][4]["constant_value"] == "no2"
     assert summary["columns"][4]["value_is_constant"]
     assert summary["columns"][5]["quantiles"] == {
-        0.0: 3.0,
-        0.25: 17.6,
-        0.5: 25.0,
-        0.75: 33.0 if df_module.name == "polars" else 32.8,
+        0.0: 5.0,
+        0.25: 17.3,
+        0.5: 27.0,
+        0.75: 33.6,
         1.0: 78.3,
     }
-    assert summary["columns"][7]["null_count"] == 69
+    assert summary["columns"][7]["null_count"] == 9
     assert summary["columns"][7]["nulls_level"] == "warning"
-    assert summary["columns"][8]["null_count"] == 207
+    assert summary["columns"][8]["null_count"] == 17
     assert summary["columns"][8]["nulls_level"] == "critical"
 
     # checking top associations
 
-    assert len(summary["top_associations"]) == 11
+    assert len(summary["top_associations"]) == 15
     asso = [
         d | {"cramer_v": round(d["cramer_v"], 1)} for d in summary["top_associations"]
     ]
@@ -121,9 +123,9 @@ def test_summarize(df_module, air_quality, order_by, with_plots):
     else:
         assert False
     assert asso[-1] == {
-        "cramer_v": 0.2,
-        "left_column": "value",
+        "cramer_v": 0.5,
         "right_column": "loc_with_nulls",
+        "left_column": "value",
     }
 
 

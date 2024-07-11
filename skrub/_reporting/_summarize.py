@@ -1,3 +1,4 @@
+"""Get information and plots for a dataframe, that are used to generate reports."""
 from .. import _dataframe as sbd
 from . import _interactions, _plotting, _utils
 

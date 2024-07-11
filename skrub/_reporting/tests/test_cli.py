@@ -12,7 +12,7 @@ def test_make_report(
     browser_mock,
     data_directory,
 ):
-    data_file = data_directory / f"air_quality_small.{extension}"
+    data_file = data_directory / f"air_quality_tiny.{extension}"
     try:
         read(data_file)
     except ImportError:

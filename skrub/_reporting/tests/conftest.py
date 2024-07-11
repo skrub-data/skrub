@@ -37,7 +37,7 @@ def data_directory():
 
 @pytest.fixture
 def air_quality(df_module, check_polars_numpy2, data_directory):
-    data_file = data_directory / "air_quality_small.parquet"
+    data_file = data_directory / "air_quality_tiny.parquet"
     reader = df_module.module.read_parquet
     try:
         df = reader(data_file)

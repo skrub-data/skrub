@@ -96,13 +96,13 @@ def test_json_encoder():
 
 @pytest.mark.parametrize("extension", ["parquet", "csv"])
 def test_read(data_directory, extension):
-    data_file = data_directory / f"air_quality_small.{extension}"
+    data_file = data_directory / f"air_quality_tiny.{extension}"
     try:
         df = _utils.read(data_file)
     except ImportError:
         assert extension == "parquet"
         pytest.skip("missing pyarrow, cannot read parquet")
-    assert df.shape == (207, 11)
+    assert df.shape == (17, 11)
 
 
 def test_read_data_bad_extension():
