@@ -1,4 +1,6 @@
 """Generate the HTML for TableReport."""
+import base64
+import json
 import pathlib
 import secrets
 
@@ -101,13 +103,19 @@ def to_html(summary, standalone=True, column_filters=None):
     else:
         template = jinja_env.get_template("inline-report.html")
     default_filters = _get_column_filters(summary["dataframe"])
+    # prioritize user-provided filters and keep them at the beginning
+    column_filters = column_filters | {
+        k: v for (k, v) in default_filters.items() if k not in column_filters
+    }
     return template.render(
         {
             "summary": summary,
-            # prioritize user-provided filters and keep them at the beginning
-            "column_filters": column_filters | {
-                k: v for (k, v) in default_filters.items() if k not in column_filters
-            },
+            "column_filters": column_filters,
+            "base64_column_filters": _b64_encode(column_filters),
             "report_id": f"report_{secrets.token_hex()[:8]}",
         }
     )
+
+
+def _b64_encode(obj):
+    return base64.b64encode(json.dumps(obj).encode("utf-8")).decode("utf-8")

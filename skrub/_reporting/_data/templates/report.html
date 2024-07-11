@@ -27,7 +27,7 @@
      {% include "skrub-report.js" %}
     </script>
     <script>
-     var columnFiltersForReport{{ report_id }} = JSON.parse('{{ column_filters | tojson | safe }}');
+     window['columnFiltersForReport{{ report_id }}'] = JSON.parse(atob('{{ base64_column_filters | safe }}'));
      setTimeout(() => {initReport("{{ report_id }}");});
     </script>
 </div>

@@ -349,8 +349,8 @@ tr:nth-child(2n -1) .table-cell[data-is-selected] {
 
 
 :is(.ok, .warning, .critical) {
-                                                 font-weight: bold;
-                                             }
+    font-weight: bold;
+}
 
 .ok {
     color: green;
