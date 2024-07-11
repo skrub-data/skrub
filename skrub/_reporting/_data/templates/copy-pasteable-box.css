@@ -1,0 +1,53 @@
+.box {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    border: 1px solid var(--darkg);
+    padding: 0;
+    min-width: 4rem;
+    max-width: 40rem;
+    max-height: 10rem;
+    min-height: 1.8rem;
+}
+
+.box pre {
+    overflow-x: auto;
+    padding: var(--tiny);
+    flex-grow: 1;
+    white-space: pre;
+}
+
+.copybutton {
+    margin-left: -2rem;
+    min-width: 2rem;
+    display: none;
+    padding: var(--micro);
+    padding-left: var(--tiny);
+    padding-right: var(--tiny);
+    border: none;
+    background: rgba(0, 0, 0, 0);
+}
+
+.box:hover .copybutton {
+    display: inline;
+    background: var(--lightg);
+}
+
+.report:hover .copybutton:hover {
+    display: inline;
+    background: var(--mediumg);
+}
+
+
+*[data-is-being-copied]{
+    color: white;
+    background-color: #4c72b0;
+}
+
+.select-displayed-siblings ~ [data-option-value]:not([data-is-selected]) {
+    display: none;
+}
+
+[data-shows-placeholder] {
+    color: #777777;
+}

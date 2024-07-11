@@ -1,0 +1,32 @@
+th[data-is-in-selected-column] {
+    background-color: var(--darkgreen);
+}
+
+tr:nth-child(2n -1) .table-cell[data-is-in-selected-column] {
+    background-color: var(--mediumgreen);
+}
+
+.table-cell[data-is-in-selected-column] {
+    background-color: var(--lightgreen);
+}
+
+
+tr:nth-child(2n -1) .table-cell[data-is-selected] {
+    background-color: var(--yellowish);
+    border: 1px solid black;
+}
+
+
+.table-cell[data-is-selected] {
+    background-color: var(--yellowish);
+    border: 1px solid black;
+}
+
+
+#report .ellided-table-part {
+    border: 1px solid white;
+    text-align: center;
+    border-top: 0;
+    border-bottom: 0;
+    background: inherit;
+}
