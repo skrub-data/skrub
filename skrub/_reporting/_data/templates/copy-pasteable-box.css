@@ -1,3 +1,8 @@
+/* Boxes with copy-paste buttons */
+/* ----------------------------- */
+
+/* Those are used to quickly copy some code snippets, column names, etc. */
+
 .box {
     display: flex;
     justify-content: space-between;
@@ -38,16 +43,16 @@
     background: var(--mediumg);
 }
 
-
-*[data-is-being-copied]{
+[data-is-being-copied] {
     color: white;
     background-color: #4c72b0;
 }
 
-.select-displayed-siblings ~ [data-option-value]:not([data-is-selected]) {
-    display: none;
-}
-
 [data-shows-placeholder] {
     color: #777777;
+}
+
+.top-bar .box {
+    flex-grow: 1;
+    max-width: 55rem;
 }

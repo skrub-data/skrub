@@ -7,7 +7,6 @@
 {% include "dataframe-sample.css" %}
 {% include "tabs.css" %}
 {% include "tooltip.css" %}
-{% include "top-bar.css" %}
 
 {% if is_inline_report %}
 {% include "inline-report.css" %}

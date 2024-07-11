@@ -93,6 +93,9 @@
     justify-self: left;
 }
 
+.select-displayed-siblings ~ [data-option-value]:not([data-is-selected]) {
+    display: none;
+}
 
 .card {
     padding: 0;
