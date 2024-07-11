@@ -1,3 +1,7 @@
+"""Generate the plots shown in the reports.
+
+The figures are returned in the form of svg strings.
+"""
 import io
 
 from matplotlib import pyplot as plt
@@ -71,6 +75,7 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
 
 
 def histogram(col, color=COLOR_0):
+    """Histogram for a numeric column."""
     values = sbd.to_numpy(col)
     fig, ax = plt.subplots()
     _despine(ax)
@@ -81,6 +86,12 @@ def histogram(col, color=COLOR_0):
 
 
 def line(x_col, y_col):
+    """Line plot for a numeric column.
+
+    ``x_col`` provides the x-axis values, ie the sorting column (corresponding
+    to the report's ``order_by`` parameter). ``y_col`` is the column to plot as
+    a function of x.
+    """
     x = sbd.to_numpy(x_col)
     y = sbd.to_numpy(y_col)
     fig, ax = plt.subplots()
@@ -93,6 +104,30 @@ def line(x_col, y_col):
 
 
 def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
+    """Bar plot of the frequencies of the most frequent values in a column.
+
+    Parameters
+    ----------
+    value_counts : dict
+        The keys are values, and values are counts. Must be sorted from most to
+        least frequent.
+
+    n_unique : int
+        Cardinality of the plotted column, used to determine if all unique
+        values are plotted or if there are too many and some have been
+        ommitted. The figure's title is adjusted accordingly.
+
+    n_rows : int
+        Total length of the column, used to convert the counts to proportions.
+
+    color : str
+        The color for the bars.
+
+    Returns
+    -------
+    str
+        The plot as a XML string.
+    """
     values = [_utils.ellide_string_short(s) for s in value_counts.keys()][::-1]
     counts = list(value_counts.values())[::-1]
     if n_unique > len(value_counts):

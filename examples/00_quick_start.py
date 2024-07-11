@@ -10,13 +10,14 @@ data.
 # Downloading example datasets
 # ----------------------------
 #
-# The :obj:`~skrub.datasets` module allows us to download a variety of tabular datasets.
+# The :obj:`~skrub.datasets` module allows us to download tabular datasets and
+# demonstrate skrub's features.
 
 # %%
 from skrub.datasets import fetch_employee_salaries
 
 dataset = fetch_employee_salaries()
-employees, salaries = dataset.X, dataset.y
+employees_df, salaries = dataset.X, dataset.y
 
 # %%
 # Generating an interactive report for a dataframe
@@ -27,7 +28,7 @@ employees, salaries = dataset.X, dataset.y
 # %%
 from skrub import TableReport
 
-TableReport(employees)
+TableReport(employees_df)
 
 # %%
 # You can use the interactive display above to explore the dataset visually.
@@ -50,7 +51,7 @@ from sklearn.model_selection import cross_validate
 from skrub import tabular_learner
 
 model = tabular_learner("regressor")
-results = cross_validate(model, employees, salaries)
+results = cross_validate(model, employees_df, salaries)
 results["test_score"]
 
 # %%
