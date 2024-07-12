@@ -1,6 +1,6 @@
 
 About
-------
+-----
 
 skrub shares much of its DNA with `scikit-learn
 <https://scikit-learn.org>`__.

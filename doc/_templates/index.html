@@ -17,6 +17,8 @@ still full-width (unlike the article) #}
 	<div class="col-md-6 mb-3 mb-md-0">
 	    <h1 class="sk-landing-header text-white text-monospace">skrub</h1>
 	    <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
+      <a class="btn sk-btn-orange mb-1" href="{{ pathto('CONTRIBUTING') }}" role="button">Contribute</code></a>
+      <a class="btn sk-btn-orange mb-1" href="{{ pathto('CHANGES') }}" role="button">Recent changes</a>
 	</div>
 	<div class="col-md-6 d-flex">
 	    <ul class="sk-landing-header-body">
@@ -235,14 +237,4 @@ class="pre">df</span></code>: <i>(expand for full code)</i></summary>
 {% endblock docs_main %}
 
 {%- block footer %}
-<div class="container-fluid sk-landing-footer">
-  <div class="row justify-content-md-center">
-    <div class="col-lg-4">
-	<p><a href="CHANGES.html">Recent changes</a></p>
-    </div>
-    <div class="col-lg-4">
-	<p><a href="CONTRIBUTING.html">Contributing</a></p>
-    </div>
-  </div>
-</div>
 {%- endblock footer %}

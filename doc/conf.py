@@ -223,6 +223,15 @@ html_context = {
     "doc_path": "doc",
 }
 
+# Custom sidebar templates, maps document names to template names.
+# Workaround for removing the left sidebar on pages without TOC
+# A better solution would be to follow the merge of:
+# https://github.com/pydata/pydata-sphinx-theme/pull/1682
+html_sidebars = {
+    "install": [],
+    "CHANGES": [],
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
