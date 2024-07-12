@@ -53,29 +53,8 @@ and `Encoding high-cardinality string categorical variables <https://hal.inria.f
 Installation
 ------------
 
-The easiest way to install skrub is via `pip`:
-
-.. code-block:: shell
-
-    pip install skrub -U
-
-
-or `conda`:
-
-.. code-block:: shell
-
-    conda install -c conda-forge skrub
-
-
-The documentation includes more detailed `installation instructions <https://skrub-data.github.io/install.html>`_.
-
-
-
-Dependencies
-~~~~~~~~~~~~
-
-Dependencies and minimal versions are listed in the `setup <https://github.com/skrub-data/skrub/blob/main/setup.cfg#L27>`_ file.
-
+skrub can easily be installed via `pip` or conda. For more installation information, see
+the `installation instructions <https://skrub-data.org/stable/install.html>`_.
 
 Contributing
 ------------
