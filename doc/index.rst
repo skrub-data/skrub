@@ -10,7 +10,7 @@
 
    install
    documentation
-   api
+   reference/index
    auto_examples/index
    CHANGES
    development
