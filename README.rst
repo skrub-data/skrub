@@ -26,7 +26,7 @@ You can also join the `discord server <https://discord.gg/ABaPnm7fDC>`_.
 Website: https://skrub-data.org/
 
 What can skrub do?
---------------------
+------------------
 
 The goal of skrub is to facilitate building and deploying machine-learning
 models on tabular data.
@@ -58,7 +58,7 @@ encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeli
 See our `examples <https://skrub-data.org/stable/auto_examples>`_.
 
 What skrub cannot do
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 `Semantic similarities <https://en.wikipedia.org/wiki/Semantic_similarity>`_
 are currently not supported.
@@ -74,7 +74,7 @@ skrub can still help with handling typos and variations in this kind of setting.
 Installation
 ------------
 
-skrub can be easily installed via `pip` or conda. For more installation information, see
+skrub can be easily installed via ``pip`` or ``conda``. For more installation information, see
 the `installation instructions <https://skrub-data.org/stable/install.html>`_.
 
 Contributing
