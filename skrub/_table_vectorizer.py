@@ -115,23 +115,18 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     Applies a different transformation to each of several kinds of columns:
 
-    - numeric:
-        Floats, ints, and Booleans.
-    - datetime:
-        Datetimes and dates.
-    - low_cardinality:
-        String and categorical columns with a count of unique values smaller
-        than a given threshold (40 by default). Category encoding schemes such
-        as one-hot encoding, ordinal encoding etc. are typically appropriate
-        for columns with few unique values.
-    - high_cardinality:
-        String and categorical columns with many unique values, such as
-        free-form text. Such columns have so many distinct values that it is
-        not possible to assign a distinct representation to each: the dimension
-        would be too large and there would be too few examples of each
-        category. Representations designed for text, such as topic modelling
-        (GapEncoder) or locality-sensitive hashing (MinHash) are more
-        appropriate.
+    - numeric: floats, ints, and booleans.
+    - datetime: datetimes and dates.
+    - low_cardinality: string and categorical columns with a count of unique values
+      smaller than a given threshold (40 by default). Category encoding schemes such as
+      one-hot encoding, ordinal encoding etc. are typically appropriate for columns with
+      few unique values.
+    - high_cardinality: string and categorical columns with many unique values, such as
+      free-form text. Such columns have so many distinct values that it is not possible
+      to assign a distinct representation to each: the dimension would be too large and
+      there would be too few examples of each category. Representations designed for
+      text, such as topic modelling (:class:`~skrub.GapEncoder`) or locality-sensitive
+      hashing (:class:`~sklearn.MinHash`) are more appropriate.
 
     .. note::
 
@@ -162,9 +157,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     cardinality_threshold : int, default=40
-        String and categorical features with a number of unique values strictly
-        smaller than this threshold are handled by the transformer ``low_cardinality``, the
-        rest are handled by the transformer ``high_cardinality``.
+        String and categorical features with a number of unique values strictly smaller
+        than this threshold are handled by the transformer ``low_cardinality``, the rest
+        are handled by the transformer ``high_cardinality``.
 
     low_cardinality : transformer, "passthrough" or "drop", optional
         The transformer for string or categorical columns with strictly fewer

@@ -6,26 +6,27 @@ End-to-end predictive models
 
 .. currentmodule:: skrub
 
-.. _table_vectorizer:
+.. _tabular_learner:
 
-Turning a dataframe into a numerical feature matrix
----------------------------------------------------
+Create baseline predictive models on heterogeneous dataset
+----------------------------------------------------------
 
-A dataframe can contain columns of all kind of types. A good numerical
-representation of these columns help analytics and statistical learning.
+Crafting a machine-learning pipeline is rather a daunting task. Choosing the ending
+learner of such pipeline is usually the easiest part. However, it imposes constraints
+regarding the preprocessing steps that are are required ahead of the learner.
+Programmatically defining these steps is the part that requires the most expertise and
+that is cumbersome to write.
 
-The :class:`TableVectorizer` gives a turn-key solution by applying
-different data-specific encoders to the different columns. It makes reasonable
-heuristic choices that are not necessarily optimal since it is not aware of the learner
-used for the machine learning task). However, it already provides a typically very good
-baseline.
+The function :func:`tabular_learner` provides a factory function that given a
+scikit-learn estimator, returns a pipeline that combines this estimator with a
+preprocessing steps. Those steps corresponds to a :class:`TableVectorizer` that
+is in charge of dealing with heterogeneous data and depending on the capabilities of
+the final estimator, a missing value imputer.
 
-The function :func:`tabular_learner` goes the extra mile by creating a machine-learning
-model that works well on tabular data. This model combines a :class:`TableVectorizer`
-with a provided scikit-learn estimator. Depending whether or not the final estimator
-natively supports missing values, a missing value imputer step is added before the
-final estimator. The parameters of the :class:`TableVectorizer` are chosen based on the
-type of the final estimator.
+In the next section, we provide more details regarding the :class:`TableVectorizer`.
+
+The parameters of the :class:`TableVectorizer` are chosen based on the type of the final
+estimator.
 
 .. list-table:: Parameter values choice of :class:`TableVectorizer` when using the :func:`tabular_learner` function
    :header-rows: 1
@@ -70,12 +71,24 @@ categorical features. It does not provide interpretable features as the default
 either the native support of the model or the
 :obj:`~sklearn.preprocessing.OrdinalEncoder`.
 
-With linear models or unknown models, the default values of the different
-parameters are used. Therefore, the :obj:`GapEncoder` is used for
-high-cardinality categorical features and the
-:obj:`~sklearn.preprocessing.OneHotEncoder` for low-cardinality ones. If the
-final estimator does not support missing values, a
-:obj:`~sklearn.impute.SimpleImputer` is added before the final estimator.
-Finally, a :obj:`~sklearn.preprocessing.StandardScaler` is added to the
-pipeline. Those choices may not be optimal in all cases but they are
-methodologically safe.
+With linear models or unknown models, the default values of the different parameters are
+used. Therefore, the :obj:`GapEncoder` is used for high-cardinality categorical features
+and the :obj:`~sklearn.preprocessing.OneHotEncoder` for low-cardinality ones. If the
+final estimator does not support missing values, a :obj:`~sklearn.impute.SimpleImputer`
+is added before the final estimator. Finally, a
+:obj:`~sklearn.preprocessing.StandardScaler` is added to the pipeline. Those choices may
+not be optimal in all cases but they are methodologically safe.
+
+.. _table_vectorizer:
+
+Turning a dataframe into a numerical feature matrix
+---------------------------------------------------
+
+A dataframe can contain columns of all kind of types. We usually refer such data to
+"heterogeneous" data. A good numerical representation of these columns help analytics
+and statistical learning.
+
+The :class:`TableVectorizer` gives a turn-key solution by applying different
+data-specific encoders to the different columns. It makes reasonable heuristic choices
+that are not necessarily optimal since it is not aware of the learner used for the
+machine learning task). However, it already provides a typically very good baseline.
