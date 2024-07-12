@@ -1,5 +1,5 @@
 skrub
-=======
+=====
 
 .. image:: https://skrub-data.github.io/stable/_static/skrub.svg
    :align: center
