@@ -43,13 +43,15 @@ encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeli
     >>> y = dataset.y
 
     # from a complex dataframe
-    >>> df
-           gender  department  department_name               ...  employee_position_title                    date_first_hired  year_first_hired
-     0     F       POL         Department of Police	            Office Services Coordinator                09/22/1986        1986
-     1     M       POL         Department of Police               Master Police Officer                      09/12/1988        1988
-     ...   ...     ...         ...                           ...  ...                                        ...               ...
-     9226  M       CCL         County Council	                  Manager II                                 09/05/2006        2006
-     9227  M       DLC         Department of Liquor Control       Alcohol/Tobacco Enforcement Specialist II  01/30/2012        2012
+    >>> df.iloc[0]
+     gender                                                                     F
+     department                                                               POL
+     department_name                                         Department of Police
+     division                   MSB Information Mgmt and Tech Division Records...
+     assignment_category                                         Fulltime-Regular
+     employee_position_title                          Office Services Coordinator
+     date_first_hired                                                  09/22/1986
+     year_first_hired                                                        1986
 
     # to a prediction
     >>> from sklearn.model_selection import cross_val_score
