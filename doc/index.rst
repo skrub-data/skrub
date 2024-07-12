@@ -1,4 +1,4 @@
-.. title:: Index
+.. title:: Home
 
 .. toctree::
    :maxdepth: 2
