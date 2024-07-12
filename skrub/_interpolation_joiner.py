@@ -22,6 +22,7 @@ DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
 class InterpolationJoiner(TransformerMixin, BaseEstimator):
     """Join with a table augmented by machine-learning predictions.
 
+    # TODO: change this, people don't know what an equi-join is
     This is similar to a usual equi-join, but instead of looking for actual
     rows in the right table that satisfy the join condition, we estimate what
     those rows would contain if they existed in the table.
@@ -52,11 +53,11 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         operating on. Therefore, ``aux_table`` is the ``annual_avg_temp``
         table.
 
-    key : list of str, or str
+    key : str or list of str, default=None
         Column names to use for both `main_key` and `aux_key`, when they are
         the same. Provide either `key` (only) or both `main_key` and `aux_key`.
 
-    main_key : list of str, or str
+    main_key : str or list of str, default=None
         The columns in the main table used for joining. The main table is the
         argument of ``transform``, to which we add information inferred using
         ``aux_table``. The column names listed in ``main_key`` will provide the
@@ -66,14 +67,14 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         column, we can pass its name rather than a list: ``"latitude"`` is
         equivalent to ``["latitude"]``.
 
-    aux_key : list of str, or str
+    aux_key : str or list of str, default=None
         The columns in ``aux_table`` used for joining. Their number and types
         must match those of the ``main_key`` columns in the main table. These
         columns provide the features for the estimators to be fitted. As for
         ``main_key``, it is possible to pass a string when using a single
         column.
 
-    suffix : str
+    suffix : str, default=""
         Suffix to append to the ``aux_table``'s column names. You can use it
         to avoid duplicate column names in the join.
 
@@ -96,7 +97,8 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         passing ``vectorizer=TableVectorizer()`` which will encode text with a
         ``GapEncoder`` rather than a ``MinHashEncoder``.
 
-    n_jobs : int or None
+    # TODO: check possible param values
+    n_jobs : int or None, default=None
         Number of jobs to run in parallel. ``None`` means 1 unless in a
         ``joblib.parallel_backend`` context. -1 means using all processors.
         Depending on the estimators used and the contents of ``aux_table``,
@@ -106,7 +108,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         not support multi-output tasks. Fitting and querying these estimators
         can be done in parallel.
 
-    on_estimator_failure : "warn", "raise" or "pass"
+    on_estimator_failure : "warn", "raise" or "pass", default="warn"
         How to handle exceptions raised when fitting one of the estimators
         (regressors and classifiers) or querying them for a prediction. If
         "raise", exceptions are propagated. If "pass" (i) if an exception is
@@ -122,6 +124,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     vectorizer_ : scikit-learn transformer
         The transformer used to vectorize the feature columns.
 
+    # TODO: add input_to_outputs_ and output_to_input_
     estimators_ : list of dicts
         The estimators used to infer values to be joined. Each entry in this
         list is a dictionary with keys ``"estimator"`` (the fitted estimator)
@@ -188,9 +191,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         on_estimator_failure="warn",
     ):
         self.aux_table = aux_table
+        self.key = key
         self.main_key = main_key
         self.aux_key = aux_key
-        self.key = key
         self.suffix = suffix
         self.regressor = _utils.clone_if_default(regressor, DEFAULT_REGRESSOR)
         self.classifier = _utils.clone_if_default(classifier, DEFAULT_CLASSIFIER)
