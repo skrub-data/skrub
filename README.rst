@@ -43,12 +43,12 @@ encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeli
     >>> y = dataset.y
     # from a complex dataframe
     >>> df
-       gender	department	department_name	division	assignment_category	employee_position_title	date_first_hired	year_first_hired
-     0	F	POL	Department of Police	MSB Information Mgmt and Tech Division Records...	Fulltime-Regular	Office Services Coordinator	09/22/1986	1986
-     1	M	POL	Department of Police	ISB Major Crimes Division Fugitive Section	Fulltime-Regular	Master Police Officer	09/12/1988	1988
-     ...	...	...	...	...	...	...	...	...
-     9226	M	CCL	County Council	Council Central Staff	Fulltime-Regular	Manager II	09/05/2006	2006
-     9227	M	DLC	Department of Liquor Control	Licensure, Regulation and Education	Fulltime-Regular	Alcohol/Tobacco Enforcement Specialist II	01/30/2012	2012
+       gender  department  department_name	division	assignment_category	employee_position_title	date_first_hired	year_first_hired
+     0         F	         POL               Department of Police	MSB Information Mgmt and Tech Division Records...	Fulltime-Regular	Office Services Coordinator	09/22/1986	1986
+     1         M	         POL	            Department of Police	ISB Major Crimes Division Fugitive Section	Fulltime-Regular	Master Police Officer	09/12/1988	1988
+     ...       ...         	...	...	...	...	...	...	...
+     9226      M	         CCL	            County Council	Council Central Staff	Fulltime-Regular	Manager II	09/05/2006	2006
+     9227      M	         DLC	            Department of Liquor Control	Licensure, Regulation and Education	Fulltime-Regular	Alcohol/Tobacco Enforcement Specialist II	01/30/2012	2012
 
     # to a prediction
     >>> from sklearn.model_selection import cross_val_score
