@@ -28,7 +28,7 @@ Website: https://skrub-data.org/
 What can skrub do?
 --------------------
 
-skrub provides data assembling tools (``TableVectorizer``, ``fuzzy_join``...) and
+skrub provides data assembling tools (``TableVectorizer``, ``Joiner``...) and
 encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
 for which we usually identify three common cases: **similarities, typos and variations**
 
@@ -64,10 +64,3 @@ Also, if you already are a skrub user, we would love to hear about your use case
 To report a bug or suggest enhancements, please
 `open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_ and/or
 `submit a pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.
-
-Additional resources
---------------------
-
-* `Introductory video (YouTube) <https://youtu.be/_GNaaeEI2tg>`_
-* `JupyterCon 2023 talk (YouTube) <https://youtu.be/lvDN0wgTpeI>`_
-* `EuroSciPy 2023 poster (Dropbox) <https://www.dropbox.com/scl/fi/89tapbshxtw0kh5uzx8dc/Poster-Euroscipy-2023.pdf?rlkey=u4ycpiyftk7rzttrjll9qlrkx&dl=0>`_
