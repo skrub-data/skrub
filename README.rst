@@ -28,9 +28,20 @@ Website: https://skrub-data.org/
 What can skrub do?
 --------------------
 
-skrub provides data assembling tools (``TableVectorizer``, ``Joiner``...) and
-encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
-for which we usually identify three common cases: **similarities, typos and variations**
+The goal of skrub is to facilitate building and deploying machine-learning
+models on tabular data.
+
+skrub provides high-level tools for joining dataframes (``Joiner``, ``AggJoiner``, ...),
+encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeline
+(``TableVectorizer``, ``tabular_learner``, ...), and more.::
+
+.. code-block:: shell
+
+    >>> from skrub.datasets import fetch_employee_salaries
+    >>> dataset = fetch_employee_salaries()
+    >>> df = dataset.X
+    >>> y = dataset.y
+    >>> df
 
 See our `examples <https://skrub-data.org/stable/auto_examples>`_.
 
