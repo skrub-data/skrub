@@ -17,7 +17,7 @@ skrub
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
 
 
-`skrub <https://skrub-data.github.io/>`_ (formerly *dirty_cat*) is a Python
+`*skrub* <https://skrub-data.github.io/>`_ (formerly *dirty_cat*) is a Python
 library that facilitates prepping your tables for machine learning.
 
 If you like the package, spread the word and ⭐ this repository!
