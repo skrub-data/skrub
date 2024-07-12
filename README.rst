@@ -44,6 +44,7 @@ encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeli
 
     # from a complex dataframe
     >>> df.iloc[0]
+     """
      gender                                                                     F
      department                                                               POL
      department_name                                         Department of Police
@@ -52,6 +53,7 @@ encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeli
      employee_position_title                          Office Services Coordinator
      date_first_hired                                                  09/22/1986
      year_first_hired                                                        1986
+     """
 
     # to a prediction
     >>> from sklearn.model_selection import cross_val_score
@@ -78,7 +80,7 @@ skrub can still help with handling typos and variations in this kind of setting.
 Installation
 ------------
 
-skrub can be easily installed via ``pip`` or ``conda``. For more installation information, see
+skrub can easily be installed via ``pip`` or ``conda``. For more installation information, see
 the `installation instructions <https://skrub-data.org/stable/install.html>`_.
 
 Contributing
