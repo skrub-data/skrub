@@ -28,8 +28,7 @@ Website: https://skrub-data.org/
 What can skrub do?
 ------------------
 
-The goal of skrub is to facilitate building and deploying machine-learning
-models on tabular data.
+The goal of skrub is to bridge the gap between tabular data sources and machine-learning models.
 
 skrub provides high-level tools for joining dataframes (``Joiner``, ``AggJoiner``, ...),
 encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeline
