@@ -4,7 +4,7 @@ User guide
 Skrub eases preparing tables for machine learning.
 
 Starting from rich, complex data stored in one or several dataframes, it helps
-performing the data wrangling necessary to produce a numeric array that can be fed
+performing the data wrangling necessary to produce a numeric array that is fed
 to a machine-learning model. This wrangling comprises joining tables (possibly
 with inexact matches), parsing text into structured data such as dates,
 extracting numeric features, etc.
@@ -21,7 +21,7 @@ essential to prevent data leakage and ensure generalization.
 
 .. topic:: Skrub highlights:
 
- - facilitates separating the train and test operations, allowing to tune
+ - eases separating the train and test operations, allowing to tune
    preprocessing steps to the data and improving the generalization of tabular
    machine-learning models.
 
