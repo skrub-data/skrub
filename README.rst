@@ -45,7 +45,7 @@ encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeli
     # from a complex dataframe
     >>> df.iloc[0]
 
-.. code-block:: text
+.. code-block::
     gender                                                                     F
     department                                                               POL
     department_name                                         Department of Police
@@ -61,7 +61,7 @@ encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeli
     >>> from skrub import tabular_learner
     >>> cross_val_score(tabular_learner('regressor'), df, y)
 
-.. code-block:: text
+.. code-block::
     array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])
 
 See our `examples <https://skrub-data.org/stable/auto_examples>`_.
