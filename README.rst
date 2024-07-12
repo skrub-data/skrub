@@ -55,20 +55,6 @@ array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])
 
 See our `examples <https://skrub-data.org/stable/auto_examples>`_.
 
-What skrub cannot do
-~~~~~~~~~~~~~~~~~~~~
-
-`Semantic similarities <https://en.wikipedia.org/wiki/Semantic_similarity>`_
-are currently not supported.
-For example, the similarity between *car* and *automobile* is outside the reach
-of the methods implemented here.
-
-This kind of problem is tackled by
-`Natural Language Processing <https://en.wikipedia.org/wiki/Natural_language_processing>`_
-methods.
-
-skrub can still help with handling typos and variations in this kind of setting.
-
 Installation
 ------------
 
