@@ -11,11 +11,11 @@ End-to-end predictive models
 Turning a dataframe into a numerical feature matrix
 ---------------------------------------------------
 
-A dataframe can comprise columns of all kind of types. A good numerical
+A dataframe can contain columns of all kind of types. A good numerical
 representation of these columns help analytics and statistical learning.
 
 The :class:`TableVectorizer` gives a turn-key solution by applying
-different data-specific encoder to the different columns. It makes reasonable
+different data-specific encoders to the different columns. It makes reasonable
 heuristic choices that are not necessarily optimal since it is not aware of the learner
 used for the machine learning task). However, it already provides a typically very good
 baseline.
@@ -23,7 +23,7 @@ baseline.
 The function :func:`tabular_learner` goes the extra mile by creating a machine-learning
 model that works well on tabular data. This model combines a :class:`TableVectorizer`
 with a provided scikit-learn estimator. Depending whether or not the final estimator
-natively support missing values, a missing value imputer step is added before the
+natively supports missing values, a missing value imputer step is added before the
 final estimator. The parameters of the :class:`TableVectorizer` are chosen based on the
 type of the final estimator.
 
