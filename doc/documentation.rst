@@ -1,7 +1,7 @@
 User guide
 ===========
 
-Skrub facilitates preparing tables for machine learning.
+Skrub eases preparing tables for machine learning.
 
 Starting from rich, complex data stored in one or several dataframes, it helps
 performing the data wrangling necessary to produce a numeric array that can be fed
