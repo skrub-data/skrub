@@ -22,6 +22,7 @@ typically with `scikit-learn <http://scikit-learn.org>`_ with its
 .. toctree::
    :maxdepth: 2
 
+   end_to_end_pipeline
    encoding
    assembling
    cleaning
