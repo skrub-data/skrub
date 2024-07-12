@@ -33,7 +33,7 @@ models on tabular data.
 
 skrub provides high-level tools for joining dataframes (``Joiner``, ``AggJoiner``, ...),
 encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeline
-(``TableVectorizer``, ``tabular_learner``, ...), and more.::
+(``TableVectorizer``, ``tabular_learner``, ...), and more.
 
 .. code-block:: shell
 
