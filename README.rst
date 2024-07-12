@@ -46,14 +46,10 @@ methods.
 
 skrub can still help with handling typos and variations in this kind of setting.
 
-For a detailed description of the problem of encoding dirty categorical data, see
-`Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
-and `Encoding high-cardinality string categorical variables <https://hal.inria.fr/hal-02171256v4>`_ [2]_.
-
 Installation
 ------------
 
-skrub can easily be installed via `pip` or conda. For more installation information, see
+skrub can be easily installed via `pip` or conda. For more installation information, see
 the `installation instructions <https://skrub-data.org/stable/install.html>`_.
 
 Contributing
@@ -73,9 +69,3 @@ Additional resources
 * `Introductory video (YouTube) <https://youtu.be/_GNaaeEI2tg>`_
 * `JupyterCon 2023 talk (YouTube) <https://youtu.be/lvDN0wgTpeI>`_
 * `EuroSciPy 2023 poster (Dropbox) <https://www.dropbox.com/scl/fi/89tapbshxtw0kh5uzx8dc/Poster-Euroscipy-2023.pdf?rlkey=u4ycpiyftk7rzttrjll9qlrkx&dl=0>`_
-
-References
-----------
-
-.. [1] Patricio Cerda, Gaël Varoquaux, Balázs Kégl. Similarity encoding for learning with dirty categorical variables. 2018. Machine Learning journal, Springer.
-.. [2] Patricio Cerda, Gaël Varoquaux. Encoding high-cardinality string categorical variables. 2020. IEEE Transactions on Knowledge & Data Engineering.
