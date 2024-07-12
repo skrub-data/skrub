@@ -40,7 +40,6 @@ encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeli
 >>> dataset = fetch_employee_salaries()
 >>> df = dataset.X
 >>> y = dataset.y
-
 >>> df.iloc[0]
 gender                                                                     F
 department                                                               POL
