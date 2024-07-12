@@ -35,7 +35,7 @@ skrub provides high-level tools for joining dataframes (``Joiner``, ``AggJoiner`
 encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeline
 (``TableVectorizer``, ``tabular_learner``, ...), and more.
 
-.. code-block:: shell
+.. code-block:: python
 
     >>> from skrub.datasets import fetch_employee_salaries
     >>> dataset = fetch_employee_salaries()
