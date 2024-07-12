@@ -1,4 +1,4 @@
-`skrub`
+skrub
 =======
 
 .. image:: https://skrub-data.github.io/stable/_static/skrub.svg
@@ -23,16 +23,16 @@ library that facilitates prepping your tables for machine learning.
 If you like the package, spread the word and ⭐ this repository!
 You can also join the `discord server <https://discord.gg/ABaPnm7fDC>`_.
 
-What can `skrub` do?
+What can skrub do?
 --------------------
 
-`skrub` provides data assembling tools (``TableVectorizer``, ``fuzzy_join``...) and
+skrub provides data assembling tools (``TableVectorizer``, ``fuzzy_join``...) and
 encoders (``GapEncoder``, ``MinHashEncoder``...) for **morphological similarities**,
 for which we usually identify three common cases: **similarities, typos and variations**
 
 See our `examples <https://skrub-data.org/stable/auto_examples>`_.
 
-What `skrub` cannot do
+What skrub cannot do
 ~~~~~~~~~~~~~~~~~~~~~~
 
 `Semantic similarities <https://en.wikipedia.org/wiki/Semantic_similarity>`_
@@ -44,7 +44,7 @@ This kind of problem is tackled by
 `Natural Language Processing <https://en.wikipedia.org/wiki/Natural_language_processing>`_
 methods.
 
-`skrub` can still help with handling typos and variations in this kind of setting.
+skrub can still help with handling typos and variations in this kind of setting.
 
 For a detailed description of the problem of encoding dirty categorical data, see
 `Similarity encoding for learning with dirty categorical variables <https://hal.inria.fr/hal-01806175>`_ [1]_
