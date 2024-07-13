@@ -63,38 +63,30 @@ X = data[["date", "holiday", "temp", "hum", "windspeed", "weathersit"]]
 X
 
 ###############################################################################
-# We convert the dataframe date columns using |to_datetime|. Notice how
-# we don't need to specify the columns to convert.
+# We convert the dataframe date column using |ToDatetime|.
 
-from skrub import to_datetime
+from skrub import ToDatetime
 
-X = to_datetime(X)
+X.loc[:, "date"] = ToDatetime().fit_transform(X["date"])
+
 X.dtypes
 
 ###############################################################################
 # Encoding the features
 # .....................
 #
-# We will construct a |ColumnTransformer| in which we will encode
-# the date with a |DatetimeEncoder|.
+# We directly encode the date column with a |DatetimeEncoder|.
 #
 # During the instantiation of the |DatetimeEncoder|, we specify that we want
 # to extract the day of the week, and that we don't want to extract anything
 # finer than hours. This is because we don't want to extract minutes, seconds
 # and lower units, as they are unimportant.
 
-from sklearn.compose import make_column_transformer
-
 from skrub import DatetimeEncoder
 
-encoder = make_column_transformer(
-    (DatetimeEncoder(add_weekday=True, resolution="hour"), "date"),
-    remainder="drop",
-)
+date_enc = DatetimeEncoder().fit_transform(X["date"])
 
-X_enc = encoder.fit_transform(X)
-
-X_enc
+print(X.date, "\n\nHas been encoded as:\n\n", date_enc)
 
 ###############################################################################
 # We see that the encoder is working as expected: the ``"date"`` column has
@@ -172,6 +164,8 @@ cross_val_score(
 #
 # The mean squared error is not obvious to interpret, so we compare
 # visually the prediction of our model with the actual values.
+# To do so, we will divide our dataset into a train and a test set:
+# we use 2011 data to predict what happened in 2012.
 import matplotlib.pyplot as plt
 
 mask_train = X["date"] < "2012-01-01"
