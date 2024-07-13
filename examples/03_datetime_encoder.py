@@ -67,7 +67,7 @@ X
 
 from skrub import ToDatetime
 
-X.loc[:, "date"] = ToDatetime().fit_transform(X["date"])
+X["date"] = ToDatetime().fit_transform(X["date"])
 
 X.dtypes
 
