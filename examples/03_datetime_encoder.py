@@ -91,7 +91,7 @@ print(X.date, "\n\nHas been encoded as:\n\n", date_enc)
 ###############################################################################
 # We see that the encoder is working as expected: the ``"date"`` column has
 # been replaced by features extracting the month, day, hour, day of the
-# week and total second since Epoch information.
+# week and total seconds since Epoch information.
 
 ###############################################################################
 # One-liner with the |TableVectorizer|
