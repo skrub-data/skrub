@@ -8,7 +8,7 @@ from ._utils import JSONEncoder
 
 
 class TableReport:
-    """Summarize the contents of a dataframe.
+    r"""Summarize the contents of a dataframe.
 
     This class summarizes a dataframe, providing information such as the type
     and summary statistics (mean, number of missing values, etc.) for each
@@ -40,6 +40,38 @@ class TableReport:
         notebook.
     json : str
         Report in JSON format.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skrub import TableReport
+    >>> df = pd.DataFrame(dict(a=[1, 2], b=['one', 'two']))
+    >>> report = TableReport(df)
+
+    If you are in a Jupyter notebook, to display the report just have it be the
+    last expression evaluated in a cell so that it is displayed in the cell's
+    output.
+
+    >>> report
+    <TableReport: use .open() to display>
+
+    (Note that above we only see the string represention, not the report itself,
+    because we are not in a notebook.)
+
+    Whether you are using a notebook or not, you can always open the report as a
+    full page in a separate browser tab with its ``open`` method:
+    ``report.open()``.
+
+    You can also get the HTML report as a string.
+    For a full, standalone web page:
+
+    >>> report.html()
+    '<!DOCTYPE html>\n<html lang="en-US">\n\n<head>\n    <meta charset="utf-8"...'
+
+    For an HTML fragment that can be inserted into a page:
+
+    >>> report.html_snippet()
+    '\n<div id="report_...-wrapper" hidden>\n    <template id="report_...'
     """
 
     def __init__(self, dataframe, order_by=None, title=None, column_filters=None):
@@ -47,6 +79,9 @@ class TableReport:
         self.title = title
         self.column_filters = column_filters
         self.dataframe = dataframe
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: use .open() to display>"
 
     @functools.cached_property
     def _summary_with_plots(self):
