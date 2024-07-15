@@ -92,19 +92,3 @@ def test_json_encoder():
     assert json.dumps(d, cls=_utils.JSONEncoder) == '{"a": 1, "b": 1.0}'
     with pytest.raises(TypeError, match=".*JSON serializable"):
         json.dumps({"a": x}, cls=_utils.JSONEncoder)
-
-
-@pytest.mark.parametrize("extension", ["parquet", "csv"])
-def test_read(data_directory, extension):
-    data_file = data_directory / f"air_quality_tiny.{extension}"
-    try:
-        df = _utils.read(data_file)
-    except ImportError:
-        assert extension == "parquet"
-        pytest.skip("missing pyarrow, cannot read parquet")
-    assert df.shape == (17, 11)
-
-
-def test_read_data_bad_extension():
-    with pytest.raises(ValueError, match="Cannot process file extension"):
-        _utils.read("bad.xml")

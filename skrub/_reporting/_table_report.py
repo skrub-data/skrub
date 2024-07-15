@@ -40,14 +40,6 @@ class TableReport:
         notebook.
     json : str
         Report in JSON format.
-
-    Notes
-    -----
-    It is possible to generate a report from the command line::
-
-        skrub-report ./table.parquet
-
-    See ``skrub-report --help`` for details on the command-line arguments.
     """
 
     def __init__(self, dataframe, order_by=None, title=None, column_filters=None):

@@ -1,6 +1,5 @@
 import base64
 import json
-from pathlib import Path
 
 import numpy as np
 
@@ -131,17 +130,3 @@ class JSONEncoder(json.JSONEncoder):
             if isinstance(value, np.floating):
                 return float(value)
             raise
-
-
-def read(file_path):
-    try:
-        from polars import read_csv, read_parquet
-    except ImportError:
-        from pandas import read_csv, read_parquet
-    file_path = Path(file_path)
-    suffix = file_path.suffix
-    if suffix == ".parquet":
-        return read_parquet(file_path)
-    if suffix == ".csv":
-        return read_csv(file_path)
-    raise ValueError(f"Cannot process file extension: {suffix}")

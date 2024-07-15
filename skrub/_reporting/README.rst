@@ -106,12 +106,3 @@ skrub's ``build-system`` requires the ``setuptools_scm`` plugin, which pacakges
 all files that are tracked by git. If the build backend is replaced by a
 different one, refer to the new build backend's documentation on handling
 "package data" (non-python files).
-
-Command-line entry point
-------------------------
-
-When ``skrub`` is installed, the ``skrub-report`` command becomes available on
-the command line. This is configured in the ``[project.scripts]`` section of the
-``pyproject.toml``. It specifies that the ``skrub-report`` command should be
-added to the python environment when installing skrub, and that it invokes
-``skrub._reporting._cli.make_report`` when executed.

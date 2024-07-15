@@ -8,18 +8,6 @@ from sklearn.utils.fixes import parse_version
 
 
 @pytest.fixture
-def skip_if_polars_and_numpy2_installed():
-    try:
-        import polars as pl
-    except ImportError:
-        return
-    if parse_version(pl.__version__) <= parse_version("1.0.0") and parse_version(
-        "2.0.0"
-    ) <= parse_version(np.__version__):
-        pytest.xfail("polars 1.0.0 does not support numpy 2 causing segfaults")
-
-
-@pytest.fixture
 def check_polars_numpy2(df_module):
     if df_module.name != "polars":
         return

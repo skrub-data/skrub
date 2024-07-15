@@ -37,9 +37,6 @@ dependencies = [
 version = { file = "skrub/VERSION.txt" }
 readme = { file = "README.rst" }
 
-[project.scripts]
-skrub-report = "skrub._reporting._cli:make_report"
-
 [project.optional-dependencies]
 doc = [
     "jupyterlite-sphinx",
