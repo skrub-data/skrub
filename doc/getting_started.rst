@@ -32,8 +32,10 @@ Assembling data
 ---------------
 
 ``Skrub`` allows imperfect assembly of data, in the case where columns are dirty and can contain typos. The :class:`~skrub.Joiner`
-allows to fuzzy-join multiple tables, and each row of a main tablewill be augmented with values from the best match
-in the auxiliary table:
+allows to fuzzy-join multiple tables, and each row of a main table will be augmented with values from the best match
+in the auxiliary table. You can control how distant fuzzy-matches are allowed to be with the ``max_dist`` parameter.
+
+In the following, we add information about capitals to a table of countries:
 
 >>> import pandas as pd
 >>> from skrub import Joiner
@@ -52,14 +54,11 @@ in the auxiliary table:
 2    Italy    Rome
 >>> joiner = Joiner(
 ...     aux_table,
-...     key="Country",
+...     key="Country",  # here both tables have the same key. You can also use left_key and right_key
 ...     suffix="_aux",
-...     max_dist=0.8,  # choose how distant matches can be
+...     max_dist=0.8,
 ...     add_match_info=False,
 ... )
-
-We can now add information about capitals to a table of countries:
-
 >>> joiner.fit_transform(main_table)
   Country      Country_aux      Capital_aux
 0  France           France            Paris
