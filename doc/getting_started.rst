@@ -40,6 +40,7 @@ In the following, we add information about capitals to a table of countries:
 >>> import pandas as pd
 >>> from skrub import Joiner
 >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
+>>> # notice the "Italy" instead of "Italia"
 >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
 ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
 >>> main_table
@@ -84,13 +85,15 @@ particularly useful to summarize information scattered across tables:
 ...     aux_table=aux,
 ...     main_key="airportId",
 ...     aux_key="from_airport",
-...     cols=["total_passengers", "company"],
-...     operations=["mean", "mode"],  # compute the mode of categorical features and the mean of numerical features
+...     cols=["total_passengers", "company"],  # the cols to perform aggregation on
+...     operations=["mean", "mode"],  # the operations to compute
 ... )
 >>> agg_joiner.fit_transform(main)
    airportId  airportName  company_mode  total_passengers_mean
 0          1    Paris CDG            AF              103.33...
 1          2       NY JFK            DL               80.00...
+
+For joining multiple auxiliary tables on a main table at once, use the :class:`~skrub.MultiAggJoiner`.
 
 See other ways to join multiple tables on `assembling data <https://skrub-data.org/stable/assembling>`_.
 
@@ -106,6 +109,10 @@ will create the encoding based on combinations of substrings which frequently co
 
 For instance, we might want to encode a column ``X`` that we know contains information about cities, being
 either Madrid or Rome :
+
+>>> import pandas as pd
+>>> from skrub import GapEncoder
+>>> enc = GapEncoder(n_components=2, random_state=0)  # 2 topics in the data
 
 >>> X = pd.Series(["Rome, Italy", "Rome", "Roma, Italia", "Madrid, SP",
 ...                "Madrid, spain", "Madrid", "Romq", "Rome, It"], name="city")
