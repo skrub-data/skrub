@@ -46,7 +46,7 @@ def _serialize(fig):
 
 
 def _rotate_ticklabels(ax):
-    ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=45, ha="right")
+    plt.setp(ax.get_xticklabels(), rotation=45, horizontalalignment="right")
 
 
 def _get_adjusted_fig_size(fig, ax, direction, target_size):
