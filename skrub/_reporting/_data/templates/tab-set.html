@@ -1,4 +1,4 @@
-{% set interactions_warning = summary["top_associations"] and summary["top_associations"][0]["cramer_v"] is gt 0.9 %}
+{% set interactions_warning = summary["top_associations"] and summary["top_associations"][0]["cramer_v"] is gt column_similarity_threshold %}
 {% set interactions_title -%}
 Show which columns are similar (have a strong association).
 {%- if interactions_warning %}

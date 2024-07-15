@@ -16,7 +16,7 @@
                 <td>{{ association["left_column"] }}</td>
                 <td>{{ association["right_column"] }}</td>
                 <td
-                    {% if association["cramer_v"] is gt 0.9 %}
+                    {% if association["cramer_v"] is gt column_similarity_threshold %}
                     class="critical"
                     {%- endif -%}
                     >

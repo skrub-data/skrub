@@ -12,7 +12,11 @@ from skrub import _selectors as s
 
 from . import _utils
 
+_COLUMN_SIMILARITY_THRESHOLD = 0.9
+
 _FILTER_NAMES = {
+    "first_10": "First 10 columns",
+    "high_similarity": "Columns with high similarity",
     "all()": "All columns",
     "has_nulls()": "Columns with null values",
     "(~has_nulls())": "Columns without null values",
@@ -47,14 +51,33 @@ def _get_jinja_env():
     return env
 
 
-def _get_column_filters(df):
+def _get_high_similarity_columns(summary):
+    columns = set()
+    for asso in summary["top_associations"]:
+        if asso["cramer_v"] <= _COLUMN_SIMILARITY_THRESHOLD:
+            break
+        columns.add(asso["left_column"])
+        columns.add(asso["right_column"])
+    return list(columns)
+
+
+def _get_column_filters(summary):
+    df = summary["dataframe"]
     filters = {}
+    filters["all()"] = {
+        "display_name": _FILTER_NAMES["all()"],
+        "columns": sbd.column_names(df),
+    }
     if sbd.shape(df)[1] > 10:
         filters["first_10"] = {
-            "display_name": "First 10 columns",
+            "display_name": _FILTER_NAMES["first_10"],
             "columns": sbd.column_names(df)[:10],
         }
-    all_selectors = [s.all()]
+    filters["high_similarity"] = {
+        "columns": _get_high_similarity_columns(summary),
+        "display_name": _FILTER_NAMES["high_similarity"],
+    }
+    all_selectors = []
     for selector in [
         s.has_nulls(),
         s.numeric(),
@@ -102,7 +125,7 @@ def to_html(summary, standalone=True, column_filters=None):
         template = jinja_env.get_template("standalone-report.html")
     else:
         template = jinja_env.get_template("inline-report.html")
-    default_filters = _get_column_filters(summary["dataframe"])
+    default_filters = _get_column_filters(summary)
     # prioritize user-provided filters and keep them at the beginning
     column_filters = column_filters | {
         k: v for (k, v) in default_filters.items() if k not in column_filters
@@ -111,6 +134,7 @@ def to_html(summary, standalone=True, column_filters=None):
         {
             "summary": summary,
             "column_filters": column_filters,
+            "column_similarity_threshold": _COLUMN_SIMILARITY_THRESHOLD,
             "base64_column_filters": _b64_encode(column_filters),
             "report_id": f"report_{secrets.token_hex()[:8]}",
         }
