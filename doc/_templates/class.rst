@@ -1,4 +1,4 @@
-:mod:`{{module}}`.{{objname}}
+{{objname}}
 {{ underline }}==============
 
 .. rst-class:: side_comment

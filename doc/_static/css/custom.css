@@ -231,3 +231,15 @@ div.sk-landing-footer {
 	max-width: 60rem;
     }
 }
+
+/** Scikit-learn buttons ***************************/
+a.sk-btn-orange {
+    font-size: 1.1rem;
+    font-weight: 500;
+    background-color: #f99f44;  /* sk-orange-tint-1 */
+    color: black !important;
+}
+
+a.sk-btn-orange:hover {
+    background-color: #fcb575;  /* --sk-orange-tint-3 */
+}

@@ -1,8 +1,8 @@
 .. _changes:
 
-========
-Changes
-========
+===============
+Release history
+===============
 
 .. currentmodule:: skrub
 
