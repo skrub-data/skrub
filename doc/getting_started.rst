@@ -64,11 +64,21 @@ Let's see the activation of each topic in each of the rows of ``X``:
 6                 0.050019                   3.049981
 7                 0.053193                   9.046807
 
-These activations can then be used to encode ``X``, for instance with a 0 if the city is Madrid, and 1 if the city is Rome:
+The higher the activation, the closer the row to the latent topic. These activations can then be used to encode
+``X``, for instance with a 0 if the city is Madrid, and 1 if the city is Rome:
 
->>> import numpy as np
->>> np.where(out[out.columns[0]] > out[out.columns[1]], 0, 1)
-array([1, 1, 1, 0, 0, 0, 1, 1])
+>>> madrid = out.iloc[:,0] > out.iloc[:,1]
+>>> X[madrid] = 0
+>>> X[~madrid] = 1
+0    1
+1    1
+2    1
+3    0
+4    0
+5    0
+6    1
+7    1
+Name: city, dtype: object
 
 Which corresponds to respective positions of Madrid and Rome in the initial column ! This column can now be understood
 by a machine-learning model.
