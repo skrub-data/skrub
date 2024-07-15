@@ -3,28 +3,42 @@ Getting started
 
 The purpose of this guide is to provide an introduction to the functionalities of ``skrub``, an
 open-source package that aims at bridging the gap between tabular data sources and machine-learning models.
-Please refer to the `installation guidelines <https://skrub-data.org/stable/install.html>`_ to install ``skrub``.
+Please refer to our `installation guidelines <https://skrub-data.org/stable/install.html>`_ for installing ``skrub``.
 
-Much of ``skrub`` revolves around cleaning, assembling, and encoding tabular data, to present data in a format that
-machine learning models understand. The following sections will present
+Much of ``skrub`` revolves around cleaning, assembling, and encoding tabular data, to wrangle data in a format that
+machine-learning models understand.
+
+
+Creating a machine-learning pipeline
+------------------------------------
+
+:func:`~skrub.tabular_learner`
+
+
+See the dedicated page on creating an `end-to-end pipeline <https://skrub-data.org/stable/end_to_end_pipeline>`_.
+
 
 Vectorizing data
 ----------------
 
-``Skrub`` provides tools that can wrangle a complex dataframe in one line of code:
+``Skrub`` provides the :class:`~skrub.TableVectorizer`, a tool that wrangle a complex dataframe in one line of code.
 
-the :class:`~skrub.TableVectorizer`
+``Skrub`` is designed to work on pandas and polars dataframes, and will be compatible with more backends in the future !
+As of now, most of our estimators and tranformers are compatible with both and should have the same behavior, regardless of the module !
 
-See end_to_end_pipeline
+
 
 Assembling data
 ---------------
 
-``Skrub`` allows imperfect assembly of data, in the case where
+``Skrub`` allows imperfect assembly of data, in the case where columns are dirty and can contain typos. The :class:`~skrub.Joiner`
+allows to fuzzy-join multiple tables, i.e.
 
-+ Example with :class:`~skrub.Joiner`
+It's also possible to augment data by joining multiple tables
++ Example with :class:`~skrub.AggJoiner`
 
-See the dedicated page on `assembling <https://skrub-data.org/stable/assembling>`_.
+See the dedicated page on `assembling data <https://skrub-data.org/stable/assembling>`_.
+
 
 Encoding data
 -------------
@@ -83,18 +97,14 @@ Name: city, dtype: object
 Which corresponds to respective positions of Madrid and Rome in the initial column ! This column can now be understood
 by a machine-learning model.
 
-See the dedicated page on `encoding <https://skrub-data.org/stable/encoding>`_.
-
-Backend interoperability
-------------------------
-
-``Skrub`` is designed to work on pandas and polars dataframes, and will be compatible with more backends in the future !
-This means that our estimators and tranformers are compatible with both and should have the same behavior, regardless of the module !
+The other encoders are presented in `encoding <https://skrub-data.org/stable/encoding>`_.
 
 
+Next steps
+----------
 
-Many more
----------
+Please refer to our `User Guide <https://skrub-data.org/stable/documentation>`_ for a more in-depth presentation of
+``skrub``'s concepts. You can also check out our `API reference <https://skrub-data.org/stable/api>`_ for the exhaustive
+list of functionalities !
 
-Please refer to our `examples <https://skrub-data.org/stable/auto_examples>`_ for a more in-depth presentation of
-the functionalities offered by ``skrub`` !
+Visit our `examples <https://skrub-data.org/stable/auto_examples>`_ for more illustrations of the tools offered by ``skrub``.
