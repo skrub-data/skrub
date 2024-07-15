@@ -31,16 +31,25 @@ Encoding data
 
 When a column contains dirty categories, it can be encoded using the :class:`~skrub.GapEncoder`.
 
+The :class:`~skrub.GapEncoder` creates a continuous encoding, based on the activation of latent categories. It
+will create continuous encoding based on combinations of substrings which frequently co-occur.
+
+For instance, we might want to encode a column ``X`` that we know contains information about cities, being
+either Madrid or Rome :
+
 >>> X = pd.Series(["Rome, Italy", "Rome", "Roma, Italia", "Madrid, SP",
 ...                "Madrid, spain", "Madrid", "Romq", "Rome, It"], name='city')
 >>> enc.fit(X)
 GapEncoder(n_components=2, random_state=0)
 
-GapEncoder has found the following two topics:
+The GapEncoder has found the following two topics:
 
 >>> enc.get_feature_names_out()
 ['city: madrid, spain, sp', 'city: italia, italy, romq']
 
+Which correspond to the two cities.
+
+Let's see the activation of each topic in each of the rows of ``X``:
 
 >>> out = enc.transform(X)
 >>> out
@@ -54,9 +63,13 @@ GapEncoder has found the following two topics:
 6                 0.050019                   3.049981
 7                 0.053193                   9.046807
 
-It could then be used to encode the input column, for instance with a 0 if the city is Madrid, and 1 if the city is Rome:
+Which can then be used to encode ``X``, for instance with a 0 if the city is Madrid, and 1 if the city is Rome:
 
+>>> import numpy as np
+>>> np.where(out[out.columns[0]] > out[out.columns[1]], 0, 1)
+array([1, 1, 1, 0, 0, 0, 1, 1])
 
+Which corresponds to respective positions of Madrid and Rome in the initial column !
 
 See the dedicated page on `encoding <https://skrub-data.org/stable/encoding>`_.
 
