@@ -8,7 +8,7 @@ from skrub._reporting import _interactions
 from skrub._reporting._summarize import summarize_dataframe
 
 
-@pytest.mark.parametrize("order_by", [None, "date.utc"])
+@pytest.mark.parametrize("order_by", [None, "date.utc", "value"])
 @pytest.mark.parametrize("with_plots", [False, True])
 def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     monkeypatch.setattr(_interactions, "_CATEGORICAL_THRESHOLD", 10)

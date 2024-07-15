@@ -46,8 +46,7 @@ def _serialize(fig):
 
 
 def _rotate_ticklabels(ax):
-    if len(ax.get_xticklabels()[0].get_text()) > 5:
-        ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=45, ha="right")
+    ax.set_xticks(ax.get_xticks(), ax.get_xticklabels(), rotation=45, ha="right")
 
 
 def _get_adjusted_fig_size(fig, ax, direction, target_size):
@@ -80,7 +79,8 @@ def histogram(col, color=COLOR_0):
     fig, ax = plt.subplots()
     _despine(ax)
     ax.hist(values, color=color)
-    _rotate_ticklabels(ax)
+    if sbd.is_any_date(col):
+        _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
     return _serialize(fig)
 
@@ -98,7 +98,8 @@ def line(x_col, y_col):
     _despine(ax)
     ax.plot(x, y)
     ax.set_xlabel(_utils.ellide_string_short(x_col.name))
-    _rotate_ticklabels(ax)
+    if sbd.is_any_date(x_col):
+        _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
     return _serialize(fig)
 
