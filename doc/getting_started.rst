@@ -5,7 +5,7 @@ The purpose of this guide is to provide an introduction to the functionalities o
 open-source package that aims at bridging the gap between tabular data sources and machine-learning models.
 Please refer to our `installation guidelines <https://skrub-data.org/stable/install.html>`_ for installing ``skrub``.
 
-Much of ``skrub`` revolves around cleaning, assembling, and encoding tabular data, to wrangle data in a format that
+Much of ``skrub`` revolves around vectorizing, assembling, and encoding tabular data, to prepare data in a format that
 machine-learning models understand.
 
 
@@ -86,20 +86,20 @@ particularly useful to summarize information scattered across tables:
 ...     main_key="airportId",
 ...     aux_key="from_airport",
 ...     cols=["total_passengers", "company"],
-...     operations=["mean", "mode"],
+...     operations=["mean", "mode"],  # compute the mode of categorical features and the mean of numerical features
 ... )
 >>> agg_joiner.fit_transform(main)
    airportId  airportName  company_mode  total_passengers_mean
 0          1    Paris CDG            AF              103.33...
 1          2       NY JFK            DL               80.00...
 
-See the dedicated page on `assembling data <https://skrub-data.org/stable/assembling>`_.
+See other ways to join multiple tables on `assembling data <https://skrub-data.org/stable/assembling>`_.
 
 
 Encoding data
 -------------
 
-When a column contains dirty categories, it can be encoded using one of ``skrub``'s encoder, such as
+When a column contains dirty categories, it can be encoded using one of ``skrub``'s encoders, such as
 the :class:`~skrub.GapEncoder`.
 
 The :class:`~skrub.GapEncoder` creates a continuous encoding, based on the activation of latent categories. It
@@ -158,6 +158,9 @@ The other encoders are presented in `encoding <https://skrub-data.org/stable/enc
 
 Next steps
 ----------
+
+We have briefly covered pipeline creation, vectorizing, assembling, and encoding. We presented the main functionalities of ``skrub``,
+but there is much more to it !
 
 Please refer to our `User Guide <https://skrub-data.org/stable/documentation>`_ for a more in-depth presentation of
 ``skrub``'s concepts. You can also check out our `API reference <https://skrub-data.org/stable/api>`_ for the exhaustive
