@@ -15,16 +15,16 @@ Creating a machine-learning pipeline
 :func:`~skrub.tabular_learner`
 
 
-See the dedicated page on creating an `end-to-end pipeline <https://skrub-data.org/stable/end_to_end_pipeline>`_.
-
+For more information about the chosen defaults, visit: `end-to-end pipeline <https://skrub-data.org/stable/end_to_end_pipeline>`_.
+Feel free to try it out on one of our `datasets <https://skrub-data.org/stable/reference/downloading_a_dataset>`_.
 
 Vectorizing data
 ----------------
 
 ``Skrub`` provides the :class:`~skrub.TableVectorizer`, a tool that wrangle a complex dataframe in one line of code.
 
-``Skrub`` is designed to work on pandas and polars dataframes, and will be compatible with more backends in the future !
-As of now, most of our estimators and tranformers are compatible with both and should have the same behavior, regardless of the module !
+``Skrub`` is designed to work on pandas and polars dataframes, and will be compatible with more backends in the future.
+We are working towards making sure our estimators are compatible with both and have the same behavior, regardless of the module !
 
 
 
@@ -32,10 +32,66 @@ Assembling data
 ---------------
 
 ``Skrub`` allows imperfect assembly of data, in the case where columns are dirty and can contain typos. The :class:`~skrub.Joiner`
-allows to fuzzy-join multiple tables, i.e.
+allows to fuzzy-join multiple tables, and each row of a main tablewill be augmented with values from the best match
+in the auxiliary table:
 
-It's also possible to augment data by joining multiple tables
-+ Example with :class:`~skrub.AggJoiner`
+>>> import pandas as pd
+>>> from skrub import Joiner
+>>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
+>>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
+...                            "Capital": ["Berlin", "Paris", "Rome"]} )
+>>> main_table
+  Country
+0  France
+1  Italia
+2   Georgia
+>>> aux_table
+   Country Capital
+0  Germany  Berlin
+1   France   Paris
+2    Italy    Rome
+>>> joiner = Joiner(
+...     aux_table,
+...     key="Country",
+...     suffix="_aux",
+...     max_dist=0.8,  # choose how distant matches can be
+...     add_match_info=False,
+... )
+
+We can now add information about capitals to a table of countries:
+
+>>> joiner.fit_transform(main_table)
+  Country      Country_aux      Capital_aux
+0  France           France            Paris
+1  Italia            Italy             Rome
+2  Georgia              NaN              NaN  # not present in the auxiliary table
+
+It's also possible to augment data by joining and aggregating multiple dataframes with the :class:`~skrub.AggJoiner`. This is
+particularly useful to summarize information scattered across tables:
+
+>>> import pandas as pd
+>>> from skrub import AggJoiner
+>>> main = pd.DataFrame({
+...     "airportId": [1, 2],
+...     "airportName": ["Paris CDG", "NY JFK"],
+... })
+>>> aux = pd.DataFrame({
+...     "flightId": range(1, 7),
+...     "from_airport": [1, 1, 1, 2, 2, 2],
+...     "total_passengers": [90, 120, 100, 70, 80, 90],
+...     "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
+... })
+>>> agg_joiner = AggJoiner(
+...     aux_table=aux,
+...     main_key="airportId",
+...     aux_key="from_airport",
+...     cols=["total_passengers", "company"],
+...     operations=["mean", "mode"],
+... )
+>>> agg_joiner.fit_transform(main)
+   airportId  airportName  company_mode  total_passengers_mean
+0          1    Paris CDG            AF              103.33...
+1          2       NY JFK            DL               80.00...
 
 See the dedicated page on `assembling data <https://skrub-data.org/stable/assembling>`_.
 
