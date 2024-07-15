@@ -12,7 +12,8 @@ machine-learning models understand.
 Creating a machine-learning pipeline
 ------------------------------------
 
-:func:`~skrub.tabular_learner`
+The goal of ``skrub`` is to ease tabular data preparation for machine learning. We provide :func:`~skrub.tabular_learner`,
+a simple yet effective function that transforms a learner into a machine learning pipeline.
 
 
 For more information about the chosen defaults, visit: `end-to-end pipeline <https://skrub-data.org/stable/end_to_end_pipeline>`_.
@@ -156,7 +157,7 @@ The higher the activation, the closer the row to the latent topic. These activat
 7    1
 Name: city, dtype: object
 
-Which corresponds to respective positions of Madrid and Rome in the initial column ! This column can now be understood
+Which corresponds to the respective positions of Madrid and Rome in the initial column ! This column can now be understood
 by a machine-learning model.
 
 The other encoders are presented in `encoding <https://skrub-data.org/stable/encoding>`_.
@@ -165,8 +166,8 @@ The other encoders are presented in `encoding <https://skrub-data.org/stable/enc
 Next steps
 ----------
 
-We have briefly covered pipeline creation, vectorizing, assembling, and encoding. We presented the main functionalities of ``skrub``,
-but there is much more to it !
+We have briefly covered pipeline creation, vectorizing, assembling, and encoding data. We presented the main functionalities of
+``skrub``, but there is much more to it !
 
 Please refer to our `User Guide <https://skrub-data.org/stable/documentation>`_ for a more in-depth presentation of
 ``skrub``'s concepts. You can also check out our `API reference <https://skrub-data.org/stable/api>`_ for the exhaustive
