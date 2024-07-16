@@ -718,8 +718,10 @@ def _to_string_polars(col):
     # anything with them; cast raises an exception.
     # polars emits a performance warning when using map_elements
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        return col.map_elements(str)
+        warnings.filterwarnings(
+            "ignore", category=pl.exceptions.PolarsInefficientMapWarning
+        )
+        return col.map_elements(str, return_dtype=pl.String)
 
 
 @dispatch

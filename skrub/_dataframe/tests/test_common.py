@@ -416,6 +416,11 @@ def test_to_string(df_module):
     assert ns.is_string(s)
 
 
+def test_to_string_polars_object(pl_module):
+    s = pl_module.make_column("", [object()])
+    ns.to_string(s)
+
+
 def test_is_object(df_module):
     if df_module.name == "polars":
         import polars as pl
