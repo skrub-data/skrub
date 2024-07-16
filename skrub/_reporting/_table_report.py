@@ -26,9 +26,10 @@ class TableReport:
         Title for the report.
     column_filters : dict
         A dict for adding custom entries to the column filter dropdown menu.
-        Each key is an id for the filter (e.g. ``"all()"``) and the value is a
+        Each key is an id for the filter (e.g. ``"first_10"``) and the value is a
         mapping with the keys ``display_name`` (the name shown in the menu,
-        e.g. ``"All columns"``) and ``columns`` (a list of column names).
+        e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
+        See the end of the "Examples" section below for details.
 
     Attributes
     ----------
@@ -45,7 +46,7 @@ class TableReport:
     --------
     >>> import pandas as pd
     >>> from skrub import TableReport
-    >>> df = pd.DataFrame(dict(a=[1, 2], b=['one', 'two']))
+    >>> df = pd.DataFrame(dict(a=[1, 2], b=['one', 'two'], c=[11.1, 11.1]))
     >>> report = TableReport(df)
 
     If you are in a Jupyter notebook, to display the report just have it be the
@@ -72,6 +73,22 @@ class TableReport:
 
     >>> report.html_snippet()
     '\n<div id="report_...-wrapper" hidden>\n    <template id="report_...'
+
+    Advanced configuration: you can add custom column filters that will appear
+    in the report's dropdown menu.
+
+    >>> filters = {
+    ...     "at_least_2": {
+    ...         "display_name": "Columns with at least 2 unique values",
+    ...         "columns": ["a", "b"],
+    ...     }
+    ... }
+    >>> report = TableReport(df, column_filters=filters)
+
+    With the code above, in addition to the default filters such as "All
+    columns", "Numeric columns", etc., the added "Columns with at least 2
+    unique values" will be available in the report, selecting columns "a" and
+    "b".
     """
 
     def __init__(self, dataframe, order_by=None, title=None, column_filters=None):
