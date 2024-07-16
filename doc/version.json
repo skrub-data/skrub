@@ -6,6 +6,6 @@
     {
         "version": "stable",
         "url": "https://skrub-data.org/stable/",
-	"preferred"
+	"preferred": true
     }
 ]
