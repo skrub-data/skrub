@@ -1,6 +1,6 @@
 """
-Quick start to skrub
-====================
+Getting Started
+===============
 
 Skrub provides some tools to easily start analyzing and learning from tabular
 data.
