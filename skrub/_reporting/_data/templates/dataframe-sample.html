@@ -1,0 +1,62 @@
+{% set top_bar_id = "{}-top-bar".format(report_id) %}
+{% set top_bar_display_id = "{}-display".format(top_bar_id) %}
+{% set top_bar_select_id = "{}-select".format(top_bar_id) %}
+
+
+<div class="if-else table-sample-toggle" data-predicate="true">
+<article class="wrapper">
+    {% include "top-bar.html" %}
+
+    <div class="horizontal-scroll">
+        <table class="pure-table pure-table-striped dataframe-sample-table"
+               id="sample-table"
+               data-top-bar-id="{{ top_bar_display_id }}"
+               data-report-id="{{ report_id }}">
+            <thead>
+                <tr>
+                    {% for idx in range(summary.head.header.__len__()) %}
+                    {% set column_name = summary.head.header[idx] %}
+
+                    <th class="clickable filterable-column"
+                        data-column-name="{{ column_name }}"
+                        data-column-idx="{{ idx }}"
+                        onclick="displayFirstCellValue(event)">{{ column_name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            {% set table_part = "head" %}
+            {% include "table-part.html" %}
+
+            {% if summary.tail.data %}
+            <tr>
+                {% for column_name in summary.head.header %}
+                <td class="ellided-table-part filterable-column"
+                    data-column-name="{{ column_name }}">⋮</td>
+                {% endfor %}
+            </tr>
+
+            {% set table_part = "tail" %}
+            {% include "table-part.html" %}
+            {% endif %}
+
+        </table>
+    </div>
+
+    <p>
+        <strong>{{ summary.n_rows }}</strong> rows ✕ <strong id="display-n-columns">{{ summary.n_columns }}</strong> columns.
+    </p>
+
+
+        <div class="column-summary-group columns-in-sample-tab">
+            {% set in_sample_tab=True %}
+            {% for column in summary.columns %}
+            {% set col_id="col_{}_in_sample_tab".format(loop.index0) %}
+            {% include "column-summary.html" %}
+            {% endfor %}
+            {% set in_sample_tab=False %}
+    </div>
+</article>
+<div class="text announcement wrapper">
+    {% include "no-filter-matches.html" %}
+</div>
+</div>

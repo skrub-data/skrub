@@ -1,0 +1,27 @@
+<div class="top-bar-toggle if-else" data-predicate="false">
+    <div class="flex flex-wrap wrapper top-bar">
+        <select id="top-bar-mode-select"
+                onchange="getReport(event).updateBarContent('top-bar')"
+                autocomplete="off">
+
+            <option value="table-column-name" data-placeholder="Select a table cell to display its column name">Column name</option>
+            <option value="table-column-name-repr" data-placeholder="Select a table cell to display its column name as a Python expression">Quoted column name</option>
+
+            <option selected value="table-cell-value" data-placeholder="Select a table cell to display its value">Cell display value</option>
+            <option value="table-cell-repr" data-placeholder="Select a table cell to display its value as a Python expression">Cell as Python expression</option>
+            <option value="table-cell-filter" data-placeholder="Select a table cell to display a snippet for filtering the dataframe">Filter df by cell value</option>
+
+        </select>
+
+        <div class="box">
+            <pre id="top-bar" data-selector-id="top-bar-mode-select"></pre>
+            <button class="copybutton" onclick='copyButtonClick(event)' data-target-id="top-bar">📋</button>
+        </div>
+
+    </div>
+    <div class="flex">
+    <div class="announcement text important-note" id="{{ top_bar_id }}-placeholder">
+        Click on a table cell below to display more information about its column.
+    </div>
+    </div>
+</div>

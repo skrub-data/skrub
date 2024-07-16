@@ -95,11 +95,10 @@ def test_to_numpy(df_module, example_data_dict):
     assert_array_equal(array[2:], np.asarray(example_data_dict["str-col"])[2:])
 
 
-def test_to_pandas(df_module, all_dataframe_modules):
+def test_to_pandas(df_module, pd_module):
     with pytest.raises(NotImplementedError):
         ns.to_pandas(np.arange(3))
 
-    pd_module = all_dataframe_modules["pandas-numpy-dtypes"]
     if df_module.name == "pandas":
         assert ns.to_pandas(df_module.example_dataframe) is df_module.example_dataframe
         assert ns.to_pandas(df_module.example_column) is df_module.example_column
@@ -287,14 +286,16 @@ def test_copy_index(source_is_df, target_is_df):
     assert source.index.tolist() == [10, 20, 30]
 
 
-def test_copy_index_non_pandas(all_dataframe_modules):
-    a = all_dataframe_modules["pandas-numpy-dtypes"].example_column
+def test_copy_index_list(pd_module):
+    a = pd_module.example_column
     b = []
     assert ns.copy_index(a, b) is b
     assert ns.copy_index(b, a) is a
-    if "polars" not in all_dataframe_modules:
-        pytest.skip(reason="polars not installed")
-    b = all_dataframe_modules["polars"].example_column
+
+
+def test_copy_index_polars(pd_module, pl_module):
+    a = pd_module.example_column
+    b = pl_module.example_column
     assert ns.copy_index(a, b) is b
     assert ns.copy_index(b, a) is a
 
@@ -415,6 +416,11 @@ def test_to_string(df_module):
     assert ns.is_string(s)
 
 
+def test_to_string_polars_object(pl_module):
+    s = pl_module.make_column("", [object()])
+    ns.to_string(s)
+
+
 def test_is_object(df_module):
     if df_module.name == "polars":
         import polars as pl
@@ -531,6 +537,84 @@ def test_all(values, expected, df_module):
 def test_any(values, expected, df_module):
     s = df_module.make_column("", values)
     assert ns.any(s) == expected
+
+
+def test_sum(df_module):
+    assert ns.sum(df_module.example_column) == np.nansum(
+        ns.to_numpy(df_module.example_column)
+    )
+
+
+def test_min(df_module):
+    assert ns.min(df_module.example_column) == np.nanmin(
+        ns.to_numpy(df_module.example_column)
+    )
+
+
+def test_max(df_module):
+    assert ns.max(df_module.example_column) == np.nanmax(
+        ns.to_numpy(df_module.example_column)
+    )
+
+
+def test_std(df_module):
+    assert ns.std(df_module.example_column) == np.nanstd(
+        ns.to_numpy(df_module.example_column), ddof=1
+    )
+
+
+def test_mean(df_module):
+    assert ns.mean(df_module.example_column) == np.nanmean(
+        ns.to_numpy(df_module.example_column)
+    )
+
+
+@pytest.mark.parametrize(
+    "descending, expected_vals",
+    [
+        (False, [3, 1, 4, 2]),
+        (True, [4, 1, 3, 2]),
+    ],
+)
+def test_sort(df_module, descending, expected_vals):
+    df = df_module.make_dataframe({"a": [2.0, None, 1.0, 3.0], "b": [1, 2, 3, 4]})
+    sorted_b = ns.col(ns.sort(df, by="a", descending=descending), "b")
+    expected_b = df_module.make_column("b", expected_vals)
+    df_module.assert_column_equal(sorted_b, expected_b)
+
+
+def test_value_counts(df_module):
+    col = df_module.make_column("x", ["a", "b", "a", None, None, "a"])
+    counts = ns.value_counts(col)
+    counts = ns.sort(counts, by="value")
+    expected = df_module.make_dataframe({"value": ["a", "b"], "count": [3, 1]})
+    expected = ns.sort(expected, by="value")
+    df_module.assert_frame_equal(counts, expected)
+
+
+@pytest.mark.parametrize("q", [0.0, 0.3, 1.0])
+@pytest.mark.parametrize(
+    "interpolation", ["nearest", "higher", "lower", "midpoint", "linear"]
+)
+def test_quantile(df_module, q, interpolation):
+    rng = np.random.default_rng(0)
+    x = rng.normal(size=100)
+    x[::10] = np.nan
+    col = df_module.make_column("x", x)
+    assert ns.quantile(col, q, interpolation=interpolation) == np.nanquantile(
+        x, q, method=interpolation
+    )
+
+
+@pytest.mark.parametrize("obj", ["column", "dataframe"])
+@pytest.mark.parametrize("s", [(1, 1), (0, 3), (-1, None), (None, 3), (None, None)])
+def test_slice(df_module, obj, s):
+    out = ns.slice(getattr(df_module, f"example_{obj}"), *s)
+    if obj == "dataframe":
+        out = ns.col(out, "float-col")
+    out = ns.to_numpy(out)
+    expected = ns.to_numpy(df_module.example_column)[slice(*s)]
+    assert_array_equal(out, expected)
 
 
 def test_is_null(df_module):

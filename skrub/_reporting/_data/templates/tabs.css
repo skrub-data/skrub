@@ -1,0 +1,60 @@
+/* The report's tabs (sample, column summaries, column similarities) */
+/* ----------------------------------------------------------------- */
+
+/* The buttons that allow selecting the tab */
+/* ---------------------------------------- */
+
+.tabset-buttons {
+    display: flex;
+    column-gap: var(--tiny);
+    padding-left: var(--tiny);
+    padding-right: var(--tiny);
+}
+
+.tabset-buttons button {
+    border: none;
+    padding: var(--tiny);
+    font-size: var(--small);
+    background-color: var(--lightg);
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.tabset-buttons button:hover {
+    background-color: var(--mediumg);
+}
+
+
+.tabset-buttons button[data-is-selected] {
+    border-top: 1px solid var(--darkg);
+    border-left: 1px solid var(--darkg);
+    border-right: 1px solid var(--darkg);
+    border-bottom: 1px solid white;
+    margin-bottom: -1px;
+    background-color: white;
+}
+
+/* When a tab contains critical content we highlight the corresponding button so */
+/* the user is more likely to click on it. ATM this is just used for the */
+/* associations tab when some columns are very strongly associated. */
+
+.tabset-buttons button[data-has-warning] {
+    color: red;
+}
+
+.tabset-buttons button[data-has-warning]::before {
+    content: "⚠️ ";
+}
+
+
+/* The tabs themselves (the main content) */
+/* -------------------------------------- */
+
+.tab {
+    display: none;
+}
+
+.tab[data-is-displayed] {
+    display: block;
+    border-top: 1px solid var(--darkg);
+    padding-top: var(--tiny);
+}

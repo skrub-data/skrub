@@ -1,0 +1,178 @@
+/* The column summary cards */
+/* ------------------------ */
+
+/* Collection of column summary cards (as shown in the "columns" tab) */
+/* ------------------------------------------------------------------ */
+
+.column-summary-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--small);
+    padding-block-start: var(--tiny);
+    padding-block-end: var(--tiny);
+    padding-inline-end: var(--small);
+    min-width: min-content;
+    max-width: max-content;
+}
+
+.column-summary-group > .card {
+    margin: 0;
+}
+
+/* On small screens, the cards are on top of each other and all have the
+   same width. On wide screens, the cards can be next to
+   each other and wrap horizontally. */
+
+@media screen and (min-width: 60rem) {
+    .column-summary-group {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--small);
+    }
+
+}
+
+/* Hide the cards of constant columns when the corresponding box is checked */
+
+#collapse-const-cols-check:checked ~ * .constant-column {
+    display: none;
+}
+
+/* Hide the card that aggregates info for all constant columns when the "collapse */
+/* constant columns" box is unchecked. */
+
+#collapse-const-cols-check:not(:checked) ~ * .constant-columns-summary{
+    display: none;
+}
+
+
+/* Hide cards of columns that do not match the filter (eg "all()", "numeric()", ...) */
+
+.filterable-column[data-is-excluded-by-filter] {
+    display: none;
+}
+
+/* Also hide filtered columns that appear in the constant columns summary card */
+
+.constant-columns-summary:not(:has(dt:not([data-is-excluded-by-filter]))){
+    display: none;
+}
+
+
+/* Individual column summary cards */
+/* ------------------------------- */
+
+.card {
+    padding: 0;
+    margin: 0.75rem;
+    border-radius: var(--radius);
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, .2), 0px 4px 10px 0px rgba(0, 0, 0, .2);
+    min-width: min-content;
+}
+
+.card-header {
+    border-radius: var(--radius) var(--radius) 0 0;
+
+    display: flex;
+    flex-wrap: wrap;
+
+    padding: var(--tiny);
+    margin-block-end: var(--tiny);
+    background-color: var(--header-color, var(--lightg));
+    border-block-end: 1px solid var(--mediumg);
+    --checkbox-margin: var(--tiny);
+}
+
+.card-header > * {
+    margin-block-start: 0;
+    margin-block-end: 0;
+    font-size: var(--large);
+}
+
+/* Used to float the dtype to the end of the header */
+
+.float-end {
+    margin-inline-start: auto;
+    padding-inline-start: var(--tiny);
+}
+
+.column-summary-content {
+    display: flex;
+    flex-direction: column;
+}
+
+/* The "constant columns" card has a similar aspect to the other ones but a */
+/* different color because it does not correspond to an actual column. */
+
+.pseudocolumn {
+    --header-color: #ffffff;
+}
+
+/* Grid of copy-pasteable boxes for a column's most frequent values */
+
+.copybutton-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tiny);
+    padding-block-start: var(--tiny);
+    padding-block-end: var(--tiny);
+}
+
+
+.grid-separator {
+    grid-column: 1/-1;
+    justify-self: left;
+}
+
+.select-displayed-siblings ~ [data-option-value]:not([data-is-selected]) {
+    display: none;
+}
+
+
+/* Aspects specific to the single card shown in the dataframe sample tab */
+/* --------------------------------------------------------------------- */
+
+/* Hide all columns except the one that is active in the table */
+
+.column-summary-group.columns-in-sample-tab > .column-summary:not([data-is-selected-in-table]) {
+    display: none;
+}
+
+/* The header has the same color as the selected cells in the table */
+
+.columns-in-sample-tab .card-header {
+    background-color: var(--darkgreen);
+    border-block-end: 1px solid var(--verydarkgreen);
+}
+
+/* Button for closing the card / deselecting the column in the table */
+
+.relative-pos {
+    position: relative;
+}
+
+.card .close-card-button {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: -1rem;
+    right: -1rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: 1rem;
+    background: var(--darkgreen);
+    border: 1px solid var(--verydarkgreen);
+}
+
+.card:hover .close-card-button {
+    display: flex;
+}
+
+.card .close-card-button:hover {
+    display: flex;
+    background: var(--verydarkgreen);
+}
