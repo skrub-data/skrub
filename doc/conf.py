@@ -210,6 +210,7 @@ html_theme_options = {
         "json_url": "https://raw.githubusercontent.com/GaelVaroquaux/skrub/version_selector_doc/doc/version.json",
         "version_match": release,
     },
+    "show_version_warning_banner": True,
 }
 
 # Additional templates that should be rendered to pages, maps page names to
