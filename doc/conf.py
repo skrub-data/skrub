@@ -191,14 +191,14 @@ html_theme_options = {
     "show_toc_level": 1,
     # "navbar_align": [left, content, right] to test that navbar items align properly
     "navbar_align": "left",
-    "navbar_center": ["version-switcher", "navbar-nav"],
-    # "navbar_center": ["navbar-nav"],
+    # "navbar_center": ["version-switcher", "navbar-nav"],
+    "navbar_center": ["navbar-nav"],
     "announcement": (
         "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html"
     ),
     # "show_nav_level": 2,
     # "navbar_start": ["navbar-logo"],
-    # "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     # "navbar_persistent": ["search-button"],
     # "primary_sidebar_end": ["custom-template.html", "sidebar-ethical-ads.html"],
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
