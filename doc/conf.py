@@ -206,7 +206,7 @@ html_theme_options = {
     # "footer_start": ["test.html", "test.html"],
     # "secondary_sidebar_items": ["index.html"],  # Remove the source buttons
     "switcher": {
-        #"json_url": "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/version.json",
+        # "json_url": "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/version.json",
         "json_url": "https://raw.githubusercontent.com/GaelVaroquaux/skrub/version_selector_doc/doc/version.json",
         "version_match": release,
     },
