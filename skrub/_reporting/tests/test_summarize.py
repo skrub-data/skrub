@@ -16,6 +16,7 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
         air_quality, with_plots=with_plots, order_by=order_by, title="the title"
     )
     assert summary["title"] == "the title"
+    assert not summary["dataframe_is_empty"]
     assert summary["n_columns"] == 11
     assert summary["n_constant_columns"] == 4
     assert summary["n_rows"] == 17
@@ -153,3 +154,17 @@ def test_all_null(df_module):
     summary = summarize_dataframe(df, with_plots=True)
     for col in summary["columns"]:
         assert col["null_proportion"] == 1.0
+
+
+def test_empty_df(df_module):
+    assert summarize_dataframe(df_module.empty_dataframe)["dataframe_is_empty"]
+
+
+@pytest.mark.parametrize(
+    "df_size, expected_tail_len",
+    [(11, 5), (10, 5), (9, 4), (7, 2), (6, 1), (5, 0), (4, 0), (1, 0), (0, 0)],
+)
+def test_small_df(df_module, df_size, expected_tail_len):
+    df = df_module.make_dataframe(dict(a=[10.5] * df_size))
+    summary = summarize_dataframe(df)
+    assert len(summary["tail"]["data"]) == expected_tail_len

@@ -33,16 +33,22 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
     dict
         A dictionary containing the extracted information.
     """
-    shape = sbd.shape(df)
+    n_rows, n_columns = sbd.shape(df)
+    tail_size = max(0, min(5, n_rows - 5))
+    if tail_size:
+        tail = _utils.to_row_list(sbd.slice(df, -tail_size, None))
+    else:
+        tail = _utils.to_row_list(sbd.slice(df, n_rows, None))
     summary = {
         "dataframe": df,
         "dataframe_module": sbd.dataframe_module_name(df),
-        "n_rows": shape[0],
-        "n_columns": shape[1],
+        "n_rows": n_rows,
+        "n_columns": n_columns,
         "columns": [],
         "head": _utils.to_row_list(sbd.slice(df, 5)),
-        "tail": _utils.to_row_list(sbd.slice(df, -5, None)),
-        "first_row_dict": _utils.first_row_dict(df),
+        "tail": tail,
+        "first_row_dict": _utils.first_row_dict(df) if n_rows else {},
+        "dataframe_is_empty": not n_rows or not n_columns,
     }
     if title is not None:
         summary["title"] = title
@@ -62,7 +68,10 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
-    _add_interactions(df, summary)
+    if n_rows and n_columns:
+        _add_interactions(df, summary)
+    else:
+        summary["top_associations"] = []
     return summary
 
 
@@ -107,7 +116,7 @@ def _summarize_column(
 def _add_nulls_summary(summary, column, dataframe_summary):
     null_count = sbd.sum(sbd.is_null(column))
     summary["null_count"] = null_count
-    null_proportion = null_count / dataframe_summary["n_rows"]
+    null_proportion = null_count / max(1, dataframe_summary["n_rows"])
     summary["null_proportion"] = null_proportion
     if summary["null_proportion"] == 0.0:
         summary["nulls_level"] = "ok"
@@ -126,7 +135,7 @@ def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
     assert n_unique > 0
 
     summary["n_unique"] = n_unique
-    summary["unique_proportion"] = n_unique / dataframe_summary["n_rows"]
+    summary["unique_proportion"] = n_unique / max(1, dataframe_summary["n_rows"])
     summary["high_cardinality"] = n_unique >= _HIGH_CARDINALITY_THRESHOLD
     summary["value_counts"] = value_counts
 

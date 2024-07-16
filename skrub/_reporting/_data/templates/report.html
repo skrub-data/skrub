@@ -10,12 +10,12 @@
                 {% endif %}
             </div>
 
-            {% if summary.n_rows > 0 and summary.n_columns > 0 %}
-            {% include "tab-set.html" %}
-            {% else %}
+            {% if summary.dataframe_is_empty  %}
             <div class="text announcement wrapper">
                 The dataframe is empty.
             </div>
+            {% else %}
+            {% include "tab-set.html" %}
             {% endif %}
         </div>
     </template>

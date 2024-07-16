@@ -26,6 +26,8 @@
             </thead>
             {% set table_part = "head" %}
             {% include "table-part.html" %}
+
+            {% if summary.tail.data %}
             <tr>
                 {% for column_name in summary.head.header %}
                 <td class="ellided-table-part filterable-column"
@@ -35,6 +37,7 @@
 
             {% set table_part = "tail" %}
             {% include "table-part.html" %}
+            {% endif %}
 
         </table>
     </div>
