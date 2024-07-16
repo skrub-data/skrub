@@ -205,10 +205,10 @@ html_theme_options = {
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "footer_start": ["test.html", "test.html"],
     # "secondary_sidebar_items": ["index.html"],  # Remove the source buttons
-    # "switcher": {
-    #     "json_url": json_url,
-    #     "version_match": version_match,
-    # },
+    "switcher": {
+        "json_url": "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/versions.json",
+        "version_match": release,
+    },
 }
 
 # Additional templates that should be rendered to pages, maps page names to

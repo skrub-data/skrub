@@ -1,0 +1,10 @@
+[
+    {
+        "version": "dev",
+        "url": "https://skrub-data/dev/"
+    },
+    {
+        "version": "stable",
+        "url": "https://skrub-data/stable/"
+    }
+]
