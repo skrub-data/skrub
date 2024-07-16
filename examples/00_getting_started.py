@@ -182,7 +182,7 @@ X = pd.Series(
 enc.fit(X)
 
 # %%
-# The GapEncoder has found the following two topics:
+# The :class:`~skrub.GapEncoder` has found the following two topics:
 
 # %%
 enc.get_feature_names_out()
