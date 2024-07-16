@@ -208,7 +208,7 @@ html_theme_options = {
     "switcher": {
         # "json_url": "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/version.json",
         "json_url": "https://raw.githubusercontent.com/GaelVaroquaux/skrub/version_selector_doc/doc/version.json",
-        "version_match": release,
+        "version_match": "dev",
     },
     "show_version_warning_banner": True,
 }
