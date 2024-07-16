@@ -438,6 +438,7 @@ sphinx_gallery_conf = {
         "dependencies": "./binder/requirements.txt",
         "use_jupyter_lab": True,
     },
+    "default_thumb_file": "./_static/skrub.svg",
 }
 if with_jupyterlite:
     sphinx_gallery_conf["jupyterlite"] = {
