@@ -191,8 +191,8 @@ html_theme_options = {
     "show_toc_level": 1,
     # "navbar_align": [left, content, right] to test that navbar items align properly
     "navbar_align": "left",
-    # "navbar_center": ["version-switcher", "navbar-nav"],
-    "navbar_center": ["navbar-nav"],
+    "navbar_center": ["version-switcher", "navbar-nav"],
+    # "navbar_center": ["navbar-nav"],
     "announcement": (
         "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html"
     ),
