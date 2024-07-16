@@ -268,11 +268,9 @@ class NumpyOutput(BaseEstimator):
         return np.ones(sbd.shape(X))
 
 
-def test_wrong_transformer_output_type(all_dataframe_modules):
+def test_wrong_transformer_output_type(pd_module):
     with pytest.raises(TypeError, match=".*fit_transform returned a result of type"):
-        OnEachColumn(NumpyOutput()).fit_transform(
-            all_dataframe_modules["pandas-numpy-dtypes"].example_dataframe
-        )
+        OnEachColumn(NumpyOutput()).fit_transform(pd_module.example_dataframe)
 
 
 def test_set_output_failure(df_module):

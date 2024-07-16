@@ -1,0 +1,41 @@
+<article class="flex-reverse wrapper wrapper-vert-l gap-l">
+    {% if summary["top_associations"] %}
+
+    <div class="horizontal-scroll">
+    <table class="pure-table">
+        <thead>
+            <tr>
+                <th>Column 1</th>
+                <th>Column 2</th>
+                <th><a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for association in summary["top_associations"] %}
+            <tr>
+                <td>{{ association["left_column"] }}</td>
+                <td>{{ association["right_column"] }}</td>
+                <td
+                    {% if association["cramer_v"] is gt column_similarity_threshold %}
+                    class="critical"
+                    {%- endif -%}
+                    >
+                    {{ association["cramer_v"] | format_number }}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+    <div class="text shrinkable-text">
+        The table below shows the strength of association between the most similar columns in the dataframe.
+        <a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a> statistic is a number between 0 and 1.
+        When it is close to 1 the columns are strongly associated — they contain similar information.
+        In this case, one of them may be redundant and for some models (such as linear models) it might be beneficial to remove it.
+    </div>
+
+    {% else %}
+    No strong associations between any pair of columns were identified by a quick screening of a subsample of the dataframe.
+    {% endif %}
+</article>

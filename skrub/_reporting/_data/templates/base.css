@@ -1,0 +1,262 @@
+/* Default styles for html elements */
+/* -------------------------------- */
+
+:host {
+    --micro: 0.25rem;
+    --tiny: 0.5rem;
+    --small: 1.0rem;
+    --large: 1.2rem;
+    --huge: 1.5rem;
+    --max-content-width: 45rem;
+    --radius: 0.25rem;
+
+    --yellowish: #ffffaa;
+
+    --lightgreen: #eafaea;
+    --mediumgreen: #d6f5d6;
+    --darkgreen: 	#c1f0c1;
+    --verydarkgreen: #84e184;
+
+    --darkg: #555555;
+    --mediumg: #d0d0d0;
+    --lightg: #f0f0f0;
+
+    /* the font stack is copied from github */
+    --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+    --fontStack-sansSerif: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+:host {
+    font-family: var(--fontStack-sansSerif);
+    line-height: 1.15;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* The report is in a shadow DOM so outside selectors don't reach it but properties */
+/* can still be inherited from a parent element. We make sure it has black text on */
+/* a white background otherwise eg a dark mode in the page could make parts of it */
+/* unreadable. */
+
+#report {
+    background: white;
+    color: black;
+    color-scheme: light;
+    border-radius: var(--radius, 0);
+    overflow: hidden;
+}
+
+:is(select, summary, button) {
+    cursor: pointer;
+}
+
+summary > * {
+    display: inline;
+}
+
+p {
+    margin-block-start: var(--tiny);
+    margin-block-end: var(--tiny);
+}
+
+code {
+    overflow-wrap: anywhere;
+}
+
+pre {
+    margin: 0;
+}
+
+code, pre {
+    font-family: var(--fontStack-monospace);
+}
+
+:is(td, th) {
+    padding: var(--tiny);
+    white-space: nowrap;
+}
+
+/* Align the items of definition lists, used to show the columns metadata (number */
+/* of null values, mean, etc) */
+
+dl {
+    display: grid;
+    grid-template-columns: max-content auto;
+    column-gap: var(--tiny);
+    margin: 0;
+}
+
+dt {
+    grid-column-start: 1;
+    font-weight: bold;
+    justify-self: end;
+}
+
+dt::after {
+    content: ":";
+}
+
+dd {
+    grid-column-start: 2;
+    justify-self: start;
+    margin: 0;
+}
+
+/* Generic utility classes */
+/* ----------------------- */
+
+
+.margin-r-s {
+    margin-inline-end: var(--small);
+}
+
+.margin-r-t {
+    margin-inline-end: var(--tiny);
+}
+
+.margin-v-t {
+    margin-block-start: var(--tiny);
+    margin-block-end: var(--tiny);
+}
+
+.horizontal-scroll {
+    overflow-x: auto;
+}
+
+.select-all {
+    user-select: all;
+}
+
+.select-none {
+    user-select: none;
+}
+
+.wrapper {
+    padding-inline-start: var(--small);
+    padding-inline-end: var(--small);
+    padding-block-end: var(--tiny);
+}
+
+.wrapper-vert {
+    padding-block-end: var(--tiny);
+}
+
+.wrapper-vert-l {
+    padding-block-start: var(--large);
+    padding-block-end: var(--huge);
+}
+
+.text {
+    max-width: var(--max-content-width);
+}
+
+.shrink {
+    display: flex;
+}
+
+.shrink > * {
+    width: 0;
+    flex-grow: 1;
+}
+
+.shrinkable-text {
+    flex-basis: 20rem;
+    flex-grow: 1;
+}
+
+.flex {
+    display: flex;
+    gap: var(--tiny);
+    align-items: center;
+}
+
+.gap-l {
+    gap: var(--large);
+}
+
+.flex-reverse {
+    display: flex;
+    flex-wrap: wrap-reverse;
+}
+
+.space-between {
+    justify-content: space-between;
+    max-width: 125ch;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+    padding-block-start: var(--tiny);
+    padding-block-end: var(--tiny);
+}
+
+.flex-wrap > * {
+    margin: 0;
+}
+
+#report .ellided {
+    max-width: 100ch;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#report .ellided-short {
+    max-width: 30ch;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+:is(.ok, .warning, .critical) {
+    font-weight: bold;
+}
+
+.ok {
+    color: green;
+}
+
+.warning {
+    color: #ff6600;
+}
+
+.critical {
+    color: red;
+}
+
+/* .if-else provides a group of 2 elements that we can toggle to decide which is shown. */
+/* Used for example to show columns OR a message saying that none match the filter */
+
+.if-else[data-predicate="false"] > :first-child{
+    display: none;
+}
+
+.if-else[data-predicate="true"] > :last-child{
+    display: none;
+}
+
+/* Misc tweaks */
+/* ----------- */
+
+
+.report-header {
+    --max-content-width: 100rem;
+    font-size: var(--large);
+}
+
+.announcement  {
+    font-size: var(--large);
+    padding-block-start: var(--huge);
+    padding-block-end: var(--huge);
+}
+
+.important-note {
+    background-color: var(--lightgreen);
+    padding: var(--small);
+    border-radius: var(--radius);
+    margin-top: var(--tiny);
+    margin-bottom: var(--small);
+}

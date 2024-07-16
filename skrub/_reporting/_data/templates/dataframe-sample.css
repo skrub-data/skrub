@@ -1,0 +1,39 @@
+/* The table showing the first few and last rows of the dataframe */
+/* -------------------------------------------------------------- */
+
+/* The column containing the selected cell has green stripes. */
+/* The rest of the table has gray stripes added by pure.css */
+
+th[data-is-in-selected-column] {
+    background-color: var(--darkgreen);
+}
+
+tr:nth-child(2n -1) .table-cell[data-is-in-selected-column] {
+    background-color: var(--mediumgreen);
+}
+
+.table-cell[data-is-in-selected-column] {
+    background-color: var(--lightgreen);
+}
+
+tr:nth-child(2n -1) .table-cell[data-is-selected] {
+    background-color: var(--yellowish);
+    border: 1px solid black;
+}
+
+/* The selected cell itself is yellow */
+
+.table-cell[data-is-selected] {
+    background-color: var(--yellowish);
+    border: 1px solid black;
+}
+
+/* The gap separating the head and the tail of the table */
+
+#report .ellided-table-part {
+    border: 1px solid white;
+    text-align: center;
+    border-top: 0;
+    border-bottom: 0;
+    background: inherit;
+}

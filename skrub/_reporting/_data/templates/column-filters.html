@@ -1,0 +1,12 @@
+
+<div class="wrapper">
+    <label for="col-filter-select">Show: </label>
+    <select id="col-filter-select" class="col-filter-select"
+        onchange='getReport(event).onFilterChange()'
+        data-report-id="{{ report_id }}" autocomplete="off">
+        {% for filter_name in column_filters %}
+        <option value="{{ filter_name }}" {{ "selected" if filter_name == "all()" }}>
+            {{ column_filters[filter_name]["display_name"] }}</option>
+        {% endfor %}
+    </select>
+</div>

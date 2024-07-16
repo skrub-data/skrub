@@ -1,0 +1,48 @@
+<div id="{{ report_id }}-wrapper" hidden>
+    <template id="{{ report_id }}-template">
+        <style>
+         {% include "skrub-report.css" %}
+        </style>
+        <div id="report">
+            <div class="report-header wrapper text">
+                {% if summary.title %}
+                <h1>{{ summary.title }}</h1>
+                {% endif %}
+            </div>
+
+            {% if summary.dataframe_is_empty  %}
+            <div class="text announcement wrapper">
+                The dataframe is empty.
+            </div>
+            {% else %}
+            {% include "tab-set.html" %}
+            {% endif %}
+        </div>
+    </template>
+
+    <skrub-table-report class="report" id="{{ report_id }}">
+    </skrub-table-report>
+
+    <script>
+     {% include "skrub-report.js" %}
+    </script>
+    <script>
+     window['columnFiltersForReport{{ report_id }}'] = JSON.parse(atob('{{ base64_column_filters | safe }}'));
+     setTimeout(() => {initReport("{{ report_id }}");});
+    </script>
+</div>
+
+<div id="{{ report_id }}-wrapper-fallback">
+    <h2>Please enable javascript</h2>
+    <p>
+        The skrub table reports need javascript to display correctly. If you are
+        displaying a report in a Jupyter notebook and you see this message, you may need to
+        re-execute the cell or to trust the notebook (button on the top right or
+        "File > Trust notebook").
+    </p>
+</div>
+
+<script>
+ document.getElementById("{{ report_id }}-wrapper").removeAttribute("hidden");
+ document.getElementById("{{ report_id }}-wrapper-fallback").setAttribute("hidden", "");
+</script>
