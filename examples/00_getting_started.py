@@ -33,7 +33,8 @@ employees_df, salaries = dataset.X, dataset.y
 # Generating an interactive report for a dataframe
 # -------------------------------------------------
 #
-# To quickly get an overview of a dataframe's contents, use the :class:`~skrub.TableReport`.
+# To quickly get an overview of a dataframe's contents, use the
+# :class:`~skrub.TableReport`.
 
 # %%
 from skrub import TableReport
@@ -79,21 +80,25 @@ results["test_score"]
 #
 # The :class:`~skrub.Joiner` allows to fuzzy-join multiple tables, and each row of
 # a main table will be augmented with values from the best match in the auxiliary table.
-# You can control how distant fuzzy-matches are allowed to be with the ``max_dist`` parameter.
+# You can control how distant fuzzy-matches are allowed to be with the
+# ``max_dist`` parameter.
 
 # %%
 # In the following, we add information about capitals to a table of countries:
 
 # %%
 import pandas as pd
+
 from skrub import Joiner
+
 main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
 # notice the "Italy" instead of "Italia"
-aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
-                           "Capital": ["Berlin", "Paris", "Rome"]} )
+aux_table = pd.DataFrame(
+    {"Country": ["Germany", "France", "Italy"], "Capital": ["Berlin", "Paris", "Rome"]}
+)
 joiner = Joiner(
     aux_table,
-    key="Country",  # here both tables have the same key. You can also use left_key and right_key
+    key="Country",
     suffix="_aux",
     max_dist=0.8,
     add_match_info=False,
@@ -105,21 +110,26 @@ joiner.fit_transform(main_table)
 # since it's not present in the auxiliary table.
 #
 # It's also possible to augment data by joining and aggregating multiple
-# dataframes with the :class:`~skrub.AggJoiner`. This is particularly useful to summarize
-# information scattered across tables:
+# dataframes with the :class:`~skrub.AggJoiner`. This is particularly useful to
+# summarize information scattered across tables:
 
 # %%
 from skrub import AggJoiner
-main = pd.DataFrame({
-    "airportId": [1, 2],
-    "airportName": ["Paris CDG", "NY JFK"],
-})
-aux = pd.DataFrame({
-    "flightId": range(1, 7),
-    "from_airport": [1, 1, 1, 2, 2, 2],
-    "total_passengers": [90, 120, 100, 70, 80, 90],
-    "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
-})
+
+main = pd.DataFrame(
+    {
+        "airportId": [1, 2],
+        "airportName": ["Paris CDG", "NY JFK"],
+    }
+)
+aux = pd.DataFrame(
+    {
+        "flightId": range(1, 7),
+        "from_airport": [1, 1, 1, 2, 2, 2],
+        "total_passengers": [90, 120, 100, 70, 80, 90],
+        "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
+    }
+)
 agg_joiner = AggJoiner(
     aux_table=aux,
     main_key="airportId",
@@ -153,10 +163,22 @@ agg_joiner.fit_transform(main)
 
 # %%
 from skrub import GapEncoder
+
 enc = GapEncoder(n_components=2, random_state=0)  # 2 topics in the data
 
-X = pd.Series(["Rome, Italy", "Rome", "Roma, Italia", "Madrid, SP",
-                "Madrid, spain", "Madrid", "Romq", "Rome, It"], name="city")
+X = pd.Series(
+    [
+        "Rome, Italy",
+        "Rome",
+        "Roma, Italia",
+        "Madrid, SP",
+        "Madrid, spain",
+        "Madrid",
+        "Romq",
+        "Rome, It",
+    ],
+    name="city",
+)
 enc.fit(X)
 
 # %%
@@ -180,7 +202,7 @@ out
 # city is Madrid, and 1 if the city is Rome:
 
 # %%
-madrid = out.iloc[:,0] > out.iloc[:,1]
+madrid = out.iloc[:, 0] > out.iloc[:, 1]
 X[madrid] = 0
 X[~madrid] = 1
 X
@@ -197,7 +219,8 @@ X
 # ----------
 #
 # We have briefly covered pipeline creation, vectorizing, assembling, and encoding
-# data. We presented the main functionalities of ``skrub``, but there is much more to it !
+# data. We presented the main functionalities of ``skrub``, but there is much
+# more to it !
 #
 # Please refer to our `User Guide <https://skrub-data.org/stable/documentation>`_
 # for a more in-depth presentation of ``skrub``'s concepts. You can also check out
