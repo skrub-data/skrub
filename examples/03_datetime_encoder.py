@@ -109,7 +109,7 @@ pprint(table_vec.get_feature_names_out())
 # If we want to customize the |DatetimeEncoder| inside the |TableVectorizer|,
 # we can replace its default parameter with a new, custom instance:
 #
-# Here, for example, we want it to extract the day of the week.
+# Here, for example, we want it to extract the day of the week:
 
 table_vec_wd = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True)).fit(X)
 pprint(table_vec_wd.get_feature_names_out())
