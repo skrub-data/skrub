@@ -1,0 +1,11 @@
+[
+    {
+        "version": "dev",
+        "url": "https://skrub-data.org/dev/"
+    },
+    {
+        "version": "stable",
+        "url": "https://skrub-data.org/stable/",
+	"preferred": true
+    }
+]

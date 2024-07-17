@@ -198,17 +198,20 @@ html_theme_options = {
     ),
     # "show_nav_level": 2,
     # "navbar_start": ["navbar-logo"],
-    # "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     # "navbar_persistent": ["search-button"],
     # "primary_sidebar_end": ["custom-template.html", "sidebar-ethical-ads.html"],
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "footer_start": ["test.html", "test.html"],
     # "secondary_sidebar_items": ["index.html"],  # Remove the source buttons
-    # "switcher": {
-    #     "json_url": json_url,
-    #     "version_match": version_match,
-    # },
+    "switcher": {
+        "json_url": (
+            "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/version.json"
+        ),
+        "version_match": "dev",
+    },
+    "show_version_warning_banner": True,
 }
 
 # Additional templates that should be rendered to pages, maps page names to
