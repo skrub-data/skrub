@@ -130,7 +130,7 @@ pprint(table_vec_wd.transformers_)
 # For prediction tasks, we recommend using the |TableVectorizer| inside a
 # pipeline, combined with a model that can use the features extracted by the
 # |DatetimeEncoder|.
-# Here's we'll use a |HGBR| as our learner.
+# Here we'll use a |HGBR| as our learner.
 #
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
