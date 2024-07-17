@@ -242,7 +242,7 @@ plt.show()
 
 # %%
 # We can see that the hour of the day, the temperature and the humidity
-# are the most important feature, which seems reasonable.
+# are the most important features, which seems reasonable.
 #
 # Conclusion
 # ----------
