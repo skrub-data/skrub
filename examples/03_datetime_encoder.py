@@ -35,8 +35,8 @@ It is used by default in the |TableVectorizer|.
 .. |HGBR| replace::
     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 
-.. |to_datetime| replace::
-    :func:`~skrub.to_datetime`
+.. |ToDatetime| replace::
+    :class:`~skrub.ToDatetime`
 """
 
 
@@ -107,7 +107,7 @@ pprint(table_vec.get_feature_names_out())
 
 ###############################################################################
 # If we want to customize the |DatetimeEncoder| inside the |TableVectorizer|,
-# we can replace its default parameter with a new, custom instance:
+# we can replace its default parameter with a new, custom instance.
 #
 # Here, for example, we want it to extract the day of the week:
 
@@ -162,8 +162,8 @@ cross_val_score(
 # Plotting the prediction
 # .......................
 #
-# The mean squared error is not obvious to interpret, so we compare
-# visually the prediction of our model with the actual values.
+# The mean squared error is not obvious to interpret, so we visually
+# compare the prediction of our model with the actual values.
 # To do so, we will divide our dataset into a train and a test set:
 # we use 2011 data to predict what happened in 2012.
 import matplotlib.pyplot as plt
