@@ -1,6 +1,8 @@
 import pandas as pd
 import pytest
 
+from sklearn.utils._param_validation import InvalidParameterError
+
 from skrub import _dataframe as sbd
 from skrub._agg_joiner import AggJoiner, AggTarget, split_num_categ_operations
 from skrub.conftest import _POLARS_INSTALLED
@@ -215,7 +217,7 @@ def test_too_many_suffixes(df_module, main_table):
         cols="rating",
         suffix=["_user", "_movie", "_tag"],
     )
-    with pytest.raises(ValueError, match=r"(?='suffix' must be a string.*)"):
+    with pytest.raises(InvalidParameterError):
         agg_joiner.fit(main_table)
 
 
@@ -447,7 +449,7 @@ def test_no_aggregation_exception(main_table):
         main_key="userId",
         operation=[],
     )
-    with pytest.raises(ValueError, match=r"(?=.*No aggregation)"):
+    with pytest.raises(ValueError, match="No aggregation to perform"):
         agg_target.fit(main_table, y)
 
 
@@ -456,5 +458,6 @@ def test_wrong_args_ops(main_table):
         main_key="userId",
         operation="mean(2)",
     )
-    with pytest.raises(ValueError, match=r"(?=.*'mean')(?=.*argument)"):
+    err_msg = "Operator 'mean' doesn't take any argument, got 2"
+    with pytest.raises(ValueError, match=err_msg):
         agg_target.fit(main_table, y)
