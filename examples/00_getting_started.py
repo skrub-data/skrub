@@ -25,8 +25,7 @@ dataset = fetch_employee_salaries()
 employees_df, salaries = dataset.X, dataset.y
 
 # %%
-# Explore all the available `datasets
-# <https://skrub-data.org/stable/reference/downloading_a_dataset>`_.
+# Explore all the available datasets :ref:`downloading_a_dataset_ref`.
 
 
 # %%
@@ -68,15 +67,15 @@ results["test_score"]
 # strings, categories and dates using the :class:`~skrub.TableVectorizer`.
 # See its documentation or :ref:`sphx_glr_auto_examples_01_encodings.py` for
 # more details. An overview of the chosen defaults is available in
-# `end-to-end pipeline <https://skrub-data.org/stable/end_to_end_pipeline>`_.
+# :ref:`end_to_end_pipeline`.
 
 
 # %%
 # Assembling data
 # ---------------
 #
-# ``Skrub`` allows imperfect assembly of data, in the case where columns are dirty
-# and can contain typos.
+# ``Skrub`` allows imperfect assembly of data, such as joining dataframes
+#  on columns that contain typos.
 #
 # The :class:`~skrub.Joiner` allows to fuzzy-join multiple tables, and each row of
 # a main table will be augmented with values from the best match in the auxiliary table.
@@ -143,8 +142,7 @@ agg_joiner.fit_transform(main)
 # For joining multiple auxiliary tables on a main table at once, use the
 # :class:`~skrub.MultiAggJoiner`.
 #
-# See other ways to join multiple tables on
-# `assembling data <https://skrub-data.org/stable/assembling>`_.
+# See other ways to join multiple tables in :ref:`assembling`.
 
 
 # %%
@@ -211,7 +209,7 @@ X
 # Which correspond to the respective positions of Madrid and Rome in the initial
 # column ! This column can now be understood by a machine-learning model.
 #
-# The other encoders are presented in `encoding <https://skrub-data.org/stable/encoding>`_.
+# The other encoders are presented in :ref:`encoding`.
 
 
 # %%
@@ -222,9 +220,9 @@ X
 # data. We presented the main functionalities of ``skrub``, but there is much
 # more to it !
 #
-# Please refer to our `User Guide <https://skrub-data.org/stable/documentation>`_
-# for a more in-depth presentation of ``skrub``'s concepts. You can also check out
-# our `API reference <https://skrub-data.org/stable/api>`_ for the exhaustive list
+# Please refer to our :ref:`user_guide` for a more in-depth presentation of
+# ``skrub``'s concepts. You can also check out our
+# `API reference <https://skrub-data.org/stable/api>`_ for the exhaustive list
 # of functionalities !
 #
 # Visit our `examples <https://skrub-data.org/stable/auto_examples>`_ for more
