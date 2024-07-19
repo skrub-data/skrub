@@ -4,8 +4,8 @@ Getting Started
 
 The purpose of this guide is to provide an introduction to the functionalities of
 ``skrub``, an open-source package that aims at bridging the gap between tabular
-data sources and machine-learning models. Please refer to our `installation guidelines
-<https://skrub-data.org/stable/install.html>`_ for installing ``skrub``.
+data sources and machine-learning models. Please refer to our :ref:`installation_instructions`
+for installing ``skrub``.
 
 Much of ``skrub`` revolves around vectorizing, assembling, and encoding tabular data,
 to prepare data in a format that machine-learning models understand.
@@ -25,7 +25,7 @@ dataset = fetch_employee_salaries()
 employees_df, salaries = dataset.X, dataset.y
 
 # %%
-# Explore all the available datasets :ref:`downloading_a_dataset_ref`.
+# Explore all the available datasets in :ref:`downloading_a_dataset_ref`.
 
 
 # %%
@@ -54,7 +54,6 @@ TableReport(employees_df)
 
 # %%
 from sklearn.model_selection import cross_validate
-
 from skrub import tabular_learner
 
 model = tabular_learner("regressor")
@@ -75,53 +74,54 @@ results["test_score"]
 # ---------------
 #
 # ``Skrub`` allows imperfect assembly of data, such as joining dataframes
-#  on columns that contain typos.
+# on columns that contain typos. ``Skrub``'s joiners have ``fit`` and
+# ``transform`` methods, storing information about the data across calls.
 #
-# The :class:`~skrub.Joiner` allows to fuzzy-join multiple tables, and each row of
+# The :class:`~skrub.Joiner` allows fuzzy-joining multiple tables, each row of
 # a main table will be augmented with values from the best match in the auxiliary table.
 # You can control how distant fuzzy-matches are allowed to be with the
 # ``max_dist`` parameter.
 
 # %%
-# In the following, we add information about capitals to a table of countries:
+# In the following, we add information about countries to a table containing
+# airports and the cities they are in:
 
 # %%
 import pandas as pd
-
 from skrub import Joiner
 
-main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
-# notice the "Italy" instead of "Italia"
-aux_table = pd.DataFrame(
-    {"Country": ["Germany", "France", "Italy"], "Capital": ["Berlin", "Paris", "Rome"]}
+airports = pd.DataFrame(
+    {
+        "airportId": [1, 2],
+        "airportName": ["Charles de Gaulle", "Aeroporto Leonardo da Vinci"],
+        "City": ["Paris", "Roma"],
+    }
+)
+# notice the "Rome" instead of "Roma"
+capitals = pd.DataFrame(
+    {"City": ["Berlin", "Paris", "Rome"], "Country": ["Germany", "France", "Italy"]}
 )
 joiner = Joiner(
-    aux_table,
-    key="Country",
+    capitals,
+    key="City",
     suffix="_aux",
     max_dist=0.8,
     add_match_info=False,
 )
-joiner.fit_transform(main_table)
+joiner.fit_transform(airports)
 
 # %%
-# Information about capitals have been added for France and Italia, but not for Georgia
-# since it's not present in the auxiliary table.
+# Information about countries have been added, even if the rows aren't exactly matching.
 #
 # It's also possible to augment data by joining and aggregating multiple
 # dataframes with the :class:`~skrub.AggJoiner`. This is particularly useful to
-# summarize information scattered across tables:
+# summarize information scattered across tables, for instance adding statistics
+# about flights to the the dataframe of airports:
 
 # %%
 from skrub import AggJoiner
 
-main = pd.DataFrame(
-    {
-        "airportId": [1, 2],
-        "airportName": ["Paris CDG", "NY JFK"],
-    }
-)
-aux = pd.DataFrame(
+flights = pd.DataFrame(
     {
         "flightId": range(1, 7),
         "from_airport": [1, 1, 1, 2, 2, 2],
@@ -130,13 +130,13 @@ aux = pd.DataFrame(
     }
 )
 agg_joiner = AggJoiner(
-    aux_table=aux,
+    aux_table=flights,
     main_key="airportId",
     aux_key="from_airport",
     cols=["total_passengers", "company"],  # the cols to perform aggregation on
     operations=["mean", "mode"],  # the operations to compute
 )
-agg_joiner.fit_transform(main)
+agg_joiner.fit_transform(airports)
 
 # %%
 # For joining multiple auxiliary tables on a main table at once, use the
@@ -149,20 +149,19 @@ agg_joiner.fit_transform(main)
 # Encoding data
 # -------------
 #
-# When a column contains dirty categories, it can be encoded using one
-# of ``skrub``'s encoders, such as the :class:`~skrub.GapEncoder`.
+# When a column contains categories with variations and typis, it can
+# be encoded using one of ``skrub``'s encoders, such as the
+# :class:`~skrub.GapEncoder`.
 #
 # The :class:`~skrub.GapEncoder` creates a continuous encoding, based on
 # the activation of latent categories. It will create the encoding based on
 # combinations of substrings which frequently co-occur.
 #
-# For instance, we might want to encode a column ``X`` that we know contains
+# For instance, we might want to encode a column ``X`` that contains
 # information about cities, being either Madrid or Rome :
 
 # %%
 from skrub import GapEncoder
-
-enc = GapEncoder(n_components=2, random_state=0)  # 2 topics in the data
 
 X = pd.Series(
     [
@@ -177,6 +176,7 @@ X = pd.Series(
     ],
     name="city",
 )
+enc = GapEncoder(n_components=2, random_state=0)  # 2 topics in the data
 enc.fit(X)
 
 # %%
@@ -191,23 +191,12 @@ enc.get_feature_names_out()
 # Let's see the activation of each topic in each of the rows of ``X``:
 
 # %%
-out = enc.transform(X)
-out
+encoded = enc.fit_transform(X).assign(original=X)
+encoded
 
 # %%
 # The higher the activation, the closer the row to the latent topic. These
-# activations can then be used to encode ``X``, for instance with a 0 if the
-# city is Madrid, and 1 if the city is Rome:
-
-# %%
-madrid = out.iloc[:, 0] > out.iloc[:, 1]
-X[madrid] = 0
-X[~madrid] = 1
-X
-
-# %%
-# Which correspond to the respective positions of Madrid and Rome in the initial
-# column ! This column can now be understood by a machine-learning model.
+# columns can now be understood by a machine-learning model.
 #
 # The other encoders are presented in :ref:`encoding`.
 
