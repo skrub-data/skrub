@@ -4,8 +4,8 @@ Getting Started
 
 The purpose of this guide is to provide an introduction to the functionalities of
 ``skrub``, an open-source package that aims at bridging the gap between tabular
-data sources and machine-learning models. Please refer to our :ref:`installation_instructions`
-for installing ``skrub``.
+data sources and machine-learning models. Please refer to our
+:ref:`installation_instructions` for installing ``skrub``.
 
 Much of ``skrub`` revolves around vectorizing, assembling, and encoding tabular data,
 to prepare data in a format that machine-learning models understand.
@@ -54,6 +54,7 @@ TableReport(employees_df)
 
 # %%
 from sklearn.model_selection import cross_validate
+
 from skrub import tabular_learner
 
 model = tabular_learner("regressor")
@@ -88,6 +89,7 @@ results["test_score"]
 
 # %%
 import pandas as pd
+
 from skrub import Joiner
 
 airports = pd.DataFrame(
