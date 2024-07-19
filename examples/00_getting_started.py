@@ -116,7 +116,7 @@ joiner.fit_transform(airports)
 # It's also possible to augment data by joining and aggregating multiple
 # dataframes with the :class:`~skrub.AggJoiner`. This is particularly useful to
 # summarize information scattered across tables, for instance adding statistics
-# about flights to the the dataframe of airports:
+# about flights to the dataframe of airports:
 
 # %%
 from skrub import AggJoiner
@@ -149,7 +149,7 @@ agg_joiner.fit_transform(airports)
 # Encoding data
 # -------------
 #
-# When a column contains categories with variations and typis, it can
+# When a column contains categories with variations and typos, it can
 # be encoded using one of ``skrub``'s encoders, such as the
 # :class:`~skrub.GapEncoder`.
 #
@@ -188,7 +188,7 @@ enc.get_feature_names_out()
 # %%
 # Which correspond to the two cities.
 #
-# Let's see the activation of each topic in each of the rows of ``X``:
+# Let's see the activation of each topic depending on the rows of ``X``:
 
 # %%
 encoded = enc.fit_transform(X).assign(original=X)
