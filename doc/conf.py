@@ -178,11 +178,6 @@ html_theme_options = {
             "url": "https://github.com/skrub-data/skrub/",
             "icon": "fa-brands fa-github",
         },
-        {
-            "name": "PyPI",
-            "url": "https://pypi.org/project/skrub",
-            "icon": "fa-custom fa-pypi",
-        },
     ],
     # alternative way to set twitter and github header icons
     # "github_url": "https://github.com/pydata/pydata-sphinx-theme",
