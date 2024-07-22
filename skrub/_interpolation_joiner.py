@@ -321,7 +321,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             new_res = dict(**res)
             if res["failed"]:
                 if set(res["columns"]).issubset(
-                    sbd.column_names(self.aux_table.select_dtypes("number"))
+                    sbd.column_names(s.select(self.aux_table, s.numeric()))
                 ):
                     dtype = float
                 else:
@@ -364,13 +364,11 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         """
         aux_table = s.select(self.aux_table, ~s.cols(*self._aux_key))
         assignments = []
-        # TODO: dispatch
-        regression_table = aux_table.select_dtypes("number")
+        regression_table = s.select(aux_table, s.numeric())
         assignments.extend(
             _get_assignments_for_estimator(regression_table, self.regressor_)
         )
-        # TODO: dispatch
-        classification_table = aux_table.select_dtypes(["object", "string", "category"])
+        classification_table = s.select(aux_table, s.string() | s.categorical())
         assignments.extend(
             _get_assignments_for_estimator(classification_table, self.classifier_)
         )
@@ -415,6 +413,7 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
     # TODO: dispatch
     kept_rows = sbd.to_numpy(target_table.notnull().all(axis=1))
     key_values = key_values[kept_rows]
+    # TODO: dispatch
     Y = target_table.to_numpy()[kept_rows]
 
     # Estimators that expect a single output issue a DataConversionWarning if
