@@ -37,7 +37,7 @@ def test_interpolation_join(df_module, buildings, weather, key, with_nulls):
                 "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
             )
         )
-    weather = weather.fillna(0.0)
+    weather = ns.fill_nulls(weather, 0.0)
     weather = df_module.DataFrame(weather)
     buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
