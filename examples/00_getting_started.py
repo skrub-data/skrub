@@ -2,8 +2,8 @@
 Getting Started
 ===============
 
-This guide showcases the features of ``skrub``, an open-source package that aims at bridging the gap between tabular
-data sources and machine-learning models.
+This guide showcases the features of ``skrub``, an open-source package that aims at
+bridging the gap between tabular data sources and machine-learning models.
 
 Much of ``skrub`` revolves around vectorizing, assembling, and encoding tabular data,
 to prepare data in a format that shallow or classic machine-learning models understand.
@@ -92,19 +92,19 @@ from skrub import Joiner
 
 airports = pd.DataFrame(
     {
-        "airportId": [1, 2],
-        "airportName": ["Charles de Gaulle", "Aeroporto Leonardo da Vinci"],
-        "City": ["Paris", "Roma"],
+        "airport_id": [1, 2],
+        "airport_name": ["Charles de Gaulle", "Aeroporto Leonardo da Vinci"],
+        "city": ["Paris", "Roma"],
     }
 )
 # notice the "Rome" instead of "Roma"
 capitals = pd.DataFrame(
-    {"Capital": ["Berlin", "Paris", "Rome"], "Country": ["Germany", "France", "Italy"]}
+    {"capital": ["Berlin", "Paris", "Rome"], "country": ["Germany", "France", "Italy"]}
 )
 joiner = Joiner(
     capitals,
-    main_key="City",
-    aux_key="Capital",
+    main_key="city",
+    aux_key="capital",
     max_dist=0.8,
     add_match_info=False,
 )
@@ -123,7 +123,7 @@ from skrub import AggJoiner
 
 flights = pd.DataFrame(
     {
-        "flightId": range(1, 7),
+        "flight_id": range(1, 7),
         "from_airport": [1, 1, 1, 2, 2, 2],
         "total_passengers": [90, 120, 100, 70, 80, 90],
         "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
@@ -131,7 +131,7 @@ flights = pd.DataFrame(
 )
 agg_joiner = AggJoiner(
     aux_table=flights,
-    main_key="airportId",
+    main_key="airport_id",
     aux_key="from_airport",
     cols=["total_passengers", "company"],  # the cols to perform aggregation on
     operations=["mean", "mode"],  # the operations to compute
