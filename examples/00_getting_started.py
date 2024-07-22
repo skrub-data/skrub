@@ -101,12 +101,12 @@ airports = pd.DataFrame(
 )
 # notice the "Rome" instead of "Roma"
 capitals = pd.DataFrame(
-    {"City": ["Berlin", "Paris", "Rome"], "Country": ["Germany", "France", "Italy"]}
+    {"Capital": ["Berlin", "Paris", "Rome"], "Country": ["Germany", "France", "Italy"]}
 )
 joiner = Joiner(
     capitals,
-    key="City",
-    suffix="_aux",
+    main_key="City",
+    aux_key="Capital",
     max_dist=0.8,
     add_match_info=False,
 )
@@ -212,9 +212,6 @@ encoded
 # more to it !
 #
 # Please refer to our :ref:`user_guide` for a more in-depth presentation of
-# ``skrub``'s concepts. You can also check out our
-# `API reference <https://skrub-data.org/stable/api>`_ for the exhaustive list
-# of functionalities !
-#
-# Visit our `examples <https://skrub-data.org/stable/auto_examples>`_ for more
-# illustrations of the tools offered by ``skrub``.
+# ``skrub``'s concepts, or visit our
+# `examples <https://skrub-data.org/stable/auto_examples>`_ for more
+# illustrations of the tools that we provide !
