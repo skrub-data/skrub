@@ -1,5 +1,7 @@
+.. _user_guide:
+
 User guide
-===========
+==========
 
 Skrub eases preparing tables for machine learning.
 
