@@ -391,8 +391,7 @@ def _get_assignments_for_estimator(table, estimator):
             {"columns": [col], "estimator": estimator}
             for col in sbd.column_names(table)
         ]
-    # TODO: dispatch
-    columns_with_nulls = table.columns[table.isnull().any()]
+    columns_with_nulls = s.has_nulls().expand(table)
     assignments = [
         {"columns": [col], "estimator": estimator} for col in columns_with_nulls
     ]
@@ -410,11 +409,11 @@ def _handles_multioutput(estimator):
 
 def _fit(key_values, target_table, estimator, propagate_exceptions):
     estimator = clone(estimator)
+    null_values = [sbd.is_null(col) for col in sbd.to_column_list(target_table)]
+    discarded_rows = np.array(null_values).any(axis=0)
+    key_values = key_values[~discarded_rows]
     # TODO: dispatch
-    kept_rows = sbd.to_numpy(target_table.notnull().all(axis=1))
-    key_values = key_values[kept_rows]
-    # TODO: dispatch
-    Y = target_table.to_numpy()[kept_rows]
+    Y = target_table.to_numpy()[~discarded_rows]
 
     # Estimators that expect a single output issue a DataConversionWarning if
     # passing a column vector rather than a 1-D array
