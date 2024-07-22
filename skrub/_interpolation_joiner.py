@@ -323,11 +323,21 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
                     dtype = float
                 else:
                     dtype = object
-                # TODO: dispatch
-                pred = pd.DataFrame(
-                    columns=res["columns"],
-                    index=np.arange(res["shape"][0]),
-                    dtype=dtype,
+                pred = sbd.make_dataframe_like(
+                    self.aux_table,
+                    {col: [None] * res["shape"][0] for col in res["columns"]},
+                )
+
+                col_list = sbd.to_column_list(pred)
+                # TODO: handle object case for polars
+                # currently raises `pyo3_runtime.PanicException:
+                # not implemented for dtype Object("object", None)``
+                if not isinstance(self.aux_table, pd.DataFrame) and dtype == object:
+                    import polars as pl
+
+                    dtype = pl.Object
+                pred = sbd.with_columns(
+                    pred, **{sbd.name(col): sbd.cast(col, dtype) for col in col_list}
                 )
                 new_res["predictions"] = pred
                 failed_columns.extend(res["columns"])
@@ -408,7 +418,7 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
     estimator = clone(estimator)
     null_values = [sbd.is_null(col) for col in sbd.to_column_list(target_table)]
     discarded_rows = np.array(null_values).any(axis=0)
-    key_values = key_values[~discarded_rows]
+    key_values = sbd.filter(key_values, ~discarded_rows)
     # TODO: dispatch
     Y = target_table.to_numpy()[~discarded_rows]
 
