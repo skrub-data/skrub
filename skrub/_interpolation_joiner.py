@@ -232,7 +232,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         fit_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_fit)(
                 key_values,
-                self.aux_table[assignment["columns"]],
+                sbd.col(self.aux_table, assignment["columns"]),
                 assignment["estimator"],
                 propagate_exceptions=(self.on_estimator_failure == "raise"),
             )
@@ -296,6 +296,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         )
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
+                main_table,
                 key_values,
                 assignment["columns"],
                 assignment["estimator"],
@@ -308,11 +309,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         predictions = [
             _join_utils.add_column_name_suffix(df, self.suffix) for df in predictions
         ]
-        # TODO: dispatch
-        for part in predictions:
-            part.index = main_table.index
-        # TODO: dispatch sbd.concat_horizontal(main_table, main_table, predictions)
-        return pd.concat([main_table] + predictions, axis=1)
+        return sbd.concat_horizontal(main_table, *predictions)
 
     def _check_prediction_results(self, results):
         checked_results = []
@@ -434,7 +431,7 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
     }
 
 
-def _predict(key_values, columns, estimator, propagate_exceptions):
+def _predict(main_table, key_values, columns, estimator, propagate_exceptions):
     failed = False
     try:
         Y_values = estimator.predict(key_values)
@@ -445,8 +442,14 @@ def _predict(key_values, columns, estimator, propagate_exceptions):
     if failed:
         predictions = None
     else:
-        # TODO: dispatch
-        predictions = pd.DataFrame(data=Y_values, columns=columns)
+        # If more than one prediction, need to set predictions as columns
+        # in order to create the dataframe
+        if len(columns) > 1:
+            Y_values = np.swapaxes(Y_values, 0, 1)
+            data = dict(zip(columns, Y_values))
+        else:
+            data = {columns[0]: Y_values}
+        predictions = sbd.make_dataframe_like(main_table, data)
     return {
         "predictions": predictions,
         "failed": failed,
