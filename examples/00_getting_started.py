@@ -2,13 +2,12 @@
 Getting Started
 ===============
 
-The purpose of this guide is to provide an introduction to the functionalities of
-``skrub``, an open-source package that aims at bridging the gap between tabular
+This guide showcases the features of ``skrub``, an open-source package that aims at bridging the gap between tabular
 data sources and machine-learning models. Please refer to our
 :ref:`installation_instructions` for installing ``skrub``.
 
 Much of ``skrub`` revolves around vectorizing, assembling, and encoding tabular data,
-to prepare data in a format that machine-learning models understand.
+to prepare data in a format that shallow or classic machine-learning models understand.
 """
 
 # %%
