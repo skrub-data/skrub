@@ -28,7 +28,8 @@
 
 :host {
     font-family: var(--fontStack-sansSerif);
-    line-height: 1.15;
+    font-size: 1rem;
+    line-height: 1.5;
     -webkit-text-size-adjust: 100%;
 }
 
