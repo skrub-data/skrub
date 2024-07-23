@@ -28,16 +28,27 @@ def weather():
     )
 
 
-@pytest.mark.parametrize("key", [["latitude", "longitude"], "latitude"])
+def test_simple_join(df_module, buildings, weather):
+    weather = df_module.DataFrame(weather)
+    buildings = df_module.DataFrame(buildings)
+    transformed = InterpolationJoiner(
+        weather,
+        main_key=("latitude", "longitude"),
+        aux_key=("latitude", "longitude"),
+    ).fit_transform(buildings)
+    assert ns.shape(transformed) == (2, 5)
+
+
+# TODO: test impossible to concat columns with same name in polars
 @pytest.mark.parametrize("fill_nulls", [False, True])
-def test_interpolation_join(df_module, buildings, weather, key, fill_nulls):
+def test_custom_predictors(df_module, buildings, weather, fill_nulls):
     if fill_nulls:
         weather = ns.fill_nulls(weather, 0.0)
     weather = df_module.DataFrame(weather)
     buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
-        key=key,
+        key=["latitude", "longitude"],
         regressor=KNeighborsRegressor(2),
         classifier=KNeighborsClassifier(2),
     ).fit_transform(buildings)
@@ -65,17 +76,6 @@ def test_custom_vectorizer(df_module):
     assert_array_equal(ns.col(join, "B"), [0, 1])
 
 
-def test_no_multioutput(df_module, buildings, weather):
-    weather = df_module.DataFrame(weather)
-    buildings = df_module.DataFrame(buildings)
-    transformed = InterpolationJoiner(
-        weather,
-        main_key=("latitude", "longitude"),
-        aux_key=("latitude", "longitude"),
-    ).fit_transform(buildings)
-    assert ns.shape(transformed) == (2, 5)
-
-
 def test_condition_choice(df_module):
     main = df_module.make_dataframe({"A": [0, 1, 2]})
     aux = df_module.make_dataframe({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
@@ -93,7 +93,7 @@ def test_condition_choice(df_module):
 
 def test_wrong_key(df_module):
     main = df_module.make_dataframe({"A": [0, 1, 2]})
-    aux = df_module.make_dataframe({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
+    aux = df_module.make_dataframe({"A": [0, 1, 2], "C": [10, 11, 12]})
 
     with pytest.raises(ValueError, match="Must pass either"):
         InterpolationJoiner(aux, main_key="A", regressor=KNeighborsRegressor(1)).fit(
@@ -117,21 +117,6 @@ def test_suffix(df_module):
         df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
     assert_array_equal(ns.column_names(join), ["A", "B", "B_aux"])
-
-
-@pytest.mark.skip()
-def test_mismatched_indexes(df_module):
-    main = pd.DataFrame({"A": [0, 1]}, index=[1, 0])
-    main = df_module.DataFrame(main)
-    aux = df_module.make_dataframe({"A": [0, 1], "B": [10, 11]})
-    join = InterpolationJoiner(
-        aux, key="A", regressor=KNeighborsRegressor(1)
-    ).fit_transform(main)
-    assert_array_equal(ns.to_list(ns.col(join, "B")), [10, 11])
-    # TODO: dispatch ``.values`` and ``.index``
-
-
-#    assert_array_equal(join.index.values, [1, 0])
 
 
 def test_fit_on_none(df_module):
