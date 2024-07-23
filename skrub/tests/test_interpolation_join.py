@@ -39,7 +39,6 @@ def test_simple_join(df_module, buildings, weather):
     assert ns.shape(transformed) == (2, 5)
 
 
-# TODO: test impossible to concat columns with same name in polars
 @pytest.mark.parametrize("fill_nulls", [False, True])
 def test_custom_predictors(df_module, buildings, weather, fill_nulls):
     if fill_nulls:
@@ -84,6 +83,7 @@ def test_condition_choice(df_module):
     ).fit_transform(main)
     assert_array_equal(ns.to_list(ns.col(join, "C")), [10, 11, 12])
 
+    # TODO: test impossible to concat columns with same name in polars
     # Can't add column with same name twice
     # join_2 = InterpolationJoiner(
     #     aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
@@ -156,15 +156,9 @@ class FailFit(DummyClassifier):
 
 
 def test_fit_failures(df_module, buildings, weather):
-    if df_module.name == "polars":
-        pytest.xfail(
-            reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
-            )
-        )
     weather = df_module.DataFrame(weather)
     buildings = df_module.DataFrame(buildings)
-    weather["climate"] = "A"
+    weather = ns.with_columns(weather, **{"climate": ["A"] * ns.shape(weather)[0]})
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
@@ -174,7 +168,9 @@ def test_fit_failures(df_module, buildings, weather):
     )
     join = joiner.fit_transform(buildings)
     assert_array_equal(ns.to_list(ns.col(join, "avg_temp")), [10.5, 15.5])
+    # Only numerical columns have been added
     assert join.shape == (2, 4)
+    assert ns.column_names(join) == ["latitude", "longitude", "n_stories", "avg_temp"]
 
     joiner = InterpolationJoiner(
         weather,
@@ -187,6 +183,7 @@ def test_fit_failures(df_module, buildings, weather):
         join = joiner.fit_transform(buildings)
     assert_array_equal(ns.to_list(ns.col(join, "avg_temp")), [10.5, 15.5])
     assert ns.shape(join) == (2, 4)
+    assert ns.column_names(join) == ["latitude", "longitude", "n_stories", "avg_temp"]
 
     joiner = InterpolationJoiner(
         weather,
@@ -246,12 +243,6 @@ def test_transform_failures(df_module, buildings, weather):
 
 
 def test_transform_failures_dtype(df_module, buildings, weather):
-    if df_module.name == "polars":
-        pytest.xfail(
-            reason=(
-                "In polars, DataFrame.drop() got an unexpected keyword argument 'axis'."
-            )
-        )
     weather = df_module.DataFrame(weather)
     buildings = df_module.DataFrame(buildings)
     joiner = InterpolationJoiner(
