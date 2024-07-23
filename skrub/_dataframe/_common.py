@@ -320,12 +320,36 @@ def concat_horizontal(*dataframes):
 
 @concat_horizontal.specialize("pandas")
 def _concat_horizontal_pandas(*dataframes):
+    parsed_names = set()
+    overlap = set()
+    for df in dataframes:
+        col_names = set(column_names(df))
+        overlap.update(parsed_names.intersection(col_names))
+        parsed_names.update(col_names)
+    if overlap:
+        raise ValueError(
+            "Can't concatenate dataframes containing duplicate column names."
+            f" The following column names are found in multiple tables: {overlap}."
+            " Please make sure column names do not overlap before concatenating them."
+        )
     dataframes = [df.reset_index(drop=True) for df in dataframes]
     return pd.concat(dataframes, axis=1, copy=False)
 
 
 @concat_horizontal.specialize("polars")
 def _concat_horizontal_polars(*dataframes):
+    parsed_names = set()
+    overlap = set()
+    for df in dataframes:
+        col_names = set(column_names(df))
+        overlap.update(parsed_names.intersection(col_names))
+        parsed_names.update(col_names)
+    if overlap:
+        raise ValueError(
+            "Can't concatenate dataframes containing duplicate column names."
+            f" The following column names are found in multiple tables: {overlap}."
+            " Please make sure column names do not overlap before concatenating them."
+        )
     return pl.concat(dataframes, how="horizontal")
 
 

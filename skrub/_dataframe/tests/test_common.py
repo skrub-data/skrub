@@ -167,10 +167,20 @@ def test_all_null_like(df_module):
 
 
 def test_concat_horizontal(df_module, example_data_dict):
-    df1 = df_module.make_dataframe(example_data_dict)
+    df1 = df_module.example_dataframe
     df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
     df = ns.concat_horizontal(df1, df2)
     assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
+
+    df2 = df_module.make_dataframe({"int-col": example_data_dict["int-col"]})
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"(Can't concatenate dataframes containing duplicate column names.)"
+            r".*({'int-col'})"
+        ),
+    ):
+        df = ns.concat_horizontal(df1, df2)
 
 
 def test_is_column_list(df_module):
