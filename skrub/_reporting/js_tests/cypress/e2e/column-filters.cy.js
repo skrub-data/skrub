@@ -10,4 +10,18 @@ describe ('test filtering visible columns', () => {
         cy.get('@report').find('#col_7').should('not.be.visible');
         cy.get('@report').find('#col_0').should('be.visible');
     });
+
+    it('hides column associatiosn not matched by the selector', () => {
+        cy.visit('_reports/employee_salaries.html');
+        cy.get('skrub-table-report').shadow().as('report');
+        cy.get('@report').find('button[data-target-tab="interactions-tab"]').click();
+        cy.get('@report').find('tr[data-left-column="division"]').first().as('row');
+        cy.get('@row').should('be.visible');
+        cy.get('@report').find('#col-filter-select').select('Columns with high similarity');
+        cy.get('@row').should('not.be.visible');
+        cy.get('@report').find('[data-test="interactions-no-match"]').as('announcement');
+        cy.get('@announcement').should('not.be.visible');
+        cy.get('@report').find('#col-filter-select').select('Numeric columns');
+        cy.get('@announcement').should('be.visible');
+    });
 });

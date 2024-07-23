@@ -77,7 +77,7 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
 
 def _add_interactions(df, dataframe_summary):
     df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
-    associations = _interactions.cramer_v(df)[:20]
+    associations = _interactions.cramer_v(df)[:30]
     dataframe_summary["top_associations"] = [
         dict(zip(("left_column", "right_column", "cramer_v"), a))
         for a in associations
