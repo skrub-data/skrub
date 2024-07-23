@@ -323,6 +323,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
                     dtype = float
                 else:
                     dtype = object
+                print({col: [None] * res["shape"][0] for col in res["columns"]})
                 pred = sbd.make_dataframe_like(
                     self.aux_table,
                     {col: [None] * res["shape"][0] for col in res["columns"]},
@@ -419,8 +420,10 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
     null_values = [sbd.is_null(col) for col in sbd.to_column_list(target_table)]
     discarded_rows = np.array(null_values).any(axis=0)
     key_values = sbd.filter(key_values, ~discarded_rows)
-    # TODO: dispatch
-    Y = target_table.to_numpy()[~discarded_rows]
+    Y = np.concatenate(
+        [sbd.to_numpy(col).reshape(-1, 1) for col in sbd.to_column_list(target_table)],
+        axis=1,
+    )[~discarded_rows]
 
     # Estimators that expect a single output issue a DataConversionWarning if
     # passing a column vector rather than a 1-D array
