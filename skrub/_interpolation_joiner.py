@@ -323,20 +323,21 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
                     dtype = float
                 else:
                     dtype = object
-                print({col: [None] * res["shape"][0] for col in res["columns"]})
                 pred = sbd.make_dataframe_like(
                     self.aux_table,
                     {col: [None] * res["shape"][0] for col in res["columns"]},
                 )
 
-                col_list = sbd.to_column_list(pred)
                 # TODO: handle object case for polars
                 # currently raises `pyo3_runtime.PanicException:
                 # not implemented for dtype Object("object", None)``
+                # i.e. we can't cast a null type column as object
+                # possible solution: cast every failed prediction as float
                 if not isinstance(self.aux_table, pd.DataFrame) and dtype == object:
                     import polars as pl
 
-                    dtype = pl.Object
+                    dtype = pl.String
+                col_list = sbd.to_column_list(pred)
                 pred = sbd.with_columns(
                     pred, **{sbd.name(col): sbd.cast(col, dtype) for col in col_list}
                 )
