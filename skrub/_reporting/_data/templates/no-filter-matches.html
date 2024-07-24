@@ -1,5 +1,7 @@
 <p>
-No columns match the selected filter: <strong class="selected-filter-display"></strong>. You can change the column filter in the dropdown menu above.
+    {{ no_match_msg or "No columns match the selected filter" }}:
+    <strong class="selected-filter-display"></strong>.
+    You can change the column filter in the dropdown menu above.
 </p>
 <p>
     <button onclick="getReport(event).clearColFilter(event)">Show all columns</button>

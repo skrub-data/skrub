@@ -49,7 +49,7 @@
 
 /* Hide cards of columns that do not match the filter (eg "all()", "numeric()", ...) */
 
-.filterable-column[data-is-excluded-by-filter] {
+:is(.filterable-column, .filterable-column-pair)[data-is-excluded-by-filter] {
     display: none;
 }
 

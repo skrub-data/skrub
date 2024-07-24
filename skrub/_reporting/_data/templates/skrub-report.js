@@ -168,7 +168,16 @@ if (customElements.get('skrub-table-report') === undefined) {
             const selectElem = this.shadowRoot.getElementById("col-filter-select");
             const colFilters = window[`columnFiltersForReport${this.id}`];
             const filterName = selectElem.value;
+            const filterDisplayName = colFilters[filterName][
+                "display_name"
+            ];
             const acceptedCols = colFilters[filterName]["columns"];
+            this.filterColumns(filterName, filterDisplayName, acceptedCols);
+            this.filterInteractionsTable(filterName, filterDisplayName,
+                acceptedCols);
+        }
+
+        filterColumns(filterName, filterDisplayName, acceptedCols) {
             const colElements = this.shadowRoot.querySelectorAll(
                 ".filterable-column");
             colElements.forEach(elem => {
@@ -193,10 +202,41 @@ if (customElements.get('skrub-table-report') === undefined) {
                     "true";
                 const filterDisplay = toggle.querySelector(
                     ".selected-filter-display");
-                filterDisplay.textContent = '"' + colFilters[filterName][
-                    "display_name"
-                ] + '"';
+                filterDisplay.textContent = '"' + filterDisplayName + '"';
             }
+        }
+
+        filterInteractionsTable(filterName, filterDisplayName, acceptedCols) {
+            const interactions = this.shadowRoot.getElementById(
+                "interactions-content");
+            if (!interactions) {
+                return;
+            }
+            const threshold = interactions.dataset.similarityThreshold;
+            const rows = interactions.querySelectorAll(
+                ".filterable-column-pair");
+            let allExcluded = true;
+            rows.forEach(row => {
+                let isExcluded;
+                if (filterName === "high_similarity") {
+                    isExcluded = row.dataset.similarity <= threshold;
+                } else {
+                    isExcluded = ![row.dataset.leftColumn, row.dataset
+                        .rightColumn
+                    ].some((c) => acceptedCols.includes(c));
+                }
+                if (isExcluded) {
+                    row.dataset.isExcludedByFilter = "";
+                } else {
+                    row.removeAttribute("data-is-excluded-by-filter");
+                    allExcluded = false;
+                }
+            });
+            const toggle = this.shadowRoot.querySelector(".interactions-toggle");
+            toggle.dataset.predicate = allExcluded ? "false" : "true";
+            const filterDisplay = toggle.querySelector(
+                ".selected-filter-display");
+            filterDisplay.textContent = '"' + filterDisplayName + '"';
         }
 
 
