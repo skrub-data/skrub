@@ -21,6 +21,11 @@ Major changes
 
 Minor changes
 -------------
+* :class:`Joiner` and :func:`fuzzy_join` used to raise an error when columns
+  with the same name appeared in the main and auxiliary table (after adding the
+  suffix). This is now allowed and a random string is inserted in the duplicate
+  column to ensure all names are unique.
+  :pr:`1014` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.2.0
 =============
