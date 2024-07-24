@@ -481,7 +481,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 operations=operations,
                 suffix=suffix,
             )
-            agg_joiner.fit(X)
+            X = agg_joiner.fit_transform(X)
             self.agg_joiners_.append(agg_joiner)
 
         return self
