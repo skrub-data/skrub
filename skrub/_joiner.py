@@ -282,6 +282,45 @@ class Joiner(TransformerMixin, BaseEstimator):
             )
         self._matching = _MATCHERS[self.ref_dist]()
 
+    def fit_transform(self, X, y=None):
+        """Fit the instance to the main table.
+
+        Parameters
+        ----------
+        X : dataframe
+            The main table, to be joined to the auxiliary ones.
+        y : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        dataframe
+            The final joined table.
+        """
+        self._aux_table = CheckInputDataFrame().fit_transform(self.aux_table)
+        self._main_check_input = CheckInputDataFrame()
+        X = self._main_check_input.fit_transform(X)
+        self._check_ref_dist()
+        self._check_max_dist()
+        self._main_key, self._aux_key = _join_utils.check_key(
+            self.main_key, self.aux_key, self.key
+        )
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
+        self._right_cols_renaming = f"{{}}{self.suffix}".format
+        self.vectorizer_ = _make_vectorizer(
+            s.select(self._aux_table, s.cols(*self._aux_key)),
+            self.string_encoder,
+            rescale=self.ref_dist != "no_rescaling",
+        )
+        aux = self.vectorizer_.fit_transform(
+            _compat_df(s.select(self._aux_table, s.cols(*self._aux_key)))
+        )
+        self._matching.fit(aux)
+        result = self._transform(X, y)
+        self.all_outputs_ = sbd.column_names(result)
+        return result
+
     def fit(self, X, y=None):
         """Fit the instance to the main table.
 
@@ -297,30 +336,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         Joiner
             Fitted Joiner instance (self).
         """
-        del y
-        self._aux_table = CheckInputDataFrame().fit_transform(self.aux_table)
-        self._main_check_input = CheckInputDataFrame()
-        X = self._main_check_input.fit_transform(X)
-        self._check_ref_dist()
-        self._check_max_dist()
-        self._main_key, self._aux_key = _join_utils.check_key(
-            self.main_key, self.aux_key, self.key
-        )
-        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
-        _join_utils.check_column_name_duplicates(
-            X, self._aux_table, self.suffix, main_table_name="X"
-        )
-        self._right_cols_renaming = f"{{}}{self.suffix}".format
-        self.vectorizer_ = _make_vectorizer(
-            s.select(self._aux_table, s.cols(*self._aux_key)),
-            self.string_encoder,
-            rescale=self.ref_dist != "no_rescaling",
-        )
-        aux = self.vectorizer_.fit_transform(
-            _compat_df(s.select(self._aux_table, s.cols(*self._aux_key)))
-        )
-        self._matching.fit(aux)
+        _ = self.fit_transform(X, y)
         return self
 
     def transform(self, X, y=None):
@@ -338,13 +354,12 @@ class Joiner(TransformerMixin, BaseEstimator):
         dataframe
             The final joined table.
         """
-        del y
         check_is_fitted(self, "vectorizer_")
         X = self._main_check_input.transform(X)
-        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_column_name_duplicates(
-            X, self._aux_table, self.suffix, main_table_name="X"
-        )
+        result = self._transform(X)
+        return sbd.set_column_names(result, self.all_outputs_)
+
+    def _transform(self, X, y=None):
         main = sbd.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
         main = self.vectorizer_.transform(_compat_df(main))
         match_result = self._matching.match(main, self.max_dist_)

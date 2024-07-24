@@ -164,3 +164,10 @@ def test_preprocessing(df_module):
     )
     out = Joiner(df2, key="date", suffix="_", add_match_info=False).fit_transform(df1)
     assert ns.to_list(ns.col(out, "v_")) == ["A"]
+
+
+def test_duplicate_names(df_module):
+    joiner = Joiner(df_module.example_dataframe, key="int-not-null-col")
+    out_1 = joiner.fit_transform(df_module.example_dataframe)
+    out_2 = joiner.transform(df_module.example_dataframe)
+    assert ns.column_names(out_1) == ns.column_names(out_2)
