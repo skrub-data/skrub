@@ -600,6 +600,6 @@ def test_not_fitted_dataframe(main_table, df_module):
         keys=[["userId"]],
     )
     multi_agg_joiner.fit(main_table)
-    error_msg = r"(?=.*columns cannot be used because they do not exist)"
+    error_msg = r"Columns of dataframes passed to fit\(\) and transform\(\) differ"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.transform(not_main)
