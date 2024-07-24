@@ -105,6 +105,9 @@ dd {
 /* Generic utility classes */
 /* ----------------------- */
 
+[data-not-visible] {
+    visibility: hidden;
+}
 
 .margin-r-s {
     margin-inline-end: var(--small);
