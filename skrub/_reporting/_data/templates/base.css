@@ -102,6 +102,10 @@ dd {
     margin: 0;
 }
 
+*[disabled] {
+    cursor: not-allowed;
+}
+
 /* Generic utility classes */
 /* ----------------------- */
 

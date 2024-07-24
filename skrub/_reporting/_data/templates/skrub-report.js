@@ -84,6 +84,8 @@ if (customElements.get('skrub-table-report') === undefined) {
             if (removeWarnings && tabButton.hasAttribute("data-has-warning")) {
                 tabButton.removeAttribute("data-has-warning");
             }
+            const toggle =  this.shadowRoot.getElementById("col-filter-select-enable");
+            toggle.dataset.predicate = tab.id === "interactions-tab" ? "false": "true";
         }
 
         displayValue(event) {
