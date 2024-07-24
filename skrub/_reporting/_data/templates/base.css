@@ -46,6 +46,14 @@
     overflow: hidden;
 }
 
+/* pure.css / Normalize.css overrides the default firefox blue ring around focussed */
+/* elements with something almost impossible to see, making it impossible to use */
+/* tab navigation. We revert it to the browser's appropriate default. */
+:focus-visible {
+    outline: revert !important;
+}
+
+
 :is(select, summary, button) {
     cursor: pointer;
 }
