@@ -225,13 +225,13 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         if X is not None:
             _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         key_values = self.vectorizer_.fit_transform(
-            sbd.col(self.aux_table, self._aux_key)
+            s.select(self.aux_table, s.cols(*self._aux_key))
         )
         estimators = self._get_estimator_assignments()
         fit_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_fit)(
                 key_values,
-                sbd.col(self.aux_table, assignment["columns"]),
+                s.select(self.aux_table, s.cols(*assignment["columns"])),
                 assignment["estimator"],
                 propagate_exceptions=(self.on_estimator_failure == "raise"),
             )
@@ -291,7 +291,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             main_table, self._main_key, "'X' (the main table)"
         )
         key_values = self.vectorizer_.transform(
-            sbd.set_column_names(sbd.col(main_table, self._main_key), self._aux_key)
+            sbd.set_column_names(
+                s.select(main_table, s.cols(*self._main_key)), self._aux_key
+            )
         )
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
