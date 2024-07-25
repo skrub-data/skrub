@@ -2,7 +2,6 @@ import warnings
 
 import joblib
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
@@ -317,30 +316,11 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         for res in results:
             new_res = dict(**res)
             if res["failed"]:
-                if set(res["columns"]).issubset(
-                    sbd.column_names(s.select(self.aux_table, s.numeric()))
-                ):
-                    dtype = float
-                else:
-                    dtype = object
-                pred = sbd.make_dataframe_like(
-                    self.aux_table,
-                    {col: [None] * res["shape"][0] for col in res["columns"]},
-                )
-
-                # TODO: handle object case for polars
-                # currently raises `pyo3_runtime.PanicException:
-                # not implemented for dtype Object("object", None)``
-                # i.e. we can't cast a null type column as object
-                # possible solution: cast every failed prediction as float
-                if not isinstance(self.aux_table, pd.DataFrame) and dtype == object:
-                    import polars as pl
-
-                    dtype = pl.String
-                col_list = sbd.to_column_list(pred)
-                pred = sbd.with_columns(
-                    pred, **{sbd.name(col): sbd.cast(col, dtype) for col in col_list}
-                )
+                _pred = [
+                    sbd.all_null_like(sbd.col(self.aux_table, col))
+                    for col in res["columns"]
+                ]
+                pred = sbd.concat_horizontal(*_pred)
                 new_res["predictions"] = pred
                 failed_columns.extend(res["columns"])
             checked_results.append(new_res)
