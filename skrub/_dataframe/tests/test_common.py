@@ -4,6 +4,7 @@ in ``skrub.conftest``. See the corresponding docstrings for details.
 """
 
 import inspect
+import re
 import warnings
 from datetime import datetime
 from functools import partial
@@ -179,6 +180,13 @@ def test_concat_horizontal(df_module, example_data_dict):
     df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
     df = ns.concat_horizontal(df1, df2)
     assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
+
+    # Test concatenating dataframes with the same column names
+    df2 = df1
+    df = ns.concat_horizontal(df1, df2)
+    assert ns.shape(df) == (4, 16)
+    for n in ns.column_names(df)[8:]:
+        assert re.match(r".*__skrub_[0-9a-f]+__", n)
 
 
 def test_is_column_list(df_module):
