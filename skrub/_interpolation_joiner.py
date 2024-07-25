@@ -286,18 +286,16 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             The result of the join between `X` and inferred rows from
             ``self.aux_table``.
         """
-        self._main_table = X
+        main_table = X
         _join_utils.check_missing_columns(
-            self._main_table, self._main_key, "'X' (the main table)"
+            main_table, self._main_key, "'X' (the main table)"
         )
         key_values = self.vectorizer_.transform(
-            sbd.set_column_names(
-                sbd.col(self._main_table, self._main_key), self._aux_key
-            )
+            sbd.set_column_names(sbd.col(main_table, self._main_key), self._aux_key)
         )
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
-                self._main_table,
+                main_table,
                 key_values,
                 assignment["columns"],
                 assignment["estimator"],
@@ -305,14 +303,16 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             )
             for assignment in self.estimators_
         )
-        prediction_results = self._check_prediction_results(prediction_results)
+        prediction_results = self._check_prediction_results(
+            main_table, prediction_results
+        )
         predictions = [res["predictions"] for res in prediction_results]
         predictions = [
             _join_utils.add_column_name_suffix(df, self.suffix) for df in predictions
         ]
-        return sbd.concat_horizontal(self._main_table, *predictions)
+        return sbd.concat_horizontal(main_table, *predictions)
 
-    def _check_prediction_results(self, results):
+    def _check_prediction_results(self, main_table, results):
         checked_results = []
         failed_columns = []
         for res in results:
@@ -321,13 +321,12 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
                 _pred = [
                     sbd.all_null_like(
                         sbd.col(self.aux_table, col),
-                        length=sbd.shape(self._main_table)[0],
+                        length=res["shape"][0],
                     )
                     for col in res["columns"]
                 ]
                 _pred = [
-                    sbd.make_dataframe_like(self._main_table, [col])
-                    for col in _pred.copy()
+                    sbd.make_dataframe_like(main_table, [col]) for col in _pred.copy()
                 ]
                 pred = sbd.concat_horizontal(*_pred)
                 new_res["predictions"] = pred
