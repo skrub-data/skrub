@@ -224,6 +224,28 @@ def _get_new_name(suggested_name, forbidden_names):
     return f"{untagged_name}__skrub_{token}__"
 
 
+def make_column_names_unique(dataframes):
+    """Select new column names with a random suffix.
+
+    Parameters
+    ----------
+    dataframes: list of dataframes
+        The dataframes to pick new names for.
+
+    Returns
+    -------
+    result: list of dataframes
+        Dataframes with unique names.
+    """
+    used = set()
+    result = []
+    for df in dataframes:
+        new_names = pick_column_names(sbd.column_names(df), forbidden_names=used)
+        result.append(sbd.set_column_names(df, new_names))
+        used.update(new_names)
+    return result
+
+
 def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
     """Left join two dataframes of the same type.
 
