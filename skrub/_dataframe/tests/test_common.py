@@ -168,6 +168,11 @@ def test_all_null_like(df_module):
     col = ns.all_null_like(df_module.example_column, length=2)
     assert ns.shape(col)[0] == 2
 
+    # Test can set length greater than column length
+    max_len = ns.shape(df_module.example_column)[0]
+    col = ns.all_null_like(df_module.example_column, length=max_len + 2)
+    assert ns.shape(col)[0] == (max_len + 2)
+
 
 def test_concat_horizontal(df_module, example_data_dict):
     df1 = df_module.make_dataframe(example_data_dict)
