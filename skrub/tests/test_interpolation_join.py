@@ -212,8 +212,7 @@ def test_transform_failures(df_module, buildings, weather):
     join = joiner.fit_transform(buildings)
     assert_array_equal(ns.to_list(ns.col(join, "avg_temp")), [10.5, 15.5])
     assert ns.is_null(ns.col(join, "climate")).all()
-    # TODO: fix object dtype for polars
-    assert ns.dtype(ns.col(join, "climate")) == object
+    assert ns.dtype(ns.col(join, "climate")) == ns.dtype(ns.col(weather, "climate"))
     assert ns.shape(join) == (2, 5)
 
     joiner = InterpolationJoiner(
@@ -227,8 +226,7 @@ def test_transform_failures(df_module, buildings, weather):
         join = joiner.fit_transform(buildings)
     assert_array_equal(ns.to_list(ns.col(join, "avg_temp")), [10.5, 15.5])
     assert ns.is_null(ns.col(join, "climate")).all()
-    # TODO: fix object dtype for polars
-    assert ns.dtype(ns.col(join, "climate")) == object
+    assert ns.dtype(ns.col(join, "climate")) == ns.dtype(ns.col(weather, "climate"))
     assert ns.shape(join) == (2, 5)
 
     joiner = InterpolationJoiner(
