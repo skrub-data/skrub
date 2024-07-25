@@ -84,6 +84,12 @@ if (customElements.get('skrub-table-report') === undefined) {
             if (removeWarnings && tabButton.hasAttribute("data-has-warning")) {
                 tabButton.removeAttribute("data-has-warning");
             }
+            const filterSelect = this.shadowRoot.getElementById("col-filter-select-wrapper");
+            if (tab.id === "interactions-tab"){
+                filterSelect.dataset.notVisible = "";
+            } else {
+                delete filterSelect.dataset.notVisible;
+            }
         }
 
         displayValue(event) {
