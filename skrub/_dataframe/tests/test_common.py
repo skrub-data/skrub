@@ -165,6 +165,9 @@ def test_all_null_like(df_module):
         expected = expected.astype("bool")
     df_module.assert_column_equal(ns.is_null(col), expected)
 
+    col = ns.all_null_like(df_module.example_column, length=2)
+    assert ns.shape(col)[0] == 2
+
 
 def test_concat_horizontal(df_module, example_data_dict):
     df1 = df_module.make_dataframe(example_data_dict)
