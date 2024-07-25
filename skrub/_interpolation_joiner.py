@@ -317,7 +317,6 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         failed_columns = []
         for res in results:
             new_res = dict(**res)
-            breakpoint()
             if res["failed"]:
                 _pred = [
                     sbd.all_null_like(
