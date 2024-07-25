@@ -23,6 +23,10 @@ Major changes
 
 Minor changes
 -------------
+* :class:`AggJoiner` and :class:`AggTarget` could produce outputs whose column
+  names varied across calls to `transform` in some cases in the presence of
+  duplicate column names, now the output names are always the same.
+  :pr:`1013` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.2.0
 =============
