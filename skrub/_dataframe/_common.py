@@ -301,7 +301,7 @@ def _all_null_like_pandas(col, length=None, dtype=None, name=None):
         dtype = col.dtype
     if name is None:
         name = col.name
-    return pd.Series(dtype=dtype, index=col.index, name=name)
+    return pd.Series(dtype=dtype, index=col.index, name=name).head(length)
 
 
 @all_null_like.specialize("polars", argument_type="Column")
