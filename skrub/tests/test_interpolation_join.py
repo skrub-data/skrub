@@ -41,6 +41,20 @@ def test_simple_join(df_module, buildings, weather):
     assert ns.shape(transformed) == (2, 5)
 
 
+def test_join_two_numeric_columns(df_module, buildings, weather):
+    weather = df_module.DataFrame(weather)
+    weather = ns.with_columns(
+        weather, **{"median_temp": [10.1, 10.9, 15.0, 16.2, 20.1, None]}
+    )
+    buildings = df_module.DataFrame(buildings)
+    transformed = InterpolationJoiner(
+        weather,
+        main_key=("latitude", "longitude"),
+        aux_key=("latitude", "longitude"),
+    ).fit_transform(buildings)
+    assert ns.shape(transformed) == (2, 6)
+
+
 @pytest.mark.parametrize("fill_nulls", [False, True])
 def test_custom_predictors(df_module, buildings, weather, fill_nulls):
     if fill_nulls:
