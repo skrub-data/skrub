@@ -224,7 +224,7 @@ def _get_new_name(suggested_name, forbidden_names):
     return f"{untagged_name}__skrub_{token}__"
 
 
-def make_column_names_unique(dataframes):
+def make_column_names_unique(*dataframes):
     """Select new column names with a random suffix.
 
     Parameters

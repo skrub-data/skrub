@@ -323,13 +323,13 @@ def concat_horizontal(*dataframes):
 @concat_horizontal.specialize("pandas")
 def _concat_horizontal_pandas(*dataframes):
     dataframes = [df.reset_index(drop=True) for df in dataframes]
-    dataframes = _join_utils.make_column_names_unique(dataframes)
+    dataframes = _join_utils.make_column_names_unique(*dataframes)
     return pd.concat(dataframes, axis=1, copy=False)
 
 
 @concat_horizontal.specialize("polars")
 def _concat_horizontal_polars(*dataframes):
-    dataframes = _join_utils.make_column_names_unique(dataframes)
+    dataframes = _join_utils.make_column_names_unique(*dataframes)
     return pl.concat(dataframes, how="horizontal")
 
 
