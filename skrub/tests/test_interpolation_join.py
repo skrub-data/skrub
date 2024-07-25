@@ -150,15 +150,26 @@ def test_suffix(df_module):
     assert_array_equal(ns.column_names(join), ["A", "B", "B_aux"])
 
 
+def test_mismatched_indexes():
+    main = pd.DataFrame({"A": [0, 1]}, index=[20, 30])
+    aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]}, index=[0, 1])
+    join = InterpolationJoiner(
+        aux, key="A", regressor=KNeighborsRegressor(1)
+    ).fit_transform(main)
+    assert_array_equal(ns.to_list(ns.col(join, "B")), [10, 11])
+    # Index is reset in ``ns.concat_horizontal``
+    assert_array_equal(join.index.values, [0, 1])
+
+
 def test_fit_on_none(df_module):
     # X is hardly used in fit so it should be ok to fit without a main table
     aux = df_module.make_dataframe({"A": [0, 1], "B": [10, 11]})
     joiner = InterpolationJoiner(aux, key="A", regressor=KNeighborsRegressor(1)).fit(
         None
     )
-    main = df_module.make_dataframe({"A": [1, 0]})
+    main = df_module.make_dataframe({"A": [0, 1]})
     join = joiner.transform(main)
-    assert_array_equal(ns.to_list(ns.col(join, "B")), [11, 10])
+    assert_array_equal(ns.to_list(ns.col(join, "B")), [10, 11])
 
 
 def test_join_on_date(df_module):
