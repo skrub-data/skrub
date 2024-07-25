@@ -781,7 +781,7 @@ def _to_datetime_polars(col, format, strict=True):
         # differently.
         format = format.replace(".%f", "%.f")
         return col.str.to_datetime(format=format, strict=strict)
-    except pl.ComputeError as e:
+    except pl.exceptions.ComputeError as e:
         raise ValueError("Failed to convert to datetime") from e
 
 
