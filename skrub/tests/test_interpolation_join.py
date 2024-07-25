@@ -57,14 +57,29 @@ def test_join_two_numeric_columns(df_module, buildings, weather):
 
 
 def test_no_multioutput(df_module, buildings, weather):
+    # Two str cols, not containing nulls, a model that handles them separately
     weather = df_module.DataFrame(weather)
-    weather = ns.with_columns(weather, **{"city": ["1", "1", "2", "2", "3", "3"]})
+    weather = ns.with_columns(weather, **{"new_col": ["1", "1", "2", "2", "3", "3"]})
     buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         main_key=("latitude", "longitude"),
         aux_key=("latitude", "longitude"),
         classifier=LogisticRegression(),
+    ).fit_transform(buildings)
+    assert ns.shape(transformed) == (2, 6)
+
+
+def test_multioutput(df_module, buildings, weather):
+    # Two str cols, not containing nulls, a model that handles both at once
+    weather = df_module.DataFrame(weather)
+    weather = ns.with_columns(weather, **{"new_col": ["1", "1", "2", "2", "3", "3"]})
+    buildings = df_module.DataFrame(buildings)
+    transformed = InterpolationJoiner(
+        weather,
+        main_key=("latitude", "longitude"),
+        aux_key=("latitude", "longitude"),
+        classifier=KNeighborsClassifier(),
     ).fit_transform(buildings)
     assert ns.shape(transformed) == (2, 6)
 
