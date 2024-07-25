@@ -14,6 +14,8 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
+* The :class:`InterpolationJoiner` now supports polars dataframes. :pr:`1016`
+  by :user:`Théo Jolivet <TheooJ>`.
 * The :class:`TableReport` provides an interactive report on a dataframe's
   contents: an overview, summary statistics and plots, statistical associations
   between columns. It can be displayed in a jupyter notebook, a browser tab or
