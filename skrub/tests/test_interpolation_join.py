@@ -68,6 +68,8 @@ def test_no_multioutput(df_module, buildings, weather):
         classifier=LogisticRegression(),
     ).fit_transform(buildings)
     assert ns.shape(transformed) == (2, 6)
+    assert_array_equal(ns.to_list(ns.col(transformed, "climate")), ["A", "B"])
+    assert_array_equal(ns.to_list(ns.col(transformed, "new_col")), ["1", "2"])
 
 
 def test_multioutput(df_module, buildings, weather):
@@ -79,9 +81,11 @@ def test_multioutput(df_module, buildings, weather):
         weather,
         main_key=("latitude", "longitude"),
         aux_key=("latitude", "longitude"),
-        classifier=KNeighborsClassifier(),
+        classifier=KNeighborsClassifier(2),
     ).fit_transform(buildings)
     assert ns.shape(transformed) == (2, 6)
+    assert_array_equal(ns.to_list(ns.col(transformed, "climate")), ["A", "B"])
+    assert_array_equal(ns.to_list(ns.col(transformed, "new_col")), ["1", "2"])
 
 
 @pytest.mark.parametrize("fill_nulls", [False, True])
