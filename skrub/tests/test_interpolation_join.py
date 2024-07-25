@@ -5,6 +5,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 
 from skrub import InterpolationJoiner
@@ -51,6 +52,19 @@ def test_join_two_numeric_columns(df_module, buildings, weather):
         weather,
         main_key=("latitude", "longitude"),
         aux_key=("latitude", "longitude"),
+    ).fit_transform(buildings)
+    assert ns.shape(transformed) == (2, 6)
+
+
+def test_no_multioutput(df_module, buildings, weather):
+    weather = df_module.DataFrame(weather)
+    weather = ns.with_columns(weather, **{"city": ["1", "1", "2", "2", "3", "3"]})
+    buildings = df_module.DataFrame(buildings)
+    transformed = InterpolationJoiner(
+        weather,
+        main_key=("latitude", "longitude"),
+        aux_key=("latitude", "longitude"),
+        classifier=LogisticRegression(),
     ).fit_transform(buildings)
     assert ns.shape(transformed) == (2, 6)
 
